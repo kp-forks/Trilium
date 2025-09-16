@@ -1,16 +1,16 @@
 :root {
     --theme-style: dark;
 
-    --main-font-family: Montserrat;
+    --main-font-family: Montserrat, sans-serif;
     --main-font-size: normal;
 
-    --tree-font-family: Montserrat;
+    --tree-font-family: Montserrat, sans-serif;
     --tree-font-size: normal;
 
-    --detail-font-family: Montserrat;
+    --detail-font-family: Montserrat, sans-serif;
     --detail-font-size: normal;
 
-    --monospace-font-family: JetBrainsLight;
+    --monospace-font-family: JetBrainsLight, monospace;
     --monospace-font-size: normal;
 
     --main-background-color: #333;
