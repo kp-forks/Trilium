@@ -103,6 +103,30 @@
         "platform_big": "v{{version}} per {{platform}}",
         "platform_small": "per {{platform}}",
         "linux_big": "v{{version}} per Linux",
-        "linux_small": "per Linux"
+        "linux_small": "per Linux",
+        "more_platforms": "Più piattaforme e configurazione del server"
+    },
+    "social_buttons": {
+        "github": "GitHub",
+        "github_discussions": "GitHub Discussions",
+        "matrix": "Matrix",
+        "reddit": "Reddit"
+    },
+    "support_us": {
+        "title": "Supportaci",
+        "financial_donations_title": "Donazioni pecuniarie",
+        "financial_donations_description": "Trilium è costruito e mantenuto con <Link>centinaia di ore di lavoro</Link>. Il tuo supporto permette di mantenerlo open-source, di migliorare le funzionalità e di coprire i costi (ad esempio dell'hosting).",
+        "financial_donations_cta": "Considera di supportare lo sviluppatore principale dell'applicazione (<Link>eliandoran</Link>) attraverso:",
+        "github_sponsors": "Sponsor GitHub",
+        "paypal": "PayPal",
+        "buy_me_a_coffee": "Offrimi un caffè"
+    },
+    "footer": {
+        "copyright_community": "comunità"
+    },
+    "contribute": {
+        "title": "Altre possibilità di contribuzione",
+        "way_translate": "Traduci l'applicazione nella tua madrelingua su <Link>Weblate</Link>.",
+        "way_community": "Interagisci con la comunità su <Discussions>GitHub Discussions</Discussions> o su <Matrix>Matrix</Matrix>."
     }
 }

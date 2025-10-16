@@ -646,8 +646,7 @@
     "about": "關於 TriliumNext 筆記",
     "logout": "登出",
     "show-cheatsheet": "顯示快捷鍵說明",
-    "toggle-zen-mode": "禪模式",
-    "update_available": "版本 {{latestVersion}} 已推出，點擊下載。"
+    "toggle-zen-mode": "禪模式"
   },
   "sync_status": {
     "unknown": "<p>同步狀態將在下一次同步嘗試開始後顯示。</p><p>點擊以立即觸發同步。</p>",

@@ -647,7 +647,8 @@
     "logout": "Logout",
     "show-cheatsheet": "Show Cheatsheet",
     "toggle-zen-mode": "Zen Mode",
-    "update_available": "Version {{latestVersion}} is available, click to download."
+    "new-version-available": "New Update Available",
+    "download-update": "Get Version {{latestVersion}}"
   },
   "zen_mode": {
     "button_exit": "Exit Zen Mode"

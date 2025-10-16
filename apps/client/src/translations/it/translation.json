@@ -90,7 +90,8 @@
   },
   "info": {
     "okButton": "OK",
-    "closeButton": "Chiudi"
+    "closeButton": "Chiudi",
+    "modalTitle": "Messaggio informativo"
   },
   "export": {
     "close": "Chiudi",
@@ -354,7 +355,53 @@
     "notSet": "non impostato",
     "goBackForwards": "indietro/avanti nella cronologia",
     "showJumpToNoteDialog": "mostra <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">finestra di dialogo “Vai a”</a>",
-    "title": "Scheda riassuntiva"
+    "title": "Scheda riassuntiva",
+    "noteNavigation": "Nota navigazione",
+    "scrollToActiveNote": "scorri fino alla nota attiva",
+    "jumpToParentNote": "vai alla nota principale",
+    "collapseWholeTree": "comprimi l'intero albero delle note",
+    "collapseSubTree": "comprimi sottoalbero",
+    "tabShortcuts": "Scorciatoie delle schede",
+    "newTabNoteLink": "Il link alla nota apre la nota in una nuova scheda",
+    "newTabWithActivationNoteLink": "Il link alla nota si apre e attiva la nota in una nuova scheda",
+    "onlyInDesktop": "Solo nella versione desktop (Electron build)",
+    "openEmptyTab": "apri scheda vuota",
+    "closeActiveTab": "chiudi scheda attiva",
+    "activateNextTab": "attiva la scheda successiva",
+    "activatePreviousTab": "attiva la scheda precedente",
+    "creatingNotes": "Creazione di note",
+    "createNoteAfter": "crea una nuova nota dopo quella attiva",
+    "createNoteInto": "crea una nuova sotto-nota nella nota attiva",
+    "editBranchPrefix": "modifica <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/tree-concepts.html#prefix\">prefisso</a> del clone della nota attiva",
+    "movingCloningNotes": "Spostamento / clonazione delle note",
+    "moveNoteUpDown": "spostare la nota verso l'alto/verso il basso nell'elenco delle note",
+    "moveNoteUpHierarchy": "spostare la nota verso l'alto nella gerarchia",
+    "multiSelectNote": "nota multi-selezione sopra/sotto",
+    "selectAllNotes": "seleziona tutte le note del livello corrente",
+    "selectNote": "seleziona nota",
+    "copyNotes": "copia la nota attiva (o la selezione corrente) negli appunti (utilizzata per la <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/cloning-notes.html#cloning-notes\">clonazione</a>)",
+    "cutNotes": "taglia la nota corrente (o la selezione corrente) negli appunti (utilizzato per spostare le note)",
+    "pasteNotes": "Incolla le note come sotto-note nella nota attiva (che viene spostata o clonata a seconda che sia stata copiata o tagliata negli appunti)",
+    "deleteNotes": "eliminazione nota / sottoalbero",
+    "editingNotes": "Modifica delle note",
+    "editNoteTitle": "nel riquadro ad albero passa dal riquadro ad albero al titolo della nota. Premendo Invio dal titolo della nota, il focus passerà all'editor di testo. <kbd>Ctrl+.</kbd> riporterà il focus dall'editor al riquadro ad albero.",
+    "createEditLink": "crea / modifica collegamento esterno",
+    "createInternalLink": "creare un collegamento interno",
+    "followLink": "segui il link sotto il cursore",
+    "insertDateTime": "inserisci la data e l'ora correnti nella posizione del cursore",
+    "jumpToTreePane": "passa al riquadro dell'albero e scorri fino alla nota attiva",
+    "markdownAutoformat": "Formattazione automatica simile a Markdown",
+    "headings": "<code>##</code>, <code>###</code>, <code>####</code>  ecc. seguiti da uno spazio per i titoli",
+    "bulletList": "<code>*</code> o <code>-</code> seguito da uno spazio per un elenco puntato",
+    "numberedList": "<code>1.</code> o <code>1)</code> seguito da uno spazio per un elenco numerato",
+    "blockQuote": "inizia una riga con <code>></code> seguito da uno spazio per il blocco di citazione",
+    "troubleshooting": "Risoluzione dei problemi",
+    "reloadFrontend": "ricarica il frontend Trilium",
+    "showDevTools": "mostra strumenti di sviluppo",
+    "showSQLConsole": "mostra console SQL",
+    "other": "Altro",
+    "quickSearch": "concentrati sull'input della ricerca rapida",
+    "inPageSearch": "ricerca all'interno della pagina"
   },
   "i18n": {
     "saturday": "Sabato",
@@ -376,5 +423,51 @@
     "notes_indexed_0": "{{ count }} nota indicizzata",
     "notes_indexed_1": "{{ count }} note indicizzate",
     "notes_indexed_2": "{{ count }} note indicizzate"
+  },
+  "import": {
+    "importIntoNote": "Importa nella nota",
+    "chooseImportFile": "Scegli file di importazione",
+    "importDescription": "Il contenuto dei file selezionati verranno importati come note secondarie in",
+    "options": "Opzioni",
+    "safeImportTooltip": "I file di esportazione Trilium <code>.zip</code> possono contenere script eseguibili che potrebbero avere comportamenti dannosi. L'importazione sicura disattiverà l'esecuzione automatica di tutti gli script importati. Deseleziona “Importazione sicura” solo se l'archivio importato dovrebbe contenere script eseguibili e ti fidi completamente del contenuto del file di importazione.",
+    "safeImport": "Importazione sicura",
+    "explodeArchivesTooltip": "Se questa opzione è selezionata, Trilium leggerà i file <code>.zip</code>, <code>.enex</code> e <code>.opml</code> e creerà delle note dai file contenuti in tali archivi. Se l'opzione non è selezionata, Trilium allegherà gli archivi stessi alla nota.",
+    "shrinkImages": "Riduci immagini",
+    "explodeArchives": "Leggi il contenuto degli archivi <code>.zip</code>, <code>.enex</code> e <code>.opml</code> .",
+    "html_import_tags": {
+      "title": "Tag di importazione HTML",
+      "description": "Configura quali tag HTML devono essere mantenuti durante l'importazione delle note. I tag che non sono presenti in questo elenco verranno rimossi durante l'importazione. Alcuni tag (come 'script') vengono sempre rimossi per motivi di sicurezza.",
+      "placeholder": "Inserisci i tag HTML, uno per riga",
+      "reset_button": "Ripristina elenco predefinito"
+    },
+    "import-status": "Stato importazione",
+    "in-progress": "Importazione in corso: {{progress}}",
+    "successful": "Importazione completata con successo."
+  },
+  "include_note": {
+    "dialog_title": "Includi nota",
+    "label_note": "Note",
+    "placeholder_search": "cerca una nota per nome",
+    "box_size_prompt": "Dimensione della casella della nota inclusa:",
+    "box_size_small": "piccola (~ 10 righe)",
+    "box_size_medium": "media (~ 30 righe)",
+    "box_size_full": "completa (la casella mostra il testo completo)",
+    "button_include": "Includi nota"
+  },
+  "jump_to_note": {
+    "search_placeholder": "Cerca una nota per nome oppure digita > per i comandi...",
+    "search_button": "Cerca nel testo completo"
+  },
+  "markdown_import": {
+    "dialog_title": "Importazione Markdown",
+    "modal_body_text": "A causa del sandbox del browser non è possibile leggere direttamente gli appunti tramite JavaScript. Incolla il Markdown da importare nell'area di testo sottostante e clicca sul pulsante Importa",
+    "import_button": "Importa",
+    "import_success": "Il contenuto Markdown è stato importato nel documento."
+  },
+  "move_to": {
+    "target_parent_note": "Nota principale di destinazione",
+    "dialog_title": "Sposta note in ...",
+    "notes_to_move": "Note da spostare",
+    "search_placeholder": "cerca una nota per nome"
   }
 }

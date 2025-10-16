@@ -646,8 +646,7 @@
     "about": "À propos de Trilium Notes",
     "logout": "Déconnexion",
     "show-cheatsheet": "Afficher l'aide rapide",
-    "toggle-zen-mode": "Zen Mode",
-    "update_available": "La version {{latestVersion}} est disponible, cliquer ici pour la télécharger."
+    "toggle-zen-mode": "Zen Mode"
   },
   "zen_mode": {
     "button_exit": "Sortir du Zen mode"

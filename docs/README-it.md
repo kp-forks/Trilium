@@ -256,9 +256,9 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-### Building the Executable
-Download the repository, install dependencies using `pnpm` and then build the
-desktop app for Windows:
+### Compilare l'eseguibile
+Scarica la repository, installa le dipendenze eseguendo `pnpm` e compila
+l'applicazione desktop per Windows:
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -266,31 +266,33 @@ pnpm install
 pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 ```
 
-For more details, see the [development
-docs](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20Guide/Developer%20Guide).
+Per più dettagli, consulta la [documentazione di
+sviluppo](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20Guide/Developer%20Guide).
 
-### Developer Documentation
+### Documentazione per sviluppatori
 
-Please view the [documentation
-guide](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)
-for details. If you have more questions, feel free to reach out via the links
-described in the "Discuss with us" section above.
+Visualizza la [guida sulla
+documentazione](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)
+per i dettagli. Se hai altre domande, sentiti libero di contattarci tramite i
+collegamenti presenti nella precedente sezione "Discuti con noi".
 
 ## 👏 Riconoscimenti
 
-* [zadam](https://github.com/zadam) for the original concept and implementation
-  of the application.
-* [Sarah Hussein](https://github.com/Sarah-Hussein) for designing the
-  application icon.
-* [nriver](https://github.com/nriver) for his work on internationalization.
-* [Thomas Frei](https://github.com/thfrei) for his original work on the Canvas.
-* [antoniotejada](https://github.com/nriver) for the original syntax highlight
-  widget.
+* [zadam](https://github.com/zadam) per l'idea originale e l'implementazione
+  della applicazione.
+* [Sarah Hussein](https://github.com/Sarah-Hussein) per il design della icona
+  della applicazione.
+* [nriver](https://github.com/nriver) per il suo lavoro
+  sull'internazionalizzazione.
+* [Thomas Frei](https://github.com/thfrei) per il suo lavoro originale sul
+  canvas.
+* [antoniotejada](https://github.com/nriver) per lo strumento originale di
+  colorazione della sintassi.
 * [Dosu](https://dosu.dev/) for providing us with the automated responses to
   GitHub issues and discussions.
 * [Tabler Icons](https://tabler.io/icons) for the system tray icons.
 
-Trilium would not be possible without the technologies behind it:
+Trilium non sarebbe possibile senza le tecnologie che lo supportano:
 
 * [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
   text notes. We are grateful for being offered a set of the premium features.
