@@ -345,16 +345,23 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
     let branch;
 
     if (!note) {
+        // Missing item, add it.
         ({ note, branch } = noteService.createNewNote({
             noteId: item.id,
             title: item.title,
             type: item.type,
             parentNoteId: parentNoteId,
-            content: "",
+            content: item.content ?? "",
             ignoreForbiddenParents: true
         }));
     } else {
+        // Existing item, check if it's in the right state.
         branch = note.getParentBranches().find((branch) => branch.parentNoteId === parentNoteId);
+
+        if (item.content && note.getContent() !== item.content) {
+            log.info(`Updating content of ${item.id}.`);
+            note.setContent(item.content);
+        }
 
         // Clean up any branches that shouldn't exist according to the meta definition
         // For hidden subtree notes, we want to ensure they only exist in their designated locations
@@ -362,7 +369,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             // If the note exists but doesn't have a branch in the expected parent,
             // create the missing branch to ensure it's in the correct location
             if (!branch) {
-                console.log("Creating missing branch for note", item.id, "under parent", parentNoteId);
+                log.info(`Creating missing branch for note ${item.id} under parent ${parentNoteId}.`);
                 branch = new BBranch({
                     noteId: item.id,
                     parentNoteId: parentNoteId,
@@ -466,7 +473,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             }).save();
         } else if (attr.name === "docName" || (existingAttribute.noteId.startsWith("_help") && attr.name === "iconClass")) {
             if (existingAttribute.value !== attr.value) {
-                console.log(`Updating attribute ${attrId} from "${existingAttribute.value}" to "${attr.value}"`);
+                log.info(`Updating attribute ${attrId} from "${existingAttribute.value}" to "${attr.value}"`);
                 existingAttribute.value = attr.value ?? "";
                 existingAttribute.save();
             }

@@ -29,7 +29,7 @@ interface Options {
 
 const CODE_MIME_TYPES = new Set(["application/json"]);
 
-async function getRenderedContent(this: {} | { ctx: string }, entity: FNote | FAttachment, options: Options = {}) {
+export async function getRenderedContent(this: {} | { ctx: string }, entity: FNote | FAttachment, options: Options = {}) {
 
     options = Object.assign(
         {

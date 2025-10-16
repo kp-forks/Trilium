@@ -54,4 +54,10 @@ export interface HiddenSubtreeItem {
      * definitions will be removed.
      */
     enforceAttributes?: boolean;
+    /**
+     * Optionally, a content to be set in the hidden note. If undefined, an empty string will be set instead.
+     *
+     * The value is also checked at every startup to ensure that it's kept up to date according to the definition.
+     */
+    content?: string;
 }

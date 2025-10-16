@@ -253,6 +253,9 @@ importers:
       react-i18next:
         specifier: 16.0.1
         version: 16.0.1(i18next@25.6.0(typescript@5.9.3))(react-dom@19.1.0(react@16.14.0))(react@16.14.0)(typescript@5.9.3)
+      reveal.js:
+        specifier: 5.2.1
+        version: 5.2.1
       split.js:
         specifier: 1.6.5
         version: 1.6.5
@@ -287,6 +290,9 @@ importers:
       '@types/mark.js':
         specifier: 8.11.12
         version: 8.11.12
+      '@types/reveal.js':
+        specifier: 5.2.1
+        version: 5.2.1
       '@types/tabulator-tables':
         specifier: 6.2.11
         version: 6.2.11
@@ -5161,6 +5167,9 @@ packages:
 
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
+
+  '@types/reveal.js@5.2.1':
+    resolution: {integrity: sha512-egr+amW5iilXo94kEGyJv24bJozsu/XAOHnhMHLnaJkHVxoui2gsWqzByaltA5zfXDTH2F4WyWnAkhHRcpytIQ==}
 
   '@types/safe-compare@1.1.2':
     resolution: {integrity: sha512-kK/IM1+pvwCMom+Kezt/UlP8LMEwm8rP6UgGbRc6zUnhU/csoBQ5rWgmD2CJuHxiMiX+H1VqPGpo0kDluJGXYA==}
@@ -11963,6 +11972,10 @@ packages:
   reusify@1.1.0:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
+
+  reveal.js@5.2.1:
+    resolution: {integrity: sha512-r7//6mIM5p34hFiDMvYfXgyjXqGRta+/psd9YtytsgRlrpRzFv4RbH76TXd2qD+7ZPZEbpBDhdRhJaFgfQ7zNQ==}
+    engines: {node: '>=18.0.0'}
 
   rfdc@1.4.1:
     resolution: {integrity: sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==}
@@ -19714,6 +19727,8 @@ snapshots:
       '@types/node': 22.18.10
 
   '@types/retry@0.12.2': {}
+
+  '@types/reveal.js@5.2.1': {}
 
   '@types/safe-compare@1.1.2': {}
 
@@ -28090,6 +28105,8 @@ snapshots:
   retry@0.13.1: {}
 
   reusify@1.1.0: {}
+
+  reveal.js@5.2.1: {}
 
   rfdc@1.4.1: {}
 

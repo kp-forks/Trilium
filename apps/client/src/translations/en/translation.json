@@ -768,6 +768,7 @@
     "table": "Table",
     "geo-map": "Geo Map",
     "board": "Board",
+    "presentation": "Presentation",
     "include_archived_notes": "Show archived notes"
   },
   "edited_notes": {
@@ -2028,6 +2029,11 @@
     "add-column-placeholder": "Enter column name...",
     "edit-note-title": "Click to edit note title",
     "edit-column-title": "Click to edit column title"
+  },
+  "presentation_view": {
+    "edit-slide": "Edit this slide",
+    "start-presentation": "Start presentation",
+    "slide-overview": "Toggle an overview of the slides"
   },
   "command_palette": {
     "tree-action-name": "Tree: {{name}}",
