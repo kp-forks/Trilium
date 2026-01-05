@@ -153,7 +153,7 @@ const TPL = /*html*/`
 const MAX_SEARCH_RESULTS_IN_TREE = 100;
 
 // this has to be hanged on the actual elements to effectively intercept and stop click event
-const cancelClickPropagation: (e: JQuery.ClickEvent) => void = (e) => e.stopPropagation();
+const cancelClickPropagation: (e: JQuery.ClickEvent | MouseEvent) => void = (e) => e.stopPropagation();
 
 // TODO: Fix once we remove Node.js API from public
 type Timeout = NodeJS.Timeout | string | number | undefined;
@@ -652,12 +652,11 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     && !note.isLaunchBarConfig()
                     && !note.noteId.startsWith("_help")
                 ) {
-                    const $createChildNoteButton = $(`<span class="tree-item-button tn-icon add-note-button bx bx-plus" title="${t("note_tree.create-child-note")}"></span>`).on(
-                        "click",
-                        cancelClickPropagation
-                    );
-
-                    $span.append($createChildNoteButton);
+                    const createChildEl = document.createElement("span");
+                    createChildEl.className = "tree-item-button tn-icon add-note-button bx bx-plus";
+                    createChildEl.title = t("note_tree.create-child-note");
+                    createChildEl.addEventListener("click", cancelClickPropagation);
+                    node.span.append(createChildEl);
                 }
 
                 if (isHoistedNote) {
