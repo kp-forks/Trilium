@@ -1789,11 +1789,16 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 }
 
 function buildEnhanceTitle() {
-    return async (event: Event,
+    const createChildTemplate = document.createElement("span");
+    createChildTemplate.className = "tree-item-button tn-icon add-note-button bx bx-plus";
+    createChildTemplate.title = t("note_tree.create-child-note");
+    createChildTemplate.addEventListener("click", cancelClickPropagation);
+
+    return async function enhanceTitle(event: Event,
         data: {
             node: Fancytree.FancytreeNode;
             noteId: string;
-        }) => {
+        }) {
         const node = data.node;
 
         if (!node.data.noteId) {
@@ -1841,11 +1846,7 @@ function buildEnhanceTitle() {
             && !note.isLaunchBarConfig()
             && !note.noteId.startsWith("_help")
         ) {
-            const createChildEl = document.createElement("span");
-            createChildEl.className = "tree-item-button tn-icon add-note-button bx bx-plus";
-            createChildEl.title = t("note_tree.create-child-note");
-            createChildEl.addEventListener("click", cancelClickPropagation);
-            node.span.append(createChildEl);
+            node.span.append(createChildTemplate.cloneNode());
         }
 
         if (isHoistedNote) {
