@@ -4,14 +4,11 @@
     <style id="trilium-icon-packs">
       <%- iconPackCss %>
     </style>
-    <script src="<%= appPath %>/runtime.js" crossorigin type="module"></script>
 </head>
 <body
   class="desktop heading-style-<%= headingStyle %> layout-<%= layoutOrientation %> platform-<%= platform %> <%= isElectron ? 'electron' : '' %> <%= hasNativeTitleBar ? 'native-titlebar' : '' %> <%= hasBackgroundEffects ? 'background-effects' : '' %>"
   lang="<%= currentLocale.id %>" dir="<%= currentLocale.rtl ? 'rtl' : 'ltr' %>"
 >
-
-<%- include("./partials/windowGlobal.ejs", locals) %>
 
 <link href="<%= assetPath %>/stylesheets/ckeditor-theme.css" rel="stylesheet">
 <link href="api/fonts" rel="stylesheet">

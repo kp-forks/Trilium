@@ -24,6 +24,20 @@
         <!-- This works even when the user directly changes --root-background in CSS -->
         <div id="background-color-tracker" style="position: absolute; visibility: hidden; color: var(--root-background); transition: color 1ms;"></div>
 
+        <!-- Bootstrap (request server for required information) -->
+        <script>
+            async function bootstrap() {
+                const response = await fetch("./bootstrap");
+                const json = await response.json();
+                
+                window.glob = {
+                    ...json,
+                    activeDialog: null
+                };
+            }
+            bootstrap();
+        </script>
+
         <!-- Required for correct loading of scripts in Electron -->
         <script>
             if (typeof module === 'object') {window.module = module; module = undefined;}

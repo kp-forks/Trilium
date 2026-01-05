@@ -31,6 +31,7 @@ export function bootstrap(req: Request, res: Response) {
     const themeNote = attributeService.getNoteWithLabel("appTheme", theme);
     const nativeTitleBarVisible = options.nativeTitleBarVisible === "true";
     const iconPacks = getIconPacks();
+    const currentLocale = getCurrentLocale();
 
     res.send({
         device: view,
@@ -43,9 +44,10 @@ export function bootstrap(req: Request, res: Response) {
         isElectron,
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: isElectron && isWindows11 && !nativeTitleBarVisible && options.backgroundEffects === "true",
-        mainFontSize: parseInt(options.mainFontSize),
-        treeFontSize: parseInt(options.treeFontSize),
-        detailFontSize: parseInt(options.detailFontSize),
+        // TODO: These font size don't actually seem to be used.
+        mainFontSize: parseInt(options.mainFontSize, 10),
+        treeFontSize: parseInt(options.treeFontSize, 10),
+        detailFontSize: parseInt(options.detailFontSize, 10),
         maxEntityChangeIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
         maxEntityChangeSyncIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
         instanceName: config.General ? config.General.instanceName : null,
@@ -57,14 +59,16 @@ export function bootstrap(req: Request, res: Response) {
         assetPath,
         appPath,
         baseApiUrl: 'api/',
-        currentLocale: getCurrentLocale(),
+        currentLocale,
+        isRtl: !!currentLocale.rtl,
         iconPackCss: iconPacks
             .map(p => generateCss(p, p.builtin
                 ? `${assetPath}/fonts/${p.fontAttachmentId}.${MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
                 : `api/attachments/download/${p.fontAttachmentId}`))
             .filter(Boolean)
             .join("\n\n"),
-        iconRegistry: generateIconRegistry(iconPacks)
+        iconRegistry: generateIconRegistry(iconPacks),
+        TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE
     });
 }
 
