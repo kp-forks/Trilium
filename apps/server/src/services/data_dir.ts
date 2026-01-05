@@ -105,15 +105,26 @@ function outputPermissionDiagnostics(targetPath: fs.PathLike) {
 }
 
 function createDirIfNotExisting(path: fs.PathLike, permissionMode: fs.Mode = FOLDER_PERMISSIONS) {
-    if (!fs.existsSync(path)) {
-        try {
-            fs.mkdirSync(path, permissionMode);
-        } catch (err: unknown) {
-            if (err && typeof err === "object" && "code" in err && err.code === "EACCES") {
+    try {
+        fs.mkdirSync(path, permissionMode);
+    } catch (err: unknown) {
+        if (err && typeof err === "object" && "code" in err) {
+            const code = (err as { code: string }).code;
+
+            if (code === "EACCES") {
                 outputPermissionDiagnostics(path);
+            } else if (code === "EEXIST") {
+                // Directory already exists - verify it's actually a directory
+                try {
+                    if (fs.statSync(path).isDirectory()) {
+                        return;
+                    }
+                } catch {
+                    // If we can't stat it, fall through to re-throw original error
+                }
             }
-            throw err;
         }
+        throw err;
     }
 }
 
