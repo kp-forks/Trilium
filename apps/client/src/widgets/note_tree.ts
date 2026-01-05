@@ -353,6 +353,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.$tree.fancytree({
             titlesTabbable: true,
             keyboard: true,
+            toggleEffect: false,
             extensions: ["dnd5", "clones", "filter"],
             source: treeData,
             scrollOfs: {
