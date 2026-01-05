@@ -1857,9 +1857,12 @@ function buildEnhanceTitle() {
 
         // Add clone indicator with tooltip if note has multiple parents
         const parentNotes = note.getParentNotes();
-        const realParents = parentNotes.filter(
-            (parent) => !["_share", "_lbBookmarks"].includes(parent.noteId) && parent.type !== "search"
-        );
+        const realParents: FNote[] = [];
+        for (const parent of parentNotes) {
+            if (parent.noteId !== "_share" && parent.noteId !== "_lbBookmarks" && parent.type !== "search") {
+                realParents.push(parent);
+            }
+        }
 
         if (realParents.length > 1) {
             const parentTitles = realParents.map((p) => p.title).join(", ");
