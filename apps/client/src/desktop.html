@@ -28,7 +28,8 @@
         <script>
             async function bootstrap() {
                 await setupGlob();
-                await loadStylesheets();
+                loadStylesheets();
+                loadIcons();
                 await loadScripts();
             }
 
@@ -43,7 +44,7 @@
                 };
             }
 
-            async function loadStylesheets() {
+            function loadStylesheets() {
                 const { assetPath, themeCssUrl, themeUseNextAsBase } = window.glob;
                 const cssToLoad = [];
                 cssToLoad.push(`${assetPath}/stylesheets/theme-light.css`);
@@ -65,6 +66,12 @@
                     linkEl.rel = "stylesheet";
                     document.body.appendChild(linkEl);
                 }
+            }
+
+            function loadIcons() {
+                const styleEl = document.createElement("style");
+                styleEl.innerText = window.glob.iconPackCss;
+                document.head.appendChild(styleEl);
             }
 
             async function loadScripts() {
