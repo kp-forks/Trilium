@@ -32,7 +32,12 @@ async function register(app: express.Application) {
             css: { devSourcemap: true }
         });
         app.use(`/${assetUrlFragment}/`, vite.middlewares);
-        app.use(`/`, (req, res, next) => {
+        app.get(`/`, (req, res, next) => {
+            // We force the page to not be cached since on mobile the CSRF token can be
+            // broken when closing the browser and coming back in to the page.
+            // The page is restored from cache, but the API call fail.
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+
             req.url = `/${assetUrlFragment}/src/desktop.html`;
             vite.middlewares(req, res, next);
         });

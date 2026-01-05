@@ -63,6 +63,7 @@ import totp from './api/totp.js';
 // API routes
 import treeApiRoute from "./api/tree.js";
 import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
+import * as indexRoute from "./index.js";
 import loginRoute from "./login.js";
 import { apiResultHandler, apiRoute, asyncApiRoute, asyncRoute, route, router, uploadMiddlewareWithErrorHandling } from "./route_api.js";
 // page routes
@@ -84,6 +85,7 @@ function register(app: express.Application) {
         skipSuccessfulRequests: true // successful auth to rate-limited ETAPI routes isn't counted. However, successful auth to /login is still counted!
     });
 
+    route(GET, "/bootstrap", [ auth.checkAuth ], indexRoute.bootstrap);
     route(PST, "/login", [loginRateLimiter], loginRoute.login);
     route(PST, "/logout", [csrfMiddleware, auth.checkAuth], loginRoute.logout);
     route(PST, "/set-password", [auth.checkAppInitialized, auth.checkPasswordNotSet], loginRoute.setPassword);
