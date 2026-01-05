@@ -27,20 +27,52 @@
         <!-- Bootstrap (request server for required information) -->
         <script>
             async function bootstrap() {
+                await setupGlob();
+                await loadStylesheets();
+                await loadScripts();
+            }
+
+            async function setupGlob() {
                 const response = await fetch("./bootstrap");
                 const json = await response.json();
                 
                 global = globalThis; /* fixes https://github.com/webpack/webpack/issues/10035 */
-                
                 window.glob = {
                     ...json,
                     activeDialog: null
                 };
+            }
 
-                const { assetPath } = json;
+            async function loadStylesheets() {
+                const { assetPath, themeCssUrl, themeUseNextAsBase } = window.glob;
+                const cssToLoad = [];
+                cssToLoad.push(`${assetPath}/stylesheets/theme-light.css`);
+                if (themeCssUrl) {
+                    cssToLoad.push(themeCssUrl);
+                }
+                if (themeUseNextAsBase === "next") {
+                    cssToLoad.push(`${assetPath}/stylesheets/theme-next.css`)
+                } else if (themeUseNextAsBase === "next-dark") {
+                    cssToLoad.push(`${assetPath}/stylesheets/theme-next-dark.css`)
+                } else if (themeUseNextAsBase === "next-light") {
+                    cssToLoad.push(`${assetPath}/stylesheets/theme-next-light.css`)
+                }
+                cssToLoad.push(`${assetPath}/stylesheets/style.css`);
+
+                for (const href of cssToLoad) {
+                    const linkEl = document.createElement("link");
+                    linkEl.href = href;
+                    linkEl.rel = "stylesheet";
+                    document.body.appendChild(linkEl);
+                }
+            }
+
+            async function loadScripts() {
+                const assetPath = glob.assetPath;
                 await import(`./${assetPath}/runtime.js`);
                 await import(`./${assetPath}/desktop.js`);
             }
+            
             bootstrap();
         </script>
 
