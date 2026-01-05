@@ -1,9 +1,9 @@
 /// <reference types='vitest' />
-import { join, resolve } from 'path';
-import { defineConfig, type Plugin } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy'
-import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import preact from "@preact/preset-vite";
+import { join } from 'path';
+import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
+import { defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 
@@ -70,7 +70,7 @@ export default defineConfig(() => ({
         sourcemap: false,
         rollupOptions: {
             input: {
-                desktop: join(__dirname, "src", "desktop.ts"),
+                desktop: join(__dirname, "src", "desktop.html"),
                 mobile: join(__dirname, "src", "mobile.ts"),
                 login: join(__dirname, "src", "login.ts"),
                 setup: join(__dirname, "src", "setup.ts"),

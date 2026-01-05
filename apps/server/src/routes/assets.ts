@@ -25,14 +25,15 @@ async function register(app: express.Application) {
         const clientDir = path.join(srcRoot, "../client");
         const vite = await createViteServer({
             server: { middlewareMode: true },
-            appType: "custom",
+            appType: "spa",
             cacheDir: path.join(srcRoot, "../../.cache/vite"),
             base: `/${assetUrlFragment}/`,
             root: clientDir,
             css: { devSourcemap: true }
         });
-        app.use(`/${assetUrlFragment}/`, (req, res, next) => {
-            req.url = `/${assetUrlFragment}${req.url}`;
+        app.use(`/${assetUrlFragment}/`, vite.middlewares);
+        app.use(`/`, (req, res, next) => {
+            req.url = `/${assetUrlFragment}/src/desktop.html`;
             vite.middlewares(req, res, next);
         });
         app.use(`/node_modules/@excalidraw/excalidraw/dist/prod`, persistentCacheStatic(path.join(srcRoot, "../../node_modules/@excalidraw/excalidraw/dist/prod")));
