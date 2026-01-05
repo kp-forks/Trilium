@@ -79,6 +79,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
         const items: (MenuItem<TreeCommandNames> | null)[] = [
             { title: t("tree-context-menu.open-in-a-new-tab"), command: "openInTab", shortcut: "Ctrl+Click", uiIcon: "bx bx-link-external", enabled: noSelectedNotes },
             { title: t("tree-context-menu.open-in-a-new-split"), command: "openNoteInSplit", uiIcon: "bx bx-dock-right", enabled: noSelectedNotes },
+            { title: t("tree-context-menu.open-in-a-new-window"), command: "openNoteInWindow", uiIcon: "bx bx-window-open", enabled: noSelectedNotes },
             { title: t("tree-context-menu.open-in-popup"), command: "openNoteInPopup", uiIcon: "bx bx-edit", enabled: noSelectedNotes },
 
             isHoisted
@@ -309,6 +310,11 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
             const { ntxId } = subContexts?.[subContexts.length - 1] ?? {};
 
             this.treeWidget.triggerCommand("openNewNoteSplit", { ntxId, notePath });
+        } else if (command === "openNoteInWindow") {
+            appContext.triggerCommand("openInWindow", {
+                notePath,
+                hoistedNoteId: appContext.tabManager.getActiveContext()?.hoistedNoteId
+            });
         } else if (command === "openNoteInPopup") {
             appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath })
         } else if (command === "convertNoteToAttachment") {

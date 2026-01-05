@@ -1643,6 +1643,7 @@
   "tree-context-menu": {
     "open-in-a-new-tab": "Open in a new tab",
     "open-in-a-new-split": "Open in a new split",
+    "open-in-a-new-window": "Open in a new window",
     "insert-note-after": "Insert note after",
     "insert-child-note": "Insert child note",
     "archive": "Archive",
