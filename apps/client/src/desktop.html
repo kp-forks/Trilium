@@ -30,10 +30,16 @@
                 const response = await fetch("./bootstrap");
                 const json = await response.json();
                 
+                global = globalThis; /* fixes https://github.com/webpack/webpack/issues/10035 */
+                
                 window.glob = {
                     ...json,
                     activeDialog: null
                 };
+
+                const { assetPath } = json;
+                await import(`./${assetPath}/runtime.js`);
+                await import(`./${assetPath}/desktop.js`);
             }
             bootstrap();
         </script>
