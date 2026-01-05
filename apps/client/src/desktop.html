@@ -30,6 +30,7 @@
                 await setupGlob();
                 loadStylesheets();
                 loadIcons();
+                setBodyAttributes();
                 await loadScripts();
             }
 
@@ -72,6 +73,26 @@
                 const styleEl = document.createElement("style");
                 styleEl.innerText = window.glob.iconPackCss;
                 document.head.appendChild(styleEl);
+            }
+
+            function setBodyAttributes() {
+                const { device, headingStyle, layoutOrientation, platform, isElectron, hasNativeTitleBar, hasBackgroundEffects, currentLocale } = window.glob;
+                const classesToSet = [
+                    device,
+                    `heading-style-${headingStyle}`,
+                    `layout-${layoutOrientation}`,
+                    `platform-${platform}`,
+                    isElectron && "isElectron",
+                    hasNativeTitleBar && "native-titlebar",
+                    hasBackgroundEffects && "background-effects"
+                ].filter(Boolean);
+
+                for (const classToSet of classesToSet) {
+                    document.body.classList.add(classToSet);
+                }
+
+                document.body.lang = currentLocale.id;
+                document.body.dir = currentLocale.rtl ? "rtl" : "ltr";
             }
 
             async function loadScripts() {
