@@ -1807,11 +1807,8 @@ function buildEnhanceTitle() {
             return;
         }
 
-        const note = await froca.getNote(node.data.noteId, true);
-
-        if (!note) {
-            return;
-        }
+        const note = froca.getNoteFromCache(node.data.noteId);
+        if (!note) return;
 
         const activeNoteContext = appContext.tabManager.getActiveContext();
 
