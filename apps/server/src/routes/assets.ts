@@ -33,11 +33,6 @@ async function register(app: express.Application) {
         });
         app.use(`/${assetUrlFragment}/`, vite.middlewares);
         app.get(`/`, (req, res, next) => {
-            // We force the page to not be cached since on mobile the CSRF token can be
-            // broken when closing the browser and coming back in to the page.
-            // The page is restored from cache, but the API call fail.
-            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-
             req.url = `/${assetUrlFragment}/src/index.html`;
             vite.middlewares(req, res, next);
         });
@@ -52,6 +47,14 @@ async function register(app: express.Application) {
             throw new Error(`Public directory is missing at: ${path.resolve(publicDir)}`);
         }
 
+        app.get(`/`, (req, res) => {
+            // We force the page to not be cached since on mobile the CSRF token can be
+            // broken when closing the browser and coming back in to the page.
+            // The page is restored from cache, but the API call fail.
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            res.sendFile(path.join(publicDir, "src", "index.html"));
+        });
+        app.use("/src", persistentCacheStatic(path.join(publicDir, "src")));
         app.use(`/${assetUrlFragment}/src`, persistentCacheStatic(path.join(publicDir, "src")));
         app.use(`/${assetUrlFragment}/stylesheets`, persistentCacheStatic(path.join(publicDir, "stylesheets")));
         app.use(`/${assetUrlFragment}/fonts`, persistentCacheStatic(path.join(publicDir, "fonts")));
