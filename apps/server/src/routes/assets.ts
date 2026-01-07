@@ -38,7 +38,7 @@ async function register(app: express.Application) {
             // The page is restored from cache, but the API call fail.
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
-            req.url = `/${assetUrlFragment}/src/desktop.html`;
+            req.url = `/${assetUrlFragment}/src/index.html`;
             vite.middlewares(req, res, next);
         });
         app.use(`/node_modules/@excalidraw/excalidraw/dist/prod`, persistentCacheStatic(path.join(srcRoot, "../../node_modules/@excalidraw/excalidraw/dist/prod")));

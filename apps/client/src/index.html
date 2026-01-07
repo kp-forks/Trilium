@@ -100,7 +100,7 @@
             async function loadScripts() {
                 const assetPath = glob.assetPath;
                 await import(`./${assetPath}/runtime.js`);
-                await import(`./${assetPath}/desktop.js`);
+                await import(`./${assetPath}/${glob.device}.js`);
             }
             
             bootstrap();
