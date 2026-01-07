@@ -70,8 +70,7 @@ export default defineConfig(() => ({
         sourcemap: false,
         rollupOptions: {
             input: {
-                desktop: join(__dirname, "src", "desktop.html"),
-                mobile: join(__dirname, "src", "mobile.ts"),
+                index: join(__dirname, "src", "index.html"),
                 login: join(__dirname, "src", "login.ts"),
                 setup: join(__dirname, "src", "setup.ts"),
                 set_password: join(__dirname, "src", "set_password.ts"),
