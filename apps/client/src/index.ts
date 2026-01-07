@@ -59,7 +59,7 @@ function setBodyAttributes() {
         isElectron && "isElectron",
         hasNativeTitleBar && "native-titlebar",
         hasBackgroundEffects && "background-effects"
-    ].filter(Boolean);
+    ].filter(Boolean) as string[];
 
     for (const classToSet of classesToSet) {
         document.body.classList.add(classToSet);
