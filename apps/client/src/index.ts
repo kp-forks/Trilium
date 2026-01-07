@@ -1,8 +1,10 @@
 async function bootstrap() {
     showSplash();
-    await initJQuery();
     await setupGlob();
-    await loadBootstrapCss();
+    await Promise.all([
+        initJQuery(),
+        loadBootstrapCss()
+    ]);
     loadStylesheets();
     loadIcons();
     setBodyAttributes();
@@ -29,7 +31,7 @@ async function setupGlob() {
 
 async function loadBootstrapCss() {
     // We have to selectively import Bootstrap CSS based on text direction.
-    if (document.body.dir === "rtl") {
+    if (glob.isRtl) {
         await import("bootstrap/dist/css/bootstrap.rtl.min.css");
     } else {
         await import("bootstrap/dist/css/bootstrap.min.css");
@@ -58,7 +60,7 @@ function loadStylesheets() {
         const linkEl = document.createElement("link");
         linkEl.href = href;
         linkEl.rel = "stylesheet";
-        document.body.appendChild(linkEl);
+        document.head.appendChild(linkEl);
     }
 }
 
@@ -75,7 +77,7 @@ function setBodyAttributes() {
         `heading-style-${headingStyle}`,
         `layout-${layoutOrientation}`,
         `platform-${platform}`,
-        isElectron && "isElectron",
+        isElectron && "electron",
         hasNativeTitleBar && "native-titlebar",
         hasBackgroundEffects && "background-effects"
     ].filter(Boolean) as string[];
