@@ -54,8 +54,7 @@ async function register(app: express.Application) {
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
             res.sendFile(path.join(publicDir, "src", "index.html"));
         });
-        app.use("/src", persistentCacheStatic(path.join(publicDir, "src")));
-        app.use(`/${assetUrlFragment}/src`, persistentCacheStatic(path.join(publicDir, "src")));
+        app.use("/assets", persistentCacheStatic(path.join(publicDir, "assets")));
         app.use(`/${assetUrlFragment}/stylesheets`, persistentCacheStatic(path.join(publicDir, "stylesheets")));
         app.use(`/${assetUrlFragment}/fonts`, persistentCacheStatic(path.join(publicDir, "fonts")));
         app.use(`/${assetUrlFragment}/translations/`, persistentCacheStatic(path.join(publicDir, "translations")));
