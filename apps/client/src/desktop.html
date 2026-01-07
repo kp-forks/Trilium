@@ -48,6 +48,7 @@
             function loadStylesheets() {
                 const { assetPath, themeCssUrl, themeUseNextAsBase } = window.glob;
                 const cssToLoad = [];
+                cssToLoad.push(`${assetPath}/stylesheets/ckeditor-theme.css`);
                 cssToLoad.push(`${assetPath}/stylesheets/theme-light.css`);
                 if (themeCssUrl) {
                     cssToLoad.push(themeCssUrl);
