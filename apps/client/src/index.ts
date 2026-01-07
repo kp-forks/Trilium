@@ -1,9 +1,6 @@
-import $ from "jquery";
-
 async function bootstrap() {
-    (window as any).$ = $;
-    (window as any).jQuery = $;
-
+    showSplash();
+    await initJQuery();
     await setupGlob();
     await loadBootstrapCss();
     loadStylesheets();
@@ -11,6 +8,12 @@ async function bootstrap() {
     setBodyAttributes();
     await loadScripts();
     hideSplash();
+}
+
+async function initJQuery() {
+    const $ = (await import("jquery")).default;
+    (window as any).$ = $;
+    (window as any).jQuery = $;
 }
 
 async function setupGlob() {
@@ -93,8 +96,13 @@ async function loadScripts() {
     }
 }
 
+function showSplash() {
+    // hide body to reduce flickering on the startup. This is done through JS and not CSS to not hide <noscript>
+    document.body.style.display = "none";
+}
+
 function hideSplash() {
-    $("body").show();
+    document.body.style.display = "block";
 }
 
 bootstrap();
