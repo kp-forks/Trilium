@@ -35,7 +35,7 @@
             }
 
             async function setupGlob() {
-                const response = await fetch("./bootstrap");
+                const response = await fetch(`/bootstrap${window.location.search}`);
                 const json = await response.json();
                 
                 global = globalThis; /* fixes https://github.com/webpack/webpack/issues/10035 */
