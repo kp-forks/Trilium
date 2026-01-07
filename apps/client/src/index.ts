@@ -12,8 +12,8 @@ async function bootstrap() {
 
 async function initJQuery() {
     const $ = (await import("jquery")).default;
-    (window as any).$ = $;
-    (window as any).jQuery = $;
+    window.$ = $;
+    window.jQuery = $;
 }
 
 async function setupGlob() {
@@ -46,11 +46,11 @@ function loadStylesheets() {
         cssToLoad.push(themeCssUrl);
     }
     if (themeUseNextAsBase === "next") {
-        cssToLoad.push(`${assetPath}/stylesheets/theme-next.css`)
+        cssToLoad.push(`${assetPath}/stylesheets/theme-next.css`);
     } else if (themeUseNextAsBase === "next-dark") {
-        cssToLoad.push(`${assetPath}/stylesheets/theme-next-dark.css`)
+        cssToLoad.push(`${assetPath}/stylesheets/theme-next-dark.css`);
     } else if (themeUseNextAsBase === "next-light") {
-        cssToLoad.push(`${assetPath}/stylesheets/theme-next-light.css`)
+        cssToLoad.push(`${assetPath}/stylesheets/theme-next-light.css`);
     }
     cssToLoad.push(`${assetPath}/stylesheets/style.css`);
 

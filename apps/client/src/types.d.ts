@@ -63,6 +63,9 @@ type RequireMethod = (moduleName: string) => any;
 
 declare global {
     interface Window {
+        $: JQueryStatic;
+        jQuery: JQueryStatic;
+
         logError(message: string);
         logInfo(message: string);
 
