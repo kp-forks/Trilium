@@ -1,9 +1,16 @@
+import $ from "jquery";
+
 async function bootstrap() {
+    (window as any).$ = $;
+    (window as any).jQuery = $;
+
     await setupGlob();
+    await loadBootstrapCss();
     loadStylesheets();
     loadIcons();
     setBodyAttributes();
     await loadScripts();
+    hideSplash();
 }
 
 async function setupGlob() {
@@ -15,6 +22,15 @@ async function setupGlob() {
         ...json,
         activeDialog: null
     };
+}
+
+async function loadBootstrapCss() {
+    // We have to selectively import Bootstrap CSS based on text direction.
+    if (document.body.dir === "rtl") {
+        await import("bootstrap/dist/css/bootstrap.rtl.min.css");
+    } else {
+        await import("bootstrap/dist/css/bootstrap.min.css");
+    }
 }
 
 function loadStylesheets() {
@@ -70,12 +86,15 @@ function setBodyAttributes() {
 }
 
 async function loadScripts() {
-    await import("./runtime.js");
     if (glob.device === "mobile") {
         await import("./mobile.js");
     } else {
         await import("./desktop.js");
     }
+}
+
+function hideSplash() {
+    $("body").show();
 }
 
 bootstrap();
