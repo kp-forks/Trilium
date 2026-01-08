@@ -1,12 +1,12 @@
-import test, { BrowserContext, expect, Page } from "@playwright/test";
+import test, { expect, Page } from "@playwright/test";
 
 import App from "../support/app";
 
 test.beforeEach(async ({ page, context }) => {
-    const app = await setLayout({ page, context }, true);
+    const app = new App(page, context);
+    await app.goto();
     await app.setOption("rightPaneCollapsedItems", "[]");
 });
-test.afterEach(async ({ page, context }) => await setLayout({ page, context }, false));
 
 test("Table of contents works", async ({ page, context }) => {
     const app = new App(page, context);
@@ -106,13 +106,6 @@ test("Layers listing works", async ({ page, context }) => {
     await app.clickNoteOnNoteTreeByTitle("Dacia Logan.pdf");
     await expect(layersList.locator(".pdf-layer-item")).toHaveCount(0);
 });
-
-async function setLayout({ page, context}: { page: Page; context: BrowserContext }, newLayout: boolean) {
-    const app = new App(page, context);
-    await app.goto();
-    await app.setOption("newLayout", newLayout ? "true" : "false");
-    return app;
-}
 
 class PdfHelper {
     private contentFrame: ReturnType<Page["frameLocator"]>;

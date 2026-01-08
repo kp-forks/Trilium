@@ -1,4 +1,5 @@
-import { test, expect, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+
 import App from "../support/app";
 
 test("Table of contents is displayed", async ({ page, context }) => {
@@ -8,7 +9,7 @@ test("Table of contents is displayed", async ({ page, context }) => {
     await app.goToNoteInNewTab("Table of contents");
 
     await expect(app.sidebar).toContainText("Table of Contents");
-    const rootList = app.sidebar.locator(".toc-widget > span > ol");
+    const rootList = app.sidebar.locator(".toc > ol");
 
     // Heading 1.1
     //  Heading 1.1
@@ -42,7 +43,7 @@ test("Highlights list is displayed", async ({ page, context }) => {
     await app.closeAllTabs();
     await app.goToNoteInNewTab("Highlights list");
 
-    await expect(app.sidebar).toContainText("Highlights List");
+    await expect(app.sidebar).toContainText("10 highlights");
     const rootList = app.sidebar.locator(".highlights-list ol");
     let index = 0;
     for (const highlightedEl of ["Bold 1", "Italic 1", "Underline 1", "Colored text 1", "Background text 1", "Bold 2", "Italic 2", "Underline 2", "Colored text 2", "Background text 2"]) {
