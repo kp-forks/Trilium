@@ -107,7 +107,6 @@ describe("Text content renderer", () => {
             ]
         });
         await renderText(parentNote, $(contentEl));
-        console.log(contentEl.innerHTML);
         const items = contentEl.querySelectorAll("a");
         expect(items.length).toBe(2);
         expect(items[0].textContent).toBe("Child note 1");
@@ -125,7 +124,6 @@ describe("Text content renderer", () => {
             ]
         });
         await renderText(parentNote, $(contentEl));
-        console.log(contentEl.innerHTML);
         const items = contentEl.querySelectorAll("a");
         expect(items.length).toBe(2);
         expect(items[0].textContent).toBe("Child note 1");
