@@ -96,4 +96,39 @@ describe("Text content renderer", () => {
         await renderText(note, $(contentEl));
         expect(contentEl.querySelectorAll("section.include-note").length).toBe(1);
     });
+
+    it("renders children list when note is empty", async () => {
+        const contentEl = document.createElement("div");
+        const parentNote = buildNote({
+            title: "Parent note",
+            children: [
+                { title: "Child note 1" },
+                { title: "Child note 2" }
+            ]
+        });
+        await renderText(parentNote, $(contentEl));
+        console.log(contentEl.innerHTML);
+        const items = contentEl.querySelectorAll("a");
+        expect(items.length).toBe(2);
+        expect(items[0].textContent).toBe("Child note 1");
+        expect(items[1].textContent).toBe("Child note 2");
+    });
+
+    it("skips archived notes in children list", async () => {
+        const contentEl = document.createElement("div");
+        const parentNote = buildNote({
+            title: "Parent note",
+            children: [
+                { title: "Child note 1" },
+                { title: "Child note 2", "#archived": "" },
+                { title: "Child note 3" }
+            ]
+        });
+        await renderText(parentNote, $(contentEl));
+        console.log(contentEl.innerHTML);
+        const items = contentEl.querySelectorAll("a");
+        expect(items.length).toBe(2);
+        expect(items[0].textContent).toBe("Child note 1");
+        expect(items[1].textContent).toBe("Child note 3");
+    });
 });

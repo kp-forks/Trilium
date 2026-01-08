@@ -25,6 +25,8 @@ export interface RenderOptions {
     noChildrenList?: boolean;
     /** If enabled, it will prevent rendering of included notes. */
     noIncludedNotes?: boolean;
+    /** If enabled, it will include archived notes when rendering children list. */
+    includeArchivedNotes?: boolean;
     /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
     seenNoteIds?: Set<string>;
 }

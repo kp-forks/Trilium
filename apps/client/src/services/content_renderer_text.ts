@@ -42,7 +42,7 @@ export default async function renderText(note: FNote | FAttachment, $renderedCon
         await rewriteMermaidDiagramsInContainer($renderedContent[0] as HTMLDivElement);
         await formatCodeBlocks($renderedContent);
     } else if (note instanceof FNote && !options.noChildrenList) {
-        await renderChildrenList($renderedContent, note);
+        await renderChildrenList($renderedContent, note, options.includeArchivedNotes ?? false);
     }
 }
 
@@ -115,7 +115,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
     }
 }
 
-async function renderChildrenList($renderedContent: JQuery<HTMLElement>, note: FNote) {
+async function renderChildrenList($renderedContent: JQuery<HTMLElement>, note: FNote, includeArchivedNotes: boolean) {
     let childNoteIds = note.getChildNoteIds();
 
     if (!childNoteIds.length) {
@@ -125,14 +125,16 @@ async function renderChildrenList($renderedContent: JQuery<HTMLElement>, note: F
     $renderedContent.css("padding", "10px");
     $renderedContent.addClass("text-with-ellipsis");
 
+    // just load the first 10 child notes
     if (childNoteIds.length > 10) {
         childNoteIds = childNoteIds.slice(0, 10);
     }
 
-    // just load the first 10 child notes
     const childNotes = await froca.getNotes(childNoteIds);
 
     for (const childNote of childNotes) {
+        if (childNote.isArchived && !includeArchivedNotes) continue;
+
         $renderedContent.append(
             await link.createLink(`${note.noteId}/${childNote.noteId}`, {
                 showTooltip: false,
