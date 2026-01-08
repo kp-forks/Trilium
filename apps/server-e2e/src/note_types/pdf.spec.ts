@@ -73,13 +73,15 @@ test("Attachments listing works", async ({ page, context }) => {
 test("Download original PDF works", async ({ page, context }) => {
     const app = new App(page, context);
     await app.goto();
-    await app.goToNoteInNewTab("Dacia Logan.pdf");
+    await app.goToNoteInNewTab("Layers test.pdf");
     const pdfHelper = new PdfHelper(app);
     await pdfHelper.toBeInitialized();
 
+    const downloadButton = app.currentNoteSplit.locator(".icon-action.bx.bx-download");
+    await expect(downloadButton).toBeVisible();
     const [ download ] = await Promise.all([
         page.waitForEvent("download"),
-        app.currentNoteSplit.locator(".icon-action.bx.bx-download").click()
+        downloadButton.click()
     ]);
     expect(download).toBeDefined();
 });
@@ -125,5 +127,6 @@ class PdfHelper {
 
     async toBeInitialized() {
         await expect(this.contentFrame.locator("#pageNumber")).toBeVisible();
+        await expect(this.contentFrame.locator(".page")).toBeVisible();
     }
 }
