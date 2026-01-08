@@ -1,18 +1,19 @@
-import renderService from "./render.js";
+import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import WheelZoom from 'vanilla-js-wheel-zoom';
+
+import FAttachment from "../entities/fattachment.js";
+import FNote from "../entities/fnote.js";
+import imageContextMenuService from "../menus/image_context_menu.js";
+import { t } from "../services/i18n.js";
+import renderText from "./content_renderer_text.js";
+import renderDoc from "./doc_renderer.js";
+import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
+import openService from "./open.js";
 import protectedSessionService from "./protected_session.js";
 import protectedSessionHolder from "./protected_session_holder.js";
-import openService from "./open.js";
-import utils from "./utils.js";
-import FNote from "../entities/fnote.js";
-import FAttachment from "../entities/fattachment.js";
-import imageContextMenuService from "../menus/image_context_menu.js";
+import renderService from "./render.js";
 import { applySingleBlockSyntaxHighlight } from "./syntax_highlight.js";
-import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
-import renderDoc from "./doc_renderer.js";
-import { t } from "../services/i18n.js";
-import WheelZoom from 'vanilla-js-wheel-zoom';
-import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
-import renderText from "./content_renderer_text.js";
+import utils from "./utils.js";
 
 let idCounter = 1;
 
@@ -22,6 +23,12 @@ export interface RenderOptions {
     imageHasZoom?: boolean;
     /** If enabled, it will prevent the default behavior in which an empty note would display a list of children. */
     noChildrenList?: boolean;
+    /** If enabled, it will prevent rendering of included notes. */
+    noIncludedNotes?: boolean;
+    /** If enabled, it will include archived notes when rendering children list. */
+    includeArchivedNotes?: boolean;
+    /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
+    seenNoteIds?: Set<string>;
 }
 
 const CODE_MIME_TYPES = new Set(["application/json"]);
@@ -152,7 +159,7 @@ function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery<HTMLE
 
     const $img = $("<img>")
         .attr("src", url || "")
-        .attr("id", "attachment-image-" + idCounter++)
+        .attr("id", `attachment-image-${  idCounter++}`)
         .css("max-width", "100%");
 
     $renderedContent.append($img);
@@ -231,14 +238,14 @@ function renderFile(entity: FNote | FAttachment, type: string, $renderedContent:
 
         $downloadButton.on("click", (e) => {
             e.stopPropagation();
-            openService.downloadFileNote(entity.noteId)
+            openService.downloadFileNote(entity.noteId);
         });
         $openButton.on("click", async (e) => {
             const iconEl = $openButton.find("> .bx");
             iconEl.removeClass("bx bx-link-external");
             iconEl.addClass("bx bx-loader spin");
             e.stopPropagation();
-            await openService.openNoteExternally(entity.noteId, entity.mime)
+            await openService.openNoteExternally(entity.noteId, entity.mime);
             iconEl.removeClass("bx bx-loader spin");
             iconEl.addClass("bx bx-link-external");
         });
@@ -266,7 +273,7 @@ async function renderMermaid(note: FNote | FAttachment, $renderedContent: JQuery
 
     try {
         await loadElkIfNeeded(mermaid, content);
-        const { svg } = await mermaid.mermaidAPI.render("in-mermaid-graph-" + idCounter++, content);
+        const { svg } = await mermaid.mermaidAPI.render(`in-mermaid-graph-${  idCounter++}`, content);
 
         $renderedContent.append($(postprocessMermaidSvg(svg)));
     } catch (e) {
