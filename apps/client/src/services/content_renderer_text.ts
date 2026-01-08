@@ -15,7 +15,10 @@ export default async function renderText(note: FNote | FAttachment, $renderedCon
 
     if (blob && !isHtmlEmpty(blob.content)) {
         $renderedContent.append($('<div class="ck-content">').html(blob.content));
-        await renderIncludedNotes($renderedContent[0]);
+
+        const seenNoteIds = options.seenNoteIds ?? new Set<string>();
+        seenNoteIds.add("noteId" in note ? note.noteId : note.attachmentId);
+        await renderIncludedNotes($renderedContent[0], seenNoteIds);
 
         if ($renderedContent.find("span.math-tex").length > 0) {
             renderMathInElement($renderedContent[0], { trust: true });
@@ -39,7 +42,7 @@ export default async function renderText(note: FNote | FAttachment, $renderedCon
     }
 }
 
-async function renderIncludedNotes(contentEl: HTMLElement) {
+async function renderIncludedNotes(contentEl: HTMLElement, seenNoteIds: Set<string>) {
     // TODO: Consider duplicating with server's share/content_renderer.ts.
     const includeNoteEls = contentEl.querySelectorAll("section.include-note");
 
@@ -66,8 +69,18 @@ async function renderIncludedNotes(contentEl: HTMLElement) {
             continue;
         }
 
-        const renderedContent = (await content_renderer.getRenderedContent(note)).$renderedContent;
+        if (seenNoteIds.has(noteId)) {
+            console.warn(`Skipping inclusion of ${noteId} to avoid circular reference.`);
+            includeNoteEl.remove();
+            continue;
+        }
+
+        const renderedContent = (await content_renderer.getRenderedContent(note, {
+            seenNoteIds
+        })).$renderedContent;
         includeNoteEl.replaceChildren(...renderedContent);
+
+        seenNoteIds.add(noteId);
     }
 }
 
