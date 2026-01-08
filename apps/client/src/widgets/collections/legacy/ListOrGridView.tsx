@@ -153,7 +153,8 @@ function NoteContent({ note, trim, noChildrenList, highlightedTokens }: { note: 
     useEffect(() => {
         content_renderer.getRenderedContent(note, {
             trim,
-            noChildrenList
+            noChildrenList,
+            noIncludedNotes: true
         })
             .then(({ $renderedContent, type }) => {
                 if (!contentRef.current) return;

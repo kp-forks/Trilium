@@ -23,6 +23,8 @@ export interface RenderOptions {
     imageHasZoom?: boolean;
     /** If enabled, it will prevent the default behavior in which an empty note would display a list of children. */
     noChildrenList?: boolean;
+    /** If enabled, it will prevent rendering of included notes. */
+    noIncludedNotes?: boolean;
     /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
     seenNoteIds?: Set<string>;
 }

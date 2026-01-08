@@ -27,6 +27,27 @@ describe("Text content renderer", () => {
         expect(contentEl.querySelectorAll("section.include-note p").length).toBe(1);
     });
 
+    it("skips rendering included note", async () => {
+        const contentEl = document.createElement("div");
+        const includedNote = buildNote({
+            title: "Included note",
+            content: "<p>This is the included note.</p>"
+        });
+        const note = buildNote({
+            title: "New note",
+            content: trimIndentation`
+                <p>
+                    Hi there
+                </p>
+                <section class="include-note" data-note-id="${includedNote.noteId}" data-box-size="medium">
+                    &nbsp;
+                </section>
+            `
+        });
+        await renderText(note, $(contentEl), { noIncludedNotes: true });
+        expect(contentEl.querySelectorAll("section.include-note").length).toBe(0);
+    });
+
     it("doesn't enter infinite loop on direct recursion", async () => {
         const contentEl = document.createElement("div");
         const note = buildNote({

@@ -18,7 +18,11 @@ export default async function renderText(note: FNote | FAttachment, $renderedCon
 
         const seenNoteIds = options.seenNoteIds ?? new Set<string>();
         seenNoteIds.add("noteId" in note ? note.noteId : note.attachmentId);
-        await renderIncludedNotes($renderedContent[0], seenNoteIds);
+        if (!options.noIncludedNotes) {
+            await renderIncludedNotes($renderedContent[0], seenNoteIds);
+        } else {
+            $renderedContent.find("section.include-note").remove();
+        }
 
         if ($renderedContent.find("span.math-tex").length > 0) {
             renderMathInElement($renderedContent[0], { trust: true });
