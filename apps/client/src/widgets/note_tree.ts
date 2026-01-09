@@ -3,13 +3,13 @@ import "jquery.fancytree/dist/modules/jquery.fancytree.dnd5.js";
 import "jquery.fancytree/dist/modules/jquery.fancytree.clones.js";
 import "jquery.fancytree/dist/modules/jquery.fancytree.filter.js";
 import "../stylesheets/tree.css";
+import "./note_tree.css";
 
 import appContext, { type CommandListenerData, type EventData } from "../components/app_context.js";
 import type { SetNoteOpts } from "../components/note_context.js";
 import type { TouchBarItem } from "../components/touch_bar.js";
 import type FBranch from "../entities/fbranch.js";
 import type FNote from "../entities/fnote.js";
-import type { NoteType } from "../entities/fnote.js";
 import contextMenu from "../menus/context_menu.js";
 import type { TreeCommandNames } from "../menus/tree_context_menu.js";
 import branchService from "../services/branches.js";
@@ -1886,6 +1886,12 @@ function buildEnhanceTitle() {
             const $sharedIndicator = $(`<span class="note-indicator-icon shared-indicator"></span>`);
             $sharedIndicator.attr("title", tooltipText);
             $span.find(".fancytree-title").append($sharedIndicator);
+        }
+
+        // Add a badge with the number of items if it hides children.
+        if (note.hasLabel("subtreeHidden")) {
+            const $badge = $(`<span class="note-indicator-icon subtree-hidden-badge">${note.getChildNoteIds().length}</span>`);
+            $span.find(".fancytree-title").append($badge);
         }
     };
 }
