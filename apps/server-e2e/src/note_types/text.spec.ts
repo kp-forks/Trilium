@@ -65,6 +65,8 @@ test("Displays math popup", async ({ page, context }) => {
     await expect(mathForm).toBeVisible();
 
     const input = mathForm.locator(".ck-input").first();
+    await expect(input).toBeVisible();
+    await expect(input).toBeEnabled();
     await input.click();
     await input.fill("e=mc^2");
     await page.waitForTimeout(100);
