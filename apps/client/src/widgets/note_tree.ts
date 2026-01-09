@@ -803,6 +803,10 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             childBranches = childBranches.slice(0, MAX_SEARCH_RESULTS_IN_TREE);
         }
 
+        if (parentNote.hasLabel("subtreeHidden")) {
+            childBranches = [];
+        }
+
         for (const branch of childBranches) {
             if (hideArchivedNotes) {
                 const note = branch.getNoteFromCache();
