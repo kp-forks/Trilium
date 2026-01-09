@@ -1058,7 +1058,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     }
 
     findChildNode(parentNode: Fancytree.FancytreeNode, childNoteId: string) {
-        return parentNode.getChildren().find((childNode) => childNode.data.noteId === childNoteId);
+        return parentNode.getChildren()?.find((childNode) => childNode.data.noteId === childNoteId);
     }
 
     async expandToNote(notePath: string, logErrors = true) {
@@ -1100,7 +1100,10 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             (await this.getNodeFromPath(this.noteContext.notePath));
 
         if (this.spotlightedNode && newActiveNode !== this.spotlightedNode) {
-            this.spotlightedNode.remove();
+            // Can get removed when switching to another note in a spotlighted subtree.
+            if (this.spotlightedNode.parent) {
+                this.spotlightedNode.remove();
+            }
             this.spotlightedNode = null;
             this.spotlightedNotePath = null;
         }
