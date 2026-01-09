@@ -3,8 +3,12 @@
     margin-inline-start: 0.5em;
     background: var(--left-pane-item-action-button-background);
     color: var(--left-pane-item-action-button-color);
-    padding: 0.25em;
+    padding: 0.2em 0.4em;
     border-radius: 0.5em;
     font-size: 0.7rem;
     font-weight: normal;
+    position: absolute;
+    top: 50%;
+    right: 0.6em;
+    transform: translateY(-50%);
 }
