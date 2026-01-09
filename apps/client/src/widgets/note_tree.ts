@@ -202,6 +202,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     private autoCollapseTimeoutId?: Timeout;
     private lastFilteredHoistedNotePath?: string | null;
     private spotlightedNotePath?: string | null;
+    private spotlightedNode: Fancytree.FancytreeNode | null = null;
     private tree!: Fancytree.Fancytree;
 
     constructor() {
@@ -1019,6 +1020,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
                             // Try to find the child again after reload
                             foundChildNode = this.findChildNode(parentNode, childNoteId);
+                            this.spotlightedNode = foundChildNode ?? null;
 
                             if (!foundChildNode) {
                                 if (logErrors || !childNote) {
@@ -1088,9 +1090,6 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.toggleInt(this.isEnabled());
         this.$treeSettingsPopup.hide();
 
-        // Clear spotlight before refresh
-        this.spotlightedNotePath = null;
-
         this.activityDetected();
 
         const oldActiveNode = this.getActiveNode();
@@ -1100,12 +1099,23 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             (!treeService.isNotePathInHiddenSubtree(this.noteContext.notePath) || (await hoistedNoteService.isHoistedInHiddenSubtree())) &&
             (await this.getNodeFromPath(this.noteContext.notePath));
 
+        if (this.spotlightedNode && newActiveNode !== this.spotlightedNode) {
+            this.spotlightedNode.remove();
+            this.spotlightedNode = null;
+            this.spotlightedNotePath = null;
+        }
+
         if (newActiveNode !== oldActiveNode) {
             let oldActiveNodeFocused = false;
 
             if (oldActiveNode) {
                 oldActiveNodeFocused = oldActiveNode.hasFocus();
 
+                if (this.spotlightedNode === oldActiveNode) {
+                    this.spotlightedNode.remove();
+                    this.spotlightedNode = null;
+                    this.spotlightedNotePath = null;
+                }
                 oldActiveNode.setActive(false);
                 oldActiveNode.setFocus(false);
             }
