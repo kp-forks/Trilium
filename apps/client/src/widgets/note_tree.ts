@@ -201,6 +201,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     private treeName: "main";
     private autoCollapseTimeoutId?: Timeout;
     private lastFilteredHoistedNotePath?: string | null;
+    private spotlightedNotePath?: string | null;
     private tree!: Fancytree.Fancytree;
 
     constructor() {
@@ -710,7 +711,20 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         }
 
         if (parentNote.hasLabel("subtreeHidden")) {
-            childBranches = [];
+            // If we have a spotlighted note path, show only the child that leads to it
+            if (this.spotlightedNotePath) {
+                const spotlightPathSegments = this.spotlightedNotePath.split('/');
+                const parentIndex = spotlightPathSegments.indexOf(parentNote.noteId);
+
+                if (parentIndex >= 0 && parentIndex < spotlightPathSegments.length - 1) {
+                    const nextNoteIdInPath = spotlightPathSegments[parentIndex + 1];
+                    childBranches = childBranches.filter(branch => branch.noteId === nextNoteIdInPath);
+                } else {
+                    childBranches = [];
+                }
+            } else {
+                childBranches = [];
+            }
         }
 
         for (const branch of childBranches) {
@@ -992,18 +1006,42 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     foundChildNode = this.findChildNode(parentNode, childNoteId);
 
                     if (!foundChildNode) {
-                        if (logErrors) {
-                            // besides real errors, this can be also caused by hiding of e.g. included images
-                            // these are real notes with real notePath, user can display them in a detail,
-                            // but they don't have a node in the tree
+                        const childNote = await froca.getNote(childNoteId);
 
-                            const childNote = await froca.getNote(childNoteId);
+                        if (childNote?.type === "image") return;
 
-                            if (!childNote || childNote.type !== "image") {
-                                ws.logError(
-                                    `Can't find node for child node of noteId=${childNoteId} for parent of noteId=${parentNode.data.noteId} and hoistedNoteId=${hoistedNoteService.getHoistedNoteId()}, requested path is ${notePath}`
-                                );
+                        // The child note can be part of a note with #subtreeHidden, case in which we need to "spotlight" it.
+                        const parentNote = froca.getNoteFromCache(parentNode.data.noteId);
+                        if (parentNote?.hasLabel("subtreeHidden")) {
+                            // Enable spotlight mode and reload the parent to show only the path to this note
+                            this.spotlightedNotePath = notePath;
+                            await parentNode.load(true);
+
+                            // Try to find the child again after reload
+                            foundChildNode = this.findChildNode(parentNode, childNoteId);
+
+                            if (!foundChildNode) {
+                                if (logErrors || !childNote) {
+                                    ws.logError(
+                                        `Can't find node for child node of noteId=${childNoteId} for parent of noteId=${parentNode.data.noteId} and hoistedNoteId=${hoistedNoteService.getHoistedNoteId()}, requested path is ${notePath}`
+                                    );
+                                    return;
+                                }
+                                return;
                             }
+
+                            parentNode = foundChildNode;
+                            continue;
+                        }
+
+                        // besides real errors, this can be also caused by hiding of e.g. included images
+                        // these are real notes with real notePath, user can display them in a detail,
+                        // but they don't have a node in the tree
+                        if (logErrors || !childNote) {
+                            ws.logError(
+                                `Can't find node for child node of noteId=${childNoteId} for parent of noteId=${parentNode.data.noteId} and hoistedNoteId=${hoistedNoteService.getHoistedNoteId()}, requested path is ${notePath}`
+                            );
+                            return;
                         }
 
                         return;
@@ -1049,6 +1087,9 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     async refresh() {
         this.toggleInt(this.isEnabled());
         this.$treeSettingsPopup.hide();
+
+        // Clear spotlight before refresh
+        this.spotlightedNotePath = null;
 
         this.activityDetected();
 
