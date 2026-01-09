@@ -857,6 +857,10 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             extraClasses.push(...["tinted", colorClass]);
         }
 
+        if (this.spotlightedNotePath && this.spotlightedNotePath.endsWith(`/${note.noteId}`)) {
+            extraClasses.push("spotlighted-node");
+        }
+
         return extraClasses.join(" ");
     }
 
