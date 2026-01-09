@@ -1843,10 +1843,12 @@ function buildEnhanceTitle() {
         }
 
         // TODO: Deduplicate with server's notes.ts#getAndValidateParent
+        const isSubtreeHidden = note.hasLabel("subtreeHidden");
         if (!["search", "launcher"].includes(note.type)
             && !note.isOptions()
             && !note.isLaunchBarConfig()
             && !note.noteId.startsWith("_help")
+            && !isSubtreeHidden
         ) {
             node.span.append(createChildTemplate.cloneNode());
         }
@@ -1889,7 +1891,7 @@ function buildEnhanceTitle() {
         }
 
         // Add a badge with the number of items if it hides children.
-        if (note.hasLabel("subtreeHidden")) {
+        if (isSubtreeHidden) {
             const $badge = $(`<span class="note-indicator-icon subtree-hidden-badge">${note.getChildNoteIds().length}</span>`);
             $span.find(".fancytree-title").append($badge);
         }
