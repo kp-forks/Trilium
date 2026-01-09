@@ -1891,8 +1891,10 @@ function buildEnhanceTitle() {
         }
 
         // Add a badge with the number of items if it hides children.
-        if (isSubtreeHidden) {
-            const $badge = $(`<span class="note-indicator-icon subtree-hidden-badge">${note.getChildNoteIds().length}</span>`);
+        const count = note.getChildNoteIds().length;
+        if (isSubtreeHidden && count > 0) {
+            const $badge = $(`<span class="note-indicator-icon subtree-hidden-badge">${count}</span>`);
+            $badge.attr("title", t("note_tree.subtree-hidden-tooltip", { count }));
             $span.find(".fancytree-title").append($badge);
         }
     };

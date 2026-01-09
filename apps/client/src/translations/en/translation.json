@@ -1772,7 +1772,8 @@
     "clone-indicator-tooltip": "This note has {{- count}} parents: {{- parents}}",
     "clone-indicator-tooltip-single": "This note is cloned (1 additional parent: {{- parent}})",
     "shared-indicator-tooltip": "This note is shared publicly",
-    "shared-indicator-tooltip-with-url": "This note is shared publicly at: {{- url}}"
+    "shared-indicator-tooltip-with-url": "This note is shared publicly at: {{- url}}",
+    "subtree-hidden-tooltip": "{{count}} child notes that are hidden from the tree"
   },
   "title_bar_buttons": {
     "window-on-top": "Keep Window on Top"
