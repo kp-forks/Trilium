@@ -758,6 +758,16 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             return;
         }
 
+        const parentNote = froca.getNoteFromCache(branch.parentNoteId);
+        if (parentNote?.hasLabel("subtreeHidden")) {
+            const parentNode = node.getParent();
+            if (parentNode) {
+                parentNode.setActive(true);
+            }
+            node.remove();
+            return;
+        }
+
         const title = `${branch.prefix ? `${branch.prefix} - ` : ""}${note.title}`;
 
         node.data.isProtected = note.isProtected;
