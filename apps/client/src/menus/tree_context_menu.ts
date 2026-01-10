@@ -1,21 +1,21 @@
-import NoteColorPicker from "./custom-items/NoteColorPicker.jsx";
-import treeService from "../services/tree.js";
-import froca from "../services/froca.js";
-import clipboard from "../services/clipboard.js";
-import noteCreateService from "../services/note_create.js";
-import contextMenu, { type MenuCommandItem, type MenuItem } from "./context_menu.js";
 import appContext, { type ContextMenuCommandData, type FilteredCommandNames } from "../components/app_context.js";
+import type { SelectMenuItemEventListener } from "../components/events.js";
+import type FAttachment from "../entities/fattachment.js";
+import attributes from "../services/attributes.js";
+import { executeBulkActions } from "../services/bulk_action.js";
+import clipboard from "../services/clipboard.js";
+import dialogService from "../services/dialog.js";
+import froca from "../services/froca.js";
+import { t } from "../services/i18n.js";
+import noteCreateService from "../services/note_create.js";
 import noteTypesService from "../services/note_types.js";
 import server from "../services/server.js";
 import toastService from "../services/toast.js";
-import dialogService from "../services/dialog.js";
-import { t } from "../services/i18n.js";
-import type NoteTreeWidget from "../widgets/note_tree.js";
-import type FAttachment from "../entities/fattachment.js";
-import type { SelectMenuItemEventListener } from "../components/events.js";
+import treeService from "../services/tree.js";
 import utils from "../services/utils.js";
-import attributes from "../services/attributes.js";
-import { executeBulkActions } from "../services/bulk_action.js";
+import type NoteTreeWidget from "../widgets/note_tree.js";
+import contextMenu, { type MenuCommandItem, type MenuItem } from "./context_menu.js";
+import NoteColorPicker from "./custom-items/NoteColorPicker.jsx";
 
 // TODO: Deduplicate once client/server is well split.
 interface ConvertToAttachmentResponse {
@@ -72,6 +72,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
         const noSelectedNotes = selNodes.length === 0 || (selNodes.length === 1 && selNodes[0] === this.node);
 
         const notSearch = note?.type !== "search";
+        const hasSubtreeHidden = note?.hasLabel("subtreeHidden") ?? false;
         const notOptionsOrHelp = !note?.noteId.startsWith("_options") && !note?.noteId.startsWith("_help");
         const parentNotSearch = !parentNote || parentNote.type !== "search";
         const insertNoteAfterEnabled = isNotRoot && !isHoisted && parentNotSearch;
@@ -84,12 +85,12 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
             isHoisted
                 ? null
                 : {
-                      title: `${t("tree-context-menu.hoist-note")}`,
-                      command: "toggleNoteHoisting",
-                      keyboardShortcut: "toggleNoteHoisting",
-                      uiIcon: "bx bxs-chevrons-up",
-                      enabled: noSelectedNotes && notSearch
-                  },
+                    title: `${t("tree-context-menu.hoist-note")}`,
+                    command: "toggleNoteHoisting",
+                    keyboardShortcut: "toggleNoteHoisting",
+                    uiIcon: "bx bxs-chevrons-up",
+                    enabled: noSelectedNotes && notSearch
+                },
             !isHoisted || !isNotRoot
                 ? null
                 : { title: t("tree-context-menu.unhoist-note"), command: "toggleNoteHoisting", keyboardShortcut: "toggleNoteHoisting", uiIcon: "bx bx-door-open" },
@@ -112,7 +113,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
                 keyboardShortcut: "createNoteInto",
                 uiIcon: "bx bx-plus",
                 items: notSearch ? await noteTypesService.getNoteTypeItems("insertChildNote") : null,
-                enabled: notSearch && noSelectedNotes && notOptionsOrHelp,
+                enabled: notSearch && noSelectedNotes && notOptionsOrHelp && !hasSubtreeHidden,
                 columns: 2
             },
 
@@ -292,17 +293,17 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
             noteCreateService.createNote(parentNotePath, {
                 target: "after",
                 targetBranchId: this.node.data.branchId,
-                type: type,
-                isProtected: isProtected,
-                templateNoteId: templateNoteId
+                type,
+                isProtected,
+                templateNoteId
             });
         } else if (command === "insertChildNote") {
             const parentNotePath = treeService.getNotePath(this.node);
 
             noteCreateService.createNote(parentNotePath, {
-                type: type,
+                type,
                 isProtected: this.node.data.isProtected,
-                templateNoteId: templateNoteId
+                templateNoteId
             });
         } else if (command === "openNoteInSplit") {
             const subContexts = appContext.tabManager.getActiveContext()?.getSubContexts();
@@ -310,7 +311,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
 
             this.treeWidget.triggerCommand("openNewNoteSplit", { ntxId, notePath });
         } else if (command === "openNoteInPopup") {
-            appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath })
+            appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath });
         } else if (command === "convertNoteToAttachment") {
             if (!(await dialogService.confirm(t("tree-context-menu.convert-to-attachment-confirm")))) {
                 return;
@@ -332,11 +333,11 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
 
             toastService.showMessage(t("tree-context-menu.converted-to-attachments", { count: converted }));
         } else if (command === "copyNotePathToClipboard") {
-            navigator.clipboard.writeText("#" + notePath);
+            navigator.clipboard.writeText(`#${  notePath}`);
         } else if (command) {
             this.treeWidget.triggerCommand<TreeCommandNames>(command, {
                 node: this.node,
-                notePath: notePath,
+                notePath,
                 noteId: this.node.data.noteId,
                 selectedOrActiveBranchIds: this.treeWidget.getSelectedOrActiveBranchIds(this.node),
                 selectedOrActiveNoteIds: this.treeWidget.getSelectedOrActiveNoteIds(this.node)
