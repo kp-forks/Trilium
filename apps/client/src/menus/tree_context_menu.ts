@@ -159,7 +159,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
                         handler: async () => {
                             const note = await froca.getNote(this.node.data.noteId);
                             if (!note) return;
-                            attributes.toggleBooleanWithInheritance(note, "subtreeHidden");
+                            attributes.setBooleanWithInheritance(note, "subtreeHidden", !hasSubtreeHidden);
                         }
                     },
                     {

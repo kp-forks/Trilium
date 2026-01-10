@@ -33,25 +33,32 @@ export async function setRelation(noteId: string, name: string, value: string = 
 }
 
 /**
- * Toggles a boolean label on the given note, taking inheritance into account. If the label is owned by the note, it
- * will be removed. If the label is inherited from a parent note, it will be overridden to `false`. If the label does
- * not exist, it will be added with an empty value.
+ * Sets a boolean label on the given note, taking inheritance into account. If the desired value matches the inherited
+ * value, any owned label will be removed to allow the inherited value to take effect. If the desired value differs
+ * from the inherited value, an owned label will be created or updated to reflect the desired value.
  *
  * When checking if the boolean value is set, don't use `note.hasLabel`; instead use `note.isLabelTruthy`.
  *
- * @param note the note on which to toggle the label.
- * @param labelName the name of the label to toggle.
+ * @param note the note on which to set the boolean label.
+ * @param labelName the name of the label to set.
+ * @param value the boolean value to set for the label.
  */
-export async function toggleBooleanWithInheritance(note: FNote, labelName: string) {
-    if (note.hasLabel(labelName)) {
-        // Can either be owned by us or inherited from parent.
-        if (note.hasOwnedLabel(labelName)) {
+export async function setBooleanWithInheritance(note: FNote, labelName: string, value: boolean) {
+    const actualValue = note.isLabelTruthy(labelName);
+    if (actualValue === value) return;
+
+    if (value) {
+        if (note.getLabelValue(labelName) === "false") {
+            // Remove the override so that the inherited true takes effect.
             removeOwnedLabelByName(note, labelName);
         } else {
-            setLabel(note.noteId, labelName, "false");
+            setLabel(note.noteId, labelName, "");
         }
+    } else if (note.hasOwnedLabel(labelName)) {
+        removeOwnedLabelByName(note, labelName);
     } else {
-        addLabel(note.noteId, labelName);
+        // Label is inherited - override to false.
+        setLabel(note.noteId, labelName, "false");
     }
 }
 
@@ -166,7 +173,7 @@ export default {
     setLabel,
     setRelation,
     setAttribute,
-    toggleBooleanWithInheritance,
+    setBooleanWithInheritance,
     removeAttributeById,
     removeOwnedLabelByName,
     removeOwnedRelationByName,
