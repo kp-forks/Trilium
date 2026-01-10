@@ -153,7 +153,7 @@ const TPL = /*html*/`
 const MAX_SEARCH_RESULTS_IN_TREE = 100;
 
 // this has to be hanged on the actual elements to effectively intercept and stop click event
-const cancelClickPropagation: (e: JQuery.ClickEvent) => void = (e) => e.stopPropagation();
+const cancelClickPropagation: (e: Event) => void = (e) => e.stopPropagation();
 
 // TODO: Fix once we remove Node.js API from public
 type Timeout = NodeJS.Timeout | string | number | undefined;
@@ -189,6 +189,9 @@ export interface DragData {
 }
 
 export const TREE_CLIPBOARD_TYPE = "application/x-fancytree-node";
+
+/** Entity changes below the given threshold will be processed without batching to avoid performance degradation. */
+const BATCH_UPDATE_THRESHOLD = 10;
 
 export default class NoteTreeWidget extends NoteContextAwareWidget {
     private $tree!: JQuery<HTMLElement>;
@@ -353,6 +356,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.$tree.fancytree({
             titlesTabbable: true,
             keyboard: true,
+            toggleEffect: options.is("motionEnabled") ? undefined : false,
             extensions: ["dnd5", "clones", "filter"],
             source: treeData,
             scrollOfs: {
@@ -598,102 +602,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             clones: {
                 highlightActiveClones: true
             },
-            async enhanceTitle (
-                event: Event,
-                data: {
-                    node: Fancytree.FancytreeNode;
-                    noteId: string;
-                }
-            ) {
-                const node = data.node;
-
-                if (!node.data.noteId) {
-                    // if there's "non-note" node, then don't enhance
-                    // this can happen for e.g. "Load error!" node
-                    return;
-                }
-
-                const note = await froca.getNote(node.data.noteId, true);
-
-                if (!note) {
-                    return;
-                }
-
-                const activeNoteContext = appContext.tabManager.getActiveContext();
-
-                const $span = $(node.span);
-
-                $span.find(".tree-item-button").remove();
-                $span.find(".note-indicator-icon").remove();
-
-                const isHoistedNote = activeNoteContext && activeNoteContext.hoistedNoteId === note.noteId && note.noteId !== "root";
-
-                if (note.hasLabel("workspace") && !isHoistedNote) {
-                    const $enterWorkspaceButton = $(`<span class="tree-item-button tn-icon enter-workspace-button bx bx-door-open" title="${t("note_tree.hoist-this-note-workspace")}"></span>`).on(
-                        "click",
-                        cancelClickPropagation
-                    );
-
-                    $span.append($enterWorkspaceButton);
-                }
-
-                if (note.type === "search") {
-                    const $refreshSearchButton = $(`<span class="tree-item-button tn-icon refresh-search-button bx bx-refresh" title="${t("note_tree.refresh-saved-search-results")}"></span>`).on(
-                        "click",
-                        cancelClickPropagation
-                    );
-
-                    $span.append($refreshSearchButton);
-                }
-
-                // TODO: Deduplicate with server's notes.ts#getAndValidateParent
-                if (!["search", "launcher"].includes(note.type)
-                    && !note.isOptions()
-                    && !note.isLaunchBarConfig()
-                    && !note.noteId.startsWith("_help")
-                ) {
-                    const $createChildNoteButton = $(`<span class="tree-item-button tn-icon add-note-button bx bx-plus" title="${t("note_tree.create-child-note")}"></span>`).on(
-                        "click",
-                        cancelClickPropagation
-                    );
-
-                    $span.append($createChildNoteButton);
-                }
-
-                if (isHoistedNote) {
-                    const $unhoistButton = $(`<span class="tree-item-button tn-icon unhoist-button bx bx-door-open" title="${t("note_tree.unhoist")}"></span>`).on("click", cancelClickPropagation);
-
-                    $span.append($unhoistButton);
-                }
-
-                // Add clone indicator with tooltip if note has multiple parents
-                const parentNotes = note.getParentNotes();
-                const realParents = parentNotes.filter(
-                    (parent) => !["_share", "_lbBookmarks"].includes(parent.noteId) && parent.type !== "search"
-                );
-
-                if (realParents.length > 1) {
-                    const parentTitles = realParents.map((p) => p.title).join(", ");
-                    const tooltipText = realParents.length === 2
-                        ? t("note_tree.clone-indicator-tooltip-single", { parent: realParents[1].title })
-                        : t("note_tree.clone-indicator-tooltip", { count: realParents.length, parents: parentTitles });
-
-                    const $cloneIndicator = $(`<span class="note-indicator-icon clone-indicator"></span>`);
-                    $cloneIndicator.attr("title", tooltipText);
-                    $span.find(".fancytree-title").append($cloneIndicator);
-                }
-
-                // Add shared indicator with tooltip if note is shared
-                if (note.isShared()) {
-                    const shareId = note.getOwnedLabelValue("shareAlias") || note.noteId;
-                    const shareUrl = `${location.origin}${location.pathname}share/${shareId}`;
-                    const tooltipText = t("note_tree.shared-indicator-tooltip-with-url", { url: shareUrl });
-
-                    const $sharedIndicator = $(`<span class="note-indicator-icon shared-indicator"></span>`);
-                    $sharedIndicator.attr("title", tooltipText);
-                    $span.find(".fancytree-title").append($sharedIndicator);
-                }
-            },
+            enhanceTitle: buildEnhanceTitle(),
             // this is done to automatically lazy load all expanded notes after tree load
             loadChildren: (event, data) => {
                 data.node.visit((subNode) => {
@@ -1257,10 +1166,18 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         const { movedActiveNode, parentsOfAddedNodes } = await this.#processBranchRows(branchRows, refreshCtx);
 
         for (const noteId of loadResults.getNoteIds()) {
+            const contentReloaded = loadResults.isNoteContentReloaded(noteId);
+            if (contentReloaded && !loadResults.isNoteReloaded(noteId, contentReloaded.componentId)) {
+                // Only the note content was reloaded, not the note itself. This would cause a redundant update on every few seconds while editing a note.
+                continue;
+            }
+
             refreshCtx.noteIdsToUpdate.add(noteId);
         }
 
-        await this.#executeTreeUpdates(refreshCtx, loadResults);
+        if (refreshCtx.noteIdsToUpdate.size + refreshCtx.noteIdsToReload.size > 0) {
+            await this.#executeTreeUpdates(refreshCtx, loadResults);
+        }
 
         await this.#setActiveNode(activeNotePath, activeNodeFocused, movedActiveNode, parentsOfAddedNodes);
 
@@ -1392,7 +1309,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     }
 
     async #executeTreeUpdates(refreshCtx: RefreshContext, loadResults: LoadResults) {
-        await this.batchUpdate(async () => {
+        const performUpdates = async () => {
             for (const noteId of refreshCtx.noteIdsToReload) {
                 for (const node of this.getNodesByNoteId(noteId)) {
                     await node.load(true);
@@ -1408,7 +1325,19 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     }
                 }
             }
-        });
+        };
+
+        if (refreshCtx.noteIdsToReload.size + refreshCtx.noteIdsToUpdate.size >= BATCH_UPDATE_THRESHOLD) {
+            /**
+             * Batch updates are used for large number of updates to prevent multiple re-renders, however in the context of small updates (such as changing a note title)
+             * it can cause up to 400ms of delay for ~8k notes which is not acceptable. Therefore we use batching only for larger number of updates.
+             * Without batching, the updates would take a couple of milliseconds.
+             * We still keep the batching for potential cases where there are many updates, for example in a sync.
+             */
+            await this.batchUpdate(performUpdates);
+        } else {
+            await performUpdates();
+        }
 
         // for some reason, node update cannot be in the batchUpdate() block (node is not re-rendered)
         for (const noteId of refreshCtx.noteIdsToUpdate) {
@@ -1881,4 +1810,102 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
         return items;
     }
+}
+
+function buildEnhanceTitle() {
+    const createChildTemplate = document.createElement("span");
+    createChildTemplate.className = "tree-item-button tn-icon add-note-button bx bx-plus";
+    createChildTemplate.title = t("note_tree.create-child-note");
+
+    return async function enhanceTitle(event: Event,
+        data: {
+            node: Fancytree.FancytreeNode;
+            noteId: string;
+        }) {
+        const node = data.node;
+
+        if (!node.data.noteId) {
+            // if there's "non-note" node, then don't enhance
+            // this can happen for e.g. "Load error!" node
+            return;
+        }
+
+        const note = froca.getNoteFromCache(node.data.noteId);
+        if (!note) return;
+
+        const activeNoteContext = appContext.tabManager.getActiveContext();
+
+        const $span = $(node.span);
+
+        $span.find(".tree-item-button").remove();
+        $span.find(".note-indicator-icon").remove();
+
+        const isHoistedNote = activeNoteContext && activeNoteContext.hoistedNoteId === note.noteId && note.noteId !== "root";
+
+        if (note.hasLabel("workspace") && !isHoistedNote) {
+            const $enterWorkspaceButton = $(`<span class="tree-item-button tn-icon enter-workspace-button bx bx-door-open" title="${t("note_tree.hoist-this-note-workspace")}"></span>`).on(
+                "click",
+                cancelClickPropagation
+            );
+
+            $span.append($enterWorkspaceButton);
+        }
+
+        if (note.type === "search") {
+            const $refreshSearchButton = $(`<span class="tree-item-button tn-icon refresh-search-button bx bx-refresh" title="${t("note_tree.refresh-saved-search-results")}"></span>`).on(
+                "click",
+                cancelClickPropagation
+            );
+
+            $span.append($refreshSearchButton);
+        }
+
+        // TODO: Deduplicate with server's notes.ts#getAndValidateParent
+        if (!["search", "launcher"].includes(note.type)
+            && !note.isOptions()
+            && !note.isLaunchBarConfig()
+            && !note.noteId.startsWith("_help")
+        ) {
+            const createChildItem = createChildTemplate.cloneNode();
+            createChildItem.addEventListener("click", cancelClickPropagation);
+            node.span.append(createChildItem);
+        }
+
+        if (isHoistedNote) {
+            const $unhoistButton = $(`<span class="tree-item-button tn-icon unhoist-button bx bx-door-open" title="${t("note_tree.unhoist")}"></span>`).on("click", cancelClickPropagation);
+
+            $span.append($unhoistButton);
+        }
+
+        // Add clone indicator with tooltip if note has multiple parents
+        const parentNotes = note.getParentNotes();
+        const realParents: FNote[] = [];
+        for (const parent of parentNotes) {
+            if (parent.noteId !== "_share" && parent.noteId !== "_lbBookmarks" && parent.type !== "search") {
+                realParents.push(parent);
+            }
+        }
+
+        if (realParents.length > 1) {
+            const parentTitles = realParents.map((p) => p.title).join(", ");
+            const tooltipText = realParents.length === 2
+                ? t("note_tree.clone-indicator-tooltip-single", { parent: realParents[1].title })
+                : t("note_tree.clone-indicator-tooltip", { count: realParents.length, parents: parentTitles });
+
+            const $cloneIndicator = $(`<span class="note-indicator-icon clone-indicator"></span>`);
+            $cloneIndicator.attr("title", tooltipText);
+            $span.find(".fancytree-title").append($cloneIndicator);
+        }
+
+        // Add shared indicator with tooltip if note is shared
+        if (note.isShared()) {
+            const shareId = note.getOwnedLabelValue("shareAlias") || note.noteId;
+            const shareUrl = `${location.origin}${location.pathname}share/${shareId}`;
+            const tooltipText = t("note_tree.shared-indicator-tooltip-with-url", { url: shareUrl });
+
+            const $sharedIndicator = $(`<span class="note-indicator-icon shared-indicator"></span>`);
+            $sharedIndicator.attr("title", tooltipText);
+            $span.find(".fancytree-title").append($sharedIndicator);
+        }
+    };
 }
