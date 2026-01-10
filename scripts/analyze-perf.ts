@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { spawn } from 'child_process';
 
 interface PerfEntry {
     operation: string;
@@ -19,10 +20,7 @@ function stripAnsi(text: string): string {
     return text.replace(/\x1b\[[0-9;]*m/g, '').replace(/\[(\d+)m/g, '');
 }
 
-function parsePerf(filePath: string): PerfEntry[] {
-    // Read as UTF-16 LE which is what PowerShell's Tee-Object writes
-    const content = fs.readFileSync(filePath, 'utf16le');
-    const lines = content.split('\n');
+function parsePerfFromLines(lines: string[]): PerfEntry[] {
     const entries: PerfEntry[] = [];
 
     // Match patterns like: "vite:load 7776.91ms [fs] /path/to/file"
@@ -237,21 +235,75 @@ function analyzePerf(entries: PerfEntry[]) {
     console.log('\n' + '='.repeat(80) + '\n');
 }
 
-// Main
-const perfFile = path.join(process.cwd(), 'perf.txt');
-if (!fs.existsSync(perfFile)) {
-    console.error('❌ perf.txt not found. Run with DEBUG=vite:* first.');
-    process.exit(1);
+// Main - runs pnpm server:start and analyzes output automatically
+async function runPerfAnalysis() {
+    console.log('🚀 Starting pnpm server:start with DEBUG=vite:*...\n');
+    console.log('⏳ This will take about 60 seconds...\n');
+
+    const lines: string[] = [];
+    let dataCount = 0;
+
+    return new Promise<void>((resolve, reject) => {
+        const child = spawn('pnpm', ['server:start'], {
+            env: { ...process.env, DEBUG: 'vite:*' },
+            shell: true,
+            cwd: path.join(__dirname, '..'),
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
+
+        child.stdout?.setEncoding('utf8');
+        child.stderr?.setEncoding('utf8');
+
+        child.stdout?.on('data', (data) => {
+            dataCount++;
+            const text = String(data);
+            lines.push(...text.split('\n'));
+            process.stdout.write('.');
+        });
+
+        child.stderr?.on('data', (data) => {
+            dataCount++;
+            const text = String(data);
+            lines.push(...text.split('\n'));
+            process.stdout.write('.');
+        });
+
+        // Wait 60 seconds then kill the process
+        setTimeout(() => {
+            child.kill('SIGTERM');
+
+            // Give it a moment to clean up
+            setTimeout(() => {
+                console.log('\n\n✅ Collected output, analyzing...\n');
+                console.log(`   Received ${dataCount} data chunks, ${lines.length} lines`);
+
+                const entries = parsePerfFromLines(lines);
+                console.log(`📊 Found ${entries.length} performance entries`);
+
+                if (entries.length === 0) {
+                    console.error('❌ No performance data found');
+                    console.error('   Expected lines like: "vite:load 123.45ms [fs] /path/to/file"');
+                    console.error(`\n   Sample lines collected (first 20):`);
+                    lines.slice(0, 20).forEach(line => {
+                        if (line.trim()) console.error(`   "${line}"`);
+                    });
+                    reject(new Error('No performance data found'));
+                    return;
+                }
+
+                analyzePerf(entries);
+                resolve();
+            }, 1000);
+        }, 60000);
+
+        child.on('error', (error) => {
+            console.error(`❌ Failed to start process: ${error.message}`);
+            reject(error);
+        });
+    });
 }
 
-console.log(`📂 Reading ${perfFile}...`);
-const entries = parsePerf(perfFile);
-console.log(`📊 Found ${entries.length} performance entries`);
-
-if (entries.length === 0) {
-    console.error('❌ No performance data found in perf.txt');
-    console.error('   Expected lines like: "vite:load 123.45ms [fs] /path/to/file"');
+runPerfAnalysis().catch(error => {
+    console.error('❌ Analysis failed:', error);
     process.exit(1);
-}
-
-analyzePerf(entries);
+});
