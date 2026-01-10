@@ -78,6 +78,9 @@ export default defineConfig(() => ({
                 print: join(__dirname, "src", "print.tsx")
             },
             output: {
+                entryFileNames: "src/[name].js",
+                chunkFileNames: "src/[name]-[hash].js",
+                assetFileNames: "src/[name]-[hash].[ext]",
                 manualChunks: {
                     "ckeditor5": [ "@triliumnext/ckeditor5" ]
                 },
