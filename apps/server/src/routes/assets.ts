@@ -29,7 +29,23 @@ async function register(app: express.Application) {
             cacheDir: path.join(srcRoot, "../../.cache/vite"),
             base: `/${assetUrlFragment}/`,
             root: clientDir,
-            css: { devSourcemap: true }
+            css: { devSourcemap: true },
+            optimizeDeps: {
+                include: [
+                    "ckeditor5-premium-features",
+                    "ckeditor5",
+                    "codemirror",
+                    "mathlive",
+                    "@triliumnext/ckeditor5",
+                    "@triliumnext/ckeditor5-math",
+                    "@triliumnext/ckeditor5-mermaid",
+                    "@triliumnext/ckeditor5-admonition",
+                    "@triliumnext/ckeditor5-footnotes",
+                    "@triliumnext/ckeditor5-keyboard-marker",
+                    "@triliumnext/codemirror",
+                    "@triliumnext/highlightjs"
+                ]
+            },
         });
         app.use(`/${assetUrlFragment}/`, (req, res, next) => {
             req.url = `/${assetUrlFragment}${req.url}`;
