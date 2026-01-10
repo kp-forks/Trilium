@@ -43,10 +43,8 @@ export default defineConfig(() => ({
         jsxDev: isDev
     },
     css: {
-        // Use Lightning CSS (Rust-based) for much faster CSS transforms
         transformer: 'lightningcss',
-        // Disable CSS source maps in dev for faster transforms
-        devSourcemap: false
+        devSourcemap: true
     },
     resolve: {
         alias: [
