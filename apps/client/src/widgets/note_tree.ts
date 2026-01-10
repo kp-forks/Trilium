@@ -1163,10 +1163,18 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         const { movedActiveNode, parentsOfAddedNodes } = await this.#processBranchRows(branchRows, refreshCtx);
 
         for (const noteId of loadResults.getNoteIds()) {
+            const contentReloaded = loadResults.isNoteContentReloaded(noteId);
+            if (contentReloaded && !loadResults.isNoteReloaded(noteId, contentReloaded.componentId)) {
+                // Only the note content was reloaded, not the note itself. This would cause a redundant update on every few seconds while editing a note.
+                continue;
+            }
+
             refreshCtx.noteIdsToUpdate.add(noteId);
         }
 
-        await this.#executeTreeUpdates(refreshCtx, loadResults);
+        if (refreshCtx.noteIdsToUpdate.size + refreshCtx.noteIdsToReload.size > 0) {
+            await this.#executeTreeUpdates(refreshCtx, loadResults);
+        }
 
         await this.#setActiveNode(activeNotePath, activeNodeFocused, movedActiveNode, parentsOfAddedNodes);
 
