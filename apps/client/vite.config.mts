@@ -45,6 +45,12 @@ export default defineConfig(() => ({
     cacheDir: '../../node_modules/.vite/apps/client',
     base: "",
     plugins,
+    css: {
+        // Use Lightning CSS (Rust-based) for much faster CSS transforms
+        transformer: 'lightningcss',
+        // Disable CSS source maps in dev for faster transforms
+        devSourcemap: false
+    },
     resolve: {
         alias: [
             {
