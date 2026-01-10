@@ -646,17 +646,28 @@ export function useNoteLabelBoolean(note: FNote | undefined | null, labelName: F
 
     const setter = useCallback((value: boolean) => {
         if (note) {
+            const actualValue = note.isLabelTruthy(labelName);
+            if (actualValue === value) return;
+
             if (value) {
-                attributes.setLabel(note.noteId, labelName, "");
-            } else {
+                if (note.getLabelValue(labelName) === "false") {
+                    // Remove the override so that the inherited true takes effect.
+                    attributes.removeOwnedLabelByName(note, labelName);
+                } else {
+                    attributes.setLabel(note.noteId, labelName, "");
+                }
+            } else if (note.hasOwnedLabel(labelName)) {
                 attributes.removeOwnedLabelByName(note, labelName);
+            } else {
+                // Label is inherited - override to false.
+                attributes.setLabel(note.noteId, labelName, "false");
             }
         }
-    }, [note]);
+    }, [note, labelName]);
 
     useDebugValue(labelName);
 
-    const labelValue = !!note?.hasLabel(labelName);
+    const labelValue = !!note?.isLabelTruthy(labelName);
     return [ labelValue, setter ] as const;
 }
 

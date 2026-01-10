@@ -800,7 +800,8 @@
     "geo-map": "Geo Map",
     "board": "Board",
     "presentation": "Presentation",
-    "include_archived_notes": "Show archived notes"
+    "include_archived_notes": "Show archived notes",
+    "hide_child_notes": "Hide child notes in tree"
   },
   "edited_notes": {
     "no_edited_notes_found": "No edited notes on this day yet...",
