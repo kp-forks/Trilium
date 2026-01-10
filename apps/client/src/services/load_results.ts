@@ -132,7 +132,6 @@ export default class LoadResults {
     }
 
     addBranch(branchId: string, componentId: string) {
-        console.log("Got branch with ", branchId, componentId);
         this.branchRows.push({ branchId, componentId });
     }
 
