@@ -153,7 +153,7 @@ const TPL = /*html*/`
 const MAX_SEARCH_RESULTS_IN_TREE = 100;
 
 // this has to be hanged on the actual elements to effectively intercept and stop click event
-const cancelClickPropagation: (e: JQuery.ClickEvent | MouseEvent) => void = (e) => e.stopPropagation();
+const cancelClickPropagation: (e: Event) => void = (e) => e.stopPropagation();
 
 // TODO: Fix once we remove Node.js API from public
 type Timeout = NodeJS.Timeout | string | number | undefined;
@@ -189,6 +189,9 @@ export interface DragData {
 }
 
 export const TREE_CLIPBOARD_TYPE = "application/x-fancytree-node";
+
+/** Entity changes below the given threshold will be processed without batching to avoid performance degradation. */
+const BATCH_UPDATE_THRESHOLD = 10;
 
 export default class NoteTreeWidget extends NoteContextAwareWidget {
     private $tree!: JQuery<HTMLElement>;
@@ -355,7 +358,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.$tree.fancytree({
             titlesTabbable: true,
             keyboard: true,
-            toggleEffect: false,
+            toggleEffect: options.is("motionEnabled") ? undefined : false,
             extensions: ["dnd5", "clones", "filter"],
             source: treeData,
             scrollOfs: {
@@ -1220,10 +1223,18 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         const { movedActiveNode, parentsOfAddedNodes } = await this.#processBranchRows(branchRows, refreshCtx);
 
         for (const noteId of loadResults.getNoteIds()) {
+            const contentReloaded = loadResults.isNoteContentReloaded(noteId);
+            if (contentReloaded && !loadResults.isNoteReloaded(noteId, contentReloaded.componentId)) {
+                // Only the note content was reloaded, not the note itself. This would cause a redundant update on every few seconds while editing a note.
+                continue;
+            }
+
             refreshCtx.noteIdsToUpdate.add(noteId);
         }
 
-        await this.#executeTreeUpdates(refreshCtx, loadResults);
+        if (refreshCtx.noteIdsToUpdate.size + refreshCtx.noteIdsToReload.size > 0) {
+            await this.#executeTreeUpdates(refreshCtx, loadResults);
+        }
 
         await this.#setActiveNode(activeNotePath, activeNodeFocused, movedActiveNode, parentsOfAddedNodes);
 
@@ -1371,7 +1382,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     }
 
     async #executeTreeUpdates(refreshCtx: RefreshContext, loadResults: LoadResults) {
-        await this.batchUpdate(async () => {
+        const performUpdates = async () => {
             for (const noteId of refreshCtx.noteIdsToReload) {
                 for (const node of this.getNodesByNoteId(noteId)) {
                     await node.load(true);
@@ -1387,7 +1398,19 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     }
                 }
             }
-        });
+        };
+
+        if (refreshCtx.noteIdsToReload.size + refreshCtx.noteIdsToUpdate.size >= BATCH_UPDATE_THRESHOLD) {
+            /**
+             * Batch updates are used for large number of updates to prevent multiple re-renders, however in the context of small updates (such as changing a note title)
+             * it can cause up to 400ms of delay for ~8k notes which is not acceptable. Therefore we use batching only for larger number of updates.
+             * Without batching, the updates would take a couple of milliseconds.
+             * We still keep the batching for potential cases where there are many updates, for example in a sync.
+             */
+            await this.batchUpdate(performUpdates);
+        } else {
+            await performUpdates();
+        }
 
         // for some reason, node update cannot be in the batchUpdate() block (node is not re-rendered)
         for (const noteId of refreshCtx.noteIdsToUpdate) {
@@ -1866,7 +1889,6 @@ function buildEnhanceTitle() {
     const createChildTemplate = document.createElement("span");
     createChildTemplate.className = "tree-item-button tn-icon add-note-button bx bx-plus";
     createChildTemplate.title = t("note_tree.create-child-note");
-    createChildTemplate.addEventListener("click", cancelClickPropagation);
 
     return async function enhanceTitle(event: Event,
         data: {
@@ -1919,7 +1941,9 @@ function buildEnhanceTitle() {
             && !note.noteId.startsWith("_help")
             && !isSubtreeHidden
         ) {
-            node.span.append(createChildTemplate.cloneNode());
+            const createChildItem = createChildTemplate.cloneNode();
+            createChildItem.addEventListener("click", cancelClickPropagation);
+            node.span.append(createChildItem);
         }
 
         if (isHoistedNote) {
