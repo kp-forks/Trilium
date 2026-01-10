@@ -26,26 +26,8 @@ async function register(app: express.Application) {
         const vite = await createViteServer({
             server: { middlewareMode: true },
             appType: "custom",
-            cacheDir: path.join(srcRoot, "../../.cache/vite"),
-            base: `/${assetUrlFragment}/`,
-            root: clientDir,
-            css: { devSourcemap: true },
-            optimizeDeps: {
-                include: [
-                    "ckeditor5-premium-features",
-                    "ckeditor5",
-                    "codemirror",
-                    "mathlive",
-                    "@triliumnext/ckeditor5",
-                    "@triliumnext/ckeditor5-math",
-                    "@triliumnext/ckeditor5-mermaid",
-                    "@triliumnext/ckeditor5-admonition",
-                    "@triliumnext/ckeditor5-footnotes",
-                    "@triliumnext/ckeditor5-keyboard-marker",
-                    "@triliumnext/codemirror",
-                    "@triliumnext/highlightjs"
-                ]
-            },
+            configFile: path.join(clientDir, "vite.config.mts"),
+            base: `/${assetUrlFragment}/`
         });
         app.use(`/${assetUrlFragment}/`, (req, res, next) => {
             req.url = `/${assetUrlFragment}${req.url}`;

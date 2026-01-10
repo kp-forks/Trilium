@@ -42,7 +42,7 @@ if (!isDev) {
 
 export default defineConfig(() => ({
     root: __dirname,
-    cacheDir: '../../node_modules/.vite/apps/client',
+    cacheDir: '../../.cache/vite',
     base: "",
     plugins,
     css: {
