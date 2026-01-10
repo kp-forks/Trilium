@@ -10,8 +10,10 @@ const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 const isDev = process.env.NODE_ENV === "development";
 let plugins: any = [
     preact({
-        babel: {
-            compact: !isDev
+        // Disable Babel in dev for faster transforms (use esbuild instead)
+        // Babel takes ~2.5s per TSX file, esbuild takes ~100ms
+        babel: isDev ? undefined : {
+            compact: true
         }
     })
 ];
