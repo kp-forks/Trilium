@@ -99,7 +99,7 @@ function analyzePerf(entries: PerfEntry[]) {
     console.log('\n🐌 TOP 20 SLOWEST OPERATIONS:\n');
     const sorted = [...entries].sort((a, b) => b.time - a.time).slice(0, 20);
     sorted.forEach((entry, i) => {
-        console.log(`${String(i + 1).padStart(2)}. ${entry.time.toFixed(2).padStart(8)}ms  [${entry.operation.padEnd(15)}] ${entry.file}`);
+        console.log(`${String(i + 1).padStart(2)}. ${(entry.time / 1000).toFixed(2).padStart(6)}s  [${entry.operation.padEnd(15)}] ${entry.file}`);
     });
 
     // Aggregate by operation type
@@ -119,7 +119,7 @@ function analyzePerf(entries: PerfEntry[]) {
 
     operationsSorted.forEach(([op, stats]) => {
         const avgTime = stats.totalTime / stats.count;
-        console.log(`${op.padEnd(20)} ${stats.totalTime.toFixed(0).padStart(8)}ms total  (${stats.count.toString().padStart(4)} ops, ${avgTime.toFixed(1)}ms avg)`);
+        console.log(`${op.padEnd(20)} ${(stats.totalTime / 1000).toFixed(1).padStart(6)}s total  (${stats.count.toString().padStart(4)} ops, ${(avgTime / 1000).toFixed(3)}s avg)`);
     });
 
     // Aggregate by package/category
@@ -127,7 +127,7 @@ function analyzePerf(entries: PerfEntry[]) {
     const byPackage = new Map<string, AggregatedStats>();
     for (const entry of entries) {
         let category = 'Other';
-        
+
         // Check package prefixes first
         if (entry.file.startsWith('pkg:ckeditor5')) {
             category = 'CKEditor Core';
@@ -141,7 +141,7 @@ function analyzePerf(entries: PerfEntry[]) {
             category = 'CodeMirror';
         } else if (entry.file.startsWith('deps:')) {
             category = 'Dependencies';
-        } 
+        }
         // Break down app source files
         else if (entry.file.includes('widgets/')) {
             if (entry.file.includes('type_widgets/')) {
@@ -184,7 +184,7 @@ function analyzePerf(entries: PerfEntry[]) {
         .sort((a, b) => b[1].totalTime - a[1].totalTime);
 
     packagesSorted.forEach(([pkg, stats]) => {
-        console.log(`${pkg.padEnd(30)} ${stats.totalTime.toFixed(0).padStart(8)}ms  (${stats.count.toString().padStart(4)} files)`);
+        console.log(`${pkg.padEnd(30)} ${(stats.totalTime / 1000).toFixed(1).padStart(6)}s  (${stats.count.toString().padStart(4)} files)`);
     });
 
     // CKEditor breakdown
@@ -219,7 +219,7 @@ function analyzePerf(entries: PerfEntry[]) {
         .sort((a, b) => b[1].totalTime - a[1].totalTime);
 
     pluginsSorted.forEach(([plugin, stats]) => {
-        console.log(`${plugin.padEnd(20)} ${stats.totalTime.toFixed(0).padStart(8)}ms  (${stats.count} files)`);
+        console.log(`${plugin.padEnd(20)} ${(stats.totalTime / 1000).toFixed(1).padStart(6)}s  (${stats.count} files)`);
     });
 
     // Summary stats
