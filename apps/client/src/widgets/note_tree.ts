@@ -555,6 +555,19 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                         } else if (data.hitMode === "after") {
                             branchService.moveAfterBranch(selectedBranchIds, node.data.branchId);
                         } else if (data.hitMode === "over") {
+                            const targetNote = froca.getNoteFromCache(node.data.noteId);
+                            if (targetNote?.hasLabel("subtreeHidden")) {
+                                toastService.showPersistent({
+                                    id: `subtree-hidden-moved`,
+                                    title: t("note_tree.subtree-hidden-moved-title", { count: selectedBranchIds.length, title: targetNote.title }),
+                                    message: targetNote.type === "book"
+                                        ? t("note_tree.subtree-hidden-moved-description-collection")
+                                        : t("note_tree.subtree-hidden-moved-description-other"),
+                                    icon: "bx bx-hide",
+                                    timeout: 5_000,
+                                });
+                            }
+
                             branchService.moveToParentNote(selectedBranchIds, node.data.branchId);
                         } else {
                             throw new Error(`Unknown hitMode '${data.hitMode}'`);
