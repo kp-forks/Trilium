@@ -46,19 +46,19 @@ export async function setRelation(noteId: string, name: string, value: string = 
 export async function setBooleanWithInheritance(note: FNote, labelName: string, value: boolean) {
     const actualValue = note.isLabelTruthy(labelName);
     if (actualValue === value) return;
+    const hasInheritedValue = !note.hasOwnedLabel(labelName) && note.hasLabel(labelName);
 
-    if (value) {
-        if (note.getOwnedLabelValue(labelName) === "false") {
-            // Remove the override so that the inherited true takes effect.
-            removeOwnedLabelByName(note, labelName);
-        } else {
+    if (hasInheritedValue) {
+        if (value) {
             setLabel(note.noteId, labelName, "");
+        } else {
+            // Label is inherited - override to false.
+            setLabel(note.noteId, labelName, "false");
         }
-    } else if (note.hasOwnedLabel(labelName)) {
-        removeOwnedLabelByName(note, labelName);
+    } else if (value) {
+        setLabel(note.noteId, labelName, "");
     } else {
-        // Label is inherited - override to false.
-        setLabel(note.noteId, labelName, "false");
+        removeOwnedLabelByName(note, labelName);
     }
 }
 
