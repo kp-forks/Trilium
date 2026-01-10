@@ -1,4 +1,5 @@
 /// <reference types='vitest' />
+import prefresh from '@prefresh/vite';
 import { join } from 'path';
 import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import { defineConfig } from 'vite';
@@ -9,9 +10,13 @@ const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 const isDev = process.env.NODE_ENV === "development";
 let plugins: any = [];
 
-if (!isDev) {
+if (isDev) {
+    // Add Prefresh for Preact HMR in development
     plugins = [
-        ...plugins,
+        prefresh()
+    ];
+} else {
+    plugins = [
         viteStaticCopy({
             targets: assets.map((asset) => ({
                 src: `src/${asset}/*`,
