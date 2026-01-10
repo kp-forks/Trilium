@@ -52,7 +52,7 @@ async function register(app: express.Application) {
             req.url = `/${assetUrlFragment}/src/index.html`;
             vite.middlewares(req, res, next);
         });
-        app.get(`/index.ts`, (req, res, next) => {
+        app.get(`/index.ts`, [ rootLimiter ], (req, res, next) => {
             req.url = `/${assetUrlFragment}/src/index.ts`;
             vite.middlewares(req, res, next);
         });
