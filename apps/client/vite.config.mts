@@ -1,9 +1,9 @@
 /// <reference types='vitest' />
+import preact from "@preact/preset-vite";
 import { join, resolve } from 'path';
+import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import { defineConfig, type Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
-import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
-import preact from "@preact/preset-vite";
 
 const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 
@@ -60,6 +60,22 @@ export default defineConfig(() => ({
             "preact",
             "preact/compat",
             "preact/hooks"
+        ]
+    },
+    optimizeDeps: {
+        include: [
+            "ckeditor5-premium-features",
+            "ckeditor5",
+            "codemirror",
+            "mathlive",
+            "@triliumnext/ckeditor5",
+            "@triliumnext/ckeditor5-math",
+            "@triliumnext/ckeditor5-mermaid",
+            "@triliumnext/ckeditor5-admonition",
+            "@triliumnext/ckeditor5-footnotes",
+            "@triliumnext/ckeditor5-keyboard-marker",
+            "@triliumnext/codemirror",
+            "@triliumnext/highlightjs"
         ]
     },
     build: {
