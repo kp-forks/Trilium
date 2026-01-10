@@ -1,7 +1,7 @@
 /// <reference types='vitest' />
-import { join, resolve } from 'path';
+import { join } from 'path';
 import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 const assets = [ "assets", "stylesheets", "fonts", "translations" ];
@@ -44,7 +44,7 @@ export default defineConfig(() => ({
     },
     css: {
         transformer: 'lightningcss',
-        devSourcemap: true
+        devSourcemap: isDev
     },
     resolve: {
         alias: [
@@ -69,9 +69,7 @@ export default defineConfig(() => ({
         include: [
             "ckeditor5-premium-features",
             "ckeditor5",
-            "codemirror",
             "mathlive",
-            "@triliumnext/ckeditor5",
             "@triliumnext/ckeditor5-math",
             "@triliumnext/ckeditor5-mermaid",
             "@triliumnext/ckeditor5-admonition",
