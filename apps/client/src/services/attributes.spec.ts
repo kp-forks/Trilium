@@ -94,23 +94,6 @@ describe("Set boolean with inheritance", () => {
         });
     });
 
-    it("deletes override boolean with inheritance", async () => {
-        const parentNote = buildNote({
-            title: "Parent note",
-            "#foo(inheritable)": "",
-            "children": [
-                {
-                    title: "Child note",
-                    "#foo": "false",
-                }
-            ]
-        });
-        const childNote = froca.getNoteFromCache(parentNote.children[0])!;
-        expect(childNote.isLabelTruthy("foo")).toBe(false);
-        await setBooleanWithInheritance(childNote, "foo", true);
-        expect(server.remove).toHaveBeenCalledWith(`notes/${childNote.noteId}/attributes/${childNote.getLabel("foo")!.attributeId}`);
-    });
-
     it("overrides boolean with inherited false", async () => {
         const parentNote = buildNote({
             title: "Parent note",
@@ -146,6 +129,11 @@ describe("Set boolean with inheritance", () => {
         const childNote = froca.getNoteFromCache(parentNote.children[0])!;
         expect(childNote.isLabelTruthy("foo")).toBe(false);
         await setBooleanWithInheritance(childNote, "foo", true);
-        expect(server.remove).toHaveBeenCalledWith(`notes/${childNote.noteId}/attributes/${childNote.getLabel("foo")!.attributeId}`);
+        expect(server.put).toBeCalledWith(`notes/${childNote.noteId}/set-attribute`, {
+            type: "label",
+            name: "foo",
+            value: "",
+            isInheritable: false
+        });
     });
 });
