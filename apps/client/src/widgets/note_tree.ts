@@ -3,13 +3,13 @@ import "jquery.fancytree/dist/modules/jquery.fancytree.dnd5.js";
 import "jquery.fancytree/dist/modules/jquery.fancytree.clones.js";
 import "jquery.fancytree/dist/modules/jquery.fancytree.filter.js";
 import "../stylesheets/tree.css";
+import "./note_tree.css";
 
 import appContext, { type CommandListenerData, type EventData } from "../components/app_context.js";
 import type { SetNoteOpts } from "../components/note_context.js";
 import type { TouchBarItem } from "../components/touch_bar.js";
 import type FBranch from "../entities/fbranch.js";
 import type FNote from "../entities/fnote.js";
-import type { NoteType } from "../entities/fnote.js";
 import contextMenu from "../menus/context_menu.js";
 import type { TreeCommandNames } from "../menus/tree_context_menu.js";
 import branchService from "../services/branches.js";
@@ -204,6 +204,8 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     private treeName: "main";
     private autoCollapseTimeoutId?: Timeout;
     private lastFilteredHoistedNotePath?: string | null;
+    private spotlightedNotePath?: string | null;
+    private spotlightedNode: Fancytree.FancytreeNode | null = null;
     private tree!: Fancytree.Fancytree;
 
     constructor() {
@@ -556,7 +558,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                         } else if (data.hitMode === "after") {
                             branchService.moveAfterBranch(selectedBranchIds, node.data.branchId);
                         } else if (data.hitMode === "over") {
-                            branchService.moveToParentNote(selectedBranchIds, node.data.branchId);
+                            branchService.moveToParentNote(selectedBranchIds, node.data.branchId, this.componentId);
                         } else {
                             throw new Error(`Unknown hitMode '${data.hitMode}'`);
                         }
@@ -712,6 +714,23 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             childBranches = childBranches.slice(0, MAX_SEARCH_RESULTS_IN_TREE);
         }
 
+        if (parentNote.isLabelTruthy("subtreeHidden")) {
+            // If we have a spotlighted note path, show only the child that leads to it
+            if (this.spotlightedNotePath) {
+                const spotlightPathSegments = this.spotlightedNotePath.split('/');
+                const parentIndex = spotlightPathSegments.indexOf(parentNote.noteId);
+
+                if (parentIndex >= 0 && parentIndex < spotlightPathSegments.length - 1) {
+                    const nextNoteIdInPath = spotlightPathSegments[parentIndex + 1];
+                    childBranches = childBranches.filter(branch => branch.noteId === nextNoteIdInPath);
+                } else {
+                    childBranches = [];
+                }
+            } else {
+                childBranches = [];
+            }
+        }
+
         for (const branch of childBranches) {
             if (hideArchivedNotes) {
                 const note = branch.getNoteFromCache();
@@ -783,6 +802,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             lazy: true,
             folder: isFolder,
             expanded: !!branch.isExpanded && note.type !== "search",
+            subtreeHidden: note.isLabelTruthy("subtreeHidden"),
             key: utils.randomString(12) // this should prevent some "duplicate key" errors
         };
 
@@ -839,6 +859,10 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
         if (colorClass) {
             extraClasses.push(...["tinted", colorClass]);
+        }
+
+        if (this.spotlightedNotePath && this.spotlightedNotePath.endsWith(`/${note.noteId}`)) {
+            extraClasses.push("spotlighted-node");
         }
 
         return extraClasses.join(" ");
@@ -991,18 +1015,43 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     foundChildNode = this.findChildNode(parentNode, childNoteId);
 
                     if (!foundChildNode) {
-                        if (logErrors) {
-                            // besides real errors, this can be also caused by hiding of e.g. included images
-                            // these are real notes with real notePath, user can display them in a detail,
-                            // but they don't have a node in the tree
+                        const childNote = await froca.getNote(childNoteId);
 
-                            const childNote = await froca.getNote(childNoteId);
+                        if (childNote?.type === "image") return;
 
-                            if (!childNote || childNote.type !== "image") {
-                                ws.logError(
-                                    `Can't find node for child node of noteId=${childNoteId} for parent of noteId=${parentNode.data.noteId} and hoistedNoteId=${hoistedNoteService.getHoistedNoteId()}, requested path is ${notePath}`
-                                );
+                        // The child note can be part of a note with #subtreeHidden, case in which we need to "spotlight" it.
+                        const parentNote = froca.getNoteFromCache(parentNode.data.noteId);
+                        if (parentNote?.isLabelTruthy("subtreeHidden")) {
+                            // Enable spotlight mode and reload the parent to show only the path to this note
+                            this.spotlightedNotePath = notePath;
+                            await parentNode.load(true);
+
+                            // Try to find the child again after reload
+                            foundChildNode = this.findChildNode(parentNode, childNoteId);
+                            this.spotlightedNode = foundChildNode ?? null;
+
+                            if (!foundChildNode) {
+                                if (logErrors || !childNote) {
+                                    ws.logError(
+                                        `Can't find node for child node of noteId=${childNoteId} for parent of noteId=${parentNode.data.noteId} and hoistedNoteId=${hoistedNoteService.getHoistedNoteId()}, requested path is ${notePath}`
+                                    );
+                                    return;
+                                }
+                                return;
                             }
+
+                            parentNode = foundChildNode;
+                            continue;
+                        }
+
+                        // besides real errors, this can be also caused by hiding of e.g. included images
+                        // these are real notes with real notePath, user can display them in a detail,
+                        // but they don't have a node in the tree
+                        if (logErrors || !childNote) {
+                            ws.logError(
+                                `Can't find node for child node of noteId=${childNoteId} for parent of noteId=${parentNode.data.noteId} and hoistedNoteId=${hoistedNoteService.getHoistedNoteId()}, requested path is ${notePath}`
+                            );
+                            return;
                         }
 
                         return;
@@ -1017,7 +1066,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     }
 
     findChildNode(parentNode: Fancytree.FancytreeNode, childNoteId: string) {
-        return parentNode.getChildren().find((childNode) => childNode.data.noteId === childNoteId);
+        return parentNode.getChildren()?.find((childNode) => childNode.data.noteId === childNoteId);
     }
 
     async expandToNote(notePath: string, logErrors = true) {
@@ -1058,12 +1107,20 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             (!treeService.isNotePathInHiddenSubtree(this.noteContext.notePath) || (await hoistedNoteService.isHoistedInHiddenSubtree())) &&
             (await this.getNodeFromPath(this.noteContext.notePath));
 
+        if (this.spotlightedNode && newActiveNode !== this.spotlightedNode) {
+            // Can get removed when switching to another note in a spotlighted subtree.
+            if (this.spotlightedNode.parent) {
+                this.spotlightedNode.remove();
+            }
+            this.spotlightedNode = null;
+            this.spotlightedNotePath = null;
+        }
+
         if (newActiveNode !== oldActiveNode) {
             let oldActiveNodeFocused = false;
 
             if (oldActiveNode) {
                 oldActiveNodeFocused = oldActiveNode.hasFocus();
-
                 oldActiveNode.setActive(false);
                 oldActiveNode.setFocus(false);
             }
@@ -1197,7 +1254,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                 } else {
                     refreshCtx.noteIdsToUpdate.add(attrRow.noteId);
                 }
-            } else if (attrRow.type === "label" && attrRow.name === "archived" && attrRow.noteId) {
+            } else if (attrRow.type === "label" && (attrRow.name === "archived" || attrRow.name === "subtreeHidden") && attrRow.noteId) {
                 const note = froca.getNoteFromCache(attrRow.noteId);
 
                 if (note) {
@@ -1282,18 +1339,34 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     } else if (frocaBranch) {
                         // make sure it's loaded
                         // we're forcing lazy since it's not clear if the whole required subtree is in froca
-                        const newNode = this.prepareNode(frocaBranch, true);
-                        if (newNode) {
-                            parentNode.addChildren([newNode]);
-                        }
+                        if (!parentNode.data.subtreeHidden) {
+                            const newNode = this.prepareNode(frocaBranch, true);
+                            if (newNode) {
+                                parentNode.addChildren([newNode]);
+                            }
 
-                        if (frocaBranch?.isExpanded && note && note.hasChildren()) {
-                            refreshCtx.noteIdsToReload.add(frocaBranch.noteId);
-                        }
+                            if (frocaBranch?.isExpanded && note && note.hasChildren()) {
+                                refreshCtx.noteIdsToReload.add(frocaBranch.noteId);
+                            }
 
-                        this.sortChildren(parentNode);
+                            this.sortChildren(parentNode);
+                        } else if (branchRow.componentId === this.componentId) {
+                            // Display the toast and focus to parent note only if we know for sure that the operation comes from the tree.
+                            const parentNote = froca.getNoteFromCache(parentNode.data.noteId || "");
+                            toastService.showPersistent({
+                                id: `subtree-hidden-moved`,
+                                title: t("note_tree.subtree-hidden-moved-title", { title: parentNote?.title }),
+                                message: parentNote?.type === "book"
+                                    ? t("note_tree.subtree-hidden-moved-description-collection")
+                                    : t("note_tree.subtree-hidden-moved-description-other"),
+                                icon: "bx bx-hide",
+                                timeout: 5_000,
+                            });
+                            parentNode.setActive(true);
+                        }
 
                         // this might be a first child which would force an icon change
+                        // also update the count if the subtree is hidden.
                         if (branchRow.parentNoteId) {
                             refreshCtx.noteIdsToUpdate.add(branchRow.parentNoteId);
                         }
@@ -1601,7 +1674,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         const toNode = node.getPrevSibling();
 
         if (toNode !== null) {
-            branchService.moveToParentNote([node.data.branchId], toNode.data.branchId);
+            branchService.moveToParentNote([node.data.branchId], toNode.data.branchId, this.componentId);
         }
     }
 
@@ -1738,12 +1811,12 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     #moveLaunchers(selectedOrActiveBranchIds: string[], desktopParent: string, mobileParent: string) {
         const desktopLaunchersToMove = selectedOrActiveBranchIds.filter((branchId) => !branchId.startsWith("_lbMobile"));
         if (desktopLaunchersToMove) {
-            branchService.moveToParentNote(desktopLaunchersToMove, `_lbRoot_${  desktopParent}`);
+            branchService.moveToParentNote(desktopLaunchersToMove, `_lbRoot_${  desktopParent}`, this.componentId);
         }
 
         const mobileLaunchersToMove = selectedOrActiveBranchIds.filter((branchId) => branchId.startsWith("_lbMobile"));
         if (mobileLaunchersToMove) {
-            branchService.moveToParentNote(mobileLaunchersToMove, `_lbMobileRoot_${  mobileParent}`);
+            branchService.moveToParentNote(mobileLaunchersToMove, `_lbMobileRoot_${mobileParent}`, this.componentId);
         }
     }
 
@@ -1861,10 +1934,13 @@ function buildEnhanceTitle() {
         }
 
         // TODO: Deduplicate with server's notes.ts#getAndValidateParent
+        const isSubtreeHidden = note.isLabelTruthy("subtreeHidden");
         if (!["search", "launcher"].includes(note.type)
             && !note.isOptions()
             && !note.isLaunchBarConfig()
             && !note.noteId.startsWith("_help")
+            && !isSubtreeHidden
+            && !node.extraClasses.includes("spotlighted-node")
         ) {
             const createChildItem = createChildTemplate.cloneNode();
             createChildItem.addEventListener("click", cancelClickPropagation);
@@ -1906,6 +1982,14 @@ function buildEnhanceTitle() {
             const $sharedIndicator = $(`<span class="note-indicator-icon shared-indicator"></span>`);
             $sharedIndicator.attr("title", tooltipText);
             $span.find(".fancytree-title").append($sharedIndicator);
+        }
+
+        // Add a badge with the number of items if it hides children.
+        const count = note.getChildNoteIds().length;
+        if (isSubtreeHidden && count > 0) {
+            const $badge = $(`<span class="note-indicator-icon subtree-hidden-badge">${count}</span>`);
+            $badge.attr("title", t("note_tree.subtree-hidden-tooltip", { count }));
+            $span.find(".fancytree-title").append($badge);
         }
     };
 }
