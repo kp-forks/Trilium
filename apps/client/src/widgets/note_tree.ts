@@ -1306,7 +1306,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     }
 
     async #executeTreeUpdates(refreshCtx: RefreshContext, loadResults: LoadResults) {
-        await this.batchUpdate(async () => {
+        const batchUpdate = async () => {
             for (const noteId of refreshCtx.noteIdsToReload) {
                 for (const node of this.getNodesByNoteId(noteId)) {
                     await node.load(true);
@@ -1322,7 +1322,14 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     }
                 }
             }
-        });
+        };
+
+        if (refreshCtx.noteIdsToReload.size + refreshCtx.noteIdsToUpdate.size >= 10) {
+            // Despite the name, batchUpdate is actually slowing things down for smaller updates.
+            await this.batchUpdate(batchUpdate);
+        } else {
+            await batchUpdate();
+        }
 
         // for some reason, node update cannot be in the batchUpdate() block (node is not re-rendered)
         for (const noteId of refreshCtx.noteIdsToUpdate) {
