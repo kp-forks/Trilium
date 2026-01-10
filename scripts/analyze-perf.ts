@@ -1,5 +1,5 @@
-import * as fs from 'fs';
 import * as path from 'path';
+import * as http from "http";
 import { spawn } from 'child_process';
 
 interface PerfEntry {
@@ -240,13 +240,12 @@ async function makeHttpRequest(): Promise<void> {
     return new Promise((resolve) => {
         console.log('\n🌐 Making request to http://localhost:8080 to trigger Vite...');
 
-        const http = require('http');
-        const req = http.get('http://localhost:8080', (res: any) => {
+        const req = http.get('http://localhost:8080', (res: http.IncomingMessage) => {
             console.log(`   ✅ Response status: ${res.statusCode}`);
             console.log(`   Response headers:`, res.headers);
 
             let body = '';
-            res.on('data', (chunk: any) => {
+            res.on('data', (chunk: Buffer | string) => {
                 body += chunk;
             });
 
@@ -261,7 +260,7 @@ async function makeHttpRequest(): Promise<void> {
             });
         });
 
-        req.on('error', (err: any) => {
+        req.on('error', (err: Error) => {
             console.log(`   ❌ Request failed: ${err.message}`);
             resolve(); // Continue anyway
         });
@@ -299,7 +298,7 @@ async function runPerfAnalysis() {
 
         let lastActivityTime = Date.now();
         let maxTimeoutHandle: NodeJS.Timeout;
-        let inactivityCheckInterval: NodeJS.Interval;
+        let inactivityCheckInterval: NodeJS.Timeout;
         let serverStarted = false;
 
         const finishCollection = () => {
