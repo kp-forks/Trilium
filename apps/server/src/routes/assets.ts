@@ -39,7 +39,15 @@ async function register(app: express.Application) {
             root: clientDir,
             css: { devSourcemap: true }
         });
-        app.use(`/${assetUrlFragment}/`, vite.middlewares);
+        app.use(`/${assetUrlFragment}/`, (req, res, next) => {
+            if (req.url.startsWith("/images/")) {
+                // Images are served as static assets from the server.
+                next();
+                return;
+            }
+
+            vite.middlewares(req, res, next);
+        });
         app.get(`/`, [ rootLimiter, auth.checkAuth, csrfMiddleware ], (req, res, next) => {
             req.url = `/${assetUrlFragment}/src/index.html`;
             vite.middlewares(req, res, next);
