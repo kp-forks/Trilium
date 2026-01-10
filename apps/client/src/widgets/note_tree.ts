@@ -1271,7 +1271,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                 } else {
                     refreshCtx.noteIdsToUpdate.add(attrRow.noteId);
                 }
-            } else if (attrRow.type === "label" && attrRow.name === "archived" && attrRow.noteId) {
+            } else if (attrRow.type === "label" && (attrRow.name === "archived" || attrRow.name === "subtreeHidden") && attrRow.noteId) {
                 const note = froca.getNoteFromCache(attrRow.noteId);
 
                 if (note) {
