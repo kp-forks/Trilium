@@ -126,7 +126,9 @@ function analyzePerf(entries: PerfEntry[]) {
     console.log('\n📦 BY PACKAGE/CATEGORY:\n');
     const byPackage = new Map<string, AggregatedStats>();
     for (const entry of entries) {
-        let category = 'other';
+        let category = 'Other';
+        
+        // Check package prefixes first
         if (entry.file.startsWith('pkg:ckeditor5')) {
             category = 'CKEditor Core';
         } else if (entry.file.startsWith('pkg:')) {
@@ -139,8 +141,32 @@ function analyzePerf(entries: PerfEntry[]) {
             category = 'CodeMirror';
         } else if (entry.file.startsWith('deps:')) {
             category = 'Dependencies';
+        } 
+        // Break down app source files
+        else if (entry.file.includes('widgets/')) {
+            if (entry.file.includes('type_widgets/')) {
+                category = 'App: Type Widgets';
+            } else if (entry.file.includes('collections/')) {
+                category = 'App: Collections';
+            } else if (entry.file.includes('ribbon/')) {
+                category = 'App: Ribbon';
+            } else if (entry.file.includes('dialogs/')) {
+                category = 'App: Dialogs';
+            } else if (entry.file.includes('launch_bar/')) {
+                category = 'App: Launch Bar';
+            } else {
+                category = 'App: Widgets';
+            }
+        } else if (entry.file.includes('services/')) {
+            category = 'App: Services';
+        } else if (entry.file.includes('components/')) {
+            category = 'App: Components';
+        } else if (entry.file.includes('menus/')) {
+            category = 'App: Menus';
         } else if (entry.file.includes('.css')) {
             category = 'CSS';
+        } else if (entry.file.match(/\.(png|jpg|jpeg|svg|gif|woff|woff2|ttf|eot)$/i)) {
+            category = 'Assets';
         }
 
         if (!byPackage.has(category)) {
