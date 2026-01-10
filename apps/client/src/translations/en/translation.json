@@ -1777,10 +1777,9 @@
     "shared-indicator-tooltip": "This note is shared publicly",
     "shared-indicator-tooltip-with-url": "This note is shared publicly at: {{- url}}",
     "subtree-hidden-tooltip": "{{count}} child notes that are hidden from the tree",
-    "subtree-hidden-moved-title_one": "{{count}} note moved to {{title}}",
-    "subtree-hidden-moved-title_other": "{{count}} notes moved to {{title}}",
-    "subtree-hidden-moved-description-collection": "Items in this collection are managed by its views.",
-    "subtree-hidden-moved-description-other": "Items in this note are intentionally hidden."
+    "subtree-hidden-moved-title": "Added to {{title}}",
+    "subtree-hidden-moved-description-collection": "This collection hides its child notes in the tree.",
+    "subtree-hidden-moved-description-other": "Child notes are hidden in the tree for this note."
   },
   "title_bar_buttons": {
     "window-on-top": "Keep Window on Top"

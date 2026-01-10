@@ -555,19 +555,6 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                         } else if (data.hitMode === "after") {
                             branchService.moveAfterBranch(selectedBranchIds, node.data.branchId);
                         } else if (data.hitMode === "over") {
-                            const targetNote = froca.getNoteFromCache(node.data.noteId);
-                            if (targetNote?.isLabelTruthy("subtreeHidden")) {
-                                toastService.showPersistent({
-                                    id: `subtree-hidden-moved`,
-                                    title: t("note_tree.subtree-hidden-moved-title", { count: selectedBranchIds.length, title: targetNote.title }),
-                                    message: targetNote.type === "book"
-                                        ? t("note_tree.subtree-hidden-moved-description-collection")
-                                        : t("note_tree.subtree-hidden-moved-description-other"),
-                                    icon: "bx bx-hide",
-                                    timeout: 5_000,
-                                });
-                            }
-
                             branchService.moveToParentNote(selectedBranchIds, node.data.branchId);
                         } else {
                             throw new Error(`Unknown hitMode '${data.hitMode}'`);
@@ -773,12 +760,8 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
         const parentNote = froca.getNoteFromCache(branch.parentNoteId);
         if (parentNote?.isLabelTruthy("subtreeHidden")) {
-            const parentNode = node.getParent();
-            if (parentNode) {
-                parentNode.setActive(true);
-            }
             node.remove();
-            return;
+            return "removed-due-to-subtree-hidden";
         }
 
         const title = `${branch.prefix ? `${branch.prefix} - ` : ""}${note.title}`;
@@ -1402,10 +1385,29 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         });
 
         // for some reason, node update cannot be in the batchUpdate() block (node is not re-rendered)
+        let removedFromSubtreeParent: Fancytree.FancytreeNode | null = null;
         for (const noteId of refreshCtx.noteIdsToUpdate) {
             for (const node of this.getNodesByNoteId(noteId)) {
-                await this.updateNode(node);
+                const parent = node.parent;
+                const result = await this.updateNode(node);
+                if (result === "removed-due-to-subtree-hidden") {
+                    removedFromSubtreeParent = parent;
+                }
             }
+        }
+
+        if (removedFromSubtreeParent) {
+            removedFromSubtreeParent.setActive(true, { noEvents: true });
+            const targetNote = froca.getNoteFromCache(removedFromSubtreeParent.data.noteId || "");
+            toastService.showPersistent({
+                id: `subtree-hidden-moved`,
+                title: t("note_tree.subtree-hidden-moved-title", { title: targetNote?.title }),
+                message: targetNote?.type === "book"
+                    ? t("note_tree.subtree-hidden-moved-description-collection")
+                    : t("note_tree.subtree-hidden-moved-description-other"),
+                icon: "bx bx-hide",
+                timeout: 5_000,
+            });
         }
     }
 
