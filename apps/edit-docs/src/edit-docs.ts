@@ -10,6 +10,7 @@ import fsExtra from "fs-extra";
 import yaml from "js-yaml";
 import path from "path";
 
+import packageJson from "../package.json" with { type: "json" };
 import { extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
 
 interface NoteMapping {
@@ -25,25 +26,81 @@ interface Config {
     noteMappings: NoteMapping[];
 }
 
-// Configuration variables
+// Parse command-line arguments
+function parseArgs() {
+    const args = process.argv.slice(2);
+    let configPath: string | undefined;
+    let showHelp = false;
+    let showVersion = false;
+
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--config' || args[i] === '-c') {
+            configPath = args[i + 1];
+            i++; // Skip the next argument as it's the value
+        } else if (args[i] === '--help' || args[i] === '-h') {
+            showHelp = true;
+        } else if (args[i] === '--version' || args[i] === '-v') {
+            showVersion = true;
+        }
+    }
+
+    return { configPath, showHelp, showVersion };
+}
+
+function getVersion(): string {
+    return packageJson.version;
+}
+
+function printHelp() {
+    const version = getVersion();
+    console.log(`
+Usage: trilium-edit-docs [options]
+
+Options:
+  -c, --config <path>  Path to the configuration file (default: edit-docs-config.yaml in the root)
+  -h, --help           Display this help message
+  -v, --version        Display version information
+
+Version: ${version}
+`);
+}
+
+function printVersion() {
+    const version = getVersion();
+    console.log(version);
+}
+
+const { configPath, showHelp, showVersion } = parseArgs();
+
+if (showHelp) {
+    printHelp();
+    process.exit(0);
+} else if (showVersion) {
+    printVersion();
+    process.exit(0);
+}
+
+// Configuration variables to be initialized
 let BASE_URL: string;
 let NOTE_MAPPINGS: NoteMapping[];
 
 // Load configuration from edit-docs-config.yaml
 async function loadConfig() {
-    const CONFIG_PATH = path.join(__dirname, "../../../edit-docs-config.yaml");
+    const CONFIG_PATH = configPath
+        ? path.resolve(configPath)
+        : path.join(__dirname, "../../../edit-docs-config.yaml");
+
     const configContent = await fs.readFile(CONFIG_PATH, "utf-8");
     const config = yaml.load(configContent) as Config;
 
     BASE_URL = config.baseUrl;
-    // Resolve all paths relative to the repository root
-    const REPO_ROOT = path.join(__dirname, "../../..");
+    // Resolve all paths relative to the config file's directory (for flexibility with external configs)
+    const CONFIG_DIR = path.dirname(CONFIG_PATH);
     NOTE_MAPPINGS = config.noteMappings.map((mapping) => ({
         ...mapping,
-        path: path.join(REPO_ROOT, mapping.path)
+        path: path.resolve(CONFIG_DIR, mapping.path)
     }));
 }
-
 
 async function main() {
     await loadConfig();
