@@ -1118,12 +1118,6 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
             if (oldActiveNode) {
                 oldActiveNodeFocused = oldActiveNode.hasFocus();
-
-                if (this.spotlightedNode === oldActiveNode) {
-                    this.spotlightedNode.remove();
-                    this.spotlightedNode = null;
-                    this.spotlightedNotePath = null;
-                }
                 oldActiveNode.setActive(false);
                 oldActiveNode.setFocus(false);
             }

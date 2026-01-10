@@ -1776,7 +1776,8 @@
     "clone-indicator-tooltip-single": "This note is cloned (1 additional parent: {{- parent}})",
     "shared-indicator-tooltip": "This note is shared publicly",
     "shared-indicator-tooltip-with-url": "This note is shared publicly at: {{- url}}",
-    "subtree-hidden-tooltip": "{{count}} child notes that are hidden from the tree",
+    "subtree-hidden-tooltip_one": "{{count}} child note that is hidden from the tree",
+    "subtree-hidden-tooltip_other": "{{count}} child notes that are hidden from the tree",
     "subtree-hidden-moved-title": "Added to {{title}}",
     "subtree-hidden-moved-description-collection": "This collection hides its child notes in the tree.",
     "subtree-hidden-moved-description-other": "Child notes are hidden in the tree for this note."
