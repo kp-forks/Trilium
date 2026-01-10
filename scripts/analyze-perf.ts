@@ -235,6 +235,45 @@ function analyzePerf(entries: PerfEntry[]) {
     console.log('\n' + '='.repeat(80) + '\n');
 }
 
+// Helper to make HTTP request to trigger Vite rendering
+async function makeHttpRequest(): Promise<void> {
+    return new Promise((resolve) => {
+        console.log('\n🌐 Making request to http://localhost:8080 to trigger Vite...');
+
+        const http = require('http');
+        const req = http.get('http://localhost:8080', (res: any) => {
+            console.log(`   ✅ Response status: ${res.statusCode}`);
+            console.log(`   Response headers:`, res.headers);
+
+            let body = '';
+            res.on('data', (chunk: any) => {
+                body += chunk;
+            });
+
+            res.on('end', () => {
+                console.log(`   Response body length: ${body.length} bytes`);
+                if (body.length < 1000) {
+                    console.log(`   Response body: ${body}`);
+                } else {
+                    console.log(`   Response body preview (first 500 chars):\n${body.substring(0, 500)}`);
+                }
+                resolve();
+            });
+        });
+
+        req.on('error', (err: any) => {
+            console.log(`   ❌ Request failed: ${err.message}`);
+            resolve(); // Continue anyway
+        });
+
+        req.setTimeout(5000, () => {
+            console.log(`   ⏱️  Request timed out after 5 seconds`);
+            req.destroy();
+            resolve();
+        });
+    });
+}
+
 // Main - runs pnpm server:start and analyzes output automatically
 async function runPerfAnalysis() {
     console.log('🚀 Starting pnpm server:start with DEBUG=vite:*...\n');
@@ -245,7 +284,11 @@ async function runPerfAnalysis() {
 
     return new Promise<void>((resolve, reject) => {
         const child = spawn('pnpm', ['server:start'], {
-            env: { ...process.env, DEBUG: 'vite:*' },
+            env: {
+                ...process.env,
+                DEBUG: 'vite:*',
+                TRILIUM_GENERAL_NOAUTHENTICATION: '1'
+            },
             shell: true,
             cwd: path.join(__dirname, '..'),
             stdio: ['ignore', 'pipe', 'pipe']
@@ -254,28 +297,22 @@ async function runPerfAnalysis() {
         child.stdout?.setEncoding('utf8');
         child.stderr?.setEncoding('utf8');
 
-        child.stdout?.on('data', (data) => {
-            dataCount++;
-            const text = String(data);
-            lines.push(...text.split('\n'));
-            process.stdout.write('.');
-        });
+        let lastActivityTime = Date.now();
+        let maxTimeoutHandle: NodeJS.Timeout;
+        let inactivityCheckInterval: NodeJS.Interval;
+        let serverStarted = false;
 
-        child.stderr?.on('data', (data) => {
-            dataCount++;
-            const text = String(data);
-            lines.push(...text.split('\n'));
-            process.stdout.write('.');
-        });
-
-        // Wait 60 seconds then kill the process
-        setTimeout(() => {
+        const finishCollection = () => {
+            clearTimeout(maxTimeoutHandle);
+            clearInterval(inactivityCheckInterval);
             child.kill('SIGTERM');
 
             // Give it a moment to clean up
             setTimeout(() => {
+                const elapsedSeconds = ((Date.now() - lastActivityTime) / 1000).toFixed(1);
                 console.log('\n\n✅ Collected output, analyzing...\n');
                 console.log(`   Received ${dataCount} data chunks, ${lines.length} lines`);
+                console.log(`   Last activity was ${elapsedSeconds}s ago`);
 
                 const entries = parsePerfFromLines(lines);
                 console.log(`📊 Found ${entries.length} performance entries`);
@@ -294,7 +331,47 @@ async function runPerfAnalysis() {
                 analyzePerf(entries);
                 resolve();
             }, 1000);
+        };
+
+        child.stdout?.on('data', (data) => {
+            dataCount++;
+            lastActivityTime = Date.now();
+            const text = String(data);
+            lines.push(...text.split('\n'));
+            process.stdout.write('.');
+
+            // Check if server has started
+            if (!serverStarted && text.includes('Listening on')) {
+                serverStarted = true;
+                // Wait 2 seconds for Vite to initialize, then make a request
+                setTimeout(async () => {
+                    await makeHttpRequest();
+                }, 2000);
+            }
+        });
+
+        child.stderr?.on('data', (data) => {
+            dataCount++;
+            lastActivityTime = Date.now();
+            const text = String(data);
+            lines.push(...text.split('\n'));
+            process.stdout.write('.');
+        });
+
+        // Maximum timeout of 60 seconds
+        maxTimeoutHandle = setTimeout(() => {
+            console.log('\n⏱️  Reached 60 second maximum timeout');
+            finishCollection();
         }, 60000);
+
+        // Check every second for 10 seconds of inactivity
+        inactivityCheckInterval = setInterval(() => {
+            const inactiveSeconds = (Date.now() - lastActivityTime) / 1000;
+            if (inactiveSeconds >= 10) {
+                console.log('\n⏱️  No activity for 10 seconds, finishing...');
+                finishCollection();
+            }
+        }, 1000);
 
         child.on('error', (error) => {
             console.error(`❌ Failed to start process: ${error.message}`);
