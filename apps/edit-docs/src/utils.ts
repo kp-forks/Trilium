@@ -7,18 +7,21 @@ import type { WriteStream } from "fs";
 import fs from "fs/promises";
 import fsExtra from "fs-extra";
 import path from "path";
-import { resolve } from "path";
 
-import { deferred, DeferredPromise } from "../../../packages/commons/src";
+import { deferred, type DeferredPromise } from "../../../packages/commons/src/index.js";
 
-export function initializeDatabase(skipDemoDb: boolean) {
-    return new Promise<void>(async (resolve) => {
-        const sqlInit = (await import("@triliumnext/server/src/services/sql_init.js")).default;
-        cls.init(async () => {
-            if (!sqlInit.isDbInitialized()) {
-                await sqlInit.createInitialDatabase(skipDemoDb);
-            }
-            resolve();
+export function initializeDatabase(skipDemoDb: boolean): Promise<void> {
+    return new Promise<void>((resolve) => {
+        import("@triliumnext/server/src/services/sql_init.js").then((m) => {
+            const sqlInit = m.default;
+            cls.init(async () => {
+                if (!sqlInit.isDbInitialized()) {
+                    sqlInit.createInitialDatabase(skipDemoDb).then(() => resolve());
+                } else {
+                    sqlInit.dbReady.resolve();
+                    resolve();
+                }
+            });
         });
     });
 }
@@ -78,7 +81,6 @@ async function createImportZip(path: string) {
         zlib: { level: 0 }
     });
 
-    console.log("Archive path is ", resolve(path));
     archive.directory(path, "/");
 
     const outputStream = fsExtra.createWriteStream(inputFile);
@@ -93,9 +95,11 @@ async function createImportZip(path: string) {
 }
 
 function waitForEnd(archive: Archiver, stream: WriteStream) {
-    return new Promise<void>(async (res, rej) => {
-        stream.on("finish", () => res());
-        await archive.finalize();
+    return new Promise<void>((res, rej) => {
+        stream.on("finish", res);
+        stream.on("error", rej);
+        archive.on("error", rej);
+        archive.finalize().catch(rej);
     });
 }
 

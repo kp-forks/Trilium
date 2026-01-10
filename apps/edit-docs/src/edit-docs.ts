@@ -36,6 +36,10 @@ function parseArgs() {
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--config' || args[i] === '-c') {
             configPath = args[i + 1];
+            if (!configPath) {
+                console.error("Error: --config/-c requires a path argument");
+                process.exit(1);
+            }
             i++; // Skip the next argument as it's the value
         } else if (args[i] === '--help' || args[i] === '-h') {
             showHelp = true;
@@ -86,9 +90,15 @@ let NOTE_MAPPINGS: NoteMapping[];
 
 // Load configuration from edit-docs-config.yaml
 async function loadConfig() {
-    const CONFIG_PATH = configPath
+    let CONFIG_PATH = configPath
         ? path.resolve(configPath)
-        : path.join(__dirname, "../../../edit-docs-config.yaml");
+        : path.join(process.cwd(), "edit-docs-config.yaml");
+
+    const exists = await fs.access(CONFIG_PATH).then(() => true).catch(() => false);
+    if (!exists && !configPath) {
+        // Fallback to project root if running from within a subproject
+        CONFIG_PATH = path.join(__dirname, "../../../edit-docs-config.yaml");
+    }
 
     const configContent = await fs.readFile(CONFIG_PATH, "utf-8");
     const config = yaml.load(configContent) as Config;
@@ -106,11 +116,17 @@ async function main() {
     await loadConfig();
     const initializedPromise = startElectron(() => {
         // Wait for the import to be finished and the application to be loaded before we listen to changes.
-        setTimeout(() => registerHandlers(), 10_000);
+        setTimeout(() => {
+            registerHandlers();
+        }, 10_000);
     });
 
     await initializeTranslations();
     await initializeDatabase(true);
+
+    // Wait for becca to be loaded before importing data
+    const beccaLoader = await import("@triliumnext/server/src/becca/becca_loader.js");
+    await beccaLoader.beccaLoaded;
 
     cls.init(async () => {
         for (const mapping of NOTE_MAPPINGS) {
@@ -248,7 +264,6 @@ async function registerHandlers() {
             return;
         }
 
-        console.log("Got entity changed", e.entityName, e.entity.title);
         debouncer();
     });
 }
