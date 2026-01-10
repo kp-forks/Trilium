@@ -1,14 +1,16 @@
-import fs from "fs/promises";
-import fsExtra from "fs-extra";
-import path from "path";
-import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
-import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
 import debounce from "@triliumnext/client/src/services/debounce.js";
-import { extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
 import cls from "@triliumnext/server/src/services/cls.js";
 import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/server/src/services/export/zip/abstract_provider.js";
+import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
 import { parseNoteMetaFile } from "@triliumnext/server/src/services/in_app_help.js";
+import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
 import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
+import fs from "fs/promises";
+import fsExtra from "fs-extra";
+import yaml from "js-yaml";
+import path from "path";
+
+import { extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
 
 interface NoteMapping {
     rootNoteId: string;
@@ -18,39 +20,33 @@ interface NoteMapping {
     exportOnly?: boolean;
 }
 
-const { DOCS_ROOT, USER_GUIDE_ROOT } = process.env;
-if (!DOCS_ROOT || !USER_GUIDE_ROOT) {
-    throw new Error("Missing DOCS_ROOT or USER_GUIDE_ROOT environment variable.");
+interface Config {
+    baseUrl: string;
+    noteMappings: NoteMapping[];
 }
 
-const BASE_URL = "https://docs.triliumnotes.org";
+// Configuration variables
+let BASE_URL: string;
+let NOTE_MAPPINGS: NoteMapping[];
 
-const NOTE_MAPPINGS: NoteMapping[] = [
-    {
-        rootNoteId: "pOsGYCXsbNQG",
-        path: path.join(__dirname, DOCS_ROOT, "User Guide"),
-        format: "markdown"
-    },
-    {
-        rootNoteId: "pOsGYCXsbNQG",
-        path: path.join(__dirname, USER_GUIDE_ROOT),
-        format: "html",
-        ignoredFiles: ["index.html", "navigation.html", "style.css", "User Guide.html"],
-        exportOnly: true
-    },
-    {
-        rootNoteId: "jdjRLhLV3TtI",
-        path: path.join(__dirname, DOCS_ROOT, "Developer Guide"),
-        format: "markdown"
-    },
-    {
-        rootNoteId: "hD3V4hiu2VW4",
-        path: path.join(__dirname, DOCS_ROOT, "Release Notes"),
-        format: "markdown"
-    }
-];
+// Load configuration from edit-docs-config.yaml
+async function loadConfig() {
+    const CONFIG_PATH = path.join(__dirname, "../../../edit-docs-config.yaml");
+    const configContent = await fs.readFile(CONFIG_PATH, "utf-8");
+    const config = yaml.load(configContent) as Config;
+
+    BASE_URL = config.baseUrl;
+    // Resolve all paths relative to the repository root
+    const REPO_ROOT = path.join(__dirname, "../../..");
+    NOTE_MAPPINGS = config.noteMappings.map((mapping) => ({
+        ...mapping,
+        path: path.join(REPO_ROOT, mapping.path)
+    }));
+}
+
 
 async function main() {
+    await loadConfig();
     const initializedPromise = startElectron(() => {
         // Wait for the import to be finished and the application to be loaded before we listen to changes.
         setTimeout(() => registerHandlers(), 10_000);
