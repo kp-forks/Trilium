@@ -1,5 +1,4 @@
 /// <reference types='vitest' />
-import preact from "@preact/preset-vite";
 import { join, resolve } from 'path';
 import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import { defineConfig, type Plugin } from 'vite';
@@ -8,15 +7,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 
 const isDev = process.env.NODE_ENV === "development";
-let plugins: any = [
-    preact({
-        // Disable Babel in dev for faster transforms (use esbuild instead)
-        // Babel takes ~2.5s per TSX file, esbuild takes ~100ms
-        babel: isDev ? undefined : {
-            compact: true
-        }
-    })
-];
+let plugins: any = [];
 
 if (!isDev) {
     plugins = [
@@ -45,6 +36,12 @@ export default defineConfig(() => ({
     cacheDir: '../../.cache/vite',
     base: "",
     plugins,
+    // Use esbuild for JSX transformation (much faster than Babel)
+    esbuild: {
+        jsx: 'automatic',
+        jsxImportSource: 'preact',
+        jsxDev: isDev
+    },
     css: {
         // Use Lightning CSS (Rust-based) for much faster CSS transforms
         transformer: 'lightningcss',
