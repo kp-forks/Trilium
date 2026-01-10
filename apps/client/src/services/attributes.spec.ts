@@ -110,4 +110,42 @@ describe("Set boolean with inheritance", () => {
         await setBooleanWithInheritance(childNote, "foo", true);
         expect(server.remove).toHaveBeenCalledWith(`notes/${childNote.noteId}/attributes/${childNote.getLabel("foo")!.attributeId}`);
     });
+
+    it("overrides boolean with inherited false", async () => {
+        const parentNote = buildNote({
+            title: "Parent note",
+            "#foo(inheritable)": "false",
+            "children": [
+                {
+                    title: "Child note"
+                }
+            ]
+        });
+        const childNote = froca.getNoteFromCache(parentNote.children[0])!;
+        expect(childNote.isLabelTruthy("foo")).toBe(false);
+        await setBooleanWithInheritance(childNote, "foo", true);
+        expect(server.put).toHaveBeenCalledWith(`notes/${childNote.noteId}/set-attribute`, {
+            type: "label",
+            name: "foo",
+            value: "",
+            isInheritable: false
+        });
+    });
+
+    it("deletes override boolean with inherited false with already existing value", async () => {
+        const parentNote = buildNote({
+            title: "Parent note",
+            "#foo(inheritable)": "false",
+            "children": [
+                {
+                    title: "Child note",
+                    "#foo": "false",
+                }
+            ]
+        });
+        const childNote = froca.getNoteFromCache(parentNote.children[0])!;
+        expect(childNote.isLabelTruthy("foo")).toBe(false);
+        await setBooleanWithInheritance(childNote, "foo", true);
+        expect(server.remove).toHaveBeenCalledWith(`notes/${childNote.noteId}/attributes/${childNote.getLabel("foo")!.attributeId}`);
+    });
 });

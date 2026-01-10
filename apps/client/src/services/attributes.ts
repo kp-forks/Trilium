@@ -48,7 +48,7 @@ export async function setBooleanWithInheritance(note: FNote, labelName: string, 
     if (actualValue === value) return;
 
     if (value) {
-        if (note.getLabelValue(labelName) === "false") {
+        if (note.getOwnedLabelValue(labelName) === "false") {
             // Remove the override so that the inherited true takes effect.
             removeOwnedLabelByName(note, labelName);
         } else {
