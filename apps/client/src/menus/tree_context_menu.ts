@@ -73,6 +73,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
 
         const notSearch = note?.type !== "search";
         const hasSubtreeHidden = note?.isLabelTruthy("subtreeHidden") ?? false;
+        const isSpotlighted = this.node.extraClasses.includes("spotlighted-node");
         const notOptionsOrHelp = !note?.noteId.startsWith("_options") && !note?.noteId.startsWith("_help");
         const parentNotSearch = !parentNote || parentNote.type !== "search";
         const insertNoteAfterEnabled = isNotRoot && !isHoisted && parentNotSearch;
@@ -113,7 +114,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
                 keyboardShortcut: "createNoteInto",
                 uiIcon: "bx bx-plus",
                 items: notSearch ? await noteTypesService.getNoteTypeItems("insertChildNote") : null,
-                enabled: notSearch && noSelectedNotes && notOptionsOrHelp && !hasSubtreeHidden,
+                enabled: notSearch && noSelectedNotes && notOptionsOrHelp && !hasSubtreeHidden && !isSpotlighted,
                 columns: 2
             },
 

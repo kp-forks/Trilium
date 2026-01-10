@@ -1940,6 +1940,7 @@ function buildEnhanceTitle() {
             && !note.isLaunchBarConfig()
             && !note.noteId.startsWith("_help")
             && !isSubtreeHidden
+            && !node.extraClasses.includes("spotlighted-node")
         ) {
             const createChildItem = createChildTemplate.cloneNode();
             createChildItem.addEventListener("click", cancelClickPropagation);
