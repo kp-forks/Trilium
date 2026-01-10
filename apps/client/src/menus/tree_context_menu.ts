@@ -72,7 +72,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
         const noSelectedNotes = selNodes.length === 0 || (selNodes.length === 1 && selNodes[0] === this.node);
 
         const notSearch = note?.type !== "search";
-        const hasSubtreeHidden = note?.hasLabel("subtreeHidden") ?? false;
+        const hasSubtreeHidden = note?.isLabelTruthy("subtreeHidden") ?? false;
         const notOptionsOrHelp = !note?.noteId.startsWith("_options") && !note?.noteId.startsWith("_help");
         const parentNotSearch = !parentNote || parentNote.type !== "search";
         const insertNoteAfterEnabled = isNotRoot && !isHoisted && parentNotSearch;

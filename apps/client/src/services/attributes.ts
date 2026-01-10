@@ -37,6 +37,8 @@ export async function setRelation(noteId: string, name: string, value: string = 
  * will be removed. If the label is inherited from a parent note, it will be overridden to `false`. If the label does
  * not exist, it will be added with an empty value.
  *
+ * When checking if the boolean value is set, don't use `note.hasLabel`; instead use `note.isLabelTruthy`.
+ *
  * @param note the note on which to toggle the label.
  * @param labelName the name of the label to toggle.
  */

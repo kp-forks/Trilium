@@ -556,7 +556,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                             branchService.moveAfterBranch(selectedBranchIds, node.data.branchId);
                         } else if (data.hitMode === "over") {
                             const targetNote = froca.getNoteFromCache(node.data.noteId);
-                            if (targetNote?.hasLabel("subtreeHidden")) {
+                            if (targetNote?.isLabelTruthy("subtreeHidden")) {
                                 toastService.showPersistent({
                                     id: `subtree-hidden-moved`,
                                     title: t("note_tree.subtree-hidden-moved-title", { count: selectedBranchIds.length, title: targetNote.title }),
@@ -724,7 +724,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             childBranches = childBranches.slice(0, MAX_SEARCH_RESULTS_IN_TREE);
         }
 
-        if (parentNote.hasLabel("subtreeHidden")) {
+        if (parentNote.isLabelTruthy("subtreeHidden")) {
             // If we have a spotlighted note path, show only the child that leads to it
             if (this.spotlightedNotePath) {
                 const spotlightPathSegments = this.spotlightedNotePath.split('/');
@@ -772,7 +772,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         }
 
         const parentNote = froca.getNoteFromCache(branch.parentNoteId);
-        if (parentNote?.hasLabel("subtreeHidden")) {
+        if (parentNote?.isLabelTruthy("subtreeHidden")) {
             const parentNode = node.getParent();
             if (parentNode) {
                 parentNode.setActive(true);
@@ -1040,7 +1040,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
                         // The child note can be part of a note with #subtreeHidden, case in which we need to "spotlight" it.
                         const parentNote = froca.getNoteFromCache(parentNode.data.noteId);
-                        if (parentNote?.hasLabel("subtreeHidden")) {
+                        if (parentNote?.isLabelTruthy("subtreeHidden")) {
                             // Enable spotlight mode and reload the parent to show only the path to this note
                             this.spotlightedNotePath = notePath;
                             await parentNode.load(true);
@@ -1924,7 +1924,7 @@ function buildEnhanceTitle() {
         }
 
         // TODO: Deduplicate with server's notes.ts#getAndValidateParent
-        const isSubtreeHidden = note.hasLabel("subtreeHidden");
+        const isSubtreeHidden = note.isLabelTruthy("subtreeHidden");
         if (!["search", "launcher"].includes(note.type)
             && !note.isOptions()
             && !note.isLaunchBarConfig()
