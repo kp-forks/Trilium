@@ -151,8 +151,17 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
 
                     { kind: "separator" },
 
-                    { title: t("tree-context-menu.expand-subtree"), command: "expandSubtree", keyboardShortcut: "expandSubtree", uiIcon: "bx bx-expand", enabled: noSelectedNotes },
-                    { title: t("tree-context-menu.collapse-subtree"), command: "collapseSubtree", keyboardShortcut: "collapseSubtree", uiIcon: "bx bx-collapse", enabled: noSelectedNotes },
+                    !hasSubtreeHidden && { title: t("tree-context-menu.expand-subtree"), command: "expandSubtree", keyboardShortcut: "expandSubtree", uiIcon: "bx bx-expand", enabled: noSelectedNotes },
+                    !hasSubtreeHidden && { title: t("tree-context-menu.collapse-subtree"), command: "collapseSubtree", keyboardShortcut: "collapseSubtree", uiIcon: "bx bx-collapse", enabled: noSelectedNotes },
+                    {
+                        title: hasSubtreeHidden ? t("tree-context-menu.show-subtree") : t("tree-context-menu.hide-subtree"),
+                        uiIcon: "bx bx-show",
+                        handler: async () => {
+                            const note = await froca.getNote(this.node.data.noteId);
+                            if (!note) return;
+                            attributes.toggleBooleanWithInheritance(note, "subtreeHidden");
+                        }
+                    },
                     {
                         title: t("tree-context-menu.sort-by"),
                         command: "sortChildNotes",
@@ -165,7 +174,7 @@ export default class TreeContextMenu implements SelectMenuItemEventListener<Tree
 
                     { title: t("tree-context-menu.copy-note-path-to-clipboard"), command: "copyNotePathToClipboard", uiIcon: "bx bx-directions", enabled: true },
                     { title: t("tree-context-menu.recent-changes-in-subtree"), command: "recentChangesInSubtree", uiIcon: "bx bx-history", enabled: noSelectedNotes && notOptionsOrHelp }
-                ]
+                ].filter(Boolean) as MenuItem<TreeCommandNames>[]
             },
 
             { kind: "separator" },

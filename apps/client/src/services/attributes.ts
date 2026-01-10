@@ -1,14 +1,15 @@
-import server from "./server.js";
-import froca from "./froca.js";
-import type FNote from "../entities/fnote.js";
-import type { AttributeRow } from "./load_results.js";
 import { AttributeType } from "@triliumnext/commons";
+
+import type FNote from "../entities/fnote.js";
+import froca from "./froca.js";
+import type { AttributeRow } from "./load_results.js";
+import server from "./server.js";
 
 async function addLabel(noteId: string, name: string, value: string = "", isInheritable = false) {
     await server.put(`notes/${noteId}/attribute`, {
         type: "label",
-        name: name,
-        value: value,
+        name,
+        value,
         isInheritable
     });
 }
@@ -16,8 +17,8 @@ async function addLabel(noteId: string, name: string, value: string = "", isInhe
 export async function setLabel(noteId: string, name: string, value: string = "", isInheritable = false) {
     await server.put(`notes/${noteId}/set-attribute`, {
         type: "label",
-        name: name,
-        value: value,
+        name,
+        value,
         isInheritable
     });
 }
@@ -25,10 +26,31 @@ export async function setLabel(noteId: string, name: string, value: string = "",
 export async function setRelation(noteId: string, name: string, value: string = "", isInheritable = false) {
     await server.put(`notes/${noteId}/set-attribute`, {
         type: "relation",
-        name: name,
-        value: value,
+        name,
+        value,
         isInheritable
     });
+}
+
+/**
+ * Toggles a boolean label on the given note, taking inheritance into account. If the label is owned by the note, it
+ * will be removed. If the label is inherited from a parent note, it will be overridden to `false`. If the label does
+ * not exist, it will be added with an empty value.
+ *
+ * @param note the note on which to toggle the label.
+ * @param labelName the name of the label to toggle.
+ */
+export async function toggleBooleanWithInheritance(note: FNote, labelName: string) {
+    if (note.hasLabel(labelName)) {
+        // Can either be owned by us or inherited from parent.
+        if (note.hasOwnedLabel(labelName)) {
+            removeOwnedLabelByName(note, labelName);
+        } else {
+            setLabel(note.noteId, labelName, "false");
+        }
+    } else {
+        addLabel(note.noteId, labelName);
+    }
 }
 
 async function removeAttributeById(noteId: string, attributeId: string) {
@@ -142,6 +164,7 @@ export default {
     setLabel,
     setRelation,
     setAttribute,
+    toggleBooleanWithInheritance,
     removeAttributeById,
     removeOwnedLabelByName,
     removeOwnedRelationByName,

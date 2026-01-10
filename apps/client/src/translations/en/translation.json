@@ -1655,6 +1655,8 @@
     "advanced": "Advanced",
     "expand-subtree": "Expand subtree",
     "collapse-subtree": "Collapse subtree",
+    "hide-subtree": "Hide subtree",
+    "show-subtree": "Show subtree",
     "sort-by": "Sort by...",
     "recent-changes-in-subtree": "Recent changes in subtree",
     "convert-to-attachment": "Convert to attachment",
