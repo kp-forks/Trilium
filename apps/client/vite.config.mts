@@ -85,8 +85,7 @@ export default defineConfig(() => ({
         sourcemap: false,
         rollupOptions: {
             input: {
-                desktop: join(__dirname, "src", "desktop.ts"),
-                mobile: join(__dirname, "src", "mobile.ts"),
+                index: join(__dirname, "src", "index.html"),
                 login: join(__dirname, "src", "login.ts"),
                 setup: join(__dirname, "src", "setup.ts"),
                 set_password: join(__dirname, "src", "set_password.ts"),
@@ -95,11 +94,10 @@ export default defineConfig(() => ({
             },
             output: {
                 entryFileNames: "src/[name].js",
-                chunkFileNames: "src/[name].js",
-                assetFileNames: "src/[name].[ext]",
+                chunkFileNames: "src/[name]-[hash].js",
+                assetFileNames: "src/[name]-[hash].[ext]",
                 manualChunks: {
-                    "ckeditor5": [ "@triliumnext/ckeditor5" ],
-                    "boxicons": [ "../../node_modules/boxicons/css/boxicons.min.css" ]
+                    "ckeditor5": [ "@triliumnext/ckeditor5" ]
                 },
             },
             onwarn(warning, rollupWarn) {
