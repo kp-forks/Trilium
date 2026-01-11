@@ -48,7 +48,7 @@
     "@playwright/test": "1.57.0",
     "@triliumnext/server": "workspace:*",
     "@types/express": "5.0.6",
-    "@types/node": "24.10.4",
+    "@types/node": "24.10.7",
     "@vitest/browser-webdriverio": "4.0.16",
     "@vitest/coverage-v8": "4.0.16",
     "@vitest/ui": "4.0.16",
