@@ -74,14 +74,7 @@ export default defineConfig(() => ({
         include: [
             "ckeditor5-premium-features",
             "ckeditor5",
-            "mathlive",
-            "@triliumnext/ckeditor5-math",
-            "@triliumnext/ckeditor5-mermaid",
-            "@triliumnext/ckeditor5-admonition",
-            "@triliumnext/ckeditor5-footnotes",
-            "@triliumnext/ckeditor5-keyboard-marker",
-            "@triliumnext/codemirror",
-            "@triliumnext/highlightjs"
+            "mathlive"
         ]
     },
     build: {
