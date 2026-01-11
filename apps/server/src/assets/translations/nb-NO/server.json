@@ -10,5 +10,8 @@
     "creating-and-moving-notes": "Lage og flytte notater",
     "dialogs": "Dialogbokser",
     "other": "Andre"
+  },
+  "setup_sync-from-desktop": {
+    "step6-here": "her"
   }
 }
