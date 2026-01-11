@@ -45,5 +45,20 @@
   "export": {
     "close": "Lukk",
     "export": "Eksporter"
+  },
+  "note_type_chooser": {
+    "templates": "Maler"
+  },
+  "help": {
+    "title": "Hurtigveiledning",
+    "troubleshooting": "Feilsøking",
+    "other": "Andre"
+  },
+  "import": {
+    "options": "Alternativer",
+    "import": "Importer"
+  },
+  "include_note": {
+    "label_note": "Notat"
   }
 }
