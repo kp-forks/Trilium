@@ -1,13 +1,11 @@
 import { buildExtraCommands, type EditorConfig, getCkLocale, loadPremiumPlugins, TemplateDefinition } from "@triliumnext/ckeditor5";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/src/emoji_definitions/en.json?url";
-import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO } from "@triliumnext/commons";
-import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
 import { t } from "../../../services/i18n.js";
 import { getMermaidConfig } from "../../../services/mermaid.js";
-import { getHighlightJsNameForMime } from "../../../services/mime_types.js";
-import mimeTypesService from "../../../services/mime_types.js";
+import { default as mimeTypesService, getHighlightJsNameForMime } from "../../../services/mime_types.js";
 import noteAutocompleteService, { type Suggestion } from "../../../services/note_autocomplete.js";
 import options from "../../../services/options.js";
 import { ensureMimeTypesForHighlighting, isSyntaxHighlightEnabled } from "../../../services/syntax_highlight.js";
