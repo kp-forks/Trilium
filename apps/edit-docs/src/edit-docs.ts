@@ -138,7 +138,7 @@ async function exportData(noteId: string, format: ExportFormat, outputPath: stri
         }
     }
 
-    const minifyMeta = (format === "html");
+    const minifyMeta = (format === "html" || format === "share");
     await cleanUpMeta(outputPath, minifyMeta);
 }
 
