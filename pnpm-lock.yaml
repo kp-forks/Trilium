@@ -745,8 +745,8 @@ importers:
         specifier: 0.6.3
         version: 0.6.3
       openai:
-        specifier: 6.15.0
-        version: 6.15.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12)
+        specifier: 6.16.0
+        version: 6.16.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12)
       rand-token:
         specifier: 1.0.1
         version: 1.0.1
@@ -11053,8 +11053,8 @@ packages:
     resolution: {integrity: sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA==}
     engines: {node: '>=18'}
 
-  openai@6.15.0:
-    resolution: {integrity: sha512-F1Lvs5BoVvmZtzkUEVyh8mDQPPFolq4F+xdsx/DO8Hee8YF3IGAlZqUIsF+DVGhqf4aU0a3bTghsxB6OIsRy1g==}
+  openai@6.16.0:
+    resolution: {integrity: sha512-fZ1uBqjFUjXzbGc35fFtYKEOxd20kd9fDpFeqWtsOZWiubY8CZ1NAlXHW3iathaFvqmNtCWMIsosCuyeI7Joxg==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -15241,8 +15241,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.3.0
       '@ckeditor/ckeditor5-upload': 47.3.0
       ckeditor5: 47.3.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-ai@47.3.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
@@ -15383,16 +15381,12 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       '@ckeditor/ckeditor5-widget': 47.3.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-cloud-services@47.3.0':
     dependencies:
       '@ckeditor/ckeditor5-core': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-code-block@47.3.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)':
     dependencies:
@@ -15585,8 +15579,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-classic@47.3.0':
     dependencies:
@@ -15596,8 +15588,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-decoupled@47.3.0':
     dependencies:
@@ -15607,8 +15597,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-inline@47.3.0':
     dependencies:
@@ -15642,6 +15630,8 @@ snapshots:
       '@ckeditor/ckeditor5-table': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-emoji@47.3.0':
     dependencies:
@@ -15698,6 +15688,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-export-word@47.3.0':
     dependencies:
@@ -15722,8 +15714,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-font@47.3.0':
     dependencies:
@@ -15798,8 +15788,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       '@ckeditor/ckeditor5-widget': 47.3.0
       ckeditor5: 47.3.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-html-embed@47.3.0':
     dependencies:
@@ -15845,6 +15833,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-import-word@47.3.0':
     dependencies:
@@ -15857,6 +15847,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-indent@47.3.0':
     dependencies:
@@ -15868,6 +15860,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-inspector@5.0.0': {}
 
@@ -15877,6 +15871,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-line-height@47.3.0':
     dependencies:
@@ -15901,6 +15897,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-list-multi-level@47.3.0':
     dependencies:
@@ -15924,6 +15922,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-markdown-gfm@47.3.0':
     dependencies:
@@ -15961,6 +15961,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       '@ckeditor/ckeditor5-widget': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-mention@47.3.0(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)':
     dependencies:
@@ -15970,6 +15972,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-merge-fields@47.3.0':
     dependencies:
@@ -15982,6 +15986,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-minimap@47.3.0':
     dependencies:
@@ -15990,6 +15996,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-operations-compressor@47.3.0':
     dependencies:
@@ -16044,6 +16052,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       '@ckeditor/ckeditor5-widget': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-pagination@47.3.0':
     dependencies:
@@ -16151,6 +16161,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-slash-command@47.3.0':
     dependencies:
@@ -16163,6 +16175,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-source-editing-enhanced@47.3.0':
     dependencies:
@@ -16210,6 +16224,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-table@47.3.0':
     dependencies:
@@ -16222,6 +16238,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-template@47.3.0':
     dependencies:
@@ -16332,6 +16350,8 @@ snapshots:
       '@ckeditor/ckeditor5-engine': 47.3.0
       '@ckeditor/ckeditor5-utils': 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-widget@47.3.0':
     dependencies:
@@ -16351,6 +16371,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.3.0
       ckeditor5: 47.3.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@codemirror/autocomplete@6.18.6':
     dependencies:
@@ -22048,6 +22070,8 @@ snapshots:
   ckeditor5-collaboration@47.3.0:
     dependencies:
       '@ckeditor/ckeditor5-collaboration-core': 47.3.0
+    transitivePeerDependencies:
+      - supports-color
 
   ckeditor5-premium-features@47.3.0(bufferutil@4.0.9)(ckeditor5@47.3.0)(utf-8-validate@6.0.5):
     dependencies:
@@ -27383,7 +27407,7 @@ snapshots:
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
 
-  openai@6.15.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12):
+  openai@6.16.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.12):
     optionalDependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod: 4.1.12
