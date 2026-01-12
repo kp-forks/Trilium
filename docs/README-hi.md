@@ -58,10 +58,10 @@ application with focus on building large personal knowledge bases.
 ### Quick Links
 - [Getting Started Guide](https://docs.triliumnotes.org/)
 - [Installation Instructions](https://docs.triliumnotes.org/user-guide/setup)
-- [Docker
-  Setup](https://docs.triliumnotes.org/user-guide/setup/server/installation/docker)
-- [Upgrading
-  TriliumNext](https://docs.triliumnotes.org/user-guide/setup/upgrading)
+- [डॉकर
+  सेटअप](https://docs.triliumnotes.org/user-guide/setup/server/installation/docker)
+- [TriliumNext को अपग्रेड
+  करना](https://docs.triliumnotes.org/user-guide/setup/upgrading)
 - [Basic Concepts and
   Features](https://docs.triliumnotes.org/user-guide/concepts/notes)
 - [Patterns of Personal Knowledge
