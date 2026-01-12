@@ -12,7 +12,7 @@
   "toast": {
     "critical-error": {
       "title": "Kritische Error",
-      "message": "Een kritieke fout heeft plaatsgevonden waardoor de applicatie niet kon opstarten:\n\n{{message}\n\nDit is waarschijnlijk veroorzaakt door een onverwachte fout in een script. Probeer de applicatie op te starten in veilige modus en het probleem op te lossen."
+      "message": "Een kritieke fout heeft plaatsgevonden waardoor de applicatie niet kon opstarten:\n\n{{message}}\n\nDit is waarschijnlijk veroorzaakt door een onverwachte fout in een script. Probeer de applicatie op te starten in veilige modus en het probleem op te lossen."
     },
     "widget-error": {
       "title": "Starten widget mislukt",
