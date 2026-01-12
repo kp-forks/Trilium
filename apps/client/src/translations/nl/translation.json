@@ -23,7 +23,7 @@
       "title": "Custom script laden mislukt",
       "message": "Script van notitie met ID \"{{id}}\", getiteld \"{{title}}\" kon niet worden uitgevoerd vanwege:\n\n{{message}}"
     },
-    "scripting-error": "Error met script: {{titel}}",
+    "scripting-error": "Error met script: {{title}}",
     "widget-list-error": {
       "title": "Kon geen lijst met widgets ophalen van de server"
     },
