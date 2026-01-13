@@ -9,6 +9,9 @@ on:
       - "apps/client/src/translations/**"
       - ".github/workflows/i18n.yml"
 
+permissions:
+  contents: read
+
 jobs:
   i18n-check:
     name: Check i18n translations
