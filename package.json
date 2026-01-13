@@ -49,9 +49,9 @@
     "@triliumnext/server": "workspace:*",
     "@types/express": "5.0.6",
     "@types/node": "24.10.7",
-    "@vitest/browser-webdriverio": "4.0.16",
-    "@vitest/coverage-v8": "4.0.16",
-    "@vitest/ui": "4.0.16",
+    "@vitest/browser-webdriverio": "4.0.17",
+    "@vitest/coverage-v8": "4.0.17",
+    "@vitest/ui": "4.0.17",
     "chalk": "5.6.2",
     "cross-env": "10.1.0",
     "dpdm": "3.14.0",
@@ -74,7 +74,7 @@
     "upath": "2.0.1",
     "vite": "7.3.1",
     "vite-plugin-dts": "4.5.4",
-    "vitest": "4.0.16"
+    "vitest": "4.0.17"
   },
   "license": "AGPL-3.0-only",
   "author": {
