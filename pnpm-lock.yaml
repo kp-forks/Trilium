@@ -897,8 +897,8 @@ importers:
   packages/ckeditor5-admonition:
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.2.3
-        version: 54.2.3(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.0
+        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -957,8 +957,8 @@ importers:
   packages/ckeditor5-footnotes:
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.2.3
-        version: 54.2.3(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.0
+        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1017,8 +1017,8 @@ importers:
   packages/ckeditor5-keyboard-marker:
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.2.3
-        version: 54.2.3(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.0
+        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1084,8 +1084,8 @@ importers:
         version: 0.108.2
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.2.3
-        version: 54.2.3(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.0
+        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1151,8 +1151,8 @@ importers:
         version: 4.17.22
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.2.3
-        version: 54.2.3(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.0
+        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1849,8 +1849,8 @@ packages:
   '@ckeditor/ckeditor5-core@47.3.0':
     resolution: {integrity: sha512-jLawN3a8yL5lbwG8gZeJihcVKkDgq+rAFeXc+Rd+nw+c5uGCdkc5F7PCRjhw+JOGruXUhNsbiF/4iNv3hUcO/A==}
 
-  '@ckeditor/ckeditor5-dev-build-tools@54.2.3':
-    resolution: {integrity: sha512-Bc8EjAQY0DLnBTXurmYAJn9NEHCHV62sMQ8YKYtt54SjkHClEKohmptkcwEBvvSki6dHrj0X8laZrHD4UM+mWw==}
+  '@ckeditor/ckeditor5-dev-build-tools@54.3.0':
+    resolution: {integrity: sha512-46gPUhiSdDdFBsGewGgSnVq2E5vkwXBVN2L9dbQ3t9Wta3F4zjXxw+496mAq71hAVxfZmyACjaVT3pAJojUIRw==}
     engines: {node: '>=24.11.0', npm: '>=5.7.1'}
     hasBin: true
 
@@ -15227,7 +15227,7 @@ snapshots:
       '@ckeditor/ckeditor5-watchdog': 47.3.0
       es-toolkit: 1.39.5
 
-  '@ckeditor/ckeditor5-dev-build-tools@54.2.3(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
+  '@ckeditor/ckeditor5-dev-build-tools@54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       '@rollup/plugin-commonjs': 28.0.9(rollup@4.52.0)
       '@rollup/plugin-json': 6.1.0(rollup@4.52.0)
