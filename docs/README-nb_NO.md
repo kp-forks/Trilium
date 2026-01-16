@@ -28,8 +28,8 @@ script)](./README-ZH_TW.md) | [English](../README.md) | [French](./README-fr.md)
 [Spanish](./README-es.md)
 <!-- translate:on -->
 
-Trilium Notes is a free and open-source, cross-platform hierarchical note taking
-application with focus on building large personal knowledge bases.
+Trilium Notes er et gratis og åpen kildekode-basert, plattformuavhengig
+hierarkisk notatprogram med fokus på å bygge store personlige kunnskapsbaser.
 
 <img src="./app.png" alt="Trilium Screenshot" width="1000">
 
