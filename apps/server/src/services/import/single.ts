@@ -1,5 +1,4 @@
 import type { NoteType } from "@triliumnext/commons";
-import { extname } from "path";
 
 import type BNote from "../../becca/entities/bnote.js";
 import imageService from "../../services/image.js";
@@ -55,13 +54,14 @@ function importImage(file: File, parentNote: BNote, taskContext: TaskContext<"im
 function importFile(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const originalName = file.originalname;
 
+    const mime = mimeService.getMime(originalName) || file.mimetype;
     const { note } = noteService.createNewNote({
         parentNoteId: parentNote.noteId,
-        title: removeFileExtension(originalName),
+        title: getNoteTitle(originalName, mime === "application/pdf"),
         content: file.buffer,
         isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable(),
         type: "file",
-        mime: mimeService.getMime(originalName) || file.mimetype
+        mime
     });
 
     note.addLabel("originalFileName", originalName);
@@ -69,17 +69,6 @@ function importFile(taskContext: TaskContext<"importNotes">, file: File, parentN
     taskContext.increaseProgressCount();
 
     return note;
-}
-
-function removeFileExtension(filename: string) {
-    const extension = extname(filename).toLowerCase();
-
-    switch (extension) {
-        case ".pdf":
-            return filename.substring(0, filename.length - extension.length);
-        default:
-            return filename;
-    }
 }
 
 function importCodeNote(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
