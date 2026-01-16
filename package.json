@@ -50,7 +50,7 @@
     "@triliumnext/server": "workspace:*",
     "@types/express": "5.0.6",
     "@types/js-yaml": "4.0.9",
-    "@types/node": "24.10.8",
+    "@types/node": "24.10.9",
     "@vitest/browser-webdriverio": "4.0.17",
     "@vitest/coverage-v8": "4.0.17",
     "@vitest/ui": "4.0.17",
