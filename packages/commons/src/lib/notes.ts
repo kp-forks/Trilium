@@ -24,6 +24,10 @@ export const NOTE_TYPE_ICONS = {
     aiChat: "bx bx-bot"
 };
 
+const FILE_MIME_MAPPINGS = {
+    "application/pdf": "bx bxs-file-pdf",
+};
+
 export function getNoteIcon({ noteId, type, mime, iconClass, workspaceIconClass, isFolder }: {
     noteId: string;
     type: NoteType;
@@ -49,6 +53,8 @@ export function getNoteIcon({ noteId, type, mime, iconClass, workspaceIconClass,
     } else if (type === "code") {
         const correspondingMimeType = MIME_TYPES_DICT.find(m => m.mime === mime);
         return correspondingMimeType?.icon ?? NOTE_TYPE_ICONS.code;
+    } else if (type === "file") {
+        return FILE_MIME_MAPPINGS[mime] ?? NOTE_TYPE_ICONS.file;
     }
     return NOTE_TYPE_ICONS[type];
 }
