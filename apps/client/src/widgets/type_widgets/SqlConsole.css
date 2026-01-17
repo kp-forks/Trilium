@@ -7,12 +7,21 @@
         overflow: auto;
     }
 
-    .sql-console-result-container {
-        width: 100%;
-        font-size: smaller;
-        flex-grow: 1;
-        overflow: auto;
-        min-height: 0;
+    .sql-result-widget  {
+        height: 100%;
+
+        > .sql-console-result-container {
+            width: 100%;
+            height: 100%;
+            font-size: smaller;
+            flex-grow: 1;
+            overflow: auto;
+            min-height: 0;
+
+            > .tabulator {
+                height: 100%;
+            }
+        }
     }
 }
 
