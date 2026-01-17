@@ -27,7 +27,7 @@ const fencedCodeBlockFilter: Rule = {
         const className = node.firstChild.getAttribute("class") || "";
         const language = rewriteLanguageTag((className.match(/language-(\S+)/) || [null, ""])[1]);
 
-        return `\n\n${  options.fence  }${language  }\n${  node.firstChild.textContent  }\n${  options.fence  }\n\n`;
+        return `\n\n${options.fence}${language}\n${node.firstChild.textContent}\n${options.fence}\n\n`;
     }
 };
 
@@ -87,11 +87,11 @@ function buildImageFilter() {
         after: /((?:^\d+(?=\.)))/
     };
 
-    const escapePattern = new RegExp(`(?:${  ESCAPE_PATTERNS.before.source  }|${  ESCAPE_PATTERNS.after.source  })`, 'g');
+    const escapePattern = new RegExp(`(?:${ESCAPE_PATTERNS.before.source}|${ESCAPE_PATTERNS.after.source})`, 'g');
 
     function escapeMarkdown (content: string) {
         return content.replace(escapePattern, (match, before, after) => {
-            return before ? `\\${  before}` : `${after  }\\`;
+            return before ? `\\${before}` : `${after}\\`;
         });
     }
 
@@ -120,9 +120,9 @@ function buildImageFilter() {
             const alt = escapeMarkdown(cleanAttribute(untypedNode.getAttribute('alt')));
             const src = escapeLinkDestination(untypedNode.getAttribute('src') || '');
             const title = cleanAttribute(untypedNode.getAttribute('title'));
-            const titlePart = title ? ` "${  escapeLinkTitle(title)  }"` : '';
+            const titlePart = title ? ` "${escapeLinkTitle(title)}"` : '';
 
-            return src ? `![${  alt  }]` + `(${  src  }${titlePart  })` : '';
+            return src ? `![${alt}](${src}${titlePart})` : '';
         }
     };
     return imageFilter;
@@ -161,9 +161,9 @@ function buildAdmonitionFilter() {
 
             content = content.replace(/^\n+|\n+$/g, '');
             content = content.replace(/^/gm, '> ');
-            content = `> [!${admonitionType}]\n${  content}`;
+            content = `> [!${admonitionType}]\n${content}`;
 
-            return `\n\n${  content  }\n\n`;
+            return `\n\n${content}\n\n`;
         }
     };
     return admonitionFilter;
@@ -199,8 +199,8 @@ function buildInlineLinkFilter(): Rule {
             let href = node.getAttribute('href');
             if (href) href = href.replace(/([()])/g, '\\$1');
             let title = cleanAttribute(node.getAttribute('title'));
-            if (title) title = ` "${  title.replace(/"/g, '\\"')  }"`;
-            return `[${  content  }](${  href  }${title  })`;
+            if (title) title = ` "${title.replace(/"/g, '\\"')}"`;
+            return `[${content}](${href}${title})`;
         }
     };
 }
@@ -225,12 +225,12 @@ function buildListItemFilter(): Rule {
             content = content
                 .trim()
                 .replace(/\n/gm, '\n    '); // indent
-            let prefix = `${options.bulletListMarker  }   `;
+            let prefix = `${options.bulletListMarker}   `;
             const parent = node.parentNode as HTMLElement;
             if (parent.nodeName === 'OL') {
                 const start = parent.getAttribute('start');
                 const index = Array.prototype.indexOf.call(parent.children, node);
-                prefix = `${start ? Number(start) + index : index + 1  }.  `;
+                prefix = `${start ? Number(start) + index : index + 1}.  `;
             } else if (parent.classList.contains("todo-list")) {
                 const isChecked = node.querySelector("input[type=checkbox]:checked");
                 prefix = (isChecked ? "- [x] " : "- [ ] ");
