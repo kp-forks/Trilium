@@ -4,6 +4,7 @@ import { SqlExecuteResults } from "@triliumnext/commons";
 import { useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
+import Tabulator from "../collections/table/tabulator";
 import Alert from "../react/Alert";
 import { useTriliumEvent } from "../react/hooks";
 import SplitEditor from "./helpers/SplitEditor";
@@ -57,20 +58,15 @@ function SqlResultTable({ rows }: { rows: object[] }) {
     if (!rows.length) return;
 
     return (
-        <table className="table table-striped">
-            <thead>
-                <tr>
-                    {Object.keys(rows[0]).map(key => <th>{key}</th>)}
-                </tr>
-            </thead>
-
-            <tbody>
-                {rows.map(row => (
-                    <tr>
-                        {Object.values(row).map(cell => <td>{cell}</td>)}
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+        <Tabulator
+            layout="fitDataFill"
+            columns={[
+                ...Object.keys(rows[0]).map(key => ({
+                    title: key,
+                    field: key
+                }))
+            ]}
+            data={rows}
+        />
     );
 }
