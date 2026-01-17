@@ -1,7 +1,10 @@
-.sql-result-widget {
-    padding: 15px;
+.sql-console-widget-container {
+    .note-detail-split-preview {
+        overflow: auto;
+    }
+
+    .sql-console-result-container td {
+        white-space: preserve;
+    }
 }
 
-.sql-console-result-container td {
-    white-space: preserve;
-}
