@@ -7,8 +7,12 @@
         overflow: auto;
     }
 
-    .sql-console-result-container td {
-        white-space: preserve;
+    .sql-console-result-container {
+        width: 100%;
+        font-size: smaller;
+        flex-grow: 1;
+        overflow: auto;
+        min-height: 0;
     }
 }
 
