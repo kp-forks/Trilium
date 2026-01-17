@@ -318,6 +318,8 @@ export async function getExtendedWidgetType(note: FNote | null | undefined, note
         resultingType = "noteMap";
     } else if (type === "text" && (await noteContext?.isReadOnly())) {
         resultingType = "readOnlyText";
+    } else if (note.isTriliumSqlite()) {
+        resultingType = "sqlConsole";
     } else if ((type === "code" || type === "mermaid") && (await noteContext?.isReadOnly())) {
         resultingType = "readOnlyCode";
     } else if (type === "text") {
