@@ -17,6 +17,9 @@ export default function SqlConsole(props: TypeWidgetProps) {
             noteType="code"
             {...props}
             previewContent={<SqlResults {...props} />}
+            splitOptions={{
+                sizes: [ 90, 10 ]
+            }}
         />
     );
 }
