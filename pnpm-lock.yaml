@@ -20,7 +20,7 @@ overrides:
   on-headers@<1.1.0: '>=1.1.0'
   form-data@>=4.0.0 <4.0.4: '>=4.0.4'
   form-data@>=3.0.0 <3.0.4: '>=3.0.4'
-  node-abi: 4.24.0
+  node-abi: 4.25.0
 
 patchedDependencies:
   '@ckeditor/ckeditor5-code-block':
@@ -10610,8 +10610,8 @@ packages:
   nice-try@1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
 
-  node-abi@4.24.0:
-    resolution: {integrity: sha512-u2EC1CeNe25uVtX3EZbdQ275c74zdZmmpzrHEQh2aIYqoVjlglfUpOX9YY85x1nlBydEKDVaSmMNhR7N82Qj8A==}
+  node-abi@4.25.0:
+    resolution: {integrity: sha512-BRrQZc23ljOLms7EXVds3MOpB59/x7gaORodNuIwt96JKlflUmrOgv5hSJZEEM/WkW3uXpjZ4x1wcFu8V9mTpw==}
     engines: {node: '>=22.12.0'}
 
   node-addon-api@7.1.1:
@@ -15224,8 +15224,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-code-block@47.4.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)':
     dependencies:
@@ -15956,8 +15954,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-restricted-editing@47.4.0':
     dependencies:
@@ -16796,7 +16792,7 @@ snapshots:
       detect-libc: 2.1.2
       fs-extra: 10.1.0
       got: 11.8.6
-      node-abi: 4.24.0
+      node-abi: 4.25.0
       node-api-version: 0.2.1
       ora: 5.4.1
       read-binary-file-arch: 1.0.6
@@ -16814,7 +16810,7 @@ snapshots:
       detect-libc: 2.1.2
       got: 11.8.6
       graceful-fs: 4.2.11
-      node-abi: 4.24.0
+      node-abi: 4.25.0
       node-api-version: 0.2.1
       node-gyp: 11.4.2
       ora: 5.4.1
@@ -26699,7 +26695,7 @@ snapshots:
 
   nice-try@1.0.5: {}
 
-  node-abi@4.24.0:
+  node-abi@4.25.0:
     dependencies:
       semver: 7.7.3
 
@@ -27844,7 +27840,7 @@ snapshots:
       minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 2.0.0
-      node-abi: 4.24.0
+      node-abi: 4.25.0
       pump: 3.0.3
       rc: 1.2.8
       simple-get: 4.0.1
