@@ -1,4 +1,8 @@
 .sql-console-widget-container {
+    .note-detail-split.split-vertical {
+        flex-direction: column-reverse;
+    }
+
     .note-detail-split-preview {
         overflow: auto;
     }
