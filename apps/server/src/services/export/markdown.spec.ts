@@ -406,4 +406,33 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
+    it("exports jQuery code in table properly", () => {
+        const html = trimIndentation`\
+            <figure class="table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                Code
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <pre>
+            <code class="language-text-x-trilium-auto">this.$widget = $("&lt;div&gt;");</code>
+                                </pre>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </figure>
+        `;
+        const expected = trimIndentation`\
+            <table><thead><tr><th>Code</th></tr></thead><tbody><tr><td><pre><code class="language-text-x-trilium-auto">this.$widget = $("&lt;div&gt;");</code>
+                                </pre></td></tr></tbody></table>`;
+        expect(markdownExportService.toMarkdown(html)).toBe(expected);
+    });
+
 });
