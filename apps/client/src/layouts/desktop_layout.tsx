@@ -46,7 +46,6 @@ import ScrollPadding from "../widgets/scroll_padding.js";
 import SearchResult from "../widgets/search_result.jsx";
 import SharedInfo from "../widgets/shared_info.jsx";
 import RightPanelContainer from "../widgets/sidebar/RightPanelContainer.jsx";
-import SqlTableSchemas from "../widgets/sql_table_schemas.js";
 import TabRowWidget from "../widgets/tab_row.js";
 import TabHistoryNavigationButtons from "../widgets/TabHistoryNavigationButtons.jsx";
 import TitleBarButtons from "../widgets/title_bar_buttons.jsx";
@@ -162,7 +161,6 @@ export default class DesktopLayout {
                                                                     .child(<SharedInfo />)
                                                                 )
                                                                 .optChild(!isNewLayout, <PromotedAttributes />)
-                                                                .child(<SqlTableSchemas />)
                                                                 .child(<NoteDetail />)
                                                                 .child(<NoteList media="screen" />)
                                                                 .child(<SearchResult />)

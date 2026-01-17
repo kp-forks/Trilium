@@ -1,26 +1,31 @@
 import "./SqlConsole.css";
 
-import { SqlExecuteResults } from "@triliumnext/commons";
-import { useState } from "preact/hooks";
+import { SchemaResponse, SqlExecuteResults } from "@triliumnext/commons";
+import { useEffect, useState } from "preact/hooks";
 import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, FrozenColumnsModule, KeybindingsModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
 
 import { t } from "../../services/i18n";
+import server from "../../services/server";
 import Tabulator from "../collections/table/tabulator";
 import Alert from "../react/Alert";
+import Dropdown from "../react/Dropdown";
 import { useTriliumEvent } from "../react/hooks";
 import SplitEditor from "./helpers/SplitEditor";
 import { TypeWidgetProps } from "./type_widget";
 
 export default function SqlConsole(props: TypeWidgetProps) {
     return (
-        <SplitEditor
-            noteType="code"
-            {...props}
-            previewContent={<SqlResults {...props} />}
-            splitOptions={{
-                sizes: [ 90, 10 ]
-            }}
-        />
+        <>
+            <SplitEditor
+                noteType="code"
+                {...props}
+                editorBefore={<SqlTableSchemas {...props} />}
+                previewContent={<SqlResults {...props} />}
+                splitOptions={{
+                    sizes: [ 70, 30 ]
+                }}
+            />
+        </>
     );
 }
 
@@ -92,5 +97,43 @@ function SqlResultTable({ rows }: { rows: object[] }) {
             ]}
             data={rows}
         />
+    );
+}
+
+export function SqlTableSchemas({ note }: TypeWidgetProps) {
+    const [ schemas, setSchemas ] = useState<SchemaResponse[]>();
+
+    useEffect(() => {
+        server.get<SchemaResponse[]>("sql/schema").then(setSchemas);
+    }, []);
+
+    const isEnabled = note?.mime === "text/x-sqlite;schema=trilium" && schemas;
+    return (
+        <div className={`sql-table-schemas-widget ${!isEnabled ? "hidden-ext" : ""}`}>
+            {isEnabled && (
+                <>
+                    {t("sql_table_schemas.tables")}{": "}
+
+                    <span class="sql-table-schemas">
+                        {schemas.map(({ name, columns }) => (
+                            <>
+                                <Dropdown text={name} noSelectButtonStyle hideToggleArrow
+                                >
+                                    <table className="table-schema">
+                                        {columns.map(column => (
+                                            <tr>
+                                                <td>{column.name}</td>
+                                                <td>{column.type}</td>
+                                            </tr>
+                                        ))}
+                                    </table>
+                                </Dropdown>
+                                {" "}
+                            </>
+                        ))}
+                    </span>
+                </>
+            )}
+        </div>
     );
 }
