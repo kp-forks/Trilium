@@ -2,6 +2,7 @@ import "./SqlConsole.css";
 
 import { SchemaResponse, SqlExecuteResults } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
+import { Fragment } from "preact/jsx-runtime";
 import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, FrozenColumnsModule, KeybindingsModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
 
 import { t } from "../../services/i18n";
@@ -47,14 +48,14 @@ function SqlResults({ note, ntxId }: TypeWidgetProps) {
                     </Alert>
                 ) : (
                     <div className="sql-console-result-container selectable-text">
-                        {results?.map(rows => {
+                        {results?.map((rows, index) => {
                             // inserts, updates
                             if (typeof rows === "object" && !Array.isArray(rows)) {
-                                return <pre>{JSON.stringify(rows, null, "\t")}</pre>;
+                                return <pre key={index}>{JSON.stringify(rows, null, "\t")}</pre>;
                             }
 
                             // selects
-                            return <SqlResultTable rows={rows} />;
+                            return <SqlResultTable key={index} rows={rows} />;
                         })}
                     </div>
                 )
@@ -116,12 +117,12 @@ export function SqlTableSchemas({ note }: TypeWidgetProps) {
 
                     <span class="sql-table-schemas">
                         {schemas.map(({ name, columns }) => (
-                            <>
+                            <Fragment key={name}>
                                 <Dropdown text={name} noSelectButtonStyle hideToggleArrow
                                 >
                                     <table className="table-schema">
                                         {columns.map(column => (
-                                            <tr>
+                                            <tr key={column.name}>
                                                 <td>{column.name}</td>
                                                 <td>{column.type}</td>
                                             </tr>
@@ -129,7 +130,7 @@ export function SqlTableSchemas({ note }: TypeWidgetProps) {
                                     </table>
                                 </Dropdown>
                                 {" "}
-                            </>
+                            </Fragment>
                         ))}
                     </span>
                 </>
