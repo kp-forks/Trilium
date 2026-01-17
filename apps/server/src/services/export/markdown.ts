@@ -14,7 +14,7 @@ export const ADMONITION_TYPE_MAPPINGS: Record<string, string> = {
 
 export const DEFAULT_ADMONITION_TYPE = ADMONITION_TYPE_MAPPINGS.note;
 
-const fencedCodeBlockFilter: Turnish.Rule = {
+const fencedCodeBlockFilter: Rule = {
     filter (node, options) {
         return options.codeBlockStyle === "fenced" && node.nodeName === "PRE" && node.firstChild !== null && node.firstChild.nodeName === "CODE";
     },
@@ -104,7 +104,7 @@ function buildImageFilter() {
         return title.replace(/"/g, '\\"');
     }
 
-    const imageFilter: Turnish.Rule = {
+    const imageFilter: Rule = {
         filter: "img",
         replacement(content, _node) {
             const node = _node as HTMLElement;
@@ -150,7 +150,7 @@ function buildAdmonitionFilter() {
         return DEFAULT_ADMONITION_TYPE;
     }
 
-    const admonitionFilter: Turnish.Rule = {
+    const admonitionFilter: Rule = {
         filter(node, options) {
             return node.nodeName === "ASIDE" && node.classList.contains("admonition");
         },
