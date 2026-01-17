@@ -36,6 +36,7 @@ function toMarkdown(content: string) {
         instance = new Turnish({
             headingStyle: "atx",
             bulletListMarker: "*",
+            emDelimiter: "_",
             codeBlockStyle: "fenced",
             blankReplacement(_content, node) {
                 if (node.nodeName === "SECTION" && node.classList.contains("include-note")) {
