@@ -20,6 +20,15 @@
 
             > .tabulator {
                 height: 100%;
+                --cell-vert-padding-size: 4px;
+
+                > .tabulator-tableholder {
+                    padding: 0;
+                }
+
+                .tabulator-col-content {
+                    padding: 4px !important;
+                }
             }
         }
     }
