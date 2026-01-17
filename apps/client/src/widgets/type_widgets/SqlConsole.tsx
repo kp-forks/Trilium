@@ -92,7 +92,7 @@ function SqlResultTable({ rows }: { rows: object[] }) {
                     minWidth: 100,
                     widthGrow: 1,
                     resizable: true,
-                    headerFilter: true
+                    headerFilter: true as const
                 }))
             ]}
             data={rows}
