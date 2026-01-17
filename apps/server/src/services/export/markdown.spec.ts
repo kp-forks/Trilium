@@ -435,7 +435,7 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
-    it("renders underline with underscore", () => {
+    it("renders emphasis with underscore", () => {
         const html = /*html*/`<p>This is <em>underlined</em> text.</p>`;
         const expected = `This is _underlined_ text.`;
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
