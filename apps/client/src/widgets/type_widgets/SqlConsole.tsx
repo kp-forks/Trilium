@@ -2,7 +2,7 @@ import "./SqlConsole.css";
 
 import { SqlExecuteResults } from "@triliumnext/commons";
 import { useState } from "preact/hooks";
-import { ResizeColumnsModule } from "tabulator-tables";
+import { ResizeColumnsModule, SortModule } from "tabulator-tables";
 
 import { t } from "../../services/i18n";
 import Tabulator from "../collections/table/tabulator";
@@ -61,7 +61,7 @@ function SqlResultTable({ rows }: { rows: object[] }) {
     return (
         <Tabulator
             layout="fitDataFill"
-            modules={[ ResizeColumnsModule ]}
+            modules={[ ResizeColumnsModule, SortModule ]}
             columns={[
                 ...Object.keys(rows[0]).map(key => ({
                     title: key,
