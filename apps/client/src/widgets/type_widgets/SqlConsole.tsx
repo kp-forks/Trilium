@@ -1,3 +1,5 @@
+import "./SqlConsole.css";
+
 import { SqlExecuteResults } from "@triliumnext/commons";
 import { useState } from "preact/hooks";
 
