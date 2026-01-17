@@ -265,9 +265,13 @@ function useNoteInfo() {
     const [ note, setNote ] = useState<FNote | null | undefined>();
     const [ type, setType ] = useState<ExtendedNoteType>();
     const [ mime, setMime ] = useState<string>();
+    const refreshIdRef = useRef(0);
 
     function refresh() {
+        const refreshId = ++refreshIdRef.current;
+
         getExtendedWidgetType(actualNote, noteContext).then(type => {
+            if (refreshId !== refreshIdRef.current) return;
             setNote(actualNote);
             setType(type);
             setMime(actualNote?.mime);
