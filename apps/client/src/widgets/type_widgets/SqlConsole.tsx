@@ -1,5 +1,11 @@
-export default function SqlConsole() {
+import SplitEditor from "./helpers/SplitEditor";
+import { TypeWidgetProps } from "./type_widget";
+
+export default function SqlConsole(props: TypeWidgetProps) {
     return (
-        <div>SQL Console Widget</div>
+        <SplitEditor
+            noteType="code"
+            {...props}
+        />
     );
 }
