@@ -2,7 +2,7 @@ import "./SqlConsole.css";
 
 import { SqlExecuteResults } from "@triliumnext/commons";
 import { useState } from "preact/hooks";
-import { ClipboardModule, EditModule, ExportModule, FormatModule, FrozenColumnsModule, KeybindingsModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
+import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, FrozenColumnsModule, KeybindingsModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
 
 import { t } from "../../services/i18n";
 import Tabulator from "../collections/table/tabulator";
@@ -61,7 +61,7 @@ function SqlResultTable({ rows }: { rows: object[] }) {
     return (
         <Tabulator
             layout="fitDataFill"
-            modules={[ ResizeColumnsModule, SortModule, SelectRangeModule, ClipboardModule, KeybindingsModule, EditModule, ExportModule, SelectRowModule, FormatModule, FrozenColumnsModule ]}
+            modules={[ ResizeColumnsModule, SortModule, SelectRangeModule, ClipboardModule, KeybindingsModule, EditModule, ExportModule, SelectRowModule, FormatModule, FrozenColumnsModule, FilterModule ]}
             selectableRange
             clipboard="copy"
             clipboardCopyRowRange="range"
@@ -83,7 +83,8 @@ function SqlResultTable({ rows }: { rows: object[] }) {
                     width: 250,
                     minWidth: 100,
                     widthGrow: 1,
-                    resizable: true
+                    resizable: true,
+                    headerFilter: true
                 }))
             ]}
             data={rows}
