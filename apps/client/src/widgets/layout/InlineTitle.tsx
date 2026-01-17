@@ -7,6 +7,7 @@ import { ComponentChild } from "preact";
 import { useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Trans } from "react-i18next";
 
+import FNote from "../../entities/fnote";
 import { ViewScope } from "../../services/link";
 import { formatDateTime } from "../../utils/formatters";
 import NoteIcon from "../note_icon";
@@ -69,9 +70,10 @@ export default function InlineTitle() {
     );
 }
 
-function shouldShow(noteId: string | undefined, type: NoteType | undefined, viewScope: ViewScope | undefined) {
+function shouldShow(note: FNote, type: NoteType | undefined, viewScope: ViewScope | undefined) {
     if (viewScope?.viewMode !== "default") return false;
-    if (noteId?.startsWith("_options")) return true;
+    if (note.noteId?.startsWith("_options")) return true;
+    if (note.isTriliumSqlite()) return false;
     return type && supportedNoteTypes.has(type);
 }
 
