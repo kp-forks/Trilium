@@ -37,14 +37,14 @@ function toMarkdown(content: string) {
             headingStyle: "atx",
             bulletListMarker: "*",
             codeBlockStyle: "fenced",
-            blankReplacement(content, node, options) {
-                if (node.nodeName === "SECTION" && (node as HTMLElement).classList.contains("include-note")) {
-                    return (node as HTMLElement).outerHTML;
+            blankReplacement(_content, node) {
+                if (node.nodeName === "SECTION" && node.classList.contains("include-note")) {
+                    return node.outerHTML;
                 }
 
                 // Original implementation as per https://github.com/mixmark-io/turndown/blob/master/src/turndown.js.
                 return ("isBlock" in node && node.isBlock) ? '\n\n' : '';
-            }
+            },
         });
         // Filter is heavily based on: https://github.com/mixmark-io/turndown/issues/274#issuecomment-458730974
         instance.addRule("fencedCodeBlock", fencedCodeBlockFilter);
