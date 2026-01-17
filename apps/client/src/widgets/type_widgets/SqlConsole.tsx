@@ -63,7 +63,10 @@ function SqlResultTable({ rows }: { rows: object[] }) {
             columns={[
                 ...Object.keys(rows[0]).map(key => ({
                     title: key,
-                    field: key
+                    field: key,
+                    minWidth: 100,
+                    maxWidth: 400,
+                    widthGrow: 1
                 }))
             ]}
             data={rows}
