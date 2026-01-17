@@ -387,4 +387,23 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
+    it("maintains escaped HTML tags", () => {
+        const html = /*html*/`<p>&lt;div&gt;Hello World&lt;/div&gt;</p>`;
+        const expected = `\\<div\\>Hello World\\</div\\>`;
+        expect(markdownExportService.toMarkdown(html)).toBe(expected);
+    });
+
+    it("escapes HTML tags inside list", () => {
+        const html = trimIndentation/*html*/`\
+            <ul>
+                <li data-list-item-id="e07fda078f7dd7103a3b9017f49eb1589">
+                    &lt;note&gt; is note.
+                </li>
+            </ul>
+        `;
+        const expected = trimIndentation`\
+            *   \\<note\\> is note.`;
+        expect(markdownExportService.toMarkdown(html)).toBe(expected);
+    });
+
 });

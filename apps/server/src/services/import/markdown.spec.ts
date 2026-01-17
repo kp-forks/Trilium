@@ -314,4 +314,9 @@ $$`;
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
+    it("doesn't unescape HTML in list", () => {
+        const input = `*   &lt;note&gt; is note.`;
+        const expected = /*html*/`<ul><li>&lt;note&gt; is note.</li></ul>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
 });
