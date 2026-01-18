@@ -1,6 +1,6 @@
 import "./SqlConsole.css";
 
-import { SchemaResponse, SqlExecuteResults } from "@triliumnext/commons";
+import { SchemaResponse, SqlExecuteResponse } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 import { Fragment } from "preact/jsx-runtime";
 import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, FrozenColumnsModule, KeybindingsModule, PageModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
@@ -8,7 +8,6 @@ import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, 
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import Tabulator from "../collections/table/tabulator";
-import Alert from "../react/Alert";
 import Button from "../react/Button";
 import Dropdown from "../react/Dropdown";
 import { useTriliumEvent } from "../react/hooks";
@@ -33,14 +32,15 @@ export default function SqlConsole(props: TypeWidgetProps) {
 }
 
 function SqlResults({ ntxId }: TypeWidgetProps) {
-    const [ results, setResults ] = useState<SqlExecuteResults>();
+    const [ response, setResponse ] = useState<SqlExecuteResponse>();
 
-    useTriliumEvent("sqlQueryResults", ({ ntxId: eventNtxId, results }) => {
+    useTriliumEvent("sqlQueryResults", ({ ntxId: eventNtxId, response }) => {
         if (eventNtxId !== ntxId) return;
-        setResults(results);
+        setResponse(response);
     });
 
-    if (results === undefined) {
+    // Not yet executed.
+    if (response === undefined) {
         return (
             <NoItems
                 icon="bx bx-data"
@@ -54,26 +54,41 @@ function SqlResults({ ntxId }: TypeWidgetProps) {
         );
     }
 
+    // Executed but failed.
+    if (response && !response.success) {
+        return (
+            <NoItems
+                icon="bx bx-error"
+                text={t("sql_result.failed")}
+            >
+                <pre className="sql-error-message selectable-text">{response.error}</pre>
+            </NoItems>
+        );
+    }
+
+    // Zero results.
+    if (response?.results.length === 1 && Array.isArray(response.results[0]) && response.results[0].length === 0) {
+        return (
+            <NoItems
+                icon="bx bx-rectangle"
+                text={t("sql_result.no_rows")}
+            />
+        );
+    }
+
     return (
         <div className="sql-result-widget">
-            {results?.length === 1 && Array.isArray(results[0]) && results[0].length === 0 ? (
-                <NoItems
-                    icon="bx bx-rectangle"
-                    text={t("sql_result.no_rows")}
-                />
-            ) : (
-                <div className="sql-console-result-container selectable-text">
-                    {results?.map((rows, index) => {
-                        // inserts, updates
-                        if (typeof rows === "object" && !Array.isArray(rows)) {
-                            return <pre key={index}>{JSON.stringify(rows, null, "\t")}</pre>;
-                        }
+            <div className="sql-console-result-container selectable-text">
+                {response?.results.map((rows, index) => {
+                    // inserts, updates
+                    if (typeof rows === "object" && !Array.isArray(rows)) {
+                        return <pre key={index}>{JSON.stringify(rows, null, "\t")}</pre>;
+                    }
 
-                        // selects
-                        return <SqlResultTable key={index} rows={rows} />;
-                    })}
-                </div>
-            )}
+                    // selects
+                    return <SqlResultTable key={index} rows={rows} />;
+                })}
+            </div>
         </div>
     );
 }
