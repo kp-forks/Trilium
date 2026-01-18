@@ -18,6 +18,7 @@ export interface SplitEditorProps extends EditableCodeProps {
     previewContent: ComponentChildren;
     previewButtons?: ComponentChildren;
     editorBefore?: ComponentChildren;
+    forceOrientation?: "horizontal" | "vertical";
 }
 
 /**
@@ -29,8 +30,8 @@ export interface SplitEditorProps extends EditableCodeProps {
  * - Can display errors to the user via {@link setError}.
  * - Horizontal or vertical orientation for the editor/preview split, adjustable via the switch split orientation button floating button.
  */
-export default function SplitEditor({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, ...editorProps }: SplitEditorProps) {
-    const splitEditorOrientation = useSplitOrientation();
+export default function SplitEditor({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, ...editorProps }: SplitEditorProps) {
+    const splitEditorOrientation = useSplitOrientation(forceOrientation);
     const [ readOnly ] = useNoteLabelBoolean(note, "readOnly");
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -95,8 +96,9 @@ export function PreviewButton(props: Omit<ActionButtonProps, "titlePosition">) {
     />;
 }
 
-function useSplitOrientation() {
+function useSplitOrientation(forceOrientation?: "horizontal" | "vertical") {
     const [ splitEditorOrientation ] = useTriliumOption("splitEditorOrientation");
+    if (forceOrientation) return forceOrientation;
     if (isMobile()) return "vertical";
     if (!splitEditorOrientation) return "horizontal";
     return splitEditorOrientation as "horizontal" | "vertical";

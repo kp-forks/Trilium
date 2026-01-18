@@ -23,6 +23,7 @@ export default function SqlConsole(props: TypeWidgetProps) {
                 {...props}
                 editorBefore={<SqlTableSchemas {...props} />}
                 previewContent={<SqlResults key={props.note.noteId} {...props} />}
+                forceOrientation="vertical"
                 splitOptions={{
                     sizes: [ 70, 30 ]
                 }}
