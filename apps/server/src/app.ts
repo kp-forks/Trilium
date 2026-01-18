@@ -3,7 +3,7 @@ import "./becca/becca_loader.js";
 
 import compression from "compression";
 import cookieParser from "cookie-parser";
-import { renderFile } from "ejs";
+import ejs from "ejs";
 import express from "express";
 import { auth } from "express-openid-connect";
 import helmet from "helmet";
@@ -35,7 +35,7 @@ export default async function buildApp() {
 
     // view engine setup
     app.set("views", path.join(assetsDir, "views"));
-    app.engine("ejs", (filePath, options, callback) => renderFile(filePath, options, callback));
+    app.engine("ejs", (filePath, options, callback) => ejs.renderFile(filePath, options, callback));
     app.set("view engine", "ejs");
 
     app.use((req, res, next) => {
