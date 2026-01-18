@@ -110,8 +110,9 @@ function bindElShortcut($el: JQuery<ElementType | Element>, keyboardShortcut: st
                 }
             };
 
-            // Add the event listener
-            element.addEventListener('keydown', listener);
+            // Add the event listener in capture phase to intercept events before they reach
+            // child elements like CodeMirror
+            element.addEventListener('keydown', listener, true);
 
             // Store the binding for later cleanup
             const binding: ShortcutBinding = {
@@ -138,15 +139,16 @@ export function removeIndividualBinding(binding: ShortcutBinding) {
     if (activeBindingsInNamespace) {
         activeBindings.set(key, activeBindingsInNamespace.filter(aBinding => aBinding.handler === binding.handler));
     }
-    binding.element.removeEventListener("keydown", binding.listener);
+    // Remove listener with capture phase to match how it was added
+    binding.element.removeEventListener("keydown", binding.listener, true);
 }
 
 function removeNamespaceBindings(namespace: string) {
     const bindings = activeBindings.get(namespace);
     if (bindings) {
-        // Remove all event listeners for this namespace
         bindings.forEach(binding => {
-            binding.element.removeEventListener('keydown', binding.listener);
+            // Remove listener with capture phase to match how it was added
+            binding.element.removeEventListener('keydown', binding.listener, true);
         });
         activeBindings.delete(namespace);
     }
