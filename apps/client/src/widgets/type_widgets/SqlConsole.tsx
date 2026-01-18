@@ -22,7 +22,7 @@ export default function SqlConsole(props: TypeWidgetProps) {
                 noteType="code"
                 {...props}
                 editorBefore={<SqlTableSchemas {...props} />}
-                previewContent={<SqlResults {...props} />}
+                previewContent={<SqlResults key={props.note.noteId} {...props} />}
                 splitOptions={{
                     sizes: [ 70, 30 ]
                 }}
