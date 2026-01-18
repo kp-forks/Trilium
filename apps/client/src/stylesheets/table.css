@@ -98,6 +98,10 @@
     border-top: none;
     border-bottom: 1px solid var(--row-delimiter-color);
     color: var(--row-text-color);
+
+    &:last-of-type {
+        border-bottom: none;
+    }
 }
 
 .tabulator-row.tabulator-row-odd {
@@ -173,10 +177,6 @@
     margin: 0;
 }
 
-.tabulator .tabulator-footer {
-    color: var(--main-text-color);
-}
-
 /* Context menus */
 
 .tabulator-popup-container {
@@ -191,8 +191,9 @@
 }
 
 /* Footer */
-
 :root .tabulator .tabulator-footer {
-    border-top: unset;
+    background: transparent;
+    color: var(--main-text-color);
+    border-top: 1px solid var(--main-border-color);
     padding: 10px 0;
 }
