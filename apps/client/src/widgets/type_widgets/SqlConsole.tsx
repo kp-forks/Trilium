@@ -82,7 +82,15 @@ function SqlResults({ ntxId }: TypeWidgetProps) {
                 {response?.results.map((rows, index) => {
                     // inserts, updates
                     if (typeof rows === "object" && !Array.isArray(rows)) {
-                        return <pre key={index}>{JSON.stringify(rows, null, "\t")}</pre>;
+                        return (
+                            <NoItems
+                                key={index}
+                                icon="bx bx-play"
+                                text={t("sql_result.statement_result")}
+                            >
+                                <pre key={index}>{JSON.stringify(rows, null, "\t")}</pre>
+                            </NoItems>
+                        );
                     }
 
                     // selects
