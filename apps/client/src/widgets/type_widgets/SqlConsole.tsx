@@ -9,8 +9,10 @@ import { t } from "../../services/i18n";
 import server from "../../services/server";
 import Tabulator from "../collections/table/tabulator";
 import Alert from "../react/Alert";
+import Button from "../react/Button";
 import Dropdown from "../react/Dropdown";
 import { useTriliumEvent } from "../react/hooks";
+import NoItems from "../react/NoItems";
 import SplitEditor from "./helpers/SplitEditor";
 import { TypeWidgetProps } from "./type_widget";
 
@@ -30,7 +32,7 @@ export default function SqlConsole(props: TypeWidgetProps) {
     );
 }
 
-function SqlResults({ note, ntxId }: TypeWidgetProps) {
+function SqlResults({ ntxId }: TypeWidgetProps) {
     const [ results, setResults ] = useState<SqlExecuteResults>();
 
     useTriliumEvent("sqlQueryResults", ({ ntxId: eventNtxId, results }) => {
@@ -38,27 +40,38 @@ function SqlResults({ note, ntxId }: TypeWidgetProps) {
         setResults(results);
     });
 
-    const isEnabled = note?.mime === "text/x-sqlite;schema=trilium";
-    return (
-        <div className={`sql-result-widget ${!isEnabled ? "hidden-ext" : ""}`}>
-            {isEnabled && (
-                results?.length === 1 && Array.isArray(results[0]) && results[0].length === 0 ? (
-                    <Alert type="info">
-                        {t("sql_result.no_rows")}
-                    </Alert>
-                ) : (
-                    <div className="sql-console-result-container selectable-text">
-                        {results?.map((rows, index) => {
-                            // inserts, updates
-                            if (typeof rows === "object" && !Array.isArray(rows)) {
-                                return <pre key={index}>{JSON.stringify(rows, null, "\t")}</pre>;
-                            }
+    if (results === undefined) {
+        return (
+            <NoItems
+                icon="bx bx-data"
+                text={t("sql_result.not_executed")}
+            >
+                <Button
+                    text={t("sql_result.execute_now")}
+                    triggerCommand="runActiveNote"
+                />
+            </NoItems>
+        );
+    }
 
-                            // selects
-                            return <SqlResultTable key={index} rows={rows} />;
-                        })}
-                    </div>
-                )
+    return (
+        <div className="sql-result-widget">
+            {results?.length === 1 && Array.isArray(results[0]) && results[0].length === 0 ? (
+                <Alert type="info">
+                    {t("sql_result.no_rows")}
+                </Alert>
+            ) : (
+                <div className="sql-console-result-container selectable-text">
+                    {results?.map((rows, index) => {
+                        // inserts, updates
+                        if (typeof rows === "object" && !Array.isArray(rows)) {
+                            return <pre key={index}>{JSON.stringify(rows, null, "\t")}</pre>;
+                        }
+
+                        // selects
+                        return <SqlResultTable key={index} rows={rows} />;
+                    })}
+                </div>
             )}
         </div>
     );

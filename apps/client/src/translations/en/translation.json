@@ -1815,7 +1815,9 @@
     "configure_launchbar": "Configure Launchbar"
   },
   "sql_result": {
-    "no_rows": "No rows have been returned for this query"
+    "not_executed": "The query has not been executed yet.",
+    "no_rows": "No rows have been returned for this query",
+    "execute_now": "Execute now"
   },
   "sql_table_schemas": {
     "tables": "Tables"
