@@ -32,6 +32,11 @@
                 .tabulator-col-content {
                     padding: 4px !important;
                 }
+
+                > .tabulator-footer,
+                > .tabulator-footer .tabulator-footer-contents {
+                    padding: 2px 4px;
+                }
             }
         }
     }
