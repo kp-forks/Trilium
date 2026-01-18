@@ -91,10 +91,17 @@ function setBodyAttributes() {
 }
 
 async function loadScripts() {
-    if (glob.device === "mobile") {
-        await import("./mobile.js");
-    } else {
-        await import("./desktop.js");
+    switch (glob.device) {
+        case "mobile":
+            await import("./mobile.js");
+            break;
+        case "print":
+            await import("./print.js");
+            break;
+        case "desktop":
+        default:
+            await import("./desktop.js");
+            break;
     }
 }
 
