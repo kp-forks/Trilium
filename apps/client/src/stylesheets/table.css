@@ -134,6 +134,10 @@
     &:last-of-type {
         border-bottom: none;
     }
+
+    &.tabulator-range-highlight > .tabulator-cell.tabulator-frozen {
+        font-weight: bold;
+    }
 }
 
 .tabulator-row.tabulator-row-odd {
@@ -155,9 +159,12 @@
     margin-inline-end: var(--cell-editing-border-width);
 }
 
-.tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left,
 .tabulator-row .tabulator-cell {
     border-inline-end-color: transparent;
+}
+
+.tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left {
+    border-inline-end-color: var(--main-border-color);
 }
 
 .tabulator-row .tabulator-cell:not(.tabulator-editable) {
