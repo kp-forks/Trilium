@@ -3,7 +3,7 @@ import "./SqlConsole.css";
 import { SchemaResponse, SqlExecuteResults } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 import { Fragment } from "preact/jsx-runtime";
-import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, FrozenColumnsModule, KeybindingsModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
+import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, FrozenColumnsModule, KeybindingsModule, PageModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
 
 import { t } from "../../services/i18n";
 import server from "../../services/server";
@@ -70,7 +70,7 @@ function SqlResultTable({ rows }: { rows: object[] }) {
     return (
         <Tabulator
             layout="fitDataFill"
-            modules={[ ResizeColumnsModule, SortModule, SelectRangeModule, ClipboardModule, KeybindingsModule, EditModule, ExportModule, SelectRowModule, FormatModule, FrozenColumnsModule, FilterModule ]}
+            modules={[ ResizeColumnsModule, SortModule, SelectRangeModule, ClipboardModule, KeybindingsModule, EditModule, ExportModule, SelectRowModule, FormatModule, FrozenColumnsModule, FilterModule, PageModule ]}
             selectableRange
             clipboard="copy"
             clipboardCopyRowRange="range"
@@ -78,6 +78,9 @@ function SqlResultTable({ rows }: { rows: object[] }) {
                 rowHeaders: false,
                 columnHeaders: false
             }}
+            pagination
+            paginationSize={20}
+            paginationCounter="rows"
             columns={[
                 {
                     title: "#",
