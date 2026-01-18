@@ -57,9 +57,10 @@ function SqlResults({ ntxId }: TypeWidgetProps) {
     return (
         <div className="sql-result-widget">
             {results?.length === 1 && Array.isArray(results[0]) && results[0].length === 0 ? (
-                <Alert type="info">
-                    {t("sql_result.no_rows")}
-                </Alert>
+                <NoItems
+                    icon="bx bx-rectangle"
+                    text={t("sql_result.no_rows")}
+                />
             ) : (
                 <div className="sql-console-result-container selectable-text">
                     {results?.map((rows, index) => {
