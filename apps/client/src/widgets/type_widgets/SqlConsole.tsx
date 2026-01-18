@@ -160,20 +160,16 @@ export function SqlTableSchemas({ note }: TypeWidgetProps) {
 
                     <span class="sql-table-schemas">
                         {schemas.map(({ name, columns }) => (
-                            <Fragment key={name}>
-                                <Dropdown text={name} noSelectButtonStyle hideToggleArrow
-                                >
-                                    <table className="table-schema">
-                                        {columns.map(column => (
-                                            <tr key={column.name}>
-                                                <td>{column.name}</td>
-                                                <td>{column.type}</td>
-                                            </tr>
-                                        ))}
-                                    </table>
-                                </Dropdown>
-                                {" "}
-                            </Fragment>
+                            <Dropdown key={name} text={name} noSelectButtonStyle hideToggleArrow>
+                                <table className="table-schema">
+                                    {columns.map(column => (
+                                        <tr key={column.name}>
+                                            <td>{column.name}</td>
+                                            <td>{column.type}</td>
+                                        </tr>
+                                    ))}
+                                </table>
+                            </Dropdown>
                         ))}
                     </span>
                 </>

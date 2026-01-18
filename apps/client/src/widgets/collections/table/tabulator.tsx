@@ -71,7 +71,10 @@ export default function Tabulator<T>({ className, columns, data, modules, tabula
 
     // Change in data.
     useEffect(() => { tabulatorRef.current?.setData(data); }, [ data ]);
-    useEffect(() => { columns && tabulatorRef.current?.setColumns(columns); }, [ data ]);
+    useEffect(() => {
+        if (!columns) return;
+        tabulatorRef.current?.setColumns(columns);
+    }, [ columns ]);
 
     return (
         <div ref={containerRef} className={className} />
