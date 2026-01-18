@@ -14,13 +14,13 @@
     --row-moving-background-color: var(--accented-background-color);
     --row-text-color: var(--main-text-color);
     --row-delimiter-color: var(--more-accented-background-color);
-    
+
     --cell-horiz-padding-size: 8px;
     --cell-vert-padding-size: 8px;
-    
+
     --cell-editable-hover-outline-color: var(--main-border-color);
     --cell-read-only-text-color: var(--muted-text-color);
-    
+
     --cell-editing-border-color: var(--main-border-color);
     --cell-editing-border-width: 2px;
     --cell-editing-background-color: var(--ck-color-selector-focused-cell-background);
@@ -80,7 +80,6 @@
 
 .tabulator-tableholder {
     padding-top: 10px;
-    height: unset !important; /* Don't extend on the full height */
 }
 
 /* Rows */

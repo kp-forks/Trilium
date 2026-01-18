@@ -81,6 +81,7 @@ function SqlResultTable({ rows }: { rows: object[] }) {
             pagination
             paginationSize={20}
             paginationCounter="rows"
+            height="100%"
             columns={[
                 {
                     title: "#",

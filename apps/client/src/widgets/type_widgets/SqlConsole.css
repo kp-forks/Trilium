@@ -19,7 +19,6 @@
             min-height: 0;
 
             > .tabulator {
-                height: 100%;
                 --cell-vert-padding-size: 4px;
 
                 > .tabulator-tableholder {
