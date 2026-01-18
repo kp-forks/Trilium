@@ -40,6 +40,13 @@
     border-bottom: var(--col-header-bottom-border);
     background: var(--col-header-background-color);
     color: var(--col-header-text-color);
+    font-weight: normal;
+
+    .tabulator-col.tabulator-range-highlight {
+        background: inherit;
+        color: inherit;
+        font-weight: bold;
+    }
 
     .tabulator-col-content {
         padding: 0 !important;
