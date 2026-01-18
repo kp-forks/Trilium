@@ -40,10 +40,33 @@
     border-bottom: var(--col-header-bottom-border);
     background: var(--col-header-background-color);
     color: var(--col-header-text-color);
-}
 
-.tabulator .tabulator-col-content {
-    padding: 8px 4px !important;
+    .tabulator-col-content {
+        padding: 0 !important;
+
+        .tabulator-col-title-holder {
+            padding: 8px 4px;
+        }
+
+        &:has(.tabulator-header-filter) {
+            .tabulator-col-title-holder {
+                padding: 4px;
+                padding-bottom: 0;
+            }
+        }
+
+        .tabulator-header-filter {
+            background: var(--main-background-color);
+            padding: 1px;
+
+            input {
+                background: var(--input-background-color);
+                color: var(--input-text-color);
+                border: 1px solid var(--button-border-color);
+                outline: none;
+            }
+        }
+    }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -196,4 +219,22 @@
     color: var(--main-text-color);
     border-top: 1px solid var(--main-border-color);
     padding: 10px 0;
+
+    .tabulator-page {
+        background: var(--button-background-color);
+        color: var(--button-text-color);
+        border: 1px solid var(--button-border-color);
+        border-radius: var(--button-border-radius);
+
+        &:hover {
+            border-color: var(--hover-item-border-color);
+            color: var(--button-text-color);
+        }
+    }
+
+    select {
+        background: var(--button-background-color);
+        color: var(--input-text-color);
+        border: 1px solid var(--button-border-color);
+    }
 }
