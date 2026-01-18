@@ -79,7 +79,7 @@ export default function SplitEditor({ note, error, splitOptions, previewContent,
     }, [ readOnly, splitEditorOrientation ]);
 
     return (
-        <div ref={containerRef} className={`note-detail-split note-detail-printable ${`split-${  splitEditorOrientation}`} ${readOnly ? "split-read-only" : ""} ${className ?? ""}`}>
+        <div ref={containerRef} className={`note-detail-split note-detail-printable ${`split-${splitEditorOrientation}`} ${readOnly ? "split-read-only" : ""} ${className ?? ""}`}>
             {splitEditorOrientation === "horizontal"
                 ? <>{editor}{preview}</>
                 : <>{preview}{editor}</>}

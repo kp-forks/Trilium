@@ -2,7 +2,6 @@ import "./SqlConsole.css";
 
 import { SchemaResponse, SqlExecuteResponse } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
-import { Fragment } from "preact/jsx-runtime";
 import { ClipboardModule, EditModule, ExportModule, FilterModule, FormatModule, FrozenColumnsModule, KeybindingsModule, PageModule, ResizeColumnsModule, SelectRangeModule, SelectRowModule, SortModule } from "tabulator-tables";
 
 import { t } from "../../services/i18n";
@@ -17,18 +16,16 @@ import { TypeWidgetProps } from "./type_widget";
 
 export default function SqlConsole(props: TypeWidgetProps) {
     return (
-        <>
-            <SplitEditor
-                noteType="code"
-                {...props}
-                editorBefore={<SqlTableSchemas {...props} />}
-                previewContent={<SqlResults key={props.note.noteId} {...props} />}
-                forceOrientation="vertical"
-                splitOptions={{
-                    sizes: [ 70, 30 ]
-                }}
-            />
-        </>
+        <SplitEditor
+            noteType="code"
+            {...props}
+            editorBefore={<SqlTableSchemas {...props} />}
+            previewContent={<SqlResults key={props.note.noteId} {...props} />}
+            forceOrientation="vertical"
+            splitOptions={{
+                sizes: [ 70, 30 ]
+            }}
+        />
     );
 }
 
@@ -151,7 +148,7 @@ export function SqlTableSchemas({ note }: TypeWidgetProps) {
         server.get<SchemaResponse[]>("sql/schema").then(setSchemas);
     }, []);
 
-    const isEnabled = note?.mime === "text/x-sqlite;schema=trilium" && schemas;
+    const isEnabled = note.isTriliumSqlite() && schemas;
     return (
         <div className={`sql-table-schemas-widget ${!isEnabled ? "hidden-ext" : ""}`}>
             {isEnabled && (
