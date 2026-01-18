@@ -57,13 +57,15 @@
 
         .tabulator-header-filter {
             background: var(--main-background-color);
-            padding: 1px;
+            padding: 2px 1px;
 
             input {
-                background: var(--input-background-color);
-                color: var(--input-text-color);
+                background: var(--main-background-color);
+                color: var(--main-text-color);
                 border: 1px solid var(--button-border-color);
+                border-radius: 3px;
                 outline: none;
+                padding: 2px;
             }
         }
     }
