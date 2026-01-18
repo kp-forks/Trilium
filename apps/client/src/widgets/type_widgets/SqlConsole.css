@@ -7,6 +7,10 @@
         overflow: auto;
     }
 
+    .gutter {
+        background-color: var(--accented-background-color) !important;
+    }
+
     .sql-result-widget  {
         height: 100%;
 
