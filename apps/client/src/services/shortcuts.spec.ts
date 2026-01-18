@@ -1,5 +1,6 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import shortcuts, { keyMatches, matchesShortcut, isIMEComposing } from "./shortcuts.js";
+import { afterEach,beforeEach, describe, expect, it, vi } from "vitest";
+
+import shortcuts, { isIMEComposing,keyMatches, matchesShortcut } from "./shortcuts.js";
 
 // Mock utils module
 vi.mock("./utils.js", () => ({
@@ -248,7 +249,7 @@ describe("shortcuts", () => {
             const handler = vi.fn();
             shortcuts.bindGlobalShortcut("ctrl+a", handler, "test-namespace");
 
-            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
+            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
         });
 
         it("should not bind shortcuts when handler is null", () => {
@@ -279,7 +280,7 @@ describe("shortcuts", () => {
             const handler = vi.fn();
             shortcuts.bindElShortcut(mockJQueryEl, "ctrl+a", handler, "test-namespace");
 
-            expect(mockEl.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
+            expect(mockEl.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
         });
 
         it("should fall back to document when element is empty", () => {
@@ -289,7 +290,7 @@ describe("shortcuts", () => {
             const handler = vi.fn();
             shortcuts.bindElShortcut(emptyJQuery, "ctrl+a", handler, "test-namespace");
 
-            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
+            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
         });
     });
 
@@ -300,7 +301,7 @@ describe("shortcuts", () => {
 
             shortcuts.removeGlobalShortcut("test-namespace");
 
-            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
+            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
         });
     });
 
