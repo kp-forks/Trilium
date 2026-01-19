@@ -39,22 +39,25 @@ async function loadBootstrapCss() {
 }
 
 function loadStylesheets() {
-    const { assetPath, themeCssUrl, themeUseNextAsBase } = window.glob;
+    const { device, assetPath, themeCssUrl, themeUseNextAsBase } = window.glob;
+
     const cssToLoad: string[] = [];
-    cssToLoad.push(`${assetPath}/stylesheets/ckeditor-theme.css`);
-    cssToLoad.push(`api/fonts`);
-    cssToLoad.push(`${assetPath}/stylesheets/theme-light.css`);
-    if (themeCssUrl) {
-        cssToLoad.push(themeCssUrl);
+    if (device !== "print") {
+        cssToLoad.push(`${assetPath}/stylesheets/ckeditor-theme.css`);
+        cssToLoad.push(`api/fonts`);
+        cssToLoad.push(`${assetPath}/stylesheets/theme-light.css`);
+        if (themeCssUrl) {
+            cssToLoad.push(themeCssUrl);
+        }
+        if (themeUseNextAsBase === "next") {
+            cssToLoad.push(`${assetPath}/stylesheets/theme-next.css`);
+        } else if (themeUseNextAsBase === "next-dark") {
+            cssToLoad.push(`${assetPath}/stylesheets/theme-next-dark.css`);
+        } else if (themeUseNextAsBase === "next-light") {
+            cssToLoad.push(`${assetPath}/stylesheets/theme-next-light.css`);
+        }
+        cssToLoad.push(`${assetPath}/stylesheets/style.css`);
     }
-    if (themeUseNextAsBase === "next") {
-        cssToLoad.push(`${assetPath}/stylesheets/theme-next.css`);
-    } else if (themeUseNextAsBase === "next-dark") {
-        cssToLoad.push(`${assetPath}/stylesheets/theme-next-dark.css`);
-    } else if (themeUseNextAsBase === "next-light") {
-        cssToLoad.push(`${assetPath}/stylesheets/theme-next-light.css`);
-    }
-    cssToLoad.push(`${assetPath}/stylesheets/style.css`);
 
     for (const href of cssToLoad) {
         const linkEl = document.createElement("link");
