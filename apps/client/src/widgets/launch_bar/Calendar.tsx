@@ -3,7 +3,7 @@ import clsx from "clsx";
 import server from "../../services/server";
 import { TargetedMouseEvent, VNode } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { dayjs, Dayjs, getWeekInfo as getWeekInfoShared } from "@triliumnext/commons";
+import { Dayjs, getWeekInfo, WeekSettings } from "@triliumnext/commons";
 import { t } from "../../services/i18n";
 
 interface DateNotesForMonth {
@@ -42,7 +42,7 @@ export default function Calendar(args: CalendarArgs) {
     const firstDayOfWeekISO = (rawFirstDayOfWeek === 0 ? 7 : rawFirstDayOfWeek);
 
     const weekSettings = {
-        firstDayOfWeekISO,
+        firstDayOfWeek: firstDayOfWeekISO,
         firstWeekOfYear: firstWeekOfYear ?? 0,
         minDaysInFirstWeek: minDaysInFirstWeek ?? 4
     };
@@ -50,7 +50,7 @@ export default function Calendar(args: CalendarArgs) {
     const date = args.date;
     const firstDay = date.startOf('month');
     const firstDayISO = firstDay.isoWeekday();
-    const monthInfo = getMonthInformation(date, firstDayISO, firstDayOfWeekISO, weekSettings.firstWeekOfYear, weekSettings.minDaysInFirstWeek);
+    const monthInfo = getMonthInformation(date, firstDayISO, weekSettings);
 
     return (
         <>
@@ -76,16 +76,7 @@ function CalendarWeekHeader({ rawFirstDayOfWeek }: { rawFirstDayOfWeek: number }
     )
 }
 
-/**
- * Week settings for calendar component (uses firstDayOfWeekISO for compatibility).
- */
-interface CalendarWeekSettings {
-    firstDayOfWeekISO: number;
-    firstWeekOfYear: number;
-    minDaysInFirstWeek: number;
-}
-
-function PreviousMonthDays({ date, info: { dates, weekNumbers, weekYears }, weekSettings, ...args }: { date: Dayjs, info: DateRangeInfo, weekSettings: CalendarWeekSettings } & CalendarArgs) {
+function PreviousMonthDays({ date, info: { dates, weekNumbers, weekYears }, weekSettings, ...args }: { date: Dayjs, info: DateRangeInfo, weekSettings: WeekSettings } & CalendarArgs) {
     const prevMonth = date.subtract(1, 'month').format('YYYY-MM');
     const [ dateNotesForPrevMonth, setDateNotesForPrevMonth ] = useState<DateNotesForMonth>();
 
@@ -101,22 +92,21 @@ function PreviousMonthDays({ date, info: { dates, weekNumbers, weekYears }, week
     )
 }
 
-function CurrentMonthDays({ date, weekSettings, ...args }: { date: Dayjs, weekSettings: CalendarWeekSettings } & CalendarArgs) {
+function CurrentMonthDays({ date, weekSettings, ...args }: { date: Dayjs, weekSettings: WeekSettings } & CalendarArgs) {
     let dateCursor = date;
     const currentMonth = date.month();
     const items: VNode[] = [];
     const curMonthString = date.format('YYYY-MM');
     const [ dateNotesForCurMonth, setDateNotesForCurMonth ] = useState<DateNotesForMonth>();
-    const { firstDayOfWeekISO, firstWeekOfYear, minDaysInFirstWeek } = weekSettings;
+    const { firstDayOfWeek, firstWeekOfYear, minDaysInFirstWeek } = weekSettings;
 
     useEffect(() => {
         server.get<DateNotesForMonth>(`special-notes/notes-for-month/${curMonthString}`).then(setDateNotesForCurMonth);
     }, [ date ]);
 
     while (dateCursor.month() === currentMonth) {
-        const sharedSettings = { firstDayOfWeek: firstDayOfWeekISO, firstWeekOfYear, minDaysInFirstWeek };
-        const { weekYear, weekNumber } = getWeekInfoShared(dateCursor, sharedSettings);
-        if (dateCursor.isoWeekday() === firstDayOfWeekISO) {
+        const { weekYear, weekNumber } = getWeekInfo(dateCursor, weekSettings);
+        if (dateCursor.isoWeekday() === firstDayOfWeek) {
             items.push(<CalendarWeek key={`${weekYear}-W${weekNumber}`} date={dateCursor} weekNumber={weekNumber} weekYear={weekYear} {...args}/>)
         }
 
@@ -183,21 +173,20 @@ function CalendarWeek({ date, weekNumber, weekYear, weekNotes, onWeekClicked }: 
         >{weekNumber}</span>);
 }
 
-export function getMonthInformation(date: Dayjs, firstDayISO: number, firstDayOfWeekISO: number, firstWeekOfYear: number = 0, minDaysInFirstWeek: number = 4) {
+export function getMonthInformation(date: Dayjs, firstDayISO: number, weekSettings: WeekSettings) {
     return {
-        prevMonth: getPrevMonthDays(date, firstDayISO, firstDayOfWeekISO, firstWeekOfYear, minDaysInFirstWeek),
-        nextMonth: getNextMonthDays(date, firstDayOfWeekISO)
+        prevMonth: getPrevMonthDays(date, firstDayISO, weekSettings),
+        nextMonth: getNextMonthDays(date, weekSettings.firstDayOfWeek)
     }
 }
 
-function getPrevMonthDays(date: Dayjs, firstDayISO: number, firstDayOfWeekISO: number, firstWeekOfYear: number, minDaysInFirstWeek: number): DateRangeInfo {
+function getPrevMonthDays(date: Dayjs, firstDayISO: number, weekSettings: WeekSettings): DateRangeInfo {
     const prevMonthLastDay = date.subtract(1, 'month').endOf('month');
-    const daysToAdd = (firstDayISO - firstDayOfWeekISO + 7) % 7;
+    const daysToAdd = (firstDayISO - weekSettings.firstDayOfWeek + 7) % 7;
     const dates: Dayjs[] = [];
 
     const firstDay = date.startOf('month');
-    const sharedSettings = { firstDayOfWeek: firstDayOfWeekISO, firstWeekOfYear, minDaysInFirstWeek };
-    const { weekYear, weekNumber } = getWeekInfoShared(firstDay, sharedSettings);
+    const { weekYear, weekNumber } = getWeekInfo(firstDay, weekSettings);
 
     // Get dates from previous month
     for (let i = daysToAdd - 1; i >= 0; i--) {
@@ -207,10 +196,10 @@ function getPrevMonthDays(date: Dayjs, firstDayISO: number, firstDayOfWeekISO: n
     return { weekNumbers: [ weekNumber ], weekYears: [ weekYear ], dates };
 }
 
-function getNextMonthDays(date: Dayjs, firstDayOfWeekISO: number): DateRangeInfo {
+function getNextMonthDays(date: Dayjs, firstDayOfWeek: number): DateRangeInfo {
     const lastDayOfMonth = date.endOf('month');
     const lastDayISO = lastDayOfMonth.isoWeekday();
-    const lastDayOfUserWeek = ((firstDayOfWeekISO + 6 - 1) % 7) + 1;
+    const lastDayOfUserWeek = ((firstDayOfWeek + 6 - 1) % 7) + 1;
     const nextMonthFirstDay = date.add(1, 'month').startOf('month');
     const dates: Dayjs[] = [];
 
