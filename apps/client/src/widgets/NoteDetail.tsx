@@ -363,8 +363,8 @@ function showToast(type: "printing" | "exporting_pdf", progress: number = 0) {
     });
 }
 
-function handlePrintReport(printReport: PrintReport) {
-    if (printReport.type === "collection" && printReport.ignoredNoteIds.length > 0) {
+function handlePrintReport(printReport?: PrintReport) {
+    if (printReport?.type === "collection" && printReport.ignoredNoteIds.length > 0) {
         toast.showPersistent({
             id: "print-report",
             icon: "bx bx-collection",
