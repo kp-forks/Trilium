@@ -793,8 +793,8 @@ importers:
         specifier: 0.2.5
         version: 0.2.5
       turnish:
-        specifier: 1.7.1
-        version: 1.7.1
+        specifier: 1.8.0
+        version: 1.8.0
       unescape:
         specifier: 1.0.1
         version: 1.0.1
@@ -13483,8 +13483,8 @@ packages:
   turndown@7.2.2:
     resolution: {integrity: sha512-1F7db8BiExOKxjSMU2b7if62D/XOyQyZbPKq/nUwopfgnHlqXHqQ0lvfUTeUIr1lZJzOPFn43dODyMSIfvWRKQ==}
 
-  turnish@1.7.1:
-    resolution: {integrity: sha512-NgyY7pIDABjKyg2isRgZyFPav6tOyvmqpTx3HROsKrOaE3JccP4C1P2IhAtkAZ8DkQb/O1R7HOFAkxY8uaJmcQ==}
+  turnish@1.8.0:
+    resolution: {integrity: sha512-r1K94mbU5FHwvHKsPrTejuxoQTyKrddeWNzxS53Dnu+33DJLZJzfAHmo7GhdxBvhrHYCfv/diYvpq2VCGSGa+w==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -15311,8 +15311,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       '@ckeditor/ckeditor5-watchdog': 47.4.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-dev-build-tools@54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
@@ -30130,7 +30128,7 @@ snapshots:
     dependencies:
       '@mixmark-io/domino': 2.2.0
 
-  turnish@1.7.1:
+  turnish@1.8.0:
     dependencies:
       '@adobe/css-tools': 4.4.4
       '@mixmark-io/domino': 2.2.0
