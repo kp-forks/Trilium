@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import shortcuts, { isIMEComposing,keyMatches, matchesShortcut } from "./shortcuts.js";
+import shortcuts, { isIMEComposing, keyMatches, matchesShortcut } from "./shortcuts.js";
 
 // Mock utils module
 vi.mock("./utils.js", () => ({
@@ -249,7 +249,7 @@ describe("shortcuts", () => {
             const handler = vi.fn();
             shortcuts.bindGlobalShortcut("ctrl+a", handler, "test-namespace");
 
-            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
         });
 
         it("should not bind shortcuts when handler is null", () => {
@@ -280,7 +280,7 @@ describe("shortcuts", () => {
             const handler = vi.fn();
             shortcuts.bindElShortcut(mockJQueryEl, "ctrl+a", handler, "test-namespace");
 
-            expect(mockEl.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+            expect(mockEl.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
         });
 
         it("should fall back to document when element is empty", () => {
@@ -290,7 +290,7 @@ describe("shortcuts", () => {
             const handler = vi.fn();
             shortcuts.bindElShortcut(emptyJQuery, "ctrl+a", handler, "test-namespace");
 
-            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+            expect(mockElement.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
         });
     });
 
@@ -301,7 +301,7 @@ describe("shortcuts", () => {
 
             shortcuts.removeGlobalShortcut("test-namespace");
 
-            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
         });
     });
 
