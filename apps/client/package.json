@@ -79,7 +79,7 @@
     "@types/tabulator-tables": "6.3.1",
     "copy-webpack-plugin": "13.0.1",
     "happy-dom": "20.3.3",
-    "lightningcss": "1.30.2",
+    "lightningcss": "1.31.1",
     "script-loader": "0.7.2",
     "vite-plugin-static-copy": "3.1.5"
   }
