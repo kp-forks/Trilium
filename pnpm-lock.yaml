@@ -197,8 +197,8 @@ importers:
         specifier: 2.11.8
         version: 2.11.8
       '@preact/signals':
-        specifier: 2.5.1
-        version: 2.5.1(preact@10.28.2)
+        specifier: 2.6.0
+        version: 2.6.0(preact@10.28.2)
       '@triliumnext/ckeditor5':
         specifier: workspace:*
         version: link:../../packages/ckeditor5
@@ -4043,11 +4043,11 @@ packages:
       '@babel/core': 7.x
       vite: 2.x || 3.x || 4.x || 5.x || 6.x || 7.x
 
-  '@preact/signals-core@1.12.1':
-    resolution: {integrity: sha512-BwbTXpj+9QutoZLQvbttRg5x3l5468qaV2kufh+51yha1c53ep5dY4kTuZR35+3pAZxpfQerGJiQqg34ZNZ6uA==}
+  '@preact/signals-core@1.12.2':
+    resolution: {integrity: sha512-5Yf8h1Ke3SMHr15xl630KtwPTW4sYDFkkxS0vQ8UiQLWwZQnrF9IKaVG1mN5VcJz52EcWs2acsc/Npjha/7ysA==}
 
-  '@preact/signals@2.5.1':
-    resolution: {integrity: sha512-VPjk5YFt7i11Fi4UK0tzaEe5xLwfhUxXL3l89ocxQ5aPz7bRo8M5+N73LjBMPklyXKYKz6YsNo4Smp8n6nplng==}
+  '@preact/signals@2.6.0':
+    resolution: {integrity: sha512-a22Mh1CCA+PaqobdV2YfeZ30PGywp/QnhCBNVDIsHUdkuqpYcbxt0vgC78JYaicBqWxAOGXLoExj5WHaZ/VKvg==}
     peerDependencies:
       preact: 10.28.2
 
@@ -15307,6 +15307,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       '@ckeditor/ckeditor5-watchdog': 47.4.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-dev-build-tools@54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
@@ -18510,11 +18512,11 @@ snapshots:
       - preact
       - supports-color
 
-  '@preact/signals-core@1.12.1': {}
+  '@preact/signals-core@1.12.2': {}
 
-  '@preact/signals@2.5.1(preact@10.28.2)':
+  '@preact/signals@2.6.0(preact@10.28.2)':
     dependencies:
-      '@preact/signals-core': 1.12.1
+      '@preact/signals-core': 1.12.2
       preact: 10.28.2
 
   '@prefresh/babel-plugin@0.5.2': {}
