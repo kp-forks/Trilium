@@ -218,8 +218,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/splitjs
       '@zumer/snapdom':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.2
+        version: 2.0.2
       autocomplete.js:
         specifier: 0.38.1
         version: 0.38.1
@@ -5965,8 +5965,8 @@ packages:
     resolution: {integrity: sha512-0fztsk/0ryJ+2PPr9EyXS5/Co7OK8q3zY/xOoozEWaUsL5x+C0cyZ4YyMuUffOO2Dx/rAdq4JMPqW0VUtm+vzA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
-  '@zumer/snapdom@2.0.1':
-    resolution: {integrity: sha512-78/qbYl2FTv4H6qaXcNfAujfIOSzdvs83NW63VbyC9QA3sqNPfPvhn4xYMO6Gy11hXwJUEhd0z65yKiNzDwy9w==}
+  '@zumer/snapdom@2.0.2':
+    resolution: {integrity: sha512-W6quT4lMcPu8Q9O/Q6witSfc6/+xuY8C8yDoHug/+o7zYKCNE/e0I3//XsWDkyq9C0mDE0TAWF/8bwCR7x3gHQ==}
 
   abab@2.0.6:
     resolution: {integrity: sha512-j2afSsaIENvHZN2B8GOpF566vZ5WVk5opAiMTvWgaQT8DkbOqsTfvNAvHoRGU2zzP8cPoqys+xHTRDWW8L+/BA==}
@@ -15307,6 +15307,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       '@ckeditor/ckeditor5-watchdog': 47.4.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-dev-build-tools@54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
@@ -20860,7 +20862,7 @@ snapshots:
 
   '@zip.js/zip.js@2.8.11': {}
 
-  '@zumer/snapdom@2.0.1': {}
+  '@zumer/snapdom@2.0.2': {}
 
   abab@2.0.6: {}
 
