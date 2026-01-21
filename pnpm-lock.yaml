@@ -897,8 +897,8 @@ importers:
   packages/ckeditor5-admonition:
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.3.0
-        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.2
+        version: 54.3.2(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -957,8 +957,8 @@ importers:
   packages/ckeditor5-footnotes:
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.3.0
-        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.2
+        version: 54.3.2(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1017,8 +1017,8 @@ importers:
   packages/ckeditor5-keyboard-marker:
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.3.0
-        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.2
+        version: 54.3.2(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1084,8 +1084,8 @@ importers:
         version: 0.108.2
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.3.0
-        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.2
+        version: 54.3.2(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1151,8 +1151,8 @@ importers:
         version: 4.17.22
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
-        specifier: 54.3.0
-        version: 54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 54.3.2
+        version: 54.3.2(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
         version: 5.0.0
@@ -1852,8 +1852,8 @@ packages:
   '@ckeditor/ckeditor5-core@47.4.0':
     resolution: {integrity: sha512-upV/3x9fhgFWxVVtwR47zCOAvZKgP8a8N7UQOFwfs3Tr52+oE1gULWKTiS9079MBaXaIqtM/EbelNdvBh4gOGg==}
 
-  '@ckeditor/ckeditor5-dev-build-tools@54.3.0':
-    resolution: {integrity: sha512-46gPUhiSdDdFBsGewGgSnVq2E5vkwXBVN2L9dbQ3t9Wta3F4zjXxw+496mAq71hAVxfZmyACjaVT3pAJojUIRw==}
+  '@ckeditor/ckeditor5-dev-build-tools@54.3.2':
+    resolution: {integrity: sha512-xmK8/vbx5uVvkLwZ5kpW5A55LKYDRFQxYvh8rcybYG/B3yNgKrq7oJXvjVPTIqWiMT3JpjJ4J/NttIYDaXZhCw==}
     engines: {node: '>=24.11.0', npm: '>=5.7.1'}
     hasBin: true
 
@@ -15242,6 +15242,8 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-code-block@47.4.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)':
     dependencies:
@@ -15307,8 +15309,10 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       '@ckeditor/ckeditor5-watchdog': 47.4.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
-  '@ckeditor/ckeditor5-dev-build-tools@54.3.0(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
+  '@ckeditor/ckeditor5-dev-build-tools@54.3.2(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       '@rollup/plugin-commonjs': 28.0.9(rollup@4.52.0)
       '@rollup/plugin-json': 6.1.0(rollup@4.52.0)
@@ -15432,6 +15436,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-editor-classic@47.4.0':
     dependencies:
@@ -15970,6 +15976,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-restricted-editing@47.4.0':
     dependencies:
@@ -16431,9 +16439,9 @@ snapshots:
       '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.0)
       '@csstools/css-tokenizer': 4.0.0
 
-  '@csstools/selector-resolve-nested@3.1.0(postcss-selector-parser@7.1.0)':
+  '@csstools/selector-resolve-nested@3.1.0(postcss-selector-parser@7.1.1)':
     dependencies:
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   '@csstools/selector-resolve-nested@4.0.0(postcss-selector-parser@7.1.1)':
     dependencies:
@@ -16442,6 +16450,10 @@ snapshots:
   '@csstools/selector-specificity@5.0.0(postcss-selector-parser@7.1.0)':
     dependencies:
       postcss-selector-parser: 7.1.0
+
+  '@csstools/selector-specificity@5.0.0(postcss-selector-parser@7.1.1)':
+    dependencies:
+      postcss-selector-parser: 7.1.1
 
   '@csstools/selector-specificity@6.0.0(postcss-selector-parser@7.1.1)':
     dependencies:
@@ -27456,7 +27468,7 @@ snapshots:
   postcss-calc@10.1.1(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
       postcss-value-parser: 4.2.0
 
   postcss-calc@8.2.4(postcss@8.5.6):
@@ -27500,7 +27512,7 @@ snapshots:
   postcss-discard-comments@7.0.4(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-discard-duplicates@5.1.0(postcss@8.5.6):
     dependencies:
@@ -27585,7 +27597,7 @@ snapshots:
       caniuse-api: 3.0.0
       cssnano-utils: 5.0.1(postcss@8.5.6)
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-minify-font-values@5.1.0(postcss@8.5.6):
     dependencies:
@@ -27634,7 +27646,7 @@ snapshots:
     dependencies:
       cssesc: 3.0.0
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-mixins@11.0.3(postcss@8.5.6):
     dependencies:
@@ -27652,13 +27664,13 @@ snapshots:
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.6)
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
       postcss-value-parser: 4.2.0
 
   postcss-modules-scope@3.2.1(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-modules-values@4.0.0(postcss@8.5.6):
     dependencies:
@@ -27667,10 +27679,10 @@ snapshots:
 
   postcss-nesting@13.0.2(postcss@8.5.6):
     dependencies:
-      '@csstools/selector-resolve-nested': 3.1.0(postcss-selector-parser@7.1.0)
-      '@csstools/selector-specificity': 5.0.0(postcss-selector-parser@7.1.0)
+      '@csstools/selector-resolve-nested': 3.1.0(postcss-selector-parser@7.1.1)
+      '@csstools/selector-specificity': 5.0.0(postcss-selector-parser@7.1.1)
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-normalize-charset@5.1.0(postcss@8.5.6):
     dependencies:
@@ -27842,7 +27854,7 @@ snapshots:
   postcss-unique-selectors@7.0.4(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-value-parser@4.2.0: {}
 
@@ -29509,7 +29521,7 @@ snapshots:
     dependencies:
       browserslist: 4.26.2
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   stylelint-config-ckeditor5@13.0.0(stylelint@17.0.0(typescript@5.9.3)):
     dependencies:
