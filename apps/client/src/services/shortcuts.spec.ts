@@ -62,9 +62,10 @@ describe("shortcuts", () => {
     });
 
     describe("keyMatches", () => {
-        const createKeyboardEvent = (key: string, code?: string) => ({
+        const createKeyboardEvent = (key: string, code?: string, extraProps: Partial<KeyboardEvent> = {}) => ({
             key,
-            code: code || `Key${key.toUpperCase()}`
+            code: code || `Key${key.toUpperCase()}`,
+            ...extraProps
         } as KeyboardEvent);
 
         it("should match regular letter keys using key code", () => {
@@ -102,17 +103,23 @@ describe("shortcuts", () => {
             consoleSpy.mockRestore();
         });
 
+        it("should match azerty keys", () => {
+            const event = createKeyboardEvent("A", "KeyQ");
+            expect(keyMatches(event, "a")).toBe(true);
+            expect(keyMatches(event, "q")).toBe(false);
+        });
+
         it("should match letter keys using code when key is a special character (macOS Alt behavior)", () => {
             // On macOS, pressing Option/Alt + A produces 'å' as the key, but code is still 'KeyA'
-            const macOSAltAEvent = createKeyboardEvent("å", "KeyA");
+            const macOSAltAEvent = createKeyboardEvent("å", "KeyA", { altKey: true });
             expect(keyMatches(macOSAltAEvent, "a")).toBe(true);
 
             // Option + H produces '˙'
-            const macOSAltHEvent = createKeyboardEvent("˙", "KeyH");
+            const macOSAltHEvent = createKeyboardEvent("˙", "KeyH", { altKey: true });
             expect(keyMatches(macOSAltHEvent, "h")).toBe(true);
 
             // Option + S produces 'ß'
-            const macOSAltSEvent = createKeyboardEvent("ß", "KeyS");
+            const macOSAltSEvent = createKeyboardEvent("ß", "KeyS", { altKey: true });
             expect(keyMatches(macOSAltSEvent, "s")).toBe(true);
         });
     });
@@ -214,6 +221,15 @@ describe("shortcuts", () => {
 
             expect(consoleSpy).toHaveBeenCalled();
             consoleSpy.mockRestore();
+        });
+
+        it("matches azerty", () => {
+            const event = createKeyboardEvent({
+                key: "a",
+                code: "KeyQ",
+                ctrlKey: true
+            });
+            expect(matchesShortcut(event, "Ctrl+A")).toBe(true);
         });
 
         it("should match Alt+letter shortcuts on macOS where key is a special character", () => {
