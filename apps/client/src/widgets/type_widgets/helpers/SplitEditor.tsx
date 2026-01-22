@@ -8,7 +8,7 @@ import { DEFAULT_GUTTER_SIZE } from "../../../services/resizer";
 import utils, { isMobile } from "../../../services/utils";
 import ActionButton, { ActionButtonProps } from "../../react/ActionButton";
 import Admonition from "../../react/Admonition";
-import { useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
+import { useNoteBlob, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
 import { EditableCode, EditableCodeProps } from "../code/Code";
 
 export interface SplitEditorProps extends EditableCodeProps {
@@ -30,12 +30,22 @@ export interface SplitEditorProps extends EditableCodeProps {
  * - Can display errors to the user via {@link setError}.
  * - Horizontal or vertical orientation for the editor/preview split, adjustable via the switch split orientation button floating button.
  */
-export default function SplitEditor({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, ...editorProps }: SplitEditorProps) {
-    const splitEditorOrientation = useSplitOrientation(forceOrientation);
-    const [ readOnly ] = useNoteLabelBoolean(note, "readOnly");
-    const containerRef = useRef<HTMLDivElement>(null);
+export default function SplitEditor(props: SplitEditorProps) {
+    const [ readOnly ] = useNoteLabelBoolean(props.note, "readOnly");
 
-    const editor = (!readOnly &&
+    if (readOnly) {
+        return <ReadOnlyView {...props} />;
+    }
+
+    return <EditorWithSplit {...props} />;
+
+}
+
+function EditorWithSplit({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, ...editorProps }: SplitEditorProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const splitEditorOrientation = useSplitOrientation(forceOrientation);
+
+    const editor = (
         <div className="note-detail-split-editor-col">
             {editorBefore}
             <div className="note-detail-split-editor">
@@ -53,19 +63,14 @@ export default function SplitEditor({ note, error, splitOptions, previewContent,
         </div>
     );
 
-    const preview = (
-        <div className="note-detail-split-preview-col">
-            <div className={`note-detail-split-preview ${error ? "on-error" : ""}`}>
-                {previewContent}
-            </div>
-            <div className="btn-group btn-group-sm map-type-switcher content-floating-buttons preview-buttons bottom-right" role="group">
-                {previewButtons}
-            </div>
-        </div>
-    );
+    const preview = <PreviewContainer
+        error={error}
+        previewContent={previewContent}
+        previewButtons={previewButtons}
+    />;
 
     useEffect(() => {
-        if (!utils.isDesktop() || !containerRef.current || readOnly) return;
+        if (!utils.isDesktop() || !containerRef.current) return;
         const elements = Array.from(containerRef.current?.children) as HTMLElement[];
         const splitInstance = Split(elements, {
             rtl: glob.isRtl,
@@ -76,13 +81,50 @@ export default function SplitEditor({ note, error, splitOptions, previewContent,
         });
 
         return () => splitInstance.destroy();
-    }, [ readOnly, splitEditorOrientation ]);
+    }, [ splitEditorOrientation ]);
 
     return (
-        <div ref={containerRef} className={`note-detail-split note-detail-printable ${`split-${splitEditorOrientation}`} ${readOnly ? "split-read-only" : ""} ${className ?? ""}`}>
+        <div ref={containerRef} className={`note-detail-split note-detail-printable ${`split-${splitEditorOrientation}`} ${className ?? ""}`}>
             {splitEditorOrientation === "horizontal"
                 ? <>{editor}{preview}</>
                 : <>{preview}{editor}</>}
+        </div>
+    );
+}
+
+function ReadOnlyView({ ...props }: SplitEditorProps) {
+    const { note, onContentChanged } = props;
+    const content = useNoteBlob(note);
+    const onContentChangedRef = useRef(onContentChanged);
+
+    useEffect(() => {
+        onContentChangedRef.current = onContentChanged;
+    });
+
+    useEffect(() => {
+        onContentChangedRef.current?.(content?.content ?? "");
+    }, [ content ]);
+
+    return (
+        <div className={`note-detail-split note-detail-printable ${props.className} split-read-only`}>
+            <PreviewContainer {...props} />
+        </div>
+    );
+}
+
+function PreviewContainer({ error, previewContent, previewButtons }: {
+    error?: string | null;
+    previewContent: ComponentChildren;
+    previewButtons?: ComponentChildren;
+}) {
+    return (
+        <div className="note-detail-split-preview-col">
+            <div className={`note-detail-split-preview ${error ? "on-error" : ""}`}>
+                {previewContent}
+            </div>
+            <div className="btn-group btn-group-sm map-type-switcher content-floating-buttons preview-buttons bottom-right" role="group">
+                {previewButtons}
+            </div>
         </div>
     );
 }
