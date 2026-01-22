@@ -197,8 +197,8 @@ importers:
         specifier: 2.11.8
         version: 2.11.8
       '@preact/signals':
-        specifier: 2.6.0
-        version: 2.6.0(preact@10.28.2)
+        specifier: 2.6.1
+        version: 2.6.1(preact@10.28.2)
       '@triliumnext/ckeditor5':
         specifier: workspace:*
         version: link:../../packages/ckeditor5
@@ -4046,8 +4046,8 @@ packages:
   '@preact/signals-core@1.12.2':
     resolution: {integrity: sha512-5Yf8h1Ke3SMHr15xl630KtwPTW4sYDFkkxS0vQ8UiQLWwZQnrF9IKaVG1mN5VcJz52EcWs2acsc/Npjha/7ysA==}
 
-  '@preact/signals@2.6.0':
-    resolution: {integrity: sha512-a22Mh1CCA+PaqobdV2YfeZ30PGywp/QnhCBNVDIsHUdkuqpYcbxt0vgC78JYaicBqWxAOGXLoExj5WHaZ/VKvg==}
+  '@preact/signals@2.6.1':
+    resolution: {integrity: sha512-Gp3DI1T/0YyirwJnImR8l9xyVJgKiVzJXmEhic1/7SPw3zStrsvuBpwKnD609CzsIdzxprWa6yTNXN+VLLZPGQ==}
     peerDependencies:
       preact: 10.28.2
 
@@ -15242,8 +15242,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-code-block@47.4.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)':
     dependencies:
@@ -15445,8 +15443,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-decoupled@47.4.0':
     dependencies:
@@ -15465,8 +15461,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-multi-root@47.4.0':
     dependencies:
@@ -15489,8 +15483,6 @@ snapshots:
       '@ckeditor/ckeditor5-table': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-emoji@47.4.0':
     dependencies:
@@ -15673,8 +15665,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.4.0
       ckeditor5: 47.4.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-icons@47.4.0': {}
 
@@ -18520,7 +18510,7 @@ snapshots:
 
   '@preact/signals-core@1.12.2': {}
 
-  '@preact/signals@2.6.0(preact@10.28.2)':
+  '@preact/signals@2.6.1(preact@10.28.2)':
     dependencies:
       '@preact/signals-core': 1.12.2
       preact: 10.28.2
