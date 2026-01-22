@@ -14,35 +14,23 @@ function register(router: Router) {
     eu.route(router, "get", "/etapi/notes/history", (req, res, next) => {
         const ancestorNoteId = (req.query.ancestorNoteId as string) || "root";
 
-        let recentChanges: RecentChangeRow[] = [];
+        let recentChanges: RecentChangeRow[];
 
-        const revisionRows = sql.getRows<RecentChangeRow>(`
-            SELECT
-                notes.noteId,
-                notes.isDeleted AS current_isDeleted,
-                notes.deleteId AS current_deleteId,
-                notes.title AS current_title,
-                notes.isProtected AS current_isProtected,
-                revisions.title,
-                revisions.utcDateCreated AS utcDate,
-                revisions.dateCreated AS date
-            FROM
-                revisions
-                JOIN notes USING(noteId)`);
-
-        for (const revisionRow of revisionRows) {
-            const note = becca.getNote(revisionRow.noteId);
-
-            // for deleted notes, the becca note is null, and it's not possible to (easily) determine if it belongs to a subtree
-            if (ancestorNoteId === "root" || note?.hasAncestor(ancestorNoteId)) {
-                recentChanges.push(revisionRow);
-            }
-        }
-
-        // now we need to also collect date points not represented in note revisions:
-        // 1. creation for all notes (dateCreated)
-        // 2. deletion for deleted notes (dateModified)
-        const noteRows = sql.getRows<RecentChangeRow>(`
+        if (ancestorNoteId === "root") {
+            // Optimized path: no ancestor filtering needed, fetch directly from DB
+            recentChanges = sql.getRows<RecentChangeRow>(`
+                SELECT
+                    notes.noteId,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
+                    revisions.title,
+                    revisions.utcDateCreated AS utcDate,
+                    revisions.dateCreated AS date
+                FROM revisions
+                JOIN notes USING(noteId)
+                UNION ALL
                 SELECT
                     notes.noteId,
                     notes.isDeleted AS current_isDeleted,
@@ -53,7 +41,7 @@ function register(router: Router) {
                     notes.utcDateCreated AS utcDate,
                     notes.dateCreated AS date
                 FROM notes
-            UNION ALL
+                UNION ALL
                 SELECT
                     notes.noteId,
                     notes.isDeleted AS current_isDeleted,
@@ -64,20 +52,59 @@ function register(router: Router) {
                     notes.utcDateModified AS utcDate,
                     notes.dateModified AS date
                 FROM notes
-                WHERE notes.isDeleted = 1`);
-
-        for (const noteRow of noteRows) {
-            const note = becca.getNote(noteRow.noteId);
-
-            // for deleted notes, the becca note is null, and it's not possible to (easily) determine if it belongs to a subtree
-            if (ancestorNoteId === "root" || note?.hasAncestor(ancestorNoteId)) {
-                recentChanges.push(noteRow);
-            }
+                WHERE notes.isDeleted = 1
+                ORDER BY utcDate DESC
+                LIMIT 500`);
+        } else {
+            // Use recursive CTE to find all descendants, then filter at DB level
+            // This pushes filtering to the database for much better performance
+            recentChanges = sql.getRows<RecentChangeRow>(`
+                WITH RECURSIVE descendants(noteId) AS (
+                    SELECT ?
+                    UNION
+                    SELECT branches.noteId
+                    FROM branches
+                    JOIN descendants ON branches.parentNoteId = descendants.noteId
+                )
+                SELECT
+                    notes.noteId,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
+                    revisions.title,
+                    revisions.utcDateCreated AS utcDate,
+                    revisions.dateCreated AS date
+                FROM revisions
+                JOIN notes USING(noteId)
+                WHERE notes.noteId IN (SELECT noteId FROM descendants)
+                UNION ALL
+                SELECT
+                    notes.noteId,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
+                    notes.title,
+                    notes.utcDateCreated AS utcDate,
+                    notes.dateCreated AS date
+                FROM notes
+                WHERE notes.noteId IN (SELECT noteId FROM descendants)
+                UNION ALL
+                SELECT
+                    notes.noteId,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
+                    notes.title,
+                    notes.utcDateModified AS utcDate,
+                    notes.dateModified AS date
+                FROM notes
+                WHERE notes.isDeleted = 1 AND notes.noteId IN (SELECT noteId FROM descendants)
+                ORDER BY utcDate DESC
+                LIMIT 500`, [ancestorNoteId]);
         }
-
-        recentChanges.sort((a, b) => (a.utcDate > b.utcDate ? -1 : 1));
-
-        recentChanges = recentChanges.slice(0, Math.min(500, recentChanges.length));
 
         for (const change of recentChanges) {
             if (change.current_isProtected) {
