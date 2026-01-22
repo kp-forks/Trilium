@@ -42,8 +42,8 @@ describe("etapi/note-history", () => {
         expect(entry).toHaveProperty("title");
         expect(entry).toHaveProperty("utcDate");
         expect(entry).toHaveProperty("date");
-        expect(entry).toHaveProperty("currentIsDeleted");
-        expect(entry).toHaveProperty("currentIsProtected");
+        expect(entry).toHaveProperty("current_isDeleted");
+        expect(entry).toHaveProperty("current_isProtected");
     });
 
     it("filters history by ancestor note", async () => {
@@ -83,7 +83,7 @@ describe("etapi/note-history", () => {
             .expect(200);
 
         const deletedEntry = response.body.find(
-            (entry: any) => entry.noteId === noteToDeleteId && entry.currentIsDeleted === true
+            (entry: any) => entry.noteId === noteToDeleteId && entry.current_isDeleted === true
         );
 
         // Deleted entries should have canBeUndeleted property

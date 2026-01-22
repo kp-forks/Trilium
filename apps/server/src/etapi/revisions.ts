@@ -21,10 +21,10 @@ function register(router: Router) {
             recentChanges = sql.getRows<RecentChangeRow>(`
                 SELECT
                     notes.noteId,
-                    notes.isDeleted AS currentIsDeleted,
-                    notes.deleteId AS currentDeleteId,
-                    notes.title AS currentTitle,
-                    notes.isProtected AS currentIsProtected,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
                     revisions.title,
                     revisions.utcDateCreated AS utcDate,
                     revisions.dateCreated AS date
@@ -33,10 +33,10 @@ function register(router: Router) {
                 UNION ALL
                 SELECT
                     notes.noteId,
-                    notes.isDeleted AS currentIsDeleted,
-                    notes.deleteId AS currentDeleteId,
-                    notes.title AS currentTitle,
-                    notes.isProtected AS currentIsProtected,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
                     notes.title,
                     notes.utcDateCreated AS utcDate,
                     notes.dateCreated AS date
@@ -44,10 +44,10 @@ function register(router: Router) {
                 UNION ALL
                 SELECT
                     notes.noteId,
-                    notes.isDeleted AS currentIsDeleted,
-                    notes.deleteId AS currentDeleteId,
-                    notes.title AS currentTitle,
-                    notes.isProtected AS currentIsProtected,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
                     notes.title,
                     notes.utcDateModified AS utcDate,
                     notes.dateModified AS date
@@ -68,10 +68,10 @@ function register(router: Router) {
                 )
                 SELECT
                     notes.noteId,
-                    notes.isDeleted AS currentIsDeleted,
-                    notes.deleteId AS currentDeleteId,
-                    notes.title AS currentTitle,
-                    notes.isProtected AS currentIsProtected,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
                     revisions.title,
                     revisions.utcDateCreated AS utcDate,
                     revisions.dateCreated AS date
@@ -81,10 +81,10 @@ function register(router: Router) {
                 UNION ALL
                 SELECT
                     notes.noteId,
-                    notes.isDeleted AS currentIsDeleted,
-                    notes.deleteId AS currentDeleteId,
-                    notes.title AS currentTitle,
-                    notes.isProtected AS currentIsProtected,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
                     notes.title,
                     notes.utcDateCreated AS utcDate,
                     notes.dateCreated AS date
@@ -93,10 +93,10 @@ function register(router: Router) {
                 UNION ALL
                 SELECT
                     notes.noteId,
-                    notes.isDeleted AS currentIsDeleted,
-                    notes.deleteId AS currentDeleteId,
-                    notes.title AS currentTitle,
-                    notes.isProtected AS currentIsProtected,
+                    notes.isDeleted AS current_isDeleted,
+                    notes.deleteId AS current_deleteId,
+                    notes.title AS current_title,
+                    notes.isProtected AS current_isProtected,
                     notes.title,
                     notes.utcDateModified AS utcDate,
                     notes.dateModified AS date
@@ -107,17 +107,17 @@ function register(router: Router) {
         }
 
         for (const change of recentChanges) {
-            if (change.currentIsProtected) {
+            if (change.current_isProtected) {
                 if (protectedSessionService.isProtectedSessionAvailable()) {
                     change.title = protectedSessionService.decryptString(change.title) || "[protected]";
-                    change.currentTitle = protectedSessionService.decryptString(change.currentTitle) || "[protected]";
+                    change.current_title = protectedSessionService.decryptString(change.current_title) || "[protected]";
                 } else {
-                    change.title = change.currentTitle = "[protected]";
+                    change.title = change.current_title = "[protected]";
                 }
             }
 
-            if (change.currentIsDeleted) {
-                const deleteId = change.currentDeleteId;
+            if (change.current_isDeleted) {
+                const deleteId = change.current_deleteId;
 
                 const undeletedParentBranchIds = noteService.getUndeletedParentBranchIds(change.noteId, deleteId);
 

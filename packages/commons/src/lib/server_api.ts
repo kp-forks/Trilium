@@ -56,10 +56,10 @@ export interface RevisionPojo {
 
 export interface RecentChangeRow {
     noteId: string;
-    currentIsDeleted: boolean;
-    currentDeleteId: string;
-    currentTitle: string;
-    currentIsProtected: boolean;
+    current_isDeleted: boolean;
+    current_deleteId: string;
+    current_title: string;
+    current_isProtected: boolean;
     title: string;
     utcDate: string;
     date: string;

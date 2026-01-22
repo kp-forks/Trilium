@@ -446,16 +446,15 @@ paths:
               schema:
                   $ref: "#/components/schemas/EntityId"
         get:
-            description: Returns revision content identified by its ID. The Content-Type header will match the revision's MIME type.
+            description: Returns revision content identified by its ID
             operationId: getRevisionContent
             responses:
                 "200":
-                    description: Revision content. The Content-Type header will be set to the revision's actual MIME type (e.g., text/html, text/plain, image/png).
+                    description: revision content response
                     content:
-                        application/octet-stream:
+                        text/html:
                             schema:
                                 type: string
-                                format: binary
                 default:
                     description: unexpected error
                     content:
@@ -1380,16 +1379,16 @@ components:
                 title:
                     type: string
                     description: Title at the time of the change (may be "[protected]" for protected notes)
-                currentTitle:
+                current_title:
                     type: string
                     description: Current title of the note (may be "[protected]" for protected notes)
-                currentIsDeleted:
+                current_isDeleted:
                     type: boolean
                     description: Whether the note is currently deleted
-                currentDeleteId:
+                current_deleteId:
                     type: string
                     description: Delete ID if the note is deleted
-                currentIsProtected:
+                current_isProtected:
                     type: boolean
                     description: Whether the note is protected
                 utcDate:
