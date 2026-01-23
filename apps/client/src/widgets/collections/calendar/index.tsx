@@ -104,17 +104,12 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
     useResizeObserver(containerRef, () => calendarRef.current?.updateSize());
     const isCalendarRoot = (calendarRoot || workspaceCalendarRoot);
     const isEditable = !isCalendarRoot;
-    const noteIdsRef = useRef(noteIds);
-    useEffect(() => {
-        noteIdsRef.current = noteIds;
-    }, [ noteIds ]);
-
     const eventBuilder = useMemo(() => {
         if (!isCalendarRoot) {
-            return async () => await buildEvents(noteIdsRef.current);
+            return async () => await buildEvents(noteIds);
         }
         return async (e: EventSourceFuncArg) => await buildEventsForCalendar(note, e);
-    }, [isCalendarRoot, note]);
+    }, [isCalendarRoot, noteIds]);
 
     const plugins = usePlugins(isEditable, isCalendarRoot);
     const locale = useLocale();
