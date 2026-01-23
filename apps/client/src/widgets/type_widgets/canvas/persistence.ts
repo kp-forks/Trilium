@@ -52,7 +52,6 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
 
             libraryCache.current = [];
             attachmentMetadata.current = [];
-            currentSceneVersion.current = -1;
 
             // load saved content into excalidraw canvas
             let content: CanvasContent = {
@@ -69,6 +68,9 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
             }
 
             loadData(api, content, theme);
+
+            // Initialize tracking state after loading to prevent redundant updates from initial onChange events
+            currentSceneVersion.current = getSceneVersion(api.getSceneElements());
 
             // load the library state
             loadLibrary(note).then(({ libraryItems, metadata }) => {
