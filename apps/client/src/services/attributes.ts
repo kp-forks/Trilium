@@ -117,15 +117,15 @@ function removeOwnedRelationByName(note: FNote, relationName: string) {
  * @param name the name of the attribute to set.
  * @param value the value of the attribute to set.
  */
-export async function setAttribute(note: FNote, type: "label" | "relation", name: string, value: string | null | undefined) {
+export async function setAttribute(note: FNote, type: "label" | "relation", name: string, value: string | null | undefined, componentId?: string) {
     if (value !== null && value !== undefined) {
         // Create or update the attribute.
-        await server.put(`notes/${note.noteId}/set-attribute`, { type, name, value });
+        await server.put(`notes/${note.noteId}/set-attribute`, { type, name, value }, componentId);
     } else {
         // Remove the attribute if it exists on the server but we don't define a value for it.
         const attributeId = note.getAttribute(type, name)?.attributeId;
         if (attributeId) {
-            await server.remove(`notes/${note.noteId}/attributes/${attributeId}`);
+            await server.remove(`notes/${note.noteId}/attributes/${attributeId}`, componentId);
         }
     }
 }

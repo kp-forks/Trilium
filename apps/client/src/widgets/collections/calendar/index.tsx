@@ -246,8 +246,8 @@ function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean, c
         const { startTime, endTime } = parseStartEndTimeFromEvent(e.event);
         const note = await froca.getNote(e.event.extendedProps.noteId);
         if (!note) return;
-        changeEvent(note, { startDate, endDate, startTime, endTime });
-    }, []);
+        changeEvent(note, { startDate, endDate, startTime, endTime, componentId });
+    }, [ componentId ]);
 
     // Called upon when clicking the day number in the calendar, opens or creates the day note but only if in a calendar root.
     const onDateClick = useCallback(async (e: DateClickArg) => {

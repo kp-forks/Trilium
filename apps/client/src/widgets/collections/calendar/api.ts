@@ -18,6 +18,7 @@ interface ChangeEventOpts {
     endDate?: string | null;
     startTime?: string | null;
     endTime?: string | null;
+    componentId?: string;
 }
 
 export async function newEvent(parentNote: FNote, { title, startDate, endDate, startTime, endTime, componentId }: NewEventOpts) {
@@ -58,7 +59,7 @@ export async function newEvent(parentNote: FNote, { title, startDate, endDate, s
     }, componentId);
 }
 
-export async function changeEvent(note: FNote, { startDate, endDate, startTime, endTime }: ChangeEventOpts) {
+export async function changeEvent(note: FNote, { startDate, endDate, startTime, endTime, componentId }: ChangeEventOpts) {
     // Don't store the end date if it's empty.
     if (endDate === startDate) {
         endDate = undefined;
@@ -70,12 +71,12 @@ export async function changeEvent(note: FNote, { startDate, endDate, startTime, 
     let endAttribute = note.getAttributes("label").filter(attr => attr.name == "calendar:endDate").shift()?.value||"endDate";
 
     const noteId = note.noteId;
-    setLabel(noteId, startAttribute, startDate);
-    setAttribute(note, "label", endAttribute, endDate);
+    setLabel(noteId, startAttribute, startDate, false, componentId);
+    setAttribute(note, "label", endAttribute, endDate, componentId);
 
     startAttribute = note.getAttributes("label").filter(attr => attr.name == "calendar:startTime").shift()?.value||"startTime";
     endAttribute = note.getAttributes("label").filter(attr => attr.name == "calendar:endTime").shift()?.value||"endTime";
 
-    setAttribute(note, "label", startAttribute, startTime);
-    setAttribute(note, "label", endAttribute, endTime);
+    setAttribute(note, "label", startAttribute, startTime, componentId);
+    setAttribute(note, "label", endAttribute, endTime, componentId);
 }
