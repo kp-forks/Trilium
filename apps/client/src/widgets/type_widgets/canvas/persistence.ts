@@ -176,10 +176,22 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
                 currentSceneVersion.current = newSceneVersion;
             }
         },
-        onLibraryChange: () => {
-            libraryChanged.current = true;
-            spacedUpdate.resetUpdateTimer();
-            spacedUpdate.scheduleUpdate();
+        onLibraryChange: (libraryItems) => {
+            if (!apiRef.current || isReadOnly) return;
+
+            // Check if library actually changed by comparing with cached state
+            const hasChanges =
+                libraryItems.length !== libraryCache.current.length ||
+                libraryItems.some(item => {
+                    const cachedItem = libraryCache.current.find(cached => cached.id === item.id);
+                    return !cachedItem || cachedItem.name !== item.name;
+                });
+
+            if (hasChanges) {
+                libraryChanged.current = true;
+                spacedUpdate.resetUpdateTimer();
+                spacedUpdate.scheduleUpdate();
+            }
         }
     };
 }
