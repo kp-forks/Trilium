@@ -125,9 +125,7 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
         // Subnote attribute change.
         if (loadResults.getAttributeRows(parentComponent?.componentId).some((a) => noteIds.includes(a.noteId ?? ""))) {
             // Defer execution after the load results are processed so that the event builder has the updated data to work with.
-            setTimeout(() => {
-                calendarRef.current?.refetchEvents();
-            }, 0);
+            setTimeout(() => api.refetchEvents(), 0);
             return; // early return since we'll refresh the events anyway
         }
 

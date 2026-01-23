@@ -1,5 +1,4 @@
-import type { AttachmentRow, AttributeRow, BranchRow, NoteRow } from "@triliumnext/commons";
-import { dayjs } from "@triliumnext/commons";
+import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow } from "@triliumnext/commons";
 import fs from "fs";
 import html2plaintext from "html2plaintext";
 import { t } from "i18next";
@@ -15,7 +14,7 @@ import ValidationError from "../errors/validation_error.js";
 import cls from "../services/cls.js";
 import log from "../services/log.js";
 import protectedSessionService from "../services/protected_session.js";
-import { newEntityId, quoteRegex, toMap,unescapeHtml } from "../services/utils.js";
+import { newEntityId, quoteRegex, toMap, unescapeHtml } from "../services/utils.js";
 import dateUtils from "./date_utils.js";
 import entityChangesService from "./entity_changes.js";
 import eventService from "./events.js";
