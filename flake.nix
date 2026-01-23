@@ -2,7 +2,7 @@
   description = "Trilium Notes (experimental flake)";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/master";
+    nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     pnpm2nix = {
       url = "github:FliegendeWurst/pnpm2nix-nzbr";
