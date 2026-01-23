@@ -119,14 +119,25 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
 
     // React to changes.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
-        if (loadResults.getNoteIds().some(noteId => noteIds.includes(noteId)) // note title change.
-            || loadResults.getAttributeRows(parentComponent?.componentId).some((a) => noteIds.includes(a.noteId ?? ""))) // subnote change.
-        {
+        const api = calendarRef.current;
+        if (!api) return;
+
+        // Subnote attribute change.
+        if (loadResults.getAttributeRows(parentComponent?.componentId).some((a) => noteIds.includes(a.noteId ?? ""))) {
             // Defer execution after the load results are processed so that the event builder has the updated data to work with.
             setTimeout(() => {
                 console.log("Refresh");
                 calendarRef.current?.refetchEvents();
             }, 0);
+            return; // early return since we'll refresh the events anyway
+        }
+
+        // Title change.
+        for (const noteId of loadResults.getNoteIds().filter(noteId => noteIds.includes(noteId))) {
+            const event = api.getEventById(noteId);
+            const note = froca.getNoteFromCache(noteId);
+            if (!event || !note) continue;
+            event.setProp("title", note.title);
         }
     });
 
