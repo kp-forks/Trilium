@@ -1,4 +1,4 @@
-import { CreateChildrenResponse } from "@triliumnext/commons";
+import { AttributeRow, CreateChildrenResponse } from "@triliumnext/commons";
 
 import FNote from "../../../entities/fnote";
 import { setAttribute, setLabel } from "../../../services/attributes";
@@ -21,24 +21,41 @@ interface ChangeEventOpts {
 }
 
 export async function newEvent(parentNote: FNote, { title, startDate, endDate, startTime, endTime, componentId }: NewEventOpts) {
-    // Create the note.
-    const { note } = await server.post<CreateChildrenResponse>(`notes/${parentNote.noteId}/children?target=into`, {
-        title,
-        content: "",
-        type: "text"
-    }, componentId);
-
-    // Set the attributes.
-    setLabel(note.noteId, "startDate", startDate, false, componentId);
+    const attributes: Omit<AttributeRow, "noteId" | "attributeId">[] = [];
+    attributes.push({
+        type: "label",
+        name: "startDate",
+        value: startDate
+    });
     if (endDate) {
-        setLabel(note.noteId, "endDate", endDate, false, componentId);
+        attributes.push({
+            type: "label",
+            name: "endDate",
+            value: endDate
+        });
     }
     if (startTime) {
-        setLabel(note.noteId, "startTime", startTime, false, componentId);
+        attributes.push({
+            type: "label",
+            name: "startTime",
+            value: startTime
+        });
     }
     if (endTime) {
-        setLabel(note.noteId, "endTime", endTime, false, componentId);
+        attributes.push({
+            type: "label",
+            name: "endTime",
+            value: endTime
+        });
     }
+
+    // Create the note.
+    await server.post<CreateChildrenResponse>(`notes/${parentNote.noteId}/children?target=into`, {
+        title,
+        content: "",
+        type: "text",
+        attributes
+    }, componentId);
 }
 
 export async function changeEvent(note: FNote, { startDate, endDate, startTime, endTime }: ChangeEventOpts) {
