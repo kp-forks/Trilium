@@ -114,7 +114,7 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
     const plugins = usePlugins(isEditable, isCalendarRoot);
     const locale = useLocale();
 
-    const { eventDidMount } = useEventDisplayCustomization(note);
+    const { eventDidMount } = useEventDisplayCustomization(note, parentComponent?.componentId);
     const editingProps = useEditing(note, isEditable, isCalendarRoot, parentComponent?.componentId);
 
     // React to changes.
@@ -126,7 +126,6 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
         if (loadResults.getAttributeRows(parentComponent?.componentId).some((a) => noteIds.includes(a.noteId ?? ""))) {
             // Defer execution after the load results are processed so that the event builder has the updated data to work with.
             setTimeout(() => {
-                console.log("Refresh");
                 calendarRef.current?.refetchEvents();
             }, 0);
             return; // early return since we'll refresh the events anyway
@@ -277,7 +276,7 @@ function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean, c
     };
 }
 
-function useEventDisplayCustomization(parentNote: FNote) {
+function useEventDisplayCustomization(parentNote: FNote, componentId: string | undefined) {
     const eventDidMount = useCallback((e: EventMountArg) => {
         const { iconClass, promotedAttributes } = e.event.extendedProps;
 
@@ -334,7 +333,7 @@ function useEventDisplayCustomization(parentNote: FNote) {
             const note = await froca.getNote(e.event.extendedProps.noteId);
             if (!note) return;
 
-            openCalendarContextMenu(contextMenuEvent, note, parentNote);
+            openCalendarContextMenu(contextMenuEvent, note, parentNote, componentId);
         }
 
         if (isMobile()) {
