@@ -20,6 +20,9 @@ export interface CanvasContent {
     appState: Partial<AppState>;
 }
 
+/** Subset of the app state that should be persisted whenever they change. This explicitly excludes transient state like the current selection or zoom level. */
+type ImportantAppState = Pick<AppState, "gridModeEnabled" | "viewBackgroundColor">;
+
 export default function useCanvasPersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: RefObject<ExcalidrawImperativeAPI>, theme: AppState["theme"], isReadOnly: boolean): Partial<ExcalidrawProps> {
     const libraryChanged = useRef(false);
 
@@ -36,6 +39,8 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
     //every libraryitem is saved on its own json file in the attachments of the note.
     const libraryCache = useRef<LibraryItem[]>([]);
     const attachmentMetadata = useRef<AttachmentMetadata[]>([]);
+
+    const appStateToCompare = useRef<Partial<ImportantAppState>>({});
 
     const spacedUpdate = useEditorSpacedUpdate({
         note,
@@ -78,7 +83,7 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
         async getData() {
             const api = apiRef.current;
             if (!api) return;
-            const { content, svg } = await getData(api);
+            const { content, svg } = await getData(api, appStateToCompare);
             const attachments: SavedData["attachments"] = [{ role: "image", title: "canvas-export.svg", mime: "image/svg+xml", content: svg, position: 0 }];
 
             // libraryChanged is unset in dataSaved()
@@ -149,7 +154,21 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
             const oldSceneVersion = currentSceneVersion.current;
             const newSceneVersion = getSceneVersion(apiRef.current.getSceneElements());
 
-            if (newSceneVersion !== oldSceneVersion) {
+            let hasChanges = (newSceneVersion !== oldSceneVersion);
+
+            // There are cases where the scene version does not change, but appState did.
+            if (!hasChanges) {
+                const importantAppState = appStateToCompare.current;
+                const currentAppState = apiRef.current.getAppState();
+                for (const key in importantAppState) {
+                    if (importantAppState[key as keyof ImportantAppState] !== currentAppState[key as keyof ImportantAppState]) {
+                        hasChanges = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasChanges) {
                 spacedUpdate.resetUpdateTimer();
                 spacedUpdate.scheduleUpdate();
                 currentSceneVersion.current = newSceneVersion;
@@ -163,7 +182,7 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
     };
 }
 
-async function getData(api: ExcalidrawImperativeAPI) {
+async function getData(api: ExcalidrawImperativeAPI, appStateToCompare: RefObject<Partial<ImportantAppState>>) {
     const elements = api.getSceneElements();
     const appState = api.getAppState();
 
@@ -188,6 +207,12 @@ async function getData(api: ExcalidrawImperativeAPI) {
         }
     });
 
+    const importantAppState: ImportantAppState = {
+        gridModeEnabled: appState.gridModeEnabled,
+        viewBackgroundColor: appState.viewBackgroundColor
+    };
+    appStateToCompare.current = importantAppState;
+
     const content = {
         type: "excalidraw",
         version: 2,
@@ -197,7 +222,7 @@ async function getData(api: ExcalidrawImperativeAPI) {
             scrollX: appState.scrollX,
             scrollY: appState.scrollY,
             zoom: appState.zoom,
-            gridModeEnabled: appState.gridModeEnabled
+            ...importantAppState
         }
     };
 
