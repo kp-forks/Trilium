@@ -1,8 +1,8 @@
 import { CreateChildrenResponse } from "@triliumnext/commons";
-import server from "../../../services/server";
+
 import FNote from "../../../entities/fnote";
 import { setAttribute, setLabel } from "../../../services/attributes";
-import froca from "../../../services/froca";
+import server from "../../../services/server";
 
 interface NewEventOpts {
     title: string;
@@ -10,6 +10,7 @@ interface NewEventOpts {
     endDate?: string | null;
     startTime?: string | null;
     endTime?: string | null;
+    componentId?: string;
 }
 
 interface ChangeEventOpts {
@@ -19,24 +20,24 @@ interface ChangeEventOpts {
     endTime?: string | null;
 }
 
-export async function newEvent(parentNote: FNote, { title, startDate, endDate, startTime, endTime }: NewEventOpts) {
+export async function newEvent(parentNote: FNote, { title, startDate, endDate, startTime, endTime, componentId }: NewEventOpts) {
     // Create the note.
     const { note } = await server.post<CreateChildrenResponse>(`notes/${parentNote.noteId}/children?target=into`, {
         title,
         content: "",
         type: "text"
-    });
+    }, componentId);
 
     // Set the attributes.
-    setLabel(note.noteId, "startDate", startDate);
+    setLabel(note.noteId, "startDate", startDate, false, componentId);
     if (endDate) {
-        setLabel(note.noteId, "endDate", endDate);
+        setLabel(note.noteId, "endDate", endDate, false, componentId);
     }
     if (startTime) {
-        setLabel(note.noteId, "startTime", startTime);
+        setLabel(note.noteId, "startTime", startTime, false, componentId);
     }
     if (endTime) {
-        setLabel(note.noteId, "endTime", endTime);
+        setLabel(note.noteId, "endTime", endTime, false, componentId);
     }
 }
 

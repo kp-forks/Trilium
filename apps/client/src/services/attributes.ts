@@ -14,13 +14,13 @@ async function addLabel(noteId: string, name: string, value: string = "", isInhe
     });
 }
 
-export async function setLabel(noteId: string, name: string, value: string = "", isInheritable = false) {
+export async function setLabel(noteId: string, name: string, value: string = "", isInheritable = false, componentId?: string) {
     await server.put(`notes/${noteId}/set-attribute`, {
         type: "label",
         name,
         value,
-        isInheritable
-    });
+        isInheritable,
+    }, componentId);
 }
 
 export async function setRelation(noteId: string, name: string, value: string = "", isInheritable = false) {

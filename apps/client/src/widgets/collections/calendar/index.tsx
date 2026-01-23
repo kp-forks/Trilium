@@ -5,7 +5,7 @@ import { DateSelectArg, EventChangeArg, EventMountArg, EventSourceFuncArg, Local
 import { DateClickArg } from "@fullcalendar/interaction";
 import { DISPLAYABLE_LOCALE_IDS } from "@triliumnext/commons";
 import { RefObject } from "preact";
-import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
@@ -17,6 +17,7 @@ import { isMobile } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button, { ButtonGroup } from "../../react/Button";
 import { useNoteLabel, useNoteLabelBoolean, useResizeObserver, useSpacedUpdate, useTriliumEvent, useTriliumOption, useTriliumOptionInt } from "../../react/hooks";
+import { ParentComponent } from "../../react/react_utils";
 import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSegmentedControl, TouchBarSpacer } from "../../react/TouchBar";
 import { ViewModeProps } from "../interface";
 import { changeEvent, newEvent } from "./api";
@@ -87,6 +88,7 @@ export const LOCALE_MAPPINGS: Record<DISPLAYABLE_LOCALE_IDS, (() => Promise<{ de
 };
 
 export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarViewData>) {
+    const parentComponent = useContext(ParentComponent);
     const containerRef = useRef<HTMLDivElement>(null);
     const calendarRef = useRef<FullCalendar>(null);
 
@@ -105,24 +107,24 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
     const eventBuilder = useMemo(() => {
         if (!isCalendarRoot) {
             return async () => await buildEvents(noteIds);
-        } 
+        }
         return async (e: EventSourceFuncArg) => await buildEventsForCalendar(note, e);
-        
     }, [isCalendarRoot, noteIds]);
 
     const plugins = usePlugins(isEditable, isCalendarRoot);
     const locale = useLocale();
 
     const { eventDidMount } = useEventDisplayCustomization(note);
-    const editingProps = useEditing(note, isEditable, isCalendarRoot);
+    const editingProps = useEditing(note, isEditable, isCalendarRoot, parentComponent?.componentId);
 
     // React to changes.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.getNoteIds().some(noteId => noteIds.includes(noteId)) // note title change.
-            || loadResults.getAttributeRows().some((a) => noteIds.includes(a.noteId ?? ""))) // subnote change.
+            || loadResults.getAttributeRows(parentComponent?.componentId).some((a) => noteIds.includes(a.noteId ?? ""))) // subnote change.
         {
             // Defer execution after the load results are processed so that the event builder has the updated data to work with.
             setTimeout(() => {
+                console.log("Refresh");
                 calendarRef.current?.refetchEvents();
             }, 0);
         }
@@ -222,7 +224,7 @@ function useLocale() {
     return calendarLocale;
 }
 
-function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean) {
+function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean, componentId: string | undefined) {
     const onCalendarSelection = useCallback(async (e: DateSelectArg) => {
         const { startDate, endDate } = parseStartEndDateFromEvent(e);
         if (!startDate) return;
@@ -234,8 +236,8 @@ function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean) {
             return;
         }
 
-        newEvent(note, { title, startDate, endDate, startTime, endTime });
-    }, [ note ]);
+        newEvent(note, { title, startDate, endDate, startTime, endTime, componentId });
+    }, [ note, componentId ]);
 
     const onEventChange = useCallback(async (e: EventChangeArg) => {
         const { startDate, endDate } = parseStartEndDateFromEvent(e.event);
