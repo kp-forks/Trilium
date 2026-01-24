@@ -1,7 +1,5 @@
-import { Rect } from "@/utils.js";
-
-import Readability from "../../lib/Readability.js";
-import { createLink, getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
+import Readability from "@/lib/Readability.js";
+import { createLink, getBaseUrl, getPageLocationOrigin, randomString, Rect } from "@/utils.js";
 
 export default defineContentScript({
     matches: [
@@ -267,7 +265,7 @@ export default defineContentScript({
                     messageText = message.message;
                 }
 
-                await import("../../lib/toast");
+                await import("@/lib/toast");
 
                 window.showToast(messageText, {
                     settings: {

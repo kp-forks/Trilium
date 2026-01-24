@@ -1,6 +1,6 @@
-import { createLink } from "../../utils";
+import { createLink } from "@/utils";
 
-async function sendMessage(message) {
+async function sendMessage(message: object) {
     try {
         console.log("Sending message", message);
         return await browser.runtime.sendMessage(message);
