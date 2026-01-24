@@ -31,8 +31,7 @@
       ],
       "js": [
         "lib/browser-polyfill.js",
-        "utils.js",
-        "content.js"
+        "utils.js"
       ]
     }
   ],
@@ -40,12 +39,8 @@
     "scripts": [
       "lib/browser-polyfill.js",
       "utils.js",
-      "trilium_server_facade.js",
-      "background.js"
+      "trilium_server_facade.js"
     ]
-  },
-  "options_ui": {
-    "page": "options/options.html"
   },
   "commands": {
     "saveSelection": {
