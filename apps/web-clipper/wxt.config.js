@@ -3,6 +3,8 @@ import { defineConfig } from "vite";
 export default defineConfig({
     modules: ['@wxt-dev/auto-icons'],
     manifest: {
+        name: "Trilium Web Clipper",
+        description: "Save web clippings to Trilium Notes.",
         permissions: [
             "activeTab",
             "tabs",
