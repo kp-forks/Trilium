@@ -28,6 +28,10 @@ const FILE_MIME_MAPPINGS = {
     "application/pdf": "bx bxs-file-pdf",
 };
 
+const IMAGE_MIME_MAPPINGS = {
+    "image/gif": "bx bxs-file-gif",
+};
+
 export function getNoteIcon({ noteId, type, mime, iconClass, workspaceIconClass, isFolder }: {
     noteId: string;
     type: NoteType;
@@ -55,6 +59,9 @@ export function getNoteIcon({ noteId, type, mime, iconClass, workspaceIconClass,
         return correspondingMimeType?.icon ?? NOTE_TYPE_ICONS.code;
     } else if (type === "file") {
         return FILE_MIME_MAPPINGS[mime] ?? NOTE_TYPE_ICONS.file;
+    } else if (type === "image") {
+        return IMAGE_MIME_MAPPINGS[mime] ?? NOTE_TYPE_ICONS.image;
     }
+
     return NOTE_TYPE_ICONS[type];
 }
