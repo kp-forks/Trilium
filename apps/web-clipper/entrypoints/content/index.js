@@ -312,10 +312,6 @@ export default defineContentScript({
                 return getRectangleArea();
             }
             else if (message.name === "trilium-save-page") {
-                await requireLib("/lib/JSDOMParser.js");
-                await requireLib("/lib/Readability.js");
-                await requireLib("/lib/Readability-readerable.js");
-
                 const {title, body} = getReadableDocument();
 
                 makeLinksAbsolute(body);
@@ -345,6 +341,14 @@ export default defineContentScript({
             }
         }
 
-        browser.runtime.onMessage.addListener(prepareMessageResponse);
+        browser.runtime.onMessage.addListener(async (message) => {
+            try {
+                const response = await prepareMessageResponse(message);
+                return response;
+            } catch (err) {
+                console.error(err);
+                throw err;
+            }
+        });
     }
 });
