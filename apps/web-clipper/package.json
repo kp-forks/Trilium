@@ -4,8 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "wxt", 
+    "dev:firefox": "wxt -b firefox", 
+    "build": "wxt build", 
+    "build:firefox": "wxt build -b firefox", 
+    "zip": "wxt zip", 
+    "zip:firefox": "wxt zip -b firefox", 
+    "postinstall": "wxt prepare"
   },
   "keywords": [],
-  "packageManager": "pnpm@10.28.1"
+  "packageManager": "pnpm@10.28.1",
+  "devDependencies": {
+    "wxt": "0.20.13"
+  }
 }
