@@ -26,3 +26,15 @@ export function getPageLocationOrigin() {
     // but for file:// protocol this is browser dependant and in particular Firefox returns "null" in this case.
     return location.protocol === 'file:' ? 'file://' : location.origin;
 }
+
+export function createLink(clickAction, text, color = "lightskyblue") {
+    const link = document.createElement('a');
+    link.href = "javascript:";
+    link.style.color = color;
+    link.appendChild(document.createTextNode(text));
+    link.addEventListener("click", () => {
+        browser.runtime.sendMessage(null, clickAction)
+    });
+
+    return link
+}

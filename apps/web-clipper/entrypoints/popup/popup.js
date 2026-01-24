@@ -1,4 +1,4 @@
-console.log("Popup script loaded");
+import { createLink } from "../../utils";
 
 async function sendMessage(message) {
     try {

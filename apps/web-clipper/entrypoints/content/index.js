@@ -1,4 +1,4 @@
-import { getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
+import { createLink, getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
 import Readability from "../../lib/Readability.js";
 
 export default defineContentScript({
@@ -235,18 +235,6 @@ export default defineContentScript({
             }
 
             return images;
-        }
-
-        function createLink(clickAction, text, color = "lightskyblue") {
-            const link = document.createElement('a');
-            link.href = "javascript:";
-            link.style.color = color;
-            link.appendChild(document.createTextNode(text));
-            link.addEventListener("click", () => {
-                browser.runtime.sendMessage(null, clickAction)
-            });
-
-            return link
         }
 
         async function prepareMessageResponse(message) {
