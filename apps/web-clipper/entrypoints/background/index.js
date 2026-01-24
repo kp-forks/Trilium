@@ -421,9 +421,6 @@ export default defineBackground(() => {
         else if (request.name === 'closeTabs') {
             return await browser.tabs.remove(request.tabIds)
         }
-        else if (request.name === 'load-script') {
-            return await browser.tabs.executeScript({file: request.file});
-        }
         else if (request.name === 'save-cropped-screenshot') {
             const activeTab = await getActiveTab();
 

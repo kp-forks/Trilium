@@ -275,7 +275,7 @@ export default defineContentScript({
                     messageText = message.message;
                 }
 
-                await requireLib('/lib/toast.js');
+                await import("../../lib/toast");
 
                 showToast(messageText, {
                     settings: {
@@ -340,16 +340,6 @@ export default defineContentScript({
             }
             else {
                 throw new Error('Unknown command: ' + JSON.stringify(message));
-            }
-        }
-
-        const loadedLibs = [];
-
-        async function requireLib(libPath) {
-            if (!loadedLibs.includes(libPath)) {
-                loadedLibs.push(libPath);
-
-                await browser.runtime.sendMessage({name: 'load-script', file: libPath});
             }
         }
 
