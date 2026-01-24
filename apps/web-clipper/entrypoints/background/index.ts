@@ -112,12 +112,6 @@ export default defineBackground(() => {
 
     browser.contextMenus.create({
         id: "trilium-save-cropped-screenshot",
-        title: "Clip screenshot to Trilium",
-        contexts: ["page"]
-    });
-
-    browser.contextMenus.create({
-        id: "trilium-save-cropped-screenshot",
         title: "Crop screen shot to Trilium",
         contexts: ["page"]
     });
