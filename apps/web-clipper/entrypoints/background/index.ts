@@ -7,18 +7,23 @@ export default defineBackground(() => {
 
     // Keyboard shortcuts
     browser.commands.onCommand.addListener(async (command) => {
-        if (command == "saveSelection") {
-            await saveSelection();
-        } else if (command == "saveWholePage") {
-            await saveWholePage();
-        } else if (command == "saveTabs") {
-            await saveTabs();
-        } else if (command == "saveCroppedScreenshot") {
-            const activeTab = await getActiveTab();
-
-            await saveCroppedScreenshot(activeTab.url);
-        } else {
-            console.log("Unrecognized command", command);
+        switch (command) {
+            case "saveSelection":
+                await saveSelection();
+                break;
+            case "saveWholePage":
+                await saveWholePage();
+                break;
+            case "saveTabs":
+                await saveTabs();
+                break;
+            case "saveCroppedScreenshot": {
+                const activeTab = await getActiveTab();
+                await saveCroppedScreenshot(activeTab.url);
+                break;
+            }
+            default:
+                console.log("Unrecognized command", command);
         }
     });
 
@@ -39,6 +44,7 @@ export default defineBackground(() => {
                 ctx.drawImage(img, newArea.x, newArea.y, newArea.width, newArea.height, 0, 0, newArea.width, newArea.height);
                 resolve(canvas.toDataURL());
             };
+            img.onerror = reject;
 
             img.src = dataUrl;
         });
@@ -188,14 +194,15 @@ export default defineBackground(() => {
     async function postProcessImage(image: { src: string, dataUrl?: string | null }) {
         if (image.src.startsWith("data:image/")) {
             image.dataUrl = image.src;
-            image.src = `inline.${  image.src.substr(11, 3)}`; // this should extract file type - png/jpg
+            const mimeSubtype = image.src.match(/data:image\/(.*?);/)?.[1];
+            if (!mimeSubtype) return;
+            image.src = `inline.${mimeSubtype}`; // this should extract file type - png/jpg
         }
         else {
             try {
                 image.dataUrl = await fetchImage(image.src);
-            }
-            catch (e) {
-                console.log(`Cannot fetch image from ${image.src}`);
+            } catch (e) {
+                console.error(`Cannot fetch image from ${image.src}`, e);
             }
         }
     }

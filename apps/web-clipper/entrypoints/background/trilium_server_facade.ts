@@ -154,7 +154,7 @@ export default class TriliumServerFacade {
         this.setTriliumSearch({ status: 'not-found' });
     }
 
-    async triggerSearchNoteByUrl(noteUrl) {
+    async triggerSearchNoteByUrl(noteUrl: string) {
         const resp = await this.callService('GET', `notes-by-url/${encodeURIComponent(noteUrl)}`);
         let newStatus: TriliumSearchNoteStatus;
         if (resp && resp.noteId) {
@@ -228,8 +228,6 @@ export default class TriliumServerFacade {
         }
         catch (e) {
             console.log("Sending request to trilium failed", e);
-
-            window.showToast('Your request failed because we could not contact Trilium instance. Please make sure Trilium is running and is accessible.');
 
             return null;
         }

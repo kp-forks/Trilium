@@ -55,12 +55,12 @@ export default defineContentScript({
             let modifiedDate: Date | null = null;
 
             const articlePublishedTime = document.querySelector("meta[property='article:published_time']")?.getAttribute('content');
-            if (articlePublishedTime && articlePublishedTime) {
+            if (articlePublishedTime) {
                 publishedDate = new Date(articlePublishedTime);
             }
 
             const articleModifiedTime = document.querySelector("meta[property='article:modified_time']")?.getAttribute('content');
-            if (articleModifiedTime && articleModifiedTime) {
+            if (articleModifiedTime) {
                 modifiedDate = new Date(articleModifiedTime);
             }
 
@@ -129,7 +129,7 @@ export default defineContentScript({
                     selection.style.height = `${selectionArea.height}px`;
                 }
 
-                function setSelectionSizeFromMouse(event) {
+                function setSelectionSizeFromMouse(event: MouseEvent) {
                     if (!draggingStartPos) return;
 
                     if (event.clientX < draggingStartPos.x) {
@@ -145,14 +145,14 @@ export default defineContentScript({
                     updateSelection();
                 }
 
-                function selection_mouseDown(event) {
+                function selection_mouseDown(event: MouseEvent) {
                     selectionArea = {x: event.clientX, y: event.clientY, width: 0, height: 0};
                     draggingStartPos = {x: event.clientX, y: event.clientY};
                     isDragging = true;
                     updateSelection();
                 }
 
-                function selection_mouseMove(event) {
+                function selection_mouseMove(event: MouseEvent) {
                     if (!isDragging) return;
                     setSelectionSizeFromMouse(event);
                 }
@@ -169,7 +169,7 @@ export default defineContentScript({
                     document.body.removeChild(messageComp);
                 }
 
-                function selection_mouseUp(event) {
+                function selection_mouseUp(event: MouseEvent) {
                     setSelectionSizeFromMouse(event);
 
                     removeOverlay();
@@ -186,7 +186,7 @@ export default defineContentScript({
                     setTimeout(() => resolve(selectionArea), 100);
                 }
 
-                function cancel(event) {
+                function cancel(event: KeyboardEvent) {
                     if (event.key === "Escape") {
                         removeOverlay();
                     }
@@ -194,7 +194,6 @@ export default defineContentScript({
 
                 overlay.addEventListener('mousedown', selection_mouseDown);
                 overlay.addEventListener('mousemove', selection_mouseMove);
-                overlay.addEventListener('mouseup', selection_mouseUp);
                 overlay.addEventListener('mouseup', selection_mouseUp);
                 messageComp.addEventListener('keydown', cancel);
             });
