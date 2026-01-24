@@ -1,4 +1,5 @@
 import { getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
+import Readability from "../../lib/Readability.js";
 
 export default defineContentScript({
     matches: [
