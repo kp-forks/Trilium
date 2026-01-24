@@ -2,7 +2,7 @@ import { defineConfig } from "wxt";
 
 export default defineConfig({
     modules: ['@wxt-dev/auto-icons'],
-    manifest: {
+    manifest: ({ manifestVersion }) => ({
         name: "Trilium Web Clipper",
         description: "Save web clippings to Trilium Notes.",
         homepage_url: "https://docs.triliumnotes.org/user-guide/setup/web-clipper",
@@ -14,8 +14,8 @@ export default defineConfig({
             "<all_urls>",
             "storage",
             "contextMenus",
-            "offscreen"
-        ],
+            manifestVersion === 3 && "offscreen"
+        ].filter(Boolean),
         browser_specific_settings: {
             gecko: {
                 id: "{1410742d-b377-40e7-a9db-63dc9c6ec99c}"
@@ -41,5 +41,5 @@ export default defineConfig({
                 }
             }
         }
-    }
+    })
 });
