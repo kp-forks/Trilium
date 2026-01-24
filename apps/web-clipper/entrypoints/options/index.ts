@@ -27,7 +27,7 @@ async function saveTriliumServerSetup(e) {
     let resp;
 
     try {
-        resp = await fetch(`${$triliumServerUrl.val()  }/api/login/token`, {
+        resp = await fetch(`${$triliumServerUrl.val()}/api/login/token`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',

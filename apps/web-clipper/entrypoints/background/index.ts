@@ -2,6 +2,19 @@ import { randomString, Rect } from "@/utils";
 
 import TriliumServerFacade from "./trilium_server_facade";
 
+type BackgroundMessage = {
+    name: "toast";
+    message: string;
+    noteId: string | null;
+    tabIds: number[] | null;
+} | {
+    name: "trilium-save-selection";
+} | {
+    name: "trilium-get-rectangle-for-screenshot";
+} | {
+    name: "trilium-save-page";
+};
+
 export default defineBackground(() => {
     const triliumServerFacade = new TriliumServerFacade();
 
@@ -155,7 +168,7 @@ export default defineBackground(() => {
         return tabs;
     }
 
-    async function sendMessageToActiveTab(message) {
+    async function sendMessageToActiveTab(message: BackgroundMessage) {
         const activeTab = await getActiveTab();
 
         if (!activeTab?.id) {
@@ -229,7 +242,7 @@ export default defineBackground(() => {
         toast("Selection has been saved to Trilium.", resp.noteId);
     }
 
-    async function getImagePayloadFromSrc(src, pageUrl) {
+    async function getImagePayloadFromSrc(src: string, pageUrl: string | null | undefined) {
         const image = {
             imageId: randomString(20),
             src
@@ -247,7 +260,7 @@ export default defineBackground(() => {
         };
     }
 
-    async function saveCroppedScreenshot(pageUrl) {
+    async function saveCroppedScreenshot(pageUrl: string | null | undefined) {
         const { rect, devicePixelRatio } = await sendMessageToActiveTab({name: 'trilium-get-rectangle-for-screenshot'});
 
         const src = await takeCroppedScreenshot(rect, devicePixelRatio);
@@ -263,7 +276,7 @@ export default defineBackground(() => {
         toast("Screenshot has been saved to Trilium.", resp.noteId);
     }
 
-    async function saveWholeScreenshot(pageUrl) {
+    async function saveWholeScreenshot(pageUrl: string | null | undefined) {
         const src = await takeWholeScreenshot();
 
         const payload = await getImagePayloadFromSrc(src, pageUrl);
@@ -277,7 +290,7 @@ export default defineBackground(() => {
         toast("Screenshot has been saved to Trilium.", resp.noteId);
     }
 
-    async function saveImage(srcUrl, pageUrl) {
+    async function saveImage(srcUrl: string, pageUrl: string | null | undefined) {
         const payload = await getImagePayloadFromSrc(srcUrl, pageUrl);
 
         const resp = await triliumServerFacade.callService("POST", "clippings", payload);
@@ -303,11 +316,11 @@ export default defineBackground(() => {
         toast("Page has been saved to Trilium.", resp.noteId);
     }
 
-    async function saveLinkWithNote(title, content) {
+    async function saveLinkWithNote(title: string, content: string) {
         const activeTab = await getActiveTab();
 
         if (!title.trim()) {
-            title = activeTab.title;
+            title = activeTab.title ?? "";
         }
 
         const resp = await triliumServerFacade.callService('POST', 'notes', {
@@ -326,7 +339,7 @@ export default defineBackground(() => {
         return true;
     }
 
-    async function getTabsPayload(tabs) {
+    async function getTabsPayload(tabs: Browser.tabs.Tab[]) {
         let content = '<ul>';
         tabs.forEach(tab => {
             content += `<li><a href="${tab.url}">${tab.title}</a></li>`;
@@ -335,7 +348,7 @@ export default defineBackground(() => {
 
         const domainsCount = tabs.map(tab => tab.url)
             .reduce((acc, url) => {
-                const hostname = new URL(url).hostname;
+                const hostname = new URL(url ?? "").hostname;
                 return acc.set(hostname, (acc.get(hostname) || 0) + 1);
             }, new Map());
 
@@ -362,7 +375,7 @@ export default defineBackground(() => {
         const resp = await triliumServerFacade.callService('POST', 'notes', payload);
         if (!resp) return;
 
-        const tabIds = tabs.map(tab => tab.id!).filter(id => id !== undefined) as number[];
+        const tabIds = tabs.map(tab => tab.id).filter(id => id !== undefined) as number[];
         toast(`${tabs.length} links have been saved to Trilium.`, resp.noteId, tabIds);
     }
 
@@ -377,6 +390,7 @@ export default defineBackground(() => {
             await saveWholeScreenshot(info.pageUrl);
         }
         else if (info.menuItemId === 'trilium-save-image') {
+            if (!info.srcUrl) return;
             await saveImage(info.srcUrl, info.pageUrl);
         }
         else if (info.menuItemId === 'trilium-save-link') {
@@ -407,7 +421,7 @@ export default defineBackground(() => {
         console.log("Received", request);
 
         if (request.name === 'openNoteInTrilium') {
-            const resp = await triliumServerFacade.callService('POST', `open/${  request.noteId}`);
+            const resp = await triliumServerFacade.callService('POST', `open/${request.noteId}`);
 
             if (!resp) {
                 return;

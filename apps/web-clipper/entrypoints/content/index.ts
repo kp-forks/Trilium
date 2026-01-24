@@ -6,7 +6,7 @@ export default defineContentScript({
         "<all_urls>"
     ],
     main: () => {
-        function absoluteUrl(url) {
+        function absoluteUrl(url: string | undefined) {
             if (!url) {
                 return url;
             }
@@ -89,8 +89,8 @@ export default defineContentScript({
                 messageComp.style.position = 'fixed';
                 messageComp.style.opacity = '0.95';
                 messageComp.style.fontSize = '14px';
-                messageComp.style.width = `${messageCompWidth  }px`;
-                messageComp.style.maxWidth = `${messageCompWidth  }px`;
+                messageComp.style.width = `${messageCompWidth}px`;
+                messageComp.style.maxWidth = `${messageCompWidth}px`;
                 messageComp.style.border = '1px solid black';
                 messageComp.style.background = 'white';
                 messageComp.style.color = 'black';
@@ -199,10 +199,12 @@ export default defineContentScript({
             });
         }
 
-        function makeLinksAbsolute(container) {
+        function makeLinksAbsolute(container: HTMLElement) {
             for (const link of container.getElementsByTagName('a')) {
                 if (link.href) {
-                    link.href = absoluteUrl(link.href);
+                    const newUrl = absoluteUrl(link.href);
+                    if (!newUrl) continue;
+                    link.href = newUrl;
                 }
             }
         }

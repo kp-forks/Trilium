@@ -111,7 +111,7 @@ function escapeHtml(string) {
 
     const htmlWithPars = pre.innerHTML.replace(/\n/g, "</p><p>");
 
-    return `<p>${  htmlWithPars  }</p>`;
+    return `<p>${htmlWithPars}</p>`;
 }
 
 const $connectionStatus = $("#connection-status");

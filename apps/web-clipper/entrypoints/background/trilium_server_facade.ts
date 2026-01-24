@@ -57,7 +57,7 @@ export default class TriliumServerFacade {
         catch (e) {} // nothing might be listening
     }
 
-    setTriliumSearchNote(st){
+    setTriliumSearchNote(st: TriliumSearchNoteStatus){
         this.triliumSearchNote = st;
         this.sendTriliumSearchNoteToPopup();
     }
@@ -69,7 +69,7 @@ export default class TriliumServerFacade {
     }
 
     setTriliumSearchWithVersionCheck(json: { protocolVersion: string }, resp: TriliumSearchStatus) {
-        const [major, minor] = json.protocolVersion
+        const [ major ] = json.protocolVersion
             .split(".")
             .map(chunk => parseInt(chunk, 10));
 
@@ -94,7 +94,7 @@ export default class TriliumServerFacade {
         try {
             const port = await this.getPort();
 
-            console.debug(`Trying port ${  port}`);
+            console.debug(`Trying port ${port}`);
 
             const resp = await fetch(`http://127.0.0.1:${port}/api/clipper/handshake`);
 
