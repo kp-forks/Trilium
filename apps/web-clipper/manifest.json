@@ -26,8 +26,7 @@
   "background": {
     "scripts": [
       "lib/browser-polyfill.js",
-      "utils.js",
-      "trilium_server_facade.js"
+      "utils.js"
     ]
   },
   "commands": {

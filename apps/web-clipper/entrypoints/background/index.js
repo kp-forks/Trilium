@@ -1,4 +1,8 @@
+import TriliumServerFacade, { isDevEnv } from "./trilium_server_facade";
+
 export default defineBackground(() => {
+    const triliumServerFacade = new TriliumServerFacade();
+
     // Keyboard shortcuts
     chrome.commands.onCommand.addListener(async function (command) {
         if (command == "saveSelection") {

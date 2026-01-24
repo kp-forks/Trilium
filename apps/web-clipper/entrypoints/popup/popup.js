@@ -2,6 +2,7 @@ console.log("Popup script loaded");
 
 async function sendMessage(message) {
     try {
+        console.log("Sending message", message);
         return await browser.runtime.sendMessage(message);
     }
     catch (e) {

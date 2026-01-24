@@ -1,12 +1,12 @@
 const PROTOCOL_VERSION_MAJOR = 1;
 
-function isDevEnv() {
+export function isDevEnv() {
 	const manifest = browser.runtime.getManifest();
 
 	return manifest.name.endsWith('(dev)');
 }
 
-class TriliumServerFacade {
+export default class TriliumServerFacade {
 	constructor() {
 		this.triggerSearchForTrilium();
 
@@ -221,5 +221,3 @@ class TriliumServerFacade {
 			(absoff % 60).toString().padStart(2,'0'));
 	}
 }
-
-window.triliumServerFacade = new TriliumServerFacade();
