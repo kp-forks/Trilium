@@ -132,7 +132,7 @@ export default class TriliumServerFacade {
 	}
 
 	async triggerSearchNoteByUrl(noteUrl) {
-		const resp = await triliumServerFacade.callService('GET', 'notes-by-url/' + encodeURIComponent(noteUrl))
+		const resp = await this.callService('GET', 'notes-by-url/' + encodeURIComponent(noteUrl))
 		let newStatus = {
 			status: 'not-found',
 			noteId: null
