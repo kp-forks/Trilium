@@ -13,18 +13,6 @@
     "default_title": "Trilium Web Clipper",
     "default_popup": "popup/popup.html"
   },
-  "content_scripts": [
-    {
-      "js": [
-        "lib/browser-polyfill.js"
-      ]
-    }
-  ],
-  "background": {
-    "scripts": [
-      "lib/browser-polyfill.js"
-    ]
-  },
   "commands": {
     "saveSelection": {
       "description": "Save the selected text into a note",
