@@ -1,5 +1,5 @@
-import { createLink, getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
 import Readability from "../../lib/Readability.js";
+import { createLink, getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
 
 export default defineContentScript({
     matches: [
@@ -19,10 +19,10 @@ export default defineContentScript({
             if (url.indexOf('//') === 0) {
                 return location.protocol + url;
             } else if (url[0] === '/') {
-                return location.protocol + '//' + location.host + url;
-            } else {
-                return getBaseUrl() + '/' + url;
+                return `${location.protocol}//${location.host}${url}`;
             }
+            return `${getBaseUrl()}/${url}`;
+
         }
 
         function pageTitle() {
@@ -47,40 +47,37 @@ export default defineContentScript({
             return {
                 title: article.title,
                 body: article.content,
-            }
+            };
         }
 
         function getDocumentDates() {
-            var dates = {
-                publishedDate: null,
-                modifiedDate: null,
-            };
+            let publishedDate: Date | null = null;
+            let modifiedDate: Date | null = null;
 
-            const articlePublishedTime = document.querySelector("meta[property='article:published_time']");
-            if (articlePublishedTime && articlePublishedTime.getAttribute('content')) {
-                dates.publishedDate = new Date(articlePublishedTime.getAttribute('content'));
+            const articlePublishedTime = document.querySelector("meta[property='article:published_time']")?.getAttribute('content');
+            if (articlePublishedTime && articlePublishedTime) {
+                publishedDate = new Date(articlePublishedTime);
             }
 
-            const articleModifiedTime = document.querySelector("meta[property='article:modified_time']");
-            if (articleModifiedTime && articleModifiedTime.getAttribute('content')) {
-                dates.modifiedDate = new Date(articleModifiedTime.getAttribute('content'));
+            const articleModifiedTime = document.querySelector("meta[property='article:modified_time']")?.getAttribute('content');
+            if (articleModifiedTime && articleModifiedTime) {
+                modifiedDate = new Date(articleModifiedTime);
             }
 
             // TODO: if we didn't get dates from meta, then try to get them from JSON-LD
-
-            return dates;
+            return { publishedDate, modifiedDate };
         }
 
         function getRectangleArea() {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const overlay = document.createElement('div');
                 overlay.style.opacity = '0.6';
                 overlay.style.background = 'black';
                 overlay.style.width = '100%';
                 overlay.style.height = '100%';
-                overlay.style.zIndex = 99999999;
-                overlay.style.top = 0;
-                overlay.style.left = 0;
+                overlay.style.zIndex = "99999999";
+                overlay.style.top = "0";
+                overlay.style.left = "0";
                 overlay.style.position = 'fixed';
 
                 document.body.appendChild(overlay);
@@ -92,15 +89,15 @@ export default defineContentScript({
                 messageComp.style.position = 'fixed';
                 messageComp.style.opacity = '0.95';
                 messageComp.style.fontSize = '14px';
-                messageComp.style.width = messageCompWidth + 'px';
-                messageComp.style.maxWidth = messageCompWidth + 'px';
+                messageComp.style.width = `${messageCompWidth  }px`;
+                messageComp.style.maxWidth = `${messageCompWidth  }px`;
                 messageComp.style.border = '1px solid black';
                 messageComp.style.background = 'white';
                 messageComp.style.color = 'black';
                 messageComp.style.top = '10px';
                 messageComp.style.textAlign = 'center';
                 messageComp.style.padding = '10px';
-                messageComp.style.left = Math.round(document.body.clientWidth / 2 - messageCompWidth / 2) + 'px';
+                messageComp.style.left = `${Math.round(document.body.clientWidth / 2 - messageCompWidth / 2)  }px`;
                 messageComp.style.zIndex = overlay.style.zIndex + 1;
 
                 messageComp.textContent = 'Drag and release to capture a screenshot';
@@ -112,9 +109,9 @@ export default defineContentScript({
                 selection.style.border = '1px solid red';
                 selection.style.background = 'white';
                 selection.style.border = '2px solid black';
-                selection.style.zIndex = overlay.style.zIndex - 1;
-                selection.style.top = 0;
-                selection.style.left = 0;
+                selection.style.zIndex = String(parseInt(overlay.style.zIndex, 10) - 1);
+                selection.style.top = "0";
+                selection.style.left = "0";
                 selection.style.position = 'fixed';
 
                 document.body.appendChild(selection);
@@ -122,17 +119,19 @@ export default defineContentScript({
                 messageComp.focus(); // we listen on keypresses on this element to cancel on escape
 
                 let isDragging = false;
-                let draggingStartPos = null;
-                let selectionArea = {};
+                let draggingStartPos: {x: number, y: number} | null = null;
+                let selectionArea: {x?: number, y?: number, width?: number, height?: number} = {};
 
                 function updateSelection() {
-                    selection.style.left = selectionArea.x + 'px';
-                    selection.style.top = selectionArea.y + 'px';
-                    selection.style.width = selectionArea.width + 'px';
-                    selection.style.height = selectionArea.height + 'px';
+                    selection.style.left = `${selectionArea.x}px`;
+                    selection.style.top = `${selectionArea.y}px`;
+                    selection.style.width = `${selectionArea.width}px`;
+                    selection.style.height = `${selectionArea.height}px`;
                 }
 
                 function setSelectionSizeFromMouse(event) {
+                    if (!draggingStartPos) return;
+
                     if (event.clientX < draggingStartPos.x) {
                         selectionArea.x = event.clientX;
                     }
@@ -209,8 +208,8 @@ export default defineContentScript({
             }
         }
 
-        function getImages(container) {
-            const images = [];
+        function getImages(container: HTMLElement) {
+            const images: {imageId: string, src: string}[] = [];
 
             for (const img of container.getElementsByTagName('img')) {
                 if (!img.src) {
@@ -226,7 +225,7 @@ export default defineContentScript({
                     const imageId = randomString(20);
 
                     images.push({
-                        imageId: imageId,
+                        imageId,
                         src: img.src
                     });
 
@@ -237,16 +236,16 @@ export default defineContentScript({
             return images;
         }
 
-        async function prepareMessageResponse(message) {
-            console.info('Message: ' + message.name);
+        async function prepareMessageResponse(message: {name: string, noteId?: string, message?: string, tabIds?: string[]}) {
+            console.info(`Message: ${  message.name}`);
 
             if (message.name === "toast") {
                 let messageText;
 
                 if (message.noteId) {
                     messageText = document.createElement('p');
-                    messageText.setAttribute("style", "padding: 0; margin: 0; font-size: larger;")
-                    messageText.appendChild(document.createTextNode(message.message + " "));
+                    messageText.setAttribute("style", "padding: 0; margin: 0; font-size: larger;");
+                    messageText.appendChild(document.createTextNode(`${message.message  } `));
                     messageText.appendChild(createLink(
                         {name: 'openNoteInTrilium', noteId: message.noteId},
                         "Open in Trilium."
@@ -268,7 +267,7 @@ export default defineContentScript({
 
                 await import("../../lib/toast");
 
-                showToast(messageText, {
+                window.showToast(messageText, {
                     settings: {
                         duration: 7000
                     }
@@ -278,6 +277,9 @@ export default defineContentScript({
                 const container = document.createElement('div');
 
                 const selection = window.getSelection();
+                if (!selection || selection.rangeCount === 0) {
+                    throw new Error('No selection available to clip');
+                }
 
                 for (let i = 0; i < selection.rangeCount; i++) {
                     const range = selection.getRangeAt(i);
@@ -292,7 +294,7 @@ export default defineContentScript({
                 return {
                     title: pageTitle(),
                     content: container.innerHTML,
-                    images: images,
+                    images,
                     pageUrl: getPageLocationOrigin() + location.pathname + location.search + location.hash
                 };
 
@@ -307,26 +309,26 @@ export default defineContentScript({
 
                 const images = getImages(body);
 
-                var labels = {};
+                const labels = {};
                 const dates = getDocumentDates();
                 if (dates.publishedDate) {
                     labels['publishedDate'] = dates.publishedDate.toISOString().substring(0, 10);
                 }
                 if (dates.modifiedDate) {
-                    labels['modifiedDate'] = dates.publishedDate.toISOString().substring(0, 10);
+                    labels['modifiedDate'] = dates.modifiedDate.toISOString().substring(0, 10);
                 }
 
                 return {
-                    title: title,
+                    title,
                     content: body.innerHTML,
-                    images: images,
+                    images,
                     pageUrl: getPageLocationOrigin() + location.pathname + location.search,
                     clipType: 'page',
-                    labels: labels
+                    labels
                 };
             }
             else {
-                throw new Error('Unknown command: ' + JSON.stringify(message));
+                throw new Error(`Unknown command: ${  JSON.stringify(message)}`);
             }
         }
 
