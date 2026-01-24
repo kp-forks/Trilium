@@ -101,7 +101,7 @@ async function saveLinkWithNote() {
 $("#save-button").on("click", saveLinkWithNote);
 
 $("#show-help-button").on("click", () => {
-    window.open("https://github.com/zadam/trilium/wiki/Web-clipper", '_blank');
+    window.open("https://docs.triliumnotes.org/user-guide/setup/web-clipper", '_blank');
 });
 
 function escapeHtml(string) {
