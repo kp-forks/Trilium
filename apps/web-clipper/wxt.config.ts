@@ -18,7 +18,8 @@ export default defineConfig({
         ].filter(Boolean),
         browser_specific_settings: {
             gecko: {
-                id: "{1410742d-b377-40e7-a9db-63dc9c6ec99c}"
+                // See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings#id.
+                id: "web-clipper@triliumnotes.org"
             }
         },
         commands: {
