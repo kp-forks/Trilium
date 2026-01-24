@@ -363,24 +363,18 @@ export default defineBackground(() => {
             await saveImage(info.srcUrl, info.pageUrl);
         }
         else if (info.menuItemId === 'trilium-save-link') {
-            const link = document.createElement("a");
             if (!info.linkUrl) return;
-            link.href = info.linkUrl;
-            // linkText is not supported in Chrome/Edge; fallback to selected text or URL
-            link.appendChild(document.createTextNode(info.linkText || info.linkUrl));
-
+            const linkText = info.linkText || info.linkUrl;
+            const content = `<a href="${info.linkUrl}">${linkText}</a>`;
             const activeTab = await getActiveTab();
 
             const resp = await triliumServerFacade.callService('POST', 'clippings', {
                 title: activeTab.title,
-                content: link.outerHTML,
+                content,
                 pageUrl: info.pageUrl
             });
 
-            if (!resp) {
-                return;
-            }
-
+            if (!resp) return;
             toast("Link has been saved to Trilium.", resp.noteId);
         }
         else if (info.menuItemId === 'trilium-save-page') {
