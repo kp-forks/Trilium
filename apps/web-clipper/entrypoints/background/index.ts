@@ -22,6 +22,40 @@ export default defineBackground(() => {
         }
     });
 
+    function cropImageManifestV2(newArea: Rect, dataUrl: string) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = newArea.width;
+                canvas.height = newArea.height;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    reject();
+                    return;
+                }
+                ctx.drawImage(img, newArea.x, newArea.y, newArea.width, newArea.height, 0, 0, newArea.width, newArea.height);
+                resolve(canvas.toDataURL());
+            };
+
+            img.src = dataUrl;
+        });
+    }
+
+    async function cropImageManifestV3(newArea: Rect, dataUrl: string) {
+        // Create offscreen document if it doesn't exist
+        await ensureOffscreenDocument();
+
+        // Send cropping task to offscreen document
+        return await browser.runtime.sendMessage({
+            type: 'CROP_IMAGE',
+            dataUrl,
+            cropRect: newArea
+        });
+    }
+
     async function takeCroppedScreenshot(cropRect: Rect, devicePixelRatio: number = 1) {
         const activeTab = await getActiveTab();
         const zoom = await browser.tabs.getZoom(activeTab.id) * devicePixelRatio;
@@ -34,18 +68,8 @@ export default defineBackground(() => {
         };
 
         const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
-
-        // Create offscreen document if it doesn't exist
-        await ensureOffscreenDocument();
-
-        // Send cropping task to offscreen document
-        const croppedDataUrl = await browser.runtime.sendMessage({
-            type: 'CROP_IMAGE',
-            dataUrl,
-            cropRect: newArea
-        });
-
-        return croppedDataUrl;
+        const cropImage = (import.meta.env.MANIFEST_VERSION === 3 ? cropImageManifestV3 : cropImageManifestV2);
+        return await cropImage(newArea, dataUrl);
     }
 
     async function ensureOffscreenDocument() {
