@@ -1,3 +1,5 @@
+import { getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
+
 export default defineContentScript({
     matches: [
         "<all_urls>"

@@ -16,15 +16,13 @@
   "content_scripts": [
     {
       "js": [
-        "lib/browser-polyfill.js",
-        "utils.js"
+        "lib/browser-polyfill.js"
       ]
     }
   ],
   "background": {
     "scripts": [
-      "lib/browser-polyfill.js",
-      "utils.js"
+      "lib/browser-polyfill.js"
     ]
   },
   "commands": {

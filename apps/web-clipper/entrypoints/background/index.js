@@ -1,3 +1,4 @@
+import { randomString } from "../../utils";
 import TriliumServerFacade, { isDevEnv } from "./trilium_server_facade";
 
 export default defineBackground(() => {
