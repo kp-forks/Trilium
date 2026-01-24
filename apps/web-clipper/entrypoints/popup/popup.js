@@ -1,3 +1,5 @@
+console.log("Popup script loaded");
+
 async function sendMessage(message) {
     try {
         return await browser.runtime.sendMessage(message);
@@ -164,7 +166,7 @@ browser.runtime.onMessage.addListener(request => {
         }else{
             $alreadyVisited.html('');
         }
-        
+
 
     }
 });
