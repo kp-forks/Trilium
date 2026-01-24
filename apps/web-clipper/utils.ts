@@ -1,3 +1,5 @@
+export type Rect = { x: number, y: number, width: number, height: number };
+
 export function randomString(len: number) {
     let text = "";
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

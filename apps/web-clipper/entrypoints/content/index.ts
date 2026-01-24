@@ -1,3 +1,5 @@
+import { Rect } from "@/utils.js";
+
 import Readability from "../../lib/Readability.js";
 import { createLink, getBaseUrl, getPageLocationOrigin, randomString } from "../../utils.js";
 
@@ -69,7 +71,7 @@ export default defineContentScript({
         }
 
         function getRectangleArea() {
-            return new Promise((resolve) => {
+            return new Promise<Rect>((resolve) => {
                 const overlay = document.createElement('div');
                 overlay.style.opacity = '0.6';
                 overlay.style.background = 'black';
@@ -120,7 +122,7 @@ export default defineContentScript({
 
                 let isDragging = false;
                 let draggingStartPos: {x: number, y: number} | null = null;
-                let selectionArea: {x?: number, y?: number, width?: number, height?: number} = {};
+                let selectionArea: Rect;
 
                 function updateSelection() {
                     selection.style.left = `${selectionArea.x}px`;
@@ -300,7 +302,10 @@ export default defineContentScript({
 
             }
             else if (message.name === 'trilium-get-rectangle-for-screenshot') {
-                return getRectangleArea();
+                return {
+                    rect: await getRectangleArea(),
+                    devicePixelRatio: window.devicePixelRatio
+                };
             }
             else if (message.name === "trilium-save-page") {
                 const {title, body} = getReadableDocument();

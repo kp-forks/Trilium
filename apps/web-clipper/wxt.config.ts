@@ -12,7 +12,8 @@ export default defineConfig({
             "https://*/",
             "<all_urls>",
             "storage",
-            "contextMenus"
+            "contextMenus",
+            "offscreen"
         ],
         browser_specific_settings: {
             gecko: {

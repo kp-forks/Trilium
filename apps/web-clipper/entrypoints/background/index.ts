@@ -1,7 +1,6 @@
-import { randomString } from "../../utils";
-import TriliumServerFacade, { isDevEnv } from "./trilium_server_facade";
+import { randomString, Rect } from "@/utils";
 
-type Rect = { x: number, y: number, width: number, height: number };
+import TriliumServerFacade, { isDevEnv } from "./trilium_server_facade";
 
 export default defineBackground(() => {
     const triliumServerFacade = new TriliumServerFacade();
@@ -23,38 +22,46 @@ export default defineBackground(() => {
         }
     });
 
-    function cropImage(newArea: Rect, dataUrl: string) {
-        return new Promise<string>((resolve) => {
-            const img = new Image();
-
-            img.onload = function () {
-                const canvas = document.createElement('canvas');
-                canvas.width = newArea.width;
-                canvas.height = newArea.height;
-
-                const ctx = canvas.getContext('2d');
-                ctx?.drawImage(img, newArea.x, newArea.y, newArea.width, newArea.height, 0, 0, newArea.width, newArea.height);
-
-                resolve(canvas.toDataURL());
-            };
-
-            img.src = dataUrl;
-        });
-    }
-
-    async function takeCroppedScreenshot(cropRect: Rect) {
+    async function takeCroppedScreenshot(cropRect: Rect, devicePixelRatio: number = 1) {
         const activeTab = await getActiveTab();
-        const zoom = await browser.tabs.getZoom(activeTab.id) *  window.devicePixelRatio;
+        const zoom = await browser.tabs.getZoom(activeTab.id) * devicePixelRatio;
 
-        const newArea: Rect = Object.assign({}, cropRect);
-        newArea.x *= zoom;
-        newArea.y *= zoom;
-        newArea.width *= zoom;
-        newArea.height *= zoom;
+        const newArea: Rect = {
+            x: cropRect.x * zoom,
+            y: cropRect.y * zoom,
+            width: cropRect.width * zoom,
+            height: cropRect.height * zoom
+        };
 
         const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
 
-        return await cropImage(newArea, dataUrl);
+        // Create offscreen document if it doesn't exist
+        await ensureOffscreenDocument();
+
+        // Send cropping task to offscreen document
+        const croppedDataUrl = await browser.runtime.sendMessage({
+            type: 'CROP_IMAGE',
+            dataUrl,
+            cropRect: newArea
+        });
+
+        return croppedDataUrl;
+    }
+
+    async function ensureOffscreenDocument() {
+        const existingContexts = await browser.runtime.getContexts({
+            contextTypes: ['OFFSCREEN_DOCUMENT']
+        });
+
+        if (existingContexts.length > 0) {
+            return; // Already exists
+        }
+
+        await browser.offscreen.createDocument({
+            url: browser.runtime.getURL('/offscreen.html'),
+            reasons: ['DOM_SCRAPING'], // or 'DISPLAY_MEDIA' depending on browser support
+            justification: 'Image cropping requires canvas API'
+        });
     }
 
     async function takeWholeScreenshot() {
@@ -224,9 +231,9 @@ export default defineBackground(() => {
     }
 
     async function saveCroppedScreenshot(pageUrl) {
-        const cropRect = await sendMessageToActiveTab({name: 'trilium-get-rectangle-for-screenshot'});
+        const { rect, devicePixelRatio } = await sendMessageToActiveTab({name: 'trilium-get-rectangle-for-screenshot'});
 
-        const src = await takeCroppedScreenshot(cropRect);
+        const src = await takeCroppedScreenshot(rect, devicePixelRatio);
 
         const payload = await getImagePayloadFromSrc(src, pageUrl);
 
