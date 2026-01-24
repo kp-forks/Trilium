@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
+    modules: ['@wxt-dev/auto-icons'],
     manifest: {
         permissions: [
             "activeTab",
