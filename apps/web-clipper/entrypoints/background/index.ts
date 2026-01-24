@@ -366,7 +366,7 @@ export default defineBackground(() => {
         toast(`${tabs.length} links have been saved to Trilium.`, resp.noteId, tabIds);
     }
 
-    browser.contextMenus.onClicked.addListener(async (info, tab) => {
+    browser.contextMenus.onClicked.addListener(async (info: globalThis.Browser.contextMenus.OnClickData & { linkText?: string; }) => {
         if (info.menuItemId === 'trilium-save-selection') {
             await saveSelection();
         }
@@ -381,6 +381,7 @@ export default defineBackground(() => {
         }
         else if (info.menuItemId === 'trilium-save-link') {
             if (!info.linkUrl) return;
+            // Link text is only available on Firefox.
             const linkText = info.linkText || info.linkUrl;
             const content = `<a href="${info.linkUrl}">${linkText}</a>`;
             const activeTab = await getActiveTab();
@@ -460,7 +461,9 @@ export default defineBackground(() => {
         }
         else if (request.name === 'trigger-trilium-search-note-url') {
             const activeTab = await getActiveTab();
-            triliumServerFacade.triggerSearchNoteByUrl(activeTab.url);
+            if (activeTab.url) {
+                triliumServerFacade.triggerSearchNoteByUrl(activeTab.url);
+            }
         }
     });
 });
