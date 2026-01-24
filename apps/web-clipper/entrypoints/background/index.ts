@@ -1,6 +1,6 @@
 import { randomString, Rect } from "@/utils";
 
-import TriliumServerFacade, { isDevEnv } from "./trilium_server_facade";
+import TriliumServerFacade from "./trilium_server_facade";
 
 export default defineBackground(() => {
     const triliumServerFacade = new TriliumServerFacade();
@@ -95,14 +95,6 @@ export default defineBackground(() => {
         // see page.js and popup.js
         return await browser.tabs.captureVisibleTab({ format: 'png' });
     }
-
-    browser.runtime.onInstalled.addListener(() => {
-        if (isDevEnv()) {
-            browser.browserAction.setIcon({
-                path: 'icons/32-dev.png',
-            });
-        }
-    });
 
     browser.contextMenus.create({
         id: "trilium-save-selection",

@@ -1,11 +1,5 @@
 const PROTOCOL_VERSION_MAJOR = 1;
 
-export function isDevEnv() {
-    const manifest = browser.runtime.getManifest();
-
-    return manifest.name.endsWith('(dev)');
-}
-
 type TriliumSearchStatus = {
     status: "searching";
 } | {
@@ -199,7 +193,7 @@ export default class TriliumServerFacade {
             return parseInt(triliumDesktopPort, 10);
         }
 
-        return isDevEnv() ? 37740 : 37840;
+        return import.meta.env.DEV ? 37742 : 37840;
     }
 
     async callService(method: string, path: string, body?: string | object) {
