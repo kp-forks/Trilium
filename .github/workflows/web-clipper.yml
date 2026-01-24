@@ -41,5 +41,5 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: web-clipper-extension
-          path: .output/*.zip
+          path: apps/web-clipper/.output/*.zip
           if-no-files-found: error
