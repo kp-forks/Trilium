@@ -1,11 +1,13 @@
 import { randomString } from "../../utils";
 import TriliumServerFacade, { isDevEnv } from "./trilium_server_facade";
 
+type Rect = { x: number, y: number, width: number, height: number };
+
 export default defineBackground(() => {
     const triliumServerFacade = new TriliumServerFacade();
 
     // Keyboard shortcuts
-    chrome.commands.onCommand.addListener(async function (command) {
+    browser.commands.onCommand.addListener(async (command) => {
         if (command == "saveSelection") {
             await saveSelection();
         } else if (command == "saveWholePage") {
@@ -21,8 +23,8 @@ export default defineBackground(() => {
         }
     });
 
-    function cropImage(newArea, dataUrl) {
-        return new Promise((resolve, reject) => {
+    function cropImage(newArea: Rect, dataUrl: string) {
+        return new Promise<string>((resolve) => {
             const img = new Image();
 
             img.onload = function () {
@@ -31,8 +33,7 @@ export default defineBackground(() => {
                 canvas.height = newArea.height;
 
                 const ctx = canvas.getContext('2d');
-
-                ctx.drawImage(img, newArea.x, newArea.y, newArea.width, newArea.height, 0, 0, newArea.width, newArea.height);
+                ctx?.drawImage(img, newArea.x, newArea.y, newArea.width, newArea.height, 0, 0, newArea.width, newArea.height);
 
                 resolve(canvas.toDataURL());
             };
@@ -41,17 +42,17 @@ export default defineBackground(() => {
         });
     }
 
-    async function takeCroppedScreenshot(cropRect) {
+    async function takeCroppedScreenshot(cropRect: Rect) {
         const activeTab = await getActiveTab();
         const zoom = await browser.tabs.getZoom(activeTab.id) *  window.devicePixelRatio;
 
-        const newArea = Object.assign({}, cropRect);
+        const newArea: Rect = Object.assign({}, cropRect);
         newArea.x *= zoom;
         newArea.y *= zoom;
         newArea.width *= zoom;
         newArea.height *= zoom;
 
-        const dataUrl = await browser.tabs.captureVisibleTab(null, { format: 'png' });
+        const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
 
         return await cropImage(newArea, dataUrl);
     }
@@ -61,7 +62,7 @@ export default defineBackground(() => {
         // workaround to save the whole page is to scroll & stitch
         // example in https://github.com/mrcoles/full-page-screen-capture-chrome-extension
         // see page.js and popup.js
-        return await browser.tabs.captureVisibleTab(null, { format: 'png' });
+        return await browser.tabs.captureVisibleTab({ format: 'png' });
     }
 
     browser.runtime.onInstalled.addListener(() => {
@@ -134,52 +135,47 @@ export default defineBackground(() => {
     async function sendMessageToActiveTab(message) {
         const activeTab = await getActiveTab();
 
-        if (!activeTab) {
+        if (!activeTab?.id) {
             throw new Error("No active tab.");
         }
 
-        try {
-            return await browser.tabs.sendMessage(activeTab.id, message);
-        }
-        catch (e) {
-            throw e;
-        }
+        return await browser.tabs.sendMessage(activeTab.id, message);
     }
 
-    function toast(message, noteId = null, tabIds = null) {
+    function toast(message: string, noteId: string | null = null, tabIds: number[] | null = null) {
         sendMessageToActiveTab({
             name: 'toast',
-            message: message,
-            noteId: noteId,
-            tabIds: tabIds
+            message,
+            noteId,
+            tabIds
         });
     }
 
-    function blob2base64(blob) {
-        return new Promise(resolve => {
+    function blob2base64(blob: Blob) {
+        return new Promise<string | null>(resolve => {
             const reader = new FileReader();
             reader.onloadend = function() {
-                resolve(reader.result);
+                resolve(reader.result as string | null);
             };
             reader.readAsDataURL(blob);
         });
     }
 
-    async function fetchImage(url) {
+    async function fetchImage(url: string) {
         const resp = await fetch(url);
         const blob = await resp.blob();
 
         return await blob2base64(blob);
     }
 
-    async function postProcessImage(image) {
+    async function postProcessImage(image: { src: string, dataUrl?: string | null }) {
         if (image.src.startsWith("data:image/")) {
             image.dataUrl = image.src;
-            image.src = "inline." + image.src.substr(11, 3); // this should extract file type - png/jpg
+            image.src = `inline.${  image.src.substr(11, 3)}`; // this should extract file type - png/jpg
         }
         else {
             try {
-                image.dataUrl = await fetchImage(image.src, image);
+                image.dataUrl = await fetchImage(image.src);
             }
             catch (e) {
                 console.log(`Cannot fetch image from ${image.src}`);
@@ -187,7 +183,7 @@ export default defineBackground(() => {
         }
     }
 
-    async function postProcessImages(resp) {
+    async function postProcessImages(resp: { images?: { src: string, dataUrl?: string }[] }) {
         if (resp.images) {
             for (const image of resp.images) {
                 await postProcessImage(image);
@@ -212,7 +208,7 @@ export default defineBackground(() => {
     async function getImagePayloadFromSrc(src, pageUrl) {
         const image = {
             imageId: randomString(20),
-            src: src
+            src
         };
 
         await postProcessImage(image);
@@ -223,7 +219,7 @@ export default defineBackground(() => {
             title: activeTab.title,
             content: `<img src="${image.imageId}">`,
             images: [image],
-            pageUrl: pageUrl
+            pageUrl
         };
     }
 
@@ -291,8 +287,8 @@ export default defineBackground(() => {
         }
 
         const resp = await triliumServerFacade.callService('POST', 'notes', {
-            title: title,
-            content: content,
+            title,
+            content,
             clipType: 'note',
             pageUrl: activeTab.url
         });
@@ -309,27 +305,27 @@ export default defineBackground(() => {
     async function getTabsPayload(tabs) {
         let content = '<ul>';
         tabs.forEach(tab => {
-            content += `<li><a href="${tab.url}">${tab.title}</a></li>`
+            content += `<li><a href="${tab.url}">${tab.title}</a></li>`;
         });
         content += '</ul>';
 
         const domainsCount = tabs.map(tab => tab.url)
             .reduce((acc, url) => {
-                const hostname = new URL(url).hostname
-                return acc.set(hostname, (acc.get(hostname) || 0) + 1)
+                const hostname = new URL(url).hostname;
+                return acc.set(hostname, (acc.get(hostname) || 0) + 1);
             }, new Map());
 
         let topDomains = [...domainsCount]
-            .sort((a, b) => {return b[1]-a[1]})
+            .sort((a, b) => {return b[1]-a[1];})
             .slice(0,3)
             .map(domain=>domain[0])
-            .join(', ')
+            .join(', ');
 
-        if (tabs.length > 3) { topDomains += '...' }
+        if (tabs.length > 3) { topDomains += '...'; }
 
         return {
             title: `${tabs.length} browser tabs: ${topDomains}`,
-            content: content,
+            content,
             clipType: 'tabs'
         };
     }
@@ -340,17 +336,13 @@ export default defineBackground(() => {
         const payload = await getTabsPayload(tabs);
 
         const resp = await triliumServerFacade.callService('POST', 'notes', payload);
+        if (!resp) return;
 
-        if (!resp) {
-            return;
-        }
-
-        const tabIds = tabs.map(tab=>{return tab.id});
-
+        const tabIds = tabs.map(tab => tab.id!).filter(id => id !== undefined) as number[];
         toast(`${tabs.length} links have been saved to Trilium.`, resp.noteId, tabIds);
     }
 
-    browser.contextMenus.onClicked.addListener(async function(info, tab) {
+    browser.contextMenus.onClicked.addListener(async (info, tab) => {
         if (info.menuItemId === 'trilium-save-selection') {
             await saveSelection();
         }
@@ -365,8 +357,9 @@ export default defineBackground(() => {
         }
         else if (info.menuItemId === 'trilium-save-link') {
             const link = document.createElement("a");
+            if (!info.linkUrl) return;
             link.href = info.linkUrl;
-            // linkText might be available only in firefox
+            // linkText is not supported in Chrome/Edge; fallback to selected text or URL
             link.appendChild(document.createTextNode(info.linkText || info.linkUrl));
 
             const activeTab = await getActiveTab();
@@ -395,7 +388,7 @@ export default defineBackground(() => {
         console.log("Received", request);
 
         if (request.name === 'openNoteInTrilium') {
-            const resp = await triliumServerFacade.callService('POST', 'open/' + request.noteId);
+            const resp = await triliumServerFacade.callService('POST', `open/${  request.noteId}`);
 
             if (!resp) {
                 return;
@@ -406,7 +399,7 @@ export default defineBackground(() => {
                 const {triliumServerUrl} = await browser.storage.sync.get("triliumServerUrl");
 
                 if (triliumServerUrl) {
-                    const noteUrl = triliumServerUrl + '/#' + request.noteId;
+                    const noteUrl = `${triliumServerUrl  }/#${  request.noteId}`;
 
                     console.log("Opening new tab in browser", noteUrl);
 
@@ -420,7 +413,7 @@ export default defineBackground(() => {
             }
         }
         else if (request.name === 'closeTabs') {
-            return await browser.tabs.remove(request.tabIds)
+            return await browser.tabs.remove(request.tabIds);
         }
         else if (request.name === 'save-cropped-screenshot') {
             const activeTab = await getActiveTab();

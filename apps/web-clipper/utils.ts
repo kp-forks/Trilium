@@ -1,4 +1,4 @@
-export function randomString(len) {
+export function randomString(len: number) {
     let text = "";
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -13,9 +13,9 @@ export function getBaseUrl() {
     let output = getPageLocationOrigin() + location.pathname;
 
     if (output[output.length - 1] !== '/') {
-        output = output.split('/');
-        output.pop();
-        output = output.join('/');
+        const outputArr = output.split('/');
+        outputArr.pop();
+        output = outputArr.join('/');
     }
 
     return output;
@@ -27,14 +27,14 @@ export function getPageLocationOrigin() {
     return location.protocol === 'file:' ? 'file://' : location.origin;
 }
 
-export function createLink(clickAction, text, color = "lightskyblue") {
+export function createLink(clickAction: object, text: string, color = "lightskyblue") {
     const link = document.createElement('a');
     link.href = "javascript:";
     link.style.color = color;
     link.appendChild(document.createTextNode(text));
     link.addEventListener("click", () => {
-        browser.runtime.sendMessage(null, clickAction)
+        browser.runtime.sendMessage(null, clickAction);
     });
 
-    return link
+    return link;
 }
