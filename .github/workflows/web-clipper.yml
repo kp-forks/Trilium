@@ -42,4 +42,5 @@ jobs:
         with:
           name: web-clipper-extension
           path: apps/web-clipper/.output/*.zip
+          include-hidden-files: true
           if-no-files-found: error
