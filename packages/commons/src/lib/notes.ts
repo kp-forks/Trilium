@@ -26,6 +26,8 @@ export const NOTE_TYPE_ICONS = {
 
 const FILE_MIME_MAPPINGS = {
     "application/pdf": "bx bxs-file-pdf",
+    "application/vnd.oasis.opendocument.text": "bx bxs-file-doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "bx bxs-file-doc",
 };
 
 const IMAGE_MIME_MAPPINGS = {
