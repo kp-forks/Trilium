@@ -112,38 +112,41 @@ Trilium Notes — це безкоштовний кросплатформний �
 * Інтелект-карти, засновані на [Mind Elixir](https://docs.mind-elixir.com/)
 * [Геокарти](https://docs.triliumnotes.org/user-guide/collections/geomap) з
   географічними позначками та GPX-треками
-* [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - see [Advanced
-  showcases](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
-* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) for
-  automation
-* Scales well in both usability and performance upwards of 100 000 notes
-* Touch optimized [mobile
-  frontend](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) for
-  smartphones and tablets
-* Built-in [dark
-  theme](https://docs.triliumnotes.org/user-guide/concepts/themes), support for
-  user themes
+* [Сценарії](https://docs.triliumnotes.org/user-guide/scripts) – див. [Розширені
+  демонстрації](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
+* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) для
+  автоматизації
+* Добре масштабується як за зручністю використання, так і за продуктивністю до
+  100 000 нотаток
+* Оптимізовано для сенсорного керування [мобільний
+  інтерфейс](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) для
+  смартфонів і планшетів
+* Вбудована [темна
+  тема](https://docs.triliumnotes.org/user-guide/concepts/themes), підтримка тем
+  користувача
 * [Evernote](https://docs.triliumnotes.org/user-guide/concepts/import-export/evernote)
   and [Markdown import &
   export](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
-* [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) for
-  easy saving of web content
-* Customizable UI (sidebar buttons, user-defined widgets, ...)
-* [Metrics](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics),
-  along with a Grafana Dashboard.
+* [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) для
+  легкого збереження веб-контенту
+* Настроюваний інтерфейс користувача (кнопки бічної панелі, віджети, що
+  визначаються користувачем, ...)
+* [Метрики](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics), а
+  також панель інструментів Grafana.
 
-✨ Check out the following third-party resources/communities for more TriliumNext
-related goodies:
+✨ Перегляньте наступні сторонні ресурси/спільноти, щоб дізнатися більше про
+TriliumNext:
 
-- [awesome-trilium](https://github.com/Nriver/awesome-trilium) for 3rd party
-  themes, scripts, plugins and more.
-- [TriliumRocks!](https://trilium.rocks/) for tutorials, guides, and much more.
+- [awesome-trilium](https://github.com/Nriver/awesome-trilium) для тем,
+  скриптів, плагінів тощо від сторонніх розробників.
+- [TriliumRocks!](https://trilium.rocks/) для навчальних посібників, інструкцій
+  та багато іншого.
 
-## ❓Why TriliumNext?
+## ❓Чому TriliumNext?
 
-The original Trilium developer ([Zadam](https://github.com/zadam)) has
-graciously given the Trilium repository to the community project which resides
-at https://github.com/TriliumNext
+Оригінальний розробник Trilium ([Zadam](https://github.com/zadam)) люб'язно
+надав репозиторій Trilium спільнотному проекту, який знаходиться за адресою
+https://github.com/TriliumNext
 
 ### ⬆️Migrating from Zadam/Trilium?
 
