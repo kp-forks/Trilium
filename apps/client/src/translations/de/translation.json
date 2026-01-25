@@ -2243,14 +2243,14 @@
     "attachments_title_other": "Anhänge in einem neuen Tab öffnen",
     "attributes_one": "{{count}} Eigenschaft",
     "attributes_other": "{{count}} Eigenschaften",
-    "attributes_title": "Eigene und gererbte Eigenschaften",
+    "attributes_title": "Eigene und geerbte Attribute",
     "note_paths_one": "{{count}} Pfad",
     "note_paths_other": "{{count}} Pfade",
     "note_paths_title": "Notizpfade",
     "code_note_switcher": "Sprachmodus ändern"
   },
   "attributes_panel": {
-    "title": "Notizeigenschaften"
+    "title": "Notizattribute"
   },
   "right_pane": {
     "empty_message": "Für diese Notiz gibt es nichts anzuzeigen",
