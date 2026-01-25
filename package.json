@@ -40,7 +40,7 @@
     "dev:linter-check": "cross-env NODE_OPTIONS=--max_old_space_size=4096 eslint .",
     "dev:linter-fix": "cross-env NODE_OPTIONS=--max_old_space_size=4096 eslint . --fix",
     "postinstall": "tsx scripts/electron-rebuild.mts && pnpm prepare",
-    "prepare": "pnpm run --filter pdfjs-viewer --filter share-theme build"
+    "prepare": "pnpm run --filter pdfjs-viewer --filter share-theme build && pnpm run --filter web-clipper postinstall"
   },
   "private": true,
   "devDependencies": {

@@ -1,5 +1,8 @@
-async function sendMessage(message) {
+import { createLink } from "@/utils";
+
+async function sendMessage(message: object) {
     try {
+        console.log("Sending message", message);
         return await browser.runtime.sendMessage(message);
     }
     catch (e) {
@@ -35,9 +38,9 @@ $saveTabsButton.on("click", () => sendMessage({name: 'save-tabs'}));
 
 const $saveLinkWithNoteWrapper = $("#save-link-with-note-wrapper");
 const $textNote = $("#save-link-with-note-textarea");
-const $keepTitle = $("#keep-title-checkbox");
+const $keepTitle = $<HTMLInputElement>("#keep-title-checkbox");
 
-$textNote.on('keypress', function (event) {
+$textNote.on('keypress', (event) => {
     if ((event.which === 10 || event.which === 13) && event.ctrlKey) {
         saveLinkWithNote();
         return false;
@@ -60,7 +63,7 @@ $("#cancel-button").on("click", () => {
 });
 
 async function saveLinkWithNote() {
-    const textNoteVal = $textNote.val().trim();
+    const textNoteVal = ($textNote.val() as string | undefined ?? "").trim();
     let title, content;
 
     if (!textNoteVal) {
@@ -98,7 +101,7 @@ async function saveLinkWithNote() {
 $("#save-button").on("click", saveLinkWithNote);
 
 $("#show-help-button").on("click", () => {
-    window.open("https://github.com/zadam/trilium/wiki/Web-clipper", '_blank');
+    window.open("https://docs.triliumnotes.org/user-guide/setup/web-clipper", '_blank');
 });
 
 function escapeHtml(string) {
@@ -108,7 +111,7 @@ function escapeHtml(string) {
 
     const htmlWithPars = pre.innerHTML.replace(/\n/g, "</p><p>");
 
-    return '<p>' + htmlWithPars + '</p>';
+    return `<p>${htmlWithPars}</p>`;
 }
 
 const $connectionStatus = $("#connection-status");
@@ -157,14 +160,13 @@ browser.runtime.onMessage.addListener(request => {
         const {searchNote} = request;
         if (searchNote.status === 'found'){
             const a = createLink({name: 'openNoteInTrilium', noteId: searchNote.noteId},
-            "Open in Trilium.")
-            noteFound = `Already visited website!`;
-            $alreadyVisited.html(noteFound);
+                "Open in Trilium.");
+            $alreadyVisited.text(`Already visited website!`);
             $alreadyVisited[0].appendChild(a);
         }else{
             $alreadyVisited.html('');
         }
-        
+
 
     }
 });
@@ -174,7 +176,7 @@ const $checkConnectionButton = $("#check-connection-button");
 $checkConnectionButton.on("click", () => {
     browser.runtime.sendMessage({
         name: "trigger-trilium-search"
-    })
+    });
 });
 
 $(() => browser.runtime.sendMessage({name: "send-trilium-search-status"}));

@@ -17,8 +17,8 @@ function showSuccess(message) {
 async function saveTriliumServerSetup(e) {
     e.preventDefault();
 
-    if ($triliumServerUrl.val().trim().length === 0
-        || $triliumServerPassword.val().trim().length === 0) {
+    if (($triliumServerUrl.val() as string | undefined)?.trim().length === 0
+        || ($triliumServerPassword.val() as string | undefined)?.trim().length === 0) {
         showError("One or more mandatory inputs are missing. Please fill in server URL and password.");
 
         return;
@@ -27,7 +27,7 @@ async function saveTriliumServerSetup(e) {
     let resp;
 
     try {
-        resp = await fetch($triliumServerUrl.val() + '/api/login/token', {
+        resp = await fetch(`${$triliumServerUrl.val()}/api/login/token`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -39,7 +39,8 @@ async function saveTriliumServerSetup(e) {
         });
     }
     catch (e) {
-        showError("Unknown error: " + e.message);
+        const message = e instanceof Error ? e.message : String(e);
+        showError(`Unknown error: ${message}`);
         return;
     }
 
@@ -47,7 +48,7 @@ async function saveTriliumServerSetup(e) {
         showError("Incorrect credentials.");
     }
     else if (resp.status !== 200) {
-        showError("Unrecognised response with status code " + resp.status);
+        showError(`Unrecognised response with status code ${  resp.status}`);
     }
     else {
         const json = await resp.json();
@@ -89,8 +90,8 @@ const $triilumDesktopSetupForm = $("#trilium-desktop-setup-form");
 $triilumDesktopSetupForm.on("submit", e => {
     e.preventDefault();
 
-    const port = $triliumDesktopPort.val().trim();
-    const portNum = parseInt(port);
+    const port = ($triliumDesktopPort.val() as string | undefined ?? "").trim();
+    const portNum = parseInt(port, 10);
 
     if (port && (isNaN(portNum) || portNum <= 0 || portNum >= 65536)) {
         showError(`Please enter valid port number.`);
@@ -105,8 +106,8 @@ $triilumDesktopSetupForm.on("submit", e => {
 });
 
 async function restoreOptions() {
-    const {triliumServerUrl} = await browser.storage.sync.get("triliumServerUrl");
-    const {authToken} = await browser.storage.sync.get("authToken");
+    const {triliumServerUrl} = await browser.storage.sync.get<{ triliumServerUrl: string }>("triliumServerUrl");
+    const {authToken} = await browser.storage.sync.get<{ authToken: string }>("authToken");
 
     $errorMessage.hide();
     $successMessage.hide();
@@ -127,8 +128,7 @@ async function restoreOptions() {
         $triliumServerConfiguredDiv.hide();
     }
 
-    const {triliumDesktopPort} = await browser.storage.sync.get("triliumDesktopPort");
-
+    const {triliumDesktopPort} = await browser.storage.sync.get<{ triliumDesktopPort: string }>("triliumDesktopPort");
     $triliumDesktopPort.val(triliumDesktopPort);
 }
 
