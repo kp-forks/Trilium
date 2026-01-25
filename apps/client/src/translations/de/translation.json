@@ -720,7 +720,7 @@
     "update_available": "Update verfügbar"
   },
   "note_launcher": {
-    "this_launcher_doesnt_define_target_note": "Dieser Launcher definiert keine Zielnotiz."
+    "this_launcher_doesnt_define_target_note": "Dieser Starter definiert keine Zielnotiz."
   },
   "code_buttons": {
     "execute_button_title": "Skript ausführen",
@@ -763,8 +763,8 @@
     "change_note_icon": "Notiz-Icon ändern",
     "search": "Suche:",
     "reset-default": "Standard wiederherstellen",
-    "search_placeholder_one": "Suche {{number}} Icons über {{count}} Pakete",
-    "search_placeholder_other": "Suche {{number}} Icons über {{count}} Pakete",
+    "search_placeholder_one": "Suche {{number}} Symbole über {{count}} Pakete",
+    "search_placeholder_other": "Suche {{number}} Symbole über {{count}} Pakete",
     "search_placeholder_filtered": "Suche {{number}} Icons in {{name}}",
     "filter": "Filter",
     "filter-none": "Alle Icons",
@@ -1169,7 +1169,7 @@
     "layout": "Layout",
     "layout-vertical-title": "Vertikal",
     "layout-horizontal-title": "Horizontal",
-    "layout-vertical-description": "Startleiste ist auf der linken Seite (standard)",
+    "layout-vertical-description": "Startleiste ist auf der linken Seite (Standard)",
     "layout-horizontal-description": "Startleiste ist unter der Tableiste. Die Tableiste wird dadurch auf die ganze Breite erweitert.",
     "auto_theme": "Alt (Folge dem Farbschema des Systems)",
     "light_theme": "Alt (Hell)",
@@ -1177,7 +1177,7 @@
   },
   "zoom_factor": {
     "title": "Zoomfaktor (nur Desktop-Build)",
-    "description": "Das Zoomen kann auch mit den Tastenkombinationen STRG+- und STRG+u003d gesteuert werden."
+    "description": "Das Zoomen kann auch mit den Tastenkombinationen Strg+- und Strg+= gesteuert werden."
   },
   "code_auto_read_only_size": {
     "title": "Automatische schreibgeschützte Größe",
@@ -1490,12 +1490,12 @@
     "note-map": "Notizkarte",
     "render-note": "Render Notiz",
     "mermaid-diagram": "Mermaid Diagramm",
-    "canvas": "Canvas",
+    "canvas": "Leinwand",
     "web-view": "Webansicht",
     "mind-map": "Mind Map",
     "file": "Datei",
     "image": "Bild",
-    "launcher": "Launcher",
+    "launcher": "Starter",
     "doc": "Dokument",
     "widget": "Widget",
     "confirm-change": "Es is nicht empfehlenswert den Notiz-Typ zu ändern, wenn der Inhalt der Notiz nicht leer ist. Möchtest du dennoch fortfahren?",
@@ -1595,7 +1595,7 @@
     "last_modified": "Bearbeitet am <Value />",
     "note_type_switcher_label": "Ändere von {{type}} zu:",
     "note_type_switcher_others": "Andere Notizart",
-    "note_type_switcher_templates": "Template",
+    "note_type_switcher_templates": "Vorlagen",
     "note_type_switcher_collection": "Sammlung",
     "edited_notes": "Notizen, bearbeitet an diesem Tag",
     "promoted_attributes": "Hervorgehobene Attribute"
@@ -1683,16 +1683,16 @@
     "confirm_unhoisting": "Die angeforderte Notiz ‚{{requestedNote}}‘ befindet sich außerhalb des hoisted Bereichs der Notiz ‚{{hoistedNote}}‘. Du musst sie unhoisten, um auf die Notiz zuzugreifen. Möchtest du mit dem Unhoisting fortfahren?"
   },
   "launcher_context_menu": {
-    "reset_launcher_confirm": "Möchtest du „{{title}}“ wirklich zurücksetzen? Alle Daten / Einstellungen in dieser Notiz (und ihren Unternotizen) gehen verloren und der Launcher wird an seinen ursprünglichen Standort zurückgesetzt.",
-    "add-note-launcher": "Launcher für Notiz hinzufügen",
-    "add-script-launcher": "Launcher für Skript hinzufügen",
+    "reset_launcher_confirm": "Möchtest du „{{title}}“ wirklich zurücksetzen? Alle Daten / Einstellungen in dieser Notiz (und ihren Unternotizen) gehen verloren und der Starter wird an seinen ursprünglichen Standort zurückgesetzt.",
+    "add-note-launcher": "Notiz-Starter hinzufügen",
+    "add-script-launcher": "Skript-Starter hinzufügen",
     "add-custom-widget": "Benutzerdefiniertes Widget hinzufügen",
-    "add-spacer": "Spacer hinzufügen",
+    "add-spacer": "Abstandhalter hinzufügen",
     "delete": "Löschen <kbd data-command=\"deleteNotes\"></kbd>",
     "reset": "Zurücksetzen",
-    "move-to-visible-launchers": "Zu sichtbaren Launchern verschieben",
-    "move-to-available-launchers": "Zu verfügbaren Launchern verschieben",
-    "duplicate-launcher": "Launcher duplizieren <kbd data-command=\"duplicateSubtree\">"
+    "move-to-visible-launchers": "Zu sichtbaren Startern verschieben",
+    "move-to-available-launchers": "Zu verfügbaren Startern verschieben",
+    "duplicate-launcher": "Starter duplizieren <kbd data-command=\"duplicateSubtree\">"
   },
   "highlighting": {
     "description": "Steuert die Syntaxhervorhebung für Codeblöcke in Textnotizen, Code-Notizen sind nicht betroffen.",
@@ -2241,8 +2241,8 @@
     "attachments_other": "{{count}} Anhänge",
     "attachments_title_one": "Anhang in einem neuen Tab öffnen",
     "attachments_title_other": "Anhänge in einem neuen Tab öffnen",
-    "attributes_one": "{{count}} Eigenschaft",
-    "attributes_other": "{{count}} Eigenschaften",
+    "attributes_one": "{{count}} Attribute",
+    "attributes_other": "{{count}} Attribute",
     "attributes_title": "Eigene und geerbte Attribute",
     "note_paths_one": "{{count}} Pfad",
     "note_paths_other": "{{count}} Pfade",
