@@ -1608,7 +1608,11 @@
     "configure_launchbar": "Startleiste konfigurieren"
   },
   "sql_result": {
-    "no_rows": "Es wurden keine Zeilen für diese Abfrage zurückgegeben"
+    "no_rows": "Es wurden keine Zeilen für diese Abfrage zurückgegeben",
+    "not_executed": "Die Abfrage wurde noch nicht ausgeführt.",
+    "failed": "SQL-Abfrage ist fehlgeschlagen",
+    "execute_now": "Jetzt ausführen",
+    "statement_result": "Anweisung Ergebnis"
   },
   "sql_table_schemas": {
     "tables": "Tabellen"

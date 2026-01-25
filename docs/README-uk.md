@@ -232,22 +232,22 @@ Trilium та TriliumDroid.
 сервера](https://docs.triliumnotes.org/user-guide/setup/server).
 
 
-## 💻 Contribute
+## 💻 Зробіть свій внесок
 
-### Translations
+### Переклади
 
-If you are a native speaker, help us translate Trilium by heading over to our
-[Weblate page](https://hosted.weblate.org/engage/trilium/).
+Якщо ви носій мови, допоможіть нам перекласти Trilium, перейшовши на нашу
+[сторінку Weblate](https://hosted.weblate.org/engage/trilium/).
 
-Here's the language coverage we have so far:
+Ось мовне висвітлення, яке ми маємо наразі:
 
-[![Translation
-status](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
+[![Стан
+перекладу](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
 
-### Code
+### Код
 
-Download the repository, install dependencies using `pnpm` and then run the
-server (available at http://localhost:8080):
+Завантажте репозиторій, встановіть залежності за допомогою `pnpm`, а потім
+запустіть сервер (доступний за адресою http://localhost:8080):
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -255,10 +255,10 @@ pnpm install
 pnpm run server:start
 ```
 
-### Documentation
+### Документація
 
-Download the repository, install dependencies using `pnpm` and then run the
-environment required to edit the documentation:
+Завантажте репозиторій, встановіть залежності за допомогою `pnpm`, а потім
+запустіть середовище, необхідне для редагування документації:
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -266,9 +266,9 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-### Building the Executable
-Download the repository, install dependencies using `pnpm` and then build the
-desktop app for Windows:
+### Створення виконуваного файлу
+Завантажте репозиторій, встановіть залежності за допомогою `pnpm`, а потім
+зберіть настільний додаток для Windows:
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -276,71 +276,72 @@ pnpm install
 pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 ```
 
-For more details, see the [development
-docs](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20Guide/Developer%20Guide).
+Для отримання додаткової інформації див. [документацію
+розробника](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20Guide/Developer%20Guide).
 
-### Developer Documentation
+### Документація розробника
 
 Please view the [documentation
 guide](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)
 for details. If you have more questions, feel free to reach out via the links
 described in the "Discuss with us" section above.
 
-## 👏 Shoutouts
+## 👏 Привітання
 
-* [zadam](https://github.com/zadam) for the original concept and implementation
-  of the application.
-* [Sarah Hussein](https://github.com/Sarah-Hussein) for designing the
-  application icon.
-* [nriver](https://github.com/nriver) for his work on internationalization.
-* [Thomas Frei](https://github.com/thfrei) for his original work on the Canvas.
-* [antoniotejada](https://github.com/nriver) for the original syntax highlight
-  widget.
-* [Dosu](https://dosu.dev/) for providing us with the automated responses to
-  GitHub issues and discussions.
-* [Tabler Icons](https://tabler.io/icons) for the system tray icons.
+* [zadam](https://github.com/zadam) за оригінальну концепцію та реалізацію
+  застосунку.
+* [Sarah Hussein](https://github.com/Sarah-Hussein) за розробку піктограми
+  програми.
+* [nriver](https://github.com/nriver) за його роботу з інтернаціоналізації.
+* [Thomas Frei](https://github.com/thfrei) за його оригінальну роботу на Canvas.
+* [antoniotejada](https://github.com/nriver) для оригінального віджета
+  підсвічування синтаксису.
+* [Dosu](https://dosu.dev/) за надання нам автоматичних відповідей на проблеми
+  та обговорення GitHub.
+* [Tabler Icons](https://tabler.io/icons) для значків у системному треї.
 
-Trilium would not be possible without the technologies behind it:
+Trilium був би неможливим без технологій, що лежать в його основі:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes. We are grateful for being offered a set of the premium features.
-* [CodeMirror](https://github.com/codemirror/CodeMirror) - code editor with
-  support for huge amount of languages.
-* [Excalidraw](https://github.com/excalidraw/excalidraw) - the infinite
-  whiteboard used in Canvas notes.
-* [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) - providing the
-  mind map functionality.
-* [Leaflet](https://github.com/Leaflet/Leaflet) - for rendering geographical
-  maps.
-* [Tabulator](https://github.com/olifolkerd/tabulator) - for the interactive
-  table used in collections.
-* [FancyTree](https://github.com/mar10/fancytree) - feature-rich tree library
-  without real competition.
-* [jsPlumb](https://github.com/jsplumb/jsplumb) - visual connectivity library.
-  Used in [relation
-  maps](https://docs.triliumnotes.org/user-guide/note-types/relation-map) and
-  [link
-  maps](https://docs.triliumnotes.org/user-guide/advanced-usage/note-map#link-map)
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) – візуальний редактор
+  текстових нотаток. Ми вдячні за те, що нам запропонували набір
+  преміум-функцій.
+* [CodeMirror](https://github.com/codemirror/CodeMirror) – редактор коду з
+  підтримкою величезної кількості мов програмування.
+* [Excalidraw](https://github.com/excalidraw/excalidraw) – нескінченна дошка, що
+  використовується в нотатках Canvas.
+* [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) – забезпечує
+  функціональність карти розуму.
+* [Leaflet](https://github.com/Leaflet/Leaflet) – для візуалізації географічних
+  карт.
+* [Tabulator](https://github.com/olifolkerd/tabulator) – для інтерактивної
+  таблиці, що використовується в колекціях.
+* [FancyTree](https://github.com/mar10/fancytree) – багатофункціональна
+  бібліотека дерев без реальної конкуренції.
+* [jsPlumb](https://github.com/jsplumb/jsplumb) – бібліотека візуальної
+  зв’язності. Використовується в [картах
+  зв’язків](https://docs.triliumnotes.org/user-guide/note-types/relation-map) та
+  [картах
+  посилань](https://docs.triliumnotes.org/user-guide/advanced-usage/note-map#link-map)
 
-## 🤝 Support
+## 🤝 Підтримка
 
-Trilium is built and maintained with [hundreds of hours of
-work](https://github.com/TriliumNext/Trilium/graphs/commit-activity). Your
-support keeps it open-source, improves features, and covers costs such as
-hosting.
+Trilium створено та підтримується [сотнями годин
+роботи](https://github.com/TriliumNext/Trilium/graphs/commit-activity). Ваша
+підтримка забезпечує його відкритий вихідний код, покращує функції та покриває
+витрати, такі як хостинг.
 
-Consider supporting the main developer
-([eliandoran](https://github.com/eliandoran)) of the application via:
+Розгляньте можливість підтримки головного розробника
+([eliandoran](https://github.com/eliandoran)) програми через:
 
-- [GitHub Sponsors](https://github.com/sponsors/eliandoran)
+- [Спонсори GitHub](https://github.com/sponsors/eliandoran)
 - [PayPal](https://paypal.me/eliandoran)
 - [Buy Me a Coffee](https://buymeacoffee.com/eliandoran)
 
-## 🔑 License
+## 🔑 Ліцензія
 
-Copyright 2017-2025 zadam, Elian Doran, and other contributors
+Авторське право 2017-2025 належить zadam, Elian Doran та іншим авторам
 
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU Affero General Public License as published by the Free
-Software Foundation, either version 3 of the License, or (at your option) any
-later version.
+Ця програма є вільним програмним забезпеченням: ви можете розповсюджувати її
+та/або змінювати відповідно до умов Загальної публічної ліцензії GNU Affero,
+опублікованої Фондом вільного програмного забезпечення, або версії 3 Ліцензії,
+або (на ваш вибір) будь-якої пізнішої версії.
