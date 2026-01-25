@@ -6,10 +6,20 @@ on:
       - main
     paths:
       - "apps/web-clipper/**"
+    tags:
+      - "web-clipper-v*"
 
   pull_request:
     paths:
       - "apps/web-clipper/**"
+
+permissions:
+  contents: write
+  discussions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -39,9 +49,22 @@ jobs:
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           name: web-clipper-extension
           path: apps/web-clipper/.output/*.zip
           include-hidden-files: true
           if-no-files-found: error
           compression-level: 0
+
+      - name: Release web clipper extension
+        uses: softprops/action-gh-release@v2.5.0
+        if: ${{ startsWith(github.ref, 'refs/tags/web-clipper-v') }}
+        with:
+          draft: false
+          fail_on_unmatched_files: true
+          files: apps/web-clipper/.output/*.zip
+          discussion_category_name: Releases
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
