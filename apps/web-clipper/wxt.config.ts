@@ -55,7 +55,7 @@ export default defineConfig({
     }),
     zip: {
         includeSources: [
-            "../../tsconfig.base.json"
+            "entrypoints/offscreen/index.html"
         ]
     },
     hooks: {
