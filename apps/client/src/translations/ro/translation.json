@@ -880,7 +880,11 @@
     "convert_into_attachment_prompt": "Doriți convertirea notiței „{{title}}” într-un atașament al notiței părinte?",
     "print_pdf": "Exportare ca PDF...",
     "open_note_on_server": "Deschide notița pe server",
-    "view_revisions": "Revizii ale notițelor..."
+    "view_revisions": "Revizii ale notițelor...",
+    "export_as_image": "Exportează ca imagine",
+    "export_as_image_png": "PNG (bitmap)",
+    "export_as_image_svg": "SVG (vectorial)",
+    "note_map": "Harta notițelor"
   },
   "note_erasure_timeout": {
     "deleted_notes_erased": "Notițele șterse au fost eliminate permanent.",
@@ -1309,8 +1313,17 @@
     },
     "bundle-error": {
       "title": "Eroare la încărcarea unui script personalizat",
-      "message": "Scriptul din notița cu ID-ul „{{id}}”, întitulată „{{title}}” nu a putut fi executată din cauza:\n\n{{message}}"
-    }
+      "message": "Scriptul nu a putut fi executat din cauza:\n\n{{message}}"
+    },
+    "widget-list-error": {
+      "title": "Nu s-a putut obține lista de widget-uri de la server"
+    },
+    "widget-render-error": {
+      "title": "Nu s-a putut randa un widget React"
+    },
+    "widget-missing-parent": "Widget-ul personalizat nu are definită proprietatea necesară „{{property}}“.\n\nDacă acest script este menit să ruleze fără interfață grafică, folosiți '#run=frontendStartup'.",
+    "open-script-note": "Deschide notița scriptului",
+    "scripting-error": "Eroare script personalizat: {{title}}"
   },
   "tray": {
     "enable_tray": "Activează system tray-ul (este necesară repornirea aplicației pentru a avea efect)",
@@ -1483,7 +1496,10 @@
   "note_icon": {
     "change_note_icon": "Schimbă iconița notiței",
     "reset-default": "Resetează la iconița implicită",
-    "search": "Căutare:"
+    "search": "Căutare:",
+    "search_placeholder_one": "Caută printre {{number}} iconițe dintr-un pachet",
+    "search_placeholder_few": "Caută printre {{number}} iconițe din {{count}} pachete",
+    "search_placeholder_other": "Caută printre {{number}} iconițe din {{count}} de pachete"
   },
   "show_highlights_list_widget_button": {
     "show_highlights_list": "Afișează lista de evidențieri"
