@@ -25,7 +25,8 @@
     },
     "widget-list-error": {
       "title": "Gagal mendapatkan daftar widget dari server"
-    }
+    },
+    "open-script-note": "Buka skrip catatan"
   },
   "add_link": {
     "add_link": "Tambah tautan",
