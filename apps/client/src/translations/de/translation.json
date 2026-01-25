@@ -1595,7 +1595,7 @@
     "last_modified": "Bearbeitet am <Value />",
     "note_type_switcher_label": "Ändere von {{type}} zu:",
     "note_type_switcher_others": "Andere Notizart",
-    "note_type_switcher_templates": "Vorlagen",
+    "note_type_switcher_templates": "Vorlage",
     "note_type_switcher_collection": "Sammlung",
     "edited_notes": "Notizen, bearbeitet an diesem Tag",
     "promoted_attributes": "Hervorgehobene Attribute"
