@@ -1612,7 +1612,7 @@
     "not_executed": "Die Abfrage wurde noch nicht ausgeführt.",
     "failed": "SQL-Abfrage ist fehlgeschlagen",
     "execute_now": "Jetzt ausführen",
-    "statement_result": "Anweisung Ergebnis"
+    "statement_result": "Abfrageergebnis"
   },
   "sql_table_schemas": {
     "tables": "Tabellen"
