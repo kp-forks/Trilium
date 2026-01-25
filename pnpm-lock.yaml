@@ -1313,11 +1313,11 @@ importers:
         specifier: 6.2.3
         version: 6.2.3(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)
       '@fsegurai/codemirror-theme-vscode-dark':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)
       '@fsegurai/codemirror-theme-vscode-light':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)
       '@replit/codemirror-indentation-markers':
         specifier: 6.5.3
         version: 6.5.3(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)
@@ -3172,16 +3172,16 @@ packages:
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': ^1.0.0
 
-  '@fsegurai/codemirror-theme-vscode-dark@6.2.3':
-    resolution: {integrity: sha512-702b/C3fdTQEfAXiXNewHuvyht83volDFQPR7/uF3S+F6xJ94nUHh4xaffLEFZskvuNVQErX477mq/hnYRdRbA==}
+  '@fsegurai/codemirror-theme-vscode-dark@6.2.4':
+    resolution: {integrity: sha512-Vjr1658LIYgvC3ALVeqMhSMLA1ljoLmQpdAq8JuFdH8HkENfCXPmLX498Lnab3UYyn/b3qZAbHtAF+wQ64iMkg==}
     peerDependencies:
       '@codemirror/language': ^6.0.0
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': ^1.0.0
 
-  '@fsegurai/codemirror-theme-vscode-light@6.2.3':
-    resolution: {integrity: sha512-/5xU4EGFfH8zOiw6tIFAhWUx7meuw3rX+OOKY0yu0uM8DFU+nXpepzdBwFlaTorJqdTjxw75EHxSxpRoxrgBkw==}
+  '@fsegurai/codemirror-theme-vscode-light@6.2.4':
+    resolution: {integrity: sha512-to840rPueVX6UV4YLEymGhUzzyuunY15LfGgm4Vq6hY2NmCfwYhQ/KfTcJ3XrZXiE80MrHjOq1FDcXl17UgvIQ==}
     peerDependencies:
       '@codemirror/language': ^6.0.0
       '@codemirror/state': ^6.0.0
@@ -15313,6 +15313,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       '@ckeditor/ckeditor5-watchdog': 47.4.0
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-dev-build-tools@54.3.2(@swc/helpers@0.5.17)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
@@ -16173,6 +16175,8 @@ snapshots:
       '@ckeditor/ckeditor5-icons': 47.4.0
       '@ckeditor/ckeditor5-ui': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-upload@47.4.0':
     dependencies:
@@ -17466,14 +17470,14 @@ snapshots:
       '@codemirror/view': 6.39.11
       '@lezer/highlight': 1.2.1
 
-  '@fsegurai/codemirror-theme-vscode-dark@6.2.3(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)':
+  '@fsegurai/codemirror-theme-vscode-dark@6.2.4(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)':
     dependencies:
       '@codemirror/language': 6.11.0
       '@codemirror/state': 6.5.2
       '@codemirror/view': 6.39.11
       '@lezer/highlight': 1.2.1
 
-  '@fsegurai/codemirror-theme-vscode-light@6.2.3(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)':
+  '@fsegurai/codemirror-theme-vscode-light@6.2.4(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.11)(@lezer/highlight@1.2.1)':
     dependencies:
       '@codemirror/language': 6.11.0
       '@codemirror/state': 6.5.2
