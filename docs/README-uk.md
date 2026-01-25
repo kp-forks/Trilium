@@ -112,38 +112,41 @@ Trilium Notes — це безкоштовний кросплатформний �
 * Інтелект-карти, засновані на [Mind Elixir](https://docs.mind-elixir.com/)
 * [Геокарти](https://docs.triliumnotes.org/user-guide/collections/geomap) з
   географічними позначками та GPX-треками
-* [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - see [Advanced
-  showcases](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
-* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) for
-  automation
-* Scales well in both usability and performance upwards of 100 000 notes
-* Touch optimized [mobile
-  frontend](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) for
-  smartphones and tablets
-* Built-in [dark
-  theme](https://docs.triliumnotes.org/user-guide/concepts/themes), support for
-  user themes
+* [Сценарії](https://docs.triliumnotes.org/user-guide/scripts) – див. [Розширені
+  демонстрації](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
+* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) для
+  автоматизації
+* Добре масштабується як за зручністю використання, так і за продуктивністю до
+  100 000 нотаток
+* Оптимізовано для сенсорного керування [мобільний
+  інтерфейс](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) для
+  смартфонів і планшетів
+* Вбудована [темна
+  тема](https://docs.triliumnotes.org/user-guide/concepts/themes), підтримка тем
+  користувача
 * [Evernote](https://docs.triliumnotes.org/user-guide/concepts/import-export/evernote)
   and [Markdown import &
   export](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
-* [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) for
-  easy saving of web content
-* Customizable UI (sidebar buttons, user-defined widgets, ...)
-* [Metrics](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics),
-  along with a Grafana Dashboard.
+* [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) для
+  легкого збереження веб-контенту
+* Настроюваний інтерфейс користувача (кнопки бічної панелі, віджети, що
+  визначаються користувачем, ...)
+* [Метрики](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics), а
+  також панель інструментів Grafana.
 
-✨ Check out the following third-party resources/communities for more TriliumNext
-related goodies:
+✨ Перегляньте наступні сторонні ресурси/спільноти, щоб дізнатися більше про
+TriliumNext:
 
-- [awesome-trilium](https://github.com/Nriver/awesome-trilium) for 3rd party
-  themes, scripts, plugins and more.
-- [TriliumRocks!](https://trilium.rocks/) for tutorials, guides, and much more.
+- [awesome-trilium](https://github.com/Nriver/awesome-trilium) для тем,
+  скриптів, плагінів тощо від сторонніх розробників.
+- [TriliumRocks!](https://trilium.rocks/) для навчальних посібників, інструкцій
+  та багато іншого.
 
-## ❓Why TriliumNext?
+## ❓Чому TriliumNext?
 
-The original Trilium developer ([Zadam](https://github.com/zadam)) has
-graciously given the Trilium repository to the community project which resides
-at https://github.com/TriliumNext
+Оригінальний розробник Trilium ([Zadam](https://github.com/zadam)) люб'язно
+надав репозиторій Trilium спільнотному проекту, який знаходиться за адресою
+https://github.com/TriliumNext
 
 ### ⬆️Migrating from Zadam/Trilium?
 
@@ -161,41 +164,42 @@ prevents direct migration.
 
 ## 💬 Discuss with us
 
-Feel free to join our official conversations. We would love to hear what
-features, suggestions, or issues you may have!
+Не соромтеся приєднуватися до наших офіційних обговорень. Ми будемо раді почути
+про ваші функції, пропозиції чи проблеми!
 
-- [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (For synchronous
-  discussions.)
-  - The `General` Matrix room is also bridged to
+- [Матриця](https://matrix.to/#/#triliumnext:matrix.org) (Для синхронних
+  обговорень.)
+  - Кімната матриці `Загальні` також підключена до
     [XMPP](xmpp:discuss@trilium.thisgreat.party?join)
-- [Github Discussions](https://github.com/TriliumNext/Trilium/discussions) (For
-  asynchronous discussions.)
-- [Github Issues](https://github.com/TriliumNext/Trilium/issues) (For bug
-  reports and feature requests.)
+- [Обговорення на Github](https://github.com/TriliumNext/Trilium/discussions)
+  (Для асинхронних обговорень.)
+- [Проблеми Github](https://github.com/TriliumNext/Trilium/issues) (Для звітів
+  про помилки та запитів на нові функції.)
 
-## 🏗 Installation
+## 🏗 Встановлення
 
 ### Windows / MacOS
 
-Download the binary release for your platform from the [latest release
-page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the package
-and run the `trilium` executable.
+Завантажте бінарний реліз для вашої платформи зі сторінки [останнього
+релізу](https://github.com/TriliumNext/Trilium/releases/latest), розпакуйте
+пакет і запустіть виконуваний файл `trilium`.
 
 ### Linux
 
-If your distribution is listed in the table below, use your distribution's
-package.
+Якщо ваш дистрибутив зазначено в таблиці нижче, використовуйте пакет вашого
+дистрибутива.
 
 [![Packaging
 status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
 
-You may also download the binary release for your platform from the [latest
-release page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the
-package and run the `trilium` executable.
+Ви також можете завантажити бінарний реліз для вашої платформи зі сторінки
+[останнього релізу](https://github.com/TriliumNext/Trilium/releases/latest),
+розпакувати пакет і запустити виконуваний файл `trilium`.
 
-TriliumNext is also provided as a Flatpak, but not yet published on FlatHub.
+TriliumNext також доступний у форматі Flatpak, але ще не опублікований на
+FlatHub.
 
-### Browser (any OS)
+### Браузер (будь-яка ОС)
 
 If you use a server installation (see below), you can directly access the web
 interface (which is almost identical to the desktop app).

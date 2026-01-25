@@ -21,8 +21,12 @@
     },
     "bundle-error": {
       "title": "Gagal memuat skrip kustom",
-      "message": "Skrip dari catatan dengan ID \"{{id}}\", berjudul \"{{title}}\" tidak dapat dijalankan karena:\n\n{{message}}"
-    }
+      "message": "Skrip tidak dapat dijalankan karena:\n\n{{message}}"
+    },
+    "widget-list-error": {
+      "title": "Gagal mendapatkan daftar widget dari server"
+    },
+    "open-script-note": "Buka skrip catatan"
   },
   "add_link": {
     "add_link": "Tambah tautan",
