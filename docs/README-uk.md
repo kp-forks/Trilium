@@ -201,8 +201,9 @@ FlatHub.
 
 ### Браузер (будь-яка ОС)
 
-If you use a server installation (see below), you can directly access the web
-interface (which is almost identical to the desktop app).
+Якщо ви використовуєте серверну інсталяцію (див. нижче), ви можете отримати
+безпосередній доступ до веб-інтерфейсу (який майже ідентичний десктопному
+додатку).
 
 Currently only the latest versions of Chrome & Firefox are supported (and
 tested).
