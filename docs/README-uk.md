@@ -232,22 +232,22 @@ Trilium та TriliumDroid.
 сервера](https://docs.triliumnotes.org/user-guide/setup/server).
 
 
-## 💻 Contribute
+## 💻 Зробіть свій внесок
 
-### Translations
+### Переклади
 
-If you are a native speaker, help us translate Trilium by heading over to our
-[Weblate page](https://hosted.weblate.org/engage/trilium/).
+Якщо ви носій мови, допоможіть нам перекласти Trilium, перейшовши на нашу
+[сторінку Weblate](https://hosted.weblate.org/engage/trilium/).
 
-Here's the language coverage we have so far:
+Ось мовне висвітлення, яке ми маємо наразі:
 
-[![Translation
-status](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
+[![Стан
+перекладу](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
 
-### Code
+### Код
 
-Download the repository, install dependencies using `pnpm` and then run the
-server (available at http://localhost:8080):
+Завантажте репозиторій, встановіть залежності за допомогою `pnpm`, а потім
+запустіть сервер (доступний за адресою http://localhost:8080):
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -255,10 +255,10 @@ pnpm install
 pnpm run server:start
 ```
 
-### Documentation
+### Документація
 
-Download the repository, install dependencies using `pnpm` and then run the
-environment required to edit the documentation:
+Завантажте репозиторій, встановіть залежності за допомогою `pnpm`, а потім
+запустіть середовище, необхідне для редагування документації:
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -266,9 +266,9 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-### Building the Executable
-Download the repository, install dependencies using `pnpm` and then build the
-desktop app for Windows:
+### Створення виконуваного файлу
+Завантажте репозиторій, встановіть залежності за допомогою `pnpm`, а потім
+зберіть настільний додаток для Windows:
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
