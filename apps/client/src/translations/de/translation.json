@@ -645,7 +645,7 @@
     "zoom_out": "Herauszoomen",
     "reset_zoom_level": "Zoomstufe zurücksetzen",
     "zoom_in": "Hineinzoomen",
-    "configure_launchbar": "Konfiguriere die Launchbar",
+    "configure_launchbar": "Konfiguriere die Starterleiste",
     "show_shared_notes_subtree": "Unterbaum „Freigegebene Notizen“ anzeigen",
     "advanced": "Erweitert",
     "open_dev_tools": "Öffne die Entwicklungstools",
@@ -1605,7 +1605,7 @@
     "search_not_executed": "Die Suche wurde noch nicht ausgeführt. Klicke oben auf „Suchen“, um die Ergebnisse anzuzeigen."
   },
   "spacer": {
-    "configure_launchbar": "Startleiste konfigurieren"
+    "configure_launchbar": "Starterleiste konfigurieren"
   },
   "sql_result": {
     "no_rows": "Es wurden keine Zeilen für diese Abfrage zurückgegeben",
