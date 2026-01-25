@@ -104,7 +104,7 @@ Unsere Dokumentation ist verfügbar in mehreren Formaten:
   [Notizverschlüsselung](https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes)
   mit Granularität pro Notiz
 * Skizzieren von Diagrammen basierend auf [Excalidraw](https://excalidraw.com/)
-  (Notiztyp „Canvas“)
+  (Notiztyp „Leinwand“)
 * [Beziehungskarten](https://docs.triliumnotes.org/user-guide/note-types/relation-map)
   und
   [Notiz-/Link-Karten](https://docs.triliumnotes.org/user-guide/note-types/note-map)
@@ -298,7 +298,7 @@ enthält weitere Details. Bei offenen Fragen kann über die im Abschnitt
   Anwendungssymbols.
 * [nriver](https://github.com/nriver) für seine Arbeit zur
   Internationalisierung.
-* [Thomas Frei](https://github.com/thfrei) für seine ursprüngliche Arbeit an
+* [Thomas Frei](https://github.com/thfrei) für seine originelle Arbeit an
   Canvas.
 * [antoniotejada](https://github.com/nriver) für das ursprüngliche
   Syntax-Highlighting-Widget.
@@ -314,7 +314,7 @@ Trilium wäre ohne die zugrundeliegenden Technologien nicht möglich:
 * [CodeMirror](https://github.com/codemirror/CodeMirror) - Code-Editor mit
   Unterstützung für eine Vielzahl von Sprachen.
 * [Excalidraw](https://github.com/excalidraw/excalidraw) – das unendliche
-  Whiteboard, verwendet in Canvas-Notizen.
+  Whiteboard, verwendet in Leinwand-Notizen.
 * [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) – bietet die
   Mindmap-Funktionalität.
 * [Leaflet](https://github.com/Leaflet/Leaflet) – für die Darstellung
