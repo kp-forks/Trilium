@@ -164,41 +164,42 @@ prevents direct migration.
 
 ## 💬 Discuss with us
 
-Feel free to join our official conversations. We would love to hear what
-features, suggestions, or issues you may have!
+Не соромтеся приєднуватися до наших офіційних обговорень. Ми будемо раді почути
+про ваші функції, пропозиції чи проблеми!
 
-- [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (For synchronous
-  discussions.)
-  - The `General` Matrix room is also bridged to
+- [Матриця](https://matrix.to/#/#triliumnext:matrix.org) (Для синхронних
+  обговорень.)
+  - Кімната матриці `Загальні` також підключена до
     [XMPP](xmpp:discuss@trilium.thisgreat.party?join)
-- [Github Discussions](https://github.com/TriliumNext/Trilium/discussions) (For
-  asynchronous discussions.)
-- [Github Issues](https://github.com/TriliumNext/Trilium/issues) (For bug
-  reports and feature requests.)
+- [Обговорення на Github](https://github.com/TriliumNext/Trilium/discussions)
+  (Для асинхронних обговорень.)
+- [Проблеми Github](https://github.com/TriliumNext/Trilium/issues) (Для звітів
+  про помилки та запитів на нові функції.)
 
-## 🏗 Installation
+## 🏗 Встановлення
 
 ### Windows / MacOS
 
-Download the binary release for your platform from the [latest release
-page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the package
-and run the `trilium` executable.
+Завантажте бінарний реліз для вашої платформи зі сторінки [останнього
+релізу](https://github.com/TriliumNext/Trilium/releases/latest), розпакуйте
+пакет і запустіть виконуваний файл `trilium`.
 
 ### Linux
 
-If your distribution is listed in the table below, use your distribution's
-package.
+Якщо ваш дистрибутив зазначено в таблиці нижче, використовуйте пакет вашого
+дистрибутива.
 
 [![Packaging
 status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
 
-You may also download the binary release for your platform from the [latest
-release page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the
-package and run the `trilium` executable.
+Ви також можете завантажити бінарний реліз для вашої платформи зі сторінки
+[останнього релізу](https://github.com/TriliumNext/Trilium/releases/latest),
+розпакувати пакет і запустити виконуваний файл `trilium`.
 
-TriliumNext is also provided as a Flatpak, but not yet published on FlatHub.
+TriliumNext також доступний у форматі Flatpak, але ще не опублікований на
+FlatHub.
 
-### Browser (any OS)
+### Браузер (будь-яка ОС)
 
 If you use a server installation (see below), you can directly access the web
 interface (which is almost identical to the desktop app).
