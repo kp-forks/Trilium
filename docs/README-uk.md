@@ -205,29 +205,31 @@ FlatHub.
 безпосередній доступ до веб-інтерфейсу (який майже ідентичний десктопному
 додатку).
 
-Currently only the latest versions of Chrome & Firefox are supported (and
-tested).
+Наразі підтримуються (і протестовані) лише найновіші версії Chrome та Firefox.
 
-### Mobile
+### Мобільний
 
-To use TriliumNext on a mobile device, you can use a mobile web browser to
-access the mobile interface of a server installation (see below).
+Щоб використовувати TriliumNext на мобільному пристрої, ви можете скористатися
+мобільним веб-браузером для доступу до мобільного інтерфейсу серверної
+інсталяції (див. нижче).
 
-See issue https://github.com/TriliumNext/Trilium/issues/4962 for more
-information on mobile app support.
+Див. випуск https://github.com/TriliumNext/Trilium/issues/4962 для отримання
+додаткової інформації про підтримку мобільних додатків.
 
-If you prefer a native Android app, you can use
+Якщо ви надаєте перевагу рідному додатку для Android, ви можете скористатися
 [TriliumDroid](https://apt.izzysoft.de/fdroid/index/apk/eu.fliegendewurst.triliumdroid).
-Report bugs and missing features at [their
-repository](https://github.com/FliegendeWurst/TriliumDroid). Note: It is best to
-disable automatic updates on your server installation (see below) when using
-TriliumDroid since the sync version must match between Trilium and TriliumDroid.
+Повідомляйте про помилки та відсутні функції на [їхньому
+репозиторії](https://github.com/FliegendeWurst/TriliumDroid). Примітка: Найкраще
+вимкнути автоматичні оновлення на вашому сервері (див. нижче) під час
+використання TriliumDroid, оскільки версія синхронізації має збігатися між
+Trilium та TriliumDroid.
 
-### Server
+### Сервер
 
-To install TriliumNext on your own server (including via Docker from
-[Dockerhub](https://hub.docker.com/r/triliumnext/trilium)) follow [the server
-installation docs](https://docs.triliumnotes.org/user-guide/setup/server).
+Щоб встановити TriliumNext на власний сервер (зокрема через Docker з
+[Dockerhub](https://hub.docker.com/r/triliumnext/trilium)), дотримуйтесь
+інструкцій [документації щодо встановлення
+сервера](https://docs.triliumnotes.org/user-guide/setup/server).
 
 
 ## 💻 Contribute
