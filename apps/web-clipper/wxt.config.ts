@@ -1,4 +1,7 @@
+import { copyFile, readFile, rm, writeFile } from "fs/promises";
 import { defineConfig } from "wxt";
+
+let originalTsConfig: object;
 
 export default defineConfig({
     modules: ['@wxt-dev/auto-icons'],
@@ -49,5 +52,31 @@ export default defineConfig({
                 }
             }
         }
-    })
+    }),
+    zip: {
+        includeSources: [
+            "../../tsconfig.base.json"
+        ]
+    },
+    hooks: {
+        'zip:sources:start': async () => {
+            // Rewrite tsconfig.base.json into the web-clipper app folder
+            await copyFile("../../tsconfig.base.json", "./tsconfig.base.json");
+
+            originalTsConfig = JSON.parse(await readFile("./tsconfig.json", "utf-8"));
+            const adjustedTsConfig = {
+                ...originalTsConfig,
+                extends: ["./tsconfig.base.json", "./.wxt/tsconfig.json"]
+            };
+
+            await writeFile("./tsconfig.json", JSON.stringify(adjustedTsConfig, null, 4), 'utf-8');
+        },
+        "zip:sources:done": async () => {
+            // Restore original tsconfig.json
+            await writeFile("./tsconfig.json", JSON.stringify(originalTsConfig, null, 4), 'utf-8');
+
+            // Remove the copied tsconfig.base.json
+            await rm("./tsconfig.base.json");
+        }
+    }
 });
