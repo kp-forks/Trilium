@@ -21,7 +21,7 @@
     },
     "bundle-error": {
       "title": "Gagal memuat skrip kustom",
-      "message": "Skrip tidak dapat dijalankan karena:\n\n{{message}}"
+      "message": "Skrip tidak dapat dijalankan:\n\n{{message}}"
     },
     "widget-list-error": {
       "title": "Gagal mendapatkan daftar widget dari server"
