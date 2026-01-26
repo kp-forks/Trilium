@@ -69,19 +69,20 @@ Dokumentasi kami tersedia dalam berbagai format:
 
 ## 🎁 Fitur
 
-* Notes can be arranged into arbitrarily deep tree. Single note can be placed
-  into multiple places in the tree (see
-  [cloning](https://docs.triliumnotes.org/user-guide/concepts/notes/cloning))
-* Rich WYSIWYG note editor including e.g. tables, images and
-  [math](https://docs.triliumnotes.org/user-guide/note-types/text) with markdown
+* Catatan dapat disusun menjadi cabang pohon manapun. Satu catatan dapat disusun
+  ke beberapa cabang di pohon
+  (lihat[cloning](https://docs.triliumnotes.org/user-guide/concepts/notes/cloning))
+* Catatan bentuk Rich WYSIWYG dengan tabel, gambar, dan
+  [math](https://docs.triliumnotes.org/user-guide/note-types/text) dengan
+  markdown
   [autoformat](https://docs.triliumnotes.org/user-guide/note-types/text/markdown-formatting)
-* Support for editing [notes with source
-  code](https://docs.triliumnotes.org/user-guide/note-types/code), including
-  syntax highlighting
-* Fast and easy [navigation between
-  notes](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-navigation),
-  full text search and [note
-  hoisting](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting)
+* Dukungan untuk peng-editan [catatan dengan kode
+  source](https://docs.triliumnotes.org/user-guide/note-types/code), termasuk
+  penyorotan sintaks
+* Cepat dan mudah [navigasi antar
+  catatan](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-navigation),
+  pencarian dengan teks dan [area
+  fokus](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting)
 * Seamless [note
   versioning](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
 * Note
@@ -95,10 +96,10 @@ Dokumentasi kami tersedia dalam berbagai format:
   more secure login
 * [Synchronization](https://docs.triliumnotes.org/user-guide/setup/synchronization)
   with self-hosted sync server
-  * there are [3rd party services for hosting synchronisation
-    server](https://docs.triliumnotes.org/user-guide/setup/server/cloud-hosting)
-* [Sharing](https://docs.triliumnotes.org/user-guide/advanced-usage/sharing)
-  (publishing) notes to public internet
+  * ada [servis pihak ke-3 untuk server hostingan
+    sinkronisasi](https://docs.triliumnotes.org/user-guide/setup/server/cloud-hosting)
+* [Bagikan](https://docs.triliumnotes.org/user-guide/advanced-usage/sharing)
+  (publikasi) catatan ke publik (internet)
 * Strong [note
   encryption](https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes)
   with per-note granularity
