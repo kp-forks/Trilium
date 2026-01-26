@@ -11,7 +11,7 @@
   },
   "toast": {
     "critical-error": {
-      "title": "Kesalahan kritis",
+      "title": "Eror kritikal",
       "message": "Telah terjadi kesalahan kritis yang mencegah aplikasi klien untuk memulai:\n\n{{message}}\n\nHal ini kemungkinan besar disebabkan oleh skrip yang gagal secara tidak terduga. Coba jalankan aplikasi dalam mode aman dan atasi masalahnya."
     },
     "widget-error": {
@@ -68,6 +68,10 @@
   "delete_notes": {
     "delete_notes_preview": "Hapus pratinjau catatan",
     "close": "Tutup",
-    "delete_all_clones_description": "Hapus seluruh duplikat (bisa dikembalikan di menu revisi)"
+    "delete_all_clones_description": "Hapus seluruh duplikat (bisa dikembalikan di menu revisi)",
+    "erase_notes_description": "Penghapusan normal hanya menandai catatan sebagai dihapus dan dapat dipulihkan (melalui dialog versi revisi) dalam jangka waktu tertentu. Mencentang opsi ini akan menghapus catatan secara permanen seketika dan catatan tidak akan bisa dipulihkan kembali.",
+    "erase_notes_warning": "Hapus catatan secara permanen (tidak bisa dikembalikan), termasuk semua duplikat. Aksi akan memaksa aplikasi untuk mengulang kembali.",
+    "notes_to_be_deleted": "Catatan-catatan berikut akan dihapuskan ({{notesCount}})",
+    "no_note_to_delete": "Tidak ada Catatan yang akan dihapus (hanya duplikat)."
   }
 }
