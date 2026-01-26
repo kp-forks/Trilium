@@ -301,7 +301,7 @@ enthält weitere Details. Bei offenen Fragen kann über die im Abschnitt
 * [Thomas Frei](https://github.com/thfrei) für seine originelle Arbeit an
   Canvas.
 * [antoniotejada](https://github.com/nriver) für das ursprüngliche
-  Syntax-Highlighting-Widget.
+  Syntaxhervorhebungs-Widget.
 * [Dosu](https://dosu.dev/) für die Bereitstellung automatisierter Antworten auf
   GitHub-Issues und Diskussionen.
 * [Tabler-Icons](https://tabler.io/icons) für die Symbole in der Taskleiste.
