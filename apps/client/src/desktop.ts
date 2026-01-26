@@ -108,6 +108,10 @@ function initTransparencyEffects(style: CSSStyleDeclaration, currentWindow: Elec
             currentWindow.setBackgroundMaterial(foundBgMaterialOption);
         }
     }
+
+    if (window.glob.platform === "darwin") {
+        currentWindow.setVibrancy("under-window");
+    }
 }
 
 /**
