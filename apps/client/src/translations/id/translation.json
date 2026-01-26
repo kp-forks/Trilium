@@ -12,7 +12,7 @@
   "toast": {
     "critical-error": {
       "title": "Eror kritikal",
-      "message": "Telah terjadi kesalahan kritis yang mencegah aplikasi klien untuk memulai:\n\n{{message}}\n\nHal ini kemungkinan besar disebabkan oleh skrip yang gagal secara tidak terduga. Coba jalankan aplikasi dalam mode aman dan atasi masalahnya."
+      "message": "Telah terjadi eror kritikal yang mencegah aplikasi klien untuk memulai:\n\n{{message}}\n\nHal ini kemungkinan besar disebabkan oleh skrip yang gagal secara tidak terduga. Coba jalankan aplikasi dalam mode aman dan atasi masalahnya."
     },
     "widget-error": {
       "title": "Gagal menginisialisasi widget",
