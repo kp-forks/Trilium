@@ -704,7 +704,10 @@
     "open_note_on_server": "Abrir nota en servidor",
     "view_revisions": "Revisiones de la nota...",
     "advanced": "Avanzado",
-    "export_as_image": "Exportar como imagen"
+    "export_as_image": "Exportar como imagen",
+    "export_as_image_png": "PNG (ráster)",
+    "export_as_image_svg": "SVG (vectorial)",
+    "note_map": "Mapa de la nota"
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
@@ -766,7 +769,13 @@
     "reset-default": "Restablecer a icono por defecto",
     "search_placeholder_one": "Buscar {{number}} icono a través de {{count}} paquetes",
     "search_placeholder_many": "Buscar {{number}} iconos a través de {{count}} paquetes",
-    "search_placeholder_other": "Buscar {{number}} iconos a través de {{count}} paquetes"
+    "search_placeholder_other": "Buscar {{number}} iconos a través de {{count}} paquetes",
+    "search_placeholder_filtered": "Buscar {{number}} iconos en {{name}}",
+    "filter": "Filtro",
+    "filter-none": "Todos los iconos",
+    "filter-default": "Iconos predeterminados",
+    "icon_tooltip": "{{name}}\nPaquete de iconos: {{iconPack}}",
+    "no_results": "No se encontraron iconos."
   },
   "basic_properties": {
     "note_type": "Tipo de nota",
@@ -793,7 +802,8 @@
     "expand_tooltip": "Expande las notas hijas inmediatas de esta colección (un nivel). Para más opciones, pulsa la flecha a la derecha.",
     "expand_first_level": "Expandir hijos inmediatos",
     "expand_nth_level": "Expandir {{depth}} niveles",
-    "expand_all_levels": "Expandir todos los niveles"
+    "expand_all_levels": "Expandir todos los niveles",
+    "hide_child_notes": "Ocultar notas hijas en el árbol"
   },
   "edited_notes": {
     "no_edited_notes_found": "Aún no hay notas editadas en este día...",
@@ -826,7 +836,8 @@
   },
   "inherited_attribute_list": {
     "title": "Atributos heredados",
-    "no_inherited_attributes": "Sin atributos heredados."
+    "no_inherited_attributes": "Sin atributos heredados.",
+    "none": "ninguno"
   },
   "note_info_widget": {
     "note_id": "ID de nota",
@@ -837,7 +848,8 @@
     "note_size_info": "El tamaño de la nota proporciona una estimación aproximada de los requisitos de almacenamiento para esta nota. Toma en cuenta el contenido de la nota y el contenido de sus revisiones de nota.",
     "calculate": "calcular",
     "subtree_size": "(tamaño del subárbol: {{size}} en {{count}} notas)",
-    "title": "Información de nota"
+    "title": "Información de nota",
+    "mime": "Tipo MIME"
   },
   "note_map": {
     "open_full": "Ampliar al máximo",
