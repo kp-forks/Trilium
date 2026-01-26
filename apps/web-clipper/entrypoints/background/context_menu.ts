@@ -31,12 +31,11 @@ const CONTEXT_MENU_ITEMS: Browser.contextMenus.CreateProperties[] = [
     }
 ];
 
-export default function setupContextMenu() {
+export default async function setupContextMenu() {
     // Context menu items need to be registered only once.
     // https://stackoverflow.com/questions/64318529/cannot-create-item-with-duplicate-context-menu-id-in-extension
-    browser.runtime.onInstalled.addListener(() => {
-        for (const item of CONTEXT_MENU_ITEMS) {
-            browser.contextMenus.create(item);
-        }
-    });
+    await browser.contextMenus.removeAll();
+    for (const item of CONTEXT_MENU_ITEMS) {
+        browser.contextMenus.create(item);
+    }
 }
