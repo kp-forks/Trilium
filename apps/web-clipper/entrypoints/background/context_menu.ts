@@ -6,12 +6,12 @@ const CONTEXT_MENU_ITEMS: Browser.contextMenus.CreateProperties[] = [
     },
     {
         id: "trilium-save-cropped-screenshot",
-        title: "Crop screen shot to Trilium",
+        title: "Crop screenshot to Trilium",
         contexts: ["page"]
     },
     {
         id: "trilium-save-whole-screenshot",
-        title: "Save whole screen shot to Trilium",
+        title: "Save whole screenshot to Trilium",
         contexts: ["page"]
     },
     {
