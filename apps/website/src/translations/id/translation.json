@@ -60,6 +60,10 @@
     },
     "faq": {
         "title": "Tanya Jawab",
-        "mobile_question": "Apakah ada aplikasi mobile?"
+        "mobile_question": "Apakah ada aplikasi mobile?",
+        "mobile_answer": "Saat ini belum ada aplikasi mobile resmi. Namun, jika Anda memiliki server, Anda dapat mengaksesnya menggunakan browser web dan bahkan menginstalnya sebagai PWA. Untuk Android, tersedia aplikasi tidak resmi bernama TriliumDroid yang dapat bekerja secara offline (sama seperti aplikasi desktop).",
+        "database_question": "Di manakah data disimpan?",
+        "database_answer": "Semua catatan Anda akan disimpan dalam basis data SQLite di dalam sebuah folder aplikasi. Alasan mengapa Trilium menggunakan basis data alih-alih file teks biasa adalah demi performa dan karena beberapa fitur akan jauh lebih sulit untuk diterapkan, seperti klon (catatan yang sama di beberapa tempat dalam hierarki). Untuk menemukan folder aplikasinya, cukup buka jendela 'Tentang'.",
+        "server_question": "Apakah saya butuh server untuk menjalankan Trilium?"
     }
 }
