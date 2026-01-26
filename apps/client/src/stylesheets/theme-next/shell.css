@@ -40,14 +40,27 @@ body.mobile {
 
 /* #region Mica */
 
+/* Quirk: --background-material is read before "theme-supports-background-effects" class
+ * is applied. Apply the matterial even if the theme doesn't support it. */
 body.background-effects.platform-win32 {
-    /* Quirk: --background-material is read before "theme-supports-background-effects" class
-     * is applied. Apply the matterial even if the theme doesn't support it. */
-    --background-material: tabbed;
+    &.layout-vertical {
+        --background-material: mica;
+    }
+
+    &.layout-horizontal {
+        --background-material: tabbed;
+    }
 }
 
 body.background-effects.platform-darwin {
-    --background-material: under-window;
+    /** Reference: https://developer.apple.com/documentation/appkit/nsvisualeffectview?preferredLanguage=objc **/
+    &.layout-vertical {
+        --background-material: under-window;
+    }
+
+    &.layout-horizontal {
+        --background-material: header;
+    }
 }
 
 body.background-effects.theme-supports-background-effects {
@@ -58,10 +71,6 @@ body.background-effects.theme-supports-background-effects {
     --new-tab-button-background: var(--window-background-color-bgfx);
     --active-tab-background-color: var(--launcher-pane-horiz-background-color);
     --root-background: transparent;
-}
-
-body.background-effects.platform-win32.layout-vertical {
-    --background-material: mica;
 }
 
 body.background-effects.theme-supports-background-effects.layout-vertical {
