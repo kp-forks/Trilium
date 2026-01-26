@@ -421,7 +421,7 @@
     "execute_description": "Längere Beschreibung der aktuellen Codenotiz, die zusammen mit der Schaltfläche „Ausführen“ angezeigt wird",
     "exclude_from_note_map": "Notizen mit dieser Bezeichnung werden in der Notizenkarte ausgeblendet",
     "new_notes_on_top": "Neue Notizen werden oben in der übergeordneten Notiz erstellt, nicht unten.",
-    "hide_highlight_widget": "Widget „Hervorhebungsliste“ ausblenden",
+    "hide_highlight_widget": "Widget „Markierungsliste“ ausblenden",
     "run_on_note_creation": "Wird ausgeführt, wenn eine Notiz im Backend erstellt wird. Verwende diese Beziehung, wenn du das Skript für alle Notizen ausführen möchtest, die unter einer bestimmten Unternotiz erstellt wurden. Erstelle es in diesem Fall auf der Unternotiz-Stammnotiz und mache es vererbbar. Eine neue Notiz, die innerhalb der Unternotiz (beliebige Tiefe) erstellt wird, löst das Skript aus.",
     "run_on_child_note_creation": "Wird ausgeführt, wenn eine neue Notiz unter der Notiz erstellt wird, in der diese Beziehung definiert ist",
     "run_on_note_title_change": "Wird ausgeführt, wenn der Notiztitel geändert wird (einschließlich der Notizerstellung)",
@@ -632,7 +632,7 @@
     "show_toc": "Inhaltsverzeichnis anzeigen"
   },
   "show_highlights_list_widget_button": {
-    "show_highlights_list": "Hervorhebungen anzeigen"
+    "show_highlights_list": "Markierungsliste anzeigen"
   },
   "global_menu": {
     "menu": "Menü",
@@ -1266,16 +1266,16 @@
     "markdown": "Markdown-Stil"
   },
   "highlights_list": {
-    "title": "Highlights-Liste",
-    "description": "Du kannst die im rechten Bereich angezeigte Highlights-Liste anpassen:",
+    "title": "Markierungsliste",
+    "description": "Du kannst die im rechten Bereich angezeigte Markierungsliste anpassen:",
     "bold": "Fettgedruckter Text",
     "italic": "Kursiver Text",
     "underline": "Unterstrichener Text",
     "color": "Farbiger Text",
     "bg_color": "Text mit Hintergrundfarbe",
-    "visibility_title": "Sichtbarkeit der Highlights-Liste",
-    "visibility_description": "Du kannst das Hervorhebungs-Widget pro Notiz ausblenden, indem du die Beschriftung #hideHighlightWidget hinzufügst.",
-    "shortcut_info": "Du kannst eine Tastenkombination zum schnellen Umschalten des rechten Bereichs (einschließlich Hervorhebungen) in den Optionen -> Tastenkombinationen konfigurieren (Name „toggleRightPane“)."
+    "visibility_title": "Sichtbarkeit der Markierungsliste",
+    "visibility_description": "Du kannst das Markierungs-Widget pro Notiz ausblenden, indem du die Beschriftung #hideHighlightWidget hinzufügst.",
+    "shortcut_info": "Du kannst eine Tastenkombination zum schnellen Umschalten des rechten Bereichs (einschließlich Markierungen) in den Optionen -> Tastenkombinationen konfigurieren (Name „toggleRightPane“)."
   },
   "table_of_contents": {
     "title": "Inhaltsverzeichnis",
@@ -1535,13 +1535,13 @@
     "replace_all": "Alle Ersetzen"
   },
   "highlights_list_2": {
-    "title": "Hervorhebungs-Liste",
+    "title": "Markierungsliste",
     "options": "Optionen",
-    "title_with_count_one": "{{count}} Highlight",
-    "title_with_count_other": "{{count}} Highlights",
-    "modal_title": "Highlight Liste konfigurieren",
-    "menu_configure": "Highlight Liste konfigurieren…",
-    "no_highlights": "Keine Highlights gefunden."
+    "title_with_count_one": "{{count}} Markierung",
+    "title_with_count_other": "{{count}} Markierungen",
+    "modal_title": "Markierungsliste konfigurieren",
+    "menu_configure": "Markierungsliste konfigurieren…",
+    "no_highlights": "Keine Markierungen gefunden."
   },
   "quick-search": {
     "placeholder": "Schnellsuche",
