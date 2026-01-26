@@ -1701,7 +1701,7 @@
   },
   "code_block": {
     "word_wrapping": "Wortumbruch",
-    "theme_none": "Keine Syntax-Hervorhebung",
+    "theme_none": "Keine Syntaxhervorhebung",
     "theme_group_light": "Helle Themen",
     "theme_group_dark": "Dunkle Themen",
     "copy_title": "Kopiere in Zwischenablage"
