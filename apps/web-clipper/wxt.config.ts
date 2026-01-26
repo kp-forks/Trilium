@@ -56,6 +56,7 @@ export default defineConfig({
         }
     }),
     zip: {
+        artifactTemplate: "trilium-web-clipper-{{version}}-{{browser}}.zip",
         includeSources: [
             "entrypoints/offscreen/index.html"
         ]
