@@ -50,6 +50,24 @@
   "bulk_actions": {
     "bulk_actions": "Aksi borongan",
     "affected_notes": "Catatan terdampak",
-    "include_descendants": "Sertakan anakan dari catatan yang dipilih"
+    "include_descendants": "Sertakan anakan dari catatan yang dipilih",
+    "available_actions": "Pilihan aksi",
+    "chosen_actions": "Aksi terpilih",
+    "execute_bulk_actions": "Eksekusi aksi borongan",
+    "bulk_actions_executed": "Aksi borongan telah di eksekusi dengan sukses.",
+    "none_yet": "Belum ada... tambahkan aksi dengan memilih salah satu dari aksi di atas.",
+    "labels": "Label-label"
+  },
+  "confirm": {
+    "cancel": "Batal",
+    "ok": "Oke",
+    "are_you_sure_remove_note": "Apakah anda yakin mau membuang catatan \"{{title}}\" dari peta relasi? ",
+    "if_you_dont_check": "Jika Anda tidak mencentang ini, catatan hanya akan dihapus dari peta relasi.",
+    "also_delete_note": "Hapus juga catatannya"
+  },
+  "delete_notes": {
+    "delete_notes_preview": "Hapus pratinjau catatan",
+    "close": "Tutup",
+    "delete_all_clones_description": "Hapus seluruh duplikat (bisa dikembalikan di menu revisi)"
   }
 }
