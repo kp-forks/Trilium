@@ -100,26 +100,28 @@ Dokumentasi kami tersedia dalam berbagai format:
     sinkronisasi](https://docs.triliumnotes.org/user-guide/setup/server/cloud-hosting)
 * [Bagikan](https://docs.triliumnotes.org/user-guide/advanced-usage/sharing)
   (publikasi) catatan ke publik (internet)
-* Strong [note
-  encryption](https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes)
-  with per-note granularity
-* Sketching diagrams, based on [Excalidraw](https://excalidraw.com/) (note type
-  "canvas")
-* [Relation
-  maps](https://docs.triliumnotes.org/user-guide/note-types/relation-map) and
-  [note/link maps](https://docs.triliumnotes.org/user-guide/note-types/note-map)
-  for visualizing notes and their relations
-* Mind maps, based on [Mind Elixir](https://docs.mind-elixir.com/)
-* [Geo maps](https://docs.triliumnotes.org/user-guide/collections/geomap) with
-  location pins and GPX tracks
-* [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - see [Advanced
-  showcases](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
-* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) for
-  automation
-* Scales well in both usability and performance upwards of 100 000 notes
-* Touch optimized [mobile
-  frontend](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) for
-  smartphones and tablets
+* Kuat [enkripsi
+  catatan](https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes)
+  dengan granularitas per catatan
+* Membuat diagram, berdasarkan [Excalidraw](https://excalidraw.com/) (tipe
+  catatan "kanvas")
+* [Peta
+  relasi](https://docs.triliumnotes.org/user-guide/note-types/relation-map) dan
+  [peta
+  catatan/link](https://docs.triliumnotes.org/user-guide/note-types/note-map)
+  untuk visualisasi relasi antar catatan.
+* Mind maps, berdasarkan [Mind Elixir](https://docs.mind-elixir.com/)
+* [Peta geolokasi](https://docs.triliumnotes.org/user-guide/collections/geomap)
+  dengan titik lokasi dan jalur GPX
+* [Pengunaan skrip](https://docs.triliumnotes.org/user-guide/scripts) - lihat
+  [Demo tingkat
+  lanjut](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
+* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi)
+  untuk otomatisasi
+* Performa dan Usabilitas tinggi, bahkan di atas 100 000 catatan
+* Teroptimisasi untuk kontrol sentuh [frontend
+  mobile](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) untuk
+  hp dan tablet
 * Built-in [dark
   theme](https://docs.triliumnotes.org/user-guide/concepts/themes), support for
   user themes
