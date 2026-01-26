@@ -30,6 +30,17 @@
         "sync_title": "Sinkronisasi",
         "sync_content": "Gunakan hostinganmu sendiri atau instansi cloud untuk sinkronisasi mudah catatan-catatan anda pada beberapa perangkat, dan untuk akses dari ponsel anda dengan PWA.",
         "search_content": "Atau cari teks di dalam catatan lalu lebih dalam dengan cari catatan induk, atau berdasarkan kedalaman.",
-        "web_clipper_title": "Penyemat Web"
+        "web_clipper_title": "Penyemat Web",
+        "web_clipper_content": "Mengambil halaman web (atau foto halaman web) dan disematkan langsung ke catatan Trilium dengan ekstensi browser penyemat web."
+    },
+    "note_types": {
+        "title": "Cara-cara menampilkan informasi Anda",
+        "text_title": "Catatan teks",
+        "text_description": "Catatan-catatan ini diedit dengan editor visual (WYSIWYG), dengan dukungan tabel, gambar, ekspresi matematika, blok kode dengan penyorotan sintaks. Format teks catatan anda dengan sintaks Markdown atau gunakan fungsi panggilan slash(/).",
+        "code_title": "Catatan kode",
+        "code_description": "Gunakan editor khusus untuk kode source yang besar yang mempunyai penyorotan sintaks untuk banyak bahasa pemograman dengan tema-tema warna yang bervariasi.",
+        "file_title": "Catatan file",
+        "file_description": "Sematkan file multimedia (PDF, gambar, video) dengan pratinjau dalam aplikasi.",
+        "canvas_title": "Kanvas"
     }
 }
