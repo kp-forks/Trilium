@@ -1,5 +1,6 @@
 import { randomString, Rect } from "@/utils";
 
+import setupContextMenu from "./context_menu";
 import TriliumServerFacade from "./trilium_server_facade";
 
 type BackgroundMessage = {
@@ -39,6 +40,8 @@ export default defineBackground(() => {
                 console.log("Unrecognized command", command);
         }
     });
+
+    setupContextMenu();
 
     function cropImageManifestV2(newArea: Rect, dataUrl: string) {
         return new Promise((resolve, reject) => {
@@ -114,42 +117,6 @@ export default defineBackground(() => {
         // see page.js and popup.js
         return await browser.tabs.captureVisibleTab({ format: 'png' });
     }
-
-    browser.contextMenus.create({
-        id: "trilium-save-selection",
-        title: "Save selection to Trilium",
-        contexts: ["selection"]
-    });
-
-    browser.contextMenus.create({
-        id: "trilium-save-cropped-screenshot",
-        title: "Crop screen shot to Trilium",
-        contexts: ["page"]
-    });
-
-    browser.contextMenus.create({
-        id: "trilium-save-whole-screenshot",
-        title: "Save whole screen shot to Trilium",
-        contexts: ["page"]
-    });
-
-    browser.contextMenus.create({
-        id: "trilium-save-page",
-        title: "Save whole page to Trilium",
-        contexts: ["page"]
-    });
-
-    browser.contextMenus.create({
-        id: "trilium-save-link",
-        title: "Save link to Trilium",
-        contexts: ["link"]
-    });
-
-    browser.contextMenus.create({
-        id: "trilium-save-image",
-        title: "Save image to Trilium",
-        contexts: ["image"]
-    });
 
     async function getActiveTab() {
         const tabs = await browser.tabs.query({

@@ -12,13 +12,15 @@ export default defineConfig({
         permissions: [
             "activeTab",
             "tabs",
-            "http://*/",
-            "https://*/",
-            "<all_urls>",
             "storage",
             "contextMenus",
             manifestVersion === 3 && "offscreen"
         ].filter(Boolean),
+        host_permissions: [
+            "http://*/",
+            "https://*/",
+            "<all_urls>",
+        ],
         browser_specific_settings: {
             gecko: {
                 // See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings#id.
@@ -54,6 +56,7 @@ export default defineConfig({
         }
     }),
     zip: {
+        artifactTemplate: "trilium-web-clipper-{{version}}-{{browser}}.zip",
         includeSources: [
             "entrypoints/offscreen/index.html"
         ]

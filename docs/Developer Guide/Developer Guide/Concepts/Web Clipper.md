@@ -7,7 +7,7 @@ Originally the Web Clipper supported only Manifest v2, which made the extension 
 
 Although Firefox does support Manifest v3, we are still using Manifest v2 for it because WXT dev mode doesn't work for the Firefox / Manifest v3 combination and there were some mentions about Manifest v3 not being well supported on Firefox Mobile (and we plan to have support for it).
 
-## Dev mode
+## Development
 
 WXT allows easy development of the plugin, with full TypeScript support and live reload. To enter dev mode:
 
@@ -16,7 +16,14 @@ WXT allows easy development of the plugin, with full TypeScript support and live
 
 This will open a separate browser instance in which the extension is automatically injected.
 
-## Port
+> [!NOTE]
+> On NixOS, the same development commands work just fine. Just make sure the browser is available in the system path:
+> 
+> ```sh
+> nix-shell -p chromium
+> ```
+
+## Default port
 
 The default port is:
 

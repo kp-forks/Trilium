@@ -1,3 +1,5 @@
+import $ from "cash-dom";
+
 import { createLink } from "@/utils";
 
 async function sendMessage(message: object) {
@@ -38,7 +40,7 @@ $saveTabsButton.on("click", () => sendMessage({name: 'save-tabs'}));
 
 const $saveLinkWithNoteWrapper = $("#save-link-with-note-wrapper");
 const $textNote = $("#save-link-with-note-textarea");
-const $keepTitle = $<HTMLInputElement>("#keep-title-checkbox");
+const $keepTitle = $("#keep-title-checkbox");
 
 $textNote.on('keypress', (event) => {
     if ((event.which === 10 || event.which === 13) && event.ctrlKey) {
@@ -52,7 +54,7 @@ $textNote.on('keypress', (event) => {
 $("#save-link-with-note-button").on("click", () => {
     $saveLinkWithNoteWrapper.show();
 
-    $textNote[0].focus();
+    $textNote[0]?.focus();
 });
 
 $("#cancel-button").on("click", () => {
@@ -70,7 +72,7 @@ async function saveLinkWithNote() {
         title = '';
         content = '';
     }
-    else if ($keepTitle[0].checked){
+    else if (($keepTitle[0] as HTMLInputElement | undefined)?.checked){
         title = '';
         content = textNoteVal;
     }
@@ -161,8 +163,8 @@ browser.runtime.onMessage.addListener(request => {
         if (searchNote.status === 'found'){
             const a = createLink({name: 'openNoteInTrilium', noteId: searchNote.noteId},
                 "Open in Trilium.");
-            $alreadyVisited.text(`Already visited website!`);
-            $alreadyVisited[0].appendChild(a);
+            $alreadyVisited.text(`Web page already clipped. `);
+            $alreadyVisited[0]?.appendChild(a);
         }else{
             $alreadyVisited.html('');
         }
