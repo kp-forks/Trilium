@@ -39,6 +39,17 @@
     "note": "Catatan"
   },
   "branch_prefix": {
-    "edit_branch_prefix_multiple": "Edit prefiks cabang untuk {{count}} cabang"
+    "edit_branch_prefix_multiple": "Edit prefiks cabang untuk {{count}} cabang",
+    "help_on_tree_prefix": "Bantuan pada prefiks pohon catatan",
+    "prefix": "Prefiks: ",
+    "save": "Simpan",
+    "branch_prefix_saved": "Prefiks cabang telah disimpan.",
+    "branch_prefix_saved_multiple": "Prefix cabang telah disimpan pada {{count}} cabang.",
+    "affected_branches": "Cabang terdampak ({{count}}):"
+  },
+  "bulk_actions": {
+    "bulk_actions": "Aksi borongan",
+    "affected_notes": "Catatan terdampak",
+    "include_descendants": "Sertakan anakan dari catatan yang dipilih"
   }
 }
