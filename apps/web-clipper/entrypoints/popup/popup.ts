@@ -163,7 +163,7 @@ browser.runtime.onMessage.addListener(request => {
         if (searchNote.status === 'found'){
             const a = createLink({name: 'openNoteInTrilium', noteId: searchNote.noteId},
                 "Open in Trilium.");
-            $alreadyVisited.text(`Already visited website!`);
+            $alreadyVisited.text(`Web page already clipped. `);
             $alreadyVisited[0]?.appendChild(a);
         }else{
             $alreadyVisited.html('');
