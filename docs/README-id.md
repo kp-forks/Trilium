@@ -122,15 +122,14 @@ Dokumentasi kami tersedia dalam berbagai format:
 * Teroptimisasi untuk kontrol sentuh [frontend
   mobile](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) untuk
   hp dan tablet
-* Built-in [dark
-  theme](https://docs.triliumnotes.org/user-guide/concepts/themes), support for
-  user themes
+* [tema gelap](https://docs.triliumnotes.org/user-guide/concepts/themes) bawaan,
+  dukungan untuk tema personal pengguna
 * [Evernote](https://docs.triliumnotes.org/user-guide/concepts/import-export/evernote)
-  and [Markdown import &
-  export](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
-* [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) for
-  easy saving of web content
-* Customizable UI (sidebar buttons, user-defined widgets, ...)
+  dan [impor & ekspor
+  markdown](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
+* [Penyemat Web](https://docs.triliumnotes.org/user-guide/setup/web-clipper)
+  untuk memudahkan pencatatan konten web
+* "UI yang dapat dikustomisasi (tombol sidebar, widget kustom, ...)"
 * [Metrics](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics),
   along with a Grafana Dashboard.
 
@@ -175,29 +174,30 @@ features, suggestions, or issues you may have!
 - [Github Issues](https://github.com/TriliumNext/Trilium/issues) (For bug
   reports and feature requests.)
 
-## 🏗 Installation
+## 🏗 Instalasi
 
 ### Windows / MacOS
 
-Download the binary release for your platform from the [latest release
-page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the package
-and run the `trilium` executable.
+Unduh rilis biner untuk platform Anda dari [halaman rilis
+terbaru](https://github.com/TriliumNext/Trilium/releases/latest), ekstrak
+package dan jalankan file executable `trilium`.
 
 ### Linux
 
-If your distribution is listed in the table below, use your distribution's
-package.
+Jika distribusi Anda tercantum dalam tabel di bawah ini, gunakan package dari
+distribusi Anda tersebut.
 
-[![Packaging
-status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
+[![Status
+packaging](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
 
-You may also download the binary release for your platform from the [latest
-release page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the
-package and run the `trilium` executable.
+Anda juga dapat mengunduh rilis biner untuk platform Anda dari [halaman rilis
+terbaru](https://github.com/TriliumNext/Trilium/releases/latest), ekstrak
+package-nya dan jalankan file executable `trilium`.
 
-TriliumNext is also provided as a Flatpak, but not yet published on FlatHub.
+TriliumNext juga tersedia sebagai Flatpak, namun belum dipublikasikan di
+FlatHub.
 
-### Browser (any OS)
+### Browser (OS apapun)
 
 If you use a server installation (see below), you can directly access the web
 interface (which is almost identical to the desktop app).
