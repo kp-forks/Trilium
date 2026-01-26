@@ -91,7 +91,7 @@
     "download_helper_server_docker": {
         "title": "Self-hosted mit Docker",
         "description": "Schnelle Installation auf Windows, Linux oder macOS mit einem Docker-Container.",
-        "download_dockerhub": "Docker-Hub",
+        "download_dockerhub": "Docker Hub",
         "download_ghcr": "ghcr.io"
     },
     "download_helper_desktop_linux": {

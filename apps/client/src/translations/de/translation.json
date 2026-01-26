@@ -421,7 +421,7 @@
     "execute_description": "Längere Beschreibung der aktuellen Codenotiz, die zusammen mit der Schaltfläche „Ausführen“ angezeigt wird",
     "exclude_from_note_map": "Notizen mit dieser Bezeichnung werden in der Notizenkarte ausgeblendet",
     "new_notes_on_top": "Neue Notizen werden oben in der übergeordneten Notiz erstellt, nicht unten.",
-    "hide_highlight_widget": "Widget „Hervorhebungsliste“ ausblenden",
+    "hide_highlight_widget": "Widget „Markierungsliste“ ausblenden",
     "run_on_note_creation": "Wird ausgeführt, wenn eine Notiz im Backend erstellt wird. Verwende diese Beziehung, wenn du das Skript für alle Notizen ausführen möchtest, die unter einer bestimmten Unternotiz erstellt wurden. Erstelle es in diesem Fall auf der Unternotiz-Stammnotiz und mache es vererbbar. Eine neue Notiz, die innerhalb der Unternotiz (beliebige Tiefe) erstellt wird, löst das Skript aus.",
     "run_on_child_note_creation": "Wird ausgeführt, wenn eine neue Notiz unter der Notiz erstellt wird, in der diese Beziehung definiert ist",
     "run_on_note_title_change": "Wird ausgeführt, wenn der Notiztitel geändert wird (einschließlich der Notizerstellung)",
@@ -632,7 +632,7 @@
     "show_toc": "Inhaltsverzeichnis anzeigen"
   },
   "show_highlights_list_widget_button": {
-    "show_highlights_list": "Hervorhebungen anzeigen"
+    "show_highlights_list": "Markierungsliste anzeigen"
   },
   "global_menu": {
     "menu": "Menü",
@@ -645,7 +645,7 @@
     "zoom_out": "Herauszoomen",
     "reset_zoom_level": "Zoomstufe zurücksetzen",
     "zoom_in": "Hineinzoomen",
-    "configure_launchbar": "Konfiguriere die Launchbar",
+    "configure_launchbar": "Konfiguriere die Starterleiste",
     "show_shared_notes_subtree": "Unterbaum „Freigegebene Notizen“ anzeigen",
     "advanced": "Erweitert",
     "open_dev_tools": "Öffne die Entwicklungstools",
@@ -720,7 +720,7 @@
     "update_available": "Update verfügbar"
   },
   "note_launcher": {
-    "this_launcher_doesnt_define_target_note": "Dieser Launcher definiert keine Zielnotiz."
+    "this_launcher_doesnt_define_target_note": "Dieser Starter definiert keine Zielnotiz."
   },
   "code_buttons": {
     "execute_button_title": "Skript ausführen",
@@ -763,8 +763,8 @@
     "change_note_icon": "Notiz-Icon ändern",
     "search": "Suche:",
     "reset-default": "Standard wiederherstellen",
-    "search_placeholder_one": "Suche {{number}} Icons über {{count}} Pakete",
-    "search_placeholder_other": "Suche {{number}} Icons über {{count}} Pakete",
+    "search_placeholder_one": "Suche {{number}} Symbole über {{count}} Pakete",
+    "search_placeholder_other": "Suche {{number}} Symbole über {{count}} Pakete",
     "search_placeholder_filtered": "Suche {{number}} Icons in {{name}}",
     "filter": "Filter",
     "filter-none": "Alle Icons",
@@ -1169,7 +1169,7 @@
     "layout": "Layout",
     "layout-vertical-title": "Vertikal",
     "layout-horizontal-title": "Horizontal",
-    "layout-vertical-description": "Startleiste ist auf der linken Seite (standard)",
+    "layout-vertical-description": "Startleiste ist auf der linken Seite (Standard)",
     "layout-horizontal-description": "Startleiste ist unter der Tableiste. Die Tableiste wird dadurch auf die ganze Breite erweitert.",
     "auto_theme": "Alt (Folge dem Farbschema des Systems)",
     "light_theme": "Alt (Hell)",
@@ -1177,7 +1177,7 @@
   },
   "zoom_factor": {
     "title": "Zoomfaktor (nur Desktop-Build)",
-    "description": "Das Zoomen kann auch mit den Tastenkombinationen STRG+- und STRG+u003d gesteuert werden."
+    "description": "Das Zoomen kann auch mit den Tastenkombinationen Strg+- und Strg+= gesteuert werden."
   },
   "code_auto_read_only_size": {
     "title": "Automatische schreibgeschützte Größe",
@@ -1266,16 +1266,16 @@
     "markdown": "Markdown-Stil"
   },
   "highlights_list": {
-    "title": "Highlights-Liste",
-    "description": "Du kannst die im rechten Bereich angezeigte Highlights-Liste anpassen:",
+    "title": "Markierungsliste",
+    "description": "Du kannst die im rechten Bereich angezeigte Markierungsliste anpassen:",
     "bold": "Fettgedruckter Text",
     "italic": "Kursiver Text",
     "underline": "Unterstrichener Text",
     "color": "Farbiger Text",
     "bg_color": "Text mit Hintergrundfarbe",
-    "visibility_title": "Sichtbarkeit der Highlights-Liste",
-    "visibility_description": "Du kannst das Hervorhebungs-Widget pro Notiz ausblenden, indem du die Beschriftung #hideHighlightWidget hinzufügst.",
-    "shortcut_info": "Du kannst eine Tastenkombination zum schnellen Umschalten des rechten Bereichs (einschließlich Hervorhebungen) in den Optionen -> Tastenkombinationen konfigurieren (Name „toggleRightPane“)."
+    "visibility_title": "Sichtbarkeit der Markierungsliste",
+    "visibility_description": "Du kannst das Markierungs-Widget pro Notiz ausblenden, indem du die Beschriftung #hideHighlightWidget hinzufügst.",
+    "shortcut_info": "Du kannst eine Tastenkombination zum schnellen Umschalten des rechten Bereichs (einschließlich Markierungen) in den Optionen -> Tastenkombinationen konfigurieren (Name „toggleRightPane“)."
   },
   "table_of_contents": {
     "title": "Inhaltsverzeichnis",
@@ -1490,12 +1490,12 @@
     "note-map": "Notizkarte",
     "render-note": "Render Notiz",
     "mermaid-diagram": "Mermaid Diagramm",
-    "canvas": "Canvas",
+    "canvas": "Leinwand",
     "web-view": "Webansicht",
     "mind-map": "Mind Map",
     "file": "Datei",
     "image": "Bild",
-    "launcher": "Launcher",
+    "launcher": "Starter",
     "doc": "Dokument",
     "widget": "Widget",
     "confirm-change": "Es is nicht empfehlenswert den Notiz-Typ zu ändern, wenn der Inhalt der Notiz nicht leer ist. Möchtest du dennoch fortfahren?",
@@ -1535,13 +1535,13 @@
     "replace_all": "Alle Ersetzen"
   },
   "highlights_list_2": {
-    "title": "Hervorhebungs-Liste",
+    "title": "Markierungsliste",
     "options": "Optionen",
-    "title_with_count_one": "{{count}} Highlight",
-    "title_with_count_other": "{{count}} Highlights",
-    "modal_title": "Highlight Liste konfigurieren",
-    "menu_configure": "Highlight Liste konfigurieren…",
-    "no_highlights": "Keine Highlights gefunden."
+    "title_with_count_one": "{{count}} Markierung",
+    "title_with_count_other": "{{count}} Markierungen",
+    "modal_title": "Markierungsliste konfigurieren",
+    "menu_configure": "Markierungsliste konfigurieren…",
+    "no_highlights": "Keine Markierungen gefunden."
   },
   "quick-search": {
     "placeholder": "Schnellsuche",
@@ -1595,7 +1595,7 @@
     "last_modified": "Bearbeitet am <Value />",
     "note_type_switcher_label": "Ändere von {{type}} zu:",
     "note_type_switcher_others": "Andere Notizart",
-    "note_type_switcher_templates": "Template",
+    "note_type_switcher_templates": "Vorlage",
     "note_type_switcher_collection": "Sammlung",
     "edited_notes": "Notizen, bearbeitet an diesem Tag",
     "promoted_attributes": "Hervorgehobene Attribute"
@@ -1605,14 +1605,14 @@
     "search_not_executed": "Die Suche wurde noch nicht ausgeführt. Klicke oben auf „Suchen“, um die Ergebnisse anzuzeigen."
   },
   "spacer": {
-    "configure_launchbar": "Startleiste konfigurieren"
+    "configure_launchbar": "Starterleiste konfigurieren"
   },
   "sql_result": {
     "no_rows": "Es wurden keine Zeilen für diese Abfrage zurückgegeben",
     "not_executed": "Die Abfrage wurde noch nicht ausgeführt.",
     "failed": "SQL-Abfrage ist fehlgeschlagen",
     "execute_now": "Jetzt ausführen",
-    "statement_result": "Anweisung Ergebnis"
+    "statement_result": "Abfrageergebnis"
   },
   "sql_table_schemas": {
     "tables": "Tabellen"
@@ -1683,16 +1683,16 @@
     "confirm_unhoisting": "Die angeforderte Notiz ‚{{requestedNote}}‘ befindet sich außerhalb des hoisted Bereichs der Notiz ‚{{hoistedNote}}‘. Du musst sie unhoisten, um auf die Notiz zuzugreifen. Möchtest du mit dem Unhoisting fortfahren?"
   },
   "launcher_context_menu": {
-    "reset_launcher_confirm": "Möchtest du „{{title}}“ wirklich zurücksetzen? Alle Daten / Einstellungen in dieser Notiz (und ihren Unternotizen) gehen verloren und der Launcher wird an seinen ursprünglichen Standort zurückgesetzt.",
-    "add-note-launcher": "Launcher für Notiz hinzufügen",
-    "add-script-launcher": "Launcher für Skript hinzufügen",
+    "reset_launcher_confirm": "Möchtest du „{{title}}“ wirklich zurücksetzen? Alle Daten / Einstellungen in dieser Notiz (und ihren Unternotizen) gehen verloren und der Starter wird an seinen ursprünglichen Standort zurückgesetzt.",
+    "add-note-launcher": "Notiz-Starter hinzufügen",
+    "add-script-launcher": "Skript-Starter hinzufügen",
     "add-custom-widget": "Benutzerdefiniertes Widget hinzufügen",
-    "add-spacer": "Spacer hinzufügen",
+    "add-spacer": "Abstandhalter hinzufügen",
     "delete": "Löschen <kbd data-command=\"deleteNotes\"></kbd>",
     "reset": "Zurücksetzen",
-    "move-to-visible-launchers": "Zu sichtbaren Launchern verschieben",
-    "move-to-available-launchers": "Zu verfügbaren Launchern verschieben",
-    "duplicate-launcher": "Launcher duplizieren <kbd data-command=\"duplicateSubtree\">"
+    "move-to-visible-launchers": "Zu sichtbaren Startern verschieben",
+    "move-to-available-launchers": "Zu verfügbaren Startern verschieben",
+    "duplicate-launcher": "Starter duplizieren <kbd data-command=\"duplicateSubtree\">"
   },
   "highlighting": {
     "description": "Steuert die Syntaxhervorhebung für Codeblöcke in Textnotizen, Code-Notizen sind nicht betroffen.",
@@ -1701,7 +1701,7 @@
   },
   "code_block": {
     "word_wrapping": "Wortumbruch",
-    "theme_none": "Keine Syntax-Hervorhebung",
+    "theme_none": "Keine Syntaxhervorhebung",
     "theme_group_light": "Helle Themen",
     "theme_group_dark": "Dunkle Themen",
     "copy_title": "Kopiere in Zwischenablage"
@@ -2241,8 +2241,8 @@
     "attachments_other": "{{count}} Anhänge",
     "attachments_title_one": "Anhang in einem neuen Tab öffnen",
     "attachments_title_other": "Anhänge in einem neuen Tab öffnen",
-    "attributes_one": "{{count}} Eigenschaft",
-    "attributes_other": "{{count}} Eigenschaften",
+    "attributes_one": "{{count}} Attribute",
+    "attributes_other": "{{count}} Attribute",
     "attributes_title": "Eigene und geerbte Attribute",
     "note_paths_one": "{{count}} Pfad",
     "note_paths_other": "{{count}} Pfade",
