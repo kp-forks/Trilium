@@ -83,17 +83,17 @@ Dokumentasi kami tersedia dalam berbagai format:
   catatan](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-navigation),
   pencarian dengan teks dan [area
   fokus](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting)
-* Seamless [note
-  versioning](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
-* Note
-  [attributes](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
-  can be used for note organization, querying and advanced
-  [scripting](https://docs.triliumnotes.org/user-guide/scripts)
+* Mulus [versi
+  catatan](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
+* Catatan
+  [atribut](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
+  dapat digunakan untuk mengatur catatan, pencarian dan tingkat lanjut
+  [pemrograman](https://docs.triliumnotes.org/user-guide/scripts)
 * Antarmuka pengguna tersedia dalam bahasa Inggris, Jerman, Spanyol, Prancis,
   Rumania, dan Tionghoa (sederhana dan tradisional)
-* Direct [OpenID and TOTP
-  integration](https://docs.triliumnotes.org/user-guide/setup/server/mfa) for
-  more secure login
+* Integrasi [OpenID dan TOTP
+  langsung](https://docs.triliumnotes.org/user-guide/setup/server/mfa) untuk
+  login yang lebih aman
 * [Synchronization](https://docs.triliumnotes.org/user-guide/setup/synchronization)
   with self-hosted sync server
   * ada [servis pihak ke-3 untuk server hostingan
