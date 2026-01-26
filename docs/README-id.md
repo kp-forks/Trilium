@@ -109,7 +109,7 @@ Dokumentasi kami tersedia dalam berbagai format:
   relasi](https://docs.triliumnotes.org/user-guide/note-types/relation-map) dan
   [peta
   catatan/link](https://docs.triliumnotes.org/user-guide/note-types/note-map)
-  untuk visualisasi relasi antar catatan.
+  untuk visualisasi relasi antar catatan
 * Mind maps, berdasarkan [Mind Elixir](https://docs.mind-elixir.com/)
 * [Peta geolokasi](https://docs.triliumnotes.org/user-guide/collections/geomap)
   dengan titik lokasi dan jalur GPX
@@ -199,13 +199,12 @@ FlatHub.
 
 ### Browser (OS apapun)
 
-If you use a server installation (see below), you can directly access the web
-interface (which is almost identical to the desktop app).
+Jika Anda menggunakan instalasi server (lihat di bawah), Anda dapat langsung
+mengakses antarmuka web (yang hampir identik dengan aplikasi desktop).
 
-Currently only the latest versions of Chrome & Firefox are supported (and
-tested).
+Saat ini hanya Chrome & Firefox versi terbaru yang didukung (dan telah diuji).
 
-### Mobile
+### Ponsel
 
 To use TriliumNext on a mobile device, you can use a mobile web browser to
 access the mobile interface of a server installation (see below).
