@@ -1,3 +1,5 @@
+import $ from "cash-dom";
+
 const $triliumServerUrl = $("#trilium-server-url");
 const $triliumServerPassword = $("#trilium-server-password");
 

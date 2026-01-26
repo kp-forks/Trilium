@@ -7,13 +7,9 @@
 <h2>Supported browsers</h2>
 <p>Trilium Web Clipper officially supports the following web browsers:</p>
 <ul>
-  <li>
-    <p>Mozilla Firefox, using Manifest v2.</p>
-  </li>
-  <li>
-    <p>Google Chrome, using Manifest v3. Theoretically the extension should work
-      on other Chromium-based browsers as well, but they are not officially supported.</p>
-  </li>
+  <li>Mozilla Firefox, using Manifest v2.</li>
+  <li>Google Chrome, using Manifest v3. Theoretically the extension should work
+    on other Chromium-based browsers as well, but they are not officially supported.</li>
 </ul>
 <h2>Obtaining the extension</h2>
 <aside class="admonition warning">
@@ -68,5 +64,48 @@
 <p>It's also possible to configure the <a href="#root/_help_WOcw2SLH6tbX">server</a> address
   if you don't run the desktop application, or want it to work without the
   desktop application running.</p>
+<h2>Testing development versions</h2>
+<p>Development versions are version pre-release versions, generally meant
+  for testing purposes. These are not available in the Google or Firefox
+  web stores, but can be downloaded from either:</p>
+<ul>
+  <li><a href="https://github.com/TriliumNext/Trilium/releases">GitHub Releases</a> by
+    looking for releases starting with <em>Web Clipper.</em>
+  </li>
+  <li>Artifacts in GitHub Actions, by looking for the <a href="https://github.com/TriliumNext/Trilium/actions/workflows/web-clipper.yml"><em>Deploy web clipper extension </em>workflow</a>.
+    Once a workflow run is selected, the ZIP files are available in the <em>Artifacts</em> section,
+    under the name <code spellcheck="false">web-clipper-extension</code>.</li>
+</ul>
+<h3>For Chrome</h3>
+<ol>
+  <li>Download <code spellcheck="false">trilium-web-clipper-[x.y.z]-chrome.zip</code>.</li>
+  <li
+ >Extract the archive.</li>
+    <li>In Chrome, navigate to <code spellcheck="false">chrome://extensions/</code>
+    </li>
+    <li>Toggle <em>Developer Mode</em> in top-right of the page.</li>
+    <li>Press the <em>Load unpacked</em> button near the header.</li>
+    <li>Point to the extracted directory from step (2).</li>
+</ol>
+<h3>For Firefox</h3>
+<aside class="admonition warning">
+  <p>Firefox prevents installation of unsigned packages in the “retail” version.
+    To be able to install extensions from disk, consider using <em>Firefox Developer Edition</em> or
+    a non-branded version of Firefox (e.g. <em>GNU IceCat</em>).</p>
+  <p>One time, go to <code spellcheck="false">about:config</code> and change
+    <code
+    spellcheck="false">xpinstall.signatures.required</code>to <code spellcheck="false">false</code>.</p>
+</aside>
+<ol>
+  <li>Navigate to <code spellcheck="false">about:addons</code>.</li>
+  <li>Select <em>Extensions</em> in the left-side navigation.</li>
+  <li>Press the <em>Gear</em> icon on the right of the <em>Manage Your Extensions</em> title.</li>
+  <li
+ >Select <em>Install Add-on From File…</em>
+    </li>
+    <li>Point it to <code spellcheck="false">trilium-web-clipper-[x.y.z]-firefox.zip</code>.</li>
+    <li
+   >Press the <em>Add</em> button to confirm.</li>
+</ol>
 <h2>Credits</h2>
 <p>Some parts of the code are based on the <a href="https://github.com/laurent22/joplin/tree/master/Clipper">Joplin Notes browser extension</a>.</p>
