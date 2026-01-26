@@ -18,6 +18,18 @@
         "title": "Organisasi",
         "note_structure_title": "Struktur catatan",
         "note_structure_description": "Catatan dapat disusun secara hirarkis. Tidak perlu folder, karena setiap catatan dapat mengandung catatan anak. Satu catatan dapat ditambah di beberapa tempat sekaligus dalam hirarki.",
-        "attributes_title": "Label dan hubungan catatan"
+        "attributes_title": "Label dan hubungan catatan",
+        "attributes_description": "Gunakan relasi antar catatan atau tambahkan label untuk kategorisasi yang mudah. Gunakan atribut utama untuk memasukkan informasi terstruktur yang dapat digunakan dalam tabel atau papan (boards).",
+        "hoisting_title": "Workspace dan Area Fokus",
+        "hoisting_description": "Dengan mudah memisahkan catatan personal dan kerjaan dengan grouping dalam workspace, fokus hanya ke catatan-catatan yang spesifik di workspace tertentu."
+    },
+    "productivity_benefits": {
+        "title": "Produktivitas dan Keamanan",
+        "revisions_title": "Revisi Catatan",
+        "revisions_content": "Catatan akan secara periodik disimpan dalam bentuk revisi secara otomatis dan versi revisi-revisi bisa digunakan untuk mengulas kembali atau melakukan undo jika ada kesalahan atau perubahan yang tidak disengaja. Versi revisi juga bisa dibuat sesuai kebutuhan.",
+        "sync_title": "Sinkronisasi",
+        "sync_content": "Gunakan hostinganmu sendiri atau instansi cloud untuk sinkronisasi mudah catatan-catatan anda pada beberapa perangkat, dan untuk akses dari ponsel anda dengan PWA.",
+        "search_content": "Atau cari teks di dalam catatan lalu lebih dalam dengan cari catatan induk, atau berdasarkan kedalaman.",
+        "web_clipper_title": "Penyemat Web"
     }
 }
