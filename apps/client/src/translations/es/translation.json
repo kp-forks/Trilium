@@ -28,7 +28,10 @@
     },
     "widget-render-error": {
       "title": "Hubo un fallo al renderizar un widget personalizado de React"
-    }
+    },
+    "widget-missing-parent": "El widget personalizado no tiene definida la propiedad obligatoria '{{property}}'.\n\nSi este script está pensado para ejecutarse sin un elemento de interfaz de usuario, utilice '#run=frontendStartup' en su lugar.",
+    "open-script-note": "Abrir script",
+    "scripting-error": "Error en script personalizado: {{title}}"
   },
   "add_link": {
     "add_link": "Agregar enlace",
@@ -211,7 +214,8 @@
   "info": {
     "modalTitle": "Mensaje informativo",
     "closeButton": "Cerrar",
-    "okButton": "Aceptar"
+    "okButton": "Aceptar",
+    "copy_to_clipboard": "Copiar al portapapeles"
   },
   "jump_to_note": {
     "search_button": "Buscar en texto completo",
@@ -697,7 +701,10 @@
     "convert_into_attachment_successful": "La nota '{{title}}' ha sido convertida a un archivo adjunto.",
     "convert_into_attachment_prompt": "¿Está seguro que desea convertir la nota '{{title}}' en un archivo adjunto de la nota padre?",
     "print_pdf": "Exportar como PDF...",
-    "open_note_on_server": "Abrir nota en servidor"
+    "open_note_on_server": "Abrir nota en servidor",
+    "view_revisions": "Revisiones de la nota...",
+    "advanced": "Avanzado",
+    "export_as_image": "Exportar como imagen"
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
