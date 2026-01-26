@@ -41,6 +41,25 @@
         "code_description": "Gunakan editor khusus untuk kode source yang besar yang mempunyai penyorotan sintaks untuk banyak bahasa pemograman dengan tema-tema warna yang bervariasi.",
         "file_title": "Catatan file",
         "file_description": "Sematkan file multimedia (PDF, gambar, video) dengan pratinjau dalam aplikasi.",
-        "canvas_title": "Kanvas"
+        "canvas_title": "Kanvas",
+        "canvas_description": "Susun bentuk, gambar, dan teks di atas kanvas tak terbatas menggunakan teknologi yang sama dengan excalidraw.com. Sangat ideal untuk diagram, sketsa, dan perencanaan visual.",
+        "mermaid_title": "Diagram mermaid",
+        "mermaid_description": "Buat diagram seperti diagram alur (flowchart), diagram kelas & urutan (class & sequence), bagan Gantt, dan banyak lagi, menggunakan sintaks Mermaid.",
+        "mindmap_title": "Peta pikiran (Mindmap)",
+        "mindmap_description": "Organisasikan pemikiran Anda secara visual atau lakukan sesi brainstorming.",
+        "others_list": "dan lainnya: <0>peta catatan</0>, <1>peta relasi</1>, <2>pencarian tersimpan</2>, <3>render catatan</3>, dan <4>tampilan web</4>."
+    },
+    "collections": {
+        "table_description": "Tampilkan dan edit informasi catatan dalam struktur tabel, dengan berbagai tipe kolom seperti teks, angka, kotak centang, tanggal & waktu, tautan, dan warna, serta dukungan untuk relasi catatan. Secara opsional, tampilkan catatan dalam hierarki pohon di dalam tabel.",
+        "board_title": "Papan Kanban",
+        "board_description": "Atur tugas atau status proyek Anda ke dalam papan Kanban dengan cara mudah untuk membuat item dan kolom baru, serta mengubah statusnya cukup dengan menyeretnya di sepanjang papan.",
+        "geomap_title": "Peta Geo",
+        "geomap_description": "Rencanakan liburan Anda atau tandai titik minat langsung pada peta geografis menggunakan penanda titik yang dapat disesuaikan. Tampilkan rekaman jalur GPX untuk melacak rencana perjalanan.",
+        "presentation_title": "Presentasi",
+        "presentation_description": "Atur informasi ke dalam slide dan presentasikan dalam layar penuh dengan transisi yang mulus. Slide juga dapat diekspor ke PDF agar mudah dibagikan."
+    },
+    "faq": {
+        "title": "Tanya Jawab",
+        "mobile_question": "Apakah ada aplikasi mobile?"
     }
 }
