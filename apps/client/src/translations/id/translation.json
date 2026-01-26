@@ -26,11 +26,19 @@
     "widget-list-error": {
       "title": "Gagal mendapatkan daftar widget dari server"
     },
-    "open-script-note": "Buka skrip catatan"
+    "open-script-note": "Buka skrip catatan",
+    "widget-render-error": {
+      "title": "Gagal render widget React custom"
+    },
+    "widget-missing-parent": "Widget custom '{{property}}' tidak terdefinisi.\n\nJika skrip ini bermaksud untuk bisa dijalankan tanpa elemen UI, gunakanlah '#run=frontendStartup'.",
+    "scripting-error": "Skrip custom eror : {{title}}"
   },
   "add_link": {
     "add_link": "Tambah tautan",
     "help_on_links": "Bantuan pada tautan",
     "note": "Catatan"
+  },
+  "branch_prefix": {
+    "edit_branch_prefix_multiple": "Edit prefiks cabang untuk {{count}} cabang"
   }
 }
