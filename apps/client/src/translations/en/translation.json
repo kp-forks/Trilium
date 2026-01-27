@@ -1958,8 +1958,8 @@
     "desktop-application": "Desktop Application",
     "native-title-bar": "Native title bar",
     "native-title-bar-description": "For Windows and macOS, keeping the native title bar off makes the application look more compact. On Linux, keeping the native title bar on integrates better with the rest of the system.",
-    "background-effects": "Enable background effects (Windows 11 only)",
-    "background-effects-description": "The Mica effect adds a blurred, stylish background to app windows, creating depth and a modern look. \"Native title bar\" must be disabled.",
+    "background-effects": "Enable background effects",
+    "background-effects-description": "Adds a blurred, stylish background to app windows, creating depth and a modern look. \"Native title bar\" must be disabled.",
     "restart-app-button": "Restart the application to view the changes",
     "zoom-factor": "Zoom factor"
   },
@@ -2267,5 +2267,8 @@
     "pages_other": "{{count}} pages",
     "pages_alt": "Page {{pageNumber}}",
     "pages_loading": "Loading..."
+  },
+  "platform_indicator": {
+    "available_on": "Available on {{platform}}"
   }
 }
