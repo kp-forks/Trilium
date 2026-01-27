@@ -61,7 +61,7 @@
     "eslint": "9.39.2",
     "eslint-config-preact": "2.0.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-playwright": "2.5.0",
+    "eslint-plugin-playwright": "2.5.1",
     "eslint-plugin-simple-import-sort": "12.1.1",
     "happy-dom": "20.3.9",
     "http-server": "14.1.1",
