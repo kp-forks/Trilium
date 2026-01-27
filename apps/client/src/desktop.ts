@@ -99,7 +99,7 @@ function initFullScreenDetection(currentWindow: Electron.BrowserWindow) {
 }
 
 function initTransparencyEffects(style: CSSStyleDeclaration, currentWindow: Electron.BrowserWindow) {
-    const material = style.getPropertyValue("--background-material");
+    const material = style.getPropertyValue("--background-material").trim();
     if (window.glob.platform === "win32") {
         const bgMaterialOptions = ["auto", "none", "mica", "acrylic", "tabbed"] as const;
         const foundBgMaterialOption = bgMaterialOptions.find((bgMaterialOption) => material === bgMaterialOption);

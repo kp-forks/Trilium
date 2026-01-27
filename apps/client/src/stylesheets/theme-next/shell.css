@@ -41,7 +41,7 @@ body.mobile {
 /* #region Mica */
 
 /* Quirk: --background-material is read before "theme-supports-background-effects" class
- * is applied. Apply the matterial even if the theme doesn't support it. */
+ * is applied. Apply the material even if the theme doesn't support it. */
 body.background-effects.platform-win32 {
     &.layout-vertical {
         --background-material: mica;
