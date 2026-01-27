@@ -12,7 +12,7 @@
   "toast": {
     "critical-error": {
       "title": "Eror kritikal",
-      "message": "Telah terjadi kesalahan kritis yang mencegah aplikasi klien untuk memulai:\n\n{{message}}\n\nHal ini kemungkinan besar disebabkan oleh skrip yang gagal secara tidak terduga. Coba jalankan aplikasi dalam mode aman dan atasi masalahnya."
+      "message": "Telah terjadi eror kritikal yang mencegah aplikasi klien untuk memulai:\n\n{{message}}\n\nHal ini kemungkinan besar disebabkan oleh skrip yang gagal secara tidak terduga. Coba jalankan aplikasi dalam mode aman dan atasi masalahnya."
     },
     "widget-error": {
       "title": "Gagal menginisialisasi widget",
@@ -36,7 +36,12 @@
   "add_link": {
     "add_link": "Tambah tautan",
     "help_on_links": "Bantuan pada tautan",
-    "note": "Catatan"
+    "note": "Catatan",
+    "search_note": "cari catatan berdasarkan nama",
+    "link_title_mirrors": "judul tautan mencerminkan judul catatan saat ini",
+    "link_title_arbitrary": "judul tautan dapat diubah secara bebas",
+    "link_title": "Judul tautan",
+    "button_add_link": "Tambah tautan"
   },
   "branch_prefix": {
     "edit_branch_prefix_multiple": "Edit prefiks cabang untuk {{count}} cabang",
@@ -73,5 +78,8 @@
     "erase_notes_warning": "Hapus catatan secara permanen (tidak bisa dikembalikan), termasuk semua duplikat. Aksi akan memaksa aplikasi untuk mengulang kembali.",
     "notes_to_be_deleted": "Catatan-catatan berikut akan dihapuskan ({{notesCount}})",
     "no_note_to_delete": "Tidak ada Catatan yang akan dihapus (hanya duplikat)."
+  },
+  "clone_to": {
+    "clone_notes_to": "Duplikat catatan ke…"
   }
 }

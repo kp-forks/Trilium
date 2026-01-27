@@ -28,9 +28,9 @@
     },
     "open-script-note": "Script-Notiz öffnen",
     "widget-render-error": {
-      "title": "Eine externe React Integration konnte nicht dargestellt werden"
+      "title": "Benutzerdefiniertes React-Widget konnte nicht dargestellt werden"
     },
-    "widget-missing-parent": "Der externen Integration fehlt die erforderliche Eigenschaft '{{property}}'\n\nFalls dieses Skript ohne UI-Element ausgeführt werden soll, benutze stattdessen '#run=frontendStartup'.",
+    "widget-missing-parent": "Benutzerdefiniertes Widget hat die erforderliche '{{property}}'-Eigenschaft nicht korrekt definiert.\n\nFalls dieses Skript ohne UI-Element ausgeführt werden soll, benutze stattdessen '#run=frontendStartup'.",
     "scripting-error": "Benutzerdefinierter Skriptfehler: {{title}}"
   },
   "add_link": {
@@ -129,7 +129,7 @@
     "scrollToActiveNote": "Scrolle zur aktiven Notiz",
     "jumpToParentNote": "Zur übergeordneten Notiz springen",
     "collapseWholeTree": "Reduziere den gesamten Notizbaum",
-    "collapseSubTree": "Teilbaum einklappen",
+    "collapseSubTree": "Zweig einklappen",
     "tabShortcuts": "Tab-Tastenkürzel",
     "newTabNoteLink": "auf den Notizlink öffnet die Notiz in einem neuen Tab",
     "onlyInDesktop": "Nur im Desktop (Electron Build)",
@@ -230,7 +230,7 @@
   "move_to": {
     "dialog_title": "Notizen verschieben nach ...",
     "notes_to_move": "Notizen zum Verschieben",
-    "target_parent_note": "Ziel-Elternnotiz",
+    "target_parent_note": "Übergeordnete Notiz bestimmen",
     "search_placeholder": "Suche nach einer Notiz anhand ihres Namens",
     "move_button": "Zur ausgewählten Notiz wechseln",
     "error_no_path": "Kein Weg, auf den man sich bewegen kann.",
@@ -333,8 +333,8 @@
     "target_note_title": "Eine Beziehung ist eine benannte Verbindung zwischen Quellnotiz und Zielnotiz.",
     "target_note": "Zielnotiz",
     "promoted_title": "Das heraufgestufte Attribut wird deutlich in der Notiz angezeigt.",
-    "promoted": "Gefördert",
-    "promoted_alias_title": "Der Name, der in der Benutzeroberfläche für heraufgestufte Attribute angezeigt werden soll.",
+    "promoted": "Hervorgehoben",
+    "promoted_alias_title": "Der Name, der in der Benutzeroberfläche für hervorgehobene Attribute angezeigt werden soll.",
     "promoted_alias": "Alias",
     "multiplicity_title": "Multiplizität definiert, wie viele Attribute mit demselben Namen erstellt werden können – maximal 1 oder mehr als 1.",
     "multiplicity": "Vielzahl",
@@ -367,7 +367,7 @@
     "disable_versioning": "deaktiviert die automatische Versionierung. Nützlich z.B. große, aber unwichtige Notizen – z.B. große JS-Bibliotheken, die für die Skripterstellung verwendet werden",
     "calendar_root": "Markiert eine Notiz, die als Basis für Tagesnotizen verwendet werden soll. Nur einer sollte als solcher gekennzeichnet sein.",
     "archived": "Notizen mit dieser Bezeichnung werden standardmäßig nicht in den Suchergebnissen angezeigt (auch nicht in den Dialogen „Springen zu“, „Link hinzufügen“ usw.).",
-    "exclude_from_export": "Notizen (mit ihrem Unterbaum) werden nicht in den Notizexport einbezogen",
+    "exclude_from_export": "Notizen (mit ihrem Unterbaum) werden nicht im Notizexport inkludiert",
     "run": "Definiert, bei welchen Ereignissen das Skript ausgeführt werden soll. Mögliche Werte sind:\n<ul>\n<li>frontendStartup - wenn das Trilium-Frontend startet (oder aktualisiert wird), außer auf mobilen Geräten.</li>\n<li>mobileStartup - wenn das Trilium-Frontend auf einem mobilen Gerät startet (oder aktualisiert wird).</li>\n<li>backendStartup - wenn das Trilium-Backend startet</li>\n<li>hourly - einmal pro Stunde ausführen. Du kannst das zusätzliche Label <code>runAtHour</code> verwenden, um die genaue Stunde festzulegen.</li>\n<li>daily - einmal pro Tag ausführen</li>\n</ul>",
     "run_on_instance": "Definiere, auf welcher Trilium-Instanz dies ausgeführt werden soll. Standardmäßig alle Instanzen.",
     "run_at_hour": "Zu welcher Stunde soll das laufen? Sollte zusammen mit <code>#runu003dhourly</code> verwendet werden. Kann für mehr Läufe im Laufe des Tages mehrfach definiert werden.",
@@ -376,7 +376,7 @@
     "sort_direction": "ASC (Standard) oder DESC",
     "sort_folders_first": "Ordner (Notizen mit Unternotizen) sollten oben sortiert werden",
     "top": "Behalte die angegebene Notiz oben in der übergeordneten Notiz (gilt nur für sortierte übergeordnete Notizen)",
-    "hide_promoted_attributes": "Heraufgestufte Attribute für diese Notiz ausblenden",
+    "hide_promoted_attributes": "Hervorgehobene Attribute für diese Notiz ausblenden",
     "read_only": "Der Editor befindet sich im schreibgeschützten Modus. Funktioniert nur für Text- und Codenotizen.",
     "auto_read_only_disabled": "Text-/Codenotizen können automatisch in den Lesemodus versetzt werden, wenn sie zu groß sind. Du kannst dieses Verhalten für jede einzelne Notiz deaktivieren, indem du diese Beschriftung zur Notiz hinzufügst",
     "app_css": "markiert CSS-Notizen, die in die Trilium-Anwendung geladen werden und somit zur Änderung des Aussehens von Trilium verwendet werden können.",
@@ -416,13 +416,13 @@
     "toc": "<code>#toc</code> oder <code>#tocu003dshow</code> erzwingen die Anzeige des Inhaltsverzeichnisses, <code>#tocu003dhide</code> erzwingt das Ausblenden. Wenn die Bezeichnung nicht vorhanden ist, wird die globale Einstellung beachtet",
     "color": "Definiert die Farbe der Notiz im Notizbaum, in Links usw. Verwende einen beliebigen gültigen CSS-Farbwert wie „rot“ oder #a13d5f",
     "keyboard_shortcut": "Definiert eine Tastenkombination, die sofort zu dieser Notiz springt. Beispiel: „Strg+Alt+E“. Erfordert ein Neuladen des Frontends, damit die Änderung wirksam wird.",
-    "keep_current_hoisting": "Das Öffnen dieses Links ändert das Hochziehen nicht, selbst wenn die Notiz im aktuell hochgezogenen Unterbaum nicht angezeigt werden kann.",
+    "keep_current_hoisting": "Das Öffnen dieses Links ändert das Hochziehen nicht, selbst wenn die Notiz im aktuell hochgezogenen Zweig nicht angezeigt werden kann.",
     "execute_button": "Titel der Schaltfläche, welche die aktuelle Codenotiz ausführt",
     "execute_description": "Längere Beschreibung der aktuellen Codenotiz, die zusammen mit der Schaltfläche „Ausführen“ angezeigt wird",
     "exclude_from_note_map": "Notizen mit dieser Bezeichnung werden in der Notizenkarte ausgeblendet",
     "new_notes_on_top": "Neue Notizen werden oben in der übergeordneten Notiz erstellt, nicht unten.",
     "hide_highlight_widget": "Widget „Markierungsliste“ ausblenden",
-    "run_on_note_creation": "Wird ausgeführt, wenn eine Notiz im Backend erstellt wird. Verwende diese Beziehung, wenn du das Skript für alle Notizen ausführen möchtest, die unter einer bestimmten Unternotiz erstellt wurden. Erstelle es in diesem Fall auf der Unternotiz-Stammnotiz und mache es vererbbar. Eine neue Notiz, die innerhalb der Unternotiz (beliebige Tiefe) erstellt wird, löst das Skript aus.",
+    "run_on_note_creation": "Wird ausgeführt, wenn eine Notiz im Backend erstellt wird. Verwende diese Beziehung, wenn du das Skript für alle Notizen ausführen möchtest, die unter einer bestimmten Zweig erstellt wurden. Erstelle es in diesem Fall auf der Stammnotiz und mache es vererbbar. Eine neue Notiz, die innerhalb des Zweigs (beliebige Tiefe) erstellt wird, löst das Skript aus.",
     "run_on_child_note_creation": "Wird ausgeführt, wenn eine neue Notiz unter der Notiz erstellt wird, in der diese Beziehung definiert ist",
     "run_on_note_title_change": "Wird ausgeführt, wenn der Notiztitel geändert wird (einschließlich der Notizerstellung)",
     "run_on_note_content_change": "Wird ausgeführt, wenn der Inhalt einer Notiz geändert wird (einschließlich der Erstellung von Notizen).",
@@ -433,8 +433,8 @@
     "run_on_branch_deletion": "wird ausgeführt, wenn ein Zweig gelöscht wird. Der Zweig ist eine Verknüpfung zwischen der übergeordneten Notiz und der untergeordneten Notiz und wird z. B. gelöscht. beim Verschieben der Notiz (alter Zweig/Link wird gelöscht).",
     "run_on_attribute_creation": "wird ausgeführt, wenn für die Notiz ein neues Attribut erstellt wird, das diese Beziehung definiert",
     "run_on_attribute_change": " wird ausgeführt, wenn das Attribut einer Notiz geändert wird, die diese Beziehung definiert. Dies wird auch ausgelöst, wenn das Attribut gelöscht wird",
-    "relation_template": "Die Attribute der Notiz werden auch ohne eine Eltern-Kind-Beziehung vererbt. Der Inhalt und der Unterbaum der Notiz werden den Instanznotizen hinzugefügt, wenn sie leer sind. Einzelheiten findest du in der Dokumentation.",
-    "inherit": "Die Attribute einer Notiz werden auch ohne eine Eltern-Kind-Beziehung vererbt. Ein ähnliches Konzept findest du unter Vorlagenbeziehung. Siehe Attributvererbung in der Dokumentation.",
+    "relation_template": "Die Attribute der Notiz werden auch ohne eine Hierarchische-Beziehung vererbt. Der Inhalt und der Zweig werden den Instanznotizen hinzugefügt, wenn sie leer sind. Einzelheiten findest du in der Dokumentation.",
+    "inherit": "Die Attribute einer Notiz werden auch ohne eine Hierarchische-Beziehung vererbt. Ein ähnliches Konzept findest du unter Vorlagenbeziehung. Siehe Attributsvererbung in der Dokumentation.",
     "render_note": "Notizen vom Typ \"HTML-Notiz rendern\" werden mit einer Code-Notiz (HTML oder Skript) gerendert, und es ist notwendig, über diese Beziehung anzugeben, welche Notiz gerendert werden soll",
     "widget_relation": "Das Ziel dieser Beziehung wird ausgeführt und als Widget in der Seitenleiste gerendert",
     "share_css": "CSS-Hinweis, der in die Freigabeseite eingefügt wird. Die CSS-Notiz muss sich ebenfalls im gemeinsamen Unterbaum befinden. Erwäge auch die Verwendung von „share_hidden_from_tree“ und „share_omit_default_css“.",
@@ -646,7 +646,7 @@
     "reset_zoom_level": "Zoomstufe zurücksetzen",
     "zoom_in": "Hineinzoomen",
     "configure_launchbar": "Konfiguriere die Starterleiste",
-    "show_shared_notes_subtree": "Unterbaum „Freigegebene Notizen“ anzeigen",
+    "show_shared_notes_subtree": "Zweig „Freigegebene Notizen“ anzeigen",
     "advanced": "Erweitert",
     "open_dev_tools": "Öffne die Entwicklungstools",
     "open_sql_console": "Öffne die SQL-Konsole",
@@ -655,7 +655,7 @@
     "show_backend_log": "Backend-Protokoll anzeigen",
     "reload_hint": "Ein Neuladen kann bei einigen visuellen Störungen Abhilfe schaffen, ohne die gesamte App neu starten zu müssen.",
     "reload_frontend": "Frontend neu laden",
-    "show_hidden_subtree": "Versteckten Teilbaum anzeigen",
+    "show_hidden_subtree": "Versteckten Zweige anzeigen",
     "show_help": "Hilfe anzeigen",
     "about": "Über Trilium Notes",
     "logout": "Abmelden",
@@ -703,8 +703,8 @@
     "export_as_image_png": "PNG (Raster)",
     "export_as_image_svg": "SVG (Vektor)",
     "note_map": "Notizen Karte",
-    "view_revisions": "Änderungshistorie...",
-    "advanced": "Fortgeschritten"
+    "view_revisions": "Notizrevisionen...",
+    "advanced": "Erweitert"
   },
   "onclick_button": {
     "no_click_handler": "Das Schaltflächen-Widget „{{componentId}}“ hat keinen definierten Klick-Handler"
@@ -798,7 +798,7 @@
     "expand_tooltip": "Erweitert die direkten Unterelemente dieser Sammlung (eine Ebene tiefer). Für weitere Optionen auf den Pfeil rechts klicken.",
     "expand_first_level": "Direkte Unterelemente erweitern",
     "expand_nth_level": "{{depth}} Ebenen erweitern",
-    "hide_child_notes": "Unterknoten im Baum ausblenden"
+    "hide_child_notes": "Unternotizen im Baum ausblenden"
   },
   "edited_notes": {
     "no_edited_notes_found": "An diesem Tag wurden noch keine Notizen bearbeitet...",
@@ -842,7 +842,7 @@
     "note_size": "Notengröße",
     "note_size_info": "Die Notizgröße bietet eine grobe Schätzung des Speicherbedarfs für diese Notiz. Es berücksichtigt den Inhalt der Notiz und den Inhalt ihrer Notizrevisionen.",
     "calculate": "berechnen",
-    "subtree_size": "(Teilbaumgröße: {{size}} in {{count}} Notizen)",
+    "subtree_size": "(Zweiggröße: {{size}} in {{count}} Notizen)",
     "title": "Notizinfo",
     "mime": "MIME Typ",
     "show_similar_notes": "Zeige ähnliche Notizen"
@@ -871,7 +871,7 @@
     "owned_attributes": "Eigene Attribute"
   },
   "promoted_attributes": {
-    "promoted_attributes": "Übergebene Attribute",
+    "promoted_attributes": "Hervorgehobene Attribute",
     "url_placeholder": "http://website...",
     "open_external_link": "Externen Link öffnen",
     "unknown_label_type": "Unbekannter Labeltyp „{{type}}“",
@@ -1115,7 +1115,7 @@
   "vacuum_database": {
     "title": "Datenbank aufräumen",
     "description": "Dadurch wird die Datenbank neu erstellt, was normalerweise zu einer kleineren Datenbankdatei führt. Es werden keine Daten tatsächlich geändert.",
-    "button_text": "Vakuumdatenbank",
+    "button_text": "Datenbank aufräumen",
     "vacuuming_database": "Datenbank wird geleert...",
     "database_vacuumed": "Die Datenbank wurde geleert"
   },
@@ -1156,7 +1156,7 @@
   },
   "ribbon": {
     "widgets": "Multifunktionsleisten-Widgets",
-    "promoted_attributes_message": "Die Multifunktionsleisten-Registerkarte „Heraufgestufte Attribute“ wird automatisch geöffnet, wenn in der Notiz heraufgestufte Attribute vorhanden sind",
+    "promoted_attributes_message": "Die „Hervorgehobene Attribute“-Leiste wird automatisch geöffnet, wenn in der Notiz hervorgehobene Attribute vorhanden sind",
     "edited_notes_message": "Die Multifunktionsleisten-Registerkarte „Bearbeitete Notizen“ wird bei Tagesnotizen automatisch geöffnet"
   },
   "theme": {
@@ -1445,19 +1445,19 @@
     "insert-note-after": "Notiz dahinter einfügen",
     "insert-child-note": "Unternotiz einfügen",
     "delete": "Löschen",
-    "search-in-subtree": "Im Notizbaum suchen",
+    "search-in-subtree": "Im Zweig suchen",
     "hoist-note": "Notiz-Fokus setzen",
     "unhoist-note": "Notiz-Fokus aufheben",
     "edit-branch-prefix": "Zweig-Präfix bearbeiten",
     "advanced": "Erweitert",
-    "expand-subtree": "Unterzweig aufklappen",
-    "collapse-subtree": "Notizbaum einklappen",
+    "expand-subtree": "Zweig aufklappen",
+    "collapse-subtree": "Zweig einklappen",
     "sort-by": "Sortieren nach...",
-    "recent-changes-in-subtree": "Kürzliche Änderungen im Notizbaum",
+    "recent-changes-in-subtree": "Kürzliche Änderungen im Zweig",
     "convert-to-attachment": "Als Anhang konvertieren",
     "copy-note-path-to-clipboard": "Notiz-Pfad in die Zwischenablage kopieren",
-    "protect-subtree": "Notizbaum schützen",
-    "unprotect-subtree": "Notizenbaum-Schutz aufheben",
+    "protect-subtree": "Zweig schützen",
+    "unprotect-subtree": "Zweig-Schutz aufheben",
     "copy-clone": "Kopieren / Klonen",
     "clone-to": "Klonen nach...",
     "cut": "Ausschneiden",
@@ -1474,12 +1474,12 @@
     "archive": "Archiviere",
     "unarchive": "Entarchivieren",
     "open-in-a-new-window": "In neuem Fenster öffnen",
-    "hide-subtree": "Teilbaum ausblenden",
-    "show-subtree": "Teilbaum anzeigen"
+    "hide-subtree": "Zweig ausblenden",
+    "show-subtree": "Zweig anzeigen"
   },
   "shared_info": {
-    "shared_publicly": "Diese Notiz ist öffentlich geteilt auf {{- link}}.",
-    "shared_locally": "Diese Notiz ist lokal geteilt auf {{- link}}.",
+    "shared_publicly": "Diese Notiz ist öffentlich freigegeben über {{- link}}.",
+    "shared_locally": "Diese Notiz ist lokal freigegeben über {{- link}}.",
     "help_link": "Für Hilfe besuche <a href=\"https://triliumnext.github.io/Docs/Wiki/sharing.html\">wiki</a>."
   },
   "note_types": {
@@ -1514,10 +1514,10 @@
     "toggle-off-hint": "Notiz ist geschützt, klicken, um den Schutz aufzuheben"
   },
   "shared_switch": {
-    "shared": "Teilen",
-    "toggle-on-title": "Notiz teilen",
+    "shared": "Freigegeben",
+    "toggle-on-title": "Notiz freigeben",
     "toggle-off-title": "Notiz-Freigabe aufheben",
-    "shared-branch": "Diese Notiz existiert nur als geteilte Notiz, das Aufheben der Freigabe würde sie löschen. Möchtest du fortfahren und die Notiz damit löschen?",
+    "shared-branch": "Diese Notiz existiert nur als freigegebene Notiz, das Aufheben der Freigabe würde sie löschen. Möchtest du fortfahren und die Notiz damit löschen?",
     "inherited": "Die Notiz kann hier nicht von der Freigabe entfernt werden, da sie über Vererbung von einer übergeordneten Notiz geteilt wird."
   },
   "template_switch": {
@@ -1566,15 +1566,15 @@
     "unhoist": "Fokus verlassen",
     "toggle-sidebar": "Seitenleiste ein-/ausblenden",
     "dropping-not-allowed": "Ablegen von Notizen an dieser Stelle ist nicht zulässig.",
-    "clone-indicator-tooltip": "Diese Notiz hat {{- count}} Elterknoten: {{- parents}}",
-    "clone-indicator-tooltip-single": "Diese Notiz ist geklont (1 weiterer Elternknoten: {{- parent}})",
-    "shared-indicator-tooltip": "Diese Notiz ist öffentlich einsehbar",
-    "shared-indicator-tooltip-with-url": "Diese Notiz ist unter {{- url}} öffentlich einsehbar",
-    "subtree-hidden-tooltip_one": "{{count}} Unterknoten, der im Baum ausgeblendet ist",
-    "subtree-hidden-tooltip_other": "{{count}} Unterknoten, die im Baum ausgeblendet sind",
+    "clone-indicator-tooltip": "Diese Notiz hat {{- count}} übergeordnete Knoten: {{- parents}}",
+    "clone-indicator-tooltip-single": "Diese Notiz ist geklont (1 weitere Quelle: {{- parent}})",
+    "shared-indicator-tooltip": "Diese Notiz ist öffentlich freigegeben",
+    "shared-indicator-tooltip-with-url": "Diese Notiz ist öffentlich freigegeben unter: {{- url}}",
+    "subtree-hidden-tooltip_one": "{{count}} untergeordnete Notiz, die im Baum ausgeblendet ist",
+    "subtree-hidden-tooltip_other": "{{count}} untergeordnete Notizen, die im Baum ausgeblendet sind",
     "subtree-hidden-moved-title": "Zu {{title}} hinzugefügt",
-    "subtree-hidden-moved-description-collection": "Diese Sammlung blendet ihre Unternotizem im Baum aus.",
-    "subtree-hidden-moved-description-other": "Diese Sammlung blendet ihre Unterknoten im Baum aus."
+    "subtree-hidden-moved-description-collection": "Diese Sammlung blendet ihre Unternotizen im Baum aus.",
+    "subtree-hidden-moved-description-other": "Untergeordnete Notizen sind im Baum für diese Notiz ausgeblendet."
   },
   "title_bar_buttons": {
     "window-on-top": "Dieses Fenster immer oben halten"
@@ -1586,8 +1586,8 @@
     "print_report_title": "Druckreport",
     "print_report_collection_details_button": "Details anzeigen",
     "print_report_collection_details_ignored_notes": "Ignorierte Notizen",
-    "print_report_collection_content_one": "{{count}} Notiz in der Sammlung konnte nicht gedruckt werden, weil sie nicht unterstützt ist oder geschützt ist.",
-    "print_report_collection_content_other": "{{count}} Notizen in der Sammlung konnten nicht gedruckt werden, weil sie nicht unterstützt sind oder geschützt sind."
+    "print_report_collection_content_one": "{{count}} Notiz in der Sammlung konnte nicht gedruckt werden, weil sie nicht unterstützt oder geschützt ist.",
+    "print_report_collection_content_other": "{{count}} Notizen in der Sammlung konnten nicht gedruckt werden, weil sie nicht unterstützt oder geschützt sind."
   },
   "note_title": {
     "placeholder": "Titel der Notiz hier eingeben…",
@@ -2000,7 +2000,7 @@
     "check_share_root": "Status des Freigabe-Roots prüfen",
     "share_root_found": "Freigabe-Root-Notiz '{{noteTitle}}' ist bereit",
     "share_root_not_found": "Keine Notiz mit #shareRoot Label gefunden",
-    "share_root_not_shared": "Notiz '{{noteTitle}}' hat das #shareRoot Label, wurde jedoch noch nicht geteilt"
+    "share_root_not_shared": "Notiz '{{noteTitle}}' hat das #shareRoot Label, wurde jedoch noch nicht freigegeben"
   },
   "tasks": {
     "due": {
@@ -2118,8 +2118,8 @@
     "show_attachments_description": "Notizanhänge anzeigen",
     "search_notes_title": "Suche Notiz",
     "search_notes_description": "Öffne erweiterte Suche",
-    "search_subtree_title": "Im Unterzweig suchen",
-    "search_subtree_description": "Im aktuellen Unterzweig suchen",
+    "search_subtree_title": "Im Zweig suchen",
+    "search_subtree_description": "Im aktuellen Zweig suchen",
     "search_history_title": "Zeige Suchhistorie",
     "search_history_description": "Zeige vorherige Suchen",
     "configure_launch_bar_title": "Startleiste anpassen",
@@ -2188,9 +2188,9 @@
     "new_layout_description": "Probiere das neue Layout für eine modernere Darstellung und verbesserte Benutzbarkeit aus. Kann sich in Zukunft stark ändern."
   },
   "server": {
-    "unknown_http_error_title": "Bei der Kommunikation mit dem Server ist ein Fehler aufgetreten",
+    "unknown_http_error_title": "Kommunikationsfehler mit dem Server",
     "unknown_http_error_content": "Statuscode: {{statusCode}}\nURL: {{method}} {{url}}\nNachricht: {{message}}",
-    "traefik_blocks_requests": "Der Traefik Reverse-Proxy hat ein fatales Update bekommen, welche die Kommunikation mit dem Server stört."
+    "traefik_blocks_requests": "Der Traefik Reverse-Proxy hat eine Änderung erfahren, welches die Kommunikation mit dem Server beeinflusst."
   },
   "tab_history_navigation_buttons": {
     "go-back": "Zur vorherigen Notiz zurück kehren",
@@ -2205,30 +2205,30 @@
     "empty_hide_archived_notes": "Archivierte Notizen ausblenden"
   },
   "breadcrumb_badges": {
-    "read_only_explicit": "Nicht Änderbar",
-    "read_only_explicit_description": "Diese Notiz wurde händisch als nicht änderbar markiert.\nKlicke hier um sie temporär zu bearbeiten.",
-    "read_only_auto": "Automatisch nicht änderbar",
-    "read_only_auto_description": "Diese Notiz wurde automatisch aus Leistungsgründen als nicht änderbar markiert. Dieses automatische Limit kann in den Einstellungen angepasst werden.\n\nKlicke hier, um sie temporär zu bearbeiten.",
+    "read_only_explicit": "Schreibgeschützt",
+    "read_only_explicit_description": "Diese Notiz wurde händisch schreibgeschützt.\nKlicke hier um sie temporär zu bearbeiten.",
+    "read_only_auto": "Automatisch schreibgeschützt",
+    "read_only_auto_description": "Diese Notiz wurde automatisch aus Leistungsgründen als schreibgeschützt markiert. Dieses automatische Limit kann in den Einstellungen angepasst werden.\n\nKlicke hier, um sie temporär zu bearbeiten.",
     "read_only_temporarily_disabled": "Temporär bearbeitbar",
-    "read_only_temporarily_disabled_description": "Diese Notiz ist aktuell bearbeitbar, ist aber normalerweise nicht änderbar. Sobald du zu einer anderen Notiz navigierst, kehrt diese Notiz in ihren Normalzustand zurück.\n\nKlicke hier, um die Notiz wieder nicht änderbar zu machen.",
-    "shared_publicly": "Öffentlich geteilt",
-    "shared_locally": "Lokal geteilt",
+    "read_only_temporarily_disabled_description": "Diese Notiz ist aktuell bearbeitbar, ist aber normalerweise schreibgeschützt. Sobald du zu einer anderen Notiz navigierst wird diese wieder schreibgeschützt.\n\nKlicke hier, um die Notiz wieder schreibgeschützt zu machen.",
+    "shared_publicly": "Öffentlich freigegeben",
+    "shared_locally": "Lokal freigegeben",
     "shared_copy_to_clipboard": "Link in die Zwischenablage kopieren",
-    "shared_open_in_browser": "Link öffnen",
-    "shared_unshare": "Teilen aufheben",
+    "shared_open_in_browser": "Link im Browser öffnen",
+    "shared_unshare": "Freigabe aufheben",
     "clipped_note": "Internetschnellverweis",
-    "clipped_note_description": "Diese Notiz wurde von {{url}} übernommen.\n\nKlicke hier, um zum Ursprung zu gehen.",
+    "clipped_note_description": "Diese Notiz wurde von {{url}} übernommen.\n\nKlicke hier, um zur Quelle zu gehen.",
     "execute_script": "Skript ausführen",
     "execute_script_description": "Diese Notiz ist eine Skriptnotiz. Klicke hier, um das Skript auszuführen.",
     "execute_sql": "SQL ausführen",
     "execute_sql_description": "Diese Notiz ist eine SQL-Notiz. Klicke hier, um die SQL-Abfrage auszuführen.",
     "save_status_saved": "Gespeichert",
-    "save_status_saving": "Speichern...",
+    "save_status_saving": "Speichere...",
     "save_status_unsaved": "Nicht gespeichert",
     "save_status_error": "Speichern fehlgeschlagen",
     "save_status_saving_tooltip": "Änderungen werden gespeichert.",
     "save_status_unsaved_tooltip": "Es gibt ungespeicherte Änderungen, welche gleich automatisch gespeichert werden.",
-    "save_status_error_tooltip": "Beim speichern der Notiz ist ein Fehler aufgetreten. Wenn möglich, versuche die Notiz woandershin zu kopieren und die Applikation neu zu laden."
+    "save_status_error_tooltip": "Beim speichern der Notiz ist ein Fehler aufgetreten. Wenn möglich, versuche die Notiz woandershin zu kopieren und die Anwendung neu zu laden."
   },
   "status_bar": {
     "language_title": "Inhaltssprache ändern",
@@ -2241,7 +2241,7 @@
     "attachments_other": "{{count}} Anhänge",
     "attachments_title_one": "Anhang in einem neuen Tab öffnen",
     "attachments_title_other": "Anhänge in einem neuen Tab öffnen",
-    "attributes_one": "{{count}} Attribute",
+    "attributes_one": "{{count}} Attribut",
     "attributes_other": "{{count}} Attribute",
     "attributes_title": "Eigene und geerbte Attribute",
     "note_paths_one": "{{count}} Pfad",
@@ -2254,9 +2254,9 @@
   },
   "right_pane": {
     "empty_message": "Für diese Notiz gibt es nichts anzuzeigen",
-    "empty_button": "Anzeige ausblenden",
-    "toggle": "Rechte Anzeige umschalten",
-    "custom_widget_go_to_source": "Zum Ursprungscode"
+    "empty_button": "Leiste ausblenden",
+    "toggle": "Rechte Leiste umschalten",
+    "custom_widget_go_to_source": "Zum Quellcode"
   },
   "pdf": {
     "attachments_one": "{{count}} Anhang",
@@ -2266,6 +2266,6 @@
     "pages_one": "{{count}} Seite",
     "pages_other": "{{count}} Seiten",
     "pages_alt": "Seite {{pageNumber}}",
-    "pages_loading": "Laden..."
+    "pages_loading": "Lädt..."
   }
 }

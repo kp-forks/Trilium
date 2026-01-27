@@ -799,11 +799,11 @@
     "board": "Tablero",
     "include_archived_notes": "Mostrar notas archivadas",
     "presentation": "Presentación",
-    "expand_tooltip": "Expande las notas hijas inmediatas de esta colección (un nivel). Para más opciones, pulsa la flecha a la derecha.",
+    "expand_tooltip": "Expande las subnotas inmediatas de esta colección (un nivel). Para más opciones, pulsa la flecha a la derecha.",
     "expand_first_level": "Expandir hijos inmediatos",
     "expand_nth_level": "Expandir {{depth}} niveles",
     "expand_all_levels": "Expandir todos los niveles",
-    "hide_child_notes": "Ocultar notas hijas en el árbol"
+    "hide_child_notes": "Ocultar subnotas en el árbol"
   },
   "edited_notes": {
     "no_edited_notes_found": "Aún no hay notas editadas en este día...",
