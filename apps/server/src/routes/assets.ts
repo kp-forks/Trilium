@@ -50,8 +50,8 @@ async function register(app: express.Application) {
             req.url = `/${assetUrlFragment}/index.html`;
             vite.middlewares(req, res, next);
         });
-        app.get(`/index.ts`, [ rootLimiter ], (req, res, next) => {
-            req.url = `/${assetUrlFragment}/index.ts`;
+        app.get(`/src/index.ts`, [ rootLimiter ], (req, res, next) => {
+            req.url = `/${assetUrlFragment}/src/index.ts`;
             vite.middlewares(req, res, next);
         });
         app.use(`/node_modules/@excalidraw/excalidraw/dist/prod`, persistentCacheStatic(path.join(srcRoot, "../../node_modules/@excalidraw/excalidraw/dist/prod")));

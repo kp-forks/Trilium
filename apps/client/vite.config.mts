@@ -19,7 +19,7 @@ if (isDev) {
     plugins = [
         viteStaticCopy({
             targets: assets.map((asset) => ({
-                src: `${asset}/*`,
+                src: `src/${asset}/*`,
                 dest: asset
             }))
         }),
@@ -27,7 +27,7 @@ if (isDev) {
             structured: true,
             targets: [
                 {
-                    src: "../../../node_modules/@excalidraw/excalidraw/dist/prod/fonts/*",
+                    src: "../../node_modules/@excalidraw/excalidraw/dist/prod/fonts/*",
                     dest: "",
                 }
             ]
@@ -37,8 +37,8 @@ if (isDev) {
 }
 
 export default defineConfig(() => ({
-    root: join(__dirname, "src"),
-    cacheDir: join(__dirname, "../../.cache/vite"),
+    root: __dirname,
+    cacheDir: '../../.cache/vite',
     base: "",
     plugins,
     // Use esbuild for JSX transformation (much faster than Babel)
@@ -79,14 +79,14 @@ export default defineConfig(() => ({
     },
     build: {
         target: "esnext",
-        outDir: '../dist',
+        outDir: './dist',
         emptyOutDir: true,
         reportCompressedSize: true,
         sourcemap: false,
         rollupOptions: {
             input: {
-                index: join(__dirname, "src", "index.html"),
-                login: join(__dirname,  "src", "login.ts"),
+                index: join(__dirname, "index.html"),
+                login: join(__dirname, "src", "login.ts"),
                 setup: join(__dirname, "src", "setup.ts"),
                 set_password: join(__dirname, "src", "set_password.ts"),
                 runtime: join(__dirname, "src", "runtime.ts"),
