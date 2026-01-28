@@ -48,6 +48,7 @@ icnsutil compose -f "mac/icon.icns" ./mac/*.png
 
 # Build Windows icon
 magick -background none "$source_icon_dir/icon-color.svg" -define icon:auto-resize=16,32,48,64,128,256 "./icon.ico"
+magick -background none "$source_icon_dir/icon-purple.svg" -define icon:auto-resize=16,32,48,64,128,256 "./icon-dev.ico"
 
 # Build Windows setup icon
 magick -background none "$source_icon_dir/icon-installer.svg" -define icon:auto-resize=16,32,48,64,128,256 "$desktop_forge_dir/setup-icon/setup.ico"
