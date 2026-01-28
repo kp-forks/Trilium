@@ -44,7 +44,7 @@ declare -a sizes=("16x16" "32x32" "128x128" "512x512")
 for size in "${sizes[@]}"; do
   magick "mac/1024x1024.png" -resize "${size}" "mac/${size}.png"
 done
-icnsutil compose -f "mac/icon.icns" ./mac/*.png
+icnsutil compose -f "icon.icns" ./mac/*.png
 
 # Build Windows icon
 magick -background none "$source_icon_dir/icon-color.svg" -define icon:auto-resize=16,32,48,64,128,256 "./icon.ico"
