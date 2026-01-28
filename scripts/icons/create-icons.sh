@@ -71,3 +71,8 @@ magick -background none "$source_icon_dir/icon-installer-purple.svg" -define ico
 # Build Squirrel splash image
 magick "./png/256x256.png" -background "#ffffff" -gravity center -extent 640x480 "$desktop_forge_dir/setup-icon/setup-banner.gif"
 magick "./png/256x256-dev.png" -background "#ffffff" -gravity center -extent 640x480 "$desktop_forge_dir/setup-icon/setup-banner-dev.gif"
+
+# Copy server assets
+server_dir="$script_dir/../../apps/server"
+cp "$desktop_forge_dir/app-icon/icon.ico" "$server_dir/src/assets/icon.ico"
+cp "$desktop_forge_dir/app-icon/icon-dev.ico" "$server_dir/src/assets/icon-dev.ico"
