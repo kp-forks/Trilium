@@ -217,17 +217,18 @@ function usePlugins(isEditable: boolean, isCalendarRoot: boolean) {
 }
 
 function useLocale() {
+    const [ locale ] = useTriliumOption("locale");
     const [ formattingLocale ] = useTriliumOption("formattingLocale");
     const [ calendarLocale, setCalendarLocale ] = useState<LocaleInput>();
 
     useEffect(() => {
-        const correspondingLocale = LOCALE_MAPPINGS[formattingLocale];
+        const correspondingLocale = LOCALE_MAPPINGS[formattingLocale] ?? LOCALE_MAPPINGS[locale];
         if (correspondingLocale) {
             correspondingLocale().then((locale) => setCalendarLocale(locale.default));
         } else {
             setCalendarLocale(undefined);
         }
-    });
+    }, [formattingLocale, locale]);
 
     return calendarLocale;
 }
