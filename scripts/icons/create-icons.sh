@@ -66,6 +66,8 @@ magick -background none "$source_icon_dir/icon-purple.svg" -define icon:auto-res
 
 # Build Windows setup icon
 magick -background none "$source_icon_dir/icon-installer.svg" -define icon:auto-resize=16,32,48,64,128,256 "$desktop_forge_dir/setup-icon/setup.ico"
+magick -background none "$source_icon_dir/icon-installer-purple.svg" -define icon:auto-resize=16,32,48,64,128,256 "$desktop_forge_dir/setup-icon/setup-dev.ico"
 
 # Build Squirrel splash image
 magick "./png/256x256.png" -background "#ffffff" -gravity center -extent 640x480 "$desktop_forge_dir/setup-icon/setup-banner.gif"
+magick "./png/256x256-dev.png" -background "#ffffff" -gravity center -extent 640x480 "$desktop_forge_dir/setup-icon/setup-banner-dev.gif"
