@@ -30,7 +30,7 @@ async function initJQuery() {
 }
 
 async function setupGlob() {
-    const response = await fetch(`/bootstrap${window.location.search}`);
+    const response = await fetch(`./bootstrap${window.location.search}`);
     const json = await response.json();
 
     window.global = globalThis; /* fixes https://github.com/webpack/webpack/issues/10035 */
