@@ -125,8 +125,8 @@ Trilium Notes — це безкоштовний кросплатформний �
   тема](https://docs.triliumnotes.org/user-guide/concepts/themes), підтримка тем
   користувача
 * [Evernote](https://docs.triliumnotes.org/user-guide/concepts/import-export/evernote)
-  and [Markdown import &
-  export](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
+  та [Markdown імпорт &
+  експорт](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
 * [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) для
   легкого збереження веб-контенту
 * Настроюваний інтерфейс користувача (кнопки бічної панелі, віджети, що
@@ -162,7 +162,7 @@ compatible with the latest zadam/trilium version of
 versions of TriliumNext/Trilium have their sync versions incremented which
 prevents direct migration.
 
-## 💬 Discuss with us
+## Обговоріть це з нами
 
 Не соромтеся приєднуватися до наших офіційних обговорень. Ми будемо раді почути
 про ваші функції, пропозиції чи проблеми!
