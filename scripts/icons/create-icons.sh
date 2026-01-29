@@ -30,6 +30,7 @@ inkscape -w 256 -h 256 "$source_icon_dir/icon-color.svg" -o "./png/256x256.png"
 # Build dev icons (including tray)
 inkscape -w 16 -h 16 "$source_icon_dir/icon-purple.svg" -o "./png/16x16-dev.png"
 inkscape -w 32 -h 32 "$source_icon_dir/icon-purple.svg" -o "./png/32x32-dev.png"
+inkscape -w 128 -h 128 "$source_icon_dir/icon-purple.svg" -o "./png/128x128-dev.png"
 inkscape -w 256 -h 256 "$source_icon_dir/icon-purple.svg" -o "./png/256x256-dev.png"
 
 # Build Mac default .icns
