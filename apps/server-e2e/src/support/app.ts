@@ -59,7 +59,7 @@ export default class App {
 
         // Wait for the page to load.
         if (url === "/") {
-            await expect(this.page.locator(".tree")).toContainText("Trilium Integration Test");
+            await expect(this.page.locator(".tree", { hasText: "Trilium Integration Test" })).toBeVisible();
             if (!preserveTabs) {
                 await this.closeAllTabs();
             }
@@ -76,7 +76,7 @@ export default class App {
         const suggestionSelector = resultsSelector.locator(".aa-suggestion")
             .nth(1); // Select the second one (best candidate), as the first one is "Create a new note"
         await expect(suggestionSelector).toContainText(noteTitle);
-        suggestionSelector.click();
+        await suggestionSelector.click();
     }
 
     async goToSettings() {

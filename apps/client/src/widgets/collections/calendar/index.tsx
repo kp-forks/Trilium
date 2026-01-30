@@ -179,13 +179,13 @@ function CalendarHeader({ calendarRef }: { calendarRef: RefObject<FullCalendar> 
             <ButtonGroup>
                 {CALENDAR_VIEWS.map(viewData => (
                     <Button
-                        text={viewData.name.toLocaleLowerCase()}
+                        text={viewData.name}
                         className={currentViewType === viewData.type ? "active" : ""}
                         onClick={() => calendarRef.current?.changeView(viewData.type)}
                     />
                 ))}
             </ButtonGroup>
-            <Button text={t("calendar.today").toLocaleLowerCase()} onClick={() => calendarRef.current?.today()} />
+            <Button text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
             <ButtonGroup>
                 <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} frame onClick={() => calendarRef.current?.prev()} />
                 <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} frame onClick={() => calendarRef.current?.next()} />
@@ -217,17 +217,18 @@ function usePlugins(isEditable: boolean, isCalendarRoot: boolean) {
 }
 
 function useLocale() {
+    const [ locale ] = useTriliumOption("locale");
     const [ formattingLocale ] = useTriliumOption("formattingLocale");
     const [ calendarLocale, setCalendarLocale ] = useState<LocaleInput>();
 
     useEffect(() => {
-        const correspondingLocale = LOCALE_MAPPINGS[formattingLocale];
+        const correspondingLocale = LOCALE_MAPPINGS[formattingLocale] ?? LOCALE_MAPPINGS[locale];
         if (correspondingLocale) {
             correspondingLocale().then((locale) => setCalendarLocale(locale.default));
         } else {
             setCalendarLocale(undefined);
         }
-    });
+    }, [formattingLocale, locale]);
 
     return calendarLocale;
 }

@@ -31,7 +31,12 @@
         "sync_content": "Gunakan hostinganmu sendiri atau instansi cloud untuk sinkronisasi mudah catatan-catatan anda pada beberapa perangkat, dan untuk akses dari ponsel anda dengan PWA.",
         "search_content": "Atau cari teks di dalam catatan lalu lebih dalam dengan cari catatan induk, atau berdasarkan kedalaman.",
         "web_clipper_title": "Penyemat Web",
-        "web_clipper_content": "Mengambil halaman web (atau foto halaman web) dan disematkan langsung ke catatan Trilium dengan ekstensi browser penyemat web."
+        "web_clipper_content": "Mengambil halaman web (atau foto halaman web) dan disematkan langsung ke catatan Trilium dengan ekstensi browser penyemat web.",
+        "protected_notes_title": "Catatan terlindungi",
+        "protected_notes_content": "Lindungi informasi pribadi sensitif dengan mengenkripsi catatan dan menguncinya di balik sesi yang dilindungi kata sandi.",
+        "jump_to_title": "Pencarian cepat dan perintah",
+        "jump_to_content": "Melompat dengan cepat ke catatan atau perintah UI di seluruh hierarki dengan mencari judulnya, dengan pencocokan kabur untuk memperhitungkan kesalahan ketik atau perbedaan kecil.",
+        "search_title": "Pencarian mumpuni"
     },
     "note_types": {
         "title": "Cara-cara menampilkan informasi Anda",
@@ -65,5 +70,8 @@
         "database_question": "Di manakah data disimpan?",
         "database_answer": "Semua catatan Anda akan disimpan dalam basis data SQLite di dalam sebuah folder aplikasi. Alasan mengapa Trilium menggunakan basis data alih-alih file teks biasa adalah demi performa dan karena beberapa fitur akan jauh lebih sulit untuk diterapkan, seperti klon (catatan yang sama di beberapa tempat dalam hierarki). Untuk menemukan folder aplikasinya, cukup buka jendela 'Tentang'.",
         "server_question": "Apakah saya butuh server untuk menjalankan Trilium?"
+    },
+    "extensibility_benefits": {
+        "share_title": "Bagikan catatan di web"
     }
 }
