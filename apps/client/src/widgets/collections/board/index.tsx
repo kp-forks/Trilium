@@ -162,16 +162,14 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
     }, [draggedColumn, columnDropPosition, handleColumnDrop]);
 
     return (
-        <div
-            className="board-view"
-            onWheel={onWheelHorizontalScroll}
-        >
+        <div className="board-view">
             <CollectionProperties note={parentNote} />
             <BoardViewContext.Provider value={boardViewContext}>
                 {byColumn && columns && <div
                     className="board-view-container"
                     onDragOver={handleColumnDragOver}
                     onDrop={handleContainerDrop}
+                    onWheel={onWheelHorizontalScroll}
                 >
                     {columns.map((column, index) => (
                         <>
