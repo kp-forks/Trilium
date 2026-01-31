@@ -1,9 +1,8 @@
 import { Modal as BootstrapModal } from "bootstrap";
 import clsx from "clsx";
-import { ComponentChildren } from "preact";
-import type { CSSProperties, RefObject } from "preact/compat";
+import { ComponentChildren, CSSProperties, RefObject } from "preact";
 import { memo } from "preact/compat";
-import { useEffect, useMemo,useRef } from "preact/hooks";
+import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import { openDialog } from "../../services/dialog";
 import { t } from "../../services/i18n";
