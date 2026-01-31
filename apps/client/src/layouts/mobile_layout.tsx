@@ -13,7 +13,6 @@ import LauncherContainer from "../widgets/launch_bar/LauncherContainer.jsx";
 import MobileDetailMenu from "../widgets/mobile_widgets/mobile_detail_menu.js";
 import ScreenContainer from "../widgets/mobile_widgets/screen_container.js";
 import SidebarContainer from "../widgets/mobile_widgets/sidebar_container.js";
-import TabSwitcher from "../widgets/mobile_widgets/TabSwitcher.jsx";
 import ToggleSidebarButton from "../widgets/mobile_widgets/toggle_sidebar_button.jsx";
 import NoteTitleWidget from "../widgets/note_title.js";
 import NoteTreeWidget from "../widgets/note_tree.js";
@@ -185,7 +184,6 @@ export default class MobileLayout {
                         .class("horizontal")
                         .css("height", "53px")
                         .child(<LauncherContainer isHorizontalLayout />)
-                        .child(<TabSwitcher />)
                         .child(<GlobalMenuWidget isHorizontalLayout />)
                         .id("launcher-pane"))
             )
