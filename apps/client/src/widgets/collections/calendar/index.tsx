@@ -17,6 +17,8 @@ import { isMobile } from "../../../services/utils";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import Button, { ButtonGroup } from "../../react/Button";
+import Dropdown from "../../react/Dropdown";
+import { FormListItem } from "../../react/FormList";
 import { useNoteLabel, useNoteLabelBoolean, useResizeObserver, useSpacedUpdate, useTriliumEvent, useTriliumOption, useTriliumOptionInt } from "../../react/hooks";
 import { ParentComponent } from "../../react/react_utils";
 import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSegmentedControl, TouchBarSpacer } from "../../react/TouchBar";
@@ -192,6 +194,24 @@ function CalendarHeaderCenter({ calendarRef }: { calendarRef: RefObject<FullCale
 
 function CalendarHeaderRight({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
     const { viewType: currentViewType } = useOnDatesSet(calendarRef);
+    const currentViewTypeData = CALENDAR_VIEWS.find(view => view.type === currentViewType);
+
+    if (isMobile()) {
+        return (
+            <Dropdown
+                text={currentViewTypeData?.name}
+            >
+                {CALENDAR_VIEWS.map(viewData => (
+                    <FormListItem
+                        key={viewData.type}
+                        selected={currentViewType === viewData.type}
+                        icon={viewData.icon}
+                        onClick={() => calendarRef.current?.changeView(viewData.type)}
+                    >{viewData.name}</FormListItem>
+                ))}
+            </Dropdown>
+        );
+    }
 
     return (
         <>
