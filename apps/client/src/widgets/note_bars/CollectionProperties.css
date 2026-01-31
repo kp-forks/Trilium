@@ -25,6 +25,10 @@
         justify-content: center;
     }
 
+    .right-container {
+        justify-content: flex-end;
+    }
+
     button.btn {
         min-width: 0;
     }
