@@ -9,7 +9,7 @@ import NoteContext from "../../components/note_context";
 import { t } from "../../services/i18n";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
-import { useTriliumEvent } from "../react/hooks";
+import { useActiveNoteContext, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 
 export default function TabSwitcher() {
@@ -53,25 +53,34 @@ function TabBarModelContent({ selectTab }: {
     selectTab: (noteContextToActivate: NoteContext) => void;
 }) {
     const mainNoteContexts = useMainNoteContexts();
+    const activeNoteContext = useActiveNoteContext();
 
     return (
         <div className="tabs">
             {mainNoteContexts.map((noteContext) => (
-                <Tab key={noteContext.ntxId} noteContext={noteContext} selectTab={selectTab} />
+                <Tab
+                    key={noteContext.ntxId}
+                    noteContext={noteContext}
+                    activeNtxId={activeNoteContext.ntxId}
+                    selectTab={selectTab}
+                />
             ))}
         </div>
     );
 }
 
-function Tab({ noteContext, selectTab }: {
+function Tab({ noteContext, selectTab, activeNtxId }: {
     noteContext: NoteContext;
     selectTab: (noteContextToActivate: NoteContext) => void;
+    activeNtxId: string | null | undefined;
 }) {
     const { note } = noteContext;
 
     return (
         <div
-            class="tab-card"
+            class={clsx("tab-card", {
+                active: noteContext.ntxId === activeNtxId
+            })}
             onClick={() => selectTab(noteContext)}
         >
             <header>
