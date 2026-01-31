@@ -21,6 +21,7 @@
 
     .center-container {
         flex-grow: 1;
+        justify-content: center;
         gap: 0.5em;
     }
 

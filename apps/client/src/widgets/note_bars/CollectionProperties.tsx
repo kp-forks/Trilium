@@ -13,7 +13,7 @@ import ActionButton from "../react/ActionButton";
 import Dropdown from "../react/Dropdown";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../react/FormList";
 import FormTextBox from "../react/FormTextBox";
-import { useNoteLabel, useNoteLabelBoolean, useNoteLabelWithDefault, useTriliumEvent } from "../react/hooks";
+import { useNoteLabel, useNoteLabelBoolean, useNoteLabelWithDefault, useNoteProperty, useTriliumEvent } from "../react/hooks";
 import Icon from "../react/Icon";
 import { ParentComponent } from "../react/react_utils";
 import { bookPropertiesConfig, BookProperty, ButtonProperty, CheckBoxProperty, ComboBoxItem, ComboBoxProperty, NumberProperty, SplitButtonProperty } from "../ribbon/collection-properties-config";
@@ -35,8 +35,9 @@ export default function CollectionProperties({ note, centerChildren, rightChildr
     rightChildren?: ComponentChildren;
 }) {
     const [ viewType, setViewType ] = useViewType(note);
+    const noteType = useNoteProperty(note, "type");
 
-    return ([ "book", "search" ].includes(note.type) &&
+    return ([ "book", "search" ].includes(noteType ?? "") &&
         <div className="collection-properties">
             <div className="left-container">
                 <ViewTypeSwitcher viewType={viewType} setViewType={setViewType} />
