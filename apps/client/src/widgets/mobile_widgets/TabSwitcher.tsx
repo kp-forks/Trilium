@@ -1,13 +1,15 @@
 import "./TabSwitcher.css";
 
 import { createPortal } from "preact/compat";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
+import appContext from "../../components/app_context";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
+import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 
 export default function TabSwitcher() {
-    const [ shown, setShown ] = useState(false);
+    const [ shown, setShown ] = useState(true);
 
     return (
         <>
@@ -21,7 +23,6 @@ export default function TabSwitcher() {
     );
 }
 
-
 function TabBarModal({ shown, setShown }: {
     shown: boolean;
     setShown: (newValue: boolean) => void;
@@ -34,7 +35,37 @@ function TabBarModal({ shown, setShown }: {
             show={shown}
             onHidden={() => setShown(false)}
         >
-            Hi
+            <TabBarModelContent />
         </Modal>
     );
+}
+
+function TabBarModelContent() {
+    const mainNoteContexts = useMainNoteContexts();
+
+    useTriliumEvent("contextsReopened", () => {
+        console.log("Reopened contexts");
+    });
+
+    return (
+        <div className="tabs">
+            {mainNoteContexts.map((tabContext) => (
+                <span key={tabContext.ntxId}>{tabContext.note?.title}</span>
+            ))}
+        </div>
+    );
+}
+
+function useMainNoteContexts() {
+    const [ noteContexts, setNoteContexts ] = useState(appContext.tabManager.getMainNoteContexts());
+
+    useTriliumEvent("newNoteContextCreated", ({ noteContext }) => {
+        if (noteContext.mainNtxId) return;
+        setNoteContexts([
+            ...noteContexts,
+            noteContext
+        ]);
+    });
+
+    return noteContexts;
 }

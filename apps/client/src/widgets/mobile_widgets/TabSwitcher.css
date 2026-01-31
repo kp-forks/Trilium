@@ -3,4 +3,10 @@
         max-height: unset;
         height: 95vh;
     }
+
+    .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1em;
+    }
 }
