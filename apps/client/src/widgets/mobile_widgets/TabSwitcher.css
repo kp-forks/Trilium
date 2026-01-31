@@ -32,6 +32,8 @@
                 height: 180px;
                 overflow: hidden;
                 font-size: 0.5em;
+                user-select: none;
+                pointer-events: none;
 
                 &.type-text {
                     padding: 10px;

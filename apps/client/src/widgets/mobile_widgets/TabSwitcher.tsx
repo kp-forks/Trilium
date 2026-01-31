@@ -2,7 +2,7 @@ import "./TabSwitcher.css";
 
 import clsx from "clsx";
 import { createPortal } from "preact/compat";
-import { useEffect, useState } from "preact/hooks";
+import { useCallback, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
@@ -31,6 +31,11 @@ function TabBarModal({ shown, setShown }: {
     shown: boolean;
     setShown: (newValue: boolean) => void;
 }) {
+    const selectTab = useCallback((noteContextToActivate: NoteContext) => {
+        appContext.tabManager.activateNoteContext(noteContextToActivate.ntxId);
+        setShown(false);
+    }, [ setShown ]);
+
     return (
         <Modal
             className="tab-bar-modal"
@@ -39,30 +44,36 @@ function TabBarModal({ shown, setShown }: {
             show={shown}
             onHidden={() => setShown(false)}
         >
-            <TabBarModelContent />
+            <TabBarModelContent selectTab={selectTab} />
         </Modal>
     );
 }
 
-function TabBarModelContent() {
+function TabBarModelContent({ selectTab }: {
+    selectTab: (noteContextToActivate: NoteContext) => void;
+}) {
     const mainNoteContexts = useMainNoteContexts();
 
     return (
         <div className="tabs">
             {mainNoteContexts.map((noteContext) => (
-                <Tab key={noteContext.ntxId} noteContext={noteContext} />
+                <Tab key={noteContext.ntxId} noteContext={noteContext} selectTab={selectTab} />
             ))}
         </div>
     );
 }
 
-function Tab({ noteContext }: {
+function Tab({ noteContext, selectTab }: {
     noteContext: NoteContext;
+    selectTab: (noteContextToActivate: NoteContext) => void;
 }) {
     const { note } = noteContext;
 
     return (
-        <div class="tab-card">
+        <div
+            class="tab-card"
+            onClick={() => selectTab(noteContext)}
+        >
             <header>
                 <span className="title">{noteContext.note?.title ?? t("tab_row.new_tab")}</span>
             </header>
