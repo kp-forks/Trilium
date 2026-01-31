@@ -14,7 +14,7 @@
 
 .modal.tab-bar-modal {
     .modal-dialog {
-        height: 100%;
+        min-height: 85vh;
     }
 
     .tabs {
