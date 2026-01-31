@@ -147,8 +147,8 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
         <div className="calendar-view" ref={containerRef} tabIndex={100}>
             <CollectionProperties
                 note={note}
-                centerChildren={<CalendarHeaderTitle calendarRef={calendarRef} />}
-                rightChildren={<CalendarHeaderButtons calendarRef={calendarRef} />}
+                centerChildren={<CalendarHeaderCenter calendarRef={calendarRef} />}
+                rightChildren={<CalendarHeaderRight calendarRef={calendarRef} />}
             />
             <Calendar
                 events={eventBuilder}
@@ -178,14 +178,19 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
     );
 }
 
-function CalendarHeaderTitle({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
-    const { title } = useOnDatesSet(calendarRef);
-    return <span className="title">{title}</span>;
+function CalendarHeaderCenter({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
+    const { title, viewType: currentViewType } = useOnDatesSet(calendarRef);
+    const currentViewData = CALENDAR_VIEWS.find(v => calendarRef.current && v.type === currentViewType);
+
+    return <div className="calendar-header-center">
+        <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} onClick={() => calendarRef.current?.prev()} />
+        <span className="title">{title}</span>
+        <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} onClick={() => calendarRef.current?.next()} />
+    </div>;
 }
 
-function CalendarHeaderButtons({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
+function CalendarHeaderRight({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
     const { viewType: currentViewType } = useOnDatesSet(calendarRef);
-    const currentViewData = CALENDAR_VIEWS.find(v => calendarRef.current && v.type === currentViewType);
 
     return (
         <>
@@ -201,10 +206,6 @@ function CalendarHeaderButtons({ calendarRef }: { calendarRef: RefObject<FullCal
                 ))}
             </ButtonGroup>
             <ActionButton icon="bx bx-calendar-event" text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
-            <ButtonGroup>
-                <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} onClick={() => calendarRef.current?.prev()} />
-                <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} onClick={() => calendarRef.current?.next()} />
-            </ButtonGroup>
         </>
     );
 }

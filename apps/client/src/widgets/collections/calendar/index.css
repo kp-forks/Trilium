@@ -59,13 +59,25 @@
     overflow: hidden;
 }
 
+.calendar-view .calendar-header-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .title {
+        min-width: 150px;
+        font-size: 1.2em;
+        text-align: center;
+    }
+}
+
 /* #region Events */
 
 /*
  * week, month, year views
  */
 
- .calendar-container a.fc-event {
+.calendar-container a.fc-event {
     text-decoration: none;
 }
 
