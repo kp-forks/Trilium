@@ -234,9 +234,9 @@ function OpenTriliumApiDocsButton({ noteMime }: NoteActionsCustomInnerProps) {
     />;
 }
 
-function InAppHelpButton({ note, noteType }: NoteActionsCustomInnerProps) {
+function InAppHelpButton({ note }: NoteActionsCustomInnerProps) {
     const helpUrl = getHelpUrlForNote(note);
-    const isEnabled = !!helpUrl && (noteType !== "book");
+    const isEnabled = !!helpUrl;
 
     return isEnabled && (
         <ActionButton

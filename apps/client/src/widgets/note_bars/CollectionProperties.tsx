@@ -47,7 +47,6 @@ export default function CollectionProperties({ note, centerChildren, rightChildr
             </div>
             <div className="right-container">
                 {rightChildren}
-                <HelpButton note={note} />
             </div>
         </div>
     );
@@ -233,16 +232,4 @@ function CheckBoxPropertyView({ note, property }: { note: FNote, property: Check
             onChange={setValue}
         />
     );
-}
-
-function HelpButton({ note }: { note: FNote }) {
-    const helpUrl = getHelpUrlForNote(note);
-
-    return (helpUrl && (
-        <ActionButton
-            icon="bx bx-help-circle"
-            onClick={(() => openInAppHelpFromUrl(helpUrl))}
-            text={t("help-button.title")}
-        />
-    ));
 }
