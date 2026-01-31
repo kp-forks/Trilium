@@ -62,7 +62,9 @@ function Tab({ noteContext }: {
 
     return (
         <div class="tab-card">
-            <header>{noteContext.note?.title}</header>
+            <header>
+                <span className="title">{noteContext.note?.title}</span>
+            </header>
             <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>
                 {note && <NoteContent
                     note={note}

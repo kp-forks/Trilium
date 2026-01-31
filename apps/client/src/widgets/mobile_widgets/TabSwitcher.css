@@ -12,10 +12,20 @@
         .tab-card {
             background: var(--card-background-color);
             border-radius: 1em;
+            min-width: 0;
 
             header {
                 padding: 0.5em 1em;
                 border-bottom: 1px solid var(--main-border-color);
+                display: flex;
+                overflow: hidden;
+
+                .title {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    text-wrap: nowrap;
+                    font-size: 0.9em;
+                }
             }
 
             .tab-preview {
