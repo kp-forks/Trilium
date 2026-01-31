@@ -129,7 +129,7 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
             }}
         >
             <header className={colorClass}>
-                <Icon icon={iconClass} />
+                {note && <Icon icon={iconClass} />}
                 <span className="title">{noteContext.note?.title ?? t("tab_row.new_tab")}</span>
                 <ActionButton
                     icon="bx bx-x"
