@@ -1647,17 +1647,6 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     }
 }
 
-@media (min-width: 992px) {
-    .modal-dialog {
-        margin: var(--bs-modal-margin);
-        max-width: 80%;
-    }
-
-    .modal-content {
-        height: 100%;
-    }
-}
-
 /* Mobile, tablet mode */
 @media (min-width: 992px) {
     body.mobile #root-widget {
@@ -1676,6 +1665,15 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
 
     #detail-container {
         background: var(--main-background-color);
+    }
+
+    .modal-dialog {
+        margin: var(--bs-modal-margin);
+        max-width: 80%;
+    }
+
+    .modal-content {
+        height: 100%;
     }
 }
 
