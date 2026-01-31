@@ -1255,7 +1255,7 @@ a.external:not(.no-arrow):after, a[href^="http://"]:not(.no-arrow):after, a[href
     inset-inline-start: 0;
     inset-inline-end: 0;
     bottom: 0;
-    z-index: 1000;
+    z-index: 2500;
     background: rgba(0, 0, 0, 0.1);
 }
 

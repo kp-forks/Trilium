@@ -65,7 +65,10 @@ function TabBarModal({ mainNoteContexts, shown, setShown }: {
                             x: e.pageX,
                             y: e.pageY,
                             items: [
-                                { title: t("tab_row.close_all_tabs"), command: "closeAllTabs", uiIcon: "bx bx-empty" },
+                                { title: t("tab_row.new_tab"), command: "openNewTab", uiIcon: "bx bx-plus" },
+                                { title: t("tab_row.reopen_last_tab"), command: "reopenLastTab", uiIcon: "bx bx-undo", enabled: appContext.tabManager.recentlyClosedTabs.length !== 0 },
+                                { kind: "separator" },
+                                { title: t("tab_row.close_all_tabs"), command: "closeAllTabs", uiIcon: "bx bx-trash destructive-action-icon" },
                             ],
                             selectMenuItemHandler: ({ command }) => {
                                 if (command) {
