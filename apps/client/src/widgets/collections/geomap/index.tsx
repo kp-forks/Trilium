@@ -1,24 +1,27 @@
-import Map from "./map";
 import "./index.css";
-import { ViewModeProps } from "../interface";
-import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useNoteTreeDrag, useSpacedUpdate, useTriliumEvent } from "../../react/hooks";
-import { DEFAULT_MAP_LAYER_NAME } from "./map_layer";
+
 import { divIcon, GPXOptions, LatLng, LeafletMouseEvent } from "leaflet";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
-import Marker, { GpxTrack } from "./marker";
-import froca from "../../../services/froca";
-import FNote from "../../../entities/fnote";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconShadow from "leaflet/dist/images/marker-shadow.png";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
+
 import appContext from "../../../components/app_context";
-import { createNewNote, moveMarker } from "./api";
-import openContextMenu, { openMapContextMenu } from "./context_menu";
-import toast from "../../../services/toast";
+import FNote from "../../../entities/fnote";
+import branches from "../../../services/branches";
+import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
-import branches from "../../../services/branches";
-import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSlider } from "../../react/TouchBar";
+import toast from "../../../services/toast";
+import CollectionProperties from "../../note_bars/CollectionProperties";
+import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useNoteTreeDrag, useSpacedUpdate, useTriliumEvent } from "../../react/hooks";
 import { ParentComponent } from "../../react/react_utils";
+import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSlider } from "../../react/TouchBar";
+import { ViewModeProps } from "../interface";
+import { createNewNote, moveMarker } from "./api";
+import openContextMenu, { openMapContextMenu } from "./context_menu";
+import Map from "./map";
+import { DEFAULT_MAP_LAYER_NAME } from "./map_layer";
+import Marker, { GpxTrack } from "./marker";
 
 const DEFAULT_COORDINATES: [number, number] = [3.878638227135724, 446.6630455551659];
 const DEFAULT_ZOOM = 2;
@@ -50,7 +53,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
         }
     }, 5000);
 
-    useEffect(() => { froca.getNotes(noteIds).then(setNotes) }, [ noteIds ]);
+    useEffect(() => { froca.getNotes(noteIds).then(setNotes); }, [ noteIds ]);
 
     useEffect(() => {
         if (!note) return;
@@ -60,7 +63,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
 
     // Note creation.
     useTriliumEvent("geoMapCreateChildNote", () => {
-         toast.showPersistent({
+        toast.showPersistent({
             icon: "plus",
             id: "geo-new-note",
             title: "New note",
@@ -130,6 +133,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
 
     return (
         <div className={`geo-view ${state === State.NewNote ? "placing-note" : ""}`}>
+            <CollectionProperties note={note} />
             { coordinates !== undefined && zoom !== undefined && <Map
                 apiRef={apiRef} containerRef={containerRef}
                 coordinates={coordinates}
@@ -204,7 +208,7 @@ function NoteMarker({ note, editable, latLng }: { note: FNote, editable: boolean
         onDragged={editable ? onDragged : undefined}
         onClick={!editable ? onClick : undefined}
         onContextMenu={onContextMenu}
-    />
+    />;
 }
 
 function NoteGpxTrack({ note }: { note: FNote }) {
@@ -238,7 +242,7 @@ function NoteGpxTrack({ note }: { note: FNote }) {
             color: note.getLabelValue("color") ?? "blue"
         }
     }), [ color, iconClass ]);
-    return xmlString && <GpxTrack gpxXmlString={xmlString} options={options} />
+    return xmlString && <GpxTrack gpxXmlString={xmlString} options={options} />;
 }
 
 function buildIcon(bxIconClass: string, colorClass?: string, title?: string, noteIdLink?: string, archived?: boolean) {
@@ -292,5 +296,5 @@ function GeoMapTouchBar({ state, map }: { state: State, map: L.Map | null | unde
                 enabled={state === State.Normal}
             />
         </TouchBar>
-    )
+    );
 }

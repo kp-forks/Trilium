@@ -1,20 +1,23 @@
+import "./index.css";
+
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { ViewModeProps } from "../interface";
-import { TableData } from "./rows";
-import { useLegacyWidget } from "../../react/hooks";
-import Tabulator from "./tabulator";
-import { Tabulator as VanillaTabulator, SortModule, FormatModule, InteractionModule, EditModule, ResizeColumnsModule, FrozenColumnsModule, PersistenceModule, MoveColumnsModule, MoveRowsModule, DataTreeModule, Options, RowComponent} from 'tabulator-tables';
-import { useContextMenu } from "./context_menu";
-import { ParentComponent } from "../../react/react_utils";
+import { DataTreeModule, EditModule, FormatModule, FrozenColumnsModule, InteractionModule, MoveColumnsModule, MoveRowsModule, Options, PersistenceModule, ResizeColumnsModule, RowComponent,SortModule, Tabulator as VanillaTabulator} from 'tabulator-tables';
+
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
-import Button from "../../react/Button";
-import "./index.css";
-import useRowTableEditing from "./row_editing";
-import useColTableEditing from "./col_editing";
-import AttributeDetailWidget from "../../attribute_widgets/attribute_detail";
 import SpacedUpdate from "../../../services/spaced_update";
+import AttributeDetailWidget from "../../attribute_widgets/attribute_detail";
+import CollectionProperties from "../../note_bars/CollectionProperties";
+import Button from "../../react/Button";
+import { useLegacyWidget } from "../../react/hooks";
+import { ParentComponent } from "../../react/react_utils";
+import { ViewModeProps } from "../interface";
+import useColTableEditing from "./col_editing";
+import { useContextMenu } from "./context_menu";
 import useData, { TableConfig } from "./data";
+import useRowTableEditing from "./row_editing";
+import { TableData } from "./rows";
+import Tabulator from "./tabulator";
 
 export default function TableView({ note, noteIds, notePath, viewConfig, saveConfig }: ViewModeProps<TableConfig>) {
     const tabulatorRef = useRef<VanillaTabulator>(null);
@@ -36,7 +39,7 @@ export default function TableView({ note, noteIds, notePath, viewConfig, saveCon
             dataTreeChildIndent: 20,
             dataTreeExpandElement: `<button class="tree-expand"><span class="bx bx-chevron-right"></span></button>`,
             dataTreeCollapseElement: `<button class="tree-collapse"><span class="bx bx-chevron-down"></span></button>`
-        }
+        };
     }, [ hasChildren ]);
 
     const rowFormatter = useCallback((row: RowComponent) => {
@@ -46,6 +49,8 @@ export default function TableView({ note, noteIds, notePath, viewConfig, saveCon
 
     return (
         <div className="table-view">
+            <CollectionProperties note={note} />
+
             {rowData !== undefined && persistenceProps &&  (
                 <>
                     <Tabulator
@@ -72,7 +77,7 @@ export default function TableView({ note, noteIds, notePath, viewConfig, saveCon
             )}
             {attributeDetailWidgetEl}
         </div>
-    )
+    );
 }
 
 function TableFooter({ note }: { note: FNote }) {
@@ -84,7 +89,7 @@ function TableFooter({ note }: { note: FNote }) {
                 <Button triggerCommand="addNewTableColumn" icon="bx bx-carousel" text={t("table_view.new-column")} />
             </div>
         </div>
-    )
+    );
 }
 
 function usePersistence(viewConfig: TableConfig | null | undefined, saveConfig: (newConfig: TableConfig) => void) {

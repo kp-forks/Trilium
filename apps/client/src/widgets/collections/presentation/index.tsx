@@ -1,18 +1,21 @@
-import { ViewModeMedia, ViewModeProps } from "../interface";
+import "./index.css";
+
+import { RefObject } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import Reveal from "reveal.js";
 import slideBaseStylesheet from "reveal.js/dist/reveal.css?raw";
-import slideCustomStylesheet from "./slidejs.css?raw";
-import { buildPresentationModel, PresentationModel, PresentationSlideBaseModel } from "./model";
-import ShadowDom from "../../react/ShadowDom";
-import ActionButton from "../../react/ActionButton";
-import "./index.css";
-import { RefObject } from "preact";
+
 import { openInCurrentNoteContext } from "../../../components/note_context";
-import { useNoteLabelWithDefault, useTriliumEvent } from "../../react/hooks";
-import { t } from "../../../services/i18n";
-import { DEFAULT_THEME, loadPresentationTheme } from "./themes";
 import FNote from "../../../entities/fnote";
+import { t } from "../../../services/i18n";
+import CollectionProperties from "../../note_bars/CollectionProperties";
+import ActionButton from "../../react/ActionButton";
+import { useNoteLabelWithDefault, useTriliumEvent } from "../../react/hooks";
+import ShadowDom from "../../react/ShadowDom";
+import { ViewModeMedia, ViewModeProps } from "../interface";
+import { buildPresentationModel, PresentationModel, PresentationSlideBaseModel } from "./model";
+import slideCustomStylesheet from "./slidejs.css?raw";
+import { DEFAULT_THEME, loadPresentationTheme } from "./themes";
 
 export default function PresentationView({ note, noteIds, media, onReady, onProgressChanged }: ViewModeProps<{}>) {
     const [ presentation, setPresentation ] = useState<PresentationModel>();
@@ -52,13 +55,14 @@ export default function PresentationView({ note, noteIds, media, onReady, onProg
     if (media === "screen") {
         return (
             <>
+                <CollectionProperties note={note} />
                 <ShadowDom
                     className="presentation-container"
                     containerRef={containerRef}
                 >{content}</ShadowDom>
                 <ButtonOverlay containerRef={containerRef} api={api} />
             </>
-        )
+        );
     } else if (media === "print") {
         // Printing needs a query parameter that is read by Reveal.js.
         const url = new URL(window.location.href);
@@ -143,7 +147,7 @@ function ButtonOverlay({ containerRef, api }: { containerRef: RefObject<HTMLDivE
                 />
             </div>
         </div>
-    )
+    );
 }
 
 function Presentation({ presentation, setApi } : { presentation: PresentationModel, setApi: (api: Reveal.Api | undefined) => void }) {
@@ -179,7 +183,7 @@ function Presentation({ presentation, setApi } : { presentation: PresentationMod
             api.destroy();
             setRevealApi(undefined);
             setApi(undefined);
-        }
+        };
     }, []);
 
     useEffect(() => {
@@ -191,19 +195,19 @@ function Presentation({ presentation, setApi } : { presentation: PresentationMod
             <div className="slides">
                 {presentation.slides?.map(slide => {
                     if (!slide.verticalSlides) {
-                        return <Slide key={slide.noteId} slide={slide} />
-                    } else {
-                        return (
-                            <section>
-                                <Slide key={slide.noteId} slide={slide} />
-                                {slide.verticalSlides.map(slide => <Slide key={slide.noteId} slide={slide} /> )}
-                            </section>
-                        );
+                        return <Slide key={slide.noteId} slide={slide} />;
                     }
+                    return (
+                        <section>
+                            <Slide key={slide.noteId} slide={slide} />
+                            {slide.verticalSlides.map(slide => <Slide key={slide.noteId} slide={slide} /> )}
+                        </section>
+                    );
+
                 })}
             </div>
         </div>
-    )
+    );
 
 }
 

@@ -30,12 +30,10 @@
 
     @media (max-width: 991px) {
         flex-wrap: wrap;
-        padding: 0.55em 1em;
-        margin: 0;
+        margin-bottom: 0.5em;
 
         >div {
             flex-grow: 1;
-            justify-content: center;
         }
     }
 }

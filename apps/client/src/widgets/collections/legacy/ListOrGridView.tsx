@@ -7,6 +7,7 @@ import attribute_renderer from "../../../services/attribute_renderer";
 import content_renderer from "../../../services/content_renderer";
 import { t } from "../../../services/i18n";
 import link from "../../../services/link";
+import CollectionProperties from "../../note_bars/CollectionProperties";
 import { useImperativeSearchHighlighlighting, useNoteLabel, useNoteLabelBoolean } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
@@ -22,6 +23,8 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
 
     return (
         <div class="note-list list-view">
+            <CollectionProperties note={note} />
+
             { noteIds.length > 0 && <div class="note-list-wrapper">
                 <Pager {...pagination} />
 
@@ -48,6 +51,8 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
 
     return (
         <div class="note-list grid-view">
+            <CollectionProperties note={note} />
+
             <div class="note-list-wrapper">
                 <Pager {...pagination} />
 
