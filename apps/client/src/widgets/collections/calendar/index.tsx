@@ -13,7 +13,7 @@ import date_notes from "../../../services/date_notes";
 import dialog from "../../../services/dialog";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
-import { isMobile } from "../../../services/utils";
+import { isDesktop, isMobile, isMobile } from "../../../services/utils";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import Button, { ButtonGroup } from "../../react/Button";
@@ -147,11 +147,7 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
 
     return (plugins &&
         <div className="calendar-view" ref={containerRef} tabIndex={100}>
-            <CollectionProperties
-                note={note}
-                centerChildren={<CalendarHeaderCenter calendarRef={calendarRef} />}
-                rightChildren={<CalendarHeaderRight calendarRef={calendarRef} />}
-            />
+            <CalendarCollectionProperties note={note} calendarRef={calendarRef} />
             <Calendar
                 events={eventBuilder}
                 calendarRef={calendarRef}
@@ -180,19 +176,51 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
     );
 }
 
-function CalendarHeaderCenter({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
+function CalendarCollectionProperties({ note, calendarRef }: {
+    note: FNote;
+    calendarRef: RefObject<FullCalendar>;
+}) {
     const { title, viewType: currentViewType } = useOnDatesSet(calendarRef);
     const currentViewData = CALENDAR_VIEWS.find(v => calendarRef.current && v.type === currentViewType);
+    const isMobileLocal = isMobile();
 
-    return <>
-        <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} onClick={() => calendarRef.current?.prev()} />
-        <span className="title">{title}</span>
-        <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} onClick={() => calendarRef.current?.next()} />
-        <Button text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
-    </>;
+    return (
+        <CollectionProperties
+            note={note}
+            centerChildren={<>
+                <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} onClick={() => calendarRef.current?.prev()} />
+                <span className="title">{title}</span>
+                <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} onClick={() => calendarRef.current?.next()} />
+                <Button text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
+                {isMobileLocal && <MobileCalendarViewSwitcher calendarRef={calendarRef} />}
+            </>}
+            rightChildren={<>
+                {!isMobileLocal && <DesktopCalendarViewSwitcher calendarRef={calendarRef} />}
+            </>}
+        />
+    );
 }
 
-function CalendarHeaderRight({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
+function DesktopCalendarViewSwitcher({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
+    const { viewType: currentViewType } = useOnDatesSet(calendarRef);
+
+    return (
+        <>
+            <ButtonGroup>
+                {CALENDAR_VIEWS.map(viewData => (
+                    <Button
+                        key={viewData.type}
+                        text={viewData.name}
+                        className={currentViewType === viewData.type ? "active" : ""}
+                        onClick={() => calendarRef.current?.changeView(viewData.type)}
+                    />
+                ))}
+            </ButtonGroup>
+        </>
+    );
+}
+
+function MobileCalendarViewSwitcher({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
     const { viewType: currentViewType } = useOnDatesSet(calendarRef);
     const currentViewTypeData = CALENDAR_VIEWS.find(view => view.type === currentViewType);
 
@@ -212,21 +240,6 @@ function CalendarHeaderRight({ calendarRef }: { calendarRef: RefObject<FullCalen
             </Dropdown>
         );
     }
-
-    return (
-        <>
-            <ButtonGroup>
-                {CALENDAR_VIEWS.map(viewData => (
-                    <Button
-                        key={viewData.type}
-                        text={viewData.name}
-                        className={currentViewType === viewData.type ? "active" : ""}
-                        onClick={() => calendarRef.current?.changeView(viewData.type)}
-                    />
-                ))}
-            </ButtonGroup>
-        </>
-    );
 }
 
 function usePlugins(isEditable: boolean, isCalendarRoot: boolean) {

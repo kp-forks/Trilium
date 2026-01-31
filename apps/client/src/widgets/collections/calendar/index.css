@@ -90,8 +90,6 @@
         }
 
         .center-container {
-            order: 100;
-
             .title {
                 flex-grow: 1;
             }
