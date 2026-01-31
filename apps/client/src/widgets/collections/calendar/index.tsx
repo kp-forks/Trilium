@@ -14,6 +14,7 @@ import dialog from "../../../services/dialog";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import { isMobile } from "../../../services/utils";
+import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import Button, { ButtonGroup } from "../../react/Button";
 import { useNoteLabel, useNoteLabelBoolean, useResizeObserver, useSpacedUpdate, useTriliumEvent, useTriliumOption, useTriliumOptionInt } from "../../react/hooks";
@@ -41,24 +42,28 @@ const CALENDAR_VIEWS = [
     {
         type: "timeGridWeek",
         name: t("calendar.week"),
+        icon: "bx bx-calendar-week",
         previousText: t("calendar.week_previous"),
         nextText: t("calendar.week_next")
     },
     {
         type: "dayGridMonth",
         name: t("calendar.month"),
+        icon: "bx bx-calendar",
         previousText: t("calendar.month_previous"),
         nextText: t("calendar.month_next")
     },
     {
         type: "multiMonthYear",
         name: t("calendar.year"),
+        icon: "bx bx-layer",
         previousText: t("calendar.year_previous"),
         nextText: t("calendar.year_next")
     },
     {
         type: "listMonth",
         name: t("calendar.list"),
+        icon: "bx bx-list-ol",
         previousText: t("calendar.month_previous"),
         nextText: t("calendar.month_next")
     }
@@ -140,7 +145,11 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
 
     return (plugins &&
         <div className="calendar-view" ref={containerRef} tabIndex={100}>
-            <CalendarHeader calendarRef={calendarRef} />
+            <CollectionProperties
+                note={note}
+                centerChildren={<CalendarHeaderTitle calendarRef={calendarRef} />}
+                rightChildren={<CalendarHeaderButtons calendarRef={calendarRef} />}
+            />
             <Calendar
                 events={eventBuilder}
                 calendarRef={calendarRef}
@@ -169,28 +178,34 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
     );
 }
 
-function CalendarHeader({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
-    const { title, viewType: currentViewType } = useOnDatesSet(calendarRef);
+function CalendarHeaderTitle({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
+    const { title } = useOnDatesSet(calendarRef);
+    return <span className="title">{title}</span>;
+}
+
+function CalendarHeaderButtons({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
+    const { viewType: currentViewType } = useOnDatesSet(calendarRef);
     const currentViewData = CALENDAR_VIEWS.find(v => calendarRef.current && v.type === currentViewType);
 
     return (
-        <div className="calendar-header">
-            <span className="title">{title}</span>
+        <>
             <ButtonGroup>
                 {CALENDAR_VIEWS.map(viewData => (
-                    <Button
+                    <ActionButton
+                        key={viewData.type}
+                        icon={viewData.icon}
                         text={viewData.name}
                         className={currentViewType === viewData.type ? "active" : ""}
                         onClick={() => calendarRef.current?.changeView(viewData.type)}
                     />
                 ))}
             </ButtonGroup>
-            <Button text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
+            <ActionButton icon="bx bx-calendar-event" text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
             <ButtonGroup>
-                <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} frame onClick={() => calendarRef.current?.prev()} />
-                <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} frame onClick={() => calendarRef.current?.next()} />
+                <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} onClick={() => calendarRef.current?.prev()} />
+                <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} onClick={() => calendarRef.current?.next()} />
             </ButtonGroup>
-        </div>
+        </>
     );
 }
 

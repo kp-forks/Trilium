@@ -6,6 +6,7 @@
     width: 100%;
     max-width: unset;
     font-size: 0.8em;
+    margin-bottom: 1em;
 
     .dropdown-menu {
         input.form-control {

@@ -59,34 +59,6 @@
     overflow: hidden;
 }
 
-/* #region Header */
-.calendar-view .calendar-header {
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.calendar-view .calendar-header .btn {
-    min-width: unset !important;
-}
-
-.calendar-view .calendar-header > .title {
-    flex-grow: 1;
-    font-size: 1.3rem;
-    font-weight: normal;
-}
-
-body.desktop:not(.zen):not(.experimental-feature-new-layout) .calendar-view .calendar-header {
-    padding-block-start: 4px;
-    padding-inline-end: 5em;
-}
-
-.search-result-widget-content .calendar-view .calendar-header {
-    padding-inline-end: unset !important;
-}
-/* #endregion */
-
 /* #region Events */
 
 /*

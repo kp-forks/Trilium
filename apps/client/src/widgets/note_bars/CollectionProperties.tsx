@@ -1,6 +1,7 @@
 import "./CollectionProperties.css";
 
 import { t } from "i18next";
+import { ComponentChildren } from "preact";
 import { useContext, useRef } from "preact/hooks";
 import { Fragment } from "preact/jsx-runtime";
 
@@ -28,7 +29,11 @@ const ICON_MAPPINGS: Record<ViewTypeOptions, string> = {
     presentation: "bx bx-rectangle"
 };
 
-export default function CollectionProperties({ note }: { note: FNote }) {
+export default function CollectionProperties({ note, centerChildren, rightChildren }: {
+    note: FNote;
+    centerChildren?: ComponentChildren;
+    rightChildren?: ComponentChildren;
+}) {
     const [ viewType, setViewType ] = useViewType(note);
 
     return (
@@ -36,6 +41,9 @@ export default function CollectionProperties({ note }: { note: FNote }) {
             <ViewTypeSwitcher viewType={viewType} setViewType={setViewType} />
             <ViewOptions note={note} viewType={viewType} />
             <div className="spacer" />
+            {centerChildren}
+            <div className="spacer" />
+            {rightChildren}
             <HelpButton note={note} />
         </div>
     );
