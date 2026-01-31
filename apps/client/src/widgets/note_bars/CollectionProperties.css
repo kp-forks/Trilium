@@ -18,4 +18,8 @@
     .spacer {
         flex-grow: 1;
     }
+
+    button.btn {
+        min-width: 0;
+    }
 }

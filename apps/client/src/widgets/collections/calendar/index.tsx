@@ -186,6 +186,7 @@ function CalendarHeaderCenter({ calendarRef }: { calendarRef: RefObject<FullCale
         <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} onClick={() => calendarRef.current?.prev()} />
         <span className="title">{title}</span>
         <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} onClick={() => calendarRef.current?.next()} />
+        <Button text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
     </div>;
 }
 
@@ -196,16 +197,14 @@ function CalendarHeaderRight({ calendarRef }: { calendarRef: RefObject<FullCalen
         <>
             <ButtonGroup>
                 {CALENDAR_VIEWS.map(viewData => (
-                    <ActionButton
+                    <Button
                         key={viewData.type}
-                        icon={viewData.icon}
                         text={viewData.name}
                         className={currentViewType === viewData.type ? "active" : ""}
                         onClick={() => calendarRef.current?.changeView(viewData.type)}
                     />
                 ))}
             </ButtonGroup>
-            <ActionButton icon="bx bx-calendar-event" text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
         </>
     );
 }
