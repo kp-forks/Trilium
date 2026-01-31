@@ -13,7 +13,7 @@ import date_notes from "../../../services/date_notes";
 import dialog from "../../../services/dialog";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
-import { isDesktop, isMobile, isMobile } from "../../../services/utils";
+import { isMobile } from "../../../services/utils";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import Button, { ButtonGroup } from "../../react/Button";
@@ -224,22 +224,20 @@ function MobileCalendarViewSwitcher({ calendarRef }: { calendarRef: RefObject<Fu
     const { viewType: currentViewType } = useOnDatesSet(calendarRef);
     const currentViewTypeData = CALENDAR_VIEWS.find(view => view.type === currentViewType);
 
-    if (isMobile()) {
-        return (
-            <Dropdown
-                text={currentViewTypeData?.name}
-            >
-                {CALENDAR_VIEWS.map(viewData => (
-                    <FormListItem
-                        key={viewData.type}
-                        selected={currentViewType === viewData.type}
-                        icon={viewData.icon}
-                        onClick={() => calendarRef.current?.changeView(viewData.type)}
-                    >{viewData.name}</FormListItem>
-                ))}
-            </Dropdown>
-        );
-    }
+    return (
+        <Dropdown
+            text={currentViewTypeData?.name}
+        >
+            {CALENDAR_VIEWS.map(viewData => (
+                <FormListItem
+                    key={viewData.type}
+                    selected={currentViewType === viewData.type}
+                    icon={viewData.icon}
+                    onClick={() => calendarRef.current?.changeView(viewData.type)}
+                >{viewData.name}</FormListItem>
+            ))}
+        </Dropdown>
+    );
 }
 
 function usePlugins(isEditable: boolean, isCalendarRoot: boolean) {
