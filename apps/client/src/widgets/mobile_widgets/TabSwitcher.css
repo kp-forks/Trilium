@@ -13,6 +13,7 @@
             background: var(--card-background-color);
             border-radius: 1em;
             min-width: 0;
+            overflow: hidden;
 
             &.active {
                 outline: 4px solid var(--more-accented-background-color);
