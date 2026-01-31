@@ -71,7 +71,7 @@
 
 .calendar-view .collection-properties {
     .center-container {
-        order: 100;
+        justify-content: center;
 
         .title {
             min-width: 150px;
@@ -90,6 +90,8 @@
         }
 
         .center-container {
+            order: 100;
+
             .title {
                 flex-grow: 1;
             }
