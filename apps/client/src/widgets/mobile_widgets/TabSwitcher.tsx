@@ -1,5 +1,6 @@
 import "./TabSwitcher.css";
 
+import clsx from "clsx";
 import { createPortal } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 
@@ -62,7 +63,7 @@ function Tab({ noteContext }: {
     return (
         <div class="tab-card">
             <header>{noteContext.note?.title}</header>
-            <div className="tab-preview">
+            <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>
                 {note && <NoteContent
                     note={note}
                     highlightedTokens={undefined}
