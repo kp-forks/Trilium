@@ -1,0 +1,6 @@
+.modal.tab-bar-modal {
+    .modal-dialog {
+        max-height: unset;
+        height: 95vh;
+    }
+}
