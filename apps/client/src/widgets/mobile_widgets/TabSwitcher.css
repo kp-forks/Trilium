@@ -80,7 +80,8 @@
 
                 &.type-book,
                 &.type-contentWidget,
-                &.type-search {
+                &.type-search,
+                &.type-empty {
                     display: flex;
                     align-items: center;
                     justify-content: center;

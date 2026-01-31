@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
+import FNote from "../../entities/fnote";
 import { getHue, parseColor } from "../../services/css_class_manager";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
@@ -143,16 +144,30 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
                 />
             </header>
             <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>
-                {note?.type === "book"
-                    ? <PreviewPlaceholder icon={ICON_MAPPINGS[note.getLabelValue("viewType") ?? ""] ?? "bx bx-book"} />
-                    : note && <NoteContent
-                        note={note}
-                        highlightedTokens={undefined}
-                        trim
-                        includeArchivedNotes={false}
-                    />}
+                <TabPreviewContent note={note} />
             </div>
         </div>
+    );
+}
+
+function TabPreviewContent({ note }: {
+    note: FNote | null
+}) {
+    if (!note) {
+        return <PreviewPlaceholder icon="bx bx-plus" />;
+    }
+
+    if (note.type === "book") {
+        return <PreviewPlaceholder icon={ICON_MAPPINGS[note.getLabelValue("viewType") ?? ""] ?? "bx bx-book"} />;
+    }
+
+    return (
+        <NoteContent
+            note={note}
+            highlightedTokens={undefined}
+            trim
+            includeArchivedNotes={false}
+        />
     );
 }
 
