@@ -21,7 +21,7 @@ import LinkButton from "../react/LinkButton";
 import Modal from "../react/Modal";
 
 export default function TabSwitcher() {
-    const [ shown, setShown ] = useState(true);
+    const [ shown, setShown ] = useState(false);
     const mainNoteContexts = useMainNoteContexts();
 
     return (
@@ -225,6 +225,7 @@ function getWorkspaceTabBackgroundColorHue(noteContext: NoteContext) {
         return getHue(parsedColor);
     } catch (e) {
         // Colors are non-critical, simply ignore.
+        console.warn(e);
     }
 }
 
