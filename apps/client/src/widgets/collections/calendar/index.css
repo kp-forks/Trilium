@@ -70,6 +70,8 @@
 
 .calendar-view .collection-properties {
     .center-container {
+        order: 100;
+
         .title {
             min-width: 150px;
             font-size: 1.2em;
@@ -78,8 +80,18 @@
     }
 
     @media (max-width: 991px) {
+        >div {
+            justify-content: flex-start;
+        }
+
+        .right-container {
+            flex-grow: 0;
+        }
+
         .center-container {
-            padding: 0.5em 0;
+            .title {
+                flex-grow: 1;
+            }
         }
     }
 }

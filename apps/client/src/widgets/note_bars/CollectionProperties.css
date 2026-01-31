@@ -30,6 +30,8 @@
 
     @media (max-width: 991px) {
         flex-wrap: wrap;
+        padding: 0.55em 1em;
+        margin: 0;
 
         >div {
             flex-grow: 1;
