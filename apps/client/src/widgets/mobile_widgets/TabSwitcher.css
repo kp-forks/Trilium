@@ -27,6 +27,9 @@
             border-radius: 1em;
             min-width: 0;
             overflow: hidden;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
 
             &.with-hue {
                 background-color: hsl(var(--bg-hue), 8.8%, 11.2%);
@@ -49,6 +52,11 @@
                 overflow: hidden;
                 align-items: center;
                 color: var(--custom-color, inherit);
+                flex-shrink: 0;
+
+                &:not(:first-of-type) {
+                    border-top: 1px solid rgba(150, 150, 150, 0.1);
+                }
 
                 >.tn-icon {
                     margin-inline-end: 0.4em;
@@ -68,7 +76,8 @@
             }
 
             .tab-preview {
-                height: 180px;
+                flex-grow: 1;
+                height: 100%;
                 overflow: hidden;
                 font-size: 0.5em;
                 user-select: none;
@@ -99,6 +108,12 @@
                 h4 { font-size: 1.10em; }
                 h5 { font-size: 1.05em}
                 h6 { font-size: 1em; }
+            }
+
+            &.with-split {
+                .preview-placeholder {
+                    font-size: 250%;
+                }
             }
         }
     }

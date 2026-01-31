@@ -1,7 +1,7 @@
 import "./TabSwitcher.css";
 
 import clsx from "clsx";
-import { createPortal } from "preact/compat";
+import { createPortal, Fragment } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext, { CommandNames } from "../../components/app_context";
@@ -141,35 +141,41 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
     const iconClass = useNoteIcon(note);
     const colorClass = note?.getColorClass() || '';
     const workspaceTabBackgroundColorHue = getWorkspaceTabBackgroundColorHue(noteContext);
+    const subContexts = noteContext.getSubContexts();
 
     return (
         <div
             ref={containerRef}
             class={clsx("tab-card", {
                 active: noteContext.ntxId === activeNtxId,
-                "with-hue": workspaceTabBackgroundColorHue !== undefined
+                "with-hue": workspaceTabBackgroundColorHue !== undefined,
+                "with-split": subContexts.length > 1
             })}
             onClick={() => selectTab(noteContext)}
             style={{
                 "--bg-hue": workspaceTabBackgroundColorHue
             }}
         >
-            <header className={colorClass}>
-                {note && <Icon icon={iconClass} />}
-                <span className="title">{noteContext.note?.title ?? t("tab_row.new_tab")}</span>
-                <ActionButton
-                    icon="bx bx-x"
-                    text={t("tab_row.close_tab")}
-                    onClick={(e) => {
-                        // We are closing a tab, so we need to prevent propagation for click (activate tab).
-                        e.stopPropagation();
-                        appContext.tabManager.removeNoteContext(noteContext.ntxId);
-                    }}
-                />
-            </header>
-            <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>
-                <TabPreviewContent note={note} />
-            </div>
+            {subContexts.map(subContext => (
+                <Fragment key={subContext.ntxId}>
+                    <header className={colorClass}>
+                        {subContext.note && <Icon icon={iconClass} />}
+                        <span className="title">{subContext.note?.title ?? t("tab_row.new_tab")}</span>
+                        {subContext.isMainContext() && <ActionButton
+                            icon="bx bx-x"
+                            text={t("tab_row.close_tab")}
+                            onClick={(e) => {
+                                // We are closing a tab, so we need to prevent propagation for click (activate tab).
+                                e.stopPropagation();
+                                appContext.tabManager.removeNoteContext(subContext.ntxId);
+                            }}
+                        />}
+                    </header>
+                    <div className={clsx("tab-preview", `type-${subContext.note?.type ?? "empty"}`)}>
+                        <TabPreviewContent note={subContext.note} />
+                    </div>
+                </Fragment>
+            ))}
         </div>
     );
 }
