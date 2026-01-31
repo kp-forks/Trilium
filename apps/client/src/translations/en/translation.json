@@ -2271,5 +2271,10 @@
   },
   "platform_indicator": {
     "available_on": "Available on {{platform}}"
+  },
+  "mobile_tab_switcher": {
+    "title_one": "{{count}} tab",
+    "title_other": "{{count}} tabs",
+    "more_options": "More options"
   }
 }
