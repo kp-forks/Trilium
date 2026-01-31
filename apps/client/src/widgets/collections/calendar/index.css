@@ -92,6 +92,8 @@
         .center-container {
             .title {
                 flex-grow: 1;
+                min-width: 110px;
+                font-size: 0.95em;
             }
         }
     }
