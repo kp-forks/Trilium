@@ -6,6 +6,7 @@ import { useEffect, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
+import { t } from "../../services/i18n";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
 import { useTriliumEvent } from "../react/hooks";
@@ -63,7 +64,7 @@ function Tab({ noteContext }: {
     return (
         <div class="tab-card">
             <header>
-                <span className="title">{noteContext.note?.title}</span>
+                <span className="title">{noteContext.note?.title ?? t("tab_row.new_tab")}</span>
             </header>
             <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>
                 {note && <NoteContent
