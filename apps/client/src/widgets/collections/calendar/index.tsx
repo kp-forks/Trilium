@@ -182,12 +182,12 @@ function CalendarHeaderCenter({ calendarRef }: { calendarRef: RefObject<FullCale
     const { title, viewType: currentViewType } = useOnDatesSet(calendarRef);
     const currentViewData = CALENDAR_VIEWS.find(v => calendarRef.current && v.type === currentViewType);
 
-    return <div className="calendar-header-center">
+    return <>
         <ActionButton icon="bx bx-chevron-left" text={currentViewData?.previousText ?? ""} onClick={() => calendarRef.current?.prev()} />
         <span className="title">{title}</span>
         <ActionButton icon="bx bx-chevron-right" text={currentViewData?.nextText ?? ""} onClick={() => calendarRef.current?.next()} />
         <Button text={t("calendar.today")} onClick={() => calendarRef.current?.today()} />
-    </div>;
+    </>;
 }
 
 function CalendarHeaderRight({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {

@@ -59,9 +59,7 @@
     overflow: hidden;
 }
 
-.calendar-view .calendar-header-center {
-    display: flex;
-    align-items: center;
+.calendar-view .collection-properties .center-container {
     justify-content: center;
 
     .title {

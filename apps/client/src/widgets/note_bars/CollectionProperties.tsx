@@ -38,13 +38,17 @@ export default function CollectionProperties({ note, centerChildren, rightChildr
 
     return (
         <div className="collection-properties">
-            <ViewTypeSwitcher viewType={viewType} setViewType={setViewType} />
-            <ViewOptions note={note} viewType={viewType} />
-            <div className="spacer" />
-            {centerChildren}
-            <div className="spacer" />
-            {rightChildren}
-            <HelpButton note={note} />
+            <div className="left-container">
+                <ViewTypeSwitcher viewType={viewType} setViewType={setViewType} />
+                <ViewOptions note={note} viewType={viewType} />
+            </div>
+            <div className="center-container">
+                {centerChildren}
+            </div>
+            <div className="right-container">
+                {rightChildren}
+                <HelpButton note={note} />
+            </div>
         </div>
     );
 }
