@@ -36,7 +36,7 @@ export default function CollectionProperties({ note, centerChildren, rightChildr
 }) {
     const [ viewType, setViewType ] = useViewType(note);
 
-    return (
+    return ([ "book", "search" ].includes(note.type) &&
         <div className="collection-properties">
             <div className="left-container">
                 <ViewTypeSwitcher viewType={viewType} setViewType={setViewType} />
