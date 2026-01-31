@@ -36,6 +36,7 @@ function TabBarModal({ shown, setShown }: {
     setShown: (newValue: boolean) => void;
 }) {
     const [ fullyShown, setFullyShown ] = useState(false);
+    const mainNoteContexts = useMainNoteContexts();
     const selectTab = useCallback((noteContextToActivate: NoteContext) => {
         appContext.tabManager.activateNoteContext(noteContextToActivate.ntxId);
         setShown(false);
@@ -45,7 +46,7 @@ function TabBarModal({ shown, setShown }: {
         <Modal
             className="tab-bar-modal"
             size="xl"
-            title="Tabs"
+            title={t("mobile_tab_switcher.title", { count: mainNoteContexts.length})}
             show={shown}
             onShown={() => setFullyShown(true)}
             onHidden={() => {
@@ -53,16 +54,16 @@ function TabBarModal({ shown, setShown }: {
                 setFullyShown(false);
             }}
         >
-            <TabBarModelContent selectTab={selectTab} shown={fullyShown} />
+            <TabBarModelContent mainNoteContexts={mainNoteContexts} selectTab={selectTab} shown={fullyShown} />
         </Modal>
     );
 }
 
-function TabBarModelContent({ selectTab, shown }: {
+function TabBarModelContent({ mainNoteContexts, selectTab, shown }: {
+    mainNoteContexts: NoteContext[];
     shown: boolean;
     selectTab: (noteContextToActivate: NoteContext) => void;
 }) {
-    const mainNoteContexts = useMainNoteContexts();
     const activeNoteContext = useActiveNoteContext();
     const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
