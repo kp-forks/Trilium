@@ -96,4 +96,13 @@
             }
         }
     }
+
+    .modal-footer {
+        .tn-link {
+            color: var(--main-text-color);
+            width: 40%;
+            text-align: center;
+            text-decoration: none;
+        }
+    }
 }

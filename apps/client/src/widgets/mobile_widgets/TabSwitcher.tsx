@@ -14,6 +14,7 @@ import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
 import ActionButton from "../react/ActionButton";
 import { useActiveNoteContext, useNoteIcon, useTriliumEvents } from "../react/hooks";
 import Icon from "../react/Icon";
+import LinkButton from "../react/LinkButton";
 import Modal from "../react/Modal";
 
 export default function TabSwitcher() {
@@ -52,6 +53,16 @@ function TabBarModal({ mainNoteContexts, shown, setShown }: {
             title={t("mobile_tab_switcher.title", { count: mainNoteContexts.length})}
             show={shown}
             onShown={() => setFullyShown(true)}
+            footer={<>
+                <LinkButton
+                    text={t("tab_row.new_tab")}
+                    onClick={() => {
+                        appContext.triggerCommand("openNewTab");
+                        setShown(false);
+                    }}
+                />
+            </>}
+            scrollable
             onHidden={() => {
                 setShown(false);
                 setFullyShown(false);
