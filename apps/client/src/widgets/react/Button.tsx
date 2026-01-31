@@ -112,7 +112,7 @@ export function SplitButton({ text, icon, children, ...restProps }: {
 export function ButtonOrActionButton(props: {
     text: string;
     icon: string;
-} & Pick<ButtonProps, "onClick" | "triggerCommand">) {
+} & Pick<ButtonProps, "onClick" | "triggerCommand" | "disabled" | "title">) {
     if (isDesktop()) {
         return <Button {...props} />;
     }

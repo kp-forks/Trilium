@@ -13,6 +13,7 @@ import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
 import CollectionProperties from "../../note_bars/CollectionProperties";
+import { ButtonOrActionButton } from "../../react/Button";
 import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useNoteTreeDrag, useSpacedUpdate, useTriliumEvent } from "../../react/hooks";
 import { ParentComponent } from "../../react/react_utils";
 import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSlider } from "../../react/TouchBar";
@@ -133,7 +134,18 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
 
     return (
         <div className={`geo-view ${state === State.NewNote ? "placing-note" : ""}`}>
-            <CollectionProperties note={note} />
+            <CollectionProperties
+                note={note}
+                rightChildren={<>
+                    <ButtonOrActionButton
+                        icon="bx bx-plus"
+                        text={t("geo-map.create-child-note-text")}
+                        title={t("geo-map.create-child-note-title")}
+                        triggerCommand="geoMapCreateChildNote"
+                        disabled={isReadOnly}
+                    />
+                </>}
+            />
             { coordinates !== undefined && zoom !== undefined && <Map
                 apiRef={apiRef} containerRef={containerRef}
                 coordinates={coordinates}

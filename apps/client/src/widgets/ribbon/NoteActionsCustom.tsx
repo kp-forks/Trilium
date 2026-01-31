@@ -247,15 +247,8 @@ function InAppHelpButton({ note }: NoteActionsCustomInnerProps) {
     );
 }
 
-function AddChildButton({ parentComponent, noteType, viewType, ntxId, isReadOnly }: NoteActionsCustomInnerProps) {
-    if (noteType === "book" && viewType === "geoMap") {
-        return <ActionButton
-            icon="bx bx-plus-circle"
-            text={t("geo-map.create-child-note-title")}
-            onClick={() => parentComponent.triggerEvent("geoMapCreateChildNote", { ntxId })}
-            disabled={isReadOnly}
-        />;
-    } else if (noteType === "relationMap") {
+function AddChildButton({ parentComponent, noteType, ntxId, isReadOnly }: NoteActionsCustomInnerProps) {
+    if (noteType === "relationMap") {
         return <ActionButton
             icon="bx bx-folder-plus"
             text={t("relation_map_buttons.create_child_note_title")}
