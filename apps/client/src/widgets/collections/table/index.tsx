@@ -49,7 +49,15 @@ export default function TableView({ note, noteIds, notePath, viewConfig, saveCon
 
     return (
         <div className="table-view">
-            <CollectionProperties note={note} />
+            <CollectionProperties
+                note={note}
+                rightChildren={note.type !== "search" &&
+                    <>
+                        <Button triggerCommand="addNewRow" icon="bx bx-plus" text={t("table_view.new-row")} />
+                        <Button triggerCommand="addNewTableColumn" icon="bx bx-carousel" text={t("table_view.new-column")} />
+                    </>
+                }
+            />
 
             {rowData !== undefined && persistenceProps &&  (
                 <>
@@ -59,7 +67,6 @@ export default function TableView({ note, noteIds, notePath, viewConfig, saveCon
                         columns={columnDefs ?? []}
                         data={rowData}
                         modules={[ SortModule, FormatModule, InteractionModule, EditModule, ResizeColumnsModule, FrozenColumnsModule, PersistenceModule, MoveColumnsModule, MoveRowsModule, DataTreeModule ]}
-                        footerElement={<TableFooter note={note} />}
                         events={{
                             ...contextMenuEvents,
                             ...rowEditingEvents
@@ -72,22 +79,9 @@ export default function TableView({ note, noteIds, notePath, viewConfig, saveCon
                         rowFormatter={rowFormatter}
                         {...dataTreeProps}
                     />
-                    <TableFooter note={note} />
                 </>
             )}
             {attributeDetailWidgetEl}
-        </div>
-    );
-}
-
-function TableFooter({ note }: { note: FNote }) {
-    return (note.type !== "search" &&
-        <div className="tabulator-footer">
-            <div className="tabulator-footer-contents">
-                <Button triggerCommand="addNewRow" icon="bx bx-plus" text={t("table_view.new-row")} />
-                {" "}
-                <Button triggerCommand="addNewTableColumn" icon="bx bx-carousel" text={t("table_view.new-column")} />
-            </div>
         </div>
     );
 }
