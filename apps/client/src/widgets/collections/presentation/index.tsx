@@ -54,7 +54,7 @@ export default function PresentationView({ note, noteIds, media, onReady, onProg
 
     if (media === "screen") {
         return (
-            <>
+            <div class="presentation-view">
                 <CollectionProperties
                     note={note}
                     rightChildren={<ButtonOverlay containerRef={containerRef} api={api} />}
@@ -63,7 +63,7 @@ export default function PresentationView({ note, noteIds, media, onReady, onProg
                     className="presentation-container"
                     containerRef={containerRef}
                 >{content}</ShadowDom>
-            </>
+            </div>
         );
     } else if (media === "print") {
         // Printing needs a query parameter that is read by Reveal.js.
