@@ -2285,5 +2285,11 @@
   },
   "platform_indicator": {
     "available_on": "Disponible en {{platform}}"
+  },
+  "mobile_tab_switcher": {
+    "title_one": "{{count}} pestaña",
+    "title_many": "{{count}} pestañas",
+    "title_other": "{{count}} pestañas",
+    "more_options": "Más opciones"
   }
 }
