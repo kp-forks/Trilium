@@ -4,6 +4,8 @@ import { createPortal } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
+import NoteContext from "../../components/note_context";
+import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
@@ -49,9 +51,29 @@ function TabBarModelContent() {
 
     return (
         <div className="tabs">
-            {mainNoteContexts.map((tabContext) => (
-                <span key={tabContext.ntxId}>{tabContext.note?.title}</span>
+            {mainNoteContexts.map((noteContext) => (
+                <Tab key={noteContext.ntxId} noteContext={noteContext} />
             ))}
+        </div>
+    );
+}
+
+function Tab({ noteContext }: {
+    noteContext: NoteContext;
+}) {
+    const { note } = noteContext;
+
+    return (
+        <div class="tab-card">
+            <header>{noteContext.note?.title}</header>
+            <div className="tab-preview">
+                {note && <NoteContent
+                    note={note}
+                    highlightedTokens={undefined}
+                    trim
+                    includeArchivedNotes={false}
+                />}
+            </div>
         </div>
     );
 }

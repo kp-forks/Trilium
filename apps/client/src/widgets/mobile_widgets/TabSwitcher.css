@@ -8,5 +8,22 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1em;
+
+        .tab-card {
+            background: var(--card-background-color);
+            border-radius: 1em;
+
+            header {
+                padding: 0.5em 1em;
+                border-bottom: 1px solid var(--main-border-color);
+            }
+
+            .tab-preview {
+                height: 180px;
+                overflow: hidden;
+                font-size: 0.5em;
+                padding: 1em;
+            }
+        }
     }
 }
