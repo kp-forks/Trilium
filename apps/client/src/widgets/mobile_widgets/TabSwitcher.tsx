@@ -2,10 +2,12 @@ import "./TabSwitcher.css";
 
 import clsx from "clsx";
 import { createPortal } from "preact/compat";
-import { useCallback, useState } from "preact/hooks";
+import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
+import { getHue, parseColor } from "../../services/css_class_manager";
+import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
@@ -32,6 +34,7 @@ function TabBarModal({ shown, setShown }: {
     shown: boolean;
     setShown: (newValue: boolean) => void;
 }) {
+    const [ fullyShown, setFullyShown ] = useState(false);
     const selectTab = useCallback((noteContextToActivate: NoteContext) => {
         appContext.tabManager.activateNoteContext(noteContextToActivate.ntxId);
         setShown(false);
@@ -43,18 +46,33 @@ function TabBarModal({ shown, setShown }: {
             size="xl"
             title="Tabs"
             show={shown}
-            onHidden={() => setShown(false)}
+            onShown={() => setFullyShown(true)}
+            onHidden={() => {
+                setShown(false);
+                setFullyShown(false);
+            }}
         >
-            <TabBarModelContent selectTab={selectTab} />
+            <TabBarModelContent selectTab={selectTab} shown={fullyShown} />
         </Modal>
     );
 }
 
-function TabBarModelContent({ selectTab }: {
+function TabBarModelContent({ selectTab, shown }: {
+    shown: boolean;
     selectTab: (noteContextToActivate: NoteContext) => void;
 }) {
     const mainNoteContexts = useMainNoteContexts();
     const activeNoteContext = useActiveNoteContext();
+    const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+    // Scroll to active tab.
+    useEffect(() => {
+        if (!shown || !activeNoteContext?.ntxId) return;
+        const correspondingEl = tabRefs.current[activeNoteContext.ntxId];
+        requestAnimationFrame(() => {
+            correspondingEl?.scrollIntoView();
+        });
+    }, [ activeNoteContext, shown ]);
 
     return (
         <div className="tabs">
@@ -64,13 +82,15 @@ function TabBarModelContent({ selectTab }: {
                     noteContext={noteContext}
                     activeNtxId={activeNoteContext.ntxId}
                     selectTab={selectTab}
+                    containerRef={el => (tabRefs.current[noteContext.ntxId ?? ""] = el)}
                 />
             ))}
         </div>
     );
 }
 
-function Tab({ noteContext, selectTab, activeNtxId }: {
+function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
+    containerRef: (el: HTMLDivElement | null) => void;
     noteContext: NoteContext;
     selectTab: (noteContextToActivate: NoteContext) => void;
     activeNtxId: string | null | undefined;
@@ -78,15 +98,21 @@ function Tab({ noteContext, selectTab, activeNtxId }: {
     const { note } = noteContext;
     const iconClass = useNoteIcon(note);
     const colorClass = note?.getColorClass() || '';
+    const workspaceTabBackgroundColorHue = getWorkspaceTabBackgroundColorHue(noteContext);
 
     return (
         <div
-            class={clsx("tab-card", colorClass, {
-                active: noteContext.ntxId === activeNtxId
+            ref={containerRef}
+            class={clsx("tab-card", {
+                active: noteContext.ntxId === activeNtxId,
+                "with-hue": workspaceTabBackgroundColorHue !== undefined
             })}
             onClick={() => selectTab(noteContext)}
+            style={{
+                "--bg-hue": workspaceTabBackgroundColorHue
+            }}
         >
-            <header>
+            <header className={colorClass}>
                 <Icon icon={iconClass} />
                 <span className="title">{noteContext.note?.title ?? t("tab_row.new_tab")}</span>
             </header>
@@ -100,6 +126,23 @@ function Tab({ noteContext, selectTab, activeNtxId }: {
             </div>
         </div>
     );
+}
+
+function getWorkspaceTabBackgroundColorHue(noteContext: NoteContext) {
+    if (!noteContext.hoistedNoteId) return;
+    const hoistedNote = froca.getNoteFromCache(noteContext.hoistedNoteId);
+    if (!hoistedNote) return;
+
+    const workspaceTabBackgroundColor = hoistedNote.getWorkspaceTabBackgroundColor();
+    if (!workspaceTabBackgroundColor) return;
+
+    try {
+        const parsedColor = parseColor(workspaceTabBackgroundColor);
+        if (!parsedColor) return;
+        return getHue(parsedColor);
+    } catch (e) {
+        // Colors are non-critical, simply ignore.
+    }
 }
 
 function useMainNoteContexts() {
