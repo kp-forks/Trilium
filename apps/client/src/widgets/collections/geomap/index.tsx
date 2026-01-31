@@ -13,10 +13,11 @@ import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
 import CollectionProperties from "../../note_bars/CollectionProperties";
+import ActionButton from "../../react/ActionButton";
 import { ButtonOrActionButton } from "../../react/Button";
 import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useNoteTreeDrag, useSpacedUpdate, useTriliumEvent } from "../../react/hooks";
 import { ParentComponent } from "../../react/react_utils";
-import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSlider } from "../../react/TouchBar";
+import TouchBar, { TouchBarButton, TouchBarSlider } from "../../react/TouchBar";
 import { ViewModeProps } from "../interface";
 import { createNewNote, moveMarker } from "./api";
 import openContextMenu, { openMapContextMenu } from "./context_menu";
@@ -137,6 +138,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
             <CollectionProperties
                 note={note}
                 rightChildren={<>
+                    <ToggleReadOnlyButton note={note} />
                     <ButtonOrActionButton
                         icon="bx bx-plus"
                         text={t("geo-map.create-child-note-text")}
@@ -165,6 +167,16 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
             <GeoMapTouchBar state={state} map={apiRef.current} />
         </div>
     );
+}
+
+function ToggleReadOnlyButton({ note }: { note: FNote }) {
+    const [ isReadOnly, setReadOnly ] = useNoteLabelBoolean(note, "readOnly");
+
+    return <ActionButton
+        text={isReadOnly ? t("toggle_read_only_button.unlock-editing") : t("toggle_read_only_button.lock-editing")}
+        icon={isReadOnly ? "bx bx-lock-open-alt" : "bx bx-lock-alt"}
+        onClick={() => setReadOnly(!isReadOnly)}
+    />;
 }
 
 function NoteWrapper({ note, isReadOnly }: { note: FNote, isReadOnly: boolean }) {
