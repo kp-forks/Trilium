@@ -55,12 +55,14 @@ export default function PresentationView({ note, noteIds, media, onReady, onProg
     if (media === "screen") {
         return (
             <>
-                <CollectionProperties note={note} />
+                <CollectionProperties
+                    note={note}
+                    rightChildren={<ButtonOverlay containerRef={containerRef} api={api} />}
+                />
                 <ShadowDom
                     className="presentation-container"
                     containerRef={containerRef}
                 >{content}</ShadowDom>
-                <ButtonOverlay containerRef={containerRef} api={api} />
             </>
         );
     } else if (media === "print") {
@@ -112,41 +114,33 @@ function ButtonOverlay({ containerRef, api }: { containerRef: RefObject<HTMLDivE
     }, [ api ]);
 
     return (
-        <div className="presentation-button-bar">
-            <div className="floating-buttons-children">
-                <ActionButton
-                    className="floating-button"
-                    icon="bx bx-edit"
-                    text={t("presentation_view.edit-slide")}
-                    noIconActionClass
-                    onClick={e => {
-                        const currentSlide = api?.getCurrentSlide();
-                        const noteId = getNoteIdFromSlide(currentSlide);
+        <>
+            <ActionButton
+                icon="bx bx-edit"
+                text={t("presentation_view.edit-slide")}
+                onClick={e => {
+                    const currentSlide = api?.getCurrentSlide();
+                    const noteId = getNoteIdFromSlide(currentSlide);
 
-                        if (noteId) {
-                            openInCurrentNoteContext(e, noteId);
-                        }
-                    }}
-                />
+                    if (noteId) {
+                        openInCurrentNoteContext(e, noteId);
+                    }
+                }}
+            />
 
-                <ActionButton
-                    className="floating-button"
-                    icon="bx bx-grid-horizontal"
-                    text={t("presentation_view.slide-overview")}
-                    active={isOverviewActive}
-                    noIconActionClass
-                    onClick={() => api?.toggleOverview()}
-                />
+            <ActionButton
+                icon="bx bx-grid-horizontal"
+                text={t("presentation_view.slide-overview")}
+                active={isOverviewActive}
+                onClick={() => api?.toggleOverview()}
+            />
 
-                <ActionButton
-                    className="floating-button"
-                    icon="bx bx-fullscreen"
-                    text={t("presentation_view.start-presentation")}
-                    noIconActionClass
-                    onClick={() => containerRef.current?.requestFullscreen()}
-                />
-            </div>
-        </div>
+            <ActionButton
+                icon="bx bx-fullscreen"
+                text={t("presentation_view.start-presentation")}
+                onClick={() => containerRef.current?.requestFullscreen()}
+            />
+        </>
     );
 }
 
