@@ -9,7 +9,8 @@ import NoteContext from "../../components/note_context";
 import { t } from "../../services/i18n";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
-import { useActiveNoteContext, useTriliumEvent } from "../react/hooks";
+import { useActiveNoteContext, useNoteIcon, useTriliumEvent } from "../react/hooks";
+import Icon from "../react/Icon";
 import Modal from "../react/Modal";
 
 export default function TabSwitcher() {
@@ -75,6 +76,7 @@ function Tab({ noteContext, selectTab, activeNtxId }: {
     activeNtxId: string | null | undefined;
 }) {
     const { note } = noteContext;
+    const iconClass = useNoteIcon(note);
 
     return (
         <div
@@ -84,6 +86,7 @@ function Tab({ noteContext, selectTab, activeNtxId }: {
             onClick={() => selectTab(noteContext)}
         >
             <header>
+                <Icon icon={iconClass} />
                 <span className="title">{noteContext.note?.title ?? t("tab_row.new_tab")}</span>
             </header>
             <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>

@@ -25,10 +25,15 @@
             }
 
             header {
-                padding: 0.5em 1em;
+                padding: 0.4em 0.5em;
                 border-bottom: 1px solid var(--main-border-color);
                 display: flex;
                 overflow: hidden;
+                align-items: center;
+
+                >.tn-icon {
+                    margin-inline-end: 0.4em;
+                }
 
                 .title {
                     overflow: hidden;
