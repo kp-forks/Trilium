@@ -30,6 +30,7 @@
                 display: flex;
                 overflow: hidden;
                 align-items: center;
+                color: var(--custom-color, inherit);
 
                 >.tn-icon {
                     margin-inline-end: 0.4em;

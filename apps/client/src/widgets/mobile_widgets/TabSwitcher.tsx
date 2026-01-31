@@ -77,10 +77,11 @@ function Tab({ noteContext, selectTab, activeNtxId }: {
 }) {
     const { note } = noteContext;
     const iconClass = useNoteIcon(note);
+    const colorClass = note?.getColorClass() || '';
 
     return (
         <div
-            class={clsx("tab-card", {
+            class={clsx("tab-card", colorClass, {
                 active: noteContext.ntxId === activeNtxId
             })}
             onClick={() => selectTab(noteContext)}
