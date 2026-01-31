@@ -21,7 +21,7 @@
     outline: 0;
     height: 100%;
     user-select: none;
-    padding: 10px;
+    padding: 0;
 
     @media (max-width: 991px) {
         padding: 0;
@@ -52,6 +52,7 @@
     --fc-border-color: var(--main-border-color);
     --fc-neutral-bg-color: var(--launcher-pane-background-color);
     --fc-list-event-hover-bg-color: var(--left-pane-item-hover-background);
+    padding: 0 12px;
 }
 
 .calendar-container .fc-list-sticky .fc-list-day > * {
