@@ -4,9 +4,10 @@ import clsx from "clsx";
 import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-import appContext from "../../components/app_context";
+import appContext, { CommandNames } from "../../components/app_context";
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
+import contextMenu from "../../menus/context_menu";
 import { getHue, parseColor } from "../../services/css_class_manager";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
@@ -55,6 +56,26 @@ function TabBarModal({ mainNoteContexts, shown, setShown }: {
             title={t("mobile_tab_switcher.title", { count: mainNoteContexts.length})}
             show={shown}
             onShown={() => setFullyShown(true)}
+            customTitleBarButtons={[
+                {
+                    iconClassName: "bx bx-dots-vertical-rounded",
+                    title: t("mobile_tab_switcher.more_options"),
+                    onClick(e) {
+                        contextMenu.show<CommandNames>({
+                            x: e.pageX,
+                            y: e.pageY,
+                            items: [
+                                { title: t("tab_row.close_all_tabs"), command: "closeAllTabs", uiIcon: "bx bx-empty" },
+                            ],
+                            selectMenuItemHandler: ({ command }) => {
+                                if (command) {
+                                    appContext.triggerCommand(command);
+                                }
+                            }
+                        });
+                    },
+                }
+            ]}
             footer={<>
                 <LinkButton
                     text={t("tab_row.new_tab")}

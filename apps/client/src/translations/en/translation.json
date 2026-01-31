@@ -2274,6 +2274,7 @@
   },
   "mobile_tab_switcher": {
     "title_one": "{{count}} tab",
-    "title_other": "{{count}} tabs"
+    "title_other": "{{count}} tabs",
+    "more_options": "More options"
   }
 }
