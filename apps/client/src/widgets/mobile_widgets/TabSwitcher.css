@@ -22,6 +22,10 @@
         grid-template-columns: 1fr 1fr;
         gap: 1em;
 
+        @media (min-width: 850px) {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
         .tab-card {
             background: var(--card-background-color);
             border-radius: 1em;
