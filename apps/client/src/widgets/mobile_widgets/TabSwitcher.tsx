@@ -45,10 +45,6 @@ function TabBarModal({ shown, setShown }: {
 function TabBarModelContent() {
     const mainNoteContexts = useMainNoteContexts();
 
-    useTriliumEvent("contextsReopened", () => {
-        console.log("Reopened contexts");
-    });
-
     return (
         <div className="tabs">
             {mainNoteContexts.map((noteContext) => (
