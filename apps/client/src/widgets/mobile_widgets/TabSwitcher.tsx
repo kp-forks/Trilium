@@ -18,25 +18,28 @@ import Modal from "../react/Modal";
 
 export default function TabSwitcher() {
     const [ shown, setShown ] = useState(true);
+    const mainNoteContexts = useMainNoteContexts();
 
     return (
         <>
             <LaunchBarActionButton
+                className="mobile-tab-switcher"
                 icon="bx bx-rectangle"
                 text="Tabs"
                 onClick={() => setShown(true)}
+                data-tab-count={mainNoteContexts.length > 99 ? "∞" : mainNoteContexts.length}
             />
-            {createPortal(<TabBarModal shown={shown} setShown={setShown} />, document.body)}
+            {createPortal(<TabBarModal mainNoteContexts={mainNoteContexts} shown={shown} setShown={setShown} />, document.body)}
         </>
     );
 }
 
-function TabBarModal({ shown, setShown }: {
+function TabBarModal({ mainNoteContexts, shown, setShown }: {
+    mainNoteContexts: NoteContext[];
     shown: boolean;
     setShown: (newValue: boolean) => void;
 }) {
     const [ fullyShown, setFullyShown ] = useState(false);
-    const mainNoteContexts = useMainNoteContexts();
     const selectTab = useCallback((noteContextToActivate: NoteContext) => {
         appContext.tabManager.activateNoteContext(noteContextToActivate.ntxId);
         setShown(false);

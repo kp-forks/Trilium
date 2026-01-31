@@ -1,3 +1,17 @@
+#launcher-container .mobile-tab-switcher {
+    position: relative;
+
+    &::after {
+        content: attr(data-tab-count);
+        font-family: var(--main-font-family);
+        font-size: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
+
 .modal.tab-bar-modal {
     .modal-dialog {
         height: 100%;
