@@ -11,6 +11,7 @@ import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
+import { ICON_MAPPINGS } from "../note_bars/CollectionProperties";
 import ActionButton from "../react/ActionButton";
 import { useActiveNoteContext, useNoteIcon, useTriliumEvents } from "../react/hooks";
 import Icon from "../react/Icon";
@@ -142,13 +143,25 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
                 />
             </header>
             <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>
-                {note && <NoteContent
-                    note={note}
-                    highlightedTokens={undefined}
-                    trim
-                    includeArchivedNotes={false}
-                />}
+                {note?.type === "book"
+                    ? <PreviewPlaceholder icon={ICON_MAPPINGS[note.getLabelValue("viewType") ?? ""] ?? "bx bx-book"} />
+                    : note && <NoteContent
+                        note={note}
+                        highlightedTokens={undefined}
+                        trim
+                        includeArchivedNotes={false}
+                    />}
             </div>
+        </div>
+    );
+}
+
+function PreviewPlaceholder({ icon}: {
+    icon: string;
+}) {
+    return (
+        <div className="preview-placeholder">
+            <Icon icon={icon} />
         </div>
     );
 }
