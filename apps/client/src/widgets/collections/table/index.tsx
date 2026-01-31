@@ -3,12 +3,11 @@ import "./index.css";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { DataTreeModule, EditModule, FormatModule, FrozenColumnsModule, InteractionModule, MoveColumnsModule, MoveRowsModule, Options, PersistenceModule, ResizeColumnsModule, RowComponent,SortModule, Tabulator as VanillaTabulator} from 'tabulator-tables';
 
-import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import SpacedUpdate from "../../../services/spaced_update";
 import AttributeDetailWidget from "../../attribute_widgets/attribute_detail";
 import CollectionProperties from "../../note_bars/CollectionProperties";
-import Button from "../../react/Button";
+import { ButtonOrActionButton } from "../../react/Button";
 import { useLegacyWidget } from "../../react/hooks";
 import { ParentComponent } from "../../react/react_utils";
 import { ViewModeProps } from "../interface";
@@ -53,8 +52,8 @@ export default function TableView({ note, noteIds, notePath, viewConfig, saveCon
                 note={note}
                 rightChildren={note.type !== "search" &&
                     <>
-                        <Button triggerCommand="addNewRow" icon="bx bx-plus" text={t("table_view.new-row")} />
-                        <Button triggerCommand="addNewTableColumn" icon="bx bx-carousel" text={t("table_view.new-column")} />
+                        <ButtonOrActionButton triggerCommand="addNewRow" icon="bx bx-plus" text={t("table_view.new-row")} />
+                        <ButtonOrActionButton triggerCommand="addNewTableColumn" icon="bx bx-carousel" text={t("table_view.new-column")} />
                     </>
                 }
             />
