@@ -46,6 +46,11 @@
                     text-overflow: ellipsis;
                     text-wrap: nowrap;
                     font-size: 0.9em;
+                    flex-grow: 1;
+                }
+
+                .icon-action {
+                    flex-shrink: 0;
                 }
             }
 

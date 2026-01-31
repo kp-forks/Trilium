@@ -2,7 +2,7 @@ import "./TabSwitcher.css";
 
 import clsx from "clsx";
 import { createPortal } from "preact/compat";
-import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
@@ -11,7 +11,8 @@ import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
-import { useActiveNoteContext, useNoteIcon, useTriliumEvent } from "../react/hooks";
+import ActionButton from "../react/ActionButton";
+import { useActiveNoteContext, useNoteIcon, useTriliumEvents } from "../react/hooks";
 import Icon from "../react/Icon";
 import Modal from "../react/Modal";
 
@@ -115,6 +116,15 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
             <header className={colorClass}>
                 <Icon icon={iconClass} />
                 <span className="title">{noteContext.note?.title ?? t("tab_row.new_tab")}</span>
+                <ActionButton
+                    icon="bx bx-x"
+                    text={t("tab_row.close_tab")}
+                    onClick={(e) => {
+                        // We are closing a tab, so we need to prevent propagation for click (activate tab).
+                        e.stopPropagation();
+                        appContext.tabManager.removeNoteContext(noteContext.ntxId);
+                    }}
+                />
             </header>
             <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`)}>
                 {note && <NoteContent
@@ -148,12 +158,8 @@ function getWorkspaceTabBackgroundColorHue(noteContext: NoteContext) {
 function useMainNoteContexts() {
     const [ noteContexts, setNoteContexts ] = useState(appContext.tabManager.getMainNoteContexts());
 
-    useTriliumEvent("newNoteContextCreated", ({ noteContext }) => {
-        if (noteContext.mainNtxId) return;
-        setNoteContexts([
-            ...noteContexts,
-            noteContext
-        ]);
+    useTriliumEvents([ "newNoteContextCreated", "noteContextRemoved" ] , () => {
+        setNoteContexts(appContext.tabManager.getMainNoteContexts());
     });
 
     return noteContexts;
