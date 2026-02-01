@@ -4,6 +4,7 @@ import { t } from "i18next";
 import path from "path";
 import url from "url";
 
+import app_info from "./app_info.js";
 import cls from "./cls.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
@@ -236,17 +237,19 @@ function getWindowExtraOpts() {
             // Linux or other platforms.
             extraOpts.frame = false;
         }
-    }
 
-    // Window effects (Mica)
-    if (optionService.getOptionBool("backgroundEffects")) {
-        if (isMac) {
-            // Vibrancy not yet supported.
-        } else if (isWindows) {
-            extraOpts.backgroundMaterial = "auto";
-        } else {
-            // Linux or other platforms.
-            extraOpts.transparent = true;
+        // Window effects (Mica on Windows and Vibrancy on macOS)
+        // These only work if native title bar is not enabled.
+        if (optionService.getOptionBool("backgroundEffects")) {
+            if (isMac) {
+                extraOpts.transparent = true;
+                extraOpts.visualEffectState = "active";
+            } else if (isWindows) {
+                extraOpts.backgroundMaterial = "auto";
+            } else {
+                // Linux or other platforms.
+                extraOpts.transparent = true;
+            }
         }
     }
 
@@ -289,6 +292,9 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
 function getIcon() {
     if (process.env.NODE_ENV === "development") {
         return path.join(__dirname, "../../../desktop/electron-forge/app-icon/png/256x256-dev.png");
+    }
+    if (app_info.appVersion.includes("test")) {
+        return path.join(RESOURCE_DIR, "../public/assets/icon-dev.png");
     }
     return path.join(RESOURCE_DIR, "../public/assets/icon.png");
 

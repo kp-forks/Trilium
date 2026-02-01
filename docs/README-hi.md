@@ -114,8 +114,8 @@ application with focus on building large personal knowledge bases.
   location pins and GPX tracks
 * [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - see [Advanced
   showcases](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
-* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) for
-  automation
+* ऑटोमेशन के लिए [REST
+  API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi)
 * Scales well in both usability and performance upwards of 100 000 notes
 * Touch optimized [mobile
   frontend](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) for

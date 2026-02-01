@@ -110,9 +110,8 @@ function bindElShortcut($el: JQuery<ElementType | Element>, keyboardShortcut: st
                 }
             };
 
-            // Add the event listener in capture phase to intercept events before they reach
-            // child elements like CodeMirror
-            element.addEventListener('keydown', listener, true);
+            // Add the event listener
+            element.addEventListener('keydown', listener);
 
             // Store the binding for later cleanup
             const binding: ShortcutBinding = {
@@ -139,16 +138,15 @@ export function removeIndividualBinding(binding: ShortcutBinding) {
     if (activeBindingsInNamespace) {
         activeBindings.set(key, activeBindingsInNamespace.filter(aBinding => aBinding.handler === binding.handler));
     }
-    // Remove listener with capture phase to match how it was added
-    binding.element.removeEventListener("keydown", binding.listener, true);
+    binding.element.removeEventListener("keydown", binding.listener);
 }
 
 function removeNamespaceBindings(namespace: string) {
     const bindings = activeBindings.get(namespace);
     if (bindings) {
+        // Remove all event listeners for this namespace
         bindings.forEach(binding => {
-            // Remove listener with capture phase to match how it was added
-            binding.element.removeEventListener('keydown', binding.listener, true);
+            binding.element.removeEventListener('keydown', binding.listener);
         });
         activeBindings.delete(namespace);
     }
@@ -217,9 +215,12 @@ export function keyMatches(e: KeyboardEvent, key: string): boolean {
     // For letter keys, use the physical key code for consistency
     // On macOS, Option/Alt key produces special characters, so we must use e.code
     if (key.length === 1 && key >= 'a' && key <= 'z') {
-        // e.code is like "KeyA", "KeyB", etc.
-        const expectedCode = `Key${key.toUpperCase()}`;
-        return e.code === expectedCode || e.key.toLowerCase() === key.toLowerCase();
+        if (e.altKey) {
+            // e.code is like "KeyA", "KeyB", etc.
+            const expectedCode = `Key${key.toUpperCase()}`;
+            return e.code === expectedCode || e.key.toLowerCase() === key.toLowerCase();
+        }
+        return e.key.toLowerCase() === key.toLowerCase();
     }
 
     // For regular keys, check both key and code as fallback
