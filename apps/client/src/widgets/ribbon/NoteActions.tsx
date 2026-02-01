@@ -104,6 +104,7 @@ export function NoteContextMenu({ note, noteContext }: { note: FNote, noteContex
             noDropdownListStyle
             iconAction
             onHidden={() => itemToFocusRef.current = null }
+            mobileBackdrop
         >
 
             {isReadOnly && <>
