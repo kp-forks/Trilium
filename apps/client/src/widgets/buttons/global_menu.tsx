@@ -29,7 +29,6 @@ export default function GlobalMenu({ isHorizontalLayout }: { isHorizontalLayout:
     const isVerticalLayout = !isHorizontalLayout;
     const parentComponent = useContext(ParentComponent);
     const { isUpdateAvailable, latestVersion } = useTriliumUpdateStatus();
-    const isMobileLocal = isMobile();
     const logoRef = useRef<SVGSVGElement>(null);
     useStaticTooltip(logoRef);
 
@@ -44,8 +43,7 @@ export default function GlobalMenu({ isHorizontalLayout }: { isHorizontalLayout:
                 </div>}
             </>}
             noDropdownListStyle
-            onShown={isMobileLocal ? () => document.getElementById("context-menu-cover")?.classList.add("show", "global-menu-cover") : undefined}
-            onHidden={isMobileLocal ? () => document.getElementById("context-menu-cover")?.classList.remove("show", "global-menu-cover") : undefined}
+            mobileBackdrop
         >
 
             <MenuItem command="openNewWindow" icon="bx bx-window-open" text={t("global_menu.open_new_window")} />

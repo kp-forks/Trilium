@@ -1,84 +1,57 @@
-import { useContext } from "preact/hooks";
-
-import appContext, { CommandMappings } from "../../components/app_context";
-import contextMenu, { MenuItem } from "../../menus/context_menu";
-import branches from "../../services/branches";
 import { t } from "../../services/i18n";
 import { getHelpUrlForNote } from "../../services/in_app_help";
 import note_create from "../../services/note_create";
-import tree from "../../services/tree";
 import { openInAppHelpFromUrl } from "../../services/utils";
-import BasicWidget from "../basic_widget";
-import ActionButton from "../react/ActionButton";
-import { ParentComponent } from "../react/react_utils";
+import { FormDropdownDivider, FormListItem } from "../react/FormList";
+import { useNoteContext } from "../react/hooks";
+import { NoteContextMenu } from "../ribbon/NoteActions";
 
 export default function MobileDetailMenu() {
-    const parentComponent = useContext(ParentComponent);
+    const { note, noteContext, parentComponent, ntxId } = useNoteContext();
+    const helpUrl = getHelpUrlForNote(note);
+    const subContexts = noteContext?.getMainContext().getSubContexts() ?? [];
+    const isMainContext = noteContext?.isMainContext();
 
     return (
-        <ActionButton
-            icon="bx bx-dots-vertical-rounded"
-            text=""
-            onClick={(e) => {
-                const ntxId = (parentComponent as BasicWidget | null)?.getClosestNtxId();
-                if (!ntxId) return;
-
-                const noteContext = appContext.tabManager.getNoteContextById(ntxId);
-                const subContexts = noteContext.getMainContext().getSubContexts();
-                const isMainContext = noteContext?.isMainContext();
-                const note = noteContext.note;
-                const helpUrl = getHelpUrlForNote(note);
-
-                const items: (MenuItem<keyof CommandMappings>)[] = [
-                    { title: t("mobile_detail_menu.insert_child_note"), command: "insertChildNote", uiIcon: "bx bx-plus", enabled: note?.type !== "search" },
-                    { title: t("mobile_detail_menu.delete_this_note"), command: "delete", uiIcon: "bx bx-trash", enabled: note?.noteId !== "root" },
-                    { kind: "separator" },
-                    { title: t("mobile_detail_menu.note_revisions"), command: "showRevisions", uiIcon: "bx bx-history" },
-                    { kind: "separator" },
-                    helpUrl && {
-                        title: t("help-button.title"),
-                        uiIcon: "bx bx-help-circle",
-                        handler: () => openInAppHelpFromUrl(helpUrl)
-                    },
-                    { kind: "separator" },
-                    subContexts.length < 2 && { title: t("create_pane_button.create_new_split"), command: "openNewNoteSplit", uiIcon: "bx bx-dock-right" },
-                    !isMainContext && { title: t("close_pane_button.close_this_pane"), command: "closeThisNoteSplit", uiIcon: "bx bx-x" }
-                ].filter(i => !!i) as MenuItem<keyof CommandMappings>[];
-
-                const lastItem = items.at(-1);
-                if (lastItem && "kind" in lastItem && lastItem.kind === "separator") {
-                    items.pop();
-                }
-
-                contextMenu.show<keyof CommandMappings>({
-                    x: e.pageX,
-                    y: e.pageY,
-                    items,
-                    selectMenuItemHandler: async ({ command }) => {
-                        if (command === "insertChildNote") {
-                            note_create.createNote(appContext.tabManager.getActiveContextNotePath() ?? undefined);
-                        } else if (command === "delete") {
-                            const notePath = appContext.tabManager.getActiveContextNotePath();
-                            if (!notePath) {
-                                throw new Error("Cannot get note path to delete.");
-                            }
-
-                            const branchId = await tree.getBranchIdFromUrl(notePath);
-
-                            if (!branchId) {
-                                throw new Error(t("mobile_detail_menu.error_cannot_get_branch_id", { notePath }));
-                            }
-
-                            if (await branches.deleteNotes([branchId]) && parentComponent) {
-                                parentComponent.triggerCommand("setActiveScreen", { screen: "tree" });
-                            }
-                        } else if (command && parentComponent) {
-                            parentComponent.triggerCommand(command, { ntxId });
-                        }
-                    },
-                    forcePositionOnMobile: true
-                });
-            }}
-        />
+        <div style={{ contain: "none" }}>
+            {note && (
+                <NoteContextMenu
+                    note={note} noteContext={noteContext}
+                    extraItems={<>
+                        <FormListItem
+                            onClick={() => noteContext?.notePath && note_create.createNote(noteContext.notePath)}
+                            icon="bx bx-plus"
+                        >{t("mobile_detail_menu.insert_child_note")}</FormListItem>
+                        {helpUrl && <>
+                            <FormDropdownDivider />
+                            <FormListItem
+                                icon="bx bx-help-circle"
+                                onClick={() => openInAppHelpFromUrl(helpUrl)}
+                            >{t("help-button.title")}</FormListItem>
+                        </>}
+                        {subContexts.length < 2 && <>
+                            <FormDropdownDivider />
+                            <FormListItem
+                                onClick={() => parentComponent.triggerCommand("openNewNoteSplit", { ntxId })}
+                                icon="bx bx-dock-right"
+                            >{t("create_pane_button.create_new_split")}</FormListItem>
+                        </>}
+                        {!isMainContext && <>
+                            <FormDropdownDivider />
+                            <FormListItem
+                                icon="bx bx-x"
+                                onClick={() => {
+                                    // Wait first for the context menu to be dismissed, otherwise the backdrop stays on.
+                                    requestAnimationFrame(() => {
+                                        parentComponent.triggerCommand("closeThisNoteSplit", { ntxId });
+                                    });
+                                }}
+                            >{t("close_pane_button.close_this_pane")}</FormListItem>
+                        </>}
+                        <FormDropdownDivider />
+                    </>}
+                />
+            )}
+        </div>
     );
 }
