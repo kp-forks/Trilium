@@ -1530,7 +1530,8 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
 
 @media (max-width: 991px) {
     body.mobile #launcher-pane .dropdown.global-menu > .dropdown-menu.show,
-    body.mobile #launcher-container .dropdown > .dropdown-menu.show {
+    body.mobile #launcher-container .dropdown > .dropdown-menu.show,
+    body.mobile .dropdown.note-actions .dropdown-menu.show {
         --dropdown-bottom: calc(var(--mobile-bottom-offset) + var(--launcher-pane-size));
         position: fixed !important;
         bottom: var(--dropdown-bottom) !important;
