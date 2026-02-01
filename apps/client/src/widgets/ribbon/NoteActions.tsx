@@ -14,7 +14,7 @@ import { t } from "../../services/i18n";
 import protected_session from "../../services/protected_session";
 import server from "../../services/server";
 import toast from "../../services/toast";
-import { isElectron as getIsElectron, isMac as getIsMac, isMobile } from "../../services/utils";
+import { isElectron as getIsElectron, isMac as getIsMac } from "../../services/utils";
 import ws from "../../services/ws";
 import ClosePaneButton from "../buttons/close_pane_button";
 import CreatePaneButton from "../buttons/create_pane_button";

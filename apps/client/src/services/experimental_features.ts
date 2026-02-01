@@ -30,7 +30,7 @@ export function isExperimentalFeatureEnabled(featureId: ExperimentalFeatureId): 
 
 export function getEnabledExperimentalFeatureIds() {
     const values = [ ...getEnabledFeatures().values() ];
-    if (options.is("newLayout")) {
+    if (isMobile() || options.is("newLayout")) {
         values.push("new-layout");
     }
     return values;
