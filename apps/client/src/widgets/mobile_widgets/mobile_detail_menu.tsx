@@ -6,8 +6,10 @@ import { useNoteContext } from "../react/hooks";
 import { CommandItem, NoteContextMenu } from "../ribbon/NoteActions";
 
 export default function MobileDetailMenu() {
-    const { note, noteContext } = useNoteContext();
+    const { note, noteContext, parentComponent, ntxId } = useNoteContext();
     const helpUrl = getHelpUrlForNote(note);
+    const subContexts = noteContext?.getMainContext().getSubContexts() ?? [];
+    const isMainContext = noteContext?.isMainContext();
 
     return (
         <div style={{ contain: "none" }}>
@@ -16,11 +18,27 @@ export default function MobileDetailMenu() {
                     note={note} noteContext={noteContext}
                     extraItems={<>
                         <CommandItem command="insertChildNote" icon="bx bx-plus" disabled={note.type === "search"} text={t("mobile_detail_menu.insert_child_note")} />
-                        <FormDropdownDivider />
-                        {helpUrl && <FormListItem
-                            icon="bx bx-help-circle"
-                            onClick={() => openInAppHelpFromUrl(helpUrl)}
-                        >{t("help-button.title")}</FormListItem>}
+                        {helpUrl && <>
+                            <FormDropdownDivider />
+                            <FormListItem
+                                icon="bx bx-help-circle"
+                                onClick={() => openInAppHelpFromUrl(helpUrl)}
+                            >{t("help-button.title")}</FormListItem>
+                        </>}
+                        {subContexts.length < 2 && <>
+                            <FormDropdownDivider />
+                            <FormListItem
+                                onClick={() => parentComponent.triggerCommand("openNewNoteSplit", { ntxId })}
+                                icon="bx bx-dock-right"
+                            >{t("create_pane_button.create_new_split")}</FormListItem>
+                        </>}
+                        {!isMainContext && <>
+                            <FormDropdownDivider />
+                            <FormListItem
+                                icon="bx bx-x"
+                                onClick={() => parentComponent.triggerCommand("closeThisNoteSplit", { ntxId })}
+                            >{t("close_pane_button.close_this_pane")}</FormListItem>
+                        </>}
                         <FormDropdownDivider />
                     </>}
                 />
