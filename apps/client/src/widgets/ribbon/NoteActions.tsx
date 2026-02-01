@@ -99,6 +99,7 @@ export function NoteContextMenu({ note, noteContext }: { note: FNote, noteContex
             dropdownRef={dropdownRef}
             buttonClassName={ isNewLayout ? "bx bx-dots-horizontal-rounded" : "bx bx-dots-vertical-rounded" }
             className="note-actions"
+            dropdownContainerClassName="mobile-bottom-menu"
             hideToggleArrow
             noSelectButtonStyle
             noDropdownListStyle
