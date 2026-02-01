@@ -38,6 +38,51 @@ describe("week_utils", () => {
                 expect(result.weekYear).toBe(2026);
                 expect(result.weekNumber).toBe(2);
             });
+
+
+            it("2026-02-01 (Sunday) should be 2026-W05 (still in week 5)", () => {
+                // Feb 1, 2026 is Sunday - with Monday as first day, this is the last day of week 5
+                // Week 5 starts on 2026-01-26 (Mon) and ends on 2026-02-01 (Sun)
+                const result = getWeekInfo(dayjs("2026-02-01"), settings);
+                expect(result.weekYear).toBe(2026);
+                expect(result.weekNumber).toBe(5);
+            });
+
+            it("2026-02-02 (Monday) should be 2026-W06 (start of week 6)", () => {
+                // Feb 2, 2026 is Monday - start of week 6
+                const result = getWeekInfo(dayjs("2026-02-02"), settings);
+                expect(result.weekYear).toBe(2026);
+                expect(result.weekNumber).toBe(6);
+            });
+        });
+
+        describe("with firstDayOfWeek=7 (Sunday as first day)", () => {
+            const settings: WeekSettings = {
+                firstDayOfWeek: 7,  // Sunday
+                firstWeekOfYear: 0,
+                minDaysInFirstWeek: 4
+            };
+
+            it("2026-02-01 (Sunday) should be 2026-W06 (start of new week)", () => {
+                // Feb 1, 2026 is Sunday - should be the START of week 6, not end of week 5
+                const result = getWeekInfo(dayjs("2026-02-01"), settings);
+                expect(result.weekYear).toBe(2026);
+                expect(result.weekNumber).toBe(6);
+            });
+
+            it("2026-01-31 (Saturday) should be 2026-W05 (last day of week 5)", () => {
+                // Jan 31, 2026 is Saturday - should be the last day of week 5
+                const result = getWeekInfo(dayjs("2026-01-31"), settings);
+                expect(result.weekYear).toBe(2026);
+                expect(result.weekNumber).toBe(5);
+            });
+
+            it("2026-01-25 (Sunday) should be 2026-W05 (start of week 5)", () => {
+                // Jan 25, 2026 is Sunday - week 5 starts here
+                const result = getWeekInfo(dayjs("2026-01-25"), settings);
+                expect(result.weekYear).toBe(2026);
+                expect(result.weekNumber).toBe(5);
+            });
         });
 
         describe("with firstWeekOfYear=1 (ISO standard, first week contains first Thursday)", () => {
