@@ -362,6 +362,31 @@ paths:
                         application/json; charset=utf-8:
                             schema:
                                 $ref: "#/components/schemas/Error"
+    /notes/{noteId}/attachments:
+        parameters:
+            - name: noteId
+              in: path
+              required: true
+              schema:
+                  $ref: "#/components/schemas/EntityId"
+        get:
+            description: Returns all attachments for a note identified by its ID
+            operationId: getNoteAttachments
+            responses:
+                "200":
+                    description: list of attachments
+                    content:
+                        application/json; charset=utf-8:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Attachment"
+                default:
+                    description: unexpected error
+                    content:
+                        application/json; charset=utf-8:
+                            schema:
+                                $ref: "#/components/schemas/Error"
     /notes/{noteId}/undelete:
         parameters:
             - name: noteId
