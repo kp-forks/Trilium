@@ -27,7 +27,6 @@ import FilePropertiesTab from "../widgets/ribbon/FilePropertiesTab.jsx";
 import SearchDefinitionTab from "../widgets/ribbon/SearchDefinitionTab.jsx";
 import SearchResult from "../widgets/search_result.jsx";
 import SharedInfoWidget from "../widgets/shared_info.js";
-import TabRowWidget from "../widgets/tab_row.js";
 import MobileEditorToolbar from "../widgets/type_widgets/text/mobile_editor_toolbar.jsx";
 import { applyModals } from "./layout_commons.js";
 
@@ -148,7 +147,6 @@ export default class MobileLayout {
                                         .child(
                                             new FlexContainer("row")
                                                 .contentSized()
-                                                .css("font-size", "larger")
                                                 .css("align-items", "center")
                                                 .child(<ToggleSidebarButton />)
                                                 .child(<NoteTitleWidget />)
