@@ -36,7 +36,12 @@ export default function MobileDetailMenu() {
                             <FormDropdownDivider />
                             <FormListItem
                                 icon="bx bx-x"
-                                onClick={() => parentComponent.triggerCommand("closeThisNoteSplit", { ntxId })}
+                                onClick={() => {
+                                    // Wait first for the context menu to be dismissed, otherwise the backdrop stays on.
+                                    requestAnimationFrame(() => {
+                                        parentComponent.triggerCommand("closeThisNoteSplit", { ntxId });
+                                    });
+                                }}
                             >{t("close_pane_button.close_this_pane")}</FormListItem>
                         </>}
                         <FormDropdownDivider />
