@@ -63,7 +63,7 @@ function RevisionsButton({ note }: { note: FNote }) {
 
 type ItemToFocus = "basic-properties";
 
-function NoteContextMenu({ note, noteContext }: { note: FNote, noteContext?: NoteContext }) {
+export function NoteContextMenu({ note, noteContext }: { note: FNote, noteContext?: NoteContext }) {
     const dropdownRef = useRef<BootstrapDropdown>(null);
     const parentComponent = useContext(ParentComponent);
     const noteType = useNoteProperty(note, "type") ?? "";
