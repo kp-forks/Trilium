@@ -462,6 +462,15 @@ body.mobile .dropdown .dropdown-submenu > span {
     align-items: center;
 }
 
+
+body.mobile .dropdown .dropdown-submenu {
+    flex-wrap: wrap;
+
+    & > span {
+        flex-grow: 1;
+    }
+}
+
 .dropdown-item span.keyboard-shortcut,
 .dropdown-item *:not(.keyboard-shortcut) > kbd {
     flex-grow: 1;
@@ -1531,7 +1540,7 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
 @media (max-width: 991px) {
     body.mobile #launcher-pane .dropdown.global-menu > .dropdown-menu.show,
     body.mobile #launcher-container .dropdown > .dropdown-menu.show,
-    body.mobile .dropdown.note-actions .dropdown-menu.show {
+    body.mobile .dropdown.note-actions > .dropdown-menu.show {
         --dropdown-bottom: calc(var(--mobile-bottom-offset) + var(--launcher-pane-size));
         position: fixed !important;
         bottom: var(--dropdown-bottom) !important;
