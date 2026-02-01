@@ -1,9 +1,10 @@
 import { t } from "../../services/i18n";
 import { getHelpUrlForNote } from "../../services/in_app_help";
+import note_create from "../../services/note_create";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import { useNoteContext } from "../react/hooks";
-import { CommandItem, NoteContextMenu } from "../ribbon/NoteActions";
+import { NoteContextMenu } from "../ribbon/NoteActions";
 
 export default function MobileDetailMenu() {
     const { note, noteContext, parentComponent, ntxId } = useNoteContext();
@@ -17,7 +18,10 @@ export default function MobileDetailMenu() {
                 <NoteContextMenu
                     note={note} noteContext={noteContext}
                     extraItems={<>
-                        <CommandItem command="insertChildNote" icon="bx bx-plus" disabled={note.type === "search"} text={t("mobile_detail_menu.insert_child_note")} />
+                        <FormListItem
+                            onClick={() => noteContext?.notePath && note_create.createNote(noteContext.notePath)}
+                            icon="bx bx-plus"
+                        >{t("mobile_detail_menu.insert_child_note")}</FormListItem>
                         {helpUrl && <>
                             <FormDropdownDivider />
                             <FormListItem
