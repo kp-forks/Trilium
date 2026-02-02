@@ -59,7 +59,7 @@
         }
 
         /* Card content - excerpt */
-        & > span:nth-child(2) > div {
+        .backlink-excerpt {
             all: unset; /* TODO: Remove after disposing the old style from FloatingButtons.css */
             display: block;
 
