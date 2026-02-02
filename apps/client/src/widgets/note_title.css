@@ -123,6 +123,7 @@ body.experimental-feature-new-layout {
 
         .note-badges {
             margin-inline: 0.5em;
+            flex-shrink: 0;
         }
 
         .note-icon-widget {
