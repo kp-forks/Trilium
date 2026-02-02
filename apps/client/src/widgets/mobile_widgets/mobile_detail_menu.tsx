@@ -120,14 +120,12 @@ function NotePathsModal({ note, modalShown, notePath, sortedNotePaths, setModalS
             show={modalShown}
             onHidden={() => setModalShown(false)}
         >
-            <ul className="note-paths-items">
-                {note && (
-                    <NotePathsWidget
-                        sortedNotePaths={sortedNotePaths}
-                        currentNotePath={notePath}
-                    />
-                )}
-            </ul>
+            {note && (
+                <NotePathsWidget
+                    sortedNotePaths={sortedNotePaths}
+                    currentNotePath={notePath}
+                />
+            )}
         </Modal>
     );
 }
