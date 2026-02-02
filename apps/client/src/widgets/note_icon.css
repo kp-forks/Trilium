@@ -143,5 +143,9 @@ body.mobile .modal.icon-switcher {
         margin: auto;
         flex-grow: 1;
         height: 100%;
+
+        span {
+            padding: 12px;
+        }
     }
 }

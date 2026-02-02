@@ -4,7 +4,7 @@ import { IconRegistry } from "@triliumnext/commons";
 import { Dropdown as BootstrapDropdown } from "bootstrap";
 import clsx from "clsx";
 import { t } from "i18next";
-import { CSSProperties, RefObject } from "preact";
+import { CSSProperties } from "preact";
 import { createPortal } from "preact/compat";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type React from "react";
@@ -20,6 +20,8 @@ import { FormDropdownDivider, FormListItem } from "./react/FormList";
 import FormTextBox from "./react/FormTextBox";
 import { useNoteContext, useNoteLabel, useStaticTooltip, useWindowSize } from "./react/hooks";
 import Modal from "./react/Modal";
+
+const ICON_SIZE = isMobile() ? 56 : 48;
 
 interface IconToCountCache {
     iconClassToCountMap: Record<string, number>;
@@ -84,7 +86,7 @@ function MobileNoteIconSwitcher({ note, icon }: {
                     className="icon-switcher note-icon-widget"
                     scrollable
                 >
-                    {note && <NoteIconList note={note} onHide={() => setModalShown(false)} columnCount={Math.floor(windowWidth / 48)} />}
+                    {note && <NoteIconList note={note} onHide={() => setModalShown(false)} columnCount={Math.floor(windowWidth / ICON_SIZE)} />}
                 </Modal>
             ), document.body)}
         </div>
@@ -160,7 +162,7 @@ function NoteIconList({ note, onHide, columnCount }: {
                 class="icon-list"
                 ref={iconListRef}
                 style={{
-                    width: (columnCount * 48 + 10),
+                    width: (columnCount * ICON_SIZE + 10),
                 }}
                 onClick={(e) => {
                     // Make sure we are not clicking on something else than a button.
@@ -178,9 +180,9 @@ function NoteIconList({ note, onHide, columnCount }: {
                 {filteredIcons.length ? (
                     <Grid
                         columnCount={columnCount}
-                        columnWidth={48}
+                        columnWidth={ICON_SIZE}
                         rowCount={Math.ceil(filteredIcons.length / columnCount)}
-                        rowHeight={48}
+                        rowHeight={ICON_SIZE}
                         cellComponent={IconItemCell}
                         cellProps={{
                             filteredIcons
