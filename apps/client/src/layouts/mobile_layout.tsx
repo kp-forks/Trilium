@@ -7,8 +7,6 @@ import RootContainer from "../widgets/containers/root_container.js";
 import ScrollingContainer from "../widgets/containers/scrolling_container.js";
 import SplitNoteContainer from "../widgets/containers/split_note_container.js";
 import FindWidget from "../widgets/find.js";
-import FloatingButtons from "../widgets/FloatingButtons.jsx";
-import { MOBILE_FLOATING_BUTTONS } from "../widgets/FloatingButtonsDefinitions.jsx";
 import LauncherContainer from "../widgets/launch_bar/LauncherContainer.jsx";
 import InlineTitle from "../widgets/layout/InlineTitle.jsx";
 import NoteBadges from "../widgets/layout/NoteBadges.jsx";
@@ -157,7 +155,6 @@ export default class MobileLayout {
                                                 .child(<NoteBadges />)
                                                 .child(<MobileDetailMenu />)
                                         )
-                                        .child(<FloatingButtons items={MOBILE_FLOATING_BUTTONS} />)
                                         .child(<PromotedAttributes />)
                                         .child(
                                             new ScrollingContainer()

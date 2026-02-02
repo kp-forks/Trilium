@@ -60,14 +60,6 @@ export const DESKTOP_FLOATING_BUTTONS: FloatingButtonsList = [
     Backlinks
 ];
 
-export const MOBILE_FLOATING_BUTTONS: FloatingButtonsList = [
-    RefreshBackendLogButton,
-    EditButton,
-    RelationMapButtons,
-    ExportImageButtons,
-    Backlinks
-];
-
 /**
  * Floating buttons that should be hidden in popup editor (Quick edit).
  */
