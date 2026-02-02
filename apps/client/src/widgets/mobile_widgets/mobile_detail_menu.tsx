@@ -73,11 +73,12 @@ export default function MobileDetailMenu() {
 function Backlinks({ note, viewScope, setModalShown }: { note: FNote, viewScope?: ViewScope, setModalShown: (shown: boolean) => void }) {
     const count = useBacklinkCount(note, viewScope?.viewMode === "default");
 
-    return count > 0 && (
+    return (
         <>
             <FormListItem
                 icon="bx bx-link"
                 onClick={() => setModalShown(true)}
+                disabled={count === 0}
             >{t("status_bar.backlinks", { count })}</FormListItem>
             <FormDropdownDivider />
         </>
