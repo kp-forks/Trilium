@@ -47,9 +47,11 @@
 }
 
 /* The toolbar show / hide button for the current text block */
-.ck.ck-block-toolbar-button {
+:root .ck.ck-block-toolbar-button {
     --ck-color-button-on-background: transparent;
     --ck-color-button-on-color: currentColor;
+    translate: -30% 0;
+    z-index: 5000;
 }
 
 :root .ck.ck-toolbar .ck-button:not(.ck-disabled):active,
