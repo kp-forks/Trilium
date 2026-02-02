@@ -769,7 +769,7 @@ body.mobile .fancytree-node > span {
 
 #left-pane .fancytree-custom-icon {
     margin-top: 0; /* Use this to align the icon with the tree view item's caption */
-    color: var(--left-pane-icon-color);
+    color: var(--custom-color, var(--left-pane-icon-color));
 }
 
 #left-pane span.fancytree-active .fancytree-title {
