@@ -1,15 +1,22 @@
+import { createPortal, useState } from "preact/compat";
+
+import FNote from "../../entities/fnote";
 import { t } from "../../services/i18n";
+import { ViewScope } from "../../services/link";
 import note_create from "../../services/note_create";
+import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
 import ActionButton from "../react/ActionButton";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import { useNoteContext } from "../react/hooks";
+import Modal from "../react/Modal";
 import { NoteContextMenu } from "../ribbon/NoteActions";
 import NoteActionsCustom from "../ribbon/NoteActionsCustom";
 
 export default function MobileDetailMenu() {
-    const { note, noteContext, parentComponent, ntxId } = useNoteContext();
+    const { note, noteContext, parentComponent, ntxId, viewScope } = useNoteContext();
     const subContexts = noteContext?.getMainContext().getSubContexts() ?? [];
     const isMainContext = noteContext?.isMainContext();
+    const [ modalShown, setModalShown ] = useState(false);
 
     function closePane() {
         // Wait first for the context menu to be dismissed, otherwise the backdrop stays on.
@@ -24,6 +31,8 @@ export default function MobileDetailMenu() {
                 <NoteContextMenu
                     note={note} noteContext={noteContext}
                     extraItems={<>
+                        <Backlinks note={note} viewScope={viewScope} setModalShown={setModalShown} />
+
                         {noteContext && ntxId && <NoteActionsCustom note={note} noteContext={noteContext} ntxId={ntxId} />}
                         <FormListItem
                             onClick={() => noteContext?.notePath && note_create.createNote(noteContext.notePath)}
@@ -53,6 +62,38 @@ export default function MobileDetailMenu() {
                     text={t("close_pane_button.close_this_pane")}
                 />
             )}
+
+            {createPortal((
+                <BacklinksModal note={note} modalShown={modalShown} setModalShown={setModalShown} />
+            ), document.body)}
         </div>
+    );
+}
+
+function Backlinks({ note, viewScope, setModalShown }: { note: FNote, viewScope?: ViewScope, setModalShown: (shown: boolean) => void }) {
+    const count = useBacklinkCount(note, viewScope?.viewMode === "default");
+
+    return count > 0 && (
+        <>
+            <FormListItem
+                icon="bx bx-link"
+                onClick={(e) => setModalShown(true)}
+            >{t("status_bar.backlinks", { count })}</FormListItem>
+            <FormDropdownDivider />
+        </>
+    );
+}
+
+function BacklinksModal({ note, modalShown, setModalShown }: { note: FNote | null | undefined, modalShown: boolean, setModalShown: (shown: boolean) => void }) {
+    return (
+        <Modal
+            className="backlinks-modal tn-backlinks-widget"
+            size="md"
+            title="Backlinks"
+            show={modalShown}
+            onHidden={() => setModalShown(false)}
+        >
+            {note && <BacklinksList note={note} />}
+        </Modal>
     );
 }
