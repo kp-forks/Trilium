@@ -55,7 +55,7 @@ export default function NoteIcon() {
             hideToggleArrow
             disabled={viewScope?.viewMode !== "default"}
         >
-            { note && <NoteIconList note={note} onHide={() => dropdownRef?.current?.hide()} /> }
+            { note && <NoteIconList note={note} onHide={() => dropdownRef?.current?.hide()} columnCount={12} /> }
         </Dropdown>
     );
 }
@@ -82,16 +82,17 @@ function MobileNoteIconSwitcher({ note, icon }: {
                     show={modalShown} onHidden={() => setModalShown(false)}
                     className="icon-switcher note-icon-widget"
                 >
-                    {note && <NoteIconList note={note} onHide={() => setModalShown(false)} />}
+                    {note && <NoteIconList note={note} onHide={() => setModalShown(false)} columnCount={7} />}
                 </Modal>
             ), document.body)}
         </div>
     );
 }
 
-function NoteIconList({ note, onHide }: {
+function NoteIconList({ note, onHide, columnCount }: {
     note: FNote;
     onHide: () => void;
+    columnCount: number;
 }) {
     const searchBoxRef = useRef<HTMLInputElement>(null);
     const iconListRef = useRef<HTMLDivElement>(null);
@@ -156,6 +157,9 @@ function NoteIconList({ note, onHide }: {
             <div
                 class="icon-list"
                 ref={iconListRef}
+                style={{
+                    width: columnCount * 48,
+                }}
                 onClick={(e) => {
                     // Make sure we are not clicking on something else than a button.
                     const clickedTarget = e.target as HTMLElement;
@@ -171,9 +175,9 @@ function NoteIconList({ note, onHide }: {
             >
                 {filteredIcons.length ? (
                     <Grid
-                        columnCount={12}
+                        columnCount={columnCount}
                         columnWidth={48}
-                        rowCount={Math.ceil(filteredIcons.length / 12)}
+                        rowCount={Math.ceil(filteredIcons.length / columnCount)}
                         rowHeight={48}
                         cellComponent={IconItemCell}
                         cellProps={{

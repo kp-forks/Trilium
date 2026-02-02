@@ -117,3 +117,17 @@ body.experimental-feature-new-layout {
         }
     }
 }
+
+body.mobile .modal.icon-switcher {
+    .modal-body {
+        padding: 0;
+
+        > .filter-row {
+            padding: 0 var(--bs-modal-padding) var(--bs-modal-padding) var(--bs-modal-padding);
+        }
+    }
+
+    .icon-list {
+        margin: auto;
+    }
+}
