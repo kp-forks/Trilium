@@ -129,6 +129,8 @@ body.mobile .modal.icon-switcher {
 
     .modal-body {
         padding: 0;
+        display: flex;
+        flex-direction: column;
 
         > .filter-row {
             padding: 0 var(--bs-modal-padding) var(--bs-modal-padding) var(--bs-modal-padding);
@@ -137,5 +139,7 @@ body.mobile .modal.icon-switcher {
 
     .icon-list {
         margin: auto;
+        flex-grow: 1;
+        height: 100%;
     }
 }

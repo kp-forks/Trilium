@@ -82,6 +82,7 @@ function MobileNoteIconSwitcher({ note, icon }: {
                     size="xl"
                     show={modalShown} onHidden={() => setModalShown(false)}
                     className="icon-switcher note-icon-widget"
+                    scrollable
                 >
                     {note && <NoteIconList note={note} onHide={() => setModalShown(false)} columnCount={Math.floor(windowWidth / 48)} />}
                 </Modal>
