@@ -9,7 +9,6 @@ import NoteActionsCustom from "../ribbon/NoteActionsCustom";
 
 export default function MobileDetailMenu() {
     const { note, noteContext, parentComponent, ntxId } = useNoteContext();
-    const helpUrl = getHelpUrlForNote(note);
     const subContexts = noteContext?.getMainContext().getSubContexts() ?? [];
     const isMainContext = noteContext?.isMainContext();
 
@@ -24,13 +23,6 @@ export default function MobileDetailMenu() {
                             onClick={() => noteContext?.notePath && note_create.createNote(noteContext.notePath)}
                             icon="bx bx-plus"
                         >{t("mobile_detail_menu.insert_child_note")}</FormListItem>
-                        {helpUrl && <>
-                            <FormDropdownDivider />
-                            <FormListItem
-                                icon="bx bx-help-circle"
-                                onClick={() => openInAppHelpFromUrl(helpUrl)}
-                            >{t("help-button.title")}</FormListItem>
-                        </>}
                         {subContexts.length < 2 && <>
                             <FormDropdownDivider />
                             <FormListItem
