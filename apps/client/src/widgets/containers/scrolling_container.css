@@ -4,11 +4,14 @@
     position: relative;
 
     > .inline-title,
-    > .note-detail > .note-detail-editable-text,
+    > .note-detail > .note-detail-editable-text > .note-detail-editable-text-editor,
     > .note-list-widget:not(.full-height) .note-list-wrapper {
-        padding-inline: 24px;
+        margin-inline: 24px;
     }
 
+    > .note-detail > .note-detail-editable-text > .note-detail-editable-text-editor {
+        overflow: unset;
+    }
 }
 
 .note-split.type-code:not(.mime-text-x-sqlite) {
