@@ -10,7 +10,9 @@ import FindWidget from "../widgets/find.js";
 import FloatingButtons from "../widgets/FloatingButtons.jsx";
 import { MOBILE_FLOATING_BUTTONS } from "../widgets/FloatingButtonsDefinitions.jsx";
 import LauncherContainer from "../widgets/launch_bar/LauncherContainer.jsx";
+import InlineTitle from "../widgets/layout/InlineTitle.jsx";
 import NoteBadges from "../widgets/layout/NoteBadges.jsx";
+import NoteTitleActions from "../widgets/layout/NoteTitleActions.jsx";
 import MobileDetailMenu from "../widgets/mobile_widgets/mobile_detail_menu.js";
 import ScreenContainer from "../widgets/mobile_widgets/screen_container.js";
 import SidebarContainer from "../widgets/mobile_widgets/sidebar_container.js";
@@ -159,6 +161,8 @@ export default class MobileLayout {
                                             new ScrollingContainer()
                                                 .filling()
                                                 .contentSized()
+                                                .child(<InlineTitle />)
+                                                .child(<NoteTitleActions />)
                                                 .child(<NoteDetail />)
                                                 .child(<NoteList media="screen" />)
                                                 .child(<StandaloneRibbonAdapter component={SearchDefinitionTab} />)
