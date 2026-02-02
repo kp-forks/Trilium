@@ -5,6 +5,7 @@ import { Dropdown as BootstrapDropdown } from "bootstrap";
 import clsx from "clsx";
 import { t } from "i18next";
 import { CSSProperties, RefObject } from "preact";
+import { createPortal } from "preact/compat";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type React from "react";
 import { CellComponentProps, Grid } from "react-window";
@@ -12,11 +13,13 @@ import { CellComponentProps, Grid } from "react-window";
 import FNote from "../entities/fnote";
 import attributes from "../services/attributes";
 import server from "../services/server";
+import { isMobile } from "../services/utils";
 import ActionButton from "./react/ActionButton";
 import Dropdown from "./react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "./react/FormList";
 import FormTextBox from "./react/FormTextBox";
 import { useNoteContext, useNoteLabel, useStaticTooltip } from "./react/hooks";
+import Modal from "./react/Modal";
 
 interface IconToCountCache {
     iconClassToCountMap: Record<string, number>;
@@ -37,6 +40,10 @@ export default function NoteIcon() {
         setIcon(note?.getIcon());
     }, [ note, iconClass, workspaceIconClass ]);
 
+    if (isMobile()) {
+        return <MobileNoteIconSwitcher note={note} icon={icon} />;
+    }
+
     return (
         <Dropdown
             className="note-icon-widget"
@@ -48,14 +55,43 @@ export default function NoteIcon() {
             hideToggleArrow
             disabled={viewScope?.viewMode !== "default"}
         >
-            { note && <NoteIconList note={note} dropdownRef={dropdownRef} /> }
+            { note && <NoteIconList note={note} onHide={() => dropdownRef?.current?.hide()} /> }
         </Dropdown>
     );
 }
 
-function NoteIconList({ note, dropdownRef }: {
-    note: FNote,
-    dropdownRef: RefObject<BootstrapDropdown>;
+function MobileNoteIconSwitcher({ note, icon }: {
+    note: FNote | null | undefined;
+    icon: string | null | undefined;
+}) {
+    const [ modalShown, setModalShown ] = useState(false);
+
+    return (
+        <div className="note-icon-widget">
+            <ActionButton
+                className="note-icon"
+                icon={icon ?? "bx bx-empty"}
+                text={t("note_icon.change_note_icon")}
+                onClick={() => setModalShown(true)}
+            />
+
+            {createPortal((
+                <Modal
+                    title={t("note_icon.change_note_icon")}
+                    size="xl"
+                    show={modalShown} onHidden={() => setModalShown(false)}
+                    className="icon-switcher note-icon-widget"
+                >
+                    {note && <NoteIconList note={note} onHide={() => setModalShown(false)} />}
+                </Modal>
+            ), document.body)}
+        </div>
+    );
+}
+
+function NoteIconList({ note, onHide }: {
+    note: FNote;
+    onHide: () => void;
 }) {
     const searchBoxRef = useRef<HTMLInputElement>(null);
     const iconListRef = useRef<HTMLDivElement>(null);
@@ -99,7 +135,7 @@ function NoteIconList({ note, dropdownRef }: {
                                 for (const label of getIconLabels(note)) {
                                     attributes.removeAttributeById(note.noteId, label.attributeId);
                                 }
-                                dropdownRef?.current?.hide();
+                                onHide();
                             }}
                         />
                     </div>
@@ -130,7 +166,7 @@ function NoteIconList({ note, dropdownRef }: {
                         const attributeToSet = note.hasOwnedLabel("workspace") ? "workspaceIconClass" : "iconClass";
                         attributes.setLabel(note.noteId, attributeToSet, iconClass);
                     }
-                    dropdownRef?.current?.hide();
+                    onHide();
                 }}
             >
                 {filteredIcons.length ? (
