@@ -92,7 +92,7 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
 }
 
 .modal.popup-editor-dialog .note-detail-editable-text {
-    padding: 0 1em;
+    padding: 0 28px;
 }
 
 .modal.popup-editor-dialog .note-detail-file {
