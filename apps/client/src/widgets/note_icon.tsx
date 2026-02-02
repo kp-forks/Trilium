@@ -185,7 +185,8 @@ function NoteIconList({ note, onHide, columnCount }: {
                         rowHeight={ICON_SIZE}
                         cellComponent={IconItemCell}
                         cellProps={{
-                            filteredIcons
+                            filteredIcons,
+                            columnCount
                         }}
                     />
                 ) : (
@@ -196,10 +197,11 @@ function NoteIconList({ note, onHide, columnCount }: {
     );
 }
 
-function IconItemCell({ rowIndex, columnIndex, style, filteredIcons }: CellComponentProps<{
+function IconItemCell({ rowIndex, columnIndex, style, filteredIcons, columnCount }: CellComponentProps<{
     filteredIcons: IconWithName[];
+    columnCount: number;
 }>) {
-    const iconIndex = rowIndex * 12 + columnIndex;
+    const iconIndex = rowIndex * columnCount + columnIndex;
     const iconData = filteredIcons[iconIndex] as IconWithName | undefined;
     if (!iconData) return <></> as React.ReactElement;
 
