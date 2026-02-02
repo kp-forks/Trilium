@@ -18,7 +18,7 @@ import ActionButton from "./react/ActionButton";
 import Dropdown from "./react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "./react/FormList";
 import FormTextBox from "./react/FormTextBox";
-import { useNoteContext, useNoteLabel, useStaticTooltip } from "./react/hooks";
+import { useNoteContext, useNoteLabel, useStaticTooltip, useWindowSize } from "./react/hooks";
 import Modal from "./react/Modal";
 
 interface IconToCountCache {
@@ -65,6 +65,7 @@ function MobileNoteIconSwitcher({ note, icon }: {
     icon: string | null | undefined;
 }) {
     const [ modalShown, setModalShown ] = useState(false);
+    const { windowWidth } = useWindowSize();
 
     return (
         <div className="note-icon-widget">
@@ -82,7 +83,7 @@ function MobileNoteIconSwitcher({ note, icon }: {
                     show={modalShown} onHidden={() => setModalShown(false)}
                     className="icon-switcher note-icon-widget"
                 >
-                    {note && <NoteIconList note={note} onHide={() => setModalShown(false)} columnCount={7} />}
+                    {note && <NoteIconList note={note} onHide={() => setModalShown(false)} columnCount={Math.floor(windowWidth / 48)} />}
                 </Modal>
             ), document.body)}
         </div>
