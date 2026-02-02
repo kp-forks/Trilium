@@ -112,8 +112,8 @@ body.experimental-feature-new-layout {
 
     &.mobile .title-row {
         .icon-action:not(.note-icon) {
-            height: 45px;
-            width: 45px;
+            --icon-button-size: 45px;
+            --icon-button-icon-ratio: 0.5;
             flex-shrink: 0;
         }
 
