@@ -2,7 +2,6 @@ import { createPortal, useState } from "preact/compat";
 
 import FNote, { NotePathRecord } from "../../entities/fnote";
 import { t } from "../../services/i18n";
-import { ViewScope } from "../../services/link";
 import note_create from "../../services/note_create";
 import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
 import ActionButton from "../react/ActionButton";
