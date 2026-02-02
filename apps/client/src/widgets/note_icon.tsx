@@ -69,7 +69,7 @@ function MobileNoteIconSwitcher({ note, icon }: {
     const [ modalShown, setModalShown ] = useState(false);
     const { windowWidth } = useWindowSize();
 
-    return (
+    return (note &&
         <div className="note-icon-widget">
             <ActionButton
                 className="note-icon"
