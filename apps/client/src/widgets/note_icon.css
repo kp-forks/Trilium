@@ -125,6 +125,7 @@ body.mobile .modal.icon-switcher {
         margin: unset;
         transform: unset;
         max-width: 100%;
+        height: 100%;
     }
 
     .modal-body {
@@ -133,7 +134,8 @@ body.mobile .modal.icon-switcher {
         flex-direction: column;
 
         > .filter-row {
-            padding: 0 var(--bs-modal-padding) var(--bs-modal-padding) var(--bs-modal-padding);
+            padding: 0.25em var(--bs-modal-padding) 0.5em var(--bs-modal-padding);
+            border-bottom: 1px solid var(--main-border-color);
         }
     }
 
