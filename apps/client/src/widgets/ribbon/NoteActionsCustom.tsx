@@ -13,6 +13,7 @@ import { isMobile, openInAppHelpFromUrl } from "../../services/utils";
 import { ViewTypeOptions } from "../collections/interface";
 import { buildSaveSqlToNoteHandler } from "../FloatingButtonsDefinitions";
 import ActionButton, { ActionButtonProps } from "../react/ActionButton";
+import { FormFileUploadActionButton, FormFileUploadFormListItem, FormFileUploadProps } from "../react/FormFileUpload";
 import { FormListItem } from "../react/FormList";
 import { useNoteLabel, useNoteLabelBoolean, useNoteProperty, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
 import { ParentComponent } from "../react/react_utils";
@@ -265,13 +266,15 @@ const cachedIsMobile = isMobile();
 function NoteAction({ text, ...props }: Pick<ActionButtonProps, "text" | "icon" | "disabled" | "triggerCommand"> & {
     onClick?: ((e: MouseEvent) => void) | undefined;
 }) {
-    if (cachedIsMobile) {
-        return <FormListItem {...props}>{text}</FormListItem>;
-    }
-    return <ActionButton text={text} {...props} />;
-
+    return (cachedIsMobile
+        ? <FormListItem {...props}>{text}</FormListItem>
+        : <ActionButton text={text} {...props} />
+    );
 }
 
-function NoteActionWithFileUpload() {
-    return "Not implemented.";
+function NoteActionWithFileUpload({ text, ...props }: Pick<ActionButtonProps, "text" | "icon" | "disabled" | "triggerCommand"> & Pick<FormFileUploadProps, "onChange">) {
+    return (cachedIsMobile
+        ? <FormFileUploadFormListItem {...props}>{text}</FormFileUploadFormListItem>
+        : <FormFileUploadActionButton text={text} {...props} />
+    );
 }
