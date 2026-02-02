@@ -1,7 +1,6 @@
 import { t } from "../../services/i18n";
-import { getHelpUrlForNote } from "../../services/in_app_help";
 import note_create from "../../services/note_create";
-import { openInAppHelpFromUrl } from "../../services/utils";
+import ActionButton from "../react/ActionButton";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import { useNoteContext } from "../react/hooks";
 import { NoteContextMenu } from "../ribbon/NoteActions";
@@ -12,9 +11,16 @@ export default function MobileDetailMenu() {
     const subContexts = noteContext?.getMainContext().getSubContexts() ?? [];
     const isMainContext = noteContext?.isMainContext();
 
+    function closePane() {
+        // Wait first for the context menu to be dismissed, otherwise the backdrop stays on.
+        requestAnimationFrame(() => {
+            parentComponent.triggerCommand("closeThisNoteSplit", { ntxId });
+        });
+    }
+
     return (
         <div style={{ contain: "none" }}>
-            {note && (
+            {note ? (
                 <NoteContextMenu
                     note={note} noteContext={noteContext}
                     extraItems={<>
@@ -34,16 +40,17 @@ export default function MobileDetailMenu() {
                             <FormDropdownDivider />
                             <FormListItem
                                 icon="bx bx-x"
-                                onClick={() => {
-                                    // Wait first for the context menu to be dismissed, otherwise the backdrop stays on.
-                                    requestAnimationFrame(() => {
-                                        parentComponent.triggerCommand("closeThisNoteSplit", { ntxId });
-                                    });
-                                }}
+                                onClick={closePane}
                             >{t("close_pane_button.close_this_pane")}</FormListItem>
                         </>}
                         <FormDropdownDivider />
                     </>}
+                />
+            ) : (
+                <ActionButton
+                    icon="bx bx-x"
+                    onClick={closePane}
+                    text={t("close_pane_button.close_this_pane")}
                 />
             )}
         </div>
