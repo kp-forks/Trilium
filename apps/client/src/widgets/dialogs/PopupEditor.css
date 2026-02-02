@@ -95,6 +95,10 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
     padding: 0 28px;
 }
 
+.modal.popup-editor-dialog .note-detail-editable-text-editor {
+    overflow: visible; /* Allow selection rectangle to go outside of the editor area */
+}
+
 .modal.popup-editor-dialog .note-detail-file {
     padding: 0;
 }
