@@ -300,7 +300,7 @@ function BacklinksBadge({ note, viewScope }: StatusBarContext) {
     const count = useBacklinkCount(note, viewScope?.viewMode === "default");
     return (note && count > 0 &&
         <StatusBarDropdown
-            className="backlinks-badge backlinks-widget"
+            className="backlinks-badge backlinks-widget tn-backlinks-widget"
             icon="bx bx-link"
             text={t("status_bar.backlinks", { count })}
             title={t("status_bar.backlinks_title", { count })}

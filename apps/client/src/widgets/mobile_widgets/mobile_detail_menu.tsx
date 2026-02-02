@@ -77,7 +77,7 @@ function Backlinks({ note, viewScope, setModalShown }: { note: FNote, viewScope?
         <>
             <FormListItem
                 icon="bx bx-link"
-                onClick={(e) => setModalShown(true)}
+                onClick={() => setModalShown(true)}
             >{t("status_bar.backlinks", { count })}</FormListItem>
             <FormDropdownDivider />
         </>
@@ -93,7 +93,9 @@ function BacklinksModal({ note, modalShown, setModalShown }: { note: FNote | nul
             show={modalShown}
             onHidden={() => setModalShown(false)}
         >
-            {note && <BacklinksList note={note} />}
+            <ul className="backlinks-items">
+                {note && <BacklinksList note={note} />}
+            </ul>
         </Modal>
     );
 }
