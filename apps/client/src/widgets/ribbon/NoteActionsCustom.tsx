@@ -35,6 +35,8 @@ interface NoteActionsCustomInnerProps extends NoteActionsCustomProps {
     viewType: ViewTypeOptions | null | undefined;
 }
 
+const cachedIsMobile = isMobile();
+
 /**
  * Part of {@link NoteActions} on the new layout, but are rendered with a slight spacing
  * from the rest of the note items and the buttons differ based on the note type.
@@ -128,7 +130,7 @@ function UploadNewRevisionButton({ note, onChange }: NoteActionsCustomInnerProps
 }
 
 function OpenExternallyButton({ note, noteMime }: NoteActionsCustomInnerProps) {
-    return (
+    return (!cachedIsMobile &&
         <NoteAction
             icon="bx bx-link-external"
             text={t("file_properties.open")}
@@ -261,7 +263,6 @@ function AddChildButton({ parentComponent, noteType, ntxId, isReadOnly }: NoteAc
     }
 }
 //#endregion
-const cachedIsMobile = isMobile();
 
 function NoteAction({ text, ...props }: Pick<ActionButtonProps, "text" | "icon" | "disabled" | "triggerCommand"> & {
     onClick?: ((e: MouseEvent) => void) | undefined;
