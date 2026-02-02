@@ -56,7 +56,7 @@ export default function StatusBar() {
         similarNotesShown: activePane === "similar-notes",
         setSimilarNotesShown: (shown) => setActivePane(shown && "similar-notes")
     };
-    const isHiddenNote = note?.isInHiddenSubtree();
+    const isHiddenNote = note?.isHiddenCompletely();
 
     return (
         <div className="status-bar">
