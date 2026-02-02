@@ -110,7 +110,27 @@ body.experimental-feature-new-layout {
         }
     }
 
-    &.mobile .title-row .note-icon-widget .note-icon {
-        --icon-button-size: 24px;
+    &.mobile .title-row {
+        .icon-action:not(.note-icon) {
+            height: 45px;
+            width: 45px;
+            flex-shrink: 0;
+        }
+
+        .note-actions {
+            width: auto;
+        }
+
+        .note-badges {
+            margin-inline: 0.5em;
+        }
+
+        .note-icon-widget {
+            margin-inline: 0.5em;
+
+            .note-icon {
+                --icon-button-size: 24px;
+            }
+        }
     }
 }
