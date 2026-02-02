@@ -172,7 +172,6 @@ function FilterRow({ note, filterByPrefix, search, setSearch, setFilterByPrefix,
     onHide: () => void;
 }) {
     const searchBoxRef = useRef<HTMLInputElement>(null);
-    const hasIconPacks = glob.iconRegistry.sources.length > 0;
     const hasCustomIcon = getIconLabels(note).length > 0;
 
     function resetToDefaultIcon() {
@@ -212,7 +211,7 @@ function FilterRow({ note, filterByPrefix, search, setSearch, setFilterByPrefix,
                         </div>
                     )}
 
-                    {hasIconPacks && <Dropdown
+                    {<Dropdown
                         buttonClassName="bx bx-filter-alt"
                         hideToggleArrow
                         noSelectButtonStyle
@@ -231,7 +230,7 @@ function FilterRow({ note, filterByPrefix, search, setSearch, setFilterByPrefix,
                         iconAction
                         dropdownContainerClassName="mobile-bottom-menu"
                     >
-                        {hasIconPacks && <>
+                        {hasCustomIcon && <>
                             <FormListItem
                                 icon="bx bx-reset"
                                 onClick={resetToDefaultIcon}
@@ -280,7 +279,7 @@ function IconFilterContent({ filterByPrefix, setFilterByPrefix }: {
                 checked={filterByPrefix === "bx"}
                 onClick={() => setFilterByPrefix("bx")}
             >{t("note_icon.filter-default")}</FormListItem>
-            <FormDropdownDivider />
+            {glob.iconRegistry.sources.length > 1 && <FormDropdownDivider />}
 
             {glob.iconRegistry.sources.map(({ prefix, name, icon }) => (
                 prefix !== "bx" && <FormListItem
