@@ -109,4 +109,8 @@ body.experimental-feature-new-layout {
             --input-focus-color: initial;
         }
     }
+
+    &.mobile .title-row .note-icon-widget .note-icon {
+        --icon-button-size: 24px;
+    }
 }
