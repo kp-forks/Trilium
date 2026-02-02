@@ -13,7 +13,7 @@ import { CellComponentProps, Grid } from "react-window";
 import FNote from "../entities/fnote";
 import attributes from "../services/attributes";
 import server from "../services/server";
-import { isMobile } from "../services/utils";
+import { isDesktop, isMobile } from "../services/utils";
 import ActionButton from "./react/ActionButton";
 import Dropdown from "./react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "./react/FormList";
@@ -98,7 +98,6 @@ function NoteIconList({ note, onHide, columnCount }: {
     onHide: () => void;
     columnCount: number;
 }) {
-    const searchBoxRef = useRef<HTMLInputElement>(null);
     const iconListRef = useRef<HTMLDivElement>(null);
     const [ search, setSearch ] = useState<string>();
     const [ filterByPrefix, setFilterByPrefix ] = useState<string | null>(null);
@@ -114,49 +113,15 @@ function NoteIconList({ note, onHide, columnCount }: {
 
     return (
         <>
-            <div class="filter-row">
-                <span>{t("note_icon.search")}</span>
-                <FormTextBox
-                    inputRef={searchBoxRef}
-                    type="text"
-                    name="icon-search"
-                    placeholder={ filterByPrefix
-                        ? t("note_icon.search_placeholder_filtered", {
-                            number: filteredIcons.length ?? 0,
-                            name: glob.iconRegistry.sources.find(s => s.prefix === filterByPrefix)?.name ?? ""
-                        })
-                        : t("note_icon.search_placeholder", { number: filteredIcons.length ?? 0, count: glob.iconRegistry.sources.length })}
-                    currentValue={search} onChange={setSearch}
-                    autoFocus
-                />
-
-                {getIconLabels(note).length > 0 && (
-                    <div style={{ textAlign: "center" }}>
-                        <ActionButton
-                            icon="bx bx-reset"
-                            text={t("note_icon.reset-default")}
-                            onClick={() => {
-                                if (!note) return;
-                                for (const label of getIconLabels(note)) {
-                                    attributes.removeAttributeById(note.noteId, label.attributeId);
-                                }
-                                onHide();
-                            }}
-                        />
-                    </div>
-                )}
-
-                {glob.iconRegistry.sources.length > 0 && <Dropdown
-                    buttonClassName="bx bx-filter-alt"
-                    hideToggleArrow
-                    noSelectButtonStyle
-                    noDropdownListStyle
-                    iconAction
-                    title={t("note_icon.filter")}
-                >
-                    <IconFilterContent filterByPrefix={filterByPrefix} setFilterByPrefix={setFilterByPrefix} />
-                </Dropdown>}
-            </div>
+            <FilterRow
+                note={note}
+                filterByPrefix={filterByPrefix}
+                search={search}
+                setSearch={setSearch}
+                setFilterByPrefix={setFilterByPrefix}
+                filteredIcons={filteredIcons}
+                onHide={onHide}
+            />
 
             <div
                 class="icon-list"
@@ -194,6 +159,91 @@ function NoteIconList({ note, onHide, columnCount }: {
                 )}
             </div>
         </>
+    );
+}
+
+function FilterRow({ note, filterByPrefix, search, setSearch, setFilterByPrefix, filteredIcons, onHide }: {
+    note: FNote;
+    filterByPrefix: string | null;
+    search: string | undefined;
+    setSearch: (value: string | undefined) => void;
+    setFilterByPrefix: (value: string | null) => void;
+    filteredIcons: IconWithName[];
+    onHide: () => void;
+}) {
+    const searchBoxRef = useRef<HTMLInputElement>(null);
+    const hasIconPacks = glob.iconRegistry.sources.length > 0;
+    const hasCustomIcon = getIconLabels(note).length > 0;
+
+    function resetToDefaultIcon() {
+        if (!note) return;
+        for (const label of getIconLabels(note)) {
+            attributes.removeAttributeById(note.noteId, label.attributeId);
+        }
+        onHide();
+    }
+
+    return (
+        <div class="filter-row">
+            <span>{t("note_icon.search")}</span>
+            <FormTextBox
+                inputRef={searchBoxRef}
+                type="text"
+                name="icon-search"
+                placeholder={ filterByPrefix
+                    ? t("note_icon.search_placeholder_filtered", {
+                        number: filteredIcons.length ?? 0,
+                        name: glob.iconRegistry.sources.find(s => s.prefix === filterByPrefix)?.name ?? ""
+                    })
+                    : t("note_icon.search_placeholder", { number: filteredIcons.length ?? 0, count: glob.iconRegistry.sources.length })}
+                currentValue={search} onChange={setSearch}
+                autoFocus
+            />
+
+            {isDesktop()
+                ? <>
+                    {hasCustomIcon && (
+                        <div style={{ textAlign: "center" }}>
+                            <ActionButton
+                                icon="bx bx-reset"
+                                text={t("note_icon.reset-default")}
+                                onClick={resetToDefaultIcon}
+                            />
+                        </div>
+                    )}
+
+                    {hasIconPacks && <Dropdown
+                        buttonClassName="bx bx-filter-alt"
+                        hideToggleArrow
+                        noSelectButtonStyle
+                        noDropdownListStyle
+                        iconAction
+                        title={t("note_icon.filter")}
+                    >
+                        <IconFilterContent filterByPrefix={filterByPrefix} setFilterByPrefix={setFilterByPrefix} />
+                    </Dropdown>}
+                </> : (
+                    <Dropdown
+                        buttonClassName="bx bx-dots-vertical-rounded"
+                        hideToggleArrow
+                        noSelectButtonStyle
+                        noDropdownListStyle
+                        iconAction
+                        dropdownContainerClassName="mobile-bottom-menu"
+                    >
+                        {hasIconPacks && <>
+                            <FormListItem
+                                icon="bx bx-reset"
+                                onClick={resetToDefaultIcon}
+                                disabled={!hasCustomIcon}
+                            >{t("note_icon.reset-default")}</FormListItem>
+                            <FormDropdownDivider />
+                        </>}
+
+                        <IconFilterContent filterByPrefix={filterByPrefix} setFilterByPrefix={setFilterByPrefix} />
+                    </Dropdown>
+                )}
+        </div>
     );
 }
 
