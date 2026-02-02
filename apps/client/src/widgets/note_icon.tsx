@@ -158,7 +158,7 @@ function NoteIconList({ note, onHide, columnCount }: {
                 class="icon-list"
                 ref={iconListRef}
                 style={{
-                    width: columnCount * 48,
+                    width: (columnCount * 48 + 10),
                 }}
                 onClick={(e) => {
                     // Make sure we are not clicking on something else than a button.
