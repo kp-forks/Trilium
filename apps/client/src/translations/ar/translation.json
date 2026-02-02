@@ -39,7 +39,9 @@
     "search_note": "البحث عن الملاحظة بالاسم",
     "link_title": "عنوان الرابط",
     "button_add_link": "اضافة رابط",
-    "help_on_links": "مساعدة حول الارتباطات التشعبية"
+    "help_on_links": "مساعدة حول الارتباطات التشعبية",
+    "link_title_mirrors": "عنوان الرابط يعكس العنوان الحالي للملاحظة",
+    "link_title_arbitrary": "يمكن تغيير عنوان الرابط حسب الرغبة"
   },
   "branch_prefix": {
     "edit_branch_prefix": "تعديل بادئة الفرع",
