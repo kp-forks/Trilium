@@ -5,6 +5,7 @@ import { openInAppHelpFromUrl } from "../../services/utils";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import { useNoteContext } from "../react/hooks";
 import { NoteContextMenu } from "../ribbon/NoteActions";
+import NoteActionsCustom from "../ribbon/NoteActionsCustom";
 
 export default function MobileDetailMenu() {
     const { note, noteContext, parentComponent, ntxId } = useNoteContext();
@@ -18,6 +19,7 @@ export default function MobileDetailMenu() {
                 <NoteContextMenu
                     note={note} noteContext={noteContext}
                     extraItems={<>
+                        {noteContext && ntxId && <NoteActionsCustom note={note} noteContext={noteContext} ntxId={ntxId} />}
                         <FormListItem
                             onClick={() => noteContext?.notePath && note_create.createNote(noteContext.notePath)}
                             icon="bx bx-plus"

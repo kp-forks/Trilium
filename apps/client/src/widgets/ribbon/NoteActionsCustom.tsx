@@ -7,11 +7,11 @@ import FNote from "../../entities/fnote";
 import { t } from "../../services/i18n";
 import { getHelpUrlForNote } from "../../services/in_app_help";
 import { downloadFileNote, openNoteExternally } from "../../services/open";
-import { openInAppHelpFromUrl } from "../../services/utils";
+import { isMobile, openInAppHelpFromUrl } from "../../services/utils";
 import { ViewTypeOptions } from "../collections/interface";
 import { buildSaveSqlToNoteHandler } from "../FloatingButtonsDefinitions";
-import ActionButton from "../react/ActionButton";
-import { FormFileUploadActionButton } from "../react/FormFileUpload";
+import ActionButton, { ActionButtonProps } from "../react/ActionButton";
+import { FormListItem } from "../react/FormList";
 import { useNoteLabel, useNoteLabelBoolean, useNoteProperty, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
 import { ParentComponent } from "../react/react_utils";
 import { buildUploadNewFileRevisionListener } from "./FilePropertiesTab";
@@ -115,7 +115,7 @@ function UploadNewRevisionButton({ note, onChange }: NoteActionsCustomInnerProps
     onChange: (files: FileList | null) => void;
 }) {
     return (
-        <FormFileUploadActionButton
+        <NoteActionWithFileUpload
             icon="bx bx-folder-open"
             text={t("image_properties.upload_new_revision")}
             disabled={!note.isContentAvailable()}
@@ -126,7 +126,7 @@ function UploadNewRevisionButton({ note, onChange }: NoteActionsCustomInnerProps
 
 function OpenExternallyButton({ note, noteMime }: NoteActionsCustomInnerProps) {
     return (
-        <ActionButton
+        <NoteAction
             icon="bx bx-link-external"
             text={t("file_properties.open")}
             disabled={note.isProtected}
@@ -137,7 +137,7 @@ function OpenExternallyButton({ note, noteMime }: NoteActionsCustomInnerProps) {
 
 function DownloadFileButton({ note, parentComponent, ntxId }: NoteActionsCustomInnerProps) {
     return (
-        <ActionButton
+        <NoteAction
             icon="bx bx-download"
             text={t("file_properties.download")}
             disabled={!note.isContentAvailable()}
@@ -149,7 +149,7 @@ function DownloadFileButton({ note, parentComponent, ntxId }: NoteActionsCustomI
 //#region Floating buttons
 function CopyReferenceToClipboardButton({ ntxId, noteType, parentComponent }: NoteActionsCustomInnerProps) {
     return (["mermaid", "canvas", "mindMap", "image"].includes(noteType) &&
-        <ActionButton
+        <NoteAction
             text={t("image_properties.copy_reference_to_clipboard")}
             icon="bx bx-copy"
             onClick={() => parentComponent?.triggerEvent("copyImageReferenceToClipboard", { ntxId })}
@@ -161,7 +161,7 @@ function RefreshButton({ note, noteType, isDefaultViewMode, parentComponent, not
     const isEnabled = (note.noteId === "_backendLog" || noteType === "render") && isDefaultViewMode;
 
     return (isEnabled &&
-        <ActionButton
+        <NoteAction
             text={t("backend_log.refresh")}
             icon="bx bx-refresh"
             onClick={() => parentComponent.triggerEvent("refreshData", { ntxId: noteContext.ntxId })}
@@ -174,7 +174,7 @@ function SwitchSplitOrientationButton({ note, isReadOnly, isDefaultViewMode }: N
     const [ splitEditorOrientation, setSplitEditorOrientation ] = useTriliumOption("splitEditorOrientation");
     const upcomingOrientation = splitEditorOrientation === "horizontal" ? "vertical" : "horizontal";
 
-    return isShown && <ActionButton
+    return isShown && <NoteAction
         text={upcomingOrientation === "vertical" ? t("switch_layout_button.title_vertical") : t("switch_layout_button.title_horizontal")}
         icon={upcomingOrientation === "vertical" ? "bx bxs-dock-bottom" : "bx bxs-dock-left"}
         onClick={() => setSplitEditorOrientation(upcomingOrientation)}
@@ -188,7 +188,7 @@ export function ToggleReadOnlyButton({ note, isDefaultViewMode }: NoteActionsCus
     const isEnabled = ([ "mermaid", "mindMap", "canvas" ].includes(note.type) || isSavedSqlite)
             && note.isContentAvailable() && isDefaultViewMode;
 
-    return isEnabled && <ActionButton
+    return isEnabled && <NoteAction
         text={isReadOnly ? t("toggle_read_only_button.unlock-editing") : t("toggle_read_only_button.lock-editing")}
         icon={isReadOnly ? "bx bx-lock-open-alt" : "bx bx-lock-alt"}
         onClick={() => setReadOnly(!isReadOnly)}
@@ -197,7 +197,7 @@ export function ToggleReadOnlyButton({ note, isDefaultViewMode }: NoteActionsCus
 
 function RunActiveNoteButton({ noteMime }: NoteActionsCustomInnerProps) {
     const isEnabled = noteMime.startsWith("application/javascript") || noteMime === "text/x-sqlite;schema=trilium";
-    return isEnabled && <ActionButton
+    return isEnabled && <NoteAction
         icon="bx bx-play"
         text={t("code_buttons.execute_button_title")}
         triggerCommand="runActiveNote"
@@ -218,7 +218,7 @@ function SaveToNoteButton({ note, noteMime }: NoteActionsCustomInnerProps) {
         }
     });
 
-    return isEnabled && <ActionButton
+    return isEnabled && <NoteAction
         icon="bx bx-save"
         text={t("code_buttons.save_to_note_button_title")}
         onClick={buildSaveSqlToNoteHandler(note)}
@@ -227,7 +227,7 @@ function SaveToNoteButton({ note, noteMime }: NoteActionsCustomInnerProps) {
 
 function OpenTriliumApiDocsButton({ noteMime }: NoteActionsCustomInnerProps) {
     const isEnabled = noteMime.startsWith("application/javascript;env=");
-    return isEnabled && <ActionButton
+    return isEnabled && <NoteAction
         icon="bx bx-help-circle"
         text={t("code_buttons.trilium_api_docs_button_title")}
         onClick={() => openInAppHelpFromUrl(noteMime.endsWith("frontend") ? "Q2z6av6JZVWm" : "MEtfsqa5VwNi")}
@@ -239,7 +239,7 @@ function InAppHelpButton({ note }: NoteActionsCustomInnerProps) {
     const isEnabled = !!helpUrl;
 
     return isEnabled && (
-        <ActionButton
+        <NoteAction
             icon="bx bx-help-circle"
             text={t("help-button.title")}
             onClick={() => helpUrl && openInAppHelpFromUrl(helpUrl)}
@@ -249,7 +249,7 @@ function InAppHelpButton({ note }: NoteActionsCustomInnerProps) {
 
 function AddChildButton({ parentComponent, noteType, ntxId, isReadOnly }: NoteActionsCustomInnerProps) {
     if (noteType === "relationMap") {
-        return <ActionButton
+        return <NoteAction
             icon="bx bx-folder-plus"
             text={t("relation_map_buttons.create_child_note_title")}
             onClick={() => parentComponent.triggerEvent("relationMapCreateChildNote", { ntxId })}
@@ -258,3 +258,18 @@ function AddChildButton({ parentComponent, noteType, ntxId, isReadOnly }: NoteAc
     }
 }
 //#endregion
+const cachedIsMobile = isMobile();
+
+function NoteAction({ text, ...props }: Pick<ActionButtonProps, "text" | "icon" | "disabled" | "triggerCommand"> & {
+    onClick?: ((e: MouseEvent) => void) | undefined;
+}) {
+    if (cachedIsMobile) {
+        return <FormListItem {...props}>{text}</FormListItem>;
+    }
+    return <ActionButton text={text} {...props} />;
+
+}
+
+function NoteActionWithFileUpload() {
+    return "Not implemented.";
+}
