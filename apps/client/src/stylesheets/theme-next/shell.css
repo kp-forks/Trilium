@@ -1322,7 +1322,7 @@ body.mobile .note-title {
     margin-inline-start: 0;
 }
 
-.title-row {
+body.desktop .title-row {
     /* Aligns the "Create new split" button with the note menu button (the three dots button) */
     padding-inline-end: 3px;
 }
