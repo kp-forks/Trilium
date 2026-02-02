@@ -20,6 +20,7 @@ export default function MobileDetailMenu() {
     const [ backlinksModalShown, setBacklinksModalShown ] = useState(false);
     const [ notePathsModalShown, setNotePathsModalShown ] = useState(false);
     const sortedNotePaths = useSortedNotePaths(note, hoistedNoteId);
+    const backlinksCount = useBacklinkCount(note, viewScope?.viewMode === "default");
 
     function closePane() {
         // Wait first for the context menu to be dismissed, otherwise the backdrop stays on.
@@ -34,13 +35,22 @@ export default function MobileDetailMenu() {
                 <NoteContextMenu
                     note={note} noteContext={noteContext}
                     extraItems={<>
-                        <Backlinks note={note} viewScope={viewScope} setModalShown={setBacklinksModalShown} />
-                        <FormDropdownDivider />
-                        <FormListItem
-                            icon="bx bx-directions"
-                            onClick={() => setNotePathsModalShown(true)}
-                            disabled={(sortedNotePaths?.length ?? 0) <= 1}
-                        >{t("status_bar.note_paths", { count: sortedNotePaths?.length })}</FormListItem>
+                        <div className="form-list-row">
+                            <div className="form-list-col">
+                                <FormListItem
+                                    icon="bx bx-link"
+                                    onClick={() => setBacklinksModalShown(true)}
+                                    disabled={backlinksCount === 0}
+                                >{t("status_bar.backlinks", { count: backlinksCount })}</FormListItem>
+                            </div>
+                            <div className="form-list-col">
+                                <FormListItem
+                                    icon="bx bx-directions"
+                                    onClick={() => setNotePathsModalShown(true)}
+                                    disabled={(sortedNotePaths?.length ?? 0) <= 1}
+                                >{t("status_bar.note_paths", { count: sortedNotePaths?.length })}</FormListItem>
+                            </div>
+                        </div>
                         <FormDropdownDivider />
 
                         {noteContext && ntxId && <NoteActionsCustom note={note} noteContext={noteContext} ntxId={ntxId} />}
@@ -80,18 +90,6 @@ export default function MobileDetailMenu() {
                 </>
             ), document.body)}
         </div>
-    );
-}
-
-function Backlinks({ note, viewScope, setModalShown }: { note: FNote, viewScope?: ViewScope, setModalShown: (shown: boolean) => void }) {
-    const count = useBacklinkCount(note, viewScope?.viewMode === "default");
-
-    return (
-        <FormListItem
-            icon="bx bx-link"
-            onClick={() => setModalShown(true)}
-            disabled={count === 0}
-        >{t("status_bar.backlinks", { count })}</FormListItem>
     );
 }
 
