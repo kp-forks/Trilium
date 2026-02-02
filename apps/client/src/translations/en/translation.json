@@ -760,7 +760,8 @@
     "delete_this_note": "Delete this note",
     "note_revisions": "Note revisions",
     "error_cannot_get_branch_id": "Cannot get branchId for notePath '{{notePath}}'",
-    "error_unrecognized_command": "Unrecognized command {{command}}"
+    "error_unrecognized_command": "Unrecognized command {{command}}",
+    "backlinks": "Backlinks"
   },
   "note_icon": {
     "change_note_icon": "Change note icon",

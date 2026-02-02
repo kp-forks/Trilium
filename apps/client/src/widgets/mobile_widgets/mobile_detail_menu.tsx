@@ -89,7 +89,7 @@ function BacklinksModal({ note, modalShown, setModalShown }: { note: FNote | nul
         <Modal
             className="backlinks-modal tn-backlinks-widget"
             size="md"
-            title="Backlinks"
+            title={t("mobile_detail_menu.backlinks")}
             show={modalShown}
             onHidden={() => setModalShown(false)}
         >
