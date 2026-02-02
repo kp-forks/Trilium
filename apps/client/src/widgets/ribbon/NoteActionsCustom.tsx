@@ -1,3 +1,5 @@
+import "./NoteActionsCustom.css";
+
 import { NoteType } from "@triliumnext/commons";
 import { useContext, useEffect, useRef, useState } from "preact/hooks";
 
