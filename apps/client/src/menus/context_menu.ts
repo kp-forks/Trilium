@@ -248,7 +248,7 @@ class ContextMenu {
         if ("uiIcon" in item || "checked" in item) {
             const icon = (item.checked ? "bx bx-check" : item.uiIcon);
             if (icon) {
-                $icon.addClass(icon);
+                $icon.addClass([icon, "tn-icon"]);
             } else {
                 $icon.append("&nbsp;");
             }
