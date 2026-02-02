@@ -2,7 +2,6 @@ import type AppContext from "../components/app_context.js";
 import GlobalMenuWidget from "../widgets/buttons/global_menu.js";
 import CloseZenModeButton from "../widgets/close_zen_button.js";
 import NoteList from "../widgets/collections/NoteList.jsx";
-import ContentHeader from "../widgets/containers/content_header.js";
 import FlexContainer from "../widgets/containers/flex_container.js";
 import RootContainer from "../widgets/containers/root_container.js";
 import ScrollingContainer from "../widgets/containers/scrolling_container.js";
@@ -11,6 +10,7 @@ import FindWidget from "../widgets/find.js";
 import FloatingButtons from "../widgets/FloatingButtons.jsx";
 import { MOBILE_FLOATING_BUTTONS } from "../widgets/FloatingButtonsDefinitions.jsx";
 import LauncherContainer from "../widgets/launch_bar/LauncherContainer.jsx";
+import NoteBadges from "../widgets/layout/NoteBadges.jsx";
 import MobileDetailMenu from "../widgets/mobile_widgets/mobile_detail_menu.js";
 import ScreenContainer from "../widgets/mobile_widgets/screen_container.js";
 import SidebarContainer from "../widgets/mobile_widgets/sidebar_container.js";
@@ -22,12 +22,10 @@ import NoteDetail from "../widgets/NoteDetail.jsx";
 import PromotedAttributes from "../widgets/PromotedAttributes.jsx";
 import QuickSearchWidget from "../widgets/quick_search.js";
 import { useNoteContext } from "../widgets/react/hooks.jsx";
-import ReadOnlyNoteInfoBar from "../widgets/ReadOnlyNoteInfoBar.jsx";
 import StandaloneRibbonAdapter from "../widgets/ribbon/components/StandaloneRibbonAdapter.jsx";
 import FilePropertiesTab from "../widgets/ribbon/FilePropertiesTab.jsx";
 import SearchDefinitionTab from "../widgets/ribbon/SearchDefinitionTab.jsx";
 import SearchResult from "../widgets/search_result.jsx";
-import SharedInfoWidget from "../widgets/shared_info.js";
 import MobileEditorToolbar from "../widgets/type_widgets/text/mobile_editor_toolbar.jsx";
 import { applyModals } from "./layout_commons.js";
 
@@ -147,10 +145,12 @@ export default class MobileLayout {
                                     new NoteWrapperWidget()
                                         .child(
                                             new FlexContainer("row")
+                                                .class("title-row note-split-title")
                                                 .contentSized()
                                                 .css("align-items", "center")
                                                 .child(<ToggleSidebarButton />)
                                                 .child(<NoteTitleWidget />)
+                                                .child(<NoteBadges />)
                                                 .child(<MobileDetailMenu />)
                                         )
                                         .child(<FloatingButtons items={MOBILE_FLOATING_BUTTONS} />)
@@ -159,10 +159,6 @@ export default class MobileLayout {
                                             new ScrollingContainer()
                                                 .filling()
                                                 .contentSized()
-                                                .child(new ContentHeader()
-                                                    .child(<ReadOnlyNoteInfoBar />)
-                                                    .child(<SharedInfoWidget />)
-                                                )
                                                 .child(<NoteDetail />)
                                                 .child(<NoteList media="screen" />)
                                                 .child(<StandaloneRibbonAdapter component={SearchDefinitionTab} />)

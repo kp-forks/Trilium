@@ -2640,7 +2640,7 @@ iframe.print-iframe {
     }
 }
 
-body.desktop .title-row {
+.title-row {
     height: 50px;
     min-height: 50px;
     align-items: center;
