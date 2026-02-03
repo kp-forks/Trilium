@@ -113,8 +113,9 @@ script)](./README-ZH_TW.md) | [English](../README.md) | [French](./README-fr.md)
   الجغرافية](https://docs.triliumnotes.org/user-guide/collections/geomap) مع
   دبابيس الموقع ومسارات GPX (GPX = تنسيق تبادل بيانات نظام تحديد المواقع
   العالمي)
-* [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - see [Advanced
-  showcases](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
+* [البرمجة النصية](https://docs.triliumnotes.org/user-guide/scripts) - راجع
+  [نماذج العرض
+  المتقدمة](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
 * [واجهة REST
   API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) للأتمتة
 * Scales well in both usability and performance upwards of 100 000 notes
