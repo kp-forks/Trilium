@@ -102,13 +102,17 @@ script)](./README-ZH_TW.md) | [English](../README.md) | [French](./README-fr.md)
   تشفير قوي مع إمكانية التحكم بكل ملاحظة على حدة
 * رسم المخططات، بالاعتماد على إكسكاليدرا [Excalidraw](https://excalidraw.com/)
   (نوع الملاحظة "لوحة رسم")
-* [Relation
-  maps](https://docs.triliumnotes.org/user-guide/note-types/relation-map) and
-  [note/link maps](https://docs.triliumnotes.org/user-guide/note-types/note-map)
-  for visualizing notes and their relations
-* Mind maps, based on [Mind Elixir](https://docs.mind-elixir.com/)
-* [Geo maps](https://docs.triliumnotes.org/user-guide/collections/geomap) with
-  location pins and GPX tracks
+* [خرائط
+  العلاقات](https://docs.triliumnotes.org/user-guide/note-types/relation-map)
+  و[خرائط الملاحظات
+  والروابط](https://docs.triliumnotes.org/user-guide/note-types/note-map) لتصور
+  الملاحظات وارتباطاتها بصرياً
+* الخرائط الذهنية، بالاعتماد على مايند إليكسر [Mind
+  Elixir](https://docs.mind-elixir.com/)
+* "[الخرائط
+  الجغرافية](https://docs.triliumnotes.org/user-guide/collections/geomap) مع
+  دبابيس الموقع ومسارات GPX (GPX = تنسيق تبادل بيانات نظام تحديد المواقع
+  العالمي)
 * [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - see [Advanced
   showcases](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
 * [واجهة REST
