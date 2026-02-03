@@ -105,8 +105,7 @@ function BrowserOnlyOptions() {
 
 function DevelopmentOptions({ dropStart }: { dropStart: boolean }) {
     return <>
-        <FormDropdownDivider />
-        <FormListItem disabled>Development Options</FormListItem>
+        <FormListHeader text="Development Options"></FormListHeader>
         <FormDropdownSubmenu icon="bx bx-test-tube" title="Experimental features" dropStart={dropStart}>
             {experimentalFeatures.map((feature) => (
                 <ExperimentalFeatureToggle key={feature.id} experimentalFeature={feature as ExperimentalFeature} />
