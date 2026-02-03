@@ -1,12 +1,17 @@
 .scrolling-container {
+    --content-margin-inline: 24px;
+
     overflow: auto;
     scroll-behavior: smooth;
     position: relative;
 
-    > .inline-title,
     > .note-detail > .note-detail-editable-text > .note-detail-editable-text-editor,
     > .note-list-widget:not(.full-height) .note-list-wrapper {
-        margin-inline: 24px;
+        margin-inline: var(--content-margin-inline);
+    }
+
+    > .inline-title {
+        padding-inline: var(--content-margin-inline);
     }
 
     > .note-detail > .note-detail-editable-text > .note-detail-editable-text-editor {
