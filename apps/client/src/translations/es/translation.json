@@ -745,7 +745,7 @@
     "button_title": "Exportar diagrama como SVG"
   },
   "relation_map_buttons": {
-    "create_child_note_title": "Crear una nueva subnota y agregarla a este mapa de relaciones",
+    "create_child_note_title": "Crear una subnota y agregarla al mapa",
     "reset_pan_zoom_title": "Restablecer la panorámica y el zoom a las coordenadas y ampliación iniciales",
     "zoom_in_title": "Acercar",
     "zoom_out_title": "Alejar"
@@ -754,14 +754,15 @@
     "relation": "relación",
     "backlink_one": "{{count}} Vínculo de retroceso",
     "backlink_many": "{{count}} Vínculos de retroceso",
-    "backlink_other": "{{count}} vínculos de retroceso"
+    "backlink_other": "{{count}} Vínculos de retroceso"
   },
   "mobile_detail_menu": {
     "insert_child_note": "Insertar subnota",
     "delete_this_note": "Eliminar esta nota",
     "error_cannot_get_branch_id": "No se puede obtener el branchID del notePath '{{notePath}}'",
     "error_unrecognized_command": "Comando no reconocido {{command}}",
-    "note_revisions": "Revisiones de notas"
+    "note_revisions": "Revisiones de notas",
+    "backlinks": "Vínculos de retroceso"
   },
   "note_icon": {
     "change_note_icon": "Cambiar icono de nota",
