@@ -1,14 +1,18 @@
+import "./mobile_detail_menu.css";
+
 import { createPortal, useState } from "preact/compat";
 
 import FNote, { NotePathRecord } from "../../entities/fnote";
 import { t } from "../../services/i18n";
 import note_create from "../../services/note_create";
+import server from "../../services/server";
 import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
 import { NoteInfoContent } from "../layout/StatusBar";
 import ActionButton from "../react/ActionButton";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
-import { useNoteContext } from "../react/hooks";
+import { useNoteContext, useNoteProperty } from "../react/hooks";
 import Modal from "../react/Modal";
+import { NoteTypeCodeNoteList, useMimeTypes } from "../ribbon/BasicPropertiesTab";
 import { NoteContextMenu } from "../ribbon/NoteActions";
 import NoteActionsCustom from "../ribbon/NoteActionsCustom";
 import { NotePathsWidget, useSortedNotePaths } from "../ribbon/NotePathsTab";
@@ -22,6 +26,7 @@ export default function MobileDetailMenu() {
     const [ notePathsModalShown, setNotePathsModalShown ] = useState(false);
     const [ noteInfoModalShown, setNoteInfoModalShown ] = useState(false);
     const [ similarNotesModalShown, setSimilarNotesModalShown ] = useState(false);
+    const [ codeNoteSwitcherModalShown, setCodeNoteSwitcherModalShown ] = useState(false);
     const sortedNotePaths = useSortedNotePaths(note, hoistedNoteId);
     const backlinksCount = useBacklinkCount(note, viewScope?.viewMode === "default");
 
@@ -76,7 +81,8 @@ export default function MobileDetailMenu() {
                             >{t("close_pane_button.close_this_pane")}</FormListItem>
                         </>}
                         <FormDropdownDivider />
-                        <FormListItem icon="bx bx-info-circle" onClick={() => setNoteInfoModalShown(true)} >{t("note_info_widget.title")}</FormListItem>
+                        {note.type === "code" && <FormListItem icon={"bx bx-code"} onClick={() => setCodeNoteSwitcherModalShown(true)}>{t("status_bar.code_note_switcher")}</FormListItem>}
+                        <FormListItem icon="bx bx-info-circle" onClick={() => setNoteInfoModalShown(true)}>{t("note_info_widget.title")}</FormListItem>
                         <FormListItem icon="bx bx-bar-chart" onClick={() => setSimilarNotesModalShown(true)}>{t("similar_notes.title")}</FormListItem>
                         <FormDropdownDivider />
                     </>}
@@ -95,6 +101,7 @@ export default function MobileDetailMenu() {
                     <NotePathsModal note={note} modalShown={notePathsModalShown} notePath={noteContext?.notePath} sortedNotePaths={sortedNotePaths} setModalShown={setNotePathsModalShown} />
                     <NoteInfoModal note={note}  modalShown={noteInfoModalShown} setModalShown={setNoteInfoModalShown} />
                     <SimilarNotesModal note={note} modalShown={similarNotesModalShown} setModalShown={setSimilarNotesModalShown} />
+                    <CodeNoteSwitcherModal note={note} modalShown={codeNoteSwitcherModalShown} setModalShown={setCodeNoteSwitcherModalShown} />
                 </>
             ), document.body)}
         </div>
@@ -165,6 +172,33 @@ function SimilarNotesModal({ note, modalShown, setModalShown }: { note: FNote | 
             onHidden={() => setModalShown(false)}
         >
             <SimilarNotesTab note={note} />
+        </Modal>
+    );
+}
+
+function CodeNoteSwitcherModal({ note, modalShown, setModalShown }: { note: FNote | null | undefined } & WithModal) {
+    const currentNoteMime = useNoteProperty(note, "mime");
+    const mimeTypes = useMimeTypes();
+
+    return (
+        <Modal
+            className="code-note-switcher-modal"
+            size="md"
+            title={t("status_bar.code_note_switcher")}
+            show={modalShown}
+            onHidden={() => setModalShown(false)}
+        >
+            <div className="dropdown-menu static show">
+                {note && <NoteTypeCodeNoteList
+                    currentMimeType={currentNoteMime}
+                    mimeTypes={mimeTypes}
+                    changeNoteType={(type, mime) => {
+                        server.put(`notes/${note.noteId}/type`, { type, mime });
+                        setModalShown(false);
+                    }}
+                    // setModalShown={() => setModalShown(true)}
+                />}
+            </div>
         </Modal>
     );
 }

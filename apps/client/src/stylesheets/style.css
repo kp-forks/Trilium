@@ -409,6 +409,7 @@ body.desktop .tabulator-popup-container,
 
 .dropdown-menu.static {
     box-shadow: unset;
+    backdrop-filter: unset !important;
 }
 
 .dropend .dropdown-toggle::after {
