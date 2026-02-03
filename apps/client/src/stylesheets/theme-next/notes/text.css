@@ -522,6 +522,10 @@ button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel).ck
  * EDITOR'S CONTENT
  */
 
+.note-detail-editable-text-editor > .ck-placeholder {
+    opacity: .5;
+}
+
 /*
  * Code Blocks
  */
