@@ -17,6 +17,10 @@
     .collapsible-body {
         height: 0;
         overflow: hidden;
+
+        &.fully-expanded {
+            overflow: visible;
+        }
     }
 
     .collapsible-inner-body {
