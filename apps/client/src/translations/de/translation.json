@@ -742,7 +742,7 @@
     "button_title": "Diagramm als SVG exportieren"
   },
   "relation_map_buttons": {
-    "create_child_note_title": "Erstelle eine neue untergeordnete Notiz und füge sie dieser Beziehungskarte hinzu",
+    "create_child_note_title": "Erstelle eine untergeordnete Notiz und füge sie dieser Karte hinzu",
     "reset_pan_zoom_title": "Schwenken und Zoomen auf die ursprünglichen Koordinaten und Vergrößerung zurücksetzen",
     "zoom_in_title": "Hineinzoom",
     "zoom_out_title": "Herauszoomen"
@@ -757,7 +757,8 @@
     "delete_this_note": "Diese Notiz löschen",
     "error_cannot_get_branch_id": "BranchId für notePath „{{notePath}}“ kann nicht abgerufen werden",
     "error_unrecognized_command": "Unbekannter Befehl {{command}}",
-    "note_revisions": "Notiz Revisionen"
+    "note_revisions": "Notiz Revisionen",
+    "backlinks": "Rücklinks"
   },
   "note_icon": {
     "change_note_icon": "Notiz-Icon ändern",
