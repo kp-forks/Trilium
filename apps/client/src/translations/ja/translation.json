@@ -407,7 +407,7 @@
   "relation_map_buttons": {
     "zoom_out_title": "ズームアウト",
     "zoom_in_title": "ズームイン",
-    "create_child_note_title": "新しい子ノートを作成し、関連マップに追加",
+    "create_child_note_title": "子ノートを作成し、マップに追加",
     "reset_pan_zoom_title": "パンとズームを初期座標と倍率にリセット"
   },
   "tree-context-menu": {
@@ -1648,7 +1648,8 @@
     "error_unrecognized_command": "認識されないコマンド {{command}}",
     "insert_child_note": "子ノートを挿入",
     "error_cannot_get_branch_id": "ノートパス 「{{notePath}} のbranchIdを取得できません",
-    "note_revisions": "ノートの変更履歴"
+    "note_revisions": "ノートの変更履歴",
+    "backlinks": "バックリンク"
   },
   "inherited_attribute_list": {
     "title": "継承属性",
