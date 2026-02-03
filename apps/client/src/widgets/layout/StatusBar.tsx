@@ -251,7 +251,7 @@ export function NoteInfoContent({ note, setSimilarNotesShown, noteType, dropdown
     const noteTypeMapping = useMemo(() => NOTE_TYPES.find(t => t.type === noteType), [ noteType ]);
 
     return (
-        <>
+        <div className="note-info-content">
             <ul>
                 {originalFileName && <NoteInfoValue text={t("file_properties.original_file_name")} value={originalFileName} />}
                 <NoteInfoValue text={t("note_info_widget.created")} value={formatDateTime(metadata?.dateCreated)} />
@@ -269,7 +269,7 @@ export function NoteInfoContent({ note, setSimilarNotesShown, noteType, dropdown
                     setSimilarNotesShown(true);
                 }}
             />}
-        </>
+        </div>
     );
 }
 
