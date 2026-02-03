@@ -12,6 +12,7 @@ import Modal from "../react/Modal";
 import { NoteContextMenu } from "../ribbon/NoteActions";
 import NoteActionsCustom from "../ribbon/NoteActionsCustom";
 import { NotePathsWidget, useSortedNotePaths } from "../ribbon/NotePathsTab";
+import SimilarNotesTab from "../ribbon/SimilarNotesTab";
 
 export default function MobileDetailMenu() {
     const { note, noteContext, parentComponent, ntxId, viewScope, hoistedNoteId } = useNoteContext();
@@ -20,6 +21,7 @@ export default function MobileDetailMenu() {
     const [ backlinksModalShown, setBacklinksModalShown ] = useState(false);
     const [ notePathsModalShown, setNotePathsModalShown ] = useState(false);
     const [ noteInfoModalShown, setNoteInfoModalShown ] = useState(false);
+    const [ similarNotesModalShown, setSimilarNotesModalShown ] = useState(false);
     const sortedNotePaths = useSortedNotePaths(note, hoistedNoteId);
     const backlinksCount = useBacklinkCount(note, viewScope?.viewMode === "default");
 
@@ -74,10 +76,8 @@ export default function MobileDetailMenu() {
                             >{t("close_pane_button.close_this_pane")}</FormListItem>
                         </>}
                         <FormDropdownDivider />
-                        <FormListItem
-                            icon="bx bx-info-circle"
-                            onClick={() => setNoteInfoModalShown(true)}
-                        >{t("note_info_widget.title")}</FormListItem>
+                        <FormListItem icon="bx bx-info-circle" onClick={() => setNoteInfoModalShown(true)} >{t("note_info_widget.title")}</FormListItem>
+                        <FormListItem icon="bx bx-bar-chart" onClick={() => setSimilarNotesModalShown(true)}>{t("similar_notes.title")}</FormListItem>
                         <FormDropdownDivider />
                     </>}
                 />
@@ -94,6 +94,7 @@ export default function MobileDetailMenu() {
                     <BacklinksModal note={note} modalShown={backlinksModalShown} setModalShown={setBacklinksModalShown} />
                     <NotePathsModal note={note} modalShown={notePathsModalShown} notePath={noteContext?.notePath} sortedNotePaths={sortedNotePaths} setModalShown={setNotePathsModalShown} />
                     <NoteInfoModal note={note}  modalShown={noteInfoModalShown} setModalShown={setNoteInfoModalShown} />
+                    <SimilarNotesModal note={note} modalShown={similarNotesModalShown} setModalShown={setSimilarNotesModalShown} />
                 </>
             ), document.body)}
         </div>
@@ -150,6 +151,20 @@ function NoteInfoModal({ note, modalShown, setModalShown }: { note: FNote | null
             onHidden={() => setModalShown(false)}
         >
             {note && <NoteInfoContent note={note} noteType={note.type}  />}
+        </Modal>
+    );
+}
+
+function SimilarNotesModal({ note, modalShown, setModalShown }: { note: FNote | null | undefined } & WithModal) {
+    return (
+        <Modal
+            className="similar-notes-modal"
+            size="md"
+            title={t("similar_notes.title")}
+            show={modalShown}
+            onHidden={() => setModalShown(false)}
+        >
+            <SimilarNotesTab note={note} />
         </Modal>
     );
 }
