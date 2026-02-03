@@ -4,6 +4,7 @@ import FNote, { NotePathRecord } from "../../entities/fnote";
 import { t } from "../../services/i18n";
 import note_create from "../../services/note_create";
 import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
+import { NoteInfoContent } from "../layout/StatusBar";
 import ActionButton from "../react/ActionButton";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import { useNoteContext } from "../react/hooks";
@@ -18,6 +19,7 @@ export default function MobileDetailMenu() {
     const isMainContext = noteContext?.isMainContext();
     const [ backlinksModalShown, setBacklinksModalShown ] = useState(false);
     const [ notePathsModalShown, setNotePathsModalShown ] = useState(false);
+    const [ noteInfoModalShown, setNoteInfoModalShown ] = useState(false);
     const sortedNotePaths = useSortedNotePaths(note, hoistedNoteId);
     const backlinksCount = useBacklinkCount(note, viewScope?.viewMode === "default");
 
@@ -72,6 +74,11 @@ export default function MobileDetailMenu() {
                             >{t("close_pane_button.close_this_pane")}</FormListItem>
                         </>}
                         <FormDropdownDivider />
+                        <FormListItem
+                            icon="bx bx-info-circle"
+                            onClick={() => setNoteInfoModalShown(true)}
+                        >{t("note_info_widget.title")}</FormListItem>
+                        <FormDropdownDivider />
                     </>}
                 />
             ) : (
@@ -86,13 +93,19 @@ export default function MobileDetailMenu() {
                 <>
                     <BacklinksModal note={note} modalShown={backlinksModalShown} setModalShown={setBacklinksModalShown} />
                     <NotePathsModal note={note} modalShown={notePathsModalShown} notePath={noteContext?.notePath} sortedNotePaths={sortedNotePaths} setModalShown={setNotePathsModalShown} />
+                    <NoteInfoModal note={note}  modalShown={noteInfoModalShown} setModalShown={setNoteInfoModalShown} />
                 </>
             ), document.body)}
         </div>
     );
 }
 
-function BacklinksModal({ note, modalShown, setModalShown }: { note: FNote | null | undefined, modalShown: boolean, setModalShown: (shown: boolean) => void }) {
+interface WithModal {
+    modalShown: boolean;
+    setModalShown: (shown: boolean) => void;
+}
+
+function BacklinksModal({ note, modalShown, setModalShown }: { note: FNote | null | undefined } & WithModal) {
     return (
         <Modal
             className="backlinks-modal tn-backlinks-widget"
@@ -108,7 +121,7 @@ function BacklinksModal({ note, modalShown, setModalShown }: { note: FNote | nul
     );
 }
 
-function NotePathsModal({ note, modalShown, notePath, sortedNotePaths, setModalShown }: { note: FNote | null | undefined, modalShown: boolean, sortedNotePaths: NotePathRecord[] | undefined, notePath: string | null | undefined, setModalShown: (shown: boolean) => void }) {
+function NotePathsModal({ note, modalShown, notePath, sortedNotePaths, setModalShown }: { note: FNote | null | undefined, sortedNotePaths: NotePathRecord[] | undefined, notePath: string | null | undefined } & WithModal) {
     return (
         <Modal
             className="note-paths-modal"
@@ -123,6 +136,20 @@ function NotePathsModal({ note, modalShown, notePath, sortedNotePaths, setModalS
                     currentNotePath={notePath}
                 />
             )}
+        </Modal>
+    );
+}
+
+function NoteInfoModal({ note, modalShown, setModalShown }: { note: FNote | null | undefined } & WithModal) {
+    return (
+        <Modal
+            className="note-info-modal"
+            size="md"
+            title={t("note_info_widget.title")}
+            show={modalShown}
+            onHidden={() => setModalShown(false)}
+        >
+            {note && <NoteInfoContent note={note} noteType={note.type}  />}
         </Modal>
     );
 }
