@@ -49,7 +49,8 @@
     "save": "حفظ",
     "help_on_tree_prefix": "مساعدة حول بادئة الشجرة",
     "branch_prefix_saved": "تم حفظ بادئة الفرع.",
-    "edit_branch_prefix_multiple": "تعديل البادئة لـ {{count}} من تفرعات الملاحظات"
+    "edit_branch_prefix_multiple": "تعديل البادئة لـ {{count}} من تفرعات الملاحظات",
+    "branch_prefix_saved_multiple": "تم حفظ بادئة التفرع لـ {{count}} من التفرعات."
   },
   "bulk_actions": {
     "bulk_actions": "اجراءات جماعية",
