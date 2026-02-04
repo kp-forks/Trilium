@@ -1,0 +1,12 @@
+.rendered-content.no-preview {
+    display: flex;
+    flex-direction: column;
+
+    & > div {
+        justify-content: space-around;
+        align-items: center;
+        height: 100%;
+        font-size: 500%;
+        flex-grow: 1;
+    }
+}
