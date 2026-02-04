@@ -7,16 +7,17 @@ import { t } from "../../services/i18n";
 import note_create from "../../services/note_create";
 import server from "../../services/server";
 import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
-import { NoteInfoContent } from "../layout/StatusBar";
+import { getLocaleName, NoteInfoContent } from "../layout/StatusBar";
 import ActionButton from "../react/ActionButton";
-import { FormDropdownDivider, FormListItem } from "../react/FormList";
+import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react/FormList";
 import { useNoteContext, useNoteProperty } from "../react/hooks";
 import Modal from "../react/Modal";
-import { NoteTypeCodeNoteList, useMimeTypes } from "../ribbon/BasicPropertiesTab";
+import { NoteTypeCodeNoteList, useLanguageSwitcher, useMimeTypes } from "../ribbon/BasicPropertiesTab";
 import { NoteContextMenu } from "../ribbon/NoteActions";
 import NoteActionsCustom from "../ribbon/NoteActionsCustom";
 import { NotePathsWidget, useSortedNotePaths } from "../ribbon/NotePathsTab";
 import SimilarNotesTab from "../ribbon/SimilarNotesTab";
+import { useProcessedLocales } from "../type_widgets/options/components/LocaleSelector";
 
 export default function MobileDetailMenu() {
     const { note, noteContext, parentComponent, ntxId, viewScope, hoistedNoteId } = useNoteContext();
@@ -81,6 +82,7 @@ export default function MobileDetailMenu() {
                             >{t("close_pane_button.close_this_pane")}</FormListItem>
                         </>}
                         <FormDropdownDivider />
+                        {note.type === "text" && <ContentLanguageSelector note={note} />}
                         {note.type === "code" && <FormListItem icon={"bx bx-code"} onClick={() => setCodeNoteSwitcherModalShown(true)}>{t("status_bar.code_note_switcher")}</FormListItem>}
                         <FormListItem icon="bx bx-info-circle" onClick={() => setNoteInfoModalShown(true)}>{t("note_info_widget.title")}</FormListItem>
                         <FormListItem icon="bx bx-bar-chart" onClick={() => setSimilarNotesModalShown(true)}>{t("similar_notes.title")}</FormListItem>
@@ -105,6 +107,31 @@ export default function MobileDetailMenu() {
                 </>
             ), document.body)}
         </div>
+    );
+}
+
+function ContentLanguageSelector({ note }: { note: FNote | null | undefined }) {
+    const { locales, DEFAULT_LOCALE, currentNoteLanguage, setCurrentNoteLanguage } = useLanguageSwitcher(note);
+    const { processedLocales } = useProcessedLocales(locales, DEFAULT_LOCALE, currentNoteLanguage ?? DEFAULT_LOCALE.id);
+
+    return (
+        <FormDropdownSubmenu
+            icon="bx bx-globe"
+            title={t("status_bar.language_title")}
+        >
+            {processedLocales.map((locale, index) =>
+                (typeof locale === "object") ? (
+                    <FormListItem
+                        key={locale.id}
+                        rtl={locale.rtl}
+                        checked={locale.id === currentNoteLanguage}
+                        onClick={() => setCurrentNoteLanguage(locale.id)}
+                    >{locale.name}</FormListItem>
+                ) : (
+                    <FormDropdownDivider key={`divider-${index}`} />
+                )
+            )}
+        </FormDropdownSubmenu>
     );
 }
 
