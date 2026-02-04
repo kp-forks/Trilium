@@ -18,14 +18,12 @@ import FlexContainer from "./flex_container.js";
  * - `#root-container.vertical-layout`, if the current layout is horizontal.
  */
 export default class RootContainer extends FlexContainer<BasicWidget> {
-    private originalViewportHeight: number;
 
     constructor(isHorizontalLayout: boolean) {
         super(isHorizontalLayout ? "column" : "row");
 
         this.id("root-widget");
         this.css("height", "100dvh");
-        this.originalViewportHeight = getViewportHeight();
     }
 
     render(): JQuery<HTMLElement> {
@@ -65,8 +63,12 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     }
 
     #onMobileResize() {
-        const currentViewportHeight = getViewportHeight();
-        const isKeyboardOpened = (currentViewportHeight < this.originalViewportHeight);
+        const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+        const windowHeight = window.innerHeight;
+
+        // If viewport is significantly smaller, keyboard is likely open
+        const isKeyboardOpened = windowHeight - viewportHeight > 150;
+
         this.$widget.toggleClass("virtual-keyboard-opened", isKeyboardOpened);
     }
 
@@ -115,6 +117,3 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     }
 }
 
-function getViewportHeight() {
-    return window.visualViewport?.height ?? window.innerHeight;
-}
