@@ -106,6 +106,7 @@
                 &.type-search,
                 &.type-empty,
                 &.type-relationMap,
+                &.type-launcher,
                 &.tab-preview-placeholder {
                     display: flex;
                     align-items: center;
