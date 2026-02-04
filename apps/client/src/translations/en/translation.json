@@ -662,7 +662,8 @@
     "show-cheatsheet": "Show Cheatsheet",
     "toggle-zen-mode": "Zen Mode",
     "new-version-available": "New Update Available",
-    "download-update": "Get Version {{latestVersion}}"
+    "download-update": "Get Version {{latestVersion}}",
+    "search_notes": "Search notes"
   },
   "zen_mode": {
     "button_exit": "Exit Zen Mode"
