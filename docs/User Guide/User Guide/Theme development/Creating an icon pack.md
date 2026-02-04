@@ -51,7 +51,7 @@ The icon pack manifest is a JSON file with the following structure:
 			"terms": [ "ball" ]
 		},
 		"bxs-party": {
-			"glyph": "\uec92"
+			"glyph": "\uec92",
 			"terms": [ "party" ]
 		}
 	}
