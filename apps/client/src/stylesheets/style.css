@@ -111,6 +111,7 @@ body.mobile #root-widget.virtual-keyboard-opened #mobile-bottom-bar {
 }
 
 #mobile-bottom-bar {
+    border-top: 1px solid var(--main-border-color);
     padding-bottom: var(--mobile-bottom-offset);
 }
 
