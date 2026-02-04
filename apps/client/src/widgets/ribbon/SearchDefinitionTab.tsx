@@ -2,6 +2,7 @@ import "./SearchDefinitionTab.css";
 
 import { SaveSearchNoteResponse } from "@triliumnext/commons";
 import { useContext, useEffect, useState } from "preact/hooks";
+import { Fragment } from "preact/jsx-runtime";
 
 import appContext from "../../components/app_context";
 import FNote from "../../entities/fnote";
@@ -96,6 +97,7 @@ export default function SearchDefinitionTab({ note, ntxId, hidden }: Pick<TabCon
                                             <Dropdown
                                                 buttonClassName="action-add-toggle btn btn-sm"
                                                 text={<><Icon icon="bx bx-plus" />{" "}{t("search_definition.option")}</>}
+                                                dropdownContainerClassName="mobile-bottom-menu" mobileBackdrop
                                                 noSelectButtonStyle
                                             >
                                                 {searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }, index) => (
@@ -219,15 +221,16 @@ function AddBulkActionButton({ note }: { note: FNote }) {
             buttonClassName="action-add-toggle btn btn-sm"
             text={<><Icon icon="bx bxs-zap" />{" "}{t("search_definition.action")}</>}
             noSelectButtonStyle
+            dropdownContainerClassName="mobile-bottom-menu" mobileBackdrop
         >
-            {ACTION_GROUPS.map(({ actions, title }) => (
-                <>
+            {ACTION_GROUPS.map(({ actions, title }, index) => (
+                <Fragment key={index}>
                     <FormListHeader text={title} />
 
                     {actions.map(({ actionName, actionTitle }) => (
-                        <FormListItem onClick={() => bulk_action.addAction(note.noteId, actionName)}>{actionTitle}</FormListItem>
+                        <FormListItem key={actionName} onClick={() => bulk_action.addAction(note.noteId, actionName)}>{actionTitle}</FormListItem>
                     ))}
-                </>
+                </Fragment>
             ))}
         </Dropdown>
     );
