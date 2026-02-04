@@ -1694,40 +1694,6 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     }
 }
 
-@media (max-width: 991px) {
-    body.mobile.force-fixed-tree #mobile-sidebar-wrapper {
-        padding-top: 0;
-        position: static;
-        height: 40vh;
-        width: 100vw;
-        transform: none !important;
-        background-color: var(--left-pane-background-color) !important;
-        border-bottom: 0.5px solid var(--main-border-color);
-    }
-
-    body.mobile.force-fixed-tree #mobile-sidebar-container {
-        display: none !important;
-    }
-
-    body.mobile.force-fixed-tree #mobile-sidebar-wrapper .quick-search {
-        display: none;
-    }
-
-    body.mobile.force-fixed-tree .component > button.bx-sidebar {
-        visibility: hidden;
-        padding: 0;
-        width: 6px;
-    }
-
-    body.mobile.force-fixed-tree #mobile-rest-container {
-        flex-direction: column !important;
-    }
-
-    body.mobile.force-fixed-tree #detail-container {
-        flex-grow: 1;
-    }
-}
-
 #launcher-pane {
     color: var(--launcher-pane-text-color);
     background-color: var(--launcher-pane-background-color);

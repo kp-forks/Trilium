@@ -744,7 +744,7 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
         background-color: rgba(0, 0, 0, 0.5);
     }
 
-    body.mobile:not(.force-fixed-tree) #mobile-sidebar-wrapper {
+    body.mobile #mobile-sidebar-wrapper {
         border-top-right-radius: 12px;
         border-bottom-right-radius: 12px;
         border-inline-end: 1px solid var(--subtle-border-color);
