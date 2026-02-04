@@ -1,11 +1,12 @@
-import { EventData } from "../../components/app_context.js";
 import { LOCALES } from "@triliumnext/commons";
-import { readCssVar } from "../../utils/css-var.js";
-import FlexContainer from "./flex_container.js";
-import options from "../../services/options.js";
-import type BasicWidget from "../basic_widget.js";
-import utils from "../../services/utils.js";
+
+import { EventData } from "../../components/app_context.js";
 import { getEnabledExperimentalFeatureIds } from "../../services/experimental_features.js";
+import options from "../../services/options.js";
+import utils, { isMobile } from "../../services/utils.js";
+import { readCssVar } from "../../utils/css-var.js";
+import type BasicWidget from "../basic_widget.js";
+import FlexContainer from "./flex_container.js";
 
 /**
  * The root container is the top-most widget/container, from which the entire layout derives.
@@ -88,7 +89,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     }
 
     #setBackdropEffects() {
-        const enabled = options.is("backdropEffectsEnabled");
+        const enabled = options.is("backdropEffectsEnabled") && !isMobile();
         document.body.classList.toggle("backdrop-effects-disabled", !enabled);
     }
 
@@ -96,7 +97,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
         // Supports background effects
 
         const useBgfx = readCssVar(document.documentElement, "allow-background-effects")
-                        .asBoolean(false);
+            .asBoolean(false);
 
         document.body.classList.toggle("theme-supports-background-effects", useBgfx);
     }
