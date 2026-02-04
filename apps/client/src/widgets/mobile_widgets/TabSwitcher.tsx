@@ -138,7 +138,6 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
     activeNtxId: string | null | undefined;
 }) {
     const { note } = noteContext;
-    const iconClass = useNoteIcon(note);
     const colorClass = note?.getColorClass() || '';
     const workspaceTabBackgroundColorHue = getWorkspaceTabBackgroundColorHue(noteContext);
     const subContexts = noteContext.getSubContexts();
@@ -158,25 +157,39 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
         >
             {subContexts.map(subContext => (
                 <Fragment key={subContext.ntxId}>
-                    <header className={colorClass}>
-                        {subContext.note && <Icon icon={iconClass} />}
-                        <span className="title">{subContext.note?.title ?? t("tab_row.new_tab")}</span>
-                        {subContext.isMainContext() && <ActionButton
-                            icon="bx bx-x"
-                            text={t("tab_row.close_tab")}
-                            onClick={(e) => {
-                                // We are closing a tab, so we need to prevent propagation for click (activate tab).
-                                e.stopPropagation();
-                                appContext.tabManager.removeNoteContext(subContext.ntxId);
-                            }}
-                        />}
-                    </header>
+                    <TabHeader noteContext={subContext} colorClass={colorClass} />
                     <div className={clsx("tab-preview", `type-${subContext.note?.type ?? "empty"}`)}>
                         <TabPreviewContent note={subContext.note} />
                     </div>
                 </Fragment>
             ))}
         </div>
+    );
+}
+
+function TabHeader({ noteContext, colorClass }: { noteContext: NoteContext, colorClass: string }) {
+    const iconClass = useNoteIcon(noteContext.note);
+    const [ navigationTitle, setNavigationTitle ] = useState<string | null>(null);
+
+    // Manage the title for read-only notes
+    useEffect(() => {
+        noteContext?.getNavigationTitle().then(setNavigationTitle);
+    }, [noteContext]);
+
+    return (
+        <header className={colorClass}>
+            {noteContext.note && <Icon icon={iconClass} />}
+            <span className="title">{navigationTitle ?? noteContext.note?.title ?? t("tab_row.new_tab")}</span>
+            {noteContext.isMainContext() && <ActionButton
+                icon="bx bx-x"
+                text={t("tab_row.close_tab")}
+                onClick={(e) => {
+                    // We are closing a tab, so we need to prevent propagation for click (activate tab).
+                    e.stopPropagation();
+                    appContext.tabManager.removeNoteContext(noteContext.ntxId);
+                }}
+            />}
+        </header>
     );
 }
 
