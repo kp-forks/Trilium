@@ -2639,10 +2639,10 @@ iframe.print-iframe {
             }
         }
 
-        /* #root-widget.virtual-keyboard-opened .note-split:not(:focus-within) {
+        #root-widget.virtual-keyboard-opened .note-split:not(.active) {
             max-height: 80px;
             opacity: 0.4;
-        } */
+        }
     }
 }
 
