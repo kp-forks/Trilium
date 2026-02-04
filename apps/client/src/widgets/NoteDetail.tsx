@@ -38,7 +38,7 @@ export default function NoteDetail() {
     const [ noteTypesToRender, setNoteTypesToRender ] = useState<{ [ key in ExtendedNoteType ]?: (props: TypeWidgetProps) => VNode }>({});
     const [ activeNoteType, setActiveNoteType ] = useState<ExtendedNoteType>();
     const widgetRequestId = useRef(0);
-    const hasFixedTree = noteContext?.hoistedNoteId === "_lbMobileRoot" && isMobile();
+    const hasFixedTree = note && noteContext?.hoistedNoteId === "_lbMobileRoot" && isMobile() && note.noteId.startsWith("_lbMobile");
 
     const props: TypeWidgetProps = {
         note: note!,
@@ -216,7 +216,7 @@ export default function NoteDetail() {
                 "fixed-tree": hasFixedTree
             })}
         >
-            {hasFixedTree && <FixedTree />}
+            {hasFixedTree && <FixedTree noteContext={noteContext} />}
 
             {Object.entries(noteTypesToRender).map(([ itemType, Element ]) => {
                 return <NoteDetailWrapper
@@ -232,8 +232,7 @@ export default function NoteDetail() {
     );
 }
 
-function FixedTree() {
-    const { noteContext } = useNoteContext();
+function FixedTree({ noteContext }: { noteContext: NoteContext }) {
     const [ treeEl ] = useLegacyWidget(() => new NoteTreeWidget(), { noteContext });
     return <div class="fixed-note-tree-container">{treeEl}</div>;
 }
