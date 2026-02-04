@@ -94,7 +94,8 @@
                 &.type-book,
                 &.type-contentWidget,
                 &.type-search,
-                &.type-empty {
+                &.type-empty,
+                &.type-relationMap {
                     display: flex;
                     align-items: center;
                     justify-content: center;
