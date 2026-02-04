@@ -89,6 +89,16 @@
 
                 &.type-text {
                     padding: 10px;
+                    --ck-content-todo-list-checkmark-size: 8px;
+
+                    p { margin-bottom: 0.2em;}
+                    hr { margin-block: 0.1em; height: 1px; }
+                    h2 { font-size: 1.20em; }
+                    h3 { font-size: 1.15em; }
+                    h4 { font-size: 1.10em; }
+                    h5 { font-size: 1.05em}
+                    h6 { font-size: 1em; }
+                    ul, ol { margin: 0 }
                 }
 
                 &.type-book,
@@ -107,13 +117,6 @@
                 .preview-placeholder {
                     font-size: 500%;
                 }
-
-                p { margin-bottom: 0.2em;}
-                h2 { font-size: 1.20em; }
-                h3 { font-size: 1.15em; }
-                h4 { font-size: 1.10em; }
-                h5 { font-size: 1.05em}
-                h6 { font-size: 1em; }
             }
 
             &.with-split {
