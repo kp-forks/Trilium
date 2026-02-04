@@ -210,7 +210,8 @@ export default function buildLaunchBarConfig() {
             id: "_lbMobileTabSwitcher",
             title: t("hidden-subtree.tab-switcher-title"),
             type: "launcher",
-            builtinWidget: "mobileTabSwitcher"
+            builtinWidget: "mobileTabSwitcher",
+            icon: "bx bx-rectangle"
         }
     ];
 
