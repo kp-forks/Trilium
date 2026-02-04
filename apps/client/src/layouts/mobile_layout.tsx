@@ -20,7 +20,6 @@ import NoteTitleWidget from "../widgets/note_title.js";
 import NoteTreeWidget from "../widgets/note_tree.js";
 import NoteWrapperWidget from "../widgets/note_wrapper.js";
 import NoteDetail from "../widgets/NoteDetail.jsx";
-import PromotedAttributes from "../widgets/PromotedAttributes.jsx";
 import QuickSearchWidget from "../widgets/quick_search.js";
 import { useNoteContext } from "../widgets/react/hooks.jsx";
 import StandaloneRibbonAdapter from "../widgets/ribbon/components/StandaloneRibbonAdapter.jsx";
@@ -155,7 +154,6 @@ export default class MobileLayout {
                                                 .child(<NoteBadges />)
                                                 .child(<MobileDetailMenu />)
                                         )
-                                        .child(<PromotedAttributes />)
                                         .child(
                                             new ScrollingContainer()
                                                 .filling()
