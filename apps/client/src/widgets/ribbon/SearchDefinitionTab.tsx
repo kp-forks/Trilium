@@ -15,7 +15,7 @@ import tree from "../../services/tree";
 import { getErrorMessage, isMobile } from "../../services/utils";
 import ws from "../../services/ws";
 import RenameNoteBulkAction from "../bulk_actions/note/rename_note";
-import Button from "../react/Button";
+import Button, { SplitButton } from "../react/Button";
 import Dropdown from "../react/Dropdown";
 import { FormListHeader, FormListItem } from "../react/FormList";
 import { useTriliumEvent } from "../react/hooks";
@@ -129,52 +129,61 @@ export default function SearchDefinitionTab({ note, ntxId, hidden }: Pick<TabCon
                             })}
                         </tbody>
                         <BulkActionsList note={note} />
-                        <tbody className="search-actions">
-                            <tr>
-                                <td colSpan={3}>
-                                    <div className="search-actions-container">
-                                        <Button
-                                            icon="bx bx-search"
-                                            text={t("search_definition.search_button")}
-                                            keyboardShortcut="Enter"
-                                            onClick={refreshResults}
-                                        />
-
-                                        <Button
-                                            icon="bx bxs-zap"
-                                            text={t("search_definition.search_execute")}
-                                            onClick={async () => {
-                                                await server.post(`search-and-execute-note/${note.noteId}`);
-                                                refreshResults();
-                                                toast.showMessage(t("search_definition.actions_executed"), 3000);
-                                            }}
-                                        />
-
-                                        {note.isHiddenCompletely() && <Button
-                                            icon="bx bx-save"
-                                            text={t("search_definition.save_to_note")}
-                                            onClick={async () => {
-                                                const { notePath } = await server.post<SaveSearchNoteResponse>("special-notes/save-search-note", { searchNoteId: note.noteId });
-                                                if (!notePath) {
-                                                    return;
-                                                }
-
-                                                await ws.waitForMaxKnownEntityChangeId();
-                                                await appContext.tabManager.getActiveContext()?.setNote(notePath);
-
-                                                // Note the {{- notePathTitle}} in json file is not typo, it's unescaping
-                                                // See https://www.i18next.com/translation-function/interpolation#unescape
-                                                toast.showMessage(t("search_definition.search_note_saved", { notePathTitle: await tree.getNotePathTitle(notePath) }));
-                                            }}
-                                        />}
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
+                        <SearchButtonBar note={note} refreshResults={refreshResults} />
                     </table>
                 )}
             </div>
         </div>
+    );
+}
+
+function SearchButtonBar({ note, refreshResults }: {
+    note: FNote;
+    refreshResults(): void;
+}) {
+    async function searchAndExecuteActions() {
+        await server.post(`search-and-execute-note/${note.noteId}`);
+        refreshResults();
+        toast.showMessage(t("search_definition.actions_executed"), 3000);
+    }
+
+    async function saveSearchNote() {
+        const { notePath } = await server.post<SaveSearchNoteResponse>("special-notes/save-search-note", { searchNoteId: note.noteId });
+        if (!notePath) return;
+
+        await ws.waitForMaxKnownEntityChangeId();
+        await appContext.tabManager.getActiveContext()?.setNote(notePath);
+
+        // Note the {{- notePathTitle}} in json file is not typo, it's unescaping
+        // See https://www.i18next.com/translation-function/interpolation#unescape
+        toast.showMessage(t("search_definition.search_note_saved", { notePathTitle: await tree.getNotePathTitle(notePath) }));
+    }
+
+    return (
+        <tbody className="search-actions">
+            <tr>
+                <td colSpan={3}>
+                    <ResponsiveContainer
+                        desktop={
+                            <div className="search-actions-container">
+                                <Button icon="bx bx-search" text={t("search_definition.search_button")} keyboardShortcut="Enter" onClick={refreshResults} />
+                                <Button icon="bx bxs-zap" text={t("search_definition.search_execute")} onClick={searchAndExecuteActions} />
+                                {note.isHiddenCompletely() && <Button icon="bx bx-save" text={t("search_definition.save_to_note")} onClick={saveSearchNote} />}
+                            </div>
+                        }
+                        mobile={
+                            <SplitButton
+                                text={t("search_definition.search_button")} icon="bx bx-search"
+                                onClick={refreshResults}
+                            >
+                                <FormListItem icon="bx bxs-zap" onClick={searchAndExecuteActions}>{t("search_definition.search_execute")}</FormListItem>
+                                {note.isHiddenCompletely() && <FormListItem icon="bx bx-save" onClick={saveSearchNote}>{t("search_definition.save_to_note")}</FormListItem>}
+                            </SplitButton>
+                        }
+                    />
+                </td>
+            </tr>
+        </tbody>
     );
 }
 
