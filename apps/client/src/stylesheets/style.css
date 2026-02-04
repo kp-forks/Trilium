@@ -28,7 +28,7 @@
     --bs-body-color: var(--main-text-color) !important;
     --bs-body-bg: var(--main-background-color) !important;
     --ck-mention-list-max-height: 500px;
-    --tn-modal-max-height: 90vh;
+    --tn-modal-max-height: 90svh;
 
     --tree-item-light-theme-max-color-lightness: 50;
     --tree-item-dark-theme-min-color-lightness: 75;
@@ -111,6 +111,7 @@ body.mobile #root-widget.virtual-keyboard-opened #mobile-bottom-bar {
 }
 
 #mobile-bottom-bar {
+    border-top: 1px solid var(--main-border-color);
     padding-bottom: var(--mobile-bottom-offset);
 }
 
@@ -1553,8 +1554,8 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         max-height: calc(var(--tn-modal-max-height) - var(--dropdown-bottom));
     }
 
-    body.mobile .modal-dialog .dropdown-menu.mobile-bottom-menu.show {
-        --dropdown-bottom: 0;
+    body.mobile .dropdown-menu.mobile-bottom-menu.show {
+        --dropdown-bottom: 0px;
     }
 
     #mobile-sidebar-container {
@@ -1682,47 +1683,15 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         background: var(--main-background-color);
     }
 
-    .modal-dialog {
-        margin: var(--bs-modal-margin);
-        max-width: 80%;
-    }
+    body.mobile {
+        .modal-dialog {
+            margin: var(--bs-modal-margin);
+            max-width: 80%;
+        }
 
-    .modal-content {
-        height: 100%;
-    }
-}
-
-@media (max-width: 991px) {
-    body.mobile.force-fixed-tree #mobile-sidebar-wrapper {
-        padding-top: 0;
-        position: static;
-        height: 40vh;
-        width: 100vw;
-        transform: none !important;
-        background-color: var(--left-pane-background-color) !important;
-        border-bottom: 0.5px solid var(--main-border-color);
-    }
-
-    body.mobile.force-fixed-tree #mobile-sidebar-container {
-        display: none !important;
-    }
-
-    body.mobile.force-fixed-tree #mobile-sidebar-wrapper .quick-search {
-        display: none;
-    }
-
-    body.mobile.force-fixed-tree .component > button.bx-sidebar {
-        visibility: hidden;
-        padding: 0;
-        width: 6px;
-    }
-
-    body.mobile.force-fixed-tree #mobile-rest-container {
-        flex-direction: column !important;
-    }
-
-    body.mobile.force-fixed-tree #detail-container {
-        flex-grow: 1;
+        .modal-content {
+            height: 100%;
+        }
     }
 }
 
@@ -2638,10 +2607,10 @@ iframe.print-iframe {
             }
         }
 
-        /* #root-widget.virtual-keyboard-opened .note-split:not(:focus-within) {
+        #root-widget.virtual-keyboard-opened .note-split:not(.active) {
             max-height: 80px;
             opacity: 0.4;
-        } */
+        }
     }
 }
 

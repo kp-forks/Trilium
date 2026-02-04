@@ -739,18 +739,12 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
     transform: translateX(-25%);
 }
 
-body.mobile .fancytree-expander::before,
-body.mobile .fancytree-title,
-body.mobile .fancytree-node > span {
-    font-size: 1rem !important;
-}
-
 @media (max-width: 991px) {
     body.mobile #mobile-sidebar-container {
         background-color: rgba(0, 0, 0, 0.5);
     }
 
-    body.mobile:not(.force-fixed-tree) #mobile-sidebar-wrapper {
+    body.mobile #mobile-sidebar-wrapper {
         border-top-right-radius: 12px;
         border-bottom-right-radius: 12px;
         border-inline-end: 1px solid var(--subtle-border-color);
@@ -1272,7 +1266,7 @@ body.layout-horizontal #rest-pane > .classic-toolbar-widget {
 #center-pane .note-split {
     padding-top: 2px;
     background-color: var(--note-split-background-color, var(--main-background-color));
-    transition: border-color 250ms ease-in;
+    transition: border-color 150ms ease-out;
     border: 2px solid transparent;
 }
 
