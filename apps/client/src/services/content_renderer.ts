@@ -1,3 +1,5 @@
+import "./content_renderer.css";
+
 import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 import WheelZoom from 'vanilla-js-wheel-zoom';
 
@@ -71,18 +73,9 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
 
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
     } else if (entity instanceof FNote) {
-        $renderedContent
-            .css("display", "flex")
-            .css("flex-direction", "column");
+        $renderedContent.addClass("no-preview");
         $renderedContent.append(
-            $("<div>")
-                .css("display", "flex")
-                .css("justify-content", "space-around")
-                .css("align-items", "center")
-                .css("height", "100%")
-                .css("font-size", "500%")
-                .css("flex-grow", "1")
-                .append($("<span>").addClass(entity.getIcon()))
+            $("<div>").append($("<span>").addClass(entity.getIcon()))
         );
 
         if (entity.type === "webView" && entity.hasLabel("webViewSrc")) {

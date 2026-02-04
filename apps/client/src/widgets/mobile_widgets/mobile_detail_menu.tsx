@@ -1,4 +1,5 @@
-import { createPortal, useState } from "preact/compat";
+import { Dropdown as BootstrapDropdown } from "bootstrap";
+import { createPortal, useRef, useState } from "preact/compat";
 
 import FNote, { NotePathRecord } from "../../entities/fnote";
 import { t } from "../../services/i18n";
@@ -13,6 +14,7 @@ import NoteActionsCustom from "../ribbon/NoteActionsCustom";
 import { NotePathsWidget, useSortedNotePaths } from "../ribbon/NotePathsTab";
 
 export default function MobileDetailMenu() {
+    const dropdownRef = useRef<BootstrapDropdown | null>(null);
     const { note, noteContext, parentComponent, ntxId, viewScope, hoistedNoteId } = useNoteContext();
     const subContexts = noteContext?.getMainContext().getSubContexts() ?? [];
     const isMainContext = noteContext?.isMainContext();
@@ -32,6 +34,7 @@ export default function MobileDetailMenu() {
         <div style={{ contain: "none" }}>
             {note ? (
                 <NoteContextMenu
+                    dropdownRef={dropdownRef}
                     note={note} noteContext={noteContext}
                     extraItems={<>
                         <div className="form-list-row">
@@ -60,7 +63,12 @@ export default function MobileDetailMenu() {
                         {subContexts.length < 2 && <>
                             <FormDropdownDivider />
                             <FormListItem
-                                onClick={() => parentComponent.triggerCommand("openNewNoteSplit", { ntxId })}
+                                onClick={(e) => {
+                                    // We have to manually manage the hide because otherwise the old note context gets activated.
+                                    e.stopPropagation();
+                                    dropdownRef.current?.hide();
+                                    parentComponent.triggerCommand("openNewNoteSplit", { ntxId });
+                                }}
                                 icon="bx bx-dock-right"
                             >{t("create_pane_button.create_new_split")}</FormListItem>
                         </>}
