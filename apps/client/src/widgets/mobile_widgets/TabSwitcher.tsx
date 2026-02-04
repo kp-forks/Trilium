@@ -211,7 +211,7 @@ function TabPreviewContent({ note, viewScope }: {
         el = <PreviewPlaceholder icon="bx bx-plus" />;
     } else if (note.type === "book") {
         el = <PreviewPlaceholder icon={ICON_MAPPINGS[note.getLabelValue("viewType") ?? ""] ?? "bx bx-book"} />;
-    } else if (viewScope?.viewMode !== "default") {
+    } else if (viewScope?.viewMode && viewScope.viewMode !== "default") {
         el = <PreviewPlaceholder icon={VIEW_MODE_ICON_MAPPINGS[viewScope?.viewMode ?? ""] ?? "bx bx-empty"} />;
     } else {
         el = <NoteContent

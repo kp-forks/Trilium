@@ -1,7 +1,6 @@
 import "./NoteDetail.css";
 
 import clsx from "clsx";
-import { use } from "i18next";
 import { isValidElement, VNode } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
@@ -16,7 +15,7 @@ import toast from "../services/toast.js";
 import { dynamicRequire, isElectron, isMobile } from "../services/utils";
 import NoteTreeWidget from "./note_tree";
 import { ExtendedNoteType, TYPE_MAPPINGS, TypeWidget } from "./note_types";
-import { useLegacyWidget, useNote, useNoteContext, useTriliumEvent } from "./react/hooks";
+import { useLegacyWidget, useNoteContext, useTriliumEvent } from "./react/hooks";
 import { NoteListWithLinks } from "./react/NoteList";
 import { TypeWidgetProps } from "./type_widgets/type_widget";
 

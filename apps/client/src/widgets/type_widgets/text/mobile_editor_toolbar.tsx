@@ -21,7 +21,7 @@ export default function MobileEditorToolbar({ inPopupEditor }: MobileEditorToolb
     const { note, noteContext, ntxId } = useNoteContext();
     const noteType = useNoteProperty(note, "type");
     const { isReadOnly } = useIsNoteReadOnly(note, noteContext);
-    const shouldDisplay = noteType === "text" && !isReadOnly;
+    const shouldDisplay = noteType === "text" && isReadOnly === false;
     const [ dropdownActive, setDropdownActive ] = useState(false);
 
     usePositioningOniOS(!inPopupEditor, containerRef);
