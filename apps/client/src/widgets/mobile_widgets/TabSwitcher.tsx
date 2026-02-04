@@ -1,6 +1,7 @@
 import "./TabSwitcher.css";
 
 import clsx from "clsx";
+import { ComponentChild } from "preact";
 import { createPortal, Fragment } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
@@ -11,6 +12,7 @@ import contextMenu from "../../menus/context_menu";
 import { getHue, parseColor } from "../../services/css_class_manager";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
+import type { ViewMode, ViewScope } from "../../services/link";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { LaunchBarActionButton } from "../launch_bar/launch_bar_widgets";
 import { ICON_MAPPINGS } from "../note_bars/CollectionProperties";
@@ -19,6 +21,13 @@ import { useActiveNoteContext, useNoteIcon, useTriliumEvents } from "../react/ho
 import Icon from "../react/Icon";
 import LinkButton from "../react/LinkButton";
 import Modal from "../react/Modal";
+
+const VIEW_MODE_ICON_MAPPINGS: Record<Exclude<ViewMode, "default">, string> = {
+    source: "bx bx-code",
+    "contextual-help": "bx bx-help-circle",
+    "note-map": "bx bxs-network-chart",
+    attachments: "bx bx-paperclip",
+};
 
 export default function TabSwitcher() {
     const [ shown, setShown ] = useState(false);
@@ -158,9 +167,7 @@ function Tab({ noteContext, containerRef, selectTab, activeNtxId }: {
             {subContexts.map(subContext => (
                 <Fragment key={subContext.ntxId}>
                     <TabHeader noteContext={subContext} colorClass={colorClass} />
-                    <div className={clsx("tab-preview", `type-${subContext.note?.type ?? "empty"}`)}>
-                        <TabPreviewContent note={subContext.note} />
-                    </div>
+                    <TabPreviewContent note={subContext.note} viewScope={subContext.viewScope} />
                 </Fragment>
             ))}
         </div>
@@ -193,24 +200,31 @@ function TabHeader({ noteContext, colorClass }: { noteContext: NoteContext, colo
     );
 }
 
-function TabPreviewContent({ note }: {
-    note: FNote | null
+function TabPreviewContent({ note, viewScope }: {
+    note: FNote | null,
+    viewScope: ViewScope | undefined
 }) {
+    let el: ComponentChild;
+    let isPlaceholder = true;
+
     if (!note) {
-        return <PreviewPlaceholder icon="bx bx-plus" />;
-    }
-
-    if (note.type === "book") {
-        return <PreviewPlaceholder icon={ICON_MAPPINGS[note.getLabelValue("viewType") ?? ""] ?? "bx bx-book"} />;
-    }
-
-    return (
-        <NoteContent
+        el = <PreviewPlaceholder icon="bx bx-plus" />;
+    } else if (note.type === "book") {
+        el = <PreviewPlaceholder icon={ICON_MAPPINGS[note.getLabelValue("viewType") ?? ""] ?? "bx bx-book"} />;
+    } else if (viewScope?.viewMode !== "default") {
+        el = <PreviewPlaceholder icon={VIEW_MODE_ICON_MAPPINGS[viewScope?.viewMode ?? ""] ?? "bx bx-empty"} />;
+    } else {
+        el = <NoteContent
             note={note}
             highlightedTokens={undefined}
             trim
             includeArchivedNotes={false}
-        />
+        />;
+        isPlaceholder = false;
+    }
+
+    return (
+        <div className={clsx("tab-preview", `type-${note?.type ?? "empty"}`, { "tab-preview-placeholder": isPlaceholder })}>{el}</div>
     );
 }
 
