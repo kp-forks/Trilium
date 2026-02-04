@@ -739,12 +739,6 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
     transform: translateX(-25%);
 }
 
-body.mobile .fancytree-expander::before,
-body.mobile .fancytree-title,
-body.mobile .fancytree-node > span {
-    font-size: 1rem !important;
-}
-
 @media (max-width: 991px) {
     body.mobile #mobile-sidebar-container {
         background-color: rgba(0, 0, 0, 0.5);

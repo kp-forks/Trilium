@@ -67,21 +67,12 @@ const FANCYTREE_CSS = `
     padding-inline-start: 10px;
 }
 
-.fancytree-custom-icon {
-    font-size: 2em;
-}
-
 .fancytree-title {
-    font-size: 1.5em;
     margin-inline-start: 0.6em !important;
 }
 
 .fancytree-node {
     padding: 5px;
-}
-
-.fancytree-node .fancytree-expander:before {
-    font-size: 2em !important;
 }
 
 span.fancytree-expander {
