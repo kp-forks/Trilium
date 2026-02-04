@@ -40,18 +40,18 @@ export default function buildLaunchBarConfig() {
             type: "launcher",
             command: "showRecentChanges",
             icon: "bx bx-history"
+        },
+        searchNotes: {
+            title: t("hidden-subtree.search-notes-title"),
+            type: "launcher",
+            command: "searchNotes",
+            icon: "bx bx-search",
         }
     };
 
     const desktopAvailableLaunchers: HiddenSubtreeItem[] = [
-        {
-            id: "_lbBackInHistory",
-            ...sharedLaunchers.backInHistory
-        },
-        {
-            id: "_lbForwardInHistory",
-            ...sharedLaunchers.forwardInHistory
-        },
+        { id: "_lbBackInHistory", ...sharedLaunchers.backInHistory },
+        { id: "_lbForwardInHistory", ...sharedLaunchers.forwardInHistory },
         {
             id: "_commandPalette",
             title: t("hidden-subtree.command-palette"),
@@ -82,11 +82,7 @@ export default function buildLaunchBarConfig() {
         },
         {
             id: "_lbSearch",
-            title: t("hidden-subtree.search-notes-title"),
-            type: "launcher",
-            command: "searchNotes",
-            icon: "bx bx-search",
-            attributes: [{ type: "label", name: "desktopOnly" }]
+            ...sharedLaunchers.searchNotes
         },
         {
             id: "_lbJumpTo",
@@ -179,22 +175,14 @@ export default function buildLaunchBarConfig() {
 
     const mobileAvailableLaunchers: HiddenSubtreeItem[] = [
         { id: "_lbMobileNewNote", ...sharedLaunchers.newNote },
+        { id: "_lbMobileSearchNotes", ...sharedLaunchers.searchNotes },
         { id: "_lbMobileToday", ...sharedLaunchers.openToday },
-        {
-            id: "_lbMobileRecentChanges",
-            ...sharedLaunchers.recentChanges
-        }
+        { id: "_lbMobileRecentChanges", ...sharedLaunchers.recentChanges }
     ];
 
     const mobileVisibleLaunchers: HiddenSubtreeItem[] = [
-        {
-            id: "_lbMobileBackInHistory",
-            ...sharedLaunchers.backInHistory
-        },
-        {
-            id: "_lbMobileForwardInHistory",
-            ...sharedLaunchers.forwardInHistory
-        },
+        { id: "_lbMobileBackInHistory", ...sharedLaunchers.backInHistory },
+        { id: "_lbMobileForwardInHistory", ...sharedLaunchers.forwardInHistory },
         {
             id: "_lbMobileJumpTo",
             title: t("hidden-subtree.jump-to-note-title"),
