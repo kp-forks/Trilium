@@ -1552,8 +1552,8 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         max-height: calc(var(--tn-modal-max-height) - var(--dropdown-bottom));
     }
 
-    body.mobile .modal-dialog .dropdown-menu.mobile-bottom-menu.show {
-        --dropdown-bottom: 0;
+    body.mobile .dropdown-menu.mobile-bottom-menu.show {
+        --dropdown-bottom: 0px;
     }
 
     #mobile-sidebar-container {
