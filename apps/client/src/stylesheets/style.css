@@ -1556,6 +1556,7 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
 
     body.mobile .dropdown-menu.mobile-bottom-menu.show {
         --dropdown-bottom: 0px;
+        padding-bottom: calc(max(var(--menu-padding-size), env(safe-area-inset-bottom))) !important;
     }
 
     #mobile-sidebar-container {
