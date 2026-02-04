@@ -13,7 +13,7 @@ import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
 import tree from "../../services/tree";
-import { getErrorMessage, isMobile } from "../../services/utils";
+import { getErrorMessage } from "../../services/utils";
 import ws from "../../services/ws";
 import RenameNoteBulkAction from "../bulk_actions/note/rename_note";
 import Button, { SplitButton } from "../react/Button";
@@ -227,9 +227,11 @@ function AddBulkActionButton({ note }: { note: FNote }) {
                 <Fragment key={index}>
                     <FormListHeader text={title} />
 
-                    {actions.map(({ actionName, actionTitle }) => (
-                        <FormListItem key={actionName} onClick={() => bulk_action.addAction(note.noteId, actionName)}>{actionTitle}</FormListItem>
-                    ))}
+                    <div>
+                        {actions.map(({ actionName, actionTitle }) => (
+                            <FormListItem key={actionName} onClick={() => bulk_action.addAction(note.noteId, actionName)}>{actionTitle}</FormListItem>
+                        ))}
+                    </div>
                 </Fragment>
             ))}
         </Dropdown>
