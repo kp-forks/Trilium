@@ -1681,13 +1681,15 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         background: var(--main-background-color);
     }
 
-    .modal-dialog {
-        margin: var(--bs-modal-margin);
-        max-width: 80%;
-    }
+    body.mobile {
+        .modal-dialog {
+            margin: var(--bs-modal-margin);
+            max-width: 80%;
+        }
 
-    .modal-content {
-        height: 100%;
+        .modal-content {
+            height: 100%;
+        }
     }
 }
 
