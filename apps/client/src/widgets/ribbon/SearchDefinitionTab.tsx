@@ -12,7 +12,7 @@ import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
 import tree from "../../services/tree";
-import { getErrorMessage } from "../../services/utils";
+import { getErrorMessage, isMobile } from "../../services/utils";
 import ws from "../../services/ws";
 import RenameNoteBulkAction from "../bulk_actions/note/rename_note";
 import Button from "../react/Button";
@@ -21,6 +21,7 @@ import { FormListHeader, FormListItem } from "../react/FormList";
 import { useTriliumEvent } from "../react/hooks";
 import Icon from "../react/Icon";
 import { ParentComponent } from "../react/react_utils";
+import ResponsiveContainer from "../react/ResponseContainer";
 import { TabContext } from "./ribbon-interface";
 import { SEARCH_OPTIONS, SearchOption } from "./SearchDefinitionOptions";
 
@@ -84,15 +85,30 @@ export default function SearchDefinitionTab({ note, ntxId, hidden }: Pick<TabCon
                             <tr>
                                 <td className="title-column">{t("search_definition.add_search_option")}</td>
                                 <td colSpan={2} className="add-search-option">
-                                    {searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }) => (
-                                        <Button
-                                            size="small"
-                                            icon={icon}
-                                            text={label}
-                                            title={tooltip}
-                                            onClick={() => attributes.setAttribute(note, attributeType, attributeName, defaultValue ?? "")}
-                                        />
-                                    ))}
+                                    <ResponsiveContainer
+                                        desktop={searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }, index) => (
+                                            <Button
+                                                key={index} size="small" icon={icon} text={label} title={tooltip}
+                                                onClick={() => attributes.setAttribute(note, attributeType, attributeName, defaultValue ?? "")}
+                                            />
+                                        ))}
+                                        mobile={
+                                            <Dropdown
+                                                buttonClassName="action-add-toggle btn btn-sm"
+                                                text={<><Icon icon="bx bx-plus" />{" "}{t("search_definition.option")}</>}
+                                                noSelectButtonStyle
+                                            >
+                                                {searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }, index) => (
+                                                    <FormListItem
+                                                        key={index} icon={icon}
+                                                        description={tooltip}
+                                                        onClick={() => attributes.setAttribute(note, attributeType, attributeName, defaultValue ?? "")}
+                                                    >{label}</FormListItem>
+                                                ))}
+                                            </Dropdown>
+                                        }
+                                    />
+
 
                                     <AddBulkActionButton note={note} />
                                 </td>
