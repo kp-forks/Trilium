@@ -28,7 +28,7 @@
     --bs-body-color: var(--main-text-color) !important;
     --bs-body-bg: var(--main-background-color) !important;
     --ck-mention-list-max-height: 500px;
-    --tn-modal-max-height: 90vh;
+    --tn-modal-max-height: 90svh;
 
     --tree-item-light-theme-max-color-lightness: 50;
     --tree-item-dark-theme-min-color-lightness: 75;
