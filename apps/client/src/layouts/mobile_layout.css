@@ -1,3 +1,7 @@
+#background-color-tracker {
+    color: var(--main-background-color) !important;
+}
+
 span.keyboard-shortcut,
 kbd {
     display: none;

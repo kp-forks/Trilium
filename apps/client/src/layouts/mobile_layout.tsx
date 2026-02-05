@@ -77,7 +77,6 @@ export default class MobileLayout {
                                                 .child(<NoteTitleActions />)
                                                 .child(<NoteDetail />)
                                                 .child(<NoteList media="screen" />)
-                                                .child(<StandaloneRibbonAdapter component={SearchDefinitionTab} />)
                                                 .child(<SearchResult />)
                                                 .child(<FilePropertiesWrapper />)
                                         )

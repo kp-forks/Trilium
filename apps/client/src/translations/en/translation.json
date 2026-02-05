@@ -662,7 +662,8 @@
     "show-cheatsheet": "Show Cheatsheet",
     "toggle-zen-mode": "Zen Mode",
     "new-version-available": "New Update Available",
-    "download-update": "Get Version {{latestVersion}}"
+    "download-update": "Get Version {{latestVersion}}",
+    "search_notes": "Search notes"
   },
   "zen_mode": {
     "button_exit": "Exit Zen Mode"
@@ -761,7 +762,8 @@
     "note_revisions": "Note revisions",
     "error_cannot_get_branch_id": "Cannot get branchId for notePath '{{notePath}}'",
     "error_unrecognized_command": "Unrecognized command {{command}}",
-    "backlinks": "Backlinks"
+    "backlinks": "Backlinks",
+    "content_language_switcher": "Content language: {{language}}"
   },
   "note_icon": {
     "change_note_icon": "Change note icon",
@@ -906,6 +908,7 @@
     "debug": "debug",
     "debug_description": "Debug will print extra debugging information into the console to aid in debugging complex queries",
     "action": "action",
+    "option": "option",
     "search_button": "Search",
     "search_execute": "Search & Execute actions",
     "save_to_note": "Save to note",
@@ -2277,5 +2280,8 @@
     "title_one": "{{count}} tab",
     "title_other": "{{count}} tabs",
     "more_options": "More options"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "Bookmarks"
   }
 }

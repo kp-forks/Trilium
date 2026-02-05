@@ -12,6 +12,7 @@
         .fixed-note-tree-container {
             height: 60%;
             border-bottom: 1px solid var(--main-border-color);
+            overflow: auto;
 
             .tree-wrapper {
                 padding: 0;
