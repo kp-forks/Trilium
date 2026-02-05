@@ -2280,5 +2280,8 @@
     "title_one": "{{count}} tab",
     "title_other": "{{count}} tabs",
     "more_options": "More options"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "Bookmarks"
   }
 }
