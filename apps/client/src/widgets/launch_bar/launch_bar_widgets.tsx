@@ -49,6 +49,7 @@ export function LaunchBarDropdownButton({ children, icon, dropdownOptions, ...pr
                     placement: isHorizontalLayout ? "bottom" : "right"
                 }
             }}
+            mobileBackdrop
             {...props}
         >{children}</Dropdown>
     );
