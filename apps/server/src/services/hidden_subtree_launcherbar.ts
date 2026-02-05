@@ -46,7 +46,13 @@ export default function buildLaunchBarConfig() {
             type: "launcher",
             command: "searchNotes",
             icon: "bx bx-search",
-        }
+        },
+        bookmarks: {
+            title: t("hidden-subtree.bookmarks-title"),
+            type: "launcher",
+            builtinWidget: "bookmarks",
+            icon: "bx bx-bookmark"
+        },
     };
 
     const desktopAvailableLaunchers: HiddenSubtreeItem[] = [
@@ -124,13 +130,7 @@ export default function buildLaunchBarConfig() {
             baseSize: "50",
             growthFactor: "0"
         },
-        {
-            id: "_lbBookmarks",
-            title: t("hidden-subtree.bookmarks-title"),
-            type: "launcher",
-            builtinWidget: "bookmarks",
-            icon: "bx bx-bookmark"
-        },
+        { id: "_lbBookmarks", ...sharedLaunchers.bookmarks },
         {
             id: "_lbToday",
             ...sharedLaunchers.openToday
@@ -177,7 +177,8 @@ export default function buildLaunchBarConfig() {
         { id: "_lbMobileNewNote", ...sharedLaunchers.newNote },
         { id: "_lbMobileSearchNotes", ...sharedLaunchers.searchNotes },
         { id: "_lbMobileToday", ...sharedLaunchers.openToday },
-        { id: "_lbMobileRecentChanges", ...sharedLaunchers.recentChanges }
+        { id: "_lbMobileRecentChanges", ...sharedLaunchers.recentChanges },
+        { id: "_lbMobileBookmarks", ...sharedLaunchers.bookmarks }
     ];
 
     const mobileVisibleLaunchers: HiddenSubtreeItem[] = [
