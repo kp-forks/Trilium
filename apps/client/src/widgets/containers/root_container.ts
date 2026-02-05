@@ -38,6 +38,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
         this.#setThemeCapabilities();
         this.#setLocaleAndDirection(options.get("locale"));
         this.#setExperimentalFeatures();
+        this.#initPWATopbarColor();
 
         return super.render();
     }
@@ -114,6 +115,24 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
         const correspondingLocale = LOCALES.find(l => l.id === locale);
         document.body.lang = locale;
         document.body.dir = correspondingLocale?.rtl ? "rtl" : "ltr";
+    }
+
+    #initPWATopbarColor() {
+        if (!utils.isPWA()) return;
+        const tracker = $("#background-color-tracker");
+
+        if (tracker.length) {
+            const applyThemeColor = () => {
+                let meta = $("meta[name='theme-color']");
+                if (!meta.length) {
+                    meta = $(`<meta name="theme-color">`).appendTo($("head"));
+                }
+                meta.attr("content", tracker.css("color"));
+            };
+
+            tracker.on("transitionend", applyThemeColor);
+            applyThemeColor();
+        }
     }
 }
 
