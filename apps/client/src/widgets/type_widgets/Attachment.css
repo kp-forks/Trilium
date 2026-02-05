@@ -127,10 +127,6 @@
 
 /* #region Attachment actions */
 
-.attachment-actions .dropdown-menu {
-    width: 20em;
-}
-
 .attachment-actions .dropdown-item .tn-icon {
     position: relative;
     top: 3px;
