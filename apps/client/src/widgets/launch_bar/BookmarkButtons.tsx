@@ -8,7 +8,7 @@ import { t } from "../../services/i18n";
 import { FormDropdownSubmenu, FormListItem } from "../react/FormList";
 import { useChildNotes, useNote, useNoteIcon, useNoteLabelBoolean } from "../react/hooks";
 import NoteLink from "../react/NoteLink";
-import ResponsiveContainer from "../react/ResponseContainer";
+import ResponsiveContainer from "../react/ResponsiveContainer";
 import { CustomNoteLauncher, launchCustomNoteLauncher } from "./GenericButtons";
 import { LaunchBarContext, LaunchBarDropdownButton, useLauncherIconAndTitle } from "./launch_bar_widgets";
 

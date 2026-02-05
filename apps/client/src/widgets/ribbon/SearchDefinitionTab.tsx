@@ -22,7 +22,7 @@ import { FormListHeader, FormListItem } from "../react/FormList";
 import { useTriliumEvent } from "../react/hooks";
 import Icon from "../react/Icon";
 import { ParentComponent } from "../react/react_utils";
-import ResponsiveContainer from "../react/ResponseContainer";
+import ResponsiveContainer from "../react/ResponsiveContainer";
 import { TabContext } from "./ribbon-interface";
 import { SEARCH_OPTIONS, SearchOption } from "./SearchDefinitionOptions";
 
