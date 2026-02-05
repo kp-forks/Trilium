@@ -22,7 +22,6 @@ export default class SidebarContainer extends FlexContainer<BasicWidget> {
     private currentTranslate: number;
     private dragState: number;
     private startX?: number;
-    private startY?: number;
     private translatePercentage: number;
     private sidebarEl!: HTMLElement;
     private backdropEl!: HTMLElement;
@@ -52,13 +51,11 @@ export default class SidebarContainer extends FlexContainer<BasicWidget> {
 
     #onDragStart(e: TouchEvent | MouseEvent) {
         const x = "touches" in e ? e.touches[0].clientX : e.clientX;
-        const y = "touches" in e ? e.touches[0].clientY : e.clientY;
         this.startX = x;
-        this.startY = y;
 
         // Prevent dragging if too far from the edge of the screen and the menu is closed.
-        const dragRefX = glob.isRtl ? this.screenWidth - x : x;
-        if (dragRefX > 300 && this.currentTranslate === -100) {
+        let dragRefX = glob.isRtl ? this.screenWidth - x : x;
+        if (dragRefX > 30 && this.currentTranslate === -100) {
             return;
         }
 
@@ -68,26 +65,13 @@ export default class SidebarContainer extends FlexContainer<BasicWidget> {
     }
 
     #onDragMove(e: TouchEvent | MouseEvent) {
-        if (this.dragState === DRAG_STATE_NONE || !this.startX || !this.startY) {
+        if (this.dragState === DRAG_STATE_NONE || !this.startX) {
             return;
         }
 
         const x = "touches" in e ? e.touches[0].clientX : e.clientX;
-        const y = "touches" in e ? e.touches[0].clientY : e.clientY;
         const deltaX = glob.isRtl ? this.startX - x : x - this.startX;
-        const deltaY = y - this.startY;
-
         if (this.dragState === DRAG_STATE_INITIAL_DRAG) {
-            // Check if the gesture is more horizontal than vertical
-            const absDeltaX = Math.abs(deltaX);
-            const absDeltaY = Math.abs(deltaY);
-
-            // If movement is more vertical than horizontal, cancel the drag to allow scrolling
-            if (absDeltaY > absDeltaX * 1.5) {
-                this.dragState = DRAG_STATE_NONE;
-                return;
-            }
-
             if (this.currentTranslate === -100 ? deltaX > DRAG_CLOSED_START_THRESHOLD : deltaX < -DRAG_OPENED_START_THRESHOLD) {
                 /* Disable the transitions since they affect performance, they are going to reenabled once drag ends. */
                 this.sidebarEl.style.transition = "none";
@@ -105,7 +89,7 @@ export default class SidebarContainer extends FlexContainer<BasicWidget> {
             }
         } else if (this.dragState === DRAG_STATE_DRAGGING) {
             const width = this.sidebarEl.offsetWidth;
-            const translatePercentage = Math.min(0, Math.max(this.currentTranslate + (deltaX / width) * 100, -100));
+            let translatePercentage = Math.min(0, Math.max(this.currentTranslate + (deltaX / width) * 100, -100));
             const backdropOpacity = Math.max(0, 1 + translatePercentage / 100);
             this.translatePercentage = translatePercentage;
             if (glob.isRtl) {
@@ -176,10 +160,12 @@ export default class SidebarContainer extends FlexContainer<BasicWidget> {
         this.sidebarEl.classList.toggle("show", isOpen);
         if (isOpen) {
             this.sidebarEl.style.transform = "translateX(0)";
-        } else if (glob.isRtl) {
-            this.sidebarEl.style.transform = "translateX(100%)";
         } else {
-            this.sidebarEl.style.transform = "translateX(-100%)";
+            if (glob.isRtl) {
+                this.sidebarEl.style.transform = "translateX(100%)"
+            } else {
+                this.sidebarEl.style.transform = "translateX(-100%)";
+            }
         }
         this.sidebarEl.style.transition = this.originalSidebarTransition;
 
