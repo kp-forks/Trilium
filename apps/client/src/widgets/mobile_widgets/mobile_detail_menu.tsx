@@ -194,7 +194,7 @@ function NoteInfoModal({ note, modalShown, setModalShown }: { note: FNote | null
             show={modalShown}
             onHidden={() => setModalShown(false)}
         >
-            {note && <NoteInfoContent note={note} noteType={note.type}  />}
+            {note && <NoteInfoContent note={note} noteType={note.type} />}
         </Modal>
     );
 }

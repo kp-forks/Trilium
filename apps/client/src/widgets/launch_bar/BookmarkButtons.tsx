@@ -57,7 +57,7 @@ function SingleBookmark({ note }: { note: FNote }) {
 function MobileBookmarkItem({ noteId, bookmarkFolder }: { noteId: string, bookmarkFolder: boolean }) {
     const note = useNote(noteId);
     const noteIcon = useNoteIcon(note);
-    if (!note) return;
+    if (!note) return null;
 
     return (
         !bookmarkFolder

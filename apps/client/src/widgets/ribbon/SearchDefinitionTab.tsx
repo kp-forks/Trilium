@@ -87,9 +87,10 @@ export default function SearchDefinitionTab({ note, ntxId, hidden }: Pick<TabCon
                                 <td className="title-column">{t("search_definition.add_search_option")}</td>
                                 <td colSpan={2} className="add-search-option">
                                     <ResponsiveContainer
-                                        desktop={searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }, index) => (
+                                        desktop={searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }) => (
                                             <Button
-                                                key={index} size="small" icon={icon} text={label} title={tooltip}
+                                                key={`${attributeType}-${attributeName}`}
+                                                size="small" icon={icon} text={label} title={tooltip}
                                                 onClick={() => attributes.setAttribute(note, attributeType, attributeName, defaultValue ?? "")}
                                             />
                                         ))}
@@ -100,9 +101,10 @@ export default function SearchDefinitionTab({ note, ntxId, hidden }: Pick<TabCon
                                                 dropdownContainerClassName="mobile-bottom-menu" mobileBackdrop
                                                 noSelectButtonStyle
                                             >
-                                                {searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }, index) => (
+                                                {searchOptions?.availableOptions.map(({ icon, label, tooltip, attributeName, attributeType, defaultValue }) => (
                                                     <FormListItem
-                                                        key={index} icon={icon}
+                                                        key={`${attributeType}-${attributeName}`}
+                                                        icon={icon}
                                                         description={tooltip}
                                                         onClick={() => attributes.setAttribute(note, attributeType, attributeName, defaultValue ?? "")}
                                                     >{label}</FormListItem>
@@ -110,7 +112,6 @@ export default function SearchDefinitionTab({ note, ntxId, hidden }: Pick<TabCon
                                             </Dropdown>
                                         }
                                     />
-
 
                                     <AddBulkActionButton note={note} />
                                 </td>
