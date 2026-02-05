@@ -1554,6 +1554,11 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         max-height: calc(var(--tn-modal-max-height) - var(--dropdown-bottom));
     }
 
+    body.mobile #launcher-container .dropdown > .dropdown-menu.show {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
     body.mobile .dropdown-menu.mobile-bottom-menu.show {
         --dropdown-bottom: 0px;
         padding-bottom: calc(max(var(--menu-padding-size), env(safe-area-inset-bottom))) !important;
