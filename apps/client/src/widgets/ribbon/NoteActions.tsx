@@ -63,10 +63,11 @@ function RevisionsButton({ note }: { note: FNote }) {
 
 type ItemToFocus = "basic-properties";
 
-export function NoteContextMenu({ note, noteContext, extraItems, dropdownRef: externalDropdownRef }: {
+export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNoteSettings, dropdownRef: externalDropdownRef }: {
     note: FNote,
     noteContext?: NoteContext,
-    extraItems?: ComponentChildren;
+    itemsAtStart?: ComponentChildren;
+    itemsNearNoteSettings?: ComponentChildren;
     dropdownRef?: RefObject<BootstrapDropdown>;
 }) {
     const dropdownRef = useSyncedRef<BootstrapDropdown>(externalDropdownRef, null);
@@ -112,7 +113,7 @@ export function NoteContextMenu({ note, noteContext, extraItems, dropdownRef: ex
             onHidden={() => itemToFocusRef.current = null }
             mobileBackdrop
         >
-            {extraItems}
+            {itemsAtStart}
 
             {isReadOnly && <>
                 <CommandItem icon="bx bx-pencil" text={t("read-only-info.edit-note")}
@@ -130,6 +131,8 @@ export function NoteContextMenu({ note, noteContext, extraItems, dropdownRef: ex
                 <NoteBasicProperties note={note} focus={itemToFocusRef} />
                 <FormDropdownDivider />
             </>}
+
+            {itemsNearNoteSettings}
 
             <CommandItem icon="bx bx-import" text={t("note_actions.import_files")}
                 disabled={isInOptionsOrHelp || note.type === "search"}

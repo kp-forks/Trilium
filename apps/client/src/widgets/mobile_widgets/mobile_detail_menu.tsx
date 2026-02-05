@@ -46,7 +46,7 @@ export default function MobileDetailMenu() {
                 <NoteContextMenu
                     dropdownRef={dropdownRef}
                     note={note} noteContext={noteContext}
-                    extraItems={<>
+                    itemsAtStart={<>
                         <div className="form-list-row">
                             <div className="form-list-col">
                                 <FormListItem
@@ -90,6 +90,8 @@ export default function MobileDetailMenu() {
                             >{t("close_pane_button.close_this_pane")}</FormListItem>
                         </>}
                         <FormDropdownDivider />
+                    </>}
+                    itemsNearNoteSettings={<>
                         {note.type === "text" && <ContentLanguageSelector note={note} />}
                         {note.type === "code" && <FormListItem icon={"bx bx-code"} onClick={() => setCodeNoteSwitcherModalShown(true)}>{t("status_bar.code_note_switcher")}</FormListItem>}
                         <FormListItem icon="bx bx-info-circle" onClick={() => setNoteInfoModalShown(true)}>{t("note_info_widget.title")}</FormListItem>
