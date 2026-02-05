@@ -4,12 +4,12 @@ import { CSSProperties } from "preact";
 import { useContext, useMemo } from "preact/hooks";
 
 import type FNote from "../../entities/fnote";
-import froca from "../../services/froca";
 import { t } from "../../services/i18n";
-import { useChildNotes, useNoteLabelBoolean } from "../react/hooks";
+import { FormDropdownSubmenu, FormListItem } from "../react/FormList";
+import { useChildNotes, useNote, useNoteIcon, useNoteLabelBoolean } from "../react/hooks";
 import NoteLink from "../react/NoteLink";
 import ResponsiveContainer from "../react/ResponseContainer";
-import { CustomNoteLauncher } from "./GenericButtons";
+import { CustomNoteLauncher, launchCustomNoteLauncher } from "./GenericButtons";
 import { LaunchBarContext, LaunchBarDropdownButton, useLauncherIconAndTitle } from "./launch_bar_widgets";
 
 const PARENT_NOTE_ID = "_lbBookmarks";
@@ -35,11 +35,7 @@ export default function BookmarkButtons() {
                     icon="bx bx-bookmark"
                     title={t("bookmark_buttons.bookmarks")}
                 >
-                    <div className="bookmark-folder-widget">
-                        <ul className="children-notes">
-                            {childNotes?.map(childNote => <SingleBookmark key={childNote.noteId} note={childNote} />)}
-                        </ul>
-                    </div>
+                    {childNotes?.map(childNote => <SingleBookmark key={childNote.noteId} note={childNote} />)}
                 </LaunchBarDropdownButton>
             }
         />
@@ -54,12 +50,38 @@ function SingleBookmark({ note }: { note: FNote }) {
                 ? <BookmarkFolder note={note} />
                 : <CustomNoteLauncher launcherNote={note} getTargetNoteId={() => note.noteId} />
         }
-        mobile={
-            <li key={note.noteId}>
-                <NoteLink notePath={note.noteId} noPreview showNoteIcon containerClassName="note-link" noTnLink />
-            </li>
-        }
+        mobile={<MobileBookmarkItem noteId={note.noteId} bookmarkFolder={bookmarkFolder} />}
     />;
+}
+
+function MobileBookmarkItem({ noteId, bookmarkFolder }: { noteId: string, bookmarkFolder: boolean }) {
+    const note = useNote(noteId);
+    const noteIcon = useNoteIcon(note);
+    if (!note) return;
+
+    return (
+        !bookmarkFolder
+            ? <FormListItem icon={noteIcon} onClick={(e) => launchCustomNoteLauncher(e, { launcherNote: note, getTargetNoteId: () => note.noteId })}>{note.title}</FormListItem>
+            : <MobileBookmarkFolder note={note} />
+    );
+}
+
+function MobileBookmarkFolder({ note }: { note: FNote }) {
+    const childNotes = useChildNotes(note.noteId);
+
+    return (
+        <FormDropdownSubmenu icon="bx bx-folder" title={note.title}>
+            {childNotes.map(childNote => (
+                <FormListItem
+                    key={childNote.noteId}
+                    icon={childNote.getIcon()}
+                    onClick={(e) => launchCustomNoteLauncher(e, { launcherNote: childNote, getTargetNoteId: () => childNote.noteId })}
+                >
+                    {childNote.title}
+                </FormListItem>
+            ))}
+        </FormDropdownSubmenu>
+    );
 }
 
 function BookmarkFolder({ note }: { note: FNote }) {
