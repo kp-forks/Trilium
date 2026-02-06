@@ -10,7 +10,7 @@ export const LANGUAGE_MAPPINGS: Record<DISPLAYABLE_LOCALE_IDS, Language["code"] 
     en_rtl: "en",
     es: "es-ES",
     fr: "fr-FR",
-    ga: "ga",
+    ga: null,
     it: "it-IT",
     ja: "ja-JP",
     pt: "pt-PT",
