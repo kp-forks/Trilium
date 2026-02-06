@@ -81,7 +81,8 @@
     "configure_launchbar": "ランチャーバーの設定",
     "show_shared_notes_subtree": "共有ノートのサブツリーを表示",
     "new-version-available": "新しいアップデートが利用可能",
-    "download-update": "{{latestVersion}} をバージョンを入手"
+    "download-update": "{{latestVersion}} をバージョンを入手",
+    "search_notes": "検索ノート"
   },
   "left_pane_toggle": {
     "show_panel": "パネルを表示",
@@ -234,7 +235,8 @@
     "search_note_saved": "検索ノートが {{- notePathTitle}} に保存されました",
     "actions_executed": "アクションが実行されました。",
     "ancestor": "祖先:",
-    "view_options": "表示オプション:"
+    "view_options": "表示オプション:",
+    "option": "オプション"
   },
   "shortcuts": {
     "multiple_shortcuts": "同じアクションに対して複数のショートカットを設定する場合、カンマで区切ることができます。",
@@ -1649,7 +1651,8 @@
     "insert_child_note": "子ノートを挿入",
     "error_cannot_get_branch_id": "ノートパス 「{{notePath}} のbranchIdを取得できません",
     "note_revisions": "ノートの変更履歴",
-    "backlinks": "バックリンク"
+    "backlinks": "バックリンク",
+    "content_language_switcher": "コンテンツの言語: {{language}}"
   },
   "inherited_attribute_list": {
     "title": "継承属性",
@@ -2262,5 +2265,8 @@
   "mobile_tab_switcher": {
     "title_other": "{{count}} タブ",
     "more_options": "その他のオプション"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "ブックマーク"
   }
 }
