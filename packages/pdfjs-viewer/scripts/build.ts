@@ -29,8 +29,9 @@ async function main() {
     // Copy locales.
     const localeMappings = {};
     for (const locale of LOCALES) {
-        if (locale.id === "en" || locale.contentOnly || locale.devOnly) continue;
-        const mappedLocale = LOCALE_MAPPINGS[locale.electronLocale] || locale.electronLocale.replace("_", "-");
+        if (locale.contentOnly || locale.devOnly) continue;
+        const mappedLocale = LOCALE_MAPPINGS[locale.id] || locale.electronLocale.replace("_", "-");
+        if (mappedLocale === "en") continue;
         const localePath = `${locale.id}/viewer.ftl`;
         build.copy(`viewer/locale/${mappedLocale}/viewer.ftl`, `web/locale/${localePath}`);
         localeMappings[locale.id] = localePath;
