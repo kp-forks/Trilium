@@ -662,7 +662,8 @@
     "show-cheatsheet": "显示快捷帮助",
     "toggle-zen-mode": "禅模式",
     "new-version-available": "新更新可用",
-    "download-update": "取得版本 {{latestVersion}}"
+    "download-update": "取得版本 {{latestVersion}}",
+    "search_notes": "搜索笔记"
   },
   "zen_mode": {
     "button_exit": "退出禅模式"
@@ -760,7 +761,8 @@
     "error_cannot_get_branch_id": "无法获取 notePath '{{notePath}}' 的 branchId",
     "error_unrecognized_command": "无法识别的命令 {{command}}",
     "note_revisions": "笔记历史版本",
-    "backlinks": "反链"
+    "backlinks": "反链",
+    "content_language_switcher": "内容语言: {{language}}"
   },
   "note_icon": {
     "change_note_icon": "更改笔记图标",
@@ -911,7 +913,8 @@
     "unknown_search_option": "未知的搜索选项 {{searchOptionName}}",
     "search_note_saved": "搜索笔记已保存到 {{- notePathTitle}}",
     "actions_executed": "操作已执行。",
-    "view_options": "查看选项："
+    "view_options": "查看选项：",
+    "option": "选项"
   },
   "similar_notes": {
     "title": "相似笔记",
@@ -2262,5 +2265,8 @@
   "mobile_tab_switcher": {
     "title_other": "{{count}} 选项卡",
     "more_options": "更多选项"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "书签"
   }
 }
