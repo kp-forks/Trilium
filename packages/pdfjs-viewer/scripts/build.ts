@@ -10,7 +10,8 @@ const build = new BuildHelper("packages/pdfjs-viewer");
 const watchMode = process.argv.includes("--watch");
 
 const LOCALE_MAPPINGS: Record<string, string> = {
-    "es": "es-ES"
+    "es": "es-ES",
+    "ga": "ga-IE"
 };
 
 async function main() {
