@@ -25,7 +25,8 @@ export default function buildIcons(): IconPackData {
         },
         meta: {
             version: packageJson.version,
-            website: "https://pictogrammers.com/library/mdi/"
+            website: "https://pictogrammers.com/library/mdi/",
+            description: "The community Material Design Icons pack (@mdi/font). Not to be confused with Google's own Material Design Icons."
         }
     };
 }

@@ -34,6 +34,7 @@ export default function Resources() {
                         key={meta.name}
                         title={<>{meta.name} <small>{meta.version}</small></>}
                     >
+                        <p className="description">{meta.description}</p>
                         <footer>
                             <Button href={`/resources/icon-packs/${meta.file}`} download text="Download" />
                             <Link href={meta.website} openExternally>Website</Link>

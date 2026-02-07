@@ -46,7 +46,10 @@ export default function buildIcons(packName: "regular" | "fill"): IconPackData {
         },
         meta: {
             version: packageJson.version,
-            website: "https://phosphoricons.com/"
+            website: "https://phosphoricons.com/",
+            description: packName === "regular"
+                ? "The regular weight version of Phosphor Icons."
+                : "The filled version of Phosphor Icons."
         }
     };
 }

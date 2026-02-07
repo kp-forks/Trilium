@@ -13,5 +13,6 @@ export interface IconPackData {
     meta: {
         version: string;
         website: string;
+        description: string;
     }
 }

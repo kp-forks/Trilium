@@ -40,7 +40,10 @@ export default function buildIcons(pack: "basic" | "brands"): IconPackData {
         },
         meta: {
             version: "3.0.0",
-            website: "https://boxicons.com/"
+            website: "https://boxicons.com/",
+            description: pack === "basic"
+                ? "The Basic set of icons from Boxicons v3. This is an upgrade from Trilium's built-in icon pack (Boxicons v2)."
+                : "The brand set of icons from Boxicons v3."
         }
     };
 }
