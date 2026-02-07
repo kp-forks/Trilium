@@ -7,7 +7,7 @@ import { hydrate, LocationProvider, prerender as ssr, Route, Router, useLocation
 
 import Footer from './components/Footer.js';
 import { Header } from './components/Header.jsx';
-import { getRepoStargazersCount } from './github-utils';
+import { FALLBACK_STARGAZERS_COUNT, getRepoStargazersCount } from './github-utils';
 import { extractLocaleFromUrl, initTranslations, LOCALES, mapLocale } from './i18n';
 import { NotFound } from './pages/_404.jsx';
 import GetStarted from './pages/GetStarted/get-started.js';
@@ -21,7 +21,7 @@ export function App({ repoStargazersCount }) {
     return (
         <LocationProvider>
             <LocaleProvider>
-                <Header repoStargazersCount={repoStargazersCount} />
+                <Header repoStargazersCount={repoStargazersCount ?? FALLBACK_STARGAZERS_COUNT} />
                 <main>
                     <Router>
                         <Route path="/" component={Home} />

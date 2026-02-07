@@ -15,7 +15,7 @@ interface IconPackMeta {
     description: string;
 }
 
-const iconPacksMeta = Object.values(import.meta.glob("../../../src/resources/icon-packs/*.json", {
+const iconPacksMeta = Object.values(import.meta.glob("../../resources/icon-packs/*.json", {
     eager: true
 })) as IconPackMeta[];
 
@@ -44,8 +44,8 @@ export default function Resources() {
                     >
                         <p className="description">{meta.description}</p>
                         <footer>
-                            <Button href={`/resources/icon-packs/${meta.file}`} download text="Download" />
-                            <Link href={meta.website} openExternally>Website</Link>
+                            <Button href={`/resources/icon-packs/${encodeURIComponent(meta.file)}`} download text={t("resources.download")} />
+                            <Link href={meta.website} openExternally>{t("resources.website")}</Link>
                         </footer>
                     </Card>
                 ))}

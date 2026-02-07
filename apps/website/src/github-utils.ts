@@ -20,7 +20,7 @@ async function fetchRepoStargazersCount(): Promise<number> {
         const details = await response.json();
         const count = details["stargazers_count"];
 
-        if (count) {
+        if (typeof count === "number" && Number.isFinite(count) && count >= 0) {
             console.log(`Got number of stargazers: ${count}`);
             return count;
         }

@@ -1,6 +1,6 @@
 import "./Header.css";
 
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+import { useContext, useEffect, useState } from "preact/hooks";
 import { useLocation } from 'preact-iso';
 import { useTranslation } from "react-i18next";
 
@@ -76,13 +76,12 @@ export function Header(props: {repoStargazersCount: number}) {
                     <SocialButton
                         name="GitHub"
                         iconSvg={githubIcon}
-                        counter={`${(props.repoStargazersCount / 1000).toFixed(1)  }K+`}
+                        counter={`${(props.repoStargazersCount / 1000).toFixed(1)}K+`}
                         url="https://github.com/TriliumNext/Trilium"
                     />
                 </div>
 
                 <DownloadButton />
-
             </div>
         </header>
     );
