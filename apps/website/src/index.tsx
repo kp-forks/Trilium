@@ -7,7 +7,7 @@ import { hydrate, LocationProvider, prerender as ssr, Route, Router, useLocation
 
 import Footer from './components/Footer.js';
 import { Header } from './components/Header.jsx';
-import { FALLBACK_STARGAZERS_COUNT, getRepoStargazersCount } from './github-utils.js';
+import { getRepoStargazersCount } from './github-utils';
 import { extractLocaleFromUrl, initTranslations, LOCALES, mapLocale } from './i18n';
 import { NotFound } from './pages/_404.jsx';
 import GetStarted from './pages/GetStarted/get-started.js';
@@ -17,11 +17,11 @@ import SupportUs from './pages/SupportUs/SupportUs.js';
 
 export const LocaleContext = createContext('en');
 
-export function App(props: {repoStargazersCount: number}) {
+export function App({ repoStargazersCount }) {
     return (
         <LocationProvider>
             <LocaleProvider>
-                <Header repoStargazersCount={props.repoStargazersCount} />
+                <Header repoStargazersCount={repoStargazersCount} />
                 <main>
                     <Router>
                         <Route path="/" component={Home} />
@@ -70,7 +70,9 @@ export function LocaleProvider({ children }) {
 }
 
 if (typeof window !== 'undefined') {
-    hydrate(<App repoStargazersCount={FALLBACK_STARGAZERS_COUNT} />, document.getElementById('app')!);
+    const el = document.getElementById("prerender-data");
+    const data = JSON.parse(el?.innerText ?? "{}");
+    hydrate(<App {...data} />, document.getElementById('app')!);
 }
 
 function getLocaleId(path: string) {
@@ -84,12 +86,12 @@ export async function prerender(data) {
     // Fetch the stargazer count of the Trilium's GitHub repo on prerender to pass
     // it to the App component for SSR.
     // This ensures the GitHub API is not called on every page load in the client.
-    const stargazersCount = await getRepoStargazersCount();
-
-    const { html, links } = await ssr(<App repoStargazersCount={stargazersCount} {...data} />);
+    data.repoStargazersCount = await getRepoStargazersCount();
+    const { html, links } = await ssr(<App {...data} />);
     return {
         html,
         links,
+        data,
         head: {
             lang: extractLocaleFromUrl(data.url) ?? "en"
         }
