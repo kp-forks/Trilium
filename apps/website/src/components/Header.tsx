@@ -41,6 +41,8 @@ export function Header(props: {repoStargazersCount: number}) {
                         <img src={logoPath} width="300" height="300" alt="Trilium Notes logo" />&nbsp;<span>Trilium Notes</span>
                     </a>
 
+                    <RepositoryButton repoStargazersCount={props.repoStargazersCount} className="mobile-only" />
+
                     <Link
                         href="#"
                         className="mobile-only menu-toggle"
@@ -69,17 +71,25 @@ export function Header(props: {repoStargazersCount: number}) {
                     <SocialButtons className="mobile-only" withText />
                 </nav>
 
-                <div class="desktop-only repository-button">
-                    <SocialButton
-                        name="GitHub"
-                        iconSvg={githubIcon}
-                        counter={`${(props.repoStargazersCount / 1000).toFixed(1)}K+`}
-                        url="https://github.com/TriliumNext/Trilium"
-                    />
-                </div>
-
+                <RepositoryButton repoStargazersCount={props.repoStargazersCount} className="desktop-only" />
                 <DownloadButton />
             </div>
         </header>
+    );
+}
+
+function RepositoryButton({ repoStargazersCount, className }: {
+    repoStargazersCount: number;
+    className: string
+}){
+    return (
+        <div class={`repository-button ${className}`}>
+            <SocialButton
+                name="GitHub"
+                iconSvg={githubIcon}
+                counter={`${(repoStargazersCount / 1000).toFixed(1)}K+`}
+                url="https://github.com/TriliumNext/Trilium"
+            />
+        </div>
     );
 }

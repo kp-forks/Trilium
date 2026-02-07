@@ -87,9 +87,17 @@ header {
 
         .first-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             width: 100%;
+            gap: 2em;
+
+            .banner {
+                flex-grow: 1;
+            }
+
+            .social-button {
+                align-items: center;
+            }
         }
 
         .menu-toggle {
