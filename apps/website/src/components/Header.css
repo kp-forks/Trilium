@@ -4,7 +4,7 @@ header {
     top: 0;
     background: var(--header-background-color);
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(20px);    
+    backdrop-filter: blur(20px);
     z-index: 1000;
     --gap: 1.25em;
     font-size: 0.8em;
@@ -23,7 +23,7 @@ header {
         justify-items: center;
         text-decoration: none;
         color: inherit;
-        
+
         &:hover { text-decoration: none;}
     }
 
@@ -67,7 +67,7 @@ header {
     }
 }
 
-@media (max-width: 719px) {
+@media (max-width: 719.99px) {
     :root {
         --header-height: 60px;
     }
@@ -100,7 +100,7 @@ header {
             flex-direction: column;
             max-height: 0;
             overflow: hidden;
-            transition: max-height 200ms ease-in;        
+            transition: max-height 200ms ease-in;
 
             &.mobile-shown {
                 display: flex;
@@ -113,7 +113,7 @@ header {
     header + main {
         margin-top: var(--header-height);
     }
-    
+
     header nav a {
         font-size: 1.25em;
         padding: 0.5em 0;
