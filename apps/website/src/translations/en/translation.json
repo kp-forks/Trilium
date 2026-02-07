@@ -199,6 +199,7 @@
   },
   "resources": {
     "title": "Resources",
-    "icon_packs": "Icon packs"
+    "icon_packs": "Icon packs",
+    "icon_packs_intro": "Expand the selection of available icons for your notes by using an icon pack. For more information about icon packs, see the <DocumentationLink>official documentation</DocumentationLink>."
   }
 }

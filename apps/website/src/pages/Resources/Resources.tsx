@@ -1,6 +1,6 @@
 import "./Resources.css";
 
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 import Button, { Link } from "../../components/Button";
 import Card from "../../components/Card";
@@ -18,6 +18,15 @@ export default function Resources() {
     return (
         <Section className="icon-packs">
             <h2>{t("resources.icon_packs")}</h2>
+
+            <p>
+                <Trans
+                    i18nKey="resources.icon_packs_intro"
+                    components={{
+                        DocumentationLink: <Link href="https://docs.triliumnotes.org/user-guide/concepts/themes/icon-packs" />
+                    }}
+                />
+            </p>
 
             <div className="grid-3-cols">
                 {iconPacksMeta.map(meta => (
