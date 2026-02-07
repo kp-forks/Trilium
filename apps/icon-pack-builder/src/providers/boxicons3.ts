@@ -29,7 +29,7 @@ export default function buildIcons(pack: "basic" | "brands"): IconPackData {
     return {
         name: pack === "basic" ? "Boxicons 3 (Basic)" : "Boxicons 3 (Brands)",
         prefix: pack === "basic" ? "bx3" : "bxl3",
-        icon: pack === "basic" ? "bx3 bx-cube" : "bxl3 bxl-boxicons",
+        icon: pack === "basic" ? "bx3 bx-cube" : "bxl3 bx-boxicons",
         fontFile: {
             name: `${fileName}.woff2`,
             mime: "font/woff2",
