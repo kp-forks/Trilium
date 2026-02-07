@@ -198,6 +198,7 @@
     "download_triliumcc": "Alternatively see trilium.cc"
   },
   "resources": {
-    "title": "Resources"
+    "title": "Resources",
+    "icon_packs": "Icon packs"
   }
 }
