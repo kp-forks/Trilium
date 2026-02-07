@@ -13,7 +13,7 @@ process.env.TRILIUM_RESOURCE_DIR = "../server/src";
 process.env.NODE_ENV = "development";
 
 async function main() {
-    const outputDir = join(__dirname, "../../website/src/assets/resources/icon-packs");
+    const outputDir = join(__dirname, "../../website/public/resources/icon-packs");
     mkdirSync(outputDir, { recursive: true });
 
     const i18n = await import("@triliumnext/server/src/services/i18n.js");
@@ -49,7 +49,8 @@ async function main() {
         });
 
         // Export to zip.
-        const zipFilePath = join(outputDir, `${iconPack.name}.zip`);
+        const zipFileName = `${iconPack.name}.zip`;
+        const zipFilePath = join(outputDir, zipFileName);
         const fileOutputStream = createWriteStream(zipFilePath);
         const { exportToZip } = (await import("@triliumnext/server/src/services/export/zip.js")).default;
         const taskContext = new (await import("@triliumnext/server/src/services/task_context.js")).default(
@@ -62,6 +63,7 @@ async function main() {
         const metaFilePath = join(outputDir, `${iconPack.name}.json`);
         writeFileSync(metaFilePath, JSON.stringify({
             name: iconPack.name,
+            file: zipFileName,
             ...iconPack.meta
         }, null, 2));
 

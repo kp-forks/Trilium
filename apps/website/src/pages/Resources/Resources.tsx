@@ -1,10 +1,13 @@
+import "./Resources.css";
+
 import { useTranslation } from "react-i18next";
 
+import Button, { Link } from "../../components/Button";
 import Card from "../../components/Card";
 import Section from "../../components/Section";
 import { usePageTitle } from "../../hooks";
 
-const iconPacksMeta = Object.values(import.meta.glob("../../assets/resources/icon-packs/*.json", {
+const iconPacksMeta = Object.values(import.meta.glob("../../../public/resources/icon-packs/*.json", {
     eager: true
 }));
 
@@ -13,7 +16,7 @@ export default function Resources() {
     usePageTitle(t("resources.title"));
 
     return (
-        <Section>
+        <Section className="icon-packs">
             <h2>{t("resources.icon_packs")}</h2>
 
             <div className="grid-3-cols">
@@ -21,8 +24,12 @@ export default function Resources() {
                     <Card
                         key={meta.name}
                         title={`${meta.name} ${meta.version}`}
-                        moreInfoUrl={meta.website}
-                    />
+                    >
+                        <footer>
+                            <Button href={`/resources/icon-packs/${meta.file}`} download text="Download" />
+                            <Link href={meta.website} openExternally>Website</Link>
+                        </footer>
+                    </Card>
                 ))}
             </div>
         </Section>

@@ -1,0 +1,9 @@
+.icon-packs .card-content {
+    footer {
+        padding: 0;
+        border: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
