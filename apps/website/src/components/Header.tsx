@@ -26,15 +26,12 @@ export function Header(props: {repoStargazersCount: number}) {
     const locale = useContext(LocaleContext);
     const [ mobileMenuShown, setMobileMenuShown ] = useState(false);
 
-    const [ headerLinks, setHeaderLinks ] = useState<HeaderLink[]>([]);
-    useEffect(() => {
-        setHeaderLinks([
-            { url: "/get-started", text: t("header.get-started") },
-            { url: "/resources", text: t("header.resources") },
-            { url: "https://docs.triliumnotes.org/", text: t("header.documentation"), external: true },
-            { url: "/support-us", text: t("header.support-us") }
-        ]);
-    }, [ locale, t ]);
+    const headerLinks = [
+        { url: "/get-started", text: t("header.get-started") },
+        { url: "/resources", text: t("header.resources") },
+        { url: "https://docs.triliumnotes.org/", text: t("header.documentation"), external: true },
+        { url: "/support-us", text: t("header.support-us") }
+    ];
 
     return (
         <header>
