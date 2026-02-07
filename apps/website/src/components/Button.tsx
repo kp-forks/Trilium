@@ -41,7 +41,7 @@ export function Link({ openExternally, children, download, ...restProps }: LinkP
             {...restProps}
             target={openExternally || download ? "_blank" : undefined}
             download={download}
-            rel={openExternally ? "noopener noreferrer" : undefined}
+            rel={openExternally || download ? "noopener noreferrer" : undefined}
         >
             {children}
         </a>

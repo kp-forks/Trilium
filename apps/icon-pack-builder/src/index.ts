@@ -1,5 +1,5 @@
 import { createWriteStream, mkdirSync, writeFileSync } from "node:fs";
-import path, { join } from "node:path";
+import { join, resolve } from "node:path";
 
 import cls from "@triliumnext/server/src/services/cls.js";
 
@@ -80,7 +80,7 @@ async function main() {
     ];
     await Promise.all(builtIconPacks.map(buildIconPack));
 
-    console.log(`\n✅ Built icon packs are available at ${path.resolve(outputDir)}.`);
+    console.log(`\n✅ Built icon packs are available at ${resolve(outputDir)}.`);
 }
 
 cls.init(() => {
