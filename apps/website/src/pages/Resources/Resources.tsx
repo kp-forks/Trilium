@@ -24,7 +24,7 @@ export default function Resources() {
     usePageTitle(t("resources.title"));
 
     return (
-        <Section className="icon-packs">
+        <Section className="icon-packs fill">
             <h2>{t("resources.icon_packs")}</h2>
 
             <p>

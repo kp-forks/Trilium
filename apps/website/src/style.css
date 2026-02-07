@@ -42,7 +42,7 @@ body {
 }
 
 main {
-    min-height: calc(100vh - 80px - 90px);
+    min-height: calc(100vh - 80px - 136px);
     display: flex;
     flex-direction: column;
 }
