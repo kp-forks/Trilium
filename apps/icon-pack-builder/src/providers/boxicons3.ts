@@ -37,6 +37,10 @@ export default function buildIcons(pack: "basic" | "brands"): IconPackData {
         },
         manifest: {
             icons
+        },
+        meta: {
+            version: "3.0.0",
+            website: "https://boxicons.com/"
         }
     };
 }

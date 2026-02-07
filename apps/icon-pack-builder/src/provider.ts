@@ -9,5 +9,9 @@ export interface IconPackData {
         name: string;
         mime: string;
         content: Buffer;
+    },
+    meta: {
+        version: string;
+        website: string;
     }
 }
