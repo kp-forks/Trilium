@@ -1,5 +1,5 @@
 import { createWriteStream, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import path, { join } from "node:path";
 
 import cls from "@triliumnext/server/src/services/cls.js";
 
@@ -13,7 +13,7 @@ process.env.TRILIUM_RESOURCE_DIR = "../server/src";
 process.env.NODE_ENV = "development";
 
 async function main() {
-    const outputDir = join(__dirname, "output");
+    const outputDir = join(__dirname, "../../website/src/assets/resources/icon-packs");
     mkdirSync(outputDir, { recursive: true });
 
     const i18n = await import("@triliumnext/server/src/services/i18n.js");
@@ -64,6 +64,8 @@ async function main() {
             name: iconPack.name,
             ...iconPack.meta
         }, null, 2));
+
+        console.log(`Built icon pack ${iconPack.name}.`);
     }
 
     const builtIconPacks = [
@@ -74,6 +76,8 @@ async function main() {
         phosphor("fill")
     ];
     await Promise.all(builtIconPacks.map(buildIconPack));
+
+    console.log(`\n✅ Built icon packs are available at ${path.resolve(outputDir)}.`);
 }
 
 cls.init(() => {
