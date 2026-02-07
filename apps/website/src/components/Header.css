@@ -145,3 +145,30 @@ header {
         }
     }
 }
+
+@media ((min-width: 720px) and (max-width: 1115px)) {
+    header {
+        .banner span {
+            display: none;
+        }
+
+        .repository-button {
+            display: none;
+        }
+
+        nav {
+            font-size: 0.9em;
+            justify-content: center;
+        }
+
+        .download-button {
+            font-size: 0.8em;
+            padding: 0.5em;
+
+            .text {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+    }
+}
