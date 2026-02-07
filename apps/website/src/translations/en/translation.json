@@ -196,5 +196,8 @@
     "description": "Trilium Notes hosted on PikaPods, a paid service for easy access and management. Not directly affiliated with the Trilium team.",
     "download_pikapod": "Set up on PikaPods",
     "download_triliumcc": "Alternatively see trilium.cc"
+  },
+  "resources": {
+    "title": "Resources"
   }
 }
