@@ -7,9 +7,17 @@ import Card from "../../components/Card";
 import Section from "../../components/Section";
 import { usePageTitle } from "../../hooks";
 
-const iconPacksMeta = Object.values(import.meta.glob("../../../public/resources/icon-packs/*.json", {
+interface IconPackMeta {
+    name: string;
+    file: string;
+    version: string;
+    website: string;
+    description: string;
+}
+
+const iconPacksMeta = Object.values(import.meta.glob("../../../src/resources/icon-packs/*.json", {
     eager: true
-}));
+})) as IconPackMeta[];
 
 export default function Resources() {
     const { t } = useTranslation();

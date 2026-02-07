@@ -14,6 +14,7 @@ process.env.NODE_ENV = "development";
 
 async function main() {
     const outputDir = join(__dirname, "../../website/public/resources/icon-packs");
+    const outputMetaDir = join(__dirname, "../../website/src/resources/icon-packs");
     mkdirSync(outputDir, { recursive: true });
 
     const i18n = await import("@triliumnext/server/src/services/i18n.js");
@@ -60,7 +61,7 @@ async function main() {
         await new Promise<void>((resolve) => { fileOutputStream.on("finish", resolve); });
 
         // Save meta.
-        const metaFilePath = join(outputDir, `${iconPack.name}.json`);
+        const metaFilePath = join(outputMetaDir, `${iconPack.name}.json`);
         writeFileSync(metaFilePath, JSON.stringify({
             name: iconPack.name,
             file: zipFileName,
