@@ -32,7 +32,7 @@ export default function Resources() {
                 {iconPacksMeta.map(meta => (
                     <Card
                         key={meta.name}
-                        title={`${meta.name} ${meta.version}`}
+                        title={<>{meta.name} <small>{meta.version}</small></>}
                     >
                         <footer>
                             <Button href={`/resources/icon-packs/${meta.file}`} download text="Download" />
