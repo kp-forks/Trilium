@@ -1,16 +1,18 @@
 import "./Header.css";
-import { Link } from "./Button.js";
-import { SocialButtons, SocialButton } from "./Footer.js";
+
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 import { useLocation } from 'preact-iso';
-import DownloadButton from './DownloadButton.js';
-import githubIcon from "../assets/boxicons/bx-github.svg?raw";
-import Icon from "./Icon.js";
-import logoPath from "../assets/icon-color.svg";
-import menuIcon from "../assets/boxicons/bx-menu.svg?raw";
-import { LocaleContext } from "..";
 import { useTranslation } from "react-i18next";
+
+import { LocaleContext } from "..";
+import githubIcon from "../assets/boxicons/bx-github.svg?raw";
+import menuIcon from "../assets/boxicons/bx-menu.svg?raw";
+import logoPath from "../assets/icon-color.svg";
 import { swapLocaleInUrl } from "../i18n";
+import { Link } from "./Button.js";
+import DownloadButton from './DownloadButton.js';
+import { SocialButton,SocialButtons } from "./Footer.js";
+import Icon from "./Icon.js";
 
 interface HeaderLink {
     url: string;
@@ -19,7 +21,7 @@ interface HeaderLink {
 }
 
 export function Header(props: {repoStargazersCount: number}) {
-	const { url } = useLocation();
+    const { url } = useLocation();
     const { t } = useTranslation();
     const locale = useContext(LocaleContext);
     const [ mobileMenuShown, setMobileMenuShown ] = useState(false);
@@ -28,13 +30,14 @@ export function Header(props: {repoStargazersCount: number}) {
     useEffect(() => {
         setHeaderLinks([
             { url: "/get-started", text: t("header.get-started") },
+            { url: "/resources", text: t("header.resources") },
             { url: "https://docs.triliumnotes.org/", text: t("header.documentation"), external: true },
             { url: "/support-us", text: t("header.support-us") }
         ]);
     }, [ locale, t ]);
 
-	return (
-		<header>
+    return (
+        <header>
             <div class="content-wrapper">
                 <div class="first-row">
                     <a class="banner" href={`/${locale}/`}>
@@ -46,7 +49,7 @@ export function Header(props: {repoStargazersCount: number}) {
                         className="mobile-only menu-toggle"
                         onClick={(e) => {
                             e.preventDefault();
-                            setMobileMenuShown(!mobileMenuShown)
+                            setMobileMenuShown(!mobileMenuShown);
                         }}
                     >
                         <Icon svg={menuIcon} />
@@ -63,7 +66,7 @@ export function Header(props: {repoStargazersCount: number}) {
                             onClick={() => {
                                 setMobileMenuShown(false);
                             }}
-                        >{link.text}</Link>)
+                        >{link.text}</Link>);
                     })}
 
                     <SocialButtons className="mobile-only" withText />
@@ -73,7 +76,7 @@ export function Header(props: {repoStargazersCount: number}) {
                     <SocialButton
                         name="GitHub"
                         iconSvg={githubIcon}
-                        counter={(props.repoStargazersCount / 1000).toFixed(1) + "K+"}
+                        counter={`${(props.repoStargazersCount / 1000).toFixed(1)  }K+`}
                         url="https://github.com/TriliumNext/Trilium"
                     />
                 </div>
@@ -81,6 +84,6 @@ export function Header(props: {repoStargazersCount: number}) {
                 <DownloadButton />
 
             </div>
-		</header>
-	);
+        </header>
+    );
 }
