@@ -1,4 +1,4 @@
-import { createWriteStream, mkdirSync } from "node:fs";
+import { createWriteStream, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import cls from "@triliumnext/server/src/services/cls.js";
@@ -58,7 +58,12 @@ async function main() {
         await exportToZip(taskContext, branch, "html", fileOutputStream, false, { skipExtraFiles: true });
         await new Promise<void>((resolve) => { fileOutputStream.on("finish", resolve); });
 
-        console.log(`Built icon pack: ${iconPack.name} (${zipFilePath})`);
+        // Save meta.
+        const metaFilePath = join(outputDir, `${iconPack.name}.json`);
+        writeFileSync(metaFilePath, JSON.stringify({
+            name: iconPack.name,
+            ...iconPack.meta
+        }, null, 2));
     }
 
     const builtIconPacks = [
