@@ -1,6 +1,6 @@
 {
   "about": {
-    "title": "Über Trilium Notizen",
+    "title": "Über Trilium Notes",
     "homepage": "Startseite:",
     "app_version": "App-Version:",
     "db_version": "DB-Version:",
@@ -662,7 +662,8 @@
     "show-cheatsheet": "Cheatsheet anzeigen",
     "toggle-zen-mode": "Zen Modus",
     "new-version-available": "Neues Update verfügbar",
-    "download-update": "Version {{latestVersion}} herunterladen"
+    "download-update": "Version {{latestVersion}} herunterladen",
+    "search_notes": "Notizen durchsuchen"
   },
   "sync_status": {
     "unknown": "<p>Der Synchronisations-Status wird bekannt, sobald der nächste Synchronisierungsversuch gestartet wird.</p><p>Klicke, um eine Synchronisierung jetzt auszulösen.</p>",
@@ -758,7 +759,8 @@
     "error_cannot_get_branch_id": "BranchId für notePath „{{notePath}}“ kann nicht abgerufen werden",
     "error_unrecognized_command": "Unbekannter Befehl {{command}}",
     "note_revisions": "Notiz Revisionen",
-    "backlinks": "Rücklinks"
+    "backlinks": "Rücklinks",
+    "content_language_switcher": "Inhaltssprache: {{language}}"
   },
   "note_icon": {
     "change_note_icon": "Notiz-Icon ändern",
@@ -910,7 +912,8 @@
     "unknown_search_option": "Unbekannte Suchoption {{searchOptionName}}",
     "search_note_saved": "Suchnotiz wurde in {{-notePathTitle}} gespeichert",
     "actions_executed": "Aktionen wurden ausgeführt.",
-    "view_options": "Optionen anzeigen:"
+    "view_options": "Optionen anzeigen:",
+    "option": "Option"
   },
   "similar_notes": {
     "title": "Ähnliche Notizen",
@@ -2277,5 +2280,8 @@
     "title_one": "{{count}} Tab",
     "title_other": "{{count}} Tabs",
     "more_options": "Weitere Optionen"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "Lesezeichen"
   }
 }

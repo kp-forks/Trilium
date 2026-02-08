@@ -27,7 +27,8 @@
     "show-cheatsheet": "Taispeáin Bileog leideanna",
     "toggle-zen-mode": "Mód Zen",
     "new-version-available": "Nuashonrú Nua ar Fáil",
-    "download-update": "Faigh Leagan {{latestVersion}}"
+    "download-update": "Faigh Leagan {{latestVersion}}",
+    "search_notes": "Cuardaigh nótaí"
   },
   "about": {
     "title": "Maidir le Trilium Notes",
@@ -764,7 +765,8 @@
     "note_revisions": "Athbhreithnithe nóta",
     "error_cannot_get_branch_id": "Ní féidir aitheantas brainse a fháil do NotePad '{{notePath}}'",
     "error_unrecognized_command": "Ordú gan aitheantas {{command}}",
-    "backlinks": "Naisc ar ais"
+    "backlinks": "Naisc ar ais",
+    "content_language_switcher": "Teanga an ábhair: {{language}}"
   },
   "note_icon": {
     "change_note_icon": "Deilbhín nóta athraithe",
@@ -919,7 +921,8 @@
     "unknown_search_option": "Rogha cuardaigh anaithnid {{searchOptionName}}",
     "search_note_saved": "Tá an nóta cuardaigh sábháilte i {{- notePathTitle}}",
     "actions_executed": "Tá gníomhartha curtha i gcrích.",
-    "view_options": "Roghanna féachana:"
+    "view_options": "Roghanna féachana:",
+    "option": "rogha"
   },
   "similar_notes": {
     "title": "Nótaí Comhchosúla",
@@ -2322,5 +2325,8 @@
     "title_many": "{{count}} cluaisíní",
     "title_other": "{{count}} cluaisíní",
     "more_options": "Tuilleadh roghanna"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "Leabharmharcanna"
   }
 }
