@@ -1,6 +1,6 @@
 # Creating an icon pack
 > [!NOTE]
-> This page explains, step‑by‑step, how to create a create a custom icon pack. For a general description of how to use already existing icon packs, see <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Themes/Icon%20Packs.md">[missing note]</a>.
+> This page explains, step‑by‑step, how to create a create a custom icon pack. For a general description of how to use already existing icon packs, see <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Themes/Icon%20Packs.md">Icon Packs</a>.
 
 First read the quick flow to get the overall steps. After that there is a concrete example (Phosphor) with a small Node.js script you can run to generate the manifest.
 
@@ -156,7 +156,7 @@ In order for an icon pack to be recognized, the prefix must be specified in the 
 For our example with Phosphor Icons, we can use the `ph` prefix since it also matches the prefix set in the original CSS. So in this case it would be `#iconPack=ph`.
 
 > [!IMPORTANT]
-> The prefix must consist of only alphanumeric characters, hyphens and underscore. If the prefix doesn't match these constraints, the icon pack will be ignored and an error will be logged in <a class="reference-link" href="../Troubleshooting/Error%20logs/Backend%20(server)%20logs.md">[missing note]</a>.
+> The prefix must consist of only alphanumeric characters, hyphens and underscore. If the prefix doesn't match these constraints, the icon pack will be ignored and an error will be logged in <a class="reference-link" href="../Troubleshooting/Error%20logs/Backend%20(server)%20logs.md">Backend (server) logs</a>.
 
 ## Creating the Trilium icon pack note
 
@@ -179,11 +179,11 @@ For our example with Phosphor Icons, we can use the `ph` prefix since it also ma
 *   Optionally, assign an icon from the new icon pack to this note. This icon will be used in the icon pack filter for a visual distinction.
 *   The icon pack can then be [exported as ZIP](../Basic%20Concepts%20and%20Features/Import%20%26%20Export.md) in order to be distributed to other users.
     *   It's important to note that icon packs are considered “unsafe” by default, so “Safe mode” must be disabled when importing the ZIP.
-    *   Consider linking new users to the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Themes/Icon%20Packs.md">[missing note]</a> documentation in order to understand how to import and use an icon pack.
+    *   Consider linking new users to the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Themes/Icon%20Packs.md">Icon Packs</a> documentation in order to understand how to import and use an icon pack.
 
 ### Troubleshooting
 
-If the icon pack doesn't show up, look through the <a class="reference-link" href="../Troubleshooting/Error%20logs/Backend%20(server)%20logs.md">[missing note]</a> for clues.
+If the icon pack doesn't show up, look through the <a class="reference-link" href="../Troubleshooting/Error%20logs/Backend%20(server)%20logs.md">Backend (server) logs</a> for clues.
 
 *   One example is if the font could not be retrieved: `ERROR: Icon pack is missing WOFF/WOFF2/TTF attachment: Boxicons v3 400 (dup) (XRzqDQ67fHEK)`.
 *   Make sure the prefix is unique and not already taken by some other icon pack. When there are two icon packs with the same prefix, only one is used. The server logs will indicate if this situation occurs.
