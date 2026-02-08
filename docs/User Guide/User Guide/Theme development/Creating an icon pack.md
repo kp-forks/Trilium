@@ -1,6 +1,6 @@
 # Creating an icon pack
 > [!NOTE]
-> This page explains, step‑by‑step, how to create a create a custom icon pack. For a general description of how to use already existing icon packs, see <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Themes/Icon%20Packs.md">Icon Packs</a>.
+> This page explains, step‑by‑step, how to create a custom icon pack. For a general description of how to use already existing icon packs, see <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Themes/Icon%20Packs.md">Icon Packs</a>.
 
 First read the quick flow to get the overall steps. After that there is a concrete example (Phosphor) with a small Node.js script you can run to generate the manifest.
 
