@@ -9,7 +9,7 @@
   "keywords": [],
   "author": "Elian Doran <contact@eliandoran.me>",
   "license": "AGPL-3.0-only",
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@10.29.1",
   "devDependencies": {
     "@redocly/cli": "2.15.1",
     "archiver": "7.0.1",
