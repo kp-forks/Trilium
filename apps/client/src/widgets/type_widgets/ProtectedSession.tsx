@@ -21,6 +21,8 @@ export default function ProtectedSession() {
 
     return (
         <form class="protected-session-password-form" onSubmit={submitCallback}>
+            <span class="form-icon bx bx-key" />
+            
             <FormGroup name="protected-session-password-in-detail" label={t("protected_session.enter_password_instruction")}>
                 <FormTextBox
                     type="password"
