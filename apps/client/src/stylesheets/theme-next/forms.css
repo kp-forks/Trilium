@@ -810,3 +810,35 @@ input[type="range"] {
         scrollbar-width: unset;
     }
 }
+
+/*
+ * Centered forms
+ */
+
+.tn-centered-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20vh;
+}
+
+.tn-centered-form .form-group {
+    text-align: center;
+    color: var(--muted-text-color);
+}
+
+.tn-centered-form .form-icon {
+    font-size: 140px;
+    color: var(--main-border-color);
+}
+
+.tn-centered-form .protected-session-password {
+    margin-inline: auto;
+    max-width: 350px;
+    text-align: center;
+}
+
+.tn-centered-form input,
+.tn-centered-form button {
+    margin-top: 12px;
+}
