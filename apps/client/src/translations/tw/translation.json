@@ -662,7 +662,8 @@
     "show-cheatsheet": "顯示快捷鍵說明",
     "toggle-zen-mode": "禪模式",
     "new-version-available": "發現新更新",
-    "download-update": "取得版本 {{latestVersion}}"
+    "download-update": "取得版本 {{latestVersion}}",
+    "search_notes": "搜尋筆記"
   },
   "sync_status": {
     "unknown": "<p>同步狀態將在下一次同步嘗試開始後顯示。</p><p>點擊以立即觸發同步。</p>",
@@ -758,7 +759,8 @@
     "error_cannot_get_branch_id": "無法獲取 notePath '{{notePath}}' 的 branchId",
     "error_unrecognized_command": "無法識別的命令 {{command}}",
     "note_revisions": "筆記歷史版本",
-    "backlinks": "反向連結"
+    "backlinks": "反向連結",
+    "content_language_switcher": "內文語言：{{language}}"
   },
   "note_icon": {
     "change_note_icon": "更改筆記圖標",
@@ -910,7 +912,8 @@
     "unknown_search_option": "未知的搜尋選項 {{searchOptionName}}",
     "search_note_saved": "搜尋筆記已儲存至 {{- notePathTitle}}",
     "actions_executed": "已執行操作。",
-    "view_options": "查看選項："
+    "view_options": "查看選項：",
+    "option": "選項"
   },
   "similar_notes": {
     "title": "相似筆記",
@@ -2272,9 +2275,13 @@
   },
   "mobile_tab_switcher": {
     "more_options": "更多選項",
-    "title_one": "{{count}} 個分頁"
+    "title_one": "{{count}} 個分頁",
+    "title_other": ""
   },
   "platform_indicator": {
     "available_on": "可於 {{platform}} 使用"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "書籤"
   }
 }
