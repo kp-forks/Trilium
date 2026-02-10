@@ -47,7 +47,7 @@ function SetupWebView({note}: {note: FNote}) {
 
     return <div class="web-view-setup-form">
             <form class="tn-centered-form" onSubmit={() => submit(src)}>
-                <span className="bx bx-world form-icon" />
+                <span className="bx bx-globe-alt form-icon" />
 
                 <FormGroup name="web-view-src-detail" label={t("web_view_setup.title")}>
                     <input className="form-control"
