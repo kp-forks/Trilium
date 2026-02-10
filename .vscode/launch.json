@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/server/src/main.ts",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+      "env": {
+        "NODE_ENV": "development",
+        "TRILIUM_ENV": "dev",
+        "TRILIUM_DATA_DIR": "${input:trilium_data_dir}",
+        "TRILIUM_RESOURCE_DIR": "${workspaceFolder}/apps/server/src"
+      },
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    },
+    {
+      "name": "Launch vitest",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/vitest",
+      "runtimeArgs": ["--inspectBrk", "--no-file-parallelism", "run"],
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "trilium_data_dir",
+      "type": "promptString",
+      "description": "Select Trilum Notes data directory",
+      "default": "${workspaceFolder}/apps/server/data"
+    }
+  ]
+}
