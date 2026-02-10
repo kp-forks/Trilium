@@ -19,14 +19,16 @@
       "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
     },
     {
-      "name": "Launch vitest",
+      "name": "Launch Vitest with current test file",
       "type": "node",
       "request": "launch",
-      "program": "${file}",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/vitest",
-      "runtimeArgs": ["--inspectBrk", "--no-file-parallelism", "run"],
-      "cwd": "${workspaceFolder}",
-      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+      "autoAttachChildProcesses": true,
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}"],
+      "smartStep": true,
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "cwd": "${workspaceFolder}"
     }
   ],
   "inputs": [
