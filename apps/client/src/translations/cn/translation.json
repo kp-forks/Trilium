@@ -2263,5 +2263,12 @@
   },
   "bookmark_buttons": {
     "bookmarks": "书签"
+  },
+  "web_view_setup": {
+    "title": "直接在 Trilium 中创建网页的实时视图",
+    "url_placeholder": "输入或粘贴网站地址，例如 https://triliumnotes.org",
+    "create_button": "创建网页视图",
+    "invalid_url_title": "无效的地址",
+    "invalid_url_message": "请输入有效的网址，例如 https://triliumnotes.org。"
   }
 }
