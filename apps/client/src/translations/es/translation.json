@@ -2293,5 +2293,12 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Marcadores"
+  },
+  "web_view_setup": {
+    "title": "Crear una vista en vivo de una página web directamente en Trilium",
+    "url_placeholder": "Ingresar o pegar la dirección del sitio web, por ejemplo https://triliumnotes.org",
+    "create_button": "Crear Vista Web",
+    "invalid_url_title": "Dirección inválida",
+    "invalid_url_message": "Ingrese una dirección web válida, por ejemplo https://triliumnotes.org."
   }
 }
