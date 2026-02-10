@@ -2323,5 +2323,12 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Leabharmharcanna"
+  },
+  "web_view_setup": {
+    "title": "Cruthaigh radharc beo de leathanach gréasáin go díreach isteach i Trilium",
+    "url_placeholder": "Cuir isteach nó greamaigh seoladh an tsuímh ghréasáin, mar shampla https://triliumnotes.org",
+    "create_button": "Cruthaigh Radharc Gréasáin",
+    "invalid_url_title": "Seoladh neamhbhailí",
+    "invalid_url_message": "Cuir isteach seoladh gréasáin bailí, mar shampla https://triliumnotes.org."
   }
 }
