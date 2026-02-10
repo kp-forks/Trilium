@@ -158,13 +158,55 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
     const progressCallback = (_e, progress: number) => e.sender.send("print-progress", { progress, action });
     ipcMain.on("print-progress", progressCallback);
 
-    await browserWindow.loadURL(`http://127.0.0.1:${port}/?print#${notePath}`);
-    const printReport = await browserWindow.webContents.executeJavaScript(`
-        new Promise(resolve => {
-            if (window._noteReady) return resolve(window._noteReady);
-            window.addEventListener("note-ready", (data) => resolve(data.detail));
-        });
-    `);
+    // Capture ALL console output (including errors) for debugging
+    browserWindow.webContents.on("console-message", (e, message, line, sourceId) => {
+        if (e.level === "debug") return;
+        if (e.level === "error") {
+            log.error(`[Print Window ${sourceId}:${line}] ${message}`);
+            return;
+        }
+        log.info(`[Print Window ${sourceId}:${line}] ${message}`);
+    });
+
+    try {
+        await browserWindow.loadURL(`http://127.0.0.1:${port}/?print#${notePath}`);
+    } catch (err) {
+        log.error(`Failed to load print window: ${err}`);
+        ipcMain.off("print-progress", progressCallback);
+        throw err;
+    }
+
+    // Set up error logging in the renderer process before content loads
+    await browserWindow.webContents.executeJavaScript(`
+        (function() {
+            window.addEventListener("error", (e) => {
+                console.error("Uncaught error:", e.message, "at", e.filename + ":" + e.lineno + ":" + e.colno);
+                if (e.error?.stack) console.error(e.error.stack);
+            });
+            window.addEventListener("unhandledrejection", (e) => {
+                console.error("Unhandled rejection:", String(e.reason));
+                if (e.reason?.stack) console.error(e.reason.stack);
+            });
+        })();
+    `).catch(err => log.error(`Failed to set up error handlers in print window: ${err}`));
+
+    let printReport;
+    try {
+        printReport = await browserWindow.webContents.executeJavaScript(`
+            new Promise((resolve, reject) => {
+                if (window._noteReady) return resolve(window._noteReady);
+
+                window.addEventListener("note-ready", (data) => {
+                    resolve(data.detail);
+                });
+            });
+        `);
+    } catch (err) {
+        log.error(`Print window promise failed for ${notePath}: ${err}`);
+        ipcMain.off("print-progress", progressCallback);
+        throw err;
+    }
+
     ipcMain.off("print-progress", progressCallback);
     return { browserWindow, printReport };
 }
