@@ -81,66 +81,82 @@ interface ExportAsPdfOpts {
 }
 
 electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
-    const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "printing");
-    browserWindow.webContents.print({}, (success, failureReason) => {
-        if (!success && failureReason !== "Print job canceled") {
-            electron.dialog.showErrorBox(t("pdf.unable-to-print"), failureReason);
-        }
-        e.sender.send("print-done", printReport);
-        browserWindow.destroy();
-    });
+    try {
+        const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "printing");
+        browserWindow.webContents.print({}, (success, failureReason) => {
+            if (!success && failureReason !== "Print job canceled") {
+                electron.dialog.showErrorBox(t("pdf.unable-to-print"), failureReason);
+            }
+            e.sender.send("print-done", printReport);
+            browserWindow.destroy();
+        });
+    } catch (err) {
+        e.sender.send("print-done", {
+            type: "error",
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined
+        });
+    }
 });
 
 electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize }: ExportAsPdfOpts) => {
-    const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
-
-    async function print() {
-        const filePath = electron.dialog.showSaveDialogSync(browserWindow, {
-            defaultPath: formatDownloadTitle(title, "file", "application/pdf"),
-            filters: [
-                {
-                    name: t("pdf.export_filter"),
-                    extensions: ["pdf"]
-                }
-            ]
-        });
-        if (!filePath) return;
-
-        let buffer: Buffer;
-        try {
-            buffer = await browserWindow.webContents.printToPDF({
-                landscape,
-                pageSize,
-                generateDocumentOutline: true,
-                generateTaggedPDF: true,
-                printBackground: true,
-                displayHeaderFooter: true,
-                headerTemplate: `<div></div>`,
-                footerTemplate: `
-                    <div class="pageNumber" style="width: 100%; text-align: center; font-size: 10pt;">
-                    </div>
-                `
-            });
-        } catch (_e) {
-            electron.dialog.showErrorBox(t("pdf.unable-to-export-title"), t("pdf.unable-to-export-message"));
-            return;
-        }
-
-        try {
-            await fs.writeFile(filePath, buffer);
-        } catch (_e) {
-            electron.dialog.showErrorBox(t("pdf.unable-to-export-title"), t("pdf.unable-to-save-message"));
-            return;
-        }
-
-        electron.shell.openPath(filePath);
-    }
-
     try {
-        await print();
-    } finally {
-        e.sender.send("print-done", printReport);
-        browserWindow.destroy();
+        const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
+
+        async function print() {
+            const filePath = electron.dialog.showSaveDialogSync(browserWindow, {
+                defaultPath: formatDownloadTitle(title, "file", "application/pdf"),
+                filters: [
+                    {
+                        name: t("pdf.export_filter"),
+                        extensions: ["pdf"]
+                    }
+                ]
+            });
+            if (!filePath) return;
+
+            let buffer: Buffer;
+            try {
+                buffer = await browserWindow.webContents.printToPDF({
+                    landscape,
+                    pageSize,
+                    generateDocumentOutline: true,
+                    generateTaggedPDF: true,
+                    printBackground: true,
+                    displayHeaderFooter: true,
+                    headerTemplate: `<div></div>`,
+                    footerTemplate: `
+                        <div class="pageNumber" style="width: 100%; text-align: center; font-size: 10pt;">
+                        </div>
+                    `
+                });
+            } catch (_e) {
+                electron.dialog.showErrorBox(t("pdf.unable-to-export-title"), t("pdf.unable-to-export-message"));
+                return;
+            }
+
+            try {
+                await fs.writeFile(filePath, buffer);
+            } catch (_e) {
+                electron.dialog.showErrorBox(t("pdf.unable-to-export-title"), t("pdf.unable-to-save-message"));
+                return;
+            }
+
+            electron.shell.openPath(filePath);
+        }
+
+        try {
+            await print();
+        } finally {
+            e.sender.send("print-done", printReport);
+            browserWindow.destroy();
+        }
+    } catch (err) {
+        e.sender.send("print-done", {
+            type: "error",
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined
+        });
     }
 });
 
@@ -176,16 +192,29 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
         throw err;
     }
 
-    // Set up error logging in the renderer process before content loads
+    // Set up error tracking and logging in the renderer process
     await browserWindow.webContents.executeJavaScript(`
         (function() {
+            window._printWindowErrors = [];
             window.addEventListener("error", (e) => {
-                console.error("Uncaught error:", e.message, "at", e.filename + ":" + e.lineno + ":" + e.colno);
+                const errorMsg = "Uncaught error: " + e.message + " at " + e.filename + ":" + e.lineno + ":" + e.colno;
+                console.error(errorMsg);
                 if (e.error?.stack) console.error(e.error.stack);
+                window._printWindowErrors.push({
+                    type: 'error',
+                    message: errorMsg,
+                    stack: e.error?.stack
+                });
             });
             window.addEventListener("unhandledrejection", (e) => {
-                console.error("Unhandled rejection:", String(e.reason));
+                const errorMsg = "Unhandled rejection: " + String(e.reason);
+                console.error(errorMsg);
                 if (e.reason?.stack) console.error(e.reason.stack);
+                window._printWindowErrors.push({
+                    type: 'rejection',
+                    message: errorMsg,
+                    stack: e.reason?.stack
+                });
             });
         })();
     `).catch(err => log.error(`Failed to set up error handlers in print window: ${err}`));
@@ -196,7 +225,17 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
             new Promise((resolve, reject) => {
                 if (window._noteReady) return resolve(window._noteReady);
 
+                // Check for errors periodically
+                const errorChecker = setInterval(() => {
+                    if (window._printWindowErrors && window._printWindowErrors.length > 0) {
+                        clearInterval(errorChecker);
+                        const errors = window._printWindowErrors.map(e => e.message).join('; ');
+                        reject(new Error("Print window errors: " + errors));
+                    }
+                }, 100);
+
                 window.addEventListener("note-ready", (data) => {
+                    clearInterval(errorChecker);
                     resolve(data.detail);
                 });
             });
