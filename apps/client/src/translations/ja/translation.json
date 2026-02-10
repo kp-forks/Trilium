@@ -2263,5 +2263,12 @@
   },
   "bookmark_buttons": {
     "bookmarks": "ブックマーク"
+  },
+  "web_view_setup": {
+    "title": "Trilium に直接 Web ページのライブビューを作成",
+    "url_placeholder": "Web サイトのアドレスを入力または貼り付けて下さい。 例: https://triliumnotes.org",
+    "create_button": "Web ビューを作成",
+    "invalid_url_title": "無効なアドレス",
+    "invalid_url_message": "有効な Web アドレスを入力してください。 例: https://triliumnotes.org"
   }
 }
