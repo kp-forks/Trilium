@@ -167,6 +167,7 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
             nodeIntegration: true,
             contextIsolation: false,
             offscreen: true,
+            devTools: false,
             session: e.sender.session
         },
     });
