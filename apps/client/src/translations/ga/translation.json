@@ -1076,11 +1076,6 @@
     "note_detail_render_help_1": "Taispeántar an nóta cabhrach seo mar nach bhfuil aon ghaol riachtanach ag an nóta seo den chineál Render HTML le go bhfeidhmeoidh sé i gceart.",
     "note_detail_render_help_2": "Úsáidtear cineál nóta HTML rindreála le haghaidh <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scriptithe</a>. Go hachomair, tá nóta cóid HTML agat (le roinnt JavaScript más féidir) agus déanfaidh an nóta seo é a rindreáil. Chun go n-oibreoidh sé, ní mór duit <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">gaol</a> ar a dtugtar \"renderNote\" a shainiú ag pointeáil chuig an nóta HTML atá le rindreáil."
   },
-  "web_view": {
-    "web_view": "Radharc Gréasáin",
-    "embed_websites": "Nóta den chineál Gréasáin a ligeann duit suíomhanna gréasáin a leabú i Trilium.",
-    "create_label": "Chun tús a chur leis, cruthaigh lipéad le seoladh URL ar mhaith leat a leabú, m.sh. #webViewSrc=\"https://www.google.com\""
-  },
   "backend_log": {
     "refresh": "Athnuachan"
   },

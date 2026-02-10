@@ -1068,11 +1068,6 @@
     "note_detail_render_help_1": "之所以显示此帮助说明，是因为这个类型为渲染 HTML 的笔记没有正常工作所需的关系。",
     "note_detail_render_help_2": "渲染 HTML 笔记类型用于<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">编写脚本</a>。简而言之，您有一份 HTML 代码笔记（可包含一些 JavaScript），然后这个笔记会把页面渲染出来。要使其正常工作，您需要定义一个名为 \"renderNote\" 的<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">关系</a>指向要渲染的 HTML 笔记。"
   },
-  "web_view": {
-    "web_view": "网页视图",
-    "embed_websites": "网页视图类型的笔记允许您将网站嵌入到 Trilium 中。",
-    "create_label": "首先，请创建一个带有您要嵌入的 URL 地址的标签，例如 #webViewSrc=\"https://www.bing.com\""
-  },
   "backend_log": {
     "refresh": "刷新"
   },

@@ -1067,11 +1067,6 @@
     "note_detail_render_help_1": "Diese Hilfesnotiz wird angezeigt, da diese Notiz vom Typ „HTML rendern“ nicht über die erforderliche Beziehung verfügt, um ordnungsgemäß zu funktionieren.",
     "note_detail_render_help_2": "Render-HTML-Notiztyp wird benutzt für <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. Kurzgesagt, du hast ein HTML-Code-Notiz (optional mit JavaScript) und diese Notiz rendert es. Damit es funktioniert, musst du eine a <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">Beziehung</a> namens \"renderNote\" zeigend auf die HTML-Notiz zum rendern definieren."
   },
-  "web_view": {
-    "web_view": "Webansicht",
-    "embed_websites": "Notiz vom Typ Web View ermöglicht das Einbetten von Websites in Trilium.",
-    "create_label": "Um zu beginnen, erstelle bitte ein Label mit einer URL-Adresse, die eingebettet werden soll, z. B. #webViewSrc=\"https://www.google.com\""
-  },
   "backend_log": {
     "refresh": "Aktualisieren"
   },

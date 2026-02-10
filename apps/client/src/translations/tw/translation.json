@@ -1067,11 +1067,6 @@
     "note_detail_render_help_1": "之所以顯示此說明筆記，是因為該類型的渲染 HTML 沒有設定好必須的關聯。",
     "note_detail_render_help_2": "渲染筆記類型用於編寫 <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">腳本</a>。簡單說就是您可以寫HTML程式碼（或者加上一些JavaScript程式碼）， 然後這個筆記會把頁面渲染出來。要使其正常工作，您需要定義一個名為 \"renderNote\" 的 <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">關聯</a> 指向要呈現的 HTML 筆記。"
   },
-  "web_view": {
-    "web_view": "網頁顯示",
-    "embed_websites": "網頁顯示類型的筆記允許您將網站嵌入至 Trilium 中。",
-    "create_label": "首先，請新增一個帶有您要嵌入的 URL 地址的標籤，例如 #webViewSrc=\"https://www.bing.com\""
-  },
   "backend_log": {
     "refresh": "重新整理"
   },

@@ -826,11 +826,6 @@
     "error_no_path": "移動するパスがありません。",
     "move_success_message": "選択したノートは以下に移動されました "
   },
-  "web_view": {
-    "web_view": "Web ビュー",
-    "embed_websites": "Web ビュータイプでは、web サイトを Trilium に埋め込むことができます。",
-    "create_label": "まず始めに、埋め込みたいURLアドレスのラベルを作成してください。例: #webViewSrc=\"https://www.google.com\""
-  },
   "backend_log": {
     "refresh": "リフレッシュ"
   },
