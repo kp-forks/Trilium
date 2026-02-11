@@ -662,7 +662,8 @@
         "show-cheatsheet": "Mostrar hoja de trucos",
         "toggle-zen-mode": "Modo Zen",
         "new-version-available": "Nueva actualización disponible",
-        "download-update": "Obtener versión {{latestVersion}}"
+        "download-update": "Obtener versión {{latestVersion}}",
+        "search_notes": "Buscar notas"
     },
     "zen_mode": {
         "button_exit": "Salir del modo Zen"
@@ -762,7 +763,8 @@
         "error_cannot_get_branch_id": "No se puede obtener el branchID del notePath '{{notePath}}'",
         "error_unrecognized_command": "Comando no reconocido {{command}}",
         "note_revisions": "Revisiones de notas",
-        "backlinks": "Vínculos de retroceso"
+        "backlinks": "Vínculos de retroceso",
+        "content_language_switcher": "Idioma de contenido: {{language}}"
     },
     "note_icon": {
         "change_note_icon": "Cambiar icono de nota",
@@ -915,7 +917,8 @@
         "unknown_search_option": "Opción de búsqueda desconocida {{searchOptionName}}",
         "search_note_saved": "La nota de búsqueda se ha guardado en {{- notePathTitle}}",
         "actions_executed": "Las acciones han sido ejecutadas.",
-        "view_options": "Ver opciones:"
+        "view_options": "Ver opciones:",
+        "option": "opción"
     },
     "similar_notes": {
         "title": "Notas similares",
@@ -1549,6 +1552,7 @@
         "confirm-change": "No es recomendado cambiar el tipo de nota cuando el contenido de la nota no está vacío. ¿Desea continuar de cualquier manera?",
         "geo-map": "Mapa Geo",
         "beta-feature": "Beta",
+        "ai-chat": "Chat de IA",
         "task-list": "Lista de tareas",
         "book": "Colección",
         "new-feature": "Nuevo",
@@ -2148,5 +2152,8 @@
         "title_many": "{{count}} pestañas",
         "title_other": "{{count}} pestañas",
         "more_options": "Más opciones"
+    },
+    "bookmark_buttons": {
+        "bookmarks": "Marcadores"
     }
 }
