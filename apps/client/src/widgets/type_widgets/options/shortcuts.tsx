@@ -70,6 +70,8 @@ export default function ShortcutSettings() {
         options.saveMany(optionsToSet);
     }, [ keyboardShortcuts ]);
 
+    const filteredKeyboardShortcuts = filter ? keyboardShortcuts.filter((action) => filterKeyboardAction(action, filter)) : keyboardShortcuts;
+
     return (
         <OptionsSection
             className="shortcuts-options-section"
@@ -87,7 +89,7 @@ export default function ShortcutSettings() {
                 />
             </header>
 
-            <KeyboardShortcutTable keyboardShortcuts={keyboardShortcuts} filter={filter} />
+            <KeyboardShortcutTable filteredKeyboardActions={filteredKeyboardShortcuts} />
 
             <footer>
                 <Button
@@ -104,7 +106,12 @@ export default function ShortcutSettings() {
     )
 }
 
-function filterKeyboardAction(action: ActionKeyboardShortcut, filter: string) {
+function filterKeyboardAction(action: KeyboardShortcut, filter: string) {
+    // Hide separators when filtering is active.
+    if ("separator" in action) {
+        return !filter;
+    }
+
     return action.actionName.toLowerCase().includes(filter) ||
         (action.friendlyName && action.friendlyName.toLowerCase().includes(filter)) ||
         (action.defaultShortcuts ?? []).some((shortcut) => shortcut.toLowerCase().includes(filter)) ||
@@ -112,7 +119,7 @@ function filterKeyboardAction(action: ActionKeyboardShortcut, filter: string) {
         (action.description && action.description.toLowerCase().includes(filter));
 }
 
-function KeyboardShortcutTable({ filter, keyboardShortcuts }: { filter?: string, keyboardShortcuts: KeyboardShortcut[] }) {
+function KeyboardShortcutTable({ filteredKeyboardActions }: { filteredKeyboardActions: KeyboardShortcut[] }) {
     return (
         <table class="keyboard-shortcut-table" cellPadding="10">
             <thead>
@@ -124,16 +131,16 @@ function KeyboardShortcutTable({ filter, keyboardShortcuts }: { filter?: string,
                 </tr>
             </thead>
             <tbody>
-                {keyboardShortcuts.map(action => (
+                {filteredKeyboardActions.map(action => (
                     <tr>
-                        {"separator" in action ? ( !filter &&
+                        {"separator" in action ?
                             <td class="separator" colspan={4} style={{
                                 backgroundColor: "var(--accented-background-color)",
                                 fontWeight: "bold"
                             }}>
                                 {action.separator}
                             </td>
-                        ) : ( (!filter || filterKeyboardAction(action, filter)) &&
+                        : (
                             <>
                                 <td>{action.friendlyName}</td>
                                 <td>
