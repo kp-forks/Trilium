@@ -2,7 +2,6 @@ import { ActionKeyboardShortcut, KeyboardShortcut, OptionNames } from "@triliumn
 import { t } from "../../../services/i18n";
 import { arrayEqual, reloadFrontendApp } from "../../../services/utils";
 import Button from "../../react/Button";
-import FormGroup from "../../react/FormGroup";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
 import RawHtml from "../../react/RawHtml";
@@ -12,6 +11,7 @@ import server from "../../../services/server";
 import options from "../../../services/options";
 import dialog from "../../../services/dialog";
 import { useTriliumEvent } from "../../react/hooks";
+import "./shortcuts.css";
 
 export default function ShortcutSettings() {
     const [ keyboardShortcuts, setKeyboardShortcuts ] = useState<KeyboardShortcut[]>([]);
@@ -73,26 +73,23 @@ export default function ShortcutSettings() {
     return (
         <OptionsSection
             className="shortcuts-options-section"
-            style={{ display: "flex", flexDirection: "column", height: "100%" }}
             noCard
         >
             <FormText>
-                {t("shortcuts.multiple_shortcuts")}
+                {t("shortcuts.multiple_shortcuts")}{" "}
                 <RawHtml html={t("shortcuts.electron_documentation")} />
             </FormText>
 
-            <FormGroup name="keyboard-shortcut-filter">
+            <header>
                 <FormTextBox
                     placeholder={t("shortcuts.type_text_to_filter")}
                     currentValue={filter} onChange={(value) => setFilter(value.toLowerCase())}
                 />
-            </FormGroup>
+            </header>
 
-            <div style={{overflow: "auto", flexGrow: 1, flexShrink: 1}}>
-                <KeyboardShortcutTable keyboardShortcuts={keyboardShortcuts} filter={filter} />
-            </div>
+            <KeyboardShortcutTable keyboardShortcuts={keyboardShortcuts} filter={filter} />
 
-            <div style={{ display: "flex", justifyContent: "space-between", margin: "15px 15px 0 15px"}}>
+            <footer>
                 <Button
                     text={t("shortcuts.reload_app")}
                     onClick={reloadFrontendApp}
@@ -102,7 +99,7 @@ export default function ShortcutSettings() {
                     text={t("shortcuts.set_all_to_default")}
                     onClick={resetShortcuts}
                 />
-            </div>
+            </footer>
         </OptionsSection>
     )
 }
