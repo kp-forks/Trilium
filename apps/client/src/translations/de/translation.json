@@ -1382,7 +1382,8 @@
     "description": "Beschreibung",
     "reload_app": "Lade die App neu, um die Änderungen zu übernehmen",
     "set_all_to_default": "Setze alle Verknüpfungen auf die Standardeinstellungen",
-    "confirm_reset": "Möchtest du wirklich alle Tastaturkürzel auf die Standardeinstellungen zurücksetzen?"
+    "confirm_reset": "Möchtest du wirklich alle Tastaturkürzel auf die Standardeinstellungen zurücksetzen?",
+    "no_results": "Keine Tastenkürzel für '{{filter}}' gefunden"
   },
   "spellcheck": {
     "title": "Rechtschreibprüfung",
@@ -1586,7 +1587,9 @@
     "print_report_collection_details_button": "Details anzeigen",
     "print_report_collection_details_ignored_notes": "Ignorierte Notizen",
     "print_report_collection_content_one": "{{count}} Notiz in der Sammlung konnte nicht gedruckt werden, weil sie nicht unterstützt oder geschützt ist.",
-    "print_report_collection_content_other": "{{count}} Notizen in der Sammlung konnten nicht gedruckt werden, weil sie nicht unterstützt oder geschützt sind."
+    "print_report_collection_content_other": "{{count}} Notizen in der Sammlung konnten nicht gedruckt werden, weil sie nicht unterstützt oder geschützt sind.",
+    "print_report_error_title": "Druck fehlgeschlagen",
+    "print_report_stack_trace": "Stapelzurückverfolgung"
   },
   "note_title": {
     "placeholder": "Titel der Notiz hier eingeben…",
@@ -2278,5 +2281,12 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Lesezeichen"
+  },
+  "web_view_setup": {
+    "title": "Erstelle eine Live-Ansicht einer Webseite direkt in Trilium",
+    "url_placeholder": "Gib oder füge die Adresse der Webseite ein, zum Beispiel https://triliumnotes.org",
+    "create_button": "Erstelle Web Ansicht",
+    "invalid_url_title": "Ungültige Adresse",
+    "invalid_url_message": "Füge eine valide Webadresse ein, zum Beispiel https://triliumnotes.org."
   }
 }
