@@ -27,5 +27,14 @@
         th {
             width: 25%;
         }
+
+        .separator {
+            background-color: var(--accented-background-color);
+            font-weight: bold;
+
+            &:first-of-type {
+                padding-top: 1em;
+            }
+        }
     }
 }

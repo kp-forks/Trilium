@@ -12,6 +12,7 @@ import options from "../../../services/options";
 import dialog from "../../../services/dialog";
 import { useTriliumEvent } from "../../react/hooks";
 import "./shortcuts.css";
+import NoItems from "../../react/NoItems";
 
 export default function ShortcutSettings() {
     const [ keyboardShortcuts, setKeyboardShortcuts ] = useState<KeyboardShortcut[]>([]);
@@ -89,7 +90,7 @@ export default function ShortcutSettings() {
                 />
             </header>
 
-            <KeyboardShortcutTable filteredKeyboardActions={filteredKeyboardShortcuts} />
+            <KeyboardShortcutTable filteredKeyboardActions={filteredKeyboardShortcuts} filter={filter} />
 
             <footer>
                 <Button
@@ -119,7 +120,7 @@ function filterKeyboardAction(action: KeyboardShortcut, filter: string) {
         (action.description && action.description.toLowerCase().includes(filter));
 }
 
-function KeyboardShortcutTable({ filteredKeyboardActions }: { filteredKeyboardActions: KeyboardShortcut[] }) {
+function KeyboardShortcutTable({ filteredKeyboardActions, filter }: { filteredKeyboardActions: KeyboardShortcut[], filter: string | undefined }) {
     return (
         <table class="keyboard-shortcut-table" cellPadding="10">
             <thead>
@@ -131,7 +132,8 @@ function KeyboardShortcutTable({ filteredKeyboardActions }: { filteredKeyboardAc
                 </tr>
             </thead>
             <tbody>
-                {filteredKeyboardActions.map(action => (
+                {filteredKeyboardActions.length > 0
+                 ? filteredKeyboardActions.map(action => (
                     <tr>
                         {"separator" in action ?
                             <td class="separator" colspan={4} style={{
@@ -151,7 +153,17 @@ function KeyboardShortcutTable({ filteredKeyboardActions }: { filteredKeyboardAc
                             </>
                         )}
                     </tr>
-                ))}
+                ))
+                : (
+                    <tr>
+                        <td colspan={4} class="text-center">
+                            <NoItems
+                                icon="bx bx-filter-alt"
+                                text={t("shortcuts.no_results", { filter })}
+                            />
+                        </td>
+                    </tr>
+                )}
             </tbody>
         </table>
     );
