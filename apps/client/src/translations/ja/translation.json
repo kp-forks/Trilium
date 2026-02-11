@@ -1954,7 +1954,9 @@
     "print_report_title": "レポートを印刷",
     "print_report_collection_content_other": "コレクション内の {{count}} 件のノートは、サポートされていないか保護されているため、印刷できませんでした。",
     "print_report_collection_details_button": "詳細を見る",
-    "print_report_collection_details_ignored_notes": "無視されたノート"
+    "print_report_collection_details_ignored_notes": "無視されたノート",
+    "print_report_error_title": "印刷に失敗しました",
+    "print_report_stack_trace": "スタックトレース"
   },
   "watched_file_update_status": {
     "ignore_this_change": "この変更を無視する",
