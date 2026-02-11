@@ -13,6 +13,7 @@
         "TRILIUM_DATA_DIR": "${input:trilium_data_dir}",
         "TRILIUM_RESOURCE_DIR": "${workspaceFolder}/apps/server/src"
       },
+      "autoAttachChildProcesses": true,
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
