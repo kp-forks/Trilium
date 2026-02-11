@@ -1779,7 +1779,9 @@
     "print_report_collection_content_other": "{{count}} notas en la colección no se pueden imprimir porque no son compatibles o están protegidas.",
     "print_report_title": "Imprimir informe",
     "print_report_collection_details_button": "Ver detalles",
-    "print_report_collection_details_ignored_notes": "Notas ignoradas"
+    "print_report_collection_details_ignored_notes": "Notas ignoradas",
+    "print_report_stack_trace": "Rastreo de pila",
+    "print_report_error_title": "Fallo al imprimir"
   },
   "note_title": {
     "placeholder": "escriba el título de la nota aquí...",
