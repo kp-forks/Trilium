@@ -71,7 +71,8 @@ export default function ShortcutSettings() {
         options.saveMany(optionsToSet);
     }, [ keyboardShortcuts ]);
 
-    const filteredKeyboardShortcuts = filter ? keyboardShortcuts.filter((action) => filterKeyboardAction(action, filter)) : keyboardShortcuts;
+    const filterLowerCase = filter?.toLowerCase() ?? "";
+    const filteredKeyboardShortcuts = filter ? keyboardShortcuts.filter((action) => filterKeyboardAction(action, filterLowerCase)) : keyboardShortcuts;
 
     return (
         <OptionsSection
@@ -86,7 +87,7 @@ export default function ShortcutSettings() {
             <header>
                 <FormTextBox
                     placeholder={t("shortcuts.type_text_to_filter")}
-                    currentValue={filter} onChange={(value) => setFilter(value.toLowerCase())}
+                    currentValue={filter} onChange={(value) => setFilter(value)}
                 />
             </header>
 
