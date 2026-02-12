@@ -22,7 +22,7 @@ import { ViewModeProps } from "../interface";
 import { createNewNote, moveMarker } from "./api";
 import openContextMenu, { openMapContextMenu } from "./context_menu";
 import Map from "./map";
-import { DEFAULT_MAP_LAYER_NAME, MAP_LAYERS } from "./map_layer";
+import { DEFAULT_MAP_LAYER_NAME, MAP_LAYERS, MapLayer } from "./map_layer";
 import Marker, { GpxTrack } from "./marker";
 
 const DEFAULT_COORDINATES: [number, number] = [3.878638227135724, 446.6630455551659];
@@ -45,10 +45,10 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
     const [ state, setState ] = useState(State.Normal);
     const [ coordinates, setCoordinates ] = useState(viewConfig?.view?.center);
     const [ zoom, setZoom ] = useState(viewConfig?.view?.zoom);
-    const [ layerName ] = useNoteLabel(note, "map:style");
     const [ hasScale ] = useNoteLabelBoolean(note, "map:scale");
     const [ isReadOnly ] = useNoteLabelBoolean(note, "readOnly");
     const [ notes, setNotes ] = useState<FNote[]>([]);
+    const layerData = useLayerData(note);
     const spacedUpdate = useSpacedUpdate(() => {
         if (viewConfig) {
             saveConfig(viewConfig);
@@ -152,7 +152,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
                 apiRef={apiRef} containerRef={containerRef}
                 coordinates={coordinates}
                 zoom={zoom}
-                layerData={MAP_LAYERS[layerName ?? ""] ?? MAP_LAYERS[DEFAULT_MAP_LAYER_NAME]}
+                layerData={layerData}
                 viewportChanged={(coordinates, zoom) => {
                     if (!viewConfig) viewConfig = {};
                     viewConfig.view = { center: coordinates, zoom };
@@ -167,6 +167,28 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
             <GeoMapTouchBar state={state} map={apiRef.current} />
         </div>
     );
+}
+
+function useLayerData(note: FNote) {
+    const [ layerName ] = useNoteLabel(note, "map:style");
+    // Memo is needed because it would generate unnecessary reloads due to layer change.
+    const layerData = useMemo(() => {
+        // Custom layers.
+        if (layerName?.startsWith("http")) {
+            return {
+                name: "Custom",
+                type: "raster",
+                url: layerName,
+                attribution: ""
+            } satisfies MapLayer;
+        }
+
+        // Built-in layers.
+        const layerData = MAP_LAYERS[layerName ?? ""] ?? MAP_LAYERS[DEFAULT_MAP_LAYER_NAME];
+        return layerData;
+    }, [ layerName ]);
+
+    return layerData;
 }
 
 function ToggleReadOnlyButton({ note }: { note: FNote }) {
