@@ -2,6 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch client (Chrome)",
+      "request": "launch",
+      "type": "chrome",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}/apps/client",
+      "runtimeExecutable": "${input:pick_chrome_browser}"
+    },
+    {
       "name": "Launch server",
       "type": "node",
       "request": "launch",
@@ -32,12 +40,26 @@
       "cwd": "${workspaceFolder}"
     }
   ],
+  "compounds": [
+    {
+      "name": "Launch client (Chrome) and server",
+      "configurations": ["Launch server","Launch client (Chrome)"],
+      "stopAll": true
+    }
+  ],
   "inputs": [
     {
       "id": "trilium_data_dir",
       "type": "promptString",
       "description": "Select Trilum Notes data directory",
       "default": "${workspaceFolder}/apps/server/data"
+    },
+    {
+      "id": "pick_chrome_browser",
+      "type": "pickString",
+      "description": "Select a Chrome browser",
+      "options": ["/usr/bin/chromium-browser", "/usr/bin/google-chrome"],
+      "default": "/usr/bin/chromium-browser"
     }
   ]
 }
