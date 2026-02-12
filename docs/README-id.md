@@ -139,21 +139,19 @@ lanjut TriliumNext:
 
 - [trilium-beken](https://github.com/Nriver/awesome-trilium) untuk banyak tema,
   skrip, plugin pihak ke-3 dan lain-lain.
-- [TriliumJaya!](https://trilium.rocks/) untuk tutorial, panduan dan banyak
-  lainnya.
+- [TriliumJaya!](https://trilium.rocks/) untuk tutorial, panduan dan lainnya.
 
-## ❓Why TriliumNext?
+## ❓Mengapa TriliumNext?
 
-The original Trilium developer ([Zadam](https://github.com/zadam)) has
-graciously given the Trilium repository to the community project which resides
-at https://github.com/TriliumNext
+Pengembang asli Trilium ([Zadam](https://github.com/zadam)) dengan murah hati
+telah memberikan repositori Trilium kepada proyek komunitas yang berada di
+https://github.com/TriliumNext
 
-### ⬆️Migrating from Zadam/Trilium?
+### ⬆️ Memindahkan dari Zadam/Trilium?
 
-There are no special migration steps to migrate from a zadam/Trilium instance to
-a TriliumNext/Trilium instance. Simply [install
-TriliumNext/Trilium](#-installation) as usual and it will use your existing
-database.
+Tidak ada langkah migrasi khusus untuk bermigrasi dari zadam/Trilium ke
+TriliumNext/Trilium. Cukup [instal TriliumNext/Trilium](#-installation) seperti
+biasa dan akan menggunakan basis data yang sudah ada.
 
 Versions up to and including
 [v0.90.4](https://github.com/TriliumNext/Trilium/releases/tag/v0.90.4) are
@@ -171,8 +169,8 @@ features, suggestions, or issues you may have!
   discussions.)
   - The `General` Matrix room is also bridged to
     [XMPP](xmpp:discuss@trilium.thisgreat.party?join)
-- [Github Discussions](https://github.com/TriliumNext/Trilium/discussions) (For
-  asynchronous discussions.)
+- [Diskusi Github](https://github.com/TriliumNext/Trilium/discussions) (Untuk
+  diskusi asinkron.)
 - [Github Issues](https://github.com/TriliumNext/Trilium/issues) (For bug
   reports and feature requests.)
 
