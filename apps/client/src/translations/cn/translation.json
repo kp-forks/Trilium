@@ -1416,7 +1416,8 @@
     "description": "描述",
     "reload_app": "重载应用以应用更改",
     "set_all_to_default": "将所有快捷键重置为默认值",
-    "confirm_reset": "您确定要将所有键盘快捷键重置为默认值吗？"
+    "confirm_reset": "您确定要将所有键盘快捷键重置为默认值吗？",
+    "no_results": "未找到与“{{filter}}”匹配的快捷方式"
   },
   "spellcheck": {
     "title": "拼写检查",
