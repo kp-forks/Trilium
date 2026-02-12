@@ -1436,11 +1436,6 @@
     "note_detail_render_help_1": "Ta notatka pomocy jest wyświetlana, ponieważ ta notatka typu Render HTML nie ma wymaganej relacji do poprawnego działania.",
     "note_detail_render_help_2": "Typ notatki Render HTML jest używany do <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">skryptowania</a>. W skrócie, masz notatkę kodu HTML (opcjonalnie z JavaScript) i ta notatka ją wyrenderuje. Aby to zadziałało, musisz zdefiniować <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relację</a> o nazwie \"renderNote\" wskazującą na notatkę HTML do wyrenderowania."
   },
-  "web_view": {
-    "web_view": "Widok WWW",
-    "embed_websites": "Notatka typu Widok WWW pozwala na osadzanie stron internetowych w Trilium.",
-    "create_label": "Aby rozpocząć, utwórz etykietę z adresem URL, który chcesz osadzić, np. #webViewSrc=\"https://www.google.com\""
-  },
   "backend_log": {
     "refresh": "Odśwież"
   },
