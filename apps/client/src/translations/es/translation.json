@@ -1572,7 +1572,8 @@
     "description": "Descripción",
     "reload_app": "Vuelva a cargar la aplicación para aplicar los cambios",
     "set_all_to_default": "Establecer todos los accesos directos al valor predeterminado",
-    "confirm_reset": "¿Realmente desea restablecer todos los atajos de teclado a sus valores predeterminados?"
+    "confirm_reset": "¿Realmente desea restablecer todos los atajos de teclado a sus valores predeterminados?",
+    "no_results": "No se encontraron atajos que coincidan con '{{filter}} '"
   },
   "spellcheck": {
     "title": "Revisión ortográfica",
