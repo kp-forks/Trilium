@@ -20,6 +20,8 @@ export interface CheckBoxProperty {
     label: string;
     bindToLabel: FilterLabelsByType<boolean>;
     icon?: string;
+    /** When true, the checkbox will be checked when the label value is false. Useful when the label represents a "hide" action, without exposing double negatives to the user. */
+    reverseValue?: boolean;
 }
 
 export interface ButtonProperty {
@@ -156,6 +158,13 @@ export const bookPropertiesConfig: Record<ViewTypeOptions, BookConfig> = {
                 icon: "bx bx-ruler",
                 type: "checkbox",
                 bindToLabel: "map:scale"
+            },
+            {
+                label: t("book_properties_config.show-labels"),
+                icon: "bx bx-label",
+                type: "checkbox",
+                bindToLabel: "map:hideLabels",
+                reverseValue: true
             }
         ]
     },

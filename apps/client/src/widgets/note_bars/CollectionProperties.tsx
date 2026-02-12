@@ -226,8 +226,8 @@ function CheckBoxPropertyView({ note, property }: { note: FNote, property: Check
         <FormListToggleableItem
             icon={property.icon}
             title={property.label}
-            currentValue={value}
-            onChange={setValue}
+            currentValue={ property.reverseValue ? !value : value }
+            onChange={newValue => setValue(property.reverseValue ? !newValue : newValue)}
         />
     );
 }
