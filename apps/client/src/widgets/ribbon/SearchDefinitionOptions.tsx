@@ -1,4 +1,5 @@
 import { AttributeType } from "@triliumnext/commons";
+import clsx from "clsx";
 import { ComponentChildren, VNode } from "preact";
 import { useEffect, useMemo, useRef } from "preact/hooks";
 
@@ -106,8 +107,9 @@ export const SEARCH_OPTIONS: SearchOption[] = [
     }
 ];
 
-function SearchOption({ note, title, titleIcon, children, help, attributeName, attributeType, additionalAttributesToDelete }: {
+function SearchOption({ note, className, title, titleIcon, children, help, attributeName, attributeType, additionalAttributesToDelete }: {
     note: FNote;
+    className?: string;
     title: string,
     titleIcon?: string,
     children?: ComponentChildren,
@@ -117,7 +119,7 @@ function SearchOption({ note, title, titleIcon, children, help, attributeName, a
     additionalAttributesToDelete?: { type: "label" | "relation", name: string }[]
 }) {
     return (
-        <tr className={attributeName}>
+        <tr className={clsx(attributeName, className)}>
             <td className="title-column">
                 {titleIcon && <><Icon icon={titleIcon} />{" "}</>}
                 {title}
@@ -161,6 +163,7 @@ function SearchStringOption({ note, refreshResults, error, ...restProps }: Searc
     return <>
         <SearchOption
             title={t("search_string.title_column")}
+            className={clsx({ "has-error": !!error })}
             help={<>
                 <strong>{t("search_string.search_syntax")}</strong> - {t("search_string.also_see")} <a href="#" data-help-page="search.html">{t("search_string.complete_help")}</a>
                 <ul style="marigin-bottom: 0;">

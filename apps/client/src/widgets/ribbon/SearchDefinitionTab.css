@@ -147,14 +147,20 @@ body.mobile .search-definition-widget {
         gap: 0.5em;
     }
 
-    .search-setting-table tr.searchString td:nth-of-type(2) {
-        flex-grow: 1;
-    }
+    .search-setting-table tr.searchString {
+        td:nth-of-type(2) {
+            flex-grow: 1;
+        }
 
-    .search-setting-table tr.searchString .button-column {
-        flex-grow: 0;
-        flex-shrink: 0;
-        width: 64px;
+        .button-column {
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 64px;
+        }
+
+        &.has-error {
+            border-bottom: 0;
+        }
     }
 
     .search-setting-table tr.ancestor > td > div {
