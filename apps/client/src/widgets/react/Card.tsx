@@ -5,17 +5,21 @@ import { useContext } from "preact/hooks";
 import clsx from "clsx";
 
 interface CardProps {
+    className?: string;
 }
 
 export function Card(props: {children: ComponentChildren} & CardProps) {
-    return <div className="tn-card">
+    return <div className={clsx(["tn-card", props.className])}>
         {props.children}
     </div>;
 }
 
 interface CardSectionProps {
+    className?: string;
     subSections?: JSX.Element | JSX.Element[];
     childrenVisible?: boolean;
+    hasAction: boolean;
+    onAction?: () => void;
 }
 
 export function CardSection(props: {children: ComponentChildren} & CardSectionProps) {
@@ -23,9 +27,13 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
     const nestingLevel = (parentContext && parentContext.nestingLevel + 1) ?? 0;
 
     return <>
-        <section className={clsx(["tn-card-section", {"tn-card-section-nested": nestingLevel > 0}])}
-                 style={"--tn-card-section-nesting-level: " + nestingLevel}>
-            {props.children} {nestingLevel}
+        <section className={clsx(["tn-card-section", {
+                    "tn-card-section-nested": nestingLevel > 0,
+                    "tn-action": props?.hasAction}
+                 ], props.className)}
+                 style={"--tn-card-section-nesting-level: " + nestingLevel}
+                 onClick={() => {props.onAction?.()}}>
+            {props.children}
         </section>
 
         {props?.childrenVisible &&
