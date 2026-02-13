@@ -7,6 +7,7 @@ import FNote from "../../entities/fnote";
 import { removeOwnedAttributesByNameOrType } from "../../services/attributes";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
+import Admonition from "../react/Admonition";
 import FormSelect from "../react/FormSelect";
 import FormTextArea from "../react/FormTextArea";
 import FormTextBox from "../react/FormTextBox";
@@ -154,64 +155,56 @@ function SearchStringOption({ note, refreshResults, error, ...restProps }: Searc
         }
     }, 1000);
 
-    // React to errors
-    const { showTooltip, hideTooltip } = useTooltip(inputRef, {
-        trigger: "manual",
-        title: `${t("search_string.error", { error: error?.message })}`,
-        html: true,
-        placement: "bottom"
-    });
-
     // Auto-focus.
     useEffect(() => inputRef.current?.focus(), []);
 
-    useEffect(() => {
-        if (error) {
-            showTooltip();
-            setTimeout(() => hideTooltip(), 4000);
-        } else {
-            hideTooltip();
-        }
-    }, [ error ]);
+    return <>
+        <SearchOption
+            title={t("search_string.title_column")}
+            help={<>
+                <strong>{t("search_string.search_syntax")}</strong> - {t("search_string.also_see")} <a href="#" data-help-page="search.html">{t("search_string.complete_help")}</a>
+                <ul style="marigin-bottom: 0;">
+                    <li>{t("search_string.full_text_search")}</li>
+                    <li><code>#abc</code> - {t("search_string.label_abc")}</li>
+                    <li><code>#year = 2019</code> - {t("search_string.label_year")}</li>
+                    <li><code>#rock #pop</code> - {t("search_string.label_rock_pop")}</li>
+                    <li><code>#rock or #pop</code> - {t("search_string.label_rock_or_pop")}</li>
+                    <li><code>#year &lt;= 2000</code> - {t("search_string.label_year_comparison")}</li>
+                    <li><code>note.dateCreated &gt;= MONTH-1</code> - {t("search_string.label_date_created")}</li>
+                </ul>
+            </>}
+            note={note} {...restProps}
+        >
+            <FormTextArea
+                inputRef={inputRef}
+                className="search-string"
+                placeholder={t("search_string.placeholder")}
+                currentValue={searchString ?? ""}
+                onChange={text => {
+                    currentValue.current = text;
+                    spacedUpdate.scheduleUpdate();
+                }}
+                onKeyDown={async (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
 
-    return <SearchOption
-        title={t("search_string.title_column")}
-        help={<>
-            <strong>{t("search_string.search_syntax")}</strong> - {t("search_string.also_see")} <a href="#" data-help-page="search.html">{t("search_string.complete_help")}</a>
-            <ul style="marigin-bottom: 0;">
-                <li>{t("search_string.full_text_search")}</li>
-                <li><code>#abc</code> - {t("search_string.label_abc")}</li>
-                <li><code>#year = 2019</code> - {t("search_string.label_year")}</li>
-                <li><code>#rock #pop</code> - {t("search_string.label_rock_pop")}</li>
-                <li><code>#rock or #pop</code> - {t("search_string.label_rock_or_pop")}</li>
-                <li><code>#year &lt;= 2000</code> - {t("search_string.label_year_comparison")}</li>
-                <li><code>note.dateCreated &gt;= MONTH-1</code> - {t("search_string.label_date_created")}</li>
-            </ul>
-        </>}
-        note={note} {...restProps}
-    >
-        <FormTextArea
-            inputRef={inputRef}
-            className="search-string"
-            placeholder={t("search_string.placeholder")}
-            currentValue={searchString ?? ""}
-            onChange={text => {
-                currentValue.current = text;
-                spacedUpdate.scheduleUpdate();
-            }}
-            onKeyDown={async (e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-
-                    // this also in effect disallows new lines in query string.
-                    // on one hand, this makes sense since search string is a label
-                    // on the other hand, it could be nice for structuring long search string. It's probably a niche case though.
-                    await spacedUpdate.updateNowIfNecessary();
-                    refreshResults();
-                }
-            }}
-        />
-    </SearchOption>;
+                        // this also in effect disallows new lines in query string.
+                        // on one hand, this makes sense since search string is a label
+                        // on the other hand, it could be nice for structuring long search string. It's probably a niche case though.
+                        await spacedUpdate.updateNowIfNecessary();
+                        refreshResults();
+                    }
+                }}
+            />
+        </SearchOption>
+        {error?.message && (
+            <tr>
+                <td colspan={3}>
+                    <Admonition type="caution">{error.message}</Admonition>
+                </td>
+            </tr>
+        )}
+    </>;
 }
 
 function SearchScriptOption({ note, ...restProps }: SearchOptionProps) {

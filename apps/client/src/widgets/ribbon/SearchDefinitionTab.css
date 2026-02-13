@@ -4,6 +4,12 @@
     width: 100%;
     border-collapse: separate;
     border-spacing: 10px;
+
+    .admonition {
+        margin-top: 0.25em;
+        margin-bottom: 1em;
+        text-wrap: wrap;
+    }
 }
 
 .search-setting-table div {
@@ -154,7 +160,7 @@ body.mobile .search-definition-widget {
     .search-setting-table tr.ancestor > td > div {
         flex-direction: column;
         align-items: flex-start !important;
-    } 
+    }
 
     .search-actions tr {
         border-bottom: 0;
