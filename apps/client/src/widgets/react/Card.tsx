@@ -18,7 +18,7 @@ interface CardSectionProps {
     className?: string;
     subSections?: JSX.Element | JSX.Element[];
     childrenVisible?: boolean;
-    hasAction: boolean;
+    hasAction?: boolean;
     onAction?: () => void;
 }
 
