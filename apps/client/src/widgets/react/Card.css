@@ -24,7 +24,7 @@
 
         &.tn-card-section-nested {
             padding-left: calc(30px * var(--tn-card-section-nesting-level));
-            opacity: .5;
+            background-color: color-mix(in srgb, var(--card-background-color) calc(100% / (var(--tn-card-section-nesting-level) + 1)) , transparent);
         }
 
         &.tn-action:hover {
