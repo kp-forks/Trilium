@@ -102,9 +102,8 @@
 
 .note-expander {
     font-size: x-large;
-    position: relative;
-    top: 3px;
     cursor: pointer;
+    opacity: .65;
 }
 
 .note-list-pager {
@@ -115,6 +114,38 @@
     margin-left: 0.5em;
     vertical-align: middle;
     opacity: 0.5;
+}
+
+:root .list-view-card {
+    --card-nested-section-indent: 40px;
+}
+
+.note-list h5 {
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+    margin: 0;
+
+    .tn-icon {
+        color: var(--left-pane-icon-color);
+        margin-inline-end: 8px;
+        font-size: 1.2em;
+    }
+
+    .note-book-title {
+        color: inherit;
+    }
+
+    .note-list-attributes {
+        flex-grow: 1;
+        text-align: right;
+        font-size: .75em;
+        opacity: .75;
+    }
+}
+
+.note-content-preview:has(.note-book-content:empty) {
+    display: none;
 }
 
 /* #region Grid view */

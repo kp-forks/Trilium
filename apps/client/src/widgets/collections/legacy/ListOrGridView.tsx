@@ -1,4 +1,5 @@
 import "./ListOrGridView.css";
+import { Card, CardSection } from "../../react/Card";
 
 import { useEffect, useRef, useState } from "preact/hooks";
 
@@ -33,7 +34,7 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
             { noteIds.length > 0 && <div class="note-list-wrapper">
                 {!hasCollectionProperties && <Pager {...pagination} />}
 
-                <div class="note-list-container use-tn-links">
+                <Card className="list-view-card">
                     {pageNotes?.map(childNote => (
                         <ListNoteCard
                             key={childNote.noteId}
@@ -41,7 +42,7 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
                             expandDepth={expandDepth} highlightedTokens={highlightedTokens}
                             currentLevel={1} includeArchived={includeArchived} />
                     ))}
-                </div>
+                </Card>
 
                 <Pager {...pagination} />
             </div>}
@@ -93,27 +94,35 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
     // Reset expand state if switching to another note, or if user manually toggled expansion state.
     useEffect(() => setExpanded(currentLevel <= expandDepth), [ note, currentLevel, expandDepth ]);
 
+    const children = <>
+        {isExpanded && <>
+            <CardSection className="note-content-preview">
+                <NoteContent note={note} highlightedTokens={highlightedTokens} noChildrenList includeArchivedNotes={includeArchived} />
+            </CardSection>
+            <NoteChildren note={note} parentNote={parentNote} highlightedTokens={highlightedTokens} currentLevel={currentLevel} expandDepth={expandDepth} includeArchived={includeArchived} />
+        </>}
+    </>
+
     return (
-        <div
-            className={`note-book-card no-tooltip-preview ${isExpanded ? "expanded" : ""} ${note.isArchived ? "archived" : ""}`}
+        <CardSection
+            className={`no-tooltip-preview ${isExpanded ? "expanded" : ""} ${note.isArchived ? "archived" : ""}`}
+            subSections={children}
+            childrenVisible={isExpanded}
+            hasAction
+            onAction={() => setExpanded(!isExpanded)}
             data-note-id={note.noteId}
         >
-            <h5 className="note-book-header">
+            <h5 className="">
                 <span
                     className={`note-expander ${isExpanded ? "bx bx-chevron-down" : "bx bx-chevron-right"}`}
-                    onClick={() => setExpanded(!isExpanded)}
+                    onClick={(e) => {setExpanded(!isExpanded); e.stopPropagation();}}
                 />
 
                 <Icon className="note-icon" icon={note.getIcon()} />
                 <NoteLink className="note-book-title" notePath={notePath} noPreview showNotePath={parentNote.type === "search"} highlightedTokens={highlightedTokens} />
                 <NoteAttributes note={note} />
             </h5>
-
-            {isExpanded && <>
-                <NoteContent note={note} highlightedTokens={highlightedTokens} noChildrenList includeArchivedNotes={includeArchived} />
-                <NoteChildren note={note} parentNote={parentNote} highlightedTokens={highlightedTokens} currentLevel={currentLevel} expandDepth={expandDepth} includeArchived={includeArchived} />
-            </>}
-        </div>
+        </CardSection>
     );
 }
 
