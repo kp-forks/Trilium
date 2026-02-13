@@ -1,0 +1,36 @@
+.tn-card {
+    --card-border-radius: 8px;
+    --card-padding: 8px 16px;
+    --card-section-gap: 3px;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-section-gap);
+
+    .tn-card-section {
+        padding: var(--card-padding);
+        border: 1px solid var(--card-border-color);
+        background: var(--card-background-color);
+
+        &:first-of-type {
+            border-top-left-radius: var(--card-border-radius);
+            border-top-right-radius: var(--card-border-radius);
+        }
+
+        &:last-of-type {
+            border-bottom-left-radius: var(--card-border-radius);
+            border-bottom-right-radius: var(--card-border-radius);
+        }
+
+        &.tn-card-section-nested {
+            padding-left: calc(30px * var(--tn-card-section-nesting-level));
+            opacity: .5;
+        }
+
+        &.tn-action:hover {
+            background-color: var(--card-background-hover-color);
+            transition: background-color .2s ease-out;
+        }
+
+    }
+}
