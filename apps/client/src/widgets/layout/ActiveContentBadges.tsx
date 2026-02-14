@@ -10,8 +10,8 @@ import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react
 import FormToggle from "../react/FormToggle";
 import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 
-const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous);
-const activeContentLabels = [ "iconPack", "widget" ] as const;
+const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous || a.name === "appCss");
+const activeContentLabels = [ "iconPack", "widget", "appCss" ] as const;
 
 const typeMappings: Record<ActiveContentInfo["type"], {
     icon: string;
@@ -38,6 +38,10 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     widget: {
         icon: "bx bxs-widget",
         helpPage: "MgibgPcfeuGz"
+    },
+    appCss: {
+        icon: "bx bxs-file-css",
+        helpPage: "AlhDUqhENtH7"
     }
 };
 
@@ -168,6 +172,8 @@ function getTranslationForType(type: ActiveContentInfo["type"]) {
             return t("active_content_badges.type_frontend_script");
         case "widget":
             return t("active_content_badges.type_widget");
+        case "appCss":
+            return t("active_content_badges.type_app_css");
     }
 }
 
@@ -205,7 +211,7 @@ function getNameWithoutPrefix(name: string) {
 }
 
 interface ActiveContentInfo {
-    type: "iconPack" | "backendScript" | "frontendScript" | "widget";
+    type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss";
     isEnabled: boolean;
 }
 

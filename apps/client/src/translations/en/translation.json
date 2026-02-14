@@ -2294,6 +2294,7 @@
     "type_backend_script": "Backend script",
     "type_frontend_script": "Frontend script",
     "type_widget": "Widget",
+    "type_app_css": "Custom CSS",
     "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
     "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}.",
     "menu_docs": "Open documentation",
