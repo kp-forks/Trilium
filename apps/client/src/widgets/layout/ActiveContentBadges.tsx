@@ -1,4 +1,5 @@
 import { BUILTIN_ATTRIBUTES } from "@triliumnext/commons";
+import clsx from "clsx";
 import { useEffect, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
@@ -75,7 +76,7 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
     const { icon, helpPage, apiDocsPage, isExecutable } = typeMappings[info.type];
     return (
         <BadgeWithDropdown
-            className="icon-pack-badge"
+            className={clsx("active-content-badge", !!info.isEnabled && "disabled")}
             icon={icon}
             text={getTranslationForType(info.type)}
         >

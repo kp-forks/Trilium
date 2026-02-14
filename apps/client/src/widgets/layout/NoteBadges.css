@@ -37,7 +37,10 @@
                 pointer-events: none;
             }
         }
-        &.icon-pack-badge { --color: var(--badge-icon-pack-background-color); }
+        &.active-content-badge { --color: var(--badge-active-content-background-color); }
+        &.active-content-badge.disabled {
+            opacity: 0.5;
+        }
 
         min-width: 0;
 
