@@ -51,8 +51,8 @@ export function ActiveContentBadges() {
 
     return (note && info &&
         <>
+            {info.canToggleEnabled && <ActiveContentToggle info={info} note={note} />}
             <ActiveContentBadge info={info} note={note} />
-            <ActiveContentToggle info={info} note={note} />
         </>
     );
 }
@@ -151,15 +151,23 @@ function ScriptRunOptions({ info, note }: { note: FNote, info: ActiveContentInfo
 
 function WidgetSwitcher({ note }: { note: FNote }) {
     const [ widget, setWidget ] = useNoteLabelBoolean(note, "widget");
+    const [ disabledWidget, setDisabledWidget ] = useNoteLabelBoolean(note, "disabled:widget");
 
-    return (
-        <FormListItem
+    return (widget || disabledWidget)
+        ? <FormListItem
+            icon="bx bx-window"
+            onClick={() => {
+                setWidget(false);
+                setDisabledWidget(false);
+            }}
+        >{t("active_content_badges.menu_change_to_frontend_script")}</FormListItem>
+        : <FormListItem
             icon={widget ? "bx bx-window" : "bx bxs-widget"}
-            onClick={() => setWidget(!widget)}
-        >
-            {widget ? t("active_content_badges.menu_change_to_frontend_script") : t("active_content_badges.menu_change_to_widget")}
-        </FormListItem>
-    );
+            onClick={() => {
+                setWidget(true);
+            }}
+        >{t("active_content_badges.menu_change_to_widget")}</FormListItem>;
+
 }
 
 function getTranslationForType(type: ActiveContentInfo["type"]) {
@@ -213,6 +221,7 @@ function getNameWithoutPrefix(name: string) {
 interface ActiveContentInfo {
     type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss";
     isEnabled: boolean;
+    canToggleEnabled: boolean;
 }
 
 function useActiveContentInfo(note: FNote | null | undefined) {
@@ -221,6 +230,7 @@ function useActiveContentInfo(note: FNote | null | undefined) {
     function refresh() {
         let type: ActiveContentInfo["type"] | null = null;
         let isEnabled = true;
+        let canToggleEnabled = false;
 
         if (!note) {
             setInfo(null);
@@ -229,8 +239,17 @@ function useActiveContentInfo(note: FNote | null | undefined) {
 
         if (note.type === "code" && note.mime === "application/javascript;env=backend") {
             type = "backendScript";
+            for (const backendLabel of [ "run", "customRequestHandler", "customResourceProvider" ]) {
+                isEnabled ||= note.hasLabel(backendLabel);
+
+                if (!canToggleEnabled && note.hasLabelOrDisabled(backendLabel)) {
+                    canToggleEnabled = true;
+                }
+            }
         } else if (note.type === "code" && note.mime === "application/javascript;env=frontend") {
             type = "frontendScript";
+            isEnabled = note.hasLabel("widget") || note.hasLabel("run");
+            canToggleEnabled = note.hasLabelOrDisabled("widget") || note.hasLabelOrDisabled("run");
         }
 
         for (const labelToCheck of activeContentLabels ) {
@@ -245,7 +264,7 @@ function useActiveContentInfo(note: FNote | null | undefined) {
         }
 
         if (type) {
-            setInfo({ type, isEnabled });
+            setInfo({ type, isEnabled, canToggleEnabled });
         } else {
             setInfo(null);
         }

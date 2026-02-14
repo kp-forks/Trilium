@@ -700,6 +700,10 @@ export default class FNote {
         return this.hasAttribute(LABEL, name);
     }
 
+    hasLabelOrDisabled(name: string) {
+        return this.hasLabel(name) || this.hasLabel(`disabled:${name}`);
+    }
+
     /**
      * @param name - label name
      * @returns true if label exists (including inherited) and does not have "false" value.
