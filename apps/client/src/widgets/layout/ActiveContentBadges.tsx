@@ -14,7 +14,7 @@ const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous || a.n
 const activeContentLabels = [ "iconPack", "widget", "appCss" ] as const;
 
 interface ActiveContentInfo {
-    type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss" | "renderNote";
+    type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss" | "renderNote" | "webView";
     isEnabled: boolean;
     canToggleEnabled: boolean;
 }
@@ -52,6 +52,10 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     renderNote: {
         icon: "bx bx-extension",
         helpPage: "HcABDtFCkbFN"
+    },
+    webView: {
+        icon: "bx bx-globe",
+        helpPage: "1vHRoWCEjj0L"
     }
 };
 
@@ -194,6 +198,8 @@ function getTranslationForType(type: ActiveContentInfo["type"]) {
             return t("active_content_badges.type_app_css");
         case "renderNote":
             return t("active_content_badges.type_render_note");
+        case "webView":
+            return t("note_types.web-view");
     }
 }
 
@@ -251,6 +257,10 @@ function useActiveContentInfo(note: FNote | null | undefined) {
             type = "renderNote";
             isEnabled = note.hasRelation("renderNote");
             canToggleEnabled = note.hasRelation("renderNote") || note.hasRelation("disabled:renderNote");
+        } else if (note.type === "webView") {
+            type = "webView";
+            isEnabled = note.hasLabel("webViewSrc");
+            canToggleEnabled = note.hasLabelOrDisabled("webViewSrc");
         } else if (note.type === "code" && note.mime === "application/javascript;env=backend") {
             type = "backendScript";
             for (const backendLabel of [ "run", "customRequestHandler", "customResourceProvider" ]) {

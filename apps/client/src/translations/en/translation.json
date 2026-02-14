@@ -2296,6 +2296,7 @@
     "type_widget": "Widget",
     "type_app_css": "Custom CSS",
     "type_render_note": "Render note",
+    "type_web_view": "Web view",
     "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
     "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}.",
     "menu_docs": "Open documentation",
