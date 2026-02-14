@@ -27,16 +27,16 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
     const nestingLevel = (parentContext && parentContext.nestingLevel + 1) ?? 0;
 
     return <>
-        <section className={clsx(["tn-card-section", {
+        <section className={clsx("tn-card-section", props.className, {
                     "tn-card-section-nested": nestingLevel > 0,
-                    "tn-action": props?.hasAction}
-                 ], props.className)}
-                 style={"--tn-card-section-nesting-level: " + nestingLevel}
-                 onClick={() => {props.onAction?.()}}>
+                    "tn-action": props.hasAction
+                 })}
+                 style={{"--tn-card-section-nesting-level": nestingLevel}}
+                 onClick={props.onAction}>
             {props.children}
         </section>
 
-        {props?.childrenVisible &&
+        {props.childrenVisible &&
             <CardSectionContext.Provider value={{nestingLevel}}>
                 {props.subSections}
             </CardSectionContext.Provider>

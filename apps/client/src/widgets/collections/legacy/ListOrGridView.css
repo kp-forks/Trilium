@@ -100,49 +100,110 @@
     overflow: auto;
 }
 
-.note-expander {
-    font-size: x-large;
-    cursor: pointer;
-    opacity: .65;
-}
-
 .note-list-pager {
     text-align: center;
 }
 
-.note-list.list-view .note-path {
-    margin-left: 0.5em;
-    vertical-align: middle;
-    opacity: 0.5;
+@keyframes note-preview-show {
+    from {
+        opacity: 0;
+    } to {
+        opacity: 1;
+    }
 }
 
-:root .list-view-card {
+.nested-note-list {
     --card-nested-section-indent: 40px;
+
+    h5 {
+        display: flex;
+        align-items: center;
+        font-size: 1em;
+        font-weight: normal;
+        margin: 0;
+
+        .note-expander {
+            font-size: x-large;
+            cursor: pointer;
+            opacity: .65;
+            margin-inline-end: 4px;
+        }
+
+        .tn-icon {
+            color: var(--left-pane-icon-color);
+            margin-inline-end: 8px;
+            font-size: 1.2em;
+        }
+
+        .note-book-title {
+            color: inherit;
+            font-weight: normal;
+        }
+
+        .note-path {
+            margin-left: 0.5em;
+            vertical-align: middle;
+            opacity: 0.5;
+            order: -1;
+        }
+
+        .note-list-attributes {
+            flex-grow: 1;
+            text-align: right;
+            font-size: .75em;
+            opacity: .75;
+        }
+    }
+
+    .note-book-content {
+        --background: rgba(0, 0, 0, .2);
+        outline: 1px solid var(--background);
+        border-radius: 8px;
+        background-color: var(--background);
+        overflow: hidden;
+        user-select: text;
+        animation: note-preview-show .25s ease-out;
+        will-change: opacity;
+
+        > .rendered-content > *:last-child {
+            margin-bottom: 0;
+        }
+
+        &.type-text {
+            padding: 8px 24px;
+
+            .ck-content > *:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        &.type-protectedSession {
+            padding: 20px;
+        }
+
+        &.type-image {
+            padding: 0;
+        }
+
+        &.type-pdf {
+            iframe {
+                height: 50vh;
+            }
+
+            .file-footer {
+                padding: 8px;
+            }
+        }
+
+        &.type-webView {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 50vh;
+        }
+    }
 }
 
-.note-list h5 {
-    display: flex;
-    align-items: center;
-    font-size: 1em;
-    margin: 0;
-
-    .tn-icon {
-        color: var(--left-pane-icon-color);
-        margin-inline-end: 8px;
-        font-size: 1.2em;
-    }
-
-    .note-book-title {
-        color: inherit;
-    }
-
-    .note-list-attributes {
-        flex-grow: 1;
-        text-align: right;
-        font-size: .75em;
-        opacity: .75;
-    }
-}
 
 .note-content-preview:has(.note-book-content:empty) {
     display: none;

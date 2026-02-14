@@ -15,6 +15,7 @@ import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
 import { Pager, usePagination } from "../Pagination";
 import { filterChildNotes, useFilteredNoteIds } from "./utils";
+import { JSX } from "preact/jsx-runtime";
 
 export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
     const expandDepth = useExpansionDepth(note);
@@ -34,7 +35,7 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
             { noteIds.length > 0 && <div class="note-list-wrapper">
                 {!hasCollectionProperties && <Pager {...pagination} />}
 
-                <Card className="list-view-card">
+                <Card className="nested-note-list">
                     {pageNotes?.map(childNote => (
                         <ListNoteCard
                             key={childNote.noteId}
@@ -94,32 +95,42 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
     // Reset expand state if switching to another note, or if user manually toggled expansion state.
     useEffect(() => setExpanded(currentLevel <= expandDepth), [ note, currentLevel, expandDepth ]);
 
-    const children = <>
-        {isExpanded && <>
+    let subSections: JSX.Element | undefined = undefined;
+    if (isExpanded) {
+        subSections = <>
             <CardSection className="note-content-preview">
-                <NoteContent note={note} highlightedTokens={highlightedTokens} noChildrenList includeArchivedNotes={includeArchived} />
+                <NoteContent note={note}
+                             highlightedTokens={highlightedTokens}
+                             noChildrenList
+                             includeArchivedNotes={includeArchived} />
             </CardSection>
-            <NoteChildren note={note} parentNote={parentNote} highlightedTokens={highlightedTokens} currentLevel={currentLevel} expandDepth={expandDepth} includeArchived={includeArchived} />
-        </>}
-    </>
 
+            <NoteChildren note={note}
+                          parentNote={parentNote}
+                          highlightedTokens={highlightedTokens}
+                          currentLevel={currentLevel}
+                          expandDepth={expandDepth}
+                          includeArchived={includeArchived} />
+        </>
+    }
+            
     return (
         <CardSection
-            className={`no-tooltip-preview ${isExpanded ? "expanded" : ""} ${note.isArchived ? "archived" : ""}`}
-            subSections={children}
+            className={`nested-note-list-item no-tooltip-preview ${isExpanded ? "expanded" : ""} ${note.isArchived ? "archived" : ""}`}
+            subSections={subSections}
             childrenVisible={isExpanded}
             hasAction
             onAction={() => setExpanded(!isExpanded)}
             data-note-id={note.noteId}
         >
             <h5 className="">
-                <span
-                    className={`note-expander ${isExpanded ? "bx bx-chevron-down" : "bx bx-chevron-right"}`}
-                    onClick={(e) => {setExpanded(!isExpanded); e.stopPropagation();}}
-                />
-
+                <span className={`note-expander ${isExpanded ? "bx bx-chevron-down" : "bx bx-chevron-right"}`} />
                 <Icon className="note-icon" icon={note.getIcon()} />
-                <NoteLink className="note-book-title" notePath={notePath} noPreview showNotePath={parentNote.type === "search"} highlightedTokens={highlightedTokens} />
+                <NoteLink className="note-book-title"
+                          notePath={notePath}
+                          noPreview
+                          showNotePath={parentNote.type === "search"}
+                          highlightedTokens={highlightedTokens} />
                 <NoteAttributes note={note} />
             </h5>
         </CardSection>
@@ -198,7 +209,8 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
             });
     }, [ note, highlightedTokens ]);
 
-    return <div ref={contentRef} className="note-book-content" />;
+    return <div ref={contentRef} className="note-book-content">
+        </div>;
 }
 
 function NoteChildren({ note, parentNote, highlightedTokens, currentLevel, expandDepth, includeArchived }: {
