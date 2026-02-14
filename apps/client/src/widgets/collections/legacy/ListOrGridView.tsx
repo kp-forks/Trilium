@@ -36,7 +36,7 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
             { noteIds.length > 0 && <div class="note-list-wrapper">
                 {!hasCollectionProperties && <Pager {...pagination} />}
 
-                <Card className="nested-note-list">
+                <Card className={clsx("nested-note-list", {"search-results": (noteType === "search")})}>
                     {pageNotes?.map(childNote => (
                         <ListNoteCard
                             key={childNote.noteId}
@@ -121,11 +121,11 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
             subSections={subSections}
             childrenVisible={isExpanded}
             hasAction
-            onAction={() => setExpanded(!isExpanded)}
             data-note-id={note.noteId}
         >
             <h5 className="">
-                <span className={`note-expander ${isExpanded ? "bx bx-chevron-down" : "bx bx-chevron-right"}`} />
+                <span className={`note-expander ${isExpanded ? "bx bx-chevron-down" : "bx bx-chevron-right"}`} 
+                      onClick={() => setExpanded(!isExpanded)}/>
                 <Icon className="note-icon" icon={note.getIcon()} />
                 <NoteLink className="note-book-title"
                           notePath={notePath}

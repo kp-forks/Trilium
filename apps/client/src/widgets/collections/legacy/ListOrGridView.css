@@ -209,6 +209,48 @@
     }
 }
 
+.nested-note-list.search-results {
+    span.tn-icon + span > span {
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: flex-start;
+    }
+
+    small {
+        line-height: .85em;
+    }
+
+    .note-path {
+        margin-left: 0;
+        font-size: .85em;
+        line-height: .85em;
+        font-weight: 500;
+        letter-spacing: .5pt;
+    }
+
+    .tn-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-inline-end: 12px;
+        background: rgb(88, 88, 88);
+        border-radius: 50%;
+        width: 1.75em;
+        height: 1.75em;
+        font-size: 1.2em;
+    }
+
+    .note-book-title {
+        --link-hover-background: transparent;
+    }
+
+    .ck-find-result {
+        background: transparent;
+        color: var(--quick-search-result-highlight-color);
+        font-weight: 600;
+        text-decoration: underline;
+    }
+}
 
 .note-content-preview:has(.note-book-content:empty) {
     display: none;
