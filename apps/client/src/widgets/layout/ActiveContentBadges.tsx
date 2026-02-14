@@ -7,9 +7,9 @@ import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import { BadgeWithDropdown } from "../react/Badge";
-import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react/FormList";
+import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
-import { useNoteContext, useNoteLabel, useTriliumEvent, useTriliumOption } from "../react/hooks";
+import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent, useTriliumOption } from "../react/hooks";
 
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous);
 const activeContentLabels = [ "iconPack" ] as const;
@@ -65,6 +65,7 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
                         triggerCommand="runActiveNote"
                     >{t("active_content_badges.menu_execute_now")}</FormListItem>
                     <ScriptRunOptions note={note} info={info} />
+                    {info.type === "frontendScript" && <WidgetSwitcher note={note} />}
                     <FormDropdownDivider />
                 </>
             )}
@@ -132,6 +133,19 @@ function ScriptRunOptions({ info, note }: { note: FNote, info: ActiveContentInfo
                 >{title}</FormListItem>
             ))}
         </FormDropdownSubmenu>
+    );
+}
+
+function WidgetSwitcher({ note }: { note: FNote }) {
+    const [ widget, setWidget ] = useNoteLabelBoolean(note, "widget");
+
+    return (
+        <FormListToggleableItem
+            title={t("active_content_badges.menu_toggle_widget")}
+            icon="bx bxs-widget"
+            currentValue={widget}
+            onChange={newValue => setWidget(newValue)}
+        />
     );
 }
 
