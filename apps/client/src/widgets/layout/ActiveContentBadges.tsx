@@ -64,7 +64,7 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
                         icon="bx bx-play"
                         triggerCommand="runActiveNote"
                     >{t("active_content_badges.menu_execute_now")}</FormListItem>
-                    <ScriptRunOptions note={note} />
+                    <ScriptRunOptions note={note} info={info} />
                     <FormDropdownDivider />
                 </>
             )}
@@ -82,18 +82,18 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
     );
 }
 
-function ScriptRunOptions({ note }: { note: FNote }) {
+function ScriptRunOptions({ info, note }: { note: FNote, info: ActiveContentInfo }) {
     const [ run, setRun ] = useNoteLabel(note, "run");
 
     const options: {
         title: string;
         value: string | null;
-        type: "backendScript" | "frontendScript";
-    }[] = [
+        type: "both" | "backendScript" | "frontendScript";
+    }[] = ([
         {
             title: t("active_content_badges.menu_run_disabled"),
             value: null,
-            type: "backendScript"
+            type: "both"
         },
         {
             title: t("active_content_badges.menu_run_backend_startup"),
@@ -110,7 +110,17 @@ function ScriptRunOptions({ note }: { note: FNote }) {
             value: "hourly",
             type: "backendScript"
         },
-    ];
+        {
+            title: t("active_content_badges.menu_run_frontend_startup"),
+            value: "frontendStartup",
+            type: "frontendScript"
+        },
+        {
+            title: t("active_content_badges.menu_run_mobile_startup"),
+            value: "mobileStartup",
+            type: "frontendScript"
+        }
+    ] as const).filter(option => option.type === "both" || option.type === info.type);
 
     return (
         <FormDropdownSubmenu title={t("active_content_badges.menu_run")} icon="bx bx-rss" dropStart>
@@ -131,6 +141,8 @@ function getTranslationForType(type: ActiveContentInfo["type"]) {
             return t("active_content_badges.type_icon_pack");
         case "backendScript":
             return t("active_content_badges.type_backend_script");
+        case "frontendScript":
+            return t("active_content_badges.type_frontend_script");
     }
 }
 
@@ -186,6 +198,8 @@ function useActiveContentInfo(note: FNote | null | undefined) {
 
         if (note.type === "code" && note.mime === "application/javascript;env=backend") {
             type = "backendScript";
+        } else if (note.type === "code" && note.mime === "application/javascript;env=frontend") {
+            type = "frontendScript";
         }
 
         for (const labelToCheck of activeContentLabels ) {
