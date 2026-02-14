@@ -1,4 +1,5 @@
 import { BUILTIN_ATTRIBUTES } from "@triliumnext/commons";
+import { note } from "mermaid/dist/rendering-util/rendering-elements/shapes/note.js";
 import { useEffect, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
@@ -6,9 +7,9 @@ import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import { BadgeWithDropdown } from "../react/Badge";
-import { FormDropdownDivider, FormListItem } from "../react/FormList";
+import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
-import { useNoteContext, useTriliumEvent } from "../react/hooks";
+import { useNoteContext, useNoteLabel, useTriliumEvent, useTriliumOption } from "../react/hooks";
 
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous);
 const activeContentLabels = [ "iconPack" ] as const;
@@ -49,7 +50,7 @@ export function ActiveContentBadges() {
     );
 }
 
-function ActiveContentBadge({ info }: { note: FNote, info: ActiveContentInfo }) {
+function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentInfo }) {
     const { icon, helpPage, apiDocsPage, isExecutable } = typeMappings[info.type];
     return (
         <BadgeWithDropdown
@@ -63,6 +64,7 @@ function ActiveContentBadge({ info }: { note: FNote, info: ActiveContentInfo }) 
                         icon="bx bx-play"
                         triggerCommand="runActiveNote"
                     >{t("active_content_badges.menu_execute_now")}</FormListItem>
+                    <ScriptRunOptions note={note} />
                     <FormDropdownDivider />
                 </>
             )}
@@ -77,6 +79,49 @@ function ActiveContentBadge({ info }: { note: FNote, info: ActiveContentInfo }) 
                 onClick={() => openInAppHelpFromUrl(apiDocsPage)}
             >{t("code_buttons.trilium_api_docs_button_title")}</FormListItem>}
         </BadgeWithDropdown>
+    );
+}
+
+function ScriptRunOptions({ note }: { note: FNote }) {
+    const [ run, setRun ] = useNoteLabel(note, "run");
+
+    const options: {
+        title: string;
+        value: string | null;
+        type: "backendScript" | "frontendScript";
+    }[] = [
+        {
+            title: t("active_content_badges.menu_run_disabled"),
+            value: null,
+            type: "backendScript"
+        },
+        {
+            title: t("active_content_badges.menu_run_backend_startup"),
+            value: "backendStartup",
+            type: "backendScript"
+        },
+        {
+            title: t("active_content_badges.menu_run_daily"),
+            value: "daily",
+            type: "backendScript"
+        },
+        {
+            title: t("active_content_badges.menu_run_hourly"),
+            value: "hourly",
+            type: "backendScript"
+        },
+    ];
+
+    return (
+        <FormDropdownSubmenu title={t("active_content_badges.menu_run")} icon="bx bx-rss" dropStart>
+            {options.map(({ title, value }) => (
+                <FormListItem
+                    key={value}
+                    onClick={() => setRun(value)}
+                    checked={run ? run === value : value === null }
+                >{title}</FormListItem>
+            ))}
+        </FormDropdownSubmenu>
     );
 }
 

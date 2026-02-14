@@ -2295,6 +2295,11 @@
     "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
     "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}.",
     "menu_docs": "Open documentation",
-    "menu_execute_now": "Execute script now"
+    "menu_execute_now": "Execute script now",
+    "menu_run": "Run automatically",
+    "menu_run_disabled": "Manually",
+    "menu_run_backend_startup": "When the backend starts up",
+    "menu_run_hourly": "Hourly",
+    "menu_run_daily": "Daily"
   }
 }
