@@ -13,6 +13,12 @@ import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } fr
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous || a.name === "appCss");
 const activeContentLabels = [ "iconPack", "widget", "appCss" ] as const;
 
+interface ActiveContentInfo {
+    type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss" | "renderNote";
+    isEnabled: boolean;
+    canToggleEnabled: boolean;
+}
+
 const typeMappings: Record<ActiveContentInfo["type"], {
     icon: string;
     helpPage: string;
@@ -42,6 +48,10 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     appCss: {
         icon: "bx bxs-file-css",
         helpPage: "AlhDUqhENtH7"
+    },
+    renderNote: {
+        icon: "bx bx-extension",
+        helpPage: "HcABDtFCkbFN"
     }
 };
 
@@ -182,6 +192,8 @@ function getTranslationForType(type: ActiveContentInfo["type"]) {
             return t("active_content_badges.type_widget");
         case "appCss":
             return t("active_content_badges.type_app_css");
+        case "renderNote":
+            return t("active_content_badges.type_render_note");
     }
 }
 
@@ -207,7 +219,11 @@ function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentI
                 if (newName === attr.name) continue;
 
                 // We are adding and removing afterwards to avoid a flicker (because for a moment there would be no active content attribute anymore) because the operations are done in sequence and not atomically.
-                await attributes.addLabel(note.noteId, newName, attr.value);
+                if (attr.type === "label") {
+                    await attributes.addLabel(note.noteId, newName, attr.value);
+                } else {
+                    await attributes.setRelation(note.noteId, newName, attr.value);
+                }
                 await attributes.removeAttributeById(note.noteId, attr.attributeId);
             }
         }}
@@ -216,12 +232,6 @@ function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentI
 
 function getNameWithoutPrefix(name: string) {
     return name.startsWith("disabled:") ? name.substring(9) : name;
-}
-
-interface ActiveContentInfo {
-    type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss";
-    isEnabled: boolean;
-    canToggleEnabled: boolean;
 }
 
 function useActiveContentInfo(note: FNote | null | undefined) {
@@ -237,7 +247,11 @@ function useActiveContentInfo(note: FNote | null | undefined) {
             return;
         }
 
-        if (note.type === "code" && note.mime === "application/javascript;env=backend") {
+        if (note.type === "render") {
+            type = "renderNote";
+            isEnabled = note.hasRelation("renderNote");
+            canToggleEnabled = note.hasRelation("renderNote") || note.hasRelation("disabled:renderNote");
+        } else if (note.type === "code" && note.mime === "application/javascript;env=backend") {
             type = "backendScript";
             for (const backendLabel of [ "run", "customRequestHandler", "customResourceProvider" ]) {
                 isEnabled ||= note.hasLabel(backendLabel);
