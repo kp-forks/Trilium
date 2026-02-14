@@ -156,6 +156,7 @@
     }
 
     .note-book-content {
+        display: none;
         --background: rgba(0, 0, 0, .2);
         outline: 1px solid var(--background);
         border-radius: 8px;
@@ -164,6 +165,10 @@
         user-select: text;
         animation: note-preview-show .25s ease-out;
         will-change: opacity;
+
+        &.note-book-content-ready {
+            display: block;
+        }
 
         > .rendered-content > *:last-child {
             margin-bottom: 0;

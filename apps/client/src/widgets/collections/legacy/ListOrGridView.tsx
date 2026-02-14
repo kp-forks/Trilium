@@ -16,6 +16,7 @@ import { ViewModeProps } from "../interface";
 import { Pager, usePagination } from "../Pagination";
 import { filterChildNotes, useFilteredNoteIds } from "./utils";
 import { JSX } from "preact/jsx-runtime";
+import { clsx } from "clsx";
 
 export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
     const expandDepth = useExpansionDepth(note);
@@ -185,6 +186,9 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
     const contentRef = useRef<HTMLDivElement>(null);
     const highlightSearch = useImperativeSearchHighlighlighting(highlightedTokens);
 
+    const [ready, setReady] = useState(false);
+    const [noteType, setNoteType] = useState<string>("none");
+
     useEffect(() => {
         content_renderer.getRenderedContent(note, {
             trim,
@@ -199,17 +203,19 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
                 } else {
                     contentRef.current.replaceChildren();
                 }
-                contentRef.current.classList.add(`type-${type}`);
                 highlightSearch(contentRef.current);
+                setNoteType(type);
+                setReady(true);
             })
             .catch(e => {
                 console.warn(`Caught error while rendering note '${note.noteId}' of type '${note.type}'`);
                 console.error(e);
                 contentRef.current?.replaceChildren(t("collections.rendering_error"));
+                setReady(true);
             });
     }, [ note, highlightedTokens ]);
 
-    return <div ref={contentRef} className="note-book-content">
+    return <div ref={contentRef} className={clsx("note-book-content", `type-${noteType}`, {"note-book-content-ready": ready})}>
         </div>;
 }
 
