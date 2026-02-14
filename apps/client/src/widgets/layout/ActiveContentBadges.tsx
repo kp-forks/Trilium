@@ -5,7 +5,7 @@ import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import { openInAppHelpFromUrl } from "../../services/utils";
-import { Badge, BadgeWithDropdown } from "../react/Badge";
+import { BadgeWithDropdown } from "../react/Badge";
 import { FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
 import { useNoteContext, useTriliumEvent } from "../react/hooks";
@@ -16,14 +16,21 @@ const activeContentLabels = [ "iconPack" ] as const;
 const typeMappings: Record<ActiveContentInfo["type"], {
     icon: string;
     helpPage: string;
+    apiDocsPage?: string;
 }> = {
     iconPack: {
         icon: "bx bx-package",
-        helpPage: "g1mlRoU8CsqC"
+        helpPage: "g1mlRoU8CsqC",
     },
     backendScript: {
         icon: "bx bx-server",
-        helpPage: "SPirpZypehBG"
+        helpPage: "SPirpZypehBG",
+        apiDocsPage: "MEtfsqa5VwNi"
+    },
+    frontendScript: {
+        icon: "bx bx-window",
+        helpPage: "yIhgI5H7A2Sm",
+        apiDocsPage: "Q2z6av6JZVWm"
     }
 };
 
@@ -40,7 +47,7 @@ export function ActiveContentBadges() {
 }
 
 function ActiveContentBadge({ info }: { note: FNote, info: ActiveContentInfo }) {
-    const { icon, helpPage } = typeMappings[info.type];
+    const { icon, helpPage, apiDocsPage } = typeMappings[info.type];
     return (
         <BadgeWithDropdown
             className="icon-pack-badge"
@@ -51,6 +58,11 @@ function ActiveContentBadge({ info }: { note: FNote, info: ActiveContentInfo }) 
                 icon="bx bx-help-circle"
                 onClick={() => openInAppHelpFromUrl(helpPage)}
             >{t("active_content_badges.menu_docs")}</FormListItem>
+
+            {apiDocsPage && <FormListItem
+                icon="bx bx-book-content"
+                onClick={() => openInAppHelpFromUrl(apiDocsPage)}
+            >{t("code_buttons.trilium_api_docs_button_title")}</FormListItem>}
         </BadgeWithDropdown>
     );
 }
@@ -98,7 +110,7 @@ function getNameWithoutPrefix(name: string) {
 }
 
 interface ActiveContentInfo {
-    type: "iconPack" | "backendScript";
+    type: "iconPack" | "backendScript" | "frontendScript";
     isEnabled: boolean;
 }
 
