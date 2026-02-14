@@ -2288,5 +2288,10 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Bookmarks"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Icon pack",
+    "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}."
   }
 }

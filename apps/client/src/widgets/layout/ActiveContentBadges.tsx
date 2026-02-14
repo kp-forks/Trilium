@@ -3,6 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
+import { t } from "../../services/i18n";
 import { Badge } from "../react/Badge";
 import FormToggle from "../react/FormToggle";
 import { useNoteContext, useTriliumEvent } from "../react/hooks";
@@ -27,16 +28,17 @@ function IconPackBadge() {
         <Badge
             className="icon-pack-badge"
             icon="bx bx-package"
-            text="Icon pack"
+            text={t("active_content_badges.type_icon_pack")}
         />
     );
 }
 
 function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentInfo }) {
     return info && <FormToggle
-        switchOnName="Enabled"
-        switchOffName="Enabled"
+        switchOnName="" switchOffName=""
         currentValue={info.isEnabled}
+        switchOnTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: t("active_content_badges.type_icon_pack") })}
+        switchOffTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: t("active_content_badges.type_icon_pack") })}
         onChange={async (willEnable) => {
             const attrs = note.getOwnedAttributes()
                 .filter(attr => {
