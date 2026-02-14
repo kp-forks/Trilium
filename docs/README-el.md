@@ -135,8 +135,8 @@ script)](./README-ZH_TW.md) | [English](../README.md) | [French](./README-fr.md)
   εύκολη αποθήκευση περιεχομένου ιστού
 * Προσαρμόσιμο UI (κουμπιά πλαϊνής γραμμής, γραφικά στοιχεία που ορίζονται από
   το χρήστη,...)
-* [Metrics](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics),
-  along with a Grafana Dashboard.
+* [Μετρικές](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics),
+  μαζί με ένα Grafana Dashboard.
 
 ✨ Ρίξτε μια ματιά στους ακόλουθους πόρους/κοινότητες τρίτων για περισσότερες
 δυνατότητες που σχετίζονται με το TriliumNext:
