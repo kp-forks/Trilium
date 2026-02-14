@@ -22,6 +22,11 @@ type Labels = {
     pageUrl: string;
     dateNote: string;
 
+    // Scripting
+    run: string;
+    widget: boolean;
+    "disabled:widget": boolean;
+
     // Tree specific
     subtreeHidden: boolean;
 
