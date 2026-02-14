@@ -1,3 +1,4 @@
+import { BUILTIN_ATTRIBUTES } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
@@ -6,15 +7,17 @@ import { Badge } from "../react/Badge";
 import FormToggle from "../react/FormToggle";
 import { useNoteContext, useTriliumEvent } from "../react/hooks";
 
+const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous);
+const activeContentLabels = [ "iconPack" ] as const;
+
 export function ActiveContentBadges() {
     const { note } = useNoteContext();
     const info = useActiveContentInfo(note);
-    console.log("Got inf ", info);
 
-    return (info &&
+    return (note && info &&
         <>
             {info.type === "iconPack" && <IconPackBadge />}
-            <ActiveContentToggle info={info} />
+            <ActiveContentToggle info={info} note={note} />
         </>
     );
 }
@@ -29,15 +32,35 @@ function IconPackBadge() {
     );
 }
 
-function ActiveContentToggle({ info }: { info: ActiveContentInfo }) {
+function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentInfo }) {
     return info && <FormToggle
         switchOnName="Enabled"
         switchOffName="Enabled"
         currentValue={info.isEnabled}
+        onChange={async (willEnable) => {
+            const attrs = note.getOwnedAttributes()
+                .filter(attr => {
+                    if (attr.isInheritable) return false;
+                    const baseName = getNameWithoutPrefix(attr.name);
+                    return DANGEROUS_ATTRIBUTES.some(item => item.name === baseName && item.type === attr.type);
+                });
+
+            for (const attr of attrs) {
+                const baseName = getNameWithoutPrefix(attr.name);
+                const newName = willEnable ? baseName : `disabled:${baseName}`;
+                if (newName === attr.name) continue;
+
+                // We are adding and removing afterwards to avoid a flicker (because for a moment there would be no active content attribute anymore) because the operations are done in sequence and not atomically.
+                await attributes.addLabel(note.noteId, newName, attr.value);
+                await attributes.removeAttributeById(note.noteId, attr.attributeId);
+            }
+        }}
     />;
 }
 
-const activeContentLabels = [ "iconPack" ] as const;
+function getNameWithoutPrefix(name: string) {
+    return name.startsWith("disabled:") ? name.substring(9) : name;
+}
 
 interface ActiveContentInfo {
     type: "iconPack";
