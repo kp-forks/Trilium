@@ -2293,6 +2293,7 @@
     "type_icon_pack": "Icon pack",
     "type_backend_script": "Backend script",
     "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
-    "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}."
+    "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}.",
+    "menu_docs": "Open documentation"
   }
 }

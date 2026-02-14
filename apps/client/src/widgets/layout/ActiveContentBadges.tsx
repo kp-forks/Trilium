@@ -4,16 +4,27 @@ import { useEffect, useState } from "preact/hooks";
 import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
-import { Badge } from "../react/Badge";
+import { openInAppHelpFromUrl } from "../../services/utils";
+import { Badge, BadgeWithDropdown } from "../react/Badge";
+import { FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
 import { useNoteContext, useTriliumEvent } from "../react/hooks";
 
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous);
 const activeContentLabels = [ "iconPack" ] as const;
 
-const typeIconMappings: Record<ActiveContentInfo["type"], string> = {
-    iconPack: "bx bx-package",
-    backendScript: "bx bx-server"
+const typeMappings: Record<ActiveContentInfo["type"], {
+    icon: string;
+    helpPage: string;
+}> = {
+    iconPack: {
+        icon: "bx bx-package",
+        helpPage: "g1mlRoU8CsqC"
+    },
+    backendScript: {
+        icon: "bx bx-server",
+        helpPage: "SPirpZypehBG"
+    }
 };
 
 export function ActiveContentBadges() {
@@ -29,12 +40,18 @@ export function ActiveContentBadges() {
 }
 
 function ActiveContentBadge({ info }: { note: FNote, info: ActiveContentInfo }) {
+    const { icon, helpPage } = typeMappings[info.type];
     return (
-        <Badge
+        <BadgeWithDropdown
             className="icon-pack-badge"
-            icon={typeIconMappings[info.type]}
+            icon={icon}
             text={getTranslationForType(info.type)}
-        />
+        >
+            <FormListItem
+                icon="bx bx-help-circle"
+                onClick={() => openInAppHelpFromUrl(helpPage)}
+            >{t("active_content_badges.menu_docs")}</FormListItem>
+        </BadgeWithDropdown>
     );
 }
 
