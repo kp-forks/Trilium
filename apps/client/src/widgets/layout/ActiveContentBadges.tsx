@@ -11,34 +11,50 @@ import { useNoteContext, useTriliumEvent } from "../react/hooks";
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous);
 const activeContentLabels = [ "iconPack" ] as const;
 
+const typeIconMappings: Record<ActiveContentInfo["type"], string> = {
+    iconPack: "bx bx-package",
+    backendScript: "bx bx-server"
+};
+
 export function ActiveContentBadges() {
     const { note } = useNoteContext();
     const info = useActiveContentInfo(note);
 
     return (note && info &&
         <>
-            {info.type === "iconPack" && <IconPackBadge />}
+            <ActiveContentBadge info={info} note={note} />
             <ActiveContentToggle info={info} note={note} />
         </>
     );
 }
 
-function IconPackBadge() {
+function ActiveContentBadge({ info }: { note: FNote, info: ActiveContentInfo }) {
     return (
         <Badge
             className="icon-pack-badge"
-            icon="bx bx-package"
-            text={t("active_content_badges.type_icon_pack")}
+            icon={typeIconMappings[info.type]}
+            text={getTranslationForType(info.type)}
         />
     );
 }
 
+function getTranslationForType(type: ActiveContentInfo["type"]) {
+    switch (type) {
+        case "iconPack":
+            return t("active_content_badges.type_icon_pack");
+        case "backendScript":
+            return t("active_content_badges.type_backend_script");
+    }
+}
+
 function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentInfo }) {
+    const typeTranslation = getTranslationForType(info.type);
+
     return info && <FormToggle
         switchOnName="" switchOffName=""
         currentValue={info.isEnabled}
-        switchOnTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: t("active_content_badges.type_icon_pack") })}
-        switchOffTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: t("active_content_badges.type_icon_pack") })}
+        switchOnTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: typeTranslation })}
+        switchOffTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: typeTranslation })}
         onChange={async (willEnable) => {
             const attrs = note.getOwnedAttributes()
                 .filter(attr => {
@@ -65,7 +81,7 @@ function getNameWithoutPrefix(name: string) {
 }
 
 interface ActiveContentInfo {
-    type: "iconPack";
+    type: "iconPack" | "backendScript";
     isEnabled: boolean;
 }
 
@@ -79,6 +95,10 @@ function useActiveContentInfo(note: FNote | null | undefined) {
         if (!note) {
             setInfo(null);
             return;
+        }
+
+        if (note.type === "code" && note.mime === "application/javascript;env=backend") {
+            type = "backendScript";
         }
 
         for (const labelToCheck of activeContentLabels ) {
