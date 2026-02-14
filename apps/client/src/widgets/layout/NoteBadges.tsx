@@ -10,6 +10,7 @@ import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import { useGetContextData, useIsNoteReadOnly, useNoteContext, useNoteLabel, useNoteLabelBoolean } from "../react/hooks";
 import { useShareState } from "../ribbon/BasicPropertiesTab";
 import { useShareInfo } from "../shared_info";
+import { ActiveContentBadges } from "./ActiveContentBadges";
 
 export default function NoteBadges() {
     return (
@@ -19,7 +20,7 @@ export default function NoteBadges() {
             <ShareBadge />
             <ClippedNoteBadge />
             <ExecuteBadge />
-            <IconPackBadge />
+            <ActiveContentBadges />
         </div>
     );
 }
@@ -145,20 +146,6 @@ export function SaveStatusBadge() {
             icon={icon}
             text={title}
             tooltip={tooltip}
-        />
-    );
-}
-
-function IconPackBadge() {
-    const { note } = useNoteContext();
-    const isEnabledIconPack = useNoteLabelBoolean(note, "iconPack");
-    const isDisabledIconPack = useNoteLabelBoolean(note, "disabled:iconPack");
-
-    return ((isEnabledIconPack || isDisabledIconPack) &&
-        <Badge
-            className="icon-pack-badge"
-            icon="bx bx-package"
-            text="Icon pack"
         />
     );
 }

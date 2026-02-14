@@ -46,6 +46,11 @@
             text-overflow: ellipsis;
             min-width: 0;
         }
+
+        .switch-button {
+            --switch-track-height: 8px;
+            --switch-track-width: 30px;
+        }
     }
 
     .dropdown-badge {
