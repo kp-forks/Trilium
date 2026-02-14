@@ -11,10 +11,10 @@ export function ActiveContentBadges() {
     const info = useActiveContentInfo(note);
     console.log("Got inf ", info);
 
-    return (
+    return (info &&
         <>
-            {info?.type === "iconPack" && <IconPackBadge />}
-            <ActiveContentToggle />
+            {info.type === "iconPack" && <IconPackBadge />}
+            <ActiveContentToggle info={info} />
         </>
     );
 }
@@ -29,11 +29,11 @@ function IconPackBadge() {
     );
 }
 
-function ActiveContentToggle() {
-    return <FormToggle
+function ActiveContentToggle({ info }: { info: ActiveContentInfo }) {
+    return info && <FormToggle
         switchOnName="Enabled"
         switchOffName="Enabled"
-        currentValue={true}
+        currentValue={info.isEnabled}
     />;
 }
 
@@ -41,6 +41,7 @@ const activeContentLabels = [ "iconPack" ] as const;
 
 interface ActiveContentInfo {
     type: "iconPack";
+    isEnabled: boolean;
 }
 
 function useActiveContentInfo(note: FNote | null | undefined) {
@@ -48,6 +49,7 @@ function useActiveContentInfo(note: FNote | null | undefined) {
 
     function refresh() {
         let type: ActiveContentInfo["type"] | null = null;
+        let isEnabled = true;
 
         if (!note) {
             setInfo(null);
@@ -57,11 +59,16 @@ function useActiveContentInfo(note: FNote | null | undefined) {
         for (const labelToCheck of activeContentLabels ) {
             if (note.hasLabel(labelToCheck)) {
                 type = labelToCheck;
+                break;
+            } else if (note.hasLabel(`disabled:${labelToCheck}`)) {
+                type = labelToCheck;
+                isEnabled = false;
+                break;
             }
         }
 
         if (type) {
-            setInfo({ type });
+            setInfo({ type, isEnabled });
         } else {
             setInfo(null);
         }
