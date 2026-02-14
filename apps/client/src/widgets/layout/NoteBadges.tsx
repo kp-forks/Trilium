@@ -19,6 +19,7 @@ export default function NoteBadges() {
             <ShareBadge />
             <ClippedNoteBadge />
             <ExecuteBadge />
+            <IconPackBadge />
         </div>
     );
 }
@@ -144,6 +145,20 @@ export function SaveStatusBadge() {
             icon={icon}
             text={title}
             tooltip={tooltip}
+        />
+    );
+}
+
+function IconPackBadge() {
+    const { note } = useNoteContext();
+    const isEnabledIconPack = useNoteLabelBoolean(note, "iconPack");
+    const isDisabledIconPack = useNoteLabelBoolean(note, "disabled:iconPack");
+
+    return ((isEnabledIconPack || isDisabledIconPack) &&
+        <Badge
+            className="icon-pack-badge"
+            icon="bx bx-package"
+            text="Icon pack"
         />
     );
 }

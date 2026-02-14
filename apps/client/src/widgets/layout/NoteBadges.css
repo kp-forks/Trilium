@@ -37,6 +37,7 @@
                 pointer-events: none;
             }
         }
+        &.icon-pack-badge { --color: var(--badge-icon-pack-background-color); }
 
         min-width: 0;
 
