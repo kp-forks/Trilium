@@ -1,5 +1,4 @@
 import { BUILTIN_ATTRIBUTES } from "@triliumnext/commons";
-import { note } from "mermaid/dist/rendering-util/rendering-elements/shapes/note.js";
 import { useEffect, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
@@ -7,12 +6,12 @@ import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import { BadgeWithDropdown } from "../react/Badge";
-import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../react/FormList";
+import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
-import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent, useTriliumOption } from "../react/hooks";
+import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous);
-const activeContentLabels = [ "iconPack" ] as const;
+const activeContentLabels = [ "iconPack", "widget" ] as const;
 
 const typeMappings: Record<ActiveContentInfo["type"], {
     icon: string;
@@ -35,6 +34,10 @@ const typeMappings: Record<ActiveContentInfo["type"], {
         helpPage: "yIhgI5H7A2Sm",
         apiDocsPage: "Q2z6av6JZVWm",
         isExecutable: true
+    },
+    widget: {
+        icon: "bx bxs-widget",
+        helpPage: "MgibgPcfeuGz"
     }
 };
 
@@ -65,7 +68,13 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
                         triggerCommand="runActiveNote"
                     >{t("active_content_badges.menu_execute_now")}</FormListItem>
                     <ScriptRunOptions note={note} info={info} />
-                    {info.type === "frontendScript" && <WidgetSwitcher note={note} />}
+                    <FormDropdownDivider />
+                </>
+            )}
+
+            {(info.type === "frontendScript" || info.type === "widget") && (
+                <>
+                    <WidgetSwitcher note={note} />
                     <FormDropdownDivider />
                 </>
             )}
@@ -140,12 +149,12 @@ function WidgetSwitcher({ note }: { note: FNote }) {
     const [ widget, setWidget ] = useNoteLabelBoolean(note, "widget");
 
     return (
-        <FormListToggleableItem
-            title={t("active_content_badges.menu_toggle_widget")}
-            icon="bx bxs-widget"
-            currentValue={widget}
-            onChange={newValue => setWidget(newValue)}
-        />
+        <FormListItem
+            icon={widget ? "bx bx-window" : "bx bxs-widget"}
+            onClick={() => setWidget(!widget)}
+        >
+            {widget ? t("active_content_badges.menu_change_to_frontend_script") : t("active_content_badges.menu_change_to_widget")}
+        </FormListItem>
     );
 }
 
@@ -157,6 +166,8 @@ function getTranslationForType(type: ActiveContentInfo["type"]) {
             return t("active_content_badges.type_backend_script");
         case "frontendScript":
             return t("active_content_badges.type_frontend_script");
+        case "widget":
+            return t("active_content_badges.type_widget");
     }
 }
 
@@ -194,7 +205,7 @@ function getNameWithoutPrefix(name: string) {
 }
 
 interface ActiveContentInfo {
-    type: "iconPack" | "backendScript" | "frontendScript";
+    type: "iconPack" | "backendScript" | "frontendScript" | "widget";
     isEnabled: boolean;
 }
 

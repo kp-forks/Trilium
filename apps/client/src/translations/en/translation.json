@@ -2293,6 +2293,7 @@
     "type_icon_pack": "Icon pack",
     "type_backend_script": "Backend script",
     "type_frontend_script": "Frontend script",
+    "type_widget": "Widget",
     "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
     "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}.",
     "menu_docs": "Open documentation",
@@ -2304,6 +2305,7 @@
     "menu_run_daily": "Daily",
     "menu_run_frontend_startup": "When the desktop frontend starts up",
     "menu_run_mobile_startup": "When the mobile frontend starts up",
-    "menu_toggle_widget": "Widget"
+    "menu_change_to_widget": "Change to widget",
+    "menu_change_to_frontend_script": "Change to frontend script"
   }
 }
