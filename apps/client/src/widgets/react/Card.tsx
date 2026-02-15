@@ -12,7 +12,7 @@ export interface CardProps {
 }
 
 export function Card(props: {children: ComponentChildren} & CardProps) {
-    return <div class={clsx("tn-card", props.className)}>
+    return <div className={clsx("tn-card", props.className)}>
         {props.heading && <h5 class="tn-card-heading">{props.heading}</h5>}
         <div className="tn-card-body">
             {props.children}
