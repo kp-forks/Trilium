@@ -76,7 +76,7 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
     const { icon, helpPage, apiDocsPage, isExecutable } = typeMappings[info.type];
     return (
         <BadgeWithDropdown
-            className={clsx("active-content-badge", !!info.isEnabled && "disabled")}
+            className={clsx("active-content-badge", info.canToggleEnabled && !info.isEnabled && "disabled")}
             icon={icon}
             text={getTranslationForType(info.type)}
         >
@@ -200,7 +200,7 @@ function getTranslationForType(type: ActiveContentInfo["type"]) {
         case "renderNote":
             return t("active_content_badges.type_render_note");
         case "webView":
-            return t("note_types.web-view");
+            return t("active_content_badges.type_web_view");
     }
 }
 
@@ -210,8 +210,8 @@ function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentI
     return info && <FormToggle
         switchOnName="" switchOffName=""
         currentValue={info.isEnabled}
-        switchOnTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: typeTranslation })}
-        switchOffTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: typeTranslation })}
+        switchOffTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: typeTranslation })}
+        switchOnTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: typeTranslation })}
         onChange={async (willEnable) => {
             const attrs = note.getOwnedAttributes()
                 .filter(attr => {
@@ -227,7 +227,7 @@ function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentI
 
                 // We are adding and removing afterwards to avoid a flicker (because for a moment there would be no active content attribute anymore) because the operations are done in sequence and not atomically.
                 if (attr.type === "label") {
-                    await attributes.addLabel(note.noteId, newName, attr.value);
+                    await attributes.setLabel(note.noteId, newName, attr.value);
                 } else {
                     await attributes.setRelation(note.noteId, newName, attr.value);
                 }
@@ -246,7 +246,7 @@ function useActiveContentInfo(note: FNote | null | undefined) {
 
     function refresh() {
         let type: ActiveContentInfo["type"] | null = null;
-        let isEnabled = true;
+        let isEnabled = false;
         let canToggleEnabled = false;
 
         if (!note) {
