@@ -25,6 +25,7 @@ import NoteDetail from "../widgets/NoteDetail.jsx";
 import QuickSearchWidget from "../widgets/quick_search.js";
 import { useNoteContext } from "../widgets/react/hooks.jsx";
 import FilePropertiesTab from "../widgets/ribbon/FilePropertiesTab.jsx";
+import ScrollPadding from "../widgets/scroll_padding";
 import SearchResult from "../widgets/search_result.jsx";
 import MobileEditorToolbar from "../widgets/type_widgets/text/mobile_editor_toolbar.jsx";
 import { applyModals } from "./layout_commons.js";
@@ -76,6 +77,7 @@ export default class MobileLayout {
                                                 .child(<NoteDetail />)
                                                 .child(<NoteList media="screen" />)
                                                 .child(<SearchResult />)
+                                                .child(<ScrollPadding />)
                                         )
                                         .child(<MobileEditorToolbar />)
                                         .child(new FindWidget())
