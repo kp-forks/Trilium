@@ -344,7 +344,7 @@ body .todo-list input[type="checkbox"]:not(:checked):before {
 }
 
 .modal.tab-bar-modal .tabs .tab-card.active.with-hue {
-    background-color: hsl(var(--bg-hue), 8.8%, 11.2%);
+    background-color: hsl(var(--bg-hue), 8.8%, 16.2%);
     border-color: hsl(var(--bg-hue), 9.4%, 25.1%);
 }
 
