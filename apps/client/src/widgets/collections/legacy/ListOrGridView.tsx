@@ -124,8 +124,8 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
                 "archived": note.isArchived
             })}
             subSections={subSections}
-            childrenVisible={isExpanded}
-            hasAction
+            subSectionsVisible={isExpanded}
+            highlightOnHover
             data-note-id={note.noteId}
         >
             <h5>
