@@ -55,6 +55,10 @@ interface ComboBoxGroup {
     items: ComboBoxItem[];
 }
 
+interface ComboBoxSeparator {
+    type: "separator"
+}
+
 export interface ComboBoxProperty {
     type: "combobox",
     label: string;
@@ -64,7 +68,7 @@ export interface ComboBoxProperty {
      * The default value is used when the label is not set.
      */
     defaultValue?: string;
-    options: (ComboBoxItem | ComboBoxGroup)[];
+    options: (ComboBoxItem | ComboBoxSeparator | ComboBoxGroup)[];
     dropStart?: boolean;
 }
 
@@ -176,6 +180,10 @@ function ComboBoxPropertyView({ note, property }: { note: FNote, property: Combo
                         </Fragment>
                     );
                 }
+                if ("type" in option) {
+                    return <FormDropdownDivider key={index} />;
+                }
+
                 return renderItem(option);
 
             })}

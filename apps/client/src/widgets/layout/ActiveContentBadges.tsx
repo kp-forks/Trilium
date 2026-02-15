@@ -73,6 +73,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
                 dropStart: true,
                 options: [
                     { label: "Legacy", value: "" },
+                    { type: "separator" },
                     { label: "Trilium (Auto)", value: "next" },
                     { label: "Trilium (Light)", value: "next-light" },
                     { label: "Trilium (Dark)", value: "next-dark" }
