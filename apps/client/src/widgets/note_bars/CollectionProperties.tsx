@@ -83,6 +83,8 @@ function ViewOptions({ note, viewType }: { note: FNote, viewType: ViewTypeOption
         <Dropdown
             buttonClassName="bx bx-cog icon-action"
             hideToggleArrow
+            dropdownContainerClassName="mobile-bottom-menu"
+            mobileBackdrop
         >
             {properties.map(property => (
                 <ViewProperty key={property.label} note={note} property={property} />
