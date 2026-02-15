@@ -10,12 +10,12 @@ interface CardProps {
 }
 
 export function Card(props: {children: ComponentChildren} & CardProps) {
-    return <>
+    return <div class={clsx("tn-card", props.className)}>
         {props.heading && <h5 class="tn-card-heading">{props.heading}</h5>}
-        <div className={clsx(["tn-card", props.className])}>
+        <div className="tn-card-body">
             {props.children}
         </div>
-    </>;
+    </div>;
 }
 
 interface CardSectionProps {

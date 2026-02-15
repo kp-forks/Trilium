@@ -14,7 +14,7 @@
     text-transform: uppercase;
 }
 
-.tn-card {
+.tn-card-body {
     display: flex;
     flex-direction: column;
     gap: var(--card-section-gap);
