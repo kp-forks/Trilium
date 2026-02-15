@@ -203,32 +203,12 @@ function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentI
         switchOffTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: title })}
         switchOnTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: title })}
         onChange={async (willEnable) => {
-            const attrs = note.getOwnedAttributes()
-                .filter(attr => {
-                    if (attr.isInheritable) return false;
-                    const baseName = getNameWithoutPrefix(attr.name);
-                    return DANGEROUS_ATTRIBUTES.some(item => item.name === baseName && item.type === attr.type);
-                });
-
-            for (const attr of attrs) {
-                const baseName = getNameWithoutPrefix(attr.name);
-                const newName = willEnable ? baseName : `disabled:${baseName}`;
-                if (newName === attr.name) continue;
-
-                // We are adding and removing afterwards to avoid a flicker (because for a moment there would be no active content attribute anymore) because the operations are done in sequence and not atomically.
-                if (attr.type === "label") {
-                    await attributes.setLabel(note.noteId, newName, attr.value);
-                } else {
-                    await attributes.setRelation(note.noteId, newName, attr.value);
-                }
-                await attributes.removeAttributeById(note.noteId, attr.attributeId);
-            }
+            await Promise.all(note.getOwnedAttributes()
+                .map(attr => ({ name: attributes.getNameWithoutDangerousPrefix(attr.name), type: attr.type }))
+                .filter(({ name, type }) => DANGEROUS_ATTRIBUTES.some(item => item.name === name && item.type === type))
+                .map(({ name, type }) => attributes.toggleDangerousAttribute(note, type, name, willEnable)));
         }}
     />;
-}
-
-function getNameWithoutPrefix(name: string) {
-    return name.startsWith("disabled:") ? name.substring(9) : name;
 }
 
 function useActiveContentInfo(note: FNote | null | undefined) {
@@ -247,11 +227,9 @@ function useActiveContentInfo(note: FNote | null | undefined) {
         if (note.type === "render") {
             type = "renderNote";
             isEnabled = note.hasRelation("renderNote");
-            canToggleEnabled = note.hasRelation("renderNote") || note.hasRelation("disabled:renderNote");
         } else if (note.type === "webView") {
             type = "webView";
             isEnabled = note.hasLabel("webViewSrc");
-            canToggleEnabled = note.hasLabelOrDisabled("webViewSrc");
         } else if (note.type === "code" && note.mime === "application/javascript;env=backend") {
             type = "backendScript";
             for (const backendLabel of [ "run", "customRequestHandler", "customResourceProvider" ]) {

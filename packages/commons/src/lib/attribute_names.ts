@@ -61,6 +61,7 @@ type Labels = {
 
     // Note-type specific
     webViewSrc: string;
+    "disabled:webViewSrc": string;
     readOnly: boolean;
     mapType: string;
     mapRootNoteId: string;
@@ -76,6 +77,10 @@ type Labels = {
 type Relations = [
     "searchScript",
     "ancestor",
+
+    // Active content
+    "renderNote",
+    "disabled:renderNote",
 
     // Launcher-specific
     "target",
