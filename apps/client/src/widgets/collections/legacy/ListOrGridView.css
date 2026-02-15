@@ -173,13 +173,13 @@
             opacity: .75;
         }
     }
-}
 
-.nested-note-list-item.use-note-color {
-    span.tn-icon + span,
-    .nested-note-list:not(.search-results) & .tn-icon,
-    .rendered-note-attributes {
-        color: var(--custom-color);
+    &.use-note-color {
+        span.tn-icon + span,
+        .nested-note-list:not(.search-results) & .tn-icon,
+        .rendered-note-attributes {
+            color: var(--custom-color);
+        }
     }
 }
 
