@@ -31,7 +31,7 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
                     "tn-card-section-nested": nestingLevel > 0,
                     "tn-card-section-highlight-on-hover": props.highlightOnHover || props.onAction
                  })}
-                 style={{"--tn-card-section-nesting-level": nestingLevel}}
+                 style={{"--tn-card-section-nesting-level": (nestingLevel) ? nestingLevel : null}}
                  onClick={props.onAction}>
             {props.children}
         </section>
