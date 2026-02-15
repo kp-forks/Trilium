@@ -1068,10 +1068,6 @@
     "default_new_note_title": "nueva nota",
     "click_on_canvas_to_place_new_note": "Haga clic en el lienzo para colocar una nueva nota"
   },
-  "render": {
-    "note_detail_render_help_1": "Esta nota de ayuda se muestra porque esta nota de tipo Renderizar HTML no tiene la relación requerida para funcionar correctamente.",
-    "note_detail_render_help_2": "El tipo de nota Render HTML es usado para <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. De forma resumida, tiene una nota con código HTML (opcionalmente con algo de JavaScript) y esta nota la renderizará. Para que funcione, es necesario definir una <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relación</a> llamada \"renderNote\" apuntando a la nota HTML nota a renderizar."
-  },
   "backend_log": {
     "refresh": "Refrescar"
   },
