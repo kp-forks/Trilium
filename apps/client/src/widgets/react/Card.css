@@ -1,6 +1,7 @@
 .tn-card {
     --card-border-radius: 8px;
-    --card-padding: 8px 16px;
+    --card-padding-block: 8px;
+    --card-padding-inline: 16px;
     --card-section-gap: 3px;
     --card-nested-section-indent: 30px;
 
@@ -9,7 +10,7 @@
     gap: var(--card-section-gap);
 
     .tn-card-section {
-        padding: var(--card-padding);
+        padding: var(--card-padding-block) var(--card-padding-inline);
         border: 1px solid var(--card-border-color, var(--main-border-color));
         background: var(--card-background-color);
 
@@ -24,11 +25,11 @@
         }
 
         &.tn-card-section-nested {
-            padding-left: calc(var(--card-nested-section-indent) * var(--tn-card-section-nesting-level));
+            padding-left: calc(var(--card-padding-inline) + var(--card-nested-section-indent) * var(--tn-card-section-nesting-level));
             background-color: color-mix(in srgb, var(--card-background-color) calc(100% / (var(--tn-card-section-nesting-level) + 1)) , transparent);
         }
 
-        &.tn-action:hover {
+        &.tn-card-section-highlight-on-hover:hover {
             background-color: var(--card-background-hover-color);
             transition: background-color .2s ease-out;
         }

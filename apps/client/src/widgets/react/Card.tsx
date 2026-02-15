@@ -17,7 +17,8 @@ export function Card(props: {children: ComponentChildren} & CardProps) {
 interface CardSectionProps {
     className?: string;
     subSections?: JSX.Element | JSX.Element[];
-    childrenVisible?: boolean;
+    subSectionsVisible?: boolean;
+    highlightOnHover?: boolean;
     hasAction?: boolean;
     onAction?: () => void;
 }
@@ -29,14 +30,14 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
     return <>
         <section className={clsx("tn-card-section", props.className, {
                     "tn-card-section-nested": nestingLevel > 0,
-                    "tn-action": props.hasAction
+                    "tn-card-section-highlight-on-hover": props.highlightOnHover || props.hasAction
                  })}
                  style={{"--tn-card-section-nesting-level": nestingLevel}}
                  onClick={props.onAction}>
             {props.children}
         </section>
 
-        {props.childrenVisible &&
+        {props.subSectionsVisible &&
             <CardSectionContext.Provider value={{nestingLevel}}>
                 {props.subSections}
             </CardSectionContext.Provider>
