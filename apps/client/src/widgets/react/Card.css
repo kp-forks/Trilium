@@ -1,10 +1,12 @@
-.tn-card {
+:where(.tn-card) {
     --card-border-radius: 8px;
     --card-padding-block: 8px;
     --card-padding-inline: 16px;
     --card-section-gap: 3px;
     --card-nested-section-indent: 30px;
+}
 
+.tn-card {
     display: flex;
     flex-direction: column;
     gap: var(--card-section-gap);
