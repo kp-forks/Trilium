@@ -119,12 +119,15 @@
 }
 
 /* List item */
-.nested-note-list-item h5 {
-    display: flex;
-    align-items: center;
-    font-size: 1em;
-    font-weight: normal;
-    margin: 0;
+.nested-note-list-item {
+
+    h5 {
+        display: flex;
+        align-items: center;
+        font-size: 1em;
+        font-weight: normal;
+        margin: 0;
+    }
 
     .note-expander {
         margin-inline-end: 4px;
@@ -162,6 +165,13 @@
     .nested-note-list-item-menu {
         margin-inline-start: 8px;
         flex-shrink: 0;
+    }
+
+    &.archived {
+        .note-book-title,
+        .tn-icon {
+            opacity: .5;
+        }
     }
 }
 
