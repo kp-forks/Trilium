@@ -153,6 +153,11 @@ textarea,
     background: var(--input-background-color);
 }
 
+.form-control:disabled {
+    background-color: var(--input-background-color);
+    opacity: 0.6;
+}
+
 .form-control:focus {
     color: var(--input-text-color);
     background: var(--input-background-color);
@@ -942,6 +947,7 @@ table.promoted-attributes-in-tooltip th {
     color: var(--muted-text-color);
     opacity: 0.6;
     line-height: 1;
+    word-wrap: break-word;
 }
 
 .aa-dropdown-menu .aa-suggestion p {
@@ -1336,13 +1342,10 @@ body.desktop .dropdown-submenu > .dropdown-menu {
     max-width: 300px;
 }
 
-.dropdown-submenu.dropstart > .dropdown-menu {
+.dropdown-submenu.dropstart > .dropdown-menu,
+body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     inset-inline-start: auto;
     inset-inline-end: calc(100% - 2px);
-}
-
-body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
-    inset-inline-start: calc(-100% + 10px);
 }
 
 .right-dropdown-widget {
