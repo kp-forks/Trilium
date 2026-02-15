@@ -30,6 +30,7 @@ const executeOption: BookProperty = {
 };
 
 const typeMappings: Record<ActiveContentInfo["type"], {
+    title: string;
     icon: string;
     helpPage: string;
     apiDocsPage?: string;
@@ -37,10 +38,12 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     additionalOptions?: BookProperty[];
 }> = {
     iconPack: {
+        title: t("active_content_badges.type_icon_pack"),
         icon: "bx bx-package",
         helpPage: "g1mlRoU8CsqC",
     },
     backendScript: {
+        title: t("active_content_badges.type_backend_script"),
         icon: "bx bx-server",
         helpPage: "SPirpZypehBG",
         apiDocsPage: "MEtfsqa5VwNi",
@@ -63,6 +66,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
         ]
     },
     frontendScript: {
+        title: t("active_content_badges.type_frontend_script"),
         icon: "bx bx-window",
         helpPage: "yIhgI5H7A2Sm",
         apiDocsPage: "Q2z6av6JZVWm",
@@ -91,6 +95,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
         ]
     },
     widget: {
+        title: t("active_content_badges.type_widget"),
         icon: "bx bxs-widget",
         helpPage: "MgibgPcfeuGz",
         additionalOptions: [
@@ -106,18 +111,22 @@ const typeMappings: Record<ActiveContentInfo["type"], {
         ]
     },
     appCss: {
+        title: t("active_content_badges.type_app_css"),
         icon: "bx bxs-file-css",
         helpPage: "AlhDUqhENtH7"
     },
     renderNote: {
+        title: t("active_content_badges.type_render_note"),
         icon: "bx bx-extension",
         helpPage: "HcABDtFCkbFN"
     },
     webView: {
+        title: t("active_content_badges.type_web_view"),
         icon: "bx bx-globe",
         helpPage: "1vHRoWCEjj0L"
     },
     appTheme: {
+        title :t("active_content_badges.type_app_theme"),
         icon: "bx bx-palette",
         helpPage: "7NfNr5pZpVKV",
         additionalOptions: [
@@ -152,12 +161,12 @@ export function ActiveContentBadges() {
 }
 
 function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentInfo }) {
-    const { icon, helpPage, apiDocsPage, additionalOptions } = typeMappings[info.type];
+    const { title, icon, helpPage, apiDocsPage, additionalOptions } = typeMappings[info.type];
     return (
         <BadgeWithDropdown
             className={clsx("active-content-badge", info.canToggleEnabled && !info.isEnabled && "disabled")}
             icon={icon}
-            text={getTranslationForType(info.type)}
+            text={title}
         >
             {additionalOptions?.length && (
                 <>
@@ -181,35 +190,14 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
     );
 }
 
-function getTranslationForType(type: ActiveContentInfo["type"]) {
-    switch (type) {
-        case "iconPack":
-            return t("active_content_badges.type_icon_pack");
-        case "backendScript":
-            return t("active_content_badges.type_backend_script");
-        case "frontendScript":
-            return t("active_content_badges.type_frontend_script");
-        case "widget":
-            return t("active_content_badges.type_widget");
-        case "appCss":
-            return t("active_content_badges.type_app_css");
-        case "renderNote":
-            return t("active_content_badges.type_render_note");
-        case "webView":
-            return t("active_content_badges.type_web_view");
-        case "appTheme":
-            return t("active_content_badges.type_app_theme");
-    }
-}
-
 function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentInfo }) {
-    const typeTranslation = getTranslationForType(info.type);
+    const { title } = typeMappings[info.type];
 
     return info && <FormToggle
         switchOnName="" switchOffName=""
         currentValue={info.isEnabled}
-        switchOffTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: typeTranslation })}
-        switchOnTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: typeTranslation })}
+        switchOffTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: title })}
+        switchOnTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: title })}
         onChange={async (willEnable) => {
             const attrs = note.getOwnedAttributes()
                 .filter(attr => {
