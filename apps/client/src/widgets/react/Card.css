@@ -43,6 +43,5 @@
             background-color: var(--card-background-hover-color);
             transition: background-color .2s ease-out;
         }
-
     }
 }

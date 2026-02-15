@@ -4,7 +4,9 @@ import { JSX } from "preact";
 import { useContext } from "preact/hooks";
 import clsx from "clsx";
 
-interface CardProps {
+// #region Card
+
+export interface CardProps {
     className?: string;
     heading?: string;
 }
@@ -18,13 +20,23 @@ export function Card(props: {children: ComponentChildren} & CardProps) {
     </div>;
 }
 
-interface CardSectionProps {
+// #endregion
+
+// #region Card Section
+
+export interface CardSectionProps {
     className?: string;
     subSections?: JSX.Element | JSX.Element[];
     subSectionsVisible?: boolean;
     highlightOnHover?: boolean;
     onAction?: () => void;
 }
+
+interface CardSectionContextType {
+    nestingLevel: number;
+}
+
+const CardSectionContext = createContext<CardSectionContextType | undefined>(undefined);
 
 export function CardSection(props: {children: ComponentChildren} & CardSectionProps) {
     const parentContext = useContext(CardSectionContext);
@@ -40,7 +52,7 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
             {props.children}
         </section>
 
-        {props.subSectionsVisible &&
+        {props.subSectionsVisible && props.subSections &&
             <CardSectionContext.Provider value={{nestingLevel}}>
                 {props.subSections}
             </CardSectionContext.Provider>
@@ -48,8 +60,4 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
     </>;
 }
 
-interface CardSectionContextType {
-    nestingLevel: number;
-}
-
-export const CardSectionContext = createContext<CardSectionContextType | undefined>(undefined);
+// #endregion
