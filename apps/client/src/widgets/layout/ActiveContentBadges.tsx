@@ -9,7 +9,7 @@ import { openInAppHelpFromUrl } from "../../services/utils";
 import { BadgeWithDropdown } from "../react/Badge";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
-import { useNoteContext, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
+import { useNoteContext, useTriliumEvent } from "../react/hooks";
 import { BookProperty, ViewProperty } from "../react/NotePropertyMenu";
 
 const NON_DANGEROUS_ACTIVE_CONTENT = [ "appCss", "appTheme" ];
@@ -78,14 +78,32 @@ const typeMappings: Record<ActiveContentInfo["type"], {
                 options: [
                     { value: null, label: t("active_content_badges.menu_run_disabled") },
                     { value: "frontendStartup", label: t("active_content_badges.menu_run_frontend_startup") },
-                    { value: "mobileStartup", label: t("active_content_badges.menu_run_mobile_startup") }
+                    { value: "mobileStartup", label: t("active_content_badges.menu_run_mobile_startup") },
                 ]
+            },
+            { type: "separator" },
+            {
+                type: "button",
+                label: t("active_content_badges.menu_change_to_widget"),
+                icon: "bx bxs-widget",
+                onClick: ({ note }) => attributes.setLabel(note.noteId, "widget")
             }
         ]
     },
     widget: {
         icon: "bx bxs-widget",
-        helpPage: "MgibgPcfeuGz"
+        helpPage: "MgibgPcfeuGz",
+        additionalOptions: [
+            {
+                type: "button",
+                label: t("active_content_badges.menu_change_to_frontend_script"),
+                icon: "bx bx-window",
+                onClick: ({ note }) => {
+                    attributes.removeOwnedLabelByName(note, "widget");
+                    attributes.removeOwnedLabelByName(note, "disabled:widget");
+                }
+            }
+        ]
     },
     appCss: {
         icon: "bx bxs-file-css",
@@ -141,13 +159,6 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
             icon={icon}
             text={getTranslationForType(info.type)}
         >
-            {(info.type === "frontendScript" || info.type === "widget") && (
-                <>
-                    <WidgetSwitcher note={note} />
-                    <FormDropdownDivider />
-                </>
-            )}
-
             {additionalOptions?.length && (
                 <>
                     {additionalOptions?.map((property, i) => (
@@ -168,27 +179,6 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
             >{t("code_buttons.trilium_api_docs_button_title")}</FormListItem>}
         </BadgeWithDropdown>
     );
-}
-
-function WidgetSwitcher({ note }: { note: FNote }) {
-    const [ widget, setWidget ] = useNoteLabelBoolean(note, "widget");
-    const [ disabledWidget, setDisabledWidget ] = useNoteLabelBoolean(note, "disabled:widget");
-
-    return (widget || disabledWidget)
-        ? <FormListItem
-            icon="bx bx-window"
-            onClick={() => {
-                setWidget(false);
-                setDisabledWidget(false);
-            }}
-        >{t("active_content_badges.menu_change_to_frontend_script")}</FormListItem>
-        : <FormListItem
-            icon={widget ? "bx bx-window" : "bx bxs-widget"}
-            onClick={() => {
-                setWidget(true);
-            }}
-        >{t("active_content_badges.menu_change_to_widget")}</FormListItem>;
-
 }
 
 function getTranslationForType(type: ActiveContentInfo["type"]) {

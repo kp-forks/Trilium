@@ -58,7 +58,7 @@ interface ComboBoxGroup {
     items: ComboBoxItem[];
 }
 
-interface ComboBoxSeparator {
+interface Separator {
     type: "separator"
 }
 
@@ -71,11 +71,11 @@ export interface ComboBoxProperty {
      * The default value is used when the label is not set.
      */
     defaultValue?: string;
-    options: (ComboBoxItem | ComboBoxSeparator | ComboBoxGroup)[];
+    options: (ComboBoxItem | Separator | ComboBoxGroup)[];
     dropStart?: boolean;
 }
 
-export type BookProperty = CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty | SplitButtonProperty;
+export type BookProperty = CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty | SplitButtonProperty | Separator;
 
 export function ViewProperty({ note, property }: { note: FNote, property: BookProperty }) {
     switch (property.type) {
@@ -89,6 +89,8 @@ export function ViewProperty({ note, property }: { note: FNote, property: BookPr
             return <NumberPropertyView note={note} property={property} />;
         case "combobox":
             return <ComboBoxPropertyView note={note} property={property} />;
+        case "separator":
+            return <FormDropdownDivider />;
     }
 }
 
