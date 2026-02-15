@@ -2,13 +2,15 @@ import "./Render.css";
 
 import { useEffect, useRef } from "preact/hooks";
 
+import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import note_create from "../../services/note_create";
 import render from "../../services/render";
 import toast from "../../services/toast";
-import Button from "../react/Button";
+import { SplitButton } from "../react/Button";
 import FormGroup from "../react/FormGroup";
+import { FormListItem } from "../react/FormList";
 import { useNoteRelation, useTriliumEvent } from "../react/hooks";
 import NoteAutocomplete from "../react/NoteAutocomplete";
 import { refToJQuerySelector } from "../react/react_utils";
@@ -19,6 +21,10 @@ const PREACT_SAMPLE = /*js*/`\
 export default function() {
     return <p>Hello world.</p>;
 }
+`;
+
+const HTML_SAMPLE = /*html*/`\
+<p>Hello world.</p>
 `;
 
 export default function Render(props: TypeWidgetProps) {
@@ -79,25 +85,36 @@ function SetupRenderContent({ note }: TypeWidgetProps) {
             <FormGroup name="render-target-note" label={t("render.setup_title")}>
                 <NoteAutocomplete noteIdChanged={noteId => {
                     if (!noteId) return;
-                    attributes.setRelation(note.noteId, "renderNote", noteId);
+                    setRenderNote(note, noteId);
                 }} />
             </FormGroup>
 
-            <Button
-                text={t("render.setup_create_sample")}
-                primary
-                onClick={async () => {
-                    const { note: codeNote } = await note_create.createNote(note.noteId, {
-                        type: "code",
-                        mime: "text/jsx",
-                        content: PREACT_SAMPLE,
-                        activate: false
-                    });
-                    if (!codeNote) return;
-                    await attributes.setRelation(note.noteId, "renderNote", codeNote.noteId);
-                    toast.showMessage(t("render.setup_sample_created"));
-                }}
-            />
+            <SplitButton
+                text={t("render.setup_create_sample_preact")}
+                icon="bx bxl-react"
+                onClick={() => setupSampleNote(note, "text/jsx", PREACT_SAMPLE)}
+            >
+                <FormListItem
+                    icon="bx bxl-html5"
+                    onClick={() => setupSampleNote(note, "text/html", HTML_SAMPLE)}
+                >{t("render.setup_create_sample_html")}</FormListItem>
+            </SplitButton>
         </SetupForm>
     );
+}
+
+async function setRenderNote(note: FNote, targetNoteUrl: string) {
+    await attributes.setRelation(note.noteId, "renderNote", targetNoteUrl);
+}
+
+async function setupSampleNote(parentNote: FNote, mime: string, content: string) {
+    const { note: codeNote } = await note_create.createNote(parentNote.noteId, {
+        type: "code",
+        mime,
+        content,
+        activate: false
+    });
+    if (!codeNote) return;
+    await setRenderNote(parentNote, codeNote.noteId);
+    toast.showMessage(t("render.setup_sample_created"));
 }

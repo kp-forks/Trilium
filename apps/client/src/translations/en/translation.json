@@ -1068,7 +1068,8 @@
   },
   "render": {
     "setup_title": "Display custom HTML or Preact JSX inside this note",
-    "setup_create_sample": "Create sample note with Preact",
+    "setup_create_sample_preact": "Create sample note with Preact",
+    "setup_create_sample_html": "Create sample note with HTML",
     "setup_sample_created": "A sample note was created as a child note."
   },
   "web_view_setup": {
