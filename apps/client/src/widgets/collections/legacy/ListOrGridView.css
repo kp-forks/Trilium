@@ -170,7 +170,7 @@
     &.archived {
         .note-book-title,
         .tn-icon {
-            opacity: .5;
+            opacity: .75;
         }
     }
 }
