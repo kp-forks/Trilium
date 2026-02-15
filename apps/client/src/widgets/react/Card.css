@@ -10,7 +10,7 @@
 
     .tn-card-section {
         padding: var(--card-padding);
-        border: 1px solid var(--card-border-color);
+        border: 1px solid var(--card-border-color, var(--main-border-color));
         background: var(--card-background-color);
 
         &:first-of-type {
