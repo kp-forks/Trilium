@@ -12,10 +12,10 @@ import FormToggle from "../react/FormToggle";
 import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous || a.name === "appCss");
-const activeContentLabels = [ "iconPack", "widget", "appCss" ] as const;
+const activeContentLabels = [ "iconPack", "widget", "appCss", "appTheme" ] as const;
 
 interface ActiveContentInfo {
-    type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss" | "renderNote" | "webView";
+    type: "iconPack" | "backendScript" | "frontendScript" | "widget" | "appCss" | "renderNote" | "webView" | "appTheme";
     isEnabled: boolean;
     canToggleEnabled: boolean;
 }
@@ -57,6 +57,10 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     webView: {
         icon: "bx bx-globe",
         helpPage: "1vHRoWCEjj0L"
+    },
+    appTheme: {
+        icon: "bx bx-palette",
+        helpPage: "7NfNr5pZpVKV"
     }
 };
 
@@ -201,6 +205,8 @@ function getTranslationForType(type: ActiveContentInfo["type"]) {
             return t("active_content_badges.type_render_note");
         case "webView":
             return t("active_content_badges.type_web_view");
+        case "appTheme":
+            return t("active_content_badges.type_app_theme");
     }
 }
 
