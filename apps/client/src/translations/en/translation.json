@@ -2314,5 +2314,8 @@
     "menu_change_to_widget": "Change to widget",
     "menu_change_to_frontend_script": "Change to frontend script",
     "menu_theme_base": "Theme base"
+  },
+  "setup_form": {
+    "more_info": "Learn more"
   }
 }

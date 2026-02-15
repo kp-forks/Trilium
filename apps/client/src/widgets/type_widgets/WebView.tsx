@@ -6,16 +6,16 @@ import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import toast from "../../services/toast";
-import utils, { openInAppHelpFromUrl } from "../../services/utils";
+import utils from "../../services/utils";
 import Button from "../react/Button";
 import FormGroup from "../react/FormGroup";
 import FormTextBox from "../react/FormTextBox";
 import { useNoteLabel } from "../react/hooks";
-import LinkButton from "../react/LinkButton";
 import SetupForm from "./helpers/SetupForm";
 import { TypeWidgetProps } from "./type_widget";
 
 const isElectron = utils.isElectron();
+const HELP_PAGE = "1vHRoWCEjj0L";
 
 export default function WebView({ note }: TypeWidgetProps) {
     const [ webViewSrc ] = useNoteLabel(note, "webViewSrc");
@@ -60,7 +60,7 @@ function SetupWebView({note}: {note: FNote}) {
 
     return (
         <SetupForm
-            icon="bx bx-globe-alt"
+            icon="bx bx-globe-alt" inAppHelpPage={HELP_PAGE}
             onSubmit={() => submit(src)}
         >
             <FormGroup name="web-view-src-detail" label={t("web_view_setup.title")}>
@@ -83,7 +83,7 @@ function SetupWebView({note}: {note: FNote}) {
 
 function DisabledWebView({ note, url }: { note: FNote, url: string }) {
     return (
-        <SetupForm icon="bx bx-globe-alt">
+        <SetupForm icon="bx bx-globe-alt" inAppHelpPage={HELP_PAGE}>
             <FormGroup name="web-view-src-detail" label={t("web_view_setup.disabled_description")}>
                 <FormTextBox
                     type="url"
@@ -97,11 +97,6 @@ function DisabledWebView({ note, url }: { note: FNote, url: string }) {
                 icon="bx bx-check-shield"
                 onClick={() => attributes.toggleDangerousAttribute(note, "label", "webViewSrc", true)}
                 primary
-            />
-
-            <LinkButton
-                text="Learn more"
-                onClick={() => openInAppHelpFromUrl("1vHRoWCEjj0L")}
             />
         </SetupForm>
     );
