@@ -1,6 +1,6 @@
 import "./Render.css";
 
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
@@ -8,6 +8,8 @@ import { t } from "../../services/i18n";
 import note_create from "../../services/note_create";
 import render from "../../services/render";
 import toast from "../../services/toast";
+import { getErrorMessage } from "../../services/utils";
+import Admonition from "../react/Admonition";
 import Button, { SplitButton } from "../react/Button";
 import FormGroup from "../react/FormGroup";
 import { FormListItem } from "../react/FormList";
@@ -47,10 +49,12 @@ export default function Render(props: TypeWidgetProps) {
 
 function RenderContent({ note, noteContext, ntxId }: TypeWidgetProps) {
     const contentRef = useRef<HTMLDivElement>(null);
+    const [ error, setError ] = useState<unknown | null>(null);
 
     function refresh() {
         if (!contentRef) return;
-        render.render(note, refToJQuerySelector(contentRef));
+        setError(null);
+        render.render(note, refToJQuerySelector(contentRef), setError);
     }
 
     useEffect(refresh, [ note ]);
@@ -80,7 +84,16 @@ function RenderContent({ note, noteContext, ntxId }: TypeWidgetProps) {
         resolve(refToJQuerySelector(contentRef));
     });
 
-    return <div ref={contentRef} className="note-detail-render-content" />;
+    return (
+        <>
+            {error && (
+                <Admonition type="caution">
+                    {getErrorMessage(error)}
+                </Admonition>
+            )}
+            <div ref={contentRef} className="note-detail-render-content" />
+        </>
+    );
 }
 
 function DisabledRender({ note }: TypeWidgetProps) {
