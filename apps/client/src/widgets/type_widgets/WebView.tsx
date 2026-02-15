@@ -12,6 +12,7 @@ import FormGroup from "../react/FormGroup";
 import FormTextBox from "../react/FormTextBox";
 import { useNoteLabel } from "../react/hooks";
 import LinkButton from "../react/LinkButton";
+import SetupForm from "./helpers/SetupForm";
 import { TypeWidgetProps } from "./type_widget";
 
 const isElectron = utils.isElectron();
@@ -58,55 +59,50 @@ function SetupWebView({note}: {note: FNote}) {
     }, [ setSrcLabel ]);
 
     return (
-        <div class="web-view-setup-form">
-            <form class="tn-centered-form" onSubmit={() => submit(src)}>
-                <span className="bx bx-globe-alt form-icon" />
-
-                <FormGroup name="web-view-src-detail" label={t("web_view_setup.title")}>
-                    <input className="form-control"
-                        type="text"
-                        value={src}
-                        placeholder={t("web_view_setup.url_placeholder")}
-                        onChange={(e) => {setSrc((e.target as HTMLInputElement)?.value);}}
-                    />
-                </FormGroup>
-
-                <Button
-                    text={t("web_view_setup.create_button")}
-                    primary
-                    keyboardShortcut="Enter"
+        <SetupForm
+            icon="bx bx-globe-alt"
+            onSubmit={() => submit(src)}
+        >
+            <FormGroup name="web-view-src-detail" label={t("web_view_setup.title")}>
+                <input className="form-control"
+                    type="text"
+                    value={src}
+                    placeholder={t("web_view_setup.url_placeholder")}
+                    onChange={(e) => {setSrc((e.target as HTMLInputElement)?.value);}}
                 />
-            </form>
-        </div>
+            </FormGroup>
+
+            <Button
+                text={t("web_view_setup.create_button")}
+                primary
+                keyboardShortcut="Enter"
+            />
+        </SetupForm>
     );
 }
 
 function DisabledWebView({ note, url }: { note: FNote, url: string }) {
     return (
-        <div class="web-view-setup-form">
-            <form class="tn-centered-form">
-                <span className="bx bx-globe-alt form-icon" />
-
-                <FormGroup name="web-view-src-detail" label={t("web_view_setup.disabled_description")}>
-                    <FormTextBox
-                        type="url"
-                        currentValue={url}
-                        disabled
-                    />
-                </FormGroup>
-
-                <Button
-                    text={t("web_view_setup.disabled_button_enable")}
-                    icon="bx bx-check-shield"
-                    onClick={() => attributes.toggleDangerousAttribute(note, "label", "webViewSrc", true)}
-                    primary
+        <SetupForm icon="bx bx-globe-alt">
+            <FormGroup name="web-view-src-detail" label={t("web_view_setup.disabled_description")}>
+                <FormTextBox
+                    type="url"
+                    currentValue={url}
+                    disabled
                 />
+            </FormGroup>
 
-                <LinkButton
-                    text="Learn more"
-                    onClick={() => openInAppHelpFromUrl("1vHRoWCEjj0L")}
-                />
-            </form>
-        </div>
+            <Button
+                text={t("web_view_setup.disabled_button_enable")}
+                icon="bx bx-check-shield"
+                onClick={() => attributes.toggleDangerousAttribute(note, "label", "webViewSrc", true)}
+                primary
+            />
+
+            <LinkButton
+                text="Learn more"
+                onClick={() => openInAppHelpFromUrl("1vHRoWCEjj0L")}
+            />
+        </SetupForm>
     );
 }
