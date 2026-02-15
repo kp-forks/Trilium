@@ -5,6 +5,7 @@ import froca from "../../services/froca";
 import { useNoteLabelInt } from "../react/hooks";
 import { t } from "../../services/i18n";
 import ActionButton from "../react/ActionButton";
+import Button from "../react/Button";
 
 interface PaginationContext {
     page: number;
@@ -27,22 +28,14 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
             const startIndex = (i - 1) * pageSize + 1;
             const endIndex = Math.min(totalNotes, i * pageSize);
 
-            if (i !== page) {
-                children.push((
-                    <a
-                        href="javascript:"
-                        title={t("pagination.page_title", { startIndex, endIndex })}
-                        onClick={() => setPage(i)}
-                    >
-                    {i}
-                    </a>
-                ))
-            } else {
-                // Current page
-                children.push(<span className="current-page">{i}</span>)
-            }
-
-            children.push(<>{" "}&nbsp;{" "}</>);
+            children.push((
+                <Button
+                    text={i.toString()}
+                    title={t("pagination.page_title", { startIndex, endIndex })}
+                    disabled={(i === page)}
+                    onClick={() => setPage(i)}
+                />
+            ))
         } else if (lastPrinted) {
             children.push(<>{"... "}&nbsp;{" "}</>);
             lastPrinted = false;
