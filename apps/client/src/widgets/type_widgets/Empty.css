@@ -1,18 +1,20 @@
-.note-detail-empty {
-    container-type: size;
-    padding-top: 50px;
-    min-width: 350px;
-}
+body.desktop {
+    .note-detail-empty {
+        container-type: size;
+        padding-top: 50px;
+        min-width: 350px;
+    }
 
-.note-detail-empty > * {
-    margin-inline: auto;
-    max-width: 850px;
-    padding-inline: 50px;
-}
-
-@container (max-width: 600px) {
     .note-detail-empty > * {
-        padding-inline: 20px;
+        margin-inline: auto;
+        max-width: 850px;
+        padding-inline: 50px;
+    }
+
+    @container (max-width: 600px) {
+        .note-detail-empty > * {
+            padding-inline: 20px;
+        }
     }
 }
 
