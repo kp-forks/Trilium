@@ -3,23 +3,32 @@ import "./WebView.css";
 import { useCallback, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
+import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import toast from "../../services/toast";
-import utils from "../../services/utils";
+import utils, { openInAppHelpFromUrl } from "../../services/utils";
 import Button from "../react/Button";
 import FormGroup from "../react/FormGroup";
+import FormTextBox from "../react/FormTextBox";
 import { useNoteLabel } from "../react/hooks";
+import LinkButton from "../react/LinkButton";
 import { TypeWidgetProps } from "./type_widget";
 
 const isElectron = utils.isElectron();
 
 export default function WebView({ note }: TypeWidgetProps) {
     const [ webViewSrc ] = useNoteLabel(note, "webViewSrc");
+    const [ disabledWebViewSrc ] = useNoteLabel(note, "disabled:webViewSrc");
 
-    return (webViewSrc
-        ? <WebViewContent src={webViewSrc} />
-        : <SetupWebView note={note} />
-    );
+    if (disabledWebViewSrc) {
+        return <DisabledWebView note={note} url={disabledWebViewSrc} />;
+    }
+
+    if (!webViewSrc) {
+        return <SetupWebView note={note} />;
+    }
+
+    return <WebViewContent src={webViewSrc} />;
 }
 
 function WebViewContent({ src }: { src: string }) {
@@ -48,24 +57,56 @@ function SetupWebView({note}: {note: FNote}) {
         setSrcLabel(url);
     }, [ setSrcLabel ]);
 
-    return <div class="web-view-setup-form">
-        <form class="tn-centered-form" onSubmit={() => submit(src)}>
-            <span className="bx bx-globe-alt form-icon" />
+    return (
+        <div class="web-view-setup-form">
+            <form class="tn-centered-form" onSubmit={() => submit(src)}>
+                <span className="bx bx-globe-alt form-icon" />
 
-            <FormGroup name="web-view-src-detail" label={t("web_view_setup.title")}>
-                <input className="form-control"
-                    type="text"
-                    value={src}
-                    placeholder={t("web_view_setup.url_placeholder")}
-                    onChange={(e) => {setSrc((e.target as HTMLInputElement)?.value);}}
+                <FormGroup name="web-view-src-detail" label={t("web_view_setup.title")}>
+                    <input className="form-control"
+                        type="text"
+                        value={src}
+                        placeholder={t("web_view_setup.url_placeholder")}
+                        onChange={(e) => {setSrc((e.target as HTMLInputElement)?.value);}}
+                    />
+                </FormGroup>
+
+                <Button
+                    text={t("web_view_setup.create_button")}
+                    primary
+                    keyboardShortcut="Enter"
                 />
-            </FormGroup>
+            </form>
+        </div>
+    );
+}
 
-            <Button
-                text={t("web_view_setup.create_button")}
-                primary
-                keyboardShortcut="Enter"
-            />
-        </form>
-    </div>;
+function DisabledWebView({ note, url }: { note: FNote, url: string }) {
+    return (
+        <div class="web-view-setup-form">
+            <form class="tn-centered-form">
+                <span className="bx bx-globe-alt form-icon" />
+
+                <FormGroup name="web-view-src-detail" label={t("web_view_setup.disabled_description")}>
+                    <FormTextBox
+                        type="url"
+                        currentValue={url}
+                        disabled
+                    />
+                </FormGroup>
+
+                <Button
+                    text={t("web_view_setup.disabled_button_enable")}
+                    icon="bx bx-check-shield"
+                    onClick={() => attributes.toggleDangerousAttribute(note, "label", "webViewSrc", true)}
+                    primary
+                />
+
+                <LinkButton
+                    text="Learn more"
+                    onClick={() => openInAppHelpFromUrl("1vHRoWCEjj0L")}
+                />
+            </form>
+        </div>
+    );
 }

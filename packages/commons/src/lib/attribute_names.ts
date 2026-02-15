@@ -61,6 +61,7 @@ type Labels = {
 
     // Note-type specific
     webViewSrc: string;
+    "disabled:webViewSrc": string;
     readOnly: boolean;
     mapType: string;
     mapRootNoteId: string;

@@ -32,4 +32,8 @@
         width: 100%;
         max-width: 600px;
     }
+
+    .tn-link {
+        margin-top: 1em;
+    }
 }
