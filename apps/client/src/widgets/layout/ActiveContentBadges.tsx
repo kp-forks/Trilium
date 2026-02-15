@@ -231,11 +231,9 @@ function useActiveContentInfo(note: FNote | null | undefined) {
         if (note.type === "render") {
             type = "renderNote";
             isEnabled = note.hasRelation("renderNote");
-            canToggleEnabled = note.hasRelation("renderNote") || note.hasRelation("disabled:renderNote");
         } else if (note.type === "webView") {
             type = "webView";
             isEnabled = note.hasLabel("webViewSrc");
-            canToggleEnabled = note.hasLabelOrDisabled("webViewSrc");
         } else if (note.type === "code" && note.mime === "application/javascript;env=backend") {
             type = "backendScript";
             for (const backendLabel of [ "run", "customRequestHandler", "customResourceProvider" ]) {
