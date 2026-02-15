@@ -4,6 +4,7 @@ import FNote from "../../entities/fnote";
 import froca from "../../services/froca";
 import { useNoteLabelInt } from "../react/hooks";
 import { t } from "../../services/i18n";
+import ActionButton from "../react/ActionButton";
 
 interface PaginationContext {
     page: number;
@@ -50,7 +51,21 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
 
     return (
         <div class="note-list-pager">
+            <ActionButton
+                icon="bx bx-caret-left"
+                disabled={(page === 1)}
+                text={t("pagination.prev_page")}
+                onClick={() => {setPage(--page)}}
+            />
+
             {children}
+            
+            <ActionButton
+                icon="bx bx-caret-right"
+                disabled={(page === pageCount)}
+                text={t("pagination.next_page")}
+                onClick={() => {setPage(++page)}}
+            />
 
             <span className="note-list-pager-total-count">({t("pagination.total_notes", { count: totalNotes })})</span>
         </div>
