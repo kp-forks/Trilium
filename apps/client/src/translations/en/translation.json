@@ -2190,7 +2190,6 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Page of {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} notes",
     "prev_page": "Previous page",
     "next_page": "Next page"
