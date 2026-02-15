@@ -1067,7 +1067,9 @@
     "click_on_canvas_to_place_new_note": "Click on canvas to place new note"
   },
   "render": {
-    "setup_title": "Display custom HTML or Preact JSX inside this note"
+    "setup_title": "Display custom HTML or Preact JSX inside this note",
+    "setup_create_sample": "Create sample note with Preact",
+    "setup_sample_created": "A sample note was created as a child note."
   },
   "web_view_setup": {
     "title": "Create a live view of a webpage directly into Trilium",

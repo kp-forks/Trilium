@@ -4,13 +4,22 @@ import { useEffect, useRef } from "preact/hooks";
 
 import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
+import note_create from "../../services/note_create";
 import render from "../../services/render";
+import toast from "../../services/toast";
+import Button from "../react/Button";
 import FormGroup from "../react/FormGroup";
 import { useNoteRelation, useTriliumEvent } from "../react/hooks";
 import NoteAutocomplete from "../react/NoteAutocomplete";
 import { refToJQuerySelector } from "../react/react_utils";
 import SetupForm from "./helpers/SetupForm";
 import { TypeWidgetProps } from "./type_widget";
+
+const PREACT_SAMPLE = /*js*/`\
+export default function() {
+    return <p>Hello world.</p>;
+}
+`;
 
 export default function Render(props: TypeWidgetProps) {
     const { note } = props;
@@ -73,6 +82,22 @@ function SetupRenderContent({ note }: TypeWidgetProps) {
                     attributes.setRelation(note.noteId, "renderNote", noteId);
                 }} />
             </FormGroup>
+
+            <Button
+                text={t("render.setup_create_sample")}
+                primary
+                onClick={async () => {
+                    const { note: codeNote } = await note_create.createNote(note.noteId, {
+                        type: "code",
+                        mime: "text/jsx",
+                        content: PREACT_SAMPLE,
+                        activate: false
+                    });
+                    if (!codeNote) return;
+                    await attributes.setRelation(note.noteId, "renderNote", codeNote.noteId);
+                    toast.showMessage(t("render.setup_sample_created"));
+                }}
+            />
         </SetupForm>
     );
 }
