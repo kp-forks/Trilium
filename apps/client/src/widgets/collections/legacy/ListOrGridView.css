@@ -234,6 +234,7 @@
 
     .tn-icon {
         display: flex;
+        flex-shrink: 0;
         justify-content: center;
         align-items: center;
         margin-inline-end: 12px;
