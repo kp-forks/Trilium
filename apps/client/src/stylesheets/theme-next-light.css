@@ -313,6 +313,16 @@
     --promoted-attribute-card-background-color: hsl(var(--custom-color-hue), 40%, 88%);
 }
 
+.modal.tab-bar-modal .tabs .tab-card.with-hue {
+    background-color: hsl(var(--bg-hue), 56%, 96%);
+    border-color: hsl(var(--bg-hue), 33%, 41%);
+}
+
+.modal.tab-bar-modal .tabs .tab-card.active.with-hue {
+    background-color: hsl(var(--bg-hue), 86%, 96%);
+    border-color: hsl(var(--bg-hue), 33%, 41%);
+}
+
 .note-split.with-hue,
 .quick-edit-dialog-wrapper.with-hue {
     --note-icon-custom-background-color: hsl(var(--custom-color-hue), 44.5%, 43.1%);
