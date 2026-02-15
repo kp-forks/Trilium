@@ -942,6 +942,7 @@ table.promoted-attributes-in-tooltip th {
     color: var(--muted-text-color);
     opacity: 0.6;
     line-height: 1;
+    word-wrap: break-word;
 }
 
 .aa-dropdown-menu .aa-suggestion p {
