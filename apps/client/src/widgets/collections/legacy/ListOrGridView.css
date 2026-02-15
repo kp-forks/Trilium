@@ -168,9 +168,9 @@
     }
 
     &.archived {
-        .note-book-title,
+        span.tn-icon + span,
         .tn-icon {
-            opacity: .75;
+            opacity: .6;
         }
     }
 
