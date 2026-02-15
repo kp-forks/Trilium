@@ -203,14 +203,10 @@ function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentI
         switchOffTooltip={t("active_content_badges.toggle_tooltip_disable_tooltip", { type: title })}
         switchOnTooltip={t("active_content_badges.toggle_tooltip_enable_tooltip", { type: title })}
         onChange={async (willEnable) => {
-            const attrs = note.getOwnedAttributes()
-                .filter(attr => {
-                    if (attr.isInheritable) return false;
-                    const baseName = attributes.getNameWithoutDangerousPrefix(attr.name);
-                    return DANGEROUS_ATTRIBUTES.some(item => item.name === baseName && item.type === attr.type);
-                });
-
-            await Promise.all(attrs.map(a => attributes.toggleDangerousAttribute(note, a.type, a.name, willEnable)));
+            await Promise.all(note.getOwnedAttributes()
+                .map(attr => ({ name: attributes.getNameWithoutDangerousPrefix(attr.name), type: attr.type }))
+                .filter(({ name, type }) => DANGEROUS_ATTRIBUTES.some(item => item.name === name && item.type === type))
+                .map(({ name, type }) => attributes.toggleDangerousAttribute(note, type, name, willEnable)));
         }}
     />;
 }

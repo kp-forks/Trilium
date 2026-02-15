@@ -190,7 +190,7 @@ async function toggleDangerousAttribute(note: FNote, type: "label" | "relation",
     for (const attr of attrs) {
         const baseName = getNameWithoutDangerousPrefix(attr.name);
         const newName = willEnable ? baseName : `disabled:${baseName}`;
-        if (newName === attr.name) return;
+        if (newName === attr.name) continue;
 
         // We are adding and removing afterwards to avoid a flicker (because for a moment there would be no active content attribute anymore) because the operations are done in sequence and not atomically.
         if (attr.type === "label") {
