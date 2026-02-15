@@ -116,16 +116,19 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
                           includeArchived={includeArchived} />
         </>
     }
-            
+    
     return (
         <CardSection
-            className={`nested-note-list-item no-tooltip-preview ${isExpanded ? "expanded" : ""} ${note.isArchived ? "archived" : ""}`}
+            className={clsx("nested-note-list-item", "no-tooltip-preview", note.getColorClass(), {
+                "expanded": isExpanded,
+                "archived": note.isArchived
+            })}
             subSections={subSections}
             childrenVisible={isExpanded}
             hasAction
             data-note-id={note.noteId}
         >
-            <h5 className="">
+            <h5>
                 <span className={`note-expander ${isExpanded ? "bx bx-chevron-down" : "bx bx-chevron-right"}`} 
                       onClick={() => setExpanded(!isExpanded)}/>
                 <Icon className="note-icon" icon={note.getIcon()} />

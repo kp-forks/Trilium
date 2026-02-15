@@ -165,6 +165,14 @@
     }
 }
 
+.nested-note-list-item.use-note-color {
+    span.tn-icon + span,
+    .nested-note-list:not(.search-results) & .tn-icon,
+    .rendered-note-attributes {
+        color: var(--custom-color);
+    }
+}
+
 .nested-note-list:not(.search-results) h5 {
     span.tn-icon + span,
     .note-list-attributes {
@@ -203,9 +211,9 @@
         height: 1.75em;
         margin-inline-end: 12px;
         border-radius: 50%;
-        background: var(--note-list-view-large-icon-background);
+        background: var(--note-icon-custom-background-color, var(--note-list-view-large-icon-background));
         font-size: 1.2em;
-        color: var(--note-list-view-large-icon-color);
+        color: var(--note-icon-custom-color, var(--note-list-view-large-icon-color));
     }
 
     h5 .ck-find-result {
