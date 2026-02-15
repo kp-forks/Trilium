@@ -2288,5 +2288,29 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Bookmarks"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Icon pack",
+    "type_backend_script": "Backend script",
+    "type_frontend_script": "Frontend script",
+    "type_widget": "Widget",
+    "type_app_css": "Custom CSS",
+    "type_render_note": "Render note",
+    "type_web_view": "Web view",
+    "type_app_theme": "Custom theme",
+    "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}.",
+    "menu_docs": "Open documentation",
+    "menu_execute_now": "Execute script now",
+    "menu_run": "Run automatically",
+    "menu_run_disabled": "Manually",
+    "menu_run_backend_startup": "When the backend starts up",
+    "menu_run_hourly": "Hourly",
+    "menu_run_daily": "Daily",
+    "menu_run_frontend_startup": "When the desktop frontend starts up",
+    "menu_run_mobile_startup": "When the mobile frontend starts up",
+    "menu_change_to_widget": "Change to widget",
+    "menu_change_to_frontend_script": "Change to frontend script",
+    "menu_theme_base": "Theme base"
   }
 }

@@ -210,6 +210,7 @@
     --badge-share-background-color: #4d4d4d;
     --badge-clipped-note-background-color: #295773;
     --badge-execute-background-color: #604180;
+    --badge-active-content-background-color: rgb(12, 68, 70);
 
     --note-icon-background-color: #444444;
     --note-icon-color: #d4d4d4;
@@ -238,9 +239,9 @@
 
     --bottom-panel-background-color: #11111180;
     --bottom-panel-title-bar-background-color: #3F3F3F80;
-    
+
     --status-bar-border-color: var(--main-border-color);
-    
+
     --scrollbar-thumb-color: #fdfdfd5c;
     --scrollbar-thumb-hover-color: #ffffff7d;
     --scrollbar-background-color: transparent;
