@@ -7,9 +7,9 @@ import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import { BadgeWithDropdown } from "../react/Badge";
-import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react/FormList";
+import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
-import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
+import { useNoteContext, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 import { BookProperty, ViewProperty } from "../react/NotePropertyMenu";
 
 const NON_DANGEROUS_ACTIVE_CONTENT = [ "appCss", "appTheme" ];
@@ -21,6 +21,13 @@ interface ActiveContentInfo {
     isEnabled: boolean;
     canToggleEnabled: boolean;
 }
+
+const executeOption: BookProperty = {
+    type: "button",
+    icon: "bx bx-play",
+    label: t("active_content_badges.menu_execute_now"),
+    onClick: context => context.triggerCommand("runActiveNote")
+};
 
 const typeMappings: Record<ActiveContentInfo["type"], {
     icon: string;
@@ -39,6 +46,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
         apiDocsPage: "MEtfsqa5VwNi",
         isExecutable: true,
         additionalOptions: [
+            executeOption,
             {
                 type: "combobox",
                 bindToLabel: "run",
@@ -60,6 +68,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
         apiDocsPage: "Q2z6av6JZVWm",
         isExecutable: true,
         additionalOptions: [
+            executeOption,
             {
                 type: "combobox",
                 bindToLabel: "run",
@@ -125,23 +134,13 @@ export function ActiveContentBadges() {
 }
 
 function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentInfo }) {
-    const { icon, helpPage, apiDocsPage, isExecutable, additionalOptions } = typeMappings[info.type];
+    const { icon, helpPage, apiDocsPage, additionalOptions } = typeMappings[info.type];
     return (
         <BadgeWithDropdown
             className={clsx("active-content-badge", info.canToggleEnabled && !info.isEnabled && "disabled")}
             icon={icon}
             text={getTranslationForType(info.type)}
         >
-            {isExecutable && (
-                <>
-                    <FormListItem
-                        icon="bx bx-play"
-                        triggerCommand="runActiveNote"
-                    >{t("active_content_badges.menu_execute_now")}</FormListItem>
-                    <FormDropdownDivider />
-                </>
-            )}
-
             {(info.type === "frontendScript" || info.type === "widget") && (
                 <>
                     <WidgetSwitcher note={note} />
