@@ -338,6 +338,17 @@ body .todo-list input[type="checkbox"]:not(:checked):before {
     --promoted-attribute-card-background-color: hsl(var(--custom-color-hue), 13.2%, 20.8%);
 }
 
+.modal.tab-bar-modal .tabs .tab-card.with-hue {
+    background-color: hsl(var(--bg-hue), 8.8%, 11.2%);
+    border-color: hsl(var(--bg-hue), 9.4%, 25.1%);
+}
+
+.modal.tab-bar-modal .tabs .tab-card.active.with-hue {
+    background-color: hsl(var(--bg-hue), 8.8%, 11.2%);
+    border-color: hsl(var(--bg-hue), 9.4%, 25.1%);
+}
+
+
 .use-note-color {
     --custom-color: var(--dark-theme-custom-color);
 }
