@@ -46,7 +46,10 @@ export interface NumberProperty {
 }
 
 export interface ComboBoxItem {
-    value: string;
+    /**
+     * The value to set to the bound label, `null` has a special meaning which removes the label entirely.
+     */
+    value: string | null;
     label: string;
 }
 

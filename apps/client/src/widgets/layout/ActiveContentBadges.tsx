@@ -72,7 +72,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
                 icon: "bx bx-layer",
                 dropStart: true,
                 options: [
-                    { label: t("theme.auto_theme"), value: "" },
+                    { label: t("theme.auto_theme"), value: null },
                     { type: "separator" },
                     { label: t("theme.triliumnext"), value: "next" },
                     { label: t("theme.triliumnext-light"), value: "next-light" },
