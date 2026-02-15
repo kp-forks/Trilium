@@ -24,9 +24,7 @@ import NoteWrapperWidget from "../widgets/note_wrapper.js";
 import NoteDetail from "../widgets/NoteDetail.jsx";
 import QuickSearchWidget from "../widgets/quick_search.js";
 import { useNoteContext } from "../widgets/react/hooks.jsx";
-import StandaloneRibbonAdapter from "../widgets/ribbon/components/StandaloneRibbonAdapter.jsx";
 import FilePropertiesTab from "../widgets/ribbon/FilePropertiesTab.jsx";
-import SearchDefinitionTab from "../widgets/ribbon/SearchDefinitionTab.jsx";
 import SearchResult from "../widgets/search_result.jsx";
 import MobileEditorToolbar from "../widgets/type_widgets/text/mobile_editor_toolbar.jsx";
 import { applyModals } from "./layout_commons.js";
@@ -78,7 +76,6 @@ export default class MobileLayout {
                                                 .child(<NoteDetail />)
                                                 .child(<NoteList media="screen" />)
                                                 .child(<SearchResult />)
-                                                .child(<FilePropertiesWrapper />)
                                         )
                                         .child(<MobileEditorToolbar />)
                                         .child(new FindWidget())
@@ -101,14 +98,4 @@ export default class MobileLayout {
         applyModals(rootContainer);
         return rootContainer;
     }
-}
-
-function FilePropertiesWrapper() {
-    const { note, ntxId } = useNoteContext();
-
-    return (
-        <div>
-            {note?.type === "file" && <FilePropertiesTab note={note} ntxId={ntxId} />}
-        </div>
-    );
 }
