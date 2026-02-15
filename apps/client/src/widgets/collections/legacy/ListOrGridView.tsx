@@ -17,6 +17,8 @@ import { Pager, usePagination } from "../Pagination";
 import { filterChildNotes, useFilteredNoteIds } from "./utils";
 import { JSX } from "preact/jsx-runtime";
 import { clsx } from "clsx";
+import ActionButton from "../../react/ActionButton";
+import linkContextMenuService from "../../../menus/link_context_menu";
 
 export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
     const expandDepth = useExpansionDepth(note);
@@ -133,6 +135,10 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
                           showNotePath={parentNote.type === "search"}
                           highlightedTokens={highlightedTokens} />
                 <NoteAttributes note={note} />
+                <ActionButton className="nested-note-list-item-menu"
+                              icon="bx bx-dots-vertical-rounded" text=""
+                              onClick={(e) => {linkContextMenuService.openContextMenu(notePath, e); e.stopPropagation()}} 
+                />
             </h5>
         </CardSection>
     );

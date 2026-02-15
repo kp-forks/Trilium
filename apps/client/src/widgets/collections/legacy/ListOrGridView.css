@@ -153,6 +153,10 @@
             font-size: .75em;
             opacity: .75;
         }
+
+        .nested-note-list-item-menu {
+            margin-inline-start: 8px;
+        }
     }
 
     .note-book-content {
