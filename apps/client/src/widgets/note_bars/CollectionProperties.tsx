@@ -86,8 +86,8 @@ function ViewOptions({ note, viewType }: { note: FNote, viewType: ViewTypeOption
             dropdownContainerClassName="mobile-bottom-menu"
             mobileBackdrop
         >
-            {properties.map(property => (
-                <ViewProperty key={property.label} note={note} property={property} />
+            {properties.map((property, index) => (
+                <ViewProperty key={index} note={note} property={property} />
             ))}
             {properties.length > 0 && <FormDropdownDivider />}
 

@@ -53,7 +53,7 @@ export interface ComboBoxItem {
     label: string;
 }
 
-interface ComboBoxGroup {
+export interface ComboBoxGroup {
     title: string;
     items: ComboBoxItem[];
 }
