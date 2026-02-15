@@ -78,6 +78,9 @@ type Relations = [
     "searchScript",
     "ancestor",
 
+    // Active content
+    "renderNote",
+
     // Launcher-specific
     "target",
     "widget"
