@@ -11,7 +11,8 @@ import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react
 import FormToggle from "../react/FormToggle";
 import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 
-const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous || a.name === "appCss");
+const NON_DANGEROUS_ACTIVE_CONTENT = [ "appCss", "appTheme" ];
+const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous || NON_DANGEROUS_ACTIVE_CONTENT.includes(a.name));
 const activeContentLabels = [ "iconPack", "widget", "appCss", "appTheme" ] as const;
 
 interface ActiveContentInfo {
@@ -24,7 +25,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     icon: string;
     helpPage: string;
     apiDocsPage?: string;
-    isExecutable?: boolean
+    isExecutable?: boolean;
 }> = {
     iconPack: {
         icon: "bx bx-package",
@@ -281,9 +282,12 @@ function useActiveContentInfo(note: FNote | null | undefined) {
             type = "frontendScript";
             isEnabled = note.hasLabel("widget") || note.hasLabel("run");
             canToggleEnabled = note.hasLabelOrDisabled("widget") || note.hasLabelOrDisabled("run");
+        } else if (note.type === "code" && note.hasLabelOrDisabled("appTheme")) {
+            isEnabled = note.hasLabel("appTheme");
+            canToggleEnabled = true;
         }
 
-        for (const labelToCheck of activeContentLabels ) {
+        for (const labelToCheck of activeContentLabels) {
             if (note.hasLabel(labelToCheck)) {
                 type = labelToCheck;
                 break;
