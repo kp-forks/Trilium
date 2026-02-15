@@ -51,8 +51,6 @@ body.desktop {
 }
 
 .note-detail-empty-results .aa-dropdown-menu {
-    max-height: 50vh;
-    overflow: scroll;
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-top: 0;
 }
