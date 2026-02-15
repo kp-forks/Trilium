@@ -7,7 +7,7 @@ import FNote from "../../entities/fnote";
 import NoteContextAwareWidget from "../note_context_aware_widget";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "./FormList";
 import FormTextBox from "./FormTextBox";
-import { useNoteLabelBoolean, useNoteLabelWithDefault } from "./hooks";
+import { useNoteLabel, useNoteLabelBoolean, useNoteLabelWithDefault } from "./hooks";
 import { ParentComponent } from "./react_utils";
 
 export interface ClickContext {
@@ -153,13 +153,14 @@ function NumberPropertyView({ note, property }: { note: FNote, property: NumberP
 }
 
 function ComboBoxPropertyView({ note, property }: { note: FNote, property: ComboBoxProperty }) {
-    const [ value, setValue ] = useNoteLabelWithDefault(note, property.bindToLabel, property.defaultValue ?? "");
+    const [ value, setValue ] = useNoteLabel(note, property.bindToLabel);
+    const valueWithDefault = value ?? property.defaultValue ?? null;
 
     function renderItem(option: ComboBoxItem) {
         return (
             <FormListItem
                 key={option.value}
-                checked={value === option.value}
+                checked={valueWithDefault === option.value}
                 onClick={() => setValue(option.value)}
             >
                 {option.label}

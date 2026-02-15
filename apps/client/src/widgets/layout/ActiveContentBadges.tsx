@@ -38,12 +38,41 @@ const typeMappings: Record<ActiveContentInfo["type"], {
         helpPage: "SPirpZypehBG",
         apiDocsPage: "MEtfsqa5VwNi",
         isExecutable: true,
+        additionalOptions: [
+            {
+                type: "combobox",
+                bindToLabel: "run",
+                label: t("active_content_badges.menu_run"),
+                icon: "bx bx-rss",
+                dropStart: true,
+                options: [
+                    { value: null, label: t("active_content_badges.menu_run_disabled") },
+                    { value: "backendStartup", label: t("active_content_badges.menu_run_backend_startup") },
+                    { value: "daily", label: t("active_content_badges.menu_run_daily") },
+                    { value: "hourly", label: t("active_content_badges.menu_run_hourly") }
+                ]
+            }
+        ]
     },
     frontendScript: {
         icon: "bx bx-window",
         helpPage: "yIhgI5H7A2Sm",
         apiDocsPage: "Q2z6av6JZVWm",
-        isExecutable: true
+        isExecutable: true,
+        additionalOptions: [
+            {
+                type: "combobox",
+                bindToLabel: "run",
+                label: t("active_content_badges.menu_run"),
+                icon: "bx bx-rss",
+                dropStart: true,
+                options: [
+                    { value: null, label: t("active_content_badges.menu_run_disabled") },
+                    { value: "frontendStartup", label: t("active_content_badges.menu_run_frontend_startup") },
+                    { value: "mobileStartup", label: t("active_content_badges.menu_run_mobile_startup") }
+                ]
+            }
+        ]
     },
     widget: {
         icon: "bx bxs-widget",
@@ -109,7 +138,6 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
                         icon="bx bx-play"
                         triggerCommand="runActiveNote"
                     >{t("active_content_badges.menu_execute_now")}</FormListItem>
-                    <ScriptRunOptions note={note} info={info} />
                     <FormDropdownDivider />
                 </>
             )}
@@ -140,59 +168,6 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
                 onClick={() => openInAppHelpFromUrl(apiDocsPage)}
             >{t("code_buttons.trilium_api_docs_button_title")}</FormListItem>}
         </BadgeWithDropdown>
-    );
-}
-
-function ScriptRunOptions({ info, note }: { note: FNote, info: ActiveContentInfo }) {
-    const [ run, setRun ] = useNoteLabel(note, "run");
-
-    const options: {
-        title: string;
-        value: string | null;
-        type: "both" | "backendScript" | "frontendScript";
-    }[] = ([
-        {
-            title: t("active_content_badges.menu_run_disabled"),
-            value: null,
-            type: "both"
-        },
-        {
-            title: t("active_content_badges.menu_run_backend_startup"),
-            value: "backendStartup",
-            type: "backendScript"
-        },
-        {
-            title: t("active_content_badges.menu_run_daily"),
-            value: "daily",
-            type: "backendScript"
-        },
-        {
-            title: t("active_content_badges.menu_run_hourly"),
-            value: "hourly",
-            type: "backendScript"
-        },
-        {
-            title: t("active_content_badges.menu_run_frontend_startup"),
-            value: "frontendStartup",
-            type: "frontendScript"
-        },
-        {
-            title: t("active_content_badges.menu_run_mobile_startup"),
-            value: "mobileStartup",
-            type: "frontendScript"
-        }
-    ] as const).filter(option => option.type === "both" || option.type === info.type);
-
-    return (
-        <FormDropdownSubmenu title={t("active_content_badges.menu_run")} icon="bx bx-rss" dropStart>
-            {options.map(({ title, value }) => (
-                <FormListItem
-                    key={value}
-                    onClick={() => setRun(value)}
-                    checked={run ? run === value : value === null }
-                >{title}</FormListItem>
-            ))}
-        </FormDropdownSubmenu>
     );
 }
 
