@@ -1582,10 +1582,6 @@
     "default_new_note_title": "nuova nota",
     "click_on_canvas_to_place_new_note": "Clicca sulla tela per inserire una nuova nota"
   },
-  "render": {
-    "note_detail_render_help_1": "Questa nota di aiuto viene visualizzata perché questa nota di tipo Render HTML non ha la relazione richiesta per funzionare correttamente.",
-    "note_detail_render_help_2": "Il tipo di nota HTML Render viene utilizzato per lo <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. In breve, si ottiene una nota in codice HTML (opzionalmente con un po' di JavaScript) che verrà visualizzata. Per farla funzionare, è necessario definire una <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relazione</a> denominata \"renderNote\" che punti alla nota HTML da visualizzare."
-  },
   "vacuum_database": {
     "title": "Pulizia del database",
     "description": "Questa operazione ricostruirà il database, generando in genere un file di dimensioni inferiori. In realtà, nessun dato verrà modificato.",

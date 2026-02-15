@@ -1860,10 +1860,6 @@
     "protecting-title": "保護の状態",
     "unprotecting-title": "保護解除の状態"
   },
-  "render": {
-    "note_detail_render_help_1": "このヘルプノートが表示されるのは、このノートの「HTML のレンダリング」タイプには、正常に機能するために必要なリレーションがないためです。",
-    "note_detail_render_help_2": "レンダリングHTMLノートタイプは、<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">スクリプティング</a>に使用されます。簡単に言うと、HTMLコードノート（オプションでJavaScriptを含む）があり、このノートがそれをレンダリングします。これを動作させるには、レンダリングするHTMLノートを指す「renderNote」という<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">リレーション</a>を定義する必要があります。"
-  },
   "consistency_checks": {
     "find_and_fix_button": "一貫性の問題を見つけて修正する",
     "finding_and_fixing_message": "一貫性の問題を見つけて修正中…",

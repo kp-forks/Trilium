@@ -1068,10 +1068,6 @@
     "default_new_note_title": "nueva nota",
     "click_on_canvas_to_place_new_note": "Haga clic en el lienzo para colocar una nueva nota"
   },
-  "render": {
-    "note_detail_render_help_1": "Esta nota de ayuda se muestra porque esta nota de tipo Renderizar HTML no tiene la relación requerida para funcionar correctamente.",
-    "note_detail_render_help_2": "El tipo de nota Render HTML es usado para <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. De forma resumida, tiene una nota con código HTML (opcionalmente con algo de JavaScript) y esta nota la renderizará. Para que funcione, es necesario definir una <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relación</a> llamada \"renderNote\" apuntando a la nota HTML nota a renderizar."
-  },
   "backend_log": {
     "refresh": "Refrescar"
   },
@@ -2302,6 +2298,43 @@
     "url_placeholder": "Ingresar o pegar la dirección del sitio web, por ejemplo https://triliumnotes.org",
     "create_button": "Crear Vista Web",
     "invalid_url_title": "Dirección inválida",
-    "invalid_url_message": "Ingrese una dirección web válida, por ejemplo https://triliumnotes.org."
+    "invalid_url_message": "Ingrese una dirección web válida, por ejemplo https://triliumnotes.org.",
+    "disabled_description": "Esta vista web fue importada de una fuente externa. Para ayudarlo a protegerse del phishing o el contenido malicioso, no se está cargando automáticamente. Puede activarlo si confía en la fuente.",
+    "disabled_button_enable": "Habilita vista web"
+  },
+  "render": {
+    "setup_title": "Mostrar HTML personalizado o Preact JSX dentro de esta nota",
+    "setup_create_sample_preact": "Crear nota de muestra con Preact",
+    "setup_create_sample_html": "Crear nota de muestra con HTML",
+    "setup_sample_created": "Se creó una nota de muestra como subnota.",
+    "disabled_description": "Esta nota de renderización proviene de una fuente externa. Para protegerlo de contenido malicioso, no está habilitado por defecto. Asegúrese de confiar en la fuente antes de habilitarla.",
+    "disabled_button_enable": "Habilitar nota de renderización"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Paquete de iconos",
+    "type_backend_script": "Script de backend",
+    "type_frontend_script": "Script de frontend",
+    "type_widget": "Widget",
+    "type_app_css": "CSS personalizado",
+    "type_render_note": "Nota de renderización",
+    "type_web_view": "Vista web",
+    "type_app_theme": "Tema personalizado",
+    "toggle_tooltip_enable_tooltip": "Haga clic para habilitar este {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Haga clic para deshabilitar este {{type}}.",
+    "menu_docs": "Abrir documentación",
+    "menu_execute_now": "Ejecutar script ahora",
+    "menu_run": "Ejecutar automáticamente",
+    "menu_run_disabled": "Manualmente",
+    "menu_run_backend_startup": "Cuando el backend inicia",
+    "menu_run_hourly": "Cada hora",
+    "menu_run_daily": "Diariamente",
+    "menu_run_frontend_startup": "Cuando el frontend de escritorio inicia",
+    "menu_run_mobile_startup": "Cuando el frontend móvil inicia",
+    "menu_change_to_widget": "Cambiar a widget",
+    "menu_change_to_frontend_script": "Cambiar a script de frontend",
+    "menu_theme_base": "Tema base"
+  },
+  "setup_form": {
+    "more_info": "Para saber más"
   }
 }
