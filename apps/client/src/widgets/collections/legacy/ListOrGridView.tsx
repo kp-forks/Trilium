@@ -225,8 +225,7 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
             });
     }, [ note, highlightedTokens ]);
 
-    return <div ref={contentRef} className={clsx("note-book-content", `type-${noteType}`, {"note-book-content-ready": ready})}>
-        </div>;
+    return <div ref={contentRef} className={clsx("note-book-content", `type-${noteType}`, {"note-book-content-ready": ready})} />;
 }
 
 function NoteChildren({ note, parentNote, highlightedTokens, currentLevel, expandDepth, includeArchived }: {

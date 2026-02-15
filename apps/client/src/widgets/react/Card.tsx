@@ -19,7 +19,6 @@ interface CardSectionProps {
     subSections?: JSX.Element | JSX.Element[];
     subSectionsVisible?: boolean;
     highlightOnHover?: boolean;
-    hasAction?: boolean;
     onAction?: () => void;
 }
 
@@ -30,7 +29,7 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
     return <>
         <section className={clsx("tn-card-section", props.className, {
                     "tn-card-section-nested": nestingLevel > 0,
-                    "tn-card-section-highlight-on-hover": props.highlightOnHover || props.hasAction
+                    "tn-card-section-highlight-on-hover": props.highlightOnHover || props.onAction
                  })}
                  style={{"--tn-card-section-nesting-level": nestingLevel}}
                  onClick={props.onAction}>
