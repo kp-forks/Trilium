@@ -1,6 +1,8 @@
 .setup-form {
     height: 100%;
     display: flex;
+    max-width: 600px;
+    margin: auto;
     flex-direction: column;
     justify-content: center;
     padding-inline: 40px;

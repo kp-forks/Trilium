@@ -1070,7 +1070,9 @@
     "setup_title": "Display custom HTML or Preact JSX inside this note",
     "setup_create_sample_preact": "Create sample note with Preact",
     "setup_create_sample_html": "Create sample note with HTML",
-    "setup_sample_created": "A sample note was created as a child note."
+    "setup_sample_created": "A sample note was created as a child note.",
+    "disabled_description": "This render notes comes from an external source. To protect you from malicious content, it is not enabled by default. Make sure you trust the source before enabling it.",
+    "disabled_button_enable": "Enable render note"
   },
   "web_view_setup": {
     "title": "Create a live view of a webpage directly into Trilium",

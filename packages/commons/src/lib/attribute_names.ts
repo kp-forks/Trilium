@@ -80,6 +80,7 @@ type Relations = [
 
     // Active content
     "renderNote",
+    "disabled:renderNote",
 
     // Launcher-specific
     "target",

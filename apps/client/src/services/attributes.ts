@@ -173,6 +173,8 @@ function isAffecting(attrRow: AttributeRow, affectedNote: FNote | null | undefin
  *
  * Note that this work for non-dangerous attributes as well.
  *
+ * If there are multiple attributes with the same name, all of them will be toggled at the same time.
+ *
  * @param note the note whose attribute to change.
  * @param type the type of dangerous attribute (label or relation).
  * @param name the name of the dangerous attribute.
@@ -180,19 +182,24 @@ function isAffecting(attrRow: AttributeRow, affectedNote: FNote | null | undefin
  * @returns a promise that will resolve when the request to the server completes.
  */
 async function toggleDangerousAttribute(note: FNote, type: "label" | "relation", name: string, willEnable: boolean) {
-    const attr = note.getOwnedAttribute(type, name) ?? note.getOwnedAttribute(type, `disabled:${name}`);
-    if (!attr) return;
-    const baseName = getNameWithoutDangerousPrefix(attr.name);
-    const newName = willEnable ? baseName : `disabled:${baseName}`;
-    if (newName === attr.name) return;
+    const attrs = [
+        ...note.getOwnedAttributes(type, name),
+        ...note.getOwnedAttributes(type, `disabled:${name}`)
+    ];
 
-    // We are adding and removing afterwards to avoid a flicker (because for a moment there would be no active content attribute anymore) because the operations are done in sequence and not atomically.
-    if (attr.type === "label") {
-        await setLabel(note.noteId, newName, attr.value);
-    } else {
-        await setRelation(note.noteId, newName, attr.value);
+    for (const attr of attrs) {
+        const baseName = getNameWithoutDangerousPrefix(attr.name);
+        const newName = willEnable ? baseName : `disabled:${baseName}`;
+        if (newName === attr.name) return;
+
+        // We are adding and removing afterwards to avoid a flicker (because for a moment there would be no active content attribute anymore) because the operations are done in sequence and not atomically.
+        if (attr.type === "label") {
+            await setLabel(note.noteId, newName, attr.value);
+        } else {
+            await setRelation(note.noteId, newName, attr.value);
+        }
+        await removeAttributeById(note.noteId, attr.attributeId);
     }
-    await removeAttributeById(note.noteId, attr.attributeId);
 }
 
 /**
