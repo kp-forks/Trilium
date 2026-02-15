@@ -68,15 +68,15 @@ const typeMappings: Record<ActiveContentInfo["type"], {
             {
                 type: "combobox",
                 bindToLabel: "appThemeBase",
-                label: "Theme base",
+                label: t("active_content_badges.menu_theme_base"),
                 icon: "bx bx-layer",
                 dropStart: true,
                 options: [
-                    { label: "Legacy", value: "" },
+                    { label: t("theme.auto_theme"), value: "" },
                     { type: "separator" },
-                    { label: "Trilium (Auto)", value: "next" },
-                    { label: "Trilium (Light)", value: "next-light" },
-                    { label: "Trilium (Dark)", value: "next-dark" }
+                    { label: t("theme.triliumnext"), value: "next" },
+                    { label: t("theme.triliumnext-light"), value: "next-light" },
+                    { label: t("theme.triliumnext-dark"), value: "next-dark" }
                 ]
             }
         ]
