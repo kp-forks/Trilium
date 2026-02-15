@@ -25,7 +25,7 @@ export default function SetupForm({ icon, children, onSubmit, inAppHelpPage }: S
                 {inAppHelpPage && (
                     <LinkButton
                         text={t("setup_form.more_info")}
-                        onClick={() => openInAppHelpFromUrl("1vHRoWCEjj0L")}
+                        onClick={() => openInAppHelpFromUrl(inAppHelpPage)}
                     />
                 )}
             </form>

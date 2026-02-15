@@ -5,10 +5,11 @@ import { useEffect, useRef } from "preact/hooks";
 import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
 import render from "../../services/render";
-import Alert from "../react/Alert";
+import FormGroup from "../react/FormGroup";
 import { useNoteRelation, useTriliumEvent } from "../react/hooks";
-import RawHtml from "../react/RawHtml";
+import NoteAutocomplete from "../react/NoteAutocomplete";
 import { refToJQuerySelector } from "../react/react_utils";
+import SetupForm from "./helpers/SetupForm";
 import { TypeWidgetProps } from "./type_widget";
 
 export default function Render(props: TypeWidgetProps) {
@@ -16,7 +17,7 @@ export default function Render(props: TypeWidgetProps) {
     const [ renderNote ] = useNoteRelation(note, "renderNote");
 
     if (!renderNote) {
-        return <SetupRenderContent />;
+        return <SetupRenderContent {...props} />;
     }
 
     return <RenderContent {...props} />;
@@ -60,11 +61,18 @@ function RenderContent({ note, noteContext, ntxId }: TypeWidgetProps) {
     return <div ref={contentRef} className="note-detail-render-content" />;
 }
 
-function SetupRenderContent() {
+function SetupRenderContent({ note }: TypeWidgetProps) {
     return (
-        <Alert className="note-detail-render-help" type="warning">
-            <p><strong>{t("render.note_detail_render_help_1")}</strong></p>
-            <p><RawHtml html={t("render.note_detail_render_help_2")} /></p>
-        </Alert>
+        <SetupForm
+            icon="bx bx-extension"
+            inAppHelpPage="HcABDtFCkbFN"
+        >
+            <FormGroup name="render-target-note" label={t("render.setup_title")}>
+                <NoteAutocomplete noteIdChanged={noteId => {
+                    if (!noteId) return;
+                    attributes.setRelation(note.noteId, "renderNote", noteId);
+                }} />
+            </FormGroup>
+        </SetupForm>
     );
 }

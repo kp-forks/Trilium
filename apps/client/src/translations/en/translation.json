@@ -1067,8 +1067,7 @@
     "click_on_canvas_to_place_new_note": "Click on canvas to place new note"
   },
   "render": {
-    "note_detail_render_help_1": "This help note is shown because this note of type Render HTML doesn't have required relation to function properly.",
-    "note_detail_render_help_2": "Render HTML note type is used for <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. In short, you have a HTML code note (optionally with some JavaScript) and this note will render it. To make it work, you need to define a <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relation</a> called \"renderNote\" pointing to the HTML note to render."
+    "setup_title": "Display custom HTML or Preact JSX inside this note"
   },
   "web_view_setup": {
     "title": "Create a live view of a webpage directly into Trilium",
