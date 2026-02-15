@@ -6,12 +6,16 @@ import clsx from "clsx";
 
 interface CardProps {
     className?: string;
+    heading?: string;
 }
 
 export function Card(props: {children: ComponentChildren} & CardProps) {
-    return <div className={clsx(["tn-card", props.className])}>
-        {props.children}
-    </div>;
+    return <>
+        {props.heading && <h5 class="tn-card-heading">{props.heading}</h5>}
+        <div className={clsx(["tn-card", props.className])}>
+            {props.children}
+        </div>
+    </>;
 }
 
 interface CardSectionProps {
