@@ -114,12 +114,12 @@
     }
 }
 
-:root .nested-note-list {
+.nested-note-list {
     --card-nested-section-indent: 25px;
-}
 
-:root .nested-note-list.search-results {
-    --card-nested-section-indent: 32px;
+    &.search-results {
+        --card-nested-section-indent: 32px;
+    }
 }
 
 /* List item */
