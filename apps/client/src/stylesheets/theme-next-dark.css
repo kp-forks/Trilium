@@ -290,6 +290,15 @@
     --ck-editor-toolbar-button-on-shadow: 1px 1px 2px rgba(0, 0, 0, .75);
     --ck-editor-toolbar-dropdown-button-open-background: #ffffff14;
 
+    --note-list-view-icon-color: var(--left-pane-icon-color);
+    --note-list-view-large-icon-background: var(--note-icon-background-color);
+    --note-list-view-large-icon-color: var(--note-icon-color);
+    --note-list-view-search-result-highlight-background: transparent;
+    --note-list-view-search-result-highlight-color: var(--quick-search-result-highlight-color);
+    --note-list-view-content-background: rgba(0, 0, 0, .2);
+    --note-list-view-content-search-result-highlight-background: var(--quick-search-result-highlight-color);
+    --note-list-view-content-search-result-highlight-color: white;
+
     --calendar-coll-event-background-saturation: 25%;
     --calendar-coll-event-background-lightness: 20%;
     --calendar-coll-event-background-color: #3c3c3c;
