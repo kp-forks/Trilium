@@ -64,6 +64,9 @@ type Labels = {
     readOnly: boolean;
     mapType: string;
     mapRootNoteId: string;
+
+    appTheme: string;
+    appThemeBase: string;
 }
 
 /**

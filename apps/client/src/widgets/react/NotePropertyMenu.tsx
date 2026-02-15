@@ -65,6 +65,7 @@ export interface ComboBoxProperty {
      */
     defaultValue?: string;
     options: (ComboBoxItem | ComboBoxGroup)[];
+    dropStart?: boolean;
 }
 
 export type BookProperty = CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty | SplitButtonProperty;
@@ -163,6 +164,7 @@ function ComboBoxPropertyView({ note, property }: { note: FNote, property: Combo
         <FormDropdownSubmenu
             title={property.label}
             icon={property.icon ?? "bx bx-empty"}
+            dropStart={property.dropStart}
         >
             {(property.options).map((option, index) => {
                 if ("items" in option) {

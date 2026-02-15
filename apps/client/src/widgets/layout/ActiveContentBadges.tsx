@@ -10,6 +10,7 @@ import { BadgeWithDropdown } from "../react/Badge";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
 import { useNoteContext, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
+import { BookProperty, ViewProperty } from "../react/NotePropertyMenu";
 
 const NON_DANGEROUS_ACTIVE_CONTENT = [ "appCss", "appTheme" ];
 const DANGEROUS_ATTRIBUTES = BUILTIN_ATTRIBUTES.filter(a => a.isDangerous || NON_DANGEROUS_ACTIVE_CONTENT.includes(a.name));
@@ -26,6 +27,7 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     helpPage: string;
     apiDocsPage?: string;
     isExecutable?: boolean;
+    additionalOptions?: BookProperty[];
 }> = {
     iconPack: {
         icon: "bx bx-package",
@@ -61,7 +63,22 @@ const typeMappings: Record<ActiveContentInfo["type"], {
     },
     appTheme: {
         icon: "bx bx-palette",
-        helpPage: "7NfNr5pZpVKV"
+        helpPage: "7NfNr5pZpVKV",
+        additionalOptions: [
+            {
+                type: "combobox",
+                bindToLabel: "appThemeBase",
+                label: "Theme base",
+                icon: "bx bx-layer",
+                dropStart: true,
+                options: [
+                    { label: "Legacy", value: "" },
+                    { label: "Trilium (Auto)", value: "next" },
+                    { label: "Trilium (Light)", value: "next-light" },
+                    { label: "Trilium (Dark)", value: "next-dark" }
+                ]
+            }
+        ]
     }
 };
 
@@ -78,7 +95,7 @@ export function ActiveContentBadges() {
 }
 
 function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentInfo }) {
-    const { icon, helpPage, apiDocsPage, isExecutable } = typeMappings[info.type];
+    const { icon, helpPage, apiDocsPage, isExecutable, additionalOptions } = typeMappings[info.type];
     return (
         <BadgeWithDropdown
             className={clsx("active-content-badge", info.canToggleEnabled && !info.isEnabled && "disabled")}
@@ -99,6 +116,15 @@ function ActiveContentBadge({ info, note }: { note: FNote, info: ActiveContentIn
             {(info.type === "frontendScript" || info.type === "widget") && (
                 <>
                     <WidgetSwitcher note={note} />
+                    <FormDropdownDivider />
+                </>
+            )}
+
+            {additionalOptions?.length && (
+                <>
+                    {additionalOptions?.map((property, i) => (
+                        <ViewProperty key={i} note={note} property={property} />
+                    ))}
                     <FormDropdownDivider />
                 </>
             )}
