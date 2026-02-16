@@ -61,7 +61,6 @@
     @container note-list-pager (max-width: 550px) {
         .note-list-pager-page-button-container,
         .note-list-pager-total-count {
-            background: red;
             display: none;
         }
 

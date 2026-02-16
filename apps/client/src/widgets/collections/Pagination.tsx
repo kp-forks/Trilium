@@ -28,7 +28,7 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
                     icon="bx bx-chevron-left"
                     disabled={(page === 1)}
                     text={t("pagination.prev_page")}
-                    onClick={() => {setPage(page - 1)}}
+                    onClick={() => setPage(page - 1)}
                 />
 
                 <PageButtons page={page} setPage={setPage} pageCount={pageCount} />
@@ -40,7 +40,7 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
                     icon="bx bx-chevron-right"
                     disabled={(page === pageCount)}
                     text={t("pagination.next_page")}
-                    onClick={() => {setPage(page + 1)}}
+                    onClick={() => setPage(page + 1)}
                 />
 
                 <div className="note-list-pager-total-count">
@@ -77,6 +77,8 @@ function PageButtons(props: PageButtonsProps) {
     middleStart = Math.min(middleStart, rightStart - middleLength);
 
     const totalButtonCount = leftLength + middleLength + rightLength;
+    const hasLeadingEllipsis =  (middleStart - leftLength > 1);
+    const hasTrailingEllipsis = (rightStart - (middleStart + middleLength - 1) > 1);
 
     return <div className={clsx("note-list-pager-page-button-container", {
                     "note-list-pager-ellipsis-present": (totalButtonCount === maxButtonCount)
@@ -84,8 +86,8 @@ function PageButtons(props: PageButtonsProps) {
                 style={{"--note-list-pager-page-button-count": totalButtonCount}}>
         {[
             ...createSegment(leftStart, leftLength, props.page, props.setPage, false),
-            ...createSegment(middleStart, middleLength, props.page, props.setPage, (middleStart - leftLength > 1)),
-            ...createSegment(rightStart, rightLength, props.page, props.setPage, (rightStart - (middleStart + middleLength - 1) > 1)),
+            ...createSegment(middleStart, middleLength, props.page, props.setPage, hasLeadingEllipsis),
+            ...createSegment(rightStart, rightLength, props.page, props.setPage, hasTrailingEllipsis),
         ]}
     </div>;
 }
