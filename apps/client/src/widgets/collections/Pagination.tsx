@@ -6,6 +6,8 @@ import { useNoteLabelInt } from "../react/hooks";
 import { t } from "../../services/i18n";
 import ActionButton from "../react/ActionButton";
 import Button from "../react/Button";
+import "./Pagination.css";
+import clsx from "clsx";
 
 interface PaginationContext {
     page: number;
@@ -24,16 +26,18 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
     return (
         <div class="note-list-pager">
             <ActionButton
-                icon="bx bx-caret-left"
+                icon="bx bx-chevron-left"
                 disabled={(page === 1)}
                 text={t("pagination.prev_page")}
                 onClick={() => {setPage(page - 1)}}
             />
 
-            {children}
+            <div class="note-list-pager-page-button-container">
+                {children}
+            </div>
             
             <ActionButton
-                icon="bx bx-caret-right"
+                icon="bx bx-chevron-right"
                 disabled={(page === pageCount)}
                 text={t("pagination.next_page")}
                 onClick={() => {setPage(page + 1)}}
@@ -74,16 +78,21 @@ function createSegment(start: number, length: number, currentPage: number, setPa
     const children: ComponentChildren[] = [];
     
     if (prependEllipsis) {
-        children.push("...");
+        children.push(<span class="note-list-pager-ellipsis">...</span>);
     }
 
     for (let i = 0; i < length; i++) {
         const pageNum = start + i;
-
+        const isCurrent = (pageNum === currentPage);
         children.push((
             <Button
                 text={pageNum.toString()}
-                disabled={(pageNum === currentPage)}
+                kind="lowProfile"
+                className={clsx(
+                    "note-list-pager-page-button",
+                    {"note-list-pager-page-button-current": isCurrent}
+                )}
+                disabled={isCurrent}
                 onClick={() => setPage(pageNum)}
             />
         ));

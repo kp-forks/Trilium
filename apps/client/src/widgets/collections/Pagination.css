@@ -1,0 +1,25 @@
+.note-list-pager {
+    display: flex;
+    align-items: center;
+    font-size: .8rem;
+
+    .note-list-pager-page-button-container {
+        .note-list-pager-page-button {
+            min-width: 40px;
+            padding-inline: 0;
+
+            &.note-list-pager-page-button-current {
+                color: orange;
+                font-weight: bold;
+                opacity: unset;
+            }
+        }
+
+        .note-list-pager-ellipsis {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+            opacity: .5;
+        }
+    }
+}
