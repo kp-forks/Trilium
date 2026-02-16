@@ -27,7 +27,7 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
                 icon="bx bx-caret-left"
                 disabled={(page === 1)}
                 text={t("pagination.prev_page")}
-                onClick={() => {setPage(--page)}}
+                onClick={() => {setPage(page - 1)}}
             />
 
             {children}
@@ -36,7 +36,7 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
                 icon="bx bx-caret-right"
                 disabled={(page === pageCount)}
                 text={t("pagination.next_page")}
-                onClick={() => {setPage(++page)}}
+                onClick={() => {setPage(page + 1)}}
             />
             <span className="note-list-pager-total-count">({t("pagination.total_notes", { count: totalNotes })})</span>
         </div>
@@ -65,8 +65,9 @@ function createPageButtons(page: number, setPage: Dispatch<StateUpdater<number>>
     return [
         ...createSegment(leftStart, leftLength, page, setPage, false),
         ...createSegment(middleStart, middleLength, page, setPage, (middleStart - leftLength > 1)),
-        ...createSegment(rightStart, rightLength, page, setPage, (rightStart - (middleStart + middleLength) > 1)),
+        ...createSegment(rightStart, rightLength, page, setPage, (rightStart - (middleStart + middleLength - 1) > 1)),
     ];
+
 }
 
 function createSegment(start: number, length: number, currentPage: number, setPage: Dispatch<StateUpdater<number>>, prependEllipsis: boolean): ComponentChildren[] {
