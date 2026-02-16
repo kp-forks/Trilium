@@ -19,9 +19,12 @@
         display: flex;
         align-items: baseline;
         justify-content: space-around;
-        /* Prevent the prev/next buttons from shifting when ellipses appear or disappear */
-        min-width: calc(var(--note-list-pager-page-button-count) * var(--note-list-pager-page-button-width)
-                       + (var(--note-list-pager-ellipsis-width) * 2));
+
+        &.note-list-pager-ellipsis-present {
+            /* Prevent the prev/next buttons from shifting when ellipses appear or disappear */
+            min-width: calc(var(--note-list-pager-page-button-count) * var(--note-list-pager-page-button-width)
+                        + (var(--note-list-pager-ellipsis-width) * 2));
+        }
 
         .note-list-pager-page-button {
             min-width: var(--note-list-pager-page-button-width);

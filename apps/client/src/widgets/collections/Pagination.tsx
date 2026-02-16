@@ -76,8 +76,12 @@ function PageButtons(props: PageButtonsProps) {
     const rightStart = props.pageCount - rightLength + 1;
     middleStart = Math.min(middleStart, rightStart - middleLength);
 
-    return <div class="note-list-pager-page-button-container"
-                style={{"--note-list-pager-page-button-count": leftLength + middleLength + rightLength}}>
+    const totalButtonCount = leftLength + middleLength + rightLength;
+
+    return <div className={clsx("note-list-pager-page-button-container", {
+                    "note-list-pager-ellipsis-present": (totalButtonCount === maxButtonCount)
+                })}
+                style={{"--note-list-pager-page-button-count": totalButtonCount}}>
         {[
             ...createSegment(leftStart, leftLength, props.page, props.setPage, false),
             ...createSegment(middleStart, middleLength, props.page, props.setPage, (middleStart - leftLength > 1)),
