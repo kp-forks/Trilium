@@ -50,7 +50,8 @@ async function createExtraWindow(extraWindowHash: string) {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            spellcheck: spellcheckEnabled
+            spellcheck: spellcheckEnabled,
+            webviewTag: true
         },
         ...getWindowExtraOpts(),
         icon: getIcon()
