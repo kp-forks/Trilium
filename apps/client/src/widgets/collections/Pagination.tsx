@@ -21,8 +21,6 @@ interface PaginationContext {
 export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<PaginationContext, "pageNotes">) {
     if (pageCount < 2) return;
 
-    const children = createPageButtons(page, setPage, pageCount);
-
     return (
         <div class="note-list-pager">
             <ActionButton
@@ -32,10 +30,8 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
                 onClick={() => {setPage(page - 1)}}
             />
 
-            <div class="note-list-pager-page-button-container">
-                {children}
-            </div>
-            
+            <PageButtons page={page} setPage={setPage} pageCount={pageCount} />
+                        
             <ActionButton
                 icon="bx bx-chevron-right"
                 disabled={(page === pageCount)}
@@ -47,31 +43,38 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
     )
 }
 
-function createPageButtons(page: number, setPage: Dispatch<StateUpdater<number>>, pageCount: number): ComponentChildren[] {
+interface PageButtonsProps {
+    page: number;
+    setPage: Dispatch<StateUpdater<number>>;
+    pageCount: number;
+}
+
+function PageButtons(props: PageButtonsProps) {
     const maxButtonCount = 9;
     const maxLeftRightSegmentLength = 2;
     
     // The left-side segment
-    const leftLength = Math.min(pageCount, maxLeftRightSegmentLength);
+    const leftLength = Math.min(props.pageCount, maxLeftRightSegmentLength);
     const leftStart = 1;
 
     // The middle segment
     const middleMaxLength = maxButtonCount - maxLeftRightSegmentLength * 2;
-    const middleLength = Math.min(pageCount - leftLength, middleMaxLength);
-    let middleStart = page - Math.floor(middleLength / 2);
+    const middleLength = Math.min(props.pageCount - leftLength, middleMaxLength);
+    let middleStart = props.page - Math.floor(middleLength / 2);
     middleStart = Math.max(middleStart, leftLength + 1);
 
     // The right-side segment
-    const rightLength = Math.min(pageCount - (middleLength + leftLength), maxLeftRightSegmentLength);
-    const rightStart = pageCount - rightLength + 1;
+    const rightLength = Math.min(props.pageCount - (middleLength + leftLength), maxLeftRightSegmentLength);
+    const rightStart = props.pageCount - rightLength + 1;
     middleStart = Math.min(middleStart, rightStart - middleLength);
 
-    return [
-        ...createSegment(leftStart, leftLength, page, setPage, false),
-        ...createSegment(middleStart, middleLength, page, setPage, (middleStart - leftLength > 1)),
-        ...createSegment(rightStart, rightLength, page, setPage, (rightStart - (middleStart + middleLength - 1) > 1)),
-    ];
-
+    return <div class="note-list-pager-page-button-container">
+        {[
+            ...createSegment(leftStart, leftLength, props.page, props.setPage, false),
+            ...createSegment(middleStart, middleLength, props.page, props.setPage, (middleStart - leftLength > 1)),
+            ...createSegment(rightStart, rightLength, props.page, props.setPage, (rightStart - (middleStart + middleLength - 1) > 1)),
+        ]}
+    </div>;
 }
 
 function createSegment(start: number, length: number, currentPage: number, setPage: Dispatch<StateUpdater<number>>, prependEllipsis: boolean): ComponentChildren[] {
