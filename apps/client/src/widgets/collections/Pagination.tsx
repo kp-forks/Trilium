@@ -38,7 +38,10 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
                 text={t("pagination.next_page")}
                 onClick={() => {setPage(page + 1)}}
             />
-            <span className="note-list-pager-total-count">({t("pagination.total_notes", { count: totalNotes })})</span>
+
+            <div className="note-list-pager-total-count">
+                {t("pagination.total_notes", { count: totalNotes })}
+            </div>
         </div>
     )
 }

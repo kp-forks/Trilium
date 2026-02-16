@@ -34,4 +34,10 @@
             opacity: .5;
         }
     }
+
+    .note-list-pager-total-count {
+        margin-inline-start: 8px;
+        opacity: .75;
+        white-space: nowrap;
+    }
 }
