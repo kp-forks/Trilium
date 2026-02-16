@@ -3,6 +3,13 @@
     --note-list-pager-ellipsis-width: 20px;
 }
 
+.note-list-pager-container {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    container: note-list-pager / inline-size;
+}
+
 .note-list-pager {
     display: flex;
     align-items: center;
@@ -35,9 +42,29 @@
         }
     }
 
+    .note-list-pager-narrow-counter {
+        display: none;
+        min-width: 60px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
     .note-list-pager-total-count {
         margin-inline-start: 8px;
         opacity: .75;
         white-space: nowrap;
     }
+
+    @container note-list-pager (max-width: 550px) {
+        .note-list-pager-page-button-container,
+        .note-list-pager-total-count {
+            background: red;
+            display: none;
+        }
+
+        .note-list-pager-narrow-counter {
+            display: block;
+        }
+    }
 }
+

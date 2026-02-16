@@ -22,25 +22,30 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
     if (pageCount < 2) return;
 
     return (
-        <div class="note-list-pager">
-            <ActionButton
-                icon="bx bx-chevron-left"
-                disabled={(page === 1)}
-                text={t("pagination.prev_page")}
-                onClick={() => {setPage(page - 1)}}
-            />
+        <div class="note-list-pager-container">
+            <div class="note-list-pager">
+                <ActionButton
+                    icon="bx bx-chevron-left"
+                    disabled={(page === 1)}
+                    text={t("pagination.prev_page")}
+                    onClick={() => {setPage(page - 1)}}
+                />
 
-            <PageButtons page={page} setPage={setPage} pageCount={pageCount} />
-                        
-            <ActionButton
-                icon="bx bx-chevron-right"
-                disabled={(page === pageCount)}
-                text={t("pagination.next_page")}
-                onClick={() => {setPage(page + 1)}}
-            />
+                <PageButtons page={page} setPage={setPage} pageCount={pageCount} />
+                <div className="note-list-pager-narrow-counter">
+                    <strong>{page}</strong> / <strong>{pageCount}</strong>
+                </div>
+                            
+                <ActionButton
+                    icon="bx bx-chevron-right"
+                    disabled={(page === pageCount)}
+                    text={t("pagination.next_page")}
+                    onClick={() => {setPage(page + 1)}}
+                />
 
-            <div className="note-list-pager-total-count">
-                {t("pagination.total_notes", { count: totalNotes })}
+                <div className="note-list-pager-total-count">
+                    {t("pagination.total_notes", { count: totalNotes })}
+                </div>
             </div>
         </div>
     )
