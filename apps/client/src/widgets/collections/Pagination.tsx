@@ -68,7 +68,8 @@ function PageButtons(props: PageButtonsProps) {
     const rightStart = props.pageCount - rightLength + 1;
     middleStart = Math.min(middleStart, rightStart - middleLength);
 
-    return <div class="note-list-pager-page-button-container">
+    return <div class="note-list-pager-page-button-container"
+                style={{"--note-list-pager-page-button-count": leftLength + middleLength + rightLength}}>
         {[
             ...createSegment(leftStart, leftLength, props.page, props.setPage, false),
             ...createSegment(middleStart, middleLength, props.page, props.setPage, (middleStart - leftLength > 1)),

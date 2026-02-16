@@ -1,11 +1,23 @@
+:where(.note-list-pager) {
+    --note-list-pager-page-button-width: 40px;
+    --note-list-pager-ellipsis-width: 20px;
+}
+
 .note-list-pager {
     display: flex;
     align-items: center;
     font-size: .8rem;
 
     .note-list-pager-page-button-container {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-around;
+        /* Prevent the prev/next buttons from shifting when ellipses appear or disappear */
+        min-width: calc(var(--note-list-pager-page-button-count) * var(--note-list-pager-page-button-width)
+                       + (var(--note-list-pager-ellipsis-width) * 2));
+
         .note-list-pager-page-button {
-            min-width: 40px;
+            min-width: var(--note-list-pager-page-button-width);
             padding-inline: 0;
 
             &.note-list-pager-page-button-current {
@@ -17,7 +29,7 @@
 
         .note-list-pager-ellipsis {
             display: inline-block;
-            width: 20px;
+            width: var(--note-list-pager-ellipsis-width);
             text-align: center;
             opacity: .5;
         }
