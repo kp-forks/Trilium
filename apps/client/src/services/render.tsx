@@ -1,4 +1,4 @@
-import { h, VNode } from "preact";
+import { Component, h, VNode } from "preact";
 
 import type FNote from "../entities/fnote.js";
 import { renderReactWidgetAtElement } from "../widgets/react/react_utils.jsx";
@@ -6,7 +6,9 @@ import { type Bundle, executeBundleWithoutErrorHandling } from "./bundle.js";
 import froca from "./froca.js";
 import server from "./server.js";
 
-async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: (e: unknown) => void) {
+type ErrorHandler = (e: unknown) => void;
+
+async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: ErrorHandler) {
     const relations = note.getRelations("renderNote");
     const renderNoteIds = relations.map((rel) => rel.value).filter((noteId) => noteId);
 
@@ -27,7 +29,7 @@ async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: (e: unkno
                 .then(result => {
                     // Render JSX
                     if (bundle.html === "") {
-                        renderIfJsx(bundle, result, $el).catch(onError);
+                        renderIfJsx(bundle, result, $el, onError).catch(onError);
                     }
                 });
         }
@@ -42,7 +44,7 @@ async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: (e: unkno
     }
 }
 
-async function renderIfJsx(bundle: Bundle, result: unknown, $el: JQuery<HTMLElement>) {
+async function renderIfJsx(bundle: Bundle, result: unknown, $el: JQuery<HTMLElement>, onError?: ErrorHandler) {
     // Ensure the root script note is actually a JSX.
     const rootScriptNoteId = await froca.getNote(bundle.noteId);
     if (rootScriptNoteId?.mime !== "text/jsx") return;
@@ -55,7 +57,23 @@ async function renderIfJsx(bundle: Bundle, result: unknown, $el: JQuery<HTMLElem
     if (!closestComponent) return;
 
     // Render the element.
-    const el = h(result as () => VNode, {});
+    const UserErrorBoundary = class UserErrorBoundary extends Component {
+        constructor(props: object) {
+            super(props);
+            this.state = { error: null };
+        }
+
+        componentDidCatch(error: unknown) {
+            onError?.(error);
+            this.setState({ error });
+        }
+
+        render() {
+            if ("error" in this.state && this.state?.error) return;
+            return this.props.children;
+        }
+    };
+    const el = h(UserErrorBoundary, {}, h(result as () => VNode, {}));
     renderReactWidgetAtElement(closestComponent, el, $el[0]);
 }
 
