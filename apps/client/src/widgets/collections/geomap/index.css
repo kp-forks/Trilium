@@ -18,6 +18,10 @@ body.mobile .geo-view > .collection-properties {
 .geo-map-container {
   height: 100%;
   overflow: hidden;
+
+  .maplibregl-canvas-container {
+    position: relative;
+  }
 }
 
 .leaflet-pane {
