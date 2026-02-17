@@ -2063,7 +2063,6 @@
     "app-restart-required": "(щоб зміни набули чинності, потрібен перезапуск програми)"
   },
   "pagination": {
-    "page_title": "Сторінка {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} нотаток"
   },
   "collections": {

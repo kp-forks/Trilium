@@ -2065,7 +2065,6 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "{{startIndex}} - {{endIndex}} ページ",
     "total_notes": "{{count}} ノート"
   },
   "collections": {

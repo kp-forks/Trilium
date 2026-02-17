@@ -2149,7 +2149,6 @@
     "app-restart-required": "（需重启程序以应用更改）"
   },
   "pagination": {
-    "page_title": "第 {{startIndex}} 页 - 第 {{endIndex}} 页",
     "total_notes": "{{count}} 篇笔记"
   },
   "collections": {

@@ -2154,7 +2154,6 @@
     "app-restart-required": "（需要重啟程式以套用更改）"
   },
   "pagination": {
-    "page_title": "第 {{startIndex}} - {{endIndex}} 頁",
     "total_notes": "{{count}} 筆記"
   },
   "collections": {

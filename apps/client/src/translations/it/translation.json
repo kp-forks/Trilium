@@ -2164,7 +2164,6 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Pagina di {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} note"
   },
   "collections": {

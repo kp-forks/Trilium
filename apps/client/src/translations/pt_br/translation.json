@@ -2115,7 +2115,6 @@
     "shared_locally": "Esta nota é compartilhada localmente em {{- link}}."
   },
   "pagination": {
-    "page_title": "Página de {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} notas"
   },
   "collections": {

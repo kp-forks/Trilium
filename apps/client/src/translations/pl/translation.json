@@ -261,7 +261,6 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Strona {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} notatek"
   },
   "collections": {

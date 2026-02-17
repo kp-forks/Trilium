@@ -2188,7 +2188,6 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Leathanach de {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} nótaí"
   },
   "collections": {

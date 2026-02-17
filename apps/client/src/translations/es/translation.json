@@ -2158,8 +2158,7 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} notas",
-    "page_title": "Página de {{startIndex}} - {{endIndex}}"
+    "total_notes": "{{count}} notas"
   },
   "presentation_view": {
     "edit-slide": "Editar este slide",
