@@ -655,7 +655,6 @@ li.dropdown-item a.dropdown-item-button:focus-visible {
     border-radius: 12px;
     user-select: none;
     padding: 0;
-    margin: 5px 10px 5px 0;
 }
 
 :root .note-list .note-book-card:hover {

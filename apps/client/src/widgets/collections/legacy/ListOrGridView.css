@@ -8,7 +8,6 @@
     border-radius: 10px;
     background-color: var(--accented-background-color);
     padding: 10px 15px 15px 8px;
-    margin: 5px 5px 5px 5px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -304,6 +303,7 @@
 .note-list.grid-view .note-list-container {
     display: flex;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
 .note-list.grid-view .note-book-card {
