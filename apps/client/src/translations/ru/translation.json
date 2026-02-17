@@ -2150,8 +2150,7 @@
     "rendering_error": "Невозможно отобразить содержимое из-за ошибки."
   },
   "pagination": {
-    "total_notes": "{{count}} заметок",
-    "page_title": "Страница {{startIndex}} - {{endIndex}}"
+    "total_notes": "{{count}} заметок"
   },
   "status_bar": {
     "attributes_one": "{{count}} атрибут",
