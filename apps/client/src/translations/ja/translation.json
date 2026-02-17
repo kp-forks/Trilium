@@ -2065,7 +2065,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} ノート"
+    "total_notes": "{{count}} ノート",
+    "prev_page": "前のページ",
+    "next_page": "次のページ"
   },
   "collections": {
     "rendering_error": "エラーのためコンテンツを表示できません。"
