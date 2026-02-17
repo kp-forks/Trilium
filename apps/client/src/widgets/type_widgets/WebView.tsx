@@ -1,7 +1,8 @@
 import "./WebView.css";
 
-import { useCallback, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
+import appContext from "../../components/app_context";
 import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import { t } from "../../services/i18n";
@@ -17,7 +18,7 @@ import { TypeWidgetProps } from "./type_widget";
 const isElectron = utils.isElectron();
 const HELP_PAGE = "1vHRoWCEjj0L";
 
-export default function WebView({ note }: TypeWidgetProps) {
+export default function WebView({ note, ntxId }: TypeWidgetProps) {
     const [ webViewSrc ] = useNoteLabel(note, "webViewSrc");
     const [ disabledWebViewSrc ] = useNoteLabel(note, "disabled:webViewSrc");
 
@@ -29,15 +30,58 @@ export default function WebView({ note }: TypeWidgetProps) {
         return <SetupWebView note={note} />;
     }
 
-    return <WebViewContent src={webViewSrc} />;
+    return isElectron
+        ? <DesktopWebView src={webViewSrc} ntxId={ntxId} />
+        : <BrowserWebView src={webViewSrc} ntxId={ntxId} />;
 }
 
-function WebViewContent({ src }: { src: string }) {
-    if (!isElectron) {
-        return <iframe src={src} class="note-detail-web-view-content" sandbox="allow-same-origin allow-scripts allow-popups" />;
-    }
-    return <webview src={src} class="note-detail-web-view-content" />;
+function DesktopWebView({ src, ntxId }: { src: string, ntxId: string | null | undefined }) {
+    const webviewRef = useRef<HTMLWebViewElement>(null);
 
+    useEffect(() => {
+        const webview = webviewRef.current;
+        if (!webview) return;
+
+        function onBlur() {
+            if (document.activeElement === webview && ntxId) {
+                appContext.tabManager.activateNoteContext(ntxId);
+            }
+        }
+
+        webview.addEventListener("focus", onBlur);
+        return () => {
+            webview.removeEventListener("focus", onBlur);
+        };
+    }, [ ntxId ]);
+
+    return <webview
+        ref={webviewRef}
+        src={src}
+        class="note-detail-web-view-content"
+    />;
+}
+
+function BrowserWebView({ src, ntxId }: { src: string, ntxId: string | null | undefined }) {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    useEffect(() => {
+        function onBlur() {
+            if (document.activeElement === iframeRef.current && ntxId) {
+                appContext.tabManager.activateNoteContext(ntxId);
+            }
+        }
+
+        window.addEventListener("blur", onBlur);
+        return () => {
+            window.removeEventListener("blur", onBlur);
+        };
+    }, [ ntxId ]);
+
+    return <iframe
+        ref={iframeRef}
+        src={src}
+        class="note-detail-web-view-content"
+        sandbox="allow-same-origin allow-scripts allow-popups" />;
 }
 
 function SetupWebView({note}: {note: FNote}) {

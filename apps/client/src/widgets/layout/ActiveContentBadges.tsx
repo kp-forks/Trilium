@@ -9,7 +9,7 @@ import { openInAppHelpFromUrl } from "../../services/utils";
 import { BadgeWithDropdown } from "../react/Badge";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
-import { useNoteContext, useTriliumEvent } from "../react/hooks";
+import { useNoteContext, useNoteProperty, useTriliumEvent } from "../react/hooks";
 import { BookProperty, ViewProperty } from "../react/NotePropertyMenu";
 
 const NON_DANGEROUS_ACTIVE_CONTENT = [ "appCss", "appTheme" ];
@@ -213,6 +213,8 @@ function ActiveContentToggle({ note, info }: { note: FNote, info: ActiveContentI
 
 function useActiveContentInfo(note: FNote | null | undefined) {
     const [ info, setInfo ] = useState<ActiveContentInfo | null>(null);
+    const noteType = useNoteProperty(note, "type");
+    const noteMime = useNoteProperty(note, "mime");
 
     function refresh() {
         let type: ActiveContentInfo["type"] | null = null;
@@ -224,13 +226,13 @@ function useActiveContentInfo(note: FNote | null | undefined) {
             return;
         }
 
-        if (note.type === "render") {
+        if (noteType === "render") {
             type = "renderNote";
             isEnabled = note.hasRelation("renderNote");
-        } else if (note.type === "webView") {
+        } else if (noteType === "webView") {
             type = "webView";
             isEnabled = note.hasLabel("webViewSrc");
-        } else if (note.type === "code" && note.mime === "application/javascript;env=backend") {
+        } else if (noteType === "code" && noteMime === "application/javascript;env=backend") {
             type = "backendScript";
             for (const backendLabel of [ "run", "customRequestHandler", "customResourceProvider" ]) {
                 isEnabled ||= note.hasLabel(backendLabel);
@@ -239,11 +241,11 @@ function useActiveContentInfo(note: FNote | null | undefined) {
                     canToggleEnabled = true;
                 }
             }
-        } else if (note.type === "code" && note.mime === "application/javascript;env=frontend") {
+        } else if (noteType === "code" && noteMime === "application/javascript;env=frontend") {
             type = "frontendScript";
             isEnabled = note.hasLabel("widget") || note.hasLabel("run");
             canToggleEnabled = note.hasLabelOrDisabled("widget") || note.hasLabelOrDisabled("run");
-        } else if (note.type === "code" && note.hasLabelOrDisabled("appTheme")) {
+        } else if (noteType === "code" && note.hasLabelOrDisabled("appTheme")) {
             isEnabled = note.hasLabel("appTheme");
             canToggleEnabled = true;
         }
@@ -270,7 +272,7 @@ function useActiveContentInfo(note: FNote | null | undefined) {
     }
 
     // Refresh on note change.
-    useEffect(refresh, [ note ]);
+    useEffect(refresh, [ note, noteType, noteMime ]);
 
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.getAttributeRows().some(attr => attributes.isAffecting(attr, note))) {
