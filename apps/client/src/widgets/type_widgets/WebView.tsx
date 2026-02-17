@@ -31,12 +31,34 @@ export default function WebView({ note, ntxId }: TypeWidgetProps) {
     }
 
     return isElectron
-        ? <DesktopWebView src={webViewSrc} />
+        ? <DesktopWebView src={webViewSrc} ntxId={ntxId} />
         : <BrowserWebView src={webViewSrc} ntxId={ntxId} />;
 }
 
-function DesktopWebView({ src }: { src: string }) {
-    return <webview src={src} class="note-detail-web-view-content" />;
+function DesktopWebView({ src, ntxId }: { src: string, ntxId: string | null | undefined }) {
+    const webviewRef = useRef<HTMLWebViewElement>(null);
+
+    useEffect(() => {
+        const webview = webviewRef.current;
+        if (!webview) return;
+
+        function onBlur() {
+            if (document.activeElement === webview && ntxId) {
+                appContext.tabManager.activateNoteContext(ntxId);
+            }
+        }
+
+        webview.addEventListener("focus", onBlur);
+        return () => {
+            webview.removeEventListener("focus", onBlur);
+        };
+    }, [ ntxId ]);
+
+    return <webview
+        ref={webviewRef}
+        src={src}
+        class="note-detail-web-view-content"
+    />;
 }
 
 function BrowserWebView({ src, ntxId }: { src: string, ntxId: string | null | undefined }) {
