@@ -2303,6 +2303,24 @@
     "type_widget": "Widget",
     "type_app_css": "Benutzerdefiniertes CSS",
     "type_render_note": "Rendering-Notiz",
-    "type_web_view": "Webansicht"
+    "type_web_view": "Webansicht",
+    "type_app_theme": "Benutzerdefiniertes Thema",
+    "toggle_tooltip_enable_tooltip": "Klicken, um diesen {{type}} zu aktivieren.",
+    "toggle_tooltip_disable_tooltip": "Klicken, um diesen {{type}} zu deaktivieren.",
+    "menu_docs": "Dokumentation öffnen",
+    "menu_execute_now": "Skript jetzt ausführen",
+    "menu_run": "Automatisch ausführen",
+    "menu_run_disabled": "Manuell",
+    "menu_run_backend_startup": "Wenn das Backend startet",
+    "menu_run_hourly": "Stündlich",
+    "menu_run_daily": "Täglich",
+    "menu_run_frontend_startup": "Wenn das Desktop-Frontend startet",
+    "menu_run_mobile_startup": "Wenn das mobile Frontend startet",
+    "menu_change_to_widget": "Zum Widget wechseln",
+    "menu_change_to_frontend_script": "Zum Frontend-Skript wechseln",
+    "menu_theme_base": "Themenbasis"
+  },
+  "setup_form": {
+    "more_info": "Mehr erfahren"
   }
 }
