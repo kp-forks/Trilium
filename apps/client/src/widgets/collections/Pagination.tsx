@@ -22,8 +22,8 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
     if (pageCount < 2) return;
 
     return (
-        <div class="note-list-pager-container">
-            <div class="note-list-pager">
+        <div className="note-list-pager-container">
+            <div className="note-list-pager">
                 <ActionButton
                     icon="bx bx-chevron-left"
                     className="note-list-pager-nav-button"
@@ -98,7 +98,7 @@ function createSegment(start: number, length: number, currentPage: number, setPa
     const children: ComponentChildren[] = [];
     
     if (prependEllipsis) {
-        children.push(<span class="note-list-pager-ellipsis">...</span>);
+        children.push(<span className="note-list-pager-ellipsis">...</span>);
     }
 
     for (let i = 0; i < length; i++) {
