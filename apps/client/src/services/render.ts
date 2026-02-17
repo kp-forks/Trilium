@@ -12,26 +12,34 @@ async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: (e: unkno
 
     $el.empty().toggle(renderNoteIds.length > 0);
 
-    for (const renderNoteId of renderNoteIds) {
-        const bundle = await server.post<Bundle>(`script/bundle/${renderNoteId}`);
+    try {
+        for (const renderNoteId of renderNoteIds) {
+            const bundle = await server.post<Bundle>(`script/bundle/${renderNoteId}`);
 
-        const $scriptContainer = $("<div>");
-        $el.append($scriptContainer);
+            const $scriptContainer = $("<div>");
+            $el.append($scriptContainer);
 
-        $scriptContainer.append(bundle.html);
+            $scriptContainer.append(bundle.html);
 
-        // async so that scripts cannot block trilium execution
-        bundleService.executeBundle(bundle, note, $scriptContainer)
-            .catch(onError)
-            .then(result => {
-                // Render JSX
-                if (bundle.html === "") {
-                    renderIfJsx(bundle, result, $el).catch(onError);
-                }
-            });
+            // async so that scripts cannot block trilium execution
+            bundleService.executeBundle(bundle, note, $scriptContainer)
+                .catch(onError)
+                .then(result => {
+                    // Render JSX
+                    if (bundle.html === "") {
+                        renderIfJsx(bundle, result, $el).catch(onError);
+                    }
+                });
+        }
+
+        return renderNoteIds.length > 0;
+    } catch (e) {
+        if (typeof e === "string" && e.startsWith("{") && e.endsWith("}")) {
+            onError?.(JSON.parse(e));
+        } else {
+            onError?.(e);
+        }
     }
-
-    return renderNoteIds.length > 0;
 }
 
 async function renderIfJsx(bundle: Bundle, result: unknown, $el: JQuery<HTMLElement>) {
