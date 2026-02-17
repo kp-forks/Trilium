@@ -37,7 +37,11 @@ async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: ErrorHand
         return renderNoteIds.length > 0;
     } catch (e) {
         if (typeof e === "string" && e.startsWith("{") && e.endsWith("}")) {
-            onError?.(JSON.parse(e));
+            try {
+                onError?.(JSON.parse(e));
+            } catch (e) {
+                onError?.(e);
+            }
         } else {
             onError?.(e);
         }
@@ -69,7 +73,7 @@ async function renderIfJsx(bundle: Bundle, result: unknown, $el: JQuery<HTMLElem
         }
 
         render() {
-            if ("error" in this.state && this.state?.error) return;
+            if ("error" in this.state && this.state?.error) return null;
             return this.props.children;
         }
     };
