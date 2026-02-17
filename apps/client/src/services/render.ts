@@ -2,7 +2,7 @@ import { h, VNode } from "preact";
 
 import type FNote from "../entities/fnote.js";
 import { renderReactWidgetAtElement } from "../widgets/react/react_utils.jsx";
-import bundleService, { type Bundle } from "./bundle.js";
+import { type Bundle, executeBundleWithoutErrorHandling } from "./bundle.js";
 import froca from "./froca.js";
 import server from "./server.js";
 
@@ -22,7 +22,7 @@ async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: (e: unkno
             $scriptContainer.append(bundle.html);
 
             // async so that scripts cannot block trilium execution
-            bundleService.executeBundle(bundle, note, $scriptContainer)
+            executeBundleWithoutErrorHandling(bundle, note, $scriptContainer)
                 .catch(onError)
                 .then(result => {
                     // Render JSX
