@@ -14,7 +14,7 @@ async function render(note: FNote, $el: JQuery<HTMLElement>, onError?: (e: unkno
 
     try {
         for (const renderNoteId of renderNoteIds) {
-            const bundle = await server.post<Bundle>(`script/bundle/${renderNoteId}`);
+            const bundle = await server.postWithSilentInternalServerError<Bundle>(`script/bundle/${renderNoteId}`);
 
             const $scriptContainer = $("<div>");
             $el.append($scriptContainer);
