@@ -26,6 +26,7 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
             <div class="note-list-pager">
                 <ActionButton
                     icon="bx bx-chevron-left"
+                    className="note-list-pager-nav-button"
                     disabled={(page === 1)}
                     text={t("pagination.prev_page")}
                     onClick={() => setPage(page - 1)}
@@ -38,6 +39,7 @@ export function Pager({ page, pageSize, setPage, pageCount, totalNotes }: Omit<P
                             
                 <ActionButton
                     icon="bx bx-chevron-right"
+                    className="note-list-pager-nav-button"
                     disabled={(page === pageCount)}
                     text={t("pagination.next_page")}
                     onClick={() => setPage(page + 1)}

@@ -15,10 +15,15 @@
     align-items: center;
     font-size: .8rem;
 
+    .note-list-pager-nav-button {
+        --icon-button-icon-ratio: .75;
+    }
+
     .note-list-pager-page-button-container {
         display: flex;
         align-items: baseline;
         justify-content: space-around;
+        gap: 2px;
 
         &.note-list-pager-ellipsis-present {
             /* Prevent the prev/next buttons from shifting when ellipses appear or disappear */
@@ -29,9 +34,11 @@
         .note-list-pager-page-button {
             min-width: var(--note-list-pager-page-button-width);
             padding-inline: 0;
+            padding-block: 4px;
 
             &.note-list-pager-page-button-current {
-                color: orange;
+                background: var(--active-item-background-color);
+                color: var(--muted-text-color);
                 font-weight: bold;
                 opacity: unset;
             }
@@ -40,6 +47,7 @@
         .note-list-pager-ellipsis {
             display: inline-block;
             width: var(--note-list-pager-ellipsis-width);
+            gap: 0;
             text-align: center;
             opacity: .5;
         }
@@ -54,7 +62,7 @@
 
     .note-list-pager-total-count {
         margin-inline-start: 8px;
-        opacity: .75;
+        opacity: .5;
         white-space: nowrap;
     }
 
