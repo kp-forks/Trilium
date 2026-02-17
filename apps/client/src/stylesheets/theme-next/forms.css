@@ -145,6 +145,10 @@ button.tn-low-profile:hover {
     font-size: calc(var(--icon-button-size) * var(--icon-button-icon-ratio));
 }
 
+:root .icon-action.disabled::before {
+    opacity: .5;
+}
+
 :root .icon-action:not(.global-menu-button):hover,
 :root .icon-action:not(.global-menu-button).show,
 :root .tn-tool-button:hover,

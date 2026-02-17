@@ -74,7 +74,7 @@ function SetupWebView({note}: {note: FNote}) {
 
             <Button
                 text={t("web_view_setup.create_button")}
-                primary
+                kind="primary"
                 keyboardShortcut="Enter"
             />
         </SetupForm>
@@ -96,7 +96,7 @@ function DisabledWebView({ note, url }: { note: FNote, url: string }) {
                 text={t("web_view_setup.disabled_button_enable")}
                 icon="bx bx-check-shield"
                 onClick={() => attributes.toggleDangerousAttribute(note, "label", "webViewSrc", true)}
-                primary
+                kind="primary"
             />
         </SetupForm>
     );
