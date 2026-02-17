@@ -3,8 +3,8 @@
     --note-list-pager-page-button-gap: 3px;
     --note-list-pager-ellipsis-width: 20px;
 
-    --note-list-pager-current-page-button-background-color: var(--active-item-background-color);
-    --note-list-pager-current-page-button-text-color: var(--muted-text-color);
+    --note-list-pager-current-page-button-background-color: var(--button-group-active-button-background);
+    --note-list-pager-current-page-button-text-color: var(--button-group-active-button-text-color);
 }
 
 .note-list-pager-container {
