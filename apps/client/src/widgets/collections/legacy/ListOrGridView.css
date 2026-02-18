@@ -119,6 +119,11 @@
         color: inherit;
         font-weight: normal;
     }
+
+    .note-book-item-menu {
+        margin-inline-start: 8px;
+        flex-shrink: 0;
+    }
 }
 
 /* #region List view */
@@ -165,11 +170,6 @@
         text-align: right;
         font-size: .75em;
         opacity: .75;
-    }
-
-    .nested-note-list-item-menu {
-        margin-inline-start: 8px;
-        flex-shrink: 0;
     }
 
     &.archived {
@@ -307,6 +307,17 @@
 /* #endregion */
 
 /* #region Grid view */
+
+.note-book-card {
+    h5 {
+
+        .tn-icon + span {
+            flex-grow: 1;
+        }
+    }
+
+}
+
 .note-list.grid-view .note-list-container {
     display: flex;
     flex-wrap: wrap;

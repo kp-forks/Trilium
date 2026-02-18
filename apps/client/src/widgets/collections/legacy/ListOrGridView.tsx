@@ -1,7 +1,7 @@
 import "./ListOrGridView.css";
 import { Card, CardSection } from "../../react/Card";
 
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import attribute_renderer from "../../../services/attribute_renderer";
@@ -139,10 +139,7 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
                           showNotePath={parentNote.type === "search"}
                           highlightedTokens={highlightedTokens} />
                 <NoteAttributes note={note} />
-                <ActionButton className="nested-note-list-item-menu"
-                              icon="bx bx-dots-vertical-rounded" text=""
-                              onClick={(e) => openNoteMenu(notePath, e)} 
-                />
+                <NoteMenuButton notePath={notePath} />
             </h5>
         </CardSection>
     );
@@ -174,6 +171,7 @@ function GridNoteCard(props: GridNoteCardProps) {
                           showNotePath={props.parentNote.type === "search"}
                           highlightedTokens={props.highlightedTokens}
                 />
+                <NoteMenuButton notePath={notePath} />
             </h5>
             <NoteContent note={props.note}
                          trim
@@ -261,6 +259,18 @@ function NoteChildren({ note, parentNote, highlightedTokens, currentLevel, expan
     />);
 }
 
+function NoteMenuButton(props: {notePath: string}) {
+    const openMenu = useCallback((e: TargetedMouseEvent<HTMLElement>) => {
+            linkContextMenuService.openContextMenu(props.notePath, e);
+            e.stopPropagation()
+    }, [props.notePath]);
+
+    return  <ActionButton className="note-book-item-menu"
+                          icon="bx bx-dots-vertical-rounded" text=""
+                          onClick={openMenu} 
+            />
+}
+
 function getNotePath(parentNote: FNote, childNote: FNote) {
     if (parentNote.type === "search") {
         // for search note parent, we want to display a non-search path
@@ -282,9 +292,4 @@ function useExpansionDepth(note: FNote) {
     }
     return parseInt(expandDepth, 10);
 
-}
-
-function openNoteMenu(notePath, e: TargetedMouseEvent<HTMLElement>) {
-    linkContextMenuService.openContextMenu(notePath, e);
-    e.stopPropagation()
 }
