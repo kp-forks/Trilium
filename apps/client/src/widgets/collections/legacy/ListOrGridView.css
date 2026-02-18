@@ -99,6 +99,28 @@
     overflow: auto;
 }
 
+.nested-note-list-item,
+.note-book-card {
+    h5 {
+        display: flex;
+        align-items: center;
+        font-size: 1em;
+        font-weight: normal;
+        margin: 0;
+    }
+
+    .tn-icon {
+        font-size: 1.2em;
+    }
+
+    .note-book-title {
+        --link-hover-background: transparent;
+        --link-hover-color: currentColor;
+        color: inherit;
+        font-weight: normal;
+    }
+}
+
 /* #region List view */
 
 @keyframes note-preview-show {
@@ -119,13 +141,6 @@
 
 /* List item */
 .nested-note-list-item {
-    h5 {
-        display: flex;
-        align-items: center;
-        font-size: 1em;
-        font-weight: normal;
-        margin: 0;
-    }
 
     .note-expander {
         margin-inline-end: 4px;
@@ -136,14 +151,6 @@
     .tn-icon {
         margin-inline-end: 8px;
         color: var(--note-list-view-icon-color);
-        font-size: 1.2em;
-    }
-
-    .note-book-title {
-        --link-hover-background: transparent;
-        --link-hover-color: currentColor;
-        color: inherit;
-        font-weight: normal;
     }
 
     .note-path {
