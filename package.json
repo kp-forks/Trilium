@@ -100,7 +100,7 @@
       "@ckeditor/ckeditor5-code-block": "patches/@ckeditor__ckeditor5-code-block.patch"
     },
     "overrides": {
-      "mermaid": "11.12.2",
+      "mermaid": "11.12.3",
       "preact": "10.28.3",
       "roughjs": "4.6.6",
       "@types/express-serve-static-core": "5.1.0",
