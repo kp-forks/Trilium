@@ -37,6 +37,7 @@ import syncMutex from "./sync_mutex.js";
 import treeService from "./tree.js";
 import { escapeHtml, randomString, unescapeHtml } from "./utils.js";
 import ws from "./ws.js";
+import markdown from "./export/markdown.js";
 
 /**
  * A whole number
@@ -60,7 +61,10 @@ interface NoteAndBranch {
     branch: BBranch;
 }
 
+
 export interface Api {
+    htmlToMarkdown(html: string): string
+
     /**
      * Note where the script started executing (entrypoint).
      * As an analogy, in C this would be the file which contains the main() function of the current process.
@@ -470,6 +474,8 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     this.getOption = (optionName) => becca.getOption(optionName);
     this.getOptions = () => optionsService.getOptions();
     this.getAttribute = (attributeId) => becca.getAttribute(attributeId);
+
+    this.htmlToMarkdown = (html) => markdown.toMarkdown(html);
 
     this.searchForNotes = (query, searchParams = {}) => {
         if (searchParams.includeArchivedNotes === undefined) {
