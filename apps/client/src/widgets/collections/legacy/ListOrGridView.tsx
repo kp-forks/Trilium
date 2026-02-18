@@ -148,27 +148,37 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
     );
 }
 
-function GridNoteCard({ note, parentNote, highlightedTokens, includeArchived }: { note: FNote, parentNote: FNote, highlightedTokens: string[] | null | undefined, includeArchived: boolean }) {
-    const titleRef = useRef<HTMLSpanElement>(null);
-    const [ noteTitle, setNoteTitle ] = useState<string>();
-    const notePath = getNotePath(parentNote, note);
+interface GridNoteCardProps {
+    note: FNote;
+    parentNote: FNote;
+    highlightedTokens: string[] | null | undefined;
+    includeArchived: boolean
+}
+
+function GridNoteCard(props: GridNoteCardProps) {
+    const notePath = getNotePath(props.parentNote, props.note);
 
     return (
-        <div
-            className={`note-book-card no-tooltip-preview block-link ${note.isArchived ? "archived" : ""}`}
-            data-href={`#${notePath}`}
-            data-note-id={note.noteId}
-            onClick={(e) => link.goToLink(e)}
+        <div className={clsx("note-book-card", "no-tooltip-preview", "block-link", {
+                "archived": props.note.isArchived
+             })}
+             data-href={`#${notePath}`}
+             data-note-id={props.note.noteId}
+             onClick={(e) => link.goToLink(e)}
         >
             <h5 className="note-book-header">
-                <Icon className="note-icon" icon={note.getIcon()} />
-                <NoteLink className="note-book-title" notePath={notePath} noPreview showNotePath={parentNote.type === "search"} highlightedTokens={highlightedTokens} />
+                <Icon className="note-icon" icon={props.note.getIcon()} />
+                <NoteLink className="note-book-title"
+                          notePath={notePath}
+                          noPreview
+                          showNotePath={props.parentNote.type === "search"}
+                          highlightedTokens={props.highlightedTokens}
+                />
             </h5>
-            <NoteContent
-                note={note}
-                trim
-                highlightedTokens={highlightedTokens}
-                includeArchivedNotes={includeArchived}
+            <NoteContent note={props.note}
+                         trim
+                         highlightedTokens={props.highlightedTokens}
+                         includeArchivedNotes={props.includeArchived}
             />
         </div>
     );
