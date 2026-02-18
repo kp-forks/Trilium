@@ -36,6 +36,7 @@ import { getSql } from "./sql/index";
 import treeService from "./tree.js";
 import { escapeHtml, randomString, unescapeHtml } from "./utils/index";
 import ws from "./ws.js";
+import markdown from "./export/markdown.js";
 
 /**
  * A whole number
@@ -59,7 +60,10 @@ interface NoteAndBranch {
     branch: BBranch;
 }
 
+
 export interface Api {
+    htmlToMarkdown(html: string): string
+
     /**
      * Note where the script execution started — the entry point of the current script bundle
      * (in C terms, the file containing `main()`). When a script is spread across multiple code
@@ -507,6 +511,8 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     this.getOption = (optionName) => becca.getOption(optionName);
     this.getOptions = () => optionsService.getOptions();
     this.getAttribute = (attributeId) => becca.getAttribute(attributeId);
+
+    this.htmlToMarkdown = (html) => markdown.toMarkdown(html);
 
     this.searchForNotes = (query, searchParams = {}) => {
         if (searchParams.includeArchivedNotes === undefined) {
