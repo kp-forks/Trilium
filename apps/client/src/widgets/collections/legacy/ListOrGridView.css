@@ -124,6 +124,14 @@
         margin-inline-start: 8px;
         flex-shrink: 0;
     }
+
+    &.use-note-color {
+        span.tn-icon + span,
+        .tn-icon,
+        .rendered-note-attributes {
+            color: var(--custom-color);
+        }
+    }
 }
 
 /* #region List view */
@@ -176,14 +184,6 @@
         span.tn-icon + span,
         .tn-icon {
             opacity: .6;
-        }
-    }
-
-    &.use-note-color {
-        span.tn-icon + span,
-        .nested-note-list:not(.search-results) & .tn-icon,
-        .rendered-note-attributes {
-            color: var(--custom-color);
         }
     }
 }

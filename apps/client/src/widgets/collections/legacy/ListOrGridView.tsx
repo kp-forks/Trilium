@@ -156,7 +156,7 @@ function GridNoteCard(props: GridNoteCardProps) {
     const notePath = getNotePath(props.parentNote, props.note);
 
     return (
-        <div className={clsx("note-book-card", "no-tooltip-preview", "block-link", {
+        <div className={clsx("note-book-card", "no-tooltip-preview", "block-link", props.note.getColorClass(), {
                 "archived": props.note.isArchived
              })}
              data-href={`#${notePath}`}

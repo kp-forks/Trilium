@@ -727,10 +727,6 @@ li.dropdown-item a.dropdown-item-button:focus-visible {
     margin-bottom: 0;
 }
 
-.note-list-wrapper .note-book-card .tn-icon {
-    color: var(--left-pane-icon-color) !important;
-}
-
 .note-list.grid-view .note-book-card:hover {
     filter: contrast(105%);
 }

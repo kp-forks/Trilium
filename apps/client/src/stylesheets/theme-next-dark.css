@@ -314,7 +314,8 @@
  */
 
 #left-pane .fancytree-node.tinted,
-.nested-note-list-item.use-note-color {
+.nested-note-list-item.use-note-color,
+.note-book-card.use-note-color {
     --custom-color: var(--dark-theme-custom-color);
 
     /* The background color of the active item in the note tree.
