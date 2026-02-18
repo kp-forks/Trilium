@@ -163,7 +163,6 @@ function GridNoteCard({ note, parentNote, highlightedTokens, includeArchived }: 
             <h5 className="note-book-header">
                 <Icon className="note-icon" icon={note.getIcon()} />
                 <NoteLink className="note-book-title" notePath={notePath} noPreview showNotePath={parentNote.type === "search"} highlightedTokens={highlightedTokens} />
-                <NoteAttributes note={note} />
             </h5>
             <NoteContent
                 note={note}
