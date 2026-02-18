@@ -309,10 +309,16 @@
 /* #region Grid view */
 
 .note-book-card {
-    h5 {
+    .note-book-header {
+        padding: .5em 1em;
+        padding-inline-end: 8px;
+        border-bottom-color: var(--card-border-color);
 
         .tn-icon + span {
             flex-grow: 1;
+            a {
+                font-weight: 500;
+            }
         }
     }
 

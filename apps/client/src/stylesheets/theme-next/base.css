@@ -678,34 +678,6 @@ li.dropdown-item a.dropdown-item-button:focus-visible {
     color: inherit !important;
 }
 
-.note-list-wrapper .note-book-card .note-book-header {
-    font-size: 1em;
-    font-weight: bold;
-    padding: 0.5em 1rem;
-    border-bottom-color: var(--card-border-color);
-}
-
-.note-list-wrapper .note-book-card .note-book-header .note-icon {
-    font-size: 17px;
-    vertical-align: text-bottom;
-}
-
-.note-list-wrapper .note-book-card .note-book-header .note-book-title {
-    font-size: 1em;
-    color: var(--active-item-text-color);
-    vertical-align: middle;
-}
-
-.note-list-wrapper .note-book-card .note-book-header .rendered-note-attributes {
-    font-size: 0.7em;
-    font-weight: normal;
-    margin-bottom: 0;
-}
-
-.note-list-wrapper .note-book-card .note-book-header:last-child {
-    border-bottom: 0;
-}
-
 .note-list-wrapper .note-book-card .note-book-content {
     padding: 0 !important;
     font-size: 0.8rem;
