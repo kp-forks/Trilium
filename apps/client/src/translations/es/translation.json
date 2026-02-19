@@ -669,7 +669,7 @@
     "button_exit": "Salir del modo Zen"
   },
   "sync_status": {
-    "unknown": "<p>El estado de sincronización será conocido una vez que el siguiente intento de sincronización comience.</p><p>Dé clic para activar la sincronización ahora</p>",
+    "unknown": "<p>El estado de sincronización será conocido una vez que el siguiente intento de sincronización comience.</p><p>Dé clic para activar la sincronización ahora.</p>",
     "connected_with_changes": "<p>Conectado al servidor de sincronización. <br>Hay cambios pendientes que aún no se han sincronizado.</p><p>Dé clic para activar la sincronización.</p>",
     "connected_no_changes": "<p>Conectado al servidor de sincronización.<br>Todos los cambios ya han sido sincronizados.</p><p>Dé clic para activar la sincronización.</p>",
     "disconnected_with_changes": "<p>El establecimiento de la conexión con el servidor de sincronización no ha tenido éxito.<br>Hay algunos cambios pendientes que aún no se han sincronizado.</p><p>Dé clic para activar la sincronización.</p>",
@@ -760,7 +760,7 @@
   "mobile_detail_menu": {
     "insert_child_note": "Insertar subnota",
     "delete_this_note": "Eliminar esta nota",
-    "error_cannot_get_branch_id": "No se puede obtener el branchID del notePath '{{notePath}}'",
+    "error_cannot_get_branch_id": "No se puede obtener el branchId del notePath '{{notePath}}'",
     "error_unrecognized_command": "Comando no reconocido {{command}}",
     "note_revisions": "Revisiones de notas",
     "backlinks": "Vínculos de retroceso",
@@ -1012,7 +1012,7 @@
     "no_attachments": "Esta nota no tiene archivos adjuntos."
   },
   "book": {
-    "no_children_help": "Esta nota de tipo libro no tiene ninguna subnota así que no hay nada que mostrar. Véa la <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a> para más detalles.",
+    "no_children_help": "Esta colección no tiene ninguna subnota así que no hay nada que mostrar.",
     "drag_locked_title": "Bloqueado para edición",
     "drag_locked_message": "No se permite Arrastrar pues la colección está bloqueada para edición."
   },
@@ -1560,7 +1560,7 @@
   "shortcuts": {
     "keyboard_shortcuts": "Atajos de teclado",
     "multiple_shortcuts": "Varios atajos para la misma acción se pueden separar mediante comas.",
-    "electron_documentation": "Véa la <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">documentación de Electron </a> para los modificadores y códigos de tecla disponibles.",
+    "electron_documentation": "Consulte la <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">documentación de Electron</a> para los modificadores y códigos de tecla disponibles.",
     "type_text_to_filter": "Escriba texto para filtrar los accesos directos...",
     "action_name": "Nombre de la acción",
     "shortcuts": "Atajos",
@@ -1826,7 +1826,7 @@
     "no_headings": "Sin encabezados."
   },
   "watched_file_update_status": {
-    "file_last_modified": "Archivo <code class=\"file-path\"></code> ha sido modificado por última vez en<span class=\"file-last-modified\"></span>.",
+    "file_last_modified": "El archivo <code class=\"file-path\"></code> ha sido modificado por última vez en <span class=\"file-last-modified\"></span>.",
     "upload_modified_file": "Subir archivo modificado",
     "ignore_this_change": "Ignorar este cambio"
   },
@@ -2050,7 +2050,8 @@
     "max-nesting-depth": "Máxima profundidad de anidamiento:",
     "vector_light": "Vector (claro)",
     "vector_dark": "Vector (oscuro)",
-    "raster": "Trama"
+    "raster": "Trama",
+    "show-labels": "Mostrar nombres de marcadores"
   },
   "table_context_menu": {
     "delete_row": "Eliminar fila"
@@ -2158,7 +2159,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} notas"
+    "total_notes": "{{count}} notas",
+    "prev_page": "Página anterior",
+    "next_page": "Página siguiente"
   },
   "presentation_view": {
     "edit-slide": "Editar este slide",
