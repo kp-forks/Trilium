@@ -11,7 +11,8 @@ const FILES_TO_COPY = [
     "web/locale/",
     "web/viewer.css",
     "web/viewer.html",
-    "web/viewer.mjs"
+    "web/viewer.mjs",
+    "web/wasm/"
 ];
 
 async function main() {
