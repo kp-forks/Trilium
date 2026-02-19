@@ -442,7 +442,7 @@
     "share_index": "liostálfaidh nóta leis an lipéad seo fréamhacha uile nótaí comhroinnte",
     "display_relations": "Ainmneacha caidrimh scartha le camóga ar cheart iad a thaispeáint. Beidh na cinn eile go léir i bhfolach.",
     "hide_relations": "Ainmneacha caidrimh scartha le camóga ar cheart iad a cheilt. Taispeánfar na cinn eile go léir.",
-    "title_template": "Teideal réamhshocraithe nótaí a cruthaíodh mar leanaí den nóta seo. Déantar an luach a mheas mar theaghrán JavaScript\n                        agus dá bhrí sin is féidir é a shaibhriú le hábhar dinimiciúil trí na hathróga <code>now</code> agus <code>parentNote</code> insteallta. Samplaí:\n\n                        <ul>\n                          <li><code>Saothair liteartha ${parentNote.getLabelValue('authorName')}</code></li>\n                          <li><code>Log le haghaidh ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                        </ul>\n\nFéach <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">vicí le sonraí</a>, doiciméid API le haghaidh <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> agus <a href=\"https://day.js.org/docs/en/display/format\">now</a> le haghaidh sonraí.",
+    "title_template": "teideal réamhshocraithe nótaí a cruthaíodh mar leanaí den nóta seo. Déantar an luach a mheas mar theaghrán JavaScript \n                        agus dá bhrí sin is féidir é a shaibhriú le hábhar dinimiciúil trí na hathróga <code>now</code> agus <code>parentNote</code> insteallta. Samplaí:\n                        \n                        <ul>\n                            <li><code>Saothair liteartha ${parentNote.getLabelValue('authorName')}</code></li>\n                            <li><code>Log le haghaidh ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                        </ul>\n                        \n                        Féach <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">vicí le sonraí</a>, doiciméid API le haghaidh <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> agus <a href=\"https://day.js.org/docs/en/display/format\">now</a> le haghaidh sonraí.",
     "template": "Beidh an nóta seo le feiceáil i roghnú na dteimpléad atá ar fáil agus nóta nua á chruthú",
     "toc": "Cuirfidh <code>#toc</code> nó <code>#toc=show</code> iallach ar an gClár Ábhair a bheith le feiceáil, cuirfidh <code>#toc=hide</code> iallach air é a cheilt. Mura bhfuil an lipéad ann, breathnaítear ar an socrú domhanda",
     "color": "sainmhíníonn dath an nóta sa chrann nótaí, snaisc srl. Úsáid aon luach datha CSS bailí cosúil le 'dearg' nó #a13d5f",
@@ -2188,7 +2188,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} nótaí"
+    "total_notes": "{{count}} nótaí",
+    "prev_page": "Leathanach roimhe seo",
+    "next_page": "An chéad leathanach eile"
   },
   "collections": {
     "rendering_error": "Ní féidir ábhar a thaispeáint mar gheall ar earráid."
