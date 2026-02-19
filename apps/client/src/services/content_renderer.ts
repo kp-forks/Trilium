@@ -15,7 +15,7 @@ import protectedSessionService from "./protected_session.js";
 import protectedSessionHolder from "./protected_session_holder.js";
 import renderService from "./render.js";
 import { applySingleBlockSyntaxHighlight } from "./syntax_highlight.js";
-import utils from "./utils.js";
+import utils, { getErrorMessage } from "./utils.js";
 
 let idCounter = 1;
 
@@ -62,7 +62,10 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
     } else if (type === "render" && entity instanceof FNote) {
         const $content = $("<div>");
 
-        await renderService.render(entity, $content);
+        await renderService.render(entity, $content, (e) => {
+            const $error = $("<div>").addClass("admonition caution").text(typeof e === "string" ? e : getErrorMessage(e));
+            $content.empty().append($error);
+        });
 
         $renderedContent.append($content);
     } else if (type === "doc" && "noteId" in entity) {
