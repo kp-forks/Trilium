@@ -2,11 +2,11 @@
     overflow: visible;
     position: relative;
     height: 100%;
-}
 
-.note-list-wrapper {
-    height: 100%;
-    overflow: auto;
+    .note-list-wrapper {
+        height: 100%;
+        overflow: auto;
+    }
 }
 
 /* #region List view / Grid view common styles */
@@ -247,14 +247,29 @@
 /* #region Grid view */
 
 .note-book-card {
-    border-radius: 10px;
-    background-color: var(--accented-background-color);
-    padding: 10px 15px 15px 8px;
-    overflow: hidden;
+    --note-list-horizontal-padding: 22px;
+    --note-list-vertical-padding: 15px;
+    
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     flex-grow: 1;
+    border: 1px solid var(--card-border-color) !important;
+    border-radius: 12px;
+    background-color: var(--card-background-color, var(--accented-background-color));
+    padding: 0;
+    overflow: hidden;
+    user-select: none;
+
+    &:hover {
+        background-color: var(--card-background-hover-color);
+        filter: contrast(105%);
+        transition: background-color 200ms ease-out;
+    }
+
+    &:active {
+        transform: scale(.98);
+    }
 
     &.archived {
         opacity: 0.5;
@@ -321,6 +336,59 @@ body.mobile .note-list.grid-view .note-book-card {
     margin-left: 0.5em;
     vertical-align: middle;
     opacity: 0.5;
+}
+
+.note-book-card .note-book-content {
+    padding: 0;
+    font-size: 0.8rem;
+    
+    .ck-content p {
+        margin-bottom: 0.5em;
+        line-height: 1.3;
+    }
+
+    .ck-content figure.image {
+        width: 25%;
+    }
+
+    .rendered-content {
+        padding: 1rem;
+    }
+
+    &.type-image .rendered-content,
+    &.type-pdf .rendered-content {
+        padding: 0;
+    }
+
+    .rendered-content.text-with-ellipsis {
+        padding: 1rem !important;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 1rem;
+        color: var(--active-item-text-color);
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
+
+    &.type-canvas .rendered-content,
+    &.type-mindMap .rendered-content,
+    &.type-code .rendered-content,
+    &.type-video .rendered-content {
+        padding: 0;
+    }
+
+    &.type-code {
+        height: 100%;
+    }
+
+    &.type-code pre {
+        height: 100%;
+        padding: 1em;
+        margin-bottom: 0;
+    }
 }
 
 /* #endregion */
