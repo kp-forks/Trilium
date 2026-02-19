@@ -1,5 +1,6 @@
 import { join } from "path";
 import packageJson from "../package.json" with { type: "json" };
+import fs from "fs/promises";
 import * as yauzl from "yauzl";
 import { createWriteStream } from "fs";
 const version = packageJson.devDependencies["pdfjs-dist"];
@@ -46,7 +47,19 @@ async function main() {
             });
             zip.readEntry();
         });
+        zip.on("end", async () => {
+            console.log("Finished extracting pdfjs-dist files.");
+            await patchViewerHTML();
+        });
     });
 };
+
+async function patchViewerHTML() {
+    const viewerPath = join(__dirname, "../viewer/viewer.html");
+    let content = await fs.readFile(viewerPath, "utf-8");
+    content = content.replace(`    <link rel="stylesheet" href="viewer.css" />`, `    <link rel="stylesheet" href="viewer.css" />\n    <link rel="stylesheet" href="custom.css" />`);
+    content = content.replace(`  <script src="viewer.mjs" type="module"></script>`, `  <script src="custom.mjs" type="module"></script>\n  <script src="viewer.mjs" type="module"></script>`);
+    await fs.writeFile(viewerPath, content, "utf-8");
+}
 
 main();
