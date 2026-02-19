@@ -72,7 +72,7 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
             <div class="note-list-wrapper">
                 {!hasCollectionProperties && <Pager {...pagination} />}
 
-                <div class="note-list-container use-tn-links">
+                <div className={clsx("note-list-container use-tn-links", {"search-results": (noteType === "search")})}>
                     {pageNotes?.map(childNote => (
                         <GridNoteCard note={childNote} parentNote={note} highlightedTokens={highlightedTokens} includeArchived={includeArchived} />
                     ))}
