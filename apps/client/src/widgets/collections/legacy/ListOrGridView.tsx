@@ -30,13 +30,13 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
     const hasCollectionProperties = [ "book", "search" ].includes(noteType ?? "");
 
     return (
-        <div class="note-list list-view">
+        <div className="note-list list-view">
             <CollectionProperties
                 note={note}
                 centerChildren={<Pager {...pagination} />}
             />
 
-            { noteIds.length > 0 && <div class="note-list-wrapper">
+            { noteIds.length > 0 && <div className="note-list-wrapper">
                 {!hasCollectionProperties && <Pager {...pagination} />}
 
                 <Card className={clsx("nested-note-list", {"search-results": (noteType === "search")})}>
@@ -63,13 +63,13 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
     const hasCollectionProperties = [ "book", "search" ].includes(noteType ?? "");
 
     return (
-        <div class="note-list grid-view">
+        <div className="note-list grid-view">
             <CollectionProperties
                 note={note}
                 centerChildren={<Pager {...pagination} />}
             />
 
-            <div class="note-list-wrapper">
+            <div className="note-list-wrapper">
                 {!hasCollectionProperties && <Pager {...pagination} />}
 
                 <div className={clsx("note-list-container use-tn-links", {"search-results": (noteType === "search")})}>
