@@ -34,13 +34,14 @@
         margin-inline-start: 8px;
         flex-shrink: 0;
     }
+}
 
-    &.use-note-color {
-        span.tn-icon + span,
-        .tn-icon,
-        .rendered-note-attributes {
-            color: var(--custom-color);
-        }
+.note-book-card.use-note-color,
+.note-book-card.use-note-color {
+    span.tn-icon + span,
+    .tn-icon,
+    .rendered-note-attributes {
+        color: var(--custom-color);
     }
 }
 
