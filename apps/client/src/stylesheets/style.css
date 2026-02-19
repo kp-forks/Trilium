@@ -1587,7 +1587,7 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         position: absolute;
         top: 0;
         inset-inline-start: 0;
-        bottom: 0;
+        height: 100dvh;
         width: 85vw;
         padding-top: env(safe-area-inset-top);
         transition: transform 250ms ease-in-out;
