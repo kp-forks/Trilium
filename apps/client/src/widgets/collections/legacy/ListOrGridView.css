@@ -21,6 +21,7 @@
 
     .tn-icon {
         font-size: 1.2em;
+        margin-inline-end: 8px;
     }
 
     .note-book-title {
@@ -36,8 +37,8 @@
     }
 }
 
-.note-book-card.use-note-color,
-.note-book-card.use-note-color {
+.note-book-card-note-color,
+.note-book-header.use-note-color {
     span.tn-icon + span,
     .tn-icon,
     .rendered-note-attributes {
@@ -155,7 +156,6 @@
     }
 
     .tn-icon {
-        margin-inline-end: 8px;
         color: var(--note-list-view-icon-color);
     }
 
