@@ -37,7 +37,7 @@
     }
 }
 
-.note-book-card-note-color,
+.nested-note-list-item.use-note-color,
 .note-book-header.use-note-color {
     span.tn-icon + span,
     .tn-icon,
