@@ -21,6 +21,7 @@ async function main() {
     }
     patchCacheBuster(`${build.outDir}/web/viewer.html`);
     build.copy(`viewer/images`, `web/images`);
+    build.copy(`viewer/wasm`, `web/wasm`);
 
     // Copy the custom files.
     await buildScript("web/custom.mjs");
