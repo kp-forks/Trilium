@@ -1,12 +1,13 @@
-import type { ComponentChildren, RefObject } from "preact";
-import type { CSSProperties } from "preact/compat";
+import type { ComponentChildren, CSSProperties, RefObject } from "preact";
 import { memo } from "preact/compat";
 import { useMemo } from "preact/hooks";
 
 import { CommandNames } from "../../components/app_context";
-import { isDesktop } from "../../services/utils";
+import { isDesktop, isMobile } from "../../services/utils";
 import ActionButton from "./ActionButton";
 import Icon from "./Icon";
+
+const cachedIsMobile = isMobile();
 
 export interface ButtonProps {
     name?: string;
@@ -30,7 +31,7 @@ const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortc
     // Memoize classes array to prevent recreation
     const classes = useMemo(() => {
         const classList: string[] = ["btn"];
-        
+
         switch(kind) {
             case "primary":
                 classList.push("btn-primary");
@@ -42,7 +43,7 @@ const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortc
                 classList.push("btn-secondary");
                 break;
         }
-        
+
         if (className) {
             classList.push(className);
         }
@@ -56,7 +57,7 @@ const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortc
 
     // Memoize keyboard shortcut rendering
     const shortcutElements = useMemo(() => {
-        if (!keyboardShortcut) return null;
+        if (!keyboardShortcut || cachedIsMobile) return null;
         const splitShortcut = keyboardShortcut.split("+");
         return splitShortcut.map((key, index) => (
             <>
