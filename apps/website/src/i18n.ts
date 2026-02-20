@@ -27,7 +27,8 @@ export function initTranslations(lng: string) {
         initAsync: false,
         react: {
             useSuspense: false
-        }
+        },
+        showSupportNotice: false
     });
 }
 
