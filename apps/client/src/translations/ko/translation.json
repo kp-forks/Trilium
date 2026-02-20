@@ -81,13 +81,17 @@
     "search_for_note_by_its_name": "이름으로 노트 검색하기",
     "no_path_to_clone_to": "클론할 경로가 존재하지 않습니다.",
     "note_cloned": "노트 \"{{clonedTitle}}\"이(가) \"{{targetTitle}}\"로 클론되었습니다",
-    "cloned_note_prefix_title": "클론된 노트는 지정된 접두사와 함께 노트 트리에 표시됩니다"
+    "cloned_note_prefix_title": "클론된 노트는 지정된 접두사와 함께 노트 트리에 표시됩니다",
+    "prefix_optional": "접두사 (선택 사항)",
+    "clone_to_selected_note": "선택한 노트에 클론"
   },
   "confirm": {
     "confirmation": "확인",
     "cancel": "취소",
     "ok": "OK",
-    "are_you_sure_remove_note": "관계 맵에서 \"{{title}}\" 노트를 정말로 제거하시겠습니까? "
+    "are_you_sure_remove_note": "관계 맵에서 \"{{title}}\" 노트를 정말로 제거하시겠습니까? ",
+    "if_you_dont_check": "이 항목을 선택하지 않으면 해당 노트는 관계 맵에서만 제거됩니다.",
+    "also_delete_note": "노트를 함께 삭제"
   },
   "delete_notes": {
     "erase_notes_description": "일반(소프트) 삭제는 메모를 삭제된 것으로 표시하는 것일 뿐이며, 일정 시간 동안 (최근 변경 내용 대화 상자에서) 복구할 수 있습니다. 이 옵션을 선택하면 메모가 즉시 삭제되며 복구할 수 없습니다.",
@@ -97,7 +101,10 @@
     "broken_relations_to_be_deleted": "다음 관계가 끊어지고 삭제됩니다({{ relationCount}})",
     "cancel": "취소",
     "ok": "OK",
-    "deleted_relation_text": "삭제 예정인 노트 {{- note}} (은)는 {{- source}}에서 시작된 관계 {{- relation}}에 의해 참조되고 있습니다."
+    "deleted_relation_text": "삭제 예정인 노트 {{- note}} (은)는 {{- source}}에서 시작된 관계 {{- relation}}에 의해 참조되고 있습니다.",
+    "delete_notes_preview": "노트 미리보기 삭제",
+    "close": "닫기",
+    "delete_all_clones_description": "모든 복제본 삭제(최근 변경 사항에서 되돌릴 수 있습니다)"
   },
   "export": {
     "export_note_title": "노트 내보내기",
@@ -108,10 +115,25 @@
     "export_in_progress": "내보내기 진행 중: {{progressCount}}",
     "export_finished_successfully": "내보내기를 성공적으로 완료했습니다.",
     "format_pdf": "PDF - 인쇄 또는 공유용",
-    "share-format": "웹 게시용 HTML - 공유 노트에 사용되는 것과 동일한 테마를 사용하지만 정적 웹사이트로 게시할 수 있습니다."
+    "share-format": "웹 게시용 HTML - 공유 노트에 사용되는 것과 동일한 테마를 사용하지만 정적 웹사이트로 게시할 수 있습니다.",
+    "close": "닫기",
+    "export_type_subtree": "이 노트와 모든 후손 노트",
+    "format_html": "HTML - 모든 형식 유지됨, 권장",
+    "format_html_zip": "HTML(ZIP 아카이브) - 모든 서식이 유지됨, 권장.",
+    "format_markdown": "마크다운 - 대부분의 서식이 유지됩니다.",
+    "format_opml": "OPML은 텍스트 전용 아웃라이너 교환 형식입니다. 서식, 이미지 및 파일은 포함되지 않습니다.",
+    "opml_version_1": "OPML v1.0 - 일반 텍스트만",
+    "opml_version_2": "OPML v2.0 - HTML 지원"
   },
   "help": {
     "title": "치트 시트",
-    "editShortcuts": "키보드 단축키 편집"
+    "editShortcuts": "키보드 단축키 편집",
+    "noteNavigation": "노트 내비게이션",
+    "goUpDown": "노트 목록에서 위/아래로 이동",
+    "collapseExpand": "노트 접기/펼치기",
+    "notSet": "미설정",
+    "goBackForwards": "히스토리에서 뒤로/앞으로 이동",
+    "showJumpToNoteDialog": "<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"노트로 이동\" 대화 상자</a> 표시",
+    "scrollToActiveNote": "활성화된 노트로 스크롤 이동"
   }
 }

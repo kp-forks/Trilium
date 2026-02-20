@@ -139,13 +139,11 @@ zadam/Trilium 인스턴스에서 TriliumNext/Trilium 인스턴스로 마이그�
 zadam/trilium 버전과 호환됩니다. 이후 버전의 TriliumNext/Trilium은 동기화 버전이 증가되어 직접 마이그레이션이
 불가능합니다.
 
-## 💬 Discuss with us
+## 💬 함께 토론해 보세요
 
-Feel free to join our official conversations. We would love to hear what
-features, suggestions, or issues you may have!
+저희 공식 대화에 자유롭게 참여해 주세요. 어떤 기능, 제안 또는 문제점이 있으시면 언제든지 알려주세요!
 
-- [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (For synchronous
-  discussions.)
+- [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (동기식 토론용)
   - `General` 매트릭스 룸은 [XMPP](xmpp:discuss@trilium.thisgreat.party?join)에도 브리지되어
     있습니다
 - [Github Discussions](https://github.com/TriliumNext/Trilium/discussions) (비동기
@@ -162,17 +160,15 @@ features, suggestions, or issues you may have!
 
 ### Linux
 
-If your distribution is listed in the table below, use your distribution's
-package.
+사용하시는 배포판이 아래 표에 나와 있다면 해당 배포판의 패키지를 사용하십시오.
 
-[![Packaging
-status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
+[![패키징
+상태](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
 
-You may also download the binary release for your platform from the [latest
-release page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the
-package and run the `trilium` executable.
+또한 [최신 릴리스 페이지](https://github.com/TriliumNext/Trilium/releases/latest)에서 해당
+플랫폼용 바이너리 릴리스를 다운로드하고 패키지의 압축을 풀고 `trilium` 실행 파일을 실행할 수도 있습니다.
 
-TriliumNext is also provided as a Flatpak, but not yet published on FlatHub.
+TriliumNext는 Flatpak으로도 제공되지만, 아직 FlatHub에는 게시되지 않았습니다.
 
 ### 브라우저 (모든 운영체제)
 
@@ -201,22 +197,21 @@ TriliumNext를 자체 서버에 설치하려면 [서버 설치
 문서](https://docs.triliumnotes.org/user-guide/setup/server)를 따르세요.
 
 
-## 💻 Contribute
+## 💻 참여하기
 
-### Translations
+### 번역
 
-If you are a native speaker, help us translate Trilium by heading over to our
-[Weblate page](https://hosted.weblate.org/engage/trilium/).
+원어민이시라면 [Weblate 페이지](https://hosted.weblate.org/engage/trilium/)로 이동하여 Trilium
+번역을 도와주세요.
 
-Here's the language coverage we have so far:
+현재까지 지원되는 언어는 다음과 같습니다:
 
-[![Translation
-status](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
+[![번역
+상태](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
 
-### Code
+### 코드
 
-Download the repository, install dependencies using `pnpm` and then run the
-server (available at http://localhost:8080):
+저장소를 다운로드하고 `pnpm`을 사용하여 종속성을 설치한 다음 서버를 실행하세요(http://localhost:8080에서 접속 가능):
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -224,7 +219,7 @@ pnpm install
 pnpm run server:start
 ```
 
-### Documentation
+### 문서
 
 저장소를 다운로드하고 `pnpm`을 사용하여 종속성을 설치한 다음 문서 편집에 필요한 환경을 실행하세요.
 ```shell
@@ -258,19 +253,16 @@ docs](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20Guide/De
 * [zadam](https://github.com/zadam)은 애플리케이션의 원래 개념과 구현에 대한 공로를 인정받았습니다.
 * [Sarah Hussein](https://github.com/Sarah-Hussein)은 애플리케이션 아이콘을 디자인했습니다.
 * [nriver](https://github.com/nriver) 국제화에 공헌.
-* [Thomas Frei](https://github.com/thfrei) for his original work on the Canvas.
-* [antoniotejada](https://github.com/nriver) for the original syntax highlight
-  widget.
-* [Dosu](https://dosu.dev/) for providing us with the automated responses to
-  GitHub issues and discussions.
-* [Tabler Icons](https://tabler.io/icons) for the system tray icons.
+* [Thomas Frei](https://github.com/thfrei) 캔버스에 대한 독창적인 작업.
+* [antoniotejada](https://github.com/nriver) 구문 강조 위젯의 원본.
+* [Dosu](https://dosu.dev/) GitHub 이슈 및 토론에 대한 자동 응답을 제공.
+* [Tabler Icons](https://tabler.io/icons) 시스템 트레이 아이콘.
 
-Trilium would not be possible without the technologies behind it:
+트릴리움은 다음의 기반 기술들이 없었다면 불가능했을 것입니다:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes. We are grateful for being offered a set of the premium features.
-* [CodeMirror](https://github.com/codemirror/CodeMirror) - code editor with
-  support for huge amount of languages.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - 텍스트 노트의 시각적 편집기입니다. 프리미엄
+  기능을 제공해주셔서 감사합니다.
+* [CodeMirror](https://github.com/codemirror/CodeMirror) - 수많은 언어를 지원하는 코드 편집기.
 * [Excalidraw](https://github.com/excalidraw/excalidraw) - the infinite
   whiteboard used in Canvas notes.
 * [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) - providing the
