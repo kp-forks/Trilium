@@ -1,9 +1,9 @@
 {
-    "about": {
-        "title": "Podrobnosti Trilium Notes",
-        "homepage": "Domača stran:",
-        "app_version": "Verzija aplikacije:",
-        "db_version": "Verzija DB:",
-        "sync_version": "Verzija Sync:"
-    }
+  "about": {
+    "title": "Podrobnosti Trilium Notes",
+    "homepage": "Domača stran:",
+    "app_version": "Verzija aplikacije:",
+    "db_version": "Verzija DB:",
+    "sync_version": "Verzija Sync:"
+  }
 }
