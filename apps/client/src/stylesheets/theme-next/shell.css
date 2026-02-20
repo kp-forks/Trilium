@@ -751,12 +751,14 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
     }
 }
 
-#left-pane .fancytree-expander {
+#left-pane .fancytree-expander,
+.nested-note-list-item .note-expander {
     opacity: 0.65;
     transition: opacity 150ms ease-in;
 }
 
-#left-pane .fancytree-expander:hover {
+#left-pane .fancytree-expander:hover,
+.nested-note-list-item .note-expander:hover {
     opacity: 1;
     transition: opacity 300ms ease-out;
 }
