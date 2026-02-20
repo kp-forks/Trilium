@@ -392,7 +392,7 @@ importers:
     dependencies:
       '@electron/remote':
         specifier: 2.1.3
-        version: 2.1.3(electron@40.4.1)
+        version: 2.1.3(electron@40.6.0)
       better-sqlite3:
         specifier: 12.6.2
         version: 12.6.2
@@ -449,8 +449,8 @@ importers:
         specifier: 13.0.1
         version: 13.0.1(webpack@5.101.3(esbuild@0.27.3))
       electron:
-        specifier: 40.4.1
-        version: 40.4.1
+        specifier: 40.6.0
+        version: 40.6.0
       prebuild-install:
         specifier: 7.1.3
         version: 7.1.3
@@ -505,8 +505,8 @@ importers:
         specifier: 13.0.1
         version: 13.0.1(webpack@5.101.3(esbuild@0.27.3))
       electron:
-        specifier: 40.4.1
-        version: 40.4.1
+        specifier: 40.6.0
+        version: 40.6.0
       fs-extra:
         specifier: 11.3.3
         version: 11.3.3
@@ -543,7 +543,7 @@ importers:
         version: 7.1.2
       '@electron/remote':
         specifier: 2.1.3
-        version: 2.1.3(electron@40.4.1)
+        version: 2.1.3(electron@40.6.0)
       '@triliumnext/commons':
         specifier: workspace:*
         version: link:../../packages/commons
@@ -680,8 +680,8 @@ importers:
         specifier: 4.0.1
         version: 4.0.1
       electron:
-        specifier: 40.4.1
-        version: 40.4.1
+        specifier: 40.6.0
+        version: 40.6.0
       electron-debug:
         specifier: 4.1.0
         version: 4.1.0
@@ -8301,8 +8301,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@40.4.1:
-    resolution: {integrity: sha512-N1ZXybQZL8kYemO8vAeh9nrk4mSvqlAO8xs0QCHkXIvRnuB/7VGwEehjvQbsU5/f4bmTKpG+2GQERe/zmKpudQ==}
+  electron@40.6.0:
+    resolution: {integrity: sha512-ett8W+yOFGDuM0vhJMamYSkrbV3LoaffzJd9GfjI96zRAxyrNqUSKqBpf/WGbQCweDxX2pkUCUfrv4wwKpsFZA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -16133,8 +16133,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-code-block@47.4.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)':
     dependencies:
@@ -17751,9 +17749,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron/remote@2.1.3(electron@40.4.1)':
+  '@electron/remote@2.1.3(electron@40.6.0)':
     dependencies:
-      electron: 40.4.1
+      electron: 40.6.0
 
   '@electron/universal@2.0.2':
     dependencies:
@@ -24269,7 +24267,7 @@ snapshots:
       - supports-color
     optional: true
 
-  electron@40.4.1:
+  electron@40.6.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.13
