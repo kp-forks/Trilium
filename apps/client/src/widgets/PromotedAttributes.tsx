@@ -3,7 +3,7 @@ import "./PromotedAttributes.css";
 import { UpdateAttributeResponse } from "@triliumnext/commons";
 import clsx from "clsx";
 import { ComponentChild, HTMLInputTypeAttribute, InputHTMLAttributes, MouseEventHandler, TargetedEvent, TargetedInputEvent } from "preact";
-import { Dispatch, StateUpdater, useEffect, useRef, useState } from "preact/hooks";
+import { Dispatch, StateUpdater, useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import NoteContext from "../components/note_context";
 import FAttribute from "../entities/fattribute";
@@ -182,21 +182,25 @@ const LABEL_MAPPINGS: Record<LabelType, HTMLInputTypeAttribute> = {
     url: "url"
 };
 
-function LabelInput({ inputId, ...props }: CellProps & { inputId: string }) {
-    const { valueName, valueAttr, definition, definitionAttr } = props.cell;
+function LabelInput(props: CellProps & { inputId: string }) {
+    const { inputId, note, cell, componentId, setCells } = props;
+    const { valueName, valueAttr, definition, definitionAttr } = cell;
     const [ valueDraft, setDraft ] = useState(valueAttr.value);
-    const onChangeListener = buildPromotedAttributeLabelChangedListener({...props});
+    const onChangeListener = useCallback(async (e: OnChangeEventData) => {
+        const inputEl = e.target as HTMLInputElement;
+        let value: string;
+
+        if (inputEl.type === "checkbox") {
+            value = inputEl.checked ? "true" : "false";
+        } else {
+            value = inputEl.value;
+        }
+
+        await updateAttribute(note, cell, componentId, value, setCells);
+    }, [ cell, componentId, note, setCells ]);
     const extraInputProps: InputHTMLAttributes = {};
 
-    // Setup autocomplete.
-    useEffect(() => {
-        if (definition.labelType === "text") {
-            const el = document.getElementById(inputId);
-            if (el) {
-                setupTextLabelAutocomplete(el as HTMLInputElement, valueAttr, onChangeListener);
-            }
-        }
-    }, [ inputId, valueAttr, onChangeListener ]);
+    useTextLabelAutocomplete(inputId, valueAttr, definition, onChangeListener);
 
     // React to model changes.
     useEffect(() => {
@@ -405,16 +409,27 @@ function InputButton({ icon, className, title, onClick }: {
     );
 }
 
-function setupTextLabelAutocomplete(el: HTMLInputElement, valueAttr: Attribute, onChangeListener: OnChangeListener) {
-    // no need to await for this, can be done asynchronously
-    const $input = $(el);
-    server.get<string[]>(`attribute-values/${encodeURIComponent(valueAttr.name)}`).then((_attributeValues) => {
-        if (_attributeValues.length === 0) {
+function useTextLabelAutocomplete(inputId: string, valueAttr: Attribute, definition: DefinitionObject, onChangeListener: OnChangeListener) {
+    const [ attributeValues, setAttributeValues ] = useState<{ value: string }[] | null>(null);
+
+    // Obtain data.
+    useEffect(() => {
+        if (definition.labelType !== "text") {
             return;
         }
 
-        const attributeValues = _attributeValues.map((attribute) => ({ value: attribute }));
+        server.get<string[]>(`attribute-values/${encodeURIComponent(valueAttr.name)}`).then((_attributesValues) => {
+            setAttributeValues(_attributesValues.map((attribute) => ({ value: attribute })));
+        });
+    }, [ definition.labelType, valueAttr.name ]);
 
+    // Initialize autocomplete.
+    useEffect(() => {
+        if (attributeValues?.length === 0) return;
+        const el = document.getElementById(inputId) as HTMLInputElement | null;
+        if (!el) return;
+
+        const $input = $(el);
         $input.autocomplete(
             {
                 appendTo: document.querySelector("body"),
@@ -430,7 +445,7 @@ function setupTextLabelAutocomplete(el: HTMLInputElement, valueAttr: Attribute, 
                     source (term, cb) {
                         term = term.toLowerCase();
 
-                        const filtered = attributeValues.filter((attr) => attr.value.toLowerCase().includes(term));
+                        const filtered = (attributeValues ?? []).filter((attr) => attr.value.toLowerCase().includes(term));
 
                         cb(filtered);
                     }
@@ -440,22 +455,9 @@ function setupTextLabelAutocomplete(el: HTMLInputElement, valueAttr: Attribute, 
 
         $input.off("autocomplete:selected");
         $input.on("autocomplete:selected", onChangeListener);
-    });
-}
 
-function buildPromotedAttributeLabelChangedListener({ note, cell, componentId, setCells }: CellProps): OnChangeListener {
-    return async function(e: OnChangeEventData) {
-        const inputEl = e.target as HTMLInputElement;
-        let value: string;
-
-        if (inputEl.type === "checkbox") {
-            value = inputEl.checked ? "true" : "false";
-        } else {
-            value = inputEl.value;
-        }
-
-        await updateAttribute(note, cell, componentId, value, setCells);
-    };
+        return () => $input.autocomplete("destroy");
+    }, [ inputId, attributeValues, onChangeListener ]);
 }
 
 async function updateAttribute(note: FNote, cell: Cell, componentId: string, value: string | undefined, setCells: Dispatch<StateUpdater<Cell[] | undefined>>) {
