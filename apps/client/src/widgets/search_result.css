@@ -9,8 +9,3 @@
 .search-result-widget .note-list {
     padding: 10px;
 }
-
-.search-no-results, .search-not-executed-yet {
-    margin: 20px;
-    padding: 20px !important;
-}
