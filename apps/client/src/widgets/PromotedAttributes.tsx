@@ -109,7 +109,7 @@ export function usePromotedAttributeData(note: FNote | null | undefined, compone
                 valueAttrs = valueAttrs.slice(0, 1);
             }
 
-            for (const [ i, valueAttr ] of valueAttrs.entries()) {
+            for (const valueAttr of valueAttrs) {
                 const definition = definitionAttr.getDefinition();
 
                 // if not owned, we'll force creation of a new attribute instead of updating the inherited one
