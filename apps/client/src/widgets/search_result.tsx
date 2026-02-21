@@ -1,9 +1,12 @@
+import "./search_result.css";
+
+import clsx from "clsx";
 import { useEffect, useState } from "preact/hooks";
+
 import { t } from "../services/i18n";
+import { SearchNoteList } from "./collections/NoteList";
 import Alert from "./react/Alert";
 import { useNoteContext,  useTriliumEvent } from "./react/hooks";
-import "./search_result.css";
-import { SearchNoteList } from "./collections/NoteList";
 
 enum SearchResultState {
     NO_RESULTS,
@@ -42,7 +45,7 @@ export default function SearchResult() {
     });
 
     return (
-        <div className={`search-result-widget ${!state ? "hidden-ext" : ""}`}>
+        <div className={clsx("search-result-widget", state === undefined && "hidden-ext")}>
             {state === SearchResultState.NOT_EXECUTED && (
                 <Alert type="info" className="search-not-executed-yet">{t("search_result.search_not_executed")}</Alert>
             )}
