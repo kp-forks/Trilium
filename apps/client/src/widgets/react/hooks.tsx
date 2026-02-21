@@ -1215,11 +1215,11 @@ export function useNoteTitle(noteId: string | undefined, parentNoteId: string | 
     });
 
     // React to external changes.
-    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
-        if (loadResults.isNoteReloaded(noteId)) {
+    useTriliumEvent("entitiesReloaded", useCallback(({ loadResults }) => {
+        if (loadResults.isNoteReloaded(noteId) || (parentNoteId && loadResults.getBranchRows().some(b => b.noteId === noteId && b.parentNoteId === parentNoteId))) {
             refresh();
         }
-    });
+    }, [noteId, parentNoteId, refresh]));
     return title;
 }
 
