@@ -3,8 +3,12 @@ import "./search_result.css";
 import clsx from "clsx";
 import { useEffect, useState } from "preact/hooks";
 
+import froca from "../services/froca";
 import { t } from "../services/i18n";
+import toast from "../services/toast";
+import { getErrorMessage } from "../services/utils";
 import { SearchNoteList } from "./collections/NoteList";
+import Button from "./react/Button";
 import { useNoteContext,  useTriliumEvent } from "./react/hooks";
 import NoItems from "./react/NoItems";
 
@@ -15,7 +19,7 @@ enum SearchResultState {
 }
 
 export default function SearchResult() {
-    const { note, notePath, ntxId } = useNoteContext();
+    const { note, notePath, ntxId, parentComponent } = useNoteContext();
     const [ state, setState ] = useState<SearchResultState>();
     const [ highlightedTokens, setHighlightedTokens ] = useState<string[]>();
 
@@ -47,7 +51,24 @@ export default function SearchResult() {
     return (
         <div className={clsx("search-result-widget", state === undefined && "hidden-ext")}>
             {state === SearchResultState.NOT_EXECUTED && (
-                <NoItems icon="bx bx-file-find" text={t("search_result.search_not_executed")} />
+                <NoItems icon="bx bx-file-find" text={t("search_result.search_not_executed")}>
+                    <Button
+                        text="Search now"
+                        onClick={async () => {
+                            if (!note) return;
+                            try {
+                                const result = await froca.loadSearchNote(note.noteId);
+                                if (result?.error) {
+                                    toast.showError(result.error);
+                                }
+
+                                parentComponent?.triggerEvent("searchRefreshed", { ntxId });
+                            } catch (e) {
+                                toast.showError(getErrorMessage(e));
+                            }
+                        }}
+                    />
+                </NoItems>
             )}
 
             {state === SearchResultState.NO_RESULTS && (
