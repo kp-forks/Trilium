@@ -153,6 +153,11 @@ textarea,
     background: var(--input-background-color);
 }
 
+.form-control:disabled {
+    background-color: var(--input-background-color);
+    opacity: 0.6;
+}
+
 .form-control:focus {
     color: var(--input-text-color);
     background: var(--input-background-color);
@@ -942,6 +947,7 @@ table.promoted-attributes-in-tooltip th {
     color: var(--muted-text-color);
     opacity: 0.6;
     line-height: 1;
+    word-wrap: break-word;
 }
 
 .aa-dropdown-menu .aa-suggestion p {
@@ -1581,7 +1587,7 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         position: absolute;
         top: 0;
         inset-inline-start: 0;
-        bottom: 0;
+        height: 100dvh;
         width: 85vw;
         padding-top: env(safe-area-inset-top);
         transition: transform 250ms ease-in-out;
@@ -1645,13 +1651,27 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         word-break: break-all;
     }
 
-    body.mobile .jump-to-note-dialog .modal-content {
-        overflow-y: auto;
-    }
+    body.mobile .jump-to-note-dialog {
+        .modal-header {
+            padding-bottom: 0.75rem !important;
+        }
 
-    body.mobile .jump-to-note-dialog .modal-dialog .aa-dropdown-menu {
-        max-height: unset;
-        overflow: auto;
+        .modal-content {
+            padding-bottom: 0 !important;
+        }
+
+        .modal-body {
+            overflow-y: auto;
+        }
+
+        .aa-dropdown-menu {
+            max-height: unset;
+            overflow: auto;
+        }
+
+        .aa-suggestion {
+            padding-inline: 0;
+        }
     }
 
     body.mobile .modal-dialog .dropdown-menu {

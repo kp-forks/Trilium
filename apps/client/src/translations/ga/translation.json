@@ -442,7 +442,7 @@
     "share_index": "liostálfaidh nóta leis an lipéad seo fréamhacha uile nótaí comhroinnte",
     "display_relations": "Ainmneacha caidrimh scartha le camóga ar cheart iad a thaispeáint. Beidh na cinn eile go léir i bhfolach.",
     "hide_relations": "Ainmneacha caidrimh scartha le camóga ar cheart iad a cheilt. Taispeánfar na cinn eile go léir.",
-    "title_template": "Teideal réamhshocraithe nótaí a cruthaíodh mar leanaí den nóta seo. Déantar an luach a mheas mar theaghrán JavaScript\n                        agus dá bhrí sin is féidir é a shaibhriú le hábhar dinimiciúil trí na hathróga <code>now</code> agus <code>parentNote</code> insteallta. Samplaí:\n\n                        <ul>\n                          <li><code>Saothair liteartha ${parentNote.getLabelValue('authorName')}</code></li>\n                          <li><code>Log le haghaidh ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                        </ul>\n\nFéach <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">vicí le sonraí</a>, doiciméid API le haghaidh <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> agus <a href=\"https://day.js.org/docs/en/display/format\">now</a> le haghaidh sonraí.",
+    "title_template": "teideal réamhshocraithe nótaí a cruthaíodh mar leanaí den nóta seo. Déantar an luach a mheas mar theaghrán JavaScript \n                        agus dá bhrí sin is féidir é a shaibhriú le hábhar dinimiciúil trí na hathróga <code>now</code> agus <code>parentNote</code> insteallta. Samplaí:\n                        \n                        <ul>\n                            <li><code>Saothair liteartha ${parentNote.getLabelValue('authorName')}</code></li>\n                            <li><code>Log le haghaidh ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                        </ul>\n                        \n                        Féach <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">vicí le sonraí</a>, doiciméid API le haghaidh <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> agus <a href=\"https://day.js.org/docs/en/display/format\">now</a> le haghaidh sonraí.",
     "template": "Beidh an nóta seo le feiceáil i roghnú na dteimpléad atá ar fáil agus nóta nua á chruthú",
     "toc": "Cuirfidh <code>#toc</code> nó <code>#toc=show</code> iallach ar an gClár Ábhair a bheith le feiceáil, cuirfidh <code>#toc=hide</code> iallach air é a cheilt. Mura bhfuil an lipéad ann, breathnaítear ar an socrú domhanda",
     "color": "sainmhíníonn dath an nóta sa chrann nótaí, snaisc srl. Úsáid aon luach datha CSS bailí cosúil le 'dearg' nó #a13d5f",
@@ -1016,7 +1016,7 @@
     "no_attachments": "Níl aon cheangaltáin leis an nóta seo."
   },
   "book": {
-    "no_children_help": "Níl aon nótaí faoi mhíbhuntáiste sa bhailiúchán seo mar sin níl aon rud le taispeáint. Féach ar an <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">vicí</a> le haghaidh tuilleadh sonraí.",
+    "no_children_help": "Níl aon nótaí faoi mhíbhuntáiste sa bhailiúchán seo mar sin níl aon rud le taispeáint.",
     "drag_locked_title": "Glasáilte le haghaidh eagarthóireachta",
     "drag_locked_message": "Ní cheadaítear tarraingt ós rud é go bhfuil an bailiúchán faoi ghlas le haghaidh eagarthóireachta."
   },
@@ -1071,10 +1071,6 @@
     "enter_title_of_new_note": "Cuir isteach teideal an nóta nua",
     "default_new_note_title": "nóta nua",
     "click_on_canvas_to_place_new_note": "Cliceáil ar chanbhás chun nóta nua a chur"
-  },
-  "render": {
-    "note_detail_render_help_1": "Taispeántar an nóta cabhrach seo mar nach bhfuil aon ghaol riachtanach ag an nóta seo den chineál Render HTML le go bhfeidhmeoidh sé i gceart.",
-    "note_detail_render_help_2": "Úsáidtear cineál nóta HTML rindreála le haghaidh <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scriptithe</a>. Go hachomair, tá nóta cóid HTML agat (le roinnt JavaScript más féidir) agus déanfaidh an nóta seo é a rindreáil. Chun go n-oibreoidh sé, ní mór duit <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">gaol</a> ar a dtugtar \"renderNote\" a shainiú ag pointeáil chuig an nóta HTML atá le rindreáil."
   },
   "backend_log": {
     "refresh": "Athnuachan"
@@ -1590,7 +1586,8 @@
     "description": "Cur síos",
     "reload_app": "Athlódáil an aip chun na hathruithe a chur i bhfeidhm",
     "set_all_to_default": "Socraigh gach aicearra go dtí an réamhshocrú",
-    "confirm_reset": "An bhfuil tú cinnte gur mhaith leat na haicearraí méarchláir go léir a athshocrú go dtí an rogha réamhshocraithe?"
+    "confirm_reset": "An bhfuil tú cinnte gur mhaith leat na haicearraí méarchláir go léir a athshocrú go dtí an rogha réamhshocraithe?",
+    "no_results": "Níor aimsíodh aon aicearraí a mheaitseálann '{{filter}}'"
   },
   "spellcheck": {
     "title": "Seiceáil Litrithe",
@@ -1808,7 +1805,9 @@
     "print_report_collection_content_many": "Níorbh fhéidir {{count}} nótaí sa bhailiúchán a phriontáil mar nach dtacaítear leo nó mar go bhfuil siad faoi chosaint.",
     "print_report_collection_content_other": "Níorbh fhéidir {{count}} nótaí sa bhailiúchán a phriontáil mar nach dtacaítear leo nó mar go bhfuil siad faoi chosaint.",
     "print_report_collection_details_button": "Féach sonraí",
-    "print_report_collection_details_ignored_notes": "Nótaí neamhairdithe"
+    "print_report_collection_details_ignored_notes": "Nótaí neamhairdithe",
+    "print_report_error_title": "Theip ar phriontáil",
+    "print_report_stack_trace": "Rian cruachta"
   },
   "note_title": {
     "placeholder": "clóscríobh teideal an nóta anseo...",
@@ -2109,7 +2108,8 @@
     "raster": "Raster",
     "vector_light": "Veicteoir (Solas)",
     "vector_dark": "Veicteoir (Dorcha)",
-    "show-scale": "Taispeáin scála"
+    "show-scale": "Taispeáin scála",
+    "show-labels": "Taispeáin ainmneacha marcóirí"
   },
   "table_context_menu": {
     "delete_row": "Scrios an tsraith"
@@ -2188,8 +2188,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Leathanach de {{startIndex}} - {{endIndex}}",
-    "total_notes": "{{count}} nótaí"
+    "total_notes": "{{count}} nótaí",
+    "prev_page": "Leathanach roimhe seo",
+    "next_page": "An chéad leathanach eile"
   },
   "collections": {
     "rendering_error": "Ní féidir ábhar a thaispeáint mar gheall ar earráid."
@@ -2329,6 +2330,43 @@
     "url_placeholder": "Cuir isteach nó greamaigh seoladh an tsuímh ghréasáin, mar shampla https://triliumnotes.org",
     "create_button": "Cruthaigh Radharc Gréasáin",
     "invalid_url_title": "Seoladh neamhbhailí",
-    "invalid_url_message": "Cuir isteach seoladh gréasáin bailí, mar shampla https://triliumnotes.org."
+    "invalid_url_message": "Cuir isteach seoladh gréasáin bailí, mar shampla https://triliumnotes.org.",
+    "disabled_description": "Iompórtáladh an radharc gréasáin seo ó fhoinse sheachtrach. Chun cabhrú leat a chosaint ar ábhar fioscaireachta nó mailíseach, níl sé ag lódáil go huathoibríoch. Is féidir leat é a chumasú má tá muinín agat as an bhfoinse.",
+    "disabled_button_enable": "Cumasaigh radharc gréasáin"
+  },
+  "render": {
+    "setup_title": "Taispeáin HTML saincheaptha nó Preact JSX taobh istigh den nóta seo",
+    "setup_create_sample_preact": "Cruthaigh nóta samplach le Preact",
+    "setup_create_sample_html": "Cruthaigh nóta samplach le HTML",
+    "setup_sample_created": "Cruthaíodh nóta samplach mar nóta linbh.",
+    "disabled_description": "Tagann na nótaí rindreála seo ó fhoinse sheachtrach. Chun tú a chosaint ar ábhar mailíseach, níl sé cumasaithe de réir réamhshocraithe. Déan cinnte go bhfuil muinín agat as an bhfoinse sula gcumasaíonn tú é.",
+    "disabled_button_enable": "Cumasaigh nóta rindreála"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Pacáiste deilbhín",
+    "type_backend_script": "Script chúltaca",
+    "type_frontend_script": "Script tosaigh",
+    "type_widget": "Giuirléid",
+    "type_app_css": "CSS saincheaptha",
+    "type_render_note": "Nóta rindreála",
+    "type_web_view": "Radharc gréasáin",
+    "type_app_theme": "Téama saincheaptha",
+    "toggle_tooltip_enable_tooltip": "Cliceáil chun an {{type}} seo a chumasú.",
+    "toggle_tooltip_disable_tooltip": "Cliceáil chun an {{type}} seo a dhíchumasú.",
+    "menu_docs": "Doiciméadú oscailte",
+    "menu_execute_now": "Rith an script anois",
+    "menu_run": "Rith go huathoibríoch",
+    "menu_run_disabled": "De láimh",
+    "menu_run_backend_startup": "Nuair a thosaíonn an cúltaca",
+    "menu_run_hourly": "Gach uair an chloig",
+    "menu_run_daily": "Laethúil",
+    "menu_run_frontend_startup": "Nuair a thosaíonn tosaigh an deisce",
+    "menu_run_mobile_startup": "Nuair a thosaíonn an taobhlíne soghluaiste",
+    "menu_change_to_widget": "Athraigh go giuirléid",
+    "menu_change_to_frontend_script": "Athraigh chuig an script tosaigh",
+    "menu_theme_base": "Bunús téama"
+  },
+  "setup_form": {
+    "more_info": "Foghlaim níos mó"
   }
 }

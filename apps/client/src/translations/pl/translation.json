@@ -261,7 +261,6 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Strona {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} notatek"
   },
   "collections": {
@@ -1431,10 +1430,6 @@
     "enter_title_of_new_note": "Wprowadź tytuł nowej notatki",
     "default_new_note_title": "nowa notatka",
     "click_on_canvas_to_place_new_note": "Kliknij na płótnie, aby umieścić nową notatkę"
-  },
-  "render": {
-    "note_detail_render_help_1": "Ta notatka pomocy jest wyświetlana, ponieważ ta notatka typu Render HTML nie ma wymaganej relacji do poprawnego działania.",
-    "note_detail_render_help_2": "Typ notatki Render HTML jest używany do <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">skryptowania</a>. W skrócie, masz notatkę kodu HTML (opcjonalnie z JavaScript) i ta notatka ją wyrenderuje. Aby to zadziałało, musisz zdefiniować <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relację</a> o nazwie \"renderNote\" wskazującą na notatkę HTML do wyrenderowania."
   },
   "backend_log": {
     "refresh": "Odśwież"

@@ -47,6 +47,7 @@ export default function GlobalMenu({ isHorizontalLayout }: { isHorizontalLayout:
         >
             {isMobile() && <>
                 <MenuItem command="searchNotes" icon="bx bx-search" text={t("global_menu.search_notes")} />
+                <MenuItem command="showRecentChanges" icon="bx bx-history" text={t("recent_changes.title")} />
                 <FormDropdownDivider />
             </>}
 

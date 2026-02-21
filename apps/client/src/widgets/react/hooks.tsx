@@ -551,7 +551,12 @@ export function useNoteRelation(note: FNote | undefined | null, relationName: Re
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         for (const attr of loadResults.getAttributeRows()) {
             if (attr.type === "relation" && attr.name === relationName && attributes.isAffecting(attr, note)) {
-                setRelationValue(attr.value ?? null);
+                if (!attr.isDeleted) {
+                    setRelationValue(attr.value ?? null);
+                } else {
+                    setRelationValue(null);
+                }
+                break;
             }
         }
     });
@@ -601,6 +606,7 @@ export function useNoteLabel(note: FNote | undefined | null, labelName: FilterLa
                 } else {
                     setLabelValue(null);
                 }
+                break;
             }
         }
     });
@@ -1208,6 +1214,12 @@ export function useNoteTitle(noteId: string | undefined, parentNoteId: string | 
         refresh();
     });
 
+    // React to external changes.
+    useTriliumEvent("entitiesReloaded", useCallback(({ loadResults }) => {
+        if (loadResults.isNoteReloaded(noteId) || (parentNoteId && loadResults.getBranchRows().some(b => b.noteId === noteId && b.parentNoteId === parentNoteId))) {
+            refresh();
+        }
+    }, [noteId, parentNoteId, refresh]));
     return title;
 }
 

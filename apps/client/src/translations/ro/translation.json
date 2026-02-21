@@ -1094,10 +1094,6 @@
     "rename_relation_from": "Redenumește relația din",
     "to": "În"
   },
-  "render": {
-    "note_detail_render_help_1": "Această notă informativă este afișată deoarece această notiță de tip „Randare HTML” nu are relația necesară pentru a funcționa corespunzător.",
-    "note_detail_render_help_2": "Notița de tipul „Render HTML” este utilizată pentru <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scriptare</a>. Pe scurt, se folosește o notiță de tip cod HTML (opțional cu niște JavaScript) și această notiță o va randa. Pentru a funcționa, trebuie definită o <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relație</a> denumită „renderNote” ce indică notița HTML de randat."
-  },
   "revisions": {
     "confirm_delete": "Doriți ștergerea acestei revizii?",
     "confirm_delete_all": "Doriți ștergerea tuturor reviziilor acestei notițe?",
@@ -2155,7 +2151,6 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Pagina pentru {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} notițe"
   },
   "collections": {

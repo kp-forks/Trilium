@@ -1,15 +1,15 @@
-import BAttribute from "../becca/entities/battribute.js";
-import BBranch from "../becca/entities/bbranch.js";
 import type { HiddenSubtreeItem } from "@triliumnext/commons";
+import { t } from "i18next";
 
 import becca from "../becca/becca.js";
-import noteService from "./notes.js";
-import log from "./log.js";
-import migrationService from "./migration.js";
-import { t } from "i18next";
-import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
+import BAttribute from "../becca/entities/battribute.js";
+import BBranch from "../becca/entities/bbranch.js";
 import buildLaunchBarConfig from "./hidden_subtree_launcherbar.js";
 import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
+import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
+import log from "./log.js";
+import migrationService from "./migration.js";
+import noteService from "./notes.js";
 
 export const LBTPL_ROOT = "_lbTplRoot";
 export const LBTPL_BASE = "_lbTplBase";
@@ -350,7 +350,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             noteId: item.id,
             title: item.title,
             type: item.type,
-            parentNoteId: parentNoteId,
+            parentNoteId,
             content: item.content ?? "",
             ignoreForbiddenParents: true
         }));
@@ -372,7 +372,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
                 log.info(`Creating missing branch for note ${item.id} under parent ${parentNoteId}.`);
                 branch = new BBranch({
                     noteId: item.id,
-                    parentNoteId: parentNoteId,
+                    parentNoteId,
                     notePosition: item.notePosition !== undefined ? item.notePosition : undefined,
                     isExpanded: item.isExpanded !== undefined ? item.isExpanded : false
                 }).save();
@@ -454,6 +454,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             // Remove unwanted attributes.
             const attrDef = attrs.find(a => a.name === attribute.name);
             if (!attrDef) {
+                console.log(`Removing unwanted attribute ${attribute.name} where expected attrs are ${attrs.map(a => a.name).join(", ")}`);
                 attribute.markAsDeleted();
                 continue;
             }
@@ -466,7 +467,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
     }
 
     for (const attr of attrs) {
-        const attrId = note.noteId + "_" + attr.type.charAt(0) + attr.name;
+        const attrId = `${note.noteId  }_${  attr.type.charAt(0)  }${attr.name}`;
 
         const existingAttribute = note.getAttributes().find((attr) => attr.attributeId === attrId);
 

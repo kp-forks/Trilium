@@ -158,5 +158,14 @@ describe("Hidden Subtree", () => {
             cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
             expect(hiddenSubtree.hasLabel("excludeFromNoteMap")).toBeFalsy();
         });
+
+        it("cleans up attribute change in templates", () => {
+            const template = becca.getNoteOrThrow("_template_table");
+            cls.init(() => {
+                template.setLabel("subtreeHidden", "foo");
+                hiddenSubtreeService.checkHiddenSubtree();
+            });
+            expect(template.getLabelValue("subtreeHidden")).toBe("false");
+        });
     });
 });
