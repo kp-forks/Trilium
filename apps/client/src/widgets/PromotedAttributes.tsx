@@ -10,7 +10,6 @@ import FAttribute from "../entities/fattribute";
 import FNote from "../entities/fnote";
 import { Attribute } from "../services/attribute_parser";
 import attributes from "../services/attributes";
-import debounce from "../services/debounce";
 import { t } from "../services/i18n";
 import { DefinitionObject, extractAttributeDefinitionTypeAndName, LabelType } from "../services/promoted_attribute_definition_parser";
 import server from "../services/server";
@@ -185,9 +184,11 @@ const LABEL_MAPPINGS: Record<LabelType, HTMLInputTypeAttribute> = {
 
 function LabelInput({ inputId, ...props }: CellProps & { inputId: string }) {
     const { valueName, valueAttr, definition, definitionAttr } = props.cell;
+    const [ valueDraft, setDraft ] = useState(valueAttr.value);
     const onChangeListener = buildPromotedAttributeLabelChangedListener({...props});
     const extraInputProps: InputHTMLAttributes = {};
 
+    // Setup autocomplete.
     useEffect(() => {
         if (definition.labelType === "text") {
             const el = document.getElementById(inputId);
@@ -196,6 +197,11 @@ function LabelInput({ inputId, ...props }: CellProps & { inputId: string }) {
             }
         }
     }, [ inputId, valueAttr, onChangeListener ]);
+
+    // React to model changes.
+    useEffect(() => {
+        setDraft(valueAttr.value);
+    }, [ valueAttr.value ]);
 
     switch (definition.labelType) {
         case "number": {
@@ -217,13 +223,13 @@ function LabelInput({ inputId, ...props }: CellProps & { inputId: string }) {
         tabIndex={200 + definitionAttr.position}
         id={inputId}
         type={LABEL_MAPPINGS[definition.labelType ?? "text"]}
-        value={valueAttr.value}
+        value={valueDraft}
         checked={definition.labelType === "boolean" ? valueAttr.value === "true" : undefined}
         placeholder={t("promoted_attributes.unset-field-placeholder")}
         data-attribute-id={valueAttr.attributeId}
         data-attribute-type={valueAttr.type}
         data-attribute-name={valueAttr.name}
-        onChange={onChangeListener}
+        onBlur={onChangeListener}
         {...extraInputProps}
     />;
 
@@ -438,7 +444,7 @@ function setupTextLabelAutocomplete(el: HTMLInputElement, valueAttr: Attribute, 
 }
 
 function buildPromotedAttributeLabelChangedListener({ note, cell, componentId, setCells }: CellProps): OnChangeListener {
-    async function onChange(e: OnChangeEventData) {
+    return async function(e: OnChangeEventData) {
         const inputEl = e.target as HTMLInputElement;
         let value: string;
 
@@ -449,9 +455,7 @@ function buildPromotedAttributeLabelChangedListener({ note, cell, componentId, s
         }
 
         await updateAttribute(note, cell, componentId, value, setCells);
-    }
-
-    return debounce(onChange, 250);
+    };
 }
 
 async function updateAttribute(note: FNote, cell: Cell, componentId: string, value: string | undefined, setCells: Dispatch<StateUpdater<Cell[] | undefined>>) {
