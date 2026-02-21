@@ -862,10 +862,10 @@ importers:
         version: 10.28.4
       preact-iso:
         specifier: 2.11.1
-        version: 2.11.1(preact-render-to-string@6.6.5(preact@10.28.4))(preact@10.28.4)
+        version: 2.11.1(preact-render-to-string@6.6.6(preact@10.28.4))(preact@10.28.4)
       preact-render-to-string:
-        specifier: 6.6.5
-        version: 6.6.5(preact@10.28.4)
+        specifier: 6.6.6
+        version: 6.6.6(preact@10.28.4)
       react-i18next:
         specifier: 16.5.4
         version: 16.5.4(i18next@25.8.11(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
@@ -12446,8 +12446,8 @@ packages:
       preact: 10.28.4
       preact-render-to-string: '>=6.4.0'
 
-  preact-render-to-string@6.6.5:
-    resolution: {integrity: sha512-O6MHzYNIKYaiSX3bOw0gGZfEbOmlIDtDfWwN1JJdc/T3ihzRT6tGGSEWE088dWrEDGa1u7101q+6fzQnO9XCPA==}
+  preact-render-to-string@6.6.6:
+    resolution: {integrity: sha512-EfqZJytnjJldV+YaaqhthU2oXsEf5e+6rDv957p+zxAvNfFLQOPfvBOTncscQ+akzu6Wrl7s3Pa0LjUQmWJsGQ==}
     peerDependencies:
       preact: 10.28.4
 
@@ -15990,8 +15990,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.4.0
       '@ckeditor/ckeditor5-upload': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-ai@47.4.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
@@ -16339,8 +16337,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-decoupled@47.4.0':
     dependencies:
@@ -16467,8 +16463,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-font@47.4.0':
     dependencies:
@@ -16543,8 +16537,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       '@ckeditor/ckeditor5-widget': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-html-embed@47.4.0':
     dependencies:
@@ -16679,6 +16671,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-markdown-gfm@47.4.0':
     dependencies:
@@ -16958,8 +16952,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-special-characters@47.4.0':
     dependencies:
@@ -17091,7 +17083,6 @@ snapshots:
       ckeditor5: 47.4.0
     transitivePeerDependencies:
       - bufferutil
-      - supports-color
       - utf-8-validate
 
   '@ckeditor/ckeditor5-utils@47.4.0':
@@ -29337,12 +29328,12 @@ snapshots:
 
   powershell-utils@0.1.0: {}
 
-  preact-iso@2.11.1(preact-render-to-string@6.6.5(preact@10.28.4))(preact@10.28.4):
+  preact-iso@2.11.1(preact-render-to-string@6.6.6(preact@10.28.4))(preact@10.28.4):
     dependencies:
       preact: 10.28.4
-      preact-render-to-string: 6.6.5(preact@10.28.4)
+      preact-render-to-string: 6.6.6(preact@10.28.4)
 
-  preact-render-to-string@6.6.5(preact@10.28.4):
+  preact-render-to-string@6.6.6(preact@10.28.4):
     dependencies:
       preact: 10.28.4
 
