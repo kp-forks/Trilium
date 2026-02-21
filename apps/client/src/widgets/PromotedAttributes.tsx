@@ -37,7 +37,7 @@ interface CellProps {
 }
 
 type OnChangeEventData = TargetedEvent<HTMLInputElement, Event> | InputEvent | JQuery.TriggeredEvent<HTMLInputElement, undefined, HTMLInputElement, HTMLInputElement>;
-type OnChangeListener = (e: OnChangeEventData) => Promise<void>;
+type OnChangeListener = (e: OnChangeEventData) => void | Promise<void>;
 
 export default function PromotedAttributes() {
     const { note, componentId, noteContext } = useNoteContext();
@@ -200,7 +200,11 @@ function LabelInput(props: CellProps & { inputId: string }) {
     }, [ cell, componentId, note, setCells ]);
     const extraInputProps: InputHTMLAttributes = {};
 
-    useTextLabelAutocomplete(inputId, valueAttr, definition, onChangeListener);
+    useTextLabelAutocomplete(inputId, valueAttr, definition, (e) => {
+        if (e.currentTarget instanceof HTMLInputElement) {
+            setDraft(e.currentTarget.value);
+        }
+    });
 
     // React to model changes.
     useEffect(() => {
