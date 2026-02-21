@@ -32,6 +32,12 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
     display: flex;
     align-items: center;
     margin-block: 0;
+
+    .note-icon-widget {
+        display: flex;
+        align-items: center;
+        margin-inline-start: 0;
+    }
 }
 
 .modal.popup-editor-dialog .modal-header .note-title-widget {
@@ -91,8 +97,9 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
     height: 100%;
 }
 
-.modal.popup-editor-dialog .note-detail-editable-text {
-    padding: 0 1em;
+.modal.popup-editor-dialog .note-detail-editable-text-editor {
+    margin: 0 28px;
+    overflow: visible; /* Allow selection rectangle to go outside of the editor area */
 }
 
 .modal.popup-editor-dialog .note-detail-file {

@@ -1,13 +1,14 @@
 import Draggabilly, { type MoveVector } from "draggabilly";
-import { t } from "../services/i18n.js";
-import BasicWidget from "./basic_widget.js";
-import contextMenu from "../menus/context_menu.js";
-import utils from "../services/utils.js";
-import keyboardActionService from "../services/keyboard_actions.js";
-import appContext, { type CommandNames, type CommandListenerData, type EventData } from "../components/app_context.js";
-import froca from "../services/froca.js";
-import attributeService from "../services/attributes.js";
+
+import appContext, { type CommandListenerData, type CommandNames, type EventData } from "../components/app_context.js";
 import type NoteContext from "../components/note_context.js";
+import contextMenu from "../menus/context_menu.js";
+import attributeService from "../services/attributes.js";
+import froca from "../services/froca.js";
+import { t } from "../services/i18n.js";
+import keyboardActionService from "../services/keyboard_actions.js";
+import utils from "../services/utils.js";
+import BasicWidget from "./basic_widget.js";
 import { setupHorizontalScrollViaWheel } from "./widget_utils.js";
 
 const isDesktop = utils.isDesktop();
@@ -96,7 +97,6 @@ const TAB_ROW_TPL = `
     .tab-row-filler {
         box-sizing: border-box;
         -webkit-app-region: drag;
-        height: 100%;
         min-width: ${MIN_FILLER_WIDTH}px;
         flex-grow: 1;
     }
