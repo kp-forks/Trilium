@@ -12,7 +12,7 @@ function getInboxNote(req: Request) {
 
 function getDayNote(req: Request) {
     const calendarRootId = req.query.calendarRootId;
-    const calendarRoot = calendarRootId ? becca.getNoteOrThrow(String(calendarRootId)) : null;
+    const calendarRoot = typeof calendarRootId === "string" ? becca.getNoteOrThrow(calendarRootId) : null;
     return dateNoteService.getDayNote(req.params.date, calendarRoot);
 }
 

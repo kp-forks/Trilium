@@ -465,6 +465,7 @@ function useTextLabelAutocomplete(inputId: string, valueAttr: Attribute, definit
 }
 
 async function updateAttribute(note: FNote, cell: Cell, componentId: string, value: string | undefined, setCells: Dispatch<StateUpdater<Cell[] | undefined>>) {
+    if (value === cell.valueAttr.value) return;
     const { attributeId } = await server.put<UpdateAttributeResponse>(
         `notes/${note.noteId}/attribute`,
         {
