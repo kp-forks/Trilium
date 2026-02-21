@@ -7,3 +7,8 @@
 .search-result-widget .note-list {
     padding: 10px;
 }
+
+.note-split.type-search .scrolling-container {
+    display: flex;
+    flex-direction: column;
+}
