@@ -1,4 +1,5 @@
 import { dayjs } from "@triliumnext/commons";
+
 import type { FNoteRow } from "../entities/fnote.js";
 import froca from "./froca.js";
 import server from "./server.js";
@@ -14,8 +15,13 @@ async function getTodayNote() {
     return await getDayNote(dayjs().format("YYYY-MM-DD"));
 }
 
-async function getDayNote(date: string) {
-    const note = await server.get<FNoteRow>(`special-notes/days/${date}`, "date-note");
+async function getDayNote(date: string, calendarRootId?: string) {
+    let url = `special-notes/days/${date}`;
+    if (calendarRootId) {
+        url += `?calendarRootId=${calendarRootId}`;
+    }
+
+    const note = await server.get<FNoteRow>(url, "date-note");
 
     await ws.waitForMaxKnownEntityChangeId();
 

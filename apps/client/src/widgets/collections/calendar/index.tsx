@@ -307,11 +307,11 @@ function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean, c
 
     // Called upon when clicking the day number in the calendar, opens or creates the day note but only if in a calendar root.
     const onDateClick = useCallback(async (e: DateClickArg) => {
-        const eventNote = await date_notes.getDayNote(e.dateStr);
+        const eventNote = await date_notes.getDayNote(e.dateStr, note.noteId);
         if (eventNote) {
             appContext.triggerCommand("openInPopup", { noteIdOrPath: eventNote.noteId });
         }
-    }, []);
+    }, [ note ]);
 
     return {
         select: onCalendarSelection,
