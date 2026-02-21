@@ -1824,7 +1824,8 @@
   },
   "search_result": {
     "no_notes_found": "No notes have been found for given search parameters.",
-    "search_not_executed": "Search has not been executed yet."
+    "search_not_executed": "Search has not been executed yet.",
+    "search_now": "Search now"
   },
   "spacer": {
     "configure_launchbar": "Configure Launchbar"

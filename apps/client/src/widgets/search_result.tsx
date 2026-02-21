@@ -49,10 +49,7 @@ export default function SearchResult() {
         <div className={clsx("search-result-widget", state === undefined && "hidden-ext")}>
             {state === SearchResultState.NOT_EXECUTED && (
                 <NoItems icon="bx bx-file-find" text={t("search_result.search_not_executed")}>
-                    <Button
-                        text="Search now"
-                        triggerCommand="searchNotes"
-                    />
+                    <Button text={t("search_result.search_now")} triggerCommand="searchNotes" />
                 </NoItems>
             )}
 
