@@ -1718,7 +1718,10 @@ class BNote extends AbstractBeccaEntity<BNote> {
     }
 
     getVisibleChildBranches() {
-        return this.getChildBranches().filter((branch) => !branch.getNote().isLabelTruthy("shareHiddenFromTree"));
+        return this.getChildBranches().filter((branch) => {
+            const note = branch.getNote();
+            return !note.isLabelTruthy("shareHiddenFromTree") && !note.noteId.startsWith("_");
+        });
     }
 
     getVisibleChildNotes() {

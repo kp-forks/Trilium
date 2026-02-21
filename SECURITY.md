@@ -10,4 +10,5 @@ Description above is a general rule and may be altered on case by case basis.
 
 ## Reporting a Vulnerability
 
-You can report low severity vulnerabilities as GitHub issues, more severe vulnerabilities should be reported to the email [contact@eliandoran.me](mailto:contact@eliandoran.me)
+* For low severity vulnerabilities, they can be reported as GitHub issues.
+* For severe vulnerabilities, please report it using [GitHub Security Advisories](https://github.com/TriliumNext/Trilium/security/advisories).

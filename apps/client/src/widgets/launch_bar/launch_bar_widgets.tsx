@@ -1,11 +1,15 @@
+import clsx from "clsx";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
+import utils from "../../services/utils";
 import ActionButton, { ActionButtonProps } from "../react/ActionButton";
 import Dropdown, { DropdownProps } from "../react/Dropdown";
 import { useNoteLabel, useNoteProperty } from "../react/hooks";
 import Icon from "../react/Icon";
+
+const cachedIsMobile = utils.isMobile();
 
 export const LaunchBarContext = createContext<{
     isHorizontalLayout: boolean;
@@ -18,14 +22,14 @@ export interface LauncherNoteProps {
     launcherNote: FNote;
 }
 
-export function LaunchBarActionButton(props: Omit<ActionButtonProps, "className" | "noIconActionClass" | "titlePosition">) {
+export function LaunchBarActionButton({ className, ...props }: Omit<ActionButtonProps, "noIconActionClass" | "titlePosition">) {
     const { isHorizontalLayout } = useContext(LaunchBarContext);
 
     return (
         <ActionButton
-            className="button-widget launcher-button"
+            className={clsx("button-widget launcher-button", className)}
             noIconActionClass
-            titlePosition={isHorizontalLayout ? "bottom" : "right"}
+            titlePosition={getTitlePosition(isHorizontalLayout)}
             {...props}
         />
     );
@@ -33,6 +37,7 @@ export function LaunchBarActionButton(props: Omit<ActionButtonProps, "className"
 
 export function LaunchBarDropdownButton({ children, icon, dropdownOptions, ...props }: Pick<DropdownProps, "title" | "children" | "onShown" | "dropdownOptions" | "dropdownRef"> & { icon: string }) {
     const { isHorizontalLayout } = useContext(LaunchBarContext);
+    const titlePosition = getTitlePosition(isHorizontalLayout);
 
     return (
         <Dropdown
@@ -40,14 +45,15 @@ export function LaunchBarDropdownButton({ children, icon, dropdownOptions, ...pr
             buttonClassName="right-dropdown-button launcher-button"
             hideToggleArrow
             text={<Icon icon={icon} />}
-            titlePosition={isHorizontalLayout ? "bottom" : "right"}
+            titlePosition={titlePosition}
             titleOptions={{ animation: false }}
             dropdownOptions={{
                 ...dropdownOptions,
                 popperConfig: {
-                    placement: isHorizontalLayout ? "bottom" : "right"
+                    placement: titlePosition
                 }
             }}
+            mobileBackdrop
             {...props}
         >{children}</Dropdown>
     );
@@ -64,4 +70,11 @@ export function useLauncherIconAndTitle(note: FNote) {
         icon: note.getIcon(),
         title: title ?? ""
     };
+}
+
+function getTitlePosition(isHorizontalLayout: boolean) {
+    if (cachedIsMobile) {
+        return "top";
+    }
+    return isHorizontalLayout ? "bottom" : "right";
 }

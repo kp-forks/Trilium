@@ -1,16 +1,19 @@
-import dateNoteService from "../../services/date_notes.js";
-import sql from "../../services/sql.js";
-import cls from "../../services/cls.js";
-import specialNotesService, { type LauncherType } from "../../services/special_notes.js";
-import becca from "../../becca/becca.js";
 import type { Request } from "express";
+
+import becca from "../../becca/becca.js";
+import cls from "../../services/cls.js";
+import dateNoteService from "../../services/date_notes.js";
+import specialNotesService, { type LauncherType } from "../../services/special_notes.js";
+import sql from "../../services/sql.js";
 
 function getInboxNote(req: Request) {
     return specialNotesService.getInboxNote(req.params.date);
 }
 
 function getDayNote(req: Request) {
-    return dateNoteService.getDayNote(req.params.date);
+    const calendarRootId = req.query.calendarRootId;
+    const calendarRoot = typeof calendarRootId === "string" ? becca.getNoteOrThrow(calendarRootId) : null;
+    return dateNoteService.getDayNote(req.params.date, calendarRoot);
 }
 
 function getWeekFirstDayNote(req: Request) {
@@ -59,9 +62,8 @@ function getDayNotesForMonth(req: Request) {
         }
 
         return result;
-    } else {
-        return sql.getMap(query);
     }
+    return sql.getMap(query);
 }
 
 async function saveSqlConsole(req: Request) {

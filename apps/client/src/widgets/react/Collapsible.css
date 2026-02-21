@@ -3,10 +3,7 @@
         line-height: 1em;
         display: flex;
         align-items: center;
-        appearance: none;
-        background: transparent;
-        border: 0;
-        color: inherit;
+        padding-inline-end: 12px;
 
         .arrow {
             font-size: 1.3em;
@@ -17,21 +14,34 @@
     .collapsible-body {
         height: 0;
         overflow: hidden;
+
+        &.fully-expanded {
+            overflow: visible;
+        }
     }
 
     .collapsible-inner-body {
         padding-top: 0.5em;
+        opacity: 0;
     }
 
     &.expanded {
         .collapsible-title .arrow {
             transform: rotate(90deg);
         }
+
+        .collapsible-inner-body {
+            opacity: 1;
+        }
     }
 
     &.with-transition {
         .collapsible-body {
             transition: height 250ms ease-in;
+        }
+
+        .collapsible-inner-body {
+            transition: opacity 250ms ease-in;
         }
     }
 }

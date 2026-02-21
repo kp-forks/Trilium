@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "preact/hooks";
-import { CommandNames } from "../../components/app_context";
-import { useStaticTooltip } from "./hooks";
-import keyboard_actions from "../../services/keyboard_actions";
 import { HTMLAttributes } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
 
-export interface ActionButtonProps extends Pick<HTMLAttributes<HTMLButtonElement>, "onClick" | "onAuxClick" | "onContextMenu"> {
+import { CommandNames } from "../../components/app_context";
+import keyboard_actions from "../../services/keyboard_actions";
+import { isMobile } from "../../services/utils";
+import { useStaticTooltip } from "./hooks";
+
+export interface ActionButtonProps extends Pick<HTMLAttributes<HTMLButtonElement>, "onClick" | "onAuxClick" | "onContextMenu" | "style"> {
     text: string;
     titlePosition?: "top" | "right" | "bottom" | "left";
     icon: string;
@@ -16,6 +18,8 @@ export interface ActionButtonProps extends Pick<HTMLAttributes<HTMLButtonElement
     disabled?: boolean;
 }
 
+const cachedIsMobile = isMobile();
+
 export default function ActionButton({ text, icon, className, triggerCommand, titlePosition, noIconActionClass, frame, active, disabled, ...restProps }: ActionButtonProps) {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [ keyboardShortcut, setKeyboardShortcut ] = useState<string[]>();
@@ -24,6 +28,7 @@ export default function ActionButton({ text, icon, className, triggerCommand, ti
         title: keyboardShortcut?.length ? `${text} (${keyboardShortcut?.join(",")})` : text,
         placement: titlePosition ?? "bottom",
         fallbackPlacements: [ titlePosition ?? "bottom" ],
+        trigger: cachedIsMobile ? "focus" : "hover focus",
         animation: false
     });
 

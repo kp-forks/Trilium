@@ -1,9 +1,13 @@
-import type { ComponentChildren, RefObject } from "preact";
-import type { CSSProperties } from "preact/compat";
-import { useMemo } from "preact/hooks";
+import type { ComponentChildren, CSSProperties, RefObject } from "preact";
 import { memo } from "preact/compat";
+import { useMemo } from "preact/hooks";
+
 import { CommandNames } from "../../components/app_context";
+import { isDesktop, isMobile } from "../../services/utils";
+import ActionButton from "./ActionButton";
 import Icon from "./Icon";
+
+const cachedIsMobile = isMobile();
 
 export interface ButtonProps {
     name?: string;
@@ -15,7 +19,7 @@ export interface ButtonProps {
     keyboardShortcut?: string;
     /** Called when the button is clicked. If not set, the button will submit the form (if any). */
     onClick?: () => void;
-    primary?: boolean;
+    kind?: "primary" | "secondary" | "lowProfile";
     disabled?: boolean;
     size?: "normal" | "small" | "micro";
     style?: CSSProperties;
@@ -23,15 +27,23 @@ export interface ButtonProps {
     title?: string;
 }
 
-const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortcut, icon, primary, disabled, size, style, triggerCommand, ...restProps }: ButtonProps) => {
+const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortcut, icon, kind, disabled, size, style, triggerCommand, ...restProps }: ButtonProps) => {
     // Memoize classes array to prevent recreation
     const classes = useMemo(() => {
         const classList: string[] = ["btn"];
-        if (primary) {
-            classList.push("btn-primary");
-        } else {
-            classList.push("btn-secondary");
+
+        switch(kind) {
+            case "primary":
+                classList.push("btn-primary");
+                break;
+            case "lowProfile":
+                classList.push("tn-low-profile");
+                break;
+            default:
+                classList.push("btn-secondary");
+                break;
         }
+
         if (className) {
             classList.push(className);
         }
@@ -41,11 +53,11 @@ const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortc
             classList.push("btn-micro");
         }
         return classList.join(" ");
-    }, [primary, className, size]);
+    }, [kind, className, size]);
 
     // Memoize keyboard shortcut rendering
     const shortcutElements = useMemo(() => {
-        if (!keyboardShortcut) return null;
+        if (!keyboardShortcut || cachedIsMobile) return null;
         const splitShortcut = keyboardShortcut.split("+");
         return splitShortcut.map((key, index) => (
             <>
@@ -78,7 +90,7 @@ export function ButtonGroup({ children }: { children: ComponentChildren }) {
         <div className="btn-group" role="group">
             {children}
         </div>
-    )
+    );
 }
 
 export function SplitButton({ text, icon, children, ...restProps }: {
@@ -103,7 +115,17 @@ export function SplitButton({ text, icon, children, ...restProps }: {
                 {children}
             </ul>
         </ButtonGroup>
-    )
+    );
+}
+
+export function ButtonOrActionButton(props: {
+    text: string;
+    icon: string;
+} & Pick<ButtonProps, "onClick" | "triggerCommand" | "disabled" | "title">) {
+    if (isDesktop()) {
+        return <Button {...props} />;
+    }
+    return <ActionButton {...props} />;
 }
 
 export default Button;
