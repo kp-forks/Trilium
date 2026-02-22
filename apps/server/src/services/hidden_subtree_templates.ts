@@ -4,7 +4,8 @@ import { t } from "i18next";
 export default function buildHiddenSubtreeTemplates() {
     const hideSubtreeAttributes: HiddenSubtreeAttribute = {
         name: "subtreeHidden",
-        type: "label"
+        type: "label",
+        value: "false"
     };
 
     const templates: HiddenSubtreeItem = {
@@ -316,6 +317,12 @@ export default function buildHiddenSubtreeTemplates() {
             }
         ]
     };
+
+    // Enforce attributes.
+    templates.enforceAttributes = true;
+    for (const template of templates.children ?? []) {
+        template.enforceAttributes = true;
+    }
 
     return templates;
 }

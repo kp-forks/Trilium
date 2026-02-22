@@ -457,6 +457,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             // Remove unwanted attributes.
             const attrDef = attrs.find(a => a.name === attribute.name);
             if (!attrDef) {
+                console.log(`Removing unwanted attribute ${attribute.name} where expected attrs are ${attrs.map(a => a.name).join(", ")}`);
                 attribute.markAsDeleted();
                 continue;
             }

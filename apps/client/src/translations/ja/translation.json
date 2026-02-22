@@ -1282,7 +1282,8 @@
   },
   "search_result": {
     "no_notes_found": "指定された検索パラメータに該当するノートは見つかりませんでした。",
-    "search_not_executed": "検索はまだ実行されていません。上の「検索」ボタンをクリックすると、検索結果が表示されます。"
+    "search_not_executed": "検索はまだ実行されていません。",
+    "search_now": "今すぐ検索"
   },
   "sql_result": {
     "no_rows": "このクエリでは行が返されませんでした",

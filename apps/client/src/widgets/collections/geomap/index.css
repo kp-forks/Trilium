@@ -7,12 +7,7 @@
 
   > .collection-properties {
     position: relative;
-    z-index: 998;
   }
-}
-
-body.mobile .geo-view > .collection-properties {
-    z-index: 2500;
 }
 
 .geo-map-container {
