@@ -2,6 +2,7 @@ import { deferred, LOCALES } from "@triliumnext/commons";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import becca from "../becca/becca.js";
+import becca_loader from "../becca/becca_loader.js";
 import branches from "./branches.js";
 import cls from "./cls.js";
 import hiddenSubtreeService from "./hidden_subtree.js";
@@ -172,22 +173,24 @@ describe("Hidden Subtree", () => {
         it("cleans up item to be deleted", async () => {
             const noteId = "_lbLlmChat";
             let llmNote = becca.getNote(noteId);
-            if (!llmNote) {
-                llmNote = notes.createNewNote({
-                    parentNoteId: "_lbVisibleLaunchers",
-                    noteId,
-                    title: "LLM chat",
-                    type: "launcher",
-                    content: ""
-                }).note;
-            }
 
-            cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
-            expect(llmNote.isDeleted).toBeTruthy();
+            cls.init(() => {
+                if (!llmNote) {
+                    llmNote = notes.createNewNote({
+                        parentNoteId: "_lbVisibleLaunchers",
+                        noteId,
+                        title: "LLM chat",
+                        type: "launcher",
+                        content: ""
+                    }).note;
+                }
 
-            // Check twice for idempotency.
-            cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
-            expect(llmNote.isDeleted).toBeTruthy();
+                hiddenSubtreeService.checkHiddenSubtree();
+                becca_loader.reload("test");
+            });
+
+            llmNote = becca.getNote(noteId);
+            expect(llmNote).toBeFalsy();
         });
     });
 });

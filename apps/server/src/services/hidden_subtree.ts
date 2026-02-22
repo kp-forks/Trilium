@@ -4,6 +4,7 @@ import { t } from "i18next";
 import becca from "../becca/becca.js";
 import BAttribute from "../becca/entities/battribute.js";
 import BBranch from "../becca/entities/bbranch.js";
+import BNote from "../becca/entities/bnote.js";
 import buildLaunchBarConfig from "./hidden_subtree_launcherbar.js";
 import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
 import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
@@ -246,7 +247,7 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { id: "_optionsEtapi", title: t("hidden-subtree.etapi-title"), type: "contentWidget", icon: "bx-extension" },
                     { id: "_optionsBackup", title: t("hidden-subtree.backup-title"), type: "contentWidget", icon: "bx-data" },
                     { id: "_optionsSync", title: t("hidden-subtree.sync-title"), type: "contentWidget", icon: "bx-wifi" },
-
+                    { id: "_optionsAi", title: "AI Chat", type: "contentWidget", enforceDeleted: true },
                     { id: "_optionsOther", title: t("hidden-subtree.other"), type: "contentWidget", icon: "bx-dots-horizontal" },
                     { id: "_optionsLocalization", title: t("hidden-subtree.localization"), type: "contentWidget", icon: "bx-world" },
                     { id: "_optionsAdvanced", title: t("hidden-subtree.advanced-title"), type: "contentWidget" }
@@ -341,8 +342,13 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
         throw new Error(`ID has to start with underscore, given '${item.id}'`);
     }
 
-    let note = becca.notes[item.id];
-    let branch;
+    let note = becca.notes[item.id] as BNote | undefined;
+    let branch: BBranch | undefined;
+
+    if (item.enforceDeleted) {
+        note?.deleteNote();
+        return;
+    }
 
     if (!note) {
         // Missing item, add it.
@@ -363,9 +369,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             note.setContent(item.content);
         }
 
-        if (item.enforceDeleted) {
-            note.deleteNote();
-        } else if (item.enforceBranches || item.id.startsWith("_help")) {
+        if (item.enforceBranches || item.id.startsWith("_help")) {
             // Clean up any branches that shouldn't exist according to the meta definition
             // For hidden subtree notes, we want to ensure they only exist in their designated locations
 
