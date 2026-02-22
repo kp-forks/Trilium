@@ -58,6 +58,10 @@ export interface HiddenSubtreeItem {
      */
     enforceAttributes?: boolean;
     /**
+     * If set to true, if a note with the same ID is found, it will be deleted. This is useful to deactivate features in future versions, for example the launch bar.
+     */
+    enforceDeleted?: boolean;
+    /**
      * Optionally, a content to be set in the hidden note. If undefined, an empty string will be set instead.
      *
      * The value is also checked at every startup to ensure that it's kept up to date according to the definition.

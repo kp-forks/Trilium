@@ -1,15 +1,15 @@
-import BAttribute from "../becca/entities/battribute.js";
-import BBranch from "../becca/entities/bbranch.js";
 import type { HiddenSubtreeItem } from "@triliumnext/commons";
+import { t } from "i18next";
 
 import becca from "../becca/becca.js";
-import noteService from "./notes.js";
-import log from "./log.js";
-import migrationService from "./migration.js";
-import { t } from "i18next";
-import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
+import BAttribute from "../becca/entities/battribute.js";
+import BBranch from "../becca/entities/bbranch.js";
 import buildLaunchBarConfig from "./hidden_subtree_launcherbar.js";
 import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
+import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
+import log from "./log.js";
+import migrationService from "./migration.js";
+import noteService from "./notes.js";
 
 export const LBTPL_ROOT = "_lbTplRoot";
 export const LBTPL_BASE = "_lbTplBase";
@@ -350,7 +350,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             noteId: item.id,
             title: item.title,
             type: item.type,
-            parentNoteId: parentNoteId,
+            parentNoteId,
             content: item.content ?? "",
             ignoreForbiddenParents: true
         }));
@@ -363,16 +363,19 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             note.setContent(item.content);
         }
 
-        // Clean up any branches that shouldn't exist according to the meta definition
-        // For hidden subtree notes, we want to ensure they only exist in their designated locations
-        if (item.enforceBranches || item.id.startsWith("_help")) {
+        if (item.enforceDeleted) {
+            note.deleteNote();
+        } else if (item.enforceBranches || item.id.startsWith("_help")) {
+            // Clean up any branches that shouldn't exist according to the meta definition
+            // For hidden subtree notes, we want to ensure they only exist in their designated locations
+
             // If the note exists but doesn't have a branch in the expected parent,
             // create the missing branch to ensure it's in the correct location
             if (!branch) {
                 log.info(`Creating missing branch for note ${item.id} under parent ${parentNoteId}.`);
                 branch = new BBranch({
                     noteId: item.id,
-                    parentNoteId: parentNoteId,
+                    parentNoteId,
                     notePosition: item.notePosition !== undefined ? item.notePosition : undefined,
                     isExpanded: item.isExpanded !== undefined ? item.isExpanded : false
                 }).save();
@@ -417,7 +420,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
         } else if (item.targetNoteId) {
             attrs.push({ type: "relation", name: "template", value: LBTPL_NOTE_LAUNCHER });
             attrs.push({ type: "relation", name: "target", value: item.targetNoteId });
-        } else {
+        } else if (!item.enforceDeleted) {
             throw new Error(`No action defined for launcher ${JSON.stringify(item)}`);
         }
     }
@@ -466,7 +469,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
     }
 
     for (const attr of attrs) {
-        const attrId = note.noteId + "_" + attr.type.charAt(0) + attr.name;
+        const attrId = `${note.noteId}_${attr.type.charAt(0)}${attr.name}`;
 
         const existingAttribute = note.getAttributes().find((attr) => attr.attributeId === attrId);
 

@@ -6,6 +6,7 @@ import branches from "./branches.js";
 import cls from "./cls.js";
 import hiddenSubtreeService from "./hidden_subtree.js";
 import { changeLanguage } from "./i18n.js";
+import notes from "./notes.js";
 import sql_init from "./sql_init.js";
 
 describe("Hidden Subtree", () => {
@@ -157,6 +158,27 @@ describe("Hidden Subtree", () => {
             expect(hiddenSubtree.hasLabel("excludeFromNoteMap")).toBeTruthy();
             cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
             expect(hiddenSubtree.hasLabel("excludeFromNoteMap")).toBeFalsy();
+        });
+
+        it("cleans up item to be deleted", async () => {
+            const noteId = "_lbLlmChat";
+            let llmNote = becca.getNote(noteId);
+            if (!llmNote) {
+                llmNote = notes.createNewNote({
+                    parentNoteId: "_lbVisibleLaunchers",
+                    noteId,
+                    title: "LLM chat",
+                    type: "launcher",
+                    content: ""
+                }).note;
+            }
+
+            cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
+            expect(llmNote.isDeleted).toBeTruthy();
+
+            // Check twice for idempotency.
+            cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
+            expect(llmNote.isDeleted).toBeTruthy();
         });
     });
 });
