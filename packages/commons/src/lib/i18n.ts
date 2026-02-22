@@ -21,6 +21,7 @@ const UNSORTED_LOCALES = [
     { id: "fr", name: "Français", electronLocale: "fr" },
     { id: "ga", name: "Gaeilge", electronLocale: "en" },
     { id: "it", name: "Italiano", electronLocale: "it" },
+    { id: "hi", name: "हिन्दी", electronLocale: "hi" },
     { id: "ja", name: "日本語", electronLocale: "ja" },
     { id: "pt_br", name: "Português (Brasil)", electronLocale: "pt_BR" },
     { id: "pt", name: "Português (Portugal)", electronLocale: "pt_PT" },

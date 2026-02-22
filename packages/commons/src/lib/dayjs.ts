@@ -44,6 +44,7 @@ export const DAYJS_LOADER: Record<LOCALE_IDS, () => Promise<typeof import("dayjs
     "ga": () => import("dayjs/locale/ga.js"),
     "it": () => import("dayjs/locale/it.js"),
     "he": () => import("dayjs/locale/he.js"),
+    "hi": () => import("dayjs/locale/hi.js"),
     "ja": () => import("dayjs/locale/ja.js"),
     "ku": () => import("dayjs/locale/ku.js"),
     "pt_br": () => import("dayjs/locale/pt-br.js"),

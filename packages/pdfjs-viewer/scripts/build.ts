@@ -11,7 +11,8 @@ const watchMode = process.argv.includes("--watch");
 
 const LOCALE_MAPPINGS: Record<string, string> = {
     "es": "es-ES",
-    "ga": "ga-IE"
+    "ga": "ga-IE",
+    "hi": "hi-IN"
 };
 
 async function main() {
