@@ -121,7 +121,6 @@
     "multi-factor-authentication-title": "MFA",
     "backup-title": "Резервное копирование",
     "sync-title": "Синхронизация",
-    "ai-llm-title": "AI/LLM",
     "other": "Прочее",
     "advanced-title": "Расширенные настройки",
     "inbox-title": "Входящие",
@@ -156,7 +155,6 @@
     "go-to-previous-note-title": "К предыдущей заметке",
     "go-to-next-note-title": "К следующей заметке",
     "open-today-journal-note-title": "Открыть сегодняшнюю заметку в журнале",
-    "llm-chat-title": "ИИ чат с заметками",
     "zen-mode": "Режим \"Дзен\"",
     "command-palette": "Открыть панель команд"
   },

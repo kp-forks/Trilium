@@ -110,7 +110,6 @@
     "protected-session-title": "보호된 세션",
     "sync-status-title": "동기화 상태",
     "settings-title": "설정",
-    "llm-chat-title": "기록과 대화하기",
     "options-title": "옵션",
     "appearance-title": "모양",
     "shortcuts-title": "바로가기",
@@ -123,7 +122,6 @@
     "etapi-title": "ETAPI",
     "backup-title": "백업",
     "sync-title": "동기화",
-    "ai-llm-title": "AI/LLM",
     "other": "기타",
     "advanced-title": "고급"
   }

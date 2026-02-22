@@ -2,10 +2,12 @@ import { deferred, LOCALES } from "@triliumnext/commons";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import becca from "../becca/becca.js";
+import becca_loader from "../becca/becca_loader.js";
 import branches from "./branches.js";
 import cls from "./cls.js";
 import hiddenSubtreeService from "./hidden_subtree.js";
 import { changeLanguage } from "./i18n.js";
+import notes from "./notes.js";
 import sql_init from "./sql_init.js";
 
 describe("Hidden Subtree", () => {
@@ -114,7 +116,7 @@ describe("Hidden Subtree", () => {
         });
 
         it("maintains launchers hidden, if they were shown by default but moved by the user", () => {
-            const launcher = becca.getNote("_lbLlmChat");
+            const launcher = becca.getNote("_lbCalendar");
             const branch = launcher?.getParentBranches()[0];
             expect(branch).toBeDefined();
             expect(branch!.parentNoteId).toBe("_lbVisibleLaunchers");
@@ -166,6 +168,29 @@ describe("Hidden Subtree", () => {
                 hiddenSubtreeService.checkHiddenSubtree();
             });
             expect(template.getLabelValue("subtreeHidden")).toBe("false");
+        });
+
+        it("cleans up item to be deleted", async () => {
+            const noteId = "_lbLlmChat";
+            let llmNote = becca.getNote(noteId);
+
+            cls.init(() => {
+                if (!llmNote) {
+                    llmNote = notes.createNewNote({
+                        parentNoteId: "_lbVisibleLaunchers",
+                        noteId,
+                        title: "LLM chat",
+                        type: "launcher",
+                        content: ""
+                    }).note;
+                }
+
+                hiddenSubtreeService.checkHiddenSubtree();
+                becca_loader.reload("test");
+            });
+
+            llmNote = becca.getNote(noteId);
+            expect(llmNote).toBeFalsy();
         });
     });
 });

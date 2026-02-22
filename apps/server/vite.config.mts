@@ -29,6 +29,6 @@ export default defineConfig(() => ({
       reporter: [ "text", "html" ]
     },
     pool: "vmForks",
-    maxWorkers: 4
+    maxWorkers: 3
   },
 }));
