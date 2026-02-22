@@ -4,6 +4,25 @@ import { JSX } from "preact";
 import { useContext } from "preact/hooks";
 import clsx from "clsx";
 
+// #region Card Frame
+
+export interface CardFrameProps {
+    className?: string;
+    highlightOnHover?: boolean;
+    children: ComponentChildren;
+}
+
+export function CardFrame(props: CardFrameProps) {
+    return <div className={clsx("tn-card-frame", props.className, {
+                    "tn-card-highlight-on-hover": props.highlightOnHover
+                })}>
+
+        {props.children}
+    </div>;
+}
+
+// #endregion
+
 // #region Card
 
 export interface CardProps {
@@ -45,7 +64,7 @@ export function CardSection(props: {children: ComponentChildren} & CardSectionPr
     return <>
         <section className={clsx("tn-card-section", props.className, {
                     "tn-card-section-nested": nestingLevel > 0,
-                    "tn-card-section-highlight-on-hover": props.highlightOnHover || props.onAction
+                    "tn-card-highlight-on-hover": props.highlightOnHover || props.onAction
                  })}
                  style={{"--tn-card-section-nesting-level": (nestingLevel) ? nestingLevel : null}}
                  onClick={props.onAction}>
