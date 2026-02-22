@@ -428,9 +428,9 @@
     "run_on_note_content_change": "Wird ausgeführt, wenn der Inhalt einer Notiz geändert wird (einschließlich der Erstellung von Notizen).",
     "run_on_note_change": "Wird ausgeführt, wenn eine Notiz geändert wird (einschließlich der Erstellung von Notizen). Enthält keine Inhaltsänderungen",
     "run_on_note_deletion": "Wird ausgeführt, wenn eine Notiz gelöscht wird",
-    "run_on_branch_creation": "wird ausgeführt, wenn ein Zweig erstellt wird. Der Zweig ist eine Verbindung zwischen der übergeordneten Notiz und der untergeordneten Notiz und wird z. B. erstellt. beim Klonen oder Verschieben von Notizen.",
+    "run_on_branch_creation": "wird ausgeführt, wenn ein Zweig erstellt wird. Der Zweig ist eine Verbindung zwischen der übergeordneten und der untergeordneten Notiz und wird z. B. beim Klonen oder Verschieben von Notizen erstellt.",
     "run_on_branch_change": "wird ausgeführt, wenn ein Zweig aktualisiert wird.",
-    "run_on_branch_deletion": "wird ausgeführt, wenn ein Zweig gelöscht wird. Der Zweig ist eine Verknüpfung zwischen der übergeordneten Notiz und der untergeordneten Notiz und wird z. B. gelöscht. beim Verschieben der Notiz (alter Zweig/Link wird gelöscht).",
+    "run_on_branch_deletion": "wird ausgeführt, wenn ein Zweig gelöscht wird. Der Zweig ist eine Verknüpfung zwischen der übergeordneten und der untergeordneten Notiz und wird z. B. beim Verschieben der Notiz gelöscht (alter Zweig/Link wird gelöscht).",
     "run_on_attribute_creation": "wird ausgeführt, wenn für die Notiz ein neues Attribut erstellt wird, das diese Beziehung definiert",
     "run_on_attribute_change": " wird ausgeführt, wenn das Attribut einer Notiz geändert wird, die diese Beziehung definiert. Dies wird auch ausgelöst, wenn das Attribut gelöscht wird",
     "relation_template": "Die Attribute der Notiz werden auch ohne eine Hierarchische-Beziehung vererbt. Der Inhalt und der Zweig werden den Instanznotizen hinzugefügt, wenn sie leer sind. Einzelheiten findest du in der Dokumentation.",
@@ -801,7 +801,7 @@
     "expand_tooltip": "Erweitert die direkten Unterelemente dieser Sammlung (eine Ebene tiefer). Für weitere Optionen auf den Pfeil rechts klicken.",
     "expand_first_level": "Direkte Unterelemente erweitern",
     "expand_nth_level": "{{depth}} Ebenen erweitern",
-    "hide_child_notes": "Unternotizen im Baum ausblenden"
+    "hide_child_notes": "Untergeordnete Notizen im Baum ausblenden"
   },
   "edited_notes": {
     "no_edited_notes_found": "An diesem Tag wurden noch keine Notizen bearbeitet...",
@@ -1007,7 +1007,7 @@
     "no_attachments": "Diese Notiz enthält keine Anhänge."
   },
   "book": {
-    "no_children_help": "Diese Sammlung enthält keineUnternotizen, daher gibt es nichts anzuzeigen.",
+    "no_children_help": "Diese Sammlung enthält keine untergeordnete Notizen, daher gibt es nichts anzuzeigen.",
     "drag_locked_title": "Für Bearbeitung gesperrt",
     "drag_locked_message": "Das Ziehen ist nicht möglich, da die Sammlung für die Bearbeitung gesperrt ist."
   },
@@ -1187,7 +1187,7 @@
     "tooltip_code_note_syntax": "Code-Notizen"
   },
   "vim_key_bindings": {
-    "use_vim_keybindings_in_code_notes": "Verwende VIM-Tastenkombinationen in Codenotizen (kein Ex-Modus)",
+    "use_vim_keybindings_in_code_notes": "Vim Tastenbelegung",
     "enable_vim_keybindings": "Aktiviere Vim-Tastenkombinationen"
   },
   "wrap_lines": {
@@ -1439,7 +1439,7 @@
     "open-in-a-new-tab": "In neuem Tab öffnen",
     "open-in-a-new-split": "In neuem Split öffnen",
     "insert-note-after": "Notiz dahinter einfügen",
-    "insert-child-note": "Unternotiz einfügen",
+    "insert-child-note": "Untergeordnete Notiz einfügen",
     "delete": "Löschen",
     "search-in-subtree": "Im Zweig suchen",
     "hoist-note": "Notiz-Fokus setzen",
@@ -1558,7 +1558,7 @@
     "saved-search-note-refreshed": "Gespeicherte Such-Notiz wurde aktualisiert.",
     "hoist-this-note-workspace": "Diese Notiz fokussieren (Arbeitsbereich)",
     "refresh-saved-search-results": "Gespeicherte Suchergebnisse aktualisieren",
-    "create-child-note": "Unternotiz anlegen",
+    "create-child-note": "Untergeordnete Notiz anlegen",
     "unhoist": "Fokus verlassen",
     "toggle-sidebar": "Seitenleiste ein-/ausblenden",
     "dropping-not-allowed": "Ablegen von Notizen an dieser Stelle ist nicht zulässig.",
@@ -1569,7 +1569,7 @@
     "subtree-hidden-tooltip_one": "{{count}} untergeordnete Notiz, die im Baum ausgeblendet ist",
     "subtree-hidden-tooltip_other": "{{count}} untergeordnete Notizen, die im Baum ausgeblendet sind",
     "subtree-hidden-moved-title": "Zu {{title}} hinzugefügt",
-    "subtree-hidden-moved-description-collection": "Diese Sammlung blendet ihre Unternotizen im Baum aus.",
+    "subtree-hidden-moved-description-collection": "Diese Sammlung blendet ihre untergeordneten Notizen im Baum aus.",
     "subtree-hidden-moved-description-other": "Untergeordnete Notizen sind im Baum für diese Notiz ausgeblendet."
   },
   "title_bar_buttons": {
@@ -1600,7 +1600,8 @@
   },
   "search_result": {
     "no_notes_found": "Es wurden keine Notizen mit den angegebenen Suchparametern gefunden.",
-    "search_not_executed": "Die Suche wurde noch nicht ausgeführt. Klicke oben auf „Suchen“, um die Ergebnisse anzuzeigen."
+    "search_not_executed": "Die Suche wurde noch nicht ausgeführt.",
+    "search_now": "Jetzt suchen"
   },
   "spacer": {
     "configure_launchbar": "Starterleiste konfigurieren"
@@ -1756,7 +1757,7 @@
   },
   "note_autocomplete": {
     "search-for": "Suche nach \"{{term}}\"",
-    "create-note": "Erstelle und verlinke Unternotiz \"{{term}}\"",
+    "create-note": "Erstelle und verlinke untergeordnete Notiz \"{{term}}\"",
     "insert-external-link": "Einfügen von Externen Link zu \"{{term}}\"",
     "clear-text-field": "Textfeldinhalt löschen",
     "show-recent-notes": "Aktuelle Notizen anzeigen",
@@ -1767,7 +1768,7 @@
     "quick-edit": "Schnellbearbeitung"
   },
   "geo-map": {
-    "create-child-note-title": "Neue Unternotiz anlegen und zur Karte hinzufügen",
+    "create-child-note-title": "Neue untergeordnete Notiz anlegen und zur Karte hinzufügen",
     "create-child-note-instruction": "Auf die Karte klicken, um eine neue Notiz an der Stelle zu erstellen oder Escape drücken um abzubrechen.",
     "unable-to-load-map": "Karte konnte nicht geladen werden.",
     "create-child-note-text": "Marker hinzufügen"
@@ -1971,7 +1972,7 @@
     "no_totp_secret_warning": "Um TOTP zu aktivieren, muss zunächst ein TOTP Geheimnis generiert werden.",
     "totp_secret_description_warning": "Nach der Generierung des TOTP Geheimnisses ist eine Neuanmeldung mit dem TOTP Geheimnis erforderlich.",
     "totp_secret_generated": "TOTP Geheimnis generiert",
-    "totp_secret_warning": "Bitte speichere das TOTP Geheimnis an einem sicheren Ort. Es wird nicht noch einmal angezeigt.",
+    "totp_secret_warning": "Bitte speichere das generierte Geheimnis an einem sicheren Ort. Es wird nicht noch einmal angezeigt.",
     "totp_secret_regenerate_confirm": "Möchten Sie das TOTP-Geheimnis wirklich neu generieren? Dadurch werden das bisherige TOTP-Geheimnis und alle vorhandenen Wiederherstellungscodes ungültig.",
     "recovery_keys_title": "Einmalige Wiederherstellungsschlüssel",
     "recovery_keys_description": "Einmalige Wiederherstellungsschlüssel werden verwendet, um sich anzumelden, falls Sie keinen Zugriff auf Ihre Authentifizierungscodes haben.",
@@ -2069,7 +2070,7 @@
     "show-hide-columns": "Zeige/verberge Spalten",
     "row-insert-above": "Zeile oberhalb einfügen",
     "row-insert-below": "Zeile unterhalb einfügen",
-    "row-insert-child": "Unternotiz einfügen",
+    "row-insert-child": "Untergeordnete Notiz einfügen",
     "add-column-to-the-left": "Spalte links einfügen",
     "add-column-to-the-right": "Spalte rechts einfügen",
     "edit-column": "Spalte editieren",
@@ -2154,7 +2155,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} Notizen"
+    "total_notes": "{{count}} Notizen",
+    "prev_page": "Vorherige Seite",
+    "next_page": "Nächste Seite"
   },
   "collections": {
     "rendering_error": "Aufgrund eines Fehlers können keine Inhalte angezeigt werden."
@@ -2200,7 +2203,7 @@
     "hoisted_badge_title": "Abgesenkt",
     "workspace_badge": "Arbeitsfläche",
     "scroll_to_top_title": "Zum Anfang der Notiz springen",
-    "create_new_note": "Neue Unternotiz erstellen",
+    "create_new_note": "Neue untergeordnete Notiz erstellen",
     "empty_hide_archived_notes": "Archivierte Notizen ausblenden"
   },
   "breadcrumb_badges": {
