@@ -67,7 +67,7 @@ function Launcher({ note, isHorizontalLayout }: { note: FNote, isHorizontalLayou
         case "builtinWidget":
             return initBuiltinWidget(note, isHorizontalLayout);
         default:
-            throw new Error(`Unrecognized launcher type '${launcherType}' for launcher '${note.noteId}' title '${note.title}'`);
+            console.warn(`Unrecognized launcher type '${launcherType}' for launcher '${note.noteId}' title '${note.title}'`);
     }
 }
 
@@ -99,7 +99,7 @@ function initBuiltinWidget(note: FNote, isHorizontalLayout: boolean) {
         case "mobileTabSwitcher":
             return <TabSwitcher />;
         default:
-            throw new Error(`Unrecognized builtin widget ${builtinWidget} for launcher ${note.noteId} "${note.title}"`);
+            console.warn(`Unrecognized builtin widget ${builtinWidget} for launcher ${note.noteId} "${note.title}"`);
     }
 }
 
