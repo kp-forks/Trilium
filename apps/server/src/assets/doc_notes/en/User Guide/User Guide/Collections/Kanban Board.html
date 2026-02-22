@@ -28,15 +28,14 @@
   <li>To reorder a column, simply hold the mouse over the title and drag it
     to the desired position.</li>
   <li>To delete a column, right click on its title and select <em>Delete column</em>.</li>
-  <li
- >To rename a column, click on the note title.
+  <li>To rename a column, click on the note title.
     <ul>
       <li>Press Enter to confirm.</li>
       <li>Upon renaming a column, the corresponding status attribute of all its
         notes will be changed in bulk.</li>
     </ul>
-    </li>
-    <li>If there are many columns, use the mouse wheel to scroll.</li>
+  </li>
+  <li>If there are many columns, use the mouse wheel to scroll.</li>
 </ul>
 <h3>Working with notes</h3>
 <ul>
@@ -80,16 +79,14 @@
   href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>.</p>
 <ol>
   <li>Select the desired note in the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>.</li>
-  <li
- >Hold the mouse on the note and drag it to the to the desired column.</li>
+  <li>Hold the mouse on the note and drag it to the to the desired column.</li>
 </ol>
 <p>This works for:</p>
 <ul>
   <li>Notes that are not children of the board, case in which a <a href="#root/_help_IakOLONlIfGI">clone</a> will
     be created.</li>
   <li>Notes that are children of the board, but not yet assigned on the board.</li>
-  <li
- >Notes that are children of the board, case in which they will be moved
+  <li>Notes that are children of the board, case in which they will be moved
     to the new column.</li>
 </ul>
 <h3>Keyboard interaction</h3>
@@ -99,10 +96,9 @@
     column titles, notes and the “New item” button for each of the columns,
     in sequential order.</li>
   <li>To rename a column or a note, press <kbd>F2</kbd> while it is focused.</li>
-  <li
- >To open a specific note or create a new item, press <kbd>Enter</kbd> while
+  <li>To open a specific note or create a new item, press <kbd>Enter</kbd> while
     it is focused.</li>
-    <li>To dismiss a rename of a note or a column, press <kbd>Escape</kbd>.</li>
+  <li>To dismiss a rename of a note or a column, press <kbd>Escape</kbd>.</li>
 </ul>
 <h2>Configuration</h2>
 <h3>Displaying custom attributes</h3>
@@ -118,9 +114,8 @@
 <ol>
   <li>Go to board note.</li>
   <li>In the ribbon select <em>Owned Attributes</em> → plus button → <em>Add new label/relation definition</em>.</li>
-  <li
- >Configure the attribute as desired.</li>
-    <li>Check <em>Inheritable</em> to make it applicable to child notes automatically.</li>
+  <li>Configure the attribute as desired.</li>
+  <li>Check <em>Inheritable</em> to make it applicable to child notes automatically.</li>
 </ol>
 <p>After creating the attribute, click on a note and fill in the promoted
   attributes which should then reflect inside the board.</p>
@@ -131,15 +126,13 @@
     assigning a custom name.</li>
   <li>Both “Single value” and “Multi value” attributes are supported. In case
     of multi-value, a badge is displayed for every instance of the attribute.</li>
-  <li
- >All label types are supported, including dates, booleans and URLs.</li>
-    <li
-   >Relation attributes are also supported as well, showing a link with the
-      target note title and icon.</li>
-      <li>Currently, it's not possible to adjust which promoted attributes are displayed,
-        since all promoted attributes will be displayed (except the <code spellcheck="false">board:groupBy</code> one).
-        There are plans to improve upon this being able to hide promoted attributes
-        individually.</li>
+  <li>All label types are supported, including dates, booleans and URLs.</li>
+  <li>Relation attributes are also supported as well, showing a link with the
+    target note title and icon.</li>
+  <li>Currently, it's not possible to adjust which promoted attributes are displayed,
+    since all promoted attributes will be displayed (except the <code spellcheck="false">board:groupBy</code> one).
+    There are plans to improve upon this being able to hide promoted attributes
+    individually.</li>
 </ul>
 <h3>Grouping by another label</h3>
 <p>By default, the label used to group the notes is <code spellcheck="false">#status</code>.
@@ -157,33 +150,36 @@
 <ul>
   <li>The columns represent the <em>target notes</em> of a relation.</li>
   <li>When creating a new column, a note is selected instead of a column name.</li>
-  <li
- >The column icon will match the target note.</li>
-    <li>Moving notes between columns will change its relation.</li>
-    <li>Renaming an existing column will change the target note of all the notes
-      in that column.</li>
+  <li>The column icon will match the target note.</li>
+  <li>Moving notes between columns will change its relation.</li>
+  <li>Renaming an existing column will change the target note of all the notes
+    in that column.</li>
 </ul>
 <p>Using relations instead of labels has some benefits:</p>
 <ul>
   <li>The status/grouping of the notes is visible outside the Kanban board,
     for example on the&nbsp;<a class="reference-link" href="#root/_help_bdUJEHsAPYQR">Note Map</a>.</li>
-  <li
- >Columns can have icons.</li>
-    <li>Renaming columns is less intensive since it simply involves changing the
-      note title of the target note instead of having to do a bulk rename.</li>
+  <li>Columns can have icons.</li>
+  <li>Renaming columns is less intensive since it simply involves changing the
+    note title of the target note instead of having to do a bulk rename.</li>
 </ul>
 <p>To do so:</p>
 <ol>
-  <li>First, create a Kanban board from scratch and not a template:</li>
-  <li
- >Assign <code spellcheck="false">#viewType=board #hidePromotedAttributes</code> to
-    emulate the default template.</li>
-    <li>Set <code spellcheck="false">#board:groupBy</code> to the name of a relation
+  <li>
+    <p>First, create a Kanban board from scratch and not a template:</p>
+  </li>
+  <li>
+    <p>Assign <code spellcheck="false">#viewType=board #hidePromotedAttributes</code> to
+      emulate the default template.</p>
+  </li>
+  <li>
+    <p>Set <code spellcheck="false">#board:groupBy</code> to the name of a relation
       to group by, <strong>including the</strong>  <code spellcheck="false">~</code>  <strong>prefix</strong> (e.g.
       <code
-      spellcheck="false">~status</code>).</li>
-    <li>
-      <p>Optionally, use&nbsp;<a class="reference-link" href="#root/_help_OFXdgB2nNk1F">Promoted Attributes</a>&nbsp;for
-        easy status change within the note:</p><pre><code class="language-text-x-trilium-auto">#relation:status(inheritable)="promoted,alias=Status,single"</code></pre>
-    </li>
+      spellcheck="false">~status</code>).</p>
+  </li>
+  <li>
+    <p>Optionally, use&nbsp;<a class="reference-link" href="#root/_help_OFXdgB2nNk1F">Promoted Attributes</a>&nbsp;for
+      easy status change within the note:</p><pre><code class="language-text-x-trilium-auto">#relation:status(inheritable)="promoted,alias=Status,single"</code></pre>
+  </li>
 </ol>
