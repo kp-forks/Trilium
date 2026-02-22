@@ -246,17 +246,14 @@
 
 /* #region Grid view */
 
-.note-book-card {
+.note-list .note-book-card {
     --note-list-horizontal-padding: 22px;
     --note-list-vertical-padding: 15px;
-    
+
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     flex-grow: 1;
-    border: 1px solid var(--card-border-color) !important;
-    border-radius: 12px;
-    background-color: var(--card-background-color, var(--accented-background-color));
     padding: 0;
     overflow: hidden;
     user-select: none;

@@ -1,5 +1,5 @@
 import "./ListOrGridView.css";
-import { Card, CardSection } from "../../react/Card";
+import { Card, CardFrame, CardSection } from "../../react/Card";
 
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
@@ -160,7 +160,7 @@ function GridNoteCard(props: GridNoteCardProps) {
     const notePath = getNotePath(props.parentNote, props.note);
 
     return (
-        <div className={clsx("note-book-card", "no-tooltip-preview", "block-link", {
+        <CardFrame className={clsx("note-book-card", "no-tooltip-preview", "block-link", {
                 "archived": props.note.isArchived
              })}
              data-href={`#${notePath}`}
@@ -182,7 +182,7 @@ function GridNoteCard(props: GridNoteCardProps) {
                          highlightedTokens={props.highlightedTokens}
                          includeArchivedNotes={props.includeArchived}
             />
-        </div>
+        </CardFrame>
     );
 }
 
