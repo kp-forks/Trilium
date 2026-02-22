@@ -1,23 +1,24 @@
 import "./Card.css";
 import { ComponentChildren, createContext } from "preact";
-import { JSX } from "preact";
+import { JSX, HTMLAttributes } from "preact";
 import { useContext } from "preact/hooks";
 import clsx from "clsx";
 
 // #region Card Frame
 
-export interface CardFrameProps {
+export interface CardFrameProps extends HTMLAttributes<HTMLDivElement> {
     className?: string;
     highlightOnHover?: boolean;
     children: ComponentChildren;
 }
 
-export function CardFrame(props: CardFrameProps) {
-    return <div className={clsx("tn-card-frame", props.className, {
-                    "tn-card-highlight-on-hover": props.highlightOnHover
+export function CardFrame({className, highlightOnHover, children, ...rest}: CardFrameProps) {
+    return <div {...rest}
+                className={clsx("tn-card-frame", className, {
+                    "tn-card-highlight-on-hover": highlightOnHover
                 })}>
 
-        {props.children}
+        {children}
     </div>;
 }
 
