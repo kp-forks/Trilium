@@ -264,7 +264,7 @@
         transition: background-color 200ms ease-out;
     }
 
-    &:active {
+    &:not(:has(.note-book-item-menu:active)):active {
         transform: scale(.98);
     }
 
