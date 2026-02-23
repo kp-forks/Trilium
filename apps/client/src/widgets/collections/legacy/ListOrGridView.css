@@ -271,7 +271,7 @@
         transition: background-color 200ms ease-out;
     }
 
-    &:not(:has(.note-book-item-menu:active)):active {
+    &:not(:has(:is(.note-book-item-menu:active, .btn-primary:active))):active {
         transform: scale(.98);
     }
 
@@ -281,7 +281,7 @@
 
     .note-book-header {
         margin-bottom: 0;
-        border-bottom: 1px solid var(--main-border-color);
+        border-bottom: 1px solid var(--card-border-color, var(--main-border-color));
         padding-bottom: .5rem;
         word-break: break-all;
         flex-shrink: 0;
@@ -335,6 +335,10 @@
 
                 &:hover {
                     background: var(--more-accented-background-color);
+                }
+
+                &:active {
+                    transform: none;
                 }
             }
         }
