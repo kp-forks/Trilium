@@ -9,7 +9,7 @@ import Button from "../react/Button";
 import "./Pagination.css";
 import clsx from "clsx";
 
-interface PaginationContext {
+export interface PaginationContext {
     className?: string;
     page: number;
     setPage: Dispatch<StateUpdater<number>>;
