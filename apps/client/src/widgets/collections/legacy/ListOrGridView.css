@@ -278,7 +278,7 @@
         padding-bottom: .5rem;
         word-break: break-all;
         flex-shrink: 0;
-        padding: .5em 1em;
+        padding: .5rem 1rem;
         padding-inline-end: 8px;
         border-bottom-color: var(--card-border-color);
 
@@ -377,17 +377,14 @@ body.mobile .note-list.grid-view .note-book-card {
         width: 25%;
     }
 
-    .rendered-content {
-        padding: 1rem;
+    .rendered-content,
+    .rendered-content.text-with-ellipsis {
+        padding: .5rem 1rem 1rem 1rem;
     }
 
     &.type-image .rendered-content,
     &.type-pdf .rendered-content {
         padding: 0;
-    }
-
-    .rendered-content.text-with-ellipsis {
-        padding: 1rem !important;
     }
 
     h1, h2, h3, h4, h5, h6 {
