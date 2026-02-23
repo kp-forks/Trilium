@@ -181,7 +181,8 @@
     }
 }
 
-.nested-note-list:not(.search-results) h5 {
+.nested-note-list:not(.search-results) h5,
+.note-book-card:not(.search-results) h5 {
     span.tn-icon + span,
     .note-list-attributes {
         white-space: nowrap;
