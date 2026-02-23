@@ -74,7 +74,7 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
 
                 <div className={clsx("note-list-container use-tn-links", {"search-results": (noteType === "search")})}>
                     {pageNotes?.map(childNote => (
-                        <GridNoteCard key={note.noteId}
+                        <GridNoteCard key={childNote.noteId}
                                       note={childNote}
                                       parentNote={note}
                                       highlightedTokens={highlightedTokens}
@@ -153,7 +153,7 @@ interface GridNoteCardProps {
     note: FNote;
     parentNote: FNote;
     highlightedTokens: string[] | null | undefined;
-    includeArchived: boolean
+    includeArchived: boolean;
 }
 
 function GridNoteCard(props: GridNoteCardProps) {
@@ -265,8 +265,8 @@ function NoteChildren({ note, parentNote, highlightedTokens, currentLevel, expan
 
 function NoteMenuButton(props: {notePath: string}) {
     const openMenu = useCallback((e: TargetedMouseEvent<HTMLElement>) => {
-            linkContextMenuService.openContextMenu(props.notePath, e);
-            e.stopPropagation()
+        linkContextMenuService.openContextMenu(props.notePath, e);
+        e.stopPropagation()
     }, [props.notePath]);
 
     return  <ActionButton className="note-book-item-menu"
