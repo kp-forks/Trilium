@@ -6,8 +6,7 @@
       "request": "launch",
       "type": "chrome",
       "url": "http://localhost:8080",
-      "webRoot": "${workspaceFolder}/apps/client",
-      "runtimeExecutable": "${input:pick_chrome_browser}"
+      "webRoot": "${workspaceFolder}/apps/client"
     },
     {
       "name": "Launch server",
@@ -53,13 +52,6 @@
       "type": "promptString",
       "description": "Select Trilum Notes data directory",
       "default": "${workspaceFolder}/apps/server/data"
-    },
-    {
-      "id": "pick_chrome_browser",
-      "type": "pickString",
-      "description": "Select a Chrome browser",
-      "options": ["/usr/bin/chromium-browser", "/usr/bin/google-chrome"],
-      "default": "/usr/bin/chromium-browser"
     }
   ]
 }
