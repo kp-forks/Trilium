@@ -160,14 +160,14 @@ function GridNoteCard(props: GridNoteCardProps) {
     const notePath = getNotePath(props.parentNote, props.note);
 
     return (
-        <CardFrame className={clsx("note-book-card", "no-tooltip-preview", "block-link", {
+        <CardFrame className={clsx("note-book-card", "no-tooltip-preview", "block-link", props.note.getColorClass(), {
                 "archived": props.note.isArchived
              })}
              data-href={`#${notePath}`}
              data-note-id={props.note.noteId}
              onClick={(e) => link.goToLink(e)}
         >
-            <h5 className={clsx("note-book-header", props.note.getColorClass())}>
+            <h5 className={clsx("note-book-header")}>
                 <Icon className="note-icon" icon={props.note.getIcon()} />
                 <NoteLink className="note-book-title"
                           notePath={notePath}

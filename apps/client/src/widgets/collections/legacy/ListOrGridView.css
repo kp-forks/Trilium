@@ -44,7 +44,7 @@
 }
 
 .nested-note-list-item.use-note-color,
-.note-book-header.use-note-color {
+.note-book-card.use-note-color .note-book-header {
     span.tn-icon + span,
     .tn-icon,
     .rendered-note-attributes {
