@@ -107,7 +107,7 @@ export default class NoteWrapperWidget extends FlexContainer<BasicWidget> {
             return true;
         }
 
-        if (note.type === "book" && COLLECTIONS_WITH_BACKGROUND_EFFECTS.includes(note.getLabelValue("viewType") ?? "")) {
+        if (note.type === "book" && COLLECTIONS_WITH_BACKGROUND_EFFECTS.includes(note.getLabelValue("viewType") ?? "none")) {
             return true;
         }
 

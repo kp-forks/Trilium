@@ -176,7 +176,7 @@ function GridNoteCard(props: GridNoteCardProps) {
                           showNotePath={props.parentNote.type === "search"}
                           highlightedTokens={props.highlightedTokens}
                 />
-                {(!props.note.isOptions()) && <NoteMenuButton notePath={notePath} />}
+                {!props.note.isOptions() && <NoteMenuButton notePath={notePath} />}
                 
             </h5>
             <NoteContent note={props.note}
