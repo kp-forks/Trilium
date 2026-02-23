@@ -287,7 +287,6 @@
         flex-shrink: 0;
         padding: .5rem 1rem;
         padding-inline-end: 8px;
-        border-bottom-color: var(--card-border-color);
 
         .tn-icon + span {
             flex-grow: 1;
@@ -329,8 +328,10 @@
                 margin: 0;
                 box-shadow: unset;
                 background: transparent;
+                border: 0;
                 border-radius: 0;
                 padding: 8px;
+                color: var(--main-text-color);
 
                 &:hover {
                     background: var(--more-accented-background-color);
