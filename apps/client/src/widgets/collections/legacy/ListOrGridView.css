@@ -7,6 +7,12 @@
         height: 100%;
         overflow: auto;
     }
+
+    &.grid-view .note-list-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
 }
 
 /* #region List view / Grid view common styles */
@@ -60,6 +66,7 @@
     }
 
     .note-path {
+        opacity: 0.5;
         margin-left: 0;
         font-size: .85em;
         line-height: .85em;
@@ -134,6 +141,10 @@
     }
 }
 
+.note-content-preview:has(.note-book-content:empty) {
+    display: none;
+}
+
 /* #endregion */
 
 /* #region List view */
@@ -157,12 +168,6 @@
 
     .tn-icon {
         color: var(--note-list-view-icon-color);
-    }
-
-    .note-path {
-        margin-left: 0.5em;
-        vertical-align: middle;
-        opacity: 0.5;
     }
 
     .note-list-attributes {
@@ -190,7 +195,6 @@
         text-overflow: ellipsis;
     }
 }
-
 
 /* Note content preview */
 .nested-note-list .note-book-content {
@@ -239,10 +243,6 @@
     }
 }
 
-.note-content-preview:has(.note-book-content:empty) {
-    display: none;
-}
-
 /* #endregion */
 
 /* #region Grid view */
@@ -255,9 +255,15 @@
     flex-direction: column;
     flex-shrink: 0;
     flex-grow: 1;
+    flex-basis: 300px;
+    max-height: 300px;
     padding: 0;
     overflow: hidden;
     user-select: none;
+
+    body.mobile & {
+        flex-basis: 150px;
+    }
 
     &:hover {
         background-color: var(--card-background-hover-color);
@@ -307,6 +313,11 @@
             padding: 0;
         }
 
+        img {
+            max-height: 220px;
+            object-fit: contain;
+        }
+
         .file-footer {
             display: flex;
             gap: 8px;
@@ -327,42 +338,6 @@
             }
         }
     }
-}
-
-.note-list.grid-view .note-list-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.note-list.grid-view .note-book-card {
-    flex-basis: 300px;
-    border: 1px solid transparent;
-}
-
-body.mobile .note-list.grid-view .note-book-card {
-    flex-basis: 150px;
-}
-
-.note-list.grid-view .note-book-card {
-    max-height: 300px;
-}
-
-.note-list.grid-view .note-book-card img {
-    max-height: 220px;
-    object-fit: contain;
-}
-
-.note-list.grid-view .note-book-card:hover {
-    cursor: pointer;
-    border: 1px solid var(--main-border-color);
-    background: var(--more-accented-background-color);
-}
-
-.note-list.grid-view .note-path {
-    margin-left: 0.5em;
-    vertical-align: middle;
-    opacity: 0.5;
 }
 
 .note-book-card .note-book-content {
