@@ -33,7 +33,7 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
         <div className="note-list list-view">
             <CollectionProperties
                 note={note}
-                centerChildren={<Pager {...pagination} />}
+                centerChildren={<Pager className="note-list-top-pager" {...pagination} />}
             />
 
             { noteIds.length > 0 && <div className="note-list-wrapper">
@@ -49,7 +49,7 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
                     ))}
                 </Card>
 
-                <Pager {...pagination} />
+                <Pager className="note-list-bottom-pager" {...pagination} />
             </div>}
         </div>
     );
@@ -66,7 +66,7 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
         <div className="note-list grid-view">
             <CollectionProperties
                 note={note}
-                centerChildren={<Pager {...pagination} />}
+                centerChildren={<Pager className="note-list-top-pager" {...pagination} />}
             />
 
             <div className="note-list-wrapper">
@@ -82,7 +82,7 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
                     ))}
                 </div>
 
-                <Pager {...pagination} />
+                <Pager className="note-list-bottom-pager" {...pagination} />
             </div>
         </div>
     );

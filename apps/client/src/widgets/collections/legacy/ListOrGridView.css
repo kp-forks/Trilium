@@ -13,6 +13,10 @@
         flex-wrap: wrap;
         gap: 10px;
     }
+
+    .note-list-bottom-pager {
+        margin-block: 8px;
+    }
 }
 
 /* #region List view / Grid view common styles */
