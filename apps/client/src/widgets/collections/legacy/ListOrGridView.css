@@ -17,6 +17,10 @@
     .note-list-bottom-pager {
         margin-block: 8px;
     }
+
+    &:not(:has(.note-list-bottom-pager)) {
+        margin-bottom: 48px;
+    }
 }
 
 /* #region List view / Grid view common styles */
