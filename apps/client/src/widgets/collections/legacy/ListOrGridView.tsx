@@ -28,7 +28,7 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const noteType = useNoteProperty(note, "type");
 
-    return <NoteList note={note} viewMode="list" noteIds={noteIds} pagination={pagination}>
+    return <NoteList note={note} viewMode="list-view" noteIds={noteIds} pagination={pagination}>
         <Card className={clsx("nested-note-list", {"search-results": (noteType === "search")})}>
             {pageNotes?.map(childNote => (
                 <ListNoteCard
@@ -62,7 +62,7 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
 
 interface NoteListProps {
     note: FNote,
-    viewMode: "list" | "grid-view",
+    viewMode: "list-view" | "grid-view",
     noteIds: string[],
     pagination: PaginationContext,
     children: ComponentChildren
@@ -72,7 +72,7 @@ function NoteList(props: NoteListProps) {
     const noteType = useNoteProperty(props.note, "type");
     const hasCollectionProperties = ["book", "search"].includes(noteType ?? "");
 
-    return <div className={"note-list " + props.viewMode}>
+    return <div className={clsx("note-list", props.viewMode)}>
         <CollectionProperties
             note={props.note}
             centerChildren={<Pager className="note-list-top-pager" {...props.pagination} />}
