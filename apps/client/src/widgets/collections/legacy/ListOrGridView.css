@@ -374,6 +374,22 @@
         width: 25%;
     }
 
+    .ck-content .table {
+        display: block;
+        overflow-y: scroll;
+        
+        table {
+            width: max-content;
+        }
+
+        figcaption {
+            display: block;
+            position: sticky;
+            left: 0;
+            width: 100%;
+        }
+    }
+
     .rendered-content,
     .rendered-content.text-with-ellipsis {
         padding: .5rem 1rem 1rem 1rem;
