@@ -70,7 +70,7 @@ function usePositioningOniOS(enabled: boolean, wrapperRef: MutableRef<HTMLDivEle
         if (!wrapperRef.current) return;
         const bottom = window.innerHeight - (window.visualViewport?.height || 0);
         wrapperRef.current.style.bottom = `${bottom}px`;
-    }, []);
+    }, [ wrapperRef ]);
 
     useEffect(() => {
         if (!isIOS() || !enabled) return;
@@ -82,7 +82,7 @@ function usePositioningOniOS(enabled: boolean, wrapperRef: MutableRef<HTMLDivEle
             window.visualViewport?.removeEventListener("resize", adjustPosition);
             window.removeEventListener("scroll", adjustPosition);
         };
-    }, [ enabled ]);
+    }, [ enabled, adjustPosition ]);
 }
 
 /**
