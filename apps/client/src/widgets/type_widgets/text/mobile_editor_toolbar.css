@@ -10,13 +10,6 @@ body.mobile {
         flex-shrink: 0;
     }
 
-    #root-widget.ios.virtual-keyboard-opened .classic-toolbar-outer-container {
-        position: absolute;
-        inset-inline-start: 0;
-        inset-inline-end: 0;
-        bottom: 0;
-    }
-
     .classic-toolbar-widget {
         position: absolute;
         bottom: 0;
