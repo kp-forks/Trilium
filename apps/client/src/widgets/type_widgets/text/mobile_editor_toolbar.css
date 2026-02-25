@@ -27,6 +27,7 @@ body.mobile {
         display: flex;
         align-items: flex-end;
         user-select: none;
+        touch-action: pan-x;
         scrollbar-width: 0 !important;
     }
 
