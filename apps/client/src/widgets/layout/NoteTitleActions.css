@@ -8,6 +8,7 @@ body.experimental-feature-new-layout {
         --title-actions-padding-end: var(--content-margin-inline);
 
         display: flex;
+        width: 100%;
         max-width: var(--max-content-width);
         flex-direction: column;
         gap: 0.5em;
