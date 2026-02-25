@@ -66,14 +66,21 @@ export default function MobileEditorToolbar({ inPopupEditor }: MobileEditorToolb
 }
 
 function usePositioningOniOS(enabled: boolean, wrapperRef: MutableRef<HTMLDivElement | null>) {
+    // Capture the baseline offset (Safari nav bar height) before the keyboard opens.
+    const baselineOffset = useRef(window.innerHeight - (window.visualViewport?.height ?? window.innerHeight));
+
     const adjustPosition = useCallback(() => {
         if (!wrapperRef.current) return;
         const viewport = window.visualViewport;
         if (!viewport) return;
-        // Account for both viewport height and its offset within the layout viewport,
-        // which includes the Safari dynamic address bar height and any page scroll.
+        // Subtract the baseline so only the keyboard's contribution remains.
         const bottom = window.innerHeight - viewport.height - viewport.offsetTop;
-        wrapperRef.current.style.bottom = `${Math.max(0, bottom)}px`;
+        if (bottom - baselineOffset.current <= 0) {
+            // Keyboard is hidden — clear the inline style so CSS controls positioning.
+            wrapperRef.current.style.removeProperty("bottom");
+        } else {
+            wrapperRef.current.style.bottom = `${bottom}px`;
+        }
     }, [ wrapperRef ]);
 
     useEffect(() => {
