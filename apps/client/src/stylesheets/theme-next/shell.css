@@ -372,10 +372,6 @@ body[dir=ltr] #launcher-container {
 .calendar-dropdown-widget .calendar-header [data-calendar-input="month"] {
     --input-background-color: transparent;
     --menu-background-color: transparent;
-
-    text-align: center;
-    font-size: 1.4em;
-    font-weight: 300;
 }
 
 .calendar-dropdown-widget .calendar-header input:not(:focus) {
@@ -425,8 +421,6 @@ body[dir=ltr] #launcher-container {
 }
 
 .calendar-dropdown-widget .calendar-week span {
-    font-size: 0.85em;
-    font-weight: 500;
     color: var(--calendar-weekday-labels-color);
 }
 
