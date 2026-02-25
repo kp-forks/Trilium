@@ -68,8 +68,12 @@ export default function MobileEditorToolbar({ inPopupEditor }: MobileEditorToolb
 function usePositioningOniOS(enabled: boolean, wrapperRef: MutableRef<HTMLDivElement | null>) {
     const adjustPosition = useCallback(() => {
         if (!wrapperRef.current) return;
-        const bottom = window.innerHeight - (window.visualViewport?.height || 0);
-        wrapperRef.current.style.bottom = `${bottom}px`;
+        const viewport = window.visualViewport;
+        if (!viewport) return;
+        // Account for both viewport height and its offset within the layout viewport,
+        // which includes the Safari dynamic address bar height and any page scroll.
+        const bottom = window.innerHeight - viewport.height - viewport.offsetTop;
+        wrapperRef.current.style.bottom = `${Math.max(0, bottom)}px`;
     }, [ wrapperRef ]);
 
     useEffect(() => {
