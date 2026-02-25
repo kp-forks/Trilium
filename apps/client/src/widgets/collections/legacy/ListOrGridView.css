@@ -355,7 +355,15 @@
 
 .note-book-card .note-book-content {
     padding: 0;
+    flex: 1;
+    overflow: hidden;
     font-size: 0.8rem;
+
+    &.note-book-content-overflowing {
+        mask-image: linear-gradient(to bottom, black calc(100% - 75px), transparent 100%);
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+    }
     
     .ck-content p {
         margin-bottom: 0.5em;
@@ -364,6 +372,26 @@
 
     .ck-content figure.image {
         width: 25%;
+    }
+
+    .ck-content .table {
+        display: flex;
+        flex-direction: column-reverse;
+        overflow-x: scroll;
+        --scrollbar-thickness: 0;
+        scrollbar-width: none;
+        
+        table {
+            width: max-content;
+            table-layout: auto;
+        }
+
+        figcaption {
+            display: block;
+            position: sticky;
+            left: 0;
+            width: 100%;
+        }
     }
 
     .rendered-content,
