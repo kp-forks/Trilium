@@ -3,7 +3,7 @@ import { LOCALES } from "@triliumnext/commons";
 import { EventData } from "../../components/app_context.js";
 import { getEnabledExperimentalFeatureIds } from "../../services/experimental_features.js";
 import options from "../../services/options.js";
-import utils, { isMobile } from "../../services/utils.js";
+import utils, { isIOS, isMobile } from "../../services/utils.js";
 import { readCssVar } from "../../utils/css-var.js";
 import type BasicWidget from "../basic_widget.js";
 import FlexContainer from "./flex_container.js";
@@ -34,6 +34,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
             window.visualViewport?.addEventListener("resize", () => this.#onMobileResize());
         }
 
+        this.#setDeviceSpecificClasses();
         this.#setMaxContentWidth();
         this.#setMotion();
         this.#setShadows();
@@ -118,6 +119,12 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
         const correspondingLocale = LOCALES.find(l => l.id === locale);
         document.body.lang = locale;
         document.body.dir = correspondingLocale?.rtl ? "rtl" : "ltr";
+    }
+
+    #setDeviceSpecificClasses() {
+        if (isIOS()) {
+            document.body.classList.add("ios");
+        }
     }
 
     #initPWATopbarColor() {
