@@ -5,7 +5,6 @@ body.mobile {
 
     .classic-toolbar-outer-container.visible {
         height: 38px;
-        background-color: var(--main-background-color);
         position: relative;
         overflow: visible;
         flex-shrink: 0;
@@ -40,11 +39,10 @@ body.mobile {
     }
 
     .classic-toolbar-widget .ck.ck-toolbar {
-        --ck-color-toolbar-background: transparent;
+        --ck-color-toolbar-background: var(--main-background-color);
         --ck-color-button-default-background: transparent;
         --ck-color-button-default-disabled-background: transparent;
         position: absolute;
-        background-color: transparent;
         border: none;
     }
 
