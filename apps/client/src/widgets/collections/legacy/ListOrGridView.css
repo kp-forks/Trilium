@@ -377,6 +377,8 @@
     .ck-content .table {
         display: block;
         overflow-y: scroll;
+        --scrollbar-thickness: 0;
+        scrollbar-width: none;
         
         table {
             width: max-content;
