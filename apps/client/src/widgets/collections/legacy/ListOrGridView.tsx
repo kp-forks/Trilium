@@ -21,6 +21,8 @@ import ActionButton from "../../react/ActionButton";
 import linkContextMenuService from "../../../menus/link_context_menu";
 import { ComponentChildren, TargetedMouseEvent } from "preact";
 
+const contentSizeObserver = new ResizeObserver(onContentResized);
+
 export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
     const expandDepth = useExpansionDepth(note);
     const noteIds = useFilteredNoteIds(note, unfilteredNoteIds);
@@ -213,6 +215,17 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
     const [noteType, setNoteType] = useState<string>("none");
 
     useEffect(() => {
+        const contentElement = contentRef.current;
+        if (!contentElement) return;
+
+        contentSizeObserver.observe(contentElement);
+
+        return () => {
+            contentSizeObserver.unobserve(contentElement);
+        }
+    }, []);
+
+    useEffect(() => {
         content_renderer.getRenderedContent(note, {
             trim,
             noChildrenList,
@@ -298,4 +311,11 @@ function useExpansionDepth(note: FNote) {
     }
     return parseInt(expandDepth, 10);
 
+}
+
+function onContentResized(entries: ResizeObserverEntry[], observer: ResizeObserver): void {
+    for (const contentElement of entries) {
+        const isOverflowing = ((contentElement.target.scrollHeight > contentElement.target.clientHeight))
+        contentElement.target.classList.toggle("note-book-content-overflowing", isOverflowing);
+    }
 }
