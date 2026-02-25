@@ -375,7 +375,8 @@
     }
 
     .ck-content .table {
-        display: block;
+        display: flex;
+        flex-direction: column-reverse;
         overflow-y: scroll;
         --scrollbar-thickness: 0;
         scrollbar-width: none;
