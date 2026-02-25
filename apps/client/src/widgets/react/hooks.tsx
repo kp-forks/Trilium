@@ -1391,11 +1391,11 @@ export function useColorScheme() {
     useEffect(() => {
         if (themeStyle !== "auto") return;
         const mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
-        const listener = () => setPrefersDark((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+        const listener = (e: MediaQueryListEvent) => setPrefersDark(e.matches);
 
         mediaQueryList.addEventListener("change", listener);
         return () => mediaQueryList.removeEventListener("change", listener);
-    }, []);
+    }, [ themeStyle ]);
 
     return prefersDark ? "dark" : "light";
 }
