@@ -99,11 +99,20 @@ export default class NoteWrapperWidget extends FlexContainer<BasicWidget> {
             "application/pdf"
         ];
 
+        const COLLECTIONS_WITH_BACKGROUND_EFFECTS = [
+            "grid",
+            "list"
+        ]
+
         if (note.isOptions()) {
             return true;
         }
 
         if (note.type === "file" && MIME_TYPES_WITH_BACKGROUND_EFFECTS.includes(note.mime)) {
+            return true;
+        }
+
+        if (note.type === "book" && COLLECTIONS_WITH_BACKGROUND_EFFECTS.includes(note.getLabelValue("viewType") ?? "none")) {
             return true;
         }
 
