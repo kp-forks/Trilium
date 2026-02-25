@@ -377,12 +377,13 @@
     .ck-content .table {
         display: flex;
         flex-direction: column-reverse;
-        overflow-y: scroll;
+        overflow-x: scroll;
         --scrollbar-thickness: 0;
         scrollbar-width: none;
         
         table {
             width: max-content;
+            table-layout: auto;
         }
 
         figcaption {
