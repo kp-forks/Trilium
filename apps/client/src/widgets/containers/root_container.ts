@@ -73,8 +73,9 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     #initTheme() {
         const colorSchemeChangeObserver = matchMedia("(prefers-color-scheme: dark)")
         colorSchemeChangeObserver.addEventListener("change", () => this.#updateColorScheme());
-        
         this.#updateColorScheme();
+        
+        document.body.setAttribute("data-theme-id", options.get("theme"));
     }
 
     #updateColorScheme() {
