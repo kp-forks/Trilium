@@ -7,7 +7,8 @@ const VARIABLE_WHITELIST = new Set([
     "root-background",
     "main-background-color",
     "main-border-color",
-    "main-text-color"
+    "main-text-color",
+    "theme-style"
 ]);
 
 interface PdfViewerProps extends Pick<HTMLAttributes<HTMLIFrameElement>, "tabIndex"> {
