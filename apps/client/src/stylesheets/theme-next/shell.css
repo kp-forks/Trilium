@@ -839,13 +839,7 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
 }
 
 #left-pane span.fancytree-node.fancytree-selected .fancytree-custom-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 1em;
-    height: 1em;
     margin: 0;
-
 }
 
 #left-pane span.fancytree-node.fancytree-selected .fancytree-custom-icon::before {
