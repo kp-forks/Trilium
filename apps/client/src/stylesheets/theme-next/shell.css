@@ -801,7 +801,8 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
     opacity: 0.5;
 }
 
-#left-pane .tree-item-button {
+#left-pane .tree-item-button,
+#left-pane span.fancytree-node.fancytree-selected .fancytree-custom-icon {
     margin-inline-end: 6px;
     border: unset;
     border-radius: 50%;
@@ -812,7 +813,8 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
         box-shadow 200ms ease-out;
 }
 
-#left-pane .tree-item-button:hover {
+#left-pane .tree-item-button:hover,
+#left-pane span.fancytree-node.fancytree-selected .fancytree-custom-icon:hover {
     background: var(--left-pane-item-action-button-hover-background);
     box-shadow: var(--left-pane-item-action-button-hover-shadow);
     transition:
@@ -820,9 +822,46 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
         box-shadow 100ms ease-in;
 }
 
-#left-pane span.fancytree-node.fancytree-active .tree-item-button:hover {
+#left-pane span.fancytree-node.fancytree-active .tree-item-button:hover,
+#left-pane span.fancytree-node.fancytree-active.fancy-tree-selected .fancytree-custom-icon:hover {
     box-shadow: var(--left-pane-item-selected-action-button-hover-shadow);
 }
+
+/* Selected item bulk action button */
+
+@keyframes bulk-action-button-blink {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: .3;
+    }
+}
+
+#left-pane span.fancytree-node.fancytree-selected .fancytree-custom-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1em;
+    height: 1em;
+    margin: 0;
+
+}
+
+#left-pane span.fancytree-node.fancytree-selected .fancytree-custom-icon::before {
+    border: 0;
+    font-size: .65em;
+}
+
+#left-pane span.fancytree-node.fancytree-selected:hover .fancytree-custom-icon:not(:hover)::before {
+    animation: bulk-action-button-blink 500ms linear infinite alternate;
+}
+
+#left-pane span.fancytree-node.fancytree-selected.protected .fancytree-custom-icon::after {
+    /* Protected note indicator */
+    display: none;
+}
+
 
 #context-menu-container {
     /* The context menu of the tree */

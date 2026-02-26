@@ -202,8 +202,8 @@ span.fancytree-node.fancytree-selected {
 
 span.fancytree-selected .fancytree-custom-icon::before {
     font-family: "boxicons";
-    content: "\eb43";
-    border: 1px solid var(--main-border-color);
+    content: "\ef05";
+    border: 1px solid var(--main-text-color);
     border-radius: 3px;
 }
 
