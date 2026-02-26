@@ -13,6 +13,8 @@ import FlexContainer from "./flex_container.js";
  *
  * For convenience, the root container has a few class selectors that can be used to target some global state:
  *
+ * - `#root-container.light-theme`, indicates whether the current color scheme is light.
+ * - `#root-container.dark-theme`, indicates whether the current color scheme is dark.
  * - `#root-container.virtual-keyboard-opened`, on mobile devices if the virtual keyboard is open.
  * - `#root-container.horizontal-layout`, if the current layout is horizontal.
  * - `#root-container.vertical-layout`, if the current layout is horizontal.
@@ -34,6 +36,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
             window.visualViewport?.addEventListener("resize", () => this.#onMobileResize());
         }
 
+        this.#initTheme();
         this.#setDeviceSpecificClasses();
         this.#setMaxContentWidth();
         this.#setMotion();
@@ -65,6 +68,20 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
 
             this.#setMaxContentWidth();
         }
+    }
+
+    #initTheme() {
+        const colorSchemeChangeObserver = matchMedia("(prefers-color-scheme: dark)")
+        colorSchemeChangeObserver.addEventListener("change", () => this.#updateColorScheme());
+        
+        this.#updateColorScheme();
+    }
+
+    #updateColorScheme() {
+        const colorScheme = readCssVar(document.body, "theme-style").asString();
+        
+        document.body.classList.toggle("light-theme", colorScheme === "light");
+        document.body.classList.toggle("dark-theme", colorScheme === "dark");
     }
 
     #onMobileResize() {
