@@ -13,6 +13,8 @@ import FlexContainer from "./flex_container.js";
  *
  * For convenience, the root container has a few class selectors that can be used to target some global state:
  *
+ * - `#root-container.light-theme`, indicates whether the current color scheme is light.
+ * - `#root-container.dark-theme`, indicates whether the current color scheme is dark.
  * - `#root-container.virtual-keyboard-opened`, on mobile devices if the virtual keyboard is open.
  * - `#root-container.horizontal-layout`, if the current layout is horizontal.
  * - `#root-container.vertical-layout`, if the current layout is horizontal.
