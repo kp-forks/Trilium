@@ -34,6 +34,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
             window.visualViewport?.addEventListener("resize", () => this.#onMobileResize());
         }
 
+        this.#initTheme();
         this.#setDeviceSpecificClasses();
         this.#setMaxContentWidth();
         this.#setMotion();
@@ -65,6 +66,20 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
 
             this.#setMaxContentWidth();
         }
+    }
+
+    #initTheme() {
+        const colorSchemeChangeObserver = matchMedia("(prefers-color-scheme: dark)")
+        colorSchemeChangeObserver.addEventListener("change", () => this.#updateColorScheme());
+        
+        this.#updateColorScheme();
+    }
+
+    #updateColorScheme() {
+        const colorScheme = readCssVar(document.body, "theme-style").asString();
+        
+        document.body.classList.toggle("light-theme", colorScheme === "light");
+        document.body.classList.toggle("dark-theme", colorScheme === "dark");
     }
 
     #onMobileResize() {
