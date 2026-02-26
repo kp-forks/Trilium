@@ -140,10 +140,22 @@ ul.fancytree-container {
     background-color: inherit;
 }
 
+
 .fancytree-custom-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1em;
+    height: 1em;
     font-size: 1.2em;
 }
 
+/* Fallback icon */
+:where(.fancytree-custom-icon)::before {
+    content: "?";
+}
+
+/* Protected note icon badge */
 span.fancytree-node.protected > span.fancytree-custom-icon {
     filter: drop-shadow(2px 2px 2px var(--main-text-color));
 }
