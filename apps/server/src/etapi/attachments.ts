@@ -24,7 +24,7 @@ function register(router: Router) {
         content: [v.isString]
     };
 
-    eu.route<{ attachmentId: string }>(router, "post", "/etapi/attachments", (req, res, next) => {
+    eu.route(router, "post", "/etapi/attachments", (req, res, next) => {
         const _params: Partial<AttachmentRow> = {};
         eu.validateAndPatch(_params, req.body, ALLOWED_PROPERTIES_FOR_CREATE_ATTACHMENT);
         const params = _params as AttachmentRow;

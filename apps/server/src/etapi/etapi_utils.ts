@@ -99,7 +99,6 @@ function getAndCheckAttachment(attachmentId: string) {
         return attachment;
     }
     throw new EtapiError(404, "ATTACHMENT_NOT_FOUND", `Attachment '${attachmentId}' not found.`);
-
 }
 
 function getAndCheckBranch(branchId: string) {

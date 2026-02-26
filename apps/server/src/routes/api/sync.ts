@@ -1,6 +1,4 @@
-
-
-import { type EntityChange,SyncTestResponse } from "@triliumnext/commons";
+import { type EntityChange, SyncTestResponse } from "@triliumnext/commons";
 import type { Request } from "express";
 import { t } from "i18next";
 
@@ -288,10 +286,10 @@ function update(req: Request) {
 
         if (pageIndex !== pageCount - 1) {
             return;
-        } 
+        }
         body = JSON.parse(partialRequests[requestId].payload);
         delete partialRequests[requestId];
-        
+
     }
 
     const { entities, instanceId } = body;
