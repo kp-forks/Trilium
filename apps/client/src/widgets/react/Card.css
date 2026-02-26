@@ -7,7 +7,7 @@
 }
 
 .tn-card-frame,
-.tn-card-section {
+.tn-card-body .tn-card-section {
     padding: var(--card-padding-block) var(--card-padding-inline);
     border: 1px solid var(--card-border-color, var(--main-border-color));
     background: var(--card-background-color);

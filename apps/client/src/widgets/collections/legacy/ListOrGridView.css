@@ -13,6 +13,14 @@
         flex-wrap: wrap;
         gap: 10px;
     }
+
+    .note-list-bottom-pager {
+        margin-block: 8px;
+    }
+
+    &:not(:has(.note-list-bottom-pager)) {
+        margin-bottom: 48px;
+    }
 }
 
 /* #region List view / Grid view common styles */
@@ -107,7 +115,7 @@
 .nested-note-list .note-book-content,
 .note-list-container .note-book-content {
     display: none;
-    animation: note-preview-show .25s ease-out;
+    animation: note-preview-show .35s ease-out;
     will-change: opacity;
 
     &.note-book-content-ready {
@@ -347,7 +355,15 @@
 
 .note-book-card .note-book-content {
     padding: 0;
+    flex: 1;
+    overflow: hidden;
     font-size: 0.8rem;
+
+    &.note-book-content-overflowing {
+        mask-image: linear-gradient(to bottom, black calc(100% - 75px), transparent 100%);
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+    }
     
     .ck-content p {
         margin-bottom: 0.5em;
@@ -358,6 +374,26 @@
         width: 25%;
     }
 
+    .ck-content .table {
+        display: flex;
+        flex-direction: column-reverse;
+        overflow-x: scroll;
+        --scrollbar-thickness: 0;
+        scrollbar-width: none;
+        
+        table {
+            width: max-content;
+            table-layout: auto;
+        }
+
+        figcaption {
+            display: block;
+            position: sticky;
+            left: 0;
+            width: 100%;
+        }
+    }
+
     .rendered-content,
     .rendered-content.text-with-ellipsis {
         padding: .5rem 1rem 1rem 1rem;
@@ -366,6 +402,10 @@
     &.type-image .rendered-content,
     &.type-pdf .rendered-content {
         padding: 0;
+    }
+
+    &.type-video video {
+        max-height: 200px;
     }
 
     h1, h2, h3, h4, h5, h6 {

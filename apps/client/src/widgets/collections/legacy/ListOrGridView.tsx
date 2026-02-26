@@ -13,13 +13,15 @@ import { useImperativeSearchHighlighlighting, useNoteLabel, useNoteLabelBoolean,
 import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
-import { Pager, usePagination } from "../Pagination";
+import { Pager, usePagination, PaginationContext } from "../Pagination";
 import { filterChildNotes, useFilteredNoteIds } from "./utils";
 import { JSX } from "preact/jsx-runtime";
 import { clsx } from "clsx";
 import ActionButton from "../../react/ActionButton";
 import linkContextMenuService from "../../../menus/link_context_menu";
-import { TargetedMouseEvent } from "preact";
+import { ComponentChildren, TargetedMouseEvent } from "preact";
+
+const contentSizeObserver = new ResizeObserver(onContentResized);
 
 export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
     const expandDepth = useExpansionDepth(note);
@@ -27,32 +29,18 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
     const { pageNotes, ...pagination } = usePagination(note, noteIds);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const noteType = useNoteProperty(note, "type");
-    const hasCollectionProperties = [ "book", "search" ].includes(noteType ?? "");
 
-    return (
-        <div className="note-list list-view">
-            <CollectionProperties
-                note={note}
-                centerChildren={<Pager {...pagination} />}
-            />
-
-            { noteIds.length > 0 && <div className="note-list-wrapper">
-                {!hasCollectionProperties && <Pager {...pagination} />}
-
-                <Card className={clsx("nested-note-list", {"search-results": (noteType === "search")})}>
-                    {pageNotes?.map(childNote => (
-                        <ListNoteCard
-                            key={childNote.noteId}
-                            note={childNote} parentNote={note}
-                            expandDepth={expandDepth} highlightedTokens={highlightedTokens}
-                            currentLevel={1} includeArchived={includeArchived} />
-                    ))}
-                </Card>
-
-                <Pager {...pagination} />
-            </div>}
-        </div>
-    );
+    return <NoteList note={note} viewMode="list-view" noteIds={noteIds} pagination={pagination}>
+        <Card className={clsx("nested-note-list", {"search-results": (noteType === "search")})}>
+            {pageNotes?.map(childNote => (
+                <ListNoteCard
+                    key={childNote.noteId}
+                    note={childNote} parentNote={note}
+                    expandDepth={expandDepth} highlightedTokens={highlightedTokens}
+                    currentLevel={1} includeArchived={includeArchived} />
+            ))}
+        </Card>
+    </NoteList>;
 }
 
 export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
@@ -60,32 +48,47 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
     const { pageNotes, ...pagination } = usePagination(note, noteIds);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const noteType = useNoteProperty(note, "type");
-    const hasCollectionProperties = [ "book", "search" ].includes(noteType ?? "");
 
-    return (
-        <div className="note-list grid-view">
-            <CollectionProperties
-                note={note}
-                centerChildren={<Pager {...pagination} />}
-            />
-
-            <div className="note-list-wrapper">
-                {!hasCollectionProperties && <Pager {...pagination} />}
-
-                <div className={clsx("note-list-container use-tn-links", {"search-results": (noteType === "search")})}>
-                    {pageNotes?.map(childNote => (
-                        <GridNoteCard key={childNote.noteId}
-                                      note={childNote}
-                                      parentNote={note}
-                                      highlightedTokens={highlightedTokens}
-                                      includeArchived={includeArchived} />
-                    ))}
-                </div>
-
-                <Pager {...pagination} />
-            </div>
+    return <NoteList note={note} viewMode="grid-view" noteIds={noteIds} pagination={pagination}>
+        <div className={clsx("note-list-container use-tn-links", {"search-results": (noteType === "search")})}>
+            {pageNotes?.map(childNote => (
+                <GridNoteCard key={childNote.noteId}
+                                note={childNote}
+                                parentNote={note}
+                                highlightedTokens={highlightedTokens}
+                                includeArchived={includeArchived} />
+            ))}
         </div>
-    );
+    </NoteList>
+}
+
+interface NoteListProps {
+    note: FNote,
+    viewMode: "list-view" | "grid-view",
+    noteIds: string[],
+    pagination: PaginationContext,
+    children: ComponentChildren
+}
+
+function NoteList(props: NoteListProps) {
+    const noteType = useNoteProperty(props.note, "type");
+    const hasCollectionProperties = ["book", "search"].includes(noteType ?? "");
+
+    return <div className={clsx("note-list", props.viewMode)}>
+        <CollectionProperties
+            note={props.note}
+            centerChildren={<Pager className="note-list-top-pager" {...props.pagination} />}
+        />
+
+        {props.noteIds.length > 0 && <div className="note-list-wrapper">
+            {!hasCollectionProperties && <Pager {...props.pagination} />}
+            
+            {props.children}
+
+            <Pager className="note-list-bottom-pager" {...props.pagination} />
+        </div>}
+
+    </div>
 }
 
 function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expandDepth, includeArchived }: {
@@ -175,7 +178,8 @@ function GridNoteCard(props: GridNoteCardProps) {
                           showNotePath={props.parentNote.type === "search"}
                           highlightedTokens={props.highlightedTokens}
                 />
-                <NoteMenuButton notePath={notePath} />
+                {!props.note.isOptions() && <NoteMenuButton notePath={notePath} />}
+                
             </h5>
             <NoteContent note={props.note}
                          trim
@@ -209,6 +213,17 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
 
     const [ready, setReady] = useState(false);
     const [noteType, setNoteType] = useState<string>("none");
+
+    useEffect(() => {
+        const contentElement = contentRef.current;
+        if (!contentElement) return;
+
+        contentSizeObserver.observe(contentElement);
+
+        return () => {
+            contentSizeObserver.unobserve(contentElement);
+        }
+    }, []);
 
     useEffect(() => {
         content_renderer.getRenderedContent(note, {
@@ -296,4 +311,11 @@ function useExpansionDepth(note: FNote) {
     }
     return parseInt(expandDepth, 10);
 
+}
+
+function onContentResized(entries: ResizeObserverEntry[], observer: ResizeObserver): void {
+    for (const contentElement of entries) {
+        const isOverflowing = ((contentElement.target.scrollHeight > contentElement.target.clientHeight))
+        contentElement.target.classList.toggle("note-book-content-overflowing", isOverflowing);
+    }
 }
