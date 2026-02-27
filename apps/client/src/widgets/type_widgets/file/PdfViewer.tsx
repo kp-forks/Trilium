@@ -24,7 +24,6 @@ const VARIABLE_WHITELIST = new Set([
     "dropdown-border-color",
     "dropdown-shadow-opacity",
     "menu-padding-size",
-    "dropdown-backdrop-filter",
     "menu-text-color",
     "hover-item-background-color",
     "hover-item-text-color",
@@ -77,7 +76,7 @@ function useStyleInjection(iframeRef: RefObject<HTMLIFrameElement>) {
 
         const style = doc.createElement('style');
         style.id = 'client-root-vars';
-        style.textContent = cssVarsToString(getRootCssVariables());;
+        style.textContent = cssVarsToString(getRootCssVariables());
         styleRef.current = style;
         doc.head.appendChild(style);
 
@@ -128,4 +127,4 @@ function injectFont(font: FontDefinition) {
             src: url('${font.url}');
         }
     `;
-};
+}

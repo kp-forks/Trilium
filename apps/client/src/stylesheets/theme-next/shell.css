@@ -823,7 +823,7 @@ body[dir=rtl] #left-pane span.fancytree-node.protected > span.fancytree-custom-i
 }
 
 #left-pane span.fancytree-node.fancytree-active .tree-item-button:hover,
-#left-pane span.fancytree-node.fancytree-active.fancy-tree-selected .fancytree-custom-icon:hover {
+#left-pane span.fancytree-node.fancytree-active.fancytree-selected .fancytree-custom-icon:hover {
     box-shadow: var(--left-pane-item-selected-action-button-hover-shadow);
 }
 
