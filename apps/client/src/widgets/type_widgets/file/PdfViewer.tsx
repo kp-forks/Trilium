@@ -1,14 +1,37 @@
 import type { HTMLAttributes, RefObject } from "preact";
 import { useCallback, useEffect, useRef } from "preact/hooks";
-
+import Inter from "./../../../fonts/Inter/Inter-VariableFont_opsz,wght.ttf";
 import { useSyncedRef, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+
+interface FontDefinition {
+    name: string;
+    url: string;
+}
+
+const FONTS: FontDefinition[] = [
+    {name: "Inter", url: Inter},
+]
 
 const VARIABLE_WHITELIST = new Set([
     "root-background",
     "main-background-color",
     "main-border-color",
     "main-text-color",
-    "theme-style"
+    "theme-style",
+    "menu-background-color",
+    "dropdown-backdrop-filter",
+    "dropdown-border-radius",
+    "dropdown-border-color",
+    "dropdown-shadow-opacity",
+    "menu-padding-size",
+    "dropdown-backdrop-filter",
+    "menu-text-color",
+    "hover-item-background-color",
+    "hover-item-text-color",
+    "menu-item-icon-color",
+    "input-focus-outline-color",
+    "input-background-color",
+    "input-text-color"
 ]);
 
 interface PdfViewerProps extends Pick<HTMLAttributes<HTMLIFrameElement>, "tabIndex"> {
@@ -54,10 +77,14 @@ function useStyleInjection(iframeRef: RefObject<HTMLIFrameElement>) {
 
         const style = doc.createElement('style');
         style.id = 'client-root-vars';
-        style.textContent = cssVarsToString(getRootCssVariables());
+        style.textContent = cssVarsToString(getRootCssVariables());;
         styleRef.current = style;
-
         doc.head.appendChild(style);
+
+        const fontStyles = doc.createElement("style");
+        fontStyles.textContent = FONTS.map(injectFont).join("\n");
+        doc.head.appendChild(fontStyles);
+        
     }, [ iframeRef ]);
 
     // React to changes.
@@ -93,3 +120,12 @@ function cssVarsToString(vars: Record<string, string>) {
         .map(([k, v]) => `  ${k}: ${v};`)
         .join('\n')}\n}`;
 }
+
+function injectFont(font: FontDefinition) {
+    return `
+        @font-face {
+            font-family: '${font.name}';
+            src: url('${font.url}');
+        }
+    `;
+};
