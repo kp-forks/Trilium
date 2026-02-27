@@ -4,6 +4,7 @@
     --main-color: var(--tn-main-text-color);
     --body-bg-color: transparent;
     --toolbar-border-color: var(--tn-main-border-color);
+    --toolbar-icon-bg-color: var(--tn-main-text-color);
     --toolbar-bg-color: transparent;
     --toolbar-icon-opacity: 1;
     --toggled-btn-bg-color: var(--tn-hover-item-background-color);
@@ -26,7 +27,6 @@
 :root #editorUndoBar,
 :root .dialogButton {
     font-family: "Inter";
-    font-size: 11;
 }
 
 #secondaryToolbar,
@@ -70,8 +70,6 @@
 /* #region Toolbar */
 
 .toolbarButton {
-    color: var(--menu-text-color);
-
     &:not(.labeled):active::before {
         transform: scale(.85) !important;
     }
@@ -81,10 +79,13 @@
         border-radius: 6px;
         color: var(--tn-hover-item-text-color);
     }
+
+    &.toggled::before {
+        color: var(--tn-menu-item-icon-color);
+    }
 }
 
 #findbar {
-    padding: unset;
 }
 
 #scaleSelectContainer {
@@ -115,13 +116,19 @@
 }
 
 /* Overflow menu */
-#secondaryToolbar {
+:root #secondaryToolbar {
     --toolbar-icon-bg-color: var(--tn-menu-item-icon-color);
     --toolbar-icon-hover-bg-color: var(--tn-menu-item-icon-color);
     --toggled-btn-bg-color: transparent;
     --toggled-btn-color: currentColor;
     --doorhanger-icon-opacity: 1;
     padding: var(--tn-menu-padding-size);
+    
+    .toolbarButton.labeled {
+        color: var(--tn-menu-text-color);
+
+        font-size: 13px;
+    }
 }
 
 /* Horizontal menu dividers */
@@ -146,7 +153,6 @@
 #scrollModeButtons .toolbarButton,
 #spreadModeButtons .toolbarButton {
     --toggled-hover-active-btn-color: var(--tn-hover-item-background-color);
-    --toggled-btn-color: var(--tn-menu-item-icon-color);
     position: relative;
 
     &::after {
