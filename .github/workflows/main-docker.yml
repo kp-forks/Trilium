@@ -281,14 +281,14 @@ jobs:
           done
 
           # Create multi-arch manifest for each tag from metadata, plus copy to DockerHub
-          for TAG in $(jq -cr '.tags[]' <<< '${{ steps.meta.outputs.json }}'); do
+          while IFS= read -r TAG; do
             echo "Creating manifest: ${TAG}"
             crane index append ${MANIFEST_ARGS} -t "${TAG}"
 
             SUFFIX="${TAG#*:}"
             echo "Copying to DockerHub: ${DOCKERHUB_IMAGE}:${SUFFIX}"
             crane copy "${TAG}" "${DOCKERHUB_IMAGE}:${SUFFIX}"
-          done
+          done <<< "${{ steps.meta.outputs.tags }}"
 
           # For stable releases (tags without hyphens), also create stable + latest
           REF_NAME="${GITHUB_REF#refs/tags/}"
@@ -307,7 +307,7 @@ jobs:
           REF_NAME="${GITHUB_REF#refs/heads/}"
           REF_NAME="${REF_NAME#refs/tags/}"
           echo "=== GHCR ==="
-          crane manifest "${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${REF_NAME}" | jq .
+          crane manifest "${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${REF_NAME}"
           echo ""
           echo "=== DockerHub ==="
-          crane manifest "${{ env.DOCKERHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${REF_NAME}" | jq .
+          crane manifest "${{ env.DOCKERHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${REF_NAME}"
