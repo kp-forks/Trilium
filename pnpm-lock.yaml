@@ -267,8 +267,8 @@ importers:
         specifier: 1.51.1
         version: 1.51.1
       globals:
-        specifier: 17.3.0
-        version: 17.3.0
+        specifier: 17.4.0
+        version: 17.4.0
       i18next:
         specifier: 25.8.13
         version: 25.8.13(typescript@5.9.3)
@@ -9348,8 +9348,8 @@ packages:
     resolution: {integrity: sha512-c/c15i26VrJ4IRt5Z89DnIzCGDn9EcebibhAOjw5ibqEHsE1wLUgkPn9RDmNcUKyU87GeaL633nyJ+pplFR2ZQ==}
     engines: {node: '>=18'}
 
-  globals@17.3.0:
-    resolution: {integrity: sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==}
+  globals@17.4.0:
+    resolution: {integrity: sha512-hjrNztw/VajQwOLsMNT1cbJiH2muO3OROCHnbehc8eY5JyD2gqz4AcMHPqgaOR59DjgUjYAYLeH699g/eWi2jw==}
     engines: {node: '>=18'}
 
   globalthis@1.0.4:
@@ -16605,8 +16605,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       '@ckeditor/ckeditor5-widget': 47.4.0
       ckeditor5: 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-html-embed@47.4.0':
     dependencies:
@@ -16980,6 +16978,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-slash-command@47.4.0':
     dependencies:
@@ -17131,8 +17131,6 @@ snapshots:
       '@ckeditor/ckeditor5-icons': 47.4.0
       '@ckeditor/ckeditor5-ui': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-upload@47.4.0':
     dependencies:
@@ -24989,7 +24987,7 @@ snapshots:
   eslint-plugin-playwright@2.8.0(eslint@10.0.2(jiti@2.6.1)):
     dependencies:
       eslint: 10.0.2(jiti@2.6.1)
-      globals: 17.3.0
+      globals: 17.4.0
 
   eslint-plugin-react-hooks@5.2.0(eslint@10.0.2(jiti@2.6.1)):
     dependencies:
@@ -25882,7 +25880,7 @@ snapshots:
 
   globals@16.5.0: {}
 
-  globals@17.3.0: {}
+  globals@17.4.0: {}
 
   globalthis@1.0.4:
     dependencies:
