@@ -97,7 +97,7 @@ function getBlankNoteTypes(command?: TreeCommandNames): MenuItem<TreeCommandName
                 title: nt.title,
                 command,
                 type: nt.type,
-                uiIcon: `bx ${  nt.icon}`,
+                uiIcon: `bx ${nt.icon}`,
                 badges: []
             };
 
@@ -209,7 +209,7 @@ async function isNewTemplate(templateNoteId) {
     if (creationDate === undefined) {
         // The creation date isn't available in the cache, try to retrieve it from the server
         try {
-            const noteInfo: any = await server.get(`notes/${  templateNoteId}`);
+            const noteInfo: any = await server.get(`notes/${templateNoteId}`);
             if ("dateCreated" in noteInfo) {
                 creationDate = new Date(noteInfo.dateCreated);
                 creationDateCache.set(templateNoteId, creationDate);
@@ -233,7 +233,6 @@ async function isNewTemplate(templateNoteId) {
         return (age <= NEW_TEMPLATE_MAX_AGE);
     }
     return false;
-
 }
 
 export default {
