@@ -3,7 +3,7 @@ import "./Spreadsheet.css";
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/preset-sheets-core/locales/en-US';
-import { CommandType, createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
+import { CommandType, createUniver, FUniver, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
@@ -45,7 +45,6 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
             ]
         });
         apiRef.current = univerAPI;
-        univerAPI.createWorkbook({});
         return () => univerAPI.dispose();
     }, [ apiRef, containerRef ]);
 }
@@ -83,15 +82,20 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             const univerAPI = apiRef.current;
             if (!univerAPI) return undefined;
 
-            try {
-                const parsedContent = JSON.parse(newContent) as unknown;
-                if (parsedContent && typeof parsedContent === "object" && "workbook" in parsedContent) {
-                    const persistedData = parsedContent as PersistedData;
-                    univerAPI.createWorkbook(persistedData.workbook);
+            let workbook: Partial<IWorkbookData> = {};
+            if (newContent) {
+                try {
+                    const parsedContent = JSON.parse(newContent) as unknown;
+                    if (parsedContent && typeof parsedContent === "object" && "workbook" in parsedContent) {
+                        const persistedData = parsedContent as PersistedData;
+                        workbook = persistedData.workbook;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse spreadsheet content", e);
                 }
-            } catch (e) {
-                console.error("Failed to parse spreadsheet content", e);
             }
+
+            univerAPI.createWorkbook(workbook);
         },
     });
 
