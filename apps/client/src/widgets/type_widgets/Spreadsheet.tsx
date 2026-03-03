@@ -4,22 +4,21 @@ import "./Spreadsheet.css";
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/preset-sheets-core/locales/en-US';
 import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
-import { useEffect, useRef } from "preact/hooks";
+import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import { useColorScheme } from "../react/hooks";
 
 export default function Spreadsheet() {
-    const colorScheme = useColorScheme();
-
-    return (
-        <UniverSpreadsheet darkMode={colorScheme === 'dark'} />
-    );
-}
-
-function UniverSpreadsheet({ darkMode }: { darkMode: boolean }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const apiRef = useRef<FUniver>();
 
+    useInitializeSpreadsheet(containerRef, apiRef);
+    useDarkMode(apiRef);
+
+    return <div ref={containerRef} className="spreadsheet" />;
+}
+
+function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>) {
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -39,14 +38,16 @@ function UniverSpreadsheet({ darkMode }: { darkMode: boolean }) {
         apiRef.current = univerAPI;
         univerAPI.createWorkbook({});
         return () => univerAPI.dispose();
-    }, []);
+    }, [ apiRef, containerRef ]);
+}
+
+function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
+    const colorScheme = useColorScheme();
 
     // React to dark mode.
     useEffect(() => {
         const univerAPI = apiRef.current;
         if (!univerAPI) return;
-        univerAPI.toggleDarkMode(darkMode);
-    }, [ darkMode ]);
-
-    return <div ref={containerRef} className="spreadsheet" />;
+        univerAPI.toggleDarkMode(colorScheme === 'dark');
+    }, [ colorScheme, apiRef ]);
 }
