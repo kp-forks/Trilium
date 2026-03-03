@@ -82,6 +82,12 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             const univerAPI = apiRef.current;
             if (!univerAPI) return undefined;
 
+            // Dispose the existing workbook.
+            const existingNotebook = univerAPI.getActiveWorkbook();
+            if (existingNotebook) {
+                univerAPI.disposeUnit(existingNotebook.getId());
+            }
+
             let workbook: Partial<IWorkbookData> = {};
             if (newContent) {
                 try {
