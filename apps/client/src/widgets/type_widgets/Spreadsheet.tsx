@@ -3,17 +3,21 @@ import "./Spreadsheet.css";
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/preset-sheets-core/locales/en-US';
-import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
+import { CommandType, createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
-import { useColorScheme } from "../react/hooks";
+import NoteContext from "../../components/note_context";
+import FNote from "../../entities/fnote";
+import { useColorScheme, useEditorSpacedUpdate } from "../react/hooks";
+import { TypeWidgetProps } from "./type_widget";
 
-export default function Spreadsheet() {
+export default function Spreadsheet({ note, noteContext }: TypeWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const apiRef = useRef<FUniver>();
 
     useInitializeSpreadsheet(containerRef, apiRef);
     useDarkMode(apiRef);
+    usePersistence(note, noteContext, apiRef);
 
     return <div ref={containerRef} className="spreadsheet" />;
 }
@@ -50,4 +54,38 @@ function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
         if (!univerAPI) return;
         univerAPI.toggleDarkMode(colorScheme === 'dark');
     }, [ colorScheme, apiRef ]);
+}
+
+function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>) {
+    const spacedUpdate = useEditorSpacedUpdate({
+        noteType: "spreadsheet",
+        note,
+        noteContext,
+        getData() {
+            const univerAPI = apiRef.current;
+            if (!univerAPI) return undefined;
+            const workbook = univerAPI.getActiveWorkbook();
+            if (!workbook) return undefined;
+            const content = JSON.stringify({
+                version: 1,
+                workbook: workbook.save()
+            });
+            return {
+                content
+            };
+        },
+        onContentChange(newContent) {
+        },
+    });
+
+    useEffect(() => {
+        const univerAPI = apiRef.current;
+        const workbook = apiRef.current?.getActiveWorkbook();
+        if (!univerAPI || !workbook) return;
+
+        workbook.onCommandExecuted(command => {
+            if (command.type !== CommandType.MUTATION) return;
+            spacedUpdate.scheduleUpdate();
+        });
+    });
 }
