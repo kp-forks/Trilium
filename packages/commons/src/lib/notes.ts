@@ -59,6 +59,9 @@ export function getNoteIcon({ noteId, type, mime, iconClass, workspaceIconClass,
         const correspondingMimeType = MIME_TYPES_DICT.find(m => m.mime === mime);
         return correspondingMimeType?.icon ?? NOTE_TYPE_ICONS.code;
     } else if (type === "file") {
+        if (mime.startsWith("video/")) {
+            return "bx bx-video";
+        }
         return FILE_MIME_MAPPINGS[mime] ?? NOTE_TYPE_ICONS.file;
     } else if (type === "image") {
         return IMAGE_MIME_MAPPINGS[mime] ?? NOTE_TYPE_ICONS.image;
