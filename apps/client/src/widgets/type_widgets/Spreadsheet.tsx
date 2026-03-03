@@ -3,8 +3,8 @@ import "./Spreadsheet.css";
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/preset-sheets-core/locales/en-US';
-import { CommandType, createUniver, FUniver, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
-import { MutableRef, useEffect, useRef, useState } from "preact/hooks";
+import { CommandType, createUniver, FUniver, IDisposable, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
+import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
@@ -61,7 +61,7 @@ function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
 }
 
 function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>) {
-    const [ workbookLoaded, setWorkbookLoaded ] = useState(false);
+    const changeListener = useRef<IDisposable>(null);
 
     const spacedUpdate = useEditorSpacedUpdate({
         noteType: "spreadsheet",
@@ -85,38 +85,41 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             if (!univerAPI) return undefined;
 
             // Dispose the existing workbook.
-            const existingNotebook = univerAPI.getActiveWorkbook();
-            if (existingNotebook) {
-                univerAPI.disposeUnit(existingNotebook.getId());
+            const existingWorkbook = univerAPI.getActiveWorkbook();
+            if (existingWorkbook) {
+                univerAPI.disposeUnit(existingWorkbook.getId());
             }
 
-            let workbook: Partial<IWorkbookData> = {};
+            let workbookData: Partial<IWorkbookData> = {};
             if (newContent) {
                 try {
                     const parsedContent = JSON.parse(newContent) as unknown;
                     if (parsedContent && typeof parsedContent === "object" && "workbook" in parsedContent) {
                         const persistedData = parsedContent as PersistedData;
-                        workbook = persistedData.workbook;
+                        workbookData = persistedData.workbook;
                     }
                 } catch (e) {
                     console.error("Failed to parse spreadsheet content", e);
                 }
             }
 
-            univerAPI.createWorkbook(workbook);
-            setWorkbookLoaded(true);
+            const workbook = univerAPI.createWorkbook(workbookData);
+            if (changeListener.current) {
+                changeListener.current.dispose();
+            }
+            changeListener.current = workbook.onCommandExecuted(command => {
+                if (command.type !== CommandType.MUTATION) return;
+                spacedUpdate.scheduleUpdate();
+            });
         },
     });
 
     useEffect(() => {
-        const univerAPI = apiRef.current;
-        const workbook = apiRef.current?.getActiveWorkbook();
-        if (!univerAPI || !workbook) return;
-
-        const disposable = workbook.onCommandExecuted(command => {
-            if (command.type !== CommandType.MUTATION) return;
-            spacedUpdate.scheduleUpdate();
-        });
-        return () => disposable.dispose();
-    }, [ apiRef, spacedUpdate, workbookLoaded ]);
+        return () => {
+            if (changeListener.current) {
+                changeListener.current.dispose();
+                changeListener.current = null;
+            }
+        };
+    }, []);
 }
