@@ -35,6 +35,8 @@
     "@triliumnext/highlightjs": "workspace:*",
     "@triliumnext/share-theme": "workspace:*",
     "@triliumnext/split.js": "workspace:*",
+    "@univerjs/preset-sheets-core": "0.16.1",
+    "@univerjs/presets": "0.16.1",
     "@zumer/snapdom": "2.0.2",
     "autocomplete.js": "0.38.1",
     "bootstrap": "5.3.8",
