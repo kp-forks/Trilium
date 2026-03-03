@@ -207,7 +207,7 @@ export function formatDownloadTitle(fileName: string, type: string | null, mime:
 export function removeFileExtension(filePath: string, mime?: string) {
     const extension = path.extname(filePath).toLowerCase();
 
-    if (mime?.startsWith("video/")) {
+    if (mime?.startsWith("video/") || mime?.startsWith("audio/")) {
         return filePath.substring(0, filePath.length - extension.length);
     }
 
