@@ -4,7 +4,7 @@ import "./Spreadsheet.css";
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/preset-sheets-core/locales/en-US';
 import { CommandType, createUniver, FUniver, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
-import { MutableRef, useEffect, useRef } from "preact/hooks";
+import { MutableRef, useEffect, useRef, useState } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
@@ -61,6 +61,8 @@ function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
 }
 
 function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>) {
+    const [ workbookLoaded, setWorkbookLoaded ] = useState(false);
+
     const spacedUpdate = useEditorSpacedUpdate({
         noteType: "spreadsheet",
         note,
@@ -102,6 +104,7 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             }
 
             univerAPI.createWorkbook(workbook);
+            setWorkbookLoaded(true);
         },
     });
 
@@ -110,9 +113,10 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
         const workbook = apiRef.current?.getActiveWorkbook();
         if (!univerAPI || !workbook) return;
 
-        workbook.onCommandExecuted(command => {
+        const disposable = workbook.onCommandExecuted(command => {
             if (command.type !== CommandType.MUTATION) return;
             spacedUpdate.scheduleUpdate();
         });
-    });
+        return () => disposable.dispose();
+    }, [ apiRef, spacedUpdate, workbookLoaded ]);
 }
