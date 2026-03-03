@@ -11,6 +11,11 @@ import FNote from "../../entities/fnote";
 import { useColorScheme, useEditorSpacedUpdate } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
+interface PersistedData {
+    version: number;
+    workbook: Parameters<FUniver["createWorkbook"]>[0];
+}
+
 export default function Spreadsheet({ note, noteContext }: TypeWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const apiRef = useRef<FUniver>();
@@ -66,15 +71,27 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             if (!univerAPI) return undefined;
             const workbook = univerAPI.getActiveWorkbook();
             if (!workbook) return undefined;
-            const content = JSON.stringify({
+            const content = {
                 version: 1,
                 workbook: workbook.save()
-            });
+            };
             return {
-                content
+                content: JSON.stringify(content)
             };
         },
         onContentChange(newContent) {
+            const univerAPI = apiRef.current;
+            if (!univerAPI) return undefined;
+
+            try {
+                const parsedContent = JSON.parse(newContent) as unknown;
+                if (parsedContent && typeof parsedContent === "object" && "workbook" in parsedContent) {
+                    const persistedData = parsedContent as PersistedData;
+                    univerAPI.createWorkbook(persistedData.workbook);
+                }
+            } catch (e) {
+                console.error("Failed to parse spreadsheet content", e);
+            }
         },
     });
 
