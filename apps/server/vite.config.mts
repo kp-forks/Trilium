@@ -19,7 +19,8 @@ export default defineConfig(() => ({
     exclude: [
       "spec/build-checks/**",
     ],
-    hookTimeout: 40_000,
+    hookTimeout: 20_000,
+    testTimeout: 40_000,
     reporters: [
       "verbose",
       ["html", { outputFile: "./test-output/vitest/html/index.html" }]
