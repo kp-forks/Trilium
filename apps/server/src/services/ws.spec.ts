@@ -56,9 +56,8 @@ describe('WebSocket Service', () => {
     let log: any;
 
     beforeEach(async () => {
-        vi.resetModules();
         vi.clearAllMocks();
-
+        
         // Get mocked log
         log = (await import('./log.js')).default;
 
