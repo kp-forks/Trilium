@@ -86,8 +86,9 @@ export default async function buildApp() {
     app.use(`/robots.txt`, express.static(path.join(publicAssetsDir, "robots.txt")));
     app.use(`/icon.png`, express.static(path.join(publicAssetsDir, "icon.png")));
 
-    const sessionParser = (await import("./routes/session_parser.js")).default;
+    const { default: sessionParser, startSessionCleanup } = await import("./routes/session_parser.js");
     app.use(sessionParser);
+    startSessionCleanup();
     app.use(favicon(path.join(assetsDir, isDev ? "icon-dev.ico" : "icon.ico")));
 
     if (openID.isOpenIDEnabled())
