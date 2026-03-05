@@ -40,6 +40,14 @@ jobs:
       - name: Run the client-side tests
         run: pnpm run --filter=client test
 
+      - name: Upload client test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: client-test-report
+          path: apps/client/test-output/vitest/html/
+          retention-days: 30
+
       - name: Run the server-side tests
         run: pnpm run --filter=server test
 
