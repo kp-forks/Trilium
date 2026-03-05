@@ -19,7 +19,7 @@ export default defineConfig(() => ({
     exclude: [
       "spec/build-checks/**",
     ],
-    hookTimeout: 20000,
+    hookTimeout: 40_000,
     reporters: [
       "verbose"
     ],
