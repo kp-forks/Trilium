@@ -44,7 +44,7 @@ jobs:
         run: pnpm run --filter=server test
 
       - name: Run the rest of the tests
-        run: pnpm run --filter=!client --filter=!server test
+        run: pnpm run --filter=\!client --filter=\!server test
 
   build_docker:
     name: Build Docker image
