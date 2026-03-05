@@ -59,8 +59,13 @@ jobs:
           path: apps/server/test-output/vitest/html/
           retention-days: 30
 
+      - name: Run CKEditor e2e tests
+        run: |
+          pnpm run --filter=ckeditor5-mermaid test
+          pnpm run --filter=ckeditor5-math test
+
       - name: Run the rest of the tests
-        run: pnpm run --filter=\!client --filter=\!server test
+        run: pnpm run --filter=\!client --filter=\!server --filter=\!ckeditor5-mermaid --filter=\!ckeditor5-math test
 
   build_docker:
     name: Build Docker image
