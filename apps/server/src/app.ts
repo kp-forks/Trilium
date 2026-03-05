@@ -99,16 +99,16 @@ export default async function buildApp() {
     custom.register(app);
     error_handlers.register(app);
 
-    // triggers sync timer
-    await import("./services/sync.js");
+    const { startSyncTimer } = await import("./services/sync.js");
+    startSyncTimer();
 
-    // triggers backup timer
     await import("./services/backup.js");
 
-    // trigger consistency checks timer
-    await import("./services/consistency_checks.js");
+    const { startConsistencyChecks } = await import("./services/consistency_checks.js");
+    startConsistencyChecks();
 
-    await import("./services/scheduler.js");
+    const { startScheduler } = await import("./services/scheduler.js");
+    startScheduler();
 
     startScheduledCleanup();
 
