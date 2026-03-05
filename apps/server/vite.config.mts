@@ -21,7 +21,8 @@ export default defineConfig(() => ({
     ],
     hookTimeout: 40_000,
     reporters: [
-      "verbose"
+      "verbose",
+      ["html", { outputFile: "./test-output/vitest/html/index.html" }]
     ],
     coverage: {
       reportsDirectory: './test-output/vitest/coverage',
