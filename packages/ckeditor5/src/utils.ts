@@ -1,24 +1,15 @@
-import { DifferItemAttribute, ModelDocumentFragment, ModelElement, ModelNode } from "ckeditor5";
-import { CKTextEditor } from "src";
-
-function isHeadingElement(node: ModelElement | ModelNode | ModelDocumentFragment | null): node is ModelElement {
-    return !!node
-        && typeof (node as any).is === "function"
-        && (node as any).is("element")
-        && typeof (node as any).name === "string"
-        && (node as any).name.startsWith("heading");
-}
+import type { DifferItemAttribute, Editor, ModelDocumentFragment, ModelElement, ModelNode } from "ckeditor5";
 
 function hasHeadingAncestor(node: ModelElement | ModelNode | ModelDocumentFragment | null): boolean {
     let current: ModelElement | ModelNode | ModelDocumentFragment | null = node;
     while (current) {
-        if (isHeadingElement(current)) return true;
+        if (!!current && current.is('element') && (current as ModelElement).name.startsWith("heading")) return true;
         current = current.parent;
     }
     return false;
 }
 
-export function attributeChangeAffectsHeading(change: DifferItemAttribute, editor: CKTextEditor): boolean {
+export function attributeChangeAffectsHeading(change: DifferItemAttribute, editor: Editor): boolean {
     if (change.type !== "attribute") return false;
 
     // Fast checks on range boundaries
