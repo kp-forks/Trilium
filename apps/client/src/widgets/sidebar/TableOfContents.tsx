@@ -175,7 +175,9 @@ function EditableTextTableOfContents() {
                 );
             });
             if (affectsHeadings) {
-                setHeadings(extractTocFromTextEditor(textEditor));
+                requestAnimationFrame(() => {
+                    setHeadings(extractTocFromTextEditor(textEditor));
+                });
             }
         };
 
