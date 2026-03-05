@@ -1,24 +1,28 @@
-"use strict";
+
 
 /**
  * @module sql
  */
 
-import log from "./log.js";
-import type { Statement, Database as DatabaseType, RunResult } from "better-sqlite3";
-import dataDir from "./data_dir.js";
-import cls from "./cls.js";
-import fs from "fs";
+import type { Database as DatabaseType, RunResult,Statement } from "better-sqlite3";
 import Database from "better-sqlite3";
-import ws from "./ws.js";
+import fs from "fs";
+
 import becca_loader from "../becca/becca_loader.js";
-import entity_changes from "./entity_changes.js";
+import cls from "./cls.js";
 import config from "./config.js";
+import dataDir from "./data_dir.js";
+import entity_changes from "./entity_changes.js";
+import log from "./log.js";
+import ws from "./ws.js";
 
 const dbOpts: Database.Options = {
     nativeBinding: process.env.BETTERSQLITE3_NATIVE_PATH || undefined
 };
 
+const INTEGRATION_TEST_SAVEPOINT = "trilium_test_reset";
+// The resolved path used to build the current test connection (for savepoint-based resets).
+let integrationTestDbPath: string | null = null;
 let dbConnection: DatabaseType = buildDatabase();
 let statementCache: Record<string, Statement> = {};
 
@@ -37,17 +41,33 @@ function buildDatabase() {
 }
 
 function buildIntegrationTestDatabase(dbPath?: string) {
-    const dbBuffer = fs.readFileSync(dbPath ?? dataDir.DOCUMENT_PATH);
-    return new Database(dbBuffer, dbOpts);
+    const resolvedPath = dbPath ?? dataDir.DOCUMENT_PATH;
+    const dbBuffer = fs.readFileSync(resolvedPath);
+    const db = new Database(dbBuffer, dbOpts);
+    integrationTestDbPath = resolvedPath;
+    // Establish a savepoint so subsequent rebuilds can roll back instantly
+    // instead of re-reading the file and allocating a new connection.
+    db.exec(`SAVEPOINT ${INTEGRATION_TEST_SAVEPOINT}`);
+    return db;
 }
 
 function rebuildIntegrationTestDatabase(dbPath?: string) {
-    if (dbConnection) {
-        dbConnection.close();
+    const resolvedPath = dbPath ?? dataDir.DOCUMENT_PATH;
+
+    if (dbConnection && resolvedPath === integrationTestDbPath) {
+        // Fast path: roll back all changes to the initial state without
+        // closing the connection or re-reading from disk.
+        dbConnection.exec(`ROLLBACK TO SAVEPOINT ${INTEGRATION_TEST_SAVEPOINT}`);
+    } else {
+        // Path changed (e.g. migration tests using a different fixture DB):
+        // close the old connection and open a fresh one.
+        if (dbConnection) {
+            dbConnection.close();
+        }
+        // This allows a database that is read normally but is kept in memory and discards all modifications.
+        dbConnection = buildIntegrationTestDatabase(dbPath);
     }
 
-    // This allows a database that is read normally but is kept in memory and discards all modifications.
-    dbConnection = buildIntegrationTestDatabase(dbPath);
     statementCache = {};
 }
 
@@ -129,7 +149,7 @@ function upsert<T extends {}>(tableName: string, primaryKey: string, rec: T) {
  * @returns the corresponding {@link Statement}.
  */
 function stmt(sql: string, isRaw?: boolean) {
-    const key = (isRaw ? "raw/" + sql : sql);
+    const key = (isRaw ? `raw/${  sql}` : sql);
 
     if (!(key in statementCache)) {
         statementCache[key] = dbConnection.prepare(sql);
@@ -169,11 +189,11 @@ function getManyRows<T>(query: string, params: Params): T[] {
 
         let j = 1;
         for (const param of curParams) {
-            curParamsObj["param" + j++] = param;
+            curParamsObj[`param${  j++}`] = param;
         }
 
         let i = 1;
-        const questionMarks = curParams.map(() => ":param" + i++).join(",");
+        const questionMarks = curParams.map(() => `:param${  i++}`).join(",");
         const curQuery = query.replace(/\?\?\?/g, questionMarks);
 
         const statement = curParams.length === PARAM_LIMIT ? stmt(curQuery) : dbConnection.prepare(curQuery);
@@ -240,11 +260,11 @@ function executeMany(query: string, params: Params) {
 
         let j = 1;
         for (const param of curParams) {
-            curParamsObj["param" + j++] = param;
+            curParamsObj[`param${  j++}`] = param;
         }
 
         let i = 1;
-        const questionMarks = curParams.map(() => ":param" + i++).join(",");
+        const questionMarks = curParams.map(() => `:param${  i++}`).join(",");
         const curQuery = query.replace(/\?\?\?/g, questionMarks);
 
         dbConnection.prepare(curQuery).run(curParamsObj);
