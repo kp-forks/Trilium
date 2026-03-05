@@ -30,6 +30,6 @@ export default defineConfig(() => ({
       reporter: [ "text", "html" ]
     },
     pool: "forks",
-    maxWorkers: 3
+    maxWorkers: 6
   },
 }));
