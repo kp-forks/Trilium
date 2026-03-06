@@ -214,7 +214,7 @@ importers:
         version: 0.2.0(mermaid@11.12.3)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.9.1)
+        version: 5.0.1(mind-elixir@5.9.2)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
@@ -312,8 +312,8 @@ importers:
         specifier: 11.12.3
         version: 11.12.3
       mind-elixir:
-        specifier: 5.9.1
-        version: 5.9.1
+        specifier: 5.9.2
+        version: 5.9.2
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -12098,8 +12098,8 @@ packages:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
 
-  mind-elixir@5.9.1:
-    resolution: {integrity: sha512-bEQi/BKlKt068NbyeFeGklZZpVTVfmrqKvPEhpgSTpCMgwEmofk1J/bglfE+4j1MQQzgoMZ9y1gmF5NlQD2EeA==}
+  mind-elixir@5.9.2:
+    resolution: {integrity: sha512-BcqwhTV5BRPhC+0Cx/JBGjqnxJnoDcWHqAxO+i1iw2o8FFQtUiVH14fP4q54DIReyusdVtdDMV3NYRTDApl31g==}
 
   mini-css-extract-plugin@2.9.4:
     resolution: {integrity: sha512-ZWYT7ln73Hptxqxk2DxPU9MmapXRhxkJD6tkSR04dnQxm8BGu2hzgKLugK5yySD97u/8yy7Ma7E76k9ZdvtjkQ==}
@@ -20425,9 +20425,9 @@ snapshots:
 
   '@microsoft/tsdoc@0.15.1': {}
 
-  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.9.1)':
+  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.9.2)':
     dependencies:
-      mind-elixir: 5.9.1
+      mind-elixir: 5.9.2
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -31042,7 +31042,7 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  mind-elixir@5.9.1: {}
+  mind-elixir@5.9.2: {}
 
   mini-css-extract-plugin@2.9.4(webpack@5.101.3(@swc/core@1.11.29(@swc/helpers@0.5.17))(esbuild@0.27.3)):
     dependencies:
