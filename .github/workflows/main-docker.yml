@@ -59,7 +59,7 @@ jobs:
         run: pnpm run server:build
 
       - name: Build and export to Docker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: apps/server
           file: apps/server/${{ matrix.dockerfile }}
@@ -189,7 +189,7 @@ jobs:
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: apps/server
           file: apps/server/${{ matrix.dockerfile }}
