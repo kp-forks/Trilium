@@ -9,7 +9,10 @@
     "hero_section": {
         "title": "Organisera dina tankar. Skapa din personliga kunskapsbank.",
         "subtitle": "Trilium är en lösning med öppen källkod som möjliggör anteckningar och organisering av en personlig kunskapsbank. Använd den lokalt på ditt skrivbord, eller synka till en självhostad server för att komma åt dina anteckningar överallt.",
-        "screenshot_alt": "Skärmdump av Trilium Notes skrivbordsapplikation"
+        "screenshot_alt": "Skärmdump av Trilium Notes skrivbordsapplikation",
+        "get_started": "Kom igång",
+        "github": "GitHub",
+        "dockerhub": "Docker Hub"
     },
     "organization_benefits": {
         "title": "Organisation",
