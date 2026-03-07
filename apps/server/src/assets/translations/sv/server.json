@@ -16,6 +16,7 @@
     "create-note-into-inbox": "Skapa en anteckning i inboxen (om angiven) eller som daganteckning",
     "delete-note": "Radera anteckning",
     "move-note-up": "Flytta anteckning uppåt",
-    "move-note-down": "Flytta anteckning nedåt"
+    "move-note-down": "Flytta anteckning nedåt",
+    "scroll-to-active-note": "Bläddra i anteckningshierarkin till aktiv anteckning"
   }
 }
