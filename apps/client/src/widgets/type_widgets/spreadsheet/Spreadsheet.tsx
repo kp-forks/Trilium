@@ -3,6 +3,8 @@ import "./Spreadsheet.css";
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
+import { UniverSheetsFilterPreset } from '@univerjs/preset-sheets-filter';
+import UniverPresetSheetsFilterEnUS from '@univerjs/preset-sheets-filter/locales/en-US';
 import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
 import sheetsFindReplaceEnUS from '@univerjs/preset-sheets-find-replace/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
@@ -52,6 +54,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     sheetsCoreEnUS,
                     sheetsFindReplaceEnUS,
                     sheetsNoteEnUS,
+                    UniverPresetSheetsFilterEnUS,
                 ),
             },
             presets: [
@@ -68,7 +71,8 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     },
                 }),
                 UniverSheetsFindReplacePreset(),
-                UniverSheetsNotePreset()
+                UniverSheetsNotePreset(),
+                UniverSheetsFilterPreset()
             ]
         });
         apiRef.current = univerAPI;
