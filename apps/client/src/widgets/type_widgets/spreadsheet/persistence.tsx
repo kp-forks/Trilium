@@ -1,19 +1,9 @@
-import "@univerjs/preset-sheets-core/lib/index.css";
-import "./Spreadsheet.css";
-
-import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
-import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
-import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
-import sheetsFindReplaceEnUS from '@univerjs/preset-sheets-find-replace/locales/en-US';
-import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
-import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
-import { CommandType, createUniver, FUniver, IDisposable, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
+import { CommandType, FUniver, IDisposable, IWorkbookData } from "@univerjs/presets";
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
-import NoteContext from "../../components/note_context";
-import FNote from "../../entities/fnote";
-import { SavedData, useColorScheme, useEditorSpacedUpdate, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
-import { TypeWidgetProps } from "./type_widget";
+import NoteContext from "../../../components/note_context";
+import FNote from "../../../entities/fnote";
+import { SavedData, useEditorSpacedUpdate } from "../../react/hooks";
 
 interface PersistedData {
     version: number;
@@ -28,80 +18,7 @@ interface SpreadsheetViewState {
     scrollCol?: number;
 }
 
-export default function Spreadsheet(props: TypeWidgetProps) {
-    const [ readOnly ] = useNoteLabelBoolean(props.note, "readOnly");
-
-    // Use readOnly as key to force full remount (and data reload) when it changes.
-    return <SpreadsheetEditor key={String(readOnly)} {...props} readOnly={readOnly} />;
-}
-
-function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { readOnly: boolean }) {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const apiRef = useRef<FUniver>();
-
-    useInitializeSpreadsheet(containerRef, apiRef, readOnly);
-    useDarkMode(apiRef);
-    usePersistence(note, noteContext, apiRef, containerRef, readOnly);
-    useSearchIntegration(apiRef);
-
-    // Focus the spreadsheet when the note is focused.
-    useTriliumEvent("focusOnDetail", () => {
-        const focusable = containerRef.current?.querySelector('[data-u-comp="editor"]');
-        if (focusable instanceof HTMLElement) {
-            focusable.focus();
-        }
-    });
-
-    return <div ref={containerRef} className="spreadsheet" />;
-}
-
-function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean) {
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        const { univerAPI } = createUniver({
-            locale: LocaleType.EN_US,
-            locales: {
-                [LocaleType.EN_US]: mergeLocales(
-                    sheetsCoreEnUS,
-                    sheetsFindReplaceEnUS,
-                    sheetsNoteEnUS,
-                ),
-            },
-            presets: [
-                UniverSheetsCorePreset({
-                    container: containerRef.current,
-                    toolbar: !readOnly,
-                    contextMenu: !readOnly,
-                    formulaBar: !readOnly,
-                    footer: readOnly ? false : undefined,
-                    menu: {
-                        "sheet.contextMenu.permission": { hidden: true },
-                        "sheet-permission.operation.openPanel": { hidden: true },
-                        "sheet.command.add-range-protection-from-toolbar": { hidden: true },
-                    },
-                }),
-                UniverSheetsFindReplacePreset(),
-                UniverSheetsNotePreset()
-            ]
-        });
-        apiRef.current = univerAPI;
-        return () => univerAPI.dispose();
-    }, [ apiRef, containerRef, readOnly ]);
-}
-
-function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
-    const colorScheme = useColorScheme();
-
-    // React to dark mode.
-    useEffect(() => {
-        const univerAPI = apiRef.current;
-        if (!univerAPI) return;
-        univerAPI.toggleDarkMode(colorScheme === 'dark');
-    }, [ colorScheme, apiRef ]);
-}
-
-function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>, readOnly: boolean) {
+export default function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>, readOnly: boolean) {
     const changeListener = useRef<IDisposable>(null);
     const pendingContent = useRef<string | null>(null);
 
@@ -274,14 +191,4 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             }
         };
     }, []);
-}
-
-function useSearchIntegration(apiRef: MutableRef<FUniver | undefined>) {
-    useTriliumEvent("findInText", () => {
-        const univerAPI = apiRef.current;
-        if (!univerAPI) return;
-
-        // Open find/replace panel and populate the search term.
-        univerAPI.executeCommand("ui.operation.open-find-dialog");
-    });
 }
