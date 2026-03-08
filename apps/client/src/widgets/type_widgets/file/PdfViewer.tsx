@@ -38,7 +38,7 @@ export default function PdfViewer({ iframeRef: externalIframeRef, pdfUrl, onLoad
             ref={iframeRef}
             class="pdf-preview"
             style={{width: "100%", height: "100%"}}
-            src={`pdfjs/web/viewer.html?file=${pdfUrl}&lang=${locale}&sidebar=${newLayout ? "0" : "1"}&editable=${editable ? "1" : "0"}`}
+            src={`pdfjs/web/viewer.html?v=${glob.triliumVersion}&file=${pdfUrl}&lang=${locale}&sidebar=${newLayout ? "0" : "1"}&editable=${editable ? "1" : "0"}`}
             onLoad={() => {
                 injectStyles();
                 onLoad?.();
