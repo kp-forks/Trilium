@@ -1,7 +1,10 @@
 import "@univerjs/preset-sheets-core/lib/index.css";
 import "./Spreadsheet.css";
 import '@univerjs/preset-sheets-sort/lib/index.css';
+import '@univerjs/preset-sheets-conditional-formatting/lib/index.css';
 
+import { UniverSheetsConditionalFormattingPreset } from '@univerjs/preset-sheets-conditional-formatting';
+import UniverPresetSheetsConditionalFormattingEnUS from '@univerjs/preset-sheets-conditional-formatting/locales/en-US';
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
 import { UniverSheetsDataValidationPreset } from '@univerjs/preset-sheets-data-validation';
@@ -62,6 +65,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     UniverPresetSheetsFilterEnUS,
                     UniverPresetSheetsSortEnUS,
                     UniverPresetSheetsDataValidationEnUS,
+                    UniverPresetSheetsConditionalFormattingEnUS,
                 ),
             },
             presets: [
@@ -81,7 +85,8 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                 UniverSheetsNotePreset(),
                 UniverSheetsFilterPreset(),
                 UniverSheetsSortPreset(),
-                UniverSheetsDataValidationPreset()
+                UniverSheetsDataValidationPreset(),
+                UniverSheetsConditionalFormattingPreset()
             ]
         });
         apiRef.current = univerAPI;
