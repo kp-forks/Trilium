@@ -243,10 +243,12 @@ function FixedTree({ noteContext }: { noteContext: NoteContext }) {
  */
 function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { Element: (props: TypeWidgetProps) => VNode, type: ExtendedNoteType, isVisible: boolean, isFullHeight: boolean, props: TypeWidgetProps }) {
     const [ cachedProps, setCachedProps ] = useState(props);
+    const [ hasBeenVisible, setHasBeenVisible ] = useState(isVisible);
 
     useEffect(() => {
         if (isVisible) {
             setCachedProps(props);
+            setHasBeenVisible(true);
         } else {
             // Do nothing, keep the old props.
         }
@@ -260,7 +262,7 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
                 height: isFullHeight ? "100%" : ""
             }}
         >
-            { <Element {...cachedProps} /> }
+            { hasBeenVisible && <Element {...cachedProps} /> }
         </div>
     );
 }
