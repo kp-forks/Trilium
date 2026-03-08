@@ -62,7 +62,12 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     toolbar: !readOnly,
                     contextMenu: !readOnly,
                     formulaBar: !readOnly,
-                    footer: readOnly ? false : undefined
+                    footer: readOnly ? false : undefined,
+                    menu: {
+                        "sheet.contextMenu.permission": { hidden: true },
+                        "sheet-permission.operation.openPanel": { hidden: true },
+                        "sheet.command.add-range-protection-from-toolbar": { hidden: true },
+                    },
                 }),
                 UniverSheetsNotePreset()
             ]
