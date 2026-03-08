@@ -10,7 +10,7 @@ import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
-import { SavedData, useColorScheme, useEditorSpacedUpdate, useElementSize, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
+import { SavedData, useColorScheme, useEditorSpacedUpdate, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
 interface PersistedData {
@@ -45,8 +45,6 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
 }
 
 function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean) {
-    const size = useElementSize(containerRef);
-
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -186,22 +184,24 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
         },
     });
 
-    // Apply pending content when the tab becomes active.
-    useTriliumEvent("activeNoteChanged", () => {
-        if (pendingContent.current === null) return;
-        if (!noteContext?.isActive()) return;
+    // Apply pending content once the container becomes visible (non-zero size).
+    useEffect(() => {
+        if (!containerRef.current) return;
 
-        const univerAPI = apiRef.current;
-        if (!univerAPI) return;
-
-        // Use requestAnimationFrame to ensure the container has been laid out.
-        requestAnimationFrame(() => {
+        const observer = new ResizeObserver(() => {
             if (pendingContent.current === null || !isContainerVisible()) return;
+
+            const univerAPI = apiRef.current;
+            if (!univerAPI) return;
+
             const content = pendingContent.current;
             pendingContent.current = null;
             applyContent(univerAPI, content);
         });
-    });
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally stable: applyContent/isContainerVisible use refs
+    }, [ containerRef ]);
 
     useEffect(() => {
         return () => {
