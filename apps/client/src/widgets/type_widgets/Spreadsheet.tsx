@@ -6,11 +6,12 @@ import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
 import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { CommandType, createUniver, FUniver, IDisposable, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
-import { MutableRef, useEffect, useRef } from "preact/hooks";
+import { note } from "mermaid/dist/rendering-util/rendering-elements/shapes/note.js";
+import { MutableRef, useCallback, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
-import { SavedData, useColorScheme, useEditorSpacedUpdate, useTriliumEvent } from "../react/hooks";
+import { SavedData, useColorScheme, useEditorSpacedUpdate, useIsNoteReadOnly, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
 interface PersistedData {
@@ -25,6 +26,7 @@ export default function Spreadsheet({ note, noteContext }: TypeWidgetProps) {
     useInitializeSpreadsheet(containerRef, apiRef);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef);
+    useReadOnly(note, apiRef);
 
     // Focus the spreadsheet when the note is focused.
     useTriliumEvent("focusOnDetail", () => {
@@ -151,4 +153,41 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             }
         };
     }, []);
+}
+
+function useReadOnly(note: FNote, apiRef: MutableRef<FUniver | undefined>) {
+    const [ readOnly ] = useNoteLabelBoolean(note, "readOnly");
+
+    useEffect(() => {
+        const univerAPI = apiRef.current;
+        if (!univerAPI) return;
+
+        function apply() {
+            const workbook = univerAPI?.getActiveWorkbook();
+            if (!workbook) return;
+
+            const permission = workbook.getPermission();
+            if (readOnly) {
+                workbook.disableSelection();
+            } else {
+                workbook.enableSelection();
+            }
+            permission.setWorkbookEditPermission(workbook.getId(), !readOnly);
+            permission.setPermissionDialogVisible(false);
+        }
+
+        // Try immediately (covers post-init changes).
+        apply();
+
+        // Also listen for lifecycle in case Univer isn't ready yet.
+        const disposable = univerAPI.addEvent(
+            univerAPI.Event.LifeCycleChanged,
+            ({ stage }) => {
+                if (stage === univerAPI.Enum.LifecycleStages.Rendered) {
+                    apply();
+                }
+            }
+        );
+        return () => disposable.dispose();
+    }, [ readOnly, apiRef ]);
 }
