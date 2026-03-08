@@ -1,7 +1,8 @@
 import type { HTMLAttributes, RefObject } from "preact";
 import { useCallback, useEffect, useRef } from "preact/hooks";
-import Inter from "./../../../fonts/Inter/Inter-VariableFont_opsz,wght.ttf";
+
 import { useSyncedRef, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import Inter from "./../../../fonts/Inter/Inter-VariableFont_opsz,wght.ttf";
 
 interface FontDefinition {
     name: string;
@@ -10,11 +11,11 @@ interface FontDefinition {
 
 const FONTS: FontDefinition[] = [
     {name: "Inter", url: Inter},
-]
+];
 
 interface PdfViewerProps extends Pick<HTMLAttributes<HTMLIFrameElement>, "tabIndex"> {
     iframeRef?: RefObject<HTMLIFrameElement>;
-    /** Note: URLs are relative to /pdfjs/web. */
+    /** Note: URLs are relative to /pdfjs/web, ideally use absolute paths (but without domain name) to avoid issues with some proxies. */
     pdfUrl: string;
     onLoad?(): void;
     /**
@@ -63,7 +64,7 @@ function useStyleInjection(iframeRef: RefObject<HTMLIFrameElement>) {
         const fontStyles = doc.createElement("style");
         fontStyles.textContent = FONTS.map(injectFont).join("\n");
         doc.head.appendChild(fontStyles);
-        
+
     }, [ iframeRef ]);
 
     // React to changes.
