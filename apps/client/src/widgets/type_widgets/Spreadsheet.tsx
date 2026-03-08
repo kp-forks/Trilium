@@ -3,6 +3,8 @@ import "./Spreadsheet.css";
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
+import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
+import sheetsFindReplaceEnUS from '@univerjs/preset-sheets-find-replace/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
 import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { CommandType, createUniver, FUniver, IDisposable, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
@@ -61,6 +63,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
             locales: {
                 [LocaleType.EN_US]: mergeLocales(
                     sheetsCoreEnUS,
+                    sheetsFindReplaceEnUS,
                     sheetsNoteEnUS,
                 ),
             },
@@ -77,6 +80,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                         "sheet.command.add-range-protection-from-toolbar": { hidden: true },
                     },
                 }),
+                UniverSheetsFindReplacePreset(),
                 UniverSheetsNotePreset()
             ]
         });
