@@ -8,7 +8,8 @@ import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
-import { useColorScheme, useEditorSpacedUpdate, useTriliumEvent } from "../react/hooks";
+import server from "../../services/server";
+import { SavedData, useColorScheme, useEditorSpacedUpdate, useTriliumEvent } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
 interface PersistedData {
@@ -22,7 +23,7 @@ export default function Spreadsheet({ note, noteContext }: TypeWidgetProps) {
 
     useInitializeSpreadsheet(containerRef, apiRef);
     useDarkMode(apiRef);
-    usePersistence(note, noteContext, apiRef);
+    usePersistence(note, noteContext, apiRef, containerRef);
 
     // Focus the spreadsheet when the note is focused.
     useTriliumEvent("focusOnDetail", () => {
@@ -68,14 +69,14 @@ function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
     }, [ colorScheme, apiRef ]);
 }
 
-function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>) {
+function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>) {
     const changeListener = useRef<IDisposable>(null);
 
     const spacedUpdate = useEditorSpacedUpdate({
         noteType: "spreadsheet",
         note,
         noteContext,
-        getData() {
+        async getData() {
             const univerAPI = apiRef.current;
             if (!univerAPI) return undefined;
             const workbook = univerAPI.getActiveWorkbook();
@@ -84,8 +85,25 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
                 version: 1,
                 workbook: workbook.save()
             };
+
+            const attachments: SavedData["attachments"] = [];
+            const canvasEl = containerRef.current?.querySelector<HTMLCanvasElement>("canvas[id]");
+            if (canvasEl) {
+                const dataUrl = canvasEl.toDataURL("image/png");
+                const base64 = dataUrl.split(",")[1];
+                attachments.push({
+                    role: "image",
+                    title: "spreadsheet-export.png",
+                    mime: "image/png",
+                    content: base64,
+                    position: 0,
+                    encoding: "base64"
+                });
+            }
+
             return {
-                content: JSON.stringify(content)
+                content: JSON.stringify(content),
+                attachments
             };
         },
         onContentChange(newContent) {
