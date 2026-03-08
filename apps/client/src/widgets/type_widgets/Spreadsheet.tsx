@@ -8,7 +8,7 @@ import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
-import { useColorScheme, useEditorSpacedUpdate } from "../react/hooks";
+import { useColorScheme, useEditorSpacedUpdate, useTriliumEvent } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
 interface PersistedData {
@@ -23,6 +23,14 @@ export default function Spreadsheet({ note, noteContext }: TypeWidgetProps) {
     useInitializeSpreadsheet(containerRef, apiRef);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef);
+
+    // Focus the spreadsheet when the note is focused.
+    useTriliumEvent("focusOnDetail", () => {
+        const focusable = containerRef.current?.querySelector('[data-u-comp="editor"]');
+        if (focusable instanceof HTMLElement) {
+            focusable.focus();
+        }
+    });
 
     return <div ref={containerRef} className="spreadsheet" />;
 }
