@@ -10,7 +10,7 @@ import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
-import { SavedData, useColorScheme, useEditorSpacedUpdate, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
+import { SavedData, useColorScheme, useEditorSpacedUpdate, useElementSize, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
 interface PersistedData {
@@ -45,6 +45,8 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
 }
 
 function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean) {
+    const size = useElementSize(containerRef);
+
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -90,6 +92,49 @@ function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
 
 function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>, readOnly: boolean) {
     const changeListener = useRef<IDisposable>(null);
+    const pendingContent = useRef<string | null>(null);
+
+    function applyContent(univerAPI: FUniver, newContent: string) {
+        // Dispose the existing workbook.
+        const existingWorkbook = univerAPI.getActiveWorkbook();
+        if (existingWorkbook) {
+            univerAPI.disposeUnit(existingWorkbook.getId());
+        }
+
+        let workbookData: Partial<IWorkbookData> = {};
+        if (newContent) {
+            try {
+                const parsedContent = JSON.parse(newContent) as unknown;
+                if (parsedContent && typeof parsedContent === "object" && "workbook" in parsedContent) {
+                    const persistedData = parsedContent as PersistedData;
+                    workbookData = persistedData.workbook;
+                }
+            } catch (e) {
+                console.error("Failed to parse spreadsheet content", e);
+            }
+        }
+
+        const workbook = univerAPI.createWorkbook(workbookData);
+        if (readOnly) {
+            workbook.disableSelection();
+            const permission = workbook.getPermission();
+            permission.setWorkbookEditPermission(workbook.getId(), false);
+            permission.setPermissionDialogVisible(false);
+        }
+        if (changeListener.current) {
+            changeListener.current.dispose();
+        }
+        changeListener.current = workbook.onCommandExecuted(command => {
+            if (command.type !== CommandType.MUTATION) return;
+            spacedUpdate.scheduleUpdate();
+        });
+    }
+
+    function isContainerVisible() {
+        const el = containerRef.current;
+        if (!el) return false;
+        return el.offsetWidth > 0 && el.offsetHeight > 0;
+    }
 
     const spacedUpdate = useEditorSpacedUpdate({
         noteType: "spreadsheet",
@@ -129,40 +174,33 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             const univerAPI = apiRef.current;
             if (!univerAPI) return undefined;
 
-            // Dispose the existing workbook.
-            const existingWorkbook = univerAPI.getActiveWorkbook();
-            if (existingWorkbook) {
-                univerAPI.disposeUnit(existingWorkbook.getId());
+            // Defer content application if the container is hidden (zero size),
+            // since the spreadsheet library cannot calculate layout in that state.
+            if (!isContainerVisible()) {
+                pendingContent.current = newContent;
+                return;
             }
 
-            let workbookData: Partial<IWorkbookData> = {};
-            if (newContent) {
-                try {
-                    const parsedContent = JSON.parse(newContent) as unknown;
-                    if (parsedContent && typeof parsedContent === "object" && "workbook" in parsedContent) {
-                        const persistedData = parsedContent as PersistedData;
-                        workbookData = persistedData.workbook;
-                    }
-                } catch (e) {
-                    console.error("Failed to parse spreadsheet content", e);
-                }
-            }
-
-            const workbook = univerAPI.createWorkbook(workbookData);
-            if (readOnly) {
-                workbook.disableSelection();
-                const permission = workbook.getPermission();
-                permission.setWorkbookEditPermission(workbook.getId(), false);
-                permission.setPermissionDialogVisible(false);
-            }
-            if (changeListener.current) {
-                changeListener.current.dispose();
-            }
-            changeListener.current = workbook.onCommandExecuted(command => {
-                if (command.type !== CommandType.MUTATION) return;
-                spacedUpdate.scheduleUpdate();
-            });
+            pendingContent.current = null;
+            applyContent(univerAPI, newContent);
         },
+    });
+
+    // Apply pending content when the tab becomes active.
+    useTriliumEvent("activeNoteChanged", () => {
+        if (pendingContent.current === null) return;
+        if (!noteContext?.isActive()) return;
+
+        const univerAPI = apiRef.current;
+        if (!univerAPI) return;
+
+        // Use requestAnimationFrame to ensure the container has been laid out.
+        requestAnimationFrame(() => {
+            if (pendingContent.current === null || !isContainerVisible()) return;
+            const content = pendingContent.current;
+            pendingContent.current = null;
+            applyContent(univerAPI, content);
+        });
     });
 
     useEffect(() => {
