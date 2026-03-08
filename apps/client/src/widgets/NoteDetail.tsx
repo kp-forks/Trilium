@@ -40,6 +40,19 @@ export default function NoteDetail() {
     const widgetRequestId = useRef(0);
     const hasFixedTree = note && noteContext?.hoistedNoteId === "_lbMobileRoot" && isMobile() && note.noteId.startsWith("_lbMobile");
 
+    // Defer loading for tabs that haven't been active yet (e.g. on app refresh).
+    const [ hasTabBeenActive, setHasTabBeenActive ] = useState(() => noteContext?.isActive() ?? false);
+    useEffect(() => {
+        if (!hasTabBeenActive && noteContext?.isActive()) {
+            setHasTabBeenActive(true);
+        }
+    }, [ noteContext, hasTabBeenActive ]);
+    useTriliumEvent("activeNoteChanged", ({ ntxId: eventNtxId }) => {
+        if (eventNtxId === ntxId && !hasTabBeenActive) {
+            setHasTabBeenActive(true);
+        }
+    });
+
     const props: TypeWidgetProps = {
         note: note!,
         viewScope,
@@ -49,7 +62,7 @@ export default function NoteDetail() {
     };
 
     useEffect(() => {
-        if (!type) return;
+        if (!type || !hasTabBeenActive) return;
         const requestId = ++widgetRequestId.current;
 
         if (!noteTypesToRender[type]) {
@@ -68,7 +81,7 @@ export default function NoteDetail() {
         } else {
             setActiveNoteType(type);
         }
-    }, [ note, viewScope, type, noteTypesToRender ]);
+    }, [ note, viewScope, type, noteTypesToRender, hasTabBeenActive ]);
 
     // Detect note type changes.
     useTriliumEvent("entitiesReloaded", async ({ loadResults }) => {
@@ -243,15 +256,12 @@ function FixedTree({ noteContext }: { noteContext: NoteContext }) {
  */
 function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { Element: (props: TypeWidgetProps) => VNode, type: ExtendedNoteType, isVisible: boolean, isFullHeight: boolean, props: TypeWidgetProps }) {
     const [ cachedProps, setCachedProps ] = useState(props);
-    const [ hasBeenVisible, setHasBeenVisible ] = useState(isVisible);
 
     useEffect(() => {
         if (isVisible) {
             setCachedProps(props);
-            setHasBeenVisible(true);
-        } else {
-            // Do nothing, keep the old props.
         }
+        // When not visible, keep the old props to avoid re-rendering in the background.
     }, [ props, isVisible ]);
 
     const typeMapping = TYPE_MAPPINGS[type];
@@ -262,7 +272,7 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
                 height: isFullHeight ? "100%" : ""
             }}
         >
-            { hasBeenVisible && <Element {...cachedProps} /> }
+            <Element {...cachedProps} />
         </div>
     );
 }
