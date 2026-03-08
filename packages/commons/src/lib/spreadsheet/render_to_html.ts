@@ -204,7 +204,7 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
 
             const attrs: string[] = [];
             if (cssText) attrs.push(`style="${cssText}"`);
-            if (mergeInfo && mergeInfo !== "hidden") {
+            if (mergeInfo) {
                 if (mergeInfo.rowSpan > 1) attrs.push(`rowspan="${mergeInfo.rowSpan}"`);
                 if (mergeInfo.colSpan > 1) attrs.push(`colspan="${mergeInfo.colSpan}"`);
             }
