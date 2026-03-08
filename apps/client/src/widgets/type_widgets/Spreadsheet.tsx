@@ -2,13 +2,14 @@ import "@univerjs/preset-sheets-core/lib/index.css";
 import "./Spreadsheet.css";
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
-import UniverPresetSheetsCoreEnUS from '@univerjs/preset-sheets-core/locales/en-US';
+import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
+import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
+import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { CommandType, createUniver, FUniver, IDisposable, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
-import server from "../../services/server";
 import { SavedData, useColorScheme, useEditorSpacedUpdate, useTriliumEvent } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
@@ -44,13 +45,15 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
             locale: LocaleType.EN_US,
             locales: {
                 [LocaleType.EN_US]: mergeLocales(
-                    UniverPresetSheetsCoreEnUS
+                    sheetsCoreEnUS,
+                    sheetsNoteEnUS,
                 ),
             },
             presets: [
                 UniverSheetsCorePreset({
                     container: containerRef.current,
-                })
+                }),
+                UniverSheetsNotePreset()
             ]
         });
         apiRef.current = univerAPI;
