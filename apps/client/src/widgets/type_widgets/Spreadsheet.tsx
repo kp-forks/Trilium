@@ -18,6 +18,14 @@ interface PersistedData {
     workbook: Parameters<FUniver["createWorkbook"]>[0];
 }
 
+interface SpreadsheetViewState {
+    activeSheetId?: string;
+    cursorRow?: number;
+    cursorCol?: number;
+    scrollRow?: number;
+    scrollCol?: number;
+}
+
 export default function Spreadsheet(props: TypeWidgetProps) {
     const [ readOnly ] = useNoteLabelBoolean(props.note, "readOnly");
 
@@ -92,7 +100,54 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
     const changeListener = useRef<IDisposable>(null);
     const pendingContent = useRef<string | null>(null);
 
+    function saveViewState(univerAPI: FUniver): SpreadsheetViewState {
+        const state: SpreadsheetViewState = {};
+        try {
+            const workbook = univerAPI.getActiveWorkbook();
+            if (!workbook) return state;
+
+            const activeSheet = workbook.getActiveSheet();
+            state.activeSheetId = activeSheet?.getSheetId();
+
+            const currentCell = activeSheet?.getSelection()?.getCurrentCell();
+            if (currentCell) {
+                state.cursorRow = currentCell.actualRow;
+                state.cursorCol = currentCell.actualColumn;
+            }
+
+            const scrollState = activeSheet?.getScrollState?.();
+            if (scrollState) {
+                state.scrollRow = scrollState.sheetViewStartRow;
+                state.scrollCol = scrollState.sheetViewStartColumn;
+            }
+        } catch {
+            // Ignore errors when reading state from a workbook being disposed.
+        }
+        return state;
+    }
+
+    function restoreViewState(workbook: ReturnType<FUniver["createWorkbook"]>, state: SpreadsheetViewState) {
+        try {
+            if (state.activeSheetId) {
+                const targetSheet = workbook.getSheetBySheetId(state.activeSheetId);
+                if (targetSheet) {
+                    workbook.setActiveSheet(targetSheet);
+                }
+            }
+            if (state.cursorRow !== undefined && state.cursorCol !== undefined) {
+                workbook.getActiveSheet().getRange(state.cursorRow, state.cursorCol).activate();
+            }
+            if (state.scrollRow !== undefined && state.scrollCol !== undefined) {
+                workbook.getActiveSheet().scrollToCell(state.scrollRow, state.scrollCol);
+            }
+        } catch {
+            // Ignore errors when restoring state (e.g. sheet no longer exists).
+        }
+    }
+
     function applyContent(univerAPI: FUniver, newContent: string) {
+        const viewState = saveViewState(univerAPI);
+
         // Dispose the existing workbook.
         const existingWorkbook = univerAPI.getActiveWorkbook();
         if (existingWorkbook) {
@@ -119,6 +174,9 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             permission.setWorkbookEditPermission(workbook.getId(), false);
             permission.setPermissionDialogVisible(false);
         }
+
+        restoreViewState(workbook, viewState);
+
         if (changeListener.current) {
             changeListener.current.dispose();
         }
