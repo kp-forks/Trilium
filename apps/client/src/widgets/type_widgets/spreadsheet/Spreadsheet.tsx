@@ -1,5 +1,6 @@
 import "@univerjs/preset-sheets-core/lib/index.css";
 import "./Spreadsheet.css";
+import '@univerjs/preset-sheets-sort/lib/index.css';
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
@@ -9,6 +10,8 @@ import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-repl
 import sheetsFindReplaceEnUS from '@univerjs/preset-sheets-find-replace/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
 import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
+import { UniverSheetsSortPreset } from '@univerjs/preset-sheets-sort';
+import UniverPresetSheetsSortEnUS from '@univerjs/preset-sheets-sort/locales/en-US';
 import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
@@ -55,6 +58,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     sheetsFindReplaceEnUS,
                     sheetsNoteEnUS,
                     UniverPresetSheetsFilterEnUS,
+                    UniverPresetSheetsSortEnUS,
                 ),
             },
             presets: [
@@ -72,7 +76,8 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                 }),
                 UniverSheetsFindReplacePreset(),
                 UniverSheetsNotePreset(),
-                UniverSheetsFilterPreset()
+                UniverSheetsFilterPreset(),
+                UniverSheetsSortPreset()
             ]
         });
         apiRef.current = univerAPI;
