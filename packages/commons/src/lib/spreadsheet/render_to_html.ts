@@ -177,7 +177,7 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
     for (let col = minCol; col <= maxCol; col++) {
         const colMeta = columnData[col];
         if (colMeta?.hd) continue;
-        const width = colMeta?.w ?? defaultWidth;
+        const width = isFiniteNumber(colMeta?.w) ? colMeta.w : defaultWidth;
         lines.push(`<col style="width:${width}px">`);
     }
     lines.push("</colgroup>");
@@ -188,7 +188,7 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
         const rowMeta = rowData[row];
         if (rowMeta?.hd) continue;
 
-        const height = rowMeta?.h ?? defaultHeight;
+        const height = isFiniteNumber(rowMeta?.h) ? rowMeta.h : defaultHeight;
         lines.push(`<tr style="height:${height}px">`);
 
         for (let col = minCol; col <= maxCol; col++) {
@@ -329,10 +329,10 @@ function buildCssText(style: IStyleData | null): string {
             parts.push("text-decoration:line-through");
         }
     }
-    if (style.fs) parts.push(`font-size:${style.fs}pt`);
-    if (style.ff) parts.push(`font-family:${style.ff}`);
-    if (style.bg?.rgb) parts.push(`background-color:${style.bg.rgb}`);
-    if (style.cl?.rgb) parts.push(`color:${style.cl.rgb}`);
+    if (style.fs && isFiniteNumber(style.fs)) parts.push(`font-size:${style.fs}pt`);
+    if (style.ff) parts.push(`font-family:${sanitizeCssValue(style.ff)}`);
+    if (style.bg?.rgb) parts.push(`background-color:${sanitizeCssColor(style.bg.rgb)}`);
+    if (style.cl?.rgb) parts.push(`color:${sanitizeCssColor(style.cl.rgb)}`);
 
     if (style.ht != null) {
         const align = horizontalAlignToCss(style.ht);
@@ -374,7 +374,7 @@ function verticalAlignToCss(align: number): string | null {
 function appendBorderCss(parts: string[], property: string, border: IBorderStyleData | null | undefined): void {
     if (!border) return;
     const width = borderStyleToWidth(border.s);
-    const color = border.cl?.rgb ?? "#000";
+    const color = sanitizeCssColor(border.cl?.rgb ?? "#000");
     const style = borderStyleToCss(border.s);
     parts.push(`${property}:${width} ${style} ${color}`);
 }
@@ -393,6 +393,35 @@ function borderStyleToCss(style: number | undefined): string {
         case BorderStyle.DOTTED: return "dotted";
         default: return "solid";
     }
+}
+
+/** Checks that a value is a finite number (guards against stringified payloads from JSON). */
+function isFiniteNumber(v: unknown): v is number {
+    return typeof v === "number" && Number.isFinite(v);
+}
+
+/**
+ * Sanitizes an arbitrary string for use as a CSS value by removing characters
+ * that could break out of a property (semicolons, braces, angle brackets, etc.).
+ */
+function sanitizeCssValue(value: string): string {
+    return value.replace(/[;<>{}\\/()'"]/g, "");
+}
+
+/**
+ * Validates a CSS color string. Accepts hex colors (#rgb, #rrggbb, #rrggbbaa),
+ * named colors (letters only), and rgb()/rgba()/hsl()/hsla() functional notation
+ * with safe characters. Returns "transparent" for anything that doesn't match.
+ */
+function sanitizeCssColor(value: string): string {
+    const trimmed = value.trim();
+    // Hex colors
+    if (/^#[0-9a-fA-F]{3,8}$/.test(trimmed)) return trimmed;
+    // Named colors (letters only, reasonable length)
+    if (/^[a-zA-Z]{1,30}$/.test(trimmed)) return trimmed;
+    // Functional notation: rgb(), rgba(), hsl(), hsla() — allow digits, commas, dots, spaces, %
+    if (/^(?:rgb|hsl)a?\([0-9.,\s%]+\)$/.test(trimmed)) return trimmed;
+    return "transparent";
 }
 
 // #endregion
@@ -414,7 +443,9 @@ function escapeHtml(text: string): string {
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    ;
 }
 
 // #endregion

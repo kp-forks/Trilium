@@ -305,4 +305,117 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("text-align:center");
         expect(html).toContain("border-bottom:");
     });
+
+    it("sanitizes CSS injection in color values", () => {
+        const input = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: {},
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 10,
+                        columnCount: 5,
+                        mergeData: [],
+                        cellData: {
+                            "0": {
+                                "0": {
+                                    v: "test",
+                                    s: {
+                                        bg: { rgb: "red;background:url(//evil.com/steal)" },
+                                        cl: { rgb: "#FFF;color:expression(alert(1))" }
+                                    }
+                                }
+                            }
+                        },
+                        rowData: {},
+                        columnData: {}
+                    }
+                }
+            }
+        });
+
+        const html = renderSpreadsheetToHtml(input);
+        expect(html).not.toContain("evil.com");
+        expect(html).not.toContain("expression");
+        expect(html).toContain("transparent");
+    });
+
+    it("sanitizes CSS injection in font-family", () => {
+        const input = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: {},
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 10,
+                        columnCount: 5,
+                        mergeData: [],
+                        cellData: {
+                            "0": {
+                                "0": {
+                                    v: "test",
+                                    s: {
+                                        ff: "Arial;}</style><script>alert(1)</script>"
+                                    }
+                                }
+                            }
+                        },
+                        rowData: {},
+                        columnData: {}
+                    }
+                }
+            }
+        });
+
+        const html = renderSpreadsheetToHtml(input);
+        expect(html).not.toContain("<script>");
+        expect(html).not.toContain("</style>");
+        expect(html).toContain("font-family:Arial");
+    });
+
+    it("sanitizes CSS injection in border colors", () => {
+        const input = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: {},
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 10,
+                        columnCount: 5,
+                        mergeData: [],
+                        cellData: {
+                            "0": {
+                                "0": {
+                                    v: "test",
+                                    s: {
+                                        bd: {
+                                            b: { s: 1, cl: { rgb: "#000;background:url(//evil.com)" } }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        rowData: {},
+                        columnData: {}
+                    }
+                }
+            }
+        });
+
+        const html = renderSpreadsheetToHtml(input);
+        expect(html).not.toContain("evil.com");
+        expect(html).toContain("transparent");
+    });
 });
