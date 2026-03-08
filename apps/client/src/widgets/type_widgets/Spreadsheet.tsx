@@ -6,12 +6,11 @@ import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
 import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { CommandType, createUniver, FUniver, IDisposable, IWorkbookData, LocaleType, mergeLocales } from '@univerjs/presets';
-import { note } from "mermaid/dist/rendering-util/rendering-elements/shapes/note.js";
-import { MutableRef, useCallback, useEffect, useRef } from "preact/hooks";
+import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
-import { SavedData, useColorScheme, useEditorSpacedUpdate, useIsNoteReadOnly, useNoteLabel, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
+import { SavedData, useColorScheme, useEditorSpacedUpdate, useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 import { TypeWidgetProps } from "./type_widget";
 
 interface PersistedData {
@@ -19,14 +18,20 @@ interface PersistedData {
     workbook: Parameters<FUniver["createWorkbook"]>[0];
 }
 
-export default function Spreadsheet({ note, noteContext }: TypeWidgetProps) {
+export default function Spreadsheet(props: TypeWidgetProps) {
+    const [ readOnly ] = useNoteLabelBoolean(props.note, "readOnly");
+
+    // Use readOnly as key to force full remount (and data reload) when it changes.
+    return <SpreadsheetEditor key={String(readOnly)} {...props} readOnly={readOnly} />;
+}
+
+function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { readOnly: boolean }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const apiRef = useRef<FUniver>();
 
-    useInitializeSpreadsheet(containerRef, apiRef);
+    useInitializeSpreadsheet(containerRef, apiRef, readOnly);
     useDarkMode(apiRef);
-    usePersistence(note, noteContext, apiRef, containerRef);
-    useReadOnly(note, apiRef);
+    usePersistence(note, noteContext, apiRef, containerRef, readOnly);
 
     // Focus the spreadsheet when the note is focused.
     useTriliumEvent("focusOnDetail", () => {
@@ -39,7 +44,7 @@ export default function Spreadsheet({ note, noteContext }: TypeWidgetProps) {
     return <div ref={containerRef} className="spreadsheet" />;
 }
 
-function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>) {
+function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean) {
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -54,13 +59,17 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
             presets: [
                 UniverSheetsCorePreset({
                     container: containerRef.current,
+                    toolbar: !readOnly,
+                    contextMenu: !readOnly,
+                    formulaBar: !readOnly,
+                    footer: readOnly ? false : undefined
                 }),
                 UniverSheetsNotePreset()
             ]
         });
         apiRef.current = univerAPI;
         return () => univerAPI.dispose();
-    }, [ apiRef, containerRef ]);
+    }, [ apiRef, containerRef, readOnly ]);
 }
 
 function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
@@ -74,7 +83,7 @@ function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
     }, [ colorScheme, apiRef ]);
 }
 
-function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>) {
+function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>, readOnly: boolean) {
     const changeListener = useRef<IDisposable>(null);
 
     const spacedUpdate = useEditorSpacedUpdate({
@@ -135,6 +144,12 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
             }
 
             const workbook = univerAPI.createWorkbook(workbookData);
+            if (readOnly) {
+                workbook.disableSelection();
+                const permission = workbook.getPermission();
+                permission.setWorkbookEditPermission(workbook.getId(), false);
+                permission.setPermissionDialogVisible(false);
+            }
             if (changeListener.current) {
                 changeListener.current.dispose();
             }
@@ -155,39 +170,3 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
     }, []);
 }
 
-function useReadOnly(note: FNote, apiRef: MutableRef<FUniver | undefined>) {
-    const [ readOnly ] = useNoteLabelBoolean(note, "readOnly");
-
-    useEffect(() => {
-        const univerAPI = apiRef.current;
-        if (!univerAPI) return;
-
-        function apply() {
-            const workbook = univerAPI?.getActiveWorkbook();
-            if (!workbook) return;
-
-            const permission = workbook.getPermission();
-            if (readOnly) {
-                workbook.disableSelection();
-            } else {
-                workbook.enableSelection();
-            }
-            permission.setWorkbookEditPermission(workbook.getId(), !readOnly);
-            permission.setPermissionDialogVisible(false);
-        }
-
-        // Try immediately (covers post-init changes).
-        apply();
-
-        // Also listen for lifecycle in case Univer isn't ready yet.
-        const disposable = univerAPI.addEvent(
-            univerAPI.Event.LifeCycleChanged,
-            ({ stage }) => {
-                if (stage === univerAPI.Enum.LifecycleStages.Rendered) {
-                    apply();
-                }
-            }
-        );
-        return () => disposable.dispose();
-    }, [ readOnly, apiRef ]);
-}
