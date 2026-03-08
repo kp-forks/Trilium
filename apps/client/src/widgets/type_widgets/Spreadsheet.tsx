@@ -42,6 +42,7 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
     useInitializeSpreadsheet(containerRef, apiRef, readOnly);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef, readOnly);
+    useSearchIntegration(apiRef);
 
     // Focus the spreadsheet when the note is focused.
     useTriliumEvent("focusOnDetail", () => {
@@ -275,3 +276,12 @@ function usePersistence(note: FNote, noteContext: NoteContext | null | undefined
     }, []);
 }
 
+function useSearchIntegration(apiRef: MutableRef<FUniver | undefined>) {
+    useTriliumEvent("findInText", () => {
+        const univerAPI = apiRef.current;
+        if (!univerAPI) return;
+
+        // Open find/replace panel and populate the search term.
+        univerAPI.executeCommand("ui.operation.open-find-dialog");
+    });
+}
