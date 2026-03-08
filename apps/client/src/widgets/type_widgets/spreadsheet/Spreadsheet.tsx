@@ -4,6 +4,8 @@ import '@univerjs/preset-sheets-sort/lib/index.css';
 
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
+import { UniverSheetsDataValidationPreset } from '@univerjs/preset-sheets-data-validation';
+import UniverPresetSheetsDataValidationEnUS from '@univerjs/preset-sheets-data-validation/locales/en-US';
 import { UniverSheetsFilterPreset } from '@univerjs/preset-sheets-filter';
 import UniverPresetSheetsFilterEnUS from '@univerjs/preset-sheets-filter/locales/en-US';
 import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
@@ -59,6 +61,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     sheetsNoteEnUS,
                     UniverPresetSheetsFilterEnUS,
                     UniverPresetSheetsSortEnUS,
+                    UniverPresetSheetsDataValidationEnUS,
                 ),
             },
             presets: [
@@ -77,7 +80,8 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                 UniverSheetsFindReplacePreset(),
                 UniverSheetsNotePreset(),
                 UniverSheetsFilterPreset(),
-                UniverSheetsSortPreset()
+                UniverSheetsSortPreset(),
+                UniverSheetsDataValidationPreset()
             ]
         });
         apiRef.current = univerAPI;
