@@ -63,7 +63,7 @@ Vår dokumentation är tillgänglig i flera format:
 - [Grundläggande koncept och
   funktioner](https://docs.triliumnotes.org/user-guide/concepts/notes)
 - [Modeller av personlig
-  kuskapsbas](https://docs.triliumnotes.org/user-guide/misc/patterns-of-personal-knowledge)
+  kunskapsbas](https://docs.triliumnotes.org/user-guide/misc/patterns-of-personal-knowledge)
 
 ## 🎁 Funktioner
 
