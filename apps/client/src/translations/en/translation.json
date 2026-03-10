@@ -1036,6 +1036,22 @@
     "file_preview_not_available": "File preview is not available for this file format.",
     "too_big": "The preview only shows the first {{maxNumChars}} characters of the file for performance reasons. Download the file and open it externally to be able to see the entire content."
   },
+  "video": {
+    "play": "Play",
+    "pause": "Pause",
+    "back-10s": "Back 10s",
+    "forward-30s": "Forward 30s",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "playback-speed": "Playback speed",
+    "loop": "Loop",
+    "disable-loop": "Disable loop",
+    "rotate": "Rotate",
+    "picture-in-picture": "Picture-in-picture",
+    "exit-picture-in-picture": "Exit picture-in-picture",
+    "fullscreen": "Fullscreen",
+    "exit-fullscreen": "Exit fullscreen"
+  },
   "protected_session": {
     "enter_password_instruction": "Showing protected note requires entering your password:",
     "start_session_button": "Start protected session",

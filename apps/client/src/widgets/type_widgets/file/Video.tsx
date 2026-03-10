@@ -4,6 +4,7 @@ import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
+import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
@@ -116,9 +117,9 @@ export default function VideoPreview({ note }: { note: FNote }) {
                         <LoopButton videoRef={videoRef} />
                     </div>
                     <div className="center">
-                        <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text="Back 10s" />
+                        <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
                         <PlayPauseButton videoRef={videoRef} playing={playing} />
-                        <SkipButton videoRef={videoRef} seconds={30} icon="bx bx-fast-forward" text="Forward 30s" />
+                        <SkipButton videoRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
                     </div>
                     <div className="right">
                         <VolumeControl videoRef={videoRef} />
@@ -177,7 +178,7 @@ function PlayPauseButton({ videoRef, playing }: { videoRef: RefObject<HTMLVideoE
         <ActionButton
             className="play-button"
             icon={playing ? "bx bx-pause" : "bx bx-play"}
-            text={playing ? "Pause" : "Play"}
+            text={playing ? t("video.pause") : t("video.play")}
             onClick={togglePlayback}
         />
     );
@@ -280,7 +281,7 @@ function VolumeControl({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
         <div class="video-volume-row">
             <ActionButton
                 icon={muted || volume === 0 ? "bx bx-volume-mute" : volume < 0.5 ? "bx bx-volume-low" : "bx bx-volume-full"}
-                text={muted ? "Unmute" : "Mute"}
+                text={muted ? t("video.unmute") : t("video.mute")}
                 onClick={toggleMute}
             />
             <input
@@ -328,7 +329,7 @@ function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
                 <Icon icon="bx bx-tachometer" />
                 <span class="video-speed-label">{speed}x</span>
             </>}
-            title="Playback speed"
+            title={t("video.playback-speed")}
         >
             {PLAYBACK_SPEEDS.map((rate) => (
                 <li key={rate}>
@@ -368,7 +369,7 @@ function LoopButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
         <ActionButton
             className={loop ? "active" : ""}
             icon="bx bx-repeat"
-            text={loop ? "Disable loop" : "Loop"}
+            text={loop ? t("video.disable-loop") : t("video.loop")}
             onClick={toggle}
         />
     );
@@ -401,7 +402,7 @@ function RotateButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
     return (
         <ActionButton
             icon="bx bx-rotate-right"
-            text="Rotate"
+            text={t("video.rotate")}
             onClick={rotate}
         />
     );
@@ -444,7 +445,7 @@ function PictureInPictureButton({ videoRef }: { videoRef: RefObject<HTMLVideoEle
     return (
         <ActionButton
             icon={active ? "bx bx-exit" : "bx bx-window-open"}
-            text={active ? "Exit picture-in-picture" : "Picture-in-picture"}
+            text={active ? t("video.exit-picture-in-picture") : t("video.picture-in-picture")}
             onClick={toggle}
         />
     );
@@ -473,7 +474,7 @@ function FullscreenButton({ targetRef }: { targetRef: RefObject<HTMLElement> }) 
     return (
         <ActionButton
             icon={isFullscreen ? "bx bx-exit-fullscreen" : "bx bx-fullscreen"}
-            text={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            text={isFullscreen ? t("video.exit-fullscreen") : t("video.fullscreen")}
             onClick={toggleFullscreen}
         />
     );
