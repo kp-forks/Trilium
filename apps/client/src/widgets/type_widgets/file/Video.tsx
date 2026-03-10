@@ -9,6 +9,7 @@ import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import Icon from "../../react/Icon";
+import NoItems from "../../react/NoItems";
 
 function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
@@ -22,7 +23,11 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
+    const [error, setError] = useState(false);
     const { visible: controlsVisible, onMouseMove, flash: flashControls } = useAutoHideControls(videoRef, playing);
+
+    useEffect(() => setError(false), [note.noteId]);
+    const onError = useCallback(() => setError(true), []);
 
     const togglePlayback = useCallback(() => {
         const video = videoRef.current;
@@ -97,6 +102,10 @@ export default function VideoPreview({ note }: { note: FNote }) {
         }
     }, [togglePlayback, flashControls]);
 
+    if (error) {
+        return <NoItems icon="bx bx-video-off" text={t("video.unsupported-format")} />;
+    }
+
     return (
         <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onMouseMove={onMouseMove}>
             <video
@@ -106,6 +115,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 datatype={note?.mime}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
+                onError={onError}
             />
 
             <div className="video-preview-controls">
