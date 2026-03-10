@@ -21,7 +21,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
-    const { visible: controlsVisible, onMouseMove } = useAutoHideControls(videoRef, playing);
+    const { visible: controlsVisible, onMouseMove, flash: flashControls } = useAutoHideControls(videoRef, playing);
 
     const togglePlayback = useCallback(() => {
         const video = videoRef.current;
@@ -46,17 +46,20 @@ export default function VideoPreview({ note }: { note: FNote }) {
             case " ":
                 e.preventDefault();
                 togglePlayback();
+                flashControls();
                 break;
             case "ArrowLeft":
                 e.preventDefault();
                 video.currentTime = Math.max(0, video.currentTime - (e.ctrlKey ? 60 : 10));
+                flashControls();
                 break;
             case "ArrowRight":
                 e.preventDefault();
                 video.currentTime = Math.min(video.duration, video.currentTime + (e.ctrlKey ? 60 : 10));
+                flashControls();
                 break;
         }
-    }, [togglePlayback]);
+    }, [togglePlayback, flashControls]);
 
     return (
         <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onMouseMove={onMouseMove}>
@@ -120,7 +123,7 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
         return () => clearTimeout(hideTimerRef.current);
     }, [playing, scheduleHide]);
 
-    return { visible, onMouseMove };
+    return { visible, onMouseMove, flash: onMouseMove };
 }
 
 function PlayPauseButton({ videoRef, playing }: { videoRef: RefObject<HTMLVideoElement>, playing: boolean }) {
