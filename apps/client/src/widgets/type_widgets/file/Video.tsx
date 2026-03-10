@@ -1,7 +1,7 @@
 import "./Video.css";
 
 import { RefObject } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import { getUrlForDownload } from "../../../services/open";
@@ -19,6 +19,42 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
+    const [controlsVisible, setControlsVisible] = useState(true);
+    const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+    const showControlsTemporarily = useCallback(() => {
+        setControlsVisible(true);
+        clearTimeout(hideTimerRef.current);
+        if (videoRef.current && !videoRef.current.paused) {
+            hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
+        }
+    }, []);
+
+    // Auto-hide when playback starts, show when paused.
+    useEffect(() => {
+        if (playing) {
+            hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
+        } else {
+            clearTimeout(hideTimerRef.current);
+            setControlsVisible(true);
+        }
+        return () => clearTimeout(hideTimerRef.current);
+    }, [playing]);
+
+    const onWrapperClick = useCallback((e: MouseEvent) => {
+        // Don't toggle if clicking on controls themselves.
+        const target = e.target as HTMLElement;
+        if (target.closest(".video-preview-controls")) return;
+        setControlsVisible((prev) => {
+            const next = !prev;
+            clearTimeout(hideTimerRef.current);
+            if (next && playing) {
+                hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
+            }
+            return next;
+        });
+    }, [playing]);
+
     const togglePlayback = () => {
         const video = videoRef.current;
         if (!video) return;
@@ -36,9 +72,8 @@ export default function VideoPreview({ note }: { note: FNote }) {
         video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
     };
 
-
     return (
-        <div ref={wrapperRef} className="video-preview-wrapper">
+        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} onClick={onWrapperClick} onMouseMove={showControlsTemporarily}>
             <video
                 ref={videoRef}
                 class="video-preview"

@@ -9,6 +9,15 @@
         height: 100%;
     }
 
+    &.controls-hidden {
+        cursor: pointer;
+
+        .video-preview-controls {
+            opacity: 0;
+            pointer-events: none;
+        }
+    }
+
     .video-preview-controls {
         position: absolute;
         bottom: 0;
@@ -19,6 +28,8 @@
         flex-direction: column;
         gap: 0.5em;
         background: rgba(0, 0, 0, 0.5);
+        opacity: 1;
+        transition: opacity 300ms ease;
 
         .video-buttons-row {
             display: flex;
