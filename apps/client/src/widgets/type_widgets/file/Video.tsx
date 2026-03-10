@@ -23,8 +23,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const [playing, setPlaying] = useState(false);
     const { visible: controlsVisible, onMouseMove } = useAutoHideControls(videoRef, playing);
 
-    const onVideoClick = useCallback((e: MouseEvent) => {
-        if ((e.target as HTMLElement).closest(".video-preview-controls")) return;
+    const togglePlayback = useCallback(() => {
         const video = videoRef.current;
         if (!video) return;
         if (video.paused) {
@@ -34,8 +33,20 @@ export default function VideoPreview({ note }: { note: FNote }) {
         }
     }, []);
 
+    const onVideoClick = useCallback((e: MouseEvent) => {
+        if ((e.target as HTMLElement).closest(".video-preview-controls")) return;
+        togglePlayback();
+    }, [togglePlayback]);
+
+    const onKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === " ") {
+            e.preventDefault();
+            togglePlayback();
+        }
+    }, [togglePlayback]);
+
     return (
-        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} onClick={onVideoClick} onMouseMove={onMouseMove}>
+        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onMouseMove={onMouseMove}>
             <video
                 ref={videoRef}
                 class="video-preview"
