@@ -124,12 +124,13 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     <div className="left">
                         <PlaybackSpeed videoRef={videoRef} />
                         <RotateButton videoRef={videoRef} />
-                        <LoopButton videoRef={videoRef} />
                     </div>
                     <div className="center">
+                        <div className="spacer" />
                         <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
                         <PlayPauseButton videoRef={videoRef} playing={playing} />
                         <SkipButton videoRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
+                        <LoopButton videoRef={videoRef} />
                     </div>
                     <div className="right">
                         <VolumeControl videoRef={videoRef} />

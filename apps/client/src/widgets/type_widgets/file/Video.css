@@ -44,6 +44,11 @@
                 display: flex;
             }
 
+            .spacer {
+                width: var(--icon-button-size, 32px);
+                height: var(--icon-button-size, 32px);
+            }
+
             .center {
                 justify-content: center;
             }
