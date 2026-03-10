@@ -15,48 +15,16 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
+const AUTO_HIDE_DELAY = 3000;
+
 export default function VideoPreview({ note }: { note: FNote }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
-    const [controlsVisible, setControlsVisible] = useState(true);
-    const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
-
-    const showControlsTemporarily = useCallback(() => {
-        setControlsVisible(true);
-        clearTimeout(hideTimerRef.current);
-        if (videoRef.current && !videoRef.current.paused) {
-            hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
-        }
-    }, []);
-
-    // Auto-hide when playback starts, show when paused.
-    useEffect(() => {
-        if (playing) {
-            hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
-        } else {
-            clearTimeout(hideTimerRef.current);
-            setControlsVisible(true);
-        }
-        return () => clearTimeout(hideTimerRef.current);
-    }, [playing]);
-
-    const onWrapperClick = useCallback((e: MouseEvent) => {
-        // Don't toggle if clicking on controls themselves.
-        const target = e.target as HTMLElement;
-        if (target.closest(".video-preview-controls")) return;
-        setControlsVisible((prev) => {
-            const next = !prev;
-            clearTimeout(hideTimerRef.current);
-            if (next && playing) {
-                hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
-            }
-            return next;
-        });
-    }, [playing]);
+    const { visible: controlsVisible, onMouseMove, onClick: onWrapperClick } = useAutoHideControls(videoRef, playing);
 
     return (
-        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} onClick={onWrapperClick} onMouseMove={showControlsTemporarily}>
+        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} onClick={onWrapperClick} onMouseMove={onMouseMove}>
             <video
                 ref={videoRef}
                 class="video-preview"
@@ -85,6 +53,46 @@ export default function VideoPreview({ note }: { note: FNote }) {
             </div>
         </div>
     );
+}
+
+function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boolean) {
+    const [visible, setVisible] = useState(true);
+    const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+    const scheduleHide = useCallback(() => {
+        clearTimeout(hideTimerRef.current);
+        if (videoRef.current && !videoRef.current.paused) {
+            hideTimerRef.current = setTimeout(() => setVisible(false), AUTO_HIDE_DELAY);
+        }
+    }, []);
+
+    const onMouseMove = useCallback(() => {
+        setVisible(true);
+        scheduleHide();
+    }, [scheduleHide]);
+
+    const onClick = useCallback((e: MouseEvent) => {
+        if ((e.target as HTMLElement).closest(".video-preview-controls")) return;
+        setVisible((prev) => {
+            const next = !prev;
+            clearTimeout(hideTimerRef.current);
+            if (next) scheduleHide();
+            return next;
+        });
+    }, [scheduleHide]);
+
+    // Auto-hide when playback starts, show when paused.
+    useEffect(() => {
+        if (playing) {
+            scheduleHide();
+        } else {
+            clearTimeout(hideTimerRef.current);
+            setVisible(true);
+        }
+        return () => clearTimeout(hideTimerRef.current);
+    }, [playing, scheduleHide]);
+
+    return { visible, onMouseMove, onClick };
 }
 
 function PlayPauseButton({ videoRef, playing }: { videoRef: RefObject<HTMLVideoElement>, playing: boolean }) {
