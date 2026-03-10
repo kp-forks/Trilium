@@ -176,8 +176,24 @@ function SeekBar({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
 }
 
 function VolumeControl({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
-    const [volume, setVolume] = useState(1);
-    const [muted, setMuted] = useState(false);
+    const [volume, setVolume] = useState(() => videoRef.current?.volume ?? 1);
+    const [muted, setMuted] = useState(() => videoRef.current?.muted ?? false);
+
+    // Sync state when the video element changes volume externally.
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        setVolume(video.volume);
+        setMuted(video.muted);
+
+        const onVolumeChange = () => {
+            setVolume(video.volume);
+            setMuted(video.muted);
+        };
+        video.addEventListener("volumechange", onVolumeChange);
+        return () => video.removeEventListener("volumechange", onVolumeChange);
+    }, []);
 
     const onVolumeChange = (e: Event) => {
         const video = videoRef.current;
