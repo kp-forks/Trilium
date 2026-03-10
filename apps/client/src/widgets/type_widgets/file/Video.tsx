@@ -237,7 +237,18 @@ function VolumeControl({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
 const PLAYBACK_SPEEDS = [0.5, 1, 1.25, 1.5, 2];
 
 function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
-    const [speed, setSpeed] = useState(1);
+    const [speed, setSpeed] = useState(() => videoRef.current?.playbackRate ?? 1);
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        setSpeed(video.playbackRate);
+
+        const onRateChange = () => setSpeed(video.playbackRate);
+        video.addEventListener("ratechange", onRateChange);
+        return () => video.removeEventListener("ratechange", onRateChange);
+    }, []);
 
     const selectSpeed = (rate: number) => {
         const video = videoRef.current;
