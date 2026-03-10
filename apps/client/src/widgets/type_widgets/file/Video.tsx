@@ -51,6 +51,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     <div className="left">
                         <PlaybackSpeed videoRef={videoRef} />
                         <RotateButton videoRef={videoRef} />
+                        <LoopButton videoRef={videoRef} />
                     </div>
                     <div className="center">
                         <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text="Back 10s" />
@@ -251,6 +252,26 @@ function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
                 </li>
             ))}
         </Dropdown>
+    );
+}
+
+function LoopButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
+    const [loop, setLoop] = useState(false);
+
+    const toggle = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.loop = !video.loop;
+        setLoop(video.loop);
+    };
+
+    return (
+        <ActionButton
+            className={loop ? "active" : ""}
+            icon="bx bx-repeat"
+            text={loop ? "Disable loop" : "Loop"}
+            onClick={toggle}
+        />
     );
 }
 
