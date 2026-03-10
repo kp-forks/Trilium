@@ -133,6 +133,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     </div>
                     <div className="right">
                         <VolumeControl videoRef={videoRef} />
+                        <ZoomToFitButton videoRef={videoRef} />
                         <PictureInPictureButton videoRef={videoRef} />
                         <FullscreenButton targetRef={wrapperRef} />
                     </div>
@@ -414,6 +415,27 @@ function RotateButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
             icon="bx bx-rotate-right"
             text={t("video.rotate")}
             onClick={rotate}
+        />
+    );
+}
+
+function ZoomToFitButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
+    const [fitted, setFitted] = useState(false);
+
+    const toggle = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        const next = !fitted;
+        video.style.objectFit = next ? "cover" : "";
+        setFitted(next);
+    };
+
+    return (
+        <ActionButton
+            className={fitted ? "active" : ""}
+            icon={fitted ? "bx bx-collapse" : "bx bx-expand"}
+            text={fitted ? t("video.zoom-reset") : t("video.zoom-to-fit")}
+            onClick={toggle}
         />
     );
 }
