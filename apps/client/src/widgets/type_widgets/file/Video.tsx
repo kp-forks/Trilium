@@ -58,6 +58,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     </div>
                     <div className="right">
                         <VolumeControl videoRef={videoRef} />
+                        <PictureInPictureButton videoRef={videoRef} />
                         <FullscreenButton targetRef={wrapperRef} />
                     </div>
                 </div>
@@ -249,6 +250,49 @@ function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
                 </li>
             ))}
         </Dropdown>
+    );
+}
+
+function PictureInPictureButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
+    const [active, setActive] = useState(false);
+    // The standard PiP API is only supported in Chromium-based browsers.
+    // Firefox uses its own proprietary PiP implementation.
+    const supported = "requestPictureInPicture" in HTMLVideoElement.prototype;
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || !supported) return;
+
+        const onEnter = () => setActive(true);
+        const onLeave = () => setActive(false);
+
+        video.addEventListener("enterpictureinpicture", onEnter);
+        video.addEventListener("leavepictureinpicture", onLeave);
+        return () => {
+            video.removeEventListener("enterpictureinpicture", onEnter);
+            video.removeEventListener("leavepictureinpicture", onLeave);
+        };
+    }, [supported]);
+
+    if (!supported) return null;
+
+    const toggle = () => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (document.pictureInPictureElement) {
+            document.exitPictureInPicture();
+        } else {
+            video.requestPictureInPicture();
+        }
+    };
+
+    return (
+        <ActionButton
+            icon={active ? "bx bx-exit" : "bx bx-window-open"}
+            text={active ? "Exit picture-in-picture" : "Picture-in-picture"}
+            onClick={toggle}
+        />
     );
 }
 
