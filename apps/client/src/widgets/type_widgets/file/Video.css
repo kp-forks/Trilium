@@ -14,7 +14,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 1em;
+        padding: 1.25em;
         display: flex;
         flex-direction: column;
         gap: 0.5em;
@@ -40,8 +40,20 @@
 
     .video-buttons-row {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+
+        > * {
+            flex: 1;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .right {
+            display: flex;
+            justify-content: flex-end;
+        }
     }
 
     .video-volume-row {

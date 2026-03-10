@@ -42,12 +42,17 @@ export default function VideoPreview({ note }: { note: FNote }) {
             <div className="video-preview-controls">
                 <SeekBar videoRef={videoRef} />
                 <div class="video-buttons-row">
-                    <ActionButton
-                        icon={playing ? "bx bx-pause" : "bx bx-play"}
-                        text={playing ? "Pause" : "Play"}
-                        onClick={togglePlayback}
-                    />
-                    <VolumeControl videoRef={videoRef} />
+                    <div className="left" />
+                    <div className="center">
+                        <ActionButton
+                            icon={playing ? "bx bx-pause" : "bx bx-play"}
+                            text={playing ? "Pause" : "Play"}
+                            onClick={togglePlayback}
+                        />
+                    </div>
+                    <div className="right">
+                        <VolumeControl videoRef={videoRef} />
+                    </div>
                 </div>
             </div>
         </div>
