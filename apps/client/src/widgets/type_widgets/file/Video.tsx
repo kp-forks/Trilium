@@ -72,6 +72,7 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
     }, [scheduleHide]);
 
     const onClick = useCallback((e: MouseEvent) => {
+        if (!playing) return;
         if ((e.target as HTMLElement).closest(".video-preview-controls")) return;
         setVisible((prev) => {
             const next = !prev;
@@ -79,7 +80,7 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
             if (next) scheduleHide();
             return next;
         });
-    }, [scheduleHide]);
+    }, [playing, scheduleHide]);
 
     // Auto-hide when playback starts, show when paused.
     useEffect(() => {
