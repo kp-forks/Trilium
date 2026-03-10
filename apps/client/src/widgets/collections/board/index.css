@@ -14,8 +14,7 @@
   height: 100%;
   display: flex;
   gap: 1em;
-  margin-inline: var(--content-margin-inline);
-  padding-block: 4px;
+  padding: 4px var(--content-margin-inline);
   align-items: flex-start;
   overflow-x: auto;
 }
