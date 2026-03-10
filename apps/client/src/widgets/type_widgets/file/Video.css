@@ -20,8 +20,21 @@
         gap: 0.5em;
     }
 
+    .video-seekbar-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+    }
+
     .video-trackbar {
-        width: 100%;
+        flex: 1;
         cursor: pointer;
+    }
+
+    .video-time {
+        font-size: 0.85em;
+        font-variant-numeric: tabular-nums;
+        color: white;
+        white-space: nowrap;
     }
 }

@@ -6,6 +6,12 @@ import FNote from "../../../entities/fnote";
 import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
 
+function formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
 export default function VideoPreview({ note }: { note: FNote }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -56,15 +62,19 @@ export default function VideoPreview({ note }: { note: FNote }) {
             />
 
             <div className="video-preview-controls">
-                <input
-                    type="range"
-                    class="video-trackbar"
-                    min={0}
-                    max={duration || 0}
-                    step={0.1}
-                    value={currentTime}
-                    onInput={onSeek}
-                />
+                <div class="video-seekbar-row">
+                    <span class="video-time">{formatTime(currentTime)}</span>
+                    <input
+                        type="range"
+                        class="video-trackbar"
+                        min={0}
+                        max={duration || 0}
+                        step={0.1}
+                        value={currentTime}
+                        onInput={onSeek}
+                    />
+                    <span class="video-time">-{formatTime(Math.max(0, duration - currentTime))}</span>
+                </div>
                 <ActionButton
                     icon={playing ? "bx bx-pause" : "bx bx-play"}
                     text={playing ? "Pause" : "Play"}
