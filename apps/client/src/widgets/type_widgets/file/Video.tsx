@@ -283,7 +283,17 @@ function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
 }
 
 function LoopButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
-    const [loop, setLoop] = useState(false);
+    const [loop, setLoop] = useState(() => videoRef.current?.loop ?? false);
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+        setLoop(video.loop);
+
+        const observer = new MutationObserver(() => setLoop(video.loop));
+        observer.observe(video, { attributes: true, attributeFilter: ["loop"] });
+        return () => observer.disconnect();
+    }, []);
 
     const toggle = () => {
         const video = videoRef.current;
