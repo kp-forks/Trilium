@@ -55,23 +55,6 @@ export default function VideoPreview({ note }: { note: FNote }) {
         });
     }, [playing]);
 
-    const togglePlayback = () => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        if (video.paused) {
-            video.play();
-        } else {
-            video.pause();
-        }
-    };
-
-    const skip = (seconds: number) => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
-    };
-
     return (
         <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} onClick={onWrapperClick} onMouseMove={showControlsTemporarily}>
             <video
@@ -90,22 +73,9 @@ export default function VideoPreview({ note }: { note: FNote }) {
                         <PlaybackSpeed videoRef={videoRef} />
                     </div>
                     <div className="center">
-                        <ActionButton
-                            icon="bx bx-rewind"
-                            text="Back 10s"
-                            onClick={() => skip(-10)}
-                        />
-                        <ActionButton
-                            className="play-button"
-                            icon={playing ? "bx bx-pause" : "bx bx-play"}
-                            text={playing ? "Pause" : "Play"}
-                            onClick={togglePlayback}
-                        />
-                        <ActionButton
-                            icon="bx bx-fast-forward"
-                            text="Forward 30s"
-                            onClick={() => skip(30)}
-                        />
+                        <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text="Back 10s" />
+                        <PlayPauseButton videoRef={videoRef} playing={playing} />
+                        <SkipButton videoRef={videoRef} seconds={30} icon="bx bx-fast-forward" text="Forward 30s" />
                     </div>
                     <div className="right">
                         <VolumeControl videoRef={videoRef} />
@@ -114,6 +84,40 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 </div>
             </div>
         </div>
+    );
+}
+
+function PlayPauseButton({ videoRef, playing }: { videoRef: RefObject<HTMLVideoElement>, playing: boolean }) {
+    const togglePlayback = () => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    };
+
+    return (
+        <ActionButton
+            className="play-button"
+            icon={playing ? "bx bx-pause" : "bx bx-play"}
+            text={playing ? "Pause" : "Play"}
+            onClick={togglePlayback}
+        />
+    );
+}
+
+function SkipButton({ videoRef, seconds, icon, text }: { videoRef: RefObject<HTMLVideoElement>, seconds: number, icon: string, text: string }) {
+    const skip = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+    };
+
+    return (
+        <ActionButton icon={icon} text={text} onClick={skip} />
     );
 }
 
