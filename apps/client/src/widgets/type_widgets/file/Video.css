@@ -18,6 +18,29 @@
         display: flex;
         flex-direction: column;
         gap: 0.5em;
+        background: rgba(0, 0, 0, 0.5);
+
+        .video-buttons-row {
+            display: flex;
+
+            > * {
+                flex: 1;
+            }
+
+            .center {
+                display: flex;
+                justify-content: center;
+            }
+
+            .right {
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .play-button {
+                --icon-button-size: 48px;
+            }
+        }
     }
 
     .video-seekbar-row {
@@ -36,24 +59,6 @@
         font-variant-numeric: tabular-nums;
         color: white;
         white-space: nowrap;
-    }
-
-    .video-buttons-row {
-        display: flex;
-
-        > * {
-            flex: 1;
-        }
-
-        .center {
-            display: flex;
-            justify-content: center;
-        }
-
-        .right {
-            display: flex;
-            justify-content: flex-end;
-        }
     }
 
     .video-volume-row {

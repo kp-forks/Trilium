@@ -45,6 +45,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     <div className="left" />
                     <div className="center">
                         <ActionButton
+                            className="play-button"
                             icon={playing ? "bx bx-pause" : "bx bx-play"}
                             text={playing ? "Pause" : "Play"}
                             onClick={togglePlayback}
