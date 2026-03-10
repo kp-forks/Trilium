@@ -17,8 +17,6 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-
     const togglePlayback = () => {
         const video = videoRef.current;
         if (!video) return;
@@ -36,22 +34,6 @@ export default function VideoPreview({ note }: { note: FNote }) {
         video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
     };
 
-    const toggleFullscreen = () => {
-        const wrapper = wrapperRef.current;
-        if (!wrapper) return;
-
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            wrapper.requestFullscreen();
-        }
-    };
-
-    useEffect(() => {
-        const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
-        document.addEventListener("fullscreenchange", onFullscreenChange);
-        return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
-    }, []);
 
     return (
         <div ref={wrapperRef} className="video-preview-wrapper">
@@ -88,11 +70,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     </div>
                     <div className="right">
                         <VolumeControl videoRef={videoRef} />
-                        <ActionButton
-                            icon={isFullscreen ? "bx bx-exit-fullscreen" : "bx bx-fullscreen"}
-                            text={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                            onClick={toggleFullscreen}
-                        />
+                        <FullscreenButton targetRef={wrapperRef} />
                     </div>
                 </div>
             </div>
@@ -182,5 +160,34 @@ function VolumeControl({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
                 onInput={onVolumeChange}
             />
         </div>
+    );
+}
+
+function FullscreenButton({ targetRef }: { targetRef: RefObject<HTMLElement> }) {
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    useEffect(() => {
+        const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener("fullscreenchange", onFullscreenChange);
+        return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+    }, []);
+
+    const toggleFullscreen = () => {
+        const target = targetRef.current;
+        if (!target) return;
+
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            target.requestFullscreen();
+        }
+    };
+
+    return (
+        <ActionButton
+            icon={isFullscreen ? "bx bx-exit-fullscreen" : "bx bx-fullscreen"}
+            text={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            onClick={toggleFullscreen}
+        />
     );
 }
