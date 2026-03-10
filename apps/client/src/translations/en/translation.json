@@ -1037,19 +1037,19 @@
     "too_big": "The preview only shows the first {{maxNumChars}} characters of the file for performance reasons. Download the file and open it externally to be able to see the entire content."
   },
   "video": {
-    "play": "Play",
-    "pause": "Pause",
-    "back-10s": "Back 10s",
-    "forward-30s": "Forward 30s",
-    "mute": "Mute",
-    "unmute": "Unmute",
+    "play": "Play (Space)",
+    "pause": "Pause (Space)",
+    "back-10s": "Back 10s (Left arrow key)",
+    "forward-30s": "Forward 30s (Right arrow key, 10s)",
+    "mute": "Mute (M)",
+    "unmute": "Unmute (M)",
     "playback-speed": "Playback speed",
     "loop": "Loop",
     "disable-loop": "Disable loop",
     "rotate": "Rotate",
     "picture-in-picture": "Picture-in-picture",
     "exit-picture-in-picture": "Exit picture-in-picture",
-    "fullscreen": "Fullscreen",
+    "fullscreen": "Fullscreen (F)",
     "exit-fullscreen": "Exit fullscreen"
   },
   "protected_session": {
