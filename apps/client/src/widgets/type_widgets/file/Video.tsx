@@ -17,6 +17,8 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const [playing, setPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [volume, setVolume] = useState(1);
+    const [muted, setMuted] = useState(false);
 
     const togglePlayback = () => {
         const video = videoRef.current;
@@ -50,6 +52,25 @@ export default function VideoPreview({ note }: { note: FNote }) {
         video.currentTime = parseFloat((e.target as HTMLInputElement).value);
     };
 
+    const onVolumeChange = (e: Event) => {
+        const video = videoRef.current;
+        if (!video) return;
+        const val = parseFloat((e.target as HTMLInputElement).value);
+        video.volume = val;
+        setVolume(val);
+        if (val > 0 && video.muted) {
+            video.muted = false;
+            setMuted(false);
+        }
+    };
+
+    const toggleMute = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.muted = !video.muted;
+        setMuted(video.muted);
+    };
+
     return (
         <div className="video-preview-wrapper">
             <video
@@ -75,11 +96,29 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     />
                     <span class="video-time">-{formatTime(Math.max(0, duration - currentTime))}</span>
                 </div>
-                <ActionButton
-                    icon={playing ? "bx bx-pause" : "bx bx-play"}
-                    text={playing ? "Pause" : "Play"}
-                    onClick={togglePlayback}
-                />
+                <div class="video-buttons-row">
+                    <ActionButton
+                        icon={playing ? "bx bx-pause" : "bx bx-play"}
+                        text={playing ? "Pause" : "Play"}
+                        onClick={togglePlayback}
+                    />
+                    <div class="video-volume-row">
+                        <ActionButton
+                            icon={muted || volume === 0 ? "bx bx-volume-mute" : volume < 0.5 ? "bx bx-volume-low" : "bx bx-volume-full"}
+                            text={muted ? "Unmute" : "Mute"}
+                            onClick={toggleMute}
+                        />
+                        <input
+                            type="range"
+                            class="video-volume-slider"
+                            min={0}
+                            max={1}
+                            step={0.05}
+                            value={muted ? 0 : volume}
+                            onInput={onVolumeChange}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );

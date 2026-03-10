@@ -37,4 +37,21 @@
         color: white;
         white-space: nowrap;
     }
+
+    .video-buttons-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .video-volume-row {
+        display: flex;
+        align-items: center;
+        gap: 0.25em;
+    }
+
+    .video-volume-slider {
+        width: 80px;
+        cursor: pointer;
+    }
 }
