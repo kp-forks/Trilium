@@ -50,6 +50,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 <div class="video-buttons-row">
                     <div className="left">
                         <PlaybackSpeed videoRef={videoRef} />
+                        <RotateButton videoRef={videoRef} />
                     </div>
                     <div className="center">
                         <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text="Back 10s" />
@@ -250,6 +251,39 @@ function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
                 </li>
             ))}
         </Dropdown>
+    );
+}
+
+function RotateButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
+    const [rotation, setRotation] = useState(0);
+
+    const rotate = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        const next = (rotation + 90) % 360;
+        setRotation(next);
+
+        const isSideways = next === 90 || next === 270;
+        if (isSideways) {
+            // Scale down so the rotated video fits within its container.
+            const container = video.parentElement;
+            if (container) {
+                const ratio = container.clientWidth / container.clientHeight;
+                video.style.transform = `rotate(${next}deg) scale(${1 / ratio})`;
+            } else {
+                video.style.transform = `rotate(${next}deg)`;
+            }
+        } else {
+            video.style.transform = next === 0 ? "" : `rotate(${next}deg)`;
+        }
+    };
+
+    return (
+        <ActionButton
+            icon="bx bx-rotate-right"
+            text="Rotate"
+            onClick={rotate}
+        />
     );
 }
 
