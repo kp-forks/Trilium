@@ -82,10 +82,10 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
         });
     }, [playing, scheduleHide]);
 
-    // Auto-hide when playback starts, show when paused.
+    // Hide immediately when playback starts, show when paused.
     useEffect(() => {
         if (playing) {
-            scheduleHide();
+            setVisible(false);
         } else {
             clearTimeout(hideTimerRef.current);
             setVisible(true);
