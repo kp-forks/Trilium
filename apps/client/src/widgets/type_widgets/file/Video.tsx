@@ -1,6 +1,6 @@
 import "./Video.css";
 
-import { useRef } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import { getUrlForDownload } from "../../../services/open";
@@ -8,6 +8,18 @@ import ActionButton from "../../react/ActionButton";
 
 export default function VideoPreview({ note }: { note: FNote }) {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [playing, setPlaying] = useState(false);
+
+    const togglePlayback = () => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    };
 
     return (
         <div className="video-preview-wrapper">
@@ -16,11 +28,16 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 class="video-preview"
                 src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
                 datatype={note?.mime}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
             />
 
             <div className="video-preview-controls">
-                <ActionButton icon="bx bx-play" text="Play" onClick={() => videoRef.current?.play()} />
-                <ActionButton icon="bx bx-pause" text="Pause" onClick={() => videoRef.current?.pause()} />
+                <ActionButton
+                    icon={playing ? "bx bx-pause" : "bx bx-play"}
+                    text={playing ? "Pause" : "Play"}
+                    onClick={togglePlayback}
+                />
             </div>
         </div>
     );
