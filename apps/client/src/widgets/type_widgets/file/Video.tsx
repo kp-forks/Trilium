@@ -73,6 +73,16 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 video.muted = !video.muted;
                 flashControls();
                 break;
+            case "ArrowUp":
+                e.preventDefault();
+                video.volume = Math.min(1, video.volume + 0.05);
+                flashControls();
+                break;
+            case "ArrowDown":
+                e.preventDefault();
+                video.volume = Math.max(0, video.volume - 0.05);
+                flashControls();
+                break;
             case "Home":
                 e.preventDefault();
                 video.currentTime = 0;
