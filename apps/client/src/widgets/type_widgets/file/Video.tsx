@@ -21,10 +21,21 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
-    const { visible: controlsVisible, onMouseMove, onClick: onWrapperClick } = useAutoHideControls(videoRef, playing);
+    const { visible: controlsVisible, onMouseMove } = useAutoHideControls(videoRef, playing);
+
+    const onVideoClick = useCallback((e: MouseEvent) => {
+        if ((e.target as HTMLElement).closest(".video-preview-controls")) return;
+        const video = videoRef.current;
+        if (!video) return;
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    }, []);
 
     return (
-        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} onClick={onWrapperClick} onMouseMove={onMouseMove}>
+        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} onClick={onVideoClick} onMouseMove={onMouseMove}>
             <video
                 ref={videoRef}
                 class="video-preview"
@@ -71,17 +82,6 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
         scheduleHide();
     }, [scheduleHide]);
 
-    const onClick = useCallback((e: MouseEvent) => {
-        if (!playing) return;
-        if ((e.target as HTMLElement).closest(".video-preview-controls")) return;
-        setVisible((prev) => {
-            const next = !prev;
-            clearTimeout(hideTimerRef.current);
-            if (next) scheduleHide();
-            return next;
-        });
-    }, [playing, scheduleHide]);
-
     // Hide immediately when playback starts, show when paused.
     useEffect(() => {
         if (playing) {
@@ -93,7 +93,7 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
         return () => clearTimeout(hideTimerRef.current);
     }, [playing, scheduleHide]);
 
-    return { visible, onMouseMove, onClick };
+    return { visible, onMouseMove };
 }
 
 function PlayPauseButton({ videoRef, playing }: { videoRef: RefObject<HTMLVideoElement>, playing: boolean }) {
