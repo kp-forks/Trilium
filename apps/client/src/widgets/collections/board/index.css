@@ -41,7 +41,11 @@ body.mobile .board-view-container {
 body.mobile .board-view-container .board-column {
   width: 75vw;
   max-width: 300px;
-  scroll-snap-align: center;
+}
+
+body.mobile .board-view-container .board-column,
+body.mobile .board-view-container .board-add-column {
+    scroll-snap-align: center;
 }
 
 .board-view-container .board-column.drag-over {
