@@ -1,5 +1,6 @@
 import "./Video.css";
 
+import { RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
@@ -15,10 +16,6 @@ function formatTime(seconds: number): string {
 export default function VideoPreview({ note }: { note: FNote }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(1);
-    const [muted, setMuted] = useState(false);
 
     const togglePlayback = () => {
         const video = videoRef.current;
@@ -30,6 +27,36 @@ export default function VideoPreview({ note }: { note: FNote }) {
             video.pause();
         }
     };
+
+    return (
+        <div className="video-preview-wrapper">
+            <video
+                ref={videoRef}
+                class="video-preview"
+                src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
+                datatype={note?.mime}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+            />
+
+            <div className="video-preview-controls">
+                <SeekBar videoRef={videoRef} />
+                <div class="video-buttons-row">
+                    <ActionButton
+                        icon={playing ? "bx bx-pause" : "bx bx-play"}
+                        text={playing ? "Pause" : "Play"}
+                        onClick={togglePlayback}
+                    />
+                    <VolumeControl videoRef={videoRef} />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function SeekBar({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -52,6 +79,27 @@ export default function VideoPreview({ note }: { note: FNote }) {
         video.currentTime = parseFloat((e.target as HTMLInputElement).value);
     };
 
+    return (
+        <div class="video-seekbar-row">
+            <span class="video-time">{formatTime(currentTime)}</span>
+            <input
+                type="range"
+                class="video-trackbar"
+                min={0}
+                max={duration || 0}
+                step={0.1}
+                value={currentTime}
+                onInput={onSeek}
+            />
+            <span class="video-time">-{formatTime(Math.max(0, duration - currentTime))}</span>
+        </div>
+    );
+}
+
+function VolumeControl({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
+    const [volume, setVolume] = useState(1);
+    const [muted, setMuted] = useState(false);
+
     const onVolumeChange = (e: Event) => {
         const video = videoRef.current;
         if (!video) return;
@@ -72,54 +120,21 @@ export default function VideoPreview({ note }: { note: FNote }) {
     };
 
     return (
-        <div className="video-preview-wrapper">
-            <video
-                ref={videoRef}
-                class="video-preview"
-                src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
-                datatype={note?.mime}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
+        <div class="video-volume-row">
+            <ActionButton
+                icon={muted || volume === 0 ? "bx bx-volume-mute" : volume < 0.5 ? "bx bx-volume-low" : "bx bx-volume-full"}
+                text={muted ? "Unmute" : "Mute"}
+                onClick={toggleMute}
             />
-
-            <div className="video-preview-controls">
-                <div class="video-seekbar-row">
-                    <span class="video-time">{formatTime(currentTime)}</span>
-                    <input
-                        type="range"
-                        class="video-trackbar"
-                        min={0}
-                        max={duration || 0}
-                        step={0.1}
-                        value={currentTime}
-                        onInput={onSeek}
-                    />
-                    <span class="video-time">-{formatTime(Math.max(0, duration - currentTime))}</span>
-                </div>
-                <div class="video-buttons-row">
-                    <ActionButton
-                        icon={playing ? "bx bx-pause" : "bx bx-play"}
-                        text={playing ? "Pause" : "Play"}
-                        onClick={togglePlayback}
-                    />
-                    <div class="video-volume-row">
-                        <ActionButton
-                            icon={muted || volume === 0 ? "bx bx-volume-mute" : volume < 0.5 ? "bx bx-volume-low" : "bx bx-volume-full"}
-                            text={muted ? "Unmute" : "Mute"}
-                            onClick={toggleMute}
-                        />
-                        <input
-                            type="range"
-                            class="video-volume-slider"
-                            min={0}
-                            max={1}
-                            step={0.05}
-                            value={muted ? 0 : volume}
-                            onInput={onVolumeChange}
-                        />
-                    </div>
-                </div>
-            </div>
+            <input
+                type="range"
+                class="video-volume-slider"
+                min={0}
+                max={1}
+                step={0.05}
+                value={muted ? 0 : volume}
+                onInput={onVolumeChange}
+            />
         </div>
     );
 }
