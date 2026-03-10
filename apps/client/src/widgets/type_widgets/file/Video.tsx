@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import FNote from "../../../entities/fnote";
 import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
+import Dropdown from "../../react/Dropdown";
+import Icon from "../../react/Icon";
 
 function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
@@ -49,7 +51,9 @@ export default function VideoPreview({ note }: { note: FNote }) {
             <div className="video-preview-controls">
                 <SeekBar videoRef={videoRef} />
                 <div class="video-buttons-row">
-                    <div className="left" />
+                    <div className="left">
+                        <PlaybackSpeed videoRef={videoRef} />
+                    </div>
                     <div className="center">
                         <ActionButton
                             icon="bx bx-rewind"
@@ -160,6 +164,43 @@ function VolumeControl({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
                 onInput={onVolumeChange}
             />
         </div>
+    );
+}
+
+const PLAYBACK_SPEEDS = [0.5, 1, 1.25, 1.5, 2];
+
+function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
+    const [speed, setSpeed] = useState(1);
+
+    const selectSpeed = (rate: number) => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.playbackRate = rate;
+        setSpeed(rate);
+    };
+
+    return (
+        <Dropdown
+            iconAction
+            hideToggleArrow
+            buttonClassName="speed-dropdown"
+            text={<>
+                <Icon icon="bx bx-tachometer" />
+                <span class="video-speed-label">{speed}x</span>
+            </>}
+            title="Playback speed"
+        >
+            {PLAYBACK_SPEEDS.map((rate) => (
+                <li key={rate}>
+                    <button
+                        class={`dropdown-item ${rate === speed ? "active" : ""}`}
+                        onClick={() => selectSpeed(rate)}
+                    >
+                        {rate}x
+                    </button>
+                </li>
+            ))}
+        </Dropdown>
     );
 }
 
