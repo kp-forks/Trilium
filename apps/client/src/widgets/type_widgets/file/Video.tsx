@@ -67,6 +67,12 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     wrapperRef.current?.requestFullscreen();
                 }
                 break;
+            case "m":
+            case "M":
+                e.preventDefault();
+                video.muted = !video.muted;
+                flashControls();
+                break;
         }
     }, [togglePlayback, flashControls]);
 
