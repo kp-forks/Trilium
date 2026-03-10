@@ -39,9 +39,22 @@ export default function VideoPreview({ note }: { note: FNote }) {
     }, [togglePlayback]);
 
     const onKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === " ") {
-            e.preventDefault();
-            togglePlayback();
+        const video = videoRef.current;
+        if (!video) return;
+
+        switch (e.key) {
+            case " ":
+                e.preventDefault();
+                togglePlayback();
+                break;
+            case "ArrowLeft":
+                e.preventDefault();
+                video.currentTime = Math.max(0, video.currentTime - (e.ctrlKey ? 60 : 10));
+                break;
+            case "ArrowRight":
+                e.preventDefault();
+                video.currentTime = Math.min(video.duration, video.currentTime + (e.ctrlKey ? 60 : 10));
+                break;
         }
     }, [togglePlayback]);
 
