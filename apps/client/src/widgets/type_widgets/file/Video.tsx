@@ -28,6 +28,12 @@ export default function VideoPreview({ note }: { note: FNote }) {
         }
     };
 
+    const skip = (seconds: number) => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+    };
+
     return (
         <div className="video-preview-wrapper">
             <video
@@ -45,10 +51,20 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     <div className="left" />
                     <div className="center">
                         <ActionButton
+                            icon="bx bx-rewind"
+                            text="Back 10s"
+                            onClick={() => skip(-10)}
+                        />
+                        <ActionButton
                             className="play-button"
                             icon={playing ? "bx bx-pause" : "bx bx-play"}
                             text={playing ? "Pause" : "Play"}
                             onClick={togglePlayback}
+                        />
+                        <ActionButton
+                            icon="bx bx-fast-forward"
+                            text="Forward 30s"
+                            onClick={() => skip(30)}
                         />
                     </div>
                     <div className="right">
