@@ -58,6 +58,15 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 video.currentTime = Math.min(video.duration, video.currentTime + (e.ctrlKey ? 60 : 10));
                 flashControls();
                 break;
+            case "f":
+            case "F":
+                e.preventDefault();
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    wrapperRef.current?.requestFullscreen();
+                }
+                break;
         }
     }, [togglePlayback, flashControls]);
 
