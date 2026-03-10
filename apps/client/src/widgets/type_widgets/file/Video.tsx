@@ -73,6 +73,16 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 video.muted = !video.muted;
                 flashControls();
                 break;
+            case "Home":
+                e.preventDefault();
+                video.currentTime = 0;
+                flashControls();
+                break;
+            case "End":
+                e.preventDefault();
+                video.currentTime = video.duration;
+                flashControls();
+                break;
         }
     }, [togglePlayback, flashControls]);
 
