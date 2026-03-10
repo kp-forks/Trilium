@@ -28,6 +28,9 @@
         flex-direction: column;
         gap: 0.5em;
         background: rgba(0, 0, 0, 0.5);
+        color: white;
+        --icon-button-hover-color: white;
+        --icon-button-hover-background: rgba(255, 255, 255, 0.2);
         opacity: 1;
         transition: opacity 300ms ease;
 
@@ -70,7 +73,6 @@
     .video-time {
         font-size: 0.85em;
         font-variant-numeric: tabular-nums;
-        color: white;
         white-space: nowrap;
     }
 
@@ -99,7 +101,6 @@
             right: 0;
             transform: translateY(15%);
             text-align: center;
-            color: white;
             font-size: 0.6rem;
             font-variant-numeric: tabular-nums;
         }
