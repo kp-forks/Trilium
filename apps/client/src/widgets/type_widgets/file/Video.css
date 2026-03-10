@@ -15,5 +15,13 @@
         left: 0;
         right: 0;
         padding: 1em;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+    }
+
+    .video-trackbar {
+        width: 100%;
+        cursor: pointer;
     }
 }
