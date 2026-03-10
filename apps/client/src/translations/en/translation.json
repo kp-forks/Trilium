@@ -1040,7 +1040,7 @@
     "play": "Play (Space)",
     "pause": "Pause (Space)",
     "back-10s": "Back 10s (Left arrow key)",
-    "forward-30s": "Forward 30s (Right arrow key, 10s)",
+    "forward-30s": "Forward 30s",
     "mute": "Mute (M)",
     "unmute": "Unmute (M)",
     "playback-speed": "Playback speed",
