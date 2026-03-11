@@ -1,14 +1,12 @@
 import "./Video.css";
 
 import { RefObject } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
-import Dropdown from "../../react/Dropdown";
-import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import { LoopButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
 
@@ -39,7 +37,52 @@ export default function VideoPreview({ note }: { note: FNote }) {
         togglePlayback();
     }, [togglePlayback]);
 
-    const onKeyDown = useCallback((e: KeyboardEvent) => {
+    const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
+
+    if (error) {
+        return <NoItems icon="bx bx-video-off" text={t("video.unsupported-format")} />;
+    }
+
+    return (
+        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onMouseMove={onMouseMove}>
+            <video
+                ref={videoRef}
+                class="video-preview"
+                src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
+                datatype={note?.mime}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+                onError={onError}
+            />
+
+            <div className="media-preview-controls">
+                <SeekBar mediaRef={videoRef} />
+                <div class="media-buttons-row">
+                    <div className="left">
+                        <PlaybackSpeed mediaRef={videoRef} />
+                        <RotateButton videoRef={videoRef} />
+                    </div>
+                    <div className="center">
+                        <div className="spacer" />
+                        <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
+                        <PlayPauseButton mediaRef={videoRef} playing={playing} />
+                        <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
+                        <LoopButton mediaRef={videoRef} />
+                    </div>
+                    <div className="right">
+                        <VolumeControl mediaRef={videoRef} />
+                        <ZoomToFitButton videoRef={videoRef} />
+                        <PictureInPictureButton videoRef={videoRef} />
+                        <FullscreenButton targetRef={wrapperRef} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function useKeyboardShortcuts(videoRef: MutableRef<HTMLVideoElement | null>, wrapperRef: MutableRef<HTMLDivElement | null>, togglePlayback: () => void, flashControls: () => void) {
+    return useCallback((e: KeyboardEvent) => {
         const video = videoRef.current;
         if (!video) return;
 
@@ -96,47 +139,6 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 break;
         }
     }, [togglePlayback, flashControls]);
-
-    if (error) {
-        return <NoItems icon="bx bx-video-off" text={t("video.unsupported-format")} />;
-    }
-
-    return (
-        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onMouseMove={onMouseMove}>
-            <video
-                ref={videoRef}
-                class="video-preview"
-                src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
-                datatype={note?.mime}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onError={onError}
-            />
-
-            <div className="media-preview-controls">
-                <SeekBar mediaRef={videoRef} />
-                <div class="media-buttons-row">
-                    <div className="left">
-                        <PlaybackSpeed mediaRef={videoRef} />
-                        <RotateButton videoRef={videoRef} />
-                    </div>
-                    <div className="center">
-                        <div className="spacer" />
-                        <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
-                        <PlayPauseButton mediaRef={videoRef} playing={playing} />
-                        <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
-                        <LoopButton mediaRef={videoRef} />
-                    </div>
-                    <div className="right">
-                        <VolumeControl mediaRef={videoRef} />
-                        <ZoomToFitButton videoRef={videoRef} />
-                        <PictureInPictureButton videoRef={videoRef} />
-                        <FullscreenButton targetRef={wrapperRef} />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
 }
 
 function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boolean) {

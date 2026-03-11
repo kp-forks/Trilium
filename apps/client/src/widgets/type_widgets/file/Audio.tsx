@@ -1,4 +1,4 @@
-import { useRef, useState } from "preact/hooks";
+import { MutableRef, useCallback, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
@@ -7,10 +7,21 @@ import { LoopButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, Volume
 
 export default function AudioPreview({ note }: { note: FNote }) {
     const [playing, setPlaying] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const togglePlayback = useCallback(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause();
+        }
+    }, []);
+    const onKeyDown = useKeyboardShortcuts(audioRef, wrapperRef, togglePlayback);
 
     return (
-        <div className="audio-preview-wrapper">
+        <div ref={wrapperRef} className="audio-preview-wrapper" onKeyDown={onKeyDown} tabIndex={0}>
             <audio
                 class="audio-preview"
                 src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
@@ -41,4 +52,47 @@ export default function AudioPreview({ note }: { note: FNote }) {
             </div>
         </div>
     );
+}
+
+function useKeyboardShortcuts(audioRef: MutableRef<HTMLAudioElement | null>, wrapperRef: MutableRef<HTMLDivElement | null>, togglePlayback: () => void) {
+    return useCallback((e: KeyboardEvent) => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        switch (e.key) {
+            case " ":
+                e.preventDefault();
+                togglePlayback();
+                break;
+            case "ArrowLeft":
+                e.preventDefault();
+                audio.currentTime = Math.max(0, audio.currentTime - (e.ctrlKey ? 60 : 10));
+                break;
+            case "ArrowRight":
+                e.preventDefault();
+                audio.currentTime = Math.min(audio.duration, audio.currentTime + (e.ctrlKey ? 60 : 10));
+                break;
+            case "m":
+            case "M":
+                e.preventDefault();
+                audio.muted = !audio.muted;
+                break;
+            case "ArrowUp":
+                e.preventDefault();
+                audio.volume = Math.min(1, audio.volume + 0.05);
+                break;
+            case "ArrowDown":
+                e.preventDefault();
+                audio.volume = Math.max(0, audio.volume - 0.05);
+                break;
+            case "Home":
+                e.preventDefault();
+                audio.currentTime = 0;
+                break;
+            case "End":
+                e.preventDefault();
+                audio.currentTime = audio.duration;
+                break;
+        }
+    }, [togglePlayback]);
 }
