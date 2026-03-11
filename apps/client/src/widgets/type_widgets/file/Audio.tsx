@@ -2,7 +2,7 @@ import { useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import { getUrlForDownload } from "../../../services/open";
-import { PlayPauseButton } from "./MediaPlayer";
+import { PlayPauseButton, SeekBar } from "./MediaPlayer";
 
 export default function AudioPreview({ note }: { note: FNote }) {
     const [playing, setPlaying] = useState(false);
@@ -18,8 +18,12 @@ export default function AudioPreview({ note }: { note: FNote }) {
                 onPause={() => setPlaying(false)}
             />
             <div className="video-preview-controls">
-                <div className="center">
-                    <PlayPauseButton mediaRef={audioRef} playing={playing} />
+                <SeekBar mediaRef={audioRef} />
+
+                <div class="video-buttons-row">
+                    <div className="center">
+                        <PlayPauseButton mediaRef={audioRef} playing={playing} />
+                    </div>
                 </div>
             </div>
         </div>

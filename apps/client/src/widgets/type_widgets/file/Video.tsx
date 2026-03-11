@@ -10,13 +10,7 @@ import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
-import { PlayPauseButton } from "./MediaPlayer";
-
-function formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
+import { PlayPauseButton, SeekBar } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
@@ -120,7 +114,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
             />
 
             <div className="video-preview-controls">
-                <SeekBar videoRef={videoRef} />
+                <SeekBar mediaRef={videoRef} />
                 <div class="video-buttons-row">
                     <div className="left">
                         <PlaybackSpeed videoRef={videoRef} />
@@ -184,48 +178,6 @@ function SkipButton({ videoRef, seconds, icon, text }: { videoRef: RefObject<HTM
 
     return (
         <ActionButton icon={icon} text={text} onClick={skip} />
-    );
-}
-
-function SeekBar({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const onTimeUpdate = () => setCurrentTime(video.currentTime);
-        const onDurationChange = () => setDuration(video.duration);
-
-        video.addEventListener("timeupdate", onTimeUpdate);
-        video.addEventListener("durationchange", onDurationChange);
-        return () => {
-            video.removeEventListener("timeupdate", onTimeUpdate);
-            video.removeEventListener("durationchange", onDurationChange);
-        };
-    }, []);
-
-    const onSeek = (e: Event) => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.currentTime = parseFloat((e.target as HTMLInputElement).value);
-    };
-
-    return (
-        <div class="video-seekbar-row">
-            <span class="video-time">{formatTime(currentTime)}</span>
-            <input
-                type="range"
-                class="video-trackbar"
-                min={0}
-                max={duration || 0}
-                step={0.1}
-                value={currentTime}
-                onInput={onSeek}
-            />
-            <span class="video-time">-{formatTime(Math.max(0, duration - currentTime))}</span>
-        </div>
     );
 }
 
