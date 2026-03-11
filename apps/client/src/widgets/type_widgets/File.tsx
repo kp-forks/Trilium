@@ -6,6 +6,7 @@ import { getUrlForDownload } from "../../services/open";
 import Alert from "../react/Alert";
 import { useNoteBlob } from "../react/hooks";
 import PdfPreview from "./file/Pdf";
+import VideoPreview from "./file/Video";
 import { TypeWidgetProps } from "./type_widget";
 
 const TEXT_MAX_NUM_CHARS = 5000;
@@ -39,17 +40,6 @@ function TextPreview({ content }: { content: string }) {
             )}
             <pre class="file-preview-content">{trimmedContent}</pre>
         </>
-    );
-}
-
-function VideoPreview({ note }: { note: FNote }) {
-    return (
-        <video
-            class="video-preview"
-            src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
-            datatype={note?.mime}
-            controls
-        />
     );
 }
 
