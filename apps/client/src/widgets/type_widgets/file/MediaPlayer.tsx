@@ -134,3 +134,15 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
         </div>
     );
 }
+
+export function SkipButton({ mediaRef, seconds, icon, text }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, seconds: number, icon: string, text: string }) {
+    const skip = () => {
+        const media = mediaRef.current;
+        if (!media) return;
+        media.currentTime = Math.max(0, Math.min(media.duration, media.currentTime + seconds));
+    };
+
+    return (
+        <ActionButton icon={icon} text={text} onClick={skip} />
+    );
+}

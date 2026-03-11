@@ -1,8 +1,9 @@
 import { useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
+import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
-import { PlayPauseButton, SeekBar, VolumeControl } from "./MediaPlayer";
+import { PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
 
 export default function AudioPreview({ note }: { note: FNote }) {
     const [playing, setPlaying] = useState(false);
@@ -24,7 +25,9 @@ export default function AudioPreview({ note }: { note: FNote }) {
                     <div className="left" />
 
                     <div className="center">
+                        <SkipButton mediaRef={audioRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
                         <PlayPauseButton mediaRef={audioRef} playing={playing} />
+                        <SkipButton mediaRef={audioRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
                     </div>
 
                     <div className="right">

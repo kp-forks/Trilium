@@ -10,7 +10,7 @@ import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
-import { PlayPauseButton, SeekBar, VolumeControl } from "./MediaPlayer";
+import { PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
@@ -122,9 +122,9 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     </div>
                     <div className="center">
                         <div className="spacer" />
-                        <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
+                        <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
                         <PlayPauseButton mediaRef={videoRef} playing={playing} />
-                        <SkipButton videoRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
+                        <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
                         <LoopButton videoRef={videoRef} />
                     </div>
                     <div className="right">
@@ -167,18 +167,6 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
     }, [playing, scheduleHide]);
 
     return { visible, onMouseMove, flash: onMouseMove };
-}
-
-function SkipButton({ videoRef, seconds, icon, text }: { videoRef: RefObject<HTMLVideoElement>, seconds: number, icon: string, text: string }) {
-    const skip = () => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
-    };
-
-    return (
-        <ActionButton icon={icon} text={text} onClick={skip} />
-    );
 }
 
 const PLAYBACK_SPEEDS = [0.5, 1, 1.25, 1.5, 2];
