@@ -15,25 +15,7 @@ export default function preprocessContent(content: string | Buffer, type: string
     } else if (type === "mindMap" && mime === "application/json") {
         content = processMindmapContent(content);
     } else if (type === "canvas" && mime === "application/json") {
-        interface Element {
-            type: string;
-            text?: string; // Optional since not all objects have a `text` property
-            id: string;
-            [key: string]: any; // Other properties that may exist
-        }
-
-        const canvasContent = JSON.parse(content);
-        const elements = canvasContent.elements;
-
-        if (Array.isArray(elements)) {
-            const texts = elements
-                .filter((element: Element) => element.type === "text" && element.text) // Filter for 'text' type elements with a 'text' property
-                .map((element: Element) => element.text!); // Use `!` to assert `text` is defined after filtering
-
-            content = normalize(texts.join(" "));
-        } else {
-            content = "";
-        }
+        content = processCanvasContent(content);
     }
 
     return content.trim();
@@ -96,6 +78,34 @@ function processMindmapContent(content: string) {
     const topicsString = topicsArray.join(", ");
 
     return normalize(topicsString.toString());
+}
+
+function processCanvasContent(content: string) {
+    interface Element {
+        type: string;
+        text?: string; // Optional since not all objects have a `text` property
+        id: string;
+        [key: string]: any; // Other properties that may exist
+    }
+
+    let canvasContent;
+    try {
+        canvasContent = JSON.parse(content);
+    } catch (e) {
+        return "";
+    }
+    const elements = canvasContent.elements;
+
+    if (Array.isArray(elements)) {
+        const texts = elements
+            .filter((element: Element) => element.type === "text" && element.text) // Filter for 'text' type elements with a 'text' property
+            .map((element: Element) => element.text!); // Use `!` to assert `text` is defined after filtering
+
+        content = normalize(texts.join(" "));
+    } else {
+        content = "";
+    }
+    return content;
 }
 
 function stripTags(content: string) {
