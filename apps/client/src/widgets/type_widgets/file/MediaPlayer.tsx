@@ -74,7 +74,7 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
     const [volume, setVolume] = useState(() => mediaRef.current?.volume ?? 1);
     const [muted, setMuted] = useState(() => mediaRef.current?.muted ?? false);
 
-    // Sync state when the video element changes volume externally.
+    // Sync state when the media element changes volume externally.
     useEffect(() => {
         const media = mediaRef.current;
         if (!media) return;

@@ -21,7 +21,7 @@ export default function AudioPreview({ note }: { note: FNote }) {
             audio.pause();
         }
     }, []);
-    const onKeyDown = useKeyboardShortcuts(audioRef, wrapperRef, togglePlayback);
+    const onKeyDown = useKeyboardShortcuts(audioRef, togglePlayback);
 
     useEffect(() => setError(false), [note.noteId]);
     const onError = useCallback(() => setError(true), []);
@@ -68,7 +68,7 @@ export default function AudioPreview({ note }: { note: FNote }) {
     );
 }
 
-function useKeyboardShortcuts(audioRef: MutableRef<HTMLAudioElement | null>, wrapperRef: MutableRef<HTMLDivElement | null>, togglePlayback: () => void) {
+function useKeyboardShortcuts(audioRef: MutableRef<HTMLAudioElement | null>, togglePlayback: () => void) {
     return useCallback((e: KeyboardEvent) => {
         const audio = audioRef.current;
         if (!audio) return;

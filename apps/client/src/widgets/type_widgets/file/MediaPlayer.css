@@ -1,8 +1,8 @@
-.media-preview-controls {    
+.media-preview-controls {
     padding: 1.25em;
     display: flex;
     flex-direction: column;
-    gap: 0.5em;    
+    gap: 0.5em;
 
     .media-buttons-row {
         display: flex;
