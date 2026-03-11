@@ -13,7 +13,7 @@
     &.controls-hidden {
         cursor: pointer;
 
-        .video-preview-controls {
+        .media-preview-controls {
             opacity: 0;
             pointer-events: none;            
         }
