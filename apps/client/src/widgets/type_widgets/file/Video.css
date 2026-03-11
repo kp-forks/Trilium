@@ -24,5 +24,9 @@
         --icon-button-hover-background: rgba(255, 255, 255, 0.2);
         opacity: 1;
         transition: opacity 300ms ease;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
     }
 }

@@ -3,6 +3,7 @@ import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hoo
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
+import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import { LoopButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
 
@@ -39,6 +40,9 @@ export default function AudioPreview({ note }: { note: FNote }) {
                 onPause={() => setPlaying(false)}
                 onError={onError}
             />
+            <div className="audio-preview-icon-wrapper">
+                <Icon icon="bx bx-music" className="audio-preview-icon" />
+            </div>
             <div className="media-preview-controls">
                 <SeekBar mediaRef={audioRef} />
 

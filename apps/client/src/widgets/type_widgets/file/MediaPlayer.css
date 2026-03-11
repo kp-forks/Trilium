@@ -1,8 +1,4 @@
-.media-preview-controls {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+.media-preview-controls {    
     padding: 1.25em;
     display: flex;
     flex-direction: column;
@@ -90,4 +86,15 @@
 .audio-preview-wrapper {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .audio-preview-icon-wrapper {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8em;
+        opacity: 0.6;
+    }
 }
