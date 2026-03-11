@@ -108,7 +108,7 @@ export default class NoteWrapperWidget extends FlexContainer<BasicWidget> {
             return true;
         }
 
-        if (note.type === "file" && MIME_TYPES_WITH_BACKGROUND_EFFECTS.includes(note.mime)) {
+        if (note.type === "file" && (MIME_TYPES_WITH_BACKGROUND_EFFECTS.includes(note.mime) || note.mime.startsWith("audio/"))) {
             return true;
         }
 
