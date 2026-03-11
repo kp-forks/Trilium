@@ -1,6 +1,6 @@
 {
     "formatVersion": 2,
-    "appVersion": "0.101.3",
+    "appVersion": "0.102.1",
     "files": [
         {
             "isClone": false,
@@ -10394,20 +10394,6 @@
                                 {
                                     "type": "relation",
                                     "name": "internalLink",
-                                    "value": "wX4HbRucYSDD",
-                                    "isInheritable": false,
-                                    "position": 60
-                                },
-                                {
-                                    "type": "relation",
-                                    "name": "internalLink",
-                                    "value": "ODY7qQn5m2FT",
-                                    "isInheritable": false,
-                                    "position": 70
-                                },
-                                {
-                                    "type": "relation",
-                                    "name": "internalLink",
                                     "value": "mHbBMPDPkVV5",
                                     "isInheritable": false,
                                     "position": 80
@@ -10467,13 +10453,20 @@
                                     "value": "bx bx-file-blank",
                                     "isInheritable": false,
                                     "position": 140
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "AjqEeiDUOzj4",
+                                    "isInheritable": false,
+                                    "position": 150
                                 }
                             ],
                             "format": "markdown",
                             "dataFileName": "File.md",
                             "attachments": [
                                 {
-                                    "attachmentId": "FoEnowwOhzLT",
+                                    "attachmentId": "fZ7VMfQJWuLQ",
                                     "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
@@ -10481,7 +10474,7 @@
                                     "dataFileName": "File_image.png"
                                 },
                                 {
-                                    "attachmentId": "fZ7VMfQJWuLQ",
+                                    "attachmentId": "hddkgf7kr9g4",
                                     "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
@@ -10489,7 +10482,7 @@
                                     "dataFileName": "1_File_image.png"
                                 },
                                 {
-                                    "attachmentId": "hddkgf7kr9g4",
+                                    "attachmentId": "hIg9g5pgsjS3",
                                     "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
@@ -10497,7 +10490,7 @@
                                     "dataFileName": "2_File_image.png"
                                 },
                                 {
-                                    "attachmentId": "hIg9g5pgsjS3",
+                                    "attachmentId": "IC0j8LFCOKka",
                                     "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
@@ -10505,20 +10498,12 @@
                                     "dataFileName": "3_File_image.png"
                                 },
                                 {
-                                    "attachmentId": "IC0j8LFCOKka",
-                                    "title": "image.png",
-                                    "role": "image",
-                                    "mime": "image/png",
-                                    "position": 10,
-                                    "dataFileName": "4_File_image.png"
-                                },
-                                {
                                     "attachmentId": "wNHX24feZRAl",
                                     "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
                                     "position": 10,
-                                    "dataFileName": "5_File_image.png"
+                                    "dataFileName": "4_File_image.png"
                                 }
                             ],
                             "dirFileName": "File",
@@ -10607,6 +10592,57 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "1_PDFs_image.png"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "isClone": false,
+                                    "noteId": "AjqEeiDUOzj4",
+                                    "notePath": [
+                                        "pOsGYCXsbNQG",
+                                        "KSZ04uQ2D1St",
+                                        "W8vYD3Q1zjCR",
+                                        "AjqEeiDUOzj4"
+                                    ],
+                                    "title": "Videos",
+                                    "notePosition": 20,
+                                    "prefix": null,
+                                    "isExpanded": false,
+                                    "type": "text",
+                                    "mime": "text/html",
+                                    "attributes": [
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "wX4HbRucYSDD",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "ODY7qQn5m2FT",
+                                            "isInheritable": false,
+                                            "position": 40
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "iconClass",
+                                            "value": "bx bx-video",
+                                            "isInheritable": false,
+                                            "position": 50
+                                        }
+                                    ],
+                                    "format": "markdown",
+                                    "dataFileName": "Videos.md",
+                                    "attachments": [
+                                        {
+                                            "attachmentId": "649jtu5ELGa8",
+                                            "title": "image.png",
+                                            "role": "image",
+                                            "mime": "image/png",
+                                            "position": 10,
+                                            "dataFileName": "Videos_image.png"
                                         }
                                     ]
                                 }
@@ -15811,6 +15847,13 @@
                     "mime": "text/html",
                     "attributes": [
                         {
+                            "type": "relation",
+                            "name": "internalLink",
+                            "value": "6f9hih2hXXZk",
+                            "isInheritable": false,
+                            "position": 10
+                        },
+                        {
                             "type": "label",
                             "name": "shareAlias",
                             "value": "llm",
@@ -15823,13 +15866,6 @@
                             "value": "bx bx-bot",
                             "isInheritable": false,
                             "position": 30
-                        },
-                        {
-                            "type": "relation",
-                            "name": "internalLink",
-                            "value": "6f9hih2hXXZk",
-                            "isInheritable": false,
-                            "position": 40
                         }
                     ],
                     "format": "markdown",
