@@ -1,12 +1,27 @@
+import { useRef, useState } from "preact/hooks";
+
 import FNote from "../../../entities/fnote";
 import { getUrlForDownload } from "../../../services/open";
+import { PlayPauseButton } from "./MediaPlayer";
 
 export default function AudioPreview({ note }: { note: FNote }) {
+    const [playing, setPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
     return (
-        <audio
-            class="audio-preview"
-            src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
-            controls
-        />
+        <div className="audio-preview-wrapper">
+            <audio
+                class="audio-preview"
+                src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
+                ref={audioRef}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+            />
+            <div className="video-preview-controls">
+                <div className="center">
+                    <PlayPauseButton mediaRef={audioRef} playing={playing} />
+                </div>
+            </div>
+        </div>
     );
 }

@@ -10,6 +10,7 @@ import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
+import { PlayPauseButton } from "./MediaPlayer";
 
 function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
@@ -128,7 +129,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     <div className="center">
                         <div className="spacer" />
                         <SkipButton videoRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
-                        <PlayPauseButton videoRef={videoRef} playing={playing} />
+                        <PlayPauseButton mediaRef={videoRef} playing={playing} />
                         <SkipButton videoRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
                         <LoopButton videoRef={videoRef} />
                     </div>
@@ -172,28 +173,6 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
     }, [playing, scheduleHide]);
 
     return { visible, onMouseMove, flash: onMouseMove };
-}
-
-function PlayPauseButton({ videoRef, playing }: { videoRef: RefObject<HTMLVideoElement>, playing: boolean }) {
-    const togglePlayback = () => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        if (video.paused) {
-            video.play();
-        } else {
-            video.pause();
-        }
-    };
-
-    return (
-        <ActionButton
-            className="play-button"
-            icon={playing ? "bx bx-pause" : "bx bx-play"}
-            text={playing ? t("video.pause") : t("video.play")}
-            onClick={togglePlayback}
-        />
-    );
 }
 
 function SkipButton({ videoRef, seconds, icon, text }: { videoRef: RefObject<HTMLVideoElement>, seconds: number, icon: string, text: string }) {
