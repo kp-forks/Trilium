@@ -56,18 +56,10 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function PlayPauseButton({ mediaRef, playing }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, playing: boolean }) {
-    const togglePlayback = () => {
-        const media = mediaRef.current;
-        if (!media) return;
-
-        if (media.paused) {
-            media.play();
-        } else {
-            media.pause();
-        }
-    };
-
+export function PlayPauseButton({ playing, togglePlayback }: {    
+    playing: boolean,
+    togglePlayback: () => void
+}) {
     return (
         <ActionButton
             className="play-button"

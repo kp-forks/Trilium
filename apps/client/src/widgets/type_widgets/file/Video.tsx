@@ -33,7 +33,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
     }, []);
 
     const onVideoClick = useCallback((e: MouseEvent) => {
-        if ((e.target as HTMLElement).closest(".video-preview-controls")) return;
+        if ((e.target as HTMLElement).closest(".media-preview-controls")) return;
         togglePlayback();
     }, [togglePlayback]);
 
@@ -65,7 +65,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     <div className="center">
                         <div className="spacer" />
                         <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
-                        <PlayPauseButton mediaRef={videoRef} playing={playing} />
+                        <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
                         <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("media.forward-30s")} />
                         <LoopButton mediaRef={videoRef} />
                     </div>

@@ -54,7 +54,7 @@ export default function AudioPreview({ note }: { note: FNote }) {
                     <div className="center">
                         <div className="spacer" />
                         <SkipButton mediaRef={audioRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
-                        <PlayPauseButton mediaRef={audioRef} playing={playing} />
+                        <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
                         <SkipButton mediaRef={audioRef} seconds={30} icon="bx bx-fast-forward" text={t("media.forward-30s")} />
                         <LoopButton mediaRef={audioRef} />
                     </div>
