@@ -75,3 +75,62 @@ export function PlayPauseButton({ mediaRef, playing }: { mediaRef: RefObject<HTM
         />
     );
 }
+
+export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement> }) {
+    const [volume, setVolume] = useState(() => mediaRef.current?.volume ?? 1);
+    const [muted, setMuted] = useState(() => mediaRef.current?.muted ?? false);
+
+    // Sync state when the video element changes volume externally.
+    useEffect(() => {
+        const media = mediaRef.current;
+        if (!media) return;
+
+        setVolume(media.volume);
+        setMuted(media.muted);
+
+        const onVolumeChange = () => {
+            setVolume(media.volume);
+            setMuted(media.muted);
+        };
+        media.addEventListener("volumechange", onVolumeChange);
+        return () => media.removeEventListener("volumechange", onVolumeChange);
+    }, []);
+
+    const onVolumeChange = (e: Event) => {
+        const media = mediaRef.current;
+        if (!media) return;
+        const val = parseFloat((e.target as HTMLInputElement).value);
+        media.volume = val;
+        setVolume(val);
+        if (val > 0 && media.muted) {
+            media.muted = false;
+            setMuted(false);
+        }
+    };
+
+    const toggleMute = () => {
+        const media = mediaRef.current;
+        if (!media) return;
+        media.muted = !media.muted;
+        setMuted(media.muted);
+    };
+
+    return (
+        <div class="media-volume-row">
+            <ActionButton
+                icon={muted || volume === 0 ? "bx bx-volume-mute" : volume < 0.5 ? "bx bx-volume-low" : "bx bx-volume-full"}
+                text={muted ? t("video.unmute") : t("video.mute")}
+                onClick={toggleMute}
+            />
+            <input
+                type="range"
+                class="media-volume-slider"
+                min={0}
+                max={1}
+                step={0.05}
+                value={muted ? 0 : volume}
+                onInput={onVolumeChange}
+            />
+        </div>
+    );
+}

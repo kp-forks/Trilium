@@ -55,4 +55,15 @@
             cursor: pointer;
         }
     }
+
+    .media-volume-row {
+        display: flex;
+        align-items: center;
+        gap: 0.25em;
+
+        .media-volume-slider {
+            width: 80px;
+            cursor: pointer;
+        }
+    }
 }

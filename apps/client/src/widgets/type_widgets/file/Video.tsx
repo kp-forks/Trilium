@@ -10,7 +10,7 @@ import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
-import { PlayPauseButton, SeekBar } from "./MediaPlayer";
+import { PlayPauseButton, SeekBar, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
@@ -128,7 +128,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                         <LoopButton videoRef={videoRef} />
                     </div>
                     <div className="right">
-                        <VolumeControl videoRef={videoRef} />
+                        <VolumeControl mediaRef={videoRef} />
                         <ZoomToFitButton videoRef={videoRef} />
                         <PictureInPictureButton videoRef={videoRef} />
                         <FullscreenButton targetRef={wrapperRef} />
@@ -178,65 +178,6 @@ function SkipButton({ videoRef, seconds, icon, text }: { videoRef: RefObject<HTM
 
     return (
         <ActionButton icon={icon} text={text} onClick={skip} />
-    );
-}
-
-function VolumeControl({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
-    const [volume, setVolume] = useState(() => videoRef.current?.volume ?? 1);
-    const [muted, setMuted] = useState(() => videoRef.current?.muted ?? false);
-
-    // Sync state when the video element changes volume externally.
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        setVolume(video.volume);
-        setMuted(video.muted);
-
-        const onVolumeChange = () => {
-            setVolume(video.volume);
-            setMuted(video.muted);
-        };
-        video.addEventListener("volumechange", onVolumeChange);
-        return () => video.removeEventListener("volumechange", onVolumeChange);
-    }, []);
-
-    const onVolumeChange = (e: Event) => {
-        const video = videoRef.current;
-        if (!video) return;
-        const val = parseFloat((e.target as HTMLInputElement).value);
-        video.volume = val;
-        setVolume(val);
-        if (val > 0 && video.muted) {
-            video.muted = false;
-            setMuted(false);
-        }
-    };
-
-    const toggleMute = () => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.muted = !video.muted;
-        setMuted(video.muted);
-    };
-
-    return (
-        <div class="video-volume-row">
-            <ActionButton
-                icon={muted || volume === 0 ? "bx bx-volume-mute" : volume < 0.5 ? "bx bx-volume-low" : "bx bx-volume-full"}
-                text={muted ? t("video.unmute") : t("video.mute")}
-                onClick={toggleMute}
-            />
-            <input
-                type="range"
-                class="video-volume-slider"
-                min={0}
-                max={1}
-                step={0.05}
-                value={muted ? 0 : volume}
-                onInput={onVolumeChange}
-            />
-        </div>
     );
 }
 
