@@ -3,7 +3,7 @@ import { useRef, useState } from "preact/hooks";
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
-import { LoopButton, PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
+import { LoopButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
 
 export default function AudioPreview({ note }: { note: FNote }) {
     const [playing, setPlaying] = useState(false);
@@ -22,7 +22,9 @@ export default function AudioPreview({ note }: { note: FNote }) {
                 <SeekBar mediaRef={audioRef} />
 
                 <div class="media-buttons-row">
-                    <div className="left" />
+                    <div className="left">
+                        <PlaybackSpeed mediaRef={audioRef} />
+                    </div>
 
                     <div className="center">
                         <div className="spacer" />

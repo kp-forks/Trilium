@@ -5,6 +5,8 @@ import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
+import Dropdown from "../../react/Dropdown";
+import Icon from "../../react/Icon";
 
 export function SeekBar({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement> }) {
     const [currentTime, setCurrentTime] = useState(0);
@@ -174,5 +176,53 @@ export function LoopButton({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement 
             text={loop ? t("video.disable-loop") : t("video.loop")}
             onClick={toggle}
         />
+    );
+}
+
+const PLAYBACK_SPEEDS = [0.5, 1, 1.25, 1.5, 2];
+
+export function PlaybackSpeed({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement> }) {
+    const [speed, setSpeed] = useState(() => mediaRef.current?.playbackRate ?? 1);
+
+    useEffect(() => {
+        const media = mediaRef.current;
+        if (!media) return;
+
+        setSpeed(media.playbackRate);
+
+        const onRateChange = () => setSpeed(media.playbackRate);
+        media.addEventListener("ratechange", onRateChange);
+        return () => media.removeEventListener("ratechange", onRateChange);
+    }, []);
+
+    const selectSpeed = (rate: number) => {
+        const media = mediaRef.current;
+        if (!media) return;
+        media.playbackRate = rate;
+        setSpeed(rate);
+    };
+
+    return (
+        <Dropdown
+            iconAction
+            hideToggleArrow
+            buttonClassName="speed-dropdown"
+            text={<>
+                <Icon icon="bx bx-tachometer" />
+                <span class="media-speed-label">{speed}x</span>
+            </>}
+            title={t("video.playback-speed")}
+        >
+            {PLAYBACK_SPEEDS.map((rate) => (
+                <li key={rate}>
+                    <button
+                        class={`dropdown-item ${rate === speed ? "active" : ""}`}
+                        onClick={() => selectSpeed(rate)}
+                    >
+                        {rate}x
+                    </button>
+                </li>
+            ))}
+        </Dropdown>
     );
 }
