@@ -26,7 +26,7 @@ export default function AudioPreview({ note }: { note: FNote }) {
     const onError = useCallback(() => setError(true), []);
 
     if (error) {
-        return <NoItems icon="bx bx-volume-mute" text={t("video.unsupported-format")} />;
+        return <NoItems icon="bx bx-volume-mute" text={t("video.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
     }
 
     return (

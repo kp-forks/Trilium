@@ -40,7 +40,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
 
     if (error) {
-        return <NoItems icon="bx bx-video-off" text={t("video.unsupported-format")} />;
+        return <NoItems icon="bx bx-video-off" text={t("video.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
     }
 
     return (
