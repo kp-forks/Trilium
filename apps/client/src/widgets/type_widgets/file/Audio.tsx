@@ -17,10 +17,10 @@ export default function AudioPreview({ note }: { note: FNote }) {
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
             />
-            <div className="video-preview-controls">
+            <div className="media-preview-controls">
                 <SeekBar mediaRef={audioRef} />
 
-                <div class="video-buttons-row">
+                <div class="media-buttons-row">
                     <div className="center">
                         <PlayPauseButton mediaRef={audioRef} playing={playing} />
                     </div>

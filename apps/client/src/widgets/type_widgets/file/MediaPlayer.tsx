@@ -1,3 +1,5 @@
+import "./MediaPlayer.css";
+
 import { RefObject } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
@@ -30,18 +32,18 @@ export function SeekBar({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | H
     };
 
     return (
-        <div class="video-seekbar-row">
-            <span class="video-time">{formatTime(currentTime)}</span>
+        <div class="media-seekbar-row">
+            <span class="media-time">{formatTime(currentTime)}</span>
             <input
                 type="range"
-                class="video-trackbar"
+                class="media-trackbar"
                 min={0}
                 max={duration || 0}
                 step={0.1}
                 value={currentTime}
                 onInput={onSeek}
             />
-            <span class="video-time">-{formatTime(Math.max(0, duration - currentTime))}</span>
+            <span class="media-time">-{formatTime(Math.max(0, duration - currentTime))}</span>
         </div>
     );
 }

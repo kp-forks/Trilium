@@ -1,0 +1,58 @@
+.media-preview-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1.25em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+
+    .media-buttons-row {
+        display: flex;
+
+        > * {
+            flex: 1;
+            align-items: center;
+            gap: 0.5em;
+            display: flex;
+        }
+
+        .spacer {
+            width: var(--icon-button-size, 32px);
+            height: var(--icon-button-size, 32px);
+        }
+
+        .center {
+            justify-content: center;
+        }
+
+        .right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .play-button {
+            --icon-button-size: 48px;
+        }
+    }
+
+    .media-seekbar-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+
+        .media-time {
+            font-size: 0.85em;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .media-trackbar {
+            flex: 1;
+            cursor: pointer;
+        }
+    }
+}

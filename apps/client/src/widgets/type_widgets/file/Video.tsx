@@ -113,9 +113,9 @@ export default function VideoPreview({ note }: { note: FNote }) {
                 onError={onError}
             />
 
-            <div className="video-preview-controls">
+            <div className="media-preview-controls">
                 <SeekBar mediaRef={videoRef} />
-                <div class="video-buttons-row">
+                <div class="media-buttons-row">
                     <div className="left">
                         <PlaybackSpeed videoRef={videoRef} />
                         <RotateButton videoRef={videoRef} />
