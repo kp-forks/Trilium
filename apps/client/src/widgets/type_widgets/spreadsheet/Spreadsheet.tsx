@@ -73,23 +73,8 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
  */
 function useFixRadixPortals() {
     useEffect(() => {
-        function isInsideUniverPortal(target: HTMLElement): boolean {
-            // Check for Radix content wrappers (covers most popover/menu portals).
-            if (target.closest("[data-radix-popper-content-wrapper]") || target.closest("[data-radix-menu-content]")) {
-                return true;
-            }
-
-            // Some Univer portals (e.g. nested color picker) don't use a Radix
-            // wrapper. Fall back to checking if the element has Univer classes.
-            if (target.className?.includes("univer-")) {
-                return true;
-            }
-
-            return false;
-        }
-
         function preventDismiss(e: Event) {
-            if (e.target instanceof HTMLElement && isInsideUniverPortal(e.target)) {
+            if (e.target instanceof HTMLElement && e.target.closest("[id^='radix-']")) {
                 e.preventDefault();
             }
         }
