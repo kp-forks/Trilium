@@ -1,14 +1,16 @@
-import { MutableRef, useCallback, useRef, useState } from "preact/hooks";
+import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
+import NoItems from "../../react/NoItems";
 import { LoopButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
 
 export default function AudioPreview({ note }: { note: FNote }) {
-    const [playing, setPlaying] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const [playing, setPlaying] = useState(false);
+    const [error, setError] = useState(false);
     const togglePlayback = useCallback(() => {
         const audio = audioRef.current;
         if (!audio) return;
@@ -20,6 +22,13 @@ export default function AudioPreview({ note }: { note: FNote }) {
     }, []);
     const onKeyDown = useKeyboardShortcuts(audioRef, wrapperRef, togglePlayback);
 
+    useEffect(() => setError(false), [note.noteId]);
+    const onError = useCallback(() => setError(true), []);
+
+    if (error) {
+        return <NoItems icon="bx bx-volume-mute" text={t("video.unsupported-format")} />;
+    }
+
     return (
         <div ref={wrapperRef} className="audio-preview-wrapper" onKeyDown={onKeyDown} tabIndex={0}>
             <audio
@@ -28,6 +37,7 @@ export default function AudioPreview({ note }: { note: FNote }) {
                 ref={audioRef}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
+                onError={onError}
             />
             <div className="media-preview-controls">
                 <SeekBar mediaRef={audioRef} />

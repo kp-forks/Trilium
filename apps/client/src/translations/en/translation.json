@@ -1051,7 +1051,7 @@
     "exit-picture-in-picture": "Exit picture-in-picture",
     "fullscreen": "Fullscreen (F)",
     "exit-fullscreen": "Exit fullscreen",
-    "unsupported-format": "Video preview is not available for this file format.",
+    "unsupported-format": "Media preview is not available for this file format.",
     "zoom-to-fit": "Zoom to fill",
     "zoom-reset": "Reset zoom to fill"
   },
