@@ -146,3 +146,33 @@ export function SkipButton({ mediaRef, seconds, icon, text }: { mediaRef: RefObj
         <ActionButton icon={icon} text={text} onClick={skip} />
     );
 }
+
+export function LoopButton({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement> }) {
+    const [loop, setLoop] = useState(() => mediaRef.current?.loop ?? false);
+
+    useEffect(() => {
+        const media = mediaRef.current;
+        if (!media) return;
+        setLoop(media.loop);
+
+        const observer = new MutationObserver(() => setLoop(media.loop));
+        observer.observe(media, { attributes: true, attributeFilter: ["loop"] });
+        return () => observer.disconnect();
+    }, []);
+
+    const toggle = () => {
+        const media = mediaRef.current;
+        if (!media) return;
+        media.loop = !media.loop;
+        setLoop(media.loop);
+    };
+
+    return (
+        <ActionButton
+            className={loop ? "active" : ""}
+            icon="bx bx-repeat"
+            text={loop ? t("video.disable-loop") : t("video.loop")}
+            onClick={toggle}
+        />
+    );
+}

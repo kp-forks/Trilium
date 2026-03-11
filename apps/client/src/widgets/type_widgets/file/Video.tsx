@@ -10,7 +10,7 @@ import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
-import { PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
+import { LoopButton, PlayPauseButton, SeekBar, SkipButton, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
@@ -125,7 +125,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
                         <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
                         <PlayPauseButton mediaRef={videoRef} playing={playing} />
                         <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
-                        <LoopButton videoRef={videoRef} />
+                        <LoopButton mediaRef={videoRef} />
                     </div>
                     <div className="right">
                         <VolumeControl mediaRef={videoRef} />
@@ -214,36 +214,6 @@ function PlaybackSpeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) 
                 </li>
             ))}
         </Dropdown>
-    );
-}
-
-function LoopButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
-    const [loop, setLoop] = useState(() => videoRef.current?.loop ?? false);
-
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-        setLoop(video.loop);
-
-        const observer = new MutationObserver(() => setLoop(video.loop));
-        observer.observe(video, { attributes: true, attributeFilter: ["loop"] });
-        return () => observer.disconnect();
-    }, []);
-
-    const toggle = () => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.loop = !video.loop;
-        setLoop(video.loop);
-    };
-
-    return (
-        <ActionButton
-            className={loop ? "active" : ""}
-            icon="bx bx-repeat"
-            text={loop ? t("video.disable-loop") : t("video.loop")}
-            onClick={toggle}
-        />
     );
 }
 
