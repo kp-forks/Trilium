@@ -2,9 +2,7 @@
     padding: 1.25em;
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
+    gap: 0.5em;    
 
     .media-buttons-row {
         display: flex;
