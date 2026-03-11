@@ -25,7 +25,7 @@ export function SeekBar({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | H
             media.removeEventListener("timeupdate", onTimeUpdate);
             media.removeEventListener("durationchange", onDurationChange);
         };
-    }, []);
+    }, [ mediaRef ]);
 
     const onSeek = (e: Event) => {
         const media = mediaRef.current;
@@ -96,7 +96,7 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
         };
         media.addEventListener("volumechange", onVolumeChange);
         return () => media.removeEventListener("volumechange", onVolumeChange);
-    }, []);
+    }, [ mediaRef ]);
 
     const onVolumeChange = (e: Event) => {
         const media = mediaRef.current;
@@ -160,7 +160,7 @@ export function LoopButton({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement 
         const observer = new MutationObserver(() => setLoop(media.loop));
         observer.observe(media, { attributes: true, attributeFilter: ["loop"] });
         return () => observer.disconnect();
-    }, []);
+    }, [ mediaRef ]);
 
     const toggle = () => {
         const media = mediaRef.current;
@@ -193,7 +193,7 @@ export function PlaybackSpeed({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
         const onRateChange = () => setSpeed(media.playbackRate);
         media.addEventListener("ratechange", onRateChange);
         return () => media.removeEventListener("ratechange", onRateChange);
-    }, []);
+    }, [ mediaRef ]);
 
     const selectSpeed = (rate: number) => {
         const media = mediaRef.current;

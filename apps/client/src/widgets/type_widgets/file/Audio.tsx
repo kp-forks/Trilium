@@ -108,5 +108,5 @@ function useKeyboardShortcuts(audioRef: MutableRef<HTMLAudioElement | null>, wra
                 audio.currentTime = audio.duration;
                 break;
         }
-    }, [togglePlayback]);
+    }, [ audioRef, togglePlayback ]);
 }

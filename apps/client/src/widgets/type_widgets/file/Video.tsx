@@ -138,7 +138,7 @@ function useKeyboardShortcuts(videoRef: MutableRef<HTMLVideoElement | null>, wra
                 flashControls();
                 break;
         }
-    }, [togglePlayback, flashControls]);
+    }, [ wrapperRef, videoRef, togglePlayback, flashControls ]);
 }
 
 function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boolean) {
@@ -150,7 +150,7 @@ function useAutoHideControls(videoRef: RefObject<HTMLVideoElement>, playing: boo
         if (videoRef.current && !videoRef.current.paused) {
             hideTimerRef.current = setTimeout(() => setVisible(false), AUTO_HIDE_DELAY);
         }
-    }, []);
+    }, [ videoRef]);
 
     const onMouseMove = useCallback(() => {
         setVisible(true);
@@ -244,7 +244,7 @@ function PictureInPictureButton({ videoRef }: { videoRef: RefObject<HTMLVideoEle
             video.removeEventListener("enterpictureinpicture", onEnter);
             video.removeEventListener("leavepictureinpicture", onLeave);
         };
-    }, [supported]);
+    }, [ videoRef, supported ]);
 
     if (!supported) return null;
 
