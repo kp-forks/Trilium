@@ -72,7 +72,7 @@ export function PlayPauseButton({ mediaRef, playing }: { mediaRef: RefObject<HTM
         <ActionButton
             className="play-button"
             icon={playing ? "bx bx-pause" : "bx bx-play"}
-            text={playing ? t("video.pause") : t("video.play")}
+            text={playing ? t("media.pause") : t("media.play")}
             onClick={togglePlayback}
         />
     );
@@ -121,7 +121,7 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
         <div class="media-volume-row">
             <ActionButton
                 icon={muted || volume === 0 ? "bx bx-volume-mute" : volume < 0.5 ? "bx bx-volume-low" : "bx bx-volume-full"}
-                text={muted ? t("video.unmute") : t("video.mute")}
+                text={muted ? t("media.unmute") : t("media.mute")}
                 onClick={toggleMute}
             />
             <input
@@ -173,7 +173,7 @@ export function LoopButton({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement 
         <ActionButton
             className={loop ? "active" : ""}
             icon="bx bx-repeat"
-            text={loop ? t("video.disable-loop") : t("video.loop")}
+            text={loop ? t("media.disable-loop") : t("media.loop")}
             onClick={toggle}
         />
     );
@@ -211,7 +211,7 @@ export function PlaybackSpeed({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
                 <Icon icon="bx bx-tachometer" />
                 <span class="media-speed-label">{speed}x</span>
             </>}
-            title={t("video.playback-speed")}
+            title={t("media.playback-speed")}
         >
             {PLAYBACK_SPEEDS.map((rate) => (
                 <li key={rate}>

@@ -40,7 +40,7 @@ export default function VideoPreview({ note }: { note: FNote }) {
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
 
     if (error) {
-        return <NoItems icon="bx bx-video-off" text={t("video.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
+        return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
     }
 
     return (
@@ -64,9 +64,9 @@ export default function VideoPreview({ note }: { note: FNote }) {
                     </div>
                     <div className="center">
                         <div className="spacer" />
-                        <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
+                        <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
                         <PlayPauseButton mediaRef={videoRef} playing={playing} />
-                        <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
+                        <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("media.forward-30s")} />
                         <LoopButton mediaRef={videoRef} />
                     </div>
                     <div className="right">
@@ -198,7 +198,7 @@ function RotateButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
     return (
         <ActionButton
             icon="bx bx-rotate-right"
-            text={t("video.rotate")}
+            text={t("media.rotate")}
             onClick={rotate}
         />
     );
@@ -219,7 +219,7 @@ function ZoomToFitButton({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }
         <ActionButton
             className={fitted ? "active" : ""}
             icon={fitted ? "bx bx-collapse" : "bx bx-expand"}
-            text={fitted ? t("video.zoom-reset") : t("video.zoom-to-fit")}
+            text={fitted ? t("media.zoom-reset") : t("media.zoom-to-fit")}
             onClick={toggle}
         />
     );
@@ -262,7 +262,7 @@ function PictureInPictureButton({ videoRef }: { videoRef: RefObject<HTMLVideoEle
     return (
         <ActionButton
             icon={active ? "bx bx-exit" : "bx bx-window-open"}
-            text={active ? t("video.exit-picture-in-picture") : t("video.picture-in-picture")}
+            text={active ? t("media.exit-picture-in-picture") : t("media.picture-in-picture")}
             onClick={toggle}
         />
     );
@@ -291,7 +291,7 @@ function FullscreenButton({ targetRef }: { targetRef: RefObject<HTMLElement> }) 
     return (
         <ActionButton
             icon={isFullscreen ? "bx bx-exit-fullscreen" : "bx bx-fullscreen"}
-            text={isFullscreen ? t("video.exit-fullscreen") : t("video.fullscreen")}
+            text={isFullscreen ? t("media.exit-fullscreen") : t("media.fullscreen")}
             onClick={toggleFullscreen}
         />
     );

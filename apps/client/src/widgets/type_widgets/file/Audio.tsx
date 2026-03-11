@@ -27,7 +27,7 @@ export default function AudioPreview({ note }: { note: FNote }) {
     const onError = useCallback(() => setError(true), []);
 
     if (error) {
-        return <NoItems icon="bx bx-volume-mute" text={t("video.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
+        return <NoItems icon="bx bx-volume-mute" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
     }
 
     return (
@@ -53,9 +53,9 @@ export default function AudioPreview({ note }: { note: FNote }) {
 
                     <div className="center">
                         <div className="spacer" />
-                        <SkipButton mediaRef={audioRef} seconds={-10} icon="bx bx-rewind" text={t("video.back-10s")} />
+                        <SkipButton mediaRef={audioRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
                         <PlayPauseButton mediaRef={audioRef} playing={playing} />
-                        <SkipButton mediaRef={audioRef} seconds={30} icon="bx bx-fast-forward" text={t("video.forward-30s")} />
+                        <SkipButton mediaRef={audioRef} seconds={30} icon="bx bx-fast-forward" text={t("media.forward-30s")} />
                         <LoopButton mediaRef={audioRef} />
                     </div>
 

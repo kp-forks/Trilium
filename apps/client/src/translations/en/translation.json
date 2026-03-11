@@ -1036,7 +1036,7 @@
     "file_preview_not_available": "File preview is not available for this file format.",
     "too_big": "The preview only shows the first {{maxNumChars}} characters of the file for performance reasons. Download the file and open it externally to be able to see the entire content."
   },
-  "video": {
+  "media": {
     "play": "Play (Space)",
     "pause": "Pause (Space)",
     "back-10s": "Back 10s (Left arrow key)",
