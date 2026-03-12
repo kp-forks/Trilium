@@ -181,11 +181,6 @@ class NoteFlatTextExp extends Expression {
     getCandidateNotes(noteSet: NoteSet, searchContext?: SearchContext): BNote[] {
         const candidateNotes: BNote[] = [];
 
-        // For limited searches (e.g. autocomplete), cap candidates to avoid
-        // processing thousands of matches when only a few hundred are needed.
-        // Use 5x the limit to ensure enough quality candidates for scoring.
-        const maxCandidates = searchContext?.limit ? searchContext.limit * 5 : Infinity;
-
         // Use the pre-built flat text index for fast scanning.
         // This provides pre-computed flat texts in a parallel array, avoiding
         // per-note property access overhead at large scale (50K+ notes).
@@ -210,10 +205,7 @@ class NoteFlatTextExp extends Expression {
                 }
             }
 
-            if (candidateNotes.length >= maxCandidates) {
-                break;
-            }
-        }
+}
 
         return candidateNotes;
     }
