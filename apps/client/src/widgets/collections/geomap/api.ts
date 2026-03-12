@@ -18,16 +18,16 @@ export async function createNewNote(parentNote: FNote, e: LeafletMouseEvent) {
     const title = await prompt({ message: t("relation_map.enter_title_of_new_note"), defaultValue: t("relation_map.default_new_note_title") });
 
     if (title?.trim()) {
-        const { note } = await note_create.createNote(parentNote.noteId, {
+        await note_create.createNote(parentNote.noteId, {
             title,
             content: "",
             type: "text",
             activate: false,
-            isProtected: parentNote.isProtected
+            isProtected: parentNote.isProtected,
+            attributes: [
+                { type: "label", name: LOCATION_ATTRIBUTE, value: [e.latlng.lat, e.latlng.lng].join(",") },
+                { type: "label", name: "iconClass", value: CHILD_NOTE_ICON }
+            ]
         });
-        if (!note) return;
-
-        attributes.setLabel(note.noteId, "iconClass", CHILD_NOTE_ICON);
-        moveMarker(note.noteId, e.latlng);
     }
 }
