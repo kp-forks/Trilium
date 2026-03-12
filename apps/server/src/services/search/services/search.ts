@@ -1,6 +1,5 @@
 "use strict";
 
-import normalizeString from "normalize-strings";
 import lex from "./lex.js";
 import handleParens from "./handle_parens.js";
 import parse from "./parse.js";
@@ -8,7 +7,7 @@ import SearchResult from "../search_result.js";
 import SearchContext from "../search_context.js";
 import becca from "../../../becca/becca.js";
 import beccaService from "../../../becca/becca_service.js";
-import { normalize, escapeHtml, escapeRegExp } from "../../utils.js";
+import { normalize, removeDiacritic, escapeHtml, escapeRegExp } from "../../utils.js";
 import log from "../../log.js";
 import hoistedNoteService from "../../hoisted_note.js";
 import type BNote from "../../../becca/entities/bnote.js";
@@ -482,12 +481,12 @@ function extractContentSnippet(noteId: string, searchTokens: string[], maxLength
         }
 
         // Try to find a snippet around the first matching token
-        const normalizedContent = normalizeString(content.toLowerCase());
+        const normalizedContent = normalize(content);
         let snippetStart = 0;
         let matchFound = false;
 
         for (const token of searchTokens) {
-            const normalizedToken = normalizeString(token.toLowerCase());
+            const normalizedToken = normalize(token);
             const matchIndex = normalizedContent.indexOf(normalizedToken);
             
             if (matchIndex !== -1) {
@@ -505,8 +504,8 @@ function extractContentSnippet(noteId: string, searchTokens: string[], maxLength
         const lines = snippet.split('\n');
         if (lines.length > 4) {
             // Find which lines contain the search tokens to ensure they're included
-            const normalizedLines = lines.map(line => normalizeString(line.toLowerCase()));
-            const normalizedTokens = searchTokens.map(token => normalizeString(token.toLowerCase()));
+            const normalizedLines = lines.map(line => normalize(line));
+            const normalizedTokens = searchTokens.map(token => normalize(token));
 
             // Find the first line that contains a search token
             let firstMatchLine = -1;
@@ -582,7 +581,7 @@ function extractAttributeSnippet(noteId: string, searchTokens: string[], maxLeng
             
             // Check if any search token matches the attribute name or value
             const hasMatch = searchTokens.some(token => {
-                const normalizedToken = normalizeString(token.toLowerCase());
+                const normalizedToken = normalize(token);
                 return attrName.includes(normalizedToken) || attrValue.includes(normalizedToken);
             });
             
@@ -734,7 +733,7 @@ function highlightSearchResults(searchResults: SearchResult[], highlightedTokens
             // Highlight in note path title
             if (result.highlightedNotePathTitle) {
                 const titleRegex = new RegExp(escapeRegExp(token), "gi");
-                while ((match = titleRegex.exec(normalizeString(result.highlightedNotePathTitle))) !== null) {
+                while ((match = titleRegex.exec(removeDiacritic(result.highlightedNotePathTitle))) !== null) {
                     result.highlightedNotePathTitle = wrapText(result.highlightedNotePathTitle, match.index, token.length, "{", "}");
                     // 2 characters are added, so we need to adjust the index
                     titleRegex.lastIndex += 2;
@@ -744,7 +743,7 @@ function highlightSearchResults(searchResults: SearchResult[], highlightedTokens
             // Highlight in content snippet
             if (result.highlightedContentSnippet) {
                 const contentRegex = new RegExp(escapeRegExp(token), "gi");
-                while ((match = contentRegex.exec(normalizeString(result.highlightedContentSnippet))) !== null) {
+                while ((match = contentRegex.exec(removeDiacritic(result.highlightedContentSnippet))) !== null) {
                     result.highlightedContentSnippet = wrapText(result.highlightedContentSnippet, match.index, token.length, "{", "}");
                     // 2 characters are added, so we need to adjust the index
                     contentRegex.lastIndex += 2;
@@ -754,7 +753,7 @@ function highlightSearchResults(searchResults: SearchResult[], highlightedTokens
             // Highlight in attribute snippet
             if (result.highlightedAttributeSnippet) {
                 const attributeRegex = new RegExp(escapeRegExp(token), "gi");
-                while ((match = attributeRegex.exec(normalizeString(result.highlightedAttributeSnippet))) !== null) {
+                while ((match = attributeRegex.exec(removeDiacritic(result.highlightedAttributeSnippet))) !== null) {
                     result.highlightedAttributeSnippet = wrapText(result.highlightedAttributeSnippet, match.index, token.length, "{", "}");
                     // 2 characters are added, so we need to adjust the index
                     attributeRegex.lastIndex += 2;
