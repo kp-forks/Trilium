@@ -201,8 +201,7 @@ class NoteFlatTextExp extends Expression {
                     break;
                 }
             }
-
-}
+        }
 
         return candidateNotes;
     }
