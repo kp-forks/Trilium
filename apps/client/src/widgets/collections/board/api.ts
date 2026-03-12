@@ -178,9 +178,8 @@ export default class BoardApi {
         if (!note) return;
         if (this.isRelationMode) {
             return attributes.removeOwnedRelationByName(note, this.statusAttribute);
-        } 
+        }
         return attributes.removeOwnedLabelByName(note, this.statusAttribute);
-        
     }
 
     async moveWithinBoard(noteId: string, sourceBranchId: string, sourceIndex: number, targetIndex: number, sourceColumn: string, targetColumn: string) {
