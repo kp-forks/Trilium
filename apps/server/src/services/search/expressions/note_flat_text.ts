@@ -7,7 +7,7 @@ import Expression from "./expression.js";
 import NoteSet from "../note_set.js";
 import becca from "../../../becca/becca.js";
 import { normalize } from "../../utils.js";
-import { normalizeSearchText, fuzzyMatchWord, fuzzyMatchWordWithResult } from "../utils/text_utils.js";
+import { normalizeSearchText, fuzzyMatchWordWithResult } from "../utils/text_utils.js";
 import beccaService from "../../../becca/becca_service.js";
 
 class NoteFlatTextExp extends Expression {
@@ -67,11 +67,8 @@ class NoteFlatTextExp extends Expression {
             }
 
             for (const attribute of note.getOwnedAttributes()) {
-                const normalizedName = normalizeSearchText(attribute.name);
-                const normalizedValue = normalizeSearchText(attribute.value);
-
                 for (const token of remainingTokens) {
-                    if (normalizedName.includes(token) || normalizedValue.includes(token)) {
+                    if (attribute.normalizedName.includes(token) || attribute.normalizedValue.includes(token)) {
                         foundAttrTokens.push(token);
                     }
                 }
@@ -134,7 +131,7 @@ class NoteFlatTextExp extends Expression {
                 }
 
                 for (const attribute of note.ownedAttributes) {
-                    if (normalizeSearchText(attribute.name).includes(token) || normalizeSearchText(attribute.value).includes(token)) {
+                    if (attribute.normalizedName.includes(token) || attribute.normalizedValue.includes(token)) {
                         foundAttrTokens.push(token);
                     }
                 }

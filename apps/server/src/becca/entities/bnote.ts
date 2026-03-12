@@ -791,8 +791,8 @@ class BNote extends AbstractBeccaEntity<BNote> {
         this.__inheritableAttributeCache = null;
         this.__ancestorCache = null;
 
-        // Dirty the becca-level flat text index since this note's flat text may have changed
-        this.becca.flatTextIndex = null;
+        // Mark only this note's flat text as dirty for incremental index update
+        this.becca.dirtyNoteFlatText(this.noteId);
     }
 
     invalidateSubTree(path: string[] = []) {
