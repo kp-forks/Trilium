@@ -33,9 +33,10 @@ function randomWord(len = 6): string {
     return word;
 }
 
-function generateHtmlContent(wordCount: number, includeTarget = false): string {
+function generateHtmlContent(wordCount: number, includeKeywords = false, keywords?: string[]): string {
     const paragraphs: string[] = [];
     let wordsRemaining = wordCount;
+    const kws = keywords ?? ["target"];
 
     while (wordsRemaining > 0) {
         const paraWords = Math.min(wordsRemaining, 20 + Math.floor(Math.random() * 40));
@@ -43,8 +44,12 @@ function generateHtmlContent(wordCount: number, includeTarget = false): string {
         for (let i = 0; i < paraWords; i++) {
             words.push(randomWord(3 + Math.floor(Math.random() * 10)));
         }
-        if (includeTarget && paragraphs.length === 2) {
-            words[Math.floor(words.length / 2)] = "target";
+        if (includeKeywords && paragraphs.length === 2) {
+            // Inject all keywords into the paragraph at spaced positions
+            for (let k = 0; k < kws.length; k++) {
+                const pos = Math.min(words.length - 1, Math.floor((words.length / (kws.length + 1)) * (k + 1)));
+                words[pos] = kws[k];
+            }
         }
         paragraphs.push(`<p>${words.join(" ")}</p>`);
         wordsRemaining -= paraWords;
@@ -80,12 +85,21 @@ function buildDataset(noteCount: number, opts: {
     labelsPerNote?: number;
     depth?: number;
     contentWordCount?: number;
+    /** When set, contentWordCount is treated as a median and actual sizes vary from 0.2x to 3x */
+    varyContentSize?: boolean;
+    /** Keywords to inject into matching notes' titles (default: ["target"]) */
+    titleKeywords?: string[];
+    /** Keywords to inject into matching notes' content (default: same as titleKeywords) */
+    contentKeywords?: string[];
 } = {}) {
     const {
         matchFraction = 0.1,
         labelsPerNote = 3,
         depth = 3,
         contentWordCount = 200,
+        varyContentSize = false,
+        titleKeywords = ["target"],
+        contentKeywords = titleKeywords,
     } = opts;
 
     becca.reset();
@@ -115,18 +129,39 @@ function buildDataset(noteCount: number, opts: {
     for (let i = 0; i < noteCount; i++) {
         const isMatch = i < matchCount;
         const title = isMatch
-            ? `${randomWord(5)} target ${randomWord(5)} Document ${i}`
+            ? `${randomWord(5)} ${titleKeywords.join(" ")} ${randomWord(5)} Document ${i}`
             : `${randomWord(5)} ${randomWord(6)} ${randomWord(4)} Note ${i}`;
 
         const n = note(title);
 
         for (let l = 0; l < labelsPerNote; l++) {
             const labelName = isMatch && l === 0 ? "category" : `label_${randomWord(4)}`;
-            const labelValue = isMatch && l === 0 ? "important target" : randomWord(8);
+            const labelValue = isMatch && l === 0 ? `important ${titleKeywords[0]}` : randomWord(8);
             n.label(labelName, labelValue);
         }
 
-        syntheticContent[n.note.noteId] = generateHtmlContent(contentWordCount, isMatch);
+        // Vary content size: 0.2x to 3x the median, producing a realistic
+        // mix of short stubs, medium notes, and long documents.
+        let noteWordCount = contentWordCount;
+        if (varyContentSize) {
+            const r = Math.random();
+            if (r < 0.2) {
+                noteWordCount = Math.floor(contentWordCount * (0.2 + Math.random() * 0.3)); // 20-50% (short stubs)
+            } else if (r < 0.7) {
+                noteWordCount = Math.floor(contentWordCount * (0.7 + Math.random() * 0.6)); // 70-130% (medium)
+            } else if (r < 0.9) {
+                noteWordCount = Math.floor(contentWordCount * (1.3 + Math.random() * 0.7)); // 130-200% (long)
+            } else {
+                noteWordCount = Math.floor(contentWordCount * (2.0 + Math.random() * 1.0)); // 200-300% (very long)
+            }
+        }
+
+        const includeContentKeyword = isMatch && contentKeywords.length > 0;
+        syntheticContent[n.note.noteId] = generateHtmlContent(
+            noteWordCount,
+            includeContentKeyword,
+            includeContentKeyword ? contentKeywords : undefined
+        );
 
         const containerIndex = i % containers.length;
         containers[containerIndex].child(n);
@@ -451,6 +486,110 @@ describe("Search Profiling", () => {
     /**
      * End-to-end scaling to give the full picture.
      */
+    /**
+     * Multi-token search with varying content sizes.
+     * Real users search things like "meeting notes january" — this exercises
+     * the multi-token path (which doesn't use the single-token fast path)
+     * with a realistic mix of note sizes.
+     */
+    describe("Multi-token search with varying content sizes", () => {
+
+        it("single vs multi-token autocomplete at scale", () => {
+            console.log("\n=== Single vs multi-token autocomplete (varying content sizes) ===");
+
+            for (const noteCount of [1000, 5000, 10000, 20000]) {
+                buildDataset(noteCount, {
+                    matchFraction: 0.15,
+                    contentWordCount: 400,
+                    varyContentSize: true,
+                    depth: 5,
+                    titleKeywords: ["meeting", "notes", "january"],
+                    contentKeywords: ["meeting", "notes", "january"],
+                });
+
+                // Warm up
+                searchService.searchNotesForAutocomplete("meeting", true);
+
+                // Single token
+                const singleTimes: number[] = [];
+                for (let i = 0; i < 3; i++) {
+                    const [, ms] = timed(() => searchService.searchNotesForAutocomplete("meeting", true));
+                    singleTimes.push(ms);
+                }
+                const singleAvg = singleTimes.reduce((a, b) => a + b, 0) / singleTimes.length;
+
+                // Two tokens
+                const twoTimes: number[] = [];
+                for (let i = 0; i < 3; i++) {
+                    const [, ms] = timed(() => searchService.searchNotesForAutocomplete("meeting notes", true));
+                    twoTimes.push(ms);
+                }
+                const twoAvg = twoTimes.reduce((a, b) => a + b, 0) / twoTimes.length;
+
+                // Three tokens
+                const threeTimes: number[] = [];
+                for (let i = 0; i < 3; i++) {
+                    const [, ms] = timed(() => searchService.searchNotesForAutocomplete("meeting notes january", true));
+                    threeTimes.push(ms);
+                }
+                const threeAvg = threeTimes.reduce((a, b) => a + b, 0) / threeTimes.length;
+
+                console.log(
+                    `  ${String(noteCount).padStart(6)} notes:  ` +
+                    `1-token ${singleAvg.toFixed(1)}ms  ` +
+                    `2-token ${twoAvg.toFixed(1)}ms  ` +
+                    `3-token ${threeAvg.toFixed(1)}ms`
+                );
+            }
+        });
+
+        it("multi-token with realistic content size distribution", () => {
+            console.log("\n=== Multi-token search — content size distribution ===");
+
+            buildDataset(5000, {
+                matchFraction: 0.15,
+                contentWordCount: 400,
+                varyContentSize: true,
+                depth: 5,
+                titleKeywords: ["project", "review"],
+                contentKeywords: ["project", "review"],
+            });
+
+            // Report the actual content size distribution
+            const sizes = Object.values(syntheticContent).map(c => c.length);
+            sizes.sort((a, b) => a - b);
+            const p10 = sizes[Math.floor(sizes.length * 0.1)];
+            const p50 = sizes[Math.floor(sizes.length * 0.5)];
+            const p90 = sizes[Math.floor(sizes.length * 0.9)];
+            const p99 = sizes[Math.floor(sizes.length * 0.99)];
+            console.log(`  Content sizes: p10=${p10} p50=${p50} p90=${p90} p99=${p99} chars`);
+
+            // Warm up
+            searchService.searchNotesForAutocomplete("project", true);
+
+            const queries = [
+                "project",
+                "project review",
+                "project review document",
+                `${randomWord(7)}`,           // no-match single token
+                `${randomWord(5)} ${randomWord(6)}`, // no-match multi token
+            ];
+
+            for (const query of queries) {
+                const times: number[] = [];
+                let resultCount = 0;
+                for (let i = 0; i < 3; i++) {
+                    const [r, ms] = timed(() => searchService.searchNotesForAutocomplete(query, true));
+                    times.push(ms);
+                    resultCount = r.length;
+                }
+                const avg = times.reduce((a, b) => a + b, 0) / times.length;
+                const label = `"${query}"`.padEnd(35);
+                console.log(`  ${label} ${avg.toFixed(1)}ms  (${resultCount} results)`);
+            }
+        });
+    });
+
     describe("End-to-end scaling", () => {
 
         it("autocomplete at different scales", () => {
