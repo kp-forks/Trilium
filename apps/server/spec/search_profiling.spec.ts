@@ -4,8 +4,8 @@
  * Uses the real SQLite database (spec/db/document.db loaded in-memory),
  * real sql module, real becca cache, and the full app stack.
  *
- * Seeds a large number of notes via direct SQL (much faster than ETAPI)
- * to create a realistic dataset for profiling.
+ * Profiles search at large scale (50K+ notes) to match real-world
+ * performance reports from users with 240K+ notes.
  */
 import { Application } from "express";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -58,224 +58,246 @@ describe("Search profiling (integration)", () => {
         app = await buildApp();
     });
 
-    it("seed and profile with realistic data", async () => {
+    it("large-scale profiling (50K notes)", async () => {
         const sql = (await import("../src/services/sql.js")).default;
         const becca = (await import("../src/becca/becca.js")).default;
         const beccaLoader = (await import("../src/becca/becca_loader.js")).default;
         const cls = (await import("../src/services/cls.js")).default;
         const searchService = (await import("../src/services/search/services/search.js")).default;
         const SearchContext = (await import("../src/services/search/search_context.js")).default;
+        const beccaService = (await import("../src/becca/becca_service.js")).default;
 
         await new Promise<void>((resolve) => {
             cls.init(() => {
                 const initialNoteCount = Object.keys(becca.notes).length;
                 console.log(`\n  Initial becca notes: ${initialNoteCount}`);
 
-                const configs = [
-                    { notes: 2000, words: 500,  label: "2K notes × 500 words (~4KB)" },
-                    { notes: 2000, words: 2000, label: "2K notes × 2000 words (~15KB)" },
-                    { notes: 5000, words: 500,  label: "5K notes × 500 words (~4KB)" },
-                    { notes: 5000, words: 2000, label: "5K notes × 2000 words (~15KB)" },
-                    { notes: 10000, words: 1000, label: "10K notes × 1000 words (~8KB)" },
-                ];
+                // ── Seed 50K notes with hierarchy ──
+                // Some folders (depth), some with common keyword "test" in title
+                const TOTAL_NOTES = 50000;
+                const FOLDER_COUNT = 500;  // 500 folders
+                const NOTES_PER_FOLDER = (TOTAL_NOTES - FOLDER_COUNT) / FOLDER_COUNT; // ~99 notes per folder
+                const MATCH_FRACTION = 0.10; // 10% match "test" — ~5000 notes
+                const CONTENT_WORDS = 500;
 
-                for (const cfg of configs) {
-                    // Reset DB: delete all seeded notes from prior iteration
-                    sql.execute(`DELETE FROM blobs WHERE blobId LIKE 'seed%'`);
-                    sql.execute(`DELETE FROM notes WHERE noteId LIKE 'seed%'`);
-                    sql.execute(`DELETE FROM branches WHERE branchId LIKE 'seed%'`);
+                const now = new Date().toISOString().replace("T", " ").replace("Z", "+0000");
+                console.log(`  Seeding ${TOTAL_NOTES} notes (${FOLDER_COUNT} folders, ~${NOTES_PER_FOLDER.toFixed(0)} per folder)...`);
 
-                    const TOTAL_NOTES = cfg.notes;
-                    const MATCH_FRACTION = 0.15;
-                    const CONTENT_WORDS = cfg.words;
-                    const matchCount = Math.floor(TOTAL_NOTES * MATCH_FRACTION);
+                const [, seedMs] = timed(() => {
+                    sql.transactional(() => {
+                        const folderIds: string[] = [];
 
-                    const now = new Date().toISOString().replace("T", " ").replace("Z", "+0000");
+                        // Create folders under root
+                        for (let f = 0; f < FOLDER_COUNT; f++) {
+                            const noteId = `seed${randomId(8)}`;
+                            const branchId = `seed${randomId(8)}`;
+                            const blobId = `seed${randomId(16)}`;
+                            folderIds.push(noteId);
 
-                    console.log(`\n  ──── ${cfg.label} ────`);
-                    console.log(`  Seeding ${TOTAL_NOTES} notes (${matchCount} with keyword)...`);
+                            sql.execute(
+                                `INSERT INTO blobs (blobId, content, dateModified, utcDateModified) VALUES (?, ?, ?, ?)`,
+                                [blobId, `<p>Folder ${f}</p>`, now, now]
+                            );
+                            sql.execute(
+                                `INSERT INTO notes (noteId, title, type, mime, blobId, isProtected, isDeleted,
+                                    dateCreated, dateModified, utcDateCreated, utcDateModified)
+                                 VALUES (?, ?, 'text', 'text/html', ?, 0, 0, ?, ?, ?, ?)`,
+                                [noteId, `Folder ${f} ${randomWord(5)}`, blobId, now, now, now, now]
+                            );
+                            sql.execute(
+                                `INSERT INTO branches (branchId, noteId, parentNoteId, notePosition, isDeleted, isExpanded, utcDateModified)
+                                 VALUES (?, ?, 'root', ?, 0, 0, ?)`,
+                                [branchId, noteId, f * 10, now]
+                            );
+                        }
 
-                    const [, seedMs] = timed(() => {
-                        sql.transactional(() => {
-                            for (let i = 0; i < TOTAL_NOTES; i++) {
-                                const isMatch = i < matchCount;
+                        // Create notes under folders
+                        let noteIdx = 0;
+                        for (let f = 0; f < FOLDER_COUNT; f++) {
+                            const parentId = folderIds[f];
+                            for (let n = 0; n < NOTES_PER_FOLDER; n++) {
+                                const isMatch = noteIdx < TOTAL_NOTES * MATCH_FRACTION;
                                 const noteId = `seed${randomId(8)}`;
                                 const branchId = `seed${randomId(8)}`;
                                 const blobId = `seed${randomId(16)}`;
                                 const title = isMatch
-                                    ? `Performance Doc ${i} ${randomWord(6)}`
-                                    : `General Note ${i} ${randomWord(6)} ${randomWord(5)}`;
-                                const content = generateContent(
-                                    CONTENT_WORDS,
-                                    isMatch ? "performance" : undefined
-                                );
+                                    ? `Test Document ${noteIdx} ${randomWord(6)}`
+                                    : `Note ${noteIdx} ${randomWord(6)} ${randomWord(5)}`;
+                                const content = generateContent(CONTENT_WORDS, isMatch ? "test" : undefined);
 
                                 sql.execute(
-                                    `INSERT INTO blobs (blobId, content, dateModified, utcDateModified)
-                                     VALUES (?, ?, ?, ?)`,
+                                    `INSERT INTO blobs (blobId, content, dateModified, utcDateModified) VALUES (?, ?, ?, ?)`,
                                     [blobId, content, now, now]
                                 );
-
                                 sql.execute(
                                     `INSERT INTO notes (noteId, title, type, mime, blobId, isProtected, isDeleted,
                                         dateCreated, dateModified, utcDateCreated, utcDateModified)
                                      VALUES (?, ?, 'text', 'text/html', ?, 0, 0, ?, ?, ?, ?)`,
                                     [noteId, title, blobId, now, now, now, now]
                                 );
-
                                 sql.execute(
-                                    `INSERT INTO branches (branchId, noteId, parentNoteId, notePosition, isDeleted, isExpanded,
-                                        utcDateModified)
-                                     VALUES (?, ?, 'root', ?, 0, 0, ?)`,
-                                    [branchId, noteId, i * 10, now]
+                                    `INSERT INTO branches (branchId, noteId, parentNoteId, notePosition, isDeleted, isExpanded, utcDateModified)
+                                     VALUES (?, ?, ?, ?, 0, 0, ?)`,
+                                    [branchId, noteId, parentId, n * 10, now]
                                 );
+                                noteIdx++;
                             }
-                        });
-                    });
-                    console.log(`  SQL seeding: ${seedMs.toFixed(0)}ms`);
-
-                    // Reload becca to pick up new notes
-                    const [, reloadMs] = timed(() => {
-                        beccaLoader.load();
-                    });
-                    console.log(`  Becca reload: ${reloadMs.toFixed(0)}ms`);
-                    console.log(`  Becca notes after seed: ${Object.keys(becca.notes).length}`);
-
-                    // Verify content is accessible
-                    const sampleNote = Object.values(becca.notes).find(n => n.title.startsWith("Performance Doc"));
-                    if (sampleNote) {
-                        const content = sampleNote.getContent();
-                        console.log(`  Sample content length: ${typeof content === 'string' ? content.length : 0} chars`);
-                    }
-
-                    // ==========================================
-                    // PROFILING
-                    // ==========================================
-
-                    console.log(`\n  --- PROFILING (${cfg.label}) ---\n`);
-
-                    // --- 1. Fast search (NoteFlatTextExp only) ---
-                    searchService.findResultsWithQuery("performance", new SearchContext({ fastSearch: true }));
-
-                    const fastTimes: number[] = [];
-                    let fastResultCount = 0;
-                    for (let i = 0; i < 5; i++) {
-                        const [r, ms] = timed(() =>
-                            searchService.findResultsWithQuery("performance",
-                                new SearchContext({ fastSearch: true })
-                            )
-                        );
-                        fastTimes.push(ms);
-                        fastResultCount = r.length;
-                    }
-                    const fastAvg = fastTimes.reduce((a, b) => a + b, 0) / fastTimes.length;
-                    console.log(`  Fast search (flat text only):     avg ${fastAvg.toFixed(1)}ms  (${fastResultCount} results)`);
-
-                    // --- 2. Full search (flat text + content fulltext via SQL) ---
-                    const fullTimes: number[] = [];
-                    let fullResultCount = 0;
-                    for (let i = 0; i < 3; i++) {
-                        const [r, ms] = timed(() =>
-                            searchService.findResultsWithQuery("performance",
-                                new SearchContext({ fastSearch: false })
-                            )
-                        );
-                        fullTimes.push(ms);
-                        fullResultCount = r.length;
-                    }
-                    const fullAvg = fullTimes.reduce((a, b) => a + b, 0) / fullTimes.length;
-                    console.log(`  Full search (flat + SQL content): avg ${fullAvg.toFixed(1)}ms  (${fullResultCount} results)`);
-
-                    // --- 3. Content snippet extraction ---
-                    const fastResults = searchService.findResultsWithQuery("performance",
-                        new SearchContext({ fastSearch: true }));
-                    const trimmed = fastResults.slice(0, 200);
-                    const tokens = ["performance"];
-
-                    const snippetTimes: number[] = [];
-                    for (let i = 0; i < 3; i++) {
-                        const [, ms] = timed(() => {
-                            for (const r of trimmed) {
-                                r.contentSnippet = searchService.extractContentSnippet(r.noteId, tokens);
-                            }
-                        });
-                        snippetTimes.push(ms);
-                    }
-                    const snippetAvg = snippetTimes.reduce((a, b) => a + b, 0) / snippetTimes.length;
-                    console.log(`  Content snippet (${trimmed.length} results):   avg ${snippetAvg.toFixed(1)}ms  (${(snippetAvg / trimmed.length).toFixed(3)}ms/note)`);
-
-                    // --- 4. Raw getContent() cost ---
-                    const contentTimes: number[] = [];
-                    const textNotes = trimmed
-                        .map(r => becca.notes[r.noteId])
-                        .filter(n => n && ["text", "code"].includes(n.type));
-
-                    for (let i = 0; i < 5; i++) {
-                        const [, ms] = timed(() => {
-                            for (const n of textNotes) n.getContent();
-                        });
-                        contentTimes.push(ms);
-                    }
-                    const contentAvg = contentTimes.reduce((a, b) => a + b, 0) / contentTimes.length;
-                    console.log(`  getContent() × ${textNotes.length} notes:      avg ${contentAvg.toFixed(1)}ms  (${(contentAvg / textNotes.length).toFixed(3)}ms/note)`);
-
-                    // --- 5. striptags + normalize cost (isolated) ---
-                    const striptags = require("striptags");
-                    const normalizeString = require("normalize-strings");
-                    const contents = textNotes.map(n => n.getContent() as string).filter(Boolean);
-
-                    const [, stripMs] = timed(() => {
-                        for (const c of contents) {
-                            striptags(c);
                         }
                     });
-                    console.log(`  striptags × ${contents.length} notes:       ${stripMs.toFixed(1)}ms  (${(stripMs / contents.length).toFixed(3)}ms/note)`);
+                });
+                console.log(`  SQL seeding: ${seedMs.toFixed(0)}ms`);
 
-                    const stripped = contents.map(c => striptags(c));
-                    const [, normMs] = timed(() => {
-                        for (const s of stripped) {
-                            normalizeString(s.toLowerCase());
-                        }
-                    });
-                    console.log(`  normalizeString × ${stripped.length} notes:  ${normMs.toFixed(1)}ms  (${(normMs / stripped.length).toFixed(3)}ms/note)`);
+                const [, reloadMs] = timed(() => beccaLoader.load());
+                const totalNotes = Object.keys(becca.notes).length;
+                console.log(`  Becca reload: ${reloadMs.toFixed(0)}ms  Total notes: ${totalNotes}`);
 
-                    // --- 6. Full autocomplete ---
-                    const autoTimes: number[] = [];
-                    let autoResultCount = 0;
-                    for (let i = 0; i < 3; i++) {
-                        const [r, ms] = timed(() =>
-                            searchService.searchNotesForAutocomplete("performance", true)
-                        );
-                        autoTimes.push(ms);
-                        autoResultCount = r.length;
+                // ── Warm caches ──
+                searchService.searchNotesForAutocomplete("test", true);
+
+                // ════════════════════════════════════════════
+                // PROFILING AT SCALE
+                // ════════════════════════════════════════════
+
+                console.log(`\n  ════ PROFILING (${totalNotes} notes) ════\n`);
+
+                // 1. getCandidateNotes cost (the full-scan bottleneck)
+                const allNotes = Object.values(becca.notes);
+                const [, flatScanMs] = timed(() => {
+                    let count = 0;
+                    for (const note of allNotes) {
+                        const ft = note.getFlatText();
+                        if (ft.includes("test")) count++;
                     }
-                    const autoAvg = autoTimes.reduce((a, b) => a + b, 0) / autoTimes.length;
-                    console.log(`\n  FULL AUTOCOMPLETE:                avg ${autoAvg.toFixed(1)}ms  (${autoResultCount} results)`);
+                    return count;
+                });
+                console.log(`  getFlatText + includes scan (${allNotes.length} notes): ${flatScanMs.toFixed(1)}ms`);
 
-                    // --- 7. SQL content scan cost ---
-                    const [scanCount, scanMs] = timed(() => {
-                        let count = 0;
-                        for (const row of sql.iterateRows<{ content: Buffer | string }>(`
-                            SELECT noteId, type, mime, content, isProtected
-                            FROM notes JOIN blobs USING (blobId)
-                            WHERE type IN ('text', 'code', 'mermaid', 'canvas', 'mindMap')
-                              AND isDeleted = 0
-                              AND LENGTH(content) < 2097152`)) {
-                            count++;
-                        }
-                        return count;
-                    });
-                    console.log(`  SQL content scan (${scanCount} rows):    ${scanMs.toFixed(1)}ms`);
-
-                    // --- Summary ---
-                    console.log(`\n  === SUMMARY (${cfg.label}, ${Object.keys(becca.notes).length} total notes) ===`);
-                    console.log(`  Fast search:          ${fastAvg.toFixed(1)}ms`);
-                    console.log(`  Full search:          ${fullAvg.toFixed(1)}ms`);
-                    console.log(`  Content snippets:     ${snippetAvg.toFixed(1)}ms (${(snippetAvg / trimmed.length).toFixed(3)}ms/note)`);
-                    console.log(`  normalizeString:      ${normMs.toFixed(1)}ms (${(normMs / stripped.length).toFixed(3)}ms/note)`);
-                    console.log(`  Full autocomplete:    ${autoAvg.toFixed(1)}ms`);
-                    console.log(`  SQL scan:             ${scanMs.toFixed(1)}ms (${scanCount} rows)`);
+                // 2. Full findResultsWithQuery (includes candidate scan + parent walk + scoring)
+                const findTimes: number[] = [];
+                let findResultCount = 0;
+                for (let i = 0; i < 3; i++) {
+                    const [r, ms] = timed(() =>
+                        searchService.findResultsWithQuery("test", new SearchContext({ fastSearch: true }))
+                    );
+                    findTimes.push(ms);
+                    findResultCount = r.length;
                 }
+                const findAvg = findTimes.reduce((a, b) => a + b, 0) / findTimes.length;
+                console.log(`  findResultsWithQuery (fast):     avg ${findAvg.toFixed(1)}ms  (${findResultCount} results)`);
+
+                // 3. Exact-only (no fuzzy)
+                const exactTimes: number[] = [];
+                for (let i = 0; i < 3; i++) {
+                    const [, ms] = timed(() =>
+                        searchService.findResultsWithQuery("test", new SearchContext({ fastSearch: true, enableFuzzyMatching: false }))
+                    );
+                    exactTimes.push(ms);
+                }
+                const exactAvg = exactTimes.reduce((a, b) => a + b, 0) / exactTimes.length;
+                console.log(`  findResultsWithQuery (exact):    avg ${exactAvg.toFixed(1)}ms`);
+                console.log(`  Fuzzy overhead:                  ${(findAvg - exactAvg).toFixed(1)}ms`);
+
+                // 4. SearchResult construction + computeScore cost (isolated)
+                const results = searchService.findResultsWithQuery("test", new SearchContext({ fastSearch: true }));
+                console.log(`  Total results before trim: ${results.length}`);
+
+                const [, scoreAllMs] = timed(() => {
+                    for (const r of results) r.computeScore("test", ["test"], true);
+                });
+                console.log(`  computeScore × ${results.length}:            ${scoreAllMs.toFixed(1)}ms  (${(scoreAllMs / results.length).toFixed(3)}ms/result)`);
+
+                // 5. getNoteTitleForPath for all results
+                const [, pathTitleMs] = timed(() => {
+                    for (const r of results) beccaService.getNoteTitleForPath(r.notePathArray);
+                });
+                console.log(`  getNoteTitleForPath × ${results.length}:     ${pathTitleMs.toFixed(1)}ms`);
+
+                // 6. Content snippet extraction (only 200)
+                const trimmed = results.slice(0, 200);
+                const [, snippetMs] = timed(() => {
+                    for (const r of trimmed) {
+                        r.contentSnippet = searchService.extractContentSnippet(r.noteId, ["test"]);
+                    }
+                });
+                console.log(`  extractContentSnippet × 200:     ${snippetMs.toFixed(1)}ms`);
+
+                // 7. Highlighting (only 200)
+                const [, hlMs] = timed(() => {
+                    searchService.highlightSearchResults(trimmed, ["test"]);
+                });
+                console.log(`  highlightSearchResults × 200:    ${hlMs.toFixed(1)}ms`);
+
+                // 7b. getBestNotePath cost (used by fast path)
+                const sampleNotes = Object.values(becca.notes).filter(n => n.title.startsWith("Test Document")).slice(0, 1000);
+                const [, bestPathMs] = timed(() => {
+                    for (const n of sampleNotes) n.getBestNotePath();
+                });
+                console.log(`  getBestNotePath × ${sampleNotes.length}:          ${bestPathMs.toFixed(1)}ms  (${(bestPathMs/sampleNotes.length).toFixed(3)}ms/note)`);
+
+                // 8. Full autocomplete end-to-end
+                const autoTimes: number[] = [];
+                let autoCount = 0;
+                for (let i = 0; i < 3; i++) {
+                    const [r, ms] = timed(() =>
+                        searchService.searchNotesForAutocomplete("test", true)
+                    );
+                    autoTimes.push(ms);
+                    autoCount = r.length;
+                }
+                const autoAvg = autoTimes.reduce((a, b) => a + b, 0) / autoTimes.length;
+                const autoMin = Math.min(...autoTimes);
+                console.log(`\n  ★ FULL AUTOCOMPLETE:             avg ${autoAvg.toFixed(1)}ms  min ${autoMin.toFixed(1)}ms  (${autoCount} results)`);
+
+                // 9. With a less common search term (fewer matches)
+                const rareTimes: number[] = [];
+                let rareCount = 0;
+                for (let i = 0; i < 3; i++) {
+                    const [r, ms] = timed(() =>
+                        searchService.searchNotesForAutocomplete("leitfaden", true)
+                    );
+                    rareTimes.push(ms);
+                    rareCount = r.length;
+                }
+                const rareAvg = rareTimes.reduce((a, b) => a + b, 0) / rareTimes.length;
+                console.log(`  Autocomplete "leitfaden":        avg ${rareAvg.toFixed(1)}ms  (${rareCount} results)`);
+
+                // 10. Full search (fastSearch=false) — the 2.7s bottleneck
+                console.log(`\n  ── Full search (fastSearch=false) ──`);
+                const fullTimes: number[] = [];
+                let fullCount = 0;
+                for (let i = 0; i < 2; i++) {
+                    const [r, ms] = timed(() =>
+                        searchService.findResultsWithQuery("test", new SearchContext({ fastSearch: false }))
+                    );
+                    fullTimes.push(ms);
+                    fullCount = r.length;
+                }
+                const fullAvg = fullTimes.reduce((a, b) => a + b, 0) / fullTimes.length;
+                console.log(`  Full search (flat + SQL):         avg ${fullAvg.toFixed(1)}ms  (${fullCount} results)`);
+
+                // 11. SQL content scan alone
+                const [scanCount, scanMs] = timed(() => {
+                    let count = 0;
+                    for (const row of sql.iterateRows<{ content: Buffer | string }>(`
+                        SELECT noteId, type, mime, content, isProtected
+                        FROM notes JOIN blobs USING (blobId)
+                        WHERE type IN ('text', 'code', 'mermaid', 'canvas', 'mindMap')
+                          AND isDeleted = 0
+                          AND LENGTH(content) < 2097152`)) {
+                        count++;
+                    }
+                    return count;
+                });
+                console.log(`  Raw SQL scan (${scanCount} rows):      ${scanMs.toFixed(1)}ms`);
+
+                // ── Summary ──
+                console.log(`\n  ════ SUMMARY ════`);
+                console.log(`  Notes: ${totalNotes}  |  Matches: ${findResultCount}  |  Hierarchy depth: 3 (root → folder → note)`);
+                console.log(`  ──────────────────────────────────`);
+                console.log(`  Autocomplete (fast):   ${autoAvg.toFixed(1)}ms`);
+                console.log(`    findResults:           ${findAvg.toFixed(1)}ms (${((findAvg/autoAvg)*100).toFixed(0)}%)`);
+                console.log(`    snippets+highlight:    ${(snippetMs + hlMs).toFixed(1)}ms (${(((snippetMs+hlMs)/autoAvg)*100).toFixed(0)}%)`);
+                console.log(`  Full search:           ${fullAvg.toFixed(1)}ms`);
 
                 resolve();
             });

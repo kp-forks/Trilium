@@ -31,9 +31,17 @@ export default class Becca {
 
     allNoteSetCache: NoteSet | null;
 
+    /**
+     * Pre-built parallel arrays for fast flat text scanning in search.
+     * Avoids per-note property access overhead when iterating 50K+ notes.
+     * Dirtied when notes change (along with allNoteSetCache).
+     */
+    flatTextIndex: { notes: BNote[], flatTexts: string[] } | null;
+
     constructor() {
         this.reset();
         this.allNoteSetCache = null;
+        this.flatTextIndex = null;
     }
 
     reset() {
@@ -239,6 +247,28 @@ export default class Becca {
     /** Should be called when the set of all non-skeleton notes changes (added/removed) */
     dirtyNoteSetCache() {
         this.allNoteSetCache = null;
+        this.flatTextIndex = null;
+    }
+
+    /**
+     * Returns pre-built parallel arrays of notes and their flat texts for fast scanning.
+     * The flat texts are already normalized (lowercase, diacritics removed).
+     */
+    getFlatTextIndex(): { notes: BNote[], flatTexts: string[] } {
+        if (!this.flatTextIndex) {
+            const allNoteSet = this.getAllNoteSet();
+            const notes: BNote[] = [];
+            const flatTexts: string[] = [];
+
+            for (const note of allNoteSet.notes) {
+                notes.push(note);
+                flatTexts.push(note.getFlatText());
+            }
+
+            this.flatTextIndex = { notes, flatTexts };
+        }
+
+        return this.flatTextIndex;
     }
 
     getAllNoteSet() {
