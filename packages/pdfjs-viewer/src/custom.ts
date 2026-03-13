@@ -20,10 +20,9 @@ async function main() {
 
     if (window.parent && window.parent !== window) {
         window.parent.addEventListener('webviewerloaded', (event) => {
-            const iframeWindow = event.detail.source;
-            if (iframeWindow.PDFViewerApplicationOptions) {
-                iframeWindow.PDFViewerApplicationOptions.set("disablePreferences", true);
-                iframeWindow.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
+            if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
+                window.PDFViewerApplicationOptions.set("disablePreferences", true);
+                window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
             }
         });
     }
