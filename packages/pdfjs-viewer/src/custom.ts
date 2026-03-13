@@ -22,6 +22,7 @@ async function main() {
         window.parent.addEventListener('webviewerloaded', (event) => {
             const iframeWindow = event.detail.source;
             if (iframeWindow.PDFViewerApplicationOptions) {
+                iframeWindow.PDFViewerApplicationOptions.set("disablePreferences", true);
                 iframeWindow.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
             }
         });
