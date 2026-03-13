@@ -50,7 +50,7 @@ function configurePdfViewerOptions() {
     };
     if (window.parent && window.parent !== window) {
         window.parent.addEventListener("webviewerloaded", pdfOptionsHandler);
-        window.addEventListener("unload", () => window.parent.removeEventListener("webviewerloaded", pdfOptionsHandler));
+        window.addEventListener("pagehide", () => window.parent.removeEventListener("webviewerloaded", pdfOptionsHandler));
     }
 }
 
