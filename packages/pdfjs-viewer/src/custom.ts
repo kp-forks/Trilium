@@ -18,16 +18,7 @@ async function main() {
         interceptPersistence(getCustomAppOptions(urlParams));
     }
 
-    const pdfOptionsHandler = (event) => {
-        if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
-            window.PDFViewerApplicationOptions.set("disablePreferences", true);
-            window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
-        }
-    };
-    if (window.parent && window.parent !== window) {
-        window.parent.addEventListener('webviewerloaded', pdfOptionsHandler);
-        window.addEventListener('unload', () => window.parent.removeEventListener('webviewerloaded', pdfOptionsHandler));
-    }
+    configurePdfViewerOptions();
 
     // Wait for the PDF viewer application to be available.
     while (!window.PDFViewerApplication) {
@@ -49,6 +40,19 @@ async function main() {
     }
     await app.initializedPromise;
 };
+
+function configurePdfViewerOptions() {
+    const pdfOptionsHandler = (event) => {
+        if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
+            window.PDFViewerApplicationOptions.set("disablePreferences", true);
+            window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
+        }
+    };
+    if (window.parent && window.parent !== window) {
+        window.parent.addEventListener("webviewerloaded", pdfOptionsHandler);
+        window.addEventListener("unload", () => window.parent.removeEventListener("webviewerloaded", pdfOptionsHandler));
+    }
+}
 
 function hideSidebar() {
     window.TRILIUM_HIDE_SIDEBAR = true;
