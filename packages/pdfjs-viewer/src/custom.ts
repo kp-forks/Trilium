@@ -42,7 +42,7 @@ async function main() {
 };
 
 function configurePdfViewerOptions() {
-    const pdfOptionsHandler = (event) => {
+    const pdfOptionsHandler = (event: CustomEvent) => {
         if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
             window.PDFViewerApplicationOptions.set("disablePreferences", true);
             window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
