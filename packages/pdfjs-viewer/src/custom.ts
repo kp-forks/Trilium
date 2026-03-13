@@ -18,6 +18,15 @@ async function main() {
         interceptPersistence(getCustomAppOptions(urlParams));
     }
 
+    if (window.parent && window.parent !== window) {
+        window.parent.addEventListener('webviewerloaded', (event) => {
+            const iframeWindow = event.detail.source;
+            if (iframeWindow.PDFViewerApplicationOptions) {
+                iframeWindow.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
+            }
+        });
+    }
+
     // Wait for the PDF viewer application to be available.
     while (!window.PDFViewerApplication) {
         await new Promise(r => setTimeout(r, 50));
