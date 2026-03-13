@@ -18,13 +18,15 @@ async function main() {
         interceptPersistence(getCustomAppOptions(urlParams));
     }
 
+    const pdfOptionsHandler = (event) => {
+        if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
+            window.PDFViewerApplicationOptions.set("disablePreferences", true);
+            window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
+        }
+    };
     if (window.parent && window.parent !== window) {
-        window.parent.addEventListener('webviewerloaded', (event) => {
-            if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
-                window.PDFViewerApplicationOptions.set("disablePreferences", true);
-                window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
-            }
-        });
+        window.parent.addEventListener('webviewerloaded', pdfOptionsHandler);
+        window.addEventListener('unload', () => window.parent.removeEventListener('webviewerloaded', pdfOptionsHandler));
     }
 
     // Wait for the PDF viewer application to be available.
