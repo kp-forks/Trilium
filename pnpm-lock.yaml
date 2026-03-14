@@ -1425,6 +1425,9 @@ importers:
 
   packages/highlightjs:
     dependencies:
+      '@catppuccin/highlightjs':
+        specifier: 1.0.1
+        version: 1.0.1
       '@exercism/highlightjs-gdscript':
         specifier: 0.0.1
         version: 0.0.1
@@ -1890,6 +1893,9 @@ packages:
 
   '@catppuccin/codemirror@1.0.3':
     resolution: {integrity: sha512-P1ZCj4DZVLqr/TNz28m3aaF2Elrikpb8OOnzN0Vyf95Un4pTWTkCSvhbskbnJbnNJ87Rfvt3fXoaUj4o55X30Q==}
+
+  '@catppuccin/highlightjs@1.0.1':
+    resolution: {integrity: sha512-wnagsNQbJroHQMalkprwRoapfGV1hHRx46d7GXp4kf6rlShImBlgpqPCt9OD471Gq4qpHdfFH/GJFIvY1CLqHA==}
 
   '@catppuccin/palette@1.7.1':
     resolution: {integrity: sha512-aRc1tbzrevOTV7nFTT9SRdF26w/MIwT4Jwt4fDMc9itRZUDXCuEDBLyz4TQMlqO9ZP8mf5Hu4Jr6D03NLFc6Gw==}
@@ -16835,6 +16841,8 @@ snapshots:
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.40.0
       '@lezer/highlight': 1.2.3
+
+  '@catppuccin/highlightjs@1.0.1': {}
 
   '@catppuccin/palette@1.7.1': {}
 
