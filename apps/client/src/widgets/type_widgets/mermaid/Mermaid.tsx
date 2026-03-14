@@ -18,6 +18,10 @@ export default function Mermaid(props: TypeWidgetProps) {
             registeredErrorReporter = true;
         }
 
+        if (!content.trim()) {
+            return "";
+        }
+
         mermaid.initialize({
             startOnLoad: false,
             ...(getMermaidConfig() as any),
