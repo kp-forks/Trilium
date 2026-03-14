@@ -7,9 +7,9 @@ import { setupPdfLayers } from "./layers";
 async function main() {
     const urlParams = new URLSearchParams(window.location.search);
     const isEditable = urlParams.get("editable") === "1";
-    
+
     document.body.classList.toggle("read-only-document", !isEditable);
-    
+
     if (urlParams.get("sidebar") === "0") {
         hideSidebar();
     }
@@ -50,7 +50,7 @@ function configurePdfViewerOptions() {
     };
     if (window.parent && window.parent !== window) {
         window.parent.addEventListener("webviewerloaded", pdfOptionsHandler, { once: true });
-        window.addEventListener("pagehide", () => window.parent.removeEventListener("webviewerloaded", pdfOptionsHandler));
+        window.addEventListener("pagehide", () => window.parent?.removeEventListener("webviewerloaded", pdfOptionsHandler));
     }
 }
 
