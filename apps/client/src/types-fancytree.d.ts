@@ -69,7 +69,7 @@ declare namespace Fancytree {
         debug(msg: any): void;
 
         /** Expand (or collapse) all parent nodes. */
-        expandAll(flag?: boolean, options?: Object): void;
+        expandAll(flag?: boolean, options?: object): void;
 
         /** [ext-filter] Dimm or hide whole branches.
          * @returns {integer} count
@@ -113,7 +113,7 @@ declare namespace Fancytree {
         generateFormElements(selected?: boolean, active?: boolean): void;
 
         /** Return the currently active node or null.  */
-        getActiveNode(): FancytreeNode;
+        getActiveNode(): FancytreeNode | null;
 
         /** Return the first top level node if any (not the invisible root node). */
         getFirstChild(): FancytreeNode;
@@ -215,6 +215,31 @@ declare namespace Fancytree {
         enableUpdate(enabled: boolean): void;
     }
 
+    interface FancytreeNodeData {
+        noteId: string;
+        parentNoteId: string;
+        branchId: string;
+        isProtected: boolean;
+        noteType: NoteType;
+        subtreeHidden: boolean;
+    }
+
+    interface FancytreeNewNode extends FancytreeNodeData {
+        title: string;
+        extraClasses: string;
+        icon: string;
+        refKey: string;
+        /** True if this node is loaded on demand, i.e. on first expansion. */
+        lazy: boolean;
+        /** Folder nodes have different default icons and click behavior. Note: Also non-folders may have children. */
+        folder: boolean;
+        /** Use isExpanded(), setExpanded() to access this property. */
+        expanded: boolean;
+        /** Node id (must be unique inside the tree) */
+        key: string;
+        children?: FancytreeNewNode[];
+    }
+
     /** A FancytreeNode represents the hierarchical data model and operations. */
     interface FancytreeNode {
         // #region Properties
@@ -227,7 +252,7 @@ declare namespace Fancytree {
         /** Display name (may contain HTML) */
         title: string;
         /** Contains all extra data that was passed on node creation */
-        data: any;
+        data: FancytreeNodeData;
         /** Array of child nodes. For lazy nodes, null or undefined means 'not yet loaded'. Use an empty array to define a node that has no children. */
         children: FancytreeNode[];
         /** Use isExpanded(), setExpanded() to access this property. */
@@ -345,7 +370,7 @@ declare namespace Fancytree {
          * @param mode 'before', 'after', or 'child' (default='child')
          * @param init NodeData (or simple title string)
          */
-        editCreateNode(mode?: string, init?: Object): void;
+        editCreateNode(mode?: string, init?: object): void;
 
         /** [ext-edit] Stop inline editing.
          *
@@ -502,7 +527,7 @@ declare namespace Fancytree {
          *
          * @param opts passed to `setExpanded()`. Defaults to {noAnimation: false, noEvents: false, scrollIntoView: true}
          */
-        makeVisible(opts?: Object): JQueryPromise<any>;
+        makeVisible(opts?: object): JQueryPromise<any>;
 
         /** Move this node to targetNode.
          *
@@ -565,25 +590,25 @@ declare namespace Fancytree {
          * @param effects animation options.
          * @param options {topNode: null, effects: ..., parent: ...} this node will remain visible in any case, even if `this` is outside the scroll pane.
          */
-        scrollIntoView(effects?: boolean, options?: Object): JQueryPromise<any>;
+        scrollIntoView(effects?: boolean, options?: object): JQueryPromise<any>;
 
         /**
          * @param effects animation options.
          * @param options {topNode: null, effects: ..., parent: ...} this node will remain visible in any case, even if `this` is outside the scroll pane.
          */
-        scrollIntoView(effects?: Object, options?: Object): JQueryPromise<any>;
+        scrollIntoView(effects?: object, options?: object): JQueryPromise<any>;
 
         /**
          * @param flag pass false to deactivate
          * @param opts additional options. Defaults to {noEvents: false}
          */
-        setActive(flag?: boolean, opts?: Object): JQueryPromise<any>;
+        setActive(flag?: boolean, opts?: object): JQueryPromise<any>;
 
         /**
          * @param flag pass false to collapse.
          * @param opts additional options. Defaults to {noAnimation:false, noEvents:false}
          */
-        setExpanded(flag?: boolean, opts?: Object): JQueryPromise<any>;
+        setExpanded(flag?: boolean, opts?: object): JQueryPromise<any>;
 
         /**
          * Set keyboard focus to this node.
@@ -1085,7 +1110,7 @@ declare namespace Fancytree {
         /** class names added to the node markup (separate with space) */
         extraClasses?: string | undefined;
         /** all properties from will be copied to `node.data` */
-        data?: Object | undefined;
+        data?: object | undefined;
 
         /** Will be added as title attribute of the node's icon span,thus enabling a tooltip. */
         iconTooltip?: string | undefined;
@@ -1136,7 +1161,7 @@ declare namespace Fancytree {
 
         escapeHtml(s: string): string;
 
-        getEventTarget(event: Event): Object;
+        getEventTarget(event: Event): object;
 
         getEventTargetType(event: Event): string;
 
@@ -1155,7 +1180,7 @@ declare namespace Fancytree {
         parseHtml($ul: JQuery): NodeData[];
 
         /** Add Fancytree extension definition to the list of globally available extensions. */
-        registerExtension(definition: Object): void;
+        registerExtension(definition: object): void;
 
         unescapeHtml(s: string): string;
 

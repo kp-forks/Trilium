@@ -22,6 +22,12 @@
       "path": "./apps/desktop"
     },
     {
+      "path": "./apps/website"
+    },
+    {
+      "path": "./apps/web-clipper"
+    },
+    {
       "path": "./apps/dump-db"
     },
     {
@@ -61,10 +67,10 @@
       "path": "./packages/share-theme"
     },
     {
-      "path": "./apps/website"
+      "path": "./packages/pdfjs-viewer"
     },
     {
-      "path": "./apps/desktop-e2e"
+      "path": "./scripts"
     }
   ]
 }

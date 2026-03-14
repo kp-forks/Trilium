@@ -1,5 +1,6 @@
-import { Autoformat, AutoLink, BlockQuote, BlockToolbar, Bold, CKFinderUploadAdapter, Clipboard, Code, CodeBlock, Enter, FindAndReplace, Font, FontBackgroundColor, FontColor, GeneralHtmlSupport, Heading, HeadingButtonsUI, HorizontalLine, Image, ImageCaption, ImageInline, ImageResize, ImageStyle, ImageToolbar, ImageUpload, Alignment, Indent, IndentBlock, Italic, Link, List, ListProperties, Mention, PageBreak, Paragraph, ParagraphButtonUI, PasteFromOffice, PictureEditing, RemoveFormat, SelectAll, ShiftEnter, SpecialCharacters, SpecialCharactersEssentials, Strikethrough, Style, Subscript, Superscript, Table, TableCaption, TableCellProperties, TableColumnResize, TableProperties, TableSelection, TableToolbar, TextPartLanguage, TextTransformation, TodoList, Typing, Underline, Undo, Bookmark, Emoji, Notification, EmojiMention, EmojiPicker } from "ckeditor5";
-import { SlashCommand, Template } from "ckeditor5-premium-features";
+import { Autoformat, AutoLink, BlockQuote, BlockToolbar, Bold, CKFinderUploadAdapter, Clipboard, Code, CodeBlock, Enter, Font, FontBackgroundColor, FontColor, GeneralHtmlSupport, Heading, HeadingButtonsUI, HorizontalLine, Image, ImageCaption, ImageInline, ImageResize, ImageStyle, ImageToolbar, ImageUpload, Alignment, Indent, IndentBlock, Italic, Link, List, ListProperties, Mention, PageBreak, Paragraph, ParagraphButtonUI, PasteFromOffice, PictureEditing, RemoveFormat, SelectAll, ShiftEnter, SpecialCharacters, SpecialCharactersEssentials, Strikethrough, Style, Subscript, Superscript, Table, TableCaption, TableCellProperties, TableColumnResize, TableProperties, TableSelection, TableToolbar, TextPartLanguage, TextTransformation, TodoList, Typing, Underline, Undo, Bookmark, EmojiMention, EmojiPicker, FindAndReplaceEditing } from "ckeditor5";
+// Premium features loaded dynamically to improve initial load time
+// import { SlashCommand, Template, FormatPainter } from "ckeditor5-premium-features";
 import type { Plugin } from "ckeditor5";
 import CutToNotePlugin from "./plugins/cuttonote.js";
 import UploadimagePlugin from "./plugins/uploadimage.js";
@@ -21,14 +22,15 @@ import { Admonition } from "@triliumnext/ckeditor5-admonition";
 import { Footnotes } from "@triliumnext/ckeditor5-footnotes";
 import { Math, AutoformatMath } from "@triliumnext/ckeditor5-math";
 
-import "@triliumnext/ckeditor5-mermaid/index.css";
-import "@triliumnext/ckeditor5-admonition/index.css";
-import "@triliumnext/ckeditor5-footnotes/index.css";
-import "@triliumnext/ckeditor5-math/index.css";
+// import "@triliumnext/ckeditor5-mermaid/index.css";
+// import "@triliumnext/ckeditor5-admonition/index.css";
+// import "@triliumnext/ckeditor5-footnotes/index.css";
+// import "@triliumnext/ckeditor5-math/index.css";
 import CodeBlockToolbar from "./plugins/code_block_toolbar.js";
 import CodeBlockLanguageDropdown from "./plugins/code_block_language_dropdown.js";
 import MoveBlockUpDownPlugin from "./plugins/move_block_updown.js";
 import ScrollOnUndoRedoPlugin from "./plugins/scroll_on_undo_redo.js"
+import InlineCodeNoSpellcheck from "./plugins/inline_code_no_spellcheck.js";
 
 /**
  * Plugins that are specific to Trilium and not part of the CKEditor 5 core, included in both text editors but not in the attribute editor.
@@ -49,7 +51,8 @@ const TRILIUM_PLUGINS: typeof Plugin[] = [
     CodeBlockLanguageDropdown,
     CodeBlockToolbar,
     MoveBlockUpDownPlugin,
-	ScrollOnUndoRedoPlugin
+    ScrollOnUndoRedoPlugin,
+    InlineCodeNoSpellcheck,
 ];
 
 /**
@@ -79,12 +82,15 @@ export const CORE_PLUGINS: typeof Plugin[] = [
 ];
 
 /**
- * Plugins that require a premium CKEditor license key to work.
+ * Dynamically loads plugins that require a premium CKEditor license key.
+ * This avoids loading ~6 seconds of premium features code during initial app startup.
  */
-export const PREMIUM_PLUGINS: typeof Plugin[] = [
-    SlashCommand,
-    Template
-];
+export async function loadPremiumPlugins(): Promise<(typeof Plugin)[]> {
+    const { SlashCommand, Template, FormatPainter } = await import('ckeditor5-premium-features');
+    // Also load the CSS when premium features are used
+    await import('ckeditor5-premium-features/ckeditor5-premium-features.css');
+    return [SlashCommand, Template, FormatPainter];
+}
 
 /**
  * The set of plugins that are required for the editor to work. This is used in normal text editors (floating or fixed toolbar) but not in the attribute editor.
@@ -98,6 +104,7 @@ export const COMMON_PLUGINS: typeof Plugin[] = [
 	Italic,
 	Underline,
 	Strikethrough,
+    FindAndReplaceEditing,
 	Code,
 	Superscript,
 	Subscript,
@@ -139,7 +146,6 @@ export const COMMON_PLUGINS: typeof Plugin[] = [
 	RemoveFormat,
 	SpecialCharacters,
 	SpecialCharactersEssentials,
-	FindAndReplace,
 	PageBreak,
 	GeneralHtmlSupport,
 	TextPartLanguage,

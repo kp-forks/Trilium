@@ -12,6 +12,7 @@ import shortcutService from "../../services/shortcuts.js";
 import appContext from "../../components/app_context.js";
 import type { Attribute } from "../../services/attribute_parser.js";
 import { focusSavedElement, saveFocusedElement } from "../../services/focus.js";
+import { isExperimentalFeatureEnabled } from "../../services/experimental_features.js";
 
 const TPL = /*html*/`
 <div class="attr-detail tn-tool-dialog">
@@ -36,7 +37,7 @@ const TPL = /*html*/`
         }
 
         .related-notes-list {
-            padding-left: 20px;
+            padding-inline-start: 20px;
             margin-top: 10px;
             margin-bottom: 10px;
         }
@@ -46,7 +47,7 @@ const TPL = /*html*/`
         }
 
         .attr-edit-table th {
-            text-align: left;
+            text-align: start;
         }
 
         .attr-edit-table td input[not(type="checkbox")] {
@@ -81,7 +82,7 @@ const TPL = /*html*/`
     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
         <h5 class="attr-detail-title">${t("attribute_detail.attr_detail_title")}</h5>
 
-        <span class="bx bx-x close-attr-detail-button tn-tool-button" title="${t("attribute_detail.close_button_title")}"></span>
+        <button class="close-attr-detail-button icon-action bx bx-x" title="${t("attribute_detail.close_button_title")}"></button>
     </div>
 
     <div class="attr-is-owned-by">${t("attribute_detail.attr_is_owned_by")}</div>
@@ -150,7 +151,7 @@ const TPL = /*html*/`
             <th title="${t("attribute_detail.precision_title")}">${t("attribute_detail.precision")}</th>
             <td>
                 <div class="input-group">
-                    <input type="number" class="form-control attr-input-number-precision" style="text-align: right">
+                    <input type="number" class="form-control attr-input-number-precision" style="text-align: end">
                     <span class="input-group-text">${t("attribute_detail.digits")}</span>
                 </div>
             </td>
@@ -176,7 +177,7 @@ const TPL = /*html*/`
 
     <div class="attr-save-delete-button-container">
         <button class="btn btn-primary btn-sm attr-save-changes-and-close-button"
-            style="flex-grow: 1; margin-right: 20px">
+            style="flex-grow: 1; margin-inline-end: 20px">
             ${t("attribute_detail.save_and_close")}</button>
 
         <button class="btn btn-secondary btn-sm attr-delete-button">
@@ -308,6 +309,8 @@ interface SearchRelatedResponse {
     }[];
     count: number;
 }
+
+const isNewLayout = isExperimentalFeatureEnabled("new-layout");
 
 export default class AttributeDetailWidget extends NoteContextAwareWidget {
     private $title!: JQuery<HTMLElement>;
@@ -578,6 +581,13 @@ export default class AttributeDetailWidget extends NoteContextAwareWidget {
             .css("right", detPosition.right)
             .css("top", y - offset.top + 70)
             .css("max-height", outerHeight + y > height - 50 ? height - y - 50 : 10000);
+
+        if (isNewLayout) {
+            this.$widget
+                .css("top", "unset")
+                .css("bottom", 70)
+                .css("max-height", "80vh");
+        }
 
         if (focus === "name") {
             this.$inputName.trigger("focus").trigger("select");

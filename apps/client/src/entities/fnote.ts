@@ -1,41 +1,24 @@
-import server from "../services/server.js";
-import noteAttributeCache from "../services/note_attribute_cache.js";
-import ws from "../services/ws.js";
-import protectedSessionHolder from "../services/protected_session_holder.js";
+import { getNoteIcon } from "@triliumnext/commons";
+
 import cssClassManager from "../services/css_class_manager.js";
 import type { Froca } from "../services/froca-interface.js";
-import type FAttachment from "./fattachment.js";
-import type { default as FAttribute, AttributeType } from "./fattribute.js";
+import noteAttributeCache from "../services/note_attribute_cache.js";
+import protectedSessionHolder from "../services/protected_session_holder.js";
+import search from "../services/search.js";
+import server from "../services/server.js";
 import utils from "../services/utils.js";
+import type FAttachment from "./fattachment.js";
+import type { AttributeType, default as FAttribute } from "./fattribute.js";
 
 const LABEL = "label";
 const RELATION = "relation";
-
-const NOTE_TYPE_ICONS = {
-    file: "bx bx-file",
-    image: "bx bx-image",
-    code: "bx bx-code",
-    render: "bx bx-extension",
-    search: "bx bx-file-find",
-    relationMap: "bx bxs-network-chart",
-    book: "bx bx-book",
-    noteMap: "bx bxs-network-chart",
-    mermaid: "bx bx-selection",
-    canvas: "bx bx-pen",
-    webView: "bx bx-globe-alt",
-    launcher: "bx bx-link",
-    doc: "bx bxs-file-doc",
-    contentWidget: "bx bxs-widget",
-    mindMap: "bx bx-sitemap",
-    aiChat: "bx bx-bot"
-};
 
 /**
  * There are many different Note types, some of which are entirely opaque to the
  * end user. Those types should be used only for checking against, they are
  * not for direct use.
  */
-export type NoteType = "file" | "image" | "search" | "noteMap" | "launcher" | "doc" | "contentWidget" | "text" | "relationMap" | "render" | "canvas" | "mermaid" | "book" | "webView" | "code" | "mindMap" | "aiChat";
+export type NoteType = "file" | "image" | "search" | "noteMap" | "launcher" | "doc" | "contentWidget" | "text" | "relationMap" | "render" | "canvas" | "mermaid" | "book" | "webView" | "code" | "mindMap" | "spreadsheet";
 
 export interface NotePathRecord {
     isArchived: boolean;
@@ -64,7 +47,7 @@ export interface NoteMetaData {
 /**
  * Note is the main node and concept in Trilium.
  */
-class FNote {
+export default class FNote {
     private froca: Froca;
 
     noteId!: string;
@@ -240,7 +223,7 @@ class FNote {
 
             const aNote = this.froca.getNoteFromCache(aNoteId);
 
-            if (aNote.isArchived || aNote.isHiddenCompletely()) {
+            if (!aNote || aNote.isArchived || aNote.isHiddenCompletely()) {
                 return 1;
             }
 
@@ -256,18 +239,36 @@ class FNote {
         return this.children;
     }
 
-    async getSubtreeNoteIds() {
-        let noteIds: (string | string[])[] = [];
+    async getChildNoteIdsWithArchiveFiltering(includeArchived = false) {
+        const isHiddenNote = this.noteId.startsWith("_");
+        const isSearchNote = this.type === "search";
+        if (!includeArchived && !isHiddenNote && !isSearchNote) {
+            const unorderedIds = new Set(await search.searchForNoteIds(`note.parents.noteId="${this.noteId}" #!archived`));
+            const results: string[] = [];
+            for (const id of this.children) {
+                if (unorderedIds.has(id)) {
+                    results.push(id);
+                }
+            }
+            return results;
+        }
+        return this.children;
+    }
+
+    async getSubtreeNoteIds(includeArchived = false) {
+        const noteIds: (string | string[])[] = [];
         for (const child of await this.getChildNotes()) {
+            if (child.isArchived && !includeArchived) continue;
+
             noteIds.push(child.noteId);
-            noteIds.push(await child.getSubtreeNoteIds());
+            noteIds.push(await child.getSubtreeNoteIds(includeArchived));
         }
         return noteIds.flat();
     }
 
     async getSubtreeNotes() {
         const noteIds = await this.getSubtreeNoteIds();
-        return this.froca.getNotes(noteIds);
+        return (await this.froca.getNotes(noteIds));
     }
 
     async getChildNotes() {
@@ -416,7 +417,7 @@ class FNote {
         return notePaths;
     }
 
-    getSortedNotePathRecords(hoistedNoteId = "root"): NotePathRecord[] {
+    getSortedNotePathRecords(hoistedNoteId = "root", activeNotePath: string | null = null): NotePathRecord[] {
         const isHoistedRoot = hoistedNoteId === "root";
 
         const notePaths: NotePathRecord[] = this.getAllNotePaths().map((path) => ({
@@ -427,7 +428,23 @@ class FNote {
             isHidden: path.includes("_hidden")
         }));
 
+        // Calculate the length of the prefix match between two arrays
+        const prefixMatchLength = (path: string[], target: string[]) => {
+            const diffIndex = path.findIndex((seg, i) => seg !== target[i]);
+            return diffIndex === -1 ? Math.min(path.length, target.length) : diffIndex;
+        };
+
         notePaths.sort((a, b) => {
+            if (activeNotePath) {
+                const activeSegments = activeNotePath.split('/');
+                const aOverlap = prefixMatchLength(a.notePath, activeSegments);
+                const bOverlap = prefixMatchLength(b.notePath, activeSegments);
+                // Paths with more matching prefix segments are prioritized
+                // when the match count is equal, other criteria are used for sorting
+                if (bOverlap !== aOverlap) {
+                    return bOverlap - aOverlap;
+                }
+            }
             if (a.isInHoistedSubTree !== b.isInHoistedSubTree) {
                 return a.isInHoistedSubTree ? -1 : 1;
             } else if (a.isArchived !== b.isArchived) {
@@ -436,9 +453,8 @@ class FNote {
                 return a.isHidden ? 1 : -1;
             } else if (a.isSearch !== b.isSearch) {
                 return a.isSearch ? 1 : -1;
-            } else {
-                return a.notePath.length - b.notePath.length;
             }
+            return a.notePath.length - b.notePath.length;
         });
 
         return notePaths;
@@ -448,10 +464,11 @@ class FNote {
      * Returns the note path considered to be the "best"
      *
      * @param {string} [hoistedNoteId='root']
+     * @param {string|null} [activeNotePath=null]
      * @return {string[]} array of noteIds constituting the particular note path
      */
-    getBestNotePath(hoistedNoteId = "root") {
-        return this.getSortedNotePathRecords(hoistedNoteId)[0]?.notePath;
+    getBestNotePath(hoistedNoteId = "root", activeNotePath: string | null = null) {
+        return this.getSortedNotePathRecords(hoistedNoteId, activeNotePath)[0]?.notePath;
     }
 
     /**
@@ -549,26 +566,15 @@ class FNote {
         const iconClassLabels = this.getLabels("iconClass");
         const workspaceIconClass = this.getWorkspaceIconClass();
 
-        if (iconClassLabels && iconClassLabels.length > 0) {
-            return iconClassLabels[0].value;
-        } else if (workspaceIconClass) {
-            return workspaceIconClass;
-        } else if (this.noteId === "root") {
-            return "bx bx-home-alt-2";
-        }
-        if (this.noteId === "_share") {
-            return "bx bx-share-alt";
-        } else if (this.type === "text") {
-            if (this.isFolder()) {
-                return "bx bx-folder";
-            } else {
-                return "bx bx-note";
-            }
-        } else if (this.type === "code" && this.mime.startsWith("text/x-sql")) {
-            return "bx bx-data";
-        } else {
-            return NOTE_TYPE_ICONS[this.type];
-        }
+        const icon = getNoteIcon({
+            noteId: this.noteId,
+            type: this.type,
+            mime: this.mime,
+            iconClass: iconClassLabels.length > 0 ? iconClassLabels[0].value : undefined,
+            workspaceIconClass,
+            isFolder: this.isFolder.bind(this)
+        });
+        return `tn-icon ${icon}`;
     }
 
     getColorClass() {
@@ -577,14 +583,16 @@ class FNote {
     }
 
     isFolder() {
-        return this.type === "search" || this.getFilteredChildBranches().length > 0;
+        if (this.isLabelTruthy("subtreeHidden")) return false;
+        if (this.type === "search") return true;
+        return this.getFilteredChildBranches().length > 0;
     }
 
     getFilteredChildBranches() {
-        let childBranches = this.getChildBranches();
+        const childBranches = this.getChildBranches();
 
         if (!childBranches) {
-            ws.logError(`No children for '${this.noteId}'. This shouldn't happen.`);
+            console.error(`No children for '${this.noteId}'. This shouldn't happen.`);
             return [];
         }
 
@@ -693,6 +701,15 @@ class FNote {
     }
 
     /**
+     * Returns `true` if the note has a label with the given name (same as {@link hasOwnedLabel}), or it has a label with the `disabled:` prefix (for example due to a safe import).
+     * @param name the name of the label to look for.
+     * @returns `true` if the label exists, or its version with the `disabled:` prefix.
+     */
+    hasLabelOrDisabled(name: string) {
+        return this.hasLabel(name) || this.hasLabel(`disabled:${name}`);
+    }
+
+    /**
      * @param name - label name
      * @returns true if label exists (including inherited) and does not have "false" value.
      */
@@ -770,6 +787,16 @@ class FNote {
         return this.getAttributeValue(LABEL, name);
     }
 
+    getLabelOrRelation(nameWithPrefix: string) {
+        if (nameWithPrefix.startsWith("#")) {
+            return this.getLabelValue(nameWithPrefix.substring(1));
+        } else if (nameWithPrefix.startsWith("~")) {
+            return this.getRelationValue(nameWithPrefix.substring(1));
+        }
+        return this.getLabelValue(nameWithPrefix);
+
+    }
+
     /**
      * @param name - relation name
      * @returns relation value if relation exists, null otherwise
@@ -821,8 +848,7 @@ class FNote {
             return [];
         }
 
-        const promotedAttrs = this.getAttributes()
-            .filter((attr) => attr.isDefinition())
+        const promotedAttrs = this.getAttributeDefinitions()
             .filter((attr) => {
                 const def = attr.getDefinition();
 
@@ -833,13 +859,18 @@ class FNote {
         promotedAttrs.sort((a, b) => {
             if (a.noteId === b.noteId) {
                 return a.position < b.position ? -1 : 1;
-            } else {
-                // inherited promoted attributes should stay grouped: https://github.com/zadam/trilium/issues/3761
-                return a.noteId < b.noteId ? -1 : 1;
             }
+            // inherited promoted attributes should stay grouped: https://github.com/zadam/trilium/issues/3761
+            return a.noteId < b.noteId ? -1 : 1;
+
         });
 
         return promotedAttrs;
+    }
+
+    getAttributeDefinitions() {
+        return this.getAttributes()
+            .filter((attr) => attr.isDefinition());
     }
 
     hasAncestor(ancestorNoteId: string, followTemplates = false, visitedNoteIds: Set<string> | null = null) {
@@ -905,8 +936,8 @@ class FNote {
         return this.getBlob();
     }
 
-    async getBlob() {
-        return await this.froca.getBlob("notes", this.noteId);
+    getBlob() {
+        return this.froca.getBlob("notes", this.noteId);
     }
 
     toString() {
@@ -943,6 +974,10 @@ class FNote {
         );
     }
 
+    isJsx() {
+        return (this.type === "code" && this.mime === "text/jsx");
+    }
+
     /** @returns true if this note is HTML */
     isHtml() {
         return (this.type === "code" || this.type === "file" || this.type === "render") && this.mime === "text/html";
@@ -950,7 +985,7 @@ class FNote {
 
     /** @returns JS script environment - either "frontend" or "backend" */
     getScriptEnv() {
-        if (this.isHtml() || (this.isJavaScript() && this.mime.endsWith("env=frontend"))) {
+        if (this.isHtml() || (this.isJavaScript() && this.mime.endsWith("env=frontend")) || this.isJsx()) {
             return "frontend";
         }
 
@@ -972,7 +1007,7 @@ class FNote {
      * @returns a promise that resolves when the script has been run. Additionally, for front-end notes, the promise will contain the value that is returned by the script.
      */
     async executeScript() {
-        if (!this.isJavaScript()) {
+        if (!(this.isJavaScript() || this.isJsx())) {
             throw new Error(`Note ${this.noteId} is of type ${this.type} and mime ${this.mime} and thus cannot be executed`);
         }
 
@@ -1020,6 +1055,14 @@ class FNote {
         return this.noteId.startsWith("_options");
     }
 
+    isTriliumSqlite() {
+        return this.mime === "text/x-sqlite;schema=trilium";
+    }
+
+    isTriliumScript() {
+        return this.mime.startsWith("application/javascript");
+    }
+
     /**
      * Provides note's date metadata.
      */
@@ -1027,5 +1070,3 @@ class FNote {
         return await server.get<NoteMetaData>(`notes/${this.noteId}/metadata`);
     }
 }
-
-export default FNote;

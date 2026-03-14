@@ -1,11 +1,22 @@
-import type { AttachmentRow } from "@triliumnext/commons";
+import type { AttachmentRow, EtapiTokenRow, NoteType, OptionNames } from "@triliumnext/commons";
+
 import type { AttributeType } from "../entities/fattribute.js";
 import type { EntityChange } from "../server_types.js";
 
 // TODO: Deduplicate with server.
 
 interface NoteRow {
+    blobId: string;
+    dateCreated: string;
+    dateModified: string;
     isDeleted?: boolean;
+    isProtected?: boolean;
+    mime: string;
+    noteId: string;
+    title: string;
+    type: NoteType;
+    utcDateCreated: string;
+    utcDateModified: string;
 }
 
 // TODO: Deduplicate with BranchRow from `rows.ts`/
@@ -53,6 +64,7 @@ type EntityRowMappings = {
     options: OptionRow;
     revisions: RevisionRow;
     note_reordering: NoteReorderingRow;
+    etapi_tokens: EtapiTokenRow;
 };
 
 export type EntityRowNames = keyof EntityRowMappings;
@@ -66,8 +78,9 @@ export default class LoadResults {
     private revisionRows: RevisionRow[];
     private noteReorderings: string[];
     private contentNoteIdToComponentId: ContentNoteIdToComponentIdRow[];
-    private optionNames: string[];
+    private optionNames: OptionNames[];
     private attachmentRows: AttachmentRow[];
+    public hasEtapiTokenChanges: boolean = false;
 
     constructor(entityChanges: EntityChange[]) {
         const entities: Record<string, Record<string, any>> = {};
@@ -123,7 +136,14 @@ export default class LoadResults {
     }
 
     getBranchRows() {
-        return this.branchRows.map((row) => this.getEntityRow("branches", row.branchId)).filter((branch) => !!branch);
+        return this.branchRows.map((row) => {
+            const branch = this.getEntityRow("branches", row.branchId);
+            if (branch) {
+                // Merge the componentId from the tracked row with the entity data
+                return { ...branch, componentId: row.componentId };
+            }
+            return null;
+        }).filter((branch) => !!branch) as BranchRow[];
     }
 
     addNoteReordering(parentNoteId: string, componentId: string) {
@@ -141,7 +161,14 @@ export default class LoadResults {
     getAttributeRows(componentId = "none"): AttributeRow[] {
         return this.attributeRows
             .filter((row) => row.componentId !== componentId)
-            .map((row) => this.getEntityRow("attributes", row.attributeId))
+            .map((row) => {
+                const attr = this.getEntityRow("attributes", row.attributeId);
+                if (attr) {
+                    // Merge the componentId from the tracked row with the entity data
+                    return { ...attr, componentId: row.componentId };
+                }
+                return null;
+            })
             .filter((attr) => !!attr) as AttributeRow[];
     }
 
@@ -178,11 +205,11 @@ export default class LoadResults {
         return this.contentNoteIdToComponentId.find((l) => l.noteId === noteId && l.componentId !== componentId);
     }
 
-    addOption(name: string) {
+    addOption(name: OptionNames) {
         this.optionNames.push(name);
     }
 
-    isOptionReloaded(name: string) {
+    isOptionReloaded(name: OptionNames) {
         return this.optionNames.includes(name);
     }
 
@@ -215,7 +242,8 @@ export default class LoadResults {
             this.revisionRows.length === 0 &&
             this.contentNoteIdToComponentId.length === 0 &&
             this.optionNames.length === 0 &&
-            this.attachmentRows.length === 0
+            this.attachmentRows.length === 0 &&
+            !this.hasEtapiTokenChanges
         );
     }
 

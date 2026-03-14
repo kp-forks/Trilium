@@ -1,5 +1,8 @@
-import utils from "./utils.js";
+import Component from "../components/component.js";
+import FNote from "../entities/fnote.js";
+import options from "./options.js";
 import server from "./server.js";
+import utils from "./utils.js";
 
 type ExecFunction = (command: string, cb: (err: string, stdout: string, stderror: string) => void) => void;
 
@@ -35,9 +38,14 @@ function download(url: string) {
     }
 }
 
-function downloadFileNote(noteId: string) {
-    const url = `${getFileUrl("notes", noteId)}?${Date.now()}`; // don't use cache
+export function downloadFileNote(note: FNote, parentComponent: Component | null, ntxId: string | null | undefined) {
+    if (note.type === "file" && note.mime === "application/pdf" && parentComponent) {
+        // Special handling, manages its own downloading process.
+        parentComponent.triggerEvent("customDownload", { ntxId });
+        return;
+    }
 
+    const url = `${getFileUrl("notes", note.noteId)}?${Date.now()}`; // don't use cache
     download(url);
 }
 
@@ -96,7 +104,7 @@ async function openCustom(type: string, entityId: string, mime: string) {
             // Note that the path separator must be \ instead of /
             filePath = filePath.replace(/\//g, "\\");
         }
-        const command = `rundll32.exe shell32.dll,OpenAs_RunDLL ` + filePath;
+        const command = `rundll32.exe shell32.dll,OpenAs_RunDLL ${filePath}`;
         exec(command, (err, stdout, stderr) => {
             if (err) {
                 console.error("Open Note custom: ", err);
@@ -126,14 +134,14 @@ function downloadRevision(noteId: string, revisionId: string) {
 /**
  * @param url - should be without initial slash!!!
  */
-function getUrlForDownload(url: string) {
+export function getUrlForDownload(url: string) {
     if (utils.isElectron()) {
         // electron needs absolute URL, so we extract current host, port, protocol
         return `${getHost()}/${url}`;
-    } else {
-        // web server can be deployed on subdomain, so we need to use a relative path
-        return url;
     }
+    // web server can be deployed on subdomain, so we need to use a relative path
+    return url;
+
 }
 
 function canOpenInBrowser(mime: string) {
@@ -163,12 +171,27 @@ async function openExternally(type: string, entityId: string, mime: string) {
     }
 }
 
-const openNoteExternally = async (noteId: string, mime: string) => await openExternally("notes", noteId, mime);
+export const openNoteExternally = async (noteId: string, mime: string) => await openExternally("notes", noteId, mime);
 const openAttachmentExternally = async (attachmentId: string, mime: string) => await openExternally("attachments", attachmentId, mime);
 
 function getHost() {
     const url = new URL(window.location.href);
     return `${url.protocol}//${url.hostname}:${url.port}`;
+}
+
+async function openNoteOnServer(noteId: string) {
+    // Get the sync server host from options
+    const syncServerHost = options.get("syncServerHost");
+
+    if (!syncServerHost) {
+        console.error("No sync server host configured");
+        return;
+    }
+
+    const url = new URL(`#root/${noteId}`, syncServerHost).toString();
+
+    // Use window.open to ensure link opens in external browser in Electron
+    window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 async function openDirectory(directory: string) {
@@ -198,5 +221,6 @@ export default {
     openAttachmentExternally,
     openNoteCustom,
     openAttachmentCustom,
+    openNoteOnServer,
     openDirectory
 };

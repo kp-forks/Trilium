@@ -1,6 +1,6 @@
 # Trilium Notes
 
-![GitHub Sponsors](https://img.shields.io/github/sponsors/eliandoran) ![Docker Pulls](https://img.shields.io/docker/pulls/triliumnext/notes) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/triliumnext/notes/total)
+![GitHub Sponsors](https://img.shields.io/github/sponsors/eliandoran) ![Docker Pulls](https://img.shields.io/docker/pulls/triliumnext/trilium) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/triliumnext/trilium/total)
 
 [English](./README.md) | [Chinese](./README-ZH_CN.md) | [Russian](./README.ru.md) | [Japanese](./README.ja.md) | [Italian](./README.it.md) | [Spanish](./README.es.md)
 
@@ -16,9 +16,9 @@ See [screenshots](https://triliumnext.github.io/Docs/Wiki/screenshot-tour) for q
 
 ### Migrating from Trilium?
 
-There are no special migration steps to migrate from a zadam/Trilium instance to a TriliumNext/Notes instance. Just upgrade your Trilium instance to the latest version and [install TriliumNext/Notes as usual](#-installation)
+There are no special migration steps to migrate from a zadam/Trilium instance to a TriliumNext/Trilium instance. Just upgrade your Trilium instance to the latest version and [install TriliumNext/Trilium as usual](#-installation)
 
-Versions up to and including [v0.90.4](https://github.com/TriliumNext/Notes/releases/tag/v0.90.4) are compatible with the latest zadam/trilium version of [v0.63.7](https://github.com/zadam/trilium/releases/tag/v0.63.7). Any later versions of TriliumNext have their sync versions incremented.
+Versions up to and including [v0.90.4](https://github.com/TriliumNext/Trilium/releases/tag/v0.90.4) are compatible with the latest zadam/trilium version of [v0.63.7](https://github.com/zadam/trilium/releases/tag/v0.63.7). Any later versions of TriliumNext have their sync versions incremented.
 
 ## 💬 Discuss with us
 
@@ -26,7 +26,7 @@ Feel free to join our official conversations. We would love to hear what feature
 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (For synchronous discussions)
   - The `General` Matrix room is also bridged to [XMPP](xmpp:discuss@trilium.thisgreat.party?join)
-- [Github Discussions](https://github.com/TriliumNext/Notes/discussions) (For Asynchronous discussions)
+- [Github Discussions](https://github.com/TriliumNext/Trilium/discussions) (For Asynchronous discussions)
 - [Wiki](https://triliumnext.github.io/Docs/) (For common how-to questions and user guides)
 
 ## 🎁 Features
@@ -63,16 +63,16 @@ Feel free to join our official conversations. We would love to hear what feature
 
 To use TriliumNext on your desktop machine (Linux, MacOS, and Windows) you have a few options:
 
-* Download the binary release for your platform from the [latest release page](https://github.com/TriliumNext/Notes/releases/latest), unzip the package and run the ```trilium``` executable.
+* Download the binary release for your platform from the [latest release page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the package and run the ```trilium``` executable.
 * Access TriliumNext via the web interface of a server installation (see below)
     * Currently only the latest versions of Chrome & Firefox are supported (and tested).
 * (Coming Soon) TriliumNext will also be provided as a Flatpak
 
 #### MacOS
-Currently when running TriliumNext/Notes on MacOS, you may get the following error:
+Currently when running TriliumNext/Trilium on MacOS, you may get the following error:
 > Apple could not verify "Trilium Notes" is free of malware and may harm your Mac or compromise your privacy.
 
-You will need to run the command on your shell to resolve the error (documented [here](https://github.com/TriliumNext/Notes/issues/329#issuecomment-2287164137)):
+You will need to run the command on your shell to resolve the error (documented [here](https://github.com/TriliumNext/Trilium/issues/329#issuecomment-2287164137)):
 
 ```bash
 xattr -c "/path/to/Trilium Next.app"
@@ -84,11 +84,11 @@ To use TriliumNext on a mobile device, you can use a mobile web browser to acces
 
 If you prefer a native Android app, you can use [TriliumDroid](https://apt.izzysoft.de/fdroid/index/apk/eu.fliegendewurst.triliumdroid). Report bugs and missing features at [their repository](https://github.com/FliegendeWurst/TriliumDroid).
 
-See issue https://github.com/TriliumNext/Notes/issues/72 for more information on mobile app support.
+See issue https://github.com/TriliumNext/Trilium/issues/72 for more information on mobile app support.
 
 ### Server
 
-To install TriliumNext on your own server (including via Docker from [Dockerhub](https://hub.docker.com/r/triliumnext/notes)) follow [the server installation docs](https://triliumnext.github.io/Docs/Wiki/server-installation).
+To install TriliumNext on your own server (including via Docker from [Dockerhub](https://hub.docker.com/r/triliumnext/trilium)) follow [the server installation docs](https://triliumnext.github.io/Docs/Wiki/server-installation).
 
 ## 📝 Documentation
 
@@ -101,17 +101,17 @@ You can also read [Patterns of personal knowledge base](https://triliumnext.gith
 ### Code
 
 ```shell
-git clone https://github.com/TriliumNext/Notes.git
+git clone https://github.com/TriliumNext/Trilium.git
 cd Notes
 npm install
 npm run server:start
 ```
 
-For more details, see the [development docs](https://github.com/TriliumNext/Notes/blob/develop/docs/Developer%20Guide/Developer%20Guide/Building%20and%20deployment/Running%20a%20development%20build.md).
+For more details, see the [development docs](https://github.com/TriliumNext/Trilium/blob/develop/docs/Developer%20Guide/Developer%20Guide/Building%20and%20deployment/Running%20a%20development%20build.md).
 
 ### Documentation
 
-See the [documentation guide](https://github.com/TriliumNext/Notes/blob/develop/docs/Developer%20Guide/Developer%20Guide/Documentation.md) for details.
+See the [documentation guide](https://github.com/TriliumNext/Trilium/blob/develop/docs/Developer%20Guide/Developer%20Guide/Documentation.md) for details.
 
 ## 👏 Shoutouts
 
@@ -123,7 +123,7 @@ See the [documentation guide](https://github.com/TriliumNext/Notes/blob/develop/
 ## 🤝 Support
 
 Support for the TriliumNext organization will be possible in the near future. For now, you can:
-- Support continued development on TriliumNext by supporting our developers: [eliandoran](https://github.com/sponsors/eliandoran) (See the [repository insights]([developers]([url](https://github.com/TriliumNext/Notes/graphs/contributors))) for a full list)
+- Support continued development on TriliumNext by supporting our developers: [eliandoran](https://github.com/sponsors/eliandoran) (See the [repository insights]([developers]([url](https://github.com/TriliumNext/Trilium/graphs/contributors))) for a full list)
 - Show a token of gratitude to the original Trilium developer ([zadam](https://github.com/sponsors/zadam)) via [PayPal](https://paypal.me/za4am) or Bitcoin (bitcoin:bc1qv3svjn40v89mnkre5vyvs2xw6y8phaltl385d2).
 
 

@@ -1,9 +1,8 @@
-"use strict";
-
-import sql from "../../services/sql.js";
-import becca from "../../becca/becca.js";
 import type { Request } from "express";
+
+import becca from "../../becca/becca.js";
 import ValidationError from "../../errors/validation_error.js";
+import sql from "../../services/sql.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
 
 interface Table {
@@ -18,14 +17,14 @@ function getSchema() {
     for (const tableName of tableNames) {
         tables.push({
             name: tableName,
-            columns: sql.getRows(`PRAGMA table_info(${tableName})`)
+            columns: sql.getRows<{ name: string; type: string; }>(`PRAGMA table_info(${tableName})`)
         });
     }
 
     return tables;
 }
 
-function execute(req: Request) {
+function execute(req: Request<{ noteId: string }>) {
     const note = becca.getNoteOrThrow(req.params.noteId);
 
     const content = note.getContent();

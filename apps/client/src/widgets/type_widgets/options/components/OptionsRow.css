@@ -1,0 +1,30 @@
+.option-row {
+    border-bottom: 1px solid var(--main-border-color);
+    display: flex;
+    align-items: center;
+    padding: 0.5em 0;
+}
+
+.option-row > label {
+    width: 40%;
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+}
+
+.option-row > select,
+.option-row > .dropdown {
+    width: 60%;
+}
+
+.option-row > .dropdown button {
+    width: 100%;
+    text-align: start;
+}
+
+.option-row:last-of-type {
+    border-bottom: unset;
+}
+
+.option-row.centered {
+    justify-content: center;
+}

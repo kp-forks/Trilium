@@ -1,5 +1,5 @@
 ul.fancytree-container {
-    padding-left: 0;
+    padding-inline-start: 0;
 }
 
 ul.fancytree-container li {
@@ -15,10 +15,8 @@ span.fancytree-node.fancytree-hide {
     flex-shrink: 1;
     flex-grow: 1;
     overflow: hidden;
-    margin-left: 7px;
+    margin-inline-start: 7px;
     outline: none;
-    position: relative;
-    top: 2px;
 }
 
 .fancytree-expander {
@@ -42,6 +40,7 @@ span.fancytree-node.fancytree-hide {
     text-overflow: ellipsis;
     user-select: none !important;
     -webkit-user-select: none !important;
+    color: var(--custom-color, inherit);
 }
 
 .fancytree-node:not(.fancytree-loading) .fancytree-expander {
@@ -59,7 +58,11 @@ span.fancytree-node.fancytree-hide {
     line-height: 1;
     position: relative;
     top: 2px;
-    margin-right: 5px;
+    margin-inline-end: 5px;
+}
+
+body[dir=rtl] .fancytree-node:not(.fancytree-loading):not(.fancytree-expanded) .fancytree-expander:before {
+    content: "\ea4d";   /* bx bx-chevron-left */
 }
 
 .fancytree-loading span.fancytree-expander {
@@ -80,7 +83,7 @@ span.fancytree-node.fancytree-hide {
     width: 12px;
     height: 12px;
     margin-top: 2px;
-    margin-left: 1px;
+    margin-inline-start: 1px;
     border-width: 1px;
     border-style: solid;
 }
@@ -137,30 +140,46 @@ ul.fancytree-container {
     background-color: inherit;
 }
 
+
 .fancytree-custom-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1em;
+    height: 1em;
     font-size: 1.2em;
 }
 
+/* Fallback icon */
+:where(.fancytree-custom-icon)::before {
+    content: "?";
+}
+
+/* Protected note icon badge */
 span.fancytree-node.protected > span.fancytree-custom-icon {
     filter: drop-shadow(2px 2px 2px var(--main-text-color));
 }
 
-span.fancytree-node.multiple-parents.shared .fancytree-title::after {
+/* Note indicator icons (clone, shared) - real DOM elements for tooltip support */
+.note-indicator-icon {
     font-family: "boxicons" !important;
     font-size: smaller;
-    content: " \eb3d \ec03";
+    margin-inline-start: 4px;
+    opacity: 0.8;
+    cursor: help;
 }
 
-span.fancytree-node.multiple-parents .fancytree-title::after {
-    font-family: "boxicons" !important;
-    font-size: smaller;
-    content: " \eb3d"; /* lookup code for "link-alt" in boxicons.css */
+.note-indicator-icon.clone-indicator::before {
+    content: "\eb3d"; /* bx-link-alt */
 }
 
-span.fancytree-node.shared .fancytree-title::after {
-    font-family: "boxicons" !important;
-    font-size: smaller;
-    content: " \ec03"; /* lookup code for "share-alt" in boxicons.css */
+.note-indicator-icon.shared-indicator::before {
+    content: "\ec03"; /* bx-share-alt */
+}
+
+body.experimental-feature-new-layout .note-indicator-icon.clone-indicator::before {
+    content: "\ed82";
+    opacity: 0.5;
 }
 
 span.fancytree-node.fancytree-active-clone:not(.fancytree-active) .fancytree-title {
@@ -169,16 +188,16 @@ span.fancytree-node.fancytree-active-clone:not(.fancytree-active) .fancytree-tit
 
 /* first nesting level has lower left padding to avoid extra left padding. Other levels are not affected */
 .ui-fancytree > li > ul {
-    padding-left: 5px;
+    padding-inline-start: 5px;
 }
 
 .ui-fancytree ul {
-    padding-left: 20px;
+    padding-inline-start: 20px;
 }
 
 span.fancytree-active {
-    color: var(--active-item-text-color) !important;
-    background-color: var(--active-item-background-color) !important;
+    color: var(--active-item-text-color);
+    background-color: var(--active-item-background-color);
     border-color: transparent; /* invisible border */
     border-radius: 5px;
 }
@@ -188,19 +207,15 @@ span.fancytree-active .fancytree-title {
     border: 0;
 }
 
-span.fancytree-selected {
-    border-color: var(--main-border-color) !important;
-    border-radius: 5px;
-}
-
-span.fancytree-selected .fancytree-title {
-    text-decoration: underline;
-    font-style: italic;
+span.fancytree-node.fancytree-selected {
+    background-color: var(--selection-background-color);
+    border-radius: 0;
 }
 
 span.fancytree-selected .fancytree-custom-icon::before {
-    content: "\eb43";
-    border: 1px solid var(--main-border-color);
+    font-family: "boxicons";
+    content: "\ef05";
+    border: 1px solid var(--main-text-color);
     border-radius: 3px;
 }
 
@@ -221,22 +236,22 @@ span.fancytree-node.archived {
     opacity: 0.6;
 }
 
-.fancytree-node:hover .bx.tree-item-button {
+.fancytree-node:hover .tn-icon.tree-item-button {
     display: inline-block;
 }
 
-.bx.tree-item-button {
+.tn-icon.tree-item-button {
     display: none;
     font-size: 120%;
     cursor: pointer;
-    margin-left: 8px;
+    margin-inline-start: 8px;
     padding: 1px;
     border: 1px solid transparent;
     border-radius: 5px;
 }
 
-.unhoist-button.bx.tree-item-button {
-    margin-left: 0; /* unhoist button is on the left and doesn't need more margin */
+.unhoist-button.tn-icon.tree-item-button {
+    margin-inline-start: 0; /* unhoist button is on the left and doesn't need more margin */
     display: block; /* keep always visible */
 }
 

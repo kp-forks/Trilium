@@ -14,13 +14,13 @@ import entityConstructor from "../becca/entity_constructor.js";
 import type { AttributeRow, BranchRow, EtapiTokenRow, NoteRow, OptionRow } from "@triliumnext/commons";
 import type AbstractBeccaEntity from "./entities/abstract_becca_entity.js";
 import ws from "../services/ws.js";
+import { dbReady } from "../services/sql_init.js";
 
-const beccaLoaded = new Promise<void>(async (res, rej) => {
-    const sqlInit = (await import("../services/sql_init.js")).default;
+export const beccaLoaded = new Promise<void>(async (res, rej) => {
     // We have to import async since options init requires keyboard actions which require translations.
     const options_init = (await import("../services/options_init.js")).default;
 
-    sqlInit.dbReady.then(() => {
+    dbReady.then(() => {
         cls.init(() => {
             load();
 

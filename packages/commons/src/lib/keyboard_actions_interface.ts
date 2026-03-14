@@ -2,6 +2,7 @@ const enum KeyboardActionNamesEnum {
     backInNoteHistory,
     forwardInNoteHistory,
     jumpToNote,
+    commandPalette,
     scrollToActiveNote,
     quickSearch,
     searchInSubtree,
@@ -34,6 +35,7 @@ const enum KeyboardActionNamesEnum {
     activateNextTab,
     activatePreviousTab,
     openNewWindow,
+    openTodayNote,
     toggleTray,
     toggleZenMode,
     firstTab,
@@ -97,12 +99,21 @@ const enum KeyboardActionNamesEnum {
 
 export type KeyboardActionNames = keyof typeof KeyboardActionNamesEnum;
 
-export interface KeyboardShortcut {
-    separator?: string;
-    actionName?: KeyboardActionNames;
+export interface KeyboardShortcutSeparator {
+    separator: string;
+}
+
+export interface ActionKeyboardShortcut {
+    actionName: KeyboardActionNames;
+    friendlyName: string;
     description?: string;
     defaultShortcuts?: string[];
     effectiveShortcuts?: string[];
+    /**
+     * An icon describing the action.
+     * This is currently only used in the command palette.
+     */
+    iconClass?: string;
     /**
      * Scope here means on which element the keyboard shortcuts are attached - this means that for the shortcut to work,
      * the focus has to be inside the element.
@@ -112,8 +123,19 @@ export interface KeyboardShortcut {
      * e.g. CTRL-C in note tree does something a bit different from CTRL-C in the text editor.
      */
     scope?: "window" | "note-tree" | "text-detail" | "code-detail";
+    /**
+     * Whether the action is only available for the desktop application.
+     * This is used to hide actions that are not available in the web version.
+     */
+    isElectronOnly?: boolean;
+    /**
+     * If set to true, the action will not be shown in the command palette.
+     */
+    ignoreFromCommandPalette?: boolean;
 }
 
-export interface KeyboardShortcutWithRequiredActionName extends KeyboardShortcut {
+export type KeyboardShortcut = ActionKeyboardShortcut | KeyboardShortcutSeparator;
+
+export interface KeyboardShortcutWithRequiredActionName extends ActionKeyboardShortcut {
     actionName: KeyboardActionNames;
 }

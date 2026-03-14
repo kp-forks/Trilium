@@ -1,23 +1,24 @@
-"use strict";
+import type { Request, Response } from "express";
 
-import sql from "../services/sql.js";
+import packageJson from "../../package.json" with { type: "json" };
+import type BNote from "../becca/entities/bnote.js";
+import appPath from "../services/app_path.js";
+import assetPath from "../services/asset_path.js";
 import attributeService from "../services/attributes.js";
 import config from "../services/config.js";
-import optionService from "../services/options.js";
+import { getCurrentLocale } from "../services/i18n.js";
+import { generateCss, generateIconRegistry, getIconPacks, MIME_TO_EXTENSION_MAPPINGS } from "../services/icon_packs.js";
 import log from "../services/log.js";
-import { isDev, isElectron } from "../services/utils.js";
+import optionService from "../services/options.js";
 import protectedSessionService from "../services/protected_session.js";
-import packageJson from "../../package.json" with { type: "json" };
-import assetPath from "../services/asset_path.js";
-import appPath from "../services/app_path.js";
 import { generateCsrfToken } from "./csrf_protection.js";
+import sql from "../services/sql.js";
+import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
 
-import type { Request, Response } from "express";
-import type BNote from "../becca/entities/bnote.js";
+type View = "desktop" | "mobile" | "print";
 
-function index(req: Request, res: Response) {
+export function bootstrap(req: Request, res: Response) {
     const options = optionService.getOptionMap();
-    const view = getView(req);
 
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
@@ -25,28 +26,27 @@ function index(req: Request, res: Response) {
     });
     log.info(`CSRF token generation: ${csrfToken ? "Successful" : "Failed"}`);
 
-    // We force the page to not be cached since on mobile the CSRF token can be
-    // broken when closing the browser and coming back in to the page.
-    // The page is restored from cache, but the API call fail.
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-
+    const view = getView(req);
     const theme = options.theme;
     const themeNote = attributeService.getNoteWithLabel("appTheme", theme);
+    const nativeTitleBarVisible = options.nativeTitleBarVisible === "true";
+    const iconPacks = getIconPacks();
+    const currentLocale = getCurrentLocale();
 
-    res.render(view, {
+    res.send({
         device: view,
-        csrfToken: csrfToken,
+        csrfToken,
         themeCssUrl: getThemeCssUrl(theme, themeNote),
         themeUseNextAsBase: themeNote?.getAttributeValue("label", "appThemeBase"),
         headingStyle: options.headingStyle,
         layoutOrientation: options.layoutOrientation,
         platform: process.platform,
         isElectron,
-        hasNativeTitleBar: isElectron && options.nativeTitleBarVisible === "true",
-        hasBackgroundEffects: isElectron && options.backgroundEffects === "true",
-        mainFontSize: parseInt(options.mainFontSize),
-        treeFontSize: parseInt(options.treeFontSize),
-        detailFontSize: parseInt(options.detailFontSize),
+        hasNativeTitleBar: isElectron && nativeTitleBarVisible,
+        hasBackgroundEffects: options.backgroundEffects === "true"
+            && isElectron
+            && (isWindows11 || isMac)
+            && !nativeTitleBarVisible,
         maxEntityChangeIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
         maxEntityChangeSyncIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
         instanceName: config.General ? config.General.instanceName : null,
@@ -54,14 +54,29 @@ function index(req: Request, res: Response) {
         isDev,
         isMainWindow: view === "mobile" ? true : !req.query.extraWindow,
         isProtectedSessionAvailable: protectedSessionService.isProtectedSessionAvailable(),
-        maxContentWidth: Math.max(640, parseInt(options.maxContentWidth)),
         triliumVersion: packageJson.version,
-        assetPath: assetPath,
-        appPath: appPath
+        assetPath,
+        appPath,
+        baseApiUrl: 'api/',
+        currentLocale,
+        isRtl: !!currentLocale.rtl,
+        iconPackCss: iconPacks
+            .map(p => generateCss(p, p.builtin
+                ? `${assetPath}/fonts/${p.fontAttachmentId}.${MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
+                : `api/attachments/download/${p.fontAttachmentId}`))
+            .filter(Boolean)
+            .join("\n\n"),
+        iconRegistry: generateIconRegistry(iconPacks),
+        TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE
     });
 }
 
-function getView(req: Request): "desktop" | "mobile" {
+function getView(req: Request): View {
+    // Special override for printing.
+    if ("print" in req.query) {
+        return "print";
+    }
+
     // Electron always uses the desktop view.
     if (isElectron) {
         return "desktop";
@@ -109,16 +124,11 @@ function getThemeCssUrl(theme: string, themeNote: BNote | null) {
         return `${assetPath}/stylesheets/theme-next-dark.css`;
     } else if (!process.env.TRILIUM_SAFE_MODE && themeNote) {
         return `api/notes/download/${themeNote.noteId}`;
-    } else {
-        // baseline light theme
-        return false;
     }
+    // baseline light theme
+    return false;
 }
 
 function getAppCssNoteIds() {
     return attributeService.getNotesWithLabel("appCss").map((note) => note.noteId);
 }
-
-export default {
-    index
-};

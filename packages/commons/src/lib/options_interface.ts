@@ -77,14 +77,17 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     imageJpegQuality: number;
     leftPaneWidth: number;
     rightPaneWidth: number;
+    rightPaneCollapsedItems: string;
     eraseEntitiesAfterTimeInSeconds: number;
     eraseEntitiesAfterTimeScale: number;
     autoReadonlySizeText: number;
     autoReadonlySizeCode: number;
     maxContentWidth: number;
+    centerContent: boolean;
     minTocHeadings: number;
     eraseUnusedAttachmentsAfterSeconds: number;
     eraseUnusedAttachmentsAfterTimeScale: number;
+    logRetentionDays: number;
     firstDayOfWeek: number;
     firstWeekOfYear: number;
     minDaysInFirstWeek: number;
@@ -92,9 +95,14 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
 
     // Appearance
     splitEditorOrientation: "horziontal" | "vertical";
+    motionEnabled: boolean;
+    shadowsEnabled: boolean;
+    backdropEffectsEnabled: boolean;
+    smoothScrollEnabled: boolean;
     codeNoteTheme: string;
 
     initialized: boolean;
+    databaseReadonly: boolean;
     isPasswordSet: boolean;
     overrideThemeFonts: boolean;
     spellCheckEnabled: boolean;
@@ -114,7 +122,6 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     downloadImagesAutomatically: boolean;
     checkForUpdates: boolean;
     disableTray: boolean;
-    promotedAttributesOpenInRibbon: boolean;
     editedNotesOpenInRibbon: boolean;
     codeBlockWordWrap: boolean;
     textNoteEditorMultilineToolbar: boolean;
@@ -122,30 +129,17 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     textNoteEmojiCompletionEnabled: boolean;
     /** Whether keyboard auto-completion for notes is triggered when typing `@` in text notes (attribute editing is not affected). */
     textNoteCompletionEnabled: boolean;
+    /** Whether keyboard auto-completion for editing commands is triggered when typing `/`. */
+    textNoteSlashCommandsEnabled: boolean;
     backgroundEffects: boolean;
+    newLayout: boolean;
 
     // Share settings
     redirectBareDomain: boolean;
     showLoginInShareTheme: boolean;
 
-    // AI/LLM integration options
-    aiEnabled: boolean;
-    aiProvider: string;
-    aiSystemPrompt: string;
-    aiTemperature: string;
-    openaiApiKey: string;
-    openaiDefaultModel: string;
-    openaiBaseUrl: string;
-    anthropicApiKey: string;
-    anthropicDefaultModel: string;
-    voyageApiKey: string;
-    anthropicBaseUrl: string;
-    ollamaEnabled: boolean;
-    ollamaBaseUrl: string;
-    ollamaDefaultModel: string;
-    codeOpenAiModel: string;
-    aiSelectedProvider: string;
-
+    seenCallToActions: string;
+    experimentalFeatures: string;
 }
 
 export type OptionNames = keyof OptionDefinitions;

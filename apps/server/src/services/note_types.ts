@@ -15,7 +15,7 @@ const noteTypes = [
     { type: "doc", defaultMime: "" },
     { type: "contentWidget", defaultMime: "" },
     { type: "mindMap", defaultMime: "application/json" },
-    { type: "aiChat", defaultMime: "application/json" }
+    { type: "spreadsheet", defaultMime: "application/json" }
 ];
 
 function getDefaultMimeForNoteType(typeName: string) {

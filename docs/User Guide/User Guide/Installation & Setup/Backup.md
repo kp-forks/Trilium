@@ -40,4 +40,4 @@ noBackup=true
 
 You can also review the [configuration](../Advanced%20Usage/Configuration%20\(config.ini%20or%20e.md) file to provide all `config.ini` values as environment variables instead.
 
-See [sample config](https://github.com/TriliumNext/Notes/blob/master/config-sample.ini).
+See [sample config](https://github.com/TriliumNext/Trilium/blob/master/config-sample.ini).

@@ -21,25 +21,28 @@ export default () => {
             note.mime = "";
             note.save();
 
-            const content = note.getContent();
-            if (content) {
-                const title = "geoMap.json";
-                const existingAttachment = note.getAttachmentsByRole("viewConfig")
-                    .filter(a => a.title === title)[0];
-                if (existingAttachment) {
-                    existingAttachment.setContent(content);
-                } else {
-                    note.saveAttachment({
-                        role: "viewConfig",
-                        title,
-                        mime: "application/json",
-                        content,
-                        position: 0
-                    });
-                }
+            if (!note.isProtected) {
+                const content = note.getContent();
+                if (content) {
+                    const title = "geoMap.json";
+                    const existingAttachment = note.getAttachmentsByRole("viewConfig")
+                        .filter(a => a.title === title)[0];
+                    if (existingAttachment) {
+                        existingAttachment.setContent(content);
+                    } else {
+                        note.saveAttachment({
+                            role: "viewConfig",
+                            title,
+                            mime: "application/json",
+                            content,
+                            position: 0
+                        });
+                    }
 
+                }
+                note.setContent("");
             }
-            note.setContent("");
+
             note.setRelation("template", "_template_geo_map");
         }
     });

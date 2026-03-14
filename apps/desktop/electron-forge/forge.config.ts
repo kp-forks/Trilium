@@ -1,8 +1,11 @@
-import path from "path";
-import fs from "fs-extra";
-import { LOCALES } from "@triliumnext/commons";
-import { PRODUCT_NAME } from "../src/app-info.js";
 import type { ForgeConfig } from "@electron-forge/shared-types";
+import { LOCALES } from "@triliumnext/commons";
+import { existsSync } from "fs";
+import fs from "fs-extra";
+import path, { join } from "path";
+
+import packageJson from "../package.json" assert { type: "json" };
+import { PRODUCT_NAME } from "../src/app-info.js";
 
 const ELECTRON_FORGE_DIR = __dirname;
 
@@ -11,12 +14,12 @@ const APP_ICON_PATH = path.join(ELECTRON_FORGE_DIR, "app-icon");
 
 const extraResourcesForPlatform = getExtraResourcesForPlatform();
 const baseLinuxMakerConfigOptions = {
-  name: EXECUTABLE_NAME,
-  bin: EXECUTABLE_NAME,
-  productName: PRODUCT_NAME,
-  icon: path.join(APP_ICON_PATH, "png/128x128.png"),
-  desktopTemplate: path.resolve(path.join(ELECTRON_FORGE_DIR, "desktop.ejs")),
-  categories: ["Office", "Utility"]
+    name: EXECUTABLE_NAME,
+    bin: EXECUTABLE_NAME,
+    productName: PRODUCT_NAME,
+    icon: path.join(APP_ICON_PATH, "png/128x128.png"),
+    desktopTemplate: path.resolve(path.join(ELECTRON_FORGE_DIR, "desktop.ejs")),
+    categories: ["Office", "Utility"]
 };
 const windowsSignConfiguration = process.env.WINDOWS_SIGN_EXECUTABLE ? {
     hookModulePath: path.join(ELECTRON_FORGE_DIR, "sign-windows.cjs")
@@ -29,6 +32,7 @@ const macosSignConfiguration = process.env.APPLE_ID ? {
         teamId: process.env.APPLE_TEAM_ID!
     }
 } : undefined;
+const isNightly = packageJson.version.includes("test");
 
 const config: ForgeConfig = {
     outDir: "out",
@@ -36,9 +40,10 @@ const config: ForgeConfig = {
     packagerConfig: {
         executableName: EXECUTABLE_NAME,
         name: PRODUCT_NAME,
+        appVersion: packageJson.version,
         overwrite: true,
         asar: true,
-        icon: path.join(APP_ICON_PATH, "icon"),
+        icon: path.join(APP_ICON_PATH, isNightly ? "icon-dev" : "icon"),
         ...macosSignConfiguration,
         windowsSign: windowsSignConfiguration,
         extraResource: [
@@ -70,7 +75,6 @@ const config: ForgeConfig = {
         ]
     },
     rebuildConfig: {
-        force: true,
         extraModules: [ "better-sqlite3" ]
     },
     makers: [
@@ -85,11 +89,33 @@ const config: ForgeConfig = {
             config: {
                 options: {
                     ...baseLinuxMakerConfigOptions,
+                    desktopTemplate: undefined, // otherwise it would put in the wrong exec
+                    icon: {
+                        "128x128": path.join(APP_ICON_PATH, isNightly ? "png/128x128-dev.png" : "png/128x128.png"),
+                    },
                     id: "com.triliumnext.notes",
                     runtimeVersion: "24.08",
                     base: "org.electronjs.Electron2.BaseApp",
                     baseVersion: "24.08",
                     baseFlatpakref: "https://flathub.org/repo/flathub.flatpakrepo",
+                    finishArgs: [
+                        // Wayland/X11 Rendering
+                        "--socket=fallback-x11",
+                        "--socket=wayland",
+                        "--share=ipc",
+                        // Open GL
+                        "--device=dri",
+                        // Audio output
+                        "--socket=pulseaudio",
+                        // Read/write home directory access
+                        "--filesystem=home",
+                        // Allow communication with network
+                        "--share=network",
+                        // System notifications with libnotify
+                        "--talk-name=org.freedesktop.Notifications",
+                        // System tray
+                        "--talk-name=org.kde.StatusNotifierWatcher"
+                    ],
                     modules: [
                         {
                             name: "zypak",
@@ -114,24 +140,24 @@ const config: ForgeConfig = {
             config: {
                 name: EXECUTABLE_NAME,
                 productName: PRODUCT_NAME,
-                iconUrl: "https://raw.githubusercontent.com/TriliumNext/Notes/develop/images/app-icons/icon.ico",
-                setupIcon: path.join(ELECTRON_FORGE_DIR, "setup-icon/setup.ico"),
-                loadingGif: path.join(ELECTRON_FORGE_DIR, "setup-icon/setup-banner.gif"),
+                iconUrl: `https://raw.githubusercontent.com/TriliumNext/Trilium/refs/heads/main/apps/desktop/electron-forge/app-icon/${isNightly ? "icon-dev" : "icon"}.ico`,
+                setupIcon: path.join(ELECTRON_FORGE_DIR, isNightly ? "setup-icon/setup-dev.ico" : "setup-icon/setup.ico"),
+                loadingGif: path.join(ELECTRON_FORGE_DIR, isNightly ? "setup-icon/setup-banner-dev.gif" : "setup-icon/setup-banner.gif"),
                 windowsSign: windowsSignConfiguration
             }
         },
         {
             name: "@electron-forge/maker-dmg",
             config: {
-                icon: path.join(APP_ICON_PATH, "icon.icns")
+                icon: path.join(APP_ICON_PATH, isNightly ? "icon-dev.icns" : "icon.icns")
             }
         },
         {
             name: "@electron-forge/maker-zip",
             config: {
                 options: {
-                    iconUrl: "https://raw.githubusercontent.com/TriliumNext/Notes/develop/images/app-icons/icon.ico",
-                    icon: path.join(APP_ICON_PATH, "icon.ico")
+                    iconUrl: `https://raw.githubusercontent.com/TriliumNext/Trilium/refs/heads/main/apps/desktop/electron-forge/app-icon/${isNightly ? "icon-dev" : "icon"}.ico`,
+                    icon: path.join(APP_ICON_PATH, isNightly ? "icon-dev.ico" : "icon.ico")
                 }
             }
         }
@@ -150,7 +176,7 @@ const config: ForgeConfig = {
                 .filter(locale => !locale.contentOnly)
                 .map(locale => locale.electronLocale) as string[];
             if (!isMac) {
-                localesToKeep = localesToKeep.map(locale => locale.replace("_", "-"))
+                localesToKeep = localesToKeep.map(locale => locale.replace("_", "-"));
             }
 
             const keptLocales = new Set();
@@ -207,8 +233,22 @@ const config: ForgeConfig = {
             // Ensure all locales that should be kept are actually present.
             for (const locale of localesToKeep) {
                 if (!keptLocales.has(locale)) {
-                    console.error(`Locale ${locale} was not found in the packaged app.`);
-                    process.exit(1);
+                    throw new Error(`Locale ${locale} was not found in the packaged app.`);
+                }
+            }
+
+            // Check that the bettersqlite3 binary has the right architecture.
+            if (packageResult.platform === "linux" && packageResult.arch === "arm64") {
+                for (const outputPath of packageResult.outputPaths) {
+                    const binaryPath = join(outputPath, "resources/app.asar.unpacked/node_modules/better-sqlite3/build/Release/better_sqlite3.node");
+                    if (!existsSync(binaryPath)) {
+                        throw new Error(`[better-sqlite3] Unable to find .node file at ${binaryPath}`);
+                    }
+
+                    const actualArch = getELFArch(binaryPath);
+                    if (actualArch !== "ARM64") {
+                        throw new Error(`[better-sqlite3] Expected ARM64 architecture but got ${actualArch} at: ${binaryPath}`);
+                    }
                 }
             }
         },
@@ -247,11 +287,11 @@ function getExtraResourcesForPlatform() {
         const scripts = ["trilium-portable", "trilium-safe-mode", "trilium-no-cert-check"];
         const scriptExt = (process.platform === "win32") ? "bat" : "sh";
         return scripts.map(script => `electron-forge/${script}.${scriptExt}`);
-    }
+    };
 
     switch (process.platform) {
         case "win32":
-            resources.push(...getScriptResources())
+            resources.push(...getScriptResources());
             break;
         case "linux":
             resources.push(...getScriptResources(), path.join(APP_ICON_PATH, "png/256x256.png"));
@@ -262,5 +302,21 @@ function getExtraResourcesForPlatform() {
 
     return resources;
 }
+
+function getELFArch(file: string) {
+    const buf = fs.readFileSync(file);
+
+    if (buf[0] !== 0x7f || buf[1] !== 0x45 || buf[2] !== 0x4c || buf[3] !== 0x46) {
+        throw new Error("Not an ELF file");
+    }
+
+    const eiClass = buf[4];      // 1=32-bit, 2=64-bit
+    const eiMachine = buf[18];   // architecture code
+
+    if (eiMachine === 0x3E) return 'x86-64';
+    if (eiMachine === 0xB7) return 'ARM64';
+    return 'other';
+}
+
 
 export default config;

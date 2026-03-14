@@ -1,33 +1,42 @@
-import renderService from "./render.js";
+import "./content_renderer.css";
+
+import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import { h, render } from "preact";
+import WheelZoom from 'vanilla-js-wheel-zoom';
+
+import FAttachment from "../entities/fattachment.js";
+import FNote from "../entities/fnote.js";
+import imageContextMenuService from "../menus/image_context_menu.js";
+import { t } from "../services/i18n.js";
+import renderText from "./content_renderer_text.js";
+import renderDoc from "./doc_renderer.js";
+import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
+import openService from "./open.js";
 import protectedSessionService from "./protected_session.js";
 import protectedSessionHolder from "./protected_session_holder.js";
-import openService from "./open.js";
-import froca from "./froca.js";
-import utils from "./utils.js";
-import linkService from "./link.js";
-import treeService from "./tree.js";
-import FNote from "../entities/fnote.js";
-import FAttachment from "../entities/fattachment.js";
-import imageContextMenuService from "../menus/image_context_menu.js";
-import { applySingleBlockSyntaxHighlight, formatCodeBlocks } from "./syntax_highlight.js";
-import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
-import renderDoc from "./doc_renderer.js";
-import { t } from "../services/i18n.js";
-import WheelZoom from 'vanilla-js-wheel-zoom';
-import { renderMathInElement } from "./math.js";
-import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import renderService from "./render.js";
+import { applySingleBlockSyntaxHighlight } from "./syntax_highlight.js";
+import utils, { getErrorMessage } from "./utils.js";
 
 let idCounter = 1;
 
-interface Options {
+export interface RenderOptions {
     tooltip?: boolean;
     trim?: boolean;
     imageHasZoom?: boolean;
+    /** If enabled, it will prevent the default behavior in which an empty note would display a list of children. */
+    noChildrenList?: boolean;
+    /** If enabled, it will prevent rendering of included notes. */
+    noIncludedNotes?: boolean;
+    /** If enabled, it will include archived notes when rendering children list. */
+    includeArchivedNotes?: boolean;
+    /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
+    seenNoteIds?: Set<string>;
 }
 
 const CODE_MIME_TYPES = new Set(["application/json"]);
 
-async function getRenderedContent(this: {} | { ctx: string }, entity: FNote | FAttachment, options: Options = {}) {
+export async function getRenderedContent(this: {} | { ctx: string }, entity: FNote | FAttachment, options: RenderOptions = {}) {
 
     options = Object.assign(
         {
@@ -42,19 +51,22 @@ async function getRenderedContent(this: {} | { ctx: string }, entity: FNote | FA
     const $renderedContent = $('<div class="rendered-content">');
 
     if (type === "text" || type === "book") {
-        await renderText(entity, $renderedContent);
+        await renderText(entity, $renderedContent, options);
     } else if (type === "code") {
         await renderCode(entity, $renderedContent);
-    } else if (["image", "canvas", "mindMap"].includes(type)) {
+    } else if (["image", "canvas", "mindMap", "spreadsheet"].includes(type)) {
         renderImage(entity, $renderedContent, options);
     } else if (!options.tooltip && ["file", "pdf", "audio", "video"].includes(type)) {
-        renderFile(entity, type, $renderedContent);
+        await renderFile(entity, type, $renderedContent);
     } else if (type === "mermaid") {
         await renderMermaid(entity, $renderedContent);
     } else if (type === "render" && entity instanceof FNote) {
         const $content = $("<div>");
 
-        await renderService.render(entity, $content);
+        await renderService.render(entity, $content, (e) => {
+            const $error = $("<div>").addClass("admonition caution").text(typeof e === "string" ? e : getErrorMessage(e));
+            $content.empty().append($error);
+        });
 
         $renderedContent.append($content);
     } else if (type === "doc" && "noteId" in entity) {
@@ -65,15 +77,34 @@ async function getRenderedContent(this: {} | { ctx: string }, entity: FNote | FA
 
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
     } else if (entity instanceof FNote) {
+        $renderedContent.addClass("no-preview");
         $renderedContent.append(
-            $("<div>")
-                .css("display", "flex")
-                .css("justify-content", "space-around")
-                .css("align-items", "center")
-                .css("height", "100%")
-                .css("font-size", "500%")
-                .append($("<span>").addClass(entity.getIcon()))
+            $("<div>").append($("<span>").addClass(entity.getIcon()))
         );
+
+        if (entity.type === "webView" && entity.hasLabel("webViewSrc")) {
+            const $footer = $("<footer>")
+                .addClass("webview-footer");
+            const $openButton = $(`
+                <button class="file-open btn btn-primary" type="button">
+                    <span class="bx bx-link-external"></span>
+                    ${t("content_renderer.open_externally")}
+                </button>
+            `)
+                .appendTo($footer)
+                .on("click", () => {
+                    const webViewSrc = entity.getLabelValue("webViewSrc");
+                    if (webViewSrc) {
+                        if (utils.isElectron()) {
+                            const electron = utils.dynamicRequire("electron");
+                            electron.shell.openExternal(webViewSrc);
+                        } else {
+                            window.open(webViewSrc, '_blank', 'noopener,noreferrer');
+                        }
+                    }
+                });
+            $footer.appendTo($renderedContent);
+        }
     }
 
     if (entity instanceof FNote) {
@@ -84,32 +115,6 @@ async function getRenderedContent(this: {} | { ctx: string }, entity: FNote | FA
         $renderedContent,
         type
     };
-}
-
-async function renderText(note: FNote | FAttachment, $renderedContent: JQuery<HTMLElement>) {
-    // entity must be FNote
-    const blob = await note.getBlob();
-
-    if (blob && !utils.isHtmlEmpty(blob.content)) {
-        $renderedContent.append($('<div class="ck-content">').html(blob.content));
-
-        if ($renderedContent.find("span.math-tex").length > 0) {
-            renderMathInElement($renderedContent[0], { trust: true });
-        }
-
-        const getNoteIdFromLink = (el: HTMLElement) => treeService.getNoteIdFromUrl($(el).attr("href") || "");
-        const referenceLinks = $renderedContent.find("a.reference-link");
-        const noteIdsToPrefetch = referenceLinks.map((i, el) => getNoteIdFromLink(el));
-        await froca.getNotes(noteIdsToPrefetch);
-
-        for (const el of referenceLinks) {
-            await linkService.loadReferenceLinkTitle($(el));
-        }
-
-        await formatCodeBlocks($renderedContent);
-    } else if (note instanceof FNote) {
-        await renderChildrenList($renderedContent, note);
-    }
 }
 
 /**
@@ -133,7 +138,7 @@ async function renderCode(note: FNote | FAttachment, $renderedContent: JQuery<HT
     await applySingleBlockSyntaxHighlight($codeBlock, normalizeMimeTypeForCKEditor(note.mime));
 }
 
-function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery<HTMLElement>, options: Options = {}) {
+function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery<HTMLElement>, options: RenderOptions = {}) {
     const encodedTitle = encodeURIComponent(entity.title);
 
     let url;
@@ -151,7 +156,7 @@ function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery<HTMLE
 
     const $img = $("<img>")
         .attr("src", url || "")
-        .attr("id", "attachment-image-" + idCounter++)
+        .attr("id", `attachment-image-${idCounter++}`)
         .css("max-width", "100%");
 
     $renderedContent.append($img);
@@ -175,7 +180,7 @@ function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery<HTMLE
     imageContextMenuService.setupContextMenu($img);
 }
 
-function renderFile(entity: FNote | FAttachment, type: string, $renderedContent: JQuery<HTMLElement>) {
+async function renderFile(entity: FNote | FAttachment, type: string, $renderedContent: JQuery<HTMLElement>) {
     let entityType, entityId;
 
     if (entity instanceof FNote) {
@@ -188,13 +193,17 @@ function renderFile(entity: FNote | FAttachment, type: string, $renderedContent:
         throw new Error(`Can't recognize entity type of '${entity}'`);
     }
 
-    const $content = $('<div style="display: flex; flex-direction: column; height: 100%;">');
+    const $content = $('<div style="display: flex; flex-direction: column; height: 100%; justify-content: end;">');
 
     if (type === "pdf") {
-        const $pdfPreview = $('<iframe class="pdf-preview" style="width: 100%; flex-grow: 100;"></iframe>');
-        $pdfPreview.attr("src", openService.getUrlForDownload(`api/${entityType}/${entityId}/open`));
+        const url = `../../api/${entityType}/${entityId}/open`;
+        const $viewer = $(`<div style="height: 100%">`);
+        const PdfViewer = (await import("../widgets/type_widgets/file/PdfViewer")).default;
+        render(h(PdfViewer, {pdfUrl: url, editable: false}), $viewer.get(0)!);
 
-        $content.append($pdfPreview);
+        $content.append($viewer);
+
+
     } else if (type === "audio") {
         const $audioPreview = $("<audio controls></audio>")
             .attr("src", openService.getUrlForDownload(`api/${entityType}/${entityId}/open-partial`))
@@ -216,20 +225,31 @@ function renderFile(entity: FNote | FAttachment, type: string, $renderedContent:
         //       in attachment list
         const $downloadButton = $(`
             <button class="file-download btn btn-primary" type="button">
-                <span class="bx bx-download"></span>
+                <span class="tn-icon bx bx-download"></span>
                 ${t("file_properties.download")}
             </button>
         `);
 
         const $openButton = $(`
             <button class="file-open btn btn-primary" type="button">
-                <span class="bx bx-link-external"></span>
+                <span class="tn-icon bx bx-link-external"></span>
                 ${t("file_properties.open")}
             </button>
         `);
 
-        $downloadButton.on("click", () => openService.downloadFileNote(entity.noteId));
-        $openButton.on("click", () => openService.openNoteExternally(entity.noteId, entity.mime));
+        $downloadButton.on("click", (e) => {
+            e.stopPropagation();
+            openService.downloadFileNote(entity, null, null);
+        });
+        $openButton.on("click", async (e) => {
+            const iconEl = $openButton.find("> .bx");
+            iconEl.removeClass("bx bx-link-external");
+            iconEl.addClass("bx bx-loader spin");
+            e.stopPropagation();
+            await openService.openNoteExternally(entity.noteId, entity.mime);
+            iconEl.removeClass("bx bx-loader spin");
+            iconEl.addClass("bx bx-link-external");
+        });
         // open doesn't work for protected notes since it works through a browser which isn't in protected session
         $openButton.toggle(!entity.isProtected);
 
@@ -254,47 +274,13 @@ async function renderMermaid(note: FNote | FAttachment, $renderedContent: JQuery
 
     try {
         await loadElkIfNeeded(mermaid, content);
-        const { svg } = await mermaid.mermaidAPI.render("in-mermaid-graph-" + idCounter++, content);
+        const { svg } = await mermaid.mermaidAPI.render(`in-mermaid-graph-${idCounter++}`, content);
 
         $renderedContent.append($(postprocessMermaidSvg(svg)));
     } catch (e) {
         const $error = $("<p>The diagram could not displayed.</p>");
 
         $renderedContent.append($error);
-    }
-}
-
-/**
- * @param {jQuery} $renderedContent
- * @param {FNote} note
- * @returns {Promise<void>}
- */
-async function renderChildrenList($renderedContent: JQuery<HTMLElement>, note: FNote) {
-    let childNoteIds = note.getChildNoteIds();
-
-    if (!childNoteIds.length) {
-        return;
-    }
-
-    $renderedContent.css("padding", "10px");
-    $renderedContent.addClass("text-with-ellipsis");
-
-    if (childNoteIds.length > 10) {
-        childNoteIds = childNoteIds.slice(0, 10);
-    }
-
-    // just load the first 10 child notes
-    const childNotes = await froca.getNotes(childNoteIds);
-
-    for (const childNote of childNotes) {
-        $renderedContent.append(
-            await linkService.createLink(`${note.noteId}/${childNote.noteId}`, {
-                showTooltip: false,
-                showNoteIcon: true
-            })
-        );
-
-        $renderedContent.append("<br>");
     }
 }
 
@@ -307,10 +293,11 @@ function getRenderingType(entity: FNote | FAttachment) {
     }
 
     const mime = "mime" in entity && entity.mime;
+    const isIconPack = entity instanceof FNote && entity.hasLabel("iconPack");
 
     if (type === "file" && mime === "application/pdf") {
         type = "pdf";
-    } else if ((type === "file" || type === "viewConfig") && mime && CODE_MIME_TYPES.has(mime)) {
+    } else if ((type === "file" || type === "viewConfig") && mime && CODE_MIME_TYPES.has(mime) && !isIconPack) {
         type = "code";
     } else if (type === "file" && mime && mime.startsWith("audio/")) {
         type = "audio";

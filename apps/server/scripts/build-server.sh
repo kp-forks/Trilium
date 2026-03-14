@@ -20,10 +20,10 @@ fi
 # Debug output
 echo "Selected Arch: $ARCH"
 
-# Set Node.js version and architecture-specific filename
-NODE_VERSION=22.16.0
-
 script_dir=$(realpath $(dirname $0))
+
+# Set Node.js version and architecture-specific filename
+NODE_VERSION=$(cat "../../.nvmrc")
 BUILD_DIR="$script_dir/../dist"
 DIST_DIR="$script_dir/../out"
 
@@ -43,7 +43,7 @@ rm -rf $BUILD_DIR/node/lib/node_modules/{npm,corepack} \
     $BUILD_DIR/node_modules/electron* \
     $BUILD_DIR/electron*.{js,map}
 
-printf "#!/bin/sh\n./node/bin/node main.cjs\n" > $BUILD_DIR/trilium.sh
+printf "#!/bin/sh\nexec ./node/bin/node main.cjs\n" > $BUILD_DIR/trilium.sh
 chmod 755 $BUILD_DIR/trilium.sh
 
 VERSION=`jq -r ".version" package.json`

@@ -1,11 +1,11 @@
-import optionService from "./options.js";
+import { type KeyboardShortcutWithRequiredActionName, type OptionMap, type OptionNames, SANITIZER_DEFAULT_ALLOWED_TAGS } from "@triliumnext/commons";
+
 import appInfo from "./app_info.js";
-import { randomSecureToken, isWindows } from "./utils.js";
-import log from "./log.js";
 import dateUtils from "./date_utils.js";
 import keyboardActions from "./keyboard_actions.js";
-import type { KeyboardShortcutWithRequiredActionName, OptionMap, OptionNames } from "@triliumnext/commons";
-import { DEFAULT_ALLOWED_TAGS } from "./html_sanitizer.js";
+import log from "./log.js";
+import optionService from "./options.js";
+import { isWindows, randomSecureToken } from "./utils.js";
 
 function initDocumentOptions() {
     optionService.createOption("documentId", randomSecureToken(16), false);
@@ -105,6 +105,7 @@ const defaultOptions: DefaultOption[] = [
     { name: "leftPaneVisible", value: "true", isSynced: false },
     { name: "rightPaneWidth", value: "25", isSynced: false },
     { name: "rightPaneVisible", value: "true", isSynced: false },
+    { name: "rightPaneCollapsedItems", value: "[]", isSynced: false },
     { name: "nativeTitleBarVisible", value: "false", isSynced: false },
     { name: "eraseEntitiesAfterTimeInSeconds", value: "604800", isSynced: true }, // default is 7 days
     { name: "eraseEntitiesAfterTimeScale", value: "86400", isSynced: true }, // default 86400 seconds = Day
@@ -112,23 +113,24 @@ const defaultOptions: DefaultOption[] = [
     { name: "debugModeEnabled", value: "false", isSynced: false },
     { name: "headingStyle", value: "underline", isSynced: true },
     { name: "autoCollapseNoteTree", value: "true", isSynced: true },
-    { name: "autoReadonlySizeText", value: "10000", isSynced: false },
-    { name: "autoReadonlySizeCode", value: "30000", isSynced: false },
+    { name: "autoReadonlySizeText", value: "32000", isSynced: false },
+    { name: "autoReadonlySizeCode", value: "64000", isSynced: false },
     { name: "dailyBackupEnabled", value: "true", isSynced: false },
     { name: "weeklyBackupEnabled", value: "true", isSynced: false },
     { name: "monthlyBackupEnabled", value: "true", isSynced: false },
     { name: "maxContentWidth", value: "1200", isSynced: false },
+    { name: "centerContent", value: "false", isSynced: false },
     { name: "compressImages", value: "true", isSynced: true },
     { name: "downloadImagesAutomatically", value: "true", isSynced: true },
     { name: "minTocHeadings", value: "5", isSynced: true },
-    { name: "highlightsList", value: '["bold","italic","underline","color","bgColor"]', isSynced: true },
+    { name: "highlightsList", value: '["underline","color","bgColor"]', isSynced: true },
     { name: "checkForUpdates", value: "true", isSynced: true },
     { name: "disableTray", value: "false", isSynced: false },
     { name: "eraseUnusedAttachmentsAfterSeconds", value: "2592000", isSynced: true }, // default 30 days
     { name: "eraseUnusedAttachmentsAfterTimeScale", value: "86400", isSynced: true }, // default 86400 seconds = Day
+    { name: "logRetentionDays", value: "90", isSynced: false }, // default 90 days
     { name: "customSearchEngineName", value: "DuckDuckGo", isSynced: true },
     { name: "customSearchEngineUrl", value: "https://duckduckgo.com/?q={keyword}", isSynced: true },
-    { name: "promotedAttributesOpenInRibbon", value: "true", isSynced: true },
     { name: "editedNotesOpenInRibbon", value: "true", isSynced: true },
     { name: "mfaEnabled", value: "false", isSynced: false },
     { name: "mfaMethod", value: "totp", isSynced: false },
@@ -152,10 +154,15 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "motionEnabled", value: "true", isSynced: false },
+    { name: "shadowsEnabled", value: "true", isSynced: false },
+    { name: "backdropEffectsEnabled", value: "true", isSynced: false },
+    { name: "smoothScrollEnabled", value: "true", isSynced: false },
+    { name: "newLayout", value: "true", isSynced: true },
 
     // Internationalization
     { name: "locale", value: "en", isSynced: true },
-    { name: "formattingLocale", value: "en", isSynced: true },
+    { name: "formattingLocale", value: "", isSynced: true }, // no value means auto-detect
     { name: "firstDayOfWeek", value: "1", isSynced: true },
     { name: "firstWeekOfYear", value: "0", isSynced: true },
     { name: "minDaysInFirstWeek", value: "4", isSynced: true },
@@ -167,9 +174,9 @@ const defaultOptions: DefaultOption[] = [
         value: (optionsMap) => {
             if (optionsMap.theme === "light") {
                 return "default:stackoverflow-light";
-            } else {
-                return "default:stackoverflow-dark";
             }
+            return "default:stackoverflow-dark";
+
         },
         isSynced: false
     },
@@ -180,13 +187,14 @@ const defaultOptions: DefaultOption[] = [
     { name: "textNoteEditorMultilineToolbar", value: "false", isSynced: true },
     { name: "textNoteEmojiCompletionEnabled", value: "true", isSynced: true },
     { name: "textNoteCompletionEnabled", value: "true", isSynced: true },
+    { name: "textNoteSlashCommandsEnabled", value: "true", isSynced: true },
 
     // HTML import configuration
     { name: "layoutOrientation", value: "vertical", isSynced: false },
-    { name: "backgroundEffects", value: "false", isSynced: false },
+    { name: "backgroundEffects", value: "true", isSynced: false },
     {
         name: "allowedHtmlTags",
-        value: JSON.stringify(DEFAULT_ALLOWED_TAGS),
+        value: JSON.stringify(SANITIZER_DEFAULT_ALLOWED_TAGS),
         isSynced: true
     },
 
@@ -194,23 +202,14 @@ const defaultOptions: DefaultOption[] = [
     { name: "redirectBareDomain", value: "false", isSynced: true },
     { name: "showLoginInShareTheme", value: "false", isSynced: true },
 
-    // AI Options
-    { name: "aiEnabled", value: "false", isSynced: true },
-    { name: "openaiApiKey", value: "", isSynced: false },
-    { name: "openaiDefaultModel", value: "", isSynced: true },
-    { name: "openaiBaseUrl", value: "https://api.openai.com/v1", isSynced: true },
-    { name: "anthropicApiKey", value: "", isSynced: false },
-    { name: "anthropicDefaultModel", value: "", isSynced: true },
-    { name: "voyageApiKey", value: "", isSynced: false },
-    { name: "anthropicBaseUrl", value: "https://api.anthropic.com/v1", isSynced: true },
-    { name: "ollamaEnabled", value: "false", isSynced: true },
-    { name: "ollamaDefaultModel", value: "", isSynced: true },
-    { name: "ollamaBaseUrl", value: "http://localhost:11434", isSynced: true },
-
-    // Adding missing AI options
-    { name: "aiTemperature", value: "0.7", isSynced: true },
-    { name: "aiSystemPrompt", value: "", isSynced: true },
-    { name: "aiSelectedProvider", value: "openai", isSynced: true },
+    {
+        name: "seenCallToActions",
+        value: JSON.stringify([
+            "new_layout", "background_effects", "next_theme"
+        ]),
+        isSynced: true
+    },
+    { name: "experimentalFeatures", value: "[]", isSynced: true }
 ];
 
 /**
@@ -251,7 +250,7 @@ function initStartupOptions() {
 }
 
 function getKeyboardDefaultOptions() {
-    return (keyboardActions.getDefaultKeyboardActions().filter((ka) => !!ka.actionName) as KeyboardShortcutWithRequiredActionName[]).map((ka) => ({
+    return (keyboardActions.getDefaultKeyboardActions().filter((ka) => "actionName" in ka) as KeyboardShortcutWithRequiredActionName[]).map((ka) => ({
         name: `keyboardShortcuts${ka.actionName.charAt(0).toUpperCase()}${ka.actionName.slice(1)}`,
         value: JSON.stringify(ka.defaultShortcuts),
         isSynced: false

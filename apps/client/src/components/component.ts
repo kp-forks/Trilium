@@ -1,6 +1,8 @@
 import utils from "../services/utils.js";
 import type { CommandMappings, CommandNames, EventData, EventNames } from "./app_context.js";
 
+type EventHandler = ((data: any) => void);
+
 /**
  * Abstract class for all components in the Trilium's frontend.
  *
@@ -19,6 +21,7 @@ export class TypedComponent<ChildT extends TypedComponent<ChildT>> {
     initialized: Promise<void> | null;
     parent?: TypedComponent<any>;
     _position!: number;
+    private listeners: Record<string, EventHandler[]> | null = {};
 
     constructor() {
         this.componentId = `${this.sanitizedClassName}-${utils.randomString(8)}`;
@@ -54,6 +57,18 @@ export class TypedComponent<ChildT extends TypedComponent<ChildT>> {
         return this;
     }
 
+    /**
+     * Removes a child component from this component's children array.
+     * This is used for cleanup when a widget is unmounted to prevent event listener accumulation.
+     */
+    removeChild(component: ChildT) {
+        const index = this.children.indexOf(component);
+        if (index !== -1) {
+            this.children.splice(index, 1);
+            component.parent = undefined;
+        }
+    }
+
     handleEvent<T extends EventNames>(name: T, data: EventData<T>): Promise<unknown[] | unknown> | null | undefined {
         try {
             const callMethodPromise = this.initialized ? this.initialized.then(() => this.callMethod((this as any)[`${name}Event`], data)) : this.callMethod((this as any)[`${name}Event`], data);
@@ -62,8 +77,8 @@ export class TypedComponent<ChildT extends TypedComponent<ChildT>> {
 
             // don't create promises if not needed (optimization)
             return callMethodPromise && childrenPromise ? Promise.all([callMethodPromise, childrenPromise]) : callMethodPromise || childrenPromise;
-        } catch (e: any) {
-            console.error(`Handling of event '${name}' failed in ${this.constructor.name} with error ${e.message} ${e.stack}`);
+        } catch (e: unknown) {
+            console.error(`Handling of event '${name}' failed in ${this.constructor.name} with error`, e);
 
             return null;
         }
@@ -76,6 +91,14 @@ export class TypedComponent<ChildT extends TypedComponent<ChildT>> {
     handleEventInChildren<T extends EventNames>(name: T, data: EventData<T>): Promise<unknown[] | unknown> | null {
         const promises: Promise<unknown>[] = [];
 
+        // Handle React children.
+        if (this.listeners?.[name]) {
+            for (const listener of this.listeners[name]) {
+                listener(data);
+            }
+        }
+
+        // Handle legacy children.
         for (const child of this.children) {
             const ret = child.handleEvent(name, data) as Promise<void>;
 
@@ -119,6 +142,35 @@ export class TypedComponent<ChildT extends TypedComponent<ChildT>> {
         }
 
         return promise;
+    }
+
+    registerHandler<T extends EventNames>(name: T, handler: EventHandler) {
+        if (!this.listeners) {
+            this.listeners = {};
+        }
+
+        if (!this.listeners[name]) {
+            this.listeners[name] = [];
+        }
+
+        if (this.listeners[name].includes(handler)) {
+            return;
+        }
+
+        this.listeners[name].push(handler);
+    }
+
+    removeHandler<T extends EventNames>(name: T, handler: EventHandler) {
+        if (!this.listeners?.[name]?.includes(handler)) {
+            return;
+        }
+
+        this.listeners[name] = this.listeners[name]
+            .filter(listener => listener !== handler);
+
+        if (!this.listeners[name].length) {
+            delete this.listeners[name];
+        }
     }
 }
 

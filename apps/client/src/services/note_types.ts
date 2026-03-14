@@ -1,9 +1,9 @@
-import { t } from "./i18n.js";
-import froca from "./froca.js";
-import server from "./server.js";
-import type { MenuCommandItem, MenuItem, MenuItemBadge } from "../menus/context_menu.js";
 import type { NoteType } from "../entities/fnote.js";
+import type { MenuCommandItem, MenuItem, MenuItemBadge, MenuSeparatorItem } from "../menus/context_menu.js";
 import type { TreeCommandNames } from "../menus/tree_context_menu.js";
+import froca from "./froca.js";
+import { t } from "./i18n.js";
+import server from "./server.js";
 
 export interface NoteTypeMapping {
     type: NoteType;
@@ -26,6 +26,7 @@ export const NOTE_TYPES: NoteTypeMapping[] = [
 
     // The default note type (always the first item)
     { type: "text", mime: "text/html", title: t("note_types.text"), icon: "bx-note" },
+    { type: "spreadsheet", mime: "application/json", title: t("note_types.spreadsheet"), icon: "bx-table", isBeta: true },
 
     // Text notes group
     { type: "book", mime: "", title: t("note_types.book"), icon: "bx-book" },
@@ -53,7 +54,6 @@ export const NOTE_TYPES: NoteTypeMapping[] = [
     { type: "file", title: t("note_types.file"), reserved: true },
     { type: "image", title: t("note_types.image"), reserved: true },
     { type: "launcher", mime: "", title: t("note_types.launcher"), reserved: true },
-    { type: "aiChat", mime: "application/json", title: t("note_types.ai-chat"), reserved: true }
 ];
 
 /** The maximum age in days for a template to be marked with the "New" badge */
@@ -73,7 +73,7 @@ const BETA_BADGE = {
     title: t("note_types.beta-feature")
 };
 
-const SEPARATOR = { title: "----" };
+const SEPARATOR: MenuSeparatorItem = { kind: "separator" };
 
 const creationDateCache = new Map<string, Date>();
 let rootCreationDate: Date | undefined;
@@ -81,8 +81,8 @@ let rootCreationDate: Date | undefined;
 async function getNoteTypeItems(command?: TreeCommandNames) {
     const items: MenuItem<TreeCommandNames>[] = [
         ...getBlankNoteTypes(command),
-        ...await getBuiltInTemplates(t("note_types.collections"), command, true),
         ...await getBuiltInTemplates(null, command, false),
+        ...await getBuiltInTemplates(t("note_types.collections"), command, true),
         ...await getUserTemplates(command)
     ];
 
@@ -97,9 +97,9 @@ function getBlankNoteTypes(command?: TreeCommandNames): MenuItem<TreeCommandName
                 title: nt.title,
                 command,
                 type: nt.type,
-                uiIcon: "bx " + nt.icon,
+                uiIcon: `bx ${nt.icon}`,
                 badges: []
-            }
+            };
 
             if (nt.isNew) {
                 menuItem.badges?.push(NEW_BADGE);
@@ -121,14 +121,17 @@ async function getUserTemplates(command?: TreeCommandNames) {
     }
 
     const items: MenuItem<TreeCommandNames>[] = [
-        SEPARATOR
+        {
+            title: t("note_type_chooser.templates"),
+            kind: "header"
+        }
     ];
 
     for (const templateNote of templateNotes) {
         const item: MenuItem<TreeCommandNames> = {
             title: templateNote.title,
             uiIcon: templateNote.getIcon(),
-            command: command,
+            command,
             type: templateNote.type,
             templateNoteId: templateNote.noteId
         };
@@ -157,23 +160,23 @@ async function getBuiltInTemplates(title: string | null, command: TreeCommandNam
     const items: MenuItem<TreeCommandNames>[] = [];
     if (title) {
         items.push({
-            title: title,
-            enabled: false,
-            uiIcon: "bx bx-empty"
+            title,
+            kind: "header"
         });
     } else {
         items.push(SEPARATOR);
     }
 
     for (const templateNote of childNotes) {
-        if (templateNote.hasLabel("collection") !== filterCollections) {
+        if (templateNote.hasLabel("collection") !== filterCollections ||
+            !templateNote.hasLabel("template")) {
             continue;
         }
 
         const item: MenuItem<TreeCommandNames> = {
             title: templateNote.title,
             uiIcon: templateNote.getIcon(),
-            command: command,
+            command,
             type: templateNote.type,
             templateNoteId: templateNote.noteId
         };
@@ -191,7 +194,7 @@ async function isNewTemplate(templateNoteId) {
     if (rootCreationDate === undefined) {
         // Retrieve the root note creation date
         try {
-            let rootNoteInfo: any = await server.get("notes/root");
+            const rootNoteInfo: any = await server.get("notes/root");
             if ("dateCreated" in rootNoteInfo) {
                 rootCreationDate = new Date(rootNoteInfo.dateCreated);
             }
@@ -206,7 +209,7 @@ async function isNewTemplate(templateNoteId) {
     if (creationDate === undefined) {
         // The creation date isn't available in the cache, try to retrieve it from the server
         try {
-            const noteInfo: any = await server.get("notes/" + templateNoteId);
+            const noteInfo: any = await server.get(`notes/${templateNoteId}`);
             if ("dateCreated" in noteInfo) {
                 creationDate = new Date(noteInfo.dateCreated);
                 creationDateCache.set(templateNoteId, creationDate);
@@ -228,9 +231,8 @@ async function isNewTemplate(templateNoteId) {
         const age = (new Date().getTime() - creationDate.getTime()) / DAY_LENGTH;
         // Return true if the template is at most NEW_TEMPLATE_MAX_AGE days old
         return (age <= NEW_TEMPLATE_MAX_AGE);
-    } else {
-        return false;
     }
+    return false;
 }
 
 export default {

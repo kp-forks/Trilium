@@ -27,4 +27,4 @@ These themes may or may not be compatible with the latest versions of TriliumNex
 | [Blue](https://github.com/SiriusXT/trilium-theme-blue) (dark) | [SiriusXT](https://github.com/SiriusXT) |
 
 > [!TIP]
-> If you would like to add your theme to this gallery, write a new post in [👐 Show and tell](https://github.com/TriliumNext/Notes/discussions/categories/show-and-tell).
+> If you would like to add your theme to this gallery, write a new post in [👐 Show and tell](https://github.com/TriliumNext/Trilium/discussions/categories/show-and-tell).

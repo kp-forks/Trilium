@@ -1,13 +1,14 @@
-"use strict";
 
-import optionService from "../../services/options.js";
-import log from "../../services/log.js";
-import searchService from "../../services/search/services/search.js";
-import ValidationError from "../../errors/validation_error.js";
-import type { Request } from "express";
-import { changeLanguage, getLocales } from "../../services/i18n.js";
+
 import type { OptionNames } from "@triliumnext/commons";
+import type { Request } from "express";
+
+import ValidationError from "../../errors/validation_error.js";
 import config from "../../services/config.js";
+import { changeLanguage, getLocales } from "../../services/i18n.js";
+import log from "../../services/log.js";
+import optionService from "../../services/options.js";
+import searchService from "../../services/search/services/search.js";
 
 interface UserTheme {
     val: string; // value of the theme, used in the URL
@@ -50,8 +51,9 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "imageMaxWidthHeight",
     "imageJpegQuality",
     "leftPaneWidth",
-    "rightPaneWidth",
     "leftPaneVisible",
+    "rightPaneWidth",
+    "rightPaneCollapsedItems",
     "rightPaneVisible",
     "nativeTitleBarVisible",
     "headingStyle",
@@ -63,7 +65,12 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "dailyBackupEnabled",
     "weeklyBackupEnabled",
     "monthlyBackupEnabled",
+    "motionEnabled",
+    "shadowsEnabled",
+    "smoothScrollEnabled",
+    "backdropEffectsEnabled",
     "maxContentWidth",
+    "centerContent",
     "compressImages",
     "downloadImagesAutomatically",
     "minTocHeadings",
@@ -75,7 +82,6 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "disableTray",
     "customSearchEngineName",
     "customSearchEngineUrl",
-    "promotedAttributesOpenInRibbon",
     "editedNotesOpenInRibbon",
     "locale",
     "formattingLocale",
@@ -87,26 +93,16 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "textNoteEditorMultilineToolbar",
     "textNoteEmojiCompletionEnabled",
     "textNoteCompletionEnabled",
+    "textNoteSlashCommandsEnabled",
     "layoutOrientation",
     "backgroundEffects",
     "allowedHtmlTags",
     "redirectBareDomain",
     "showLoginInShareTheme",
     "splitEditorOrientation",
-
-    // AI/LLM integration options
-    "aiEnabled",
-    "aiTemperature",
-    "aiSystemPrompt",
-    "aiSelectedProvider",
-    "openaiApiKey",
-    "openaiBaseUrl",
-    "openaiDefaultModel",
-    "anthropicApiKey",
-    "anthropicBaseUrl",
-    "anthropicDefaultModel",
-    "ollamaBaseUrl",
-    "ollamaDefaultModel",
+    "seenCallToActions",
+    "experimentalFeatures",
+    "newLayout",
     "mfaEnabled",
     "mfaMethod"
 ]);
@@ -132,7 +128,7 @@ function getOptions() {
     return resultMap;
 }
 
-function updateOption(req: Request) {
+function updateOption(req: Request<{ name: string; value: string }>) {
     const { name, value } = req.params;
 
     if (!update(name, value)) {

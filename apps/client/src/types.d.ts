@@ -1,12 +1,14 @@
-import type FNote from "./entities/fnote";
-import type { Froca } from "./services/froca-interface";
-import { Suggestion } from "./services/note_autocomplete";
-import utils from "./services/utils";
+import { IconRegistry, Locale } from "@triliumnext/commons";
+
 import appContext, { AppContext } from "./components/app_context";
-import server from "./services/server";
-import library_loader, { Library } from "./services/library_loader";
+import type FNote from "./entities/fnote";
+import type { PrintReport } from "./print";
 import type { lint } from "./services/eslint";
-import type { Mermaid, MermaidConfig } from "mermaid";
+import type { Froca } from "./services/froca-interface";
+import { Library } from "./services/library_loader";
+import { Suggestion } from "./services/note_autocomplete";
+import server from "./services/server";
+import utils from "./services/utils";
 
 interface ElectronProcess {
     type: string;
@@ -16,7 +18,7 @@ interface ElectronProcess {
 interface CustomGlobals {
     isDesktop: typeof utils.isDesktop;
     isMobile: typeof utils.isMobile;
-    device: "mobile" | "desktop";
+    device: "mobile" | "desktop" | "print";
     getComponentByEl: typeof appContext.getComponentByEl;
     getHeaders: typeof server.getHeaders;
     getReferenceLinkTitle: (href: string) => Promise<string>;
@@ -26,7 +28,6 @@ interface CustomGlobals {
     appContext: AppContext;
     froca: Froca;
     treeCache: Froca;
-    importMarkdownInline: () => Promise<unknown>;
     SEARCH_HELP_TEXT: string;
     activeDialog: JQuery<HTMLElement> | null;
     componentId: string;
@@ -46,19 +47,40 @@ interface CustomGlobals {
     platform?: typeof process.platform;
     linter: typeof lint;
     hasNativeTitleBar: boolean;
+    hasBackgroundEffects: boolean;
+    isElectron: boolean;
+    isRtl: boolean;
+    iconRegistry: IconRegistry;
+    themeCssUrl: string;
+    themeUseNextAsBase?: "next" | "next-light" | "next-dark";
+    iconPackCss: string;
+    headingStyle: "plain" | "underline" | "markdown";
+    layoutOrientation: "vertical" | "horizontal";
+    currentLocale: Locale;
 }
 
 type RequireMethod = (moduleName: string) => any;
 
 declare global {
     interface Window {
+        $: JQueryStatic;
+        jQuery: JQueryStatic;
+
         logError(message: string);
         logInfo(message: string);
 
         process?: ElectronProcess;
         glob?: CustomGlobals;
 
+        /** On the printing endpoint, set to true when the note has fully loaded and is ready to be printed/exported as PDF. */
+        _noteReady?: PrintReport;
+
         EXCALIDRAW_ASSET_PATH?: string;
+    }
+
+    interface WindowEventMap {
+        "note-ready": Event;
+        "note-load-progress": CustomEvent<{ progress: number }>;
     }
 
     interface AutoCompleteConfig {
@@ -97,17 +119,7 @@ declare global {
         setNote(noteId: string);
     }
 
-    interface JQueryStatic {
-        hotkeys: {
-            options: {
-                filterInputAcceptingElements: boolean;
-                filterContentEditable: boolean;
-                filterTextInputs: boolean;
-            }
-        }
-    }
-
-    var logError: (message: string, e?: Error | string) => void;
+    var logError: (message: string, e?: unknown) => void;
     var logInfo: (message: string) => void;
     var glob: CustomGlobals;
     //@ts-ignore
@@ -125,11 +137,17 @@ declare global {
         filterKey: (e: { altKey: boolean }, dx: number, dy: number, dz: number) => void;
     });
 
+    interface PanZoomTransform {
+        x: number;
+        y: number;
+        scale: number;
+    }
+
     interface PanZoom {
         zoomTo(x: number, y: number, scale: number);
         moveTo(x: number, y: number);
         on(event: string, callback: () => void);
-        getTransform(): unknown;
+        getTransform(): PanZoomTransform;
         dispose(): void;
     }
 }

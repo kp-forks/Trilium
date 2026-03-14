@@ -1,12 +1,13 @@
-<p>A label is an <a href="#root/_help_zEY4DaJG4YT5">attribute</a> of a note
-  which has a name and optionally a value.</p>
+<p>A label is an <a href="#root/_help_zEY4DaJG4YT5">attribute</a> of a note which
+  has a name and optionally a value.</p>
 <h2>Common use cases</h2>
 <ul>
   <li><strong>Metadata for personal use</strong>: Assign labels with optional
-    values for categorization, such as <code>#year=1999</code>, <code>#genre="sci-fi"</code>,
-    or <code>#author="Neal Stephenson"</code>. This can be combined with&nbsp;
-    <a
-    class="reference-link" href="#root/_help_OFXdgB2nNk1F">Promoted Attributes</a>&nbsp;to make their display more user-friendly.</li>
+    values for categorization, such as <code spellcheck="false">#year=1999</code>,
+    <code
+    spellcheck="false">#genre="sci-fi"</code>, or <code spellcheck="false">#author="Neal Stephenson"</code>.
+      This can be combined with&nbsp;<a class="reference-link" href="#root/_help_OFXdgB2nNk1F">Promoted Attributes</a>&nbsp;to
+      make their display more user-friendly.</li>
   <li><strong>Configuration</strong>: Labels can configure advanced features
     or settings (see reference below).</li>
   <li><strong>Scripts and Plugins</strong>: Used to tag notes with special metadata,
@@ -36,21 +37,24 @@
 <p>In the <em>Owned Attributes</em> section in the&nbsp;<a class="reference-link"
   href="#root/_help_BlN9DFI679QC">Ribbon</a>:</p>
 <ul>
-  <li>To create a label called <code>myLabel</code> with no value, simply type <code>#myLabel</code>.</li>
-  <li>To create a label called <code>myLabel</code> with a value <code>value</code>,
-    simply type <code>#myLabel=value</code>.</li>
-  <li>If the value contains spaces, then the text must be quoted: <code>#myLabel="Hello world"</code>.</li>
+  <li>To create a label called <code spellcheck="false">myLabel</code> with no
+    value, simply type <code spellcheck="false">#myLabel</code>.</li>
+  <li>To create a label called <code spellcheck="false">myLabel</code> with a
+    value <code spellcheck="false">value</code>, simply type <code spellcheck="false">#myLabel=value</code>.</li>
+  <li>If the value contains spaces, then the text must be quoted: <code spellcheck="false">#myLabel="Hello world"</code>.</li>
   <li>If the string contains quotes (regardless of whether it has spaces), then
-    the text must be quoted with apostrophes instead: <code>#myLabel='Hello "world"'</code>.</li>
-  <li>To create an inheritable label called <code>myLabel</code>, simply write <code>#myLabel(inheritable)</code> for
-    no value or <code>#myLabel(inheritable)=value</code> if there is a value.</li>
+    the text must be quoted with apostrophes instead: <code spellcheck="false">#myLabel='Hello "world"'</code>.</li>
+  <li>To create an inheritable label called <code spellcheck="false">myLabel</code>,
+    simply write <code spellcheck="false">#myLabel(inheritable)</code> for no
+    value or <code spellcheck="false">#myLabel(inheritable)=value</code> if there
+    is a value.</li>
 </ul>
 <h2>Predefined labels</h2>
 <p>This is a list of labels that Trilium natively supports.</p>
 <aside class="admonition tip">
-  <p>Some labels presented here end with a <code>*</code>. That means that there
-    are multiple labels with the same prefix, consult the specific page linked
-    in the description of that label for more information.</p>
+  <p>Some labels presented here end with a <code spellcheck="false">*</code>.
+    That means that there are multiple labels with the same prefix, consult
+    the specific page linked in the description of that label for more information.</p>
 </aside>
 <table class="ck-table-resized">
   <colgroup>
@@ -81,8 +85,7 @@
       <td><code>calendarRoot</code>
       </td>
       <td>Marks the note which should be used as root for&nbsp;<a class="reference-link"
-        href="#root/_help_l0tKav7yLHGF">Day Notes</a>. Only one should be marked
-        as such.</td>
+        href="#root/_help_l0tKav7yLHGF">Day Notes</a>. Only one should be marked as such.</td>
     </tr>
     <tr>
       <td><code>archived</code>
@@ -154,8 +157,8 @@
     <tr>
       <td><code>autoReadOnlyDisabled</code>
       </td>
-      <td>Disables automatic <a href="#root/_help_CoFPLs3dRlXc">read-only mode</a> for
-        the given note.</td>
+      <td>Disables automatic <a href="#root/_help_CoFPLs3dRlXc">read-only mode</a> for the
+        given note.</td>
     </tr>
     <tr>
       <td><code>appCss</code>
@@ -177,8 +180,7 @@
       <td>Set to <code>next</code>, <code>next-light</code>, or <code>next-dark</code> to
         use the corresponding TriliumNext theme (auto, light or dark) as the base
         for a custom theme, instead of the legacy one. See&nbsp;<a class="reference-link"
-        href="#root/_help_WFGzWeUK6arS">Customize the Next theme</a>&nbsp;for more
-        information.</td>
+        href="#root/_help_WFGzWeUK6arS">Customize the Next theme</a>&nbsp;for more information.</td>
     </tr>
     <tr>
       <td><code>cssClass</code>
@@ -302,7 +304,9 @@
       <td><code>color</code>
       </td>
       <td>defines color of the note in note tree, links etc. Use any valid CSS color
-        value like 'red' or #a13d5f</td>
+        value like 'red' or #a13d5f
+        <br>Note: this color may be automatically adjusted when displayed to ensure
+        sufficient contrast with the background.</td>
     </tr>
     <tr>
       <td><code>keyboardShortcut</code>
@@ -351,6 +355,13 @@
         that particular note.</td>
     </tr>
     <tr>
+      <td><code>subtreeHidden</code>
+      </td>
+      <td>Hides all child notes of this note from the tree, displaying a badge with
+        the count of hidden children. Children remain accessible via search or
+        direct links.</td>
+    </tr>
+    <tr>
       <td><code>printLandscape</code>
       </td>
       <td>When exporting to PDF, changes the orientation of the page to landscape
@@ -367,6 +378,11 @@
       <td>Indicates the latitude and longitude of a note, to be displayed in a&nbsp;
         <a
         class="reference-link" href="#root/_help_81SGnPGMk7Xc">Geo Map</a>.</td>
+    </tr>
+    <tr>
+      <td><code>map:*</code>
+      </td>
+      <td>Defines specific options for the&nbsp;<a class="reference-link" href="#root/_help_81SGnPGMk7Xc">Geo Map</a>.</td>
     </tr>
     <tr>
       <td><code>calendar:*</code>

@@ -1,47 +1,26 @@
-import utils from "../services/utils.js";
+import { CreateChildrenResponse, SqlExecuteResponse } from "@triliumnext/commons";
+
+import bundleService from "../services/bundle.js";
 import dateNoteService from "../services/date_notes.js";
+import froca from "../services/froca.js";
+import { t } from "../services/i18n.js";
+import linkService from "../services/link.js";
 import protectedSessionHolder from "../services/protected_session_holder.js";
 import server from "../services/server.js";
+import toastService from "../services/toast.js";
+import utils from "../services/utils.js";
+import ws from "../services/ws.js";
 import appContext, { type NoteCommandData } from "./app_context.js";
 import Component from "./component.js";
-import toastService from "../services/toast.js";
-import ws from "../services/ws.js";
-import bundleService from "../services/bundle.js";
-import froca from "../services/froca.js";
-import linkService from "../services/link.js";
-import { t } from "../services/i18n.js";
-import type FNote from "../entities/fnote.js";
-
-// TODO: Move somewhere else nicer.
-export type SqlExecuteResults = string[][][];
-
-// TODO: Deduplicate with server.
-interface SqlExecuteResponse {
-    success: boolean;
-    error?: string;
-    results: SqlExecuteResults;
-}
-
-// TODO: Deduplicate with server.
-interface CreateChildrenResponse {
-    note: FNote;
-}
 
 export default class Entrypoints extends Component {
     constructor() {
         super();
-
-        if (jQuery.hotkeys) {
-            // hot keys are active also inside inputs and content editables
-            jQuery.hotkeys.options.filterInputAcceptingElements = false;
-            jQuery.hotkeys.options.filterContentEditable = false;
-            jQuery.hotkeys.options.filterTextInputs = false;
-        }
     }
 
     openDevToolsCommand() {
         if (utils.isElectron()) {
-            utils.dynamicRequire("@electron/remote").getCurrentWindow().toggleDevTools();
+            utils.dynamicRequire("@electron/remote").getCurrentWindow().webContents.toggleDevTools();
         }
     }
 
@@ -113,7 +92,9 @@ export default class Entrypoints extends Component {
             if (win.isFullScreenable()) {
                 win.setFullScreen(!win.isFullScreen());
             }
-        } // outside of electron this is handled by the browser
+        } else {
+            document.documentElement.requestFullscreen();
+        }
     }
 
     reloadFrontendAppCommand() {
@@ -129,7 +110,7 @@ export default class Entrypoints extends Component {
         if (utils.isElectron()) {
             // standard JS version does not work completely correctly in electron
             const webContents = utils.dynamicRequire("@electron/remote").getCurrentWebContents();
-            const activeIndex = parseInt(webContents.navigationHistory.getActiveIndex());
+            const activeIndex = webContents.navigationHistory.getActiveIndex();
 
             webContents.goToIndex(activeIndex - 1);
         } else {
@@ -141,7 +122,7 @@ export default class Entrypoints extends Component {
         if (utils.isElectron()) {
             // standard JS version does not work completely correctly in electron
             const webContents = utils.dynamicRequire("@electron/remote").getCurrentWebContents();
-            const activeIndex = parseInt(webContents.navigationHistory.getActiveIndex());
+            const activeIndex = webContents.navigationHistory.getActiveIndex();
 
             webContents.goToIndex(activeIndex + 1);
         } else {
@@ -179,6 +160,16 @@ export default class Entrypoints extends Component {
         this.openInWindowCommand({ notePath: "", hoistedNoteId: "root" });
     }
 
+    async openTodayNoteCommand() {
+        const todayNote = await dateNoteService.getTodayNote();
+        if (!todayNote) {
+            console.warn("Missing today note.");
+            return;
+        }
+
+        await appContext.tabManager.openInSameTab(todayNote.noteId);
+    }
+
     async runActiveNoteCommand() {
         const noteContext = appContext.tabManager.getActiveContext();
         if (!noteContext) {
@@ -197,13 +188,8 @@ export default class Entrypoints extends Component {
         } else if (note.mime.endsWith("env=backend")) {
             await server.post(`script/run/${note.noteId}`);
         } else if (note.mime === "text/x-sqlite;schema=trilium") {
-            const resp = await server.post<SqlExecuteResponse>(`sql/execute/${note.noteId}`);
-
-            if (!resp.success) {
-                toastService.showError(t("entrypoints.sql-error", { message: resp.error }));
-            }
-
-            await appContext.triggerEvent("sqlQueryResults", { ntxId: ntxId, results: resp.results });
+            const response = await server.post<SqlExecuteResponse>(`sql/execute/${note.noteId}`);
+            await appContext.triggerEvent("sqlQueryResults", { ntxId, response });
         }
 
         toastService.showMessage(t("entrypoints.note-executed"));

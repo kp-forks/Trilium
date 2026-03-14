@@ -1,18 +1,20 @@
-import protectedSessionHolder from "../services/protected_session_holder.js";
-import server from "../services/server.js";
-import utils from "../services/utils.js";
-import appContext, { type EventData, type EventListener } from "./app_context.js";
-import treeService from "../services/tree.js";
-import Component from "./component.js";
-import froca from "../services/froca.js";
-import hoistedNoteService from "../services/hoisted_note.js";
-import options from "../services/options.js";
-import type { ViewScope } from "../services/link.js";
-import type FNote from "../entities/fnote.js";
-import type TypeWidget from "../widgets/type_widgets/type_widget.js";
 import type { CKTextEditor } from "@triliumnext/ckeditor5";
 import type CodeMirror from "@triliumnext/codemirror";
+
+import type FNote from "../entities/fnote.js";
 import { closeActiveDialog } from "../services/dialog.js";
+import froca from "../services/froca.js";
+import hoistedNoteService from "../services/hoisted_note.js";
+import type { ViewScope } from "../services/link.js";
+import options from "../services/options.js";
+import protectedSessionHolder from "../services/protected_session_holder.js";
+import server from "../services/server.js";
+import treeService from "../services/tree.js";
+import utils from "../services/utils.js";
+import { ReactWrappedWidget } from "../widgets/basic_widget.js";
+import type { HeadingContext } from "../widgets/sidebar/TableOfContents.js";
+import appContext, { type EventData, type EventListener } from "./app_context.js";
+import Component from "./component.js";
 
 export interface SetNoteOpts {
     triggerSwitchEvent?: unknown;
@@ -20,6 +22,31 @@ export interface SetNoteOpts {
 }
 
 export type GetTextEditorCallback = (editor: CKTextEditor) => void;
+
+export type SaveState = "saved" | "saving" | "unsaved" | "error";
+
+export interface NoteContextDataMap {
+    toc: HeadingContext;
+    pdfPages: {
+        totalPages: number;
+        currentPage: number;
+        scrollToPage(page: number): void;
+        requestThumbnail(page: number): void;
+    };
+    pdfAttachments: {
+        attachments: PdfAttachment[];
+        downloadAttachment(filename: string): void;
+    };
+    pdfLayers: {
+        layers: PdfLayer[];
+        toggleLayer(layerId: string, visible: boolean): void;
+    };
+    saveState: {
+        state: SaveState;
+    };
+}
+
+type ContextDataKey = keyof NoteContextDataMap;
 
 class NoteContext extends Component implements EventListener<"entitiesReloaded"> {
     ntxId: string | null;
@@ -30,6 +57,13 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
     noteId?: string | null;
     parentNoteId?: string | null;
     viewScope?: ViewScope;
+
+    /**
+     * Metadata storage for UI components (e.g., table of contents, PDF page list, code outline).
+     * This allows type widgets to publish data that sidebar/toolbar components can consume.
+     * Data is automatically cleared when navigating to a different note.
+     */
+    private contextData: Map<string, unknown> = new Map();
 
     constructor(ntxId: string | null = null, hoistedNoteId: string = "root", mainNtxId: string | null = null) {
         super();
@@ -89,6 +123,22 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
         this.notePath = resolvedNotePath;
         this.viewScope = opts.viewScope;
         ({ noteId: this.noteId, parentNoteId: this.parentNoteId } = treeService.getNoteIdAndParentIdFromUrl(resolvedNotePath));
+
+        // Clear context data when switching notes and notify subscribers
+        const oldKeys = Array.from(this.contextData.keys());
+        this.contextData.clear();
+        if (oldKeys.length > 0) {
+            // Notify subscribers asynchronously to avoid blocking navigation
+            window.setTimeout(() => {
+                for (const key of oldKeys) {
+                    this.triggerEvent("contextDataChanged", {
+                        noteContext: this,
+                        key,
+                        value: undefined
+                    });
+                }
+            }, 0);
+        }
 
         this.saveToRecentNotes(resolvedNotePath);
 
@@ -321,14 +371,24 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
             return false;
         }
 
+        if (note.type === "search") {
+            return false;
+        }
+
         if (!["default", "contextual-help"].includes(this.viewScope?.viewMode ?? "")) {
             return false;
         }
 
         // Collections must always display a note list, even if no children.
-        const viewType = note.getLabelValue("viewType") ?? "grid";
-        if (!["list", "grid"].includes(viewType)) {
-            return true;
+        if (note.type === "book") {
+            if (note.isProtected && !protectedSessionHolder.isProtectedSessionAvailable()) {
+                return false;
+            }
+
+            const viewType = note.getLabelValue("viewType") ?? "grid";
+            if (!["list", "grid"].includes(viewType)) {
+                return true;
+            }
         }
 
         if (!note.hasChildren()) {
@@ -383,7 +443,7 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
      * If no content could be determined `null` is returned instead.
      */
     async getContentElement() {
-        return this.timeout<JQuery<HTMLElement>>(
+        return this.timeout<JQuery<HTMLElement> | null>(
             new Promise((resolve) =>
                 appContext.triggerCommand("executeWithContentElement", {
                     resolve,
@@ -395,7 +455,7 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
 
     async getTypeWidget() {
         return this.timeout(
-            new Promise<TypeWidget | null>((resolve) =>
+            new Promise<ReactWrappedWidget | null>((resolve) =>
                 appContext.triggerCommand("executeWithTypeWidget", {
                     resolve,
                     ntxId: this.ntxId
@@ -435,6 +495,70 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
         }
 
         return title;
+    }
+
+    /**
+     * Set metadata for this note context (e.g., table of contents, PDF pages, code outline).
+     * This data can be consumed by sidebar/toolbar components.
+     *
+     * @param key - Unique identifier for the data type (e.g., "toc", "pdfPages", "codeOutline")
+     * @param value - The data to store (will be cleared when switching notes)
+     */
+    setContextData<K extends ContextDataKey>(key: K, value: NoteContextDataMap[K]): void {
+        this.contextData.set(key, value);
+        // Trigger event so subscribers can react
+        this.triggerEvent("contextDataChanged", {
+            noteContext: this,
+            key,
+            value
+        });
+    }
+
+    /**
+     * Get metadata for this note context.
+     *
+     * @param key - The data key to retrieve
+     * @returns The stored data, or undefined if not found
+     */
+    getContextData<K extends ContextDataKey>(key: K): NoteContextDataMap[K] | undefined {
+        return this.contextData.get(key) as NoteContextDataMap[K] | undefined;
+    }
+
+    /**
+     * Check if context data exists for a given key.
+     */
+    hasContextData(key: ContextDataKey): boolean {
+        return this.contextData.has(key);
+    }
+
+    /**
+     * Clear specific context data.
+     */
+    clearContextData(key: ContextDataKey): void {
+        this.contextData.delete(key);
+        this.triggerEvent("contextDataChanged", {
+            noteContext: this,
+            key,
+            value: undefined
+        });
+    }
+}
+
+export function openInCurrentNoteContext(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDownEvent | React.PointerEvent<HTMLCanvasElement> | null, notePath: string, viewScope?: ViewScope) {
+    const ntxId = $(evt?.target as Element)
+        .closest("[data-ntx-id]")
+        .attr("data-ntx-id");
+
+    const noteContext = ntxId ? appContext.tabManager.getNoteContextById(ntxId) : appContext.tabManager.getActiveContext();
+
+    if (noteContext) {
+        noteContext.setNote(notePath, { viewScope }).then(() => {
+            if (noteContext !== appContext.tabManager.getActiveContext()) {
+                appContext.tabManager.activateNoteContext(noteContext.ntxId);
+            }
+        });
+    } else {
+        appContext.tabManager.openContextWithNote(notePath, { viewScope, activate: true });
     }
 }
 

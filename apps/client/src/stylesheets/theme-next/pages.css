@@ -52,18 +52,18 @@
     background-color: #f5f5f5;
 }
 .google-login-btn img {
-    margin-right: 10px;
+    margin-inline-end: 10px;
     width: 18px;
     height: 18px;
 }
 
-/* 
+/*
  * SEARCH PAGE
  */
 
  /* Button bar */
- .search-definition-widget .search-setting-table tbody:last-child div {
-    justify-content: flex-end !important;
+ .search-definition-widget .search-setting-table .search-actions-container {
+    justify-content: flex-end;
     gap: 8px;
  }
 
@@ -96,31 +96,23 @@
     background: var(--background) !important;
     color: var(--color) !important;
     line-height: unset;
-    cursor: help;
 }
 
 .sql-table-schemas-widget .sql-table-schemas button:hover,
 .sql-table-schemas-widget .sql-table-schemas button:active,
 .sql-table-schemas-widget .sql-table-schemas button:focus-visible {
-    --background: var(--card-background-press-color);
+    --background: var(--card-background-hover-color);
     --color: var(--main-text-color);
-}
-
-/* Tooltip */
-
-.tooltip .table-schema {
-    font-family: var(--monospace-font-family);
-    font-size: .85em;
-}
-
-/* Data type */
-.tooltip .table-schema td:nth-child(2) {
-    color: var(--muted-text-color);
 }
 
 /*
  * NOTE MAP
  */
+
+.note-detail-note-map .fixnodes-type-switcher .tn-tool-button,
+.note-map-widget .fixnodes-type-switcher .tn-tool-button {
+    padding: unset;
+}
 
  .note-detail-note-map .fixnodes-type-switcher .tn-tool-button.toggled {
     color: var(--tab-close-button-hover-background);
@@ -131,9 +123,9 @@
  */
 
 /* The container */
-div.note-detail-empty {
-    max-width: 70%;
-    margin: 50px auto;
+
+.note-split.empty-note div.note-detail {
+    margin-inline: auto;
 }
 
 /* The search results list */
@@ -151,14 +143,23 @@ div.note-detail-empty {
 /*
  * OPTIONS PAGES
  */
- 
+
  :root {
     --options-card-min-width: 500px;
     --options-card-max-width: 900px;
     --options-card-padding: 17px;
-    --options-title-font-size: 1rem;
+    --options-title-font-size: .75rem;
     --options-title-offset: 13px;
 }
+
+.note-split.options {
+    --preferred-max-content-width: var(--options-card-max-width);
+}
+
+.note-split.options .collection-properties {
+    visibility: hidden;
+}
+
 /* Create a gap at the top of the option pages */
 .note-detail-content-widget-content.options>*:first-child {
     margin-top: var(--options-first-item-top-margin, 1em);
@@ -180,16 +181,22 @@ div.note-detail-empty {
     height: 0;
 }
 
+body.experimental-feature-new-layout .note-detail-content-widget-content.options {
+    padding-inline: 25px;
+}
+
 .options-section:not(.tn-no-card) {
-    margin: auto;
-    min-width: var(--options-card-min-width);
-    max-width: var(--options-card-max-width);
-    border-radius: 12px;
-    border: 1px solid var(--card-border-color) !important;
+    margin-bottom: calc(var(--options-title-offset) + 26px) !important;
     box-shadow: var(--card-box-shadow);
+    border: 1px solid var(--card-border-color) !important;
+    border-radius: 8px;
     background: var(--card-background-color);
     padding: var(--options-card-padding);
-    margin-bottom: calc(var(--options-title-offset) + 26px) !important;
+}
+
+body.desktop .options-section:not(.tn-no-card) {
+    min-width: var(--options-card-min-width);
+    max-width: var(--options-card-max-width);
 }
 
 .note-detail-content-widget-content.options {
@@ -198,13 +205,20 @@ div.note-detail-empty {
     padding-bottom: var(--default-padding);
 }
 
+.options-section:not(.tn-no-card) h4,
+.options-section:not(.tn-no-card) h5 {
+    text-transform: uppercase;
+    letter-spacing: .4pt;
+}
+
+
 .options-section:not(.tn-no-card) h4 {
     font-size: var(--options-title-font-size);
-    font-weight: bold;
+    font-weight: 600;
     color: var(--launcher-pane-text-color);
     margin-top: calc(-1 * var(--options-card-padding) - var(--options-title-font-size) - var(--options-title-offset)) !important;
     margin-bottom: calc(var(--options-title-offset) + var(--options-card-padding)) !important;
-    margin-left: calc(-1 * var(--options-card-padding));
+    margin-inline-start: calc(-1 * var(--options-card-padding));
 }
 
 .options-section:not(.tn-no-card) h5 {
@@ -221,8 +235,8 @@ div.note-detail-empty {
 .options-section hr {
     --bs-border-width: 2px;
 
-    margin-left: calc(var(--options-card-padding) * -1);
-    margin-right: calc(var(--options-card-padding) * -1);
+    margin-inline-start: calc(var(--options-card-padding) * -1);
+    margin-inline-end: calc(var(--options-card-padding) * -1);
     opacity: 1;
     color: var(--root-background);
 }
@@ -231,11 +245,6 @@ div.note-detail-empty {
 .options-section h4 + p:last-child,
 .options-section .existing-anonymized-databases {
     margin-bottom: 0;
-}
-
-.options-section .options-mime-types {
-    padding: 0;
-    margin: 0;
 }
 
 .options-section .form-group {
@@ -254,13 +263,6 @@ div.note-detail-empty {
 
 .options-section label:not(.tn-checkbox):not(.tn-radio) {
     margin-bottom: 6px;
-}
-
-.options-section .alert {
-    margin-bottom: 8px;
-    background: var(--alert-bar-background) !important;
-    border-radius: 8px;
-    font-size: .85em;
 }
 
 nav.options-section-tabs {

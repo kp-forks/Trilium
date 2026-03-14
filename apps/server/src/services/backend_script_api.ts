@@ -7,7 +7,7 @@ import dateNoteService from "./date_notes.js";
 import treeService from "./tree.js";
 import config from "./config.js";
 import axios from "axios";
-import dayjs from "dayjs";
+import { dayjs } from "@triliumnext/commons";
 import xml2js from "xml2js";
 import * as cheerio from "cheerio";
 import cloningService from "./cloning.js";
@@ -23,6 +23,7 @@ import exportService from "./export/zip.js";
 import syncMutex from "./sync_mutex.js";
 import backupService from "./backup.js";
 import optionsService from "./options.js";
+import { formatLogMessage } from "@triliumnext/commons";
 import type BNote from "../becca/entities/bnote.js";
 import type AbstractBeccaEntity from "../becca/entities/abstract_becca_entity.js";
 import type BBranch from "../becca/entities/bbranch.js";
@@ -35,17 +36,6 @@ import type { AttributeRow } from "@triliumnext/commons";
 import type Becca from "../becca/becca-interface.js";
 import type { NoteParams } from "./note-interface.js";
 import type { ApiParams } from "./backend_script_api_interface.js";
-
-// Dayjs plugins
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import isBetween from "dayjs/plugin/isBetween";
-import advancedFormat from "dayjs/plugin/advancedFormat.js";
-
-dayjs.extend(isSameOrBefore);
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isBetween);
-dayjs.extend(advancedFormat);
 
 /**
  * A whole number
@@ -221,7 +211,7 @@ export interface Api {
     /**
      * Log given message to trilium logs and log pane in UI
      */
-    log(message: string): void;
+    log(message: string | object): void;
 
     /**
      * Returns root note of the calendar.
@@ -413,6 +403,17 @@ export interface Api {
     backupNow(backupName: string): Promise<string>;
 
     /**
+     * Enables the complete duplication of the specified original note and all its children into the specified parent note.
+     * The new note will be named the same as the original, with (Dup) added to the end of it.
+     *
+     * @param origNoteId - the noteId for the original note to be duplicated
+     * @param newParentNoteId - the noteId for the parent note where the duplication is to be placed.
+     *
+     * @returns the note and the branch of the newly created note.
+     */
+    duplicateSubtree(origNoteId: string, newParentNoteId: string): { note: BNote; branch: BBranch; }
+
+    /**
      * This object contains "at your risk" and "no BC guarantees" objects for advanced use cases.
      */
     __private: {
@@ -545,7 +546,8 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     this.logMessages = {};
     this.logSpacedUpdates = {};
 
-    this.log = (message) => {
+    this.log = (rawMessage) => {
+        const message = formatLogMessage(rawMessage);
         log.info(message);
 
         if (!this.startNote) {
@@ -703,6 +705,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
 
     this.runOutsideOfSync = syncMutex.doExclusively;
     this.backupNow = backupService.backupNow;
+    this.duplicateSubtree = noteService.duplicateSubtree;
 
     this.__private = {
         becca

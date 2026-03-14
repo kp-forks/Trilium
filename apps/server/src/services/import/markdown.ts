@@ -1,14 +1,17 @@
-"use strict";
 
-import { parse, Renderer, use, type Tokens } from "marked";
-import htmlSanitizer from "../html_sanitizer.js";
-import importUtils from "./utils.js";
+
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO } from "@triliumnext/commons";
-import { ADMONITION_TYPE_MAPPINGS } from "../export/markdown.js";
-import utils from "../utils.js";
 import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
-import wikiLinkTransclusion from "./markdown/wikilink_transclusion.js";
+import { parse, Renderer, type Tokens,use } from "marked";
+
+import { ADMONITION_TYPE_MAPPINGS } from "../export/markdown.js";
+import htmlSanitizer from "../html_sanitizer.js";
+import utils from "../utils.js";
 import wikiLinkInternalLink from "./markdown/wikilink_internal_link.js";
+import wikiLinkTransclusion from "./markdown/wikilink_transclusion.js";
+import importUtils from "./utils.js";
+
+const escape = utils.escapeHtml;
 
 /**
  * Keep renderer code up to date with https://github.com/markedjs/marked/blob/master/src/Renderer.ts.
@@ -34,7 +37,7 @@ class CustomMarkdownRenderer extends Renderer {
         }
 
         // Escape the HTML.
-        text = utils.escapeHtml(text);
+        text = escape(text);
 
         // Unescape &quot
         text = text.replace(/&quot;/g, '"');
@@ -57,16 +60,16 @@ class CustomMarkdownRenderer extends Renderer {
     }
 
     override checkbox({ checked }: Tokens.Checkbox): string {
-        return '<input type="checkbox"'
-            + (checked ? 'checked="checked" ' : '')
-            + 'disabled="disabled">';
+        return `<input type="checkbox"${
+            checked ? 'checked="checked" ' : ''
+        }disabled="disabled">`;
     }
 
     override listitem(item: Tokens.ListItem): string {
         // Handle todo-list in the CKEditor format.
         if (item.task) {
             let itemBody = '';
-            const checkbox = this.checkbox({ checked: !!item.checked });
+            const checkbox = this.checkbox({ checked: !!item.checked, raw: "- [ ]", type: "checkbox" });
             if (item.loose) {
                 if (item.tokens[0]?.type === 'paragraph') {
                     item.tokens[0].text = checkbox + item.tokens[0].text;
@@ -86,7 +89,7 @@ class CustomMarkdownRenderer extends Renderer {
                 itemBody += checkbox;
             }
 
-            itemBody += `<span class="todo-list__label__description">${this.parser.parse(item.tokens, !!item.loose)}</span>`;
+            itemBody += `<span class="todo-list__label__description">${this.parser.parse(item.tokens.filter(t => t.type !== "checkbox"))}</span>`;
             return `<li><label class="todo-list__label">${itemBody}</label></li>`;
         }
 
@@ -117,6 +120,10 @@ class CustomMarkdownRenderer extends Renderer {
         return `<blockquote>${body}</blockquote>`;
     }
 
+    codespan({ text }: Tokens.Codespan): string {
+        return `<code spellcheck="false">${escape(text)}</code>`;
+    }
+
 }
 
 function renderToHtml(content: string, title: string) {
@@ -136,7 +143,7 @@ function renderToHtml(content: string, title: string) {
 
     let html = parse(processedText, {
         async: false,
-        renderer: renderer
+        renderer
     }) as string;
 
     // After rendering, replace placeholders back with the formula HTML

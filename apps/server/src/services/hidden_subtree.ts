@@ -1,25 +1,26 @@
-import BAttribute from "../becca/entities/battribute.js";
-import BBranch from "../becca/entities/bbranch.js";
 import type { HiddenSubtreeItem } from "@triliumnext/commons";
+import { t } from "i18next";
 
 import becca from "../becca/becca.js";
-import noteService from "./notes.js";
-import log from "./log.js";
-import migrationService from "./migration.js";
-import { t } from "i18next";
-import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
+import BAttribute from "../becca/entities/battribute.js";
+import BBranch from "../becca/entities/bbranch.js";
+import BNote from "../becca/entities/bnote.js";
 import buildLaunchBarConfig from "./hidden_subtree_launcherbar.js";
 import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
+import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
+import log from "./log.js";
+import migrationService from "./migration.js";
+import noteService from "./notes.js";
 
-const LBTPL_ROOT = "_lbTplRoot";
-const LBTPL_BASE = "_lbTplBase";
-const LBTPL_HEADER = "_lbTplHeader";
-const LBTPL_NOTE_LAUNCHER = "_lbTplLauncherNote";
-const LBTPL_WIDGET = "_lbTplLauncherWidget";
-const LBTPL_COMMAND = "_lbTplLauncherCommand";
-const LBTPL_SCRIPT = "_lbTplLauncherScript";
-const LBTPL_SPACER = "_lbTplSpacer";
-const LBTPL_CUSTOM_WIDGET = "_lbTplCustomWidget";
+export const LBTPL_ROOT = "_lbTplRoot";
+export const LBTPL_BASE = "_lbTplBase";
+export const LBTPL_HEADER = "_lbTplHeader";
+export const LBTPL_NOTE_LAUNCHER = "_lbTplLauncherNote";
+export const LBTPL_WIDGET = "_lbTplLauncherWidget";
+export const LBTPL_COMMAND = "_lbTplLauncherCommand";
+export const LBTPL_SCRIPT = "_lbTplLauncherScript";
+export const LBTPL_SPACER = "_lbTplSpacer";
+export const LBTPL_CUSTOM_WIDGET = "_lbTplCustomWidget";
 
 /*
  * Hidden subtree is generated as a "predictable structure" which means that it avoids generating random IDs to always
@@ -40,8 +41,8 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
         // we want to keep the hidden subtree always last, otherwise there will be problems with e.g., keyboard navigation
         // over tree when it's in the middle
         notePosition: 999_999_999,
+        enforceAttributes: true,
         attributes: [
-            { type: "label", name: "excludeFromNoteMap", isInheritable: true },
             { type: "label", name: "docName", value: "hidden" }
         ],
         children: [
@@ -246,7 +247,7 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { id: "_optionsEtapi", title: t("hidden-subtree.etapi-title"), type: "contentWidget", icon: "bx-extension" },
                     { id: "_optionsBackup", title: t("hidden-subtree.backup-title"), type: "contentWidget", icon: "bx-data" },
                     { id: "_optionsSync", title: t("hidden-subtree.sync-title"), type: "contentWidget", icon: "bx-wifi" },
-                    { id: "_optionsAi", title: t("hidden-subtree.ai-llm-title"), type: "contentWidget", icon: "bx-bot" },
+                    { id: "_optionsAi", title: "AI Chat", type: "contentWidget", enforceDeleted: true },
                     { id: "_optionsOther", title: t("hidden-subtree.other"), type: "contentWidget", icon: "bx-dots-horizontal" },
                     { id: "_optionsLocalization", title: t("hidden-subtree.localization"), type: "contentWidget", icon: "bx-world" },
                     { id: "_optionsAdvanced", title: t("hidden-subtree.advanced-title"), type: "contentWidget" }
@@ -341,44 +342,61 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
         throw new Error(`ID has to start with underscore, given '${item.id}'`);
     }
 
-    let note = becca.notes[item.id];
-    let branch;
+    let note = becca.notes[item.id] as BNote | undefined;
+    let branch: BBranch | undefined;
+
+    if (item.enforceDeleted) {
+        note?.deleteNote();
+        return;
+    }
 
     if (!note) {
+        // Missing item, add it.
         ({ note, branch } = noteService.createNewNote({
             noteId: item.id,
             title: item.title,
             type: item.type,
-            parentNoteId: parentNoteId,
-            content: "",
+            parentNoteId,
+            content: item.content ?? "",
             ignoreForbiddenParents: true
         }));
     } else {
+        // Existing item, check if it's in the right state.
         branch = note.getParentBranches().find((branch) => branch.parentNoteId === parentNoteId);
 
-        // If the note exists but doesn't have a branch in the expected parent,
-        // create the missing branch to ensure it's in the correct location
-        if (!branch) {
-            branch = new BBranch({
-                noteId: item.id,
-                parentNoteId: parentNoteId,
-                notePosition: item.notePosition !== undefined ? item.notePosition : undefined,
-                isExpanded: item.isExpanded !== undefined ? item.isExpanded : false
-            }).save();
+        if (item.content && note.getContent() !== item.content) {
+            log.info(`Updating content of ${item.id}.`);
+            note.setContent(item.content);
         }
 
-        // Clean up any branches that shouldn't exist according to the meta definition
-        // For hidden subtree notes, we want to ensure they only exist in their designated locations
-        const expectedParents = getExpectedParentIds(item.id, hiddenSubtreeDefinition);
-        const currentBranches = note.getParentBranches();
+        if (item.enforceBranches || item.id.startsWith("_help")) {
+            // Clean up any branches that shouldn't exist according to the meta definition
+            // For hidden subtree notes, we want to ensure they only exist in their designated locations
 
-        for (const currentBranch of currentBranches) {
-            // Only delete branches that are not in the expected locations
-            // and are within the hidden subtree structure (avoid touching user-created clones)
-            if (!expectedParents.includes(currentBranch.parentNoteId) &&
-                isWithinHiddenSubtree(currentBranch.parentNoteId)) {
-                log.info(`Removing unexpected branch for note '${item.id}' from parent '${currentBranch.parentNoteId}'`);
-                currentBranch.markAsDeleted();
+            // If the note exists but doesn't have a branch in the expected parent,
+            // create the missing branch to ensure it's in the correct location
+            if (!branch) {
+                log.info(`Creating missing branch for note ${item.id} under parent ${parentNoteId}.`);
+                branch = new BBranch({
+                    noteId: item.id,
+                    parentNoteId,
+                    notePosition: item.notePosition !== undefined ? item.notePosition : undefined,
+                    isExpanded: item.isExpanded !== undefined ? item.isExpanded : false
+                }).save();
+            }
+
+            // Remove any branches that are not in the expected parent.
+            const expectedParents = getExpectedParentIds(item.id, hiddenSubtreeDefinition);
+            const currentBranches = note.getParentBranches();
+
+            for (const currentBranch of currentBranches) {
+                // Only delete branches that are not in the expected locations
+                // and are within the hidden subtree structure (avoid touching user-created clones)
+                if (!expectedParents.includes(currentBranch.parentNoteId) &&
+                    isWithinHiddenSubtree(currentBranch.parentNoteId)) {
+                    log.info(`Removing unexpected branch for note '${item.id}' from parent '${currentBranch.parentNoteId}'`);
+                    currentBranch.markAsDeleted();
+                }
             }
         }
     }
@@ -406,12 +424,13 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
         } else if (item.targetNoteId) {
             attrs.push({ type: "relation", name: "template", value: LBTPL_NOTE_LAUNCHER });
             attrs.push({ type: "relation", name: "target", value: item.targetNoteId });
-        } else {
+        } else if (!item.enforceDeleted) {
             throw new Error(`No action defined for launcher ${JSON.stringify(item)}`);
         }
     }
 
-    if ((extraOpts.restoreNames || note.noteId.startsWith("_help")) && note.title !== item.title) {
+    const shouldRestoreNames = extraOpts.restoreNames || note.noteId.startsWith("_help") || item.id.startsWith("_lb") || item.id.startsWith("_template");
+    if (shouldRestoreNames && note.title !== item.title) {
         note.title = item.title;
         note.save();
     }
@@ -436,8 +455,28 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
         }
     }
 
+    // Enforce attribute structure if needed.
+    if (item.enforceAttributes) {
+        for (const attribute of note.getAttributes()) {
+            // Remove unwanted attributes.
+            const attrDef = attrs.find(a => a.name === attribute.name);
+            if (!attrDef) {
+                console.log(`Removing unwanted attribute ${attribute.name} where expected attrs are ${attrs.map(a => a.name).join(", ")}`);
+                attribute.markAsDeleted();
+                continue;
+            }
+
+            // Ensure value is consistent.
+            if (attribute.value !== attrDef.value || attribute.type !== attrDef.type) {
+                attribute.type = attrDef.type;
+                attribute.value = attrDef.value ?? "";
+                attribute.save();
+            }
+        }
+    }
+
     for (const attr of attrs) {
-        const attrId = note.noteId + "_" + attr.type.charAt(0) + attr.name;
+        const attrId = `${note.noteId}_${attr.type.charAt(0)}${attr.name}`;
 
         const existingAttribute = note.getAttributes().find((attr) => attr.attributeId === attrId);
 
@@ -452,8 +491,8 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             }).save();
         } else if (attr.name === "docName" || (existingAttribute.noteId.startsWith("_help") && attr.name === "iconClass")) {
             if (existingAttribute.value !== attr.value) {
+                log.info(`Updating attribute ${attrId} from "${existingAttribute.value}" to "${attr.value}"`);
                 existingAttribute.value = attr.value ?? "";
-                console.log("Updating attribute ", attrId);
                 existingAttribute.save();
             }
         }
@@ -465,13 +504,5 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
 }
 
 export default {
-    checkHiddenSubtree,
-    LBTPL_ROOT,
-    LBTPL_BASE,
-    LBTPL_COMMAND,
-    LBTPL_NOTE_LAUNCHER,
-    LBTPL_WIDGET,
-    LBTPL_SCRIPT,
-    LBTPL_SPACER,
-    LBTPL_CUSTOM_WIDGET
+    checkHiddenSubtree
 };

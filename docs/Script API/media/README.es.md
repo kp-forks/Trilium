@@ -14,7 +14,7 @@ Vea estas [capturas de pantalla](https://triliumnext.github.io/Docs/Wiki/screens
 
 ### ¿Cómo migrar desde Trilium?
 
-No hay pasos de migración especiales para migrar de una instancia de zadam/Trilium a una instancia de TriliumNext/Notes. Simplemente actualice su instancia de Trilium a la última versión e [instale TriliumNext/Notes como de costumbre](#-Instalación)
+No hay pasos de migración especiales para migrar de una instancia de zadam/Trilium a una instancia de TriliumNext/Trilium. Simplemente actualice su instancia de Trilium a la última versión e [instale TriliumNext/Trilium como de costumbre](#-Instalación)
 
 ## 💬 Discuta con nosotros
 
@@ -22,7 +22,7 @@ Siéntase libre de unirse a nuestras conversaciones oficiales. ¡Nos encantaría
 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (Para discusiones síncronas)
   - La sala `General` es replicada a [XMPP](xmpp:discuss@trilium.thisgreat.party?join)
-- [Discusiones de GitHub](https://github.com/TriliumNext/Notes/discussions) (Para discusiones asíncronas)
+- [Discusiones de GitHub](https://github.com/TriliumNext/Trilium/discussions) (Para discusiones asíncronas)
 - [Wiki](https://triliumnext.github.io/Docs/) (Para preguntas frecuentes y guías de usuario)
 
 ## 🎁 Características
@@ -58,7 +58,7 @@ Siéntase libre de unirse a nuestras conversaciones oficiales. ¡Nos encantaría
 
 Para usar TriliumNext en su máquina de escritorio (Linux, MacOS y Windows) tiene algunas opciones:
 
-- Descargue la versión binaria para su plataforma desde la [página de lanzamientos](https://github.com/TriliumNext/Notes/releases/latest), descomprima el paquete y ejecute el ejecutable `trilium`.
+- Descargue la versión binaria para su plataforma desde la [página de lanzamientos](https://github.com/TriliumNext/Trilium/releases/latest), descomprima el paquete y ejecute el ejecutable `trilium`.
 - Acceda a TriliumNext a través de la interfaz web de una instalación de servidor (ver más abajo)
   - Actualmente solo las últimas versiones de Chrome y Firefox son compatibles (y están probadas).
 - (Próximamente) TriliumNext también se proporcionará como un Flatpak
@@ -68,11 +68,11 @@ Para usar TriliumNext en su máquina de escritorio (Linux, MacOS y Windows) tien
 Para usar TriliumNext en un dispositivo móvil:
 
 - Utilice un navegador web móvil para acceder a la interfaz móvil de una instalación de servidor (ver más abajo)
-- El uso de una aplicación móvil aún no está soportado ([vea aquí](https://github.com/TriliumNext/Notes/issues/72)) para seguir las mejoras móviles.
+- El uso de una aplicación móvil aún no está soportado ([vea aquí](https://github.com/TriliumNext/Trilium/issues/72)) para seguir las mejoras móviles.
 
 ### Servidor
 
-Para instalar TriliumNext en su servidor (incluyendo vía Docker desde [Dockerhub](https://hub.docker.com/r/triliumnext/notes)) siga la [documentación de instalación de servidor](https://triliumnext.github.io/Docs/Wiki/server-installation).
+Para instalar TriliumNext en su servidor (incluyendo vía Docker desde [Dockerhub](https://hub.docker.com/r/triliumnext/trilium)) siga la [documentación de instalación de servidor](https://triliumnext.github.io/Docs/Wiki/server-installation).
 
 ## 📝 Documentación
 

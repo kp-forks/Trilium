@@ -1,6 +1,7 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { Application, NextFunction,Request, Response } from "express";
 import supertest from "supertest";
-import type { Application, Request, Response, NextFunction } from "express";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { safeExtractMessageAndStackFromError } from "../services/utils.js";
 
 let app: Application;
@@ -9,6 +10,7 @@ describe("Share API test", () => {
     let cannotSetHeadersCount = 0;
 
     beforeAll(async () => {
+        vi.useFakeTimers();
         const buildApp = (await import("../app.js")).default;
         app = await buildApp();
         app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
@@ -19,6 +21,10 @@ describe("Share API test", () => {
 
             next();
         });
+    });
+
+    afterAll(() => {
+        vi.useRealTimers();
     });
 
     beforeEach(() => {

@@ -1,4 +1,13 @@
 # FAQ
+## Inspiration for the name “Trilium”
+
+> Naming software is hard. I lived in Ontario when I first started the project and Trillium (the flower) is sort of a provincial logo, many institutions in Ontario are named "Trillium \[something\]". So I kept hearing/reading it almost everyday, I liked the sound of it and its nature motif, so I just reused it.
+> 
+> _– Zadam (original Trilium maintainer)_
+
+> [!NOTE]
+> Despite the fact that the Trillium flower has two “l"s, the Trilium application only has one.
+
 ## macOS support
 
 Originally, Trilium Notes considered the macOS build unsupported. TriliumNext commits to make the experience on macOS as good as possible.
@@ -23,7 +32,7 @@ Common request is to allow multiple users collaborate, share notes etc. So far I
 
 This is normally not supported - one Trilium process can open only a single instance of a [database](Advanced%20Usage/Database.md). However, you can run two Trilium processes (from one installation), each connected to a separate document. To achieve this, you need to set a location for the [data directory](Installation%20%26%20Setup/Data%20directory.md) in the `TRILIUM_DATA_DIR` environment variable and separate port on `TRILIUM_PORT` environment variable. How to do that depends on the platform, in Unix-based systems you can achieve that by running command such as this:
 
-```
+```sh
 TRILIUM_DATA_DIR=/home/me/path/to/data/dir TRILIUM_PORT=12345 trilium 
 ```
 
@@ -55,3 +64,27 @@ More detailed answer:
 *   Trilium allows storing note [attributes](Advanced%20Usage/Attributes.md) which could be represented in extended user attributes but their support differs greatly among different filesystems / operating systems
 *   Trilium makes links / relations between different notes which can be quickly retrieved / navigated (e.g. for [note map](Advanced%20Usage/Note%20Map%20\(Link%20map%2C%20Tree%20map\).md)). There's no such support in file systems which means these would have to be stored in some kind of side-car files (mini-databases).
 *   Filesystems are generally not transactional. While this is not completely required for a note-taking application, having transactions make it way easier to keep notes and their metadata in predictable and consistent state.
+
+## Search-related Questions
+
+### Why does search sometimes find results with typos?
+
+Trilium uses a progressive search strategy that includes fuzzy matching when exact matches return fewer than 5 results. This finds notes despite minor typos in your search query. You can use fuzzy search operators (`~=` for fuzzy exact match and `~*` for fuzzy contains). See the <a class="reference-link" href="Basic%20Concepts%20and%20Features/Navigation/Search.md">Search</a> documentation for details.
+
+### How can I search for notes when I'm not sure of the exact spelling?
+
+Use the fuzzy search operators:
+
+*   `#title ~= "projct"` - finds notes with titles like "project" despite the typo
+*   `note.content ~* "algoritm"` - finds content containing "algorithm" or similar words
+
+### Why do some search results appear before others with lower scores?
+
+Trilium places exact matches before fuzzy matches. When you search for "project", notes containing exactly "project" appear before notes with variations like "projects" or "projection", regardless of other scoring factors.
+
+### How can I make my searches faster?
+
+1.  Use the "Fast search" option to search only titles and attributes (not content)
+2.  Limit search scope using the "Ancestor" field
+3.  Set a result limit to prevent loading too many results
+4.  For large databases, consider archiving old notes to reduce search scope

@@ -15,7 +15,7 @@ import eraseService from "../services/erase.js";
 import sanitizeAttributeName from "./sanitize_attribute_name.js";
 import noteTypesService from "../services/note_types.js";
 import type { BranchRow } from "@triliumnext/commons";
-import type { EntityChange } from "./entity_changes_interface.js";
+import type { EntityChange } from "@triliumnext/commons";
 import becca_loader from "../becca/becca_loader.js";
 const noteTypes = noteTypesService.getNoteTypeNames();
 
@@ -953,12 +953,14 @@ function runEntityChangesChecks() {
     consistencyChecks.findEntityChangeIssues();
 }
 
-sqlInit.dbReady.then(() => {
-    setInterval(cls.wrap(runPeriodicChecks), 60 * 60 * 1000);
+export function startConsistencyChecks() {
+    sqlInit.dbReady.then(() => {
+        setInterval(cls.wrap(runPeriodicChecks), 60 * 60 * 1000);
 
-    // kickoff checks soon after startup (to not block the initial load)
-    setTimeout(cls.wrap(runPeriodicChecks), 4 * 1000);
-});
+        // kickoff checks soon after startup (to not block the initial load)
+        setTimeout(cls.wrap(runPeriodicChecks), 4 * 1000);
+    });
+}
 
 export default {
     runOnDemandChecks,

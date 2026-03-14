@@ -6,7 +6,7 @@ This document outlines the steps required to upgrade Trilium to a new release ve
 Trilium does not support built-in automatic upgrades; all updates must be performed manually. The upgrade process varies depending on the installation method:
 
 *   [**Docker Server Installation**](Server%20Installation/1.%20Installing%20the%20server/Using%20Docker.md): Pull the new image and restart the container.
-*   **Other Installations**: Download the latest version from the [release page](https://github.com/TriliumNext/Notes/releases/latest) and replace the existing application files.
+*   **Other Installations**: Download the latest version from the [release page](https://github.com/TriliumNext/Trilium/releases/latest) and replace the existing application files.
 
 ## Database Compatibility and Migration
 

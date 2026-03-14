@@ -1,24 +1,12 @@
-"use strict";
-
-import sql from "../../services/sql.js";
-import protectedSessionService from "../../services/protected_session.js";
-import noteService from "../../services/notes.js";
-import becca from "../../becca/becca.js";
+import type { RecentChangeRow } from "@triliumnext/commons";
 import type { Request } from "express";
 
-interface RecentChangeRow {
-    noteId: string;
-    current_isDeleted: boolean;
-    current_deleteId: string;
-    current_title: string;
-    current_isProtected: boolean;
-    title: string;
-    utcDate: string;
-    date: string;
-    canBeUndeleted?: boolean;
-}
+import becca from "../../becca/becca.js";
+import noteService from "../../services/notes.js";
+import protectedSessionService from "../../services/protected_session.js";
+import sql from "../../services/sql.js";
 
-function getRecentChanges(req: Request) {
+function getRecentChanges(req: Request<{ ancestorNoteId: string }>) {
     const { ancestorNoteId } = req.params;
 
     let recentChanges: RecentChangeRow[] = [];
