@@ -54,6 +54,10 @@
                 "eslint-plugin-svelte"
             ],
             "groupName": "svelte monorepo"
+        },
+        {
+            "matchPackageNames": "@univerjs/**",
+            "groupName": "univer monorepo"
         }
     ]
 }
