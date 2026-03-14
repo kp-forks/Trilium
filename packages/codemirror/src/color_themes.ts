@@ -38,14 +38,14 @@ const themes: ThemeDefinition[] = [
         load: async () => (await import("@fsegurai/codemirror-theme-basic-light")).basicLight
     },
     {
-        id: "catppuccin-latte",
-        name: "Catppuccin Latte",
-        load: async () => (await import("@catppuccin/codemirror")).catppuccinLatte
-    },
-    {
         id: "catppuccin-frappe",
         name: "Catppuccin Frappé",
         load: async () => (await import("@catppuccin/codemirror")).catppuccinFrappe
+    },
+    {
+        id: "catppuccin-latte",
+        name: "Catppuccin Latte",
+        load: async () => (await import("@catppuccin/codemirror")).catppuccinLatte
     },
     {
         id: "catppuccin-macchiato",
