@@ -1,8 +1,9 @@
+import { t } from "../../../services/i18n";
 import type { NoteContentTemplate } from "../../layout/NoteContentSwitcher";
 
 const SAMPLE_DIAGRAMS: NoteContentTemplate[] = [
     {
-        name: "Flowchart",
+        name: t("mermaid.sample_flowchart"),
         content: `\
 flowchart TD
     A[Christmas] -->|Get money| B(Go shopping)
@@ -13,7 +14,7 @@ flowchart TD
 `
     },
     {
-        name: "Class",
+        name: t("mermaid.sample_class"),
         content: `\
 classDiagram
     Animal <|-- Duck
@@ -39,7 +40,7 @@ classDiagram
 `
     },
     {
-        name: "Sequence",
+        name: t("mermaid.sample_sequence"),
         content: `\
 sequenceDiagram
     Alice->>+John: Hello John, how are you?
@@ -49,7 +50,7 @@ sequenceDiagram
 `
     },
     {
-        name: "Entity Relationship",
+        name: t("mermaid.sample_entity_relationship"),
         content: `\
 erDiagram
     CUSTOMER ||--o{ ORDER : places
@@ -77,7 +78,7 @@ erDiagram
 `
     },
     {
-        name: "State",
+        name: t("mermaid.sample_state"),
         content: `\
 stateDiagram-v2
     [*] --> Still
@@ -89,7 +90,7 @@ stateDiagram-v2
 `
     },
     {
-        name: "Mindmap",
+        name: t("mermaid.sample_mindmap"),
         content: `\
 mindmap
   root((mindmap))
@@ -111,7 +112,7 @@ mindmap
 `
     },
     {
-        name: "Architecture",
+        name: t("mermaid.sample_architecture"),
         content: `\
 architecture-beta
     group api(cloud)[API]
@@ -127,7 +128,7 @@ architecture-beta
 `
     },
     {
-        name: "Block",
+        name: t("mermaid.sample_block"),
         content: `\
 block-beta
 columns 1
@@ -146,7 +147,7 @@ columns 1
 `
     },
     {
-        name: "C4",
+        name: t("mermaid.sample_c4"),
         content: `\
 C4Context
     title System Context diagram for Internet Banking System
@@ -184,7 +185,7 @@ C4Context
 `
     },
     {
-        name: "Gantt",
+        name: t("mermaid.sample_gantt"),
         content: `\
 gantt
     title A Gantt Diagram
@@ -198,7 +199,7 @@ gantt
 `
     },
     {
-        name: "Git",
+        name: t("mermaid.sample_git"),
         content: `\
 gitGraph
     commit
@@ -218,7 +219,7 @@ gitGraph
 `
     },
     {
-        name: "Kanban",
+        name: t("mermaid.sample_kanban"),
         content: `\
 ---
 config:
@@ -246,7 +247,7 @@ kanban
 `
     },
     {
-        name: "Packet",
+        name: t("mermaid.sample_packet"),
         content: `\
 ---
 title: "TCP Packet"
@@ -272,7 +273,7 @@ packet
         `
     },
     {
-        name: "Pie",
+        name: t("mermaid.sample_pie"),
         content: `\
 pie title Pets adopted by volunteers
     "Dogs" : 386
@@ -281,7 +282,7 @@ pie title Pets adopted by volunteers
 `
     },
     {
-        name: "Quadrant",
+        name: t("mermaid.sample_quadrant"),
         content: `\
 quadrantChart
     title Reach and engagement of campaigns
@@ -300,7 +301,7 @@ quadrantChart
 `
     },
     {
-        name: "Radar",
+        name: t("mermaid.sample_radar"),
         content: `\
 ---
 title: "Grades"
@@ -316,7 +317,7 @@ radar-beta
         `
     },
     {
-        name: "Requirement",
+        name: t("mermaid.sample_requirement"),
         content: `\
 requirementDiagram
 
@@ -335,7 +336,7 @@ requirementDiagram
 `
     },
     {
-        name: "Sankey",
+        name: t("mermaid.sample_sankey"),
         content: `\
 ---
 config:
@@ -415,7 +416,7 @@ Wind,Electricity grid,289.366
 `
     },
     {
-        name: "Timeline",
+        name: t("mermaid.sample_timeline"),
         content: `\
 timeline
     title History of Social Media Platform
@@ -427,7 +428,7 @@ timeline
         `
     },
     {
-        name: "Treemap",
+        name: t("mermaid.sample_treemap"),
         content: `\
 treemap-beta
 "Section 1"
@@ -440,7 +441,7 @@ treemap-beta
 `
     },
     {
-        name: "User Journey",
+        name: t("mermaid.sample_user_journey"),
         content: `\
 journey
     title My working day
@@ -454,7 +455,7 @@ journey
 `
     },
     {
-        name: "XY",
+        name: t("mermaid.sample_xy"),
         content: `\
 xychart-beta
     title "Sales Revenue"
