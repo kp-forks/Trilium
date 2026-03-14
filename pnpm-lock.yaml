@@ -312,8 +312,8 @@ importers:
         specifier: 0.16.38
         version: 0.16.38
       knockout:
-        specifier: 3.5.1
-        version: 3.5.1
+        specifier: 3.5.2
+        version: 3.5.2
       leaflet:
         specifier: 1.9.4
         version: 1.9.4
@@ -11475,8 +11475,8 @@ packages:
     resolution: {integrity: sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==}
     engines: {node: '>= 8'}
 
-  knockout@3.5.1:
-    resolution: {integrity: sha512-wRJ9I4az0QcsH7A4v4l0enUpkS++MBx0BnL/68KaLzJg7x1qmbjSlwEoCNol7KTYZ+pmtI7Eh2J0Nu6/2Z5J/Q==}
+  knockout@3.5.2:
+    resolution: {integrity: sha512-AcJS2PqsYspjtOAlnnVS8hAuBnHMEqRVEwdvmQTeXj/9zfjV//KHurzdYc8MtBd/Pu8bZLMGHc7x0cj8qUvKxQ==}
 
   known-css-properties@0.37.0:
     resolution: {integrity: sha512-JCDrsP4Z1Sb9JwG0aJ8Eo2r7k4Ou5MwmThS/6lcIe1ICyb7UBJKGRIUUdqc2ASdE/42lgz6zFUnzAIhtXnBVrQ==}
@@ -17501,8 +17501,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.4.0
       ckeditor5: 47.4.0
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-multi-root@47.4.0':
     dependencies:
@@ -17552,8 +17550,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.4.0
       '@ckeditor/ckeditor5-engine': 47.4.0
       '@ckeditor/ckeditor5-utils': 47.4.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-essentials@47.4.0':
     dependencies:
@@ -29899,7 +29895,7 @@ snapshots:
 
   klona@2.0.6: {}
 
-  knockout@3.5.1: {}
+  knockout@3.5.2: {}
 
   known-css-properties@0.37.0: {}
 
