@@ -117,6 +117,7 @@ export default function SvgSplitEditor({ ntxId, note, attachmentName, renderSvg,
             error={error}
             onContentChanged={onContentChanged}
             dataSaved={onSave}
+            placeholder={t("mermaid.placeholder")}
             previewContent={(
                 <RawHtmlBlock
                     className="render-container"

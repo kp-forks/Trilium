@@ -2204,6 +2204,7 @@
     "more_info": "Learn more"
   },
   "mermaid": {
+    "placeholder": "Type the content of your Mermaid diagram or use one of the sample diagrams below.",
     "sample_diagrams": "Sample diagrams:",
     "sample_flowchart": "Flowchart",
     "sample_class": "Class",

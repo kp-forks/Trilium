@@ -19,7 +19,7 @@ interface NoteContentSwitcherProps {
 export default function NoteContentSwitcher({ text, note, templates }: NoteContentSwitcherProps) {
     const blob = useNoteSavedData(note?.noteId);
 
-    return (blob?.length === 0 &&
+    return (blob?.trim().length === 0 &&
         <div className="note-content-switcher">
             {text}{" "}
 
