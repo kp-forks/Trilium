@@ -51,9 +51,9 @@
     "color": "5.0.3",
     "debounce": "3.0.0",
     "draggabilly": "3.0.0",
-    "force-graph": "1.51.1",
+    "force-graph": "1.51.2",
     "globals": "17.4.0",
-    "i18next": "25.8.17",
+    "i18next": "25.8.18",
     "i18next-http-backend": "3.0.2",
     "jquery": "4.0.0",
     "jquery.fancytree": "2.38.5",
@@ -69,7 +69,7 @@
     "normalize.css": "8.0.1",
     "panzoom": "9.4.3",
     "preact": "10.29.0",
-    "react-i18next": "16.5.6",
+    "react-i18next": "16.5.8",
     "react-window": "2.2.7",
     "reveal.js": "5.2.1",
     "rrule": "2.8.1",
@@ -91,6 +91,6 @@
     "happy-dom": "20.8.4",
     "lightningcss": "1.32.0",
     "script-loader": "0.7.2",
-    "vite-plugin-static-copy": "3.2.0"
+    "vite-plugin-static-copy": "3.3.0"
   }
 }
