@@ -29,7 +29,7 @@
     "widget-render-error": {
       "title": "Nie udało się wyrenderować niestandardowego widżetu React"
     },
-    "widget-missing-parent": "Niestandardowy widżet nie ma zdefiniowanej obowiązkowej właściwości „{{property}}”.\nJeśli skrypt ma działać bez interfejsu użytkownika (UI) wyłącz go:  '#run=frontendStartup'.",
+    "widget-missing-parent": "Niestandardowy widżet nie ma zdefiniowanej obowiązkowej właściwości „{{property}}”.\n\nJeśli skrypt ma działać bez interfejsu użytkownika (UI) wyłącz go: '#run=frontendStartup'.",
     "open-script-note": "Otwórz notatkę ze skryptem",
     "scripting-error": "Błąd skryptu użytkownika: {{title}}"
   },
@@ -1487,7 +1487,7 @@
     "custom_name_label": "Nazwa niestandardowej wyszukiwarki",
     "custom_name_placeholder": "Dostosuj nazwę wyszukiwarki",
     "custom_url_label": "URL niestandardowej wyszukiwarki powinien zawierać {keyword} jako symbol zastępczy dla wyszukiwanej frazy.",
-    "custom_url_placeholder": "Dostosuj URL wyszukiwarki",
+    "custom_url_placeholder": "Dostosuj url wyszukiwarki",
     "save_button": "Zapisz"
   },
   "tray": {
@@ -2198,5 +2198,52 @@
   },
   "setup_form": {
     "more_info": "Dowiedz się więcej"
+  },
+  "media": {
+    "fullscreen": "Pełny ekran (F)",
+    "mute": "Wycisz (M)",
+    "unmute": "Wyłącz wyciszenie (M)",
+    "exit-fullscreen": "Wyłącz pełny ekran",
+    "loop": "Pętla",
+    "disable-loop": "Wyłącz pętle",
+    "rotate": "Obróć",
+    "picture-in-picture": "Obraz w obrazie",
+    "pause": "Zatrzymaj (Space)",
+    "back-10s": "Cofnij 10s (Lewa strzałka)",
+    "forward-30s": "Do przodu 30s",
+    "playback-speed": "Szybkość odtwarzania",
+    "exit-picture-in-picture": "Wyjdź z obrazu w obrazie",
+    "zoom-to-fit": "Powiększ aby wypełnić",
+    "unsupported-format": "Podgląd multimediów nie jest dostępny dla tego formatu pliku\n{{mime}}",
+    "play": "Odtwórz (Space)",
+    "zoom-reset": "Zresetuj powiększenie"
+  },
+  "mermaid": {
+    "sample_architecture": "Architektura",
+    "sample_diagrams": "Przykład diagramu:",
+    "sample_flowchart": "Schemat blokowy",
+    "sample_class": "Klasa",
+    "sample_sequence": "Sekwencja",
+    "sample_timeline": "Oś czasu",
+    "sample_treemap": "Mapa drzewa",
+    "sample_xy": "XY",
+    "sample_venn": "Diagram Venna",
+    "sample_ishikawa": "Diagram Ishikawa",
+    "placeholder": "Wpisz treść swojego diagramu lub skorzystaj z jednego z przykładowych diagramów poniżej.",
+    "sample_entity_relationship": "Diagram związków Encji",
+    "sample_state": "Diagram stanów",
+    "sample_mindmap": "Mapa myśli",
+    "sample_block": "Diagram blokowy",
+    "sample_c4": "C4",
+    "sample_gantt": "Wykres Gantta",
+    "sample_git": "Git diagram",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Diagram pakietów",
+    "sample_pie": "Wykres kołowy",
+    "sample_quadrant": "Diagram kwadrantowy",
+    "sample_radar": "Wykres radarowy",
+    "sample_requirement": "Diagram wymagań",
+    "sample_sankey": "Wykres Sankeya",
+    "sample_user_journey": "Mapa Podróży Użytkownika"
   }
 }
