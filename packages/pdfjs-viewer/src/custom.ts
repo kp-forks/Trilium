@@ -18,6 +18,8 @@ async function main() {
         interceptPersistence(getCustomAppOptions(urlParams));
     }
 
+    configurePdfViewerOptions();
+
     // Wait for the PDF viewer application to be available.
     while (!window.PDFViewerApplication) {
         await new Promise(r => setTimeout(r, 50));
@@ -38,6 +40,19 @@ async function main() {
     }
     await app.initializedPromise;
 };
+
+function configurePdfViewerOptions() {
+    const pdfOptionsHandler = (event: CustomEvent) => {
+        if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
+            window.PDFViewerApplicationOptions.set("disablePreferences", true);
+            window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
+        }
+    };
+    if (window.parent && window.parent !== window) {
+        window.parent.addEventListener("webviewerloaded", pdfOptionsHandler, { once: true });
+        window.addEventListener("pagehide", () => window.parent?.removeEventListener("webviewerloaded", pdfOptionsHandler));
+    }
+}
 
 function hideSidebar() {
     window.TRILIUM_HIDE_SIDEBAR = true;
