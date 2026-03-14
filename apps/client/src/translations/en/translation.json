@@ -2227,6 +2227,8 @@
     "sample_timeline": "Timeline",
     "sample_treemap": "Treemap",
     "sample_user_journey": "User Journey",
-    "sample_xy": "XY"
+    "sample_xy": "XY",
+    "sample_venn": "Venn",
+    "sample_ishikawa": "Ishikawa"
   }
 }

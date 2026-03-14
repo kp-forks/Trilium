@@ -464,6 +464,48 @@ xychart-beta
     bar [5000, 6000, 7500, 8200, 9500, 10500, 11000, 10200, 9200, 8500, 7000, 6000]
     line [5000, 6000, 7500, 8200, 9500, 10500, 11000, 10200, 9200, 8500, 7000, 6000]
 `
+    },
+    {
+        name: t("mermaid.sample_venn"),
+        content: `\
+venn-beta
+    title Web Dev
+    set Frontend
+        text React
+        text shadcn-ui
+        text Firebase
+    set Backend
+        text Hono
+        text PostgreSQL
+        text S3
+        text Lambda
+    union Frontend,Backend["APIs"]
+        `
+    },
+    {
+        name: t("mermaid.sample_ishikawa"),
+        content: `\
+ishikawa-beta
+  Blurry Photo
+  Process
+    Out of focus
+    Shutter speed too slow
+    Protective film not removed
+    Beautification filter applied
+  User
+    Shaky hands
+  Equipment
+    LENS
+      Inappropriate lens
+      Damaged lens
+      Dirty lens
+    SENSOR
+      Damaged sensor
+      Dirty sensor
+  Environment
+    Subject moved too quickly
+    Too dark
+`
     }
 ];
 
