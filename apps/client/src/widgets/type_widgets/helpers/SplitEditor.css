@@ -38,6 +38,7 @@
     white-space: pre-wrap;
     font-size: 0.85em;
     overflow: auto;
+    user-select: text;
 }
 
 .note-detail-split .note-detail-split-preview {
