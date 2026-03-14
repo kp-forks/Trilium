@@ -3,7 +3,7 @@ import "./index.css";
 import { RefObject } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import Reveal, { RevealApi } from "reveal.js";
-import slideBaseStylesheet from "reveal.js/dist/reveal.css?raw";
+import slideBaseStylesheet from "reveal.js/reveal.css?raw";
 
 import { openInCurrentNoteContext } from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
