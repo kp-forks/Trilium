@@ -34,7 +34,7 @@ export default function Mermaid(props: TypeWidgetProps) {
             renderSvg={renderSvg}
             noteType="mermaid"
             extraContent={(
-                <NoteContentSwitcher templates={SAMPLE_DIAGRAMS} />
+                <NoteContentSwitcher note={props.note} templates={SAMPLE_DIAGRAMS} />
             )}
             {...props}
         />
