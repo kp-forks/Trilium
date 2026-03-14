@@ -31,7 +31,7 @@
     },
     "packageRules": [
         {
-            "matchPackageNames": "@fsegurai/codemirror-theme-**",
+            "matchPackageNames": ["@fsegurai/codemirror-theme-**", "@catppuccin/codemirror"],
             "groupName": "codemirror themes"
         },
         {

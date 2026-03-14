@@ -100,6 +100,9 @@
       "@ckeditor/ckeditor5-code-block": "patches/@ckeditor__ckeditor5-code-block.patch"
     },
     "overrides": {
+      "@codemirror/language": "6.12.2",
+      "@lezer/highlight": "1.2.3",
+      "@lezer/common": "1.5.1",
       "mermaid": "11.13.0",
       "preact": "10.29.0",
       "roughjs": "4.6.6",
