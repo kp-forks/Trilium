@@ -23,13 +23,13 @@
     contain: size !important;
 }
 
-.note-detail-split .note-detail-code-editor {
+.note-detail-split .note-detail-code-editor .cm-editor {
+    margin: 0 !important;
+}
+
+body.desktop .note-detail-split .note-detail-code-editor {
     border-radius: 6px;
     margin-top: 1px;
-
-    .cm-editor {
-        margin: 0 !important;
-    }
 }
 
 .note-detail-split .note-detail-error-container {
