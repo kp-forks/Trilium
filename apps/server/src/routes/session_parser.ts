@@ -102,11 +102,7 @@ export const sessionStore = new SQLiteSessionStore();
 const sessionParser: express.RequestHandler = session({
     secret: sessionSecret,
     resave: false, // true forces the session to be saved back to the session store, even if the session was never modified during the request.
-    saveUninitialized: true, // Ensures new sessions are always persisted and the session cookie is sent on the first response.
-    // This is required for csrf-csrf v4, which binds CSRF tokens to the session ID via HMAC.
-    // With saveUninitialized: false, a brand-new session would never be saved (and its cookie
-    // never sent) when noAuthentication=true, causing every request to get a different ephemeral
-    // session ID and making CSRF validation fail for all API calls.
+    saveUninitialized: false, // true forces a session that is "uninitialized" to be saved to the store. A session is uninitialized when it is new but not modified.
     rolling: true, // forces the session to be saved back to the session store, resetting the expiration date.
     cookie: {
         path: "/",
