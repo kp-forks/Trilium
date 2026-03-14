@@ -8,7 +8,7 @@
       "preact"
     ],
     "rootDir": "src",
-    "jsx": "preserve",
+    "jsx": "react",
     "jsxFactory": "h",
 		"jsxImportSource": "preact",
     "module": "esnext",
