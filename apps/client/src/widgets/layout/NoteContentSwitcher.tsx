@@ -1,9 +1,25 @@
-import { ComponentChildren } from "preact";
+import "./NoteContentSwitcher.css";
 
-interface NoteContentSwitcherProps {
-    children: ComponentChildren;
+import { Badge } from "../react/Badge";
+
+export interface NoteContentTemplate {
+    name: string;
+    content: string;
 }
 
-export default function NoteContentSwitcher({ children }: NoteContentSwitcherProps) {
-    return <p>{children}</p>;
+interface NoteContentSwitcherProps {
+    templates: NoteContentTemplate[];
+}
+
+export default function NoteContentSwitcher({ templates }: NoteContentSwitcherProps) {
+    return (
+        <div className="note-content-switcher">
+            {templates.map(sample => (
+                <Badge
+                    key={sample.name}
+                    text={sample.name}
+                />
+            ))}
+        </div>
+    );
 }

@@ -4,6 +4,7 @@ import { getMermaidConfig, loadElkIfNeeded, postprocessMermaidSvg } from "../../
 import NoteContentSwitcher from "../../layout/NoteContentSwitcher";
 import SvgSplitEditor from "../helpers/SvgSplitEditor";
 import { TypeWidgetProps } from "../type_widget";
+import SAMPLE_DIAGRAMS from "./sample_diagrams";
 
 let idCounter = 1;
 let registeredErrorReporter = false;
@@ -33,9 +34,7 @@ export default function Mermaid(props: TypeWidgetProps) {
             renderSvg={renderSvg}
             noteType="mermaid"
             extraContent={(
-                <NoteContentSwitcher>
-                    Foo
-                </NoteContentSwitcher>
+                <NoteContentSwitcher templates={SAMPLE_DIAGRAMS} />
             )}
             {...props}
         />
