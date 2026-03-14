@@ -11,15 +11,18 @@ export interface NoteContentTemplate {
 }
 
 interface NoteContentSwitcherProps {
+    text: string;
     note: FNote;
     templates: NoteContentTemplate[];
 }
 
-export default function NoteContentSwitcher({ note, templates }: NoteContentSwitcherProps) {
+export default function NoteContentSwitcher({ text, note, templates }: NoteContentSwitcherProps) {
     const blob = useNoteSavedData(note?.noteId);
 
     return (blob?.length === 0 &&
         <div className="note-content-switcher">
+            {text}{" "}
+
             {templates.map(sample => (
                 <Badge
                     key={sample.name}

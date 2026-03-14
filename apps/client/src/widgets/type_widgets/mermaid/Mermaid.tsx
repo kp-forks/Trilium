@@ -1,5 +1,6 @@
 import { useCallback } from "preact/hooks";
 
+import { t } from "../../../services/i18n";
 import { getMermaidConfig, loadElkIfNeeded, postprocessMermaidSvg } from "../../../services/mermaid";
 import NoteContentSwitcher from "../../layout/NoteContentSwitcher";
 import SvgSplitEditor from "../helpers/SvgSplitEditor";
@@ -38,7 +39,10 @@ export default function Mermaid(props: TypeWidgetProps) {
             renderSvg={renderSvg}
             noteType="mermaid"
             extraContent={(
-                <NoteContentSwitcher note={props.note} templates={SAMPLE_DIAGRAMS} />
+                <NoteContentSwitcher
+                    text={t("mermaid.sample_diagrams")}
+                    note={props.note}
+                    templates={SAMPLE_DIAGRAMS} />
             )}
             {...props}
         />
