@@ -3,6 +3,7 @@ import "./NoteContentSwitcher.css";
 import FNote from "../../entities/fnote";
 import server from "../../services/server";
 import { Badge } from "../react/Badge";
+import { useNoteSavedData } from "../react/hooks";
 
 export interface NoteContentTemplate {
     name: string;
@@ -15,7 +16,9 @@ interface NoteContentSwitcherProps {
 }
 
 export default function NoteContentSwitcher({ note, templates }: NoteContentSwitcherProps) {
-    return (
+    const blob = useNoteSavedData(note?.noteId);
+
+    return (blob?.length === 0 &&
         <div className="note-content-switcher">
             {templates.map(sample => (
                 <Badge
