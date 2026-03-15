@@ -46,6 +46,7 @@ function configurePdfViewerOptions() {
         if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
             window.PDFViewerApplicationOptions.set("disablePreferences", true);
             window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
+            window.PDFViewerApplicationOptions.set("enableComment", true);
         }
     };
     if (window.parent && window.parent !== window) {
