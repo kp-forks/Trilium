@@ -983,8 +983,8 @@ importers:
         specifier: 14.1.1
         version: 14.1.1
       lint-staged:
-        specifier: 16.3.3
-        version: 16.3.3
+        specifier: 16.4.0
+        version: 16.4.0
       stylelint:
         specifier: 17.4.0
         version: 17.4.0(typescript@5.9.3)
@@ -1043,8 +1043,8 @@ importers:
         specifier: 14.1.1
         version: 14.1.1
       lint-staged:
-        specifier: 16.3.3
-        version: 16.3.3
+        specifier: 16.4.0
+        version: 16.4.0
       stylelint:
         specifier: 17.4.0
         version: 17.4.0(typescript@5.9.3)
@@ -1103,8 +1103,8 @@ importers:
         specifier: 14.1.1
         version: 14.1.1
       lint-staged:
-        specifier: 16.3.3
-        version: 16.3.3
+        specifier: 16.4.0
+        version: 16.4.0
       stylelint:
         specifier: 17.4.0
         version: 17.4.0(typescript@5.9.3)
@@ -1170,8 +1170,8 @@ importers:
         specifier: 14.1.1
         version: 14.1.1
       lint-staged:
-        specifier: 16.3.3
-        version: 16.3.3
+        specifier: 16.4.0
+        version: 16.4.0
       stylelint:
         specifier: 17.4.0
         version: 17.4.0(typescript@5.9.3)
@@ -1237,8 +1237,8 @@ importers:
         specifier: 14.1.1
         version: 14.1.1
       lint-staged:
-        specifier: 16.3.3
-        version: 16.3.3
+        specifier: 16.4.0
+        version: 16.4.0
       stylelint:
         specifier: 17.4.0
         version: 17.4.0(typescript@5.9.3)
@@ -11656,8 +11656,8 @@ packages:
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
 
-  lint-staged@16.3.3:
-    resolution: {integrity: sha512-RLq2koZ5fGWrx7tcqx2tSTMQj4lRkfNJaebO/li/uunhCJbtZqwTuwPHpgIimAHHi/2nZIiGrkCHDCOeR1onxA==}
+  lint-staged@16.4.0:
+    resolution: {integrity: sha512-lBWt8hujh/Cjysw5GYVmZpFHXDCgZzhrOm8vbcUdobADZNOK/bRshr2kM3DfgrrtR1DQhfupW9gnIXOfiFi+bw==}
     engines: {node: '>=20.17'}
     hasBin: true
 
@@ -15166,6 +15166,10 @@ packages:
     resolution: {integrity: sha512-W/KYk+NFhkmsYpuHq5JykngiOCnxeVL8v8dFnqxSD8qEEdRfXk1SDM6JzNqcERbcGYj9tMrDQBYV9cjgnunFIg==}
     engines: {node: '>=18'}
 
+  tinyexec@1.0.4:
+    resolution: {integrity: sha512-u9r3uZC0bdpGOXtlxUIdwf9pkmvhqJdrVCH9fapQtgy/OeTTMZ1nqH7agtvEfmGui6e1XxjcdrlxvxJvc3sMqw==}
+    engines: {node: '>=18'}
+
   tinyglobby@0.2.15:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
@@ -17547,8 +17551,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-classic@47.6.1':
     dependencies:
@@ -17576,6 +17578,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-editor-multi-root@47.6.1':
     dependencies:
@@ -17598,6 +17602,8 @@ snapshots:
       '@ckeditor/ckeditor5-table': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-emoji@47.6.1':
     dependencies:
@@ -17654,6 +17660,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-export-word@47.6.1':
     dependencies:
@@ -17779,6 +17787,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-icons@47.6.1': {}
 
@@ -17810,6 +17820,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-indent@47.6.1':
     dependencies:
@@ -17949,6 +17961,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-minimap@47.6.1':
     dependencies:
@@ -18076,8 +18090,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-restricted-editing@47.6.1':
     dependencies:
@@ -18122,6 +18134,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-slash-command@47.6.1':
     dependencies:
@@ -30110,13 +30124,13 @@ snapshots:
     dependencies:
       uc.micro: 2.1.0
 
-  lint-staged@16.3.3:
+  lint-staged@16.4.0:
     dependencies:
       commander: 14.0.3
       listr2: 9.0.5
-      micromatch: 4.0.8
+      picomatch: 4.0.3
       string-argv: 0.3.2
-      tinyexec: 1.0.2
+      tinyexec: 1.0.4
       yaml: 2.8.2
 
   listr2@7.0.2:
@@ -34582,6 +34596,8 @@ snapshots:
   tinycolor2@1.6.0: {}
 
   tinyexec@1.0.2: {}
+
+  tinyexec@1.0.4: {}
 
   tinyglobby@0.2.15:
     dependencies:
