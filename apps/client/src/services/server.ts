@@ -140,7 +140,7 @@ async function refreshCsrfToken(): Promise<void> {
 
     csrfRefreshInProgress = (async () => {
         try {
-            const response = await fetch(`./bootstrap${window.location.search}`);
+            const response = await fetch(`./bootstrap${window.location.search}`, { cache: "no-store" });
             if (response.ok) {
                 const json = await response.json();
                 glob.csrfToken = json.csrfToken;
