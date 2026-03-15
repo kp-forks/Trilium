@@ -78,7 +78,7 @@
     "cls-hooked": "4.2.2",
     "compression": "1.8.1",
     "cookie-parser": "1.4.7",
-    "csrf-csrf": "4.0.2",
+    "csrf-csrf": "4.0.3",
     "debounce": "3.0.0",
     "debug": "4.4.3",
     "ejs": "5.0.1",
