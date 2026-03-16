@@ -171,9 +171,9 @@ function PromotedAttributeCell(props: CellProps) {
     );
 }
 
-const LABEL_MAPPINGS: Record<LabelType, HTMLInputTypeAttribute> = {
+const LABEL_MAPPINGS: Record<LabelType, HTMLInputTypeAttribute | undefined> = {
     text: "text",
-    textarea: "text",
+    textarea: undefined,
     number: "number",
     boolean: "checkbox",
     date: "date",
