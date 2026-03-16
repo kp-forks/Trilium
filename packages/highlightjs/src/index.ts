@@ -48,7 +48,7 @@ export function highlight(code: string, options: HighlightOptions) {
 }
 
 export function normalizeThemeCss(themeCss: string): string {
-    const themeSelectorScopedToCodeTag = /\bcode \.hljs-/.test(themeCss);
+    const themeSelectorScopedToCodeTag = /\bcode\s+\.hljs-/.test(themeCss);
     if (themeSelectorScopedToCodeTag) {
         themeCss = themeCss.replace(/\bcode\.hljs/g, ".hljs");
         themeCss = themeCss.replace(/\bcode \.hljs-/g, ".hljs .hljs-");
