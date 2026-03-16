@@ -343,6 +343,7 @@
     "label_type_title": "Type of the label will help Trilium to choose suitable interface to enter the label value.",
     "label_type": "Type",
     "text": "Text",
+    "textarea": "Textarea",
     "number": "Number",
     "boolean": "Boolean",
     "date": "Date",
