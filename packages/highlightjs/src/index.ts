@@ -51,7 +51,7 @@ export function normalizeThemeCss(themeCss: string): string {
     const themeSelectorScopedToCodeTag = /\bcode\s+\.hljs-/.test(themeCss);
     if (themeSelectorScopedToCodeTag) {
         themeCss = themeCss.replace(/\bcode\.hljs/g, ".hljs");
-        themeCss = themeCss.replace(/\bcode \.hljs-/g, ".hljs .hljs-");
+        themeCss = themeCss.replace(/\bcode\s+\.hljs-/g, ".hljs .hljs-");
     }
 
     // Increase the specificity of the HLJS selector to render properly within CKEditor without the need of patching the library.
