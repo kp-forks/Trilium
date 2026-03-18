@@ -96,10 +96,10 @@ class NoteFlatTextExp extends Expression {
 
         const candidateNotes = this.getCandidateNotes(inputNoteSet, searchContext);
 
-        // Fast path for single-token searches with a limit (e.g. autocomplete):
+        // Fast path for single-token autocomplete searches:
         // Skip the expensive recursive parent walk and just use getBestNotePath().
         // The flat text already matched, so we know the token is present.
-        if (this.tokens.length === 1 && searchContext.limit) {
+        if (this.tokens.length === 1 && searchContext.autocomplete) {
             for (const note of candidateNotes) {
                 if (!resultNoteSet.hasNoteId(note.noteId)) {
                     const notePath = note.getBestNotePath();

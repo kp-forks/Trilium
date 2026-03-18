@@ -248,10 +248,10 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
         return performSearch(expression, searchContext, false);
     }
 
-    // For limited searches (e.g. autocomplete), skip the expensive two-phase
-    // fuzzy fallback. The user is typing and will refine their query — exact
-    // matching is sufficient and avoids a second full scan of all notes.
-    if (searchContext.limit) {
+    // For autocomplete searches, skip the expensive two-phase fuzzy fallback.
+    // The user is typing and will refine their query — exact matching is
+    // sufficient and avoids a second full scan of all notes.
+    if (searchContext.autocomplete) {
         return performSearch(expression, searchContext, false);
     }
 
@@ -645,7 +645,7 @@ function searchNotesForAutocomplete(query: string, fastSearch: boolean = true) {
         fuzzyAttributeSearch: true,
         ignoreInternalAttributes: true,
         ancestorNoteId: hoistedNoteService.isHoistedInHiddenSubtree() ? "root" : hoistedNoteService.getHoistedNoteId(),
-        limit: 200
+        autocomplete: true
     });
 
     const allSearchResults = findResultsWithQuery(query, searchContext);

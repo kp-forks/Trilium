@@ -18,6 +18,8 @@ class SearchContext {
     debug?: boolean;
     debugInfo: {} | null;
     fuzzyAttributeSearch: boolean;
+    /** When true, skip the two-phase fuzzy fallback and use the single-token fast path. */
+    autocomplete: boolean;
     enableFuzzyMatching: boolean; // Controls whether fuzzy matching is enabled for this search phase
     highlightedTokens: string[];
     originalQuery: string;
@@ -46,6 +48,7 @@ class SearchContext {
         this.debug = params.debug;
         this.debugInfo = null;
         this.fuzzyAttributeSearch = !!params.fuzzyAttributeSearch;
+        this.autocomplete = !!params.autocomplete;
         this.enableFuzzyMatching = true; // Default to true for backward compatibility
         this.highlightedTokens = [];
         this.originalQuery = "";
