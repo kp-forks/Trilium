@@ -97,6 +97,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "layoutOrientation",
     "backgroundEffects",
     "allowedHtmlTags",
+    "searchEnableFuzzyMatching",
     "redirectBareDomain",
     "showLoginInShareTheme",
     "splitEditorOrientation",

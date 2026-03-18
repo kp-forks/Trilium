@@ -134,6 +134,10 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     backgroundEffects: boolean;
     newLayout: boolean;
 
+    // Search settings
+    /** Whether fuzzy matching is enabled in search (matches similar words when exact matches are insufficient). */
+    searchEnableFuzzyMatching: boolean;
+
     // Share settings
     redirectBareDomain: boolean;
     showLoginInShareTheme: boolean;

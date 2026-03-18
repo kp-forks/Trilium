@@ -1,6 +1,7 @@
 "use strict";
 
 import hoistedNoteService from "../hoisted_note.js";
+import optionService from "../options.js";
 import type { SearchParams } from "./services/types.js";
 
 class SearchContext {
@@ -49,7 +50,11 @@ class SearchContext {
         this.debugInfo = null;
         this.fuzzyAttributeSearch = !!params.fuzzyAttributeSearch;
         this.autocomplete = !!params.autocomplete;
-        this.enableFuzzyMatching = true; // Default to true for backward compatibility
+        try {
+            this.enableFuzzyMatching = optionService.getOptionBool("searchEnableFuzzyMatching");
+        } catch {
+            this.enableFuzzyMatching = true; // Default to true if option not yet initialized
+        }
         this.highlightedTokens = [];
         this.originalQuery = "";
         this.fulltextQuery = ""; // complete fulltext part

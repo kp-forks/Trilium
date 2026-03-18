@@ -21,6 +21,7 @@ import TimeSelector from "./components/TimeSelector";
 export default function OtherSettings() {
     return (
         <>
+            <SearchSettings />
             {isElectron() && <>
                 <SearchEngineSettings />
                 <TrayOptionsSettings />
@@ -33,6 +34,21 @@ export default function OtherSettings() {
             <ShareSettings />
             <NetworkSettings />
         </>
+    );
+}
+
+function SearchSettings() {
+    const [ fuzzyEnabled, setFuzzyEnabled ] = useTriliumOptionBool("searchEnableFuzzyMatching");
+
+    return (
+        <OptionsSection title={t("search.title")}>
+            <FormCheckbox
+                name="search-fuzzy-matching"
+                label={t("search.enable_fuzzy_matching")}
+                currentValue={fuzzyEnabled}
+                onChange={setFuzzyEnabled}
+            />
+        </OptionsSection>
     );
 }
 

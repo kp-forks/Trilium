@@ -1292,6 +1292,10 @@
     "erase_excess_revision_snapshots": "Erase excess revision snapshots now",
     "erase_excess_revision_snapshots_prompt": "Excess revision snapshots have been erased."
   },
+  "search": {
+    "title": "Search",
+    "enable_fuzzy_matching": "Enable fuzzy matching in search (matches similar words when exact matches are insufficient)"
+  },
   "search_engine": {
     "title": "Search Engine",
     "custom_search_engine_info": "Custom search engine requires both a name and a URL to be set. If either of these is not set, DuckDuckGo will be used as the default search engine.",

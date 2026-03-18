@@ -198,6 +198,9 @@ const defaultOptions: DefaultOption[] = [
         isSynced: true
     },
 
+    // Search settings
+    { name: "searchEnableFuzzyMatching", value: "true", isSynced: true },
+
     // Share settings
     { name: "redirectBareDomain", value: "false", isSynced: true },
     { name: "showLoginInShareTheme", value: "false", isSynced: true },
