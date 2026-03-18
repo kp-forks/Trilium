@@ -123,6 +123,13 @@ function render404(res: Response) {
 }
 
 function register(router: Router) {
+    // Guard: if the share DB is not yet initialized, return 503 for all /share routes.
+    router.use((_req: Request, res: Response, next) => {
+        if (!assertShareDbReady(res)) {
+            return;
+        }
+        next();
+    });
 
     function renderNote(note: SNote, req: Request, res: Response) {
         if (!note) {
