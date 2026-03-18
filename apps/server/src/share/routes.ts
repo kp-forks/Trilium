@@ -10,7 +10,15 @@ import type SNote from "./shaca/entities/snote.js";
 import type SAttachment from "./shaca/entities/sattachment.js";
 import { getDefaultTemplatePath, renderNoteContent } from "./content_renderer.js";
 import utils from "../services/utils.js";
+import { isShareDbReady } from "./sql.js";
 
+function assertShareDbReady(res: Response): boolean {
+    if (!isShareDbReady()) {
+        res.status(503).send("The application is still initializing. Please try again in a moment.");
+        return false;
+    }
+    return true;
+}
 function addNoIndexHeader(note: SNote, res: Response) {
     if (note.isLabelTruthy("shareDisallowRobotIndexing")) {
         res.setHeader("X-Robots-Tag", "noindex");
