@@ -51,7 +51,7 @@ class SetupController {
 
         for (const input of this.setupTypeInputs) {
             input.addEventListener("change", () => {
-                this.setupType = (input.checked ? input.value : this.getSelectedSetupType()) as SetupType;
+                this.setupType = input.value as SetupType;
                 this.render();
             });
         }
