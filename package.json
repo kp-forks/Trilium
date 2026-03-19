@@ -13,6 +13,7 @@
     "server:build": "pnpm run --filter server build",
     "server:coverage": "pnpm run --filter server test --coverage",
     "server:start": "pnpm run --filter server dev",
+    "server:start-alt": "pnpm run --filter server dev-alt",
     "server:start-prod": "pnpm run --filter server start-prod",
     "desktop:start": "pnpm run --filter desktop dev",
     "desktop:build": "pnpm run --filter desktop build",
