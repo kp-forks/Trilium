@@ -23,6 +23,18 @@ class NoteFlatTextExp extends Expression {
     execute(inputNoteSet: NoteSet, executionContext: any, searchContext: SearchContext) {
         const resultNoteSet = new NoteSet();
 
+        // Cache normalized titles to avoid redundant normalize+getNoteTitle calls
+        const titleCache = new Map<string, string>();
+        const getNormalizedTitle = (noteId: string, parentNoteId: string): string => {
+            const key = `${noteId}-${parentNoteId}`;
+            let cached = titleCache.get(key);
+            if (cached === undefined) {
+                cached = normalizeSearchText(beccaService.getNoteTitle(noteId, parentNoteId));
+                titleCache.set(key, cached);
+            }
+            return cached;
+        };
+
         /**
          * @param note
          * @param remainingTokens - tokens still needed to be found in the path towards root
@@ -38,10 +50,8 @@ class NoteFlatTextExp extends Expression {
                     const noteId = resultPath[resultPath.length - 1];
 
                     if (!resultNoteSet.hasNoteId(noteId)) {
-                        // we could get here from multiple paths, the first one wins because the paths
-                        // are sorted by importance
+                        // Snapshot takenPath since it's mutable
                         executionContext.noteIdToNotePath[noteId] = resultPath;
-
                         resultNoteSet.add(becca.notes[noteId]);
                     }
                 }
@@ -50,18 +60,14 @@ class NoteFlatTextExp extends Expression {
             }
 
             if (note.parents.length === 0 || note.noteId === "root") {
-                // we've reached root, but there are still remaining tokens -> this candidate note produced no result
                 return;
             }
 
             const foundAttrTokens: string[] = [];
 
             for (const token of remainingTokens) {
-                // Add defensive checks for undefined properties
-                const typeMatches = note.type && note.type.includes(token);
-                const mimeMatches = note.mime && note.mime.includes(token);
-                
-                if (typeMatches || mimeMatches) {
+                if ((note.type && note.type.includes(token)) ||
+                    (note.mime && note.mime.includes(token))) {
                     foundAttrTokens.push(token);
                 }
             }
@@ -75,17 +81,19 @@ class NoteFlatTextExp extends Expression {
             }
 
             for (const parentNote of note.parents) {
-                const title = normalizeSearchText(beccaService.getNoteTitle(note.noteId, parentNote.noteId));
-                const foundTokens: string[] = foundAttrTokens.slice();
+                const title = getNormalizedTitle(note.noteId, parentNote.noteId);
+
+                // Use Set for O(1) lookup instead of Array.includes() which is O(n)
+                const foundTokenSet = new Set<string>(foundAttrTokens);
 
                 for (const token of remainingTokens) {
                     if (this.smartMatch(title, token, searchContext)) {
-                        foundTokens.push(token);
+                        foundTokenSet.add(token);
                     }
                 }
 
-                if (foundTokens.length > 0) {
-                    const newRemainingTokens = remainingTokens.filter((token) => !foundTokens.includes(token));
+                if (foundTokenSet.size > 0) {
+                    const newRemainingTokens = remainingTokens.filter((token) => !foundTokenSet.has(token));
 
                     searchPathTowardsRoot(parentNote, newRemainingTokens, [note.noteId, ...takenPath]);
                 } else {

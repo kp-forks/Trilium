@@ -722,37 +722,40 @@ function highlightSearchResults(searchResults: SearchResult[], highlightedTokens
         }
 
         for (const result of searchResults) {
-            // Reset token
-            const tokenRegex = new RegExp(escapeRegExp(token), "gi");
             let match;
 
             // Highlight in note path title
             if (result.highlightedNotePathTitle) {
                 const titleRegex = new RegExp(escapeRegExp(token), "gi");
-                while ((match = titleRegex.exec(removeDiacritic(result.highlightedNotePathTitle))) !== null) {
+                // Compute diacritic-free version ONCE before the loop, not on every iteration
+                let titleNoDiacritics = removeDiacritic(result.highlightedNotePathTitle);
+                while ((match = titleRegex.exec(titleNoDiacritics)) !== null) {
                     result.highlightedNotePathTitle = wrapText(result.highlightedNotePathTitle, match.index, token.length, "{", "}");
-                    // 2 characters are added, so we need to adjust the index
+                    // 2 characters are added, so we need to adjust the index and re-derive
                     titleRegex.lastIndex += 2;
+                    titleNoDiacritics = removeDiacritic(result.highlightedNotePathTitle);
                 }
             }
 
             // Highlight in content snippet
             if (result.highlightedContentSnippet) {
                 const contentRegex = new RegExp(escapeRegExp(token), "gi");
-                while ((match = contentRegex.exec(removeDiacritic(result.highlightedContentSnippet))) !== null) {
+                let contentNoDiacritics = removeDiacritic(result.highlightedContentSnippet);
+                while ((match = contentRegex.exec(contentNoDiacritics)) !== null) {
                     result.highlightedContentSnippet = wrapText(result.highlightedContentSnippet, match.index, token.length, "{", "}");
-                    // 2 characters are added, so we need to adjust the index
                     contentRegex.lastIndex += 2;
+                    contentNoDiacritics = removeDiacritic(result.highlightedContentSnippet);
                 }
             }
 
             // Highlight in attribute snippet
             if (result.highlightedAttributeSnippet) {
                 const attributeRegex = new RegExp(escapeRegExp(token), "gi");
-                while ((match = attributeRegex.exec(removeDiacritic(result.highlightedAttributeSnippet))) !== null) {
+                let attrNoDiacritics = removeDiacritic(result.highlightedAttributeSnippet);
+                while ((match = attributeRegex.exec(attrNoDiacritics)) !== null) {
                     result.highlightedAttributeSnippet = wrapText(result.highlightedAttributeSnippet, match.index, token.length, "{", "}");
-                    // 2 characters are added, so we need to adjust the index
                     attributeRegex.lastIndex += 2;
+                    attrNoDiacritics = removeDiacritic(result.highlightedAttributeSnippet);
                 }
             }
         }
