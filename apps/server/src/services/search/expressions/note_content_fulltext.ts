@@ -107,6 +107,14 @@ class NoteContentFulltextExp extends Expression {
      * Whether this operator can be served by FTS5.
      */
     private canUseFts(): boolean {
+        try {
+            const optionService = require("../../options.js").default;
+            if (!optionService.getOptionBool("searchEnableFts5")) {
+                return false;
+            }
+        } catch {
+            // Option not available yet — allow FTS
+        }
         return ["=", "!=", "*=*"].includes(this.operator);
     }
 

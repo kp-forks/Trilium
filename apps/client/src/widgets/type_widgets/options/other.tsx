@@ -39,6 +39,7 @@ export default function OtherSettings() {
 
 function SearchSettings() {
     const [ fuzzyEnabled, setFuzzyEnabled ] = useTriliumOptionBool("searchEnableFuzzyMatching");
+    const [ fts5Enabled, setFts5Enabled ] = useTriliumOptionBool("searchEnableFts5");
 
     return (
         <OptionsSection title={t("search.title")}>
@@ -47,6 +48,12 @@ function SearchSettings() {
                 label={t("search.enable_fuzzy_matching")}
                 currentValue={fuzzyEnabled}
                 onChange={setFuzzyEnabled}
+            />
+            <FormCheckbox
+                name="search-fts5"
+                label={t("search.enable_fts5")}
+                currentValue={fts5Enabled}
+                onChange={setFts5Enabled}
             />
         </OptionsSection>
     );

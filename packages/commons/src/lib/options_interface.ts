@@ -137,6 +137,8 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     // Search settings
     /** Whether fuzzy matching is enabled in search (matches similar words when exact matches are insufficient). */
     searchEnableFuzzyMatching: boolean;
+    /** Whether to use FTS5 index for content search (faster but requires index build). */
+    searchEnableFts5: boolean;
 
     // Share settings
     redirectBareDomain: boolean;
