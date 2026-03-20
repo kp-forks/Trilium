@@ -70,28 +70,32 @@ function buildIndex(): void {
 
     sql.execute("DELETE FROM note_content_fts");
 
-    const count = sql.transactional(() => {
-        let count = 0;
+    // Collect all rows first, then batch-insert in a transaction.
+    // iterateRows() holds an open cursor that conflicts with writes on the same connection.
+    const prepared: { noteId: string; content: string }[] = [];
 
-        for (const row of sql.iterateRows<ContentRow>(`
-            SELECT noteId, type, mime, content, isProtected, isDeleted
-            FROM notes JOIN blobs USING (blobId)
-            WHERE type IN ('text', 'code', 'mermaid', 'canvas', 'mindMap')
-              AND isDeleted = 0
-              AND content IS NOT NULL
-              AND LENGTH(content) < ${MAX_CONTENT_SIZE}
-        `)) {
-            const processedContent = prepareContent(row);
-            if (processedContent) {
-                sql.execute(
-                    "INSERT INTO note_content_fts (noteId, content) VALUES (?, ?)",
-                    [row.noteId, processedContent]
-                );
-                count++;
-            }
+    for (const row of sql.iterateRows<ContentRow>(`
+        SELECT noteId, type, mime, content, isProtected, isDeleted
+        FROM notes JOIN blobs USING (blobId)
+        WHERE type IN ('text', 'code', 'mermaid', 'canvas', 'mindMap')
+          AND isDeleted = 0
+          AND content IS NOT NULL
+          AND LENGTH(content) < ${MAX_CONTENT_SIZE}
+    `)) {
+        const processedContent = prepareContent(row);
+        if (processedContent) {
+            prepared.push({ noteId: row.noteId, content: processedContent });
         }
+    }
 
-        return count;
+    const count = sql.transactional(() => {
+        for (const { noteId, content } of prepared) {
+            sql.execute(
+                "INSERT INTO note_content_fts (noteId, content) VALUES (?, ?)",
+                [noteId, content]
+            );
+        }
+        return prepared.length;
     });
 
     const elapsed = Date.now() - startTime;
