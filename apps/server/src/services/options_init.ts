@@ -200,7 +200,6 @@ const defaultOptions: DefaultOption[] = [
 
     // Search settings
     { name: "searchEnableFuzzyMatching", value: "true", isSynced: true },
-    { name: "searchEnableFts5", value: "true", isSynced: true },
 
     // Share settings
     { name: "redirectBareDomain", value: "false", isSynced: true },

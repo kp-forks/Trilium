@@ -60,17 +60,6 @@ eventService.subscribe([eventService.ENTITY_CHANGED, eventService.ENTITY_DELETED
     } else if (entityName === "notes") {
         // ENTITY_DELETED won't trigger anything since all branches/attributes are already deleted at this point
         runAttachedRelations(entity, "runOnNoteChange", entity);
-
-        if (entity.isDeleted) {
-            try {
-                const ftsIndex = require("./search/fts_index.js").default;
-                if (ftsIndex.isIndexBuilt()) {
-                    ftsIndex.removeNote(entity.noteId);
-                }
-            } catch {
-                // FTS index update failure should not block note operations
-            }
-        }
     }
 });
 
@@ -92,16 +81,6 @@ eventService.subscribe(eventService.ENTITY_CHANGED, ({ entityName, entity }) => 
 
 eventService.subscribe(eventService.NOTE_CONTENT_CHANGE, ({ entity }) => {
     runAttachedRelations(entity, "runOnNoteContentChange", entity);
-
-    // Update FTS content index incrementally
-    try {
-        const ftsIndex = require("./search/fts_index.js").default;
-        if (ftsIndex.isIndexBuilt()) {
-            ftsIndex.updateNote(entity.noteId);
-        }
-    } catch {
-        // FTS index update failure should not block note saves
-    }
 });
 
 eventService.subscribe(eventService.ENTITY_CREATED, ({ entityName, entity }) => {

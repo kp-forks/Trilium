@@ -6,11 +6,6 @@
 
 // Migrations should be kept in descending order, so the latest migration is first.
 const MIGRATIONS: (SqlMigration | JsMigration)[] = [
-    // Add FTS5 virtual table for full-text content search
-    {
-        version: 235,
-        module: async () => import("./0235__add_fts5_content_search.js")
-    },
     // Migrate aiChat notes to code notes since LLM integration has been removed
     {
         version: 234,

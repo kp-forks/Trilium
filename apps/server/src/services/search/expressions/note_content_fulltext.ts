@@ -79,17 +79,7 @@ class NoteContentFulltextExp extends Expression {
 
         const resultNoteSet = new NoteSet();
 
-        // Try FTS5 index first for supported operators
-        if (this.canUseFts()) {
-            const ftsWorked = this.searchViaFts(inputNoteSet, resultNoteSet);
-            if (ftsWorked) {
-                this.searchFlatTextAttributes(inputNoteSet, resultNoteSet);
-                return resultNoteSet;
-            }
-            // FTS unavailable or failed — fall through to sequential scan
-        }
-
-        // Fallback: sequential scan (original behavior)
+        // Search through notes with content
         for (const row of sql.iterateRows<SearchRow>(`
                 SELECT noteId, type, mime, content, isProtected
                 FROM notes JOIN blobs USING (blobId)
@@ -99,91 +89,43 @@ class NoteContentFulltextExp extends Expression {
             this.findInText(row, inputNoteSet, resultNoteSet);
         }
 
-        this.searchFlatTextAttributes(inputNoteSet, resultNoteSet);
+        // For exact match with flatText, also search notes WITHOUT content (they may have matching attributes)
+        if (this.flatText && (this.operator === "=" || this.operator === "!=")) {
+            for (const note of inputNoteSet.notes) {
+                // Skip if already found or doesn't exist
+                if (resultNoteSet.hasNoteId(note.noteId) || !(note.noteId in becca.notes)) {
+                    continue;
+                }
+
+                const noteFromBecca = becca.notes[note.noteId];
+                const flatText = noteFromBecca.getFlatText();
+
+                // For flatText, only check attribute values (format: #name=value or ~name=value)
+                // Don't match against noteId, type, mime, or title which are also in flatText
+                let matches = false;
+                const phrase = this.tokens.join(" ");
+                const normalizedPhrase = normalizeSearchText(phrase);
+                const normalizedFlatText = normalizeSearchText(flatText);
+
+                // Check if =phrase appears in flatText (indicates attribute value match)
+                // For single words, use word-boundary matching to avoid substring matches
+                if (!normalizedPhrase.includes(' ')) {
+                    // Single word: look for =word with word boundaries
+                    // Split by = to get attribute values, then check each value for exact word match
+                    const parts = normalizedFlatText.split('=');
+                    matches = parts.slice(1).some(part => this.exactWordMatch(normalizedPhrase, part));
+                } else {
+                    // Multi-word phrase: check for substring match
+                    matches = normalizedFlatText.includes(`=${normalizedPhrase}`);
+                }
+
+                if ((this.operator === "=" && matches) || (this.operator === "!=" && !matches)) {
+                    resultNoteSet.add(noteFromBecca);
+                }
+            }
+        }
+
         return resultNoteSet;
-    }
-
-    /**
-     * Whether this operator can be served by FTS5.
-     */
-    private canUseFts(): boolean {
-        try {
-            const optionService = require("../../options.js").default;
-            if (!optionService.getOptionBool("searchEnableFts5")) {
-                return false;
-            }
-        } catch {
-            // Option not available yet — allow FTS
-        }
-        return ["=", "!=", "*=*"].includes(this.operator);
-    }
-
-    /**
-     * Attempts to use the FTS5 index for content search.
-     * Returns true if FTS was used successfully, false to fall back to sequential scan.
-     */
-    private searchViaFts(inputNoteSet: NoteSet, resultNoteSet: NoteSet): boolean {
-        try {
-            const ftsIndex = require("../fts_index.js").default;
-            const matchingNoteIds = ftsIndex.searchContent(this.tokens, this.operator);
-
-            for (const noteId of matchingNoteIds) {
-                if (inputNoteSet.hasNoteId(noteId) && noteId in becca.notes) {
-                    if (this.operator === "!=") {
-                        continue;
-                    }
-                    resultNoteSet.add(becca.notes[noteId]);
-                }
-            }
-
-            if (this.operator === "!=") {
-                const matchingSet = new Set(matchingNoteIds);
-                for (const note of inputNoteSet.notes) {
-                    if (!matchingSet.has(note.noteId) && note.noteId in becca.notes) {
-                        resultNoteSet.add(becca.notes[note.noteId]);
-                    }
-                }
-            }
-
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * Searches flat text attributes for = and != operators.
-     * Extracted from the old execute() tail.
-     */
-    private searchFlatTextAttributes(inputNoteSet: NoteSet, resultNoteSet: NoteSet): void {
-        if (!this.flatText || (this.operator !== "=" && this.operator !== "!=")) {
-            return;
-        }
-
-        for (const note of inputNoteSet.notes) {
-            if (resultNoteSet.hasNoteId(note.noteId) || !(note.noteId in becca.notes)) {
-                continue;
-            }
-
-            const noteFromBecca = becca.notes[note.noteId];
-            const flatText = noteFromBecca.getFlatText();
-
-            let matches = false;
-            const phrase = this.tokens.join(" ");
-            const normalizedPhrase = normalizeSearchText(phrase);
-            const normalizedFlatText = normalizeSearchText(flatText);
-
-            if (!normalizedPhrase.includes(' ')) {
-                const parts = normalizedFlatText.split('=');
-                matches = parts.slice(1).some(part => this.exactWordMatch(normalizedPhrase, part));
-            } else {
-                matches = normalizedFlatText.includes(`=${normalizedPhrase}`);
-            }
-
-            if ((this.operator === "=" && matches) || (this.operator === "!=" && !matches)) {
-                resultNoteSet.add(noteFromBecca);
-            }
-        }
     }
 
     /**
