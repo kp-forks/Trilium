@@ -1,5 +1,6 @@
 import { AttributeEditor as CKEditorAttributeEditor, MentionFeed, ModelElement, ModelNode, ModelPosition } from "@triliumnext/ckeditor5";
 import { AttributeType } from "@triliumnext/commons";
+import { createPortal } from "preact/compat";
 import { MutableRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "preact/hooks";
 
 import type { CommandData, FilteredCommandNames } from "../../../components/app_context";
@@ -407,7 +408,7 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
                 )}
             </div>}
 
-            {attributeDetailWidgetEl}
+            {createPortal(attributeDetailWidgetEl, document.body)}
         </>
     );
 }
