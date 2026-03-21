@@ -337,7 +337,8 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
                                 let matchedAttr: Attribute | null = null;
 
                                 for (const attr of parsedAttrs) {
-                                    if (attr.startIndex && clickIndex > attr.startIndex && attr.endIndex && clickIndex <= attr.endIndex) {
+                                    if (attr.startIndex !== undefined && clickIndex > attr.startIndex &&
+                                        attr.endIndex !== undefined && clickIndex <= attr.endIndex) {
                                         matchedAttr = attr;
                                         break;
                                     }
