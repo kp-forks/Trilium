@@ -56,6 +56,22 @@ const themeDefinitions: Record<string, Theme> = {
         name: "Brown Paper (Light)",
         load: () => import("highlight.js/styles/brown-paper.css?raw")
     },
+    "catppuccin-latte": {
+        name: "Catppuccin Latte (Light)",
+        load: () => import("@catppuccin/highlightjs/css/catppuccin-latte.css?raw")
+    },
+    "catppuccin-frappe": {
+        name: "Catppuccin Frappé (Dark)",
+        load: () => import("@catppuccin/highlightjs/css/catppuccin-frappe.css?raw")
+    },
+    "catppuccin-macchiato": {
+        name: "Catppuccin Macchiato (Dark)",
+        load: () => import("@catppuccin/highlightjs/css/catppuccin-macchiato.css?raw")
+    },
+    "catppuccin-mocha": {
+        name: "Catppuccin Mocha (Dark)",
+        load: () => import("@catppuccin/highlightjs/css/catppuccin-mocha.css?raw")
+    },
     "codepen-embed": {
         name: "CodePen Embed (Dark)",
         load: () => import("highlight.js/styles/codepen-embed.css?raw")
