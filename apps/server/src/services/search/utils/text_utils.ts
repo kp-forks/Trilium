@@ -275,19 +275,19 @@ export function fuzzyMatchWordWithResult(token: string, text: string, maxDistanc
     }
     
     try {
-        // Inputs from smartMatch() are already normalized (lowercased, diacritics removed).
-        // Skip redundant toLowerCase() — just use the inputs directly.
+        // Normalize for comparison — some callers pass pre-normalized text,
+        // others don't, so this function must be self-contained.
+        const normalizedToken = token.toLowerCase();
+        const normalizedText = text.toLowerCase();
 
         // Exact match check first (most common case)
-        if (text.includes(token)) {
+        if (normalizedText.includes(normalizedToken)) {
             return token;
         }
 
-        // For fuzzy matching, we need to check individual words in the text.
-        // Split into words and check each word against the token.
-        // Inputs are already normalized so we don't need a separate originalWords array.
-        const words = text.split(/\s+/);
-        const originalWords = words;
+        // For fuzzy matching, split into words and check each against the token
+        const words = normalizedText.split(/\s+/).filter(word => word.length > 0);
+        const originalWords = text.split(/\s+/).filter(word => word.length > 0);
         
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
