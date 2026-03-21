@@ -11,6 +11,9 @@ export interface Contributor {
 // is exceeded by another users.
 const PINNED_CONTRIBUTORS = ["eliandoran", "zadam"];
 
+// Bots marked as users on the GitHub profile info to exclude from the listing
+const BOTS = ["weblate"];
+
 export default async function getContributors() {
     const response = await fetch("https://api.github.com/repos/TriliumNext/Trilium/contributors");
 
@@ -26,7 +29,7 @@ export default async function getContributors() {
 function getList(contributorInfo: any[]) {
     return contributorInfo
         // Filter out bots and private profiles
-        .filter((c) => c.type === "User" && c.user_view_type === "public")
+        .filter((c) => c.type === "User" && c.user_view_type === "public" && !BOTS.includes(c.login))
         // Sort by the commit count. Honorific contributors are always first.
         .sort(contributorOrderer)
         .map((c) => {return {
