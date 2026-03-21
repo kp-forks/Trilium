@@ -1402,8 +1402,8 @@ importers:
         specifier: 0.5.0
         version: 0.5.0
       eslint-linter-browserify:
-        specifier: 10.0.3
-        version: 10.0.3
+        specifier: 10.1.0
+        version: 10.1.0
 
   packages/commons:
     dependencies:
@@ -9249,8 +9249,8 @@ packages:
     peerDependencies:
       eslint: '>=7.0.0'
 
-  eslint-linter-browserify@10.0.3:
-    resolution: {integrity: sha512-ljF77YFJ/LQNuKeJ42KDhvO7SQe12+m37TfFFs3TXQSx/u0/2HVxqfUYRU3RPMEO6UW9j/NYYqmRj+1f5GKS3g==}
+  eslint-linter-browserify@10.1.0:
+    resolution: {integrity: sha512-PEcXfZXc/Rqo+kUqq1uf4ia8jleXFertdQI8Icj8KBq1kLzjOXOmRACg1hLNsHBgQYNDZH71X3O1amv5/WqHfA==}
 
   eslint-plugin-ckeditor5-rules@14.0.0:
     resolution: {integrity: sha512-TLdFs+qhiEzVO4LQgVrJmc/49ZQ62qKq0fx+M+231tzGXSqioRV6LpRLHvF7XxEuG3+3LblMUJTLM+pBm5fXMg==}
@@ -16704,8 +16704,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.6.1
       '@ckeditor/ckeditor5-upload': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-ai@47.6.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
@@ -16853,8 +16851,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-code-block@47.6.1(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)':
     dependencies:
@@ -17041,8 +17037,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-classic@47.6.1':
     dependencies:
@@ -17052,8 +17046,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-decoupled@47.6.1':
     dependencies:
@@ -17063,8 +17055,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-inline@47.6.1':
     dependencies:
@@ -17098,6 +17088,8 @@ snapshots:
       '@ckeditor/ckeditor5-table': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-emoji@47.6.1':
     dependencies:
@@ -17123,8 +17115,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.6.1
       '@ckeditor/ckeditor5-engine': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-essentials@47.6.1':
     dependencies:
@@ -17257,8 +17247,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-html-embed@47.6.1':
     dependencies:
@@ -17434,6 +17422,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-mention@47.6.1(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)':
     dependencies:
@@ -17556,8 +17546,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.6.1
       '@ckeditor/ckeditor5-engine': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-real-time-collaboration@47.6.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
@@ -17588,8 +17576,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-restricted-editing@47.6.1':
     dependencies:
@@ -17676,8 +17662,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-special-characters@47.6.1':
     dependencies:
@@ -26866,7 +26850,7 @@ snapshots:
     dependencies:
       eslint: 10.0.3(jiti@2.6.1)
 
-  eslint-linter-browserify@10.0.3: {}
+  eslint-linter-browserify@10.1.0: {}
 
   eslint-plugin-ckeditor5-rules@14.0.0:
     dependencies:
