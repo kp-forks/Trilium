@@ -15,6 +15,9 @@
 - [Typing Progression (keystroke simulation)](#typing-progression-keystroke-simulation)
 - [Fuzzy Matching Effectiveness (typos & misspellings)](#fuzzy-matching-effectiveness-typos--misspellings)
 - [Realistic User Session](#realistic-user-session)
+- [Full Search (fastSearch=false)](#full-search-fastsearchfalse)
+- [Full Search with Fuzzy](#full-search-with-fuzzy)
+- [Long Queries (4 tokens)](#long-queries-4-tokens)
 - [Scale Comparison Summary](#scale-comparison-summary)
 - [Summary of Improvements](#summary-of-improvements)
 
@@ -149,6 +152,115 @@ Simulates a typical user session at 10K notes with mixed query types and typos.
 
 ---
 
+## Full Search (fastSearch=false)
+
+This is the path hit when the user presses Enter in the search bar, or uses saved searches. It runs `NoteFlatTextExp` + `NoteContentFulltextExp` via `OrExp`.
+
+> Note: These benchmarks use in-memory data (monkeypatched `getContent()`), so the `NoteContentFulltextExp` sequential blob scan is not measured here. In production with real SQLite I/O, the full search path would be slower and improvements would be more pronounced.
+
+### Single token: `"meeting"` (fuzzy OFF)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 1,000 | 2.3ms | 3.3ms | +43% |
+| 5,000 | 9.6ms | 9.7ms | +1% |
+| 10,000 | 22.9ms | 19.6ms | **-14%** |
+| 20,000 | 47.6ms | 37.9ms | **-20%** |
+
+### 2-Token: `"meeting notes"` (fuzzy OFF)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 1,000 | 3.3ms | 1.2ms | **-64%** |
+| 5,000 | 16.1ms | 6.9ms | **-57%** |
+| 10,000 | 35.7ms | 17.4ms | **-51%** |
+| 20,000 | 71.9ms | 38.2ms | **-47%** |
+
+### 3-Token: `"meeting notes january"` (fuzzy OFF)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 1,000 | 3.9ms | 1.3ms | **-67%** |
+| 5,000 | 20.9ms | 8.9ms | **-57%** |
+| 10,000 | 43.4ms | 21.0ms | **-52%** |
+| 20,000 | 91.7ms | 41.9ms | **-54%** |
+
+---
+
+## Full Search with Fuzzy
+
+### Single token: `"meeting"` (fuzzy ON)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 1,000 | 1.8ms | 2.8ms | +56% |
+| 5,000 | 11.1ms | 8.2ms | **-26%** |
+| 10,000 | 23.3ms | 17.8ms | **-24%** |
+| 20,000 | 48.7ms | 35.1ms | **-28%** |
+
+### 2-Token: `"meeting notes"` (fuzzy ON)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 1,000 | 3.3ms | 1.2ms | **-64%** |
+| 5,000 | 16.4ms | 7.1ms | **-57%** |
+| 10,000 | 33.8ms | 18.6ms | **-45%** |
+| 20,000 | 70.7ms | 37.2ms | **-47%** |
+
+### 3-Token: `"meeting notes january"` (fuzzy ON)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 1,000 | 3.7ms | 1.3ms | **-65%** |
+| 5,000 | 21.2ms | 8.7ms | **-59%** |
+| 10,000 | 43.2ms | 18.0ms | **-58%** |
+| 20,000 | 92.8ms | 40.1ms | **-57%** |
+
+### No-match with fuzzy — worst case (full scan + fuzzy phase)
+
+| Notes | Query | main | feature | Change |
+|------:|:------|-----:|--------:|-------:|
+| 5,000 | `"xyzfoo xyzbar"` | 31.7ms | 28.6ms | **-10%** |
+| 10,000 | `"xyzfoo xyzbar"` | 64.2ms | 61.4ms | -4% |
+| 20,000 | `"xyzfoo xyzbar"` | 142.9ms | 127.5ms | **-11%** |
+
+### Realistic typo recovery (full search + fuzzy)
+
+| Query | main | feature | Change |
+|:------|-----:|--------:|-------:|
+| `"project planning"` | 32.8ms | 18.6ms | **-43%** |
+| `"projct planing"` (typo, fuzzy OFF) | 10.5ms | 7.8ms | **-26%** |
+| `"projct planing"` (typo, fuzzy ON — recovers 1,500 results) | 133.8ms | 94.8ms | **-29%** |
+
+---
+
+## Long Queries (4 tokens)
+
+Query: `"quarterly budget review report"`.
+
+### Autocomplete
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 5,000 | 17.2ms | 11.9ms | **-31%** |
+| 10,000 | 36.8ms | 15.9ms | **-57%** |
+
+### Full search (fuzzy OFF)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 5,000 | 17.6ms | 25.4ms | +44% |
+| 10,000 | 37.1ms | 18.3ms | **-51%** |
+
+### Full search (fuzzy ON)
+
+| Notes | main | feature | Change |
+|------:|-----:|--------:|-------:|
+| 5,000 | 18.2ms | 17.9ms | -2% |
+| 10,000 | 39.5ms | 17.2ms | **-56%** |
+
+---
+
 ## Scale Comparison Summary
 
 Side-by-side comparison across all note counts for the most common query patterns.
@@ -193,21 +305,28 @@ Side-by-side comparison across all note counts for the most common query pattern
 
 ## Summary of Improvements
 
-### Where the feature branch clearly wins (consistent 25-60% improvement):
-- **Single-token autocomplete** at all scales (29-42% faster)
-- **Multi-token autocomplete** — the biggest consistent gains (50-70% faster)
+### Autocomplete (typing in search bar) — 30-70% faster:
+- **Single-token** at all scales (29-42% faster)
+- **Multi-token** — the biggest consistent gains (50-70% faster)
 - **Typing progression** (26-49% faster per keystroke at 10K notes)
 - **Diacritics queries** (28-53% faster)
-- **Broad term autocomplete** (e.g., `"note"` matching 8,500 results: 49% faster)
-- **Realistic user session queries** (33-47% faster for typical searches)
+- **Broad term** (e.g., `"note"` matching 8,500 results: 49% faster)
 
-### Where the feature branch dramatically wins (80%+ improvement):
+### Full search (pressing Enter) — 25-58% faster:
+- **Multi-token full search** (fuzzy OFF): 47-64% faster at all scales
+- **Multi-token full search** (fuzzy ON): 45-65% faster at all scales
+- **4-token full search** at 10K: 51-56% faster
+- **Typo recovery** (`"projct planing"` + fuzzy): 134ms → 95ms (**-29%**)
+- **Realistic queries** (`"project planning"` full search): 33ms → 19ms (**-43%**)
+
+### Dramatic wins (80%+ improvement):
 - **Autocomplete with fuzzy ON, no-match queries** (65-92% faster — fuzzy fallback skipped entirely)
-- **Autocomplete typo queries** (e.g., `"projct"` + fuzzy: 101ms -> 6ms, **-94%**)
+- **Autocomplete typo queries** (e.g., `"projct"` + fuzzy: 101ms → 6ms, **-94%**)
 
-### Where performance is roughly equal:
-- Full search fuzzy typo path — slight regression (+9-12%) because the two-phase fuzzy scan still runs
-- No-match queries without fuzzy at smaller scales (within noise)
+### Where performance is roughly equal or slightly slower:
+- Single-token full search at 1K notes (small dataset noise)
+- No-match queries without fuzzy at smaller scales
+- Full-search worst case (no-match + multi-token + fuzzy): 4-11% improvement
 
 ### Key optimizations in this PR:
 1. **Pre-built flat text index** with incremental updates in Becca
@@ -216,7 +335,9 @@ Side-by-side comparison across all note counts for the most common query pattern
 4. **Cached normalized parent titles** per search execution
 5. **Set-based token lookup** in searchPathTowardsRoot (O(1) vs O(n))
 6. **Removed redundant toLowerCase()** throughout scoring pipeline
-7. **Skip edit distance** when fuzzy matching is disabled
-8. **Faster content snippet extraction** — regex strip, window normalization
-9. **removeDiacritic() outside regex while-loop** in highlighting
-10. **Single-token autocomplete fast path** — skips recursive parent walk
+7. **Pre-normalize tokens once** in addScoreForStrings instead of per-chunk
+8. **Skip edit distance** when fuzzy matching is disabled
+9. **Faster content snippet extraction** — regex strip, window normalization
+10. **removeDiacritic() outside regex while-loop** in highlighting
+11. **Single-token autocomplete fast path** — skips recursive parent walk
+12. **User option** to disable fuzzy matching entirely for fastest mode
