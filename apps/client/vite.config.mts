@@ -1,13 +1,28 @@
 /// <reference types='vitest' />
 import prefresh from '@prefresh/vite';
-import { join } from 'path';
+import { join, resolve } from "path";
 import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { writeFileSync, mkdirSync } from "fs";
+import getContributors from "./src/services/contributors_list";
 
 const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 
 const isDev = process.env.NODE_ENV === "development";
+
+const buildContributorListPlugin = {
+    name: "build-contributor-list-plugin",
+    writeBundle: async () => {
+        console.log("Retrieving the contributors list...");
+        const jsonData = await getContributors();
+
+        const assetsDir = resolve(__dirname, "dist/assets");
+        mkdirSync(assetsDir, {recursive: true});
+        writeFileSync(resolve(assetsDir, "contributors.json"), JSON.stringify(jsonData, null, 2));
+    }
+};
+
 let plugins: any = [];
 
 if (isDev) {
@@ -17,6 +32,7 @@ if (isDev) {
     ];
 } else {
     plugins = [
+        buildContributorListPlugin,
         viteStaticCopy({
             targets: assets.map((asset) => ({
                 src: `src/${asset}/*`,
