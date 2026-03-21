@@ -1,9 +1,9 @@
-/// <reference types='vitest' />
-import prefresh from '@prefresh/vite';
+/// <reference types="vitest" />
+import prefresh from "@prefresh/vite";
 import { join, resolve } from "path";
-import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
-import { defineConfig } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import webpackStatsPlugin from "rollup-plugin-webpack-stats";
+import { defineConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy"
 import { writeFileSync, mkdirSync } from "fs";
 import getContributors from "./src/services/contributors_list";
 
@@ -54,17 +54,17 @@ if (isDev) {
 
 export default defineConfig(() => ({
     root: __dirname,
-    cacheDir: '../../.cache/vite',
+    cacheDir: "../../.cache/vite",
     base: "",
     plugins,
     // Use esbuild for JSX transformation (much faster than Babel)
     esbuild: {
-        jsx: 'automatic',
-        jsxImportSource: 'preact',
+        jsx: "automatic",
+        jsxImportSource: "preact",
         jsxDev: isDev
     },
     css: {
-        transformer: 'lightningcss',
+        transformer: "lightningcss",
         devSourcemap: isDev
     },
     resolve: {
@@ -95,7 +95,7 @@ export default defineConfig(() => ({
     },
     build: {
         target: "esnext",
-        outDir: './dist',
+        outDir: "./dist",
         emptyOutDir: true,
         reportCompressedSize: true,
         sourcemap: false,
