@@ -14,8 +14,14 @@ const isDev = process.env.NODE_ENV === "development";
 const buildContributorListPlugin = {
     name: "build-contributor-list-plugin",
     writeBundle: async () => {
-        console.log("Retrieving the contributors list...");
-        const jsonData = await getContributors();
+        console.log("Retrieving the contributor list...");
+    
+        let jsonData: any = {};
+        try {
+            jsonData = await getContributors();
+        } catch (ex) {
+            console.error(ex);
+        }
 
         const assetsDir = resolve(__dirname, "dist/assets");
         mkdirSync(assetsDir, {recursive: true});
