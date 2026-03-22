@@ -7,11 +7,15 @@ export interface ContributorList {
 export interface Contributor {
     name: string;
     url: string;
+    role?: "lead-dev" | "original-dev";
 }
 
 // Keep honorific contributors at top of the list, even if their commit count
 // is exceeded by another users.
-const PINNED_CONTRIBUTORS = ["eliandoran", "zadam"];
+const PINNED_CONTRIBUTORS = {
+    "eliandoran": "lead-dev",
+    "zadam": "original-dev"
+};
 
 // Bots marked as users on the GitHub profile info to exclude from the listing
 const BOTS = ["weblate"];
@@ -50,13 +54,14 @@ function getList(contributorInfo: any[]) {
         .sort(contributorOrderer)
         .map((c) => {return {
             name: c.login,
+            role: (c.login in PINNED_CONTRIBUTORS) ? PINNED_CONTRIBUTORS[c.login]: undefined,
             url: c.html_url
         } as Contributor});
 }
 
 function contributorOrderer(a, b) {
-    const isAPinned = PINNED_CONTRIBUTORS.includes(a.login);
-    const isBPinned = PINNED_CONTRIBUTORS.includes(b.login);
+    const isAPinned = (a.login in PINNED_CONTRIBUTORS);
+    const isBPinned = (b.login in PINNED_CONTRIBUTORS);
     
     // Pinned contributors come first
     if (isAPinned !== isBPinned) {
