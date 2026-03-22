@@ -1,30 +1,31 @@
 import { ConvertAttachmentToNoteResponse } from "@triliumnext/commons";
-import blobService from "../../services/blob";
 import { ValidationError } from "../../errors";
 import type { Request } from "express";
 
+
 import becca from "../../becca/becca.js";
+import blobService from "../../services/blob.js";
 import imageService from "../../services/image.js";
 
-function getAttachmentBlob(req: Request) {
+function getAttachmentBlob(req: Request<{ attachmentId: string }>) {
     const preview = req.query.preview === "true";
 
     return blobService.getBlobPojo("attachments", req.params.attachmentId, { preview });
 }
 
-function getAttachments(req: Request) {
+function getAttachments(req: Request<{ noteId: string }>) {
     const note = becca.getNoteOrThrow(req.params.noteId);
 
     return note.getAttachments();
 }
 
-function getAttachment(req: Request) {
+function getAttachment(req: Request<{ attachmentId: string }>) {
     const { attachmentId } = req.params;
 
     return becca.getAttachmentOrThrow(attachmentId);
 }
 
-function getAllAttachments(req: Request) {
+function getAllAttachments(req: Request<{ attachmentId: string }>) {
     const { attachmentId } = req.params;
     // one particular attachment is requested, but return all note's attachments
 
@@ -32,7 +33,7 @@ function getAllAttachments(req: Request) {
     return attachment.getNote()?.getAttachments() || [];
 }
 
-function saveAttachment(req: Request) {
+function saveAttachment(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
     const { attachmentId, role, mime, title, content } = req.body;
     const matchByQuery = req.query.matchBy;
@@ -43,7 +44,7 @@ function saveAttachment(req: Request) {
     note.saveAttachment({ attachmentId, role, mime, title, content }, matchBy);
 }
 
-function uploadAttachment(req: Request) {
+function uploadAttachment(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
     const { file } = req;
 
@@ -77,7 +78,7 @@ function uploadAttachment(req: Request) {
     };
 }
 
-function renameAttachment(req: Request) {
+function renameAttachment(req: Request<{ attachmentId: string }>) {
     const { title } = req.body;
     const { attachmentId } = req.params;
 
@@ -91,7 +92,7 @@ function renameAttachment(req: Request) {
     attachment.save();
 }
 
-function deleteAttachment(req: Request) {
+function deleteAttachment(req: Request<{ attachmentId: string }>) {
     const { attachmentId } = req.params;
 
     const attachment = becca.getAttachment(attachmentId);
@@ -101,7 +102,7 @@ function deleteAttachment(req: Request) {
     }
 }
 
-function convertAttachmentToNote(req: Request) {
+function convertAttachmentToNote(req: Request<{ attachmentId: string }>) {
     const { attachmentId } = req.params;
 
     const attachment = becca.getAttachmentOrThrow(attachmentId);

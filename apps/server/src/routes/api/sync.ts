@@ -1,4 +1,4 @@
-import { type EntityChange,SyncTestResponse } from "@triliumnext/commons";
+import { type EntityChange, SyncTestResponse } from "@triliumnext/commons";
 import { ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import { t } from "i18next";
@@ -286,10 +286,9 @@ function update(req: Request) {
 
         if (pageIndex !== pageCount - 1) {
             return;
-        } 
+        }
         body = JSON.parse(partialRequests[requestId].payload);
         delete partialRequests[requestId];
-        
     }
 
     const { entities, instanceId } = body;
@@ -313,7 +312,7 @@ function syncFinished() {
     sqlInit.setDbAsInitialized();
 }
 
-function queueSector(req: Request) {
+function queueSector(req: Request<{ entityName: string; sector: string }>) {
     const entityName = utils.sanitizeSqlIdentifier(req.params.entityName);
     const sector = utils.sanitizeSqlIdentifier(req.params.sector);
 

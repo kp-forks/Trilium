@@ -28,7 +28,7 @@ interface DefaultOption {
     /**
      * The value to initialize the option with, if the option is not already present in the database.
      *
-     * If a function is passed in instead, the function is called if the option does not exist (with access to the current options) and the return value is used instead. Useful to migrate a new option with a value depending on some other option that might be initialized.
+     * If a function is passed Gin instead, the function is called if the option does not exist (with access to the current options) and the return value is used instead. Useful to migrate a new option with a value depending on some other option that might be initialized.
      */
     value: string | ((options: OptionMap) => string);
     isSynced: boolean;
@@ -201,22 +201,6 @@ const defaultOptions: DefaultOption[] = [
     // Share settings
     { name: "redirectBareDomain", value: "false", isSynced: true },
     { name: "showLoginInShareTheme", value: "false", isSynced: true },
-
-    // AI Options
-    { name: "aiEnabled", value: "false", isSynced: true },
-    { name: "openaiApiKey", value: "", isSynced: false },
-    { name: "openaiDefaultModel", value: "", isSynced: true },
-    { name: "openaiBaseUrl", value: "https://api.openai.com/v1", isSynced: true },
-    { name: "anthropicApiKey", value: "", isSynced: false },
-    { name: "anthropicDefaultModel", value: "", isSynced: true },
-    { name: "voyageApiKey", value: "", isSynced: false },
-    { name: "anthropicBaseUrl", value: "https://api.anthropic.com/v1", isSynced: true },
-    { name: "ollamaEnabled", value: "false", isSynced: true },
-    { name: "ollamaDefaultModel", value: "", isSynced: true },
-    { name: "ollamaBaseUrl", value: "http://localhost:11434", isSynced: true },
-    { name: "aiTemperature", value: "0.7", isSynced: true },
-    { name: "aiSystemPrompt", value: "", isSynced: true },
-    { name: "aiSelectedProvider", value: "openai", isSynced: true },
 
     {
         name: "seenCallToActions",

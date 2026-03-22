@@ -1,20 +1,20 @@
-import treeService from "./tree.js";
-import linkService from "./link.js";
-import froca from "./froca.js";
-import utils from "./utils.js";
-import attributeRenderer from "./attribute_renderer.js";
-import contentRenderer from "./content_renderer.js";
 import appContext from "../components/app_context.js";
 import type FNote from "../entities/fnote.js";
+import attributeRenderer from "./attribute_renderer.js";
+import contentRenderer from "./content_renderer.js";
+import froca from "./froca.js";
 import { t } from "./i18n.js";
+import linkService from "./link.js";
+import treeService from "./tree.js";
+import utils from "./utils.js";
 
 // Track all elements that open tooltips
 let openTooltipElements: JQuery<HTMLElement>[] = [];
 let dismissTimer: ReturnType<typeof setTimeout>;
 
 function setupGlobalTooltip() {
-    $(document).on("mouseenter", "a:not(.no-tooltip-preview)", mouseEnterHandler);
-    $(document).on("mouseenter", "[data-href]:not(.no-tooltip-preview)", mouseEnterHandler);
+    $(document).on("pointerenter", "a:not(.no-tooltip-preview)", mouseEnterHandler);
+    $(document).on("pointerenter", "[data-href]:not(.no-tooltip-preview)", mouseEnterHandler);
 
     // close any note tooltip after click, this fixes the problem that sometimes tooltips remained on the screen
     $(document).on("click", (e) => {
@@ -37,10 +37,12 @@ function dismissAllTooltips() {
 }
 
 function setupElementTooltip($el: JQuery<HTMLElement>) {
-    $el.on("mouseenter", mouseEnterHandler);
+    $el.on("pointerenter", mouseEnterHandler);
 }
 
-async function mouseEnterHandler(this: HTMLElement) {
+async function mouseEnterHandler<T>(this: HTMLElement, e: JQuery.TriggeredEvent<T, undefined, T, T>) {
+    if (e.pointerType !== "mouse") return;
+
     const $link = $(this);
 
     if ($link.hasClass("no-tooltip-preview") || $link.hasClass("disabled")) {
@@ -91,7 +93,7 @@ async function mouseEnterHandler(this: HTMLElement) {
     }
 
     const html = `<div class="note-tooltip-content">${content}</div>`;
-    const tooltipClass = "tooltip-" + Math.floor(Math.random() * 999_999_999);
+    const tooltipClass = `tooltip-${  Math.floor(Math.random() * 999_999_999)}`;
 
     // we need to check if we're still hovering over the element
     // since the operation to get tooltip content was async, it is possible that
@@ -224,7 +226,7 @@ function renderFootnoteOrAnchor($link: JQuery<HTMLElement>, url: string) {
     }
 
     let footnoteContent = $targetContent.html();
-    footnoteContent = `<div class="ck-content">${footnoteContent}</div>`
+    footnoteContent = `<div class="ck-content">${footnoteContent}</div>`;
     return footnoteContent || "";
 }
 

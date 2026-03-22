@@ -12,7 +12,7 @@
         "get_started": "Начало работы",
         "github": "GitHub",
         "dockerhub": "Docker Hub",
-        "screenshot_alt": "Скриншот приложения Trilium Notes для ПК"
+        "screenshot_alt": "Скриншот приложения Trilium Notes для настольного приложения"
     },
     "organization_benefits": {
         "title": "Структура",
@@ -70,7 +70,8 @@
     "header": {
         "get-started": "Начало работы",
         "support-us": "Поддержите нас",
-        "documentation": "Документация"
+        "documentation": "Документация",
+        "resources": "Ресурсы"
     },
     "social_buttons": {
         "github": "GitHub",
@@ -196,5 +197,12 @@
     "404": {
         "title": "404: Не найдено",
         "description": "Страница, которую вы искали, не найдена. Возможно, она была удалена или URL-адрес указан неверно."
+    },
+    "resources": {
+        "title": "Ресурсы",
+        "icon_packs": "Наборы иконок",
+        "download": "Скачать",
+        "website": "Сайт",
+        "icon_packs_intro": "Расширьте выбор значков для заметок, используя набор иконок. Подробнее о наборах иконок смотрите в <DocumentationLink>официальной документации</DocumentationLink>."
     }
 }

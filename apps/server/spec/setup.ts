@@ -21,7 +21,8 @@ beforeAll(async () => {
         ns: "server",
         backend: {
             loadPath: join(__dirname, "../src/assets/translations/{{lng}}/{{ns}}.json")
-        }
+        },
+        showSupportNotice: false
     });
 
     // Initialize dayjs

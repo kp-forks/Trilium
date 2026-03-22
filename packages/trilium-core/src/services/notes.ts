@@ -1,8 +1,4 @@
-import type { AttachmentRow, AttributeRow, BranchRow, NoteRow, NoteType } from "@triliumnext/commons";
-import { dayjs } from "@triliumnext/commons";
-import date_utils from "../services/utils/date";
-import eventService from "../services/events";
-import { ValidationError } from "../errors.js";
+import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, NoteType } from "@triliumnext/commons";
 import fs from "fs";
 import html2plaintext from "html2plaintext";
 import { t } from "i18next";
@@ -14,10 +10,12 @@ import BAttachment from "../becca/entities/battachment.js";
 import BAttribute from "../becca/entities/battribute.js";
 import BBranch from "../becca/entities/bbranch.js";
 import BNote from "../becca/entities/bnote.js";
-import * as cls from "../services/context.js";
+import log, { getLog } from "../services/log.js";
 import protectedSessionService from "../services/protected_session.js";
 import { newEntityId, quoteRegex, toMap, unescapeHtml } from "./utils/index.js";
+import date_utils from "./utils/date.js";
 import entityChangesService from "./entity_changes.js";
+import eventService from "./events.js";
 import imageService from "./image.js";
 import noteTypesService from "./note_types.js";
 import optionService from "./options.js";
@@ -25,10 +23,11 @@ import request from "./request.js";
 import revisionService from "./revisions.js";
 import type TaskContext from "./task_context.js";
 import ws from "./ws.js";
-import { getSql } from "./sql/index.js";
-import { getLog } from "./log.js";
 import { decodeBase64 } from "./utils/binary.js";
+import { getSql } from "./sql/index.js";
 import { sanitizeHtml } from "./sanitizer.js";
+import { ValidationError } from "../errors.js";
+import * as cls from "./context.js";
 
 interface FoundLink {
     name: "imageLink" | "internalLink" | "includeNoteLink" | "relationMapLink";
@@ -83,7 +82,6 @@ function getNewNotePosition(parentNote: BNote) {
         .reduce((max, note) => Math.max(max, note?.notePosition || 0), 0);
 
     return maxNotePos + 10;
-
 }
 
 function triggerNoteTitleChanged(note: BNote) {
@@ -347,7 +345,6 @@ function createNewNoteWithTarget(target: "into" | "after" | "before", targetBran
         return retObject;
     }
     throw new Error(`Unknown target '${target}'`);
-
 }
 
 function protectNoteRecursively(note: BNote, protect: boolean, includingSubTree: boolean, taskContext: TaskContext<"protectNotes">) {
@@ -526,7 +523,7 @@ function findRelationMapLinks(content: string, foundLinks: FoundLink[]) {
             });
         }
     } catch (e: any) {
-        getLog().error(`Could not scan for relation map links: ${  e.message}`);
+        getLog().error(`Could not scan for relation map links: ${e.message}`);
     }
 }
 
@@ -534,7 +531,6 @@ const imageUrlToAttachmentIdMapping: Record<string, string> = {};
 
 async function downloadImage(noteId: string, imageUrl: string) {
     const unescapedUrl = unescapeHtml(imageUrl);
-    const log = getLog();
 
     try {
         let imageBuffer: Uint8Array;
@@ -563,12 +559,12 @@ async function downloadImage(noteId: string, imageUrl: string) {
         if (attachment.attachmentId) {
             imageUrlToAttachmentIdMapping[imageUrl] = attachment.attachmentId;
         } else {
-            log.error(`Download of '${imageUrl}' for note '${noteId}' failed due to no attachment ID.`);
+            getLog().error(`Download of '${imageUrl}' for note '${noteId}' failed due to no attachment ID.`);
         }
 
-        log.info(`Download of '${imageUrl}' succeeded and was saved as image attachment '${attachment.attachmentId}' of note '${noteId}'`);
+        getLog().info(`Download of '${imageUrl}' succeeded and was saved as image attachment '${attachment.attachmentId}' of note '${noteId}'`);
     } catch (e: any) {
-        log.error(`Download of '${imageUrl}' for note '${noteId}' failed with error: ${e.message} ${e.stack}`);
+        getLog().error(`Download of '${imageUrl}' for note '${noteId}' failed with error: ${e.message} ${e.stack}`);
     }
 }
 
@@ -806,16 +802,19 @@ function updateNoteData(noteId: string, content: string, attachments: Attachment
     if (attachments?.length > 0) {
         const existingAttachmentsByTitle = toMap(note.getAttachments(), "title");
 
-        for (const { attachmentId, role, mime, title, position, content } of attachments) {
+        for (const { attachmentId, role, mime, title, position, content, encoding } of attachments) {
+            const decodedContent = encoding === "base64" && typeof content === "string"
+                ? decodeBase64(content) : content;
+
             const existingAttachment = existingAttachmentsByTitle.get(title);
             if (attachmentId || !existingAttachment) {
-                note.saveAttachment({ attachmentId, role, mime, title, content, position });
+                note.saveAttachment({ attachmentId, role, mime, title, content: decodedContent, position });
             } else {
                 existingAttachment.role = role;
                 existingAttachment.mime = mime;
                 existingAttachment.position = position;
-                if (content) {
-                    existingAttachment.setContent(content, { forceSave: true });
+                if (decodedContent) {
+                    existingAttachment.setContent(decodedContent, { forceSave: true });
                 }
             }
         }

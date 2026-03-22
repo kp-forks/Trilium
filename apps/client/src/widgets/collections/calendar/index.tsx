@@ -79,6 +79,7 @@ export const LOCALE_MAPPINGS: Record<DISPLAYABLE_LOCALE_IDS, (() => Promise<{ de
     es: () => import("@fullcalendar/core/locales/es"),
     fr: () => import("@fullcalendar/core/locales/fr"),
     it: () => import("@fullcalendar/core/locales/it"),
+    hi: () => import("@fullcalendar/core/locales/hi"),
     ga: null,
     cn: () => import("@fullcalendar/core/locales/zh-cn"),
     tw: () => import("@fullcalendar/core/locales/zh-tw"),
@@ -251,6 +252,7 @@ function usePlugins(isEditable: boolean, isCalendarRoot: boolean) {
             plugins.push((await import("@fullcalendar/timegrid")).default);
             plugins.push((await import("@fullcalendar/list")).default);
             plugins.push((await import("@fullcalendar/multimonth")).default);
+            plugins.push((await import("@fullcalendar/rrule")).default);
             if (isEditable || isCalendarRoot) {
                 plugins.push((await import("@fullcalendar/interaction")).default);
             }
@@ -307,11 +309,11 @@ function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean, c
 
     // Called upon when clicking the day number in the calendar, opens or creates the day note but only if in a calendar root.
     const onDateClick = useCallback(async (e: DateClickArg) => {
-        const eventNote = await date_notes.getDayNote(e.dateStr);
+        const eventNote = await date_notes.getDayNote(e.dateStr, note.noteId);
         if (eventNote) {
             appContext.triggerCommand("openInPopup", { noteIdOrPath: eventNote.noteId });
         }
-    }, []);
+    }, [ note ]);
 
     return {
         select: onCalendarSelection,

@@ -1,4 +1,5 @@
 import type { NextFunction, Request, RequestHandler, Response, Router } from "express";
+import type { ParamsDictionary } from "express-serve-static-core";
 
 import becca from "../becca/becca.js";
 import { namespace } from "../cls_provider.js";
@@ -51,7 +52,7 @@ function checkEtapiAuth(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-function processRequest(req: Request, res: Response, routeHandler: ApiRequestHandler, next: NextFunction, method: string, path: string) {
+function processRequest<P extends ParamsDictionary>(req: Request<P>, res: Response, routeHandler: ApiRequestHandler<P>, next: NextFunction, method: string, path: string) {
     try {
         namespace.bindEmitter(req);
         namespace.bindEmitter(res);
@@ -75,12 +76,12 @@ function processRequest(req: Request, res: Response, routeHandler: ApiRequestHan
     }
 }
 
-function route(router: Router, method: HttpMethod, path: string, routeHandler: SyncRouteRequestHandler) {
-    router[method](path, checkEtapiAuth, (req: Request, res: Response, next: NextFunction) => processRequest(req, res, routeHandler, next, method, path));
+function route<P extends ParamsDictionary>(router: Router, method: HttpMethod, path: string, routeHandler: SyncRouteRequestHandler<P>) {
+    router[method](path, checkEtapiAuth, (req: Request<P>, res: Response, next: NextFunction) => processRequest(req, res, routeHandler, next, method, path));
 }
 
-function NOT_AUTHENTICATED_ROUTE(router: Router, method: HttpMethod, path: string, middleware: RequestHandler[], routeHandler: SyncRouteRequestHandler) {
-    router[method](path, ...middleware, (req: Request, res: Response, next: NextFunction) => processRequest(req, res, routeHandler, next, method, path));
+function NOT_AUTHENTICATED_ROUTE<P extends ParamsDictionary>(router: Router, method: HttpMethod, path: string, middleware: RequestHandler[], routeHandler: SyncRouteRequestHandler<P>) {
+    router[method](path, ...middleware, (req: Request<P>, res: Response, next: NextFunction) => processRequest(req, res, routeHandler, next, method, path));
 }
 
 function getAndCheckNote(noteId: string) {
@@ -88,9 +89,9 @@ function getAndCheckNote(noteId: string) {
 
     if (note) {
         return note;
-    } 
+    }
     throw new EtapiError(404, "NOTE_NOT_FOUND", `Note '${noteId}' not found.`);
-    
+
 }
 
 function getAndCheckAttachment(attachmentId: string) {
@@ -98,9 +99,9 @@ function getAndCheckAttachment(attachmentId: string) {
 
     if (attachment) {
         return attachment;
-    } 
+    }
     throw new EtapiError(404, "ATTACHMENT_NOT_FOUND", `Attachment '${attachmentId}' not found.`);
-    
+
 }
 
 function getAndCheckBranch(branchId: string) {
@@ -108,9 +109,9 @@ function getAndCheckBranch(branchId: string) {
 
     if (branch) {
         return branch;
-    } 
+    }
     throw new EtapiError(404, "BRANCH_NOT_FOUND", `Branch '${branchId}' not found.`);
-    
+
 }
 
 function getAndCheckAttribute(attributeId: string) {
@@ -118,9 +119,9 @@ function getAndCheckAttribute(attributeId: string) {
 
     if (attribute) {
         return attribute;
-    } 
+    }
     throw new EtapiError(404, "ATTRIBUTE_NOT_FOUND", `Attribute '${attributeId}' not found.`);
-    
+
 }
 
 function getAndCheckRevision(revisionId: string) {
@@ -128,9 +129,8 @@ function getAndCheckRevision(revisionId: string) {
 
     if (revision) {
         return revision;
-    } else {
-        throw new EtapiError(404, "REVISION_NOT_FOUND", `Revision '${revisionId}' not found.`);
     }
+    throw new EtapiError(404, "REVISION_NOT_FOUND", `Revision '${revisionId}' not found.`);
 }
 
 function validateAndPatch(target: any, source: any, allowedProperties: ValidatorMap) {

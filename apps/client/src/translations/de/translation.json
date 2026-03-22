@@ -428,9 +428,9 @@
     "run_on_note_content_change": "Wird ausgeführt, wenn der Inhalt einer Notiz geändert wird (einschließlich der Erstellung von Notizen).",
     "run_on_note_change": "Wird ausgeführt, wenn eine Notiz geändert wird (einschließlich der Erstellung von Notizen). Enthält keine Inhaltsänderungen",
     "run_on_note_deletion": "Wird ausgeführt, wenn eine Notiz gelöscht wird",
-    "run_on_branch_creation": "wird ausgeführt, wenn ein Zweig erstellt wird. Der Zweig ist eine Verbindung zwischen der übergeordneten Notiz und der untergeordneten Notiz und wird z. B. erstellt. beim Klonen oder Verschieben von Notizen.",
+    "run_on_branch_creation": "wird ausgeführt, wenn ein Zweig erstellt wird. Der Zweig ist eine Verbindung zwischen der übergeordneten und der untergeordneten Notiz und wird z. B. beim Klonen oder Verschieben von Notizen erstellt.",
     "run_on_branch_change": "wird ausgeführt, wenn ein Zweig aktualisiert wird.",
-    "run_on_branch_deletion": "wird ausgeführt, wenn ein Zweig gelöscht wird. Der Zweig ist eine Verknüpfung zwischen der übergeordneten Notiz und der untergeordneten Notiz und wird z. B. gelöscht. beim Verschieben der Notiz (alter Zweig/Link wird gelöscht).",
+    "run_on_branch_deletion": "wird ausgeführt, wenn ein Zweig gelöscht wird. Der Zweig ist eine Verknüpfung zwischen der übergeordneten und der untergeordneten Notiz und wird z. B. beim Verschieben der Notiz gelöscht (alter Zweig/Link wird gelöscht).",
     "run_on_attribute_creation": "wird ausgeführt, wenn für die Notiz ein neues Attribut erstellt wird, das diese Beziehung definiert",
     "run_on_attribute_change": " wird ausgeführt, wenn das Attribut einer Notiz geändert wird, die diese Beziehung definiert. Dies wird auch ausgelöst, wenn das Attribut gelöscht wird",
     "relation_template": "Die Attribute der Notiz werden auch ohne eine Hierarchische-Beziehung vererbt. Der Inhalt und der Zweig werden den Instanznotizen hinzugefügt, wenn sie leer sind. Einzelheiten findest du in der Dokumentation.",
@@ -801,7 +801,7 @@
     "expand_tooltip": "Erweitert die direkten Unterelemente dieser Sammlung (eine Ebene tiefer). Für weitere Optionen auf den Pfeil rechts klicken.",
     "expand_first_level": "Direkte Unterelemente erweitern",
     "expand_nth_level": "{{depth}} Ebenen erweitern",
-    "hide_child_notes": "Unternotizen im Baum ausblenden"
+    "hide_child_notes": "Untergeordnete Notizen im Baum ausblenden"
   },
   "edited_notes": {
     "no_edited_notes_found": "An diesem Tag wurden noch keine Notizen bearbeitet...",
@@ -1007,7 +1007,7 @@
     "no_attachments": "Diese Notiz enthält keine Anhänge."
   },
   "book": {
-    "no_children_help": "Diese Notiz mit dem Notiztyp Buch besitzt keine Unternotizen, deshalb ist nichts zum Anzeigen vorhanden. Siehe <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">Wiki</a> für mehr Details.",
+    "no_children_help": "Diese Sammlung enthält keine untergeordnete Notizen, daher gibt es nichts anzuzeigen.",
     "drag_locked_title": "Für Bearbeitung gesperrt",
     "drag_locked_message": "Das Ziehen ist nicht möglich, da die Sammlung für die Bearbeitung gesperrt ist."
   },
@@ -1046,7 +1046,6 @@
     "unprotecting-title": "Ungeschützt-Status"
   },
   "relation_map": {
-    "open_in_new_tab": "In neuem Tab öffnen",
     "remove_note": "Notiz entfernen",
     "edit_title": "Titel bearbeiten",
     "rename_note": "Notiz umbenennen",
@@ -1062,15 +1061,6 @@
     "enter_title_of_new_note": "Gebe den Titel der neuen Notiz ein",
     "default_new_note_title": "neue Notiz",
     "click_on_canvas_to_place_new_note": "Klicke auf den Canvas, um eine neue Notiz zu platzieren"
-  },
-  "render": {
-    "note_detail_render_help_1": "Diese Hilfesnotiz wird angezeigt, da diese Notiz vom Typ „HTML rendern“ nicht über die erforderliche Beziehung verfügt, um ordnungsgemäß zu funktionieren.",
-    "note_detail_render_help_2": "Render-HTML-Notiztyp wird benutzt für <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. Kurzgesagt, du hast ein HTML-Code-Notiz (optional mit JavaScript) und diese Notiz rendert es. Damit es funktioniert, musst du eine a <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">Beziehung</a> namens \"renderNote\" zeigend auf die HTML-Notiz zum rendern definieren."
-  },
-  "web_view": {
-    "web_view": "Webansicht",
-    "embed_websites": "Notiz vom Typ Web View ermöglicht das Einbetten von Websites in Trilium.",
-    "create_label": "Um zu beginnen, erstelle bitte ein Label mit einer URL-Adresse, die eingebettet werden soll, z. B. #webViewSrc=\"https://www.google.com\""
   },
   "backend_log": {
     "refresh": "Aktualisieren"
@@ -1196,7 +1186,7 @@
     "tooltip_code_note_syntax": "Code-Notizen"
   },
   "vim_key_bindings": {
-    "use_vim_keybindings_in_code_notes": "Verwende VIM-Tastenkombinationen in Codenotizen (kein Ex-Modus)",
+    "use_vim_keybindings_in_code_notes": "Vim Tastenbelegung",
     "enable_vim_keybindings": "Aktiviere Vim-Tastenkombinationen"
   },
   "wrap_lines": {
@@ -1387,7 +1377,8 @@
     "description": "Beschreibung",
     "reload_app": "Lade die App neu, um die Änderungen zu übernehmen",
     "set_all_to_default": "Setze alle Verknüpfungen auf die Standardeinstellungen",
-    "confirm_reset": "Möchtest du wirklich alle Tastaturkürzel auf die Standardeinstellungen zurücksetzen?"
+    "confirm_reset": "Möchtest du wirklich alle Tastaturkürzel auf die Standardeinstellungen zurücksetzen?",
+    "no_results": "Keine Tastenkürzel für '{{filter}}' gefunden"
   },
   "spellcheck": {
     "title": "Rechtschreibprüfung",
@@ -1447,7 +1438,7 @@
     "open-in-a-new-tab": "In neuem Tab öffnen",
     "open-in-a-new-split": "In neuem Split öffnen",
     "insert-note-after": "Notiz dahinter einfügen",
-    "insert-child-note": "Unternotiz einfügen",
+    "insert-child-note": "Untergeordnete Notiz einfügen",
     "delete": "Löschen",
     "search-in-subtree": "Im Zweig suchen",
     "hoist-note": "Notiz-Fokus setzen",
@@ -1496,20 +1487,21 @@
     "mermaid-diagram": "Mermaid Diagramm",
     "canvas": "Leinwand",
     "web-view": "Webansicht",
-    "mind-map": "Mind Map",
+    "mind-map": "Mindmap",
     "file": "Datei",
     "image": "Bild",
     "launcher": "Starter",
     "doc": "Dokument",
     "widget": "Widget",
-    "confirm-change": "Es is nicht empfehlenswert den Notiz-Typ zu ändern, wenn der Inhalt der Notiz nicht leer ist. Möchtest du dennoch fortfahren?",
+    "confirm-change": "Es ist nicht empfehlenswert den Notiz-Typ zu ändern, wenn der Inhalt der Notiz nicht leer ist. Möchtest du dennoch fortfahren?",
     "geo-map": "Geo-Karte",
     "beta-feature": "Beta",
     "book": "Sammlung",
-    "ai-chat": "KI Chat",
+    "ai-chat": "KI-Chat",
     "task-list": "Aufgabenliste",
     "new-feature": "Neu",
-    "collections": "Sammlungen"
+    "collections": "Sammlungen",
+    "spreadsheet": "Tabelle"
   },
   "protect_note": {
     "toggle-on": "Notiz schützen",
@@ -1566,7 +1558,7 @@
     "saved-search-note-refreshed": "Gespeicherte Such-Notiz wurde aktualisiert.",
     "hoist-this-note-workspace": "Diese Notiz fokussieren (Arbeitsbereich)",
     "refresh-saved-search-results": "Gespeicherte Suchergebnisse aktualisieren",
-    "create-child-note": "Unternotiz anlegen",
+    "create-child-note": "Untergeordnete Notiz anlegen",
     "unhoist": "Fokus verlassen",
     "toggle-sidebar": "Seitenleiste ein-/ausblenden",
     "dropping-not-allowed": "Ablegen von Notizen an dieser Stelle ist nicht zulässig.",
@@ -1577,7 +1569,7 @@
     "subtree-hidden-tooltip_one": "{{count}} untergeordnete Notiz, die im Baum ausgeblendet ist",
     "subtree-hidden-tooltip_other": "{{count}} untergeordnete Notizen, die im Baum ausgeblendet sind",
     "subtree-hidden-moved-title": "Zu {{title}} hinzugefügt",
-    "subtree-hidden-moved-description-collection": "Diese Sammlung blendet ihre Unternotizen im Baum aus.",
+    "subtree-hidden-moved-description-collection": "Diese Sammlung blendet ihre untergeordneten Notizen im Baum aus.",
     "subtree-hidden-moved-description-other": "Untergeordnete Notizen sind im Baum für diese Notiz ausgeblendet."
   },
   "title_bar_buttons": {
@@ -1591,7 +1583,9 @@
     "print_report_collection_details_button": "Details anzeigen",
     "print_report_collection_details_ignored_notes": "Ignorierte Notizen",
     "print_report_collection_content_one": "{{count}} Notiz in der Sammlung konnte nicht gedruckt werden, weil sie nicht unterstützt oder geschützt ist.",
-    "print_report_collection_content_other": "{{count}} Notizen in der Sammlung konnten nicht gedruckt werden, weil sie nicht unterstützt oder geschützt sind."
+    "print_report_collection_content_other": "{{count}} Notizen in der Sammlung konnten nicht gedruckt werden, weil sie nicht unterstützt oder geschützt sind.",
+    "print_report_error_title": "Druck fehlgeschlagen",
+    "print_report_stack_trace": "Stapelzurückverfolgung"
   },
   "note_title": {
     "placeholder": "Titel der Notiz hier eingeben…",
@@ -1606,7 +1600,8 @@
   },
   "search_result": {
     "no_notes_found": "Es wurden keine Notizen mit den angegebenen Suchparametern gefunden.",
-    "search_not_executed": "Die Suche wurde noch nicht ausgeführt. Klicke oben auf „Suchen“, um die Ergebnisse anzuzeigen."
+    "search_not_executed": "Die Suche wurde noch nicht ausgeführt.",
+    "search_now": "Jetzt suchen"
   },
   "spacer": {
     "configure_launchbar": "Starterleiste konfigurieren"
@@ -1734,6 +1729,7 @@
     "add-term-to-dictionary": "Begriff \"{{term}}\" zum Wörterbuch hinzufügen",
     "cut": "Ausschneiden",
     "copy": "Kopieren",
+    "copy-as-markdown": "Als Markdown kopieren",
     "copy-link": "Link kopieren",
     "paste": "Einfügen",
     "paste-as-plain-text": "Als unformatierten Text einfügen",
@@ -1762,7 +1758,7 @@
   },
   "note_autocomplete": {
     "search-for": "Suche nach \"{{term}}\"",
-    "create-note": "Erstelle und verlinke Unternotiz \"{{term}}\"",
+    "create-note": "Erstelle und verlinke untergeordnete Notiz \"{{term}}\"",
     "insert-external-link": "Einfügen von Externen Link zu \"{{term}}\"",
     "clear-text-field": "Textfeldinhalt löschen",
     "show-recent-notes": "Aktuelle Notizen anzeigen",
@@ -1773,7 +1769,7 @@
     "quick-edit": "Schnellbearbeitung"
   },
   "geo-map": {
-    "create-child-note-title": "Neue Unternotiz anlegen und zur Karte hinzufügen",
+    "create-child-note-title": "Neue untergeordnete Notiz anlegen und zur Karte hinzufügen",
     "create-child-note-instruction": "Auf die Karte klicken, um eine neue Notiz an der Stelle zu erstellen oder Escape drücken um abzubrechen.",
     "unable-to-load-map": "Karte konnte nicht geladen werden.",
     "create-child-note-text": "Marker hinzufügen"
@@ -1799,149 +1795,6 @@
   "modal": {
     "close": "Schließen",
     "help_title": "Zeige mehr Informationen zu diesem Fenster"
-  },
-  "ai_llm": {
-    "not_started": "Nicht gestartet",
-    "title": "KI Einstellungen",
-    "processed_notes": "Verarbeitete Notizen",
-    "total_notes": "Gesamt Notizen",
-    "progress": "Fortschritt",
-    "queued_notes": "Eingereihte Notizen",
-    "failed_notes": "Fehlgeschlagenen Notizen",
-    "last_processed": "Zuletzt verarbeitet",
-    "refresh_stats": "Statistiken neu laden",
-    "enable_ai_features": "Aktiviere KI/LLM Funktionen",
-    "enable_ai_description": "Aktiviere KI-Funktionen wie Notizzusammenfassungen, Inhaltserzeugung und andere LLM-Funktionen",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "Aktiviere KI/LLM Funktionen",
-    "enable_ai_desc": "Aktiviere KI-Funktionen wie Notizzusammenfassungen, Inhaltserzeugung und andere LLM-Funktionen",
-    "provider_configuration": "KI-Anbieterkonfiguration",
-    "provider_precedence": "Anbieter Priorität",
-    "provider_precedence_description": "Komma-getrennte Liste von Anbieter in der Reihenfolge ihrer Priorität (z.B. 'openai, anthropic,ollama')",
-    "temperature": "Temperatur",
-    "temperature_description": "Regelt die Zufälligkeit in Antworten (0 = deterministisch, 2 = maximale Zufälligkeit)",
-    "system_prompt": "Systemaufforderung",
-    "system_prompt_description": "Standard Systemaufforderung für alle KI-Interaktionen",
-    "openai_configuration": "OpenAI Konfiguration",
-    "openai_settings": "OpenAI Einstellungen",
-    "api_key": "API Schlüssel",
-    "url": "Basis-URL",
-    "model": "Modell",
-    "anthropic_settings": "Anthropic Einstellungen",
-    "partial": "{{ percentage }}% verarbeitet",
-    "anthropic_api_key_description": "Dein Anthropic API-Key für den Zugriff auf Claude Modelle",
-    "anthropic_model_description": "Anthropic Claude Modell für Chat-Vervollständigung",
-    "voyage_settings": "Einstellungen für Voyage AI",
-    "ollama_url_description": "URL für die Ollama API (Standard: http://localhost:11434)",
-    "ollama_model_description": "Ollama Modell für Chat-Vervollständigung",
-    "anthropic_configuration": "Anthropic Konfiguration",
-    "voyage_configuration": "Voyage AI Konfiguration",
-    "voyage_url_description": "Standard: https://api.voyageai.com/v1",
-    "ollama_configuration": "Ollama Konfiguration",
-    "enable_ollama": "Aktiviere Ollama",
-    "enable_ollama_description": "Aktiviere Ollama für lokale KI Modell Nutzung",
-    "ollama_url": "Ollama URL",
-    "ollama_model": "Ollama Modell",
-    "refresh_models": "Aktualisiere Modelle",
-    "refreshing_models": "Aktualisiere...",
-    "enable_automatic_indexing": "Aktiviere automatische Indizierung",
-    "rebuild_index": "Index neu aufbauen",
-    "rebuild_index_error": "Fehler beim Neuaufbau des Index. Prüfe Log für mehr Informationen.",
-    "retry_failed": "Fehler: Notiz konnte nicht erneut eingereiht werden",
-    "max_notes_per_llm_query": "Max. Notizen je Abfrage",
-    "max_notes_per_llm_query_description": "Maximale Anzahl ähnlicher Notizen zum Einbinden als KI Kontext",
-    "active_providers": "Aktive Anbieter",
-    "disabled_providers": "Inaktive Anbieter",
-    "remove_provider": "Entferne Anbieter von Suche",
-    "restore_provider": "Anbieter zur Suche wiederherstellen",
-    "similarity_threshold": "Ähnlichkeitsschwelle",
-    "similarity_threshold_description": "Mindestähnlichkeitswert (0-1) für Notizen, die im Kontext für LLM-Abfragen berücksichtigt werden sollen",
-    "reprocess_index": "Suchindex neu erstellen",
-    "reprocessing_index": "Neuerstellung...",
-    "reprocess_index_started": "Suchindex-Optimierung wurde im Hintergrund gestartet",
-    "reprocess_index_error": "Fehler beim Wiederaufbau des Suchindex",
-    "index_rebuild_progress": "Fortschritt der Index-Neuerstellung",
-    "index_rebuilding": "Optimierung Index ({{percentage}}%)",
-    "index_rebuild_complete": "Index Optimierung abgeschlossen",
-    "index_rebuild_status_error": "Fehler bei Überprüfung Status Index Neuerstellung",
-    "never": "Niemals",
-    "processing": "Verarbeitung ({{percentage}}%)",
-    "refreshing": "Aktualisiere...",
-    "incomplete": "Unvollständig ({{percentage}}%)",
-    "complete": "Abgeschlossen (100%)",
-    "auto_refresh_notice": "Auto-Aktualisierung alle {{seconds}} Sekunden",
-    "note_queued_for_retry": "Notiz in Warteschlange für erneuten Versuch hinzugefügt",
-    "failed_to_retry_note": "Wiederholungsversuch fehlgeschlagen für Notiz",
-    "ai_settings": "KI Einstellungen",
-    "agent": {
-      "processing": "Verarbeite...",
-      "thinking": "Nachdenken...",
-      "loading": "Lade...",
-      "generating": "Generiere..."
-    },
-    "name": "KI",
-    "openai": "OpenAI",
-    "use_enhanced_context": "Benutze verbesserten Kontext",
-    "openai_api_key_description": "Dein OpenAPI-Key für den Zugriff auf den KI-Dienst",
-    "default_model": "Standardmodell",
-    "openai_model_description": "Beispiele: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "base_url": "Basis URL",
-    "openai_url_description": "Standard: https://api.openai.com/v1",
-    "anthropic_url_description": "Basis URL für Anthropic API (Standard: https://api.anthropic.com)",
-    "ollama_settings": "Ollama Einstellungen",
-    "note_title": "Notiz Titel",
-    "error": "Fehler",
-    "last_attempt": "Letzter Versuch",
-    "actions": "Aktionen",
-    "retry": "Erneut versuchen",
-    "retry_queued": "Notiz für weiteren Versuch eingereiht",
-    "empty_key_warning": {
-      "anthropic": "Anthropic API-Key ist leer. Bitte gültigen API-Key eingeben.",
-      "openai": "OpenAI API-Key ist leer. Bitte gültigen API-Key eingeben.",
-      "voyage": "Voyage API-Key ist leer. Bitte gültigen API-Key eingeben.",
-      "ollama": "Ollama API-Key ist leer. Bitte gültigen API-Key eingeben."
-    },
-    "api_key_tooltip": "API-Key für den Zugriff auf den Dienst",
-    "failed_to_retry_all": "Wiederholungsversuch für Notizen fehlgeschlagen",
-    "all_notes_queued_for_retry": "Alle fehlgeschlagenen Notizen wurden zur Wiederholung in die Warteschlange gestellt",
-    "enhanced_context_description": "Versorgt die KI mit mehr Kontext aus der Notiz und den zugehörigen Notizen, um bessere Antworten zu ermöglichen",
-    "show_thinking": "Zeige Denkprozess",
-    "show_thinking_description": "Zeige den Denkprozess der KI",
-    "enter_message": "Geben Sie Ihre Nachricht ein...",
-    "error_contacting_provider": "Fehler beim Kontaktieren des KI-Anbieters. Bitte überprüfe die Einstellungen und die Internetverbindung.",
-    "error_generating_response": "Fehler beim Generieren der KI Antwort",
-    "index_all_notes": "Indiziere alle Notizen",
-    "index_status": "Indizierungsstatus",
-    "indexed_notes": "Indizierte Notizen",
-    "indexing_stopped": "Indizierung gestoppt",
-    "indexing_in_progress": "Indizierung in Bearbeitung...",
-    "last_indexed": "Zuletzt Indiziert",
-    "note_chat": "Notizen-Chat",
-    "sources": "Quellen",
-    "start_indexing": "Starte Indizierung",
-    "use_advanced_context": "Benutze erweiterten Kontext",
-    "ollama_no_url": "Ollama ist nicht konfiguriert. Bitte trage eine gültige URL ein.",
-    "chat": {
-      "root_note_title": "KI Chats",
-      "root_note_content": "Diese Notiz enthält gespeicherte KI-Chat-Unterhaltungen.",
-      "new_chat_title": "Neuer Chat",
-      "create_new_ai_chat": "Erstelle neuen KI Chat"
-    },
-    "create_new_ai_chat": "Erstelle neuen KI Chat",
-    "configuration_warnings": "Es wurden Probleme mit der KI Konfiguration festgestellt. Bitte überprüfe die Einstellungen.",
-    "experimental_warning": "Die LLM-Funktionen sind aktuell experimentell - sei an dieser Stelle gewarnt.",
-    "selected_provider": "Ausgewählter Anbieter",
-    "selected_provider_description": "Wähle einen KI-Anbieter für Chat- und Vervollständigungsfunktionen",
-    "select_model": "Wähle Modell...",
-    "select_provider": "Wähle Anbieter...",
-    "ai_enabled": "KI Funktionen aktiviert",
-    "ai_disabled": "KI Funktionen deaktiviert",
-    "no_models_found_online": "Keine Modelle gefunden. Bitte überprüfe den API-Key und die Einstellungen.",
-    "no_models_found_ollama": "Kein Ollama Modell gefunden. Bitte prüfe, ob Ollama gerade läuft.",
-    "error_fetching": "Fehler beim Abrufen der Modelle: {{error}}"
   },
   "zen_mode": {
     "button_exit": "Verlasse Zen Modus"
@@ -1977,7 +1830,7 @@
     "no_totp_secret_warning": "Um TOTP zu aktivieren, muss zunächst ein TOTP Geheimnis generiert werden.",
     "totp_secret_description_warning": "Nach der Generierung des TOTP Geheimnisses ist eine Neuanmeldung mit dem TOTP Geheimnis erforderlich.",
     "totp_secret_generated": "TOTP Geheimnis generiert",
-    "totp_secret_warning": "Bitte speichere das TOTP Geheimnis an einem sicheren Ort. Es wird nicht noch einmal angezeigt.",
+    "totp_secret_warning": "Bitte speichere das generierte Geheimnis an einem sicheren Ort. Es wird nicht noch einmal angezeigt.",
     "totp_secret_regenerate_confirm": "Möchten Sie das TOTP-Geheimnis wirklich neu generieren? Dadurch werden das bisherige TOTP-Geheimnis und alle vorhandenen Wiederherstellungscodes ungültig.",
     "recovery_keys_title": "Einmalige Wiederherstellungsschlüssel",
     "recovery_keys_description": "Einmalige Wiederherstellungsschlüssel werden verwendet, um sich anzumelden, falls Sie keinen Zugriff auf Ihre Authentifizierungscodes haben.",
@@ -2075,7 +1928,7 @@
     "show-hide-columns": "Zeige/verberge Spalten",
     "row-insert-above": "Zeile oberhalb einfügen",
     "row-insert-below": "Zeile unterhalb einfügen",
-    "row-insert-child": "Unternotiz einfügen",
+    "row-insert-child": "Untergeordnete Notiz einfügen",
     "add-column-to-the-left": "Spalte links einfügen",
     "add-column-to-the-right": "Spalte rechts einfügen",
     "edit-column": "Spalte editieren",
@@ -2092,7 +1945,8 @@
     "raster": "Raster",
     "vector_light": "Vektor (Hell)",
     "vector_dark": "Vektor (Dunkel)",
-    "show-scale": "Zeige Skalierung"
+    "show-scale": "Zeige Skalierung",
+    "show-labels": "Zeige Markierungsnamen"
   },
   "table_context_menu": {
     "delete_row": "Zeile entfernen"
@@ -2159,8 +2013,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Seite {{startIndex}} von {{endIndex}}",
-    "total_notes": "{{count}} Notizen"
+    "total_notes": "{{count}} Notizen",
+    "prev_page": "Vorherige Seite",
+    "next_page": "Nächste Seite"
   },
   "collections": {
     "rendering_error": "Aufgrund eines Fehlers können keine Inhalte angezeigt werden."
@@ -2206,7 +2061,7 @@
     "hoisted_badge_title": "Abgesenkt",
     "workspace_badge": "Arbeitsfläche",
     "scroll_to_top_title": "Zum Anfang der Notiz springen",
-    "create_new_note": "Neue Unternotiz erstellen",
+    "create_new_note": "Neue untergeordnete Notiz erstellen",
     "empty_hide_archived_notes": "Archivierte Notizen ausblenden"
   },
   "breadcrumb_badges": {
@@ -2283,5 +2138,96 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Lesezeichen"
+  },
+  "web_view_setup": {
+    "title": "Erstelle eine Live-Ansicht einer Webseite direkt in Trilium",
+    "url_placeholder": "Gib oder füge die Adresse der Webseite ein, zum Beispiel https://triliumnotes.org",
+    "create_button": "Erstelle Web Ansicht",
+    "invalid_url_title": "Ungültige Adresse",
+    "invalid_url_message": "Füge eine valide Webadresse ein, zum Beispiel https://triliumnotes.org.",
+    "disabled_description": "Diese Webansicht wurde von einer externen Quelle importiert. Um Sie vor Phishing oder schädlichen Inhalten zu schützen, wird sie nicht automatisch geladen. Sie können sie aktivieren, wenn Sie der Quelle vertrauen.",
+    "disabled_button_enable": "Webansicht aktivieren"
+  },
+  "render": {
+    "setup_create_sample_html": "Eine Beispielnotiz mit HTML erstellen",
+    "setup_create_sample_preact": "Eine Beispielnotiz mit Preact erstellen",
+    "setup_title": "Benutzerdefiniertes HTML oder Preact JSX in dieser Notiz anzeigen",
+    "setup_sample_created": "Eine Beispielnotiz wurde als untergeordnete Notiz erstellt.",
+    "disabled_description": "Diese Rendering-Notizen stammen aus einer externen Quelle. Um Sie vor schädlichen Inhalten zu schützen, ist diese Funktion standardmäßig deaktiviert. Stellen Sie sicher, dass Sie der Quelle vertrauen, bevor Sie sie aktivieren.",
+    "disabled_button_enable": "Rendering-Notiz aktivieren"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Icon-Paket",
+    "type_backend_script": "Backend-Skript",
+    "type_frontend_script": "Frontend-Skript",
+    "type_widget": "Widget",
+    "type_app_css": "Benutzerdefiniertes CSS",
+    "type_render_note": "Rendering-Notiz",
+    "type_web_view": "Webansicht",
+    "type_app_theme": "Benutzerdefiniertes Thema",
+    "toggle_tooltip_enable_tooltip": "Klicken, um diesen {{type}} zu aktivieren.",
+    "toggle_tooltip_disable_tooltip": "Klicken, um diesen {{type}} zu deaktivieren.",
+    "menu_docs": "Dokumentation öffnen",
+    "menu_execute_now": "Skript jetzt ausführen",
+    "menu_run": "Automatisch ausführen",
+    "menu_run_disabled": "Manuell",
+    "menu_run_backend_startup": "Wenn das Backend startet",
+    "menu_run_hourly": "Stündlich",
+    "menu_run_daily": "Täglich",
+    "menu_run_frontend_startup": "Wenn das Desktop-Frontend startet",
+    "menu_run_mobile_startup": "Wenn das mobile Frontend startet",
+    "menu_change_to_widget": "Zum Widget wechseln",
+    "menu_change_to_frontend_script": "Zum Frontend-Skript wechseln",
+    "menu_theme_base": "Themenbasis"
+  },
+  "setup_form": {
+    "more_info": "Mehr erfahren"
+  },
+  "media": {
+    "play": "Abspielen (Arbeitsbereich)",
+    "pause": "Pausieren (Arbeitsbereich)",
+    "back-10s": "10 s zurück (Linke Pfeiltaste)",
+    "forward-30s": "30 s vorwärts",
+    "mute": "Stumm (M)",
+    "unmute": "Stummschaltung aufheben (M)",
+    "playback-speed": "Wiedergabegeschwindigkeit",
+    "loop": "Schleife",
+    "disable-loop": "Schleife deaktivieren",
+    "rotate": "Rotieren",
+    "picture-in-picture": "Bild-in-Bild",
+    "exit-picture-in-picture": "Bild-in-Bild verlassen",
+    "fullscreen": "Vollbild (F)",
+    "exit-fullscreen": "Vollbild verlassen",
+    "unsupported-format": "Medienvorschau ist für dieses Format nicht verfügbar:\n{{mime}}",
+    "zoom-to-fit": "Zoomen um auszufüllen",
+    "zoom-reset": "Zoomen um auszufüllen zurücksetzen"
+  },
+  "mermaid": {
+    "placeholder": "Geben den Inhalt des Mermaid-Diagramms ein oder verwenden eine der folgenden Beispieldiagramme.",
+    "sample_diagrams": "Beispieldiagramme:",
+    "sample_flowchart": "Flussdiagramm",
+    "sample_class": "Klasse",
+    "sample_sequence": "Abfolge",
+    "sample_entity_relationship": "Entität Beziehung",
+    "sample_state": "Zustandsübergangsdiagramm",
+    "sample_mindmap": "Mindmap",
+    "sample_architecture": "Architektur",
+    "sample_block": "Block",
+    "sample_c4": "C4",
+    "sample_gantt": "Gantt",
+    "sample_git": "GitGraph",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Paket",
+    "sample_pie": "Kuchen",
+    "sample_quadrant": "Quadrant",
+    "sample_radar": "Radar",
+    "sample_requirement": "Anforderung",
+    "sample_sankey": "Sankey",
+    "sample_timeline": "Zeitstrahl",
+    "sample_treemap": "Kachel",
+    "sample_user_journey": "Benutzererfahrung",
+    "sample_xy": "XY",
+    "sample_venn": "Mengen",
+    "sample_ishikawa": "Ursache-Wirkung"
   }
 }

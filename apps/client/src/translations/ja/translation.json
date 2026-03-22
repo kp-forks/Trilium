@@ -249,7 +249,8 @@
     "reload_app": "リロードして変更を適用する",
     "set_all_to_default": "すべてのショートカットをデフォルトに戻す",
     "confirm_reset": "キーボードショートカットをすべてデフォルトにリセットしますか？",
-    "keyboard_shortcuts": "キーボードショートカット"
+    "keyboard_shortcuts": "キーボードショートカット",
+    "no_results": "'{{filter}}' に一致するショートカットが見つかりません"
   },
   "confirm": {
     "confirmation": "確認",
@@ -587,7 +588,7 @@
     "note-map": "ノートマップ",
     "render-note": "レンダリングノート",
     "book": "コレクション",
-    "mermaid-diagram": "Mermaidダイアグラム",
+    "mermaid-diagram": "マーメイド図",
     "canvas": "キャンバス",
     "web-view": "Web ビュー",
     "mind-map": "マインドマップ",
@@ -596,10 +597,11 @@
     "widget": "ウィジェット",
     "confirm-change": "ノートの内容が空ではない場合、ノートタイプを変更することは推奨されません。続行しますか？",
     "beta-feature": "Beta",
-    "ai-chat": "AI チャット",
     "task-list": "タスクリスト",
     "new-feature": "New",
-    "collections": "コレクション"
+    "collections": "コレクション",
+    "ai-chat": "AI チャット",
+    "spreadsheet": "スプレッドシート"
   },
   "edited_notes": {
     "no_edited_notes_found": "この日の編集されたノートはまだありません...",
@@ -825,11 +827,6 @@
     "move_button": "選択したノートに移動",
     "error_no_path": "移動するパスがありません。",
     "move_success_message": "選択したノートは以下に移動されました "
-  },
-  "web_view": {
-    "web_view": "Web ビュー",
-    "embed_websites": "Web ビュータイプでは、web サイトを Trilium に埋め込むことができます。",
-    "create_label": "まず始めに、埋め込みたいURLアドレスのラベルを作成してください。例: #webViewSrc=\"https://www.google.com\""
   },
   "backend_log": {
     "refresh": "リフレッシュ"
@@ -1183,7 +1180,8 @@
     "is_owned_by_note": "ノートによって所有されています",
     "and_more": "...その他 {{count}} 件。",
     "print_landscape": "PDF にエクスポートするときに、ページの向きを縦向きではなく横向きに変更します。",
-    "print_page_size": "PDF にエクスポートするときに、ページのサイズを変更します。サポートされる値: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>。"
+    "print_page_size": "PDF にエクスポートするときに、ページのサイズを変更します。サポートされる値: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>。",
+    "textarea": "複数行テキスト"
   },
   "link_context_menu": {
     "open_note_in_popup": "クイック編集",
@@ -1287,7 +1285,8 @@
   },
   "search_result": {
     "no_notes_found": "指定された検索パラメータに該当するノートは見つかりませんでした。",
-    "search_not_executed": "検索はまだ実行されていません。上の「検索」ボタンをクリックすると、検索結果が表示されます。"
+    "search_not_executed": "検索はまだ実行されていません。",
+    "search_now": "今すぐ検索"
   },
   "sql_result": {
     "no_rows": "このクエリでは行が返されませんでした",
@@ -1356,6 +1355,7 @@
     "add-term-to-dictionary": "辞書に \"{{term}}\" を追加",
     "cut": "切り取り",
     "copy": "コピー",
+    "copy-as-markdown": "Markdownとしてコピー",
     "copy-link": "リンクをコピー",
     "paste": "貼り付け",
     "paste-as-plain-text": "プレーンテキストで貼り付け",
@@ -1427,149 +1427,6 @@
   },
   "content_renderer": {
     "open_externally": "外部で開く"
-  },
-  "ai_llm": {
-    "title": "AI 設定",
-    "enable_ai_features": "AI/LLM 機能を有効化",
-    "enable_ai_description": "ノートの要約、コンテンツ生成、その他のLLM機能などのAI機能を有効にする",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "AI/LLM 機能を有効化",
-    "enable_ai_desc": "ノートの要約、コンテンツ生成、その他のLLM機能などのAI機能を有効にする",
-    "provider_configuration": "AI プロバイダーの設定",
-    "provider_precedence": "プロバイダーの優先順位",
-    "provider_precedence_description": "カンマで区切られたプロバイダーの優先順位リスト（例: 'openai,anthropic,ollama'）",
-    "temperature_description": "応答のランダム性を制御する（0 = 決定的、2 = 最大ランダム性）",
-    "system_prompt_description": "すべてのAIとの対話に使用されるデフォルトのシステムプロンプト",
-    "system_prompt": "システムプロンプト",
-    "openai_configuration": "OpenAIの設定",
-    "openai_settings": "OpenAIの設定",
-    "api_key": "APIキー",
-    "model": "モデル",
-    "openai_api_key_description": "OpenAIのAIサービスにアクセスするためのAPIキー",
-    "anthropic_api_key_description": "AnthropicのClaudeモデルにアクセスするためのAPIキー",
-    "default_model": "デフォルトモデル",
-    "openai_model_description": "例: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "openai_url_description": "デフォルト: https://api.openai.com/v1",
-    "anthropic_settings": "Anthropicの設定",
-    "anthropic_model_description": "チャット補完用のAnthropic Claudeモデル",
-    "voyage_settings": "Voyage AIの設定",
-    "ollama_settings": "Ollamaの設定",
-    "ollama_url_description": "Ollama API の URL（デフォルト: http://localhost:11434）",
-    "anthropic_url_description": "Anthropic APIのベースURL（デフォルト: https://api.anthropic.com）",
-    "ollama_model_description": "チャット補完用のOllamaモデル",
-    "anthropic_configuration": "Anthropicの設定",
-    "voyage_configuration": "Voyage AIの設定",
-    "voyage_url_description": "デフォルト: https://api.voyageai.com/v1",
-    "ollama_configuration": "Ollamaの設定",
-    "enable_ollama": "Ollamaを有効",
-    "enable_ollama_description": "ローカルAIモデルを利用するためOllamaを有効にする",
-    "ollama_url": "Ollama URL",
-    "ollama_model": "Ollamaモデル",
-    "refresh_models": "モデルを更新",
-    "refreshing_models": "更新中...",
-    "error": "エラー",
-    "retry": "再試行",
-    "partial": "{{ percentage }}%完了",
-    "processing": "処理中（{{percentage}}%）",
-    "complete": "完了（100%）",
-    "refreshing": "更新中...",
-    "auto_refresh_notice": "{{seconds}}秒ごとに自動更新",
-    "ai_settings": "AI 設定",
-    "api_key_tooltip": "サービスにアクセスするためのAPIキー",
-    "empty_key_warning": {
-      "anthropic": "Anthropic APIキーが空です。有効な APIキーを入力してください。",
-      "openai": "OpenAI APIキーが空です。有効なAPIキーを入力してください。",
-      "voyage": "Voyage APIキーが空です。有効なAPIキーを入力してください。",
-      "ollama": "Ollama APIキーが空です。有効なAPIキーを入力してください。"
-    },
-    "agent": {
-      "processing": "処理中...",
-      "loading": "読み込み中...",
-      "generating": "生成中...",
-      "thinking": "考え中..."
-    },
-    "name": "AI",
-    "openai": "OpenAI",
-    "error_contacting_provider": "AIプロバイダーへの接続中にエラーが発生しました。設定とインターネット接続をご確認ください。",
-    "ollama_no_url": "Ollamaは設定されていません。有効なURLを入力してください。",
-    "chat": {
-      "root_note_title": "AIチャット",
-      "root_note_content": "このノートには、保存されたAIチャットの会話が含まれています。",
-      "new_chat_title": "新しいチャット",
-      "create_new_ai_chat": "新しいAIチャットを作成"
-    },
-    "create_new_ai_chat": "新しいAIチャットを作成",
-    "configuration_warnings": "AIの設定に問題があります。設定を確認してください。",
-    "experimental_warning": "LLM機能は現在実験的です - ご注意ください。",
-    "selected_provider_description": "チャットおよび補完機能のAIプロバイダーを選択する",
-    "selected_provider": "プロバイダーを選択",
-    "select_model": "モデルを選択...",
-    "select_provider": "プロバイダーを選択...",
-    "not_started": "開始されていません",
-    "processed_notes": "処理済みノート",
-    "total_notes": "ノートの総数",
-    "progress": "進行状況",
-    "queued_notes": "キューに登録されたノート",
-    "failed_notes": "失敗したノート",
-    "last_processed": "最終処理日時",
-    "refresh_stats": "統計情報を更新",
-    "temperature": "Temperature（温度）",
-    "url": "ベースURL",
-    "base_url": "ベースURL",
-    "enable_automatic_indexing": "自動インデックス作成を有効にする",
-    "rebuild_index": "インデックスの再構築",
-    "rebuild_index_error": "インデックスの再構築開始時にエラーが発生しました。詳細はログをご確認ください。",
-    "note_title": "ノートのタイトル",
-    "last_attempt": "最終試行日時",
-    "actions": "アクション",
-    "retry_queued": "ノートが再試行キューに追加されました",
-    "retry_failed": "ノートを再試行キューに追加できませんでした",
-    "max_notes_per_llm_query": "クエリあたりの最大ノート数",
-    "max_notes_per_llm_query_description": "AIコンテキストに含める類似ノートの最大数",
-    "active_providers": "アクティブなプロバイダー",
-    "disabled_providers": "無効なプロバイダー",
-    "remove_provider": "検索からプロバイダーを削除",
-    "restore_provider": "検索にプロバイダーを復元",
-    "similarity_threshold": "類似度のしきい値",
-    "similarity_threshold_description": "LLMクエリのコンテキストに含めるノートの最小類似度スコア（0～1）",
-    "reprocess_index": "検索インデックスを再構築",
-    "reprocessing_index": "再構築中...",
-    "reprocess_index_started": "検索インデックスの最適化がバックグラウンドで開始されました",
-    "reprocess_index_error": "検索インデックスの再構築中にエラーが発生しました",
-    "index_rebuild_progress": "インデックスの再構築の進行状況",
-    "index_rebuilding": "インデックスの最適化中（{{percentage}}%）",
-    "index_rebuild_complete": "インデックスの最適化が完了しました",
-    "index_rebuild_status_error": "インデックスの再構築ステータスの確認中にエラーが発生しました",
-    "never": "なし",
-    "incomplete": "未完了 ({{percentage}}%)",
-    "note_queued_for_retry": "ノートが再試行キューに追加されました",
-    "failed_to_retry_note": "ノートの再試行に失敗しました",
-    "all_notes_queued_for_retry": "失敗したすべてのノートは再試行のためにキューに入れられました",
-    "failed_to_retry_all": "ノートの再試行に失敗しました",
-    "use_enhanced_context": "拡張されたコンテキストを使用する",
-    "enhanced_context_description": "ノートとその関連ノートからより多くのコンテキストをAIに提供し、より良い応答を実現します",
-    "show_thinking": "思考を表示",
-    "show_thinking_description": "AIの思考プロセスをチェーン表示",
-    "enter_message": "メッセージを入力...",
-    "error_generating_response": "AI応答の生成中にエラーが発生しました",
-    "index_all_notes": "すべてのノートをインデックスに登録",
-    "index_status": "インデックスのステータス",
-    "indexed_notes": "インデックス登録済みのノート",
-    "indexing_stopped": "インデックス登録を停止しました",
-    "indexing_in_progress": "インデックス登録中です...",
-    "last_indexed": "最終インデックス作成日時",
-    "note_chat": "ノートチャット",
-    "sources": "ソース",
-    "start_indexing": "インデックス作成を開始",
-    "use_advanced_context": "高度なコンテキストを使用",
-    "ai_enabled": "AI 機能が有効",
-    "ai_disabled": "AI 機能が無効",
-    "no_models_found_online": "モデルが見つかりません。API キーと設定を確認してください。",
-    "no_models_found_ollama": "Ollama モデルが見つかりません。Ollama が実行中かどうかを確認してください。",
-    "error_fetching": "モデルの取得エラー: {{error}}"
   },
   "add_label": {
     "add_label": "ラベルを追加",
@@ -1681,7 +1538,6 @@
     "url_placeholder": "http://web サイト..."
   },
   "relation_map": {
-    "open_in_new_tab": "新しいタブで開く",
     "remove_note": "ノートを削除",
     "edit_title": "タイトルを編集",
     "rename_note": "ノート名を変更",
@@ -1864,10 +1720,6 @@
     "protecting-title": "保護の状態",
     "unprotecting-title": "保護解除の状態"
   },
-  "render": {
-    "note_detail_render_help_1": "このヘルプノートが表示されるのは、このノートの「HTML のレンダリング」タイプには、正常に機能するために必要なリレーションがないためです。",
-    "note_detail_render_help_2": "レンダリングHTMLノートタイプは、<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">スクリプティング</a>に使用されます。簡単に言うと、HTMLコードノート（オプションでJavaScriptを含む）があり、このノートがそれをレンダリングします。これを動作させるには、レンダリングするHTMLノートを指す「renderNote」という<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">リレーション</a>を定義する必要があります。"
-  },
   "consistency_checks": {
     "find_and_fix_button": "一貫性の問題を見つけて修正する",
     "finding_and_fixing_message": "一貫性の問題を見つけて修正中…",
@@ -1959,7 +1811,9 @@
     "print_report_title": "レポートを印刷",
     "print_report_collection_content_other": "コレクション内の {{count}} 件のノートは、サポートされていないか保護されているため、印刷できませんでした。",
     "print_report_collection_details_button": "詳細を見る",
-    "print_report_collection_details_ignored_notes": "無視されたノート"
+    "print_report_collection_details_ignored_notes": "無視されたノート",
+    "print_report_error_title": "印刷に失敗しました",
+    "print_report_stack_trace": "スタックトレース"
   },
   "watched_file_update_status": {
     "ignore_this_change": "この変更を無視する",
@@ -2042,7 +1896,8 @@
     "show-scale": "スケールを表示",
     "raster": "Raster",
     "vector_light": "Vector（ライト）",
-    "vector_dark": "Vector （ダーク）"
+    "vector_dark": "Vector （ダーク）",
+    "show-labels": "マーカー名を表示"
   },
   "call_to_action": {
     "next_theme_title": "新しいTriliumテーマをお試しください",
@@ -2070,8 +1925,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "{{startIndex}} - {{endIndex}} ページ",
-    "total_notes": "{{count}} ノート"
+    "total_notes": "{{count}} ノート",
+    "prev_page": "前のページ",
+    "next_page": "次のページ"
   },
   "collections": {
     "rendering_error": "エラーのためコンテンツを表示できません。"
@@ -2099,7 +1955,7 @@
     "no_attachments": "このノートには添付ファイルはありません。"
   },
   "book": {
-    "no_children_help": "このコレクションには子ノートがないため、表示するものがありません。詳細は<a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a>をご覧ください。",
+    "no_children_help": "このコレクションには子ノートがないため、表示するものがありません。",
     "drag_locked_title": "編集をロック中",
     "drag_locked_message": "コレクションは編集がロックされているため、ドラッグは許可されていません。"
   },
@@ -2268,5 +2124,96 @@
   },
   "bookmark_buttons": {
     "bookmarks": "ブックマーク"
+  },
+  "web_view_setup": {
+    "title": "Trilium に直接 Web ページのライブビューを作成",
+    "url_placeholder": "Web サイトのアドレスを入力または貼り付けて下さい。 例: https://triliumnotes.org",
+    "create_button": "Web ビューを作成",
+    "invalid_url_title": "無効なアドレス",
+    "invalid_url_message": "有効な Web アドレスを入力してください。 例: https://triliumnotes.org",
+    "disabled_description": "この Web ビューは外部ソースからインポートされました。フィッシングや悪意のあるコンテンツから保護するため、自動的には読み込まれません。ソースを信頼できる場合は、有効にすることができます。",
+    "disabled_button_enable": "Web ビューを有効"
+  },
+  "render": {
+    "setup_title": "このノート内にカスタム HTML または Preact JSX を表示",
+    "setup_create_sample_preact": "Preact でサンプルノートを作成",
+    "setup_create_sample_html": "HTML でサンプルノートを作成",
+    "setup_sample_created": "子ノートとしてサンプルノートが作成されました。",
+    "disabled_description": "このレンダリングノートは外部ソースから提供されています。悪意のあるコンテンツからユーザーを保護するため、デフォルトでは有効になっていません。有効にする前に、ソースが信頼できるかどうかをご確認ください。",
+    "disabled_button_enable": "レンダリングノートを有効"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "アイコンパック",
+    "type_backend_script": "バックエンドスクリプト",
+    "type_frontend_script": "フロントエンドスクリプト",
+    "type_widget": "ウィジェット",
+    "type_app_css": "カスタム CSS",
+    "type_render_note": "レンダリングノート",
+    "type_web_view": "Web ビュー",
+    "type_app_theme": "カスタムテーマ",
+    "toggle_tooltip_enable_tooltip": "この {{type}} を有効にするにはクリックしてください。",
+    "toggle_tooltip_disable_tooltip": "この {{type}} を無効にするにはクリックしてください。",
+    "menu_docs": "ドキュメントを開く",
+    "menu_execute_now": "今すぐスクリプトを実行",
+    "menu_run": "自動で実行",
+    "menu_run_disabled": "手動で実行",
+    "menu_run_backend_startup": "バックエンドの起動時",
+    "menu_run_hourly": "毎時",
+    "menu_run_daily": "毎日",
+    "menu_run_frontend_startup": "デスクトップ フロントエンドの起動時",
+    "menu_run_mobile_startup": "モバイル フロントエンドの起動時",
+    "menu_change_to_widget": "ウィジェットの変更",
+    "menu_change_to_frontend_script": "フロントエンドスクリプトの変更",
+    "menu_theme_base": "テーマベース"
+  },
+  "setup_form": {
+    "more_info": "さらに詳しく"
+  },
+  "media": {
+    "play": "再生 (スペース)",
+    "pause": "一時停止 (スペース)",
+    "back-10s": "10 秒戻る (左矢印キー)",
+    "forward-30s": "30 秒進む",
+    "mute": "ミュート (M)",
+    "unmute": "ミュート解除 (M)",
+    "playback-speed": "再生速度",
+    "loop": "ループ",
+    "disable-loop": "ループを解除",
+    "rotate": "回転",
+    "picture-in-picture": "ピクチャーインピクチャー",
+    "exit-picture-in-picture": "ピクチャーインピクチャーを終了",
+    "fullscreen": "全画面表示 (F)",
+    "exit-fullscreen": "全画面表示を終了",
+    "unsupported-format": "このファイル形式ではメディアプレビューはご利用いただけません:\n{{mime}}",
+    "zoom-to-fit": "ズームして全体を表示",
+    "zoom-reset": "ズーム設定をリセット"
+  },
+  "mermaid": {
+    "placeholder": "マーメイド図の内容を入力するか、以下のサンプル図のいずれかを使用してください。",
+    "sample_diagrams": "サンプル図：",
+    "sample_flowchart": "フローチャート",
+    "sample_class": "クラス図",
+    "sample_sequence": "シーケンス図",
+    "sample_entity_relationship": "ER 図",
+    "sample_state": "状態遷移図",
+    "sample_mindmap": "マインドマップ",
+    "sample_architecture": "アーキテクチャ図",
+    "sample_block": "ブロック図",
+    "sample_c4": "C4 図",
+    "sample_gantt": "ガントチャート",
+    "sample_git": "Git グラフ",
+    "sample_kanban": "カンバン",
+    "sample_packet": "パケット図",
+    "sample_pie": "円グラフ",
+    "sample_quadrant": "4象限図",
+    "sample_radar": "レーダーチャート",
+    "sample_requirement": "要件図",
+    "sample_sankey": "サンキー図",
+    "sample_timeline": "タイムライン",
+    "sample_treemap": "ツリーマップ",
+    "sample_user_journey": "ユーザージャーニー図",
+    "sample_xy": "XY チャート",
+    "sample_venn": "ベン図",
+    "sample_ishikawa": "石川図"
   }
 }

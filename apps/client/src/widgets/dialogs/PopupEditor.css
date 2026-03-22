@@ -32,6 +32,12 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
     display: flex;
     align-items: center;
     margin-block: 0;
+
+    .note-icon-widget {
+        display: flex;
+        align-items: center;
+        margin-inline-start: 0;
+    }
 }
 
 .modal.popup-editor-dialog .modal-header .note-title-widget {
@@ -110,5 +116,13 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
     & .cm-editor {
         margin: 0;
         border-radius: 0;
+    }
+}
+
+.modal.popup-editor-dialog .note-list-widget {
+    --content-margin-inline: 12px;
+
+    &:not(.full-height) .note-list-wrapper {
+        margin-inline: var(--content-margin-inline);
     }
 }

@@ -25,7 +25,7 @@ function getSchema() {
     return tables;
 }
 
-function execute(req: Request) {
+function execute(req: Request<{ noteId: string }>) {
     const sql = getSql();
     const note = becca.getNoteOrThrow(req.params.noteId);
 

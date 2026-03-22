@@ -18,7 +18,7 @@ const RELATION = "relation";
  * end user. Those types should be used only for checking against, they are
  * not for direct use.
  */
-export type NoteType = "file" | "image" | "search" | "noteMap" | "launcher" | "doc" | "contentWidget" | "text" | "relationMap" | "render" | "canvas" | "mermaid" | "book" | "webView" | "code" | "mindMap" | "aiChat";
+export type NoteType = "file" | "image" | "search" | "noteMap" | "launcher" | "doc" | "contentWidget" | "text" | "relationMap" | "render" | "canvas" | "mermaid" | "book" | "webView" | "code" | "mindMap" | "spreadsheet";
 
 export interface NotePathRecord {
     isArchived: boolean;
@@ -698,6 +698,15 @@ export default class FNote {
      */
     hasLabel(name: string) {
         return this.hasAttribute(LABEL, name);
+    }
+
+    /**
+     * Returns `true` if the note has a label with the given name (same as {@link hasOwnedLabel}), or it has a label with the `disabled:` prefix (for example due to a safe import).
+     * @param name the name of the label to look for.
+     * @returns `true` if the label exists, or its version with the `disabled:` prefix.
+     */
+    hasLabelOrDisabled(name: string) {
+        return this.hasLabel(name) || this.hasLabel(`disabled:${name}`);
     }
 
     /**

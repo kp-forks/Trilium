@@ -9,6 +9,8 @@ test("Can duplicate note with broken links", async ({ page, context }) => {
 
     await app.noteTree.getByText("Note map").first().click({ button: "right" });
     await page.locator("#context-menu-container").getByText("Duplicate").click();
-    await expect(page.locator(".toast-body")).toBeHidden();
-    await expect(app.noteTree.getByText("Note map (dup)")).toBeVisible();
+    await expect(page.locator(".toast-body", {
+        hasText: `Note "Note map" has been`
+    })).toBeHidden();
+    await expect(app.noteTree.getByText("Note map (dup)").first()).toBeVisible();
 });

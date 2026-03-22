@@ -4,7 +4,7 @@ import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
 
-async function getSimilarNotes(req: Request) {
+async function getSimilarNotes(req: Request<{ noteId: string }>) {
     const noteId = req.params.noteId;
 
     const _note = becca.getNoteOrThrow(noteId);

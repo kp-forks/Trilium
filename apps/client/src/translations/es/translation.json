@@ -669,7 +669,7 @@
     "button_exit": "Salir del modo Zen"
   },
   "sync_status": {
-    "unknown": "<p>El estado de sincronización será conocido una vez que el siguiente intento de sincronización comience.</p><p>Dé clic para activar la sincronización ahora</p>",
+    "unknown": "<p>El estado de sincronización será conocido una vez que el siguiente intento de sincronización comience.</p><p>Dé clic para activar la sincronización ahora.</p>",
     "connected_with_changes": "<p>Conectado al servidor de sincronización. <br>Hay cambios pendientes que aún no se han sincronizado.</p><p>Dé clic para activar la sincronización.</p>",
     "connected_no_changes": "<p>Conectado al servidor de sincronización.<br>Todos los cambios ya han sido sincronizados.</p><p>Dé clic para activar la sincronización.</p>",
     "disconnected_with_changes": "<p>El establecimiento de la conexión con el servidor de sincronización no ha tenido éxito.<br>Hay algunos cambios pendientes que aún no se han sincronizado.</p><p>Dé clic para activar la sincronización.</p>",
@@ -760,7 +760,7 @@
   "mobile_detail_menu": {
     "insert_child_note": "Insertar subnota",
     "delete_this_note": "Eliminar esta nota",
-    "error_cannot_get_branch_id": "No se puede obtener el branchID del notePath '{{notePath}}'",
+    "error_cannot_get_branch_id": "No se puede obtener el branchId del notePath '{{notePath}}'",
     "error_unrecognized_command": "Comando no reconocido {{command}}",
     "note_revisions": "Revisiones de notas",
     "backlinks": "Vínculos de retroceso",
@@ -1012,7 +1012,7 @@
     "no_attachments": "Esta nota no tiene archivos adjuntos."
   },
   "book": {
-    "no_children_help": "Esta nota de tipo libro no tiene ninguna subnota así que no hay nada que mostrar. Véa la <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a> para más detalles.",
+    "no_children_help": "Esta colección no tiene ninguna subnota así que no hay nada que mostrar.",
     "drag_locked_title": "Bloqueado para edición",
     "drag_locked_message": "No se permite Arrastrar pues la colección está bloqueada para edición."
   },
@@ -1051,7 +1051,6 @@
     "unprotecting-title": "Estado de desprotección"
   },
   "relation_map": {
-    "open_in_new_tab": "Abrir en nueva pestaña",
     "remove_note": "Quitar nota",
     "edit_title": "Editar título",
     "rename_note": "Cambiar nombre de nota",
@@ -1067,15 +1066,6 @@
     "enter_title_of_new_note": "Ingrese el título de la nueva nota",
     "default_new_note_title": "nueva nota",
     "click_on_canvas_to_place_new_note": "Haga clic en el lienzo para colocar una nueva nota"
-  },
-  "render": {
-    "note_detail_render_help_1": "Esta nota de ayuda se muestra porque esta nota de tipo Renderizar HTML no tiene la relación requerida para funcionar correctamente.",
-    "note_detail_render_help_2": "El tipo de nota Render HTML es usado para <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. De forma resumida, tiene una nota con código HTML (opcionalmente con algo de JavaScript) y esta nota la renderizará. Para que funcione, es necesario definir una <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relación</a> llamada \"renderNote\" apuntando a la nota HTML nota a renderizar."
-  },
-  "web_view": {
-    "web_view": "Vista web",
-    "embed_websites": "La nota de tipo Web View le permite insertar sitios web en Trilium.",
-    "create_label": "Para comenzar, por favor cree una etiqueta con una dirección URL que desee empotrar, e.g. #webViewSrc=\"https://www.google.com\""
   },
   "backend_log": {
     "refresh": "Refrescar"
@@ -1183,149 +1173,6 @@
     "auto_theme": "Heredado (Sigue el esquema de colores del sistema)",
     "light_theme": "Heredado (Claro)",
     "dark_theme": "Heredado (Oscuro)"
-  },
-  "ai_llm": {
-    "not_started": "No iniciado",
-    "title": "IA y ajustes de embeddings",
-    "processed_notes": "Notas procesadas",
-    "total_notes": "Notas totales",
-    "progress": "Progreso",
-    "queued_notes": "Notas en fila",
-    "failed_notes": "Notas fallidas",
-    "last_processed": "Última procesada",
-    "refresh_stats": "Recargar estadísticas",
-    "enable_ai_features": "Habilitar características IA/LLM",
-    "enable_ai_description": "Habilitar características de IA como resumen de notas, generación de contenido y otras capacidades LLM",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "Habilitar características IA/LLM",
-    "enable_ai_desc": "Habilitar características de IA como resumen de notas, generación de contenido y otras capacidades LLM",
-    "provider_configuration": "Configuración de proveedor de IA",
-    "provider_precedence": "Precedencia de proveedor",
-    "provider_precedence_description": "Lista de proveedores en orden de precedencia separada por comas (p.e., 'openai,anthropic,ollama')",
-    "temperature": "Temperatura",
-    "temperature_description": "Controla la aleatoriedad de las respuestas (0 = determinista, 2 = aleatoriedad máxima)",
-    "system_prompt": "Mensaje de sistema",
-    "system_prompt_description": "Mensaje de sistema predeterminado utilizado para todas las interacciones de IA",
-    "openai_configuration": "Configuración de OpenAI",
-    "openai_settings": "Ajustes de OpenAI",
-    "api_key": "Clave API",
-    "url": "URL base",
-    "model": "Modelo",
-    "openai_api_key_description": "Tu clave API de OpenAI para acceder a sus servicios de IA",
-    "anthropic_api_key_description": "Tu clave API de Anthropic para acceder a los modelos Claude",
-    "default_model": "Modelo por defecto",
-    "openai_model_description": "Ejemplos: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "base_url": "URL base",
-    "openai_url_description": "Por defecto: https://api.openai.com/v1",
-    "anthropic_settings": "Ajustes de Anthropic",
-    "anthropic_url_description": "URL base para la API de Anthropic (por defecto: https://api.anthropic.com)",
-    "anthropic_model_description": "Modelos Claude de Anthropic para el completado de chat",
-    "voyage_settings": "Ajustes de Voyage AI",
-    "ollama_settings": "Ajustes de Ollama",
-    "ollama_url_description": "URL para la API de Ollama (por defecto: http://localhost:11434)",
-    "ollama_model_description": "Modelo de Ollama a usar para el completado de chat",
-    "anthropic_configuration": "Configuración de Anthropic",
-    "voyage_configuration": "Configuración de Voyage AI",
-    "voyage_url_description": "Por defecto: https://api.voyageai.com/v1",
-    "ollama_configuration": "Configuración de Ollama",
-    "enable_ollama": "Habilitar Ollama",
-    "enable_ollama_description": "Habilitar Ollama para uso de modelo de IA local",
-    "ollama_url": "URL de Ollama",
-    "ollama_model": "Modelo de Ollama",
-    "refresh_models": "Refrescar modelos",
-    "refreshing_models": "Refrescando...",
-    "enable_automatic_indexing": "Habilitar indexado automático",
-    "rebuild_index": "Recrear índice",
-    "rebuild_index_error": "Error al comenzar la reconstrucción del índice. Consulte los registros para más detalles.",
-    "note_title": "Título de nota",
-    "error": "Error",
-    "last_attempt": "Último intento",
-    "actions": "Acciones",
-    "retry": "Reintentar",
-    "partial": "{{ percentage }}% completado",
-    "retry_queued": "Nota en la cola para reintento",
-    "retry_failed": "Hubo un fallo al poner en la cola a la nota para reintento",
-    "max_notes_per_llm_query": "Máximo de notas por consulta",
-    "max_notes_per_llm_query_description": "Número máximo de notas similares a incluir en el contexto IA",
-    "active_providers": "Proveedores activos",
-    "disabled_providers": "Proveedores deshabilitados",
-    "remove_provider": "Eliminar proveedor de la búsqueda",
-    "restore_provider": "Restaurar proveedor a la búsqueda",
-    "similarity_threshold": "Bias de similaridad",
-    "similarity_threshold_description": "Puntuación de similaridad mínima (0-1) para incluir notas en el contexto para consultas LLM",
-    "reprocess_index": "Reconstruir el índice de búsqueda",
-    "reprocessing_index": "Reconstruyendo...",
-    "reprocess_index_started": "La optimización de índice de búsqueda comenzó en segundo plano",
-    "reprocess_index_error": "Error al reconstruir el índice de búsqueda",
-    "index_rebuild_progress": "Progreso de reconstrucción de índice",
-    "index_rebuilding": "Optimizando índice ({{percentage}}%)",
-    "index_rebuild_complete": "Optimización de índice completa",
-    "index_rebuild_status_error": "Error al comprobar el estado de reconstrucción del índice",
-    "never": "Nunca",
-    "processing": "Procesando ({{percentage}}%)",
-    "incomplete": "Incompleto ({{percentage}}%)",
-    "complete": "Completo (100%)",
-    "refreshing": "Refrescando...",
-    "auto_refresh_notice": "Refrescar automáticamente cada {{seconds}} segundos",
-    "note_queued_for_retry": "Nota en la cola para reintento",
-    "failed_to_retry_note": "Hubo un fallo al reintentar nota",
-    "all_notes_queued_for_retry": "Todas las notas con fallo agregadas a la cola para reintento",
-    "failed_to_retry_all": "Hubo un fallo al reintentar notas",
-    "ai_settings": "Ajustes de IA",
-    "api_key_tooltip": "Clave API para acceder al servicio",
-    "empty_key_warning": {
-      "anthropic": "La clave API de Anthropic está vacía. Por favor, ingrese una clave API válida.",
-      "openai": "La clave API de OpenAI está vacía. Por favor, ingrese una clave API válida.",
-      "voyage": "La clave API de Voyage está vacía. Por favor, ingrese una clave API válida.",
-      "ollama": "La clave API de Ollama está vacía. Por favor, ingrese una clave API válida."
-    },
-    "agent": {
-      "processing": "Procesando...",
-      "thinking": "Pensando...",
-      "loading": "Cargando...",
-      "generating": "Generando..."
-    },
-    "name": "IA",
-    "openai": "OpenAI",
-    "use_enhanced_context": "Utilizar contexto mejorado",
-    "enhanced_context_description": "Provee a la IA con más contexto de la nota y sus notas relacionadas para obtener mejores respuestas",
-    "show_thinking": "Mostrar pensamiento",
-    "show_thinking_description": "Mostrar la cadena del proceso de pensamiento de la IA",
-    "enter_message": "Ingrese su mensaje...",
-    "error_contacting_provider": "Error al contactar con su proveedor de IA. Por favor compruebe sus ajustes y conexión a internet.",
-    "error_generating_response": "Error al generar respuesta de IA",
-    "index_all_notes": "Indexar todas las notas",
-    "index_status": "Estado de índice",
-    "indexed_notes": "Notas indexadas",
-    "indexing_stopped": "Indexado detenido",
-    "indexing_in_progress": "Indexado en progreso...",
-    "last_indexed": "Último indexado",
-    "note_chat": "Chat de nota",
-    "sources": "Fuentes",
-    "start_indexing": "Comenzar indexado",
-    "use_advanced_context": "Usar contexto avanzado",
-    "ollama_no_url": "Ollama no está configurado. Por favor ingrese una URL válida.",
-    "chat": {
-      "root_note_title": "Chats de IA",
-      "root_note_content": "Esta nota contiene tus conversaciones de chat de IA guardadas.",
-      "new_chat_title": "Nuevo chat",
-      "create_new_ai_chat": "Crear nuevo chat de IA"
-    },
-    "create_new_ai_chat": "Crear nuevo chat de IA",
-    "configuration_warnings": "Hay algunos problemas con su configuración de IA. Por favor compruebe sus ajustes.",
-    "experimental_warning": "La característica de LLM aún es experimental - ha sido advertido.",
-    "selected_provider": "Proveedor seleccionado",
-    "selected_provider_description": "Elija el proveedor de IA para el chat y características de completado",
-    "select_model": "Seleccionar modelo...",
-    "select_provider": "Seleccionar proveedor...",
-    "ai_enabled": "Características de IA activadas",
-    "ai_disabled": "Características de IA desactivadas",
-    "no_models_found_online": "No se encontraron modelos. Por favor, comprueba tu clave de API y la configuración.",
-    "no_models_found_ollama": "No se encontraron modelos de Ollama. Por favor, comprueba si Ollama se está ejecutando.",
-    "error_fetching": "Error al obtener los modelos: {{error}}"
   },
   "zoom_factor": {
     "title": "Factor de zoom (solo versión de escritorio)",
@@ -1569,7 +1416,7 @@
   "shortcuts": {
     "keyboard_shortcuts": "Atajos de teclado",
     "multiple_shortcuts": "Varios atajos para la misma acción se pueden separar mediante comas.",
-    "electron_documentation": "Véa la <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">documentación de Electron </a> para los modificadores y códigos de tecla disponibles.",
+    "electron_documentation": "Consulte la <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">documentación de Electron</a> para los modificadores y códigos de tecla disponibles.",
     "type_text_to_filter": "Escriba texto para filtrar los accesos directos...",
     "action_name": "Nombre de la acción",
     "shortcuts": "Atajos",
@@ -1577,7 +1424,8 @@
     "description": "Descripción",
     "reload_app": "Vuelva a cargar la aplicación para aplicar los cambios",
     "set_all_to_default": "Establecer todos los accesos directos al valor predeterminado",
-    "confirm_reset": "¿Realmente desea restablecer todos los atajos de teclado a sus valores predeterminados?"
+    "confirm_reset": "¿Realmente desea restablecer todos los atajos de teclado a sus valores predeterminados?",
+    "no_results": "No se encontraron atajos que coincidan con '{{filter}} '"
   },
   "spellcheck": {
     "title": "Revisión ortográfica",
@@ -1699,7 +1547,8 @@
     "task-list": "Lista de tareas",
     "book": "Colección",
     "new-feature": "Nuevo",
-    "collections": "Colecciones"
+    "collections": "Colecciones",
+    "spreadsheet": "Hoja de cálculo"
   },
   "protect_note": {
     "toggle-on": "Proteger la nota",
@@ -1784,7 +1633,9 @@
     "print_report_collection_content_other": "{{count}} notas en la colección no se pueden imprimir porque no son compatibles o están protegidas.",
     "print_report_title": "Imprimir informe",
     "print_report_collection_details_button": "Ver detalles",
-    "print_report_collection_details_ignored_notes": "Notas ignoradas"
+    "print_report_collection_details_ignored_notes": "Notas ignoradas",
+    "print_report_stack_trace": "Rastreo de pila",
+    "print_report_error_title": "Fallo al imprimir"
   },
   "note_title": {
     "placeholder": "escriba el título de la nota aquí...",
@@ -1799,7 +1650,8 @@
   },
   "search_result": {
     "no_notes_found": "No se han encontrado notas para los parámetros de búsqueda dados.",
-    "search_not_executed": "La búsqueda aún no se ha ejecutado. Dé clic en el botón «Buscar» para ver los resultados."
+    "search_not_executed": "La búsqueda aún no se ha ejecutado.",
+    "search_now": "Buscar ahora"
   },
   "spacer": {
     "configure_launchbar": "Configurar barra de lanzamiento"
@@ -1832,7 +1684,7 @@
     "no_headings": "Sin encabezados."
   },
   "watched_file_update_status": {
-    "file_last_modified": "Archivo <code class=\"file-path\"></code> ha sido modificado por última vez en<span class=\"file-last-modified\"></span>.",
+    "file_last_modified": "El archivo <code class=\"file-path\"></code> ha sido modificado por última vez en <span class=\"file-last-modified\"></span>.",
     "upload_modified_file": "Subir archivo modificado",
     "ignore_this_change": "Ignorar este cambio"
   },
@@ -1927,6 +1779,7 @@
     "add-term-to-dictionary": "Agregar \"{{term}}\" al diccionario",
     "cut": "Cortar",
     "copy": "Copiar",
+    "copy-as-markdown": "Copiar como markdown",
     "copy-link": "Copiar enlace",
     "paste": "Pegar",
     "paste-as-plain-text": "Pegar como texto plano",
@@ -2056,7 +1909,8 @@
     "max-nesting-depth": "Máxima profundidad de anidamiento:",
     "vector_light": "Vector (claro)",
     "vector_dark": "Vector (oscuro)",
-    "raster": "Trama"
+    "raster": "Trama",
+    "show-labels": "Mostrar nombres de marcadores"
   },
   "table_context_menu": {
     "delete_row": "Eliminar fila"
@@ -2165,7 +2019,8 @@
   },
   "pagination": {
     "total_notes": "{{count}} notas",
-    "page_title": "Página de {{startIndex}} - {{endIndex}}"
+    "prev_page": "Página anterior",
+    "next_page": "Página siguiente"
   },
   "presentation_view": {
     "edit-slide": "Editar este slide",
@@ -2298,5 +2153,96 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Marcadores"
+  },
+  "web_view_setup": {
+    "title": "Crear una vista en vivo de una página web directamente en Trilium",
+    "url_placeholder": "Ingresar o pegar la dirección del sitio web, por ejemplo https://triliumnotes.org",
+    "create_button": "Crear Vista Web",
+    "invalid_url_title": "Dirección inválida",
+    "invalid_url_message": "Ingrese una dirección web válida, por ejemplo https://triliumnotes.org.",
+    "disabled_description": "Esta vista web fue importada de una fuente externa. Para ayudarlo a protegerse del phishing o el contenido malicioso, no se está cargando automáticamente. Puede activarlo si confía en la fuente.",
+    "disabled_button_enable": "Habilita vista web"
+  },
+  "render": {
+    "setup_title": "Mostrar HTML personalizado o Preact JSX dentro de esta nota",
+    "setup_create_sample_preact": "Crear nota de muestra con Preact",
+    "setup_create_sample_html": "Crear nota de muestra con HTML",
+    "setup_sample_created": "Se creó una nota de muestra como subnota.",
+    "disabled_description": "Esta nota de renderización proviene de una fuente externa. Para protegerlo de contenido malicioso, no está habilitado por defecto. Asegúrese de confiar en la fuente antes de habilitarla.",
+    "disabled_button_enable": "Habilitar nota de renderización"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Paquete de iconos",
+    "type_backend_script": "Script de backend",
+    "type_frontend_script": "Script de frontend",
+    "type_widget": "Widget",
+    "type_app_css": "CSS personalizado",
+    "type_render_note": "Nota de renderización",
+    "type_web_view": "Vista web",
+    "type_app_theme": "Tema personalizado",
+    "toggle_tooltip_enable_tooltip": "Haga clic para habilitar este {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Haga clic para deshabilitar este {{type}}.",
+    "menu_docs": "Abrir documentación",
+    "menu_execute_now": "Ejecutar script ahora",
+    "menu_run": "Ejecutar automáticamente",
+    "menu_run_disabled": "Manualmente",
+    "menu_run_backend_startup": "Cuando el backend inicia",
+    "menu_run_hourly": "Cada hora",
+    "menu_run_daily": "Diariamente",
+    "menu_run_frontend_startup": "Cuando el frontend de escritorio inicia",
+    "menu_run_mobile_startup": "Cuando el frontend móvil inicia",
+    "menu_change_to_widget": "Cambiar a widget",
+    "menu_change_to_frontend_script": "Cambiar a script de frontend",
+    "menu_theme_base": "Tema base"
+  },
+  "setup_form": {
+    "more_info": "Para saber más"
+  },
+  "media": {
+    "play": "Reproducir (Espacio)",
+    "pause": "Pausa (Espacio)",
+    "back-10s": "Retroceder 10s (tecla de flecha izquierda)",
+    "forward-30s": "Adelantar 30s",
+    "mute": "Silenciar (M)",
+    "unmute": "Activar sonido (M)",
+    "playback-speed": "Velocidad de reproducción",
+    "loop": "Bucle",
+    "disable-loop": "Deshabilitar bucle",
+    "rotate": "Rotar",
+    "picture-in-picture": "Imagen en imagen",
+    "exit-picture-in-picture": "Salir del modo imagen en imagen",
+    "fullscreen": "Pantalla completa (F)",
+    "exit-fullscreen": "Salir de la pantalla completa",
+    "unsupported-format": "La vista previa del medio no está disponible para este formato de archivo:\n{{mime}}",
+    "zoom-to-fit": "Acercamiento para llenar",
+    "zoom-reset": "Reiniciar acercamiento para llenar"
+  },
+  "mermaid": {
+    "placeholder": "Ingrese el contenido de su diagrama Mermaid o utilice uno de los diagramas de muestra a continuación.",
+    "sample_diagrams": "Diagramas de muestra:",
+    "sample_flowchart": "Diagrama de flujo",
+    "sample_class": "Clase",
+    "sample_sequence": "Secuencia",
+    "sample_entity_relationship": "Relación entre entidades",
+    "sample_state": "Estado",
+    "sample_mindmap": "Mapa mental",
+    "sample_architecture": "Arquitectura",
+    "sample_block": "Bloque",
+    "sample_c4": "C4",
+    "sample_gantt": "Gantt",
+    "sample_git": "Git",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Paquete",
+    "sample_pie": "Pastel",
+    "sample_quadrant": "Cuadrante",
+    "sample_radar": "Radar",
+    "sample_requirement": "Requerimiento",
+    "sample_sankey": "Sankey",
+    "sample_timeline": "Línea de tiempo",
+    "sample_user_journey": "Jornada de usuario",
+    "sample_xy": "XY",
+    "sample_venn": "Venn",
+    "sample_ishikawa": "Ishikawa",
+    "sample_treemap": "Mapa de árbol"
   }
 }

@@ -1,5 +1,5 @@
 <figure class="image image-style-align-center">
-  <img style="aspect-ratio:767/606;" src="4_Calendar_image.png"
+  <img style="aspect-ratio:767/606;" src="2_Calendar_image.png"
   width="767" height="606">
 </figure>
 <p>The Calendar view will display each child note in a calendar that has
@@ -18,35 +18,9 @@
   kind of interaction, such as moving events around as well as creating new
   ones.</p>
 <h2>Creating a calendar</h2>
-<table>
-  <thead>
-    <tr>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1</td>
-      <td>
-        <img src="2_Calendar_image.png">
-      </td>
-      <td>The Calendar View works only for Collection note types. To create a new
-        note, right click on the note tree on the left and select Insert note after,
-        or Insert child note and then select <em>Collection</em>.</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>
-        <img src="3_Calendar_image.png">
-      </td>
-      <td>Once created, the “View type” of the Collection needs changed to “Calendar”,
-        by selecting the “Collection Properties” tab in the ribbon.</td>
-    </tr>
-  </tbody>
-</table>
-
+<p>Right click on an existing note in the&nbsp;<a class="reference-link"
+  href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and select <em>Insert child note</em> and
+  look for <em>Calendar</em>.</p>
 <h2>Creating a new event/note</h2>
 <ul>
   <li>Clicking on a day will create a new child note and assign it to that particular
@@ -68,7 +42,7 @@
 <ul>
   <li>Hovering the mouse over an event will display information about the note.
     <br>
-    <img src="7_Calendar_image.png">
+    <img src="5_Calendar_image.png">
   </li>
   <li>Left clicking the event will open a&nbsp;<a class="reference-link" href="#root/_help_ZjLYv08Rp3qC">Quick edit</a>&nbsp;to
     edit the note in a popup while allowing easy return to the calendar by
@@ -125,33 +99,36 @@
   </thead>
   <tbody>
     <tr>
-      <td><code>#calendar:hideWeekends</code>
+      <td><code spellcheck="false">#calendar:hideWeekends</code>
       </td>
       <td>When present (regardless of value), it will hide Saturday and Sundays
         from the calendar.</td>
     </tr>
     <tr>
-      <td><code>#calendar:weekNumbers</code>
+      <td><code spellcheck="false">#calendar:weekNumbers</code>
       </td>
       <td>When present (regardless of value), it will show the number of the week
         on the calendar.</td>
     </tr>
     <tr>
-      <td><code>#calendar:initialDate</code>
+      <td><code spellcheck="false">#calendar:initialDate</code>
       </td>
       <td>Change the date the calendar opens on. When not present, the calendar
         opens on the current date.</td>
     </tr>
     <tr>
-      <td><code>#calendar:view</code>
+      <td><code spellcheck="false">#calendar:view</code>
       </td>
       <td>
         <p>Which view to display in the calendar:</p>
         <ul>
-          <li><code>timeGridWeek</code> for the <em>week</em> view;</li>
-          <li><code>dayGridMonth</code> for the <em>month</em> view;</li>
-          <li><code>multiMonthYear</code> for the <em>year</em> view;</li>
-          <li><code>listMonth</code> for the <em>list</em> view.</li>
+          <li><code spellcheck="false">timeGridWeek</code> for the <em>week</em> view;</li>
+          <li
+         ><code spellcheck="false">dayGridMonth</code> for the <em>month</em> view;</li>
+            <li
+           ><code spellcheck="false">multiMonthYear</code> for the <em>year</em> view;</li>
+              <li
+             ><code spellcheck="false">listMonth</code> for the <em>list</em> view.</li>
         </ul>
         <p>Any other value will be dismissed and the default view (month) will be
           used instead.</p>
@@ -160,7 +137,7 @@
       </td>
     </tr>
     <tr>
-      <td><code>~child:template</code>
+      <td><code spellcheck="false">~child:template</code>
       </td>
       <td>Defines the template for newly created notes in the calendar (via dragging
         or clicking).</td>
@@ -209,6 +186,18 @@
         present, or <code spellcheck="false">startDate</code>).</td>
     </tr>
     <tr>
+      <td><code spellcheck="false">#recurrence</code>
+      </td>
+      <td>This is an optional CalDAV <code spellcheck="false">RRULE</code> string
+        that if present, determines whether a task should repeat or not. Note that
+        it does not include the <code spellcheck="false">DTSTART</code> attribute,
+        which is derived from the <code spellcheck="false">#startDate</code> and
+        <code
+        spellcheck="false">#startTime</code>directly. For examples of valid <code spellcheck="false">RRULE</code> strings
+          see <a href="https://icalendar.org/rrule-tool.html">https://icalendar.org/rrule-tool.html</a>
+      </td>
+    </tr>
+    <tr>
       <td><code spellcheck="false">#color</code>
       </td>
       <td>Displays the event with a specified color (named such as <code spellcheck="false">red</code>,
@@ -220,7 +209,7 @@
     <tr>
       <td><code spellcheck="false">#calendar:color</code>
       </td>
-      <td><strong>❌️ Removed since v0.100.0. Use</strong>  <code spellcheck="false">**#color**</code>  <strong>instead.</strong> 
+      <td><strong>❌️ Removed since v0.100.0. Use</strong>  <code spellcheck="false">**#color**</code>  <strong>instead.</strong>&nbsp;&nbsp;
         <br>
         <br>Similar to <code spellcheck="false">#color</code>, but applies the color
         only for the event in the calendar and not for other places such as the
@@ -244,15 +233,15 @@
       <td><code spellcheck="false">#calendar:displayedAttributes</code>
       </td>
       <td>Allows displaying the value of one or more attributes in the calendar
-        like this:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        like this:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <br>
         <br>
-        <img src="9_Calendar_image.png">&nbsp;&nbsp;&nbsp;
+        <img src="7_Calendar_image.png">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <br>
-        <br><code spellcheck="false">#weight="70" #Mood="Good" #calendar:displayedAttributes="weight,Mood"</code>&nbsp;&nbsp;&nbsp;
+        <br><code spellcheck="false">#weight="70" #Mood="Good" #calendar:displayedAttributes="weight,Mood"</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <br>
         <br>It can also be used with relations, case in which it will display the
-        title of the target note:&nbsp;&nbsp;&nbsp;&nbsp;
+        title of the target note:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <br>
         <br><code spellcheck="false">~assignee=@My assignee #calendar:displayedAttributes="assignee"</code>
       </td>
@@ -289,7 +278,7 @@
 
 <h2>How the calendar works</h2>
 <p>
-  <img src="11_Calendar_image.png">
+  <img src="9_Calendar_image.png">
 </p>
 <p>The calendar displays all the child notes of the Collection that have
   a <code spellcheck="false">#startDate</code>. An <code spellcheck="false">#endDate</code> can
@@ -300,11 +289,52 @@
 #hidePromotedAttributes </code></pre>
 <p>This will result in:</p>
 <p>
-  <img src="10_Calendar_image.png">
+  <img src="8_Calendar_image.png">
 </p>
 <p>When not used in a Journal, the calendar is recursive. That is, it will
   look for events not just in its child notes but also in the children of
   these child notes.</p>
+<h2>Recurrence</h2>
+<p>The built in calendar view also supports repeating tasks. If a child note
+  of the calendar has a #recurrence label with a valid recurrence, that event
+  will repeat on the calendar according to the recurrence string.&nbsp;</p>
+<p>For example, to make a note repeat on the calendar:</p>
+<ul>
+  <li>Every Day - <code spellcheck="false">#recurrence="FREQ=DAILY;INTERVAL=1"</code>
+  </li>
+  <li>Every 3 days - <code spellcheck="false">#recurrence="FREQ=DAILY;INTERVAL=3"</code>
+  </li>
+  <li>Every week - <code spellcheck="false">#recurrence="FREQ=WEEKLY;INTERVAL=1"</code>
+  </li>
+  <li>Every 2 weeks on Monday, Wednesday and Friday - <code spellcheck="false">#recurrence="FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR"</code>
+  </li>
+  <li>Every 3 months - <code spellcheck="false">#recurrence="FREQ=MONTHLY;INTERVAL=3"</code>
+  </li>
+  <li>Every 2 months on the First Sunday - <code spellcheck="false">#recurrence="FREQ=MONTHLY;INTERVAL=2;BYDAY=1SU"</code>
+  </li>
+  <li>Every month on the Last Friday - <code spellcheck="false">#recurrence="FREQ=MONTHLY;INTERVAL=1;BYDAY=-1FR"</code>
+  </li>
+  <li>And so on.</li>
+</ul>
+<p>For other examples of valid <code spellcheck="false">RRULE</code> strings
+  see <a href="https://icalendar.org/rrule-tool.html">https://icalendar.org/rrule-tool.html</a>
+</p>
+<p>Note that the recurrence string does not include the <code spellcheck="false">DTSTART</code> attribute
+  as defined in the iCAL specifications. This is derived directly from the
+  <code
+  spellcheck="false">startDate</code>and <code spellcheck="false">startTime</code> attributes</p>
+<p>If you want to override the label the calendar uses to fetch the recurrence
+  string, you can use the <code spellcheck="false">#calendar:recurrence</code> attribute.
+  For example, you can set <code spellcheck="false">#calendar:recurrence=taskRepeats</code>.
+  Then you can set your recurrence string like <code spellcheck="false">#taskRepeats="FREQ=DAILY;INTERVAL=1"</code>
+</p>
+<p>Also note that the recurrence label can be made promoted as with the start
+  and end dates.&nbsp;</p>
+<aside class="admonition warning">
+  <p>If the recurrence string is not valid, a toast will be shown with the
+    note ID and title of the note with the erroneous recurrence message. This
+    note will not be added to the calendar</p>
+</aside>
 <h2>Use-cases</h2>
 <h3>Using with the Journal / calendar</h3>
 <p>It is possible to integrate the calendar view into the Journal with day
@@ -324,7 +354,7 @@
     not having a <code spellcheck="false">dateNote</code> attribute. Children
     of the child notes will not be displayed.</li>
 </ul>
-<img src="8_Calendar_image.png" width="1217"
+<img src="6_Calendar_image.png" width="1217"
 height="724">
 
 <h3>Using a different attribute as event title</h3>
@@ -352,7 +382,7 @@ height="724">
       <td>
         <p>&nbsp;</p>
         <figure class="image image-style-align-center">
-          <img style="aspect-ratio:445/124;" src="5_Calendar_image.png"
+          <img style="aspect-ratio:445/124;" src="3_Calendar_image.png"
           width="445" height="124">
         </figure>
       </td>
@@ -378,7 +408,7 @@ height="724">
       <td><pre><code class="language-text-x-trilium-auto">#startDate=2025-02-14 #endDate=2025-02-15 ~for=@John Smith ~for=@Jane Doe #calendar:title="for"</code></pre>
       </td>
       <td>
-        <img src="6_Calendar_image.png" width="294"
+        <img src="4_Calendar_image.png" width="294"
         height="151">
       </td>
     </tr>

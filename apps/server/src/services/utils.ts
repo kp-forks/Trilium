@@ -145,8 +145,12 @@ export function formatDownloadTitle(fileName: string, type: string | null, mime:
     return coreUtils.formatDownloadTitle(fileName, type, mime);
 }
 
-export function removeFileExtension(filePath: string) {
+export function removeFileExtension(filePath: string, mime?: string) {
     const extension = path.extname(filePath).toLowerCase();
+
+    if (mime?.startsWith("video/") || mime?.startsWith("audio/")) {
+        return filePath.substring(0, filePath.length - extension.length);
+    }
 
     switch (extension) {
         case ".md":
@@ -168,7 +172,7 @@ export function getNoteTitle(filePath: string, replaceUnderscoresWithSpaces: boo
     const trimmedNoteMeta = noteMeta?.title?.trim();
     if (trimmedNoteMeta) return trimmedNoteMeta;
 
-    const basename = path.basename(removeFileExtension(filePath));
+    const basename = path.basename(removeFileExtension(filePath, noteMeta?.mime));
     return replaceUnderscoresWithSpaces ? basename.replace(/_/g, " ").trim() : basename;
 }
 
@@ -454,6 +458,13 @@ export const safeExtractMessageAndStackFromError = coreUtils.safeExtractMessageA
 /** @deprecated */
 export const isEmptyOrWhitespace = coreUtils.isEmptyOrWhitespace;
 
+export function waitForStreamToFinish(stream: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+        stream.on("finish", () => resolve());
+        stream.on("error", (err) => reject(err));
+    });
+}
+
 export default {
     compareVersions,
     constantTimeCompare,
@@ -493,5 +504,6 @@ export default {
     toBase64,
     toMap,
     toObject,
-    unescapeHtml
+    unescapeHtml,
+    waitForStreamToFinish
 };

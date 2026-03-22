@@ -75,8 +75,10 @@ test("Tabs are restored in right order", async ({ page, context }) => {
     await expect(app.getActiveTab()).toContainText("Mermaid");
 
     // Select the mid one.
+    const recentNotesSaved = page.waitForResponse((resp) => resp.url().includes("/api/recent-notes") && resp.ok());
     await (await app.getTab(1)).click();
     await expect(app.noteTreeActiveNote).toContainText("Text notes");
+    await recentNotesSaved;
 
     // Refresh the page and check the order.
     await app.goto( { preserveTabs: true });

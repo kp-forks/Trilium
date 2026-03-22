@@ -442,7 +442,7 @@
     "share_index": "liostálfaidh nóta leis an lipéad seo fréamhacha uile nótaí comhroinnte",
     "display_relations": "Ainmneacha caidrimh scartha le camóga ar cheart iad a thaispeáint. Beidh na cinn eile go léir i bhfolach.",
     "hide_relations": "Ainmneacha caidrimh scartha le camóga ar cheart iad a cheilt. Taispeánfar na cinn eile go léir.",
-    "title_template": "Teideal réamhshocraithe nótaí a cruthaíodh mar leanaí den nóta seo. Déantar an luach a mheas mar theaghrán JavaScript\n                        agus dá bhrí sin is féidir é a shaibhriú le hábhar dinimiciúil trí na hathróga <code>now</code> agus <code>parentNote</code> insteallta. Samplaí:\n\n                        <ul>\n                          <li><code>Saothair liteartha ${parentNote.getLabelValue('authorName')}</code></li>\n                          <li><code>Log le haghaidh ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                        </ul>\n\nFéach <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">vicí le sonraí</a>, doiciméid API le haghaidh <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> agus <a href=\"https://day.js.org/docs/en/display/format\">now</a> le haghaidh sonraí.",
+    "title_template": "teideal réamhshocraithe nótaí a cruthaíodh mar leanaí den nóta seo. Déantar an luach a mheas mar theaghrán JavaScript \n                        agus dá bhrí sin is féidir é a shaibhriú le hábhar dinimiciúil trí na hathróga <code>now</code> agus <code>parentNote</code> insteallta. Samplaí:\n                        \n                        <ul>\n                            <li><code>Saothair liteartha ${parentNote.getLabelValue('authorName')}</code></li>\n                            <li><code>Log le haghaidh ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                        </ul>\n                        \n                        Féach <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">vicí le sonraí</a>, doiciméid API le haghaidh <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> agus <a href=\"https://day.js.org/docs/en/display/format\">now</a> le haghaidh sonraí.",
     "template": "Beidh an nóta seo le feiceáil i roghnú na dteimpléad atá ar fáil agus nóta nua á chruthú",
     "toc": "Cuirfidh <code>#toc</code> nó <code>#toc=show</code> iallach ar an gClár Ábhair a bheith le feiceáil, cuirfidh <code>#toc=hide</code> iallach air é a cheilt. Mura bhfuil an lipéad ann, breathnaítear ar an socrú domhanda",
     "color": "sainmhíníonn dath an nóta sa chrann nótaí, snaisc srl. Úsáid aon luach datha CSS bailí cosúil le 'dearg' nó #a13d5f",
@@ -1016,7 +1016,7 @@
     "no_attachments": "Níl aon cheangaltáin leis an nóta seo."
   },
   "book": {
-    "no_children_help": "Níl aon nótaí faoi mhíbhuntáiste sa bhailiúchán seo mar sin níl aon rud le taispeáint. Féach ar an <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">vicí</a> le haghaidh tuilleadh sonraí.",
+    "no_children_help": "Níl aon nótaí faoi mhíbhuntáiste sa bhailiúchán seo mar sin níl aon rud le taispeáint.",
     "drag_locked_title": "Glasáilte le haghaidh eagarthóireachta",
     "drag_locked_message": "Ní cheadaítear tarraingt ós rud é go bhfuil an bailiúchán faoi ghlas le haghaidh eagarthóireachta."
   },
@@ -1055,7 +1055,6 @@
     "unprotecting-title": "Stádas díchosanta"
   },
   "relation_map": {
-    "open_in_new_tab": "Oscail i gcluaisín nua",
     "remove_note": "Bain nóta",
     "edit_title": "Cuir an teideal in eagar",
     "rename_note": "Athainmnigh an nóta",
@@ -1071,15 +1070,6 @@
     "enter_title_of_new_note": "Cuir isteach teideal an nóta nua",
     "default_new_note_title": "nóta nua",
     "click_on_canvas_to_place_new_note": "Cliceáil ar chanbhás chun nóta nua a chur"
-  },
-  "render": {
-    "note_detail_render_help_1": "Taispeántar an nóta cabhrach seo mar nach bhfuil aon ghaol riachtanach ag an nóta seo den chineál Render HTML le go bhfeidhmeoidh sé i gceart.",
-    "note_detail_render_help_2": "Úsáidtear cineál nóta HTML rindreála le haghaidh <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scriptithe</a>. Go hachomair, tá nóta cóid HTML agat (le roinnt JavaScript más féidir) agus déanfaidh an nóta seo é a rindreáil. Chun go n-oibreoidh sé, ní mór duit <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">gaol</a> ar a dtugtar \"renderNote\" a shainiú ag pointeáil chuig an nóta HTML atá le rindreáil."
-  },
-  "web_view": {
-    "web_view": "Radharc Gréasáin",
-    "embed_websites": "Nóta den chineál Gréasáin a ligeann duit suíomhanna gréasáin a leabú i Trilium.",
-    "create_label": "Chun tús a chur leis, cruthaigh lipéad le seoladh URL ar mhaith leat a leabú, m.sh. #webViewSrc=\"https://www.google.com\""
   },
   "backend_log": {
     "refresh": "Athnuachan"
@@ -1201,149 +1191,6 @@
     "enable-backdrop-effects": "Cumasaigh éifeachtaí cúlra do bhiachláir, fuinneoga aníos agus painéil",
     "enable-smooth-scroll": "Cumasaigh scrollú réidh",
     "app-restart-required": "(tá atosú an fheidhmchláir ag teastáil chun an t-athrú a chur i bhfeidhm)"
-  },
-  "ai_llm": {
-    "not_started": "Níor tosaíodh",
-    "title": "Socruithe AI",
-    "processed_notes": "Nótaí Próiseáilte",
-    "total_notes": "Nótaí Iomlána",
-    "progress": "Dul Chun Cinn",
-    "queued_notes": "Nótaí i gCiú",
-    "failed_notes": "Nótaí Theipthe",
-    "last_processed": "Próiseáilte Deiridh",
-    "refresh_stats": "Athnuachan Staitisticí",
-    "enable_ai_features": "Cumasaigh gnéithe AI/LLM",
-    "enable_ai_description": "Cumasaigh gnéithe AI cosúil le achoimre nótaí, giniúint ábhair, agus cumais LLM eile",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "Cumasaigh gnéithe AI/LLM",
-    "enable_ai_desc": "Cumasaigh gnéithe AI cosúil le achoimre nótaí, giniúint ábhair, agus cumais LLM eile",
-    "provider_configuration": "Cumraíocht Soláthraí AI",
-    "provider_precedence": "Tosaíocht Soláthraí",
-    "provider_precedence_description": "Liosta soláthraithe scartha le camóga in ord tosaíochta (m.sh., 'openai, anthropic, ollama')",
-    "temperature": "Teocht",
-    "temperature_description": "Rialaíonn randamacht i bhfreagraí (0 = cinntitheach, 2 = uasmhéid randamachta)",
-    "system_prompt": "Pras Córais",
-    "system_prompt_description": "Leid réamhshocraithe an chórais a úsáidtear le haghaidh gach idirghníomhaíocht AI",
-    "openai_configuration": "Cumraíocht OpenAI",
-    "openai_settings": "Socruithe OpenAI",
-    "api_key": "Eochair API",
-    "url": "Bun-URL",
-    "model": "Samhail",
-    "openai_api_key_description": "D'eochair API OpenAI chun rochtain a fháil ar a gcuid seirbhísí AI",
-    "anthropic_api_key_description": "D'eochair API Anthropic chun rochtain a fháil ar mhúnlaí Claude",
-    "default_model": "Samhail Réamhshocraithe",
-    "openai_model_description": "Samplaí: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "base_url": "Bun-URL",
-    "openai_url_description": "Réamhshocrú: https://api.openai.com/v1",
-    "anthropic_settings": "Socruithe Anthropic",
-    "anthropic_url_description": "Bun-URL don Anthropic API (réamhshocraithe: https://api.anthropic.com)",
-    "anthropic_model_description": "Samhlacha Anthropic Claude le haghaidh comhlánú comhrá",
-    "voyage_settings": "Socruithe Voyage AI",
-    "ollama_settings": "Socruithe Ollama",
-    "ollama_url_description": "URL don Ollama API (réamhshocrú: http://localhost:11434)",
-    "ollama_model_description": "Samhail Ollama le húsáid le haghaidh comhrá a chríochnú",
-    "anthropic_configuration": "Cumraíocht Anthropic",
-    "voyage_configuration": "Cumraíocht AI Voyage",
-    "voyage_url_description": "Réamhshocrú: https://api.voyageai.com/v1",
-    "ollama_configuration": "Cumraíocht Ollama",
-    "enable_ollama": "Cumasaigh Ollama",
-    "enable_ollama_description": "Cumasaigh Ollama le haghaidh úsáide áitiúla samhail AI",
-    "ollama_url": "URL Ollama",
-    "ollama_model": "Samhail Ollama",
-    "refresh_models": "Athnuachan Samhlacha",
-    "refreshing_models": "Ag athnuachan...",
-    "enable_automatic_indexing": "Cumasaigh Innéacsú Uathoibríoch",
-    "rebuild_index": "Innéacs Athchóirithe",
-    "rebuild_index_error": "Earráid ag tosú atógáil an innéacs. Seiceáil na logaí le haghaidh sonraí.",
-    "note_title": "Teideal an Nóta",
-    "error": "Earráid",
-    "last_attempt": "Iarracht Dheiridh",
-    "actions": "Gníomhartha",
-    "retry": "Déan iarracht eile",
-    "partial": "{{ percentage }}% críochnaithe",
-    "retry_queued": "Nóta curtha i scuaine le haghaidh athiarrachta",
-    "retry_failed": "Theip ar an nóta a chur sa scuaine le haghaidh athiarrachta",
-    "max_notes_per_llm_query": "Uasmhéid Nótaí In Aghaidh an Fhiosrúcháin",
-    "max_notes_per_llm_query_description": "Uasmhéid nótaí comhchosúla le cur san áireamh i gcomhthéacs na hintleachta saorga",
-    "active_providers": "Soláthraithe Gníomhacha",
-    "disabled_providers": "Soláthraithe faoi Mhíchumas",
-    "remove_provider": "Bain an soláthraí as an gcuardach",
-    "restore_provider": "Athchóirigh soláthraí chuig an gcuardach",
-    "similarity_threshold": "Tairseach Cosúlachta",
-    "similarity_threshold_description": "Scór cosúlachta íosta (0-1) le go n-áireofar nótaí i gcomhthéacs fiosrúcháin LLM",
-    "reprocess_index": "Athchruthaigh Innéacs Cuardaigh",
-    "reprocessing_index": "Atógáil...",
-    "reprocess_index_started": "Cuireadh tús le hoptamú innéacs cuardaigh sa chúlra",
-    "reprocess_index_error": "Earráid ag atógáil innéacs cuardaigh",
-    "index_rebuild_progress": "Dul Chun Cinn Athchóirithe Innéacs",
-    "index_rebuilding": "Innéacs optamaithe ({{percentage}}%)",
-    "index_rebuild_complete": "Uasmhéadú innéacs críochnaithe",
-    "index_rebuild_status_error": "Earráid ag seiceáil stádas athchóirithe innéacs",
-    "never": "Choíche",
-    "processing": "Próiseáil ({{percentage}}%)",
-    "incomplete": "Neamhchríochnaithe ({{percentage}}%)",
-    "complete": "Críochnaithe (100%)",
-    "refreshing": "Ag athnuachan...",
-    "auto_refresh_notice": "Athnuachan uathoibríoch gach {{seconds}} soicind",
-    "note_queued_for_retry": "Nóta curtha i scuaine le haghaidh athiarrachta",
-    "failed_to_retry_note": "Theip ar an nóta a athdhéanamh",
-    "all_notes_queued_for_retry": "Gach nóta nár éirigh leo curtha i scuaine le haghaidh athiarrachta",
-    "failed_to_retry_all": "Theip ar athiarracht nótaí",
-    "ai_settings": "Socruithe AI",
-    "api_key_tooltip": "Eochair API chun rochtain a fháil ar an tseirbhís",
-    "empty_key_warning": {
-      "anthropic": "Tá eochair API Anthropic folamh. Cuir isteach eochair API bhailí le do thoil.",
-      "openai": "Tá eochair API OpenAI folamh. Cuir isteach eochair API bhailí le do thoil.",
-      "voyage": "Tá eochair API Voyage folamh. Cuir isteach eochair API bhailí le do thoil.",
-      "ollama": "Tá eochair API Ollama folamh. Cuir isteach eochair API bhailí le do thoil."
-    },
-    "agent": {
-      "processing": "Ag próiseáil...",
-      "thinking": "Ag smaoineamh...",
-      "loading": "Ag lódáil...",
-      "generating": "Ag giniúint..."
-    },
-    "name": "Intleacht Shaorga",
-    "openai": "OpenAI",
-    "use_enhanced_context": "Úsáid comhthéacs feabhsaithe",
-    "enhanced_context_description": "Tugann sé níos mó comhthéacs don AI ón nóta agus a nótaí gaolmhara le haghaidh freagraí níos fearr",
-    "show_thinking": "Taispeáin smaointeoireacht",
-    "show_thinking_description": "Taispeáin slabhra phróiseas smaointeoireachta na hintleachta saorga",
-    "enter_message": "Cuir isteach do theachtaireacht...",
-    "error_contacting_provider": "Earráid ag teacht i dteagmháil leis an soláthraí AI. Seiceáil do shocruithe agus do nasc idirlín le do thoil.",
-    "error_generating_response": "Earráid ag giniúint freagra AI",
-    "index_all_notes": "Innéacs na Nótaí Uile",
-    "index_status": "Stádas Innéacs",
-    "indexed_notes": "Nótaí Innéacsaithe",
-    "indexing_stopped": "Stopadh an innéacsú",
-    "indexing_in_progress": "Innéacsú ar siúl...",
-    "last_indexed": "Innéacsaithe Deiridh",
-    "note_chat": "Comhrá Nótaí",
-    "sources": "Foinsí",
-    "start_indexing": "Tosaigh ag Innéacsú",
-    "use_advanced_context": "Úsáid Comhthéacs Ardleibhéil",
-    "ollama_no_url": "Níl Ollama cumraithe. Cuir isteach URL bailí le do thoil.",
-    "chat": {
-      "root_note_title": "Comhráite AI",
-      "root_note_content": "Tá do chomhráite comhrá AI sábháilte sa nóta seo.",
-      "new_chat_title": "Comhrá Nua",
-      "create_new_ai_chat": "Cruthaigh Comhrá AI nua"
-    },
-    "create_new_ai_chat": "Cruthaigh Comhrá AI nua",
-    "configuration_warnings": "Tá roinnt fadhbanna le do chumraíocht AI. Seiceáil do shocruithe le do thoil.",
-    "experimental_warning": "Tá an ghné LLM turgnamhach faoi láthair - tugadh rabhadh duit.",
-    "selected_provider": "Soláthraí Roghnaithe",
-    "selected_provider_description": "Roghnaigh an soláthraí AI le haghaidh gnéithe comhrá agus comhlánaithe",
-    "select_model": "Roghnaigh samhail...",
-    "select_provider": "Roghnaigh soláthraí...",
-    "ai_enabled": "Gnéithe AI cumasaithe",
-    "ai_disabled": "Gnéithe AI díchumasaithe",
-    "no_models_found_online": "Níor aimsíodh aon mhúnlaí. Seiceáil d’eochair API agus do shocruithe le do thoil.",
-    "no_models_found_ollama": "Níor aimsíodh aon mhúnlaí Ollama. Seiceáil le do thoil an bhfuil Ollama ag rith.",
-    "error_fetching": "Earráid ag fáil samhlacha: {{error}}"
   },
   "zoom_factor": {
     "title": "Fachtóir Súmáil (leagan deisce amháin)",
@@ -1595,7 +1442,8 @@
     "description": "Cur síos",
     "reload_app": "Athlódáil an aip chun na hathruithe a chur i bhfeidhm",
     "set_all_to_default": "Socraigh gach aicearra go dtí an réamhshocrú",
-    "confirm_reset": "An bhfuil tú cinnte gur mhaith leat na haicearraí méarchláir go léir a athshocrú go dtí an rogha réamhshocraithe?"
+    "confirm_reset": "An bhfuil tú cinnte gur mhaith leat na haicearraí méarchláir go léir a athshocrú go dtí an rogha réamhshocraithe?",
+    "no_results": "Níor aimsíodh aon aicearraí a mheaitseálann '{{filter}}'"
   },
   "spellcheck": {
     "title": "Seiceáil Litrithe",
@@ -1722,7 +1570,8 @@
     "ai-chat": "Comhrá AI",
     "task-list": "Liosta Tascanna",
     "new-feature": "Nua",
-    "collections": "Bailiúcháin"
+    "collections": "Bailiúcháin",
+    "spreadsheet": "Scarbhileog"
   },
   "protect_note": {
     "toggle-on": "Cosain an nóta",
@@ -1813,7 +1662,9 @@
     "print_report_collection_content_many": "Níorbh fhéidir {{count}} nótaí sa bhailiúchán a phriontáil mar nach dtacaítear leo nó mar go bhfuil siad faoi chosaint.",
     "print_report_collection_content_other": "Níorbh fhéidir {{count}} nótaí sa bhailiúchán a phriontáil mar nach dtacaítear leo nó mar go bhfuil siad faoi chosaint.",
     "print_report_collection_details_button": "Féach sonraí",
-    "print_report_collection_details_ignored_notes": "Nótaí neamhairdithe"
+    "print_report_collection_details_ignored_notes": "Nótaí neamhairdithe",
+    "print_report_error_title": "Theip ar phriontáil",
+    "print_report_stack_trace": "Rian cruachta"
   },
   "note_title": {
     "placeholder": "clóscríobh teideal an nóta anseo...",
@@ -1828,7 +1679,8 @@
   },
   "search_result": {
     "no_notes_found": "Ní bhfuarthas aon nótaí do na paraiméadair chuardaigh tugtha.",
-    "search_not_executed": "Níl an cuardach curtha i gcrích fós. Cliceáil ar an gcnaipe \"Cuardaigh\" thuas chun na torthaí a fheiceáil."
+    "search_not_executed": "Níl an cuardach curtha i gcrích fós.",
+    "search_now": "Cuardaigh anois"
   },
   "spacer": {
     "configure_launchbar": "Cumraigh an Barra Seoladh"
@@ -1956,6 +1808,7 @@
     "add-term-to-dictionary": "Cuir \"{{term}}\" leis an bhfoclóir",
     "cut": "Gearr",
     "copy": "Cóipeáil",
+    "copy-as-markdown": "Cóipeáil mar markdown",
     "copy-link": "Cóipeáil nasc",
     "paste": "Greamaigh",
     "paste-as-plain-text": "Greamaigh mar théacs simplí",
@@ -2114,7 +1967,8 @@
     "raster": "Raster",
     "vector_light": "Veicteoir (Solas)",
     "vector_dark": "Veicteoir (Dorcha)",
-    "show-scale": "Taispeáin scála"
+    "show-scale": "Taispeáin scála",
+    "show-labels": "Taispeáin ainmneacha marcóirí"
   },
   "table_context_menu": {
     "delete_row": "Scrios an tsraith"
@@ -2193,8 +2047,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Leathanach de {{startIndex}} - {{endIndex}}",
-    "total_notes": "{{count}} nótaí"
+    "total_notes": "{{count}} nótaí",
+    "prev_page": "Leathanach roimhe seo",
+    "next_page": "An chéad leathanach eile"
   },
   "collections": {
     "rendering_error": "Ní féidir ábhar a thaispeáint mar gheall ar earráid."
@@ -2328,5 +2183,96 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Leabharmharcanna"
+  },
+  "web_view_setup": {
+    "title": "Cruthaigh radharc beo de leathanach gréasáin go díreach isteach i Trilium",
+    "url_placeholder": "Cuir isteach nó greamaigh seoladh an tsuímh ghréasáin, mar shampla https://triliumnotes.org",
+    "create_button": "Cruthaigh Radharc Gréasáin",
+    "invalid_url_title": "Seoladh neamhbhailí",
+    "invalid_url_message": "Cuir isteach seoladh gréasáin bailí, mar shampla https://triliumnotes.org.",
+    "disabled_description": "Iompórtáladh an radharc gréasáin seo ó fhoinse sheachtrach. Chun cabhrú leat a chosaint ar ábhar fioscaireachta nó mailíseach, níl sé ag lódáil go huathoibríoch. Is féidir leat é a chumasú má tá muinín agat as an bhfoinse.",
+    "disabled_button_enable": "Cumasaigh radharc gréasáin"
+  },
+  "render": {
+    "setup_title": "Taispeáin HTML saincheaptha nó Preact JSX taobh istigh den nóta seo",
+    "setup_create_sample_preact": "Cruthaigh nóta samplach le Preact",
+    "setup_create_sample_html": "Cruthaigh nóta samplach le HTML",
+    "setup_sample_created": "Cruthaíodh nóta samplach mar nóta linbh.",
+    "disabled_description": "Tagann na nótaí rindreála seo ó fhoinse sheachtrach. Chun tú a chosaint ar ábhar mailíseach, níl sé cumasaithe de réir réamhshocraithe. Déan cinnte go bhfuil muinín agat as an bhfoinse sula gcumasaíonn tú é.",
+    "disabled_button_enable": "Cumasaigh nóta rindreála"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Pacáiste deilbhín",
+    "type_backend_script": "Script chúltaca",
+    "type_frontend_script": "Script tosaigh",
+    "type_widget": "Giuirléid",
+    "type_app_css": "CSS saincheaptha",
+    "type_render_note": "Nóta rindreála",
+    "type_web_view": "Radharc gréasáin",
+    "type_app_theme": "Téama saincheaptha",
+    "toggle_tooltip_enable_tooltip": "Cliceáil chun an {{type}} seo a chumasú.",
+    "toggle_tooltip_disable_tooltip": "Cliceáil chun an {{type}} seo a dhíchumasú.",
+    "menu_docs": "Doiciméadú oscailte",
+    "menu_execute_now": "Rith an script anois",
+    "menu_run": "Rith go huathoibríoch",
+    "menu_run_disabled": "De láimh",
+    "menu_run_backend_startup": "Nuair a thosaíonn an cúltaca",
+    "menu_run_hourly": "Gach uair an chloig",
+    "menu_run_daily": "Laethúil",
+    "menu_run_frontend_startup": "Nuair a thosaíonn tosaigh an deisce",
+    "menu_run_mobile_startup": "Nuair a thosaíonn an taobhlíne soghluaiste",
+    "menu_change_to_widget": "Athraigh go giuirléid",
+    "menu_change_to_frontend_script": "Athraigh chuig an script tosaigh",
+    "menu_theme_base": "Bunús téama"
+  },
+  "setup_form": {
+    "more_info": "Foghlaim níos mó"
+  },
+  "media": {
+    "play": "Seinn (Spás)",
+    "pause": "Sos (Spás)",
+    "back-10s": "10 soicind ar ais (eochair saighead chlé)",
+    "forward-30s": "Ar aghaidh 30s",
+    "mute": "Balbhaigh (M)",
+    "unmute": "Díbhalbhaigh (M)",
+    "playback-speed": "Luas athsheinm",
+    "loop": "Lúb",
+    "disable-loop": "Díchumasaigh an lúb",
+    "rotate": "Rothlaigh",
+    "picture-in-picture": "Pictiúr i bpictiúr",
+    "exit-picture-in-picture": "Scoir pictiúr-i-bpictiúr",
+    "fullscreen": "Lánscáileán (F)",
+    "exit-fullscreen": "Scoir lánscáileáin",
+    "unsupported-format": "Níl réamhamharc meán ar fáil don fhormáid comhaid seo:\n{{mime}}",
+    "zoom-to-fit": "Zúmáil chun líonadh",
+    "zoom-reset": "Athshocraigh súmáil chun líonadh"
+  },
+  "mermaid": {
+    "placeholder": "Clóscríobh ábhar do léaráid Maighdean Mhara nó bain úsáid as ceann de na léaráidí samplacha thíos.",
+    "sample_diagrams": "Léaráidí samplacha:",
+    "sample_flowchart": "Cairt Sreabhadh",
+    "sample_class": "Rang",
+    "sample_sequence": "Seicheamh",
+    "sample_entity_relationship": "Gaol Eintitis",
+    "sample_state": "Stát",
+    "sample_mindmap": "Léarscáil intinne",
+    "sample_architecture": "Ailtireacht",
+    "sample_block": "Bloc",
+    "sample_c4": "C4",
+    "sample_gantt": "Gantt",
+    "sample_git": "Git",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Paicéad",
+    "sample_pie": "Pióg",
+    "sample_quadrant": "Ceathrú",
+    "sample_radar": "Radar",
+    "sample_requirement": "Riachtanas",
+    "sample_sankey": "Sankey",
+    "sample_timeline": "Amlíne",
+    "sample_treemap": "Léarscáil Crann",
+    "sample_user_journey": "Turas Úsáideora",
+    "sample_xy": "XY",
+    "sample_venn": "Venn",
+    "sample_ishikawa": "Ishikawa"
   }
 }

@@ -13,7 +13,10 @@ function register(app: Application) {
             && err.code === "EBADCSRFTOKEN";
 
         if (isCsrfTokenError) {
-            log.error(`Invalid CSRF token: ${req.headers["x-csrf-token"]}, secret: ${req.cookies["_csrf"]}`);
+            const csrfHeader = req.headers["x-csrf-token"];
+            const csrfHeaderPrefix = typeof csrfHeader === "string" ? csrfHeader.slice(0, 8) : undefined;
+            const tokenInfo = csrfHeaderPrefix ? ` (token prefix: ${csrfHeaderPrefix})` : "";
+            log.error(`Invalid CSRF token on ${req.method} ${req.url}${tokenInfo}`);
             return next(new ForbiddenError("Invalid CSRF token"));
         }
 

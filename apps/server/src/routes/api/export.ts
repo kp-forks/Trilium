@@ -9,7 +9,7 @@ import log from "../../services/log.js";
 import TaskContext from "../../services/task_context.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
 
-function exportBranch(req: Request, res: Response) {
+function exportBranch(req: Request<{ branchId: string; type: string; format: string; version: string; taskId: string }>, res: Response) {
     const { branchId, type, format, version, taskId } = req.params;
     const branch = becca.getBranch(branchId);
 

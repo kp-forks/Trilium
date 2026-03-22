@@ -1,35 +1,38 @@
-import dateNoteService from "../../services/date_notes.js";
-import sql from "../../services/sql.js";
-import cls from "../../services/cls.js";
-import specialNotesService, { type LauncherType } from "../../services/special_notes.js";
-import becca from "../../becca/becca.js";
 import type { Request } from "express";
 
-function getInboxNote(req: Request) {
+import becca from "../../becca/becca.js";
+import cls from "../../services/cls.js";
+import dateNoteService from "../../services/date_notes.js";
+import specialNotesService, { type LauncherType } from "../../services/special_notes.js";
+import sql from "../../services/sql.js";
+
+function getInboxNote(req: Request<{ date: string }>) {
     return specialNotesService.getInboxNote(req.params.date);
 }
 
-function getDayNote(req: Request) {
-    return dateNoteService.getDayNote(req.params.date);
+function getDayNote(req: Request<{ date: string }>) {
+    const calendarRootId = req.query.calendarRootId;
+    const calendarRoot = typeof calendarRootId === "string" ? becca.getNoteOrThrow(calendarRootId) : null;
+    return dateNoteService.getDayNote(req.params.date, calendarRoot);
 }
 
-function getWeekFirstDayNote(req: Request) {
+function getWeekFirstDayNote(req: Request<{ date: string }>) {
     return dateNoteService.getWeekFirstDayNote(req.params.date);
 }
 
-function getWeekNote(req: Request) {
+function getWeekNote(req: Request<{ week: string }>) {
     return dateNoteService.getWeekNote(req.params.week);
 }
 
-function getMonthNote(req: Request) {
+function getMonthNote(req: Request<{ month: string }>) {
     return dateNoteService.getMonthNote(req.params.month);
 }
 
-function getQuarterNote(req: Request) {
+function getQuarterNote(req: Request<{ quarter: string }>) {
     return dateNoteService.getQuarterNote(req.params.quarter);
 }
 
-function getYearNote(req: Request) {
+function getYearNote(req: Request<{ year: string }>) {
     return dateNoteService.getYearNote(req.params.year);
 }
 
@@ -59,9 +62,8 @@ function getDayNotesForMonth(req: Request) {
         }
 
         return result;
-    } else {
-        return sql.getMap(query);
     }
+    return sql.getMap(query);
 }
 
 async function saveSqlConsole(req: Request) {
@@ -88,7 +90,7 @@ function getHoistedNote() {
     return becca.getNote(cls.getHoistedNoteId());
 }
 
-function createLauncher(req: Request) {
+function createLauncher(req: Request<{ parentNoteId: string, launcherType: string }>) {
     return specialNotesService.createLauncher({
         parentNoteId: req.params.parentNoteId,
         // TODO: Validate the parameter
@@ -96,7 +98,7 @@ function createLauncher(req: Request) {
     });
 }
 
-function resetLauncher(req: Request) {
+function resetLauncher(req: Request<{ noteId: string }>) {
     return specialNotesService.resetLauncher(req.params.noteId);
 }
 

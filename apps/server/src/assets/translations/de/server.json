@@ -251,9 +251,7 @@
     "visible-launchers-title": "Sichtbare Starter",
     "user-guide": "Nutzerhandbuch",
     "jump-to-note-title": "Springe zu...",
-    "llm-chat-title": "Chat mit Notizen",
     "multi-factor-authentication-title": "MFA",
-    "ai-llm-title": "AI/LLM",
     "localization": "Sprache & Region",
     "inbox-title": "Posteingang",
     "zen-mode": "Zen-Modus",
@@ -330,7 +328,7 @@
     "expand-subtree": "Unterzweig aufklappen",
     "collapse-tree": "Baumstruktur einklappen",
     "collapse-subtree": "Unterzweig einklappen",
-    "sort-child-notes": "Unternotizen sortieren",
+    "sort-child-notes": "Untergeordnete Notizen sortieren",
     "create-note-after": "Erstelle eine neue Notiz dahinter",
     "create-note-into": "Erstelle eine neue Notiz davor",
     "create-note-into-inbox": "Neue Notiz in Inbox erstellen",
@@ -425,7 +423,7 @@
     "error_title": "Fehler"
   },
   "share_theme": {
-    "site-theme": "Webseite Stil",
+    "site-theme": "Webseiten Stil",
     "search_placeholder": "Suche...",
     "image_alt": "Artikel Bild",
     "last-updated": "Zuletzt aktualisiert am {{- date}}",

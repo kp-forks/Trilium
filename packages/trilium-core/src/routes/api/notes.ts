@@ -38,7 +38,7 @@ import { randomString } from "../../services/utils/index";
  *       - session: []
  *     tags: ["data"]
  */
-function getNote(req: Request) {
+function getNote(req: Request<{ noteId: string }>) {
     return becca.getNoteOrThrow(req.params.noteId);
 }
 
@@ -65,7 +65,7 @@ function getNote(req: Request) {
  *       - session: []
  *     tags: ["data"]
  */
-function getNoteBlob(req: Request) {
+function getNoteBlob(req: Request<{ noteId: string }>) {
     return blobService.getBlobPojo("notes", req.params.noteId);
 }
 
@@ -92,7 +92,7 @@ function getNoteBlob(req: Request) {
  *       - session: []
  *     tags: ["data"]
  */
-function getNoteMetadata(req: Request) {
+function getNoteMetadata(req: Request<{ noteId: string }>) {
     const note = becca.getNoteOrThrow(req.params.noteId);
 
     return {
@@ -125,7 +125,7 @@ function createNote(req: Request) {
     } satisfies CreateChildrenResponse;
 }
 
-function updateNoteData(req: Request) {
+function updateNoteData(req: Request<{ noteId: string }>) {
     const { content, attachments } = req.body;
     const { noteId } = req.params;
 
@@ -169,7 +169,7 @@ function updateNoteData(req: Request) {
  *       - session: []
  *     tags: ["data"]
  */
-function deleteNote(req: Request) {
+function deleteNote(req: Request<{ noteId: string }>) {
     const noteId = req.params.noteId;
     const taskId = req.query.taskId;
     const eraseNotes = req.query.eraseNotes === "true";
@@ -196,7 +196,7 @@ function deleteNote(req: Request) {
     }
 }
 
-function undeleteNote(req: Request) {
+function undeleteNote(req: Request<{ noteId: string }>) {
     const taskContext = TaskContext.getInstance(randomString(10), "undeleteNotes", null);
 
     noteService.undeleteNote(req.params.noteId, taskContext);
@@ -204,7 +204,7 @@ function undeleteNote(req: Request) {
     taskContext.taskSucceeded(null);
 }
 
-function sortChildNotes(req: Request) {
+function sortChildNotes(req: Request<{ noteId: string }>) {
     const noteId = req.params.noteId;
     const { sortBy, sortDirection, foldersFirst, sortNatural, sortLocale } = req.body;
 
@@ -215,7 +215,7 @@ function sortChildNotes(req: Request) {
     treeService.sortNotes(noteId, sortBy, reverse, foldersFirst, sortNatural, sortLocale);
 }
 
-function protectNote(req: Request) {
+function protectNote(req: Request<{ noteId: string; isProtected: string }>) {
     const noteId = req.params.noteId;
     const note = becca.notes[noteId];
     const protect = !!parseInt(req.params.isProtected);
@@ -228,7 +228,7 @@ function protectNote(req: Request) {
     taskContext.taskSucceeded(null);
 }
 
-function setNoteTypeMime(req: Request) {
+function setNoteTypeMime(req: Request<{ noteId: string }>) {
     // can't use [] destructuring because req.params is not iterable
     const { noteId } = req.params;
     const { type, mime } = req.body;
@@ -239,7 +239,7 @@ function setNoteTypeMime(req: Request) {
     note.save();
 }
 
-function changeTitle(req: Request) {
+function changeTitle(req: Request<{ noteId: string }>) {
     const noteId = req.params.noteId;
     const title = req.body.title;
 
@@ -266,7 +266,7 @@ function changeTitle(req: Request) {
     return note;
 }
 
-function duplicateSubtree(req: Request) {
+function duplicateSubtree(req: Request<{ noteId: string; parentNoteId: string }>) {
     const { noteId, parentNoteId } = req.params;
 
     return noteService.duplicateSubtree(noteId, parentNoteId);
@@ -342,7 +342,7 @@ function getDeleteNotesPreview(req: Request) {
     } satisfies DeleteNotesPreview;
 }
 
-function forceSaveRevision(req: Request) {
+function forceSaveRevision(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
     const note = becca.getNoteOrThrow(noteId);
 
@@ -353,7 +353,7 @@ function forceSaveRevision(req: Request) {
     note.saveRevision();
 }
 
-function convertNoteToAttachment(req: Request) {
+function convertNoteToAttachment(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
     const note = becca.getNoteOrThrow(noteId);
 

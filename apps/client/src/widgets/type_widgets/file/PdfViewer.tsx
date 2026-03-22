@@ -2,17 +2,20 @@ import type { HTMLAttributes, RefObject } from "preact";
 import { useCallback, useEffect, useRef } from "preact/hooks";
 
 import { useSyncedRef, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import Inter from "./../../../fonts/Inter/Inter-VariableFont_opsz,wght.ttf";
 
-const VARIABLE_WHITELIST = new Set([
-    "root-background",
-    "main-background-color",
-    "main-border-color",
-    "main-text-color"
-]);
+interface FontDefinition {
+    name: string;
+    url: string;
+}
+
+const FONTS: FontDefinition[] = [
+    {name: "Inter", url: Inter},
+];
 
 interface PdfViewerProps extends Pick<HTMLAttributes<HTMLIFrameElement>, "tabIndex"> {
     iframeRef?: RefObject<HTMLIFrameElement>;
-    /** Note: URLs are relative to /pdfjs/web. */
+    /** Note: URLs are relative to /pdfjs/web, ideally use absolute paths (but without domain name) to avoid issues with some proxies. */
     pdfUrl: string;
     onLoad?(): void;
     /**
@@ -34,7 +37,8 @@ export default function PdfViewer({ iframeRef: externalIframeRef, pdfUrl, onLoad
         <iframe
             ref={iframeRef}
             class="pdf-preview"
-            src={`pdfjs/web/viewer.html?file=${pdfUrl}&lang=${locale}&sidebar=${newLayout ? "0" : "1"}&editable=${editable ? "1" : "0"}`}
+            style={{width: "100%", height: "100%"}}
+            src={`pdfjs/web/viewer.html?v=${glob.triliumVersion}&file=${pdfUrl}&lang=${locale}&sidebar=${newLayout ? "0" : "1"}&editable=${editable ? "1" : "0"}`}
             onLoad={() => {
                 injectStyles();
                 onLoad?.();
@@ -55,8 +59,12 @@ function useStyleInjection(iframeRef: RefObject<HTMLIFrameElement>) {
         style.id = 'client-root-vars';
         style.textContent = cssVarsToString(getRootCssVariables());
         styleRef.current = style;
-
         doc.head.appendChild(style);
+
+        const fontStyles = doc.createElement("style");
+        fontStyles.textContent = FONTS.map(injectFont).join("\n");
+        doc.head.appendChild(fontStyles);
+
     }, [ iframeRef ]);
 
     // React to changes.
@@ -79,7 +87,7 @@ function getRootCssVariables() {
 
     for (let i = 0; i < styles.length; i++) {
         const prop = styles[i];
-        if (prop.startsWith('--') && VARIABLE_WHITELIST.has(prop.substring(2))) {
+        if (prop.startsWith('--')) {
             vars[`--tn-${prop.substring(2)}`] = styles.getPropertyValue(prop).trim();
         }
     }
@@ -91,4 +99,13 @@ function cssVarsToString(vars: Record<string, string>) {
     return `:root {\n${Object.entries(vars)
         .map(([k, v]) => `  ${k}: ${v};`)
         .join('\n')}\n}`;
+}
+
+function injectFont(font: FontDefinition) {
+    return `
+        @font-face {
+            font-family: '${font.name}';
+            src: url('${font.url}');
+        }
+    `;
 }

@@ -1,20 +1,19 @@
-import { UpdateAttributeResponse } from "@triliumnext/commons";
+import { UpdateAttributeResponse, ValidationError } from "@triliumnext/commons";
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
 import BAttribute from "../../becca/entities/battribute.js";
 import attributeService from "../../services/attributes.js";
 import { getLog } from "../../services/log.js";
-import { ValidationError } from "../../errors.js";
 import { getSql } from "../../services/sql/index.js";
 
-function getEffectiveNoteAttributes(req: Request) {
+function getEffectiveNoteAttributes(req: Request<{ noteId: string }>) {
     const note = becca.getNote(req.params.noteId);
 
     return note?.getAttributes();
 }
 
-function updateNoteAttribute(req: Request) {
+function updateNoteAttribute(req: Request<{ noteId: string }>) {
     const noteId = req.params.noteId;
     const body = req.body;
 
@@ -95,7 +94,7 @@ function addNoteAttribute(req: Request) {
     new BAttribute({ ...body, noteId }).save();
 }
 
-function deleteNoteAttribute(req: Request) {
+function deleteNoteAttribute(req: Request<{ noteId: string; attributeId: string }>) {
     const noteId = req.params.noteId;
     const attributeId = req.params.attributeId;
 
@@ -110,7 +109,7 @@ function deleteNoteAttribute(req: Request) {
     }
 }
 
-function updateNoteAttributes(req: Request) {
+function updateNoteAttributes(req: Request<{ noteId: string }>) {
     const noteId = req.params.noteId;
     const incomingAttributes = req.body;
 
@@ -192,7 +191,7 @@ function getValuesForAttribute(req: Request) {
     return getSql().getColumn("SELECT DISTINCT value FROM attributes WHERE isDeleted = 0 AND name = ? AND type = 'label' AND value != '' ORDER BY value", [attributeName]);
 }
 
-function createRelation(req: Request) {
+function createRelation(req: Request<{ noteId: string; targetNoteId: string; name: string }>) {
     const sourceNoteId = req.params.noteId;
     const targetNoteId = req.params.targetNoteId;
     const name = req.params.name;

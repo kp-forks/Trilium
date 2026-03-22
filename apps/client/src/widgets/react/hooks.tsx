@@ -98,6 +98,7 @@ export interface SavedData {
         mime: string;
         content: string;
         position: number;
+        encoding?: "base64";
     }[];
 }
 
@@ -551,7 +552,12 @@ export function useNoteRelation(note: FNote | undefined | null, relationName: Re
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         for (const attr of loadResults.getAttributeRows()) {
             if (attr.type === "relation" && attr.name === relationName && attributes.isAffecting(attr, note)) {
-                setRelationValue(attr.value ?? null);
+                if (!attr.isDeleted) {
+                    setRelationValue(attr.value ?? null);
+                } else {
+                    setRelationValue(null);
+                }
+                break;
             }
         }
     });
@@ -601,6 +607,7 @@ export function useNoteLabel(note: FNote | undefined | null, labelName: FilterLa
                 } else {
                     setLabelValue(null);
                 }
+                break;
             }
         }
     });
@@ -1208,6 +1215,12 @@ export function useNoteTitle(noteId: string | undefined, parentNoteId: string | 
         refresh();
     });
 
+    // React to external changes.
+    useTriliumEvent("entitiesReloaded", useCallback(({ loadResults }) => {
+        if (loadResults.isNoteReloaded(noteId) || (parentNoteId && loadResults.getBranchRows().some(b => b.noteId === noteId && b.parentNoteId === parentNoteId))) {
+            refresh();
+        }
+    }, [noteId, parentNoteId, refresh]));
     return title;
 }
 
@@ -1371,3 +1384,28 @@ export function useGetContextDataFrom<K extends keyof NoteContextDataMap>(
     return data;
 }
 
+export function useColorScheme() {
+    const themeStyle = getThemeStyle();
+    const defaultValue = themeStyle === "auto" ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) : themeStyle === "dark";
+    const [ prefersDark, setPrefersDark ] = useState(defaultValue);
+
+    useEffect(() => {
+        if (themeStyle !== "auto") return;
+        const mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
+        const listener = (e: MediaQueryListEvent) => setPrefersDark(e.matches);
+
+        mediaQueryList.addEventListener("change", listener);
+        return () => mediaQueryList.removeEventListener("change", listener);
+    }, [ themeStyle ]);
+
+    return prefersDark ? "dark" : "light";
+}
+
+function getThemeStyle() {
+    const style = window.getComputedStyle(document.body);
+    const themeStyle = style.getPropertyValue("--theme-style");
+    if (style.getPropertyValue("--theme-style-auto") !== "true" && (themeStyle === "light" || themeStyle === "dark")) {
+        return themeStyle as "light" | "dark";
+    }
+    return "auto";
+}

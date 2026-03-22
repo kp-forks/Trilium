@@ -118,7 +118,7 @@
     "export_type_subtree": "Questa nota e tutti i suoi discendenti",
     "format_html": "HTML - raccomandato in quanto mantiene tutti i formati",
     "format_html_zip": "HTML in archivio ZIP - questo è raccomandato in quanto conserva tutta la formattazione.",
-    "format_markdown": "MArkdown - questo conserva la maggior parte della formattazione.",
+    "format_markdown": "Markdown: preserva la maggior parte della formattazione.",
     "export_type_single": "Solo questa nota, senza le sottostanti",
     "format_opml": "OPML - formato per scambio informazioni outline. Formattazione, immagini e files non sono inclusi.",
     "opml_version_1": "OPML v.1.0 - solo testo semplice",
@@ -167,8 +167,8 @@
     "desktop-application": "Applicazione Desktop",
     "native-title-bar": "Barra del titolo nativa",
     "native-title-bar-description": "Su Windows e macOS, disattivare la barra del titolo nativa rende l'applicazione più compatta. Su Linux, attivarla si integra meglio con il resto del sistema.",
-    "background-effects": "Abilita effetti di sfondo (solo Windows 11)",
-    "background-effects-description": "L'effetto Mica aggiunge uno sfondo sfocato ed elegante alle finestre delle app, creando profondità e un aspetto moderno. La \"Barra del titolo nativa\" deve essere disattivata.",
+    "background-effects": "Abilita effetti di sfondo",
+    "background-effects-description": "Aggiunge uno sfondo sfocato ed elegante alle finestre dell'app, creando profondità e un look moderno. La \"barra del titolo nativa\" deve essere disabilitata.",
     "restart-app-button": "Riavviare l'applicazione per visualizzare le modifiche"
   },
   "note_autocomplete": {
@@ -186,7 +186,8 @@
   "geo-map": {
     "create-child-note-title": "Crea una nota figlia e aggiungila alla mappa",
     "create-child-note-instruction": "Clicca sulla mappa per creare una nuova nota qui o premi Escape per uscire.",
-    "unable-to-load-map": "Impossibile caricare la mappa."
+    "unable-to-load-map": "Impossibile caricare la mappa.",
+    "create-child-note-text": "Aggiungi indicatore"
   },
   "geo-map-context": {
     "open-location": "Apri la posizione",
@@ -333,6 +334,7 @@
   "electron_context_menu": {
     "cut": "Taglia",
     "copy": "Copia",
+    "copy-as-markdown": "Copia come markdown",
     "paste": "Incolla",
     "copy-link": "Copia collegamento",
     "paste-as-plain-text": "Incolla come testo semplice",
@@ -368,7 +370,8 @@
     "description": "Descrizione",
     "reload_app": "Ricarica l'app per applicare le modifiche",
     "set_all_to_default": "Imposta tutte le scorciatoie sui valori predefiniti",
-    "confirm_reset": "Vuoi davvero ripristinare tutte le scorciatoie da tastiera ai valori predefiniti?"
+    "confirm_reset": "Vuoi davvero ripristinare tutte le scorciatoie da tastiera ai valori predefiniti?",
+    "no_results": "Nessuna scorciatoia trovata corrispondente '{{filter}}'"
   },
   "shared_switch": {
     "toggle-on-title": "Condividi la nota",
@@ -422,7 +425,8 @@
     "unknown_search_option": "Opzione di ricerca sconosciuta {{searchOptionName}}",
     "search_note_saved": "La nota di ricerca è stata salvata in {{- notePathTitle}}",
     "actions_executed": "Le azioni sono state eseguite.",
-    "view_options": "Opzioni di visualizzazione:"
+    "view_options": "Opzioni di visualizzazione:",
+    "option": "opzione"
   },
   "modal": {
     "close": "Chiudi",
@@ -589,7 +593,7 @@
     "collapseExpand": "collassa/espande il nodo",
     "notSet": "non impostato",
     "goBackForwards": "indietro/avanti nella cronologia",
-    "showJumpToNoteDialog": "mostra <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">finestra di dialogo “Vai a”</a>",
+    "showJumpToNoteDialog": "mostra <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">finestra \"Vai a\"</a>",
     "title": "Scheda riassuntiva",
     "noteNavigation": "Nota navigazione",
     "scrollToActiveNote": "scorri fino alla nota attiva",
@@ -659,149 +663,6 @@
     "wednesday": "Mercoledì",
     "thursday": "Giovedì",
     "friday": "Venerdì"
-  },
-  "ai_llm": {
-    "not_started": "Non iniziato",
-    "title": "Impostazioni AI",
-    "processed_notes": "Note elaborate",
-    "total_notes": "Note totali",
-    "progress": "Progressi",
-    "queued_notes": "Note in coda",
-    "failed_notes": "Note non riuscite",
-    "last_processed": "Ultimo elaborato",
-    "refresh_stats": "Aggiorna statistiche",
-    "enable_ai_features": "Abilita le funzionalità AI/LLM",
-    "enable_ai_description": "Abilita funzionalità di intelligenza artificiale come il riepilogo delle note, la generazione di contenuti e altre funzionalità LLM",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Antropico",
-    "voyage_tab": "Viaggio AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "Abilita le funzionalità AI/LLM",
-    "enable_ai_desc": "Abilita funzionalità di intelligenza artificiale come il riepilogo delle note, la generazione di contenuti e altre funzionalità LLM",
-    "provider_configuration": "Configurazione del fornitore di intelligenza artificiale",
-    "provider_precedence": "Precedenza del fornitore",
-    "provider_precedence_description": "Elenco dei provider separati da virgole in ordine di precedenza (ad esempio, 'openai,anthropic,ollama')",
-    "temperature": "Temperatura",
-    "temperature_description": "Controlla la casualità nelle risposte (0 = deterministico, 2 = casualità massima)",
-    "system_prompt": "Prompt di sistema",
-    "system_prompt_description": "Prompt di sistema predefinito utilizzato per tutte le interazioni con l'IA",
-    "openai_configuration": "Configurazione OpenAI",
-    "openai_settings": "Impostazioni OpenAI",
-    "api_key": "Chiave API",
-    "url": "URL di base",
-    "model": "Modello",
-    "openai_api_key_description": "La tua chiave API OpenAI per accedere ai loro servizi di intelligenza artificiale",
-    "anthropic_api_key_description": "La tua chiave API Anthropic per accedere ai modelli Claude",
-    "default_model": "Modello predefinito",
-    "openai_model_description": "Esempi: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "base_url": "URL di base",
-    "openai_url_description": "Predefinito: https://api.openai.com/v1",
-    "anthropic_settings": "Ambientazioni antropiche",
-    "anthropic_url_description": "URL di base per l'API Anthropic (predefinito: https://api.anthropic.com)",
-    "anthropic_model_description": "Modelli di Anthropic Claude per il completamento della chat",
-    "voyage_settings": "Impostazioni AI di Voyage",
-    "ollama_settings": "Impostazioni Ollama",
-    "ollama_url_description": "URL per l'API Ollama (predefinito: http://localhost:11434)",
-    "ollama_model_description": "Modello Ollama da utilizzare per il completamento della chat",
-    "anthropic_configuration": "Configurazione antropica",
-    "voyage_configuration": "Configurazione AI di viaggio",
-    "voyage_url_description": "Predefinito: https://api.voyageai.com/v1",
-    "ollama_configuration": "Configurazione Ollama",
-    "enable_ollama": "Abilita Ollama",
-    "enable_ollama_description": "Abilita Ollama per l'utilizzo del modello AI locale",
-    "ollama_url": "URL di Ollama",
-    "ollama_model": "Modello Ollama",
-    "refresh_models": "Aggiorna modelli",
-    "refreshing_models": "Rinfrescante...",
-    "enable_automatic_indexing": "Abilita l'indicizzazione automatica",
-    "rebuild_index": "Ricostruisci indice",
-    "rebuild_index_error": "Errore durante l'avvio della ricostruzione dell'indice. Controllare i log per i dettagli.",
-    "note_title": "Titolo della nota",
-    "error": "Errore",
-    "last_attempt": "Ultimo tentativo",
-    "actions": "Azioni",
-    "retry": "Riprova",
-    "partial": "{{ percentage }}% completato",
-    "retry_queued": "Nota in coda per un nuovo tentativo",
-    "retry_failed": "Impossibile mettere in coda la nota per un nuovo tentativo",
-    "max_notes_per_llm_query": "Numero massimo di note per query",
-    "max_notes_per_llm_query_description": "Numero massimo di note simili da includere nel contesto AI",
-    "active_providers": "Fornitori attivi",
-    "disabled_providers": "Fornitori disabili",
-    "remove_provider": "Rimuovi il fornitore dalla ricerca",
-    "restore_provider": "Ripristina il provider per la ricerca",
-    "similarity_threshold": "Soglia di similarità",
-    "similarity_threshold_description": "Punteggio minimo di similarità (0-1) per le note da includere nel contesto per le query LLM",
-    "reprocess_index": "Ricostruisci l'indice di ricerca",
-    "reprocessing_index": "Ricostruzione...",
-    "reprocess_index_started": "Ottimizzazione dell'indice di ricerca avviata in background",
-    "reprocess_index_error": "Errore durante la ricostruzione dell'indice di ricerca",
-    "index_rebuild_progress": "Progresso nella ricostruzione dell'indice",
-    "index_rebuilding": "Indice di ottimizzazione ({{percentage}}%)",
-    "index_rebuild_complete": "Ottimizzazione dell'indice completata",
-    "index_rebuild_status_error": "Errore durante il controllo dello stato di ricostruzione dell'indice",
-    "never": "Mai",
-    "processing": "Elaborazione ({{percentage}}%)",
-    "incomplete": "Incompleto ({{percentage}}%)",
-    "complete": "Completato (100%)",
-    "refreshing": "Rinfrescante...",
-    "auto_refresh_notice": "Si aggiorna automaticamente ogni {{seconds}} secondi",
-    "note_queued_for_retry": "Nota in coda per un nuovo tentativo",
-    "failed_to_retry_note": "Impossibile riprovare nota",
-    "all_notes_queued_for_retry": "Tutte le note non riuscite sono in coda per un nuovo tentativo",
-    "failed_to_retry_all": "Impossibile riprovare le note",
-    "ai_settings": "Impostazioni AI",
-    "api_key_tooltip": "Chiave API per accedere al servizio",
-    "empty_key_warning": {
-      "anthropic": "La chiave API di Anthropic è vuota. Inserisci una chiave API valida.",
-      "openai": "La chiave API di OpenAI è vuota. Inserisci una chiave API valida.",
-      "voyage": "La chiave API di Voyage è vuota. Inserisci una chiave API valida.",
-      "ollama": "La chiave API di Ollama è vuota. Inserisci una chiave API valida."
-    },
-    "agent": {
-      "processing": "Elaborazione in corso...",
-      "thinking": "Pensiero...",
-      "loading": "Caricamento...",
-      "generating": "Generazione in corso..."
-    },
-    "name": "intelligenza artificiale",
-    "openai": "OpenAI",
-    "use_enhanced_context": "Utilizzare il contesto avanzato",
-    "enhanced_context_description": "Fornisce all'IA più contesto dalla nota e dalle note correlate per risposte migliori",
-    "show_thinking": "Mostra il pensiero",
-    "show_thinking_description": "Mostra la catena del processo di pensiero dell'IA",
-    "enter_message": "Inserisci il tuo messaggio...",
-    "error_contacting_provider": "Errore durante la connessione al fornitore dell'IA. Controlla le impostazioni e la connessione Internet.",
-    "error_generating_response": "Errore durante la generazione della risposta AI",
-    "index_all_notes": "Indice Tutte le note",
-    "index_status": "Stato dell'indice",
-    "indexed_notes": "Note indicizzate",
-    "indexing_stopped": "Indicizzazione interrotta",
-    "indexing_in_progress": "Indicizzazione in corso...",
-    "last_indexed": "Ultimo indicizzato",
-    "note_chat": "Nota Chat",
-    "sources": "Fonti",
-    "start_indexing": "Avvia l'indicizzazione",
-    "use_advanced_context": "Usa contesto avanzato",
-    "ollama_no_url": "Ollama non è configurato. Inserisci un URL valido.",
-    "chat": {
-      "root_note_title": "Chat AI",
-      "root_note_content": "Questa nota contiene le conversazioni della chat AI salvate.",
-      "new_chat_title": "Nuova chat",
-      "create_new_ai_chat": "Crea una nuova chat AI"
-    },
-    "create_new_ai_chat": "Crea una nuova chat AI",
-    "configuration_warnings": "Ci sono alcuni problemi con la configurazione dell'IA. Controlla le impostazioni.",
-    "experimental_warning": "La funzionalità LLM è attualmente sperimentale: sei stato avvisato.",
-    "selected_provider": "Fornitore selezionato",
-    "selected_provider_description": "Scegli il fornitore di intelligenza artificiale per le funzionalità di chat e completamento",
-    "select_model": "Seleziona il modello...",
-    "select_provider": "Seleziona il fornitore...",
-    "ai_enabled": "Funzionalità AI abilitate",
-    "ai_disabled": "Funzionalità AI disabilitate",
-    "no_models_found_online": "Nessun modello trovato. Controlla la tua chiave API e le impostazioni.",
-    "no_models_found_ollama": "Nessun modello Ollama trovato. Controlla se Ollama è in esecuzione.",
-    "error_fetching": "Errore durante il recupero dei modelli: {{error}}"
   },
   "import": {
     "importIntoNote": "Importa nella nota",
@@ -1241,7 +1102,8 @@
     "show-cheatsheet": "Mostra il foglietto illustrativo",
     "toggle-zen-mode": "Modalità Zen",
     "new-version-available": "Nuovo aggiornamento disponibile",
-    "download-update": "Ottieni la versione {{latestVersion}}"
+    "download-update": "Ottieni la versione {{latestVersion}}",
+    "search_notes": "Cerca note"
   },
   "zen_mode": {
     "button_exit": "Esci dalla modalità Zen"
@@ -1324,7 +1186,7 @@
     "button_title": "Esporta diagramma come SVG"
   },
   "relation_map_buttons": {
-    "create_child_note_title": "Crea una nuova nota secondaria e aggiungila a questa mappa delle relazioni",
+    "create_child_note_title": "Crea una nota secondaria e aggiungila alla mappa",
     "reset_pan_zoom_title": "Ripristina panoramica e zoom alle coordinate e all'ingrandimento iniziali",
     "zoom_in_title": "Ingrandisci",
     "zoom_out_title": "Rimpicciolisci"
@@ -1340,7 +1202,9 @@
     "delete_this_note": "Elimina questa nota",
     "note_revisions": "Revisioni delle note",
     "error_cannot_get_branch_id": "Impossibile ottenere branchId per notePath '{{notePath}}'",
-    "error_unrecognized_command": "Comando non riconosciuto {{command}}"
+    "error_unrecognized_command": "Comando non riconosciuto {{command}}",
+    "backlinks": "Backlinks",
+    "content_language_switcher": "Lingua dei contenuti: {{language}}"
   },
   "note_icon": {
     "change_note_icon": "Cambia icona nota",
@@ -1521,7 +1385,7 @@
     "no_attachments": "Questa nota non ha allegati."
   },
   "book": {
-    "no_children_help": "Questa raccolta non ha note secondarie, quindi non c'è nulla da visualizzare. Consulta la <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a> per i dettagli.",
+    "no_children_help": "Questa raccolta non ha note secondarie, quindi non c'è nulla da visualizzare.",
     "drag_locked_title": "Bloccato per la modifica",
     "drag_locked_message": "Trascinamento non consentito poiché la raccolta è bloccata per la modifica."
   },
@@ -1560,7 +1424,6 @@
     "unprotecting-title": "Stato non protetto"
   },
   "relation_map": {
-    "open_in_new_tab": "Apri in una nuova scheda",
     "remove_note": "Rimuovi nota",
     "edit_title": "Modifica titolo",
     "rename_note": "Rinomina nota",
@@ -1576,15 +1439,6 @@
     "enter_title_of_new_note": "Inserisci il titolo della nuova nota",
     "default_new_note_title": "nuova nota",
     "click_on_canvas_to_place_new_note": "Clicca sulla tela per inserire una nuova nota"
-  },
-  "render": {
-    "note_detail_render_help_1": "Questa nota di aiuto viene visualizzata perché questa nota di tipo Render HTML non ha la relazione richiesta per funzionare correttamente.",
-    "note_detail_render_help_2": "Il tipo di nota HTML Render viene utilizzato per lo <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. In breve, si ottiene una nota in codice HTML (opzionalmente con un po' di JavaScript) che verrà visualizzata. Per farla funzionare, è necessario definire una <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relazione</a> denominata \"renderNote\" che punti alla nota HTML da visualizzare."
-  },
-  "web_view": {
-    "web_view": "Visualizzazione Web",
-    "embed_websites": "La nota di tipo Web View consente di incorporare siti web in Trilium.",
-    "create_label": "Per iniziare, crea un'etichetta con l'indirizzo URL che desideri incorporare, ad esempio #webViewSrc=\"https://www.google.com\""
   },
   "vacuum_database": {
     "title": "Pulizia del database",
@@ -1859,10 +1713,11 @@
     "confirm-change": "Si sconsiglia di cambiare tipo di nota quando il contenuto della nota non è vuoto. Vuoi continuare comunque?",
     "geo-map": "Mappa geografica",
     "beta-feature": "Beta",
-    "ai-chat": "Chat AI",
     "task-list": "Elenco delle attività",
     "new-feature": "Nuovo",
-    "collections": "Collezioni"
+    "collections": "Collezioni",
+    "ai-chat": "Chat con IA",
+    "spreadsheet": "Foglio di calcolo"
   },
   "protect_note": {
     "toggle-on": "Proteggi la nota",
@@ -1923,7 +1778,9 @@
     "print_report_collection_content_many": "{{count}} le note nella raccolta non possono essere stampate perché non sono supportate o sono protette.",
     "print_report_collection_content_other": "{{count}} le note nella raccolta non possono essere stampate perché non sono supportate o sono protette.",
     "print_report_collection_details_button": "Vedi dettagli",
-    "print_report_collection_details_ignored_notes": "Note ignorate"
+    "print_report_collection_details_ignored_notes": "Note ignorate",
+    "print_report_error_title": "Impossibile stampare",
+    "print_report_stack_trace": "Traccia dello stack"
   },
   "note_title": {
     "placeholder": "scrivi qui il titolo della nota...",
@@ -1938,7 +1795,8 @@
   },
   "search_result": {
     "no_notes_found": "Non sono state trovate note per i parametri di ricerca specificati.",
-    "search_not_executed": "La ricerca non è stata ancora eseguita. Clicca sul pulsante \"Cerca\" qui sopra per visualizzare i risultati."
+    "search_not_executed": "La ricerca non è stata ancora eseguita.",
+    "search_now": "Cerca ora"
   },
   "spacer": {
     "configure_launchbar": "Configura Launchbar"
@@ -2110,7 +1968,8 @@
     "raster": "Trama",
     "vector_light": "Vettore (Luce)",
     "vector_dark": "Vettore (scuro)",
-    "show-scale": "Mostra scala"
+    "show-scale": "Mostra scala",
+    "show-labels": "Mostra nomi dei marcatori"
   },
   "table_context_menu": {
     "delete_row": "Elimina riga"
@@ -2143,9 +2002,9 @@
     "next_theme_message": "Al momento stai utilizzando il tema legacy. Vuoi provare il nuovo tema?",
     "next_theme_button": "Prova il nuovo tema",
     "background_effects_title": "Gli effetti di sfondo sono ora stabili",
-    "background_effects_message": "Sui dispositivi Windows, gli effetti di sfondo sono ora completamente stabili. Gli effetti di sfondo aggiungono un tocco di colore all'interfaccia utente sfocando lo sfondo retrostante. Questa tecnica è utilizzata anche in altre applicazioni come Esplora risorse di Windows.",
+    "background_effects_message": "Su dispositivi Windows e macOS, gli effetti di sfondo sono ora stabili. Gli effetti di sfondo aggiungono un tocco di colore all'interfaccia utente sfocando lo sfondo dietro di essa.",
     "background_effects_button": "Abilita gli effetti di sfondo",
-    "dismiss": "Congedare",
+    "dismiss": "Chiudi",
     "new_layout_title": "Nuovo layout",
     "new_layout_message": "Abbiamo introdotto un layout modernizzato per Trilium. La barra multifunzione è stata rimossa e integrata perfettamente nell'interfaccia principale, con una nuova barra di stato e sezioni espandibili (come gli attributi promossi) che assumono le funzioni chiave.\n\nIl nuovo layout è abilitato di default e può essere temporaneamente disabilitato tramite Opzioni → Aspetto.",
     "new_layout_button": "Maggiori informazioni"
@@ -2164,8 +2023,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Pagina di {{startIndex}} - {{endIndex}}",
-    "total_notes": "{{count}} note"
+    "total_notes": "{{count}} note",
+    "prev_page": "Pagina precedente",
+    "next_page": "Pagina successiva"
   },
   "collections": {
     "rendering_error": "Impossibile mostrare il contenuto a causa di un errore."
@@ -2281,5 +2141,61 @@
     "pages_other": "{{count}} pagine",
     "pages_alt": "Pagina {{pageNumber}}",
     "pages_loading": "Caricamento in corso..."
+  },
+  "web_view_setup": {
+    "title": "Crea una visualizzazione live di una pagina web direttamente in Trilium",
+    "url_placeholder": "Inserisci o incolla l'indirizzo del sito web, ad esempio https://triliumnotes.org",
+    "create_button": "Crea vista Web",
+    "invalid_url_title": "Indirizzo non valido",
+    "invalid_url_message": "Inserisci un indirizzo web valido, ad esempio https://triliumnotes.org.",
+    "disabled_description": "Questa visualizzazione web è stata importata da una fonte esterna. Per proteggerti dal phishing o da contenuti dannosi, non viene caricata automaticamente. Puoi abilitarla se ritieni che la fonte sia affidabile.",
+    "disabled_button_enable": "Abilita visualizzazione web"
+  },
+  "platform_indicator": {
+    "available_on": "Disponibile su {{platform}}"
+  },
+  "mobile_tab_switcher": {
+    "title_one": "Scheda {{count}}",
+    "title_many": "Schede {{count}}",
+    "title_other": "Schede {{count}}",
+    "more_options": "Altre opzioni"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "Segnalibri"
+  },
+  "render": {
+    "setup_title": "Visualizza HTML personalizzato o Preact JSX all'interno di questa nota",
+    "setup_create_sample_preact": "Crea una nota di esempio con Preact",
+    "setup_create_sample_html": "Crea una nota di esempio con HTML",
+    "setup_sample_created": "È stata creata una nota di esempio come nota secondaria.",
+    "disabled_description": "Queste note di rendering provengono da una fonte esterna. Per proteggerti da contenuti dannosi, non sono abilitate per impostazione predefinita. Assicurati di fidarti della fonte prima di abilitarle.",
+    "disabled_button_enable": "Abilita nota di rendering"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Pacchetto icone",
+    "type_backend_script": "Script di backend",
+    "type_frontend_script": "Script frontend",
+    "type_widget": "Widget",
+    "type_app_css": "CSS personalizzato",
+    "type_render_note": "Nota di rendering",
+    "type_web_view": "Visualizzazione web",
+    "type_app_theme": "Tema personalizzato",
+    "toggle_tooltip_enable_tooltip": "Clicca per abilitare questa funzione {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Clicca per disattivare questa funzione {{type}}.",
+    "menu_docs": "Documentazione aperta",
+    "menu_execute_now": "Esegui lo script ora",
+    "menu_run": "Esegui automaticamente",
+    "menu_run_disabled": "Manualmente",
+    "menu_run_backend_startup": "Quando il backend si avvia",
+    "menu_run_hourly": "Ogni ora",
+    "menu_run_daily": "Giornaliero",
+    "menu_run_frontend_startup": "Quando si avvia il frontend desktop",
+    "menu_run_mobile_startup": "Quando si avvia il frontend mobile",
+    "menu_change_to_widget": "Passa al widget",
+    "menu_change_to_frontend_script": "Modifica allo script frontend",
+    "menu_theme_base": "Tema base"
+  },
+  "setup_form": {
+    "more_info": "Per saperne di più"
   }
 }

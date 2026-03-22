@@ -1,5 +1,4 @@
-import { AnonymizedDbResponse, DatabaseAnonymizeResponse } from "@triliumnext/commons";
-import { BUILTIN_ATTRIBUTES } from "@triliumnext/core";
+import { AnonymizedDbResponse, BUILTIN_ATTRIBUTES, DatabaseAnonymizeResponse } from "@triliumnext/commons";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";

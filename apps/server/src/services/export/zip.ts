@@ -18,7 +18,7 @@ import type NoteMeta from "../meta/note_meta.js";
 import type { NoteMetaFile } from "../meta/note_meta.js";
 import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
-import { getContentDisposition } from "../utils.js";
+import { getContentDisposition, waitForStreamToFinish } from "../utils.js";
 import { AdvancedExportOptions, type ExportFormat, ZipExportProviderData } from "./zip/abstract_provider.js";
 import HtmlExportProvider from "./zip/html.js";
 import MarkdownExportProvider from "./zip/markdown.js";
@@ -469,6 +469,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
     taskContext.taskSucceeded(null);
 }
 
+
 async function exportToZipFile(noteId: string, format: ExportFormat, zipFilePath: string, zipExportOptions?: AdvancedExportOptions) {
     const fileOutputStream = fs.createWriteStream(zipFilePath);
     const taskContext = new TaskContext("no-progress-reporting", "export", null);
@@ -480,6 +481,7 @@ async function exportToZipFile(noteId: string, format: ExportFormat, zipFilePath
     }
 
     await exportToZip(taskContext, note.getParentBranches()[0], format, fileOutputStream, false, zipExportOptions);
+    await waitForStreamToFinish(fileOutputStream);
 
     log.info(`Exported '${noteId}' with format '${format}' to '${zipFilePath}'`);
 }

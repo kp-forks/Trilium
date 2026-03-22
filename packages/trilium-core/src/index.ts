@@ -42,7 +42,6 @@ export { default as branches } from "./services/branches";
 export { default as bulk_actions } from "./services/bulk_actions";
 
 export { default as attribute_formatter} from "./services/attribute_formatter";
-export { default as BUILTIN_ATTRIBUTES } from "./services/builtin_attributes";
 
 // Messaging system
 export * from "./services/messaging/index";
@@ -58,7 +57,7 @@ export { default as BAttribute } from "./becca/entities/battribute";
 export { default as BBlob } from "./becca/entities/bblob";
 export { default as BBranch } from "./becca/entities/bbranch";
 export { default as BEtapiToken } from "./becca/entities/betapi_token";
-export { default as BNote, NOTE_TYPE_ICONS } from "./becca/entities/bnote";
+export { default as BNote } from "./becca/entities/bnote";
 export { default as BOption } from "./becca/entities/boption";
 export { default as BRecentNote } from "./becca/entities/brecent_note";
 export { default as BRevision } from "./becca/entities/brevision";

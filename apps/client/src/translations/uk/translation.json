@@ -55,7 +55,10 @@
     "show_help": "Показати Довідку",
     "logout": "Вийти",
     "show-cheatsheet": "Показати Шпаргалку",
-    "toggle-zen-mode": "Дзен-режим"
+    "toggle-zen-mode": "Дзен-режим",
+    "new-version-available": "Доступне оновлення",
+    "download-update": "Отримати версію {{latest Version}}",
+    "search_notes": "Пошук нотаток"
   },
   "modal": {
     "help_title": "Показати більше інформації про це вікно",
@@ -293,7 +296,8 @@
     },
     "import-status": "Статус Імпорту",
     "in-progress": "Триває Імпорт: {{progress}}",
-    "successful": "Імпорт успішно завершено."
+    "successful": "Імпорт успішно завершено.",
+    "importZipRecommendation": "Під час імпорту ZIP-файлу ієрархія нотаток відображатиме структуру підкаталогів в архіві."
   },
   "prompt": {
     "title": "Запит(prompt)",
@@ -355,7 +359,8 @@
   "info": {
     "modalTitle": "Інформаційне повідомлення",
     "closeButton": "Закрити",
-    "okButton": "ОК"
+    "okButton": "ОК",
+    "copy_to_clipboard": "Копіювати в буфер обміну"
   },
   "jump_to_note": {
     "search_placeholder": "Пошук нотатки за її назвою або типом > для команд...",
@@ -805,7 +810,14 @@
     "convert_into_attachment_failed": "Не вдалося конвертувати нотатку '{{title}}'.",
     "convert_into_attachment_successful": "Нотатку '{{title}}' перетворено на вкладення.",
     "convert_into_attachment_prompt": "Ви впевнені, що хочете перетворити нотатку '{{title}}' на вкладення батьківської нотатки?",
-    "print_pdf": "Експортувати як PDF..."
+    "print_pdf": "Експортувати як PDF...",
+    "open_note_on_server": "Відкрити нотатку на сервері",
+    "view_revisions": "Ревізії нотатки...",
+    "advanced": "Розширені",
+    "export_as_image": "Експортувати як зображення",
+    "export_as_image_png": "PNG (растровий)",
+    "export_as_image_svg": "SVG (векторний)",
+    "note_map": "Карта нотатки"
   },
   "onclick_button": {
     "no_click_handler": "Віджет кнопки '{{componentId}}' не має визначеного обробника кліків"
@@ -858,7 +870,10 @@
     "insert_child_note": "Вставити дочірню нотатку",
     "delete_this_note": "Видалити цю нотатку",
     "error_cannot_get_branch_id": "Не вдається отримати branchId для notePath '{{notePath}}'",
-    "error_unrecognized_command": "Нерозпізнана команда {{command}}"
+    "error_unrecognized_command": "Нерозпізнана команда {{command}}",
+    "note_revisions": "Ревізії нотатки",
+    "backlinks": "Зворотні посилання",
+    "content_language_switcher": "Мова контенту: {{language}}"
   },
   "note_icon": {
     "change_note_icon": "Змінити значок нотатки",
@@ -866,7 +881,13 @@
     "reset-default": "Скинути значок до стандартного значення",
     "search_placeholder_one": "Пошук {{number}} значка у {{count}} пакеті",
     "search_placeholder_few": "Пошук {{number}} значків у {{count}} пакетах",
-    "search_placeholder_many": "Пошук {{number}} значків у {{count}} пакетах"
+    "search_placeholder_many": "Пошук {{number}} значків у {{count}} пакетах",
+    "search_placeholder_filtered": "Пошук {{number}} іконок у {{name}}",
+    "filter": "Фільтр",
+    "filter-none": "Всі іконки",
+    "filter-default": "Іконки за замовчуванням",
+    "icon_tooltip": "{{name}}\nПакет іконок: {{iconPack}}",
+    "no_results": "Іконки не знайдено"
   },
   "basic_properties": {
     "note_type": "Тип нотатки",
@@ -888,7 +909,13 @@
     "table": "Таблиця",
     "geo-map": "Географічна карта",
     "board": "Дошка",
-    "include_archived_notes": "Показати архівовані нотатки"
+    "include_archived_notes": "Показати архівовані нотатки",
+    "expand_tooltip": "Розгортає безпосередні дочірні елементи цієї колекції (на один рівень у глибину). Щоб переглянути більше параметрів, натисніть стрілку праворуч.",
+    "expand_first_level": "Розгорнути прямі дочірні елементи",
+    "expand_nth_level": "Розгорнути {{depth}} рівнів",
+    "expand_all_levels": "Розгорнути всі рівні",
+    "presentation": "Презентація",
+    "hide_child_notes": "Приховати дочірні нотатки в дереві"
   },
   "edited_notes": {
     "no_edited_notes_found": "Цього дня ще немає редагованих нотаток...",
@@ -921,7 +948,8 @@
   },
   "inherited_attribute_list": {
     "title": "Успадковані Атрибути",
-    "no_inherited_attributes": "Немає успадкованих атрибутів."
+    "no_inherited_attributes": "Немає успадкованих атрибутів.",
+    "none": "пусто"
   },
   "note_info_widget": {
     "note_id": "ID Нотатки",
@@ -932,7 +960,9 @@
     "note_size_info": "Розмір нотатки надає приблизну оцінку вимог до зберігання для цієї нотатки. Він враховує вміст нотатки та вміст її версій.",
     "calculate": "обчислити",
     "subtree_size": "(розмір піддерева: {{size}} у {{count}} нотатках)",
-    "title": "Інформація про нотатку"
+    "title": "Інформація про нотатку",
+    "mime": "Тип MIME",
+    "show_similar_notes": "Показати схожі нотатки"
   },
   "note_map": {
     "open_full": "Розгорнути на повний розмір",
@@ -995,7 +1025,9 @@
     "search_parameters": "Параметри пошуку",
     "unknown_search_option": "Невідомий параметр пошуку {{searchOptionName}}",
     "actions_executed": "Дії виконано.",
-    "search_note_saved": "Нотатка з пошуку збережена у {{- notePathTitle}}"
+    "search_note_saved": "Нотатка з пошуку збережена у {{- notePathTitle}}",
+    "option": "опції",
+    "view_options": "Опції перегляду:"
   },
   "similar_notes": {
     "title": "Схожі нотатки",
@@ -1089,7 +1121,13 @@
   },
   "editable_text": {
     "placeholder": "Введіть тут вміст вашої нотатки...",
-    "auto-detect-language": "Автовизначено"
+    "auto-detect-language": "Автовизначено",
+    "editor_crashed_title": "Збій текстового редактора",
+    "editor_crashed_content": "Ваш контент успішно відновлено, але деякі з ваших останніх змін могли бути не збережені.",
+    "editor_crashed_details_button": "Переглянути більше деталей...",
+    "editor_crashed_details_intro": "Якщо ви стикаєтеся з цією помилкою кілька разів, подумайте про те, щоб повідомити про неї на GitHub, вставивши наведену нижче інформацію.",
+    "editor_crashed_details_title": "Технічна інформація",
+    "keeps-crashing": "Компонент редагування постійно аварійно завершує роботу. Спробуйте перезапустити Trilium. Якщо проблема не зникає, спробуйте створити звіт про помилку."
   },
   "empty": {
     "open_note_instruction": "Відкрийте нотатку, ввівши її заголовок в поле нижче, або виберіть нотатку в дереві.",
@@ -1113,7 +1151,6 @@
     "unprotecting-title": "Статус зняття захисту"
   },
   "relation_map": {
-    "open_in_new_tab": "Відкрити в новій вкладці",
     "remove_note": "Видалити нотатку",
     "edit_title": "Редагувати заголовок",
     "rename_note": "Перейменувати нотатку",
@@ -1129,15 +1166,6 @@
     "enter_title_of_new_note": "Введіть заголовок нової нотатки",
     "default_new_note_title": "нова нотатка",
     "click_on_canvas_to_place_new_note": "Натисніть на полотно, щоб розмістити нову нотатку"
-  },
-  "render": {
-    "note_detail_render_help_1": "Ця довідка відображається, оскільки ця нотатка типу Render HTML не має необхідного зв'язку для належного функціонування.",
-    "note_detail_render_help_2": "Тип нотатки Render HTML використовується для <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">скриптів</a>. Коротше кажучи, у вас є нотатка з HTML-кодом (за бажанням з деяким JavaScript), і ця нотатка її відобразить. Щоб це запрацювало, вам потрібно визначити <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">відношення</a> під назвою \"renderNote\", яке вказує на нотатку HTML для відображення."
-  },
-  "web_view": {
-    "web_view": "Веб-перегляд",
-    "embed_websites": "Нотатка типу Веб-перегляд дозволяє вбудовувати веб-сайти в Trilium.",
-    "create_label": "Для початку створіть мітку з URL-адресою, яку ви хочете вбудувати, наприклад, #webViewSrc=\"https://www.google.com\""
   },
   "backend_log": {
     "refresh": "Оновити"
@@ -1244,149 +1272,6 @@
     "layout-horizontal-title": "Горизонтальний",
     "layout-vertical-description": "Панель запуску знаходиться ліворуч (за замовчуванням)",
     "layout-horizontal-description": "Панель запуску знаходиться під панеллю вкладок, панель вкладок тепер має повну ширину."
-  },
-  "ai_llm": {
-    "not_started": "Не розпочато",
-    "title": "Параметри AI",
-    "processed_notes": "Оброблені нотатки",
-    "total_notes": "Всього нотаток",
-    "progress": "Прогрес",
-    "queued_notes": "Черга нотаток",
-    "failed_notes": "Невдалі нотатки",
-    "last_processed": "Остання обробка",
-    "refresh_stats": "Оновити статистику",
-    "enable_ai_features": "Увімкнути функції AI/LLM",
-    "enable_ai_description": "Увімкніть функції AI, такі як підсумовування нотаток, генерація контенту та інші можливості LLM",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "Увімкнути функції AI/LLM",
-    "enable_ai_desc": "Увімкнути функції AI, такі як підсумовування нотаток, генерація контенту та інші можливості LLM",
-    "provider_configuration": "Конфігурація постачальника AI",
-    "provider_precedence": "Пріоритет постачальника",
-    "provider_precedence_description": "Список постачальників, розділених комами, у порядку пріоритету (наприклад, «openai,anthropic,ollama»)",
-    "temperature": "Температура",
-    "temperature_description": "Контролює випадковість відповідей (0 = детермінований, 2 = максимальна випадковість)",
-    "system_prompt": "Системний Запит (Prompt)",
-    "system_prompt_description": "Системний запит (prompt) за замовчуванням використовується для всіх взаємодій з AI",
-    "openai_configuration": "Конфігурація OpenAI",
-    "openai_settings": "Налаштування OpenAI",
-    "api_key": "API Key",
-    "url": "Base URL",
-    "model": "Модель",
-    "openai_api_key_description": "Ваш ключ OpenAI API для доступу до служб AI",
-    "anthropic_api_key_description": "Ваш ключ Anthropic API для доступу до моделей Claude",
-    "default_model": "Модель за замовчуванням",
-    "openai_model_description": "Наприклад: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "base_url": "Base URL",
-    "openai_url_description": "За замовчуванням: https://api.openai.com/v1",
-    "anthropic_settings": "Налаштування Anthropic",
-    "anthropic_url_description": "Базова URL-адреса для Anthropic API (за замовчуванням: https://api.anthropic.com)",
-    "anthropic_model_description": "Моделі Anthropic Claude для чату",
-    "voyage_settings": "Налаштування Voyage AI",
-    "ollama_settings": "Налаштування Ollama",
-    "ollama_url_description": "URL для Ollama API (default: http://localhost:11434)",
-    "ollama_model_description": "Модель Ollama для чату",
-    "anthropic_configuration": "Конфігурація Anthropic",
-    "voyage_configuration": "Конфігурація Voyage AI",
-    "voyage_url_description": "За замовчуванням: https://api.voyageai.com/v1",
-    "ollama_configuration": "Конфігурація Ollama",
-    "enable_ollama": "Увімкнути Ollama",
-    "enable_ollama_description": "Увімкнути Ollama для локальної моделі AI",
-    "ollama_url": "Ollama URL",
-    "ollama_model": "Модель Ollama",
-    "refresh_models": "Оновити моделі",
-    "refreshing_models": "Оновлення...",
-    "enable_automatic_indexing": "Увімкнути автоматичне індексування",
-    "rebuild_index": "Перебудувати індекс",
-    "rebuild_index_error": "Помилка початку перебудови індексу. Перегляньте logs для інформації.",
-    "note_title": "Заголовок нотатки",
-    "error": "Помилка",
-    "last_attempt": "Остання спроба",
-    "actions": "Дії",
-    "retry": "Повторити спробу",
-    "partial": "{{ percentage }}% completed",
-    "retry_queued": "Нотатка в черзі на повторну спробу",
-    "retry_failed": "Не вдалося додати нотатку до черги для повторної спроби",
-    "max_notes_per_llm_query": "Максимальна кількість нотаток на запит",
-    "max_notes_per_llm_query_description": "Максимальна кількість схожих нотаток для включення в контекст AI",
-    "active_providers": "Активні постачальники",
-    "disabled_providers": "Вимкнути постачальників",
-    "remove_provider": "Видалити постачальника з пошуку",
-    "restore_provider": "Відновити постачальника для пошуку",
-    "similarity_threshold": "Поріг схожості",
-    "similarity_threshold_description": "Мінімальна оцінка схожості (0-1) для нотаток, що включатимуться в контекст для запитів LLM",
-    "reprocess_index": "Перебудувати індекс пошуку",
-    "reprocessing_index": "Відбудова...",
-    "reprocess_index_started": "Оптимізація пошукового індексу розпочата у фоновому режимі",
-    "reprocess_index_error": "Помилка відбудови індексу пошуку",
-    "index_rebuild_progress": "Прогрес відбудови індексу",
-    "index_rebuilding": "Індекс оптимізації ({{percentage}}%)",
-    "index_rebuild_complete": "Оптимізацію індексу завершено",
-    "index_rebuild_status_error": "Помилка перевірки стану перебудови індексу",
-    "never": "Ніколи",
-    "processing": "Обробка ({{percentage}}%)",
-    "incomplete": "Незавершено ({{percentage}}%)",
-    "complete": "Завершено (100%)",
-    "refreshing": "Оновлення...",
-    "auto_refresh_notice": "Автоматичне оновлення кожні {{seconds}} секунд",
-    "note_queued_for_retry": "Нотатка в черзі на повторну спробу",
-    "failed_to_retry_note": "Не вдалося повторити спробу",
-    "all_notes_queued_for_retry": "Усі невдалі нотатки поставлені в чергу на повторну спробу",
-    "failed_to_retry_all": "Не вдалося повторити спробу",
-    "ai_settings": "Налаштування AI",
-    "api_key_tooltip": "Ключ API для доступу до сервісу",
-    "empty_key_warning": {
-      "anthropic": "Ключ API Anthropic порожній. Будь ласка, введіть дійсний ключ API.",
-      "openai": "Ключ API OpenAI порожній. Будь ласка, введіть дійсний ключ API.",
-      "voyage": "Ключ Voyage API подорожі порожній. Будь ласка, введіть дійсний ключ API.",
-      "ollama": "Ключ API Ollama порожній. Будь ласка, введіть дійсний ключ API."
-    },
-    "agent": {
-      "processing": "Обробка...",
-      "thinking": "Думаю...",
-      "loading": "Завантаження...",
-      "generating": "Генерування..."
-    },
-    "name": "AI",
-    "openai": "OpenAI",
-    "use_enhanced_context": "Використовувати покращений контекст",
-    "enhanced_context_description": "Надає AI більше контексту з нотатки та пов'язаних з нею нотаток для кращих відповідей",
-    "show_thinking": "Показати міркування",
-    "show_thinking_description": "Показати ланцюжок міркувань AI",
-    "enter_message": "Введіть ваше повідомлення...",
-    "error_contacting_provider": "Помилка зв’язку з постачальником AI. Перевірте налаштування та підключення до Інтернету.",
-    "error_generating_response": "Помилка створення відповіді AI",
-    "index_all_notes": "Індексація усіх нотаток",
-    "index_status": "Статус індексації",
-    "indexed_notes": "Індексовані нотатки",
-    "indexing_stopped": "Індексацію зупинено",
-    "indexing_in_progress": "Триває індексація...",
-    "last_indexed": "Остання індексація",
-    "note_chat": "Нотатка Чат",
-    "sources": "Джерела",
-    "start_indexing": "Почати індексацію",
-    "use_advanced_context": "Використовувати розширений контекст",
-    "ollama_no_url": "Ollama не налаштовано. Будь ласка, введіть дійсну URL-адресу.",
-    "chat": {
-      "root_note_title": "AI Чати",
-      "root_note_content": "Ця нотатка містить ваші збережені розмови в чаті з AI.",
-      "new_chat_title": "Новий Чат",
-      "create_new_ai_chat": "Створити новий AI Чат"
-    },
-    "create_new_ai_chat": "Створити новий AI Чат",
-    "configuration_warnings": "Виникли деякі проблеми з конфігурацією AI. Перевірте налаштування.",
-    "experimental_warning": "Функція LLM наразі є експериментальною – вас попередили.",
-    "selected_provider": "Вибраний постачальник",
-    "selected_provider_description": "Вибрати постачальника послуг AI для функцій чату та автозаповнення",
-    "select_model": "Виберіть модель...",
-    "select_provider": "Виберіть постачальника...",
-    "ai_enabled": "Функції AI увімкнено",
-    "ai_disabled": "Функції AI вимкнено",
-    "no_models_found_online": "Моделей не знайдено. Будь ласка, перевірте свій ключ API та налаштування.",
-    "no_models_found_ollama": "Моделей Ollama не знайдено. Перевірте, чи працює Ollama.",
-    "error_fetching": "Помилка отримання моделей: {{error}}"
   },
   "backup": {
     "automatic_backup": "Автоматичне резервне копіювання",
@@ -1685,6 +1570,7 @@
     "add-term-to-dictionary": "Додати \"{{term}}\" до словника",
     "cut": "Вирізати",
     "copy": "Копіювати",
+    "copy-as-markdown": "Копіювати як Markdown",
     "copy-link": "Копіювати посилання",
     "paste": "Вставити",
     "paste-as-plain-text": "Вставити як звичайний текст",
@@ -1966,7 +1852,6 @@
     "confirm-change": "Не рекомендується змінювати тип нотатки, якщо її вміст не порожній. Ви все одно хочете продовжити?",
     "geo-map": "Географічна карта",
     "beta-feature": "Бета",
-    "ai-chat": "Чат AI",
     "task-list": "Список завдань",
     "new-feature": "Нова",
     "collections": "Колекції",
@@ -2072,7 +1957,6 @@
     "app-restart-required": "(щоб зміни набули чинності, потрібен перезапуск програми)"
   },
   "pagination": {
-    "page_title": "Сторінка {{startIndex}} - {{endIndex}}",
     "total_notes": "{{count}} нотаток"
   },
   "collections": {
@@ -2108,5 +1992,11 @@
     "pages_one": "{{count}} сторінка",
     "pages_few": "{{count}} сторінки",
     "pages_many": "{{count}} сторінок"
+  },
+  "render": {
+    "setup_title": "Відображати власний HTML або Preact JSX у цій нотатці",
+    "setup_create_sample_preact": "Створіть зразок нотатки за допомогою Preact",
+    "setup_create_sample_html": "Створити зразок нотатки за допомогою HTML",
+    "setup_sample_created": "Зразок нотатки було створено як дочірню нотатку."
   }
 }

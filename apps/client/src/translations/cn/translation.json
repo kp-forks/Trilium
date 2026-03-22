@@ -1008,7 +1008,7 @@
     "no_attachments": "此笔记没有附件。"
   },
   "book": {
-    "no_children_help": "此类型为书籍的笔记没有任何子笔记，因此没有内容显示。请参阅 <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a> 了解详情。",
+    "no_children_help": "此集合没有任何子笔记，因此没有内容显示。",
     "drag_locked_title": "锁定编辑",
     "drag_locked_message": "无法拖拽，因为集合已被锁定编辑。"
   },
@@ -1047,7 +1047,6 @@
     "unprotecting-title": "解除保护状态"
   },
   "relation_map": {
-    "open_in_new_tab": "在新标签页中打开",
     "remove_note": "删除笔记",
     "edit_title": "编辑标题",
     "rename_note": "重命名笔记",
@@ -1063,15 +1062,6 @@
     "enter_title_of_new_note": "输入新笔记的标题",
     "default_new_note_title": "新笔记",
     "click_on_canvas_to_place_new_note": "点击画布以放置新笔记"
-  },
-  "render": {
-    "note_detail_render_help_1": "之所以显示此帮助说明，是因为这个类型为渲染 HTML 的笔记没有正常工作所需的关系。",
-    "note_detail_render_help_2": "渲染 HTML 笔记类型用于<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">编写脚本</a>。简而言之，您有一份 HTML 代码笔记（可包含一些 JavaScript），然后这个笔记会把页面渲染出来。要使其正常工作，您需要定义一个名为 \"renderNote\" 的<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">关系</a>指向要渲染的 HTML 笔记。"
-  },
-  "web_view": {
-    "web_view": "网页视图",
-    "embed_websites": "网页视图类型的笔记允许您将网站嵌入到 Trilium 中。",
-    "create_label": "首先，请创建一个带有您要嵌入的 URL 地址的标签，例如 #webViewSrc=\"https://www.bing.com\""
   },
   "backend_log": {
     "refresh": "刷新"
@@ -1421,7 +1411,8 @@
     "description": "描述",
     "reload_app": "重载应用以应用更改",
     "set_all_to_default": "将所有快捷键重置为默认值",
-    "confirm_reset": "您确定要将所有键盘快捷键重置为默认值吗？"
+    "confirm_reset": "您确定要将所有键盘快捷键重置为默认值吗？",
+    "no_results": "未找到与“{{filter}}”匹配的快捷方式"
   },
   "spellcheck": {
     "title": "拼写检查",
@@ -1540,10 +1531,11 @@
     "geo-map": "地理地图",
     "beta-feature": "测试版",
     "task-list": "任务列表",
-    "ai-chat": "AI聊天",
     "new-feature": "新建",
     "collections": "集合",
-    "book": "集合"
+    "book": "集合",
+    "ai-chat": "AI聊天",
+    "spreadsheet": "电子表格"
   },
   "protect_note": {
     "toggle-on": "保护笔记",
@@ -1622,7 +1614,9 @@
     "print_report_title": "打印报告",
     "print_report_collection_content_other": "集合中的 {{count}} 篇笔记无法打印，因为它们不受支持或受到保护。",
     "print_report_collection_details_button": "查看详情",
-    "print_report_collection_details_ignored_notes": "忽略的笔记"
+    "print_report_collection_details_ignored_notes": "忽略的笔记",
+    "print_report_error_title": "打印失败",
+    "print_report_stack_trace": "堆栈跟踪"
   },
   "note_title": {
     "placeholder": "请输入笔记标题...",
@@ -1637,7 +1631,8 @@
   },
   "search_result": {
     "no_notes_found": "没有找到符合搜索条件的笔记。",
-    "search_not_executed": "尚未执行搜索。请点击上方的\"搜索\"按钮查看结果。"
+    "search_not_executed": "尚未执行搜索。",
+    "search_now": "立即搜索"
   },
   "spacer": {
     "configure_launchbar": "配置启动栏"
@@ -1765,6 +1760,7 @@
     "add-term-to-dictionary": "将 \"{{term}}\" 添加到字典",
     "cut": "剪切",
     "copy": "复制",
+    "copy-as-markdown": "复制为 Markdown",
     "copy-link": "复制链接",
     "paste": "粘贴",
     "paste-as-plain-text": "以纯文本粘贴",
@@ -1844,149 +1840,6 @@
       "tomorrow": "明天",
       "yesterday": "昨天"
     }
-  },
-  "ai_llm": {
-    "not_started": "未开始",
-    "title": "AI设置",
-    "processed_notes": "已处理笔记",
-    "total_notes": "笔记总数",
-    "progress": "进度",
-    "queued_notes": "排队中笔记",
-    "failed_notes": "失败笔记",
-    "last_processed": "最后处理时间",
-    "refresh_stats": "刷新统计数据",
-    "enable_ai_features": "启用AI/LLM功能",
-    "enable_ai_description": "启用笔记摘要、内容生成等AI功能及其他LLM能力",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "启用AI/LLM功能",
-    "enable_ai_desc": "启用笔记摘要、内容生成等AI功能及其他LLM能力",
-    "provider_configuration": "AI提供商配置",
-    "provider_precedence": "提供商优先级",
-    "provider_precedence_description": "按优先级排序的提供商列表（用逗号分隔，例如：'openai,anthropic,ollama'）",
-    "temperature": "温度参数",
-    "temperature_description": "控制响应的随机性（0 = 确定性输出，2 = 最大随机性）",
-    "system_prompt": "系统提示词",
-    "system_prompt_description": "所有AI交互使用的默认系统提示词",
-    "openai_configuration": "OpenAI配置",
-    "openai_settings": "OpenAI设置",
-    "api_key": "API密钥",
-    "url": "基础URL",
-    "model": "模型",
-    "openai_api_key_description": "用于访问OpenAI服务的API密钥",
-    "anthropic_api_key_description": "用于访问Claude模型的Anthropic API密钥",
-    "default_model": "默认模型",
-    "openai_model_description": "示例：gpt-4o、gpt-4-turbo、gpt-3.5-turbo",
-    "base_url": "基础URL",
-    "openai_url_description": "默认：https://api.openai.com/v1",
-    "anthropic_settings": "Anthropic设置",
-    "anthropic_url_description": "Anthropic API的基础URL（默认：https://api.anthropic.com）",
-    "anthropic_model_description": "用于聊天补全的Anthropic Claude模型",
-    "voyage_settings": "Voyage AI设置",
-    "ollama_settings": "Ollama设置",
-    "ollama_url_description": "Ollama API的URL（默认：http://localhost:11434）",
-    "ollama_model_description": "用于聊天补全的 Ollama 模型",
-    "anthropic_configuration": "Anthropic配置",
-    "voyage_configuration": "Voyage AI配置",
-    "voyage_url_description": "默认：https://api.voyageai.com/v1",
-    "ollama_configuration": "Ollama配置",
-    "enable_ollama": "启用Ollama",
-    "enable_ollama_description": "启用Ollama以使用本地AI模型",
-    "ollama_url": "Ollama URL",
-    "ollama_model": "Ollama模型",
-    "refresh_models": "刷新模型",
-    "refreshing_models": "刷新中...",
-    "enable_automatic_indexing": "启用自动索引",
-    "rebuild_index": "重建索引",
-    "rebuild_index_error": "启动索引重建失败。请查看日志了解详情。",
-    "note_title": "笔记标题",
-    "error": "错误",
-    "last_attempt": "最后尝试时间",
-    "actions": "操作",
-    "retry": "重试",
-    "partial": "{{ percentage }}% 已完成",
-    "retry_queued": "笔记已加入重试队列",
-    "retry_failed": "笔记加入重试队列失败",
-    "max_notes_per_llm_query": "每次查询的最大笔记数",
-    "max_notes_per_llm_query_description": "AI上下文包含的最大相似笔记数量",
-    "active_providers": "活跃提供商",
-    "disabled_providers": "已禁用提供商",
-    "remove_provider": "从搜索中移除提供商",
-    "restore_provider": "将提供商恢复到搜索中",
-    "similarity_threshold": "相似度阈值",
-    "similarity_threshold_description": "纳入LLM查询上下文的笔记最低相似度分数（0-1）",
-    "reprocess_index": "重建搜索索引",
-    "reprocessing_index": "重建中...",
-    "reprocess_index_started": "搜索索引优化已在后台启动",
-    "reprocess_index_error": "重建搜索索引失败",
-    "index_rebuild_progress": "索引重建进度",
-    "index_rebuilding": "正在优化索引（{{percentage}}%）",
-    "index_rebuild_complete": "索引优化完成",
-    "index_rebuild_status_error": "检查索引重建状态失败",
-    "never": "从未",
-    "processing": "处理中（{{percentage}}%）",
-    "incomplete": "未完成（{{percentage}}%）",
-    "complete": "已完成（100%）",
-    "refreshing": "刷新中...",
-    "auto_refresh_notice": "每 {{seconds}} 秒自动刷新",
-    "note_queued_for_retry": "笔记已加入重试队列",
-    "failed_to_retry_note": "重试笔记失败",
-    "all_notes_queued_for_retry": "所有失败笔记已加入重试队列",
-    "failed_to_retry_all": "重试笔记失败",
-    "ai_settings": "AI设置",
-    "api_key_tooltip": "用于访问服务的API密钥",
-    "empty_key_warning": {
-      "anthropic": "Anthropic API密钥为空。请输入有效的API密钥。",
-      "openai": "OpenAI API密钥为空。请输入有效的API密钥。",
-      "voyage": "Voyage API密钥为空。请输入有效的API密钥。",
-      "ollama": "Ollama API密钥为空。请输入有效的API密钥。"
-    },
-    "agent": {
-      "processing": "处理中...",
-      "thinking": "思考中...",
-      "loading": "加载中...",
-      "generating": "生成中..."
-    },
-    "name": "AI",
-    "openai": "OpenAI",
-    "use_enhanced_context": "使用增强上下文",
-    "enhanced_context_description": "为AI提供来自笔记及其相关笔记的更多上下文，以获得更好的响应",
-    "show_thinking": "显示思考过程",
-    "show_thinking_description": "显示AI的思维链过程",
-    "enter_message": "输入你的消息...",
-    "error_contacting_provider": "联系AI提供商失败。请检查你的设置和网络连接。",
-    "error_generating_response": "生成AI响应失败",
-    "index_all_notes": "为所有笔记建立索引",
-    "index_status": "索引状态",
-    "indexed_notes": "已索引笔记",
-    "indexing_stopped": "索引已停止",
-    "indexing_in_progress": "索引进行中...",
-    "last_indexed": "最后索引时间",
-    "note_chat": "笔记聊天",
-    "sources": "来源",
-    "start_indexing": "开始索引",
-    "use_advanced_context": "使用高级上下文",
-    "ollama_no_url": "Ollama 未配置。请输入有效的URL。",
-    "chat": {
-      "root_note_title": "AI聊天记录",
-      "root_note_content": "此笔记包含你保存的AI聊天对话。",
-      "new_chat_title": "新聊天",
-      "create_new_ai_chat": "创建新的AI聊天"
-    },
-    "create_new_ai_chat": "创建新的AI聊天",
-    "configuration_warnings": "你的AI配置存在一些问题。请检查你的设置。",
-    "experimental_warning": "LLM功能目前处于实验阶段 - 特此提醒。",
-    "selected_provider": "已选提供商",
-    "selected_provider_description": "选择用于聊天和补全功能的AI提供商",
-    "select_model": "选择模型...",
-    "select_provider": "选择提供商...",
-    "ai_enabled": "已启用 AI 功能",
-    "ai_disabled": "已禁用 AI 功能",
-    "no_models_found_online": "找不到模型。请检查您的 API 密钥及设置。",
-    "no_models_found_ollama": "找不到 Ollama 模型。请确认 Ollama 是否正在运行。",
-    "error_fetching": "获取模型失败：{{error}}"
   },
   "code-editor-options": {
     "title": "编辑器"
@@ -2075,7 +1928,8 @@
     "raster": "栅格",
     "vector_light": "矢量（浅色）",
     "vector_dark": "矢量（深色）",
-    "show-scale": "显示比例尺"
+    "show-scale": "显示比例尺",
+    "show-labels": "显示标记名称"
   },
   "table_context_menu": {
     "delete_row": "删除行"
@@ -2154,8 +2008,9 @@
     "app-restart-required": "（需重启程序以应用更改）"
   },
   "pagination": {
-    "page_title": "第 {{startIndex}} 页 - 第 {{endIndex}} 页",
-    "total_notes": "{{count}} 篇笔记"
+    "total_notes": "{{count}} 篇笔记",
+    "prev_page": "上一页",
+    "next_page": "下一页"
   },
   "collections": {
     "rendering_error": "出现错误无法显示内容。"
@@ -2268,5 +2123,49 @@
   },
   "bookmark_buttons": {
     "bookmarks": "书签"
+  },
+  "web_view_setup": {
+    "title": "直接在 Trilium 中创建网页的实时视图",
+    "url_placeholder": "输入或粘贴网站地址，例如 https://triliumnotes.org",
+    "create_button": "创建网页视图",
+    "invalid_url_title": "无效的地址",
+    "invalid_url_message": "请输入有效的网址，例如 https://triliumnotes.org。",
+    "disabled_description": "此网页视图来自外部来源。为保护您免受网络钓鱼或恶意内容侵害，该视图不会自动加载。若您信任该来源，可手动启用加载功能。",
+    "disabled_button_enable": "启用网页视图"
+  },
+  "render": {
+    "setup_title": "在此笔记中显示自定义 HTML 或 Preact JSX",
+    "setup_create_sample_preact": "使用 Preact 建立范例笔记",
+    "setup_create_sample_html": "使用 HTML 建立范例笔记",
+    "setup_sample_created": "已建立一个范例笔记作为子笔记。",
+    "disabled_description": "此渲染笔记来自外部来源。为保护您免受恶意内容侵害，该功能默认处于禁用状态。启用前请确保您信任该来源。",
+    "disabled_button_enable": "启用渲染笔记"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "图标包",
+    "type_backend_script": "后端脚本",
+    "type_frontend_script": "前端脚本",
+    "type_widget": "小部件",
+    "type_app_css": "自定义 CSS",
+    "type_render_note": "渲染笔记",
+    "type_web_view": "网页视图",
+    "type_app_theme": "自定义主题",
+    "toggle_tooltip_enable_tooltip": "点击以启用此 {{type}}。",
+    "toggle_tooltip_disable_tooltip": "点击以禁用此 {{type}}。",
+    "menu_docs": "打开文档",
+    "menu_execute_now": "立即执行脚本",
+    "menu_run": "自动执行",
+    "menu_run_disabled": "手动",
+    "menu_run_backend_startup": "当后端启动时",
+    "menu_run_hourly": "每小时",
+    "menu_run_daily": "每日",
+    "menu_run_frontend_startup": "当桌面前端启动时",
+    "menu_run_mobile_startup": "当移动前端启动时",
+    "menu_change_to_widget": "更改为小部件",
+    "menu_change_to_frontend_script": "更改为前端脚本",
+    "menu_theme_base": "主题基底"
+  },
+  "setup_form": {
+    "more_info": "了解更多"
   }
 }

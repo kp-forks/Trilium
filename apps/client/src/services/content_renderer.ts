@@ -1,6 +1,7 @@
 import "./content_renderer.css";
 
 import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import { h, render } from "preact";
 import WheelZoom from 'vanilla-js-wheel-zoom';
 
 import FAttachment from "../entities/fattachment.js";
@@ -15,7 +16,7 @@ import protectedSessionService from "./protected_session.js";
 import protectedSessionHolder from "./protected_session_holder.js";
 import renderService from "./render.js";
 import { applySingleBlockSyntaxHighlight } from "./syntax_highlight.js";
-import utils from "./utils.js";
+import utils, { getErrorMessage } from "./utils.js";
 
 let idCounter = 1;
 
@@ -53,16 +54,19 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         await renderText(entity, $renderedContent, options);
     } else if (type === "code") {
         await renderCode(entity, $renderedContent);
-    } else if (["image", "canvas", "mindMap"].includes(type)) {
+    } else if (["image", "canvas", "mindMap", "spreadsheet"].includes(type)) {
         renderImage(entity, $renderedContent, options);
     } else if (!options.tooltip && ["file", "pdf", "audio", "video"].includes(type)) {
-        renderFile(entity, type, $renderedContent);
+        await renderFile(entity, type, $renderedContent);
     } else if (type === "mermaid") {
         await renderMermaid(entity, $renderedContent);
     } else if (type === "render" && entity instanceof FNote) {
         const $content = $("<div>");
 
-        await renderService.render(entity, $content);
+        await renderService.render(entity, $content, (e) => {
+            const $error = $("<div>").addClass("admonition caution").text(typeof e === "string" ? e : getErrorMessage(e));
+            $content.empty().append($error);
+        });
 
         $renderedContent.append($content);
     } else if (type === "doc" && "noteId" in entity) {
@@ -176,7 +180,7 @@ function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery<HTMLE
     imageContextMenuService.setupContextMenu($img);
 }
 
-function renderFile(entity: FNote | FAttachment, type: string, $renderedContent: JQuery<HTMLElement>) {
+async function renderFile(entity: FNote | FAttachment, type: string, $renderedContent: JQuery<HTMLElement>) {
     let entityType, entityId;
 
     if (entity instanceof FNote) {
@@ -189,13 +193,17 @@ function renderFile(entity: FNote | FAttachment, type: string, $renderedContent:
         throw new Error(`Can't recognize entity type of '${entity}'`);
     }
 
-    const $content = $('<div style="display: flex; flex-direction: column; height: 100%;">');
+    const $content = $('<div style="display: flex; flex-direction: column; height: 100%; justify-content: end;">');
 
     if (type === "pdf") {
-        const $pdfPreview = $('<iframe class="pdf-preview" style="width: 100%; flex-grow: 100;"></iframe>');
-        $pdfPreview.attr("src", openService.getUrlForDownload(`pdfjs/web/viewer.html?file=../../api/${entityType}/${entityId}/open`));
+        const url = `../../api/${entityType}/${entityId}/open`;
+        const $viewer = $(`<div style="height: 100%">`);
+        const PdfViewer = (await import("../widgets/type_widgets/file/PdfViewer")).default;
+        render(h(PdfViewer, {pdfUrl: url, editable: false}), $viewer.get(0)!);
 
-        $content.append($pdfPreview);
+        $content.append($viewer);
+
+
     } else if (type === "audio") {
         const $audioPreview = $("<audio controls></audio>")
             .attr("src", openService.getUrlForDownload(`api/${entityType}/${entityId}/open-partial`))

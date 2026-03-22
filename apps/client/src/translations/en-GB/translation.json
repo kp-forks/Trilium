@@ -47,11 +47,6 @@
   "attachment_detail_2": {
     "unrecognized_role": "Unrecognised attachment role '{{role}}'."
   },
-  "ai_llm": {
-    "reprocess_index_started": "Search index optimisation started in the background",
-    "index_rebuilding": "Optimising index ({{percentage}}%)",
-    "index_rebuild_complete": "Index optimisation complete"
-  },
   "highlighting": {
     "color-scheme": "Colour Scheme"
   },

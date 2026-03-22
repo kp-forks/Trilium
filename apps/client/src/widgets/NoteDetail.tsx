@@ -40,6 +40,21 @@ export default function NoteDetail() {
     const widgetRequestId = useRef(0);
     const hasFixedTree = note && noteContext?.hoistedNoteId === "_lbMobileRoot" && isMobile() && note.noteId.startsWith("_lbMobile");
 
+    // Defer loading for tabs that haven't been active yet (e.g. on app refresh).
+    // Special contexts (ntxId starting with "_", e.g. popup editor) are always considered active.
+    const isSpecialContext = ntxId?.startsWith("_") ?? false;
+    const [ hasTabBeenActive, setHasTabBeenActive ] = useState(() => isSpecialContext || (noteContext?.isActive() ?? false));
+    useEffect(() => {
+        if (!hasTabBeenActive && noteContext?.isActive()) {
+            setHasTabBeenActive(true);
+        }
+    }, [ noteContext, hasTabBeenActive ]);
+    useTriliumEvent("activeNoteChanged", ({ ntxId: eventNtxId }) => {
+        if (eventNtxId === ntxId && !hasTabBeenActive) {
+            setHasTabBeenActive(true);
+        }
+    });
+
     const props: TypeWidgetProps = {
         note: note!,
         viewScope,
@@ -49,7 +64,7 @@ export default function NoteDetail() {
     };
 
     useEffect(() => {
-        if (!type) return;
+        if (!type || !hasTabBeenActive) return;
         const requestId = ++widgetRequestId.current;
 
         if (!noteTypesToRender[type]) {
@@ -68,7 +83,7 @@ export default function NoteDetail() {
         } else {
             setActiveNoteType(type);
         }
-    }, [ note, viewScope, type, noteTypesToRender ]);
+    }, [ note, viewScope, type, noteTypesToRender, hasTabBeenActive ]);
 
     // Detect note type changes.
     useTriliumEvent("entitiesReloaded", async ({ loadResults }) => {
@@ -247,9 +262,8 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
     useEffect(() => {
         if (isVisible) {
             setCachedProps(props);
-        } else {
-            // Do nothing, keep the old props.
         }
+        // When not visible, keep the old props to avoid re-rendering in the background.
     }, [ props, isVisible ]);
 
     const typeMapping = TYPE_MAPPINGS[type];
@@ -260,7 +274,7 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
                 height: isFullHeight ? "100%" : ""
             }}
         >
-            { <Element {...cachedProps} /> }
+            <Element {...cachedProps} />
         </div>
     );
 }
@@ -355,6 +369,14 @@ export function checkFullHeight(noteContext: NoteContext | undefined, type: Exte
     // https://github.com/zadam/trilium/issues/2522
     const isBackendNote = noteContext?.noteId === "_backendLog";
     const isFullHeightNoteType = type && TYPE_MAPPINGS[type].isFullHeight;
+
+    // Allow vertical centering when there are no results.
+    if (type === "book" &&
+        [ "grid", "list" ].includes(noteContext.note?.getLabelValue("viewType") ?? "grid") &&
+        !noteContext.note?.hasChildren()) {
+        return true;
+    }
+
     return (!noteContext?.hasNoteList() && isFullHeightNoteType)
         || noteContext?.viewScope?.viewMode === "attachments"
         || isBackendNote;
@@ -370,7 +392,33 @@ function showToast(type: "printing" | "exporting_pdf", progress: number = 0) {
 }
 
 function handlePrintReport(printReport?: PrintReport) {
-    if (printReport?.type === "collection" && printReport.ignoredNoteIds.length > 0) {
+    if (!printReport) return;
+
+    if (printReport.type === "error") {
+        toast.showPersistent({
+            id: "print-error",
+            icon: "bx bx-error-circle",
+            title: t("note_detail.print_report_error_title"),
+            message: printReport.message,
+            buttons: printReport.stack ? [
+                {
+                    text: t("note_detail.print_report_collection_details_button"),
+                    onClick(api) {
+                        api.dismissToast();
+                        dialog.info(<>
+                            <p>{printReport.message}</p>
+                            <details>
+                                <summary>{t("note_detail.print_report_stack_trace")}</summary>
+                                <pre style="font-size: 0.85em; overflow-x: auto;">{printReport.stack}</pre>
+                            </details>
+                        </>, {
+                            title: t("note_detail.print_report_error_title")
+                        });
+                    }
+                }
+            ] : undefined
+        });
+    } else if (printReport.type === "collection" && printReport.ignoredNoteIds.length > 0) {
         toast.showPersistent({
             id: "print-report",
             icon: "bx bx-collection",

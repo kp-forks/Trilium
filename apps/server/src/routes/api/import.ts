@@ -1,4 +1,4 @@
-import { becca_loader,ValidationError } from "@triliumnext/core";
+import { becca_loader, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import path from "path";
 
@@ -13,7 +13,7 @@ import log from "../../services/log.js";
 import TaskContext from "../../services/task_context.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
 
-async function importNotesToBranch(req: Request) {
+async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
     const { taskId, last } = req.body;
 
@@ -99,7 +99,7 @@ async function importNotesToBranch(req: Request) {
     return note.getPojo();
 }
 
-function importAttachmentsToNote(req: Request) {
+function importAttachmentsToNote(req: Request<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
     const { taskId, last } = req.body;
 

@@ -54,6 +54,8 @@ export default function PopupEditor() {
             }
         });
 
+        // Events triggered at note context level (e.g. the save indicator) would not work since the note context has no parent component. Propagate events to parent component so that they can be handled properly.
+        noteContext.triggerEvent = (name, data) => parentComponent?.handleEventInChildren(name, data);
         setNoteContext(noteContext);
         setShown(true);
     });
@@ -67,10 +69,7 @@ export default function PopupEditor() {
         <NoteContextContext.Provider value={noteContext}>
             <DialogWrapper>
                 <Modal
-                    title={<>
-                        <TitleRow />
-                        {isNewLayout && <NoteBadges />}
-                    </>}
+                    title={<TitleRow />}
                     customTitleBarButtons={[{
                         iconClassName: "bx-expand-alt",
                         title: t("popup-editor.maximize"),
@@ -123,6 +122,7 @@ export function TitleRow() {
         <div className="title-row">
             <NoteIcon />
             <NoteTitleWidget />
+            {isNewLayout && <NoteBadges />}
         </div>
     );
 }

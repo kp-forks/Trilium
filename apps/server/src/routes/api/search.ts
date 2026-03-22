@@ -10,7 +10,7 @@ import SearchContext from "../../services/search/search_context.js";
 import type SearchResult from "../../services/search/search_result.js";
 import searchService, { EMPTY_RESULT, type SearchNoteResult } from "../../services/search/services/search.js";
 
-function searchFromNote(req: Request): SearchNoteResult {
+function searchFromNote(req: Request<{ noteId: string }>): SearchNoteResult {
     const note = becca.getNoteOrThrow(req.params.noteId);
 
     if (!note) {
@@ -25,7 +25,7 @@ function searchFromNote(req: Request): SearchNoteResult {
     return searchService.searchFromNote(note);
 }
 
-function searchAndExecute(req: Request) {
+function searchAndExecute(req: Request<{ noteId: string }>) {
     const note = becca.getNoteOrThrow(req.params.noteId);
 
     if (!note) {
@@ -42,7 +42,7 @@ function searchAndExecute(req: Request) {
     bulkActionService.executeActionsFromNote(note, searchResultNoteIds);
 }
 
-function quickSearch(req: Request) {
+function quickSearch(req: Request<{ searchString: string }>) {
     const { searchString } = req.params;
 
     const searchContext = new SearchContext({
@@ -92,7 +92,7 @@ function quickSearch(req: Request) {
     };
 }
 
-function search(req: Request) {
+function search(req: Request<{ searchString: string }>) {
     const { searchString } = req.params;
 
     const searchContext = new SearchContext({

@@ -17,6 +17,8 @@ export interface AttachmentRow {
     deleteId?: string;
     contentLength?: number;
     content?: Uint8Array | string;
+    /** If set to `"base64"`, the `content` string will be decoded from base64 to binary before storage. */
+    encoding?: "base64";
 }
 
 export interface RevisionRow {
@@ -120,7 +122,7 @@ export const ALLOWED_NOTE_TYPES = [
     "webView",
     "code",
     "mindMap",
-    "aiChat"
+    "spreadsheet"
 ] as const;
 export type NoteType = (typeof ALLOWED_NOTE_TYPES)[number];
 

@@ -6,12 +6,12 @@ import "./MindMap.css";
 import nodeMenu from "@mind-elixir/node-menu";
 import { DISPLAYABLE_LOCALE_IDS } from "@triliumnext/commons";
 import { snapdom } from "@zumer/snapdom";
-import { default as VanillaMindElixir,MindElixirData, MindElixirInstance, Operation, Options } from "mind-elixir";
+import { DARK_THEME, default as VanillaMindElixir, MindElixirData, MindElixirInstance, Operation, Options, THEME as LIGHT_THEME } from "mind-elixir";
 import { HTMLAttributes, RefObject } from "preact";
 import { useCallback, useEffect, useRef } from "preact/hooks";
 
 import utils from "../../services/utils";
-import { useEditorSpacedUpdate, useNoteLabelBoolean, useSyncedRef, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
+import { useColorScheme, useEditorSpacedUpdate, useNoteLabelBoolean, useSyncedRef, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
 import { refToJQuerySelector } from "../react/react_utils";
 import { TypeWidgetProps } from "./type_widget";
 
@@ -36,6 +36,7 @@ const LOCALE_MAPPINGS: Record<DISPLAYABLE_LOCALE_IDS, Options["locale"] | null> 
     fr: "fr",
     ga: null,
     it: "it",
+    hi: null,
     ja: "ja",
     pt: "pt",
     pl: null,
@@ -84,9 +85,11 @@ export default function MindMap({ note, ntxId, noteContext }: TypeWidgetProps) {
         },
         onContentChange: (content) => {
             let newContent: MindElixirData;
+
             if (content) {
                 try {
                     newContent = JSON.parse(content) as MindElixirData;
+                    delete newContent.theme;    // The theme is managed internally by the widget, so we remove it from the loaded content to avoid inconsistencies.
                 } catch (e) {
                     console.warn(e);
                     console.debug("Wrong JSON content: ", content);
@@ -150,6 +153,8 @@ function MindElixir({ containerRef: externalContainerRef, containerProps, apiRef
     const containerRef = useSyncedRef<HTMLDivElement>(externalContainerRef, null);
     const apiRef = useRef<MindElixirInstance>(null);
     const [ locale ] = useTriliumOption("locale");
+    const colorScheme = useColorScheme();
+    const defaultColorScheme = useRef(colorScheme);
 
     function reinitialize() {
         if (!containerRef.current) return;
@@ -157,7 +162,8 @@ function MindElixir({ containerRef: externalContainerRef, containerProps, apiRef
         const mind = new VanillaMindElixir({
             el: containerRef.current,
             locale: LOCALE_MAPPINGS[locale as DISPLAYABLE_LOCALE_IDS] ?? undefined,
-            editable
+            editable,
+            theme: defaultColorScheme.current === "dark" ? DARK_THEME : LIGHT_THEME
         });
 
         if (editable) {
@@ -177,6 +183,18 @@ function MindElixir({ containerRef: externalContainerRef, containerProps, apiRef
             apiRef.current = null;
         };
     }, []);
+
+    // React to theme changes.
+    useEffect(() => {
+        if (!apiRef.current) return;
+        const newTheme = colorScheme === "dark" ? DARK_THEME : LIGHT_THEME;
+        if (apiRef.current.theme === newTheme) return; // Avoid unnecessary theme changes, which can be expensive to render.
+        try {
+            apiRef.current.changeTheme(newTheme);
+        } catch (e) {
+            console.warn("Failed to change mind map theme:", e);
+        }
+    }, [ colorScheme ]);
 
     useEffect(() => {
         const data = apiRef.current?.getData();

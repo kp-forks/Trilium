@@ -29,7 +29,7 @@
     "widget-render-error": {
       "title": "Nie udało się wyrenderować niestandardowego widżetu React"
     },
-    "widget-missing-parent": "Niestandardowy widżet nie ma zdefiniowanej obowiązkowej właściwości „{{property}}”.\nJeśli skrypt ma działać bez interfejsu użytkownika (UI) wyłącz go:  '#run=frontendStartup'.",
+    "widget-missing-parent": "Niestandardowy widżet nie ma zdefiniowanej obowiązkowej właściwości „{{property}}”.\n\nJeśli skrypt ma działać bez interfejsu użytkownika (UI) wyłącz go: '#run=frontendStartup'.",
     "open-script-note": "Otwórz notatkę ze skryptem",
     "scripting-error": "Błąd skryptu użytkownika: {{title}}"
   },
@@ -261,8 +261,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Strona {{startIndex}} - {{endIndex}}",
-    "total_notes": "{{count}} notatek"
+    "total_notes": "{{count}} notatek",
+    "prev_page": "Poprzednia strona",
+    "next_page": "Następna strona"
   },
   "collections": {
     "rendering_error": "Nie można wyświetlić zawartości z powodu błędu."
@@ -613,6 +614,7 @@
   "electron_context_menu": {
     "cut": "Wytnij",
     "copy": "Kopiuj",
+    "copy-as-markdown": "Kopiuj jako markdown",
     "copy-link": "Kopiuj link",
     "paste": "Wklej",
     "paste-as-plain-text": "Wklej jako zwykły tekst",
@@ -738,7 +740,8 @@
     "raster": "Raster",
     "vector_light": "Wektor (Jasny)",
     "vector_dark": "Wektor (Ciemny)",
-    "show-scale": "Pokaż skalę"
+    "show-scale": "Pokaż skalę",
+    "show-labels": "Pokaż nazwy znaczników"
   },
   "table_context_menu": {
     "delete_row": "Usuń wiersz"
@@ -773,149 +776,6 @@
     "to": "do",
     "target_note": "notatka docelowa",
     "create_relation_on_all_matched_notes": "Na wszystkich dopasowanych notatkach utwórz podaną relację."
-  },
-  "ai_llm": {
-    "actions": "Akcje",
-    "retry": "Ponów",
-    "partial": "{{ percentage }}% ukończono",
-    "retry_queued": "Notatka zakolejkowana do ponowienia",
-    "retry_failed": "Nie udało się zakolejkować notatki do ponowienia",
-    "max_notes_per_llm_query": "Maks. notatek na zapytanie",
-    "index_all_notes": "Indeksuj wszystkie notatki",
-    "index_status": "Status indeksu",
-    "indexed_notes": "Zaindeksowane notatki",
-    "indexing_stopped": "Indeksowanie zatrzymane",
-    "indexing_in_progress": "Indeksowanie w toku...",
-    "last_indexed": "Ostatnio zaindeksowane",
-    "note_chat": "Czat notatki",
-    "note_title": "Tytuł notatki",
-    "error": "Błąd",
-    "last_attempt": "Ostatnia próba",
-    "queued_notes": "Notatki w kolejce",
-    "failed_notes": "Notatki nieudane",
-    "last_processed": "Ostatnio przetworzone",
-    "refresh_stats": "Odśwież statystyki",
-    "enable_ai_features": "Włącz funkcje AI/LLM",
-    "enable_ai_description": "Włącz funkcje AI, takie jak podsumowywanie notatek, generowanie treści i inne możliwości LLM",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "Włącz funkcje AI/LLM",
-    "enable_ai_desc": "Włącz funkcje AI, takie jak podsumowywanie notatek, generowanie treści i inne możliwości LLM",
-    "provider_configuration": "Konfiguracja dostawcy AI",
-    "provider_precedence": "Kolejność dostawców",
-    "provider_precedence_description": "Lista dostawców oddzielona przecinkami w kolejności pierwszeństwa (np. 'openai,anthropic,ollama')",
-    "temperature": "Temperatura",
-    "temperature_description": "Kontroluje losowość w odpowiedziach (0 = deterministyczne, 2 = maksymalna losowość)",
-    "system_prompt": "Prompt systemowy",
-    "system_prompt_description": "Domyślny prompt systemowy używany dla wszystkich interakcji AI",
-    "openai_configuration": "Konfiguracja OpenAI",
-    "openai_settings": "Ustawienia OpenAI",
-    "api_key": "Klucz API",
-    "url": "Bazowy URL",
-    "model": "Model",
-    "openai_api_key_description": "Twój klucz API OpenAI do dostępu do ich usług AI",
-    "anthropic_api_key_description": "Twój klucz API Anthropic do dostępu do modeli Claude",
-    "default_model": "Domyślny model",
-    "openai_model_description": "Przykłady: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "base_url": "Bazowy URL",
-    "openai_url_description": "Domyślnie: https://api.openai.com/v1",
-    "anthropic_settings": "Ustawienia Anthropic",
-    "anthropic_url_description": "Bazowy URL dla API Anthropic (domyślnie: https://api.anthropic.com)",
-    "anthropic_model_description": "Modele Anthropic Claude do czatu",
-    "voyage_settings": "Ustawienia Voyage AI",
-    "ollama_settings": "Ustawienia Ollama",
-    "ollama_url_description": "URL dla API Ollama (domyślnie: http://localhost:11434)",
-    "ollama_model_description": "Model Ollama do użycia w czacie",
-    "anthropic_configuration": "Konfiguracja Anthropic",
-    "voyage_configuration": "Konfiguracja Voyage AI",
-    "voyage_url_description": "Domyślnie: https://api.voyageai.com/v1",
-    "ollama_configuration": "Konfiguracja Ollama",
-    "enable_ollama": "Włącz Ollama",
-    "enable_ollama_description": "Włącz Ollama do lokalnego użycia modeli AI",
-    "ollama_url": "URL Ollama",
-    "ollama_model": "Model Ollama",
-    "refresh_models": "Odśwież modele",
-    "refreshing_models": "Odświeżanie...",
-    "enable_automatic_indexing": "Włącz automatyczne indeksowanie",
-    "rebuild_index": "Przebuduj indeks",
-    "rebuild_index_error": "Błąd podczas rozpoczynania przebudowy indeksu. Sprawdź logi po szczegóły.",
-    "max_notes_per_llm_query_description": "Maksymalna liczba podobnych notatek do uwzględnienia w kontekście AI",
-    "active_providers": "Aktywni dostawcy",
-    "disabled_providers": "Wyłączeni dostawcy",
-    "remove_provider": "Usuń dostawcę z wyszukiwania",
-    "restore_provider": "Przywróć dostawcę do wyszukiwania",
-    "similarity_threshold": "Próg podobieństwa",
-    "not_started": "Nie rozpoczęto",
-    "title": "Ustawienia AI",
-    "processed_notes": "Przetworzone notatki",
-    "total_notes": "Łącznie notatek",
-    "progress": "Postęp",
-    "similarity_threshold_description": "Minimalny wynik podobieństwa (0-1) dla notatek, które mają być uwzględnione w kontekście zapytań LLM",
-    "reprocess_index": "Przebuduj indeks wyszukiwania",
-    "reprocessing_index": "Przebudowywanie...",
-    "reprocess_index_started": "Optymalizacja indeksu wyszukiwania rozpoczęta w tle",
-    "reprocess_index_error": "Błąd podczas przebudowy indeksu wyszukiwania",
-    "index_rebuild_progress": "Postęp przebudowy indeksu",
-    "index_rebuilding": "Optymalizacja indeksu ({{percentage}}%)",
-    "index_rebuild_complete": "Optymalizacja indeksu zakończona",
-    "index_rebuild_status_error": "Błąd podczas sprawdzania statusu przebudowy indeksu",
-    "never": "Nigdy",
-    "processing": "Przetwarzanie ({{percentage}}%)",
-    "incomplete": "Niekompletne ({{percentage}}%)",
-    "complete": "Zakończone (100%)",
-    "refreshing": "Odświeżanie...",
-    "auto_refresh_notice": "Automatyczne odświeżanie co {{seconds}} sekund",
-    "note_queued_for_retry": "Notatka zakolejkowana do ponowienia",
-    "failed_to_retry_note": "Nie udało się ponowić notatki",
-    "all_notes_queued_for_retry": "Wszystkie nieudane notatki zakolejkowane do ponowienia",
-    "failed_to_retry_all": "Nie udało się ponowić notatek",
-    "ai_settings": "Ustawienia AI",
-    "api_key_tooltip": "Klucz API do dostępu do usługi",
-    "empty_key_warning": {
-      "anthropic": "Klucz API Anthropic jest pusty. Proszę wprowadzić poprawny klucz API.",
-      "openai": "Klucz API OpenAI jest pusty. Proszę wprowadzić poprawny klucz API.",
-      "voyage": "Klucz API Voyage jest pusty. Proszę wprowadzić poprawny klucz API.",
-      "ollama": "Klucz API Ollama jest pusty. Proszę wprowadzić poprawny klucz API."
-    },
-    "agent": {
-      "processing": "Przetwarzanie...",
-      "thinking": "Myślę...",
-      "loading": "Ładowanie...",
-      "generating": "Generowanie..."
-    },
-    "name": "AI",
-    "openai": "OpenAI",
-    "use_enhanced_context": "Użyj rozszerzonego kontekstu",
-    "enhanced_context_description": "Dostarcza AI więcej kontekstu z notatki i jej powiązanych notatek dla lepszych odpowiedzi",
-    "show_thinking": "Pokaż proces myślenia",
-    "show_thinking_description": "Pokaż ciąg myślowy AI",
-    "enter_message": "Wpisz swoją wiadomość...",
-    "error_contacting_provider": "Błąd połączenia z dostawcą AI. Sprawdź swoje ustawienia i połączenie internetowe.",
-    "error_generating_response": "Błąd generowania odpowiedzi AI",
-    "sources": "Źródła",
-    "start_indexing": "Rozpocznij indeksowanie",
-    "use_advanced_context": "Użyj zaawansowanego kontekstu",
-    "ollama_no_url": "Ollama nie jest skonfigurowana. Proszę wprowadzić poprawny URL.",
-    "chat": {
-      "root_note_title": "Czaty AI",
-      "root_note_content": "Ta notatka zawiera twoje zapisane rozmowy czatu AI.",
-      "new_chat_title": "Nowy czat",
-      "create_new_ai_chat": "Utwórz nowy czat AI"
-    },
-    "create_new_ai_chat": "Utwórz nowy czat AI",
-    "configuration_warnings": "Istnieją pewne problemy z twoją konfiguracją AI. Proszę sprawdzić ustawienia.",
-    "experimental_warning": "Funkcja LLM jest obecnie eksperymentalna - zostałeś ostrzeżony.",
-    "selected_provider": "Wybrany dostawca",
-    "selected_provider_description": "Wybierz dostawcę AI dla funkcji czatu i uzupełniania",
-    "select_model": "Wybierz model...",
-    "select_provider": "Wybierz dostawcę...",
-    "ai_enabled": "Funkcje AI włączone",
-    "ai_disabled": "Funkcje AI wyłączone",
-    "no_models_found_online": "Nie znaleziono modeli. Proszę sprawdzić klucz API i ustawienia.",
-    "no_models_found_ollama": "Nie znaleziono modeli Ollama. Proszę sprawdzić, czy Ollama jest uruchomiona.",
-    "error_fetching": "Błąd pobierania modeli: {{error}}"
   },
   "prompt": {
     "title": "Monit",
@@ -1376,7 +1236,7 @@
     "no_attachments": "Ta notatka nie ma załączników."
   },
   "book": {
-    "no_children_help": "Ta kolekcja nie posiada żadnych notatek podrzędnych, więc nie ma nic do wyświetlenia. Zobacz <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a> po szczegóły.",
+    "no_children_help": "Ta kolekcja nie zawiera notatek podrzędnych, więc nie ma nic do wyświetlenia.",
     "drag_locked_title": "Zablokowane do edycji",
     "drag_locked_message": "Przeciąganie niedozwolone, ponieważ kolekcja jest zablokowana do edycji."
   },
@@ -1415,7 +1275,6 @@
     "unprotecting-title": "Status zdejmowania ochrony"
   },
   "relation_map": {
-    "open_in_new_tab": "Otwórz w nowej karcie",
     "remove_note": "Usuń notatkę",
     "edit_title": "Edytuj tytuł",
     "rename_note": "Zmień nazwę notatki",
@@ -1431,15 +1290,6 @@
     "enter_title_of_new_note": "Wprowadź tytuł nowej notatki",
     "default_new_note_title": "nowa notatka",
     "click_on_canvas_to_place_new_note": "Kliknij na płótnie, aby umieścić nową notatkę"
-  },
-  "render": {
-    "note_detail_render_help_1": "Ta notatka pomocy jest wyświetlana, ponieważ ta notatka typu Render HTML nie ma wymaganej relacji do poprawnego działania.",
-    "note_detail_render_help_2": "Typ notatki Render HTML jest używany do <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">skryptowania</a>. W skrócie, masz notatkę kodu HTML (opcjonalnie z JavaScript) i ta notatka ją wyrenderuje. Aby to zadziałało, musisz zdefiniować <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relację</a> o nazwie \"renderNote\" wskazującą na notatkę HTML do wyrenderowania."
-  },
-  "web_view": {
-    "web_view": "Widok WWW",
-    "embed_websites": "Notatka typu Widok WWW pozwala na osadzanie stron internetowych w Trilium.",
-    "create_label": "Aby rozpocząć, utwórz etykietę z adresem URL, który chcesz osadzić, np. #webViewSrc=\"https://www.google.com\""
   },
   "backend_log": {
     "refresh": "Odśwież"
@@ -1636,7 +1486,7 @@
     "custom_name_label": "Nazwa niestandardowej wyszukiwarki",
     "custom_name_placeholder": "Dostosuj nazwę wyszukiwarki",
     "custom_url_label": "URL niestandardowej wyszukiwarki powinien zawierać {keyword} jako symbol zastępczy dla wyszukiwanej frazy.",
-    "custom_url_placeholder": "Dostosuj URL wyszukiwarki",
+    "custom_url_placeholder": "Dostosuj url wyszukiwarki",
     "save_button": "Zapisz"
   },
   "tray": {
@@ -1806,7 +1656,8 @@
     "description": "Opis",
     "reload_app": "Przeładuj aplikację, aby zastosować zmiany",
     "set_all_to_default": "Ustaw wszystkie skróty na domyślne",
-    "confirm_reset": "Czy na pewno chcesz zresetować wszystkie skróty klawiszowe do domyślnych?"
+    "confirm_reset": "Czy na pewno chcesz zresetować wszystkie skróty klawiszowe do domyślnych?",
+    "no_results": "Nie znaleziono skrótów pasujących do '{{filter}}'"
   },
   "spellcheck": {
     "title": "Sprawdzanie pisowni",
@@ -1928,7 +1779,8 @@
     "ai-chat": "Czat AI",
     "task-list": "Lista zadań",
     "new-feature": "Nowość",
-    "collections": "Kolekcje"
+    "collections": "Kolekcje",
+    "spreadsheet": "Arkusz"
   },
   "protect_note": {
     "toggle-on": "Chroń notatkę",
@@ -2013,7 +1865,9 @@
     "print_report_collection_content_few": "Nie można wydrukować {{count}} notatek w kolekcji, ponieważ nie są one obsługiwane lub są chronione.",
     "print_report_collection_content_many": "Nie można wydrukować {{count}} notatek w kolekcji, ponieważ nie są one obsługiwane lub są chronione.",
     "print_report_collection_details_button": "Zobacz szczegóły",
-    "print_report_collection_details_ignored_notes": "Zignorowane notatki"
+    "print_report_collection_details_ignored_notes": "Zignorowane notatki",
+    "print_report_error_title": "Nie udało się wydrukować",
+    "print_report_stack_trace": "Ślad stosu"
   },
   "note_title": {
     "placeholder": "wpisz tytuł notatki tutaj...",
@@ -2028,7 +1882,8 @@
   },
   "search_result": {
     "no_notes_found": "Nie znaleziono notatek dla podanych parametrów wyszukiwania.",
-    "search_not_executed": "Wyszukiwanie nie zostało jeszcze wykonane. Kliknij przycisk \"Szukaj\" powyżej, aby zobaczyć wyniki."
+    "search_not_executed": "Nie przeprowadzono jeszcze wyszukiwania.",
+    "search_now": "Szukaj teraz"
   },
   "spacer": {
     "configure_launchbar": "Konfiguruj pasek szybkiego dostępu"
@@ -2298,5 +2153,96 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Zakładki"
+  },
+  "render": {
+    "setup_title": "Wyświetl własny kod HTML lub Preact JSX w tej notatce",
+    "setup_create_sample_preact": "Stwórz przykładową notatkę z użyciem Preact",
+    "setup_create_sample_html": "Stwórz przykładową notatkę z użyciem HTML",
+    "setup_sample_created": "Utworzono przykładową notatkę jako notatkę podrzędną.",
+    "disabled_description": "Ta notatka pochodzi z zewnętrznego źródła. Ze względów bezpieczeństwa funkcja ta nie jest domyślnie włączona. Upewnij się, że ufasz źródłu, zanim ją aktywujesz.",
+    "disabled_button_enable": "Włącz renderowanie notatki"
+  },
+  "web_view_setup": {
+    "title": "Utwórz podgląd strony na żywo bezpośrednio w Trilium",
+    "url_placeholder": "Wpisz lub wklej adres strony internetowej, na przykład https://triliumnotes.org",
+    "create_button": "Utwórz widok strony",
+    "invalid_url_title": "Nieprawidłowy adres",
+    "invalid_url_message": "Wprowadź prawidłowy adres strony, na przykład https://triliumnotes.org.",
+    "disabled_description": "Ten widok strony został zaimportowany z zewnętrznego źródła. Aby chronić Cię przed phishingiem lub szkodliwą zawartością, nie jest on ładowany automatycznie. Możesz go włączyć, jeśli ufasz źródłu.",
+    "disabled_button_enable": "Włącz widok strony"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Pakiet ikon",
+    "type_backend_script": "Skrypt po stronie serwera",
+    "type_frontend_script": "Skrypt po stronie klienta",
+    "type_widget": "Widżet",
+    "type_app_css": "Niestandardowy CSS",
+    "type_render_note": "Renderuj notatkę",
+    "type_web_view": "Widok strony",
+    "type_app_theme": "Własny motyw",
+    "toggle_tooltip_enable_tooltip": "Kliknij, aby włączyć {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Kliknij, aby wyłączyć {{type}}.",
+    "menu_docs": "Otwórz dokumentację",
+    "menu_execute_now": "Uruchom skrypt teraz",
+    "menu_run": "Uruchamiaj automatycznie",
+    "menu_run_disabled": "Ręcznie",
+    "menu_run_backend_startup": "Podczas uruchamiania backendu",
+    "menu_run_hourly": "Co godzinę",
+    "menu_run_daily": "Codziennie",
+    "menu_run_frontend_startup": "Podczas uruchamiania desktopowego frontendu",
+    "menu_run_mobile_startup": "Podczas uruchamiania mobilnego frontendu",
+    "menu_change_to_widget": "Zmień na widżet",
+    "menu_change_to_frontend_script": "Zmień na skrypt frontendowy",
+    "menu_theme_base": "Baza motywu"
+  },
+  "setup_form": {
+    "more_info": "Dowiedz się więcej"
+  },
+  "media": {
+    "fullscreen": "Pełny ekran (F)",
+    "mute": "Wycisz (M)",
+    "unmute": "Wyłącz wyciszenie (M)",
+    "exit-fullscreen": "Wyłącz pełny ekran",
+    "loop": "Pętla",
+    "disable-loop": "Wyłącz pętle",
+    "rotate": "Obróć",
+    "picture-in-picture": "Obraz w obrazie",
+    "pause": "Zatrzymaj (Space)",
+    "back-10s": "Cofnij 10s (Lewa strzałka)",
+    "forward-30s": "Do przodu 30s",
+    "playback-speed": "Szybkość odtwarzania",
+    "exit-picture-in-picture": "Wyjdź z obrazu w obrazie",
+    "zoom-to-fit": "Powiększ aby wypełnić",
+    "unsupported-format": "Podgląd multimediów nie jest dostępny dla tego formatu pliku\n{{mime}}",
+    "play": "Odtwórz (Space)",
+    "zoom-reset": "Zresetuj powiększenie"
+  },
+  "mermaid": {
+    "sample_architecture": "Architektura",
+    "sample_diagrams": "Przykład diagramu:",
+    "sample_flowchart": "Schemat blokowy",
+    "sample_class": "Klasa",
+    "sample_sequence": "Sekwencja",
+    "sample_timeline": "Oś czasu",
+    "sample_treemap": "Mapa drzewa",
+    "sample_xy": "XY",
+    "sample_venn": "Diagram Venna",
+    "sample_ishikawa": "Diagram Ishikawa",
+    "placeholder": "Wpisz treść swojego diagramu lub skorzystaj z jednego z przykładowych diagramów poniżej.",
+    "sample_entity_relationship": "Diagram związków encji",
+    "sample_state": "Diagram stanów",
+    "sample_mindmap": "Mapa myśli",
+    "sample_block": "Diagram blokowy",
+    "sample_c4": "C4",
+    "sample_gantt": "Wykres Gantta",
+    "sample_git": "Diagram Git",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Diagram pakietów",
+    "sample_pie": "Wykres kołowy",
+    "sample_quadrant": "Diagram kwadrantowy",
+    "sample_radar": "Wykres radarowy",
+    "sample_requirement": "Diagram wymagań",
+    "sample_sankey": "Wykres Sankeya",
+    "sample_user_journey": "Mapa Podróży Użytkownika"
   }
 }

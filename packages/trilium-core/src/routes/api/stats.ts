@@ -26,7 +26,7 @@ function getNoteSize(req: Request) {
     } satisfies NoteSizeResponse;
 }
 
-function getSubtreeSize(req: Request) {
+function getSubtreeSize(req: Request<{ noteId: string }>) {
     const note = becca.getNoteOrThrow(req.params.noteId);
     const subTreeNoteIds = note.getSubtreeNoteIds();
     const sql = getSql();

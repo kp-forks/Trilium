@@ -257,7 +257,7 @@
     "collapseExpand": "свернуть/развернуть узел",
     "notSet": "не установлено",
     "goBackForwards": "назад / вперед в истории",
-    "showJumpToNoteDialog": "показать <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">окно \"Перейти к\"</a>",
+    "showJumpToNoteDialog": "Перейти к <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"Перейти к\" окно</a>",
     "scrollToActiveNote": "прокрутка к активной заметке",
     "jumpToParentNote": "переход к родительской заметке",
     "collapseWholeTree": "свернуть все дерево заметок",
@@ -471,7 +471,7 @@
     "calendar_root": "отмечает заметку, которая должна использоваться в качестве корневой для заметок дня. Только одна должна быть отмечена как таковая.",
     "archived": "заметки с этой меткой не будут отображаться в результатах поиска по умолчанию (а также в диалоговых окнах «Перейти к», «Добавить ссылку» и т. д.).",
     "exclude_from_export": "заметки (с их поддеревьями) не будут включены ни в один экспорт заметок",
-    "run": "определяет, при каких событиях должен запускаться скрипт. Возможные значения:\n<ul>\n<li>frontendStartup — при запуске (или обновлении) фронтенда Trilium, но не на мобильном устройстве.</li>\n<li>mobileStartup — при запуске (или обновлении) фронтенда Trilium на мобильном устройстве.</li>\n<li>backendStartup — при запуске бэкенда Trilium.</li>\n<li>hourly — запускать каждый час. Для указания времени можно использовать дополнительную метку <code>runAtHour</code>.</li>\n<li>daily — запускать раз в день.</li>\n</ul>",
+    "run": "определяет, при каких событиях должен запускаться скрипт. Возможные значения:<ul>\n<li>frontendStartup — при запуске (или обновлении) фронтенда Trilium, но не на мобильном устройстве.</li>\n<li>mobileStartup — при запуске (или обновлении) фронтенда Trilium на мобильном устройстве.</li>\n<li>backendStartup — при запуске бэкенда Trilium.</li>\n<li>hourly — запускать каждый час. Для указания времени можно использовать дополнительную метку <code>runAtHour</code>.</li>\n<li>daily — запускать раз в день.</li></ul>",
     "run_on_instance": "Определить, на каком экземпляре Trilium это должно выполняться. По умолчанию — для всех экземпляров.",
     "run_at_hour": "В какой час это должно выполняться? Следует использовать вместе с <code>#run=hourly</code>. Можно задать несколько раз для большего количества запусков в течение дня.",
     "disable_inclusion": "скрипты с этой меткой не будут включены в выполнение родительского скрипта.",
@@ -594,7 +594,8 @@
     "display-week-numbers": "Отображать номера недель",
     "hide-weekends": "Скрыть выходные",
     "raster": "Растр",
-    "show-scale": "Показать масштаб"
+    "show-scale": "Показать масштаб",
+    "show-labels": "Показать названия маркеров"
   },
   "editorfeatures": {
     "note_completion_enabled": "Включить автодополнение",
@@ -668,7 +669,8 @@
   "geo-map": {
     "unable-to-load-map": "Не удалось загрузить карту.",
     "create-child-note-instruction": "Щелкните по карте, чтобы создать новую заметку в этом месте, или нажмите Escape, чтобы закрыть ее.",
-    "create-child-note-title": "Создать новую дочернюю заметку и добавить ее на карту"
+    "create-child-note-title": "Создать новую дочернюю заметку и добавить ее на карту",
+    "create-child-note-text": "Добавить маркер"
   },
   "note_tooltip": {
     "quick-edit": "Быстрое редактирование",
@@ -685,8 +687,8 @@
   "electron_integration": {
     "zoom-factor": "Коэффициент масштабирования",
     "restart-app-button": "Применить изменения и перезапустить приложение",
-    "background-effects-description": "Эффект Mica добавляет размытый, стильный фон окнам приложений, создавая глубину и современный вид. Опция \"Системная строка заголовка\" должна быть отключена.",
-    "background-effects": "Включить фоновые эффекты (только Windows 11)",
+    "background-effects-description": "Добавляет размытый, стильный фон окнам приложений, создавая глубину и современный вид. Опция \"Системная строка заголовка\" должна быть отключена.",
+    "background-effects": "Включить фоновые эффекты",
     "native-title-bar-description": "В Windows и macOS отключение системной строки заголовка делает приложение более компактным. В Linux включение системной строки заголовка улучшает интеграцию с остальной частью системы.",
     "native-title-bar": "Системная панель заголовка",
     "desktop-application": "Десктопное приложение"
@@ -707,6 +709,7 @@
     "paste": "Вставить",
     "copy-link": "Скопировать ссылку",
     "copy": "Скопировать",
+    "copy-as-markdown": "Копировать как Markdown",
     "cut": "Вырезать",
     "search_online": "Поиск \"{{term}}\" в {{searchEngine}}",
     "add-term-to-dictionary": "Добавить \"{{term}}\" в словарь",
@@ -776,7 +779,17 @@
     "refresh-saved-search-results": "Обновить сохраненные результаты поиска",
     "automatically-collapse-notes-title": "Заметки будут свернуты после определенного периода бездействия, чтобы навести порядок в дереве.",
     "toggle-sidebar": "Переключить боковую панель",
-    "dropping-not-allowed": "Перетаскивание заметок в эту область не разрешено."
+    "dropping-not-allowed": "Перетаскивание заметок в эту область не разрешено.",
+    "shared-indicator-tooltip": "Эта заметка опубликована",
+    "shared-indicator-tooltip-with-url": "Эта заметка доступно публично по адресу: {{- url}}",
+    "subtree-hidden-moved-description-other": "В дереве, к которому относится эта заметка, скрыты дочерние заметки.",
+    "subtree-hidden-moved-description-collection": "Эта коллекция скрывает свои дочерние заметки в дереве.",
+    "clone-indicator-tooltip": "У этой заметки {{- count}} родителей: {{- parents}}",
+    "clone-indicator-tooltip-single": "Эта заметка клонирована (1 дополнительный родитель: {{- parent}})",
+    "subtree-hidden-moved-title": "Добавлено в {{title}}",
+    "subtree-hidden-tooltip_one": "{{count}} дочерняя заметка скрыта",
+    "subtree-hidden-tooltip_few": "Скрыто {{count}} дочерних заметок",
+    "subtree-hidden-tooltip_many": "Скрыто {{count}} дочерних заметок"
   },
   "quick-search": {
     "no-results": "Результаты не найдены",
@@ -819,9 +832,10 @@
     "web-view": "Веб-страница",
     "mind-map": "Mind Map",
     "geo-map": "Географическая карта",
-    "ai-chat": "ИИ Чат",
     "task-list": "Список задач",
-    "confirm-change": "Не рекомендуется менять тип заметки, если её содержимое не пустое. Вы всё равно хотите продолжить?"
+    "confirm-change": "Не рекомендуется менять тип заметки, если её содержимое не пустое. Вы всё равно хотите продолжить?",
+    "ai-chat": "Чат с ИИ",
+    "spreadsheet": "Электронная таблица"
   },
   "tree-context-menu": {
     "open-in-popup": "Быстрое редактирование",
@@ -856,7 +870,10 @@
     "convert-to-attachment-confirm": "Вы уверены, что хотите преобразовать выбранные заметки во вложения их родительских заметок? Эта операция применяется только к заметкам в виде изображений; другие заметки будут пропущены.",
     "converted-to-attachments": "{{count}} заметок были преобразованы во вложения.",
     "archive": "Архивировать",
-    "unarchive": "Разархивировать"
+    "unarchive": "Разархивировать",
+    "open-in-a-new-window": "Открыть в новом окне",
+    "hide-subtree": "Скрыть поддерево",
+    "show-subtree": "Показать поддерево"
   },
   "info": {
     "closeButton": "Закрыть",
@@ -1000,7 +1017,8 @@
     "switch_to_mobile_version": "Перейти на мобильную версию",
     "switch_to_desktop_version": "Переключиться на версию для ПК",
     "new-version-available": "Доступно обновление",
-    "download-update": "Обновить до {{latestVersion}}"
+    "download-update": "Обновить до {{latestVersion}}",
+    "search_notes": "Поиск заметок"
   },
   "zpetne_odkazy": {
     "relation": "отношение",
@@ -1047,7 +1065,8 @@
     "expand_all_levels": "Развернуть все вложенные уровни",
     "expand_nth_level": "Развернуть уровни: {{depth}} шт.",
     "expand_first_level": "Развернуть прямые дочерние уровни",
-    "expand_tooltip": "Разщвернуть дочерние элементы этой коллекции (на один уровень вложенности). Для получения дополнительных параметров нажмите стрелку справа."
+    "expand_tooltip": "Разщвернуть дочерние элементы этой коллекции (на один уровень вложенности). Для получения дополнительных параметров нажмите стрелку справа.",
+    "hide_child_notes": "Скрыть дочерние заметки в дереве"
   },
   "edited_notes": {
     "deleted": "(удалено)",
@@ -1143,7 +1162,8 @@
     "search_note_saved": "Заметка с настройкой поиска сохранена в {{- notePathTitle}}",
     "unknown_search_option": "Неизвестный параметр поиска {{searchOptionName}}",
     "actions_executed": "Действия выполнены.",
-    "view_options": "Просмотреть опции:"
+    "view_options": "Просмотреть опции:",
+    "option": "опция"
   },
   "ancestor": {
     "depth_label": "глубина",
@@ -1246,149 +1266,6 @@
     "enabled": "включено",
     "disabled": "выключено",
     "title": "Системная панель заголовка (требует перезапуска приложения)"
-  },
-  "ai_llm": {
-    "progress": "Прогресс",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "ollama_tab": "Ollama",
-    "temperature": "Температура",
-    "model": "Модель",
-    "refreshing_models": "Обновление...",
-    "error": "Ошибка",
-    "actions": "Действия",
-    "retry": "Повторить",
-    "never": "Никогда",
-    "refreshing": "Обновление...",
-    "agent": {
-      "processing": "Обработка...",
-      "thinking": "Думаю...",
-      "loading": "Загрузка...",
-      "generating": "Создание..."
-    },
-    "name": "AI",
-    "openai": "OpenAI",
-    "sources": "Источники",
-    "reprocessing_index": "Перестройка индекса...",
-    "processed_notes": "Обработанные заметки",
-    "total_notes": "Всего заметок",
-    "queued_notes": "Заметок в очереди",
-    "failed_notes": "Заметки с ошибками обработки",
-    "last_processed": "Последние обработанные",
-    "refresh_stats": "Обновить статистику",
-    "voyage_tab": "Voyage AI",
-    "system_prompt": "Системный промпт",
-    "openai_configuration": "Конфигурация OpenAI",
-    "openai_settings": "Настройки OpenAI",
-    "api_key": "Ключ API",
-    "url": "Базовый URL",
-    "default_model": "Модель по умолчанию",
-    "base_url": "Базовый URL",
-    "openai_url_description": "По умолчанию: https://api.openai.com/v1",
-    "anthropic_settings": "Настройки Anthropic",
-    "ollama_settings": "Настройки Ollama",
-    "anthropic_configuration": "Конфигурация Anthropic",
-    "voyage_url_description": "По умолчанию: https://api.voyageai.com/v1",
-    "ollama_configuration": "Конфигурация Ollama",
-    "enable_ollama": "Включить Ollama",
-    "ollama_url": "URL Ollama",
-    "ollama_model": "Модель Ollama",
-    "refresh_models": "Обновить модели",
-    "rebuild_index": "Пересобрать индекс",
-    "note_title": "Название заметки",
-    "last_attempt": "Последняя попытка",
-    "active_providers": "Активные провайдеры",
-    "disabled_providers": "Отключенные провайдеры",
-    "similarity_threshold": "Порок сходства",
-    "processing": "Обработка ({{percentage}}%)",
-    "incomplete": "Не завершено ({{percentage}}%)",
-    "complete": "Завершено (100%)",
-    "ai_settings": "Настройки AI",
-    "show_thinking": "Отображать размышление",
-    "index_status": "Статус индексирования",
-    "indexed_notes": "Проиндексированные заметки",
-    "indexing_stopped": "Индексирование остановлено",
-    "last_indexed": "Индексировано в последний раз",
-    "note_chat": "Чат по заметке",
-    "start_indexing": "Начать индексирование",
-    "chat": {
-      "root_note_title": "Чаты с AI",
-      "new_chat_title": "Новый чат",
-      "create_new_ai_chat": "Создать новый чат с ИИ",
-      "root_note_content": "В этой заметке содержатся сохраненные вами разговоры в чате ИИ."
-    },
-    "selected_provider": "Выбранный провайдер",
-    "select_model": "Выбрать модель...",
-    "select_provider": "Выбрать провайдера...",
-    "title": "Настройки AI",
-    "voyage_settings": "Настройки Voyage AI",
-    "error_contacting_provider": "Ошибка подключения к провайдеру AI. Проверьте настройки и подключение к интернету.",
-    "configuration_warnings": "Возникли проблемы с конфигурацией AI. Проверьте настройки.",
-    "selected_provider_description": "Выберите провайдер AI для функций чата и автодополнения",
-    "provider_configuration": "Конфигурация провайдера AI",
-    "ollama_url_description": "URL для API Ollama (по умолчанию: http://localhost:11434)",
-    "ollama_model_description": "Модель Ollama для автодополнения чата",
-    "temperature_description": "Контролирует случайность ответов (0 = детерминированный, 2 = максимальная случайность)",
-    "system_prompt_description": "Системный промпт по умолчанию, используемый для всех взаимодействий с ИИ",
-    "empty_key_warning": {
-      "openai": "Ключ API OpenAI пуст. Введите действительный ключ API.",
-      "ollama": "API-ключ Ollama пуст. Введите действительный API-ключ.",
-      "voyage": "Ключ API Voyage пуст. Введите действительный ключ API.",
-      "anthropic": "Ключ API Anthropic пуст. Введите действительный ключ API."
-    },
-    "openai_api_key_description": "Ваш ключ API OpenAI для доступа к их службам ИИ",
-    "provider_precedence_description": "Список провайдеров, разделенных запятыми, в порядке приоритета (например, \"openai,anthropic,ollama\")",
-    "remove_provider": "Удалить провайдер из поиска",
-    "not_started": "Не запущено",
-    "provider_precedence": "Приоритет провайдера",
-    "enable_ai_features": "Включить функции AI/LLM",
-    "enable_ai": "Включить функции AI/LLM",
-    "voyage_configuration": "Конфигурация Voyage AI",
-    "enable_automatic_indexing": "Включить автоматическое индексирование",
-    "reprocess_index": "Перестроить индекс поиска",
-    "index_rebuild_progress": "Прогресс перестройки индекса",
-    "index_rebuilding": "Оптимизация индекса ({{percentage}}%)",
-    "index_rebuild_complete": "Оптимизация индекса завершена",
-    "use_enhanced_context": "Использовать улучшенный контекст",
-    "enter_message": "Введите ваше сообщение...",
-    "index_all_notes": "Индексировать все заметки",
-    "indexing_in_progress": "Индексация в процессе...",
-    "use_advanced_context": "Использовать расширенный контекст",
-    "openai_model_description": "Примеры: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "partial": "{{ percentage }}% завершено",
-    "retry_queued": "Примечание поставлено в очередь на повторную попытку",
-    "max_notes_per_llm_query": "Макс. количество заметок на запрос",
-    "reprocess_index_error": "Ошибка перестройки поискового индекса",
-    "auto_refresh_notice": "Автоматически обновляется каждые {{seconds}} секунд",
-    "note_queued_for_retry": "Заметка поставлена в очередь на повторную попытку",
-    "failed_to_retry_note": "Не удалось повторить попытку",
-    "failed_to_retry_all": "Не удалось повторить попытку",
-    "error_generating_response": "Ошибка генерации ответа ИИ",
-    "create_new_ai_chat": "Создать новый чат с ИИ",
-    "ai_enabled": "Возможности ИИ активны",
-    "ai_disabled": "Возможности ИИ неактивны",
-    "restore_provider": "Восстановить значение провайдера",
-    "error_fetching": "Ошибка получения списка моделей: {{error}}",
-    "index_rebuild_status_error": "Ошибка проверки статуса перестроения индекса",
-    "enhanced_context_description": "Предоставляет ИИ больше контекста из заметки и связанных с ней заметок для более точных ответов",
-    "no_models_found_ollama": "Модели Ollama не найдены. Проверьте, запущена ли Ollama.",
-    "no_models_found_online": "Модели не найдены. Проверьте ваш ключ API и настройки.",
-    "experimental_warning": "Функция LLM в настоящее время является экспериментальной — вы предупреждены.",
-    "ollama_no_url": "Ollama не настроена. Введите корректный URL-адрес.",
-    "show_thinking_description": "Показать цепочку мыслительного процесса ИИ",
-    "api_key_tooltip": "API-ключ для доступа к сервису",
-    "all_notes_queued_for_retry": "Все неудачные заметки поставлены в очередь на повторную попытку",
-    "reprocess_index_started": "Оптимизация поискового индекса запущена в фоновом режиме",
-    "similarity_threshold_description": "Минимальный показатель сходства (similarity score, 0–1) для заметок, которые следует включить в контекст запросов LLM",
-    "max_notes_per_llm_query_description": "Максимальное количество похожих заметок для включения в контекст ИИ",
-    "retry_failed": "Не удалось поставить заметку в очередь для повторной попытки",
-    "rebuild_index_error": "Ошибка при запуске перестроения индекса. Подробности смотрите в логах.",
-    "enable_ollama_description": "Включить Ollama для использования локальной модели ИИ",
-    "anthropic_model_description": "Модели Anthropic Claude для автодополнения чата",
-    "anthropic_url_description": "Базовый URL для Anthropic API (по умолчанию: https://api.anthropic.com)",
-    "anthropic_api_key_description": "Ваш ключ Anthropic API для доступа к моделям Claude",
-    "enable_ai_desc": "Включить функции ИИ, такие как резюмирование заметок, генерация контента и другие возможности LLM",
-    "enable_ai_description": "Включить функции ИИ, такие как резюмирование заметок, генерация контента и другие возможности LLM"
   },
   "code-editor-options": {
     "title": "Редактор"
@@ -1536,7 +1413,8 @@
     "type_text_to_filter": "Введите текст для фильтрации сочетаний клавиш...",
     "reload_app": "Перезагрузить приложение, чтобы применить изменения",
     "confirm_reset": "Вы действительно хотите сбросить все сочетания клавиш до значений по умолчанию?",
-    "set_all_to_default": "Установить все сочетания клавиш по умолчанию"
+    "set_all_to_default": "Установить все сочетания клавиш по умолчанию",
+    "no_results": "Не найдено ярлыков, соответствующих '{{filter}}'"
   },
   "sync_2": {
     "timeout_unit": "миллисекунд",
@@ -1692,7 +1570,7 @@
     "zoom_in_title": "Увеличить масштаб",
     "zoom_out_title": "Уменьшить масштаб",
     "reset_pan_zoom_title": "Сбросить панорамирование и масштабирование",
-    "create_child_note_title": "Создать новую дочернюю заметку и добавить ее в эту карту связей"
+    "create_child_note_title": "Создать дочернюю заметку и добавить ее в карту"
   },
   "code_auto_read_only_size": {
     "unit": "символов",
@@ -1747,7 +1625,6 @@
     "rename_note": "Переименовать заметку",
     "remove_relation": "Удалить отношение",
     "default_new_note_title": "новая заметка",
-    "open_in_new_tab": "Открыть в новой вкладке",
     "confirm_remove_relation": "Вы уверены, что хотите удалить связь?",
     "enter_new_title": "Введите новое название заметки:",
     "note_not_found": "Заметка {{noteId}} не найдена!",
@@ -1845,7 +1722,9 @@
     "error_cannot_get_branch_id": "Невозможно получить branchId для notePath '{{notePath}}'",
     "delete_this_note": "Удалить эту заметку",
     "insert_child_note": "Вставить дочернюю заметку",
-    "note_revisions": "История изменений"
+    "note_revisions": "История изменений",
+    "content_language_switcher": "Язык содержимого: {{language}}",
+    "backlinks": "Ссылки"
   },
   "svg_export_button": {
     "button_title": "Экспортировать диаграмму как SVG"
@@ -1900,7 +1779,7 @@
     "dismiss": "Отклонить",
     "background_effects_button": "Включить эффекты фона",
     "next_theme_button": "Попробовать новую тему",
-    "background_effects_message": "На устройствах Windows фоновые эффекты теперь полностью стабильны. Они добавляют цвет в пользовательский интерфейс, размывая фон за ним. Этот приём также используется в других приложениях, например, в проводнике Windows.",
+    "background_effects_message": "На устройствах с ОС Windows или macOS, фоновые эффекты теперь полностью стабильны. Они добавляют цвета в пользовательский интерфейс, размывая фон за ним.",
     "background_effects_title": "Фоновые эффекты теперь стабильны",
     "next_theme_title": "Попробуйте новую тему Trilium",
     "new_layout_button": "Подробнее",
@@ -1922,7 +1801,8 @@
   },
   "search_result": {
     "no_notes_found": "По заданным параметрам поиска заметки не найдены.",
-    "search_not_executed": "Поиск ещё не выполнен. Нажмите кнопку «Поиск» выше, чтобы увидеть результаты."
+    "search_not_executed": "Поиск ещё не выполнен.",
+    "search_now": "Искать сейчас"
   },
   "empty": {
     "search_placeholder": "поиск заметки по ее названию",
@@ -1987,11 +1867,6 @@
     "open_help_page": "Открыть справку по вложениям",
     "attachment_deleted": "Это вложение было удалено.",
     "you_can_also_open": ", вы также можете открыть "
-  },
-  "web_view": {
-    "web_view": "Веб-страница",
-    "create_label": "Для начала создайте метку с URL-адресом, который вы хотите встроить, например, #webViewSrc=\"https://www.google.com\"",
-    "embed_websites": "Заметки типа \"Веб-страница\" позволяет встраивать веб-сайты в Trilium."
   },
   "ribbon": {
     "widgets": "Виджеты ленты",
@@ -2075,10 +1950,6 @@
   "help-button": {
     "title": "Открыть соответствующую страницу справки"
   },
-  "render": {
-    "note_detail_render_help_2": "Тип заметки «Рендер HTML» используется для <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">скриптинга</a>. Если коротко, у вас есть заметка с HTML-кодом (возможно, с добавлением JavaScript), и эта заметка её отобразит. Для этого необходимо определить <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">отношение</a> с именем «renderNote», указывающее на HTML-заметку для отрисовки.",
-    "note_detail_render_help_1": "Эта справочная заметка отображается, поскольку эта справка типа Render HTML не имеет необходимой связи для правильной работы."
-  },
   "file": {
     "too_big": "В целях повышения производительности в режиме предварительного просмотра отображаются только первые {{maxNumChars}} символов файла. Загрузите файл и откройте его во внешнем браузере, чтобы увидеть всё содержимое.",
     "file_preview_not_available": "Предварительный просмотр файла недоступен для этого файла."
@@ -2094,7 +1965,11 @@
     "ui": "Пользовательский интерфейс"
   },
   "sql_result": {
-    "no_rows": "По этому запросу не возвращено ни одной строки"
+    "no_rows": "По этому запросу не возвращено ни одной строки",
+    "not_executed": "Запрос еще не выполнен.",
+    "failed": "Выполнение SQL-запроса завершилось с ошибкой",
+    "statement_result": "Результат заявления",
+    "execute_now": "Выполнить сейчас"
   },
   "editable_code": {
     "placeholder": "Введите содержимое для заметки с кодом..."
@@ -2125,10 +2000,12 @@
     "print_report_collection_content_few": "{{count}} заметки в коллекции не удалось распечатать, поскольку они не поддерживаются или защищены.",
     "print_report_collection_content_many": "{{count}} заметок в коллекции не удалось распечатать, поскольку они не поддерживаются или защищены.",
     "print_report_collection_details_button": "Подробнее",
-    "print_report_collection_details_ignored_notes": "Пропущенные заметки"
+    "print_report_collection_details_ignored_notes": "Пропущенные заметки",
+    "print_report_error_title": "Не удалось напечатать",
+    "print_report_stack_trace": "Трассировка стека"
   },
   "book": {
-    "no_children_help": "В этой коллекции нет дочерних заметок, поэтому отображать нечего. Подробности см. в <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a>.",
+    "no_children_help": "В этой коллекции нет дочерних заметок, поэтому отображать нечего.",
     "drag_locked_title": "Защищено от изменения",
     "drag_locked_message": "Перетаскивание не допускается, так как коллекция защищена от редактирования."
   },
@@ -2145,7 +2022,8 @@
   },
   "pagination": {
     "total_notes": "{{count}} заметок",
-    "page_title": "Страница {{startIndex}} - {{endIndex}}"
+    "prev_page": "Предыдущая страница",
+    "next_page": "Следующая страница"
   },
   "status_bar": {
     "attributes_one": "{{count}} атрибут",
@@ -2189,7 +2067,14 @@
     "read_only_auto_description": "Эта заметка была автоматически переведена в режим только для чтения по соображениям производительности. Это автоматическое ограничение можно изменить в настройках.\n\nНажмите, чтобы временно отредактировать её.",
     "read_only_auto": "Автоматический режим \"только для чтения\"",
     "read_only_explicit_description": "Эта заметка была вручную установлена в режим «только для чтения».\nНажмите, чтобы временно отредактировать её.",
-    "read_only_explicit": "Только для чтения"
+    "read_only_explicit": "Только для чтения",
+    "save_status_saving": "Сохранение...",
+    "save_status_saved": "Сохранение",
+    "save_status_unsaved": "Не сохранено",
+    "save_status_error": "Ошибка сохранения",
+    "save_status_saving_tooltip": "Изменения сохраняются.",
+    "save_status_unsaved_tooltip": "Есть несохраненные изменения. Они будут сохранены автоматически через некоторое время.",
+    "save_status_error_tooltip": "Произошла ошибка при сохранении заметки. Если возможно, попробуйте скопировать содержимое заметки в другое место и перезагрузить приложение."
   },
   "breadcrumb": {
     "hoisted_badge_title": "Снять фокус",
@@ -2243,5 +2128,74 @@
   },
   "attributes_panel": {
     "title": "Атрибуты заметки"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "Закладки"
+  },
+  "mobile_tab_switcher": {
+    "more_options": "Показать больше",
+    "title_one": "{{count}} вкладка",
+    "title_few": "{{count}} вкладки",
+    "title_many": "{{count}} вкладок"
+  },
+  "pdf": {
+    "pages_loading": "Загрузка...",
+    "pages_alt": "Страница {{pageNumber}}",
+    "pages_one": "{{count}} страница",
+    "pages_few": "{{count}} страницы",
+    "pages_many": "{{count}} страниц",
+    "layers_one": "{{count}} слой",
+    "layers_few": "{{count}} слоя",
+    "layers_many": "{{count}} слоев",
+    "attachments_one": "{{count}} вложение",
+    "attachments_few": "{{count}} вложения",
+    "attachments_many": "{{count}} вложений"
+  },
+  "platform_indicator": {
+    "available_on": "Доступно для {{platform}}"
+  },
+  "render": {
+    "setup_title": "Отобразить настраиваемый HTML или Preact JSX в этой заметке",
+    "setup_create_sample_preact": "Создать образец заметки с помощью Preact",
+    "setup_create_sample_html": "Создать образец заметки с помощью HTML",
+    "setup_sample_created": "Образец заметки был создан в качестве дочерней записи.",
+    "disabled_description": "Эти заметки для рендера поступают из внешнего источника. Чтобы защитить вас от вредоносного содержимого, они не включены по умолчанию. Убедитесь, что вы доверяете источнику до его включения.",
+    "disabled_button_enable": "Включить заметки для рендера"
+  },
+  "web_view_setup": {
+    "title": "Создайте живой просмотр веб-страницы прямо в Trilium",
+    "url_placeholder": "Введите или вставьте адрес сайта, например https://triliumnotes.org",
+    "create_button": "Создать веб-просмотр",
+    "invalid_url_title": "Неверный адрес",
+    "invalid_url_message": "Введите корректный веб-адрес, например https://triliumnotes.org.",
+    "disabled_description": "Этот веб-просмотр был импортирован из внешнего источника. Чтобы защитить вас от фишинга или вредоносного контента, он не загружается автоматически. Вы можете включить его, если доверяете источнику.",
+    "disabled_button_enable": "Включить просмотр веб-страниц"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Набор иконок",
+    "type_backend_script": "Бэкенд скрипт",
+    "type_frontend_script": "Фронтенд скрипт",
+    "type_widget": "Виджет",
+    "type_app_css": "Пользовательский CSS",
+    "type_render_note": "Заметка для рендера",
+    "type_web_view": "Просмотр веб-страницы",
+    "type_app_theme": "Пользовательская тема",
+    "toggle_tooltip_enable_tooltip": "Нажмите, чтобы включить этот {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Нажмите, чтобы выключить этот {{type}}.",
+    "menu_docs": "Открытая документация",
+    "menu_execute_now": "Выполнить скрипт сейчас",
+    "menu_run": "Выполнять автоматически",
+    "menu_run_disabled": "Вручную",
+    "menu_run_backend_startup": "При запуске бэкенда",
+    "menu_run_hourly": "Ежечасно",
+    "menu_run_daily": "Ежедневно",
+    "menu_run_frontend_startup": "Когда запускается интерфейс ПК",
+    "menu_run_mobile_startup": "При запуске мобильного интерфейса",
+    "menu_change_to_widget": "Изменить виджет",
+    "menu_change_to_frontend_script": "Перейти к фронтенд скрипту",
+    "menu_theme_base": "Базовая тема"
+  },
+  "setup_form": {
+    "more_info": "Узнать больше"
   }
 }

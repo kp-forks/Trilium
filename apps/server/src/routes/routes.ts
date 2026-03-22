@@ -18,7 +18,6 @@ import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
 import { isElectron } from "../services/utils.js";
 import shareRoutes from "../share/routes.js";
-import anthropicRoute from "./api/anthropic.js";
 import autocompleteApiRoute from "./api/autocomplete.js";
 import backendLogRoute from "./api/backend_log.js";
 import clipperRoute from "./api/clipper.js";
@@ -29,12 +28,9 @@ import filesRoute from "./api/files.js";
 import fontsRoute from "./api/fonts.js";
 import imageRoute from "./api/image.js";
 import importRoute from "./api/import.js";
-import llmRoute from "./api/llm.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import noteMapRoute from "./api/note_map.js";
-import ollamaRoute from "./api/ollama.js";
-import openaiRoute from "./api/openai.js";
 import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
@@ -275,20 +271,6 @@ function register(app: express.Application) {
     etapiSpecRoute.register(router);
     etapiBackupRoute.register(router);
     etapiMetricsRoute.register(router);
-
-    // LLM Chat API
-    asyncApiRoute(PST, "/api/llm/chat", llmRoute.createSession);
-    asyncApiRoute(GET, "/api/llm/chat", llmRoute.listSessions);
-    asyncApiRoute(GET, "/api/llm/chat/:sessionId", llmRoute.getSession);
-    asyncApiRoute(PATCH, "/api/llm/chat/:sessionId", llmRoute.updateSession);
-    asyncApiRoute(DEL, "/api/llm/chat/:chatNoteId", llmRoute.deleteSession);
-    asyncApiRoute(PST, "/api/llm/chat/:chatNoteId/messages", llmRoute.sendMessage);
-    asyncApiRoute(PST, "/api/llm/chat/:chatNoteId/messages/stream", llmRoute.streamMessage);
-
-    // LLM provider endpoints - moved under /api/llm/providers hierarchy
-    asyncApiRoute(GET, "/api/llm/providers/ollama/models", ollamaRoute.listModels);
-    asyncApiRoute(GET, "/api/llm/providers/openai/models", openaiRoute.listModels);
-    asyncApiRoute(GET, "/api/llm/providers/anthropic/models", anthropicRoute.listModels);
 
     app.use("", router);
 }

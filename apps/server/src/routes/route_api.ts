@@ -1,5 +1,6 @@
-import { routes, NotFoundError, ValidationError } from "@triliumnext/core";
+import { NotFoundError, routes, ValidationError } from "@triliumnext/core";
 import express, { type RequestHandler } from "express";
+import type { ParamsDictionary } from "express-serve-static-core";
 import multer from "multer";
 
 import { namespace } from "../cls_provider.js";
@@ -20,8 +21,8 @@ type HttpMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "options
 export type ApiResultHandler = (req: express.Request, res: express.Response, result: unknown) => number;
 
 type NotAPromise<T> = T & { then?: void };
-export type ApiRequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => unknown;
-export type SyncRouteRequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => NotAPromise<object> | number | string | void | null;
+export type ApiRequestHandler<P extends ParamsDictionary> = (req: express.Request<P>, res: express.Response, next: express.NextFunction) => unknown;
+export type SyncRouteRequestHandler<P extends ParamsDictionary> = (req: express.Request<P>, res: express.Response, next: express.NextFunction) => NotAPromise<object> | number | string | void | null;
 
 export function apiResultHandler(req: express.Request, res: express.Response, result: unknown) {
     res.setHeader("trilium-max-entity-change-id", entityChangesService.getMaxEntityChangeId());
@@ -63,24 +64,24 @@ function send(res: express.Response, statusCode: number, response: unknown) {
 
 }
 
-export function apiRoute(method: HttpMethod, path: string, routeHandler: SyncRouteRequestHandler) {
+export function apiRoute<P extends ParamsDictionary>(method: HttpMethod, path: string, routeHandler: SyncRouteRequestHandler<P>) {
     route(method, path, [auth.checkApiAuth, csrfMiddleware], routeHandler, apiResultHandler);
 }
 
-export function asyncApiRoute(method: HttpMethod, path: string, routeHandler: ApiRequestHandler) {
+export function asyncApiRoute<P extends ParamsDictionary>(method: HttpMethod, path: string, routeHandler: ApiRequestHandler<P>) {
     asyncRoute(method, path, [auth.checkApiAuth, csrfMiddleware], routeHandler, apiResultHandler);
 }
 
-export function route(method: HttpMethod, path: string, middleware: express.Handler[], routeHandler: SyncRouteRequestHandler, resultHandler: ApiResultHandler | null = null) {
+export function route<P extends ParamsDictionary>(method: HttpMethod, path: string, middleware: express.Handler[], routeHandler: SyncRouteRequestHandler<P>, resultHandler: ApiResultHandler | null = null) {
     internalRoute(method, path, middleware, routeHandler, resultHandler, true);
 }
 
-export function asyncRoute(method: HttpMethod, path: string, middleware: express.Handler[], routeHandler: ApiRequestHandler, resultHandler: ApiResultHandler | null = null) {
+export function asyncRoute<P extends ParamsDictionary>(method: HttpMethod, path: string, middleware: express.Handler[], routeHandler: ApiRequestHandler<P>, resultHandler: ApiResultHandler | null = null) {
     internalRoute(method, path, middleware, routeHandler, resultHandler, false);
 }
 
-function internalRoute(method: HttpMethod, path: string, middleware: express.Handler[], routeHandler: ApiRequestHandler, resultHandler: ApiResultHandler | null = null, transactional: boolean) {
-    router[method](path, ...(middleware as express.Handler[]), (req: express.Request, res: express.Response, next: express.NextFunction) => {
+function internalRoute<P extends ParamsDictionary>(method: HttpMethod, path: string, middleware: express.Handler[], routeHandler: ApiRequestHandler<P>, resultHandler: ApiResultHandler | null = null, transactional: boolean) {
+    router[method](path, ...(middleware as express.Handler[]), (req: express.Request<P>, res: express.Response, next: express.NextFunction) => {
         const start = Date.now();
 
         try {

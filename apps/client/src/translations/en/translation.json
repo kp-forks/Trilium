@@ -343,6 +343,7 @@
     "label_type_title": "Type of the label will help Trilium to choose suitable interface to enter the label value.",
     "label_type": "Type",
     "text": "Text",
+    "textarea": "Multi-line Text",
     "number": "Number",
     "boolean": "Boolean",
     "date": "Date",
@@ -1010,7 +1011,7 @@
     "no_attachments": "This note has no attachments."
   },
   "book": {
-    "no_children_help": "This collection doesn't have any child notes so there's nothing to display. See <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a> for details.",
+    "no_children_help": "This collection doesn't have any child notes so there's nothing to display.",
     "drag_locked_title": "Locked for editing",
     "drag_locked_message": "Dragging not allowed since the collection is locked for editing."
   },
@@ -1036,6 +1037,25 @@
     "file_preview_not_available": "File preview is not available for this file format.",
     "too_big": "The preview only shows the first {{maxNumChars}} characters of the file for performance reasons. Download the file and open it externally to be able to see the entire content."
   },
+  "media": {
+    "play": "Play (Space)",
+    "pause": "Pause (Space)",
+    "back-10s": "Back 10s (Left arrow key)",
+    "forward-30s": "Forward 30s",
+    "mute": "Mute (M)",
+    "unmute": "Unmute (M)",
+    "playback-speed": "Playback speed",
+    "loop": "Loop",
+    "disable-loop": "Disable loop",
+    "rotate": "Rotate",
+    "picture-in-picture": "Picture-in-picture",
+    "exit-picture-in-picture": "Exit picture-in-picture",
+    "fullscreen": "Fullscreen (F)",
+    "exit-fullscreen": "Exit fullscreen",
+    "unsupported-format": "Media preview is not available for this file format:\n{{mime}}",
+    "zoom-to-fit": "Zoom to fill",
+    "zoom-reset": "Reset zoom to fill"
+  },
   "protected_session": {
     "enter_password_instruction": "Showing protected note requires entering your password:",
     "start_session_button": "Start protected session",
@@ -1049,7 +1069,6 @@
     "unprotecting-title": "Unprotecting status"
   },
   "relation_map": {
-    "open_in_new_tab": "Open in new tab",
     "remove_note": "Remove note",
     "edit_title": "Edit title",
     "rename_note": "Rename note",
@@ -1067,13 +1086,21 @@
     "click_on_canvas_to_place_new_note": "Click on canvas to place new note"
   },
   "render": {
-    "note_detail_render_help_1": "This help note is shown because this note of type Render HTML doesn't have required relation to function properly.",
-    "note_detail_render_help_2": "Render HTML note type is used for <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/scripts.html\">scripting</a>. In short, you have a HTML code note (optionally with some JavaScript) and this note will render it. To make it work, you need to define a <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/attributes.html\">relation</a> called \"renderNote\" pointing to the HTML note to render."
+    "setup_title": "Display custom HTML or Preact JSX inside this note",
+    "setup_create_sample_preact": "Create sample note with Preact",
+    "setup_create_sample_html": "Create sample note with HTML",
+    "setup_sample_created": "A sample note was created as a child note.",
+    "disabled_description": "This render notes comes from an external source. To protect you from malicious content, it is not enabled by default. Make sure you trust the source before enabling it.",
+    "disabled_button_enable": "Enable render note"
   },
-  "web_view": {
-    "web_view": "Web View",
-    "embed_websites": "Note of type Web View allows you to embed websites into Trilium.",
-    "create_label": "To start, please create a label with a URL address you want to embed, e.g. #webViewSrc=\"https://www.google.com\""
+  "web_view_setup": {
+    "title": "Create a live view of a webpage directly into Trilium",
+    "url_placeholder": "Enter or paste the website address, for example https://triliumnotes.org",
+    "create_button": "Create Web View",
+    "invalid_url_title": "Invalid address",
+    "invalid_url_message": "Insert a valid web address, for example https://triliumnotes.org.",
+    "disabled_description": "This web view was imported from an external source. To help protect you from phishing or malicious content, it isn’t loading automatically. You can enable it if you trust the source.",
+    "disabled_button_enable": "Enable web view"
   },
   "backend_log": {
     "refresh": "Refresh"
@@ -1195,149 +1222,6 @@
     "enable-backdrop-effects": "Enable background effects for menus, popups and panels",
     "enable-smooth-scroll": "Enable smooth scrolling",
     "app-restart-required": "(a restart of the application is required for the change to take effect)"
-  },
-  "ai_llm": {
-    "not_started": "Not started",
-    "title": "AI Settings",
-    "processed_notes": "Processed Notes",
-    "total_notes": "Total Notes",
-    "progress": "Progress",
-    "queued_notes": "Queued Notes",
-    "failed_notes": "Failed Notes",
-    "last_processed": "Last Processed",
-    "refresh_stats": "Refresh Statistics",
-    "enable_ai_features": "Enable AI/LLM features",
-    "enable_ai_description": "Enable AI features like note summarization, content generation, and other LLM capabilities",
-    "openai_tab": "OpenAI",
-    "anthropic_tab": "Anthropic",
-    "voyage_tab": "Voyage AI",
-    "ollama_tab": "Ollama",
-    "enable_ai": "Enable AI/LLM features",
-    "enable_ai_desc": "Enable AI features like note summarization, content generation, and other LLM capabilities",
-    "provider_configuration": "AI Provider Configuration",
-    "provider_precedence": "Provider Precedence",
-    "provider_precedence_description": "Comma-separated list of providers in order of precedence (e.g., 'openai,anthropic,ollama')",
-    "temperature": "Temperature",
-    "temperature_description": "Controls randomness in responses (0 = deterministic, 2 = maximum randomness)",
-    "system_prompt": "System Prompt",
-    "system_prompt_description": "Default system prompt used for all AI interactions",
-    "openai_configuration": "OpenAI Configuration",
-    "openai_settings": "OpenAI Settings",
-    "api_key": "API Key",
-    "url": "Base URL",
-    "model": "Model",
-    "openai_api_key_description": "Your OpenAI API key for accessing their AI services",
-    "anthropic_api_key_description": "Your Anthropic API key for accessing Claude models",
-    "default_model": "Default Model",
-    "openai_model_description": "Examples: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "base_url": "Base URL",
-    "openai_url_description": "Default: https://api.openai.com/v1",
-    "anthropic_settings": "Anthropic Settings",
-    "anthropic_url_description": "Base URL for the Anthropic API (default: https://api.anthropic.com)",
-    "anthropic_model_description": "Anthropic Claude models for chat completion",
-    "voyage_settings": "Voyage AI Settings",
-    "ollama_settings": "Ollama Settings",
-    "ollama_url_description": "URL for the Ollama API (default: http://localhost:11434)",
-    "ollama_model_description": "Ollama model to use for chat completion",
-    "anthropic_configuration": "Anthropic Configuration",
-    "voyage_configuration": "Voyage AI Configuration",
-    "voyage_url_description": "Default: https://api.voyageai.com/v1",
-    "ollama_configuration": "Ollama Configuration",
-    "enable_ollama": "Enable Ollama",
-    "enable_ollama_description": "Enable Ollama for local AI model usage",
-    "ollama_url": "Ollama URL",
-    "ollama_model": "Ollama Model",
-    "refresh_models": "Refresh Models",
-    "refreshing_models": "Refreshing...",
-    "enable_automatic_indexing": "Enable Automatic Indexing",
-    "rebuild_index": "Rebuild Index",
-    "rebuild_index_error": "Error starting index rebuild. Check logs for details.",
-    "note_title": "Note Title",
-    "error": "Error",
-    "last_attempt": "Last Attempt",
-    "actions": "Actions",
-    "retry": "Retry",
-    "partial": "{{ percentage }}% completed",
-    "retry_queued": "Note queued for retry",
-    "retry_failed": "Failed to queue note for retry",
-    "max_notes_per_llm_query": "Max Notes Per Query",
-    "max_notes_per_llm_query_description": "Maximum number of similar notes to include in AI context",
-    "active_providers": "Active Providers",
-    "disabled_providers": "Disabled Providers",
-    "remove_provider": "Remove provider from search",
-    "restore_provider": "Restore provider to search",
-    "similarity_threshold": "Similarity Threshold",
-    "similarity_threshold_description": "Minimum similarity score (0-1) for notes to be included in context for LLM queries",
-    "reprocess_index": "Rebuild Search Index",
-    "reprocessing_index": "Rebuilding...",
-    "reprocess_index_started": "Search index optimization started in the background",
-    "reprocess_index_error": "Error rebuilding search index",
-    "index_rebuild_progress": "Index Rebuild Progress",
-    "index_rebuilding": "Optimizing index ({{percentage}}%)",
-    "index_rebuild_complete": "Index optimization complete",
-    "index_rebuild_status_error": "Error checking index rebuild status",
-    "never": "Never",
-    "processing": "Processing ({{percentage}}%)",
-    "incomplete": "Incomplete ({{percentage}}%)",
-    "complete": "Complete (100%)",
-    "refreshing": "Refreshing...",
-    "auto_refresh_notice": "Auto-refreshes every {{seconds}} seconds",
-    "note_queued_for_retry": "Note queued for retry",
-    "failed_to_retry_note": "Failed to retry note",
-    "all_notes_queued_for_retry": "All failed notes queued for retry",
-    "failed_to_retry_all": "Failed to retry notes",
-    "ai_settings": "AI Settings",
-    "api_key_tooltip": "API key for accessing the service",
-    "empty_key_warning": {
-      "anthropic": "Anthropic API key is empty. Please enter a valid API key.",
-      "openai": "OpenAI API key is empty. Please enter a valid API key.",
-      "voyage": "Voyage API key is empty. Please enter a valid API key.",
-      "ollama": "Ollama API key is empty. Please enter a valid API key."
-    },
-    "agent": {
-      "processing": "Processing...",
-      "thinking": "Thinking...",
-      "loading": "Loading...",
-      "generating": "Generating..."
-    },
-    "name": "AI",
-    "openai": "OpenAI",
-    "use_enhanced_context": "Use enhanced context",
-    "enhanced_context_description": "Provides the AI with more context from the note and its related notes for better responses",
-    "show_thinking": "Show thinking",
-    "show_thinking_description": "Show the AI's chain of thought process",
-    "enter_message": "Enter your message...",
-    "error_contacting_provider": "Error contacting AI provider. Please check your settings and internet connection.",
-    "error_generating_response": "Error generating AI response",
-    "index_all_notes": "Index All Notes",
-    "index_status": "Index Status",
-    "indexed_notes": "Indexed Notes",
-    "indexing_stopped": "Indexing stopped",
-    "indexing_in_progress": "Indexing in progress...",
-    "last_indexed": "Last Indexed",
-    "note_chat": "Note Chat",
-    "sources": "Sources",
-    "start_indexing": "Start Indexing",
-    "use_advanced_context": "Use Advanced Context",
-    "ollama_no_url": "Ollama is not configured. Please enter a valid URL.",
-    "chat": {
-      "root_note_title": "AI Chats",
-      "root_note_content": "This note contains your saved AI chat conversations.",
-      "new_chat_title": "New Chat",
-      "create_new_ai_chat": "Create new AI Chat"
-    },
-    "create_new_ai_chat": "Create new AI Chat",
-    "configuration_warnings": "There are some issues with your AI configuration. Please check your settings.",
-    "experimental_warning": "The LLM feature is currently experimental - you have been warned.",
-    "selected_provider": "Selected Provider",
-    "selected_provider_description": "Choose the AI provider for chat and completion features",
-    "select_model": "Select model...",
-    "select_provider": "Select provider...",
-    "ai_enabled": "AI features enabled",
-    "ai_disabled": "AI features disabled",
-    "no_models_found_online": "No models found. Please check your API key and settings.",
-    "no_models_found_ollama": "No Ollama models found. Please check if Ollama is running.",
-    "error_fetching": "Error fetching models: {{error}}"
   },
   "zoom_factor": {
     "title": "Zoom Factor (desktop build only)",
@@ -1589,7 +1473,8 @@
     "description": "Description",
     "reload_app": "Reload app to apply changes",
     "set_all_to_default": "Set all shortcuts to the default",
-    "confirm_reset": "Do you really want to reset all keyboard shortcuts to the default?"
+    "confirm_reset": "Do you really want to reset all keyboard shortcuts to the default?",
+    "no_results": "No shortcuts found matching '{{filter}}'"
   },
   "spellcheck": {
     "title": "Spell Check",
@@ -1716,7 +1601,8 @@
     "ai-chat": "AI Chat",
     "task-list": "Task List",
     "new-feature": "New",
-    "collections": "Collections"
+    "collections": "Collections",
+    "spreadsheet": "Spreadsheet"
   },
   "protect_note": {
     "toggle-on": "Protect the note",
@@ -1795,6 +1681,8 @@
     "printing": "Printing in progress...",
     "printing_pdf": "Exporting to PDF in progress...",
     "print_report_title": "Print report",
+    "print_report_error_title": "Failed to print",
+    "print_report_stack_trace": "Stack trace",
     "print_report_collection_content_one": "{{count}} note in the collection could not be printed because they are not supported or they are protected.",
     "print_report_collection_content_other": "{{count}} notes in the collection could not be printed because they are not supported or they are protected.",
     "print_report_collection_details_button": "See details",
@@ -1813,7 +1701,8 @@
   },
   "search_result": {
     "no_notes_found": "No notes have been found for given search parameters.",
-    "search_not_executed": "Search has not been executed yet. Click on \"Search\" button above to see the results."
+    "search_not_executed": "Search has not been executed yet.",
+    "search_now": "Search now"
   },
   "spacer": {
     "configure_launchbar": "Configure Launchbar"
@@ -1941,6 +1830,7 @@
     "add-term-to-dictionary": "Add \"{{term}}\" to dictionary",
     "cut": "Cut",
     "copy": "Copy",
+    "copy-as-markdown": "Copy as Markdown",
     "copy-link": "Copy link",
     "paste": "Paste",
     "paste-as-plain-text": "Paste as plain text",
@@ -2099,7 +1989,8 @@
     "raster": "Raster",
     "vector_light": "Vector (Light)",
     "vector_dark": "Vector (Dark)",
-    "show-scale": "Show scale"
+    "show-scale": "Show scale",
+    "show-labels": "Show marker names"
   },
   "table_context_menu": {
     "delete_row": "Delete row"
@@ -2178,8 +2069,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "page_title": "Page of {{startIndex}} - {{endIndex}}",
-    "total_notes": "{{count}} notes"
+    "total_notes": "{{count}} notes",
+    "prev_page": "Previous page",
+    "next_page": "Next page"
   },
   "collections": {
     "rendering_error": "Unable to show content due to an error."
@@ -2283,5 +2175,60 @@
   },
   "bookmark_buttons": {
     "bookmarks": "Bookmarks"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "Icon pack",
+    "type_backend_script": "Backend script",
+    "type_frontend_script": "Frontend script",
+    "type_widget": "Widget",
+    "type_app_css": "Custom CSS",
+    "type_render_note": "Render note",
+    "type_web_view": "Web view",
+    "type_app_theme": "Custom theme",
+    "toggle_tooltip_enable_tooltip": "Click to enable this {{type}}.",
+    "toggle_tooltip_disable_tooltip": "Click to disable this {{type}}.",
+    "menu_docs": "Open documentation",
+    "menu_execute_now": "Execute script now",
+    "menu_run": "Run automatically",
+    "menu_run_disabled": "Manually",
+    "menu_run_backend_startup": "When the backend starts up",
+    "menu_run_hourly": "Hourly",
+    "menu_run_daily": "Daily",
+    "menu_run_frontend_startup": "When the desktop frontend starts up",
+    "menu_run_mobile_startup": "When the mobile frontend starts up",
+    "menu_change_to_widget": "Change to widget",
+    "menu_change_to_frontend_script": "Change to frontend script",
+    "menu_theme_base": "Theme base"
+  },
+  "setup_form": {
+    "more_info": "Learn more"
+  },
+  "mermaid": {
+    "placeholder": "Type the content of your Mermaid diagram or use one of the sample diagrams below.",
+    "sample_diagrams": "Sample diagrams:",
+    "sample_flowchart": "Flowchart",
+    "sample_class": "Class",
+    "sample_sequence": "Sequence",
+    "sample_entity_relationship": "Entity Relationship",
+    "sample_state": "State",
+    "sample_mindmap": "Mindmap",
+    "sample_architecture": "Architecture",
+    "sample_block": "Block",
+    "sample_c4": "C4",
+    "sample_gantt": "Gantt",
+    "sample_git": "Git",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Packet",
+    "sample_pie": "Pie",
+    "sample_quadrant": "Quadrant",
+    "sample_radar": "Radar",
+    "sample_requirement": "Requirement",
+    "sample_sankey": "Sankey",
+    "sample_timeline": "Timeline",
+    "sample_treemap": "Treemap",
+    "sample_user_journey": "User Journey",
+    "sample_xy": "XY",
+    "sample_venn": "Venn",
+    "sample_ishikawa": "Ishikawa"
   }
 }

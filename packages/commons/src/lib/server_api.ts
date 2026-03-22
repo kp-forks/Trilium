@@ -300,7 +300,7 @@ export interface IconRegistry {
     }[];
 }
 
-export type LabelType = "text" | "number" | "boolean" | "date" | "datetime" | "time" | "url" | "color";
+export type LabelType = "text" | "textarea" | "number" | "boolean" | "date" | "datetime" | "time" | "url" | "color";
 export type Multiplicity = "single" | "multi";
 
 export interface DefinitionObject {

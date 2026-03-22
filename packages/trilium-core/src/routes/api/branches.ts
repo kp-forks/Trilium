@@ -17,7 +17,7 @@ import { ValidationError } from "../../errors.js";
  * for not deleted branches. There may be multiple deleted note-parent note relationships.
  */
 
-function moveBranchToParent(req: Request) {
+function moveBranchToParent(req: Request<{ branchId: string, parentBranchId: string }>) {
     const { branchId, parentBranchId } = req.params;
 
     const branchToMove = becca.getBranch(branchId);
@@ -30,7 +30,7 @@ function moveBranchToParent(req: Request) {
     return branchService.moveBranchToBranch(branchToMove, targetParentBranch, branchId);
 }
 
-function moveBranchBeforeNote(req: Request) {
+function moveBranchBeforeNote(req: Request<{ branchId: string, beforeBranchId: string }>) {
     const { branchId, beforeBranchId } = req.params;
 
     const branchToMove = becca.getBranchOrThrow(branchId);
@@ -78,7 +78,7 @@ function moveBranchBeforeNote(req: Request) {
     return { success: true };
 }
 
-function moveBranchAfterNote(req: Request) {
+function moveBranchAfterNote(req: Request<{ branchId: string, afterBranchId: string }>) {
     const { branchId, afterBranchId } = req.params;
 
     const branchToMove = becca.getBranchOrThrow(branchId);
@@ -127,7 +127,7 @@ function moveBranchAfterNote(req: Request) {
     return { success: true };
 }
 
-function setExpanded(req: Request) {
+function setExpanded(req: Request<{ branchId: string, expanded: string }>) {
     const { branchId } = req.params;
     const expanded = parseInt(req.params.expanded);
 
@@ -149,7 +149,7 @@ function setExpanded(req: Request) {
     }
 }
 
-function setExpandedForSubtree(req: Request) {
+function setExpandedForSubtree(req: Request<{ branchId: string, expanded: string }>) {
     const { branchId } = req.params;
     const expanded = parseInt(req.params.expanded);
     const sql = getSql();
@@ -232,7 +232,7 @@ function setExpandedForSubtree(req: Request) {
  *       - session: []
  *     tags: ["data"]
  */
-function deleteBranch(req: Request) {
+function deleteBranch(req: Request<{ branchId: string }>) {
     const last = req.query.last === "true";
     const eraseNotes = req.query.eraseNotes === "true";
     const branch = becca.getBranchOrThrow(req.params.branchId);
@@ -260,7 +260,7 @@ function deleteBranch(req: Request) {
     };
 }
 
-function setPrefix(req: Request) {
+function setPrefix(req: Request<{ branchId: string }>) {
     const branchId = req.params.branchId;
     //TriliumNextTODO: req.body arrives as string, so req.body.prefix will be undefined – did the code below ever even work?
     const prefix = isEmptyOrWhitespace(req.body.prefix) ? null : req.body.prefix;

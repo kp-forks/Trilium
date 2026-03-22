@@ -95,7 +95,7 @@ export default defineConfig(() => ({
             output: {
                 entryFileNames: (chunk) => {
                     // We enforce a hash in the main index file to avoid caching issues, this only works because we have the HTML entry point.
-                    if (chunk.name === "index") {
+                    if (chunk.name === "index" || chunk.name === "print") {
                         return "src/[name]-[hash].js";
                     }
 
@@ -103,10 +103,7 @@ export default defineConfig(() => ({
                     return "src/[name].js";
                 },
                 chunkFileNames: "src/[name]-[hash].js",
-                assetFileNames: "src/[name]-[hash].[ext]",
-                manualChunks: {
-                    "ckeditor5": [ "@triliumnext/ckeditor5" ]
-                },
+                assetFileNames: "src/[name]-[hash].[ext]"
             },
             onwarn(warning, rollupWarn) {
                 if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
@@ -120,7 +117,11 @@ export default defineConfig(() => ({
         environment: "happy-dom",
         setupFiles: [
             "./src/test/setup.ts"
-        ]
+        ],
+        reporters: [
+            "verbose",
+            ["html", { outputFile: "./test-output/vitest/html/index.html" }]
+        ],
     },
     commonjsOptions: {
         transformMixedEsModules: true,

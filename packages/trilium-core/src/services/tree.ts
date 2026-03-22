@@ -234,7 +234,7 @@ function setNoteToParent(noteId: string, prefix: string, parentNoteId: string) {
     }
 
     // case where there might be more such branches is ignored. It's expected there should be just one
-    const branchId = sql.getValue<string>("SELECT branchId FROM branches WHERE isDeleted = 0 AND noteId = ? AND prefix = ?", [noteId, prefix]);
+    const branchId = getSql().getValue<string>("SELECT branchId FROM branches WHERE isDeleted = 0 AND noteId = ? AND prefix = ?", [noteId, prefix]);
     const branch = becca.getBranch(branchId);
 
     if (branch) {
@@ -258,7 +258,7 @@ function setNoteToParent(noteId: string, prefix: string, parentNoteId: string) {
             throw new Error(`Cannot create a branch for '${noteId}' which is deleted.`);
         }
 
-        const branchId = sql.getValue<string>("SELECT branchId FROM branches WHERE isDeleted = 0 AND noteId = ? AND parentNoteId = ?", [noteId, parentNoteId]);
+        const branchId = getSql().getValue<string>("SELECT branchId FROM branches WHERE isDeleted = 0 AND noteId = ? AND parentNoteId = ?", [noteId, parentNoteId]);
         const branch = becca.getBranch(branchId);
 
         if (branch) {
