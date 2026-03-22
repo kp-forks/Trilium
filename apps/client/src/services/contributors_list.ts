@@ -28,8 +28,8 @@ export default async function getContributors() {
 
 function getList(contributorInfo: any[]) {
     return contributorInfo
-        // Filter out bots and private profiles
-        .filter((c) => c.type === "User" && c.user_view_type === "public" && !BOTS.includes(c.login))
+        // Filter out bots
+        .filter((c) => c.type === "User" && !BOTS.includes(c.login))
         // Sort by the commit count. Honorific contributors are always first.
         .sort(contributorOrderer)
         .map((c) => {return {
