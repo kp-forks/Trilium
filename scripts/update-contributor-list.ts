@@ -1,3 +1,5 @@
+import { writeFileSync } from "fs";
+
 export interface ContributorList {
     contributors: Contributor[];
 }
@@ -14,11 +16,25 @@ const PINNED_CONTRIBUTORS = ["eliandoran", "zadam"];
 // Bots marked as users on the GitHub profile info to exclude from the listing
 const BOTS = ["weblate"];
 
-export default async function getContributors() {
+async function main() {
+    console.log("Retrieving the contributor list...");
+
+    let jsonData: any = {};
+    try {
+        jsonData = await getContributors();
+    } catch (ex) {
+        console.error(ex);
+    }
+
+    writeFileSync("contributors.json", JSON.stringify(jsonData, null, 2));
+}
+
+async function getContributors() {
     const response = await fetch("https://api.github.com/repos/TriliumNext/Trilium/contributors");
 
     if (response.ok) {
         return {
+            "⚠️": "NOTE: this is an auto-generated list. Do not modify it.",
             contributors: getList(await response.json())
         } as ContributorList
     } else {
@@ -50,3 +66,5 @@ function contributorOrderer(a, b) {
     // Within each group, sort by contributions
     return b.contributions - a.contributions;
 }
+
+main();
