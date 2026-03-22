@@ -34,9 +34,9 @@ function wrapHandler(handler: (req: any) => unknown, transactional: boolean) {
  * Creates an apiRoute function compatible with buildSharedApiRoutes.
  * This bridges the core's route registration to the BrowserRouter.
  */
-function createApiRoute(router: BrowserRouter) {
+function createApiRoute(router: BrowserRouter, transactional: boolean) {
     return (method: HttpMethod, path: string, handler: (req: any) => unknown) => {
-        router.register(method, path, wrapHandler(handler, true));
+        router.register(method, path, wrapHandler(handler, transactional));
     };
 }
 
@@ -46,21 +46,21 @@ function createApiRoute(router: BrowserRouter) {
  * @param router - The browser router instance
  */
 export function registerRoutes(router: BrowserRouter): void {
-    const apiRoute = createApiRoute(router);
-    routes.buildSharedApiRoutes(apiRoute);
+    const apiRoute = createApiRoute(router, true);
+    routes.buildSharedApiRoutes({
+        apiRoute,
+        asyncApiRoute: createApiRoute(router, false)
+    });
     apiRoute('get', '/bootstrap', bootstrapRoute);
 
     // Dummy routes for compatibility.
     apiRoute("get", "/api/script/widgets", () => []);
     apiRoute("get", "/api/script/startup", () => []);
     apiRoute("get", "/api/system-checks", () => ({ isCpuArchMismatch: false }));
-    apiRoute("get", "/api/search/:searchString", () => []);
-    apiRoute("get", "/api/search-templates", () => []);
     apiRoute("get", "/api/autocomplete", () => []);
 }
 
 function bootstrapRoute() {
-
     const assetPath = ".";
 
     return {
