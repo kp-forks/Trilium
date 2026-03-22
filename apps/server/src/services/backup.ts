@@ -1,15 +1,14 @@
-"use strict";
-
-import dateUtils from "./date_utils.js";
-import optionService from "./options.js";
-import fs from "fs";
-import dataDir from "./data_dir.js";
-import log from "./log.js";
-import syncMutexService from "./sync_mutex.js";
-import cls from "./cls.js";
-import sql from "./sql.js";
-import path from "path";
 import type { DatabaseBackup, OptionNames } from "@triliumnext/commons";
+import { sync_mutex as syncMutexService } from "@triliumnext/core";
+import fs from "fs";
+import path from "path";
+
+import cls from "./cls.js";
+import dataDir from "./data_dir.js";
+import dateUtils from "./date_utils.js";
+import log from "./log.js";
+import optionService from "./options.js";
+import sql from "./sql.js";
 
 type BackupType = "daily" | "weekly" | "monthly";
 

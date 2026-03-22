@@ -37,12 +37,9 @@ function isMigrationRunning() {
     return cls.isMigrationRunning();
 }
 
+/** @deprecated */
 function getAndClearEntityChangeIds() {
-    const entityChangeIds = cls.getContext().get("entityChangeIds") || [];
-
-    cls.getContext().set("entityChangeIds", []);
-
-    return entityChangeIds;
+    return cls.getAndClearEntityChangeIds();
 }
 
 function putEntityChange(entityChange: EntityChange) {

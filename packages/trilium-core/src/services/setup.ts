@@ -1,13 +1,13 @@
 import syncService from "./sync.js";
-import log from "./log.js";
+import { getLog } from "./log.js";
 import sqlInit from "./sql_init.js";
 import optionService from "./options.js";
 import syncOptions from "./sync_options.js";
-import { request } from "@triliumnext/core";
 import appInfo from "./app_info.js";
-import { timeLimit } from "./utils.js";
+import { timeLimit } from "./utils/index.js";
 import becca from "../becca/becca.js";
-import type { SetupStatusResponse, SetupSyncSeedResponse } from "./api-interface.js";
+import type { SetupStatusResponse, SetupSyncSeedResponse } from "@triliumnext/commons";
+import request from "./request.js";
 
 async function hasSyncServerSchemaAndSeed() {
     const response = await requestToSyncServer<SetupStatusResponse>("GET", "/api/setup/status");
@@ -22,7 +22,7 @@ async function hasSyncServerSchemaAndSeed() {
 }
 
 function triggerSync() {
-    log.info("Triggering sync.");
+    getLog().info("Triggering sync.");
 
     // it's ok to not wait for it here
     syncService.sync().then((res) => {
@@ -33,7 +33,7 @@ function triggerSync() {
 }
 
 async function sendSeedToSyncServer() {
-    log.info("Initiating sync to server");
+    getLog().info("Initiating sync to server");
 
     await requestToSyncServer<void>("POST", "/api/setup/sync-seed", {
         options: getSyncSeedOptions(),
@@ -69,6 +69,7 @@ async function setupSyncFromSyncServer(syncServerHost: string, syncProxy: string
         };
     }
 
+    const log = getLog();
     try {
         log.info("Getting document options FROM sync server.");
 

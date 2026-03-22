@@ -1,17 +1,19 @@
+import { getMessagingProvider } from "@triliumnext/core";
+import type { Express } from "express";
 import fs from "fs";
 import http from "http";
 import https from "https";
 import tmp from "tmp";
-import config from "./services/config.js";
-import log from "./services/log.js";
-import appInfo from "./services/app_info.js";
-import ws from "./services/ws.js";
-import utils, { formatSize, formatUtcTime } from "./services/utils.js";
-import port from "./services/port.js";
-import host from "./services/host.js";
+
 import buildApp from "./app.js";
-import type { Express } from "express";
+import appInfo from "./services/app_info.js";
+import config from "./services/config.js";
+import host from "./services/host.js";
+import log from "./services/log.js";
+import port from "./services/port.js";
 import { getDbSize } from "./services/sql_init.js";
+import utils, { formatSize, formatUtcTime } from "./services/utils.js";
+import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 
 const MINIMUM_NODE_VERSION = "20.0.0";
 
@@ -58,7 +60,7 @@ export default async function startTriliumServer() {
     const httpServer = startHttpServer(app);
 
     const sessionParser = (await import("./routes/session_parser.js")).default;
-    ws.init(httpServer, sessionParser as any); // TODO: Not sure why session parser is incompatible.
+    (getMessagingProvider() as WebSocketMessagingProvider).init(httpServer, sessionParser);
 
     if (utils.isElectron) {
         const electronRouting = await import("./routes/electron.js");
@@ -67,8 +69,8 @@ export default async function startTriliumServer() {
 }
 
 async function displayStartupMessage() {
-    log.info("\n" + LOGO.replace("[version]", appInfo.appVersion));
-    log.info(`📦 Versions:    app=${appInfo.appVersion} db=${appInfo.dbVersion} sync=${appInfo.syncVersion} clipper=${appInfo.clipperProtocolVersion}`)
+    log.info(`\n${LOGO.replace("[version]", appInfo.appVersion)}`);
+    log.info(`📦 Versions:    app=${appInfo.appVersion} db=${appInfo.dbVersion} sync=${appInfo.syncVersion} clipper=${appInfo.clipperProtocolVersion}`);
     log.info(`🔧 Build:       ${formatUtcTime(appInfo.buildDate)} (${appInfo.buildRevision.substring(0, 10)})`);
     log.info(`📂 Data dir:    ${appInfo.dataDirectory}`);
     log.info(`⏰ UTC time:    ${formatUtcTime(appInfo.utcDateTime)}`);

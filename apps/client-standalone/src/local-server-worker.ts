@@ -55,6 +55,7 @@ let BrowserSqlProvider: typeof import('./lightweight/sql_provider').default;
 let WorkerMessagingProvider: typeof import('./lightweight/messaging_provider').default;
 let BrowserExecutionContext: typeof import('./lightweight/cls_provider').default;
 let BrowserCryptoProvider: typeof import('./lightweight/crypto_provider').default;
+let FetchRequestProvider: typeof import('./lightweight/request_provider').default;
 let translationProvider: typeof import('./lightweight/translation_provider').default;
 let createConfiguredRouter: typeof import('./lightweight/browser_routes').createConfiguredRouter;
 
@@ -79,6 +80,7 @@ async function loadModules(): Promise<void> {
         messagingModule,
         clsModule,
         cryptoModule,
+        requestModule,
         translationModule,
         routesModule
     ] = await Promise.all([
@@ -86,6 +88,7 @@ async function loadModules(): Promise<void> {
         import('./lightweight/messaging_provider.js'),
         import('./lightweight/cls_provider.js'),
         import('./lightweight/crypto_provider.js'),
+        import('./lightweight/request_provider.js'),
         import('./lightweight/translation_provider.js'),
         import('./lightweight/browser_routes.js')
     ]);
@@ -94,6 +97,7 @@ async function loadModules(): Promise<void> {
     WorkerMessagingProvider = messagingModule.default;
     BrowserExecutionContext = clsModule.default;
     BrowserCryptoProvider = cryptoModule.default;
+    FetchRequestProvider = requestModule.default;
     translationProvider = translationModule.default;
     createConfiguredRouter = routesModule.createConfiguredRouter;
 
@@ -152,18 +156,20 @@ async function initialize(): Promise<void> {
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
                 messaging: messagingProvider!,
+                request: new FetchRequestProvider(),
                 translations: translationProvider,
                 dbConfig: {
                     provider: sqlProvider!,
                     isReadOnly: false,
                     onTransactionCommit: () => {
-                        // No-op for now
+                        coreModule?.ws.sendTransactionEntityChangesToAllClients();
                     },
                     onTransactionRollback: () => {
                         // No-op for now
                     }
                 }
             });
+            coreModule.ws.init();
 
             console.log("[Worker] Supported routes", Object.keys(coreModule.routes));
 
@@ -206,10 +212,6 @@ interface LocalRequest {
 
 // Main dispatch
 async function dispatch(request: LocalRequest) {
-    const url = new URL(request.url);
-
-    console.log("[Worker] Dispatch:", url.pathname);
-
     // Ensure initialization is complete and get the router
     const appRouter = await ensureInitialized();
 

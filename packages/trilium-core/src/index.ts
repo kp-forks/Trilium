@@ -4,6 +4,7 @@ import { getLog, initLog } from "./services/log";
 import { initSql } from "./services/sql/index";
 import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
+import { initRequest, RequestProvider } from "./services/request";
 import { initTranslations, TranslationProvider } from "./services/i18n";
 import appInfo from "./services/app_info";
 
@@ -43,8 +44,10 @@ export { default as bulk_actions } from "./services/bulk_actions";
 export { default as hoisted_note } from "./services/hoisted_note";
 export { default as special_notes } from "./services/special_notes";
 export { default as date_notes } from "./services/date_notes";
+export { getCrypto } from "./services/encryption/crypto";
 
 export { default as attribute_formatter} from "./services/attribute_formatter";
+export { default as attributes } from "./services/attributes";
 
 // Messaging system
 export * from "./services/messaging/index";
@@ -69,17 +72,29 @@ export { default as Becca } from "./becca/becca-interface";
 export type { NotePojo } from "./becca/becca-interface";
 
 export { default as NoteSet } from "./services/search/note_set";
+export { default as SearchContext } from "./services/search/search_context";
+export { default as search } from "./services/search/services/search";
 export { default as note_service } from "./services/notes";
 export type { NoteParams } from "./services/notes";
 export * as sanitize from "./services/sanitizer";
 export * as routes from "./routes";
+export { default as ws } from "./services/ws";
+export { default as request } from "./services/request";
+export { default as sync_options } from "./services/sync_options";
+export { default as sync_update } from "./services/sync_update";
+export { default as sync } from "./services/sync";
+export { default as consistency_checks } from "./services/consistency_checks";
+export { default as content_hash } from "./services/content_hash";
+export { default as sync_mutex } from "./services/sync_mutex";
+export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, extraAppInfo }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, extraAppInfo }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
     translations: TranslationProvider,
     messaging?: MessagingProvider,
+    request?: RequestProvider,
     extraAppInfo?: {
         nodeVersion: string;
         dataDirectory: string;
@@ -93,5 +108,8 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
     Object.assign(appInfo, extraAppInfo);
     if (messaging) {
         initMessaging(messaging);
+    }
+    if (request) {
+        initRequest(request);
     }
 };

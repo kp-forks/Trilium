@@ -38,7 +38,6 @@ import scriptRoute from "./api/script.js";
 import senderRoute from "./api/sender.js";
 import setupApiRoute from "./api/setup.js";
 import similarNotesRoute from "./api/similar_notes.js";
-import syncApiRoute from "./api/sync.js";
 import systemInfoRoute from "./api/system_info.js";
 import totp from './api/totp.js';
 // API routes
@@ -86,8 +85,11 @@ function register(app: express.Application) {
     apiRoute(GET, '/api/totp_recovery/used', recoveryCodes.getUsedRecoveryCodes);
 
     routes.buildSharedApiRoutes({
+        route,
         apiRoute,
-        asyncApiRoute
+        asyncApiRoute,
+        apiResultHandler,
+        checkApiAuth: auth.checkApiAuth
     });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
@@ -144,18 +146,6 @@ function register(app: express.Application) {
 
     apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
-
-    asyncApiRoute(PST, "/api/sync/test", syncApiRoute.testSync);
-    asyncApiRoute(PST, "/api/sync/now", syncApiRoute.syncNow);
-    apiRoute(PST, "/api/sync/fill-entity-changes", syncApiRoute.fillEntityChanges);
-    apiRoute(PST, "/api/sync/force-full-sync", syncApiRoute.forceFullSync);
-    route(GET, "/api/sync/check", [auth.checkApiAuth], syncApiRoute.checkSync, apiResultHandler);
-    route(GET, "/api/sync/changed", [auth.checkApiAuth], syncApiRoute.getChanged, apiResultHandler);
-    route(PUT, "/api/sync/update", [auth.checkApiAuth], syncApiRoute.update, apiResultHandler);
-    route(PST, "/api/sync/finished", [auth.checkApiAuth], syncApiRoute.syncFinished, apiResultHandler);
-    route(PST, "/api/sync/check-entity-changes", [auth.checkApiAuth], syncApiRoute.checkEntityChanges, apiResultHandler);
-    route(PST, "/api/sync/queue-sector/:entityName/:sector", [auth.checkApiAuth], syncApiRoute.queueSector, apiResultHandler);
-    route(GET, "/api/sync/stats", [], syncApiRoute.getStats, apiResultHandler);
 
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
     apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);

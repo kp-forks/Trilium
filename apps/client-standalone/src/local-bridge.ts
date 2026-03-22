@@ -30,6 +30,15 @@ export function startLocalServerWorker() {
             return;
         }
 
+        // Handle WebSocket-like messages from the worker (for frontend updates)
+        if (msg?.type === "WS_MESSAGE" && msg.message) {
+            // Dispatch a custom event that ws.ts listens to in standalone mode
+            window.dispatchEvent(new CustomEvent("trilium:ws-message", {
+                detail: msg.message
+            }));
+            return;
+        }
+
         if (!msg || msg.type !== "LOCAL_RESPONSE") return;
 
         const { id, response, error } = msg;
@@ -58,10 +67,10 @@ export function attachServiceWorkerBridge() {
             const id = msg.id;
             const req = msg.request;
 
-            const response = await new Promise((resolve, reject) => {
+            const response = await new Promise<{ body?: ArrayBuffer }>((resolve, reject) => {
                 pending.set(id, { resolve, reject });
                 // Transfer body to worker for efficiency (if present)
-                localWorker.postMessage({
+                localWorker!.postMessage({
                     type: "LOCAL_REQUEST",
                     id,
                     request: req
@@ -73,14 +82,15 @@ export function attachServiceWorkerBridge() {
                 id,
                 response
             }, response.body ? [response.body] : []);
-        } catch (e) {
+        } catch (e: unknown) {
+            const errorMessage = e instanceof Error ? e.message : String(e);
             port.postMessage({
                 type: "LOCAL_FETCH_RESPONSE",
                 id: msg.id,
                 response: {
                     status: 500,
                     headers: { "content-type": "text/plain; charset=utf-8" },
-                    body: new TextEncoder().encode(String(e?.message || e)).buffer
+                    body: new TextEncoder().encode(errorMessage).buffer
                 }
             });
         }

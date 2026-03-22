@@ -19,6 +19,7 @@ import recentChangesApiRoute from "./api/recent_changes";
 import bulkActionRoute from "./api/bulk_action";
 import searchRoute from "./api/search";
 import specialNotesRoute from "./api/special_notes";
+import syncApiRoute from "./api/sync";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -28,11 +29,14 @@ const GET = "get",
     DEL = "delete";
 
 interface SharedApiRoutesContext {
+    route: any;
     apiRoute: any;
     asyncApiRoute: any;
+    checkApiAuth: any;
+    apiResultHandler: any;
 }
 
-export function buildSharedApiRoutes({ apiRoute, asyncApiRoute }: SharedApiRoutesContext) {
+export function buildSharedApiRoutes({ route, apiRoute, asyncApiRoute, checkApiAuth, apiResultHandler }: SharedApiRoutesContext) {
     apiRoute(GET, '/api/tree', treeApiRoute.getTree);
     apiRoute(PST, '/api/tree/load', treeApiRoute.load);
 
@@ -98,6 +102,18 @@ export function buildSharedApiRoutes({ apiRoute, asyncApiRoute }: SharedApiRoute
     apiRoute(DEL, "/api/branches/:branchId", branchesApiRoute.deleteBranch);
     apiRoute(PUT, "/api/branches/:branchId/set-prefix", branchesApiRoute.setPrefix);
     apiRoute(PUT, "/api/branches/set-prefix-batch", branchesApiRoute.setPrefixBatch);
+
+    asyncApiRoute(PST, "/api/sync/test", syncApiRoute.testSync);
+    asyncApiRoute(PST, "/api/sync/now", syncApiRoute.syncNow);
+    apiRoute(PST, "/api/sync/fill-entity-changes", syncApiRoute.fillEntityChanges);
+    apiRoute(PST, "/api/sync/force-full-sync", syncApiRoute.forceFullSync);
+    route(GET, "/api/sync/check", [checkApiAuth], syncApiRoute.checkSync, apiResultHandler);
+    route(GET, "/api/sync/changed", [checkApiAuth], syncApiRoute.getChanged, apiResultHandler);
+    route(PUT, "/api/sync/update", [checkApiAuth], syncApiRoute.update, apiResultHandler);
+    route(PST, "/api/sync/finished", [checkApiAuth], syncApiRoute.syncFinished, apiResultHandler);
+    route(PST, "/api/sync/check-entity-changes", [checkApiAuth], syncApiRoute.checkEntityChanges, apiResultHandler);
+    route(PST, "/api/sync/queue-sector/:entityName/:sector", [checkApiAuth], syncApiRoute.queueSector, apiResultHandler);
+    route(GET, "/api/sync/stats", [], syncApiRoute.getStats, apiResultHandler);
 
     apiRoute(GET, "/api/quick-search/:searchString", searchRoute.quickSearch);
     apiRoute(GET, "/api/search-note/:noteId", searchRoute.searchFromNote);

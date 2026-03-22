@@ -1,4 +1,4 @@
-import { utils as coreUtils } from "@triliumnext/core";
+import { getCrypto,utils as coreUtils } from "@triliumnext/core";
 import chardet from "chardet";
 import crypto from "crypto";
 import { t } from "i18next";
@@ -49,10 +49,8 @@ export function fromBase64(encodedText: string) {
     return Buffer.from(encodedText, "base64");
 }
 
-export function hmac(secret: any, value: any) {
-    const hmac = crypto.createHmac("sha256", Buffer.from(secret.toString(), "ascii"));
-    hmac.update(value.toString());
-    return hmac.digest("base64");
+export function hmac(secret: string | Uint8Array, value: string | Uint8Array) {
+    return getCrypto().hmac(secret, value);
 }
 
 /**
@@ -83,10 +81,6 @@ export function constantTimeCompare(a: string | null | undefined, b: string | nu
     }
 
     return crypto.timingSafeEqual(bufA, bufB);
-}
-
-export function sanitizeSqlIdentifier(str: string) {
-    return str.replace(/[^A-Za-z0-9_]/g, "");
 }
 
 export function toObject<T, K extends string | number | symbol, V>(array: T[], fn: (item: T) => [K, V]): Record<K, V> {
@@ -170,35 +164,6 @@ export function getNoteTitle(filePath: string, replaceUnderscoresWithSpaces: boo
 
     const basename = path.basename(removeFileExtension(filePath, noteMeta?.mime));
     return replaceUnderscoresWithSpaces ? basename.replace(/_/g, " ").trim() : basename;
-}
-
-export function timeLimit<T>(promise: Promise<T>, limitMs: number, errorMessage?: string): Promise<T> {
-    // TriliumNextTODO: since TS avoids this from ever happening – do we need this check?
-    if (!promise || !promise.then) {
-        // it's not actually a promise
-        return promise;
-    }
-
-    // better stack trace if created outside of promise
-    const errorTimeLimit = new Error(errorMessage || `Process exceeded time limit ${limitMs}`);
-
-    return new Promise((res, rej) => {
-        let resolved = false;
-
-        promise
-            .then((result) => {
-                resolved = true;
-
-                res(result);
-            })
-            .catch((error) => rej(error));
-
-        setTimeout(() => {
-            if (!resolved) {
-                rej(errorTimeLimit);
-            }
-        }, limitMs);
-    });
 }
 
 /** @deprecated */
@@ -338,36 +303,6 @@ export function processStringOrBuffer(data: string | Buffer | null) {
 }
 
 /**
- * Normalizes URL by removing trailing slashes and fixing double slashes.
- * Preserves the protocol (http://, https://) but removes trailing slashes from the rest.
- *
- * @param url The URL to normalize
- * @returns The normalized URL without trailing slashes
- */
-export function normalizeUrl(url: string | null | undefined): string | null | undefined {
-    if (!url || typeof url !== 'string') {
-        return url;
-    }
-
-    // Trim whitespace
-    url = url.trim();
-
-    if (!url) {
-        return url;
-    }
-
-    // Fix double slashes (except in protocol) first
-    url = url.replace(/([^:]\/)\/+/g, '$1');
-
-    // Remove trailing slash, but preserve protocol
-    if (url.endsWith('/') && !url.match(/^https?:\/\/$/)) {
-        url = url.slice(0, -1);
-    }
-
-    return url;
-}
-
-/**
  * Normalizes a path pattern for custom request handlers.
  * Ensures both trailing slash and non-trailing slash versions are handled.
  *
@@ -455,6 +390,10 @@ export const randomSecureToken = coreUtils.randomSecureToken;
 export const safeExtractMessageAndStackFromError = coreUtils.safeExtractMessageAndStackFromError;
 /** @deprecated */
 export const isEmptyOrWhitespace = coreUtils.isEmptyOrWhitespace;
+/** @deprecated */
+export const normalizeUrl = coreUtils.normalizeUrl;
+export const timeLimit = coreUtils.timeLimit;
+export const sanitizeSqlIdentifier = coreUtils.sanitizeSqlIdentifier;
 
 export function waitForStreamToFinish(stream: any): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -487,7 +426,6 @@ export default {
     newEntityId,
     normalize,
     normalizeCustomHandlerPattern,
-    normalizeUrl,
     quoteRegex,
     randomSecureToken,
     randomString,
@@ -495,10 +433,8 @@ export default {
     removeFileExtension,
     replaceAll,
     safeExtractMessageAndStackFromError,
-    sanitizeSqlIdentifier,
     stripTags,
     slugify,
-    timeLimit,
     toBase64,
     toMap,
     toObject,

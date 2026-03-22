@@ -38,15 +38,22 @@ export default async function buildApp() {
     app.set("view engine", "ejs");
 
     app.use((req, res, next) => {
-        // set CORS header
+        // set CORS headers
         if (config["Network"]["corsAllowOrigin"]) {
             res.header("Access-Control-Allow-Origin", config["Network"]["corsAllowOrigin"]);
+            res.header("Access-Control-Allow-Credentials", "true");
         }
         if (config["Network"]["corsAllowMethods"]) {
             res.header("Access-Control-Allow-Methods", config["Network"]["corsAllowMethods"]);
         }
         if (config["Network"]["corsAllowHeaders"]) {
             res.header("Access-Control-Allow-Headers", config["Network"]["corsAllowHeaders"]);
+        }
+
+        // Handle preflight OPTIONS requests
+        if (req.method === "OPTIONS" && config["Network"]["corsAllowOrigin"]) {
+            res.sendStatus(204);
+            return;
         }
 
         res.locals.t = t;
@@ -98,13 +105,12 @@ export default async function buildApp() {
     custom.register(app);
     error_handlers.register(app);
 
-    const { startSyncTimer } = await import("./services/sync.js");
-    startSyncTimer();
+    const { sync, consistency_checks } = await import("@triliumnext/core");
+    sync.startSyncTimer();
 
     await import("./services/backup.js");
 
-    const { startConsistencyChecks } = await import("./services/consistency_checks.js");
-    startConsistencyChecks();
+    consistency_checks.startConsistencyChecks();
 
     const { startScheduler } = await import("./services/scheduler.js");
     startScheduler();

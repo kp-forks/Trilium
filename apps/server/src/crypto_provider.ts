@@ -26,4 +26,10 @@ export default class NodejsCryptoProvider implements CryptoProvider {
         return randtoken.generate(length);
     }
 
+    hmac(secret: string | Uint8Array, value: string | Uint8Array) {
+        const hmac = crypto.createHmac("sha256", Buffer.from(secret.toString(), "ascii"));
+        hmac.update(value.toString());
+        return hmac.digest("base64");
+    }
+
 }
