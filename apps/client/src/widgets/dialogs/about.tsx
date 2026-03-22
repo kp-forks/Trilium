@@ -8,18 +8,19 @@ import { useState } from "preact/hooks";
 import type { CSSProperties } from "preact/compat";
 import type { AppInfo } from "@triliumnext/commons";
 import { useTriliumEvent } from "../react/hooks.jsx";
+import logo from "../../assets/icon.png";
+import { Card, CardSection } from "../react/Card.js";
+import "./about.css";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
     const [shown, setShown] = useState(false);
-    const forceWordBreak: CSSProperties = { wordBreak: "break-all" };
 
     useTriliumEvent("openAboutDialog", () => setShown(true));
 
     return (
         <Modal className="about-dialog"
-            size="lg"
-            title={t("about.title")}
+            size="md"
             show={shown}
             onShown={async () => {
                 const appInfo = await server.get<AppInfo>("app-info");
@@ -27,44 +28,41 @@ export default function AboutDialog() {
             }}
             onHidden={() => setShown(false)}
         >
-            <table className="table table-borderless">
-                <tbody>
-                    <tr>
-                        <th>{t("about.homepage")}</th>
-                        <td className="selectable-text"><a className="tn-link external" href="https://github.com/TriliumNext/Trilium" style={forceWordBreak}>https://github.com/TriliumNext/Trilium</a></td>
-                    </tr>
-                    <tr>
-                        <th>{t("about.app_version")}</th>
-                        <td className="app-version selectable-text">{appInfo?.appVersion}</td>
-                    </tr>
-                    <tr>
-                        <th>{t("about.db_version")}</th>
-                        <td className="db-version selectable-text">{appInfo?.dbVersion}</td>
-                    </tr>
-                    <tr>
-                        <th>{t("about.sync_version")}</th>
-                        <td className="sync-version selectable-text">{appInfo?.syncVersion}</td>
-                    </tr>
-                    <tr>
-                        <th>{t("about.build_date")}</th>
-                        <td className="build-date selectable-text">
-                            {appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>{t("about.build_revision")}</th>
-                        <td className="selectable-text">
-                            {appInfo?.buildRevision && <a className="tn-link build-revision external" href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" style={forceWordBreak}>{appInfo.buildRevision}</a>}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>{t("about.data_directory")}</th>
-                        <td className="data-directory">
-                            {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} style={forceWordBreak} />)}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+           <div>
+                <img src={logo} width="128" />
+                <h2>Trilium Notes</h2>
+                <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
+                    triliumnotes.org
+                </a>
+                
+                <Card className="property-sheet-card">
+                    <CardSection>
+                        <div>{t("about.version_label")}</div>
+                        <div>
+                            {t("about.version", {
+                                appVersion: appInfo?.appVersion,
+                                dbVersion: appInfo?.dbVersion,
+                                syncVersion: appInfo?.syncVersion
+                            })}
+                            <div>
+                                {t("about.build_info", {
+                                    buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : "",
+                                    buildRevision: appInfo?.buildRevision ? appInfo.buildRevision.substring(0, 6) : ""
+                                })}
+                            </div>
+                        </div>
+                    </CardSection>
+                    <CardSection>
+                        <div>{t("about.contributors_label")}</div>
+                    </CardSection>
+                    <CardSection>
+                        <div>{t("about.data_directory")}</div>
+                        <div>
+                            {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} />)}
+                        </div>
+                    </CardSection>
+                </Card>
+           </div>
         </Modal>
     );
 }

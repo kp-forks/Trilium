@@ -1,0 +1,11 @@
+.property-sheet-card {
+    font-size: .85em;
+
+    .tn-card-section {
+        display: flex;
+
+        > :first-child {
+            width: 100px;
+        }
+    }
+}
