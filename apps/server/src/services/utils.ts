@@ -1,4 +1,4 @@
-import { utils as coreUtils } from "@triliumnext/core";
+import { getCrypto,utils as coreUtils } from "@triliumnext/core";
 import chardet from "chardet";
 import crypto from "crypto";
 import { t } from "i18next";
@@ -49,10 +49,8 @@ export function fromBase64(encodedText: string) {
     return Buffer.from(encodedText, "base64");
 }
 
-export function hmac(secret: any, value: any) {
-    const hmac = crypto.createHmac("sha256", Buffer.from(secret.toString(), "ascii"));
-    hmac.update(value.toString());
-    return hmac.digest("base64");
+export function hmac(secret: string | Uint8Array, value: string | Uint8Array) {
+    return getCrypto().hmac(secret, value);
 }
 
 /**

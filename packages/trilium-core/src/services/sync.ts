@@ -14,13 +14,14 @@ import { getSql } from "./sql/index.js";
 import syncMutexService from "./sync_mutex.js";
 import syncOptions from "./sync_options.js";
 import syncUpdateService from "./sync_update.js";
-import { hmac, randomString, timeLimit } from "./utils/index.js";
+import { randomString, timeLimit } from "./utils/index.js";
 import ws from "./ws.js";
 import getInstanceId from "./instance_id.js";
 import request, { CookieJar, ExecOpts } from "./request.js";
 import entity_constructor from "../../src/becca/entity_constructor.js";
 import becca_loader from "../becca/becca_loader.js";
 import * as binary_utils from "./utils/binary.js";
+import { getCrypto } from "./encryption/crypto.js";
 
 let proxyToggle = true;
 
@@ -119,7 +120,7 @@ async function doLogin(): Promise<SyncContext> {
     const timestamp = dateUtils.utcNowDateTime();
 
     const documentSecret = optionService.getOption("documentSecret");
-    const hash = hmac(documentSecret, timestamp);
+    const hash = getCrypto().hmac(documentSecret, timestamp);
 
     const syncContext: SyncContext = { cookieJar: {} };
     const resp = await syncRequest<SyncResponse>(syncContext, "POST", "/api/login/sync", {

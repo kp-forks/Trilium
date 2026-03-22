@@ -44,6 +44,7 @@ export { default as bulk_actions } from "./services/bulk_actions";
 export { default as hoisted_note } from "./services/hoisted_note";
 export { default as special_notes } from "./services/special_notes";
 export { default as date_notes } from "./services/date_notes";
+export { getCrypto } from "./services/encryption/crypto";
 
 export { default as attribute_formatter} from "./services/attribute_formatter";
 

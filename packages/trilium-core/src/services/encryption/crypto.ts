@@ -10,6 +10,8 @@ export interface CryptoProvider {
     randomString(length: number): string;
     createCipheriv(algorithm: "aes-128-cbc", key: Uint8Array, iv: Uint8Array): Cipher;
     createDecipheriv(algorithm: "aes-128-cbc", key: Uint8Array, iv: Uint8Array): Cipher;
+    hmac(secret: string | Uint8Array, value: string | Uint8Array): string;
+
 }
 
 let crypto: CryptoProvider | null = null;

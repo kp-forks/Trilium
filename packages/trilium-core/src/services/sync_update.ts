@@ -5,7 +5,7 @@ import { getLog } from "./log.js";
 import { getSql } from "./sql/index.js";
 import ws from "./ws.js";
 import { default as eventService } from "./events.js";
-import entity_constructor from "src/becca/entity_constructor.js";
+import entity_constructor from "../becca/entity_constructor.js";
 
 interface UpdateContext {
     alreadyErased: number;
