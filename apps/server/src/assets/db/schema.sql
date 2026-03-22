@@ -79,7 +79,7 @@ CREATE UNIQUE INDEX `IDX_entityChanges_entityName_entityId` ON "entity_changes" 
                                                                                  `entityId`
     );
 CREATE INDEX `IDX_branches_noteId_parentNoteId` ON `branches` (`noteId`,`parentNoteId`);
-CREATE INDEX IDX_branches_parentNoteId ON branches (parentNoteId);
+CREATE INDEX IDX_branches_parentNoteId_isDeleted_notePosition ON branches (parentNoteId, isDeleted, notePosition);
 CREATE INDEX `IDX_notes_title` ON `notes` (`title`);
 CREATE INDEX `IDX_notes_type` ON `notes` (`type`);
 CREATE INDEX `IDX_notes_dateCreated` ON `notes` (`dateCreated`);

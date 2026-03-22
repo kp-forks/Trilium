@@ -22,8 +22,9 @@ const MIGRATIONS: (SqlMigration | JsMigration)[] = [
                 ON attributes (isDeleted, utcDateModified);
             CREATE INDEX IF NOT EXISTS IDX_attachments_isDeleted_utcDateModified
                 ON attachments (isDeleted, utcDateModified);
-            CREATE INDEX IF NOT EXISTS IDX_attachments_utcDateScheduledForErasureSince
-                ON attachments (utcDateScheduledForErasureSince);
+            DROP INDEX IF EXISTS IDX_branches_parentNoteId;
+            CREATE INDEX IF NOT EXISTS IDX_branches_parentNoteId_isDeleted_notePosition
+                ON branches (parentNoteId, isDeleted, notePosition);
         `
     },
     // Migrate aiChat notes to code notes since LLM integration has been removed
