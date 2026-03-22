@@ -1,14 +1,6 @@
 import { writeFileSync } from "fs";
 
-export interface ContributorList {
-    contributors: Contributor[];
-}
-
-export interface Contributor {
-    name: string;
-    url: string;
-    role?: "lead-dev" | "original-dev";
-}
+import {Contributor, ContributorList} from "../packages/commons/";
 
 // Keep honorific contributors at top of the list, even if their commit count
 // is exceeded by another users.
