@@ -4,7 +4,7 @@
  */
 
 import { BootstrapDefinition } from '@triliumnext/commons';
-import { getSharedBootstrapItems, getSql, routes } from '@triliumnext/core';
+import { getContext, getSharedBootstrapItems, getSql, routes } from '@triliumnext/core';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { type BrowserRequest,BrowserRouter } from './browser_router';
@@ -14,19 +14,23 @@ type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 /**
  * Wraps a core route handler to work with the BrowserRouter.
  * Core handlers expect an Express-like request object with params, query, and body.
+ * Each request is wrapped in an execution context (like cls.init() on the server)
+ * to ensure entity change tracking works correctly.
  */
 function wrapHandler(handler: (req: any) => unknown, transactional: boolean) {
     return (req: BrowserRequest) => {
-        // Create an Express-like request object
-        const expressLikeReq = {
-            params: req.params,
-            query: req.query,
-            body: req.body
-        };
-        if (transactional) {
-            return getSql().transactional(() => handler(expressLikeReq));
-        }
-        return handler(expressLikeReq);
+        return getContext().init(() => {
+            // Create an Express-like request object
+            const expressLikeReq = {
+                params: req.params,
+                query: req.query,
+                body: req.body
+            };
+            if (transactional) {
+                return getSql().transactional(() => handler(expressLikeReq));
+            }
+            return handler(expressLikeReq);
+        });
     };
 }
 
