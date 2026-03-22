@@ -60,7 +60,7 @@ export default async function startTriliumServer() {
     const httpServer = startHttpServer(app);
 
     const sessionParser = (await import("./routes/session_parser.js")).default;
-    (getMessagingProvider() as WebSocketMessagingProvider).init(httpServer, sessionParser); // TODO: Not sure why session parser is incompatible.
+    (getMessagingProvider() as WebSocketMessagingProvider).init(httpServer, sessionParser);
 
     if (utils.isElectron) {
         const electronRouting = await import("./routes/electron.js");

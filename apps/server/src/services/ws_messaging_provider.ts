@@ -1,6 +1,7 @@
 import type { WebSocketMessage } from "@triliumnext/commons";
 import type { ClientMessageHandler, MessagingProvider } from "@triliumnext/core";
 import type { IncomingMessage, Server as HttpServer } from "http";
+import type express from "express";
 import { WebSocket, WebSocketServer } from "ws";
 
 import config from "./config.js";
@@ -20,10 +21,10 @@ export default class WebSocketMessagingProvider implements MessagingProvider {
     private clientMap = new Map<string, WebSocket>();
     private clientMessageHandler?: ClientMessageHandler;
 
-    init(httpServer: HttpServer, sessionParser: SessionParser) {
+    init(httpServer: HttpServer, sessionParser: express.RequestHandler) {
         this.webSocketServer = new WebSocketServer({
             verifyClient: (info, done) => {
-                sessionParser(info.req, {}, () => {
+                sessionParser(info.req as express.Request, {}, () => {
                     const allowed = isElectron || (info.req as any).session.loggedIn || (config.General && config.General.noAuthentication);
 
                     if (!allowed) {
