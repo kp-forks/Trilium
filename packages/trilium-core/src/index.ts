@@ -4,6 +4,7 @@ import { getLog, initLog } from "./services/log";
 import { initSql } from "./services/sql/index";
 import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
+import { initRequest, RequestProvider } from "./services/request";
 import { initTranslations, TranslationProvider } from "./services/i18n";
 import appInfo from "./services/app_info";
 
@@ -74,13 +75,16 @@ export type { NoteParams } from "./services/notes";
 export * as sanitize from "./services/sanitizer";
 export * as routes from "./routes";
 export { default as ws } from "./services/ws";
+export { default as request } from "./services/request";
+export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, extraAppInfo }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, extraAppInfo }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
     translations: TranslationProvider,
     messaging?: MessagingProvider,
+    request?: RequestProvider,
     extraAppInfo?: {
         nodeVersion: string;
         dataDirectory: string;
@@ -94,5 +98,8 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
     Object.assign(appInfo, extraAppInfo);
     if (messaging) {
         initMessaging(messaging);
+    }
+    if (request) {
+        initRequest(request);
     }
 };

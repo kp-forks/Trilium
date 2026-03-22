@@ -1,5 +1,5 @@
 import type { EntityChange, EntityChangeRecord, EntityRow } from "@triliumnext/commons";
-import { becca_loader, binary_utils, entity_constructor, getInstanceId } from "@triliumnext/core";
+import { becca_loader, binary_utils, entity_constructor, getInstanceId, request, type CookieJar, type ExecOpts } from "@triliumnext/core";
 
 import becca from "../becca/becca.js";
 import appInfo from "./app_info.js";
@@ -10,8 +10,6 @@ import dateUtils from "./date_utils.js";
 import entityChangesService from "./entity_changes.js";
 import log from "./log.js";
 import optionService from "./options.js";
-import request from "./request.js";
-import type { CookieJar, ExecOpts } from "./request_interface.js";
 import setupService from "./setup.js";
 import sql from "./sql.js";
 import syncMutexService from "./sync_mutex.js";

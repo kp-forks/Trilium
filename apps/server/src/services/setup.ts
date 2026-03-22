@@ -3,7 +3,7 @@ import log from "./log.js";
 import sqlInit from "./sql_init.js";
 import optionService from "./options.js";
 import syncOptions from "./sync_options.js";
-import request from "./request.js";
+import { request } from "@triliumnext/core";
 import appInfo from "./app_info.js";
 import { timeLimit } from "./utils.js";
 import becca from "../becca/becca.js";

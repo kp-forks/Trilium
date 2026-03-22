@@ -8,6 +8,7 @@ import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
+import NodeRequestProvider from "./services/request.js";
 import dataDirs from "./services/data_dir.js";
 import BetterSqlite3Provider from "./sql_provider.js";
 
@@ -45,6 +46,7 @@ async function startApplication() {
             },
         },
         crypto: new NodejsCryptoProvider(),
+        request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         translations: (await import("./services/i18n.js")).initializeTranslations,
         extraAppInfo: {
