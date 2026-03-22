@@ -1,19 +1,11 @@
 {
-  "about": {
-    "title": "About Trilium Notes",
-    "homepage": "Homepage:",
-    "app_version": "App version:",
-    "db_version": "DB version:",
-    "sync_version": "Sync version:",
-    "build_date": "Build date:",
-    "build_revision": "Build revision:",
-    "data_directory": "Data directory:",
-
-    "version_label": "Version",
+  "about": {   
+    "version_label": "Version:",
     "version": "app: {{appVersion}}, database: {{dbVersion}}, sync protocol: {{syncVersion}}",
     "build_info": "{{buildDate}}, revision: {{buildRevision}}",
-    "contributors_label": "Contributors"
-
+    "contributors_label": "Contributors:",
+    "data_directory": "Data directory:",
+    "donate": "Donate"
   },
   "toast": {
     "critical-error": {

@@ -1,11 +1,37 @@
-.property-sheet-card {
-    font-size: .85em;
-
-    .tn-card-section {
+.about-dialog {
+    .about-dialog-content {
         display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-        > :first-child {
-            width: 100px;
+    .property-sheet-card {
+        margin-block: 30px;
+        font-size: .85em;
+
+        .tn-card-section {
+            display: flex;
+
+            > :first-child {
+                width: 100px;
+            }
+        }
+    }
+
+    footer {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 30px;
+
+        a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            
+            &::after {
+                display: none;
+            }
         }
     }
 }
