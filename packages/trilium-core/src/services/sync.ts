@@ -450,7 +450,7 @@ function getOutstandingPullCount() {
     return outstandingPullCount;
 }
 
-export function startSyncTimer() {
+function startSyncTimer() {
     becca_loader.beccaLoaded.then(() => {
         setInterval(cls.wrap(sync), 60000);
 
@@ -467,5 +467,6 @@ export default {
     login,
     getEntityChangeRecords,
     getOutstandingPullCount,
-    getMaxEntityChangeId
+    getMaxEntityChangeId,
+    startSyncTimer
 };

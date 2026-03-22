@@ -957,7 +957,7 @@ function runEntityChangesChecks() {
     consistencyChecks.findEntityChangeIssues();
 }
 
-export function startConsistencyChecks() {
+function startConsistencyChecks() {
     sqlInit.dbReady.then(() => {
         setInterval(cls.wrap(runPeriodicChecks), 60 * 60 * 1000);
 
@@ -968,5 +968,6 @@ export function startConsistencyChecks() {
 
 export default {
     runOnDemandChecks,
-    runEntityChangesChecks
+    runEntityChangesChecks,
+    startConsistencyChecks
 };

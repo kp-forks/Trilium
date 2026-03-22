@@ -47,6 +47,7 @@ export { default as date_notes } from "./services/date_notes";
 export { getCrypto } from "./services/encryption/crypto";
 
 export { default as attribute_formatter} from "./services/attribute_formatter";
+export { default as attributes } from "./services/attributes";
 
 // Messaging system
 export * from "./services/messaging/index";
@@ -71,6 +72,8 @@ export { default as Becca } from "./becca/becca-interface";
 export type { NotePojo } from "./becca/becca-interface";
 
 export { default as NoteSet } from "./services/search/note_set";
+export { default as SearchContext } from "./services/search/search_context";
+export { default as search } from "./services/search/services/search";
 export { default as note_service } from "./services/notes";
 export type { NoteParams } from "./services/notes";
 export * as sanitize from "./services/sanitizer";
@@ -82,6 +85,7 @@ export { default as sync_update } from "./services/sync_update";
 export { default as sync } from "./services/sync";
 export { default as consistency_checks } from "./services/consistency_checks";
 export { default as content_hash } from "./services/content_hash";
+export { default as sync_mutex } from "./services/sync_mutex";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 
 export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, extraAppInfo }: {
