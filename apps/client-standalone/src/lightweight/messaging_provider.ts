@@ -1,5 +1,5 @@
 import type { WebSocketMessage } from "@triliumnext/commons";
-import type { MessagingProvider, MessageHandler } from "@triliumnext/core";
+import type { ClientMessageHandler, MessageHandler,MessagingProvider } from "@triliumnext/core";
 
 /**
  * Messaging provider for browser Worker environments.
@@ -14,6 +14,7 @@ import type { MessagingProvider, MessageHandler } from "@triliumnext/core";
  */
 export default class WorkerMessagingProvider implements MessagingProvider {
     private messageHandlers: MessageHandler[] = [];
+    private clientMessageHandler?: ClientMessageHandler;
     private isDisposed = false;
 
     constructor() {
@@ -27,6 +28,15 @@ export default class WorkerMessagingProvider implements MessagingProvider {
         const { type, message } = event.data || {};
 
         if (type === "WS_MESSAGE" && message) {
+            // Dispatch to the client message handler (used by ws.ts for log-error, log-info, ping)
+            if (this.clientMessageHandler) {
+                try {
+                    this.clientMessageHandler("main-thread", message);
+                } catch (e) {
+                    console.error("[WorkerMessagingProvider] Error in client message handler:", e);
+                }
+            }
+
             // Dispatch to all registered handlers
             for (const handler of this.messageHandlers) {
                 try {
@@ -56,6 +66,26 @@ export default class WorkerMessagingProvider implements MessagingProvider {
         } catch (e) {
             console.error("[WorkerMessagingProvider] Error sending message:", e);
         }
+    }
+
+    /**
+     * Send a message to a specific client.
+     * In worker context, there's only one client (the main thread), so clientId is ignored.
+     */
+    sendMessageToClient(_clientId: string, message: WebSocketMessage): boolean {
+        if (this.isDisposed) {
+            return false;
+        }
+
+        this.sendMessageToAllClients(message);
+        return true;
+    }
+
+    /**
+     * Register a handler for incoming client messages.
+     */
+    setClientMessageHandler(handler: ClientMessageHandler): void {
+        this.clientMessageHandler = handler;
     }
 
     /**

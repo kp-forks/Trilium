@@ -157,13 +157,14 @@ async function initialize(): Promise<void> {
                     provider: sqlProvider!,
                     isReadOnly: false,
                     onTransactionCommit: () => {
-                        // No-op for now
+                        coreModule?.ws.sendTransactionEntityChangesToAllClients();
                     },
                     onTransactionRollback: () => {
                         // No-op for now
                     }
                 }
             });
+            coreModule.ws.init();
 
             console.log("[Worker] Supported routes", Object.keys(coreModule.routes));
 

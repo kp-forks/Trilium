@@ -73,6 +73,7 @@ export { default as note_service } from "./services/notes";
 export type { NoteParams } from "./services/notes";
 export * as sanitize from "./services/sanitizer";
 export * as routes from "./routes";
+export { default as ws } from "./services/ws";
 
 export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, extraAppInfo }: {
     dbConfig: SqlServiceParams,

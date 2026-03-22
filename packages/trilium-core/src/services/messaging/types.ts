@@ -25,6 +25,13 @@ export interface MessageClient {
  * - Worker postMessage for browser environments
  * - Mock implementations for testing
  */
+/**
+ * Handler for incoming client messages. Receives the client ID and the raw parsed message.
+ * The message is typed as `any` because clients may send message types (e.g. "log-error",
+ * "log-info") that aren't part of the server's WebSocketMessage union.
+ */
+export type ClientMessageHandler = (clientId: string, message: any) => void | Promise<void>;
+
 export interface MessagingProvider {
     /**
      * Send a message to all connected clients.
@@ -36,7 +43,12 @@ export interface MessagingProvider {
      * Send a message to a specific client by ID.
      * Returns false if the client is not found or disconnected.
      */
-    sendMessageToClient?(clientId: string, message: WebSocketMessage): boolean;
+    sendMessageToClient(clientId: string, message: WebSocketMessage): boolean;
+
+    /**
+     * Register a handler for incoming client messages.
+     */
+    setClientMessageHandler(handler: ClientMessageHandler): void;
 
     /**
      * Subscribe to incoming messages from clients.
