@@ -23,4 +23,8 @@ function schemaExists() {
     return true;
 }
 
-export default { isDbInitialized, createDatabaseForSync, setDbAsInitialized, schemaExists };
+function getDbSize() {
+    return 1000;
+}
+
+export default { isDbInitialized, createDatabaseForSync, setDbAsInitialized, schemaExists, getDbSize, dbReady };

@@ -79,6 +79,7 @@ export { default as request } from "./services/request";
 export { default as sync_options } from "./services/sync_options";
 export { default as sync_update } from "./services/sync_update";
 export { default as sync } from "./services/sync";
+export { default as consistency_checks } from "./services/consistency_checks";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 
 export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, extraAppInfo }: {
