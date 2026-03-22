@@ -1,34 +1,13 @@
-/// <reference types="vitest" />
-import prefresh from "@prefresh/vite";
-import { join, resolve } from "path";
-import webpackStatsPlugin from "rollup-plugin-webpack-stats";
-import { defineConfig } from "vite";
-import { viteStaticCopy } from "vite-plugin-static-copy"
-import { writeFileSync, mkdirSync } from "fs";
-import getContributors from "./src/services/contributors_list";
+/// <reference types='vitest' />
+import prefresh from '@prefresh/vite';
+import { join } from 'path';
+import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
+import { defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 
 const isDev = process.env.NODE_ENV === "development";
-
-const buildContributorListPlugin = {
-    name: "build-contributor-list-plugin",
-    writeBundle: async () => {
-        console.log("Retrieving the contributor list...");
-    
-        let jsonData: any = {};
-        try {
-            jsonData = await getContributors();
-        } catch (ex) {
-            console.error(ex);
-        }
-
-        const assetsDir = resolve(__dirname, "dist/assets");
-        mkdirSync(assetsDir, {recursive: true});
-        writeFileSync(resolve(assetsDir, "contributors.json"), JSON.stringify(jsonData, null, 2));
-    }
-};
-
 let plugins: any = [];
 
 if (isDev) {
@@ -38,7 +17,6 @@ if (isDev) {
     ];
 } else {
     plugins = [
-        buildContributorListPlugin,
         viteStaticCopy({
             targets: assets.map((asset) => ({
                 src: `src/${asset}/*`,
@@ -60,17 +38,17 @@ if (isDev) {
 
 export default defineConfig(() => ({
     root: __dirname,
-    cacheDir: "../../.cache/vite",
+    cacheDir: '../../.cache/vite',
     base: "",
     plugins,
     // Use esbuild for JSX transformation (much faster than Babel)
     esbuild: {
-        jsx: "automatic",
-        jsxImportSource: "preact",
+        jsx: 'automatic',
+        jsxImportSource: 'preact',
         jsxDev: isDev
     },
     css: {
-        transformer: "lightningcss",
+        transformer: 'lightningcss',
         devSourcemap: isDev
     },
     resolve: {
@@ -101,7 +79,7 @@ export default defineConfig(() => ({
     },
     build: {
         target: "esnext",
-        outDir: "./dist",
+        outDir: './dist',
         emptyOutDir: true,
         reportCompressedSize: true,
         sourcemap: false,
