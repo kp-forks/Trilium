@@ -38,15 +38,22 @@ export default async function buildApp() {
     app.set("view engine", "ejs");
 
     app.use((req, res, next) => {
-        // set CORS header
+        // set CORS headers
         if (config["Network"]["corsAllowOrigin"]) {
             res.header("Access-Control-Allow-Origin", config["Network"]["corsAllowOrigin"]);
+            res.header("Access-Control-Allow-Credentials", "true");
         }
         if (config["Network"]["corsAllowMethods"]) {
             res.header("Access-Control-Allow-Methods", config["Network"]["corsAllowMethods"]);
         }
         if (config["Network"]["corsAllowHeaders"]) {
             res.header("Access-Control-Allow-Headers", config["Network"]["corsAllowHeaders"]);
+        }
+
+        // Handle preflight OPTIONS requests
+        if (req.method === "OPTIONS" && config["Network"]["corsAllowOrigin"]) {
+            res.sendStatus(204);
+            return;
         }
 
         res.locals.t = t;
