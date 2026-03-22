@@ -69,3 +69,11 @@ export function putEntityChange(entityChange: EntityChange) {
 
     getContext().set("entityChangeIds", entityChangeIds);
 }
+
+export function getAndClearEntityChangeIds() {
+    const entityChangeIds = getContext().get("entityChangeIds") || [];
+
+    getContext().set("entityChangeIds", []);
+
+    return entityChangeIds;
+}
