@@ -540,7 +540,7 @@ function extractContentSnippet(noteId: string, searchTokens: string[], maxLength
                 if (firstSpace > 0 && firstSpace < 20) {
                     snippet = snippet.substring(firstSpace + 1);
                 }
-                snippet = `...${  snippet}`;
+                snippet = `...${snippet}`;
             }
 
             if (snippetStart + maxLength < content.length) {
@@ -632,7 +632,7 @@ function extractAttributeSnippet(noteId: string, searchTokens: string[], maxLeng
                 // Otherwise just truncate and add ellipsis
                 const lastSpace = truncated.lastIndexOf(' ');
                 snippet = truncated.substring(0, lastSpace > maxLength / 2 ? lastSpace : maxLength - 3);
-                snippet = `${snippet  }...`;
+                snippet = `${snippet}...`;
             }
         }
 
