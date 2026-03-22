@@ -253,6 +253,11 @@ function connectWebSocket() {
 }
 
 async function sendPing() {
+    if (!ws) {
+        // In standalone mode, there's no WebSocket — nothing to ping.
+        return;
+    }
+
     if (Date.now() - lastPingTs > 30000) {
         console.warn(utils.now(), "Lost websocket connection to the backend");
         toast.showPersistent({
