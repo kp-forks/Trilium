@@ -20,7 +20,8 @@ class WasmStatement implements Statement {
     constructor(
         private stmt: Sqlite3PreparedStatement,
         private db: Sqlite3Database,
-        private sqlite3: Sqlite3Module
+        private sqlite3: Sqlite3Module,
+        private sql: string
     ) {}
 
     run(...params: unknown[]): RunResult {
@@ -137,6 +138,24 @@ class WasmStatement implements Statement {
         return this;
     }
 
+    /**
+     * Detect the prefix used for a parameter name in the SQL query.
+     * SQLite supports @name, :name, and $name parameter styles.
+     * Returns the prefix character, or ':' as default if not found.
+     */
+    private detectParamPrefix(paramName: string): string {
+        // Search for the parameter with each possible prefix
+        for (const prefix of [':', '@', '$']) {
+            // Use word boundary to avoid partial matches
+            const pattern = new RegExp(`\\${prefix}${paramName}(?![a-zA-Z0-9_])`);
+            if (pattern.test(this.sql)) {
+                return prefix;
+            }
+        }
+        // Default to ':' if not found (most common in Trilium)
+        return ':';
+    }
+
     private bindParams(params: unknown[]): void {
         this.stmt.clearBindings();
         if (params.length === 0) {
@@ -148,16 +167,16 @@ class WasmStatement implements Statement {
             const inputBindings = params[0] as { [paramName: string]: BindableValue };
 
             // SQLite WASM expects parameter names to include the prefix (@ : or $)
-            // better-sqlite3 automatically maps unprefixed names to @name
-            // We need to add the @ prefix for compatibility
+            // We detect the prefix used in the SQL for each parameter
             const bindings: { [paramName: string]: BindableValue } = {};
             for (const [key, value] of Object.entries(inputBindings)) {
                 // If the key already has a prefix, use it as-is
                 if (key.startsWith('@') || key.startsWith(':') || key.startsWith('$')) {
                     bindings[key] = value;
                 } else {
-                    // Add @ prefix to match better-sqlite3 behavior
-                    bindings[`@${key}`] = value;
+                    // Detect the prefix used in the SQL and apply it
+                    const prefix = this.detectParamPrefix(key);
+                    bindings[`${prefix}${key}`] = value;
                 }
             }
 
@@ -493,7 +512,7 @@ export default class BrowserSqlProvider implements DatabaseProvider {
 
         // Create new statement and cache it
         const stmt = this.db!.prepare(query);
-        const wasmStatement = new WasmStatement(stmt, this.db!, this.sqlite3!);
+        const wasmStatement = new WasmStatement(stmt, this.db!, this.sqlite3!, query);
         this.statementCache.set(query, wasmStatement);
         return wasmStatement;
     }
