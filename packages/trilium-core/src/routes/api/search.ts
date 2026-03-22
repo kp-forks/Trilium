@@ -1,14 +1,15 @@
-import { becca_service,ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
 import attributeFormatter from "../../services/attribute_formatter.js";
 import bulkActionService from "../../services/bulk_actions.js";
-import cls from "../../services/cls.js";
 import hoistedNoteService from "../../services/hoisted_note.js";
 import SearchContext from "../../services/search/search_context.js";
 import type SearchResult from "../../services/search/search_result.js";
 import searchService, { EMPTY_RESULT, type SearchNoteResult } from "../../services/search/services/search.js";
+import { ValidationError } from "../../errors.js";
+import becca_service from "../../becca/becca_service.js";
+import { getHoistedNoteId } from "../../services/context.js";
 
 function searchFromNote(req: Request<{ noteId: string }>): SearchNoteResult {
     const note = becca.getNoteOrThrow(req.params.noteId);
@@ -146,7 +147,7 @@ function getRelatedNotes(req: Request) {
 }
 
 function searchTemplates() {
-    const query = cls.getHoistedNoteId() === "root" ? "#template" : "#template OR #workspaceTemplate";
+    const query = getHoistedNoteId() === "root" ? "#template" : "#template OR #workspaceTemplate";
 
     return searchService
         .searchNotes(query, {

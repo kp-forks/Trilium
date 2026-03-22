@@ -35,11 +35,9 @@ import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
 import scriptRoute from "./api/script.js";
-import searchRoute from "./api/search.js";
 import senderRoute from "./api/sender.js";
 import setupApiRoute from "./api/setup.js";
 import similarNotesRoute from "./api/similar_notes.js";
-import specialNotesRoute from "./api/special_notes.js";
 import syncApiRoute from "./api/sync.js";
 import systemInfoRoute from "./api/system_info.js";
 import totp from './api/totp.js';
@@ -87,7 +85,10 @@ function register(app: express.Application) {
     apiRoute(GET, '/api/totp_recovery/enabled', recoveryCodes.checkForRecoveryKeys);
     apiRoute(GET, '/api/totp_recovery/used', recoveryCodes.getUsedRecoveryCodes);
 
-    routes.buildSharedApiRoutes(apiRoute);
+    routes.buildSharedApiRoutes({
+        apiRoute,
+        asyncApiRoute
+    });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
     route(GET, "/api/notes/:noteId/open", [auth.checkApiAuthOrElectron], filesRoute.openFile);
@@ -171,12 +172,6 @@ function register(app: express.Application) {
 
     apiRoute(GET, "/api/autocomplete", autocompleteApiRoute.getAutocomplete);
     apiRoute(GET, "/api/autocomplete/notesCount", autocompleteApiRoute.getNotesCount);
-    apiRoute(GET, "/api/quick-search/:searchString", searchRoute.quickSearch);
-    apiRoute(GET, "/api/search-note/:noteId", searchRoute.searchFromNote);
-    apiRoute(PST, "/api/search-and-execute-note/:noteId", searchRoute.searchAndExecute);
-    apiRoute(PST, "/api/search-related", searchRoute.getRelatedNotes);
-    apiRoute(GET, "/api/search/:searchString", searchRoute.search);
-    apiRoute(GET, "/api/search-templates", searchRoute.searchTemplates);
 
     route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
     // this is for entering protected mode so user has to be already logged-in (that's the reason we don't require username)
@@ -199,22 +194,6 @@ function register(app: express.Application) {
     asyncRoute(PST, "/api/clipper/notes", clipperMiddleware, clipperRoute.createNote, apiResultHandler);
     route(PST, "/api/clipper/open/:noteId", clipperMiddleware, clipperRoute.openNote, apiResultHandler);
     asyncRoute(GET, "/api/clipper/notes-by-url/:noteUrl", clipperMiddleware, clipperRoute.findNotesByUrl, apiResultHandler);
-
-    asyncApiRoute(GET, "/api/special-notes/inbox/:date", specialNotesRoute.getInboxNote);
-    asyncApiRoute(GET, "/api/special-notes/days/:date", specialNotesRoute.getDayNote);
-    asyncApiRoute(GET, "/api/special-notes/week-first-day/:date", specialNotesRoute.getWeekFirstDayNote);
-    asyncApiRoute(GET, "/api/special-notes/weeks/:week", specialNotesRoute.getWeekNote);
-    asyncApiRoute(GET, "/api/special-notes/months/:month", specialNotesRoute.getMonthNote);
-    asyncApiRoute(GET, "/api/special-notes/quarters/:quarter", specialNotesRoute.getQuarterNote);
-    apiRoute(GET, "/api/special-notes/years/:year", specialNotesRoute.getYearNote);
-    apiRoute(GET, "/api/special-notes/notes-for-month/:month", specialNotesRoute.getDayNotesForMonth);
-    apiRoute(PST, "/api/special-notes/sql-console", specialNotesRoute.createSqlConsole);
-    asyncApiRoute(PST, "/api/special-notes/save-sql-console", specialNotesRoute.saveSqlConsole);
-    apiRoute(PST, "/api/special-notes/search-note", specialNotesRoute.createSearchNote);
-    apiRoute(PST, "/api/special-notes/save-search-note", specialNotesRoute.saveSearchNote);
-    apiRoute(PST, "/api/special-notes/launchers/:noteId/reset", specialNotesRoute.resetLauncher);
-    apiRoute(PST, "/api/special-notes/launchers/:parentNoteId/:launcherType", specialNotesRoute.createLauncher);
-    apiRoute(PUT, "/api/special-notes/api-script-launcher", specialNotesRoute.createOrUpdateScriptLauncherFromApi);
 
     asyncRoute(PST, "/api/database/anonymize/:type", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.anonymize, apiResultHandler);
     apiRoute(GET, "/api/database/anonymized-databases", databaseRoute.getExistingAnonymizedDatabases);

@@ -1,6 +1,6 @@
 "use strict";
 
-import { normalize } from "../../utils.js";
+import { normalize } from "../../utils/index";
 
 /**
  * Shared text processing utilities for search functionality
@@ -31,12 +31,12 @@ export const FUZZY_SEARCH_CONFIG = {
  * Normalizes text by removing diacritics and converting to lowercase.
  * This is the centralized text normalization function used across all search components.
  * Uses the shared normalize function from utils for consistency.
- * 
- * Examples: 
+ *
+ * Examples:
  * - "café" -> "cafe"
  * - "naïve" -> "naive"
  * - "HELLO WORLD" -> "hello world"
- * 
+ *
  * @param text The text to normalize
  * @returns The normalized text
  */
@@ -44,7 +44,7 @@ export function normalizeSearchText(text: string): string {
     if (!text || typeof text !== 'string') {
         return '';
     }
-    
+
     // Use shared normalize function for consistency across the codebase
     return normalize(text);
 }
@@ -53,7 +53,7 @@ export function normalizeSearchText(text: string): string {
  * Optimized edit distance calculation using single array and early termination.
  * This is significantly more memory efficient than the 2D matrix approach and includes
  * early termination optimizations for better performance.
- * 
+ *
  * @param str1 First string
  * @param str2 Second string
  * @param maxDistance Maximum allowed distance (for early termination)
@@ -64,7 +64,7 @@ export function calculateOptimizedEditDistance(str1: string, str2: string, maxDi
     if (typeof str1 !== 'string' || typeof str2 !== 'string') {
         throw new Error('Both arguments must be strings');
     }
-    
+
     if (maxDistance < 0 || !Number.isInteger(maxDistance)) {
         throw new Error('maxDistance must be a non-negative integer');
     }
@@ -103,7 +103,7 @@ export function calculateOptimizedEditDistance(str1: string, str2: string, maxDi
                 currentRow[j - 1] + 1,     // insertion
                 previousRow[j - 1] + cost  // substitution
             );
-            
+
             // Track minimum value in current row for early termination
             if (currentRow[j] < minInRow) {
                 minInRow = currentRow[j];
@@ -125,7 +125,7 @@ export function calculateOptimizedEditDistance(str1: string, str2: string, maxDi
 
 /**
  * Validates that tokens meet minimum requirements for fuzzy operators.
- * 
+ *
  * @param tokens Array of search tokens
  * @param operator The search operator being used
  * @returns Validation result with success status and error message
@@ -153,10 +153,10 @@ export function validateFuzzySearchTokens(tokens: string[], operator: string): {
     }
 
     // Check for null, undefined, or non-string tokens
-    const invalidTypeTokens = tokens.filter(token => 
+    const invalidTypeTokens = tokens.filter(token =>
         token == null || typeof token !== 'string'
     );
-    
+
     if (invalidTypeTokens.length > 0) {
         return {
             isValid: false,
@@ -166,7 +166,7 @@ export function validateFuzzySearchTokens(tokens: string[], operator: string): {
 
     // Check for empty string tokens
     const emptyTokens = tokens.filter(token => token.trim().length === 0);
-    
+
     if (emptyTokens.length > 0) {
         return {
             isValid: false,
@@ -180,7 +180,7 @@ export function validateFuzzySearchTokens(tokens: string[], operator: string): {
 
     // Check minimum token length for fuzzy operators
     const shortTokens = tokens.filter(token => token.length < FUZZY_SEARCH_CONFIG.MIN_FUZZY_TOKEN_LENGTH);
-    
+
     if (shortTokens.length > 0) {
         return {
             isValid: false,
@@ -191,7 +191,7 @@ export function validateFuzzySearchTokens(tokens: string[], operator: string): {
     // Check for excessively long tokens that could cause performance issues
     const maxTokenLength = 100; // Reasonable limit for search tokens
     const longTokens = tokens.filter(token => token.length > maxTokenLength);
-    
+
     if (longTokens.length > 0) {
         return {
             isValid: false,
@@ -205,7 +205,7 @@ export function validateFuzzySearchTokens(tokens: string[], operator: string): {
 /**
  * Validates and preprocesses content for search operations.
  * Philosophy: Try to search everything! Only block truly extreme cases that could crash the system.
- * 
+ *
  * @param content The content to validate and preprocess
  * @param noteId The note ID (for logging purposes)
  * @returns Processed content, only null for truly extreme cases that could cause system instability
@@ -258,9 +258,9 @@ function escapeRegExp(string: string): string {
 /**
  * Checks if a word matches a token with fuzzy matching and returns the matched word.
  * Optimized for common case where distances are small.
- * 
+ *
  * @param token The search token (should be normalized)
- * @param text The text to match against (should be normalized)  
+ * @param text The text to match against (should be normalized)
  * @param maxDistance Maximum allowed edit distance
  * @returns The matched word if found, null otherwise
  */
@@ -269,49 +269,49 @@ export function fuzzyMatchWordWithResult(token: string, text: string, maxDistanc
     if (typeof token !== 'string' || typeof text !== 'string') {
         return null;
     }
-    
+
     if (token.length === 0 || text.length === 0) {
         return null;
     }
-    
+
     try {
         // Normalize both strings for comparison
         const normalizedToken = token.toLowerCase();
         const normalizedText = text.toLowerCase();
-        
+
         // Exact match check first (most common case)
         if (normalizedText.includes(normalizedToken)) {
             // Find the exact match in the original text to preserve case
             const exactMatch = text.match(new RegExp(escapeRegExp(token), 'i'));
             return exactMatch ? exactMatch[0] : token;
         }
-        
+
         // For fuzzy matching, we need to check individual words in the text
         // Split the text into words and check each word against the token
         const words = normalizedText.split(/\s+/).filter(word => word.length > 0);
         const originalWords = text.split(/\s+/).filter(word => word.length > 0);
-        
+
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
             const originalWord = originalWords[i];
-            
+
             // Skip if word is too different in length for fuzzy matching
             if (Math.abs(word.length - normalizedToken.length) > maxDistance) {
                 continue;
             }
-            
+
             // For very short tokens or very different lengths, be more strict
             if (normalizedToken.length < 4 || Math.abs(word.length - normalizedToken.length) > 2) {
                 continue;
             }
-            
+
             // Use optimized edit distance calculation
             const distance = calculateOptimizedEditDistance(normalizedToken, word, maxDistance);
             if (distance <= maxDistance) {
                 return originalWord; // Return the original word with case preserved
             }
         }
-        
+
         return null;
     } catch (error) {
         // Log error and return null for safety
@@ -323,7 +323,7 @@ export function fuzzyMatchWordWithResult(token: string, text: string, maxDistanc
 /**
  * Checks if a word matches a token with fuzzy matching.
  * Optimized for common case where distances are small.
- * 
+ *
  * @param token The search token (should be normalized)
  * @param word The word to match against (should be normalized)
  * @param maxDistance Maximum allowed edit distance

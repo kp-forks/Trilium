@@ -17,6 +17,8 @@ import revisionsApiRoute from "./api/revisions";
 import relationMapApiRoute from "./api/relation-map";
 import recentChangesApiRoute from "./api/recent_changes";
 import bulkActionRoute from "./api/bulk_action";
+import searchRoute from "./api/search";
+import specialNotesRoute from "./api/special_notes";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -25,7 +27,12 @@ const GET = "get",
     PATCH = "patch",
     DEL = "delete";
 
-export function buildSharedApiRoutes(apiRoute: any) {
+interface SharedApiRoutesContext {
+    apiRoute: any;
+    asyncApiRoute: any;
+}
+
+export function buildSharedApiRoutes({ apiRoute, asyncApiRoute }: SharedApiRoutesContext) {
     apiRoute(GET, '/api/tree', treeApiRoute.getTree);
     apiRoute(PST, '/api/tree/load', treeApiRoute.load);
 
@@ -92,10 +99,33 @@ export function buildSharedApiRoutes(apiRoute: any) {
     apiRoute(PUT, "/api/branches/:branchId/set-prefix", branchesApiRoute.setPrefix);
     apiRoute(PUT, "/api/branches/set-prefix-batch", branchesApiRoute.setPrefixBatch);
 
+    apiRoute(GET, "/api/quick-search/:searchString", searchRoute.quickSearch);
+    apiRoute(GET, "/api/search-note/:noteId", searchRoute.searchFromNote);
+    apiRoute(PST, "/api/search-and-execute-note/:noteId", searchRoute.searchAndExecute);
+    apiRoute(PST, "/api/search-related", searchRoute.getRelatedNotes);
+    apiRoute(GET, "/api/search/:searchString", searchRoute.search);
+    apiRoute(GET, "/api/search-templates", searchRoute.searchTemplates);
+
     apiRoute(PUT, "/api/notes/:noteId/clone-to-branch/:parentBranchId", cloningApiRoute.cloneNoteToBranch);
     apiRoute(PUT, "/api/notes/:noteId/toggle-in-parent/:parentNoteId/:present", cloningApiRoute.toggleNoteInParent);
     apiRoute(PUT, "/api/notes/:noteId/clone-to-note/:parentNoteId", cloningApiRoute.cloneNoteToParentNote);
     apiRoute(PUT, "/api/notes/:noteId/clone-after/:afterBranchId", cloningApiRoute.cloneNoteAfter);
+
+    asyncApiRoute(GET, "/api/special-notes/inbox/:date", specialNotesRoute.getInboxNote);
+    asyncApiRoute(GET, "/api/special-notes/days/:date", specialNotesRoute.getDayNote);
+    asyncApiRoute(GET, "/api/special-notes/week-first-day/:date", specialNotesRoute.getWeekFirstDayNote);
+    asyncApiRoute(GET, "/api/special-notes/weeks/:week", specialNotesRoute.getWeekNote);
+    asyncApiRoute(GET, "/api/special-notes/months/:month", specialNotesRoute.getMonthNote);
+    asyncApiRoute(GET, "/api/special-notes/quarters/:quarter", specialNotesRoute.getQuarterNote);
+    apiRoute(GET, "/api/special-notes/years/:year", specialNotesRoute.getYearNote);
+    apiRoute(GET, "/api/special-notes/notes-for-month/:month", specialNotesRoute.getDayNotesForMonth);
+    apiRoute(PST, "/api/special-notes/sql-console", specialNotesRoute.createSqlConsole);
+    asyncApiRoute(PST, "/api/special-notes/save-sql-console", specialNotesRoute.saveSqlConsole);
+    apiRoute(PST, "/api/special-notes/search-note", specialNotesRoute.createSearchNote);
+    apiRoute(PST, "/api/special-notes/save-search-note", specialNotesRoute.saveSearchNote);
+    apiRoute(PST, "/api/special-notes/launchers/:noteId/reset", specialNotesRoute.resetLauncher);
+    apiRoute(PST, "/api/special-notes/launchers/:parentNoteId/:launcherType", specialNotesRoute.createLauncher);
+    apiRoute(PUT, "/api/special-notes/api-script-launcher", specialNotesRoute.createOrUpdateScriptLauncherFromApi);
 
     apiRoute(GET, "/api/note-map/:noteId/backlink-count", noteMapRoute.getBacklinkCount);
 

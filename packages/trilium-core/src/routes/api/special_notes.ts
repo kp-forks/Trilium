@@ -1,10 +1,10 @@
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
-import cls from "../../services/cls.js";
+import * as cls from "../../services/context.js";
 import dateNoteService from "../../services/date_notes.js";
 import specialNotesService, { type LauncherType } from "../../services/special_notes.js";
-import sql from "../../services/sql.js";
+import { getSql } from "../../services/sql/index.js";
 
 function getInboxNote(req: Request<{ date: string }>) {
     return specialNotesService.getInboxNote(req.params.date);
@@ -51,6 +51,7 @@ function getDayNotesForMonth(req: Request) {
             AND attr.name = 'dateNote'
             AND attr.value LIKE '${month}%'`;
 
+    const sql = getSql();
     if (calendarRoot) {
         const rows = sql.getRows<{ date: string; noteId: string }>(query);
         const result: Record<string, string> = {};

@@ -17,7 +17,7 @@ import OrderByAndLimitExp from "../expressions/order_by_and_limit.js";
 import AncestorExp from "../expressions/ancestor.js";
 import buildComparator from "./build_comparator.js";
 import ValueExtractor from "../value_extractor.js";
-import { removeDiacritic } from "../../utils.js";
+import { removeDiacritic } from "../../utils/index.js";
 import TrueExp from "../expressions/true.js";
 import IsHiddenExp from "../expressions/is_hidden.js";
 import type SearchContext from "../search_context.js";

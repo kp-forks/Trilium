@@ -1,6 +1,6 @@
 import striptags from "striptags";
-
-import { normalize } from "../../utils.js";
+import { normalizeSearchText } from "../utils/text_utils";
+import { normalize } from "../../utils/index";
 
 export default function preprocessContent(rawContent: string | Uint8Array, type: string, mime: string, raw?: boolean) {
     let content = normalize(rawContent.toString());
@@ -77,7 +77,7 @@ function processMindmapContent(content: string) {
     // Combine topics into a single string
     const topicsString = topicsArray.join(", ");
 
-    return normalize(topicsString.toString());
+    return normalizeSearchText(topicsString.toString());
 }
 
 function processCanvasContent(content: string) {
