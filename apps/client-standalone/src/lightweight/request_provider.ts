@@ -22,9 +22,8 @@ export default class FetchRequestProvider implements RequestProvider {
             "requestId": paging.requestId
         };
 
-        if (opts.cookieJar?.header) {
-            headers["Cookie"] = opts.cookieJar.header;
-        }
+        // Note: the Cookie header is a forbidden header in fetch —
+        // the browser manages cookies automatically via credentials: 'include'.
 
         if (opts.auth?.password) {
             headers["trilium-cred"] = btoa(`dummy:${opts.auth.password}`);
@@ -45,16 +44,9 @@ export default class FetchRequestProvider implements RequestProvider {
                 method: opts.method,
                 headers,
                 body,
-                signal: controller.signal
+                signal: controller.signal,
+                credentials: "include"
             });
-
-            // Handle set-cookie from response (limited in browser, but keep for API compat)
-            if (opts.cookieJar) {
-                const setCookie = response.headers.get("set-cookie");
-                if (setCookie) {
-                    opts.cookieJar.header = setCookie;
-                }
-            }
 
             if ([200, 201, 204].includes(response.status)) {
                 const text = await response.text();
