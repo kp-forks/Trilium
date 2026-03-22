@@ -1,4 +1,4 @@
-import { UpdateAttributeResponse, ValidationError } from "@triliumnext/commons";
+import { UpdateAttributeResponse } from "@triliumnext/commons";
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
@@ -6,6 +6,7 @@ import BAttribute from "../../becca/entities/battribute.js";
 import attributeService from "../../services/attributes.js";
 import { getLog } from "../../services/log.js";
 import { getSql } from "../../services/sql/index.js";
+import { ValidationError } from "../../errors.js";
 
 function getEffectiveNoteAttributes(req: Request<{ noteId: string }>) {
     const note = becca.getNote(req.params.noteId);
