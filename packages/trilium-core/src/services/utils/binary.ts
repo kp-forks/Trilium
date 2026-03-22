@@ -41,7 +41,7 @@ export function decodeUtf8(stringOrBuffer: string | Uint8Array) {
 }
 
 export function encodeUtf8(string: string | Uint8Array) {
-    return utf8Encoder.encode(wrapStringOrBuffer(string));
+    return utf8Encoder.encode(unwrapStringOrBuffer(string));
 }
 
 export function unwrapStringOrBuffer(stringOrBuffer: string | Uint8Array) {

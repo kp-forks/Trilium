@@ -6,6 +6,7 @@ import { getSql } from "./sql/index.js";
 import ws from "./ws.js";
 import { default as eventService } from "./events.js";
 import entity_constructor from "../becca/entity_constructor.js";
+import { decodeBase64 } from "./utils/binary.js";
 
 interface UpdateContext {
     alreadyErased: number;
@@ -119,7 +120,7 @@ function preProcessContent(remoteEC: EntityChange, remoteEntityRow: EntityRow) {
         // "string notes". The problem is that in general, it's not possible to detect whether a blob content
         // is string note or note (syncs can arrive out of order)
         if (typeof remoteEntityRow.content === "string") {
-            remoteEntityRow.content = Buffer.from(remoteEntityRow.content, "base64");
+            remoteEntityRow.content = decodeBase64(remoteEntityRow.content);
 
             if (remoteEntityRow.content.byteLength === 0) {
                 // there seems to be a bug which causes empty buffer to be stored as NULL which is then picked up as inconsistency

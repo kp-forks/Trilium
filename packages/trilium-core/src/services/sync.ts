@@ -360,7 +360,7 @@ function getEntityChangeRow(entityChange: EntityChange) {
 
     if (entityName === "blobs" && entityRow.content !== null) {
         if (typeof entityRow.content === "string") {
-            entityRow.content = Buffer.from(entityRow.content, "utf-8");
+            entityRow.content = binary_utils.encodeUtf8(entityRow.content);
         }
 
         if (entityRow.content) {
