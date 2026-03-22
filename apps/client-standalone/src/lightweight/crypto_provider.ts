@@ -1,5 +1,6 @@
 import type { CryptoProvider } from "@triliumnext/core";
 import { sha1 } from "js-sha1";
+import { sha256 } from "js-sha256";
 import { sha512 } from "js-sha512";
 
 interface Cipher {
@@ -51,6 +52,18 @@ export default class BrowserCryptoProvider implements CryptoProvider {
             result += CHARS[bytes[i] % CHARS.length];
         }
         return result;
+    }
+
+    hmac(secret: string | Uint8Array, value: string | Uint8Array): string {
+        const secretStr = typeof secret === "string" ? secret : new TextDecoder().decode(secret);
+        const valueStr = typeof value === "string" ? value : new TextDecoder().decode(value);
+        // sha256.hmac returns hex, convert to base64 to match Node's behavior
+        const hexHash = sha256.hmac(secretStr, valueStr);
+        const bytes = new Uint8Array(hexHash.length / 2);
+        for (let i = 0; i < hexHash.length; i += 2) {
+            bytes[i / 2] = parseInt(hexHash.substr(i, 2), 16);
+        }
+        return btoa(String.fromCharCode(...bytes));
     }
 }
 
