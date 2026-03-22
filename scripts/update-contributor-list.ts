@@ -28,9 +28,11 @@ async function main() {
         jsonData = await getContributors();
     } catch (ex) {
         console.error(ex);
+        return;
     }
 
     writeFileSync("contributors.json", JSON.stringify(jsonData, null, 2));
+    console.log("Done.");
 }
 
 async function getContributors() {
