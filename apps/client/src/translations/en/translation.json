@@ -2,7 +2,7 @@
   "about": {   
     "version_label": "Version:",
     "version": "app: {{appVersion}}, database: {{dbVersion}}, sync protocol: {{syncVersion}}",
-    "build_info": "{{buildDate}}, revision: {{buildRevision}}",
+    "build_info": "{{buildDate}}, revision: <buildRevision />",
     "contributors_label": "Contributors:",
     "data_directory": "Data directory:",
     "donate": "Donate"

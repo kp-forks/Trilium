@@ -11,6 +11,8 @@ import { useTriliumEvent } from "../react/hooks.jsx";
 import logo from "../../assets/icon.png";
 import { Card, CardSection } from "../react/Card.js";
 import "./about.css";
+import { Trans } from "react-i18next";
+import type React from "react";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
@@ -39,17 +41,26 @@ export default function AboutDialog() {
                 <Card className="property-sheet-card">
                     <CardSection>
                         <div>{t("about.version_label")}</div>
-                        <div>
+                        <div  className="selectable-text">
                             {t("about.version", {
                                 appVersion: appInfo?.appVersion,
                                 dbVersion: appInfo?.dbVersion,
                                 syncVersion: appInfo?.syncVersion
                             })}
                             <div>
-                                {t("about.build_info", {
-                                    buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : "",
-                                    buildRevision: appInfo?.buildRevision ? appInfo.buildRevision.substring(0, 6) : ""
-                                })}
+                                <Trans
+                                    i18nKey="about.build_info"
+                                    values={{
+                                        buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""
+                                    }}
+                                    components={{
+                                        buildRevision: <>
+                                            {appInfo?.buildRevision && <a href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" className="tn-link">
+                                                {appInfo.buildRevision.substring(0, 7)}
+                                            </a>}
+                                        </> as React.ReactElement
+                                    }}
+                                />
                             </div>
                         </div>
                     </CardSection>
@@ -58,7 +69,7 @@ export default function AboutDialog() {
                     </CardSection>
                     <CardSection>
                         <div>{t("about.data_directory")}</div>
-                        <div>
+                        <div className="selectable-text">
                             {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} />)}
                         </div>
                     </CardSection>
