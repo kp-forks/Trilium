@@ -207,10 +207,6 @@ interface LocalRequest {
 
 // Main dispatch
 async function dispatch(request: LocalRequest) {
-    const url = new URL(request.url);
-
-    console.log("[Worker] Dispatch:", url.pathname);
-
     // Ensure initialization is complete and get the router
     const appRouter = await ensureInitialized();
 
