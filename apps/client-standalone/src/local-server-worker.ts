@@ -1,15 +1,12 @@
-import { BrowserRouter } from './lightweight/browser_router';
-import { createConfiguredRouter } from './lightweight/browser_routes';
-import BrowserExecutionContext from './lightweight/cls_provider';
-import BrowserCryptoProvider from './lightweight/crypto_provider';
-import WorkerMessagingProvider from './lightweight/messaging_provider';
-import BrowserSqlProvider from './lightweight/sql_provider';
-import translationProvider from './lightweight/translation_provider';
+// =============================================================================
+// ERROR HANDLERS FIRST - No static imports above this!
+// ES modules hoist static imports, so they execute BEFORE any code runs.
+// We use dynamic imports below to ensure error handlers are registered first.
+// =============================================================================
 
-// Global error handlers - MUST be set up before any async imports
 self.onerror = (message, source, lineno, colno, error) => {
-    console.error("[Worker] Uncaught error:", message, source, lineno, colno, error);
-    // Try to notify the main thread about the error
+    const errorMsg = `[Worker] Uncaught error: ${message}\n  at ${source}:${lineno}:${colno}`;
+    console.error(errorMsg, error);
     try {
         self.postMessage({
             type: "WORKER_ERROR",
@@ -18,24 +15,25 @@ self.onerror = (message, source, lineno, colno, error) => {
                 source,
                 lineno,
                 colno,
-                stack: error?.stack
+                stack: error?.stack || new Error().stack
             }
         });
     } catch (e) {
-        // Can't even post message, just log
         console.error("[Worker] Failed to report error:", e);
     }
-    return false; // Don't suppress the error
+    return false;
 };
 
 self.onunhandledrejection = (event) => {
-    console.error("[Worker] Unhandled rejection:", event.reason);
+    const reason = event.reason;
+    const errorMsg = `[Worker] Unhandled rejection: ${reason?.message || reason}`;
+    console.error(errorMsg, reason);
     try {
         self.postMessage({
             type: "WORKER_ERROR",
             error: {
-                message: String(event.reason?.message || event.reason),
-                stack: event.reason?.stack
+                message: String(reason?.message || reason),
+                stack: reason?.stack || new Error().stack
             }
         });
     } catch (e) {
@@ -43,19 +41,68 @@ self.onunhandledrejection = (event) => {
     }
 };
 
-console.log("[Worker] Error handlers installed");
+console.log("[Worker] Error handlers installed, loading modules...");
 
-// Shared SQL provider instance
-const sqlProvider = new BrowserSqlProvider();
+// =============================================================================
+// TYPE-ONLY IMPORTS (erased at runtime, safe as static imports)
+// =============================================================================
+import type { BrowserRouter } from './lightweight/browser_router';
 
-// Messaging provider for worker-to-main-thread communication
-const messagingProvider = new WorkerMessagingProvider();
+// =============================================================================
+// MODULE STATE (populated by dynamic imports)
+// =============================================================================
+let BrowserSqlProvider: typeof import('./lightweight/sql_provider').default;
+let WorkerMessagingProvider: typeof import('./lightweight/messaging_provider').default;
+let BrowserExecutionContext: typeof import('./lightweight/cls_provider').default;
+let BrowserCryptoProvider: typeof import('./lightweight/crypto_provider').default;
+let translationProvider: typeof import('./lightweight/translation_provider').default;
+let createConfiguredRouter: typeof import('./lightweight/browser_routes').createConfiguredRouter;
+
+// Instance state
+let sqlProvider: InstanceType<typeof BrowserSqlProvider> | null = null;
+let messagingProvider: InstanceType<typeof WorkerMessagingProvider> | null = null;
 
 // Core module, router, and initialization state
 let coreModule: typeof import("@triliumnext/core") | null = null;
 let router: BrowserRouter | null = null;
 let initPromise: Promise<void> | null = null;
 let initError: Error | null = null;
+
+/**
+ * Load all required modules using dynamic imports.
+ * This allows errors to be caught by our error handlers.
+ */
+async function loadModules(): Promise<void> {
+    console.log("[Worker] Loading lightweight modules...");
+    const [
+        sqlModule,
+        messagingModule,
+        clsModule,
+        cryptoModule,
+        translationModule,
+        routesModule
+    ] = await Promise.all([
+        import('./lightweight/sql_provider.js'),
+        import('./lightweight/messaging_provider.js'),
+        import('./lightweight/cls_provider.js'),
+        import('./lightweight/crypto_provider.js'),
+        import('./lightweight/translation_provider.js'),
+        import('./lightweight/browser_routes.js')
+    ]);
+
+    BrowserSqlProvider = sqlModule.default;
+    WorkerMessagingProvider = messagingModule.default;
+    BrowserExecutionContext = clsModule.default;
+    BrowserCryptoProvider = cryptoModule.default;
+    translationProvider = translationModule.default;
+    createConfiguredRouter = routesModule.createConfiguredRouter;
+
+    // Create instances
+    sqlProvider = new BrowserSqlProvider();
+    messagingProvider = new WorkerMessagingProvider();
+
+    console.log("[Worker] Lightweight modules loaded successfully");
+}
 
 /**
  * Initialize SQLite WASM and load the core module.
@@ -71,18 +118,21 @@ async function initialize(): Promise<void> {
 
     initPromise = (async () => {
         try {
+            // First, load all modules dynamically
+            await loadModules();
+
             console.log("[Worker] Initializing SQLite WASM...");
-            await sqlProvider.initWasm();
+            await sqlProvider!.initWasm();
 
             // Try to use OPFS for persistent storage
-            if (sqlProvider.isOpfsAvailable()) {
+            if (sqlProvider!.isOpfsAvailable()) {
                 console.log("[Worker] OPFS available, loading persistent database...");
-                sqlProvider.loadFromOpfs("/trilium.db");
+                sqlProvider!.loadFromOpfs("/trilium.db");
 
                 // Check if database is initialized (schema exists)
-                if (!sqlProvider.isDbInitialized()) {
+                if (!sqlProvider!.isDbInitialized()) {
                     console.log("[Worker] Database not initialized, loading demo data...");
-                    sqlProvider.initializeDemoDatabase();
+                    sqlProvider!.initializeDemoDatabase();
                     console.log("[Worker] Demo data loaded");
                 } else {
                     console.log("[Worker] Existing initialized database loaded");
@@ -91,7 +141,7 @@ async function initialize(): Promise<void> {
                 // Fall back to in-memory database (non-persistent)
                 console.warn("[Worker] OPFS not available, using in-memory database (data will not persist)");
                 console.warn("[Worker] To enable persistence, ensure COOP/COEP headers are set by the server");
-                sqlProvider.loadFromMemory();
+                sqlProvider!.loadFromMemory();
             }
 
             console.log("[Worker] Database loaded");
@@ -101,10 +151,10 @@ async function initialize(): Promise<void> {
             await coreModule.initializeCore({
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
-                messaging: messagingProvider,
+                messaging: messagingProvider!,
                 translations: translationProvider,
                 dbConfig: {
-                    provider: sqlProvider,
+                    provider: sqlProvider!,
                     isReadOnly: false,
                     onTransactionCommit: () => {
                         // No-op for now
