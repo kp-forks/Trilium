@@ -1,3 +1,4 @@
+import { getMessagingProvider } from "@triliumnext/core";
 import type { Express } from "express";
 import fs from "fs";
 import http from "http";
@@ -12,7 +13,6 @@ import log from "./services/log.js";
 import port from "./services/port.js";
 import { getDbSize } from "./services/sql_init.js";
 import utils, { formatSize, formatUtcTime } from "./services/utils.js";
-import ws from "./services/ws.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 
 const MINIMUM_NODE_VERSION = "20.0.0";
@@ -60,8 +60,7 @@ export default async function startTriliumServer() {
     const httpServer = startHttpServer(app);
 
     const sessionParser = (await import("./routes/session_parser.js")).default;
-    const messagingProvider = new WebSocketMessagingProvider(httpServer, sessionParser);
-    ws.init(messagingProvider); // TODO: Not sure why session parser is incompatible.
+    (getMessagingProvider() as WebSocketMessagingProvider).init(httpServer, sessionParser); // TODO: Not sure why session parser is incompatible.
 
     if (utils.isElectron) {
         const electronRouting = await import("./routes/electron.js");

@@ -16,11 +16,11 @@ type SessionParser = (req: IncomingMessage, params: {}, cb: () => void) => void;
  * message serialization, and client tracking.
  */
 export default class WebSocketMessagingProvider implements MessagingProvider {
-    private webSocketServer: WebSocketServer;
+    private webSocketServer!: WebSocketServer;
     private clientMap = new Map<string, WebSocket>();
     private clientMessageHandler?: ClientMessageHandler;
 
-    constructor(httpServer: HttpServer, sessionParser: SessionParser) {
+    init(httpServer: HttpServer, sessionParser: SessionParser) {
         this.webSocketServer = new WebSocketServer({
             verifyClient: (info, done) => {
                 sessionParser(info.req, {}, () => {

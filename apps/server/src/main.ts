@@ -8,8 +8,9 @@ import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
-import NodeRequestProvider from "./services/request.js";
 import dataDirs from "./services/data_dir.js";
+import NodeRequestProvider from "./services/request.js";
+import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "./sql_provider.js";
 
 async function startApplication() {
@@ -48,6 +49,7 @@ async function startApplication() {
         crypto: new NodejsCryptoProvider(),
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
+        messaging: new WebSocketMessagingProvider(),
         translations: (await import("./services/i18n.js")).initializeTranslations,
         extraAppInfo: {
             nodeVersion: process.version,
