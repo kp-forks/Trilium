@@ -17,6 +17,7 @@ import revisionsApiRoute from "./api/revisions";
 import relationMapApiRoute from "./api/relation-map";
 import recentChangesApiRoute from "./api/recent_changes";
 import bulkActionRoute from "./api/bulk_action";
+import searchRoute from "./api/search";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -91,6 +92,13 @@ export function buildSharedApiRoutes(apiRoute: any) {
     apiRoute(DEL, "/api/branches/:branchId", branchesApiRoute.deleteBranch);
     apiRoute(PUT, "/api/branches/:branchId/set-prefix", branchesApiRoute.setPrefix);
     apiRoute(PUT, "/api/branches/set-prefix-batch", branchesApiRoute.setPrefixBatch);
+
+    apiRoute(GET, "/api/quick-search/:searchString", searchRoute.quickSearch);
+    apiRoute(GET, "/api/search-note/:noteId", searchRoute.searchFromNote);
+    apiRoute(PST, "/api/search-and-execute-note/:noteId", searchRoute.searchAndExecute);
+    apiRoute(PST, "/api/search-related", searchRoute.getRelatedNotes);
+    apiRoute(GET, "/api/search/:searchString", searchRoute.search);
+    apiRoute(GET, "/api/search-templates", searchRoute.searchTemplates);
 
     apiRoute(PUT, "/api/notes/:noteId/clone-to-branch/:parentBranchId", cloningApiRoute.cloneNoteToBranch);
     apiRoute(PUT, "/api/notes/:noteId/toggle-in-parent/:parentNoteId/:present", cloningApiRoute.toggleNoteInParent);

@@ -35,7 +35,6 @@ import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
 import scriptRoute from "./api/script.js";
-import searchRoute from "./api/search.js";
 import senderRoute from "./api/sender.js";
 import setupApiRoute from "./api/setup.js";
 import similarNotesRoute from "./api/similar_notes.js";
@@ -171,12 +170,6 @@ function register(app: express.Application) {
 
     apiRoute(GET, "/api/autocomplete", autocompleteApiRoute.getAutocomplete);
     apiRoute(GET, "/api/autocomplete/notesCount", autocompleteApiRoute.getNotesCount);
-    apiRoute(GET, "/api/quick-search/:searchString", searchRoute.quickSearch);
-    apiRoute(GET, "/api/search-note/:noteId", searchRoute.searchFromNote);
-    apiRoute(PST, "/api/search-and-execute-note/:noteId", searchRoute.searchAndExecute);
-    apiRoute(PST, "/api/search-related", searchRoute.getRelatedNotes);
-    apiRoute(GET, "/api/search/:searchString", searchRoute.search);
-    apiRoute(GET, "/api/search-templates", searchRoute.searchTemplates);
 
     route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
     // this is for entering protected mode so user has to be already logged-in (that's the reason we don't require username)

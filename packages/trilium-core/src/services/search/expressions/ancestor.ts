@@ -2,7 +2,7 @@
 
 import Expression from "./expression.js";
 import NoteSet from "../note_set.js";
-import log from "../../log.js";
+import log, { getLog } from "../../log.js";
 import becca from "../../../becca/becca.js";
 import type SearchContext from "../search_context.js";
 
@@ -24,7 +24,7 @@ class AncestorExp extends Expression {
         const ancestorNote = becca.notes[this.ancestorNoteId];
 
         if (!ancestorNote) {
-            log.error(`Subtree note '${this.ancestorNoteId}' was not not found.`);
+            getLog().error(`Subtree note '${this.ancestorNoteId}' was not not found.`);
 
             return new NoteSet([]);
         }
@@ -64,7 +64,7 @@ class AncestorExp extends Expression {
         } else if (depthCondition.startsWith("lt")) {
             return (depth) => depth < comparedDepth;
         } else {
-            log.error(`Unrecognized depth condition value ${depthCondition}`);
+            getLog().error(`Unrecognized depth condition value ${depthCondition}`);
             return null;
         }
     }

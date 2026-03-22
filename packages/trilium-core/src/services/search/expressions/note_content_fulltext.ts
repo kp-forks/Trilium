@@ -1,9 +1,8 @@
 import type { NoteRow } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
-import log from "../../log.js";
+import { getLog } from "../../log.js";
 import protectedSessionService from "../../protected_session.js";
-import sql from "../../sql.js";
 import NoteSet from "../note_set.js";
 import type SearchContext from "../search_context.js";
 import {
@@ -14,6 +13,7 @@ import {
     validateFuzzySearchTokens} from "../utils/text_utils.js";
 import Expression from "./expression.js";
 import preprocessContent from "./note_content_fulltext_preprocessor.js";
+import { getSql } from "../../../services/sql/index.js";
 
 const ALLOWED_OPERATORS = new Set(["=", "!=", "*=*", "*=", "=*", "%=", "~=", "~*"]);
 
@@ -80,7 +80,7 @@ class NoteContentFulltextExp extends Expression {
         const resultNoteSet = new NoteSet();
 
         // Search through notes with content
-        for (const row of sql.iterateRows<SearchRow>(`
+        for (const row of getSql().iterateRows<SearchRow>(`
                 SELECT noteId, type, mime, content, isProtected
                 FROM notes JOIN blobs USING (blobId)
                 WHERE type IN ('text', 'code', 'mermaid', 'canvas', 'mindMap')
@@ -204,7 +204,7 @@ class NoteContentFulltextExp extends Expression {
             try {
                 content = protectedSessionService.decryptString(content) || undefined;
             } catch (e) {
-                log.info(`Cannot decrypt content of note ${noteId}`);
+                getLog().info(`Cannot decrypt content of note ${noteId}`);
                 return;
             }
         }
@@ -327,7 +327,7 @@ class NoteContentFulltextExp extends Expression {
             return this.fuzzyMatchToken(token, normalizedContent) ||
                    (this.flatText && this.fuzzyMatchToken(token, flatText));
         } catch (error) {
-            log.error(`Error in fuzzy matching for note ${noteId}: ${error}`);
+            getLog().error(`Error in fuzzy matching for note ${noteId}: ${error}`);
             return false;
         }
     }

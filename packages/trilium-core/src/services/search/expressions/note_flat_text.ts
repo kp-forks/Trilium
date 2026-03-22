@@ -1,8 +1,6 @@
-import { becca_service } from "@triliumnext/core";
-
+import becca_service from "../../../becca/becca_service.js";
 import becca from "../../../becca/becca.js";
 import type BNote from "../../../becca/entities/bnote.js";
-import { normalize } from "../../utils.js";
 import NoteSet from "../note_set.js";
 import type SearchContext from "../search_context.js";
 import { fuzzyMatchWord, fuzzyMatchWordWithResult,normalizeSearchText } from "../utils/text_utils.js";

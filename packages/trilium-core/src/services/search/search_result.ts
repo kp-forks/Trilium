@@ -1,4 +1,4 @@
-import { becca_service } from "@triliumnext/core";
+import becca_service from "../../becca/becca_service";
 
 import becca from "../../becca/becca.js";
 import {

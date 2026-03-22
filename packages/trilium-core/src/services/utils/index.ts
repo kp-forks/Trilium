@@ -135,3 +135,7 @@ export function isEmptyOrWhitespace(str: string | null | undefined) {
     if (!str) return true;
     return str.match(/^ *$/) !== null;
 }
+
+export function escapeRegExp(str: string) {
+    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}

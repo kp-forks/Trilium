@@ -105,10 +105,6 @@ export function stripTags(text: string) {
     return text.replace(/<(?:.|\n)*?>/gm, "");
 }
 
-export function escapeRegExp(str: string) {
-    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-}
-
 export async function crash(message: string) {
     if (isElectron) {
         const electron = await import("electron");
@@ -449,6 +445,8 @@ function slugify(text: string) {
 
 /** @deprecated */
 export const escapeHtml = coreUtils.escapeHtml;
+/** @deprecated */
+export const escapeRegExp = coreUtils.escapeRegExp;
 /** @deprecated */
 export const unescapeHtml = coreUtils.unescapeHtml;
 /** @deprecated */
