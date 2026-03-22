@@ -1,5 +1,5 @@
 import type { Locale } from "./i18n.js";
-import { AttachmentRow, AttributeRow, BranchRow, NoteRow, NoteType } from "./rows.js";
+import { AttachmentRow, AttributeRow, BranchRow, NoteRow, NoteType, OptionRow } from "./rows.js";
 
 type Response = {
     success: true,
@@ -340,4 +340,20 @@ export interface BootstrapDefinition {
     iconPackCss: string;
     iconRegistry: IconRegistry;
     TRILIUM_SAFE_MODE: boolean;
+}
+
+/**
+ * Response for /api/setup/status.
+ */
+export interface SetupStatusResponse {
+    syncVersion: number;
+    schemaExists: boolean;
+}
+
+/**
+ * Response for /api/setup/sync-seed.
+ */
+export interface SetupSyncSeedResponse {
+    syncVersion: number;
+    options: OptionRow[];
 }

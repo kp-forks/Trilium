@@ -11,4 +11,16 @@ function isDbInitialized() {
     return true;
 }
 
-export default { isDbInitialized };
+async function createDatabaseForSync(a: any, b: string, c: any) {
+    console.error("createDatabaseForSync is not implemented yet");
+}
+
+function setDbAsInitialized() {
+    // Noop.
+}
+
+function schemaExists() {
+    return true;
+}
+
+export default { isDbInitialized, createDatabaseForSync, setDbAsInitialized, schemaExists };

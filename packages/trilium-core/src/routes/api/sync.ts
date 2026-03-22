@@ -1,20 +1,20 @@
 import { type EntityChange, SyncTestResponse } from "@triliumnext/commons";
-import { ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import { t } from "i18next";
 
 import consistencyChecksService from "../../services/consistency_checks.js";
 import contentHashService from "../../services/content_hash.js";
 import entityChangesService from "../../services/entity_changes.js";
-import log from "../../services/log.js";
+import { getLog } from "../../services/log.js";
 import optionService from "../../services/options.js";
-import sql from "../../services/sql.js";
+import { getSql } from "../../services/sql/index.js";
 import sqlInit from "../../services/sql_init.js";
 import syncService from "../../services/sync.js";
 import syncOptions from "../../services/sync_options.js";
 import syncUpdateService from "../../services/sync_update.js";
-import utils, { safeExtractMessageAndStackFromError } from "../../services/utils.js";
+import * as utils from "../../services/utils/index.js";
 import ws from "../../services/ws.js";
+import { ValidationError } from "../../errors.js";
 
 async function testSync(): Promise<SyncTestResponse> {
     try {
@@ -30,7 +30,7 @@ async function testSync(): Promise<SyncTestResponse> {
 
         return { success: true, message: t("test_sync.successful") };
     } catch (e: unknown) {
-        const [errMessage] = safeExtractMessageAndStackFromError(e);
+        const [errMessage] = utils.safeExtractMessageAndStackFromError(e);
         return {
             success: false,
             message: errMessage
@@ -45,11 +45,11 @@ function getStats() {
     }
 
     const stats = {
-        initialized: sql.getValue("SELECT value FROM options WHERE name = 'initialized'") === "true",
+        initialized: getSql().getValue("SELECT value FROM options WHERE name = 'initialized'") === "true",
         outstandingPullCount: syncService.getOutstandingPullCount()
     };
 
-    log.info(`Returning sync stats: ${JSON.stringify(stats)}`);
+    getLog().info(`Returning sync stats: ${JSON.stringify(stats)}`);
 
     return stats;
 }
@@ -57,12 +57,12 @@ function getStats() {
 function checkSync() {
     return {
         entityHashes: contentHashService.getEntityHashes(),
-        maxEntityChangeId: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1")
+        maxEntityChangeId: getSql().getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1")
     };
 }
 
 function syncNow() {
-    log.info("Received request to trigger sync now.");
+    getLog().info("Received request to trigger sync now.");
 
     // when explicitly asked for set in progress status immediately for faster user feedback
     ws.syncPullInProgress();
@@ -73,14 +73,14 @@ function syncNow() {
 function fillEntityChanges() {
     entityChangesService.fillAllEntityChanges();
 
-    log.info("Sync rows have been filled.");
+    getLog().info("Sync rows have been filled.");
 }
 
 function forceFullSync() {
     optionService.setOption("lastSyncedPull", 0);
     optionService.setOption("lastSyncedPush", 0);
 
-    log.info("Forcing full sync.");
+    getLog().info("Forcing full sync.");
 
     // not awaiting for the job to finish (will probably take a long time)
     syncService.sync();
@@ -149,6 +149,7 @@ function getChanged(req: Request) {
     const clientInstanceId = req.query.instanceId;
     let filteredEntityChanges: EntityChange[] = [];
 
+    const sql = getSql();
     do {
         const entityChanges: EntityChange[] = sql.getRows<EntityChange>(
             `
@@ -177,7 +178,7 @@ function getChanged(req: Request) {
     if (entityChangeRecords.length > 0) {
         lastEntityChangeId = entityChangeRecords[entityChangeRecords.length - 1].entityChange.id;
 
-        log.info(`Returning ${entityChangeRecords.length} entity changes in ${Date.now() - startTime}ms`);
+        getLog().info(`Returning ${entityChangeRecords.length} entity changes in ${Date.now() - startTime}ms`);
     }
 
     return {
@@ -282,7 +283,7 @@ function update(req: Request) {
 
         partialRequests[requestId].payload += req.body;
 
-        log.info(`Receiving a partial request ${requestId}, page ${pageIndex + 1} out of ${pageCount} pages.`);
+        getLog().info(`Receiving a partial request ${requestId}, page ${pageIndex + 1} out of ${pageCount} pages.`);
 
         if (pageIndex !== pageCount - 1) {
             return;
@@ -293,13 +294,13 @@ function update(req: Request) {
 
     const { entities, instanceId } = body;
 
-    sql.transactional(() => syncUpdateService.updateEntities(entities, instanceId));
+    getSql().transactional(() => syncUpdateService.updateEntities(entities, instanceId));
 }
 
 setInterval(() => {
     for (const key in partialRequests) {
         if (Date.now() - partialRequests[key].createdAt > 20 * 60 * 1000) {
-            log.info(`Cleaning up unfinished partial requests for ${key}`);
+            getLog().info(`Cleaning up unfinished partial requests for ${key}`);
 
             delete partialRequests[key];
         }

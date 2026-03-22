@@ -4,12 +4,33 @@
  */
 
 import { BootstrapDefinition } from '@triliumnext/commons';
-import { getContext, getSharedBootstrapItems, getSql, routes } from '@triliumnext/core';
+import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes } from '@triliumnext/core';
 
 import packageJson from '../../package.json' with { type: 'json' };
-import { type BrowserRequest,BrowserRouter } from './browser_router';
+import { type BrowserRequest, BrowserRouter } from './browser_router';
+
+/** Minimal response object used by apiResultHandler to capture the processed result. */
+interface ResultHandlerResponse {
+    headers: Record<string, string>;
+    result: unknown;
+    setHeader(name: string, value: string): void;
+}
 
 type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
+
+/**
+ * Creates an Express-like request object from a BrowserRequest.
+ */
+function toExpressLikeReq(req: BrowserRequest) {
+    return {
+        params: req.params,
+        query: req.query,
+        body: req.body,
+        headers: req.headers ?? {},
+        method: req.method,
+        get originalUrl() { return req.url; }
+    };
+}
 
 /**
  * Wraps a core route handler to work with the BrowserRouter.
@@ -20,12 +41,7 @@ type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 function wrapHandler(handler: (req: any) => unknown, transactional: boolean) {
     return (req: BrowserRequest) => {
         return getContext().init(() => {
-            // Create an Express-like request object
-            const expressLikeReq = {
-                params: req.params,
-                query: req.query,
-                body: req.body
-            };
+            const expressLikeReq = toExpressLikeReq(req);
             if (transactional) {
                 return getSql().transactional(() => handler(expressLikeReq));
             }
@@ -45,6 +61,74 @@ function createApiRoute(router: BrowserRouter, transactional: boolean) {
 }
 
 /**
+ * Low-level route registration matching the server's `route()` signature:
+ *   route(method, path, middleware[], handler, resultHandler)
+ *
+ * In standalone mode:
+ * - Middleware (e.g. checkApiAuth) is skipped — there's no authentication.
+ * - The resultHandler is applied to post-process the result (entity conversion, status codes).
+ */
+function createRoute(router: BrowserRouter) {
+    return (method: HttpMethod, path: string, _middleware: any[], handler: (req: any) => unknown, resultHandler?: ((req: any, res: any, result: unknown) => unknown) | null) => {
+        router.register(method, path, (req: BrowserRequest) => {
+            return getContext().init(() => {
+                const expressLikeReq = toExpressLikeReq(req);
+                const result = getSql().transactional(() => handler(expressLikeReq));
+
+                if (resultHandler) {
+                    // Create a minimal response object that captures what apiResultHandler sets.
+                    const res = createResultHandlerResponse();
+                    resultHandler(expressLikeReq, res, result);
+                    return res.result;
+                }
+
+                return result;
+            });
+        });
+    };
+}
+
+/**
+ * Standalone apiResultHandler matching the server's behavior:
+ * - Converts Becca entities to POJOs
+ * - Handles [statusCode, response] tuple format
+ * - Sets trilium-max-entity-change-id (captured in response headers)
+ */
+function apiResultHandler(_req: any, res: ResultHandlerResponse, result: unknown) {
+    res.headers["trilium-max-entity-change-id"] = String(entity_changes.getMaxEntityChangeId());
+    result = routes.convertEntitiesToPojo(result);
+
+    if (Array.isArray(result) && result.length > 0 && Number.isInteger(result[0])) {
+        const [_statusCode, response] = result;
+        res.result = response;
+    } else if (result === undefined) {
+        res.result = "";
+    } else {
+        res.result = result;
+    }
+}
+
+/**
+ * No-op auth middleware for standalone — there's no authentication.
+ */
+function checkApiAuth() {
+    // No authentication in standalone mode.
+}
+
+/**
+ * Creates a minimal response-like object for the apiResultHandler.
+ */
+function createResultHandlerResponse(): ResultHandlerResponse {
+    return {
+        headers: {},
+        result: undefined,
+        setHeader(name: string, value: string) {
+            this.headers[name] = value;
+        }
+    };
+}
+
+/**
  * Register all API routes on the browser router using the shared builder.
  *
  * @param router - The browser router instance
@@ -52,8 +136,11 @@ function createApiRoute(router: BrowserRouter, transactional: boolean) {
 export function registerRoutes(router: BrowserRouter): void {
     const apiRoute = createApiRoute(router, true);
     routes.buildSharedApiRoutes({
+        route: createRoute(router),
         apiRoute,
-        asyncApiRoute: createApiRoute(router, false)
+        asyncApiRoute: createApiRoute(router, false),
+        apiResultHandler,
+        checkApiAuth
     });
     apiRoute('get', '/bootstrap', bootstrapRoute);
 
