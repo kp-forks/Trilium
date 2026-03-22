@@ -691,7 +691,7 @@ function highlightSearchResults(searchResults: SearchResult[], highlightedTokens
     // which would make the resulting HTML string invalid.
     // { and } are used for marking <b> and </b> tag (to avoid matches on single 'b' character)
     // < and > are used for marking <small> and </small>
-    highlightedTokens = highlightedTokens.map((token) => token.replace("/[<\{\}]/g", "")).filter((token) => !!token?.trim());
+    highlightedTokens = highlightedTokens.map((token) => token.replace(/[<>{}]/g, "")).filter((token) => !!token?.trim());
 
     // sort by the longest, so we first highlight the longest matches
     highlightedTokens.sort((a, b) => (a.length > b.length ? -1 : 1));
