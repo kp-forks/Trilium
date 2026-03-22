@@ -57,6 +57,49 @@ export function unsubscribeToMessage(messageHandler: MessageHandler) {
     messageHandlers = messageHandlers.filter(handler => handler !== messageHandler);
 }
 
+/**
+ * Dispatch a message to all handlers and process it.
+ * This is the main entry point for incoming messages from any provider
+ * (WebSocket, Worker, etc.)
+ */
+export async function dispatchMessage(message: WebSocketMessage) {
+    // Notify all subscribers
+    for (const messageHandler of messageHandlers) {
+        messageHandler(message);
+    }
+
+    // Use string type for flexibility - server sends more message types than are typed
+    const messageType = message.type as string;
+    const msg = message as any;
+
+    // Process the message
+    if (messageType === "ping") {
+        lastPingTs = Date.now();
+    } else if (messageType === "reload-frontend") {
+        utils.reloadFrontendApp("received request from backend to reload frontend");
+    } else if (messageType === "frontend-update") {
+        await executeFrontendUpdate(msg.data.entityChanges);
+    } else if (messageType === "sync-hash-check-failed") {
+        toastService.showError(t("ws.sync-check-failed"), 60000);
+    } else if (messageType === "consistency-checks-failed") {
+        toastService.showError(t("ws.consistency-checks-failed"), 50 * 60000);
+    } else if (messageType === "api-log-messages") {
+        appContext.triggerEvent("apiLogMessages", { noteId: msg.noteId, messages: msg.messages });
+    } else if (messageType === "toast") {
+        toastService.showMessage(msg.message);
+    } else if (messageType === "execute-script") {
+        // TODO: Remove after porting the file
+        // @ts-ignore
+        const bundleService = (await import("./bundle.js")).default as any;
+        // TODO: Remove after porting the file
+        // @ts-ignore
+        const froca = (await import("./froca.js")).default as any;
+        const originEntity = msg.originEntityId ? await froca.getNote(msg.originEntityId) : null;
+
+        bundleService.getAndExecuteBundle(msg.currentNoteId, originEntity, msg.script, msg.params);
+    }
+}
+
 // used to serialize frontend update operations
 let consumeQueuePromise: Promise<void> | null = null;
 
@@ -112,38 +155,13 @@ async function executeFrontendUpdate(entityChanges: EntityChange[]) {
     }
 }
 
-async function handleMessage(event: MessageEvent<any>) {
-    const message = JSON.parse(event.data);
-
-    for (const messageHandler of messageHandlers) {
-        messageHandler(message);
-    }
-
-    if (message.type === "ping") {
-        lastPingTs = Date.now();
-    } else if (message.type === "reload-frontend") {
-        utils.reloadFrontendApp("received request from backend to reload frontend");
-    } else if (message.type === "frontend-update") {
-        await executeFrontendUpdate(message.data.entityChanges);
-    } else if (message.type === "sync-hash-check-failed") {
-        toastService.showError(t("ws.sync-check-failed"), 60000);
-    } else if (message.type === "consistency-checks-failed") {
-        toastService.showError(t("ws.consistency-checks-failed"), 50 * 60000);
-    } else if (message.type === "api-log-messages") {
-        appContext.triggerEvent("apiLogMessages", { noteId: message.noteId, messages: message.messages });
-    } else if (message.type === "toast") {
-        toastService.showMessage(message.message);
-    } else if (message.type === "execute-script") {
-        // TODO: Remove after porting the file
-        // @ts-ignore
-        const bundleService = (await import("./bundle.js")).default as any;
-        // TODO: Remove after porting the file
-        // @ts-ignore
-        const froca = (await import("./froca.js")).default as any;
-        const originEntity = message.originEntityId ? await froca.getNote(message.originEntityId) : null;
-
-        bundleService.getAndExecuteBundle(message.currentNoteId, originEntity, message.script, message.params);
-    }
+/**
+ * WebSocket message handler - parses the event and dispatches to generic handler.
+ * This is only used in WebSocket mode (not standalone).
+ */
+async function handleWebSocketMessage(event: MessageEvent<string>) {
+    const message = JSON.parse(event.data) as WebSocketMessage;
+    await dispatchMessage(message);
 }
 
 let entityChangeIdReachedListeners: {
@@ -228,7 +246,7 @@ function connectWebSocket() {
     // use wss for secure messaging
     const ws = new WebSocket(webSocketUri);
     ws.onopen = () => console.debug(utils.now(), `Connected to server ${webSocketUri} with WebSocket`);
-    ws.onmessage = handleMessage;
+    ws.onmessage = handleWebSocketMessage;
     // we're not handling ws.onclose here because reconnection is done in sendPing()
 
     return ws;
@@ -261,8 +279,18 @@ async function sendPing() {
 }
 
 setTimeout(() => {
-    if (glob.device === "print" || glob.isStandalone) return;
+    if (glob.device === "print") return;
 
+    if (glob.isStandalone) {
+        // In standalone mode, listen for messages from the local worker via custom event
+        window.addEventListener("trilium:ws-message", ((event: CustomEvent<WebSocketMessage>) => {
+            dispatchMessage(event.detail);
+        }) as EventListener);
+        console.debug(utils.now(), "Standalone mode: listening for worker messages");
+        return;
+    }
+
+    // Normal mode: use WebSocket
     ws = connectWebSocket();
 
     lastPingTs = Date.now();
