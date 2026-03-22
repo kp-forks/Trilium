@@ -8,17 +8,24 @@ import { useState } from "preact/hooks";
 import type { CSSProperties } from "preact/compat";
 import type { AppInfo } from "@triliumnext/commons";
 import { useTriliumEvent } from "../react/hooks.jsx";
-import logo from "../../assets/icon.png";
 import { Card, CardSection } from "../react/Card.js";
 import "./about.css";
 import { Trans } from "react-i18next";
 import type React from "react";
+import icon from "../../assets/icon.svg";
+import iconAlt from "../../assets/icon-alt.svg";
+import { useEffect } from "react";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
     const [shown, setShown] = useState(false);
+    const [isNightly, setNightly] = useState(false);
 
     useTriliumEvent("openAboutDialog", () => setShown(true));
+
+    useEffect(() => {
+        setNightly(!!appInfo?.appVersion.includes("test"));
+    }, [appInfo])
 
     return (
         <Modal className="about-dialog"
@@ -32,8 +39,8 @@ export default function AboutDialog() {
         >
            <div className="about-dialog-content">
 
-                <img src={logo} width="128" />
-                <h2>Trilium Notes</h2>
+                <img src={(isNightly) ? iconAlt : icon} width="128" />
+                <h2>Trilium Notes {isNightly && <span>Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
                     triliumnotes.org
                 </a>
