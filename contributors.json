@@ -3,13 +3,15 @@
   "contributors": [
     {
       "name": "eliandoran",
-      "role": "lead-dev",
-      "url": "https://github.com/eliandoran"
+      "url": "https://github.com/eliandoran",
+      "fullName": "Elian Doran",
+      "role": "lead-dev"
     },
     {
       "name": "zadam",
-      "role": "original-dev",
-      "url": "https://github.com/zadam"
+      "url": "https://github.com/zadam",
+      "fullName": "Zadam",
+      "role": "original-dev"
     },
     {
       "name": "adoriandoran",

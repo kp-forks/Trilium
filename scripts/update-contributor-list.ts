@@ -4,9 +4,9 @@ import {Contributor, ContributorList} from "../packages/commons/";
 
 // Keep honorific contributors at top of the list, even if their commit count
 // is exceeded by another users.
-const PINNED_CONTRIBUTORS = {
-    "eliandoran": "lead-dev",
-    "zadam": "original-dev"
+const PINNED_CONTRIBUTORS: Record<string, Pick<Contributor, "fullName" | "role">> = {
+    "eliandoran": {fullName: "Elian Doran", role: "lead-dev"},
+    "zadam": {fullName: "Zadam", role: "original-dev"}
 };
 
 // Bots marked as users on the GitHub profile info to exclude from the listing
@@ -46,11 +46,18 @@ function getList(contributorInfo: any[]) {
         .filter((c) => c.type === "User" && !BOTS.includes(c.login))
         // Sort by the commit count. Honorific contributors are always first.
         .sort(contributorOrderer)
-        .map((c) => {return {
-            name: c.login,
-            role: (c.login in PINNED_CONTRIBUTORS) ? PINNED_CONTRIBUTORS[c.login]: undefined,
-            url: c.html_url
-        } as Contributor});
+        .map((c) => {
+            let result = {
+                name: c.login,
+                url: c.html_url
+            } as Contributor;
+
+            if (c.login in PINNED_CONTRIBUTORS) {
+                result = {...result, ...PINNED_CONTRIBUTORS[c.login]};
+            }
+
+            return result;
+        });
 }
 
 function contributorOrderer(a, b) {

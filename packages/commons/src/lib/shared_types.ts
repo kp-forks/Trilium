@@ -4,6 +4,7 @@ export interface ContributorList {
 
 export interface Contributor {
     name: string;
+    fullName?: string;
     url: string;
     role?: "lead-dev" | "original-dev";
 }
