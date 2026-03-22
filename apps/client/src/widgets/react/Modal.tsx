@@ -16,7 +16,7 @@ interface CustomTitleBarButton {
 
 export interface ModalProps {
     className: string;
-    title: string | ComponentChildren;
+    title?: string | ComponentChildren;
     customTitleBarButtons?: (CustomTitleBarButton | null)[];
     size: "xl" | "lg" | "md" | "sm";
     children: ComponentChildren;
