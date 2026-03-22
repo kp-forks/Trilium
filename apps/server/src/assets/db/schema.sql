@@ -146,6 +146,13 @@ CREATE INDEX IDX_notes_blobId on notes (blobId);
 CREATE INDEX IDX_revisions_blobId on revisions (blobId);
 CREATE INDEX IDX_attachments_blobId on attachments (blobId);
 
+CREATE INDEX IDX_entity_changes_isSynced_id ON entity_changes (isSynced, id);
+CREATE INDEX IDX_entity_changes_isErased_entityName ON entity_changes (isErased, entityName);
+CREATE INDEX IDX_notes_isDeleted_utcDateModified ON notes (isDeleted, utcDateModified);
+CREATE INDEX IDX_branches_isDeleted_utcDateModified ON branches (isDeleted, utcDateModified);
+CREATE INDEX IDX_attributes_isDeleted_utcDateModified ON attributes (isDeleted, utcDateModified);
+CREATE INDEX IDX_attachments_isDeleted_utcDateModified ON attachments (isDeleted, utcDateModified);
+CREATE INDEX IDX_attachments_utcDateScheduledForErasureSince ON attachments (utcDateScheduledForErasureSince);
 
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
