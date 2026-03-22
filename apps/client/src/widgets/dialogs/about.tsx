@@ -14,14 +14,21 @@ import { Trans } from "react-i18next";
 import type React from "react";
 import icon from "../../assets/icon.svg";
 import iconAlt from "../../assets/icon-alt.svg";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
     const [shown, setShown] = useState(false);
     const [isNightly, setNightly] = useState(false);
 
-    useTriliumEvent("openAboutDialog", () => setShown(true));
+    const onLoad = useCallback(async () => {
+        if (!appInfo) {
+            setAppInfo(await server.get<AppInfo>("app-info"));
+        }
+        setShown(true);
+    }, []);
+
+    useTriliumEvent("openAboutDialog", onLoad);
 
     useEffect(() => {
         setNightly(!!appInfo?.appVersion.includes("test"));
@@ -31,10 +38,6 @@ export default function AboutDialog() {
         <Modal className="about-dialog"
             size="md"
             show={shown}
-            onShown={async () => {
-                const appInfo = await server.get<AppInfo>("app-info");
-                setAppInfo(appInfo);
-            }}
             onHidden={() => setShown(false)}
         >
            <div className="about-dialog-content">
