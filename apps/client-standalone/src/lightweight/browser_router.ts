@@ -183,6 +183,7 @@ export class BrowserRouter {
                 path,
                 params,
                 query,
+                headers: headers ?? {},
                 body: parsedBody
             };
 

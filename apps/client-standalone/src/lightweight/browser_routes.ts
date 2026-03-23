@@ -33,6 +33,18 @@ function toExpressLikeReq(req: BrowserRequest) {
 }
 
 /**
+ * Extracts context headers from the request and sets them in the execution context,
+ * mirroring what the server does in route_api.ts.
+ */
+function setContextFromHeaders(req: BrowserRequest) {
+    const headers = req.headers ?? {};
+    const ctx = getContext();
+    ctx.set("componentId", headers["trilium-component-id"]);
+    ctx.set("localNowDateTime", headers["trilium-local-now-datetime"]);
+    ctx.set("hoistedNoteId", headers["trilium-hoisted-note-id"] || "root");
+}
+
+/**
  * Wraps a core route handler to work with the BrowserRouter.
  * Core handlers expect an Express-like request object with params, query, and body.
  * Each request is wrapped in an execution context (like cls.init() on the server)
@@ -41,6 +53,7 @@ function toExpressLikeReq(req: BrowserRequest) {
 function wrapHandler(handler: (req: any) => unknown, transactional: boolean) {
     return (req: BrowserRequest) => {
         return getContext().init(() => {
+            setContextFromHeaders(req);
             const expressLikeReq = toExpressLikeReq(req);
             if (transactional) {
                 return getSql().transactional(() => handler(expressLikeReq));
@@ -72,6 +85,7 @@ function createRoute(router: BrowserRouter) {
     return (method: HttpMethod, path: string, _middleware: any[], handler: (req: any) => unknown, resultHandler?: ((req: any, res: any, result: unknown) => unknown) | null) => {
         router.register(method, path, (req: BrowserRequest) => {
             return getContext().init(() => {
+                setContextFromHeaders(req);
                 const expressLikeReq = toExpressLikeReq(req);
                 const result = getSql().transactional(() => handler(expressLikeReq));
 
