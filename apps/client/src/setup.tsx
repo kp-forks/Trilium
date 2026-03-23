@@ -42,8 +42,11 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
                     description={t("setup.new-document-description")}
-                    onClick={() => {
-                        server.post("setup/new-document");
+                    onClick={async () => {
+                        await server.post("setup/new-document");
+
+                        // After creating a new document, we can just reload the page to load it.
+                        location.reload();
                     }}
                 />
 
