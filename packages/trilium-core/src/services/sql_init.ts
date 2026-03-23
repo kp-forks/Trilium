@@ -148,8 +148,6 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
     const log = getLog();
     sql.transactional(() => {
         log.info("Creating database schema ...");
-
-        console.log("Got schema:", schema.substring(0, 100)); // Log the first 100 characters of the schema to verify it's loaded correctly
         sql.executeScript(schema);
 
         becca_loader.load();
@@ -182,7 +180,9 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
     // Check hidden subtree.
     // This ensures the existence of system templates, for the demo content.
     console.log("Checking hidden subtree at first start.");
-    getContext().init(() => hidden_subtree.checkHiddenSubtree());
+    getContext().init(() => {
+        getSql().transactional(() => hidden_subtree.checkHiddenSubtree());
+    });
 
     // Import demo content.
     log.info("Importing demo content...");
