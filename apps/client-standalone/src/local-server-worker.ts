@@ -169,7 +169,12 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Router configured");
 
             console.log("[Worker] Initializing becca...");
-            await coreModule.becca_loader.beccaLoaded;
+            if (coreModule.sql_init.isDbInitialized()) {
+                console.log("[Worker] Database already initialized, loading becca...");
+                await coreModule.becca_loader.beccaLoaded;
+            } else {
+                console.log("[Worker] Database not initialized, skipping becca load (will be loaded during DB initialization)");
+            }
 
             console.log("[Worker] Initialization complete");
         } catch (error) {

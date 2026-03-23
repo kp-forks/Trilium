@@ -312,7 +312,8 @@ export interface DefinitionObject {
     inverseRelation?: string;
 }
 
-export interface BootstrapDefinition {
+export type BootstrapDefinition = {
+    dbInitialized: true;
     device: "mobile" | "desktop" | "print" | false;
     csrfToken: string;
     themeCssUrl: string | false;
@@ -340,6 +341,8 @@ export interface BootstrapDefinition {
     iconPackCss: string;
     iconRegistry: IconRegistry;
     TRILIUM_SAFE_MODE: boolean;
+} | {
+    dbInitialized: false;
 }
 
 /**

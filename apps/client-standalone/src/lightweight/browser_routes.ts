@@ -4,7 +4,7 @@
  */
 
 import { BootstrapDefinition } from '@triliumnext/commons';
-import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes } from '@triliumnext/core';
+import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { type BrowserRequest, BrowserRouter } from './browser_router';
@@ -220,10 +220,17 @@ export function registerRoutes(router: BrowserRouter): void {
     apiRoute("get", "/api/system-checks", () => ({ isCpuArchMismatch: false }));
 }
 
-function bootstrapRoute() {
+function bootstrapRoute(): BootstrapDefinition {
     const assetPath = ".";
 
+    if (!sql_init.isDbInitialized()) {
+        return {
+            dbInitialized: false
+        };
+    }
+
     return {
+        dbInitialized: true,
         ...getSharedBootstrapItems(assetPath),
         appPath: assetPath,
         device: false, // Let the client detect device type.
@@ -248,7 +255,7 @@ function bootstrapRoute() {
         instanceName: null,
         appCssNoteIds: [],
         TRILIUM_SAFE_MODE: false
-    } satisfies BootstrapDefinition;
+    };
 }
 
 /**
