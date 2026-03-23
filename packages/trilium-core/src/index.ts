@@ -10,6 +10,7 @@ import appInfo from "./services/app_info";
 
 export type * from "./services/sql/types";
 export * from "./services/sql/index";
+export { default as sql_init } from "./services/sql_init";
 export * as protected_session from "./services/protected_session";
 export { default as data_encryption } from "./services/encryption/data_encryption"
 export * as binary_utils from "./services/utils/binary";

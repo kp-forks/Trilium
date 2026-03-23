@@ -1,75 +1,27 @@
-import { deferred, type OptionRow } from "@triliumnext/commons";
-import { events as eventService } from "@triliumnext/core";
+import { type OptionRow } from "@triliumnext/commons";
+import { sql_init as coreSqlInit } from "@triliumnext/core";
 import fs from "fs";
-import { t } from "i18next";
 
 import BBranch from "../becca/entities/bbranch.js";
 import BNote from "../becca/entities/bnote.js";
 import BOption from "../becca/entities/boption.js";
-import backup from "./backup.js";
 import cls from "./cls.js";
-import config from "./config.js";
 import password from "./encryption/password.js";
 import hidden_subtree from "./hidden_subtree.js";
 import zipImportService from "./import/zip.js";
 import log from "./log.js";
-import migrationService from "./migration.js";
 import optionService from "./options.js";
-import port from "./port.js";
 import resourceDir from "./resource_dir.js";
 import sql from "./sql.js";
 import TaskContext from "./task_context.js";
-import { isElectron } from "./utils.js";
 
-export const dbReady = deferred<void>();
-
-function schemaExists() {
-    return !!sql.getValue(/*sql*/`SELECT name FROM sqlite_master
-                                WHERE type = 'table' AND name = 'options'`);
-}
-
-function isDbInitialized() {
-    if (!schemaExists()) {
-        return false;
-    }
-
-    const initialized = sql.getValue("SELECT value FROM options WHERE name = 'initialized'");
-
-    return initialized === "true";
-}
-
-async function initDbConnection() {
-    if (!isDbInitialized()) {
-        if (isElectron) {
-            log.info(t("sql_init.db_not_initialized_desktop"));
-        } else {
-            log.info(t("sql_init.db_not_initialized_server", { port }));
-        }
-
-        return;
-    }
-
-    await migrationService.migrateIfNecessary();
-
-    sql.execute('CREATE TEMP TABLE IF NOT EXISTS "param_list" (`paramId` TEXT NOT NULL PRIMARY KEY)');
-
-    sql.execute(`
-    CREATE TABLE IF NOT EXISTS "user_data"
-    (
-        tmpID INT,
-        username TEXT,
-        email TEXT,
-        userIDEncryptedDataKey TEXT,
-        userIDVerificationHash TEXT,
-        salt TEXT,
-        derivedKey TEXT,
-        isSetup TEXT DEFAULT "false",
-        UNIQUE (tmpID),
-        PRIMARY KEY (tmpID)
-    );`);
-
-    dbReady.resolve();
-}
+const schemaExists = coreSqlInit.schemaExists;
+const isDbInitialized = coreSqlInit.isDbInitialized;
+const dbReady = coreSqlInit.dbReady;
+const setDbAsInitialized = coreSqlInit.setDbAsInitialized;
+const initDbConnection = coreSqlInit.initDbConnection;
+const initializeDb = coreSqlInit.initializeDb;
+export const getDbSize = coreSqlInit.getDbSize;
 
 /**
  * Applies the database schema, creating the necessary tables and importing the demo content.
@@ -184,57 +136,6 @@ async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", 
     });
 
     log.info("Schema and not synced options generated.");
-}
-
-function setDbAsInitialized() {
-    if (!isDbInitialized()) {
-        optionService.setOption("initialized", "true");
-
-        initDbConnection();
-
-        // Emit an event to notify that the database is now initialized
-        eventService.emit(eventService.DB_INITIALIZED);
-
-        log.info("Database initialization completed, emitted DB_INITIALIZED event");
-    }
-}
-
-function optimize() {
-    if (config.General.readOnly) {
-        return;
-    }
-    log.info("Optimizing database");
-    const start = Date.now();
-
-    sql.execute("PRAGMA optimize");
-
-    log.info(`Optimization finished in ${Date.now() - start}ms.`);
-}
-
-export function getDbSize() {
-    return sql.getValue<number>("SELECT page_count * page_size / 1000 as size FROM pragma_page_count(), pragma_page_size()");
-}
-
-function initializeDb() {
-    cls.init(initDbConnection);
-
-    dbReady.then(() => {
-        if (config.General && config.General.noBackup === true) {
-            log.info("Disabling scheduled backups.");
-
-            return;
-        }
-
-        setInterval(() => backup.regularBackup(), 4 * 60 * 60 * 1000);
-
-        // kickoff first backup soon after start up
-        setTimeout(() => backup.regularBackup(), 5 * 60 * 1000);
-
-        // optimize is usually inexpensive no-op, so running it semi-frequently is not a big deal
-        setTimeout(() => optimize(), 60 * 60 * 1000);
-
-        setInterval(() => optimize(), 10 * 60 * 60 * 1000);
-    });
 }
 
 export default {
