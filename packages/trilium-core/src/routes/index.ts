@@ -22,6 +22,7 @@ import specialNotesRoute from "./api/special_notes";
 import syncApiRoute from "./api/sync";
 import autocompleteApiRoute from "./api/autocomplete";
 import similarNotesRoute from "./api/similar_notes";
+import imageRoute from "./api/image";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -36,9 +37,10 @@ interface SharedApiRoutesContext {
     asyncApiRoute: any;
     checkApiAuth: any;
     apiResultHandler: any;
+    checkApiAuthOrElectron: any;
 }
 
-export function buildSharedApiRoutes({ route, apiRoute, asyncApiRoute, checkApiAuth, apiResultHandler }: SharedApiRoutesContext) {
+export function buildSharedApiRoutes({ route, apiRoute, asyncApiRoute, checkApiAuth, apiResultHandler, checkApiAuthOrElectron }: SharedApiRoutesContext) {
     apiRoute(GET, '/api/tree', treeApiRoute.getTree);
     apiRoute(PST, '/api/tree/load', treeApiRoute.load);
 
@@ -104,6 +106,10 @@ export function buildSharedApiRoutes({ route, apiRoute, asyncApiRoute, checkApiA
     apiRoute(DEL, "/api/branches/:branchId", branchesApiRoute.deleteBranch);
     apiRoute(PUT, "/api/branches/:branchId/set-prefix", branchesApiRoute.setPrefix);
     apiRoute(PUT, "/api/branches/set-prefix-batch", branchesApiRoute.setPrefixBatch);
+
+    route(GET, "/api/revisions/:revisionId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromRevision);
+    route(GET, "/api/attachments/:attachmentId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnAttachedImage);
+    route(GET, "/api/images/:noteId/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromNote);
 
     asyncApiRoute(PST, "/api/sync/test", syncApiRoute.testSync);
     asyncApiRoute(PST, "/api/sync/now", syncApiRoute.syncNow);

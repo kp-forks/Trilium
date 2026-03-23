@@ -25,7 +25,6 @@ import etapiTokensApiRoutes from "./api/etapi_tokens.js";
 import exportRoute from "./api/export.js";
 import filesRoute from "./api/files.js";
 import fontsRoute from "./api/fonts.js";
-import imageRoute from "./api/image.js";
 import importRoute from "./api/import.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
@@ -87,7 +86,8 @@ function register(app: express.Application) {
         apiRoute,
         asyncApiRoute,
         apiResultHandler,
-        checkApiAuth: auth.checkApiAuth
+        checkApiAuth: auth.checkApiAuth,
+        checkApiAuthOrElectron: auth.checkApiAuthOrElectron
     });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
@@ -110,7 +110,6 @@ function register(app: express.Application) {
 
     // TODO: Bring back attachment uploading
     // route(PST, "/api/notes/:noteId/attachments/upload", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], attachmentsApiRoute.uploadAttachment, apiResultHandler);
-    route(GET, "/api/attachments/:attachmentId/image/:filename", [auth.checkApiAuthOrElectron], imageRoute.returnAttachedImage);
     route(GET, "/api/attachments/:attachmentId/open", [auth.checkApiAuthOrElectron], filesRoute.openAttachment);
     asyncRoute(
         GET,
@@ -129,9 +128,10 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/attachments/:attachmentId/upload-modified-file", filesRoute.uploadModifiedFileToAttachment);
     route(PUT, "/api/attachments/:attachmentId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateAttachment, apiResultHandler);
 
-    route(GET, "/api/revisions/:revisionId/image/:filename", [auth.checkApiAuthOrElectron], imageRoute.returnImageFromRevision);
+    // TODO: Re-enable once ported to core.
+    // route(PUT, "/api/images/:noteId", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], imageRoute.updateImage, apiResultHandler);
 
-    // TODO: Re-enable once we suppourt route()
+    // TODO: Re-enable once we support route()
     // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
 
     route(GET, "/api/branches/:branchId/export/:type/:format/:version/:taskId", [auth.checkApiAuthOrElectron], exportRoute.exportBranch);
@@ -139,8 +139,6 @@ function register(app: express.Application) {
     route(PST, "/api/notes/:parentNoteId/attachments-import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importAttachmentsToNote, apiResultHandler);
 
     // :filename is not used by trilium, but instead used for "save as" to assign a human-readable filename
-    route(GET, "/api/images/:noteId/:filename", [auth.checkApiAuthOrElectron], imageRoute.returnImageFromNote);
-    route(PUT, "/api/images/:noteId", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], imageRoute.updateImage, apiResultHandler);
 
     apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);

@@ -30,6 +30,13 @@ interface Route {
     handler: RouteHandler;
 }
 
+/**
+ * Symbol used to mark a result as an already-formatted response,
+ * so that formatResult passes it through without JSON-serializing.
+ * Must match the symbol exported from browser_routes.ts.
+ */
+const RAW_RESPONSE = Symbol.for('RAW_RESPONSE');
+
 const encoder = new TextEncoder();
 
 /**
@@ -204,6 +211,26 @@ export class BrowserRouter {
      * Follows the same patterns as the server's apiResultHandler.
      */
     private formatResult(result: unknown): BrowserResponse {
+        // Handle raw responses (e.g. from image routes that write directly to res)
+        if (result && typeof result === 'object' && RAW_RESPONSE in result) {
+            const raw = result as unknown as { status: number; headers: Record<string, string>; body: unknown };
+            let body: ArrayBuffer | null = null;
+
+            if (raw.body instanceof ArrayBuffer) {
+                body = raw.body;
+            } else if (raw.body instanceof Uint8Array) {
+                body = raw.body.buffer as ArrayBuffer;
+            } else if (typeof raw.body === 'string') {
+                body = encoder.encode(raw.body).buffer as ArrayBuffer;
+            }
+
+            return {
+                status: raw.status,
+                headers: raw.headers,
+                body
+            };
+        }
+
         // Handle [statusCode, response] format
         if (Array.isArray(result) && result.length > 0 && Number.isInteger(result[0])) {
             const [statusCode, response] = result;

@@ -16,6 +16,13 @@ interface ResultHandlerResponse {
     setHeader(name: string, value: string): void;
 }
 
+/**
+ * Symbol used to mark a result as an already-formatted BrowserResponse,
+ * so that BrowserRouter.formatResult passes it through without JSON-serializing.
+ * Uses Symbol.for() so the same symbol is shared across modules.
+ */
+const RAW_RESPONSE = Symbol.for('RAW_RESPONSE');
+
 type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 /**
@@ -82,12 +89,24 @@ function createApiRoute(router: BrowserRouter, transactional: boolean) {
  * - The resultHandler is applied to post-process the result (entity conversion, status codes).
  */
 function createRoute(router: BrowserRouter) {
-    return (method: HttpMethod, path: string, _middleware: any[], handler: (req: any) => unknown, resultHandler?: ((req: any, res: any, result: unknown) => unknown) | null) => {
+    return (method: HttpMethod, path: string, _middleware: any[], handler: (req: any, res: any) => unknown, resultHandler?: ((req: any, res: any, result: unknown) => unknown) | null) => {
         router.register(method, path, (req: BrowserRequest) => {
             return getContext().init(() => {
                 setContextFromHeaders(req);
                 const expressLikeReq = toExpressLikeReq(req);
-                const result = getSql().transactional(() => handler(expressLikeReq));
+                const mockRes = createMockExpressResponse();
+                const result = getSql().transactional(() => handler(expressLikeReq, mockRes));
+
+                // If the handler used the mock response (e.g. image routes that call res.send()),
+                // return it as a raw response so BrowserRouter doesn't JSON-serialize it.
+                if (mockRes._used) {
+                    return {
+                        [RAW_RESPONSE]: true as const,
+                        status: mockRes._status,
+                        headers: mockRes._headers,
+                        body: mockRes._body
+                    };
+                }
 
                 if (resultHandler) {
                     // Create a minimal response object that captures what apiResultHandler sets.
@@ -100,6 +119,42 @@ function createRoute(router: BrowserRouter) {
             });
         });
     };
+}
+
+/**
+ * Creates a mock Express response object that captures calls to set(), send(), sendStatus(), etc.
+ * Used for route handlers (like image routes) that write directly to the response.
+ */
+function createMockExpressResponse() {
+    const res = {
+        _used: false,
+        _status: 200,
+        _headers: {} as Record<string, string>,
+        _body: null as unknown,
+        set(name: string, value: string) {
+            res._headers[name] = value;
+            return res;
+        },
+        setHeader(name: string, value: string) {
+            res._headers[name] = value;
+            return res;
+        },
+        status(code: number) {
+            res._status = code;
+            return res;
+        },
+        send(body: unknown) {
+            res._used = true;
+            res._body = body;
+            return res;
+        },
+        sendStatus(code: number) {
+            res._used = true;
+            res._status = code;
+            return res;
+        }
+    };
+    return res;
 }
 
 /**
@@ -154,7 +209,8 @@ export function registerRoutes(router: BrowserRouter): void {
         apiRoute,
         asyncApiRoute: createApiRoute(router, false),
         apiResultHandler,
-        checkApiAuth
+        checkApiAuth,
+        checkApiAuthOrElectron: checkApiAuth
     });
     apiRoute('get', '/bootstrap', bootstrapRoute);
 
