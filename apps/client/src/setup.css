@@ -37,11 +37,19 @@ body.setup {
                 .setup-option-card {
                     padding: 1.5em;
                     cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
 
                     &:hover {
                         background-color: var(--card-background-hover-color);
                         filter: contrast(105%);
                         transition: background-color .2s ease-out;
+                    }
+
+                    .tn-icon {
+                        font-size: 2.5em;
+                        color: var(--muted-text-color);
                     }
 
                     h3 {

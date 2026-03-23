@@ -320,6 +320,8 @@ interface BootstrapCommonItems {
     assetPath: string;
     themeCssUrl: string | false;
     themeUseNextAsBase?: "next" | "next-light" | "next-dark";
+    iconPackCss: string;
+    iconRegistry: IconRegistry;
 }
 
 /**
@@ -347,8 +349,6 @@ export type BootstrapDefinition = BootstrapCommonItems & ({
     appPath: string;
     currentLocale: Locale;
     isRtl: boolean;
-    iconPackCss: string;
-    iconRegistry: IconRegistry;
     TRILIUM_SAFE_MODE: boolean;
 } | {
     dbInitialized: false;

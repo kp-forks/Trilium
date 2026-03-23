@@ -7,7 +7,6 @@ import { getCurrentLocale } from "./i18n";
 
 export default function getSharedBootstrapItems(assetPath: string): Pick<BootstrapDefinition, "assetPath" | "headingStyle" | "layoutOrientation" | "maxEntityChangeIdAtLoad" | "maxEntityChangeSyncIdAtLoad" | "isProtectedSessionAvailable" | "iconRegistry" | "iconPackCss" | "currentLocale" | "isRtl"> {
     const sql = getSql();
-    const iconPacks = getIconPacks();
     const currentLocale = getCurrentLocale();
 
     return {
@@ -19,6 +18,14 @@ export default function getSharedBootstrapItems(assetPath: string): Pick<Bootstr
         isProtectedSessionAvailable: protected_session.isProtectedSessionAvailable(),
         currentLocale,
         isRtl: !!currentLocale.rtl,
+        ...getIconConfig(assetPath)
+    }
+}
+
+export function getIconConfig(assetPath: string): Pick<BootstrapDefinition, "iconRegistry" | "iconPackCss"> {
+    const iconPacks = getIconPacks();
+
+    return {
         iconRegistry: generateIconRegistry(iconPacks),
         iconPackCss: iconPacks
             .map(p => generateCss(p, p.builtin
@@ -26,5 +33,5 @@ export default function getSharedBootstrapItems(assetPath: string): Pick<Bootstr
                 : `api/attachments/download/${p.fontAttachmentId}`))
             .filter(Boolean)
             .join("\n\n"),
-    }
+    };
 }

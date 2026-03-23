@@ -5,6 +5,7 @@
 
 import { BootstrapDefinition } from '@triliumnext/commons';
 import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
+import { getIconConfig } from '@triliumnext/core/src/services/bootstrap_utils';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { type BrowserRequest, BrowserRouter } from './browser_router';
@@ -230,6 +231,7 @@ function bootstrapRoute(): BootstrapDefinition {
             assetPath,
             themeCssUrl: false,
             themeUseNextAsBase: "next",
+            ...getIconConfig(assetPath)
         };
     }
 
