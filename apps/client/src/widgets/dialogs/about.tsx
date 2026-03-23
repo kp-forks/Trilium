@@ -6,7 +6,7 @@ import utils from "../../services/utils.js";
 import openService from "../../services/open.js";
 import { useState } from "preact/hooks";
 import type { CSSProperties } from "preact/compat";
-import type { AppInfo } from "@triliumnext/commons";
+import type { AppInfo, Contributor, ContributorList } from "@triliumnext/commons";
 import { useTriliumEvent } from "../react/hooks.jsx";
 import { Card, CardSection } from "../react/Card.js";
 import "./about.css";
@@ -15,6 +15,7 @@ import type React from "react";
 import icon from "../../assets/icon.svg";
 import iconAlt from "../../assets/icon-alt.svg";
 import { useCallback, useEffect } from "react";
+import contributors from "../../../../../contributors.json"; 
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
@@ -76,6 +77,9 @@ export default function AboutDialog() {
                     </CardSection>
                     <CardSection>
                         <div>{t("about.contributors_label")}</div>
+                        <div>
+                            <Contributors data={contributors as ContributorList} />
+                        </div>
                     </CardSection>
                     <CardSection>
                         <div>{t("about.data_directory")}</div>
@@ -111,4 +115,28 @@ function DirectoryLink({ directory, style }: { directory: string, style?: CSSPro
     } else {
         return <span className="selectable-text" style={style}>{directory}</span>;
     }
+}
+
+function Contributors(params: {data: ContributorList}) {
+    return params.data.contributors.map((c, index, array) => {
+        return <>
+            <ContributorListItem data={c} />
+            
+            {/* Add a comma between items */}
+            {(index < array.length - 1) ? ", " : undefined}
+        </>
+    });
+}
+
+function ContributorListItem({data}: {data: Contributor}) {
+    let roleString = "";
+    if (data.role) {
+        roleString = t(`about.contributor_roles.${data.role}`);
+    }
+
+    return <>
+        <a href={data.url} target="_blank">{data.fullName ?? data.name}</a>
+
+        {roleString && <span>&nbsp;({roleString})</span>} 
+    </>
 }

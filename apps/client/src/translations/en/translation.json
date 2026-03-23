@@ -4,6 +4,10 @@
     "version": "app: {{appVersion}}, database: {{dbVersion}}, sync protocol: {{syncVersion}}",
     "build_info": "{{buildDate}}, revision: <buildRevision />",
     "contributors_label": "Contributors:",
+    "contributor_roles": {
+      "lead-dev": "lead developer",
+      "original-dev": "original developer"
+    },
     "data_directory": "Data directory:",
     "donate": "Donate"
   },
