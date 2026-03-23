@@ -312,7 +312,12 @@ export interface DefinitionObject {
     inverseRelation?: string;
 }
 
-export type BootstrapDefinition = {
+interface BootstrapCommonItems {
+    baseApiUrl: string;
+    assetPath: string;
+}
+
+export type BootstrapDefinition = BootstrapCommonItems & ({
     dbInitialized: true;
     device: "mobile" | "desktop" | "print" | false;
     csrfToken: string;
@@ -333,9 +338,7 @@ export type BootstrapDefinition = {
     isMainWindow: boolean;
     isProtectedSessionAvailable: boolean;
     triliumVersion: string;
-    assetPath: string;
     appPath: string;
-    baseApiUrl: string;
     currentLocale: Locale;
     isRtl: boolean;
     iconPackCss: string;
@@ -343,8 +346,7 @@ export type BootstrapDefinition = {
     TRILIUM_SAFE_MODE: boolean;
 } | {
     dbInitialized: false;
-    baseApiUrl: string;
-}
+});
 
 /**
  * Response for /api/setup/status.
