@@ -41,7 +41,7 @@ async function fetchContributors() {
     }
 }
 
-function processContributorList(contributorInfo: any[]) {
+function processContributorList(contributorInfo: GithubContributor[]) {
     return contributorInfo
         // Filter out bots
         .filter((c) => c.type === "User" && !BOTS.includes(c.login))
