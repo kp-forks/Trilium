@@ -168,7 +168,10 @@ async function initialize(): Promise<void> {
             router = createConfiguredRouter();
             console.log("[Worker] Router configured");
 
-            console.log("[Worker] Initializing becca...");
+            // initializeDb runs initDbConnection inside an execution context,
+            // which resolves dbReady — required before beccaLoaded can settle.
+            coreModule.sql_init.initializeDb();
+
             if (coreModule.sql_init.isDbInitialized()) {
                 console.log("[Worker] Database already initialized, loading becca...");
                 await coreModule.becca_loader.beccaLoaded;
