@@ -5,7 +5,6 @@ import server from "../../services/server.js";
 import utils from "../../services/utils.js";
 import openService from "../../services/open.js";
 import { useState } from "preact/hooks";
-import type { CSSProperties } from "preact/compat";
 import type { AppInfo, Contributor, ContributorList } from "@triliumnext/commons";
 import { useTriliumEvent } from "../react/hooks.jsx";
 import { Card, CardSection } from "../react/Card.js";
@@ -36,13 +35,13 @@ export default function AboutDialog() {
     }, [appInfo])
 
     return (
-        <Modal className="about-dialog"
+        <Modal
+            className="about-dialog"
             size="md"
             show={shown}
             onHidden={() => setShown(false)}
         >
            <div className="about-dialog-content">
-
                 <img src={(isNightly) ? iconAlt : icon} width="128" />
                 <h2>Trilium Notes {isNightly && <span>Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
@@ -65,16 +64,13 @@ export default function AboutDialog() {
                                         buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""
                                     }}
                                     components={{
-                                        buildRevision: <>
-                                            {appInfo?.buildRevision && <a href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" className="tn-link">
-                                                {appInfo.buildRevision.substring(0, 7)}
-                                            </a>}
-                                        </> as React.ReactElement
+                                        buildRevision: revisionLink(appInfo)
                                     }}
                                 />
                             </div>
                         </div>
                     </CardSection>
+                   
                     <CardSection>
                         <div>{t("about.contributors_label")}</div>
                         <div className="contributor-list use-tn-links">
@@ -84,6 +80,7 @@ export default function AboutDialog() {
                             </a>
                         </div>
                     </CardSection>
+                    
                     <CardSection>
                         <div>{t("about.data_directory")}</div>
                         <div className="selectable-text">
@@ -107,17 +104,12 @@ export default function AboutDialog() {
     );
 }
 
-function DirectoryLink({ directory, style }: { directory: string, style?: CSSProperties }) {
-    if (utils.isElectron()) {
-        const onClick = (e: MouseEvent) => {
-            e.preventDefault();
-            openService.openDirectory(directory);
-        };
-
-        return <a className="tn-link selectable-text" href="#" onClick={onClick} style={style}>{directory}</a>
-    } else {
-        return <span className="selectable-text" style={style}>{directory}</span>;
-    }
+function revisionLink(appInfo: AppInfo | null) {
+    return <>
+        {appInfo?.buildRevision && <a href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" className="tn-link">
+            {appInfo.buildRevision.substring(0, 7)}
+        </a>}
+    </> as React.ReactElement;
 }
 
 function Contributors(params: {data: ContributorList}) {
@@ -142,4 +134,17 @@ function ContributorListItem({data}: {data: Contributor}) {
 
         {roleString && <span>&nbsp;({roleString})</span>} 
     </>
+}
+
+function DirectoryLink({ directory }: { directory: string}) {
+    if (utils.isElectron()) {
+        const onClick = (e: MouseEvent) => {
+            e.preventDefault();
+            openService.openDirectory(directory);
+        };
+
+        return <a className="tn-link selectable-text" href="#" onClick={onClick}>{directory}</a>
+    } else {
+        return <span className="selectable-text">{directory}</span>;
+    }
 }
