@@ -1,6 +1,5 @@
+import { Contributor, ContributorList } from "../packages/commons/";
 import { writeFileSync } from "fs";
-
-import {Contributor, ContributorList} from "../packages/commons/";
 
 // Keep honorific contributors at top of the list, even if their commit count
 // is exceeded by another users.
@@ -10,37 +9,39 @@ const PINNED_CONTRIBUTORS: Record<string, Pick<Contributor, "fullName" | "role">
 };
 
 // Bots marked as users on the GitHub profile info to exclude from the listing
-const BOTS = ["weblate"];
+const BOTS = [
+    "weblate"
+];
 
 async function main() {
     console.log("Retrieving the contributor list...");
 
-    let jsonData: any = {};
+    let data: any = {};
     try {
-        jsonData = await getContributors();
+        data = await fetchContributors();
     } catch (ex) {
         console.error(ex);
         return;
     }
 
-    writeFileSync("contributors.json", JSON.stringify(jsonData, null, 2));
+    writeFileSync("contributors.json", JSON.stringify(data, null, 4));
     console.log("Done.");
 }
 
-async function getContributors() {
+async function fetchContributors() {
     const response = await fetch("https://api.github.com/repos/TriliumNext/Trilium/contributors");
 
     if (response.ok) {
         return {
             "⚠️": "NOTE: this is an auto-generated list. Do not modify it.",
-            contributors: getList(await response.json())
+            contributors: processContributorList(await response.json())
         } as ContributorList
     } else {
         throw new Error(`Unable to request the contributor list from GitHub. Reason: ${response.statusText}`);
     }
 }
 
-function getList(contributorInfo: any[]) {
+function processContributorList(contributorInfo: any[]) {
     return contributorInfo
         // Filter out bots
         .filter((c) => c.type === "User" && !BOTS.includes(c.login))
