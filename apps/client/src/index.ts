@@ -112,7 +112,7 @@ function loadIcons() {
 }
 
 function setBodyAttributes() {
-    if (!glob.isDbInitialized) return;
+    if (!glob.dbInitialized) return;
 
     const { device, headingStyle, layoutOrientation, platform, isElectron, hasNativeTitleBar, hasBackgroundEffects, currentLocale } = window.glob;
     const classesToSet = [
