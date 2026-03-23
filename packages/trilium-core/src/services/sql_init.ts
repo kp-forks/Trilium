@@ -7,6 +7,11 @@ import optionService from "./options";
 import eventService from "./events";
 import { getContext } from "./context";
 import config from "./config";
+import BNote from "../becca/entities/bnote";
+import BBranch from "../becca/entities/bbranch";
+import schema from "../assets/schema.sql?raw";
+import hidden_subtree from "./hidden_subtree";
+import TaskContext from "./task_context";
 
 export const dbReady = deferred<void>();
 
@@ -122,4 +127,94 @@ function initializeDb() {
     });
 }
 
-export default { isDbInitialized, createDatabaseForSync, setDbAsInitialized, schemaExists, getDbSize, initDbConnection, dbReady, initializeDb };
+/**
+ * Applies the database schema, creating the necessary tables and importing the demo content.
+ *
+ * @param skipDemoDb if set to `true`, then the demo database will not be imported, resulting in an empty root note.
+ * @throws {Error} if the database is already initialized.
+ */
+async function createInitialDatabase(skipDemoDb?: boolean) {
+    if (isDbInitialized()) {
+        throw new Error("DB is already initialized");
+    }
+
+    let rootNote!: BNote;
+
+    // We have to import async since options init requires keyboard actions which require translations.
+    const optionsInitService = (await import("./options_init.js")).default;
+    const becca_loader = (await import("../becca/becca_loader.js")).default;
+
+    const sql = getSql();
+    const log = getLog();
+    sql.transactional(() => {
+        log.info("Creating database schema ...");
+
+        console.log("Got schema:", schema.substring(0, 100)); // Log the first 100 characters of the schema to verify it's loaded correctly
+        sql.executeScript(schema);
+
+        becca_loader.load();
+
+        log.info("Creating root note ...");
+
+        rootNote = new BNote({
+            noteId: "root",
+            title: "root",
+            type: "text",
+            mime: "text/html"
+        }).save();
+
+        rootNote.setContent("");
+
+        new BBranch({
+            noteId: "root",
+            parentNoteId: "none",
+            isExpanded: true,
+            notePosition: 10
+        }).save();
+
+        // Bring in option init.
+        optionsInitService.initDocumentOptions();
+        optionsInitService.initNotSyncedOptions(true, {});
+        optionsInitService.initStartupOptions();
+        // password.resetPassword();
+    });
+
+    // Check hidden subtree.
+    // This ensures the existence of system templates, for the demo content.
+    console.log("Checking hidden subtree at first start.");
+    getContext().init(() => hidden_subtree.checkHiddenSubtree());
+
+    // Import demo content.
+    log.info("Importing demo content...");
+
+    const dummyTaskContext = new TaskContext("no-progress-reporting", "importNotes", null);
+
+    // if (demoFile) {
+    //     await zipImportService.importZip(dummyTaskContext, demoFile, rootNote);
+    // }
+
+    // Post-demo.
+    sql.transactional(() => {
+        // this needs to happen after ZIP import,
+        // the previous solution was to move option initialization here, but then the important parts of initialization
+        // are not all in one transaction (because ZIP import is async and thus not transactional)
+
+        const startNoteId = sql.getValue("SELECT noteId FROM branches WHERE parentNoteId = 'root' AND isDeleted = 0 ORDER BY notePosition");
+
+        optionService.setOption(
+            "openNoteContexts",
+            JSON.stringify([
+                {
+                    notePath: startNoteId,
+                    active: true
+                }
+            ])
+        );
+    });
+
+    log.info("Schema and initial content generated.");
+
+    initDbConnection();
+}
+
+export default { isDbInitialized, createDatabaseForSync, setDbAsInitialized, schemaExists, getDbSize, initDbConnection, dbReady, initializeDb, createInitialDatabase };

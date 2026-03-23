@@ -4,9 +4,9 @@ import { ComponentChildren, render } from "preact";
 import { useState } from "preact/hooks";
 
 import { initLocale, t } from "./services/i18n";
+import server from "./services/server";
 import Button from "./widgets/react/Button";
 import { CardFrame } from "./widgets/react/Card";
-import FormGroup from "./widgets/react/FormGroup";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 
@@ -42,6 +42,9 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
                     description={t("setup.new-document-description")}
+                    onClick={() => {
+                        server.post("setup/new-document");
+                    }}
                 />
 
                 <SetupOptionCard
@@ -63,6 +66,16 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncFromServer({ setState }: { setState: (state: State) => void }) {
+    const [serverUrl, setServerUrl] = useState("");
+    const [password, setPassword] = useState("");
+
+    function handleFinishSetup() {
+        server.post("setup/sync-from-server", {
+            syncServerHost: serverUrl,
+            password
+        });
+    }
+
     return (
         <div class="page sync-from-server">
             <h1>{t("setup.sync-from-server-page-title")}</h1>
@@ -71,18 +84,18 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             <main>
                 <form>
                     <FormItemWithIcon icon="bx bx-server">
-                        <FormTextBox placeholder="https://example.com" />
+                        <FormTextBox placeholder="https://example.com" currentValue={serverUrl} onChange={setServerUrl} />
                     </FormItemWithIcon>
 
                     <FormItemWithIcon icon="bx bx-lock">
-                        <FormTextBox placeholder={t("setup.password-placeholder")} type="password" />
+                        <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} />
                     </FormItemWithIcon>
                 </form>
             </main>
 
             <footer>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
-                <Button text={t("setup.button-finish-setup")} kind="primary" />
+                <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} />
             </footer>
         </div>
     );

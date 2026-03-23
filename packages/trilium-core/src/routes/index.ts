@@ -23,6 +23,7 @@ import syncApiRoute from "./api/sync";
 import autocompleteApiRoute from "./api/autocomplete";
 import similarNotesRoute from "./api/similar_notes";
 import imageRoute from "./api/image";
+import setupApiRoute from "./api/setup";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -33,14 +34,18 @@ const GET = "get",
 
 interface SharedApiRoutesContext {
     route: any;
+    asyncRoute: any;
     apiRoute: any;
     asyncApiRoute: any;
     checkApiAuth: any;
     apiResultHandler: any;
     checkApiAuthOrElectron: any;
+    checkAppNotInitialized: any;
+    loginRateLimiter: any;
+    checkCredentials: any;
 }
 
-export function buildSharedApiRoutes({ route, apiRoute, asyncApiRoute, checkApiAuth, apiResultHandler, checkApiAuthOrElectron }: SharedApiRoutesContext) {
+export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRoute, checkApiAuth, apiResultHandler, checkApiAuthOrElectron, checkAppNotInitialized, checkCredentials, loginRateLimiter }: SharedApiRoutesContext) {
     apiRoute(GET, '/api/tree', treeApiRoute.getTree);
     apiRoute(PST, '/api/tree/load', treeApiRoute.load);
 
@@ -110,6 +115,13 @@ export function buildSharedApiRoutes({ route, apiRoute, asyncApiRoute, checkApiA
     route(GET, "/api/revisions/:revisionId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromRevision);
     route(GET, "/api/attachments/:attachmentId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnAttachedImage);
     route(GET, "/api/images/:noteId/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromNote);
+
+    // group of the services below are meant to be executed from the outside
+    route(GET, "/api/setup/status", [], setupApiRoute.getStatus, apiResultHandler);
+    asyncRoute(PST, "/api/setup/new-document", [checkAppNotInitialized], setupApiRoute.setupNewDocument, apiResultHandler);
+    asyncRoute(PST, "/api/setup/sync-from-server", [checkAppNotInitialized], setupApiRoute.setupSyncFromServer, apiResultHandler);
+    route(GET, "/api/setup/sync-seed", [loginRateLimiter, checkCredentials], setupApiRoute.getSyncSeed, apiResultHandler);
+    asyncRoute(PST, "/api/setup/sync-seed", [checkAppNotInitialized], setupApiRoute.saveSyncSeed, apiResultHandler);
 
     asyncApiRoute(PST, "/api/sync/test", syncApiRoute.testSync);
     asyncApiRoute(PST, "/api/sync/now", syncApiRoute.syncNow);

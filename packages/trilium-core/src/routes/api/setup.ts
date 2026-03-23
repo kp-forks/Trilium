@@ -1,8 +1,6 @@
-"use strict";
-
 import sqlInit from "../../services/sql_init.js";
 import setupService from "../../services/setup.js";
-import log from "../../services/log.js";
+import { getLog } from "../../services/log.js";
 import appInfo from "../../services/app_info.js";
 import type { Request } from "express";
 
@@ -27,6 +25,7 @@ function setupSyncFromServer(req: Request) {
 function saveSyncSeed(req: Request) {
     const { options, syncVersion } = req.body;
 
+    const log = getLog();
     if (appInfo.syncVersion !== syncVersion) {
         const message = `Could not setup sync since local sync protocol version is ${appInfo.syncVersion} while remote is ${syncVersion}. To fix this issue, use same Trilium version on all instances.`;
 
@@ -42,7 +41,7 @@ function saveSyncSeed(req: Request) {
 
     log.info("Saved sync seed.");
 
-    sqlInit.createDatabaseForSync(options);
+    // sqlInit.createDatabaseForSync(options);
 }
 
 /**
@@ -74,7 +73,7 @@ function saveSyncSeed(req: Request) {
  *       - user-password: []
  */
 function getSyncSeed() {
-    log.info("Serving sync seed.");
+    getLog().info("Serving sync seed.");
 
     return {
         options: setupService.getSyncSeedOptions(),

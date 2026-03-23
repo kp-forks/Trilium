@@ -34,7 +34,6 @@ import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
 import scriptRoute from "./api/script.js";
 import senderRoute from "./api/sender.js";
-import setupApiRoute from "./api/setup.js";
 import systemInfoRoute from "./api/system_info.js";
 import totp from './api/totp.js';
 // API routes
@@ -83,11 +82,15 @@ function register(app: express.Application) {
 
     routes.buildSharedApiRoutes({
         route,
+        asyncRoute,
         apiRoute,
         asyncApiRoute,
         apiResultHandler,
         checkApiAuth: auth.checkApiAuth,
-        checkApiAuthOrElectron: auth.checkApiAuthOrElectron
+        checkApiAuthOrElectron: auth.checkApiAuthOrElectron,
+        checkAppNotInitialized: auth.checkAppNotInitialized,
+        checkCredentials: auth.checkCredentials,
+        loginRateLimiter
     });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
@@ -148,13 +151,6 @@ function register(app: express.Application) {
 
     // docker health check
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);
-
-    // group of the services below are meant to be executed from the outside
-    route(GET, "/api/setup/status", [], setupApiRoute.getStatus, apiResultHandler);
-    asyncRoute(PST, "/api/setup/new-document", [auth.checkAppNotInitialized], setupApiRoute.setupNewDocument, apiResultHandler);
-    asyncRoute(PST, "/api/setup/sync-from-server", [auth.checkAppNotInitialized], setupApiRoute.setupSyncFromServer, apiResultHandler);
-    route(GET, "/api/setup/sync-seed", [loginRateLimiter, auth.checkCredentials], setupApiRoute.getSyncSeed, apiResultHandler);
-    asyncRoute(PST, "/api/setup/sync-seed", [auth.checkAppNotInitialized], setupApiRoute.saveSyncSeed, apiResultHandler);
 
     route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
     // this is for entering protected mode so user has to be already logged-in (that's the reason we don't require username)
