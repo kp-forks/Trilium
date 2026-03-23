@@ -77,8 +77,11 @@ export default function AboutDialog() {
                     </CardSection>
                     <CardSection>
                         <div>{t("about.contributors_label")}</div>
-                        <div>
+                        <div className="contributor-list use-tn-links">
                             <Contributors data={contributors as ContributorList} />
+                            <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
+                                {t("about.contributor_full_list")}
+                            </a>
                         </div>
                     </CardSection>
                     <CardSection>
@@ -123,7 +126,7 @@ function Contributors(params: {data: ContributorList}) {
             <ContributorListItem data={c} />
             
             {/* Add a comma between items */}
-            {(index < array.length - 1) ? ", " : undefined}
+            {(index < array.length - 1) ? ", " : ". "}
         </>
     });
 }

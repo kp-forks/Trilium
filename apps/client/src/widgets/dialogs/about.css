@@ -18,6 +18,12 @@
         }
     }
 
+    .contributor-list {
+        a, span {
+            white-space: nowrap;
+        }
+    }
+
     footer {
         display: flex;
         justify-content: center;
