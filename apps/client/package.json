@@ -89,6 +89,6 @@
     "happy-dom": "20.8.4",
     "lightningcss": "1.32.0",
     "script-loader": "0.7.2",
-    "vite-plugin-static-copy": "3.3.0"
+    "vite-plugin-static-copy": "3.4.0"
   }
 }
