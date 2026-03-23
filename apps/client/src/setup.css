@@ -1,0 +1,9 @@
+.setup-body-wrapper {
+    padding: 2rem;
+
+    .setup-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
