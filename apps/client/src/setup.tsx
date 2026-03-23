@@ -20,22 +20,31 @@ function App() {
             <h1>{t("setup.heading")}</h1>
 
             <div class="setup-options">
-                <CardFrame>
-                    <h3>{t("setup.new-document")}</h3>
-                    <p>{t("setup.new-document-description")}</p>
-                </CardFrame>
+                <SetupOptionCard
+                    title={t("setup.new-document")}
+                    description={t("setup.new-document-description")}
+                />
 
-                <CardFrame>
-                    <h3>{t("setup.sync-from-server")}</h3>
-                    <p>{t("setup.sync-from-server-description")}</p>
-                </CardFrame>
+                <SetupOptionCard
+                    title={t("setup.sync-from-server")}
+                    description={t("setup.sync-from-server-description")}
+                />
 
-                <CardFrame>
-                    <h3>{t("setup.sync-from-desktop")}</h3>
-                    <p>{t("setup.sync-from-desktop-description")}</p>
-                </CardFrame>
+                <SetupOptionCard
+                    title={t("setup.sync-from-desktop")}
+                    description={t("setup.sync-from-desktop-description")}
+                />
             </div>
         </div>
+    );
+}
+
+function SetupOptionCard({ title, description }: { title: string; description: string }) {
+    return (
+        <CardFrame className="setup-option-card">
+            <h3>{title}</h3>
+            <p>{description}</p>
+        </CardFrame>
     );
 }
 
