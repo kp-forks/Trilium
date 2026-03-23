@@ -2230,5 +2230,15 @@
     "sample_xy": "XY",
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa"
+  },
+  "setup": {
+    "heading": "Trilium Notes setup",
+    "new-document": "I'm a new user, and I want to create a new Trilium document for my notes",
+    "sync-from-desktop": "I have a desktop instance already, and I want to set up sync with it",
+    "sync-from-server": "I have a server instance already, and I want to set up sync with it",
+    "next": "Next",
+    "init-in-progress": "Document initialization in progress",
+    "redirecting": "You will be shortly redirected to the application.",
+    "title": "Setup"
   }
 }
