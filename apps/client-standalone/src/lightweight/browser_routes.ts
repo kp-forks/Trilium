@@ -227,7 +227,9 @@ function bootstrapRoute(): BootstrapDefinition {
         return {
             dbInitialized: false,
             baseApiUrl: "../api/",
-            assetPath
+            assetPath,
+            themeCssUrl: false,
+            themeUseNextAsBase: "next",
         };
     }
 

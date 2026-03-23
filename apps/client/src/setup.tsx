@@ -3,32 +3,39 @@ import "./setup.css";
 import { render } from "preact";
 
 import { initLocale, t } from "./services/i18n";
-import Button from "./widgets/react/Button";
+import { CardFrame } from "./widgets/react/Card";
 
 async function main() {
     await initLocale();
 
     const bodyWrapper = document.createElement("div");
-    bodyWrapper.classList.add("setup-body-wrapper");
+    document.body.classList.add("setup");
     render(<App />, bodyWrapper);
     document.body.replaceChildren(bodyWrapper);
 }
 
 function App() {
     return (
-        <>
+        <div class="setup-container">
             <h1>{t("setup.heading")}</h1>
 
             <div class="setup-options">
-                <Button
-                    text={t("setup.new-document")}
-                />
+                <CardFrame>
+                    <h3>{t("setup.new-document")}</h3>
+                    <p>{t("setup.new-document-description")}</p>
+                </CardFrame>
 
-                <Button
-                    text={t("setup.sync-from-server")}
-                />
+                <CardFrame>
+                    <h3>{t("setup.sync-from-server")}</h3>
+                    <p>{t("setup.sync-from-server-description")}</p>
+                </CardFrame>
+
+                <CardFrame>
+                    <h3>{t("setup.sync-from-desktop")}</h3>
+                    <p>{t("setup.sync-from-desktop-description")}</p>
+                </CardFrame>
             </div>
-        </>
+        </div>
     );
 }
 

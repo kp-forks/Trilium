@@ -312,17 +312,23 @@ export interface DefinitionObject {
     inverseRelation?: string;
 }
 
+/**
+ * Subset of bootstrap items that are available both in the main client and in the setup page.
+ */
 interface BootstrapCommonItems {
     baseApiUrl: string;
     assetPath: string;
+    themeCssUrl: string | false;
+    themeUseNextAsBase?: "next" | "next-light" | "next-dark";
 }
 
+/**
+ * Bootstrap items that the client needs to start up. These are sent by the server in the HTML and made available as `window.glob`.
+ */
 export type BootstrapDefinition = BootstrapCommonItems & ({
     dbInitialized: true;
     device: "mobile" | "desktop" | "print" | false;
     csrfToken: string;
-    themeCssUrl: string | false;
-    themeUseNextAsBase?: "next" | "next-light" | "next-dark";
     headingStyle: "plain" | "underline" | "markdown";
     layoutOrientation: "vertical" | "horizontal";
     platform?: typeof process.platform | "web";
