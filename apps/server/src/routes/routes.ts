@@ -36,7 +36,6 @@ import recoveryCodes from './api/recovery_codes.js';
 import scriptRoute from "./api/script.js";
 import senderRoute from "./api/sender.js";
 import setupApiRoute from "./api/setup.js";
-import similarNotesRoute from "./api/similar_notes.js";
 import systemInfoRoute from "./api/system_info.js";
 import totp from './api/totp.js';
 // API routes
@@ -212,7 +211,6 @@ function register(app: express.Application) {
     asyncRoute(PST, "/api/sender/image", [auth.checkEtapiToken, uploadMiddlewareWithErrorHandling], senderRoute.uploadImage, apiResultHandler);
     asyncRoute(PST, "/api/sender/note", [auth.checkEtapiToken], senderRoute.saveNote, apiResultHandler);
 
-    asyncApiRoute(GET, "/api/similar-notes/:noteId", similarNotesRoute.getSimilarNotes);
     asyncApiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
     apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);

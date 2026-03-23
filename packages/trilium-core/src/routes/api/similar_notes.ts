@@ -1,13 +1,12 @@
 import { SimilarNoteResponse } from "@triliumnext/commons";
-import { similarity } from "@triliumnext/core";
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
+import similarity from "../../becca/similarity.js";
 
 async function getSimilarNotes(req: Request<{ noteId: string }>) {
     const noteId = req.params.noteId;
-
-    const _note = becca.getNoteOrThrow(noteId);
+    becca.getNoteOrThrow(noteId);
 
     return (await similarity.findSimilarNotes(noteId) satisfies SimilarNoteResponse);
 }

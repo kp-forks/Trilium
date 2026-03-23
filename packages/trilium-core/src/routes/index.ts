@@ -21,6 +21,7 @@ import searchRoute from "./api/search";
 import specialNotesRoute from "./api/special_notes";
 import syncApiRoute from "./api/sync";
 import autocompleteApiRoute from "./api/autocomplete";
+import similarNotesRoute from "./api/similar_notes";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -165,6 +166,7 @@ export function buildSharedApiRoutes({ route, apiRoute, asyncApiRoute, checkApiA
 
     apiRoute(GET, "/api/app-info", appInfoRoute.getAppInfo);
     apiRoute(GET, "/api/other/icon-usage", otherRoute.getIconUsage);
+    asyncApiRoute(GET, "/api/similar-notes/:noteId", similarNotesRoute.getSimilarNotes);
     apiRoute(PST, "/api/relation-map", relationMapApiRoute.getRelationMap);
     apiRoute(GET, "/api/recent-changes/:ancestorNoteId", recentChangesApiRoute.getRecentChanges);
 }
