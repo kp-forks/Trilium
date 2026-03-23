@@ -225,7 +225,8 @@ function bootstrapRoute(): BootstrapDefinition {
 
     if (!sql_init.isDbInitialized()) {
         return {
-            dbInitialized: false
+            dbInitialized: false,
+            baseApiUrl: "../api/"
         };
     }
 

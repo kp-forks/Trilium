@@ -343,6 +343,7 @@ export type BootstrapDefinition = {
     TRILIUM_SAFE_MODE: boolean;
 } | {
     dbInitialized: false;
+    baseApiUrl: string;
 }
 
 /**
