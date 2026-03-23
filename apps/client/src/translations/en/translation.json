@@ -2242,6 +2242,10 @@
     "next": "Next",
     "init-in-progress": "Document initialization in progress",
     "redirecting": "You will be shortly redirected to the application.",
-    "title": "Setup"
+    "title": "Setup",
+    "sync-from-server-page-title": "Connect to sync server",
+    "sync-from-server-page-description": "Enter your server details below to connect your existing workspace.",
+    "button-back": "Back",
+    "button-finish-setup": "Finish setup"
   }
 }

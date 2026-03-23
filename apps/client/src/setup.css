@@ -66,5 +66,23 @@ body.setup {
                 }
             }
         }
+
+        .page {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            >main {
+                flex: 1;
+            }
+
+            >footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 0.5rem;
+                border-top: 1px solid var(--main-border-color);
+                padding-top: 1rem;
+            }
+        }
     }
 }
