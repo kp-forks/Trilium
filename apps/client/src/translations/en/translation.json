@@ -2245,6 +2245,7 @@
     "title": "Setup",
     "sync-from-server-page-title": "Connect to sync server",
     "sync-from-server-page-description": "Enter your server details below to connect your existing workspace.",
+    "password-placeholder": "Password",
     "button-back": "Back",
     "button-finish-setup": "Finish setup"
   }

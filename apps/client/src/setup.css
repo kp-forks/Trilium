@@ -74,6 +74,8 @@ body.setup {
 
             >main {
                 flex: 1;
+                display: flex;
+                flex-direction: column;
             }
 
             >footer {
@@ -82,6 +84,27 @@ body.setup {
                 gap: 0.5rem;
                 border-top: 1px solid var(--main-border-color);
                 padding-top: 1rem;
+            }
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-grow: 1;
+            gap: 1rem;
+            width: 80%;
+            margin: auto;
+        }
+
+        .form-item-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            .tn-icon {
+                font-size: 1.5em;
+                color: var(--muted-text-color);
             }
         }
     }

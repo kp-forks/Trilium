@@ -1,11 +1,13 @@
 import "./setup.css";
 
-import { render } from "preact";
+import { ComponentChildren, render } from "preact";
 import { useState } from "preact/hooks";
 
 import { initLocale, t } from "./services/i18n";
 import Button from "./widgets/react/Button";
 import { CardFrame } from "./widgets/react/Card";
+import FormGroup from "./widgets/react/FormGroup";
+import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 
 async function main() {
@@ -66,12 +68,31 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             <h1>{t("setup.sync-from-server-page-title")}</h1>
             <p>{t("setup.sync-from-server-page-description")}</p>
 
-            <main />
+            <main>
+                <form>
+                    <FormItemWithIcon icon="bx bx-server">
+                        <FormTextBox placeholder="https://example.com" />
+                    </FormItemWithIcon>
+
+                    <FormItemWithIcon icon="bx bx-lock">
+                        <FormTextBox placeholder={t("setup.password-placeholder")} type="password" />
+                    </FormItemWithIcon>
+                </form>
+            </main>
 
             <footer>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
                 <Button text={t("setup.button-finish-setup")} kind="primary" />
             </footer>
+        </div>
+    );
+}
+
+function FormItemWithIcon({ icon, children }: { icon: string; children: ComponentChildren }) {
+    return (
+        <div class="form-item-with-icon">
+            <Icon icon={icon} />
+            {children}
         </div>
     );
 }
