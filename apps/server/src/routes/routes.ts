@@ -18,7 +18,6 @@ import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
 import { isElectron } from "../services/utils.js";
 import shareRoutes from "../share/routes.js";
-import autocompleteApiRoute from "./api/autocomplete.js";
 import backendLogRoute from "./api/backend_log.js";
 import clipperRoute from "./api/clipper.js";
 import databaseRoute from "./api/database.js";
@@ -159,9 +158,6 @@ function register(app: express.Application) {
     asyncRoute(PST, "/api/setup/sync-from-server", [auth.checkAppNotInitialized], setupApiRoute.setupSyncFromServer, apiResultHandler);
     route(GET, "/api/setup/sync-seed", [loginRateLimiter, auth.checkCredentials], setupApiRoute.getSyncSeed, apiResultHandler);
     asyncRoute(PST, "/api/setup/sync-seed", [auth.checkAppNotInitialized], setupApiRoute.saveSyncSeed, apiResultHandler);
-
-    apiRoute(GET, "/api/autocomplete", autocompleteApiRoute.getAutocomplete);
-    apiRoute(GET, "/api/autocomplete/notesCount", autocompleteApiRoute.getNotesCount);
 
     route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
     // this is for entering protected mode so user has to be already logged-in (that's the reason we don't require username)

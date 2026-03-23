@@ -1,12 +1,13 @@
-import { becca_service, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
-import cls from "../../services/cls.js";
-import log from "../../services/log.js";
+import * as cls from "../../services/context.js";
+import { getLog } from "../../services/log.js";
 import searchService from "../../services/search/services/search.js";
-import sql from "../../services/sql.js";
-import utils from "../../services/utils.js";
+import { getSql } from "../../services/sql/index.js";
+import { escapeHtml } from "../../services/utils/index.js";
+import { ValidationError } from "../../errors.js";
+import becca_service from "../../becca/becca_service.js";
 
 function getAutocomplete(req: Request) {
     if (typeof req.query.query !== "string") {
@@ -30,7 +31,7 @@ function getAutocomplete(req: Request) {
     const msTaken = Date.now() - timestampStarted;
 
     if (msTaken >= 100) {
-        log.info(`Slow autocomplete took ${msTaken}ms`);
+        getLog().info(`Slow autocomplete took ${msTaken}ms`);
     }
 
     return results;
@@ -73,7 +74,7 @@ function getRecentNotes(activeNoteId: string) {
             notePath: rn.notePath,
             noteTitle: title,
             notePathTitle,
-            highlightedNotePathTitle: utils.escapeHtml(notePathTitle || title),
+            highlightedNotePathTitle: escapeHtml(notePathTitle || title),
             icon: icon ?? "bx bx-note"
         };
     });
@@ -81,7 +82,7 @@ function getRecentNotes(activeNoteId: string) {
 
 // Get the total number of notes
 function getNotesCount(req: Request) {
-    const notesCount = sql.getRow(
+    const notesCount = getSql().getRow(
         /*sql*/`SELECT COUNT(*) AS count FROM notes WHERE isDeleted = 0;`,
     ) as { count: number };
     return notesCount.count;

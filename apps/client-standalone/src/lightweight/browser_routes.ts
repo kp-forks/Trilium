@@ -148,7 +148,6 @@ export function registerRoutes(router: BrowserRouter): void {
     apiRoute("get", "/api/script/widgets", () => []);
     apiRoute("get", "/api/script/startup", () => []);
     apiRoute("get", "/api/system-checks", () => ({ isCpuArchMismatch: false }));
-    apiRoute("get", "/api/autocomplete", () => []);
 }
 
 function bootstrapRoute() {
