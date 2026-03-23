@@ -58,7 +58,7 @@ export default function AboutDialog() {
                                 dbVersion: appInfo?.dbVersion,
                                 syncVersion: appInfo?.syncVersion
                             })}
-                            <div>
+                            <div className="build-info">
                                 <Trans
                                     i18nKey="about.build_info"
                                     values={{
@@ -96,7 +96,7 @@ export default function AboutDialog() {
                     <i class='bx bxl-github'></i>
                     GitHub
                 </a>
-                <a href="https://triliumnotes.org/en/support-us" target="_blank">
+                <a href="https://triliumnotes.org/en/support-us" className="donate-link" target="_blank">
                     <i class='bx bx-heart' ></i>
                     {t("about.donate")}
                 </a>
