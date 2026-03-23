@@ -7,7 +7,7 @@ async function main() {
 
     const bodyWrapper = document.createElement("div");
     render(<App />, bodyWrapper);
-    document.body.appendChild(bodyWrapper);
+    document.body.replaceChildren(bodyWrapper);
 }
 
 function App() {
