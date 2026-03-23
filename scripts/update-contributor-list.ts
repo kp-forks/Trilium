@@ -47,16 +47,14 @@ function getList(contributorInfo: any[]) {
         // Sort by the commit count. Honorific contributors are always first.
         .sort(contributorOrderer)
         .map((c) => {
-            let result = {
+            let pinnedInfo = PINNED_CONTRIBUTORS[c.login];
+
+            return {
                 name: c.login,
-                url: c.html_url
+                fullName: pinnedInfo?.fullName,
+                url: c.html_url,
+                role: pinnedInfo?.role
             } as Contributor;
-
-            if (c.login in PINNED_CONTRIBUTORS) {
-                result = {...result, ...PINNED_CONTRIBUTORS[c.login]};
-            }
-
-            return result;
         });
 }
 
