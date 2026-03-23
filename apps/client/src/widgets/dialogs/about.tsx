@@ -15,6 +15,7 @@ import icon from "../../assets/icon.svg";
 import iconAlt from "../../assets/icon-alt.svg";
 import { useCallback, useEffect } from "react";
 import contributors from "../../../../../contributors.json"; 
+import { Fragment } from "preact/jsx-runtime";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
@@ -114,12 +115,12 @@ function revisionLink(appInfo: AppInfo | null) {
 
 function Contributors(params: {data: ContributorList}) {
     return params.data.contributors.map((c, index, array) => {
-        return <>
+        return <Fragment key={c.name}>
             <ContributorListItem data={c} />
             
             {/* Add a comma between items */}
             {(index < array.length - 1) ? ", " : ". "}
-        </>
+        </Fragment>
     });
 }
 
