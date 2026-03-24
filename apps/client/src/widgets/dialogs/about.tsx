@@ -15,6 +15,7 @@ import iconAlt from "../../assets/icon-alt.svg";
 import { useCallback, useEffect } from "react";
 import contributors from "../../../../../contributors.json"; 
 import { Fragment } from "preact/jsx-runtime";
+import { ComponentChildren } from "preact";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
@@ -64,7 +65,7 @@ export default function AboutDialog() {
                                         buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""
                                     }}
                                     components={{
-                                        buildRevision: revisionLink(appInfo)
+                                        buildRevision: RevisionLink(appInfo)
                                     }}
                                 />
                             </div>
@@ -91,27 +92,37 @@ export default function AboutDialog() {
            </div>
 
            <footer>
-                <a href="https://github.com/TriliumNext/Trilium" target="_blank" title={t("about.github_tooltip")}>
-                    <i class='bx bxl-github'></i>
-                    GitHub
-                </a>
+                <FooterLink 
+                    text="GitHub"
+                    url="https://github.com/TriliumNext/Trilium"
+                    tooltip={t("about.github_tooltip")}>
 
-                <a href="https://www.gnu.org/licenses/agpl-3.0.en.html#license-text" target="_blank" title={t("about.license_tooltip")}>
+                    <i class='bx bxl-github'></i>
+                </FooterLink>
+                
+                <FooterLink
+                    text="AGPL 3.0"
+                    url="https://www.gnu.org/licenses/agpl-3.0.en.html#license-text"
+                    tooltip={t("about.license_tooltip")}>
+
                     {/* https://pictogrammers.com/library/mdi/icon/scale-balance/ */}
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,3C10.73,3 9.6,3.8 9.18,5H3V7H4.95L2,14C1.53,16 3,17 5.5,17C8,17 9.56,16 9,14L6.05,7H9.17C9.5,7.85 10.15,8.5 11,8.83V20H2V22H22V20H13V8.82C13.85,8.5 14.5,7.85 14.82,7H17.95L15,14C14.53,16 16,17 18.5,17C21,17 22.56,16 22,14L19.05,7H21V5H14.83C14.4,3.8 13.27,3 12,3M12,5A1,1 0 0,1 13,6A1,1 0 0,1 12,7A1,1 0 0,1 11,6A1,1 0 0,1 12,5M5.5,10.25L7,14H4L5.5,10.25M18.5,10.25L20,14H17L18.5,10.25Z" /></svg>
-                    AGPL 3.0
-                </a>
+                </FooterLink>
 
-                <a href="https://triliumnotes.org/en/support-us" className="donate-link" target="_blank" title={t("about.donate_tooltip")}>
+                <FooterLink
+                    text={t("about.donate")}
+                    url="https://triliumnotes.org/en/support-us"
+                    tooltip={t("about.donate_tooltip")}
+                    className="donate-link">
+
                     <i class='bx bx-heart' ></i>
-                    {t("about.donate")}
-                </a>
+                </FooterLink>
            </footer>
         </Modal>
     );
 }
 
-function revisionLink(appInfo: AppInfo | null) {
+function RevisionLink(appInfo: AppInfo | null) {
     return <>
         {appInfo?.buildRevision && <a href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" className="tn-link">
             {appInfo.buildRevision.substring(0, 7)}
@@ -119,8 +130,15 @@ function revisionLink(appInfo: AppInfo | null) {
     </> as React.ReactElement;
 }
 
-function Contributors(params: {data: ContributorList}) {
-    return params.data.contributors.slice(0, 10).map((c, index, array) => {
+function FooterLink(props: {children: ComponentChildren, text: string, url: string, tooltip: string, className?: string}) {
+    return <a href={props.url} className={props.className} target="_blank" title={props.tooltip}>
+        {props.children}
+        {props.text}
+    </a>
+}
+
+function Contributors({data}: {data: ContributorList}) {
+    return data.contributors.slice(0, 10).map((c, index, array) => {
         return <Fragment key={c.name}>
             <ContributorListItem data={c} />
             
