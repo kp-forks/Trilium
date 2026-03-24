@@ -22,9 +22,7 @@ export const beccaLoaded = new Promise<void>(async (res, rej) => {
     dbReady.then(() => {
         getContext().init(() => {
             load();
-
-            options_init.initStartupOptions();
-
+            getSql().transactional(() => options_init.initStartupOptions());
             res();
         });
     });
