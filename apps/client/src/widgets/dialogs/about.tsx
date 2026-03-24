@@ -10,8 +10,6 @@ import { useTriliumEvent } from "../react/hooks.jsx";
 import "./about.css";
 import { Trans } from "react-i18next";
 import type React from "react";
-import icon from "../../assets/icon.svg";
-import iconAlt from "../../assets/icon-alt.svg";
 import { useCallback, useEffect } from "react";
 import contributors from "../../../../../contributors.json"; 
 import { Fragment } from "preact/jsx-runtime";
@@ -23,6 +21,8 @@ export default function AboutDialog() {
     const [shown, setShown] = useState(false);
     const [isNightly, setNightly] = useState(false);
     const [iconClassName, setIconClassName] = useState("icon-default");
+    const [altIconClassName, setAltIconClassName] = useState<string | null>(null);
+
 
     const onLoad = useCallback(async () => {
         if (!appInfo) {
@@ -49,7 +49,7 @@ export default function AboutDialog() {
         >
            <div className="about-dialog-content">
                
-                <div className={clsx("icon", iconClassName)} />
+                <div className={clsx("icon", altIconClassName ?? iconClassName)} />
                 <h2>Trilium Notes {isNightly && <span className="channel-name">Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
                     triliumnotes.org
@@ -81,7 +81,11 @@ export default function AboutDialog() {
                     <tr>
                         <td>{t("about.contributors_label")}</td>
                         <td className="contributor-list use-tn-links">
-                            <Contributors data={contributors as ContributorList} />
+                            <Contributors 
+                                data={contributors as ContributorList}
+                                onHover={(contributor, isHovering) => {setAltIconClassName((isHovering && contributor.role === "original-dev") ? "icon-classic" : null)}}
+                            />
+
                             <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
                                 {t("about.contributor_full_list")}
                             </a>
@@ -143,10 +147,12 @@ function FooterLink(props: {children: ComponentChildren, text: string, url: stri
     </a>
 }
 
-function Contributors({data}: {data: ContributorList}) {
+type HoverCallback = (contributor: Contributor, isHovering: boolean) => void;
+
+function Contributors({data, onHover}: {data: ContributorList, onHover?: HoverCallback}) {
     return data.contributors.slice(0, 10).map((c, index, array) => {
         return <Fragment key={c.name}>
-            <ContributorListItem data={c} />
+            <ContributorListItem data={c} onHover={onHover} />
             
             {/* Add a comma between items */}
             {(index < array.length - 1) ? ", " : ". "}
@@ -154,14 +160,22 @@ function Contributors({data}: {data: ContributorList}) {
     });
 }
 
-function ContributorListItem({data}: {data: Contributor}) {
+
+function ContributorListItem({data, onHover}: {data: Contributor, onHover?: HoverCallback}) {
     let roleString = "";
     if (data.role) {
         roleString = t(`about.contributor_roles.${data.role}`);
     }
 
     return <>
-        <a href={data.url} target="_blank">{data.fullName ?? data.name}</a>
+        <a
+            href={data.url}
+            target="_blank"
+            onMouseEnter={(e) => onHover?.(data, true)}
+            onMouseLeave={(e) => onHover?.(data, false)}>
+
+            {data.fullName ?? data.name}
+        </a>
 
         {roleString && <span>&nbsp;({roleString})</span>} 
     </>
