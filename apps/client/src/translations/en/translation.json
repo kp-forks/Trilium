@@ -2256,6 +2256,12 @@
     "create-new-document-description": "You’ll be redirected automatically in a moment.",
     "sync-illustration-this-device": "This device",
     "sync-illustration-desktop-app": "Desktop app",
-    "sync-illustration-server": "Sync server"
+    "sync-illustration-server": "Sync server",
+    "sync-from-desktop-step1": "Open your desktop instance of Trilium Notes.",
+    "sync-from-desktop-step2": "From the Trilium Menu, click Options.",
+    "sync-from-desktop-step3": "Click on Sync category in the note tree.",
+    "sync-from-desktop-step4": "Change server instance address to: {{- host}} and click Save.",
+    "sync-from-desktop-step5": "Click \"Test sync\" button to verify connection is successful.",
+    "sync-from-desktop-final": "Once you've completed these steps, you can proceed to the next step."
   }
 }

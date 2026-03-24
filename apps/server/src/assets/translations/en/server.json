@@ -233,12 +233,6 @@
   "setup_sync-from-desktop": {
     "heading": "Sync from Desktop",
     "description": "This setup needs to be initiated from the desktop instance:",
-    "step1": "Open your desktop instance of Trilium Notes.",
-    "step2": "From the Trilium Menu, click Options.",
-    "step3": "Click on Sync category.",
-    "step4": "Change server instance address to: {{- host}} and click Save.",
-    "step5": "Click \"Test sync\" button to verify connection is successful.",
-    "step6": "Once you've completed these steps, click {{- link}}.",
     "step6-here": "here"
   },
   "setup_sync-from-server": {

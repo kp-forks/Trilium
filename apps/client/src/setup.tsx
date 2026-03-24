@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
 import Button from "./widgets/react/Button";
-import { CardFrame } from "./widgets/react/Card";
+import { Card, CardFrame, CardSection } from "./widgets/react/Card";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 
@@ -255,7 +255,15 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
             <h1>{t("setup.sync-from-desktop")}</h1>
 
             <main>
-                Content goes here.
+                <Card heading="On the other device">
+                    <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
+                    <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
+                    <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
+                    <CardSection>4. {t("setup.sync-from-desktop-step4", { host: location.host })}</CardSection>
+                    <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
+
+                    {t("setup.sync-from-desktop-final")}
+                </Card>
             </main>
 
             <footer>
