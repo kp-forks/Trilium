@@ -74,8 +74,19 @@ function SyncInProgress() {
         <div class="page sync-in-progress">
             <h1>{t("setup.sync-in-progress-title")}</h1>
             <p>{t("setup.sync-in-progress-description")}</p>
+            <Spinner />
         </div>
     );
+}
+
+function Spinner() {
+    return (
+        <div class="lds-ring" style="margin-right: 20px;">
+            <div />
+            <div />
+            <div />
+            <div />
+        </div>);
 }
 
 function SyncFromServer({ setState }: { setState: (state: State) => void }) {
