@@ -7,7 +7,6 @@ import openService from "../../services/open.js";
 import { useState } from "preact/hooks";
 import type { AppInfo, Contributor, ContributorList } from "@triliumnext/commons";
 import { useTriliumEvent } from "../react/hooks.jsx";
-import { Card, CardSection } from "../react/Card.js";
 import "./about.css";
 import { Trans } from "react-i18next";
 import type React from "react";
@@ -43,8 +42,8 @@ export default function AboutDialog() {
             onHidden={() => setShown(false)}
         >
            <div className="about-dialog-content">
-                <img src={(isNightly) ? iconAlt : icon} width="128" />
-                <h2>Trilium Notes {isNightly && <span>Nightly</span>}</h2>
+                <img src={(isNightly) ? iconAlt : icon} width="160" />
+                <h2>Trilium Notes {isNightly && <span className="channel-name">Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
                     triliumnotes.org
                 </a>
@@ -96,6 +95,7 @@ export default function AboutDialog() {
                     <i class='bx bxl-github'></i>
                     GitHub
                 </a>
+                
                 <a href="https://triliumnotes.org/en/support-us" className="donate-link" target="_blank">
                     <i class='bx bx-heart' ></i>
                     {t("about.donate")}
