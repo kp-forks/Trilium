@@ -117,7 +117,7 @@
     "no_path_to_clone_to": "Brak ścieżki do sklonowania.",
     "note_cloned": "Notatka \"{{clonedTitle}}\" została sklonowana do \"{{targetTitle}}\"",
     "help_on_links": "Pomoc dotycząca linków",
-    "target_parent_note": "Docelowa notatka nadrzędna"
+    "target_parent_note": "Docelowa pierwotna notatka"
   },
   "help": {
     "title": "Ściągawka",
