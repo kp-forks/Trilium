@@ -70,26 +70,32 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncInProgress() {
-    const { outstandingPullCount, initialized } = useOutstandingSyncInfo();
+    const { outstandingPullCount, totalPullCount, initialized } = useOutstandingSyncInfo();
+
+    const progress = totalPullCount
+        ? Math.round(((totalPullCount - outstandingPullCount) / totalPullCount) * 100)
+        : 0;
 
     return (
         <div class="page sync-in-progress">
             <h1>{t("setup.sync-in-progress-title")}</h1>
             <p>{t("setup.sync-in-progress-description")}</p>
-            <Spinner />
-            <p>Outstanding sync objects: {outstandingPullCount}</p>
+            <progress value={totalPullCount ? totalPullCount - outstandingPullCount : 0} max={totalPullCount ?? 0} />
+            <p>{progress}% ({totalPullCount ? totalPullCount - outstandingPullCount : 0} / {totalPullCount ?? "?"})</p>
         </div>
     );
 }
 
 function useOutstandingSyncInfo() {
     const [ outstandingPullCount, setOutstandingPullCount ] = useState(0);
+    const [ totalPullCount, setTotalPullCount ] = useState<number | null>(null);
     const [ initialized, setInitialized ] = useState(false);
 
     async function refresh() {
-        const { outstandingPullCount, initialized } = await server.get("sync/stats");
-        setOutstandingPullCount(outstandingPullCount);
-        setInitialized(initialized);
+        const resp = await server.get<{ outstandingPullCount: number; totalPullCount: number | null; initialized: boolean }>("sync/stats");
+        setOutstandingPullCount(resp.outstandingPullCount);
+        setTotalPullCount(resp.totalPullCount);
+        setInitialized(resp.initialized);
     }
 
     useEffect(() => {
@@ -98,7 +104,7 @@ function useOutstandingSyncInfo() {
 
         return () => clearInterval(interval);
     }, []);
-    return { outstandingPullCount, initialized };
+    return { outstandingPullCount, totalPullCount, initialized };
 }
 
 function Spinner() {

@@ -46,7 +46,8 @@ function getStats() {
 
     const stats = {
         initialized: getSql().getValue("SELECT value FROM options WHERE name = 'initialized'") === "true",
-        outstandingPullCount: syncService.getOutstandingPullCount()
+        outstandingPullCount: syncService.getOutstandingPullCount(),
+        totalPullCount: syncService.getTotalPullCount()
     };
 
     getLog().info(`Returning sync stats: ${JSON.stringify(stats)}`);
