@@ -35,7 +35,7 @@ function renderState(state: State, setState: (state: State) => void) {
 }
 
 function App() {
-    const [state, setState] = useState<State>("syncFromDesktop");
+    const [state, setState] = useState<State>("firstOptions");
     const [prevState, setPrevState] = useState<State | null>(null);
     const [transitioning, setTransitioning] = useState(false);
     const prevStateRef = useRef<State>(state);
@@ -268,7 +268,7 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
 
             <footer>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
-                <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} />
+                <Button icon="bx-loader bx-spin" text={t("setup.sync-from-desktop-waiting")} kind="primary" disabled />
             </footer>
         </div>
     );
