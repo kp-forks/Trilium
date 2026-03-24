@@ -19,15 +19,16 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-type State = "firstOptions" | "syncFromDesktop" | "syncFromServer";
+type State = "firstOptions" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
 
 function App() {
-    const [ state, setState ] = useState<State>("syncFromServer");
+    const [ state, setState ] = useState<State>("syncInProgress");
 
     return (
         <div class="setup-container">
             {state === "firstOptions" && <SetupOptions setState={setState} />}
             {state === "syncFromServer" && <SyncFromServer setState={setState} />}
+            {state === "syncInProgress" && <SyncInProgress />}
         </div>
     );
 }
@@ -64,6 +65,15 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     onClick={() => setState("syncFromDesktop")}
                 />
             </main>
+        </div>
+    );
+}
+
+function SyncInProgress() {
+    return (
+        <div class="page sync-in-progress">
+            <h1>{t("setup.sync-in-progress-title")}</h1>
+            <p>{t("setup.sync-in-progress-description")}</p>
         </div>
     );
 }
