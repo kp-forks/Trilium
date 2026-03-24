@@ -1,16 +1,25 @@
-import { BootstrapDefinition } from "@triliumnext/commons";
+import { BootstrapCommonItems, BootstrapDefinition } from "@triliumnext/commons";
 import { getSql } from "./sql";
 import protected_session from "./protected_session";
 import { generateCss, generateIconRegistry, getIconPacks, MIME_TO_EXTENSION_MAPPINGS } from "./icon_packs";
 import options from "./options";
 import { getCurrentLocale } from "./i18n";
 
-export default function getSharedBootstrapItems(assetPath: string): Pick<BootstrapDefinition, "assetPath" | "headingStyle" | "layoutOrientation" | "maxEntityChangeIdAtLoad" | "maxEntityChangeSyncIdAtLoad" | "isProtectedSessionAvailable" | "iconRegistry" | "iconPackCss" | "currentLocale" | "isRtl"> {
+export default function getSharedBootstrapItems(assetPath: string, dbInitialized: boolean) {
     const sql = getSql();
     const currentLocale = getCurrentLocale();
 
-    return {
+    const commonItems: Partial<BootstrapCommonItems> = {
         assetPath,
+        ...getIconConfig(assetPath)
+    };
+
+    if (!dbInitialized) {
+        return commonItems;
+    }
+
+    return {
+        ...commonItems,
         headingStyle: options.getOption("headingStyle") as "plain" | "underline" | "markdown",
         layoutOrientation: options.getOption("layoutOrientation") as "vertical" | "horizontal",
         maxEntityChangeIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
@@ -18,7 +27,6 @@ export default function getSharedBootstrapItems(assetPath: string): Pick<Bootstr
         isProtectedSessionAvailable: protected_session.isProtectedSessionAvailable(),
         currentLocale,
         isRtl: !!currentLocale.rtl,
-        ...getIconConfig(assetPath)
     }
 }
 

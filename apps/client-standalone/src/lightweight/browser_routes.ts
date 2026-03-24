@@ -5,7 +5,6 @@
 
 import { BootstrapDefinition } from '@triliumnext/commons';
 import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
-import { getIconConfig } from '@triliumnext/core/src/services/bootstrap_utils';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { type BrowserRequest, BrowserRouter } from './browser_router';
@@ -241,20 +240,23 @@ export function registerRoutes(router: BrowserRouter): void {
 function bootstrapRoute(): BootstrapDefinition {
     const assetPath = ".";
 
-    if (!sql_init.isDbInitialized()) {
+    const isDbInitialized = sql_init.isDbInitialized();
+    const commonItems = getSharedBootstrapItems(assetPath, isDbInitialized);
+
+    if (!isDbInitialized) {
         return {
+            ...commonItems,
             dbInitialized: false,
             baseApiUrl: "../api/",
             assetPath,
             themeCssUrl: false,
-            themeUseNextAsBase: "next",
-            ...getIconConfig(assetPath)
+            themeUseNextAsBase: "next"
         };
     }
 
     return {
+        ...commonItems,
         dbInitialized: true,
-        ...getSharedBootstrapItems(assetPath),
         appPath: assetPath,
         device: false, // Let the client detect device type.
         csrfToken: "dummy-csrf-token",
