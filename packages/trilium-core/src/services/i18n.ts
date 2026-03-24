@@ -44,6 +44,11 @@ export async function changeLanguage(locale: string) {
 }
 
 export function getCurrentLocale() {
+    if (!sql_init.isDbInitialized()) {
+        // If DB is not initialized, we cannot get the locale from options, so we return English as a default.
+        return LOCALES.find(l => l.id === "en")!;
+    }
+
     const localeId = options.getOptionOrNull("locale") ?? "en";
     const currentLocale = LOCALES.find(l => l.id === localeId);
     if (!currentLocale) return LOCALES.find(l => l.id === "en")!;

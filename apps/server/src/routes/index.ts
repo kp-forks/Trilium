@@ -16,8 +16,6 @@ import { generateCsrfToken } from "./csrf_protection.js";
 type View = "desktop" | "mobile" | "print";
 
 export function bootstrap(req: Request, res: Response) {
-    const options = optionService.getOptionMap();
-
     // csrf-csrf v4 binds CSRF tokens to the session ID via HMAC. With saveUninitialized: false,
     // a brand-new session is never persisted unless explicitly modified, so its cookie is never
     // sent to the browser — meaning every request gets a different ephemeral session ID, and
@@ -30,11 +28,14 @@ export function bootstrap(req: Request, res: Response) {
     const isDbInitialized = sql_init.isDbInitialized();
     const commonItems = getSharedBootstrapItems(assetPath, isDbInitialized);
     if (!isDbInitialized) {
-        return {
+        res.send({
             ...commonItems,
             baseApiUrl: "../api/"
-        };
+        });
+        return;
     }
+
+    const options = optionService.getOptionMap();
 
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
@@ -51,6 +52,7 @@ export function bootstrap(req: Request, res: Response) {
 
     res.send({
         ...commonItems,
+        dbInitialized: true,
         device: view,
         csrfToken,
         themeCssUrl: getThemeCssUrl(theme, themeNote),

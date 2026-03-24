@@ -1,4 +1,4 @@
-import { BootstrapCommonItems, BootstrapDefinition } from "@triliumnext/commons";
+import { BootstrapDefinition } from "@triliumnext/commons";
 import { getSql } from "./sql";
 import protected_session from "./protected_session";
 import { generateCss, generateIconRegistry, getIconPacks, MIME_TO_EXTENSION_MAPPINGS } from "./icon_packs";
@@ -9,7 +9,7 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
     const sql = getSql();
     const currentLocale = getCurrentLocale();
 
-    const commonItems: Partial<BootstrapCommonItems> = {
+    const commonItems = {
         assetPath,
         dbInitialized,
         ...getIconConfig(assetPath)
