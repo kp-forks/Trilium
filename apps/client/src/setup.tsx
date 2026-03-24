@@ -28,13 +28,14 @@ function renderState(state: State, setState: (state: State) => void) {
         case "firstOptions": return <SetupOptions setState={setState} />;
         case "createNewDocument": return <CreateNewDocument />;
         case "syncFromServer": return <SyncFromServer setState={setState} />;
+        case "syncFromDesktop": return <SyncFromDesktop setState={setState} />;
         case "syncInProgress": return <SyncInProgress />;
         default: return null;
     }
 }
 
 function App() {
-    const [state, setState] = useState<State>("firstOptions");
+    const [state, setState] = useState<State>("syncFromDesktop");
     const [prevState, setPrevState] = useState<State | null>(null);
     const [transitioning, setTransitioning] = useState(false);
     const prevStateRef = useRef<State>(state);
@@ -233,6 +234,26 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
                         <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} />
                     </FormItemWithIcon>
                 </form>
+            </main>
+
+            <footer>
+                <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
+                <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} />
+            </footer>
+        </div>
+    );
+}
+
+function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
+    function handleFinishSetup() {
+    }
+
+    return (
+        <div class="page sync-from-desktop">
+            <h1>{t("setup.sync-desktop-title")}</h1>
+
+            <main>
+                Content goes here.
             </main>
 
             <footer>
