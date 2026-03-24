@@ -86,7 +86,7 @@
     "@types/mark.js": "8.11.12",
     "@types/tabulator-tables": "6.3.1",
     "copy-webpack-plugin": "14.0.0",
-    "happy-dom": "20.8.4",
+    "happy-dom": "20.8.7",
     "lightningcss": "1.32.0",
     "script-loader": "0.7.2",
     "vite-plugin-static-copy": "3.4.0"
