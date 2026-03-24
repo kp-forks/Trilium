@@ -7,6 +7,7 @@ import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
+import Collapsible from "./widgets/react/Collapsible";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 
@@ -208,12 +209,14 @@ function CreateNewDocument() {
 }
 
 function SyncFromServer({ setState }: { setState: (state: State) => void }) {
-    const [serverUrl, setServerUrl] = useState("");
-    const [password, setPassword] = useState("");
+    const [ syncServerHost, setSyncServerHost ] = useState("");
+    const [ password, setPassword ] = useState("");
+    const [ syncProxy, setSyncProxy ] = useState("");
 
     async function handleFinishSetup() {
         await server.post("setup/sync-from-server", {
-            syncServerHost: serverUrl,
+            syncServerHost: syncServerHost.trim(),
+            syncProxy: syncProxy.trim(),
             password
         });
         setState("syncInProgress");
@@ -228,12 +231,18 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             <main>
                 <form>
                     <FormItemWithIcon icon="bx bx-server">
-                        <FormTextBox placeholder="https://example.com" currentValue={serverUrl} onChange={setServerUrl} />
+                        <FormTextBox placeholder="https://example.com" currentValue={syncServerHost} onChange={setSyncServerHost} />
                     </FormItemWithIcon>
 
                     <FormItemWithIcon icon="bx bx-lock">
                         <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} />
                     </FormItemWithIcon>
+
+                    <Collapsible title={t("setup.advanced-options")} initiallyExpanded={false}>
+                        <FormItemWithIcon icon="bx bx-shape-polygon">
+                            <FormTextBox placeholder="http://my-proxy.com:8080" currentValue={syncProxy} onChange={setSyncProxy} />
+                        </FormItemWithIcon>
+                    </Collapsible>
                 </form>
             </main>
 
