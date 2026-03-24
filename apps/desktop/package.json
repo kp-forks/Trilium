@@ -33,6 +33,7 @@
   "devDependencies": {
     "@types/electron-squirrel-startup": "1.0.2",
     "@triliumnext/commons": "workspace:*",
+    "@triliumnext/core": "workspace:*",
     "@triliumnext/server": "workspace:*",
     "copy-webpack-plugin": "14.0.0",
     "electron": "41.0.3",
