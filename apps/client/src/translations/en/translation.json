@@ -2236,7 +2236,7 @@
     "new-document": "New document",
     "new-document-description": "Start with a clean workspace and begin immediately.",
     "sync-from-desktop": "Sync from desktop",
-    "sync-from-desktop-description": "“Import data from your desktop app on this network.",
+    "sync-from-desktop-description": "Import data from your desktop app on this network.",
     "sync-from-server": "Sync from server",
     "sync-from-server-description": "Connect to an existing sync server with your credentials.",
     "next": "Next",
