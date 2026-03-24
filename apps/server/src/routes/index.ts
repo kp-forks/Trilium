@@ -1,5 +1,6 @@
 import { BootstrapDefinition } from "@triliumnext/commons";
-import { getSharedBootstrapItems, getSql, icon_packs as iconPackService } from "@triliumnext/core";
+import { getSharedBootstrapItems, getSql, icon_packs as iconPackService, sql_init } from "@triliumnext/core";
+import { getIconConfig } from "@triliumnext/core/src/services/bootstrap_utils";
 import type { Request, Response } from "express";
 
 import packageJson from "../../package.json" with { type: "json" };
@@ -27,6 +28,17 @@ export function bootstrap(req: Request, res: Response) {
         req.session.csrfInitialized = true;
     }
 
+    if (!sql_init.isDbInitialized()) {
+        return {
+            dbInitialized: false,
+            baseApiUrl: "../api/",
+            assetPath,
+            themeCssUrl: false,
+            themeUseNextAsBase: "next",
+            ...getIconConfig(assetPath)
+        };
+    }
+
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
         validateOnReuse: false      // if validation fails, generate a new token instead of throwing an error
@@ -42,6 +54,7 @@ export function bootstrap(req: Request, res: Response) {
 
     res.send({
         ...getSharedBootstrapItems(assetPath),
+        dbInitialized: true,
         device: view,
         csrfToken,
         themeCssUrl: getThemeCssUrl(theme, themeNote),
