@@ -15,7 +15,6 @@ class SetupController {
     private setupTypeNextButton: HTMLButtonElement;
     private setupTypeInputs: HTMLInputElement[];
     private syncServerHostInput: HTMLInputElement;
-    private syncProxyInput: HTMLInputElement;
     private passwordInput: HTMLInputElement;
     private sections: Record<SetupStep, HTMLElement>;
 
@@ -27,7 +26,6 @@ class SetupController {
         this.setupTypeNextButton = mustGetElement("setup-type-next", HTMLButtonElement);
         this.setupTypeInputs = Array.from(document.querySelectorAll<HTMLInputElement>("input[name='setup-type']"));
         this.syncServerHostInput = mustGetElement("sync-server-host", HTMLInputElement);
-        this.syncProxyInput = mustGetElement("sync-proxy", HTMLInputElement);
         this.passwordInput = mustGetElement("password", HTMLInputElement);
         this.sections = {
             "setup-type": mustGetElement("setup-type-section", HTMLElement),
@@ -112,13 +110,6 @@ class SetupController {
             showAlert("Password can't be empty");
             return;
         }
-
-        // not using server.js because it loads too many dependencies
-        const resp = await $.post("api/setup/sync-from-server", {
-            syncServerHost,
-            syncProxy,
-            password
-        });
 
         if (resp.result === "success") {
             hideAlert();

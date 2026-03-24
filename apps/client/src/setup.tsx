@@ -212,6 +212,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     const [ syncServerHost, setSyncServerHost ] = useState("");
     const [ password, setPassword ] = useState("");
     const [ syncProxy, setSyncProxy ] = useState("");
+    const isValid = syncServerHost.trim() !== "" && password !== "";
 
     async function handleFinishSetup() {
         await server.post("setup/sync-from-server", {
@@ -229,13 +230,13 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             <p>{t("setup.sync-from-server-page-description")}</p>
 
             <main>
-                <form>
+                <form onSubmit={handleFinishSetup}>
                     <FormItemWithIcon icon="bx bx-server">
-                        <FormTextBox placeholder="https://example.com" currentValue={syncServerHost} onChange={setSyncServerHost} />
+                        <FormTextBox placeholder="https://example.com" currentValue={syncServerHost} onChange={setSyncServerHost} required />
                     </FormItemWithIcon>
 
                     <FormItemWithIcon icon="bx bx-lock">
-                        <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} />
+                        <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} required />
                     </FormItemWithIcon>
 
                     <Collapsible title={t("setup.advanced-options")} initiallyExpanded={false}>
@@ -248,7 +249,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 
             <footer>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
-                <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} />
+                <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} disabled={!isValid} />
             </footer>
         </div>
     );
