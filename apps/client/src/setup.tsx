@@ -1,7 +1,7 @@
 import "./setup.css";
 
 import { ComponentChildren, render } from "preact";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
@@ -22,7 +22,7 @@ async function main() {
 type State = "firstOptions" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
 
 function App() {
-    const [ state, setState ] = useState<State>("syncInProgress");
+    const [ state, setState ] = useState<State>("syncFromServer");
 
     return (
         <div class="setup-container">
@@ -70,13 +70,35 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncInProgress() {
+    const { outstandingPullCount, initialized } = useOutstandingSyncInfo();
+
     return (
         <div class="page sync-in-progress">
             <h1>{t("setup.sync-in-progress-title")}</h1>
             <p>{t("setup.sync-in-progress-description")}</p>
             <Spinner />
+            <p>Outstanding sync objects: {outstandingPullCount}</p>
         </div>
     );
+}
+
+function useOutstandingSyncInfo() {
+    const [ outstandingPullCount, setOutstandingPullCount ] = useState(0);
+    const [ initialized, setInitialized ] = useState(false);
+
+    async function refresh() {
+        const { outstandingPullCount, initialized } = await server.get("sync/stats");
+        setOutstandingPullCount(outstandingPullCount);
+        setInitialized(initialized);
+    }
+
+    useEffect(() => {
+        const interval = setInterval(refresh, 1000);
+        refresh();
+
+        return () => clearInterval(interval);
+    }, []);
+    return { outstandingPullCount, initialized };
 }
 
 function Spinner() {
@@ -93,11 +115,12 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     const [serverUrl, setServerUrl] = useState("");
     const [password, setPassword] = useState("");
 
-    function handleFinishSetup() {
-        server.post("setup/sync-from-server", {
+    async function handleFinishSetup() {
+        await server.post("setup/sync-from-server", {
             syncServerHost: serverUrl,
             password
         });
+        setState("syncInProgress");
     }
 
     return (

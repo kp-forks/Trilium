@@ -1,4 +1,4 @@
-import { deferred } from "@triliumnext/commons";
+import { deferred, OptionRow } from "@triliumnext/commons";
 import { getSql } from "./sql";
 import { getLog } from "./log";
 import { isElectron } from "./utils";
@@ -11,6 +11,7 @@ import BNote from "../becca/entities/bnote";
 import BBranch from "../becca/entities/bbranch";
 import hidden_subtree from "./hidden_subtree";
 import TaskContext from "./task_context";
+import BOption from "../becca/entities/boption";
 
 export const dbReady = deferred<void>();
 
@@ -73,10 +74,6 @@ async function initDbConnection() {
     );`);
 
     dbReady.resolve();
-}
-
-async function createDatabaseForSync(a: any, b: string, c: any) {
-    console.error("createDatabaseForSync is not implemented yet");
 }
 
 function setDbAsInitialized() {
@@ -220,6 +217,32 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
     log.info("Schema and initial content generated.");
 
     initDbConnection();
+}
+
+async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", syncProxy = "") {
+    const log = getLog();
+    const sql = getSql();
+    log.info("Creating database for sync");
+
+    if (isDbInitialized()) {
+        throw new Error("DB is already initialized");
+    }
+
+    // We have to import async since options init requires keyboard actions which require translations.
+    const optionsInitService = (await import("./options_init.js")).default;
+
+    sql.transactional(() => {
+        sql.executeScript(schema);
+
+        optionsInitService.initNotSyncedOptions(false, { syncServerHost, syncProxy });
+
+        // document options required for sync to kick off
+        for (const opt of options) {
+            new BOption(opt).save();
+        }
+    });
+
+    log.info("Schema and not synced options generated.");
 }
 
 export default { isDbInitialized, createDatabaseForSync, setDbAsInitialized, schemaExists, getDbSize, initDbConnection, dbReady, initializeDb, createInitialDatabase };
