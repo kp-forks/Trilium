@@ -114,7 +114,7 @@ function revisionLink(appInfo: AppInfo | null) {
 }
 
 function Contributors(params: {data: ContributorList}) {
-    return params.data.contributors.map((c, index, array) => {
+    return params.data.contributors.splice(0, 10).map((c, index, array) => {
         return <Fragment key={c.name}>
             <ContributorListItem data={c} />
             
