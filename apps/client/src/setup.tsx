@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
+import { replaceHtmlEscapedSlashes } from "./services/utils";
 import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
@@ -257,7 +258,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
                         </FormItemWithIcon>
                     </Collapsible>
 
-                    {error && <Admonition className="error" type="caution">{error}</Admonition>}
+                    {error && <Admonition className="error" type="caution">{replaceHtmlEscapedSlashes(error)}</Admonition>}
                 </form>
             </main>
 
