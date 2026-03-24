@@ -16,11 +16,13 @@ import { useCallback, useEffect } from "react";
 import contributors from "../../../../../contributors.json"; 
 import { Fragment } from "preact/jsx-runtime";
 import { ComponentChildren } from "preact";
+import clsx from "clsx";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
     const [shown, setShown] = useState(false);
     const [isNightly, setNightly] = useState(false);
+    const [iconClassName, setIconClassName] = useState("icon-default");
 
     const onLoad = useCallback(async () => {
         if (!appInfo) {
@@ -33,17 +35,21 @@ export default function AboutDialog() {
 
     useEffect(() => {
         setNightly(!!appInfo?.appVersion.includes("test"));
+        if (isNightly) {
+            setIconClassName("icon-nightly");
+        }
     }, [appInfo])
 
     return (
         <Modal
-            className="about-dialog"
+            className={"about-dialog"}
             size="md"
             show={shown}
             onHidden={() => setShown(false)}
         >
            <div className="about-dialog-content">
-                <img src={(isNightly) ? iconAlt : icon} width="160" />
+               
+                <div className={clsx("icon", iconClassName)} />
                 <h2>Trilium Notes {isNightly && <span className="channel-name">Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
                     triliumnotes.org
