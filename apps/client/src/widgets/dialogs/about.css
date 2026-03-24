@@ -1,4 +1,6 @@
 .about-dialog {
+    --bs-modal-width: 650px;
+
     h2 {
         all: unset;
         font-size: 2em;
@@ -12,17 +14,10 @@
         align-items: center;
     }
 
-    .property-sheet-card {
+    .property-sheet-table {
         margin-block: 30px;
         font-size: .85em;
-
-        .tn-card-section {
-            display: flex;
-
-            > :first-child {
-                width: 100px;
-            }
-        }
+        margin-inline: 20px;  
     }
 
     .build-info {
@@ -66,6 +61,40 @@
             &.donate-link {
                 color: #E33F3B;
             }
+        }
+    }
+}
+
+/* TODO: move to global styles */
+.property-sheet-table {
+    border-spacing: 0 2px;
+    border-collapse: separate;
+
+    tr {
+        --_br: 8px;
+        
+        background: var(--card-background-color);
+
+        &:first-child {
+            clip-path: inset(0 round var(--_br) var(--_br) 0 0);
+        }
+
+        &:last-child {
+            clip-path: inset(0 round 0 0 var(--_br) var(--_br));
+        }
+    }
+
+    td {
+        padding: 8px 16px;
+        vertical-align: top;
+
+        &:first-child {
+            white-space: nowrap;
+            color: var(--muted-text-color);
+        }
+
+        &:last-child {
+            width: 100%;
         }
     }
 }

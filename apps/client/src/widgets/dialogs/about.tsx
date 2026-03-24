@@ -49,10 +49,10 @@ export default function AboutDialog() {
                     triliumnotes.org
                 </a>
 
-                <Card className="property-sheet-card">
-                    <CardSection>
-                        <div>{t("about.version_label")}</div>
-                        <div  className="selectable-text">
+                <table className="property-sheet-table">
+                    <tr>
+                        <td>{t("about.version_label")}</td>
+                        <td  className="selectable-text">
                             {t("about.version", {
                                 appVersion: appInfo?.appVersion,
                                 dbVersion: appInfo?.dbVersion,
@@ -69,26 +69,26 @@ export default function AboutDialog() {
                                     }}
                                 />
                             </div>
-                        </div>
-                    </CardSection>
+                        </td>
+                    </tr>
                    
-                    <CardSection>
-                        <div>{t("about.contributors_label")}</div>
-                        <div className="contributor-list use-tn-links">
+                    <tr>
+                        <td>{t("about.contributors_label")}</td>
+                        <td className="contributor-list use-tn-links">
                             <Contributors data={contributors as ContributorList} />
                             <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
                                 {t("about.contributor_full_list")}
                             </a>
-                        </div>
-                    </CardSection>
+                        </td>
+                    </tr>
                     
-                    <CardSection>
-                        <div>{t("about.data_directory")}</div>
-                        <div className="selectable-text">
+                    <tr>
+                        <td>{t("about.data_directory")}</td>
+                        <td className="selectable-text">
                             {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} />)}
-                        </div>
-                    </CardSection>
-                </Card>
+                        </td>
+                    </tr>
+                </table>
            </div>
 
            <footer>
