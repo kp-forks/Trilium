@@ -131,7 +131,7 @@ function RevisionLink(appInfo: AppInfo | null) {
 }
 
 function FooterLink(props: {children: ComponentChildren, text: string, url: string, tooltip: string, className?: string}) {
-    return <a href={props.url} className={props.className} target="_blank" title={props.tooltip}>
+    return <a href={props.url} className={props.className} target="_blank" title={props.tooltip} draggable={false}>
         {props.children}
         {props.text}
     </a>
