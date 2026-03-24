@@ -2249,6 +2249,9 @@
     "sync-in-progress-description": "Your device is now connected and items are being synchronized.",
     "password-placeholder": "Password",
     "button-back": "Back",
-    "button-finish-setup": "Finish setup"
+    "button-finish-setup": "Finish setup",
+    "sync-step-connecting": "Connecting to server",
+    "sync-step-syncing": "Syncing data",
+    "sync-step-finalizing": "Setting up options"
   }
 }

@@ -69,19 +69,61 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
     );
 }
 
-function SyncInProgress() {
-    const { outstandingPullCount, totalPullCount, initialized } = useOutstandingSyncInfo();
+type SyncStep = "connecting" | "syncing" | "finalizing";
 
-    const progress = totalPullCount
-        ? Math.round(((totalPullCount - outstandingPullCount) / totalPullCount) * 100)
+function getSyncStep(stats: { outstandingPullCount: number; totalPullCount: number | null; initialized: boolean }): SyncStep {
+    if (stats.initialized) {
+        return "finalizing"; // will reload momentarily
+    }
+    if (stats.totalPullCount !== null && stats.outstandingPullCount > 0) {
+        return "syncing";
+    }
+    if (stats.totalPullCount !== null && stats.outstandingPullCount === 0) {
+        return "finalizing";
+    }
+    return "connecting";
+}
+
+function SyncInProgress() {
+    const stats = useOutstandingSyncInfo();
+    const step = getSyncStep(stats);
+
+    useEffect(() => {
+        if (stats.initialized) {
+            location.reload();
+        }
+    }, [stats.initialized]);
+
+    const steps: { key: SyncStep; label: string }[] = [
+        { key: "connecting", label: t("setup.sync-step-connecting") },
+        { key: "syncing", label: t("setup.sync-step-syncing") },
+        { key: "finalizing", label: t("setup.sync-step-finalizing") }
+    ];
+
+    const currentIndex = steps.findIndex((s) => s.key === step);
+
+    const progress = stats.totalPullCount
+        ? Math.round(((stats.totalPullCount - stats.outstandingPullCount) / stats.totalPullCount) * 100)
         : 0;
 
     return (
         <div class="page sync-in-progress">
             <h1>{t("setup.sync-in-progress-title")}</h1>
-            <p>{t("setup.sync-in-progress-description")}</p>
-            <progress value={totalPullCount ? totalPullCount - outstandingPullCount : 0} max={totalPullCount ?? 0} />
-            <p>{progress}% ({totalPullCount ? totalPullCount - outstandingPullCount : 0} / {totalPullCount ?? "?"})</p>
+
+            <ol class="sync-steps">
+                {steps.map((s, i) => (
+                    <li class={i < currentIndex ? "completed" : i === currentIndex ? "active" : ""} key={s.key}>
+                        <Icon icon={i < currentIndex ? "bx bx-check-circle" : i === currentIndex ? "bx bx-loader-circle" : "bx bx-circle"} />{" "}
+                        {s.label}
+                        {s.key === "syncing" && step === "syncing" && (
+                            <div class="sync-progress">
+                                <progress value={stats.totalPullCount! - stats.outstandingPullCount} max={stats.totalPullCount!} />
+                                <span>{progress}%</span>
+                            </div>
+                        )}
+                    </li>
+                ))}
+            </ol>
         </div>
     );
 }
