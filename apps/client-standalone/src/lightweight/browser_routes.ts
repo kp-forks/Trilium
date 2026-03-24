@@ -246,17 +246,12 @@ function bootstrapRoute(): BootstrapDefinition {
     if (!isDbInitialized) {
         return {
             ...commonItems,
-            dbInitialized: false,
             baseApiUrl: "../api/",
-            assetPath,
-            themeCssUrl: false,
-            themeUseNextAsBase: "next"
         };
     }
 
     return {
         ...commonItems,
-        dbInitialized: true,
         appPath: assetPath,
         device: false, // Let the client detect device type.
         csrfToken: "dummy-csrf-token",

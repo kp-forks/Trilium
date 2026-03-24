@@ -32,11 +32,7 @@ export function bootstrap(req: Request, res: Response) {
     if (!isDbInitialized) {
         return {
             ...commonItems,
-            dbInitialized: false,
-            baseApiUrl: "../api/",
-            assetPath,
-            themeCssUrl: false,
-            themeUseNextAsBase: "next",
+            baseApiUrl: "../api/"
         };
     }
 
@@ -55,7 +51,6 @@ export function bootstrap(req: Request, res: Response) {
 
     res.send({
         ...commonItems,
-        dbInitialized: true,
         device: view,
         csrfToken,
         themeCssUrl: getThemeCssUrl(theme, themeNote),

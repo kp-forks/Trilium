@@ -316,6 +316,7 @@ export interface DefinitionObject {
  * Subset of bootstrap items that are available both in the main client and in the setup page.
  */
 export interface BootstrapCommonItems {
+    dbInitialized: boolean;
     baseApiUrl: string;
     assetPath: string;
     themeCssUrl: string | false;

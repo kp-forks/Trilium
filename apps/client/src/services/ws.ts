@@ -1,13 +1,14 @@
-import utils from "./utils.js";
-import toastService from "./toast.js";
-import server from "./server.js";
-import options from "./options.js";
-import frocaUpdater from "./froca_updater.js";
-import appContext from "../components/app_context.js";
-import { t } from "./i18n.js";
-import type { EntityChange } from "../server_types.js";
 import { WebSocketMessage } from "@triliumnext/commons";
+
+import appContext from "../components/app_context.js";
+import type { EntityChange } from "../server_types.js";
+import frocaUpdater from "./froca_updater.js";
+import { t } from "./i18n.js";
+import options from "./options.js";
+import server from "./server.js";
+import toastService from "./toast.js";
 import toast from "./toast.js";
+import utils from "./utils.js";
 
 type MessageHandler = (message: WebSocketMessage) => void;
 let messageHandlers: MessageHandler[] = [];
@@ -179,7 +180,7 @@ function waitForEntityChangeId(desiredEntityChangeId: number) {
 
     return new Promise<void>((res, rej) => {
         entityChangeIdReachedListeners.push({
-            desiredEntityChangeId: desiredEntityChangeId,
+            desiredEntityChangeId,
             resolvePromise: res,
             start: Date.now()
         });
@@ -253,6 +254,7 @@ function connectWebSocket() {
 }
 
 async function sendPing() {
+    console.log("Got ws", ws);
     if (!ws) {
         // In standalone mode, there's no WebSocket — nothing to ping.
         return;

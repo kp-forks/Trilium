@@ -11,11 +11,16 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
 
     const commonItems: Partial<BootstrapCommonItems> = {
         assetPath,
+        dbInitialized,
         ...getIconConfig(assetPath)
     };
 
     if (!dbInitialized) {
-        return commonItems;
+        return {
+            ...commonItems,
+            themeCssUrl: false,
+            themeUseNextAsBase: "next"
+        };
     }
 
     return {
