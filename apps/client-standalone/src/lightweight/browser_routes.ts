@@ -246,6 +246,7 @@ function bootstrapRoute(): BootstrapDefinition {
     if (!isDbInitialized) {
         return {
             ...commonItems,
+            isStandalone: true,
             baseApiUrl: "../api/",
         };
     }
