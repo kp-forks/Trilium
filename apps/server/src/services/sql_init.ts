@@ -2,24 +2,16 @@ import { type OptionRow } from "@triliumnext/commons";
 import { sql_init as coreSqlInit } from "@triliumnext/core";
 import fs from "fs";
 
-import BBranch from "../becca/entities/bbranch.js";
-import BNote from "../becca/entities/bnote.js";
 import BOption from "../becca/entities/boption.js";
-import cls from "./cls.js";
-import password from "./encryption/password.js";
-import hidden_subtree from "./hidden_subtree.js";
-import zipImportService from "./import/zip.js";
 import log from "./log.js";
-import optionService from "./options.js";
 import resourceDir from "./resource_dir.js";
 import sql from "./sql.js";
-import TaskContext from "./task_context.js";
 
 const schemaExists = coreSqlInit.schemaExists;
 const isDbInitialized = coreSqlInit.isDbInitialized;
 const dbReady = coreSqlInit.dbReady;
 const setDbAsInitialized = coreSqlInit.setDbAsInitialized;
-const initDbConnection = coreSqlInit.initDbConnection;
+const createInitialDatabase = coreSqlInit.createInitialDatabase;
 const initializeDb = coreSqlInit.initializeDb;
 export const getDbSize = coreSqlInit.getDbSize;
 

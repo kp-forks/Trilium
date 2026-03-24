@@ -142,6 +142,7 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Database loaded");
 
             console.log("[Worker] Loading @triliumnext/core...");
+            const schemaModule = await import("@triliumnext/core/src/assets/schema.sql?raw");
             coreModule = await import("@triliumnext/core");
             await coreModule.initializeCore({
                 executionContext: new BrowserExecutionContext(),
@@ -149,6 +150,7 @@ async function initialize(): Promise<void> {
                 messaging: messagingProvider!,
                 request: new FetchRequestProvider(),
                 translations: translationProvider,
+                schema: schemaModule.default,
                 dbConfig: {
                     provider: sqlProvider!,
                     isReadOnly: false,

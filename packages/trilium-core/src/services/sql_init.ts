@@ -9,11 +9,16 @@ import { getContext } from "./context";
 import config from "./config";
 import BNote from "../becca/entities/bnote";
 import BBranch from "../becca/entities/bbranch";
-import schema from "../assets/schema.sql?raw";
 import hidden_subtree from "./hidden_subtree";
 import TaskContext from "./task_context";
 
 export const dbReady = deferred<void>();
+
+let schema: string;
+
+export function initSchema(schemaStr: string) {
+    schema = schemaStr;
+}
 
 function schemaExists() {
     return !!getSql().getValue(/*sql*/`SELECT name FROM sqlite_master

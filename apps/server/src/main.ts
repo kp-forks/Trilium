@@ -3,6 +3,7 @@
  * are loaded later and will result in an empty string.
  */
 
+import fs from "fs";
 import { initializeCore } from "@triliumnext/core";
 import path from "path";
 
@@ -50,6 +51,7 @@ async function startApplication() {
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),
+        schema: fs.readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
         translations: (await import("./services/i18n.js")).initializeTranslations,
         extraAppInfo: {
             nodeVersion: process.version,

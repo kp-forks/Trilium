@@ -6,6 +6,7 @@ import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
 import { initRequest, RequestProvider } from "./services/request";
 import { initTranslations, TranslationProvider } from "./services/i18n";
+import { initSchema } from "./services/sql_init";
 import appInfo from "./services/app_info";
 
 export type * from "./services/sql/types";
@@ -87,13 +88,15 @@ export { default as sync } from "./services/sync";
 export { default as consistency_checks } from "./services/consistency_checks";
 export { default as content_hash } from "./services/content_hash";
 export { default as sync_mutex } from "./services/sync_mutex";
+export { default as setup } from "./services/setup";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, extraAppInfo }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, schema, extraAppInfo }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
     translations: TranslationProvider,
+    schema: string,
     messaging?: MessagingProvider,
     request?: RequestProvider,
     extraAppInfo?: {
@@ -106,6 +109,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
     initCrypto(crypto);
     initSql(new SqlService(dbConfig, getLog()));
     initContext(executionContext);
+    initSchema(schema);
     Object.assign(appInfo, extraAppInfo);
     if (messaging) {
         initMessaging(messaging);
