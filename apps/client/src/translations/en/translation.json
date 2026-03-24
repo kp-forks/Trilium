@@ -2264,6 +2264,7 @@
     "sync-from-desktop-step5": "Click \"Test sync\" button to verify connection is successful.",
     "sync-from-desktop-final": "Once you've completed these steps, you can proceed to the next step.",
     "sync-from-desktop-waiting": "Waiting for connection...",
-    "advanced-options": "Advanced options"
+    "advanced-options": "Advanced options",
+    "sync-failed": "Failed to sync: {{message}}"
   }
 }

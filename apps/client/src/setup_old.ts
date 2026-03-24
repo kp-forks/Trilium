@@ -101,16 +101,6 @@ class SetupController {
         const syncProxy = this.syncProxyInput.value.trim();
         const password = this.passwordInput.value;
 
-        if (!syncServerHost) {
-            showAlert("Trilium server address can't be empty");
-            return;
-        }
-
-        if (!password) {
-            showAlert("Password can't be empty");
-            return;
-        }
-
         if (resp.result === "success") {
             hideAlert();
             this.setStep("sync-in-progress");

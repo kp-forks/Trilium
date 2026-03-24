@@ -3,6 +3,7 @@ import setupService from "../../services/setup.js";
 import { getLog } from "../../services/log.js";
 import appInfo from "../../services/app_info.js";
 import type { Request } from "express";
+import { SetupSyncFromServerResponse } from "@triliumnext/commons";
 
 function getStatus() {
     return {
@@ -16,7 +17,7 @@ async function setupNewDocument() {
     await sqlInit.createInitialDatabase();
 }
 
-function setupSyncFromServer(req: Request) {
+function setupSyncFromServer(req: Request): Promise<SetupSyncFromServerResponse> {
     const { syncServerHost, syncProxy, password } = req.body;
 
     return setupService.setupSyncFromSyncServer(syncServerHost, syncProxy, password);

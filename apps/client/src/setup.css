@@ -83,6 +83,7 @@ body.setup {
                 display: flex;
                 flex-direction: column;
                 padding-top: 1em;
+                overflow: auto;
             }
 
             >footer {
@@ -102,6 +103,10 @@ body.setup {
             gap: 1rem;
             width: 80%;
             margin: auto;
+
+            .admonition {
+                margin: 0;
+            }
         }
 
         .form-item-with-icon {

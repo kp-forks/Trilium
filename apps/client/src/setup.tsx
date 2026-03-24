@@ -1,10 +1,12 @@
 import "./setup.css";
 
+import { SetupSyncFromServerResponse } from "@triliumnext/commons";
 import { ComponentChildren, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
+import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
 import Collapsible from "./widgets/react/Collapsible";
@@ -212,15 +214,25 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     const [ syncServerHost, setSyncServerHost ] = useState("");
     const [ password, setPassword ] = useState("");
     const [ syncProxy, setSyncProxy ] = useState("");
+    const [ error, setError ] = useState<string | null>(null);
     const isValid = syncServerHost.trim() !== "" && password !== "";
 
     async function handleFinishSetup() {
-        await server.post("setup/sync-from-server", {
-            syncServerHost: syncServerHost.trim(),
-            syncProxy: syncProxy.trim(),
-            password
-        });
-        setState("syncInProgress");
+        try {
+            const resp = await server.post<SetupSyncFromServerResponse>("setup/sync-from-server", {
+                syncServerHost: syncServerHost.trim(),
+                syncProxy: syncProxy.trim(),
+                password
+            });
+
+            if (resp.result === "success") {
+                setState("syncInProgress");
+            } else {
+                setError(t("setup.sync-failed", { message: resp.error }));
+            }
+        } catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
+        }
     }
 
     return (
@@ -230,7 +242,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             <p>{t("setup.sync-from-server-page-description")}</p>
 
             <main>
-                <form onSubmit={handleFinishSetup}>
+                <form>
                     <FormItemWithIcon icon="bx bx-server">
                         <FormTextBox placeholder="https://example.com" currentValue={syncServerHost} onChange={setSyncServerHost} required />
                     </FormItemWithIcon>
@@ -244,6 +256,8 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
                             <FormTextBox placeholder="http://my-proxy.com:8080" currentValue={syncProxy} onChange={setSyncProxy} />
                         </FormItemWithIcon>
                     </Collapsible>
+
+                    {error && <Admonition className="error" type="caution">{error}</Admonition>}
                 </form>
             </main>
 

@@ -370,3 +370,10 @@ export interface SetupSyncSeedResponse {
     syncVersion: number;
     options: OptionRow[];
 }
+
+export type SetupSyncFromServerResponse = {
+    result: "success";
+} | {
+    result: "failure";
+    error: string;
+}
