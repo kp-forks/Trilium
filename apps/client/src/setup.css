@@ -144,6 +144,40 @@ body.setup {
             }
         }
     }
+
+    .sync-illustration {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+
+        .tn-icon {
+            font-size: 3em;
+            color: var(--muted-text-color);
+        }
+
+        >div {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+            line-height: 1;
+        }
+
+        .sync-illustration-arrows {
+            width: 60px;
+            height: 3em;
+            position: relative;
+
+            &::after {
+                content: "";
+                position: absolute;
+                border: 2px dashed var(--main-border-color);
+                top: 1.5em;
+                left: 0;
+                right: 0;
+            }
+        }
+    }
 }
 
 @keyframes lds-ring {

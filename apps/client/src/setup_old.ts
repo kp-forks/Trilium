@@ -145,14 +145,6 @@ class SetupController {
     private getSelectedSetupType(): SetupType {
         return (this.setupTypeInputs.find((input) => input.checked)?.value ?? "") as SetupType;
     }
-
-    private startSyncPolling() {
-        if (this.syncPollIntervalId !== null) {
-            return;
-        }
-
-        this.syncPollIntervalId = window.setInterval(checkOutstandingSyncs, 1000);
-    }
 }
 
 async function checkOutstandingSyncs() {

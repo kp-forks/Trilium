@@ -221,6 +221,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 
     return (
         <div class="page sync-from-server">
+            <SyncIllustration targetDevice="server" />
             <h1>{t("setup.sync-from-server-page-title")}</h1>
             <p>{t("setup.sync-from-server-page-description")}</p>
 
@@ -250,6 +251,7 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
 
     return (
         <div class="page sync-from-desktop">
+            <SyncIllustration targetDevice="desktop" />
             <h1>{t("setup.sync-desktop-title")}</h1>
 
             <main>
@@ -260,6 +262,22 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
                 <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} />
             </footer>
+        </div>
+    );
+}
+
+function SyncIllustration({ targetDevice }: { targetDevice: "desktop" | "server" }) {
+    return (
+        <div class="sync-illustration">
+            <div>
+                <Icon icon="bx bx-globe" />
+                {t("setup.sync-illustration-this-device")}
+            </div>
+            <div class="sync-illustration-arrows" />
+            <div>
+                <Icon icon={targetDevice === "desktop" ? "bx bx-desktop" : "bx bx-server"} />
+                {targetDevice === "desktop" ? t("setup.sync-illustration-desktop-app") : t("setup.sync-illustration-server")}
+            </div>
         </div>
     );
 }

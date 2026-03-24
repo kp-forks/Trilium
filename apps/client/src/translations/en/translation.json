@@ -2255,6 +2255,9 @@
     "sync-step-finalizing": "Setting up options",
     "create-new-document-title": "Preparing your new document",
     "create-new-document-description": "You’ll be redirected automatically in a moment.",
-    "sync-desktop-title": "Sync from desktop"
+    "sync-desktop-title": "Sync from desktop",
+    "sync-illustration-this-device": "This device",
+    "sync-illustration-desktop-app": "Desktop app",
+    "sync-illustration-server": "Sync server"
   }
 }
