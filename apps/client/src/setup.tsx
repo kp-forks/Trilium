@@ -33,7 +33,7 @@ function renderState(state: State, setState: (state: State) => void) {
         case "createNewDocument": return <CreateNewDocument />;
         case "syncFromServer": return <SyncFromServer setState={setState} />;
         case "syncFromDesktop": return <SyncFromDesktop setState={setState} />;
-        case "syncInProgress": return <SyncInProgress />;
+        case "syncInProgress": return <SyncInProgress device="server" />;
         default: return null;
     }
 }
@@ -121,7 +121,7 @@ function getSyncStep(stats: { outstandingPullCount: number; totalPullCount: numb
     return "connecting";
 }
 
-function SyncInProgress() {
+function SyncInProgress({ device }: { device: "server" | "desktop" }) {
     const stats = useOutstandingSyncInfo();
     const step = getSyncStep(stats);
 
@@ -145,22 +145,25 @@ function SyncInProgress() {
 
     return (
         <div class="page sync-in-progress">
+            <SyncIllustration targetDevice={device} />
             <h1>{t("setup.sync-in-progress-title")}</h1>
 
-            <ol class="sync-steps">
-                {steps.map((s, i) => (
-                    <li class={i < currentIndex ? "completed" : i === currentIndex ? "active" : ""} key={s.key}>
-                        <Icon icon={i < currentIndex ? "bx bx-check-circle" : i === currentIndex ? "bx bx-loader-circle" : "bx bx-circle"} />{" "}
-                        {s.label}
-                        {s.key === "syncing" && step === "syncing" && (
-                            <div class="sync-progress">
-                                <progress value={stats.totalPullCount! - stats.outstandingPullCount} max={stats.totalPullCount!} />
-                                <span>{progress}%</span>
-                            </div>
-                        )}
-                    </li>
-                ))}
-            </ol>
+            <main>
+                <Card className="sync-steps">
+                    {steps.map((s, i) => (
+                        <CardSection className={i < currentIndex ? "completed" : i === currentIndex ? "active" : ""} key={s.key}>
+                            <Icon icon={i < currentIndex ? "bx bx-check-circle" : i === currentIndex ? "bx bx-loader-circle bx-spin" : "bx bx-circle"} />{" "}
+                            {s.label}
+                            {s.key === "syncing" && (
+                                <div class="sync-progress">
+                                    <progress value={stats.totalPullCount! - stats.outstandingPullCount} max={stats.totalPullCount!} />
+                                    <span>{progress}%</span>
+                                </div>
+                            )}
+                        </CardSection>
+                    ))}
+                </Card>
+            </main>
         </div>
     );
 }

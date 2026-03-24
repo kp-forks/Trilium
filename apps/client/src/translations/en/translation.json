@@ -2244,7 +2244,7 @@
     "redirecting": "You will be shortly redirected to the application.",
     "title": "Setup",
     "sync-from-server-page-description": "Enter your server details below to connect your existing workspace.",
-    "sync-in-progress-title": "Connection successful",
+    "sync-in-progress-title": "Sync in progress",
     "sync-in-progress-description": "Your device is now connected and items are being synchronized.",
     "password-placeholder": "Password",
     "button-back": "Back",
