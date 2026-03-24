@@ -222,7 +222,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     return (
         <div class="page sync-from-server">
             <SyncIllustration targetDevice="server" />
-            <h1>{t("setup.sync-from-server-page-title")}</h1>
+            <h1>{t("setup.sync-from-server")}</h1>
             <p>{t("setup.sync-from-server-page-description")}</p>
 
             <main>
@@ -252,7 +252,7 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
     return (
         <div class="page sync-from-desktop">
             <SyncIllustration targetDevice="desktop" />
-            <h1>{t("setup.sync-desktop-title")}</h1>
+            <h1>{t("setup.sync-from-desktop")}</h1>
 
             <main>
                 Content goes here.
