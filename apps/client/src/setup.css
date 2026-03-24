@@ -82,6 +82,7 @@ body.setup {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
+                padding-top: 1em;
             }
 
             >footer {
@@ -148,7 +149,7 @@ body.setup {
     .sync-illustration {
         display: flex;
         justify-content: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
 
         .tn-icon {
             font-size: 3em;
@@ -161,6 +162,7 @@ body.setup {
             text-align: center;
             gap: 0.5rem;
             line-height: 1;
+            font-size: 0.85rem;
         }
 
         .sync-illustration-arrows {
@@ -177,6 +179,16 @@ body.setup {
                 right: 0;
             }
         }
+    }
+
+    h1 {
+        font-size: 1.4em;
+        text-align: center;
+    }
+
+    h1 + p {
+        text-align: center;
+        color: var(--muted-text-color);
     }
 }
 
