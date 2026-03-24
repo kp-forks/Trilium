@@ -37,7 +37,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
         <div class="page setup-options-container">
             <h1>{t("setup.heading")}</h1>
 
-            <div class="setup-options">
+            <main class="setup-options">
                 <SetupOptionCard
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
@@ -63,7 +63,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     description={t("setup.sync-from-desktop-description")}
                     onClick={() => setState("syncFromDesktop")}
                 />
-            </div>
+            </main>
         </div>
     );
 }

@@ -34,6 +34,7 @@ body.setup {
             .setup-options {
                 display: flex;
                 flex-direction: column;
+                justify-content: center;
                 gap: 1rem;
 
                 .setup-option-card {
