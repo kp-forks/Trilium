@@ -19,14 +19,15 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-type State = "firstOptions" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
+type State = "firstOptions" | "createNewDocument" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
 
 function App() {
-    const [ state, setState ] = useState<State>("syncFromServer");
+    const [ state, setState ] = useState<State>("firstOptions");
 
     return (
         <div class="setup-container">
             {state === "firstOptions" && <SetupOptions setState={setState} />}
+            {state === "createNewDocument" && <CreateNewDocument />}
             {state === "syncFromServer" && <SyncFromServer setState={setState} />}
             {state === "syncInProgress" && <SyncInProgress />}
         </div>
@@ -43,12 +44,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
                     description={t("setup.new-document-description")}
-                    onClick={async () => {
-                        await server.post("setup/new-document");
-
-                        // After creating a new document, we can just reload the page to load it.
-                        location.reload();
-                    }}
+                    onClick={() => setState("createNewDocument")}
                 />
 
                 <SetupOptionCard
@@ -157,6 +153,21 @@ function Spinner() {
             <div />
             <div />
         </div>);
+}
+
+function CreateNewDocument() {
+    useEffect(() => {
+        server.post("setup/new-document").then(() => {
+            location.reload();
+        });
+    }, []);
+
+    return (<div class="page create-new-document">
+        <h1>{t("setup.create-new-document-title")}</h1>
+        <p>{t("setup.create-new-document-description")}</p>
+
+        <Spinner />
+    </div>);
 }
 
 function SyncFromServer({ setState }: { setState: (state: State) => void }) {

@@ -2252,6 +2252,8 @@
     "button-finish-setup": "Finish setup",
     "sync-step-connecting": "Connecting to server",
     "sync-step-syncing": "Syncing data",
-    "sync-step-finalizing": "Setting up options"
+    "sync-step-finalizing": "Setting up options",
+    "create-new-document-title": "Preparing your new document",
+    "create-new-document-description": "You’ll be redirected automatically in a moment."
   }
 }
