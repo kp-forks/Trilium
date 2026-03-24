@@ -30,6 +30,8 @@ body.setup {
             height: 550px;
             width: 700px;
             box-shadow: 0px 10px 20px rgba(0, 0, 0, var(--dropdown-shadow-opacity));
+            overflow: hidden;
+            position: relative;
 
             .setup-options {
                 display: flex;
@@ -148,4 +150,56 @@ body.setup {
     100% {
         transform: rotate(360deg);
     }
+}
+
+/* Slide transitions */
+.slide-page {
+    position: absolute;
+    inset: 0;
+    padding: 2em;
+}
+
+.slide-out-forward,
+.slide-out-backward,
+.slide-in-forward,
+.slide-in-backward {
+    animation-duration: 0.35s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+}
+
+.slide-out-forward {
+    animation-name: slide-out-left;
+}
+
+.slide-out-backward {
+    animation-name: slide-out-right;
+}
+
+.slide-in-forward {
+    animation-name: slide-in-right;
+}
+
+.slide-in-backward {
+    animation-name: slide-in-left;
+}
+
+@keyframes slide-out-left {
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(-100%); opacity: 0; }
+}
+
+@keyframes slide-out-right {
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes slide-in-right {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slide-in-left {
+    from { transform: translateX(-100%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
 }

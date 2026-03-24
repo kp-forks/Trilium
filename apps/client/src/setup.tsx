@@ -1,7 +1,7 @@
 import "./setup.css";
 
 import { ComponentChildren, render } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
@@ -21,15 +21,51 @@ async function main() {
 
 type State = "firstOptions" | "createNewDocument" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
 
+const STATE_ORDER: State[] = ["firstOptions", "createNewDocument", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
+
+function renderState(state: State, setState: (state: State) => void) {
+    switch (state) {
+        case "firstOptions": return <SetupOptions setState={setState} />;
+        case "createNewDocument": return <CreateNewDocument />;
+        case "syncFromServer": return <SyncFromServer setState={setState} />;
+        case "syncInProgress": return <SyncInProgress />;
+        default: return null;
+    }
+}
+
 function App() {
-    const [ state, setState ] = useState<State>("firstOptions");
+    const [state, setState] = useState<State>("firstOptions");
+    const [prevState, setPrevState] = useState<State | null>(null);
+    const [transitioning, setTransitioning] = useState(false);
+    const prevStateRef = useRef<State>(state);
+
+    function handleSetState(newState: State) {
+        setPrevState(prevStateRef.current);
+        prevStateRef.current = newState;
+        setTransitioning(true);
+        setState(newState);
+    }
+
+    const direction = prevState !== null
+        ? STATE_ORDER.indexOf(state) > STATE_ORDER.indexOf(prevState) ? "forward" : "backward"
+        : "forward";
 
     return (
         <div class="setup-container">
-            {state === "firstOptions" && <SetupOptions setState={setState} />}
-            {state === "createNewDocument" && <CreateNewDocument />}
-            {state === "syncFromServer" && <SyncFromServer setState={setState} />}
-            {state === "syncInProgress" && <SyncInProgress />}
+            {transitioning && prevState !== null && (
+                <div
+                    class={`slide-page slide-out-${direction}`}
+                    onAnimationEnd={() => {
+                        setTransitioning(false);
+                        setPrevState(null);
+                    }}
+                >
+                    {renderState(prevState, handleSetState)}
+                </div>
+            )}
+            <div class={`slide-page ${transitioning ? `slide-in-${direction}` : "slide-current"}`} key={state}>
+                {renderState(state, handleSetState)}
+            </div>
         </div>
     );
 }
