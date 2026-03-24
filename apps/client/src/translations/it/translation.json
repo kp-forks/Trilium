@@ -520,7 +520,7 @@
     "custom_name_label": "Nome del motore di ricerca personalizzato",
     "custom_name_placeholder": "Personalizza il nome del motore di ricerca",
     "custom_url_label": "L'URL del motore di ricerca personalizzato deve includere {keyword} come segnaposto per il termine di ricerca.",
-    "custom_url_placeholder": "Personalizza l'URL del motore di ricerca"
+    "custom_url_placeholder": "Personalizza indirizzo url del motore di ricerca"
   },
   "sql_table_schemas": {
     "tables": "Tabelle"
@@ -917,7 +917,8 @@
     "print_landscape": "Quando si esporta in PDF, cambia l'orientamento della pagina da verticale a orizzontale.",
     "print_page_size": "Quando si esporta in PDF, modifica le dimensioni della pagina. Valori supportati: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
     "color_type": "Colore",
-    "share_root": "segna la nota che viene servita su /share root."
+    "share_root": "segna la nota che viene servita su /share root.",
+    "textarea": "Testo su più righe"
   },
   "attribute_editor": {
     "help_text_body1": "Per aggiungere un'etichetta, basta digitare ad esempio <code>#rock</code> oppure, se si desidera aggiungere anche un valore, ad esempio <code>#year = 2020</code>",
@@ -2197,5 +2198,52 @@
   },
   "setup_form": {
     "more_info": "Per saperne di più"
+  },
+  "media": {
+    "play": "Gioca (Barra spaziatrice)",
+    "pause": "Pausa (Barra spaziatrice)",
+    "back-10s": "Indietro di 10 (tasto freccia sinistra)",
+    "forward-30s": "Avanti 30s",
+    "mute": "Muto (M)",
+    "unmute": "Riattiva audio (M)",
+    "playback-speed": "Velocità di riproduzione",
+    "loop": "Ciclo",
+    "disable-loop": "Disattiva il ciclo",
+    "rotate": "Ruota",
+    "picture-in-picture": "Immagine nell'immagine",
+    "exit-picture-in-picture": "Esci dalla modalità picture-in-picture",
+    "fullscreen": "Schermo intero (F)",
+    "exit-fullscreen": "Esci dalla modalità a schermo intero",
+    "unsupported-format": "Per questo formato di file non è disponibile l'anteprima multimediale:\n{{mime}}",
+    "zoom-to-fit": "Ingrandisci per riempire",
+    "zoom-reset": "Ripristina lo zoom a schermo intero"
+  },
+  "mermaid": {
+    "placeholder": "Digita il contenuto del tuo diagramma Mermaid oppure utilizza uno dei diagrammi di esempio riportati di seguito.",
+    "sample_diagrams": "Esempi di diagrammi:",
+    "sample_flowchart": "Diagramma di flusso",
+    "sample_class": "Classe",
+    "sample_sequence": "Sequenza",
+    "sample_entity_relationship": "Relazioni tra entità",
+    "sample_state": "Stato",
+    "sample_mindmap": "Mappa mentale",
+    "sample_architecture": "Architettura",
+    "sample_block": "Blocco",
+    "sample_c4": "C4",
+    "sample_gantt": "Gantt",
+    "sample_git": "Git",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Packet",
+    "sample_pie": "Torta",
+    "sample_quadrant": "Quadrante",
+    "sample_radar": "Radar",
+    "sample_requirement": "Requisito",
+    "sample_sankey": "Chiave",
+    "sample_timeline": "Cronologia",
+    "sample_treemap": "Treemap",
+    "sample_user_journey": "Percorso dell'utente",
+    "sample_xy": "XY",
+    "sample_venn": "Venn",
+    "sample_ishikawa": "Ishikawa"
   }
 }
