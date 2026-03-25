@@ -13,6 +13,7 @@ import type React from "react";
 import contributors from "../../../../../contributors.json"; 
 import { Fragment } from "preact/jsx-runtime";
 import { ComponentChildren } from "preact";
+import clsx from "clsx";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
@@ -205,6 +206,7 @@ function ContributorListItem({data, onHover}: {data: Contributor, onHover?: Hove
     return <>
         <a
             ref={linkRef}
+            className={clsx({"has-tooltip": !!data.role})}
             href={data.url}
             target="_blank"
             onMouseEnter={(e) => onHover?.(data, true)}
