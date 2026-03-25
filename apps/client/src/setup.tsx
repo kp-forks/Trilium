@@ -363,16 +363,14 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
             title={t("setup.sync-from-desktop")}
             illustration={<SyncIllustration targetDevice="desktop" />}
             onBack={() => setState("firstOptions")}
-            footer={<Button icon="bx-loader bx-spin" text={t("setup.sync-from-desktop-waiting")} kind="primary" disabled />}
         >
+            <div class="card-columns">
             <Card heading="On the other device">
                 <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
                 <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
                 <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
                 <CardSection>4. {t("setup.sync-from-desktop-step4", { protocol: location.protocol, port: location.port })}</CardSection>
                 <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
-
-                {t("setup.sync-from-desktop-final")}
             </Card>
 
             {networkAddresses.length > 0 && (
@@ -382,6 +380,12 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                     ))}
                 </Card>
             )}
+            </div>
+
+            <div class="sync-from-desktop-waiting">
+                <div class="main"><Icon icon="bx bx-loader-circle bx-spin" />{" "} {t("setup.sync-from-desktop-waiting")}</div>
+                <div class="subtle">{t("setup.sync-from-desktop-warning")}</div>
+            </div>
         </SetupPage>
     );
 }

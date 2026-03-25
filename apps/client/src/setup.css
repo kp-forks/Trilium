@@ -305,9 +305,23 @@ body.setup {
 }
 
 .page.sync-from-desktop {
-    &> main {
-        flex-direction: row !important;
+    .card-columns {
+        display: flex;
+        flex-direction: row;
         gap: 1.5rem;
+    }
+
+    .sync-from-desktop-waiting {
+        margin-top: 2rem;
+        text-align: center;
+
+        .main {
+            font-size: 1.35em;
+        }
+
+        .subtle {
+            color: var(--muted-text-color);
+        }
     }
 
     .ip-addresses {

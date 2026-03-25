@@ -2266,7 +2266,7 @@
     "sync-from-desktop-step3": "Click on Sync category in the note tree.",
     "sync-from-desktop-step4": "Change server instance address to point to this device: \"{{protocol}}//<hostname>:{{- port}}\" and click Save.",
     "sync-from-desktop-step5": "Click \"Test sync\" button to verify connection is successful.",
-    "sync-from-desktop-final": "Once you've completed these steps, you can proceed to the next step.",
+    "sync-from-desktop-warning": "Make sure both devices are on the same network.",
     "sync-from-desktop-waiting": "Waiting for connection...",
     "advanced-options": "Advanced options",
     "sync-failed": "Failed to sync: {{message}}",
