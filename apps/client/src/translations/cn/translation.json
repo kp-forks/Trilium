@@ -446,7 +446,8 @@
     "and_more": "... 以及另外 {{count}} 个。",
     "print_landscape": "导出为 PDF 时，将页面方向更改为横向而不是纵向。",
     "print_page_size": "导出为 PDF 时，更改页面大小。支持的值：<code>A0</code>、<code>A1</code>、<code>A2</code>、<code>A3</code>、<code>A4</code>、<code>A5</code>、<code>A6</code>、<code>Legal</code>、<code>Letter</code>、<code>Tabloid</code>、<code>Ledger</code>。",
-    "color_type": "颜色"
+    "color_type": "颜色",
+    "textarea": "多行文本"
   },
   "attribute_editor": {
     "help_text_body1": "要添加标签，只需输入例如 <code>#rock</code> 或者如果您还想添加值，则例如 <code>#year = 2020</code>",
@@ -2167,5 +2168,52 @@
   },
   "setup_form": {
     "more_info": "了解更多"
+  },
+  "media": {
+    "play": "播放（空格）",
+    "pause": "暂停（空格）",
+    "back-10s": "后退10秒（左箭头键）",
+    "forward-30s": "前进30秒",
+    "mute": "静音（M）",
+    "unmute": "取消静音（M）",
+    "playback-speed": "播放速度",
+    "loop": "循环播放",
+    "disable-loop": "禁用循环播放",
+    "rotate": "旋转",
+    "picture-in-picture": "画中画",
+    "exit-picture-in-picture": "退出画中画",
+    "fullscreen": "全屏（F）",
+    "exit-fullscreen": "退出全屏",
+    "unsupported-format": "此文件格式不支持媒体预览：\n{{mime}}",
+    "zoom-to-fit": "缩放以填充",
+    "zoom-reset": "重置缩放以填充"
+  },
+  "mermaid": {
+    "sample_diagrams": "示例图：",
+    "sample_flowchart": "流程图",
+    "sample_class": "类图",
+    "sample_sequence": "时序图",
+    "sample_entity_relationship": "实体关系图",
+    "sample_state": "状态图",
+    "sample_mindmap": "思维导图",
+    "sample_architecture": "架构图",
+    "sample_block": "模块图",
+    "sample_c4": "C4 图",
+    "sample_gantt": "甘特图",
+    "sample_git": "Git 流程图",
+    "sample_kanban": "看板图",
+    "sample_packet": "数据包图",
+    "sample_pie": "饼图",
+    "sample_quadrant": "象限图",
+    "sample_radar": "雷达图",
+    "sample_requirement": "需求图",
+    "sample_sankey": "桑基图",
+    "sample_timeline": "时间轴图",
+    "sample_treemap": "树形图",
+    "sample_user_journey": "用户旅程图",
+    "sample_xy": "散点图",
+    "sample_venn": "韦恩图",
+    "sample_ishikawa": "鱼骨图",
+    "placeholder": "输入你的美人鱼图的内容，或者使用下面的示例图之一。"
   }
 }
