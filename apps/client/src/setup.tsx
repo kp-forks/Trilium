@@ -367,7 +367,7 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                 <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
                 <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
                 <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
-                <CardSection>4. {t("setup.sync-from-desktop-step4", { host: location.host })}</CardSection>
+                <CardSection>4. {t("setup.sync-from-desktop-step4", { protocol: location.protocol, port: location.port })}</CardSection>
                 <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
 
                 {t("setup.sync-from-desktop-final")}
