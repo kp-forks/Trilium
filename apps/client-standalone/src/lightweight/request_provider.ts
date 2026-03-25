@@ -60,11 +60,11 @@ export default class FetchRequestProvider implements RequestProvider {
             } catch {
                 errorMessage = text.substring(0, 100);
             }
-            throw new Error(`Request to ${opts.method} ${opts.url} failed, error: ${response.status} ${response.statusText} ${errorMessage}`);
+            throw new Error(`${response.status} ${opts.method} ${opts.url}: ${errorMessage}`);
 
         } catch (e: any) {
             if (e.name === "AbortError") {
-                throw new Error(`Request to ${opts.method} ${opts.url} failed, error: timeout after ${opts.timeout}ms`);
+                throw new Error(`${opts.method} ${opts.url} failed, error: timeout after ${opts.timeout}ms`);
             }
             if (e instanceof TypeError && e.message === "Failed to fetch") {
                 const isCrossOrigin = !opts.url.startsWith(location.origin);
@@ -85,7 +85,7 @@ export default class FetchRequestProvider implements RequestProvider {
         const response = await fetch(imageUrl);
 
         if (!response.ok) {
-            throw new Error(`Request to GET ${imageUrl} failed, error: ${response.status} ${response.statusText}`);
+            throw new Error(`${response.status} GET ${imageUrl} failed`);
         }
 
         return await response.arrayBuffer();
