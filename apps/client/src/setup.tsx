@@ -136,6 +136,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     title={t("setup.sync-from-desktop")}
                     description={t("setup.sync-from-desktop-description")}
                     disabled={glob.isStandalone}
+                    onClick={() => setState("syncFromDesktop")}
                 />
             </div>
         </SetupPage>
