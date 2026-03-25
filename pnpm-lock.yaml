@@ -312,8 +312,8 @@ importers:
         specifier: 2.15.6
         version: 2.15.6
       katex:
-        specifier: 0.16.40
-        version: 0.16.40
+        specifier: 0.16.42
+        version: 0.16.42
       leaflet:
         specifier: 1.9.4
         version: 1.9.4
@@ -1457,8 +1457,8 @@ importers:
         specifier: 7.1.0
         version: 7.1.0
       katex:
-        specifier: 0.16.40
-        version: 0.16.40
+        specifier: 0.16.42
+        version: 0.16.42
       mermaid:
         specifier: 11.13.0
         version: 11.13.0
@@ -11082,8 +11082,8 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  katex@0.16.40:
-    resolution: {integrity: sha512-1DJcK/L05k1Y9Gf7wMcyuqFOL6BiY3vY0CFcAM/LPRN04NALxcl6u7lOWNsp3f/bCHWxigzQl6FbR95XJ4R84Q==}
+  katex@0.16.42:
+    resolution: {integrity: sha512-sZ4jqyEXfHTLEFK+qsFYToa3UZ0rtFcPGwKpyiRYh2NJn8obPWOQ+/u7ux0F6CAU/y78+Mksh1YkxTPXTh47TQ==}
     hasBin: true
 
   kdbush@4.0.2:
@@ -29122,7 +29122,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  katex@0.16.40:
+  katex@0.16.42:
     dependencies:
       commander: 8.3.0
 
@@ -29860,7 +29860,7 @@ snapshots:
       dagre-d3-es: 7.0.14
       dayjs: 1.11.20
       dompurify: 3.3.3
-      katex: 0.16.40
+      katex: 0.16.42
       khroma: 2.1.0
       lodash-es: 4.17.23
       marked: 16.4.2
