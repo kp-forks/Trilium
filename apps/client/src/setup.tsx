@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { ComponentChildren, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
+import logo from "./assets/icon-color.svg?url";
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
 import { isElectron, replaceHtmlEscapedSlashes } from "./services/utils";
@@ -12,7 +13,6 @@ import ActionButton from "./widgets/react/ActionButton";
 import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
-import Collapsible from "./widgets/react/Collapsible";
 import FormGroup from "./widgets/react/FormGroup";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
@@ -83,7 +83,11 @@ function App() {
 
 function SetupOptions({ setState }: { setState: (state: State) => void }) {
     return (
-        <SetupPage title={t("setup.heading")} className="setup-options-container">
+        <SetupPage
+            title={t("setup.heading")}
+            className="setup-options-container"
+            illustration={<img src={logo} alt="Setup illustration" className="illustration-logo" />}
+        >
             <div class="setup-options centered">
                 <SetupOptionCard
                     icon="bx bx-file-blank"

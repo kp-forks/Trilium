@@ -30,8 +30,8 @@ body.setup {
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            height: 600px;
-            width: 700px;
+            height: 650px;
+            width: 800px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             position: relative;
@@ -89,6 +89,7 @@ body.setup {
             flex-direction: column;
             height: 100%;
             padding: 2em;
+            overflow: auto;
 
             >.back-button {
                 position: absolute;
@@ -106,7 +107,6 @@ body.setup {
                 display: flex;
                 flex-direction: column;
                 padding-top: 1em;
-                overflow: auto;
             }
 
             &.contentless {
@@ -248,6 +248,12 @@ body.setup {
         opacity: 0.6;
         margin-top: 2rem;
         margin-bottom: 1rem;
+    }
+
+    .illustration-logo {
+        width: 96px;
+        height: 96px;
+        margin: auto;
     }
 
     h1 {
