@@ -135,14 +135,7 @@
   },
   "setup_sync-from-desktop": {
     "description": "Acești pași trebuie urmați de pe aplicația de desktop:",
-    "heading": "Sincronizare cu aplicația desktop",
-    "step1": "Deschideți aplicația Trilium Notes pentru desktop.",
-    "step2": "Din meniul Trilium, dați clic pe Opțiuni.",
-    "step3": "Clic pe categoria „Sincronizare”.",
-    "step4": "Schimbați adresa server-ului către: {{- host}} și apăsați „Salvează”.",
-    "step5": "Clic pe butonul „Testează sincronizarea” pentru a verifica dacă conexiunea a fost făcută cu succes.",
-    "step6": "După ce ați completat pașii, dați click {{- link}}.",
-    "step6-here": "aici"
+    "heading": "Sincronizare cu aplicația desktop"
   },
   "setup_sync-from-server": {
     "back": "Înapoi",
