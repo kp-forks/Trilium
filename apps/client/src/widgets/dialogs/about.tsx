@@ -45,9 +45,19 @@ export default function AboutDialog() {
         }
     }, []);
 
-    const onContributorHovered = useCallback((contributor: Contributor, isHovering: boolean) => {
-        if (contributor.role === "original-dev") {
-            setAltIcon((isHovering) ? "classic": null);
+    const createContributorHoverHandler = useCallback(() => {
+        let timeoutID;
+        return (contributor: Contributor, isHovering: boolean) => {
+            if (contributor.role === "original-dev") {
+                if (isHovering) {
+                    timeoutID = setTimeout(() => {
+                        setAltIcon("classic");
+                    }, 500);
+                } else {
+                    clearTimeout(timeoutID);
+                    setAltIcon(null);
+                }
+            }
         }
     }, []);
 
@@ -94,7 +104,7 @@ export default function AboutDialog() {
                         <td className="contributor-list use-tn-links">
                             <Contributors 
                                 data={contributors as ContributorList}
-                                onHover={onContributorHovered}
+                                onHover={createContributorHoverHandler()}
                             />
 
                             <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
