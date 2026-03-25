@@ -167,7 +167,7 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
 
     useEffect(() => {
         if (stats.initialized) {
-            location.reload();
+            location.href = "setup";
         }
     }, [stats.initialized]);
 
@@ -251,7 +251,7 @@ function CreateNewDocumentOptions({ setState }: { setState: (state: State) => vo
 function CreateNewDocumentInProgress({ withDemo = false }: { withDemo?: boolean }) {
     useEffect(() => {
         server.post(`setup/new-document${withDemo ? "" : "?skipDemoDb"}`).then(() => {
-            location.reload();
+            location.href = "setup";
         });
     }, [ withDemo ]);
 
