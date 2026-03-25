@@ -1,11 +1,10 @@
-import { initializeCore } from "@triliumnext/core";
+import { getLog, initializeCore, sql_init } from "@triliumnext/core";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import options from "@triliumnext/server/src/services/options.js";
 import port from "@triliumnext/server/src/services/port.js";
 import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
-import sqlInit from "@triliumnext/server/src/services/sql_init.js";
 import tray from "@triliumnext/server/src/services/tray.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
@@ -130,7 +129,7 @@ async function main() {
 
                 // the maxEntityChangeId has been incremented during failed transaction, need to recalculate
                 entity_changes.recalculateMaxEntityChangeId();
-            },
+            }
         },
         crypto: new NodejsCryptoProvider(),
         request: new NodeRequestProvider(),
@@ -147,6 +146,7 @@ async function main() {
     const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
     await startTriliumServer();
     console.log("Server loaded");
+
     serverInitializedPromise.resolve();
 }
 
@@ -163,8 +163,8 @@ async function onReady() {
 
     // if db is not initialized -> setup process
     // if db is initialized, then we need to wait until the migration process is finished
-    if (sqlInit.isDbInitialized()) {
-        await sqlInit.dbReady;
+    if (sql_init.isDbInitialized()) {
+        await sql_init.dbReady;
 
         await windowService.createMainWindow(app);
 
@@ -178,6 +178,7 @@ async function onReady() {
 
         tray.createTray();
     } else {
+        getLog().info(t("sql_init.db_not_initialized_desktop"));
         await windowService.createSetupWindow();
     }
 

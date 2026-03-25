@@ -3,13 +3,15 @@
  * are loaded later and will result in an empty string.
  */
 
+import { getLog,initializeCore, sql_init } from "@triliumnext/core";
 import fs from "fs";
-import { initializeCore } from "@triliumnext/core";
+import { t } from "i18next";
 import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
 import dataDirs from "./services/data_dir.js";
+import port from "./services/port.js";
 import NodeRequestProvider from "./services/request.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "./sql_provider.js";
@@ -45,7 +47,7 @@ async function startApplication() {
 
                 // the maxEntityChangeId has been incremented during failed transaction, need to recalculate
                 entity_changes.recalculateMaxEntityChangeId();
-            },
+            }
         },
         crypto: new NodejsCryptoProvider(),
         request: new NodeRequestProvider(),
@@ -60,6 +62,10 @@ async function startApplication() {
     });
     const startTriliumServer = (await import("./www.js")).default;
     await startTriliumServer();
+
+    if (!sql_init.isDbInitialized()) {
+        getLog().info(t("sql_init.db_not_initialized_server", { port }));
+    }
 }
 
 startApplication();

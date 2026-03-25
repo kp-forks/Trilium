@@ -19,14 +19,10 @@ import config from "./services/config.js";
 import log from "./services/log.js";
 import openID from "./services/open_id.js";
 import { RESOURCE_DIR } from "./services/resource_dir.js";
-import sql_init from "./services/sql_init.js";
 import utils, { getResourceDir, isDev } from "./services/utils.js";
 
 export default async function buildApp() {
     const app = express();
-
-    // Initialize DB
-    sql_init.initializeDb();
 
     const publicDir = isDev ? path.join(getResourceDir(), "../dist/public") : path.join(getResourceDir(), "public");
     const publicAssetsDir = path.join(publicDir, "assets");

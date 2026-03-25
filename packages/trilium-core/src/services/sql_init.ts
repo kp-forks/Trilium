@@ -42,14 +42,6 @@ function isDbInitialized() {
 
 async function initDbConnection() {
     if (!isDbInitialized()) {
-        const log = getLog();
-        if (isElectron) {
-            log.info(t("sql_init.db_not_initialized_desktop"));
-        } else {
-            // TODO: Bring back port.
-            log.info(t("sql_init.db_not_initialized_server", { port: 1234 }));
-        }
-
         return;
     }
 

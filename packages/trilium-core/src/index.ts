@@ -9,6 +9,7 @@ import { initTranslations, TranslationProvider } from "./services/i18n";
 import { initSchema } from "./services/sql_init";
 import appInfo from "./services/app_info";
 
+export { getLog } from "./services/log";
 export type * from "./services/sql/types";
 export * from "./services/sql/index";
 export { default as sql_init } from "./services/sql_init";
@@ -107,8 +108,8 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
     initLog();
     await initTranslations(translations);
     initCrypto(crypto);
-    initSql(new SqlService(dbConfig, getLog()));
     initContext(executionContext);
+    initSql(new SqlService(dbConfig, getLog()), dbConfig.onDatabaseNotInitialized);
     initSchema(schema);
     Object.assign(appInfo, extraAppInfo);
     if (messaging) {
