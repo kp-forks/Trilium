@@ -84,6 +84,7 @@ body.setup {
             display: flex;
             flex-direction: column;
             height: 100%;
+            padding: 2em;
 
             >main {
                 flex: 1;
@@ -101,6 +102,18 @@ body.setup {
                 padding-top: 1rem;
                 margin-inline: -2em;
                 padding-inline: 2em;
+            }
+
+            >.page-error {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: var(--admonition-caution-accent-color);
+                z-index: 10;
+                margin: 0;
+                border-radius: 0;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
             }
         }
 
@@ -223,7 +236,6 @@ body.setup {
 .slide-page {
     position: absolute;
     inset: 0;
-    padding: 2em;
 }
 
 .slide-out-forward,

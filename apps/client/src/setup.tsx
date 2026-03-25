@@ -247,6 +247,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             title={t("setup.sync-from-server")}
             description={t("setup.sync-from-server-page-description")}
             illustration={<SyncIllustration targetDevice="server" />}
+            error={error}
             footer={<>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
                 <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} disabled={!isValid} />
@@ -270,8 +271,6 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
                         <FormTextBox placeholder={t("setup.proxy-server-placeholder")} currentValue={syncProxy} onChange={setSyncProxy} />
                     </FormGroup>
                 </Collapsible>
-
-                {error && <Admonition className="error" type="caution">{replaceHtmlEscapedSlashes(error)}</Admonition>}
             </form>
         </SetupPage>
     );
@@ -345,9 +344,10 @@ function SetupOptionCard({ title, description, icon, onClick, disabled }: { titl
     );
 }
 
-function SetupPage({ title, className, illustration, children, footer }: {
+function SetupPage({ title, className, illustration, children, footer, error }: {
     title: string;
     description?: string;
+    error?: string | null;
     className?: string;
     illustration?: ComponentChildren;
     children: ComponentChildren;
@@ -355,6 +355,8 @@ function SetupPage({ title, className, illustration, children, footer }: {
 }) {
     return (
         <div className={clsx("page", className)}>
+            {error && <Admonition className="page-error" type="caution">{replaceHtmlEscapedSlashes(error)}</Admonition>}
+
             {illustration}
             <h1>{title}</h1>
             <main>
