@@ -21,7 +21,7 @@ export { default as date_utils } from "./services/utils/date";
 export { default as events } from "./services/events";
 export { default as blob } from "./services/blob";
 export { default as options } from "./services/options";
-export { default as options_init } from "./services/options_init";
+export * as options_init from "./services/options_init";
 export { default as app_info } from "./services/app_info";
 export { default as keyboard_actions } from "./services/keyboard_actions";
 export { default as entity_changes } from "./services/entity_changes";

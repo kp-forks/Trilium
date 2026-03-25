@@ -143,8 +143,8 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
     let rootNote!: BNote;
 
     // We have to import async since options init requires keyboard actions which require translations.
-    const optionsInitService = (await import("./options_init.js")).default;
-    const becca_loader = (await import("../becca/becca_loader.js")).default;
+    const { initDocumentOptions, initNotSyncedOptions, initStartupOptions } = await import("./options_init.js");
+    const { load: loadBecca } = await import("../becca/becca_loader.js");
 
     const sql = getSql();
     const log = getLog();
@@ -152,7 +152,7 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
         log.info("Creating database schema ...");
         sql.executeScript(schema);
 
-        becca_loader.load();
+        loadBecca();
 
         log.info("Creating root note ...");
 
@@ -173,9 +173,9 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
         }).save();
 
         // Bring in option init.
-        optionsInitService.initDocumentOptions();
-        optionsInitService.initNotSyncedOptions(true, {});
-        optionsInitService.initStartupOptions();
+        initDocumentOptions();
+        initNotSyncedOptions(true, {});
+        initStartupOptions();
         // password.resetPassword();
     });
 
@@ -229,12 +229,12 @@ async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", 
     }
 
     // We have to import async since options init requires keyboard actions which require translations.
-    const optionsInitService = (await import("./options_init.js")).default;
+    const { initNotSyncedOptions } = await import("./options_init.js");
 
     sql.transactional(() => {
         sql.executeScript(schema);
 
-        optionsInitService.initNotSyncedOptions(false, { syncServerHost, syncProxy });
+        initNotSyncedOptions(false, { syncServerHost, syncProxy });
 
         // document options required for sync to kick off
         for (const opt of options) {

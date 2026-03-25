@@ -7,7 +7,7 @@ import { getLog } from "./log.js";
 import optionService from "./options.js";
 import { isWindows, randomSecureToken } from "./utils/index.js";
 
-function initDocumentOptions() {
+export function initDocumentOptions() {
     optionService.createOption("documentId", randomSecureToken(16), false);
     optionService.createOption("documentSecret", randomSecureToken(16), false);
 }
@@ -40,7 +40,7 @@ interface DefaultOption {
  * @param initialized `true` if the database has been fully initialized (i.e. a new database was created), or `false` if the database is created for sync.
  * @param opts additional options to be initialized, for example the sync configuration.
  */
-async function initNotSyncedOptions(initialized: boolean, opts: NotSyncedOpts = {}) {
+export async function initNotSyncedOptions(initialized: boolean, opts: NotSyncedOpts = {}) {
     optionService.createOption(
         "openNoteContexts",
         JSON.stringify([
@@ -217,7 +217,7 @@ const defaultOptions: DefaultOption[] = [
  *
  * This method is called regardless of whether a new database is created, or an existing database is used.
  */
-function initStartupOptions() {
+export function initStartupOptions() {
     const optionsMap = optionService.getOptionMap();
 
     const allDefaultOptions = defaultOptions.concat(getKeyboardDefaultOptions());
@@ -258,8 +258,3 @@ function getKeyboardDefaultOptions() {
     })) as DefaultOption[];
 }
 
-export default {
-    initDocumentOptions,
-    initNotSyncedOptions,
-    initStartupOptions
-};
