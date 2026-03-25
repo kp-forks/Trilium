@@ -238,12 +238,7 @@
   "setup_sync-from-server": {
     "heading": "Sync from Server",
     "instructions": "Please enter Trilium server address and credentials below. This will download the whole Trilium document from server and setup sync to it. Depending on the document size and your connection speed, this may take a while.",
-    "server-host": "Trilium server address",
-    "server-host-placeholder": "https://<hostname>:<port>",
-    "proxy-server": "Proxy server (optional)",
-    "proxy-server-placeholder": "https://<hostname>:<port>",
     "note": "Note:",
-    "proxy-instruction": "If you leave proxy setting blank, system proxy will be used (applies to the desktop application only)",
     "password": "Password",
     "password-placeholder": "Password",
     "back": "Back",

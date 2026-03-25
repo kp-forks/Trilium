@@ -2246,7 +2246,6 @@
     "sync-from-server-page-description": "Enter your server details below to connect your existing workspace.",
     "sync-in-progress-title": "Sync in progress",
     "sync-in-progress-description": "Your device is now connected and items are being synchronized.",
-    "password-placeholder": "Password",
     "button-back": "Back",
     "button-finish-setup": "Finish setup",
     "sync-step-connecting": "Connecting to server",
@@ -2265,6 +2264,12 @@
     "sync-from-desktop-final": "Once you've completed these steps, you can proceed to the next step.",
     "sync-from-desktop-waiting": "Waiting for connection...",
     "advanced-options": "Advanced options",
-    "sync-failed": "Failed to sync: {{message}}"
+    "sync-failed": "Failed to sync: {{message}}",
+    "server-host": "Trilium server address",
+    "server-host-placeholder": "https://<hostname>:<port>",
+    "server-password": "Password",
+    "proxy-server": "Proxy server (optional)",
+    "proxy-server-placeholder": "https://<hostname>:<port>",
+    "proxy-instruction": "If you leave proxy setting blank, system proxy will be used."
   }
 }

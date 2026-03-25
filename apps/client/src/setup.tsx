@@ -7,11 +7,12 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
-import { replaceHtmlEscapedSlashes } from "./services/utils";
+import { isElectron, replaceHtmlEscapedSlashes } from "./services/utils";
 import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
 import Collapsible from "./widgets/react/Collapsible";
+import FormGroup from "./widgets/react/FormGroup";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 
@@ -252,18 +253,22 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             </>}
         >
             <form>
-                <FormItemWithIcon icon="bx bx-server">
-                    <FormTextBox placeholder="https://example.com" currentValue={syncServerHost} onChange={setSyncServerHost} required />
-                </FormItemWithIcon>
+                <FormGroup label={t("setup.server-host")} name="serverHost">
+                    <FormTextBox placeholder={t("setup.server-host-placeholder")} currentValue={syncServerHost} onChange={setSyncServerHost} required />
+                </FormGroup>
 
-                <FormItemWithIcon icon="bx bx-lock">
-                    <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} required />
-                </FormItemWithIcon>
+                <FormGroup label={t("setup.server-password")} name="serverPassword">
+                    <FormTextBox type="password" currentValue={password} onChange={setPassword} required />
+                </FormGroup>
 
                 <Collapsible title={t("setup.advanced-options")} initiallyExpanded={false}>
-                    <FormItemWithIcon icon="bx bx-shape-polygon">
-                        <FormTextBox placeholder="http://my-proxy.com:8080" currentValue={syncProxy} onChange={setSyncProxy} />
-                    </FormItemWithIcon>
+                    <FormGroup
+                        name="proxyServer"
+                        label={t("setup.proxy-server")}
+                        description={isElectron() ? t("setup.proxy-instruction") : undefined}
+                    >
+                        <FormTextBox placeholder={t("setup.proxy-server-placeholder")} currentValue={syncProxy} onChange={setSyncProxy} />
+                    </FormGroup>
                 </Collapsible>
 
                 {error && <Admonition className="error" type="caution">{replaceHtmlEscapedSlashes(error)}</Admonition>}

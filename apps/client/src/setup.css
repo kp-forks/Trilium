@@ -109,7 +109,6 @@ body.setup {
             flex-direction: column;
             justify-content: center;
             flex-grow: 1;
-            gap: 1rem;
             width: 80%;
             margin: auto;
 
