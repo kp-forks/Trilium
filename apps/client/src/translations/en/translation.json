@@ -2279,6 +2279,7 @@
     "dismiss-error": "Dismiss error",
     "wrong-password": "Incorrect password. Please try again.",
     "language": "Language",
-    "continue": "Continue"
+    "continue": "Continue",
+    "your-ip-addresses": "Your IP addresses"
   }
 }

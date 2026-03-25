@@ -304,6 +304,26 @@ body.setup {
     }
 }
 
+.page.sync-from-desktop {
+    &> main {
+        flex-direction: row !important;
+        gap: 1.5rem;
+    }
+
+    .ip-addresses {
+        min-width: 200px;
+        user-select: text;
+        display: flex;
+        flex-direction: column;
+        font-family: var(--monospace-font-family);
+
+        .tn-card-body {
+            overflow: auto;
+            padding-bottom: 0.5em;
+        }
+    }
+}
+
 .page.sync-in-progress {
     .sync-progress {
         margin-top: 0.5rem;

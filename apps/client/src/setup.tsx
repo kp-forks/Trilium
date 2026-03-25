@@ -51,7 +51,7 @@ function renderState(state: State, setState: (state: State) => void) {
 }
 
 function App() {
-    const [state, setState] = useState<State>("selectLanguage");
+    const [state, setState] = useState<State>("syncFromDesktop");
     const [prevState, setPrevState] = useState<State | null>(null);
     const [transitioning, setTransitioning] = useState(false);
     const prevStateRef = useRef<State>(state);
@@ -355,6 +355,8 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
+    const networkAddresses = getNetworkAddresses();
+
     return (
         <SetupPage
             className="sync-from-desktop"
@@ -372,6 +374,14 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
 
                 {t("setup.sync-from-desktop-final")}
             </Card>
+
+            {networkAddresses.length > 0 && (
+                <Card heading={t("setup.your-ip-addresses")} className="ip-addresses">
+                    {networkAddresses.map((addr) => (
+                        <CardSection key={addr}>{addr}</CardSection>
+                    ))}
+                </Card>
+            )}
         </SetupPage>
     );
 }
@@ -453,6 +463,28 @@ function SetupPage({ title, description, className, illustration, children, foot
             {footer && <footer>{footer}</footer>}
         </div>
     );
+}
+
+function getNetworkAddresses(): string[] {
+    if (!isElectron()) {
+        return [];
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const os = require("os") as typeof import("os");
+    const interfaces = os.networkInterfaces();
+    const addresses: string[] = [];
+
+    for (const nets of Object.values(interfaces)) {
+        if (!nets) continue;
+        for (const net of nets) {
+            if (net.internal) continue;
+            if (net.family === "IPv6" && net.scopeid !== 0) continue;
+            addresses.push(net.address);
+        }
+    }
+
+    return addresses;
 }
 
 main();
