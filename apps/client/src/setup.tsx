@@ -78,10 +78,8 @@ function App() {
 
 function SetupOptions({ setState }: { setState: (state: State) => void }) {
     return (
-        <div class="page setup-options-container">
-            <h1>{t("setup.heading")}</h1>
-
-            <main class="setup-options">
+        <SetupPage title={t("setup.heading")} className="setup-options-container">
+            <div class="setup-options">
                 <SetupOptionCard
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
@@ -102,8 +100,8 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     description={t("setup.sync-from-desktop-description")}
                     disabled={glob.isStandalone}
                 />
-            </main>
-        </div>
+            </div>
+        </SetupPage>
     );
 }
 
@@ -145,27 +143,26 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
         : 0;
 
     return (
-        <div class="page sync-in-progress">
-            <SyncIllustration targetDevice={device} />
-            <h1>{t("setup.sync-in-progress-title")}</h1>
-
-            <main>
-                <Card className="sync-steps">
-                    {steps.map((s, i) => (
-                        <CardSection className={i < currentIndex ? "completed" : i === currentIndex ? "active" : ""} key={s.key}>
-                            <Icon icon={i < currentIndex ? "bx bx-check-circle" : i === currentIndex ? "bx bx-loader-circle bx-spin" : "bx bx-circle"} />{" "}
-                            {s.label}
-                            {s.key === "syncing" && (
-                                <div class="sync-progress">
-                                    <progress value={stats.totalPullCount! - stats.outstandingPullCount} max={stats.totalPullCount!} />
-                                    <span>{progress}%</span>
-                                </div>
-                            )}
-                        </CardSection>
-                    ))}
-                </Card>
-            </main>
-        </div>
+        <SetupPage
+            className="sync-in-progress"
+            illustration={<SyncIllustration targetDevice={device} />}
+            title={t("setup.sync-in-progress-title")}
+        >
+            <Card className="sync-steps">
+                {steps.map((s, i) => (
+                    <CardSection className={i < currentIndex ? "completed" : i === currentIndex ? "active" : ""} key={s.key}>
+                        <Icon icon={i < currentIndex ? "bx bx-check-circle" : i === currentIndex ? "bx bx-loader-circle bx-spin" : "bx bx-circle"} />{" "}
+                        {s.label}
+                        {s.key === "syncing" && (
+                            <div class="sync-progress">
+                                <progress value={stats.totalPullCount! - stats.outstandingPullCount} max={stats.totalPullCount!} />
+                                <span>{progress}%</span>
+                            </div>
+                        )}
+                    </CardSection>
+                ))}
+            </Card>
+        </SetupPage>
     );
 }
 
@@ -207,12 +204,15 @@ function CreateNewDocument() {
         });
     }, []);
 
-    return (<div class="page create-new-document">
-        <h1>{t("setup.create-new-document-title")}</h1>
-        <p>{t("setup.create-new-document-description")}</p>
-
-        <Spinner />
-    </div>);
+    return (
+        <SetupPage
+            className="create-new-document"
+            title={t("setup.create-new-document-title")}
+            description={t("setup.create-new-document-description")}
+        >
+            <Spinner />
+        </SetupPage>
+    );
 }
 
 function SyncFromServer({ setState }: { setState: (state: State) => void }) {
@@ -241,36 +241,34 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     }
 
     return (
-        <div class="page sync-from-server">
-            <SyncIllustration targetDevice="server" />
-            <h1>{t("setup.sync-from-server")}</h1>
-            <p>{t("setup.sync-from-server-page-description")}</p>
-
-            <main>
-                <form>
-                    <FormItemWithIcon icon="bx bx-server">
-                        <FormTextBox placeholder="https://example.com" currentValue={syncServerHost} onChange={setSyncServerHost} required />
-                    </FormItemWithIcon>
-
-                    <FormItemWithIcon icon="bx bx-lock">
-                        <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} required />
-                    </FormItemWithIcon>
-
-                    <Collapsible title={t("setup.advanced-options")} initiallyExpanded={false}>
-                        <FormItemWithIcon icon="bx bx-shape-polygon">
-                            <FormTextBox placeholder="http://my-proxy.com:8080" currentValue={syncProxy} onChange={setSyncProxy} />
-                        </FormItemWithIcon>
-                    </Collapsible>
-
-                    {error && <Admonition className="error" type="caution">{replaceHtmlEscapedSlashes(error)}</Admonition>}
-                </form>
-            </main>
-
-            <footer>
+        <SetupPage
+            className="sync-from-server"
+            title={t("setup.sync-from-server")}
+            description={t("setup.sync-from-server-page-description")}
+            illustration={<SyncIllustration targetDevice="server" />}
+            footer={<>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
                 <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} disabled={!isValid} />
-            </footer>
-        </div>
+            </>}
+        >
+            <form>
+                <FormItemWithIcon icon="bx bx-server">
+                    <FormTextBox placeholder="https://example.com" currentValue={syncServerHost} onChange={setSyncServerHost} required />
+                </FormItemWithIcon>
+
+                <FormItemWithIcon icon="bx bx-lock">
+                    <FormTextBox placeholder={t("setup.password-placeholder")} type="password" currentValue={password} onChange={setPassword} required />
+                </FormItemWithIcon>
+
+                <Collapsible title={t("setup.advanced-options")} initiallyExpanded={false}>
+                    <FormItemWithIcon icon="bx bx-shape-polygon">
+                        <FormTextBox placeholder="http://my-proxy.com:8080" currentValue={syncProxy} onChange={setSyncProxy} />
+                    </FormItemWithIcon>
+                </Collapsible>
+
+                {error && <Admonition className="error" type="caution">{replaceHtmlEscapedSlashes(error)}</Admonition>}
+            </form>
+        </SetupPage>
     );
 }
 
@@ -279,27 +277,25 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
     }
 
     return (
-        <div class="page sync-from-desktop">
-            <SyncIllustration targetDevice="desktop" />
-            <h1>{t("setup.sync-from-desktop")}</h1>
-
-            <main>
-                <Card heading="On the other device">
-                    <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
-                    <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
-                    <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
-                    <CardSection>4. {t("setup.sync-from-desktop-step4", { host: location.host })}</CardSection>
-                    <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
-
-                    {t("setup.sync-from-desktop-final")}
-                </Card>
-            </main>
-
-            <footer>
+        <SetupPage
+            className="sync-from-desktop"
+            title={t("setup.sync-from-desktop")}
+            illustration={<SyncIllustration targetDevice="desktop" />}
+            footer={<>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
                 <Button icon="bx-loader bx-spin" text={t("setup.sync-from-desktop-waiting")} kind="primary" disabled />
-            </footer>
-        </div>
+            </>}
+        >
+            <Card heading="On the other device">
+                <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
+                <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
+                <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
+                <CardSection>4. {t("setup.sync-from-desktop-step4", { host: location.host })}</CardSection>
+                <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
+
+                {t("setup.sync-from-desktop-final")}
+            </Card>
+        </SetupPage>
     );
 }
 
@@ -341,6 +337,26 @@ function SetupOptionCard({ title, description, icon, onClick, disabled }: { titl
                 <p>{description}</p>
             </div>
         </CardFrame>
+    );
+}
+
+function SetupPage({ title, className, illustration, children, footer }: {
+    title: string;
+    description?: string;
+    className?: string;
+    illustration?: ComponentChildren;
+    children: ComponentChildren;
+    footer?: ComponentChildren;
+}) {
+    return (
+        <div className={clsx("page", className)}>
+            {illustration}
+            <h1>{title}</h1>
+            <main>
+                {children}
+            </main>
+            {footer && <footer>{footer}</footer>}
+        </div>
     );
 }
 
