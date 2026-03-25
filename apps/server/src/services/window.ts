@@ -395,6 +395,9 @@ async function createSetupWindow() {
         autoHideMenuBar: true,
         title: "Trilium Notes Setup",
         icon: getIcon(),
+        // Background effects (Mica on Windows, vibrancy on macOS)
+        ...(isWindows && { backgroundMaterial: "mica" as const }),
+        ...(isMac && { transparent: true, visualEffectState: "active" as const, vibrancy: "under-window" as const }),
         webPreferences: {
             // necessary for e.g. utils.isElectron()
             nodeIntegration: true,

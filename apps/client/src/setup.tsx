@@ -26,7 +26,7 @@ async function main() {
     bodyWrapper.classList.add("setup-outer-wrapper");
     document.body.classList.add("setup");
     if (isElectron()) {
-        document.body.classList.add("electron");
+        document.body.classList.add("electron", `platform-${window.process.platform}`, "background-effects");
     }
     render(<App />, bodyWrapper);
     document.body.replaceChildren(bodyWrapper);
@@ -51,7 +51,7 @@ function renderState(state: State, setState: (state: State) => void) {
 }
 
 function App() {
-    const [state, setState] = useState<State>("syncFromDesktop");
+    const [state, setState] = useState<State>("selectLanguage");
     const [prevState, setPrevState] = useState<State | null>(null);
     const [transitioning, setTransitioning] = useState(false);
     const prevStateRef = useRef<State>(state);
@@ -365,21 +365,21 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
             onBack={() => setState("firstOptions")}
         >
             <div class="card-columns">
-            <Card heading="On the other device">
-                <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
-                <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
-                <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
+                <Card heading="On the other device">
+                    <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
+                    <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
+                    <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
                     <CardSection>4. {t("setup.sync-from-desktop-step4")}</CardSection>
-                <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
-            </Card>
-
-            {networkAddresses.length > 0 && (
-                <Card heading={t("setup.your-ip-addresses")} className="ip-addresses">
-                    {networkAddresses.map((addr) => (
-                            <CardSection key={addr}>{addr}</CardSection>
-                    ))}
+                    <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
                 </Card>
-            )}
+
+                {networkAddresses.length > 0 && (
+                    <Card heading={t("setup.your-ip-addresses")} className="ip-addresses">
+                        {networkAddresses.map((addr) => (
+                            <CardSection key={addr}>{addr}</CardSection>
+                        ))}
+                    </Card>
+                )}
             </div>
 
             <div class="sync-from-desktop-waiting">

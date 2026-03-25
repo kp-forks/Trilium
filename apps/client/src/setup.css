@@ -245,6 +245,11 @@ body.setup {
     }
 }
 
+body.setup.background-effects,
+body.setup.background-effects .setup-container {
+    background: transparent;
+}
+
 @keyframes lds-ring {
     0% {
         transform: rotate(0deg);
