@@ -202,3 +202,7 @@ export function isEmptyOrWhitespace(str: string | null | undefined) {
 export function escapeRegExp(str: string) {
     return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
+
+export async function crash(message: string): never {
+    throw new Error(message);
+}

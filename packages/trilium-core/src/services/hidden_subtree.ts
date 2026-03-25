@@ -8,7 +8,7 @@ import BNote from "../becca/entities/bnote.js";
 import buildLaunchBarConfig from "./hidden_subtree_launcherbar.js";
 import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
 import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
-import * as migrationService from "./migration.js";
+import migrationService from "./migration.js";
 import noteService from "./notes.js";
 import { getLog } from "./log.js";
 

@@ -1,9 +1,9 @@
 import becca from "../becca/becca";
 import becca_loader from "../becca/becca_loader";
-import cls from "../services/cls.js";
+import { getContext } from "../services/context";
 
 export default () => {
-    cls.init(() => {
+    getContext().init(() => {
         becca_loader.load();
 
         for (const note of Object.values(becca.notes)) {

@@ -1,12 +1,14 @@
-import { becca_loader } from "@triliumnext/core";
-
 import becca from "../becca/becca.js";
-import cls from "../services/cls.js";
-import log from "../services/log.js";
-import sql from "../services/sql.js";
+import { getLog } from "../services/log.js";
+import { getSql } from "../services/sql/index.js";
+import { getContext } from "../services/context.js";
+import becca_loader from "../becca/becca_loader.js";
 
 export default () => {
-    cls.init(() => {
+    getContext().init(() => {
+        const sql = getSql();
+        const log = getLog();
+
         // emergency disabling of image compression since it appears to make problems in migration to 0.61
         sql.execute(/*sql*/`UPDATE options SET value = 'false' WHERE name = 'compressImages'`);
 

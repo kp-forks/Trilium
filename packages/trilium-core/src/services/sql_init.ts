@@ -12,6 +12,7 @@ import BBranch from "../becca/entities/bbranch";
 import hidden_subtree from "./hidden_subtree";
 import TaskContext from "./task_context";
 import BOption from "../becca/entities/boption";
+import migrationService from "./migration";
 
 export const dbReady = deferred<void>();
 
@@ -52,8 +53,7 @@ async function initDbConnection() {
         return;
     }
 
-    //TODO: Renable migration
-    //await migrationService.migrateIfNecessary();
+    await migrationService.migrateIfNecessary();
 
     const sql = getSql();
     sql.execute('CREATE TEMP TABLE IF NOT EXISTS "param_list" (`paramId` TEXT NOT NULL PRIMARY KEY)');
