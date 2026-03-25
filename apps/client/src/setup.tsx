@@ -1,6 +1,7 @@
 import "./setup.css";
 
 import { SetupSyncFromServerResponse } from "@triliumnext/commons";
+import clsx from "clsx";
 import { ComponentChildren, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
@@ -99,7 +100,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     icon="bx bx-desktop"
                     title={t("setup.sync-from-desktop")}
                     description={t("setup.sync-from-desktop-description")}
-                    onClick={() => setState("syncFromDesktop")}
+                    disabled={glob.isStandalone}
                 />
             </main>
         </div>
@@ -327,9 +328,12 @@ function FormItemWithIcon({ icon, children }: { icon: string; children: Componen
     );
 }
 
-function SetupOptionCard({ title, description, icon, onClick }: { title: string; description: string, icon: string, onClick?: () => void }) {
+function SetupOptionCard({ title, description, icon, onClick, disabled }: { title: string; description: string, icon: string, onClick?: () => void, disabled?: boolean }) {
     return (
-        <CardFrame className="setup-option-card" onClick={onClick}>
+        <CardFrame
+            className={clsx("setup-option-card", { disabled })}
+            onClick={disabled ? undefined : onClick}
+        >
             <Icon icon={icon} />
 
             <div>
