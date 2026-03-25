@@ -311,15 +311,20 @@ body.setup {
     }
 
     .ip-addresses {
-        min-width: 200px;
+        min-width: 250px;
         user-select: text;
         display: flex;
         flex-direction: column;
         font-family: var(--monospace-font-family);
+        font-size: 0.9em;
 
         .tn-card-body {
             overflow: auto;
             padding-bottom: 0.5em;
+
+            > :first-child {
+                font-weight: bold;
+            }
         }
     }
 }

@@ -2280,6 +2280,6 @@
     "wrong-password": "Incorrect password. Please try again.",
     "language": "Language",
     "continue": "Continue",
-    "your-ip-addresses": "Your IP addresses"
+    "your-ip-addresses": "Addresses for this device"
   }
 }
