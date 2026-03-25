@@ -173,39 +173,6 @@ body.setup {
         }
     }
 
-    .lds-ring {
-        display: inline-block;
-        position: relative;
-        --size: 128px;
-        flex-grow: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        &>div {
-            box-sizing: border-box;
-            display: block;
-            position: absolute;
-            width: var(--size, 48px);
-            height: var(--size, 48px);
-            margin: 8px;
-            border: 6px solid var(--main-text-color);
-            border-radius: 50%;
-            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-            border-color: var(--main-text-color) transparent transparent transparent;
-
-            &:nth-child(1) {
-                animation-delay: -0.45s;
-            }
-            &:nth-child(2) {
-                animation-delay: -0.3s;
-            }
-            &:nth-child(3) {
-                animation-delay: -0.15s;
-            }
-        }
-    }
-
     .sync-illustration {
         display: flex;
         justify-content: center;

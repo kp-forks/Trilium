@@ -229,16 +229,6 @@ function useOutstandingSyncInfo() {
     return { outstandingPullCount, totalPullCount, initialized };
 }
 
-function Spinner() {
-    return (
-        <div class="lds-ring" style="margin-right: 20px;">
-            <div />
-            <div />
-            <div />
-            <div />
-        </div>);
-}
-
 function CreateNewDocumentOptions({ setState }: { setState: (state: State) => void }) {
     return (
         <SetupPage
@@ -260,7 +250,7 @@ function CreateNewDocumentInProgress({ withDemo = false }: { withDemo?: boolean 
         server.post(`setup/new-document${withDemo ? "" : "?skipDemoDb"}`).then(() => {
             location.reload();
         });
-    }, []);
+    }, [ withDemo ]);
 
     return (
         <SetupPage
@@ -362,9 +352,6 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
-    function handleFinishSetup() {
-    }
-
     return (
         <SetupPage
             className="sync-from-desktop"
@@ -398,15 +385,6 @@ function SyncIllustration({ targetDevice }: { targetDevice: "desktop" | "server"
                 <Icon icon={targetDevice === "desktop" ? "bx bx-desktop" : "bx bx-server"} />
                 {targetDevice === "desktop" ? t("setup.sync-illustration-desktop-app") : t("setup.sync-illustration-server")}
             </div>
-        </div>
-    );
-}
-
-function FormItemWithIcon({ icon, children }: { icon: string; children: ComponentChildren }) {
-    return (
-        <div class="form-item-with-icon">
-            <Icon icon={icon} />
-            {children}
         </div>
     );
 }
