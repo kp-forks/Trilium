@@ -233,9 +233,8 @@ function CreateNewDocumentInProgress({ withDemo = false }: { withDemo?: boolean 
             className="create-new-document"
             title={t("setup.create-new-document-title")}
             description={t("setup.create-new-document-description")}
-        >
-            <Spinner />
-        </SetupPage>
+            illustration={<Icon icon="bx bx-loader-circle bx-spin" className="illustration-icon" />}
+        />
     );
 }
 
@@ -384,14 +383,14 @@ function SetupOptionCard({ title, description, icon, onClick, disabled }: { titl
     );
 }
 
-function SetupPage({ title, className, illustration, children, footer, error, errorId }: {
+function SetupPage({ title, description, className, illustration, children, footer, error, errorId }: {
     title: string;
     description?: string;
     error?: string | null;
     errorId?: number;
     className?: string;
     illustration?: ComponentChildren;
-    children: ComponentChildren;
+    children?: ComponentChildren;
     footer?: ComponentChildren;
 }) {
     const [ showError, setShowError ] = useState(!!error);
@@ -402,7 +401,7 @@ function SetupPage({ title, className, illustration, children, footer, error, er
     }, [ error, errorId ]);
 
     return (
-        <div className={clsx("page", className)}>
+        <div className={clsx("page", className, { "contentless": !children })}>
             {error && showError && (
                 <Admonition className="page-error" type="caution">
                     <ActionButton icon="bx bx-x" text={t("setup.dismiss-error")} onClick={() => setShowError(false)}  />
@@ -412,9 +411,10 @@ function SetupPage({ title, className, illustration, children, footer, error, er
 
             {illustration}
             <h1>{title}</h1>
-            <main>
+            {description && <p class="page-description">{description}</p>}
+            {children && <main>
                 {children}
-            </main>
+            </main>}
             {footer && <footer>{footer}</footer>}
         </div>
     );
