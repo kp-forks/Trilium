@@ -92,6 +92,8 @@ body.setup {
                 gap: 0.5rem;
                 border-top: 1px solid var(--main-border-color);
                 padding-top: 1rem;
+                margin-inline: -2em;
+                padding-inline: 2em;
             }
         }
 
