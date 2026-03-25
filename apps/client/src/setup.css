@@ -30,7 +30,7 @@ body.setup {
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            height: 550px;
+            height: 600px;
             width: 700px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
@@ -41,6 +41,10 @@ body.setup {
                 flex-direction: column;
                 justify-content: center;
                 gap: 1rem;
+
+                &.centered {
+                    flex-grow: 1;
+                }
 
                 .setup-option-card {
                     padding: 1.5em;

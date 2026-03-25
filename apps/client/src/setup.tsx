@@ -84,7 +84,7 @@ function App() {
 function SetupOptions({ setState }: { setState: (state: State) => void }) {
     return (
         <SetupPage title={t("setup.heading")} className="setup-options-container">
-            <div class="setup-options">
+            <div class="setup-options centered">
                 <SetupOptionCard
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
@@ -285,30 +285,38 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             footer={<Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} disabled={!isValid} />}
         >
             <form>
-                <FormGroup label={t("setup.server-host")} name="serverHost">
-                    <FormTextBox placeholder={t("setup.server-host-placeholder")} currentValue={syncServerHost} onChange={setSyncServerHost} required />
-                </FormGroup>
+                <Card>
+                    <CardSection>
+                        <FormGroup label={t("setup.server-host")} name="serverHost">
+                            <FormTextBox placeholder={t("setup.server-host-placeholder")} currentValue={syncServerHost} onChange={setSyncServerHost} required />
+                        </FormGroup>
+                    </CardSection>
 
-                <FormGroup
-                    label={t("setup.server-password")} name="serverPassword"
-                    error={isWrongPassword ? t("setup.wrong-password") : undefined}
-                >
-                    <FormTextBox
-                        type="password"
-                        currentValue={password} onChange={setPassword}
-                        required
-                    />
-                </FormGroup>
+                    <CardSection>
+                        <FormGroup
+                            label={t("setup.server-password")} name="serverPassword"
+                            error={isWrongPassword ? t("setup.wrong-password") : undefined}
+                        >
+                            <FormTextBox
+                                type="password"
+                                currentValue={password} onChange={setPassword}
+                                required
+                            />
+                        </FormGroup>
+                    </CardSection>
+                </Card>
 
-                <Collapsible title={t("setup.advanced-options")} initiallyExpanded={false}>
-                    <FormGroup
-                        name="proxyServer"
-                        label={t("setup.proxy-server")}
-                        description={isElectron() ? t("setup.proxy-instruction") : undefined}
-                    >
-                        <FormTextBox placeholder={t("setup.proxy-server-placeholder")} currentValue={syncProxy} onChange={setSyncProxy} />
-                    </FormGroup>
-                </Collapsible>
+                <Card heading={t("setup.advanced-options")}>
+                    <CardSection>
+                        <FormGroup
+                            name="proxyServer"
+                            label={t("setup.proxy-server")}
+                            description={isElectron() ? t("setup.proxy-instruction") : undefined}
+                        >
+                            <FormTextBox placeholder={t("setup.proxy-server-placeholder")} currentValue={syncProxy} onChange={setSyncProxy} />
+                        </FormGroup>
+                    </CardSection>
+                </Card>
             </form>
         </SetupPage>
     );
