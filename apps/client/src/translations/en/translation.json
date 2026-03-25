@@ -2271,6 +2271,7 @@
     "proxy-server": "Proxy server (optional)",
     "proxy-server-placeholder": "https://<hostname>:<port>",
     "proxy-instruction": "If you leave proxy setting blank, system proxy will be used.",
-    "dismiss-error": "Dismiss error"
+    "dismiss-error": "Dismiss error",
+    "wrong-password": "Incorrect password. Please try again."
   }
 }

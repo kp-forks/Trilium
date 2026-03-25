@@ -224,6 +224,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     const [ syncProxy, setSyncProxy ] = useState("");
     const [ error, setError ] = useState<string | null>(null);
     const [ errorId, setErrorId ] = useState(0);
+    const [ isWrongPassword, setIsWrongPassword ] = useState(false);
     const isValid = syncServerHost.trim() !== "" && password !== "";
 
     function raiseError(message: string) {
@@ -241,6 +242,8 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 
             if (resp.result === "success") {
                 setState("syncInProgress");
+            } else if (resp.error.includes("Incorrect password")) {
+                setIsWrongPassword(true);
             } else {
                 raiseError(t("setup.sync-failed", { message: resp.error }));
             }
@@ -267,8 +270,15 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
                     <FormTextBox placeholder={t("setup.server-host-placeholder")} currentValue={syncServerHost} onChange={setSyncServerHost} required />
                 </FormGroup>
 
-                <FormGroup label={t("setup.server-password")} name="serverPassword">
-                    <FormTextBox type="password" currentValue={password} onChange={setPassword} required />
+                <FormGroup
+                    label={t("setup.server-password")} name="serverPassword"
+                    error={isWrongPassword ? t("setup.wrong-password") : undefined}
+                >
+                    <FormTextBox
+                        type="password"
+                        currentValue={password} onChange={setPassword}
+                        required
+                    />
                 </FormGroup>
 
                 <Collapsible title={t("setup.advanced-options")} initiallyExpanded={false}>
