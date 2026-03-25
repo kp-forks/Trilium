@@ -27,15 +27,16 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-type State = "firstOptions" | "createNewDocumentOptions" | "createNewDocument" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
+type State = "firstOptions" | "createNewDocumentOptions" | "createNewDocumentWithDemo" | "createNewDocumentEmpty" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
 
-const STATE_ORDER: State[] = ["firstOptions", "createNewDocumentOptions", "createNewDocument", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
+const STATE_ORDER: State[] = ["firstOptions", "createNewDocumentOptions", "createNewDocumentWithDemo", "createNewDocumentEmpty", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
 
 function renderState(state: State, setState: (state: State) => void) {
     switch (state) {
         case "firstOptions": return <SetupOptions setState={setState} />;
         case "createNewDocumentOptions": return <CreateNewDocumentOptions setState={setState} />;
-        case "createNewDocument": return <CreateNewDocumentInProgress />;
+        case "createNewDocumentWithDemo": return <CreateNewDocumentInProgress withDemo />;
+        case "createNewDocumentEmpty": return <CreateNewDocumentInProgress />;
         case "syncFromServer": return <SyncFromServer setState={setState} />;
         case "syncFromDesktop": return <SyncFromDesktop setState={setState} />;
         case "syncInProgress": return <SyncInProgress device="server" />;
@@ -213,16 +214,16 @@ function CreateNewDocumentOptions({ setState }: { setState: (state: State) => vo
             illustration={<Icon icon="bx bx-star" className="illustration-icon" />}
         >
             <div class="setup-options">
-                <SetupOptionCard icon="bx bx-book-open"  title={t("setup.create-new-document-options-with-demo")} description={t("setup.create-new-document-options-with-demo-description")} onClick={() => setState("createNewDocumentWithDemo")} />
+                <SetupOptionCard icon="bx bx-book-open" title={t("setup.create-new-document-options-with-demo")} description={t("setup.create-new-document-options-with-demo-description")} onClick={() => setState("createNewDocumentWithDemo")} />
                 <SetupOptionCard icon="bx bx-file-blank" title={t("setup.create-new-document-options-empty")} description={t("setup.create-new-document-options-empty-description")} onClick={() => setState("createNewDocumentEmpty")} />
             </div>
         </SetupPage>
     );
 }
 
-function CreateNewDocumentInProgress() {
+function CreateNewDocumentInProgress({ withDemo = false }: { withDemo?: boolean }) {
     useEffect(() => {
-        server.post("setup/new-document").then(() => {
+        server.post(`setup/new-document${withDemo ? "" : "?skipDemoDb"}`).then(() => {
             location.reload();
         });
     }, []);
