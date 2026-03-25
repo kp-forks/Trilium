@@ -254,7 +254,6 @@ function connectWebSocket() {
 }
 
 async function sendPing() {
-    console.log("Got ws", ws);
     if (!ws) {
         // In standalone mode, there's no WebSocket — nothing to ping.
         return;
@@ -287,6 +286,7 @@ async function sendPing() {
 
 setTimeout(() => {
     if (glob.device === "print") return;
+    if (!glob.dbInitialized) return;
 
     if (glob.isStandalone) {
         // In standalone mode, listen for messages from the local worker via custom event
