@@ -11,40 +11,44 @@ body.setup {
     padding: 0;
 
     &>.setup-outer-wrapper {
-        background:
-            radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
-            radial-gradient(ellipse at 60% 80%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
-            var(--left-pane-background-color);
-        padding: 2em;
-        width: 100vw;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        width: 100dvw;
+        height: 100dvh;
+
+        @media (min-width: 700px) {
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 80%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
+                var(--left-pane-background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2em;
+        }
 
         .setup-container {
             background-color: var(--main-background-color);
             border-radius: 16px;
             padding: 2em;
-            display: flex;
             flex-direction: column;
             gap: 2rem;
-            height: 650px;
-            width: 750px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
             position: relative;
+            height: 100%;
+
+            @media (min-width: 700px) {
+                display: flex;
+                width: 750px;
+                height: 650px;
+                top: unset;
+                overflow: hidden;
+            }
 
             .setup-options {
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 gap: 1rem;
-
-                &.centered {
-                    flex-grow: 1;
-                }
 
                 .setup-option-card {
                     padding: 1.5em;

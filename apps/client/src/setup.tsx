@@ -116,7 +116,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
             illustration={<img src={logo} alt="Setup illustration" className="illustration-logo" />}
             onBack={() => setState("selectLanguage")}
         >
-            <div class="setup-options centered">
+            <div class="setup-options">
                 <SetupOptionCard
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
