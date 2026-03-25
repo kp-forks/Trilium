@@ -141,9 +141,13 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
 
     const currentIndex = steps.findIndex((s) => s.key === step);
 
-    const progress = stats.totalPullCount
-        ? Math.round(((stats.totalPullCount - stats.outstandingPullCount) / stats.totalPullCount) * 100)
-        : 0;
+    const syncingDone = currentIndex > steps.findIndex((s) => s.key === "syncing");
+    let progress = 0;
+    if (syncingDone) {
+        progress = 100;
+    } else if (stats.totalPullCount) {
+        progress = Math.round(((stats.totalPullCount - stats.outstandingPullCount) / stats.totalPullCount) * 100);
+    }
 
     return (
         <SetupPage
@@ -158,7 +162,7 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
                         {s.label}
                         {s.key === "syncing" && (
                             <div class="sync-progress">
-                                <progress value={stats.totalPullCount! - stats.outstandingPullCount} max={stats.totalPullCount!} />
+                                <progress value={syncingDone ? 1 : stats.totalPullCount! - stats.outstandingPullCount} max={syncingDone ? 1 : stats.totalPullCount!} />
                                 <span>{progress}%</span>
                             </div>
                         )}
