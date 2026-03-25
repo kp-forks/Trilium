@@ -369,14 +369,14 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                 <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
                 <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
                 <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
-                <CardSection>4. {t("setup.sync-from-desktop-step4", { protocol: location.protocol, port: location.port })}</CardSection>
+                    <CardSection>4. {t("setup.sync-from-desktop-step4")}</CardSection>
                 <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
             </Card>
 
             {networkAddresses.length > 0 && (
                 <Card heading={t("setup.your-ip-addresses")} className="ip-addresses">
                     {networkAddresses.map((addr) => (
-                        <CardSection key={addr}>{`${location.protocol}//${addr}:${location.port}`}</CardSection>
+                            <CardSection key={addr}>{addr}</CardSection>
                     ))}
                 </Card>
             )}
@@ -471,7 +471,7 @@ function SetupPage({ title, description, className, illustration, children, foot
 
 function getNetworkAddresses(): string[] {
     if (!isElectron()) {
-        return [];
+        return [`${location.protocol}//${location.host}`];
     }
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -491,7 +491,7 @@ function getNetworkAddresses(): string[] {
     // Sort by likelihood of being the local network address.
     addresses.sort((a, b) => networkScore(a) - networkScore(b));
 
-    return addresses;
+    return addresses.map((addr) => `${location.protocol}//${addr}:${location.port}`);
 }
 
 function networkScore(addr: string): number {
