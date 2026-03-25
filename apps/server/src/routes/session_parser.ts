@@ -1,10 +1,11 @@
-import sql from "../services/sql.js";
-import sqlInit from "../services/sql_init.js";
+import type express from "express";
 import session, { Store } from "express-session";
-import sessionSecret from "../services/session_secret.js";
+
 import config from "../services/config.js";
 import log from "../services/log.js";
-import type express from "express";
+import sessionSecret from "../services/session_secret.js";
+import sql from "../services/sql.js";
+import sqlInit from "../services/sql_init.js";
 
 /**
  * The amount of time in milliseconds after which expired sessions are cleaned up.
@@ -132,6 +133,8 @@ const sessionParser: express.RequestHandler = session({
 
 export function startSessionCleanup() {
     setInterval(() => {
+        if (!sqlInit.isDbInitialized()) return;
+
         // Clean up expired sessions.
         const now = Date.now();
         const result = sql.execute(/*sql*/`DELETE FROM sessions WHERE expires < ?`, now);
