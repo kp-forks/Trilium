@@ -27,14 +27,15 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-type State = "firstOptions" | "createNewDocument" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
+type State = "firstOptions" | "createNewDocumentOptions" | "createNewDocument" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
 
-const STATE_ORDER: State[] = ["firstOptions", "createNewDocument", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
+const STATE_ORDER: State[] = ["firstOptions", "createNewDocumentOptions", "createNewDocument", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
 
 function renderState(state: State, setState: (state: State) => void) {
     switch (state) {
         case "firstOptions": return <SetupOptions setState={setState} />;
-        case "createNewDocument": return <CreateNewDocument />;
+        case "createNewDocumentOptions": return <CreateNewDocumentOptions setState={setState} />;
+        case "createNewDocument": return <CreateNewDocumentInProgress />;
         case "syncFromServer": return <SyncFromServer setState={setState} />;
         case "syncFromDesktop": return <SyncFromDesktop setState={setState} />;
         case "syncInProgress": return <SyncInProgress device="server" />;
@@ -87,7 +88,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
                     icon="bx bx-file-blank"
                     title={t("setup.new-document")}
                     description={t("setup.new-document-description")}
-                    onClick={() => setState("createNewDocument")}
+                    onClick={() => setState("createNewDocumentOptions")}
                 />
 
                 <SetupOptionCard
@@ -204,7 +205,22 @@ function Spinner() {
         </div>);
 }
 
-function CreateNewDocument() {
+function CreateNewDocumentOptions({ setState }: { setState: (state: State) => void }) {
+    return (
+        <SetupPage
+            className="create-new-document-options"
+            title={t("setup.create-new-document-options-title")}
+            illustration={<Icon icon="bx bx-star" className="illustration-icon" />}
+        >
+            <div class="setup-options">
+                <SetupOptionCard icon="bx bx-book-open"  title={t("setup.create-new-document-options-with-demo")} description={t("setup.create-new-document-options-with-demo-description")} onClick={() => setState("createNewDocumentWithDemo")} />
+                <SetupOptionCard icon="bx bx-file-blank" title={t("setup.create-new-document-options-empty")} description={t("setup.create-new-document-options-empty-description")} onClick={() => setState("createNewDocumentEmpty")} />
+            </div>
+        </SetupPage>
+    );
+}
+
+function CreateNewDocumentInProgress() {
     useEffect(() => {
         server.post("setup/new-document").then(() => {
             location.reload();
