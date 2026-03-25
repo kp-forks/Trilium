@@ -380,7 +380,7 @@ function SyncIllustration({ targetDevice }: { targetDevice: "desktop" | "server"
     return (
         <div class="sync-illustration">
             <div>
-                <Icon icon="bx bx-globe" />
+                <Icon icon={isElectron() ? "bx bx-desktop" : "bx bx-globe"} />
                 {t("setup.sync-illustration-this-device")}
             </div>
             <div class="sync-illustration-arrows" />
