@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
 import { isElectron, replaceHtmlEscapedSlashes } from "./services/utils";
+import ActionButton from "./widgets/react/ActionButton";
 import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
@@ -20,6 +21,7 @@ async function main() {
     await initLocale();
 
     const bodyWrapper = document.createElement("div");
+    bodyWrapper.classList.add("setup-outer-wrapper");
     document.body.classList.add("setup");
     render(<App />, bodyWrapper);
     document.body.replaceChildren(bodyWrapper);
@@ -221,7 +223,13 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     const [ password, setPassword ] = useState("");
     const [ syncProxy, setSyncProxy ] = useState("");
     const [ error, setError ] = useState<string | null>(null);
+    const [ errorId, setErrorId ] = useState(0);
     const isValid = syncServerHost.trim() !== "" && password !== "";
+
+    function raiseError(message: string) {
+        setError(message);
+        setErrorId(id => id + 1);
+    }
 
     async function handleFinishSetup() {
         try {
@@ -234,10 +242,10 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             if (resp.result === "success") {
                 setState("syncInProgress");
             } else {
-                setError(t("setup.sync-failed", { message: resp.error }));
+                raiseError(t("setup.sync-failed", { message: resp.error }));
             }
         } catch (e) {
-            setError(e instanceof Error ? e.message : String(e));
+            raiseError(e instanceof Error ? e.message : String(e));
         }
     }
 
@@ -248,6 +256,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             description={t("setup.sync-from-server-page-description")}
             illustration={<SyncIllustration targetDevice="server" />}
             error={error}
+            errorId={errorId}
             footer={<>
                 <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
                 <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} disabled={!isValid} />
@@ -344,18 +353,31 @@ function SetupOptionCard({ title, description, icon, onClick, disabled }: { titl
     );
 }
 
-function SetupPage({ title, className, illustration, children, footer, error }: {
+function SetupPage({ title, className, illustration, children, footer, error, errorId }: {
     title: string;
     description?: string;
     error?: string | null;
+    errorId?: number;
     className?: string;
     illustration?: ComponentChildren;
     children: ComponentChildren;
     footer?: ComponentChildren;
 }) {
+    const [ showError, setShowError ] = useState(!!error);
+    useEffect(() => {
+        if (error) {
+            setShowError(true);
+        }
+    }, [ error, errorId ]);
+
     return (
         <div className={clsx("page", className)}>
-            {error && <Admonition className="page-error" type="caution">{replaceHtmlEscapedSlashes(error)}</Admonition>}
+            {error && showError && (
+                <Admonition className="page-error" type="caution">
+                    <ActionButton icon="bx bx-x" text={t("setup.dismiss-error")} onClick={() => setShowError(false)}  />
+                    {replaceHtmlEscapedSlashes(error)}
+                </Admonition>
+            )}
 
             {illustration}
             <h1>{title}</h1>
