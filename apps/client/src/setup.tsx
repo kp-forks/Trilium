@@ -212,6 +212,7 @@ function CreateNewDocumentOptions({ setState }: { setState: (state: State) => vo
             className="create-new-document-options"
             title={t("setup.create-new-document-options-title")}
             illustration={<Icon icon="bx bx-star" className="illustration-icon" />}
+            onBack={() => setState("firstOptions")}
         >
             <div class="setup-options">
                 <SetupOptionCard icon="bx bx-book-open" title={t("setup.create-new-document-options-with-demo")} description={t("setup.create-new-document-options-with-demo-description")} onClick={() => setState("createNewDocumentWithDemo")} />
@@ -274,16 +275,14 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 
     return (
         <SetupPage
-            className="sync-from-server"
+            className="sync-from-server top-aligned"
             title={t("setup.sync-from-server")}
             description={t("setup.sync-from-server-page-description")}
             illustration={<SyncIllustration targetDevice="server" />}
             error={error}
             errorId={errorId}
-            footer={<>
-                <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
-                <Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} disabled={!isValid} />
-            </>}
+            onBack={() => setState("firstOptions")}
+            footer={<Button text={t("setup.button-finish-setup")} kind="primary" onClick={handleFinishSetup} disabled={!isValid} />}
         >
             <form>
                 <FormGroup label={t("setup.server-host")} name="serverHost">
@@ -324,10 +323,8 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
             className="sync-from-desktop"
             title={t("setup.sync-from-desktop")}
             illustration={<SyncIllustration targetDevice="desktop" />}
-            footer={<>
-                <Button text={t("setup.button-back")} onClick={() => setState("firstOptions")} kind="lowProfile" />
-                <Button icon="bx-loader bx-spin" text={t("setup.sync-from-desktop-waiting")} kind="primary" disabled />
-            </>}
+            onBack={() => setState("firstOptions")}
+            footer={<Button icon="bx-loader bx-spin" text={t("setup.sync-from-desktop-waiting")} kind="primary" disabled />}
         >
             <Card heading="On the other device">
                 <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
@@ -383,7 +380,7 @@ function SetupOptionCard({ title, description, icon, onClick, disabled }: { titl
     );
 }
 
-function SetupPage({ title, description, className, illustration, children, footer, error, errorId }: {
+function SetupPage({ title, description, className, illustration, children, footer, error, errorId, onBack }: {
     title: string;
     description?: string;
     error?: string | null;
@@ -392,6 +389,7 @@ function SetupPage({ title, description, className, illustration, children, foot
     illustration?: ComponentChildren;
     children?: ComponentChildren;
     footer?: ComponentChildren;
+    onBack?: () => void;
 }) {
     const [ showError, setShowError ] = useState(!!error);
     useEffect(() => {
@@ -402,6 +400,15 @@ function SetupPage({ title, description, className, illustration, children, foot
 
     return (
         <div className={clsx("page", className, { "contentless": !children })}>
+            {onBack && (
+                <Button
+                    className="back-button"
+                    icon="bx bx-arrow-back"
+                    text={t("setup.button-back")}
+                    onClick={onBack}
+                    kind="lowProfile"
+                />
+            )}
             {error && showError && (
                 <Admonition className="page-error" type="caution">
                     <ActionButton icon="bx bx-x" text={t("setup.dismiss-error")} onClick={() => setShowError(false)}  />
