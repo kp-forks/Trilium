@@ -1,9 +1,10 @@
 import "./setup.css";
 
-import { SetupSyncFromServerResponse } from "@triliumnext/commons";
+import { LOCALES, SetupSyncFromServerResponse } from "@triliumnext/commons";
 import clsx from "clsx";
 import { ComponentChildren, render } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useTranslation } from "react-i18next";
 
 import logo from "./assets/icon-color.svg?url";
 import { initLocale, t } from "./services/i18n";
@@ -14,6 +15,7 @@ import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
 import FormGroup from "./widgets/react/FormGroup";
+import FormList, { FormListItem } from "./widgets/react/FormList";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 
@@ -27,12 +29,13 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-type State = "firstOptions" | "createNewDocumentOptions" | "createNewDocumentWithDemo" | "createNewDocumentEmpty" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
+type State = "selectLanguage" | "firstOptions" | "createNewDocumentOptions" | "createNewDocumentWithDemo" | "createNewDocumentEmpty" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
 
-const STATE_ORDER: State[] = ["firstOptions", "createNewDocumentOptions", "createNewDocumentWithDemo", "createNewDocumentEmpty", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
+const STATE_ORDER: State[] = ["selectLanguage", "firstOptions", "createNewDocumentOptions", "createNewDocumentWithDemo", "createNewDocumentEmpty", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
 
 function renderState(state: State, setState: (state: State) => void) {
     switch (state) {
+        case "selectLanguage": return <SelectLanguage />;
         case "firstOptions": return <SetupOptions setState={setState} />;
         case "createNewDocumentOptions": return <CreateNewDocumentOptions setState={setState} />;
         case "createNewDocumentWithDemo": return <CreateNewDocumentInProgress withDemo />;
@@ -45,7 +48,7 @@ function renderState(state: State, setState: (state: State) => void) {
 }
 
 function App() {
-    const [state, setState] = useState<State>("firstOptions");
+    const [state, setState] = useState<State>("selectLanguage");
     const [prevState, setPrevState] = useState<State | null>(null);
     const [transitioning, setTransitioning] = useState(false);
     const prevStateRef = useRef<State>(state);
@@ -78,6 +81,31 @@ function App() {
                 {renderState(state, handleSetState)}
             </div>
         </div>
+    );
+}
+
+function SelectLanguage() {
+    const [ currentLocale, setCurrentLocale ] = useState("en");
+    const filteredLocales = useMemo(() => LOCALES.filter(l => !l.contentOnly), []);
+    const { t, i18n } = useTranslation();
+    console.log("Rendering with ", currentLocale, t("setup.language"));
+
+    return (
+        <SetupPage
+            title={t("setup.language")}
+            className="select-language"
+            illustration={<Icon icon="bx bx-globe" className="illustration-icon" />}
+            footer={<Button text={t("setup.continue")} kind="primary" />}
+        >
+            <FormList onSelect={async (id) => {
+                await i18n.changeLanguage(id);
+                setCurrentLocale(id);
+            }}>
+                {filteredLocales.map(locale => (
+                    <FormListItem key={locale.id} value={locale.id} active={locale.id === currentLocale}>{locale.name}</FormListItem>
+                ))}
+            </FormList>
+        </SetupPage>
     );
 }
 

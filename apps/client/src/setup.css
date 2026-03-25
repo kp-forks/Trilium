@@ -30,8 +30,8 @@ body.setup {
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            height: 650px;
-            width: 800px;
+            height: 600px;
+            width: 700px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             position: relative;
@@ -107,6 +107,7 @@ body.setup {
                 display: flex;
                 flex-direction: column;
                 padding-top: 1em;
+                min-height: 0;
             }
 
             &.contentless {
@@ -310,6 +311,23 @@ body.setup {
 
 .slide-in-backward {
     animation-name: slide-in-left;
+}
+
+.page.select-language {
+    .dropdownWrapper {
+        padding-bottom: 1.5em;
+    }
+
+    .dropdownWrapper,
+    .dropdown,
+    .dropdown-menu {
+        height: 100%;
+    }
+
+    .dropdown-menu {
+        box-sizing: border-box;
+        overflow: auto;
+    }
 }
 
 .page.sync-in-progress {
