@@ -85,9 +85,9 @@ function App() {
 }
 
 function SelectLanguage({ setState }: { setState: (state: State) => void }) {
-    const [ currentLocale, setCurrentLocale ] = useState("en");
-    const filteredLocales = useMemo(() => LOCALES.filter(l => !l.contentOnly), []);
     const { t, i18n } = useTranslation();
+    const [ currentLocale, setCurrentLocale ] = useState(i18n.language);
+    const filteredLocales = useMemo(() => LOCALES.filter(l => !l.contentOnly), []);
 
     return (
         <SetupPage
