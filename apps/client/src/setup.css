@@ -314,7 +314,9 @@ body.setup {
 
 .page.select-language {
     .dropdownWrapper {
-        padding-bottom: 1.5em;
+        padding-bottom: 2em;
+        width: 80%;
+        margin: auto;
     }
 
     .dropdownWrapper,
