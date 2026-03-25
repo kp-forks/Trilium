@@ -30,8 +30,8 @@ body.setup {
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            height: 600px;
-            width: 700px;
+            height: 650px;
+            width: 750px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             position: relative;
