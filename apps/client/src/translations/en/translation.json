@@ -8,6 +8,10 @@
       "lead-dev": "lead developer",
       "original-dev": "original developer"
     },
+    "role_brief_history": {
+      "lead-dev": "TODO",
+      "original-dev": "TODO"
+    },
     "contributor_full_list": "See the entire community",
     "data_directory": "Data directory:",
     "github_tooltip": "Report bugs, suggest features, or contribute on GitHub",

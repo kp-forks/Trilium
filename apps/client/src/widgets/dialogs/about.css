@@ -14,21 +14,21 @@
         width: 160px;
         height: 160px;
 
-        &.icon-default {
+        &:not([data-alt-icon]) {
             background-image: url(../../assets/icon.svg);
         }
 
-        &.icon-nightly {
+        &[data-alt-icon="nightly"] {
             background-image: url(../../assets/icon-nightly.svg);
         }
 
-        &.icon-default,
-        &.icon-nightly {
+        &:not([data-alt-icon]),
+        &[data-alt-icon="nightly"] {
             animation: icon-intro 500ms ease-out;
             will-change: opacity, transform;
         }
 
-        &.icon-classic {
+        &[data-alt-icon="classic"] {
             mask-image: url(../../assets/icon-classic.svg);
             background-color: var(--muted-text-color);
             animation: icon-classic-intro 300ms ease-in-out;

@@ -4,41 +4,52 @@ import { formatDateTime } from "../../utils/formatters.js";
 import server from "../../services/server.js";
 import utils from "../../services/utils.js";
 import openService from "../../services/open.js";
-import { useState } from "preact/hooks";
+import { useState, useCallback, useRef } from "preact/hooks";
 import type { AppInfo, Contributor, ContributorList } from "@triliumnext/commons";
-import { useTriliumEvent } from "../react/hooks.jsx";
+import { useTooltip, useTriliumEvent } from "../react/hooks.jsx";
 import "./about.css";
 import { Trans } from "react-i18next";
 import type React from "react";
-import { useCallback, useEffect } from "react";
 import contributors from "../../../../../contributors.json"; 
 import { Fragment } from "preact/jsx-runtime";
 import { ComponentChildren } from "preact";
-import clsx from "clsx";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
     const [shown, setShown] = useState(false);
     const [isNightly, setNightly] = useState(false);
-    const [iconClassName, setIconClassName] = useState("icon-default");
-    const [altIconClassName, setAltIconClassName] = useState<string | null>(null);
-
+    const iconRef = useRef<HTMLDivElement>(null);
 
     const onLoad = useCallback(async () => {
         if (!appInfo) {
-            setAppInfo(await server.get<AppInfo>("app-info"));
+            const info = await server.get<AppInfo>("app-info");
+            if (info.appVersion.includes("test")) {
+                setNightly(true);
+                setAltIcon("nightly");
+            }
+            setAppInfo(info);
         }
         setShown(true);
     }, []);
 
     useTriliumEvent("openAboutDialog", onLoad);
 
-    useEffect(() => {
-        setNightly(!!appInfo?.appVersion.includes("test"));
-        if (isNightly) {
-            setIconClassName("icon-nightly");
+    const setAltIcon = useCallback((iconId: string | null) => {
+        /* The alternate icon is set by directly accessing the DOM to prevent the dialog being
+         * rerendered. A rerender while an element is hovered and displaying a tooltip in the same
+         * time, will cause the tooltip to break. */
+        if (iconId) {
+            iconRef.current?.setAttribute("data-alt-icon", iconId);
+        } else {
+            iconRef.current?.removeAttribute("data-alt-icon");
         }
-    }, [appInfo])
+    }, []);
+
+    const onContributorHovered = useCallback((contributor: Contributor, isHovering: boolean) => {
+        if (contributor.role === "original-dev") {
+            setAltIcon((isHovering) ? "classic": null);
+        }
+    }, []);
 
     return (
         <Modal
@@ -49,7 +60,7 @@ export default function AboutDialog() {
         >
            <div className="about-dialog-content">
                
-                <div className={clsx("icon", altIconClassName ?? iconClassName)} />
+                <div ref={iconRef} className={"icon"} />
                 <h2>Trilium Notes {isNightly && <span className="channel-name">Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
                     triliumnotes.org
@@ -83,7 +94,7 @@ export default function AboutDialog() {
                         <td className="contributor-list use-tn-links">
                             <Contributors 
                                 data={contributors as ContributorList}
-                                onHover={(contributor, isHovering) => {setAltIconClassName((isHovering && contributor.role === "original-dev") ? "icon-classic" : null)}}
+                                onHover={onContributorHovered}
                             />
 
                             <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
@@ -141,7 +152,16 @@ function RevisionLink(appInfo: AppInfo | null) {
 }
 
 function FooterLink(props: {children: ComponentChildren, text: string, url: string, tooltip: string, className?: string}) {
-    return <a href={props.url} className={props.className} target="_blank" title={props.tooltip} draggable={false}>
+    
+    const linkRef = useRef<HTMLAnchorElement>(null);
+
+    useTooltip(linkRef, {
+        title: props.tooltip,
+        delay: 250,
+        placement: "bottom"
+    })
+    
+    return <a ref={linkRef} href={props.url} className={props.className} target="_blank" draggable={false}>
         {props.children}
         {props.text}
     </a>
@@ -162,13 +182,19 @@ function Contributors({data, onHover}: {data: ContributorList, onHover?: HoverCa
 
 
 function ContributorListItem({data, onHover}: {data: Contributor, onHover?: HoverCallback}) {
-    let roleString = "";
-    if (data.role) {
-        roleString = t(`about.contributor_roles.${data.role}`);
-    }
+    const linkRef = useRef<HTMLAnchorElement>(null);
+    const roleString = (data.role) ? t(`about.contributor_roles.${data.role}`) : "";
+
+    useTooltip(linkRef, (data.role) ? {
+        title: t(`about.role_brief_history.${data.role}`),
+        placement: "bottom",
+        offset: [0, 10],
+        delay: 500
+    }: {});
 
     return <>
         <a
+            ref={linkRef}
             href={data.url}
             target="_blank"
             onMouseEnter={(e) => onHover?.(data, true)}
