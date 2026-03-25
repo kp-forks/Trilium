@@ -321,7 +321,12 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
                 <Card>
                     <CardSection>
                         <FormGroup label={t("setup.server-host")} name="serverHost">
-                            <FormTextBox placeholder={t("setup.server-host-placeholder")} currentValue={syncServerHost} onChange={setSyncServerHost} required />
+                            <FormTextBox
+                                placeholder={t("setup.server-host-placeholder")}
+                                currentValue={syncServerHost} onChange={setSyncServerHost}
+                                autocomplete="trilium-sync-server-host"
+                                required
+                            />
                         </FormGroup>
                     </CardSection>
 
@@ -333,6 +338,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
                             <FormTextBox
                                 type="password"
                                 currentValue={password} onChange={setPassword}
+                                autocomplete="trilium-sync-server-password"
                                 required
                             />
                         </FormGroup>
