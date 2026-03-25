@@ -247,8 +247,7 @@ body.setup {
         text-align: center;
         color: var(--muted-text-color);
         opacity: 0.6;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
+        margin-block: 1rem;
     }
 
     .illustration-logo {

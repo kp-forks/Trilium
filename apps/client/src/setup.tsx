@@ -35,7 +35,7 @@ const STATE_ORDER: State[] = ["selectLanguage", "firstOptions", "createNewDocume
 
 function renderState(state: State, setState: (state: State) => void) {
     switch (state) {
-        case "selectLanguage": return <SelectLanguage />;
+        case "selectLanguage": return <SelectLanguage setState={setState} />;
         case "firstOptions": return <SetupOptions setState={setState} />;
         case "createNewDocumentOptions": return <CreateNewDocumentOptions setState={setState} />;
         case "createNewDocumentWithDemo": return <CreateNewDocumentInProgress withDemo />;
@@ -84,18 +84,17 @@ function App() {
     );
 }
 
-function SelectLanguage() {
+function SelectLanguage({ setState }: { setState: (state: State) => void }) {
     const [ currentLocale, setCurrentLocale ] = useState("en");
     const filteredLocales = useMemo(() => LOCALES.filter(l => !l.contentOnly), []);
     const { t, i18n } = useTranslation();
-    console.log("Rendering with ", currentLocale, t("setup.language"));
 
     return (
         <SetupPage
             title={t("setup.language")}
             className="select-language"
             illustration={<Icon icon="bx bx-globe" className="illustration-icon" />}
-            footer={<Button text={t("setup.continue")} kind="primary" />}
+            footer={<Button text={t("setup.continue")} kind="primary" onClick={() => setState("firstOptions")} />}
         >
             <FormList onSelect={async (id) => {
                 await i18n.changeLanguage(id);
@@ -115,6 +114,7 @@ function SetupOptions({ setState }: { setState: (state: State) => void }) {
             title={t("setup.heading")}
             className="setup-options-container"
             illustration={<img src={logo} alt="Setup illustration" className="illustration-logo" />}
+            onBack={() => setState("selectLanguage")}
         >
             <div class="setup-options centered">
                 <SetupOptionCard
