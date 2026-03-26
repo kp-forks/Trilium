@@ -1,8 +1,6 @@
 import { deferred, OptionRow } from "@triliumnext/commons";
 import { getSql } from "./sql";
 import { getLog } from "./log";
-import { isElectron } from "./utils";
-import { t } from "i18next";
 import optionService from "./options";
 import eventService from "./events";
 import { getContext } from "./context";

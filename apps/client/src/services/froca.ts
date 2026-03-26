@@ -337,7 +337,7 @@ class FrocaImpl implements Froca {
             attachmentRows = await server.getWithSilentNotFound<FAttachmentRow[]>(`attachments/${attachmentId}/all`);
         } catch (e: any) {
             if (silentNotFoundError) {
-                logInfo(`Attachment '${attachmentId}' not found, but silentNotFoundError is enabled: ${  e.message}`);
+                logInfo(`Attachment '${attachmentId}' not found, but silentNotFoundError is enabled: ${e.message}`);
                 return null;
             }
             throw e;

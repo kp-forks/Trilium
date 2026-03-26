@@ -43,7 +43,7 @@ function saveSyncSeed(req: Request) {
 
     log.info("Saved sync seed.");
 
-    // sqlInit.createDatabaseForSync(options);
+    sqlInit.createDatabaseForSync(options);
 }
 
 /**
