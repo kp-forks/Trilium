@@ -30,7 +30,8 @@ export function bootstrap(req: Request, res: Response) {
     if (!isDbInitialized) {
         res.send({
             ...commonItems,
-            baseApiUrl: "api/"
+            baseApiUrl: "api/",
+            componentId: ""
         });
         return;
     }
