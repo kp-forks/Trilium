@@ -1332,7 +1332,8 @@
     "date-and-time": "Fecha y hora",
     "path": "Ruta",
     "database_backed_up_to": "Se ha realizado una copia de seguridad de la base de datos en {{backupFilePath}}",
-    "no_backup_yet": "no hay copia de seguridad todavía"
+    "no_backup_yet": "no hay copia de seguridad todavía",
+    "download": "Descargar"
   },
   "etapi": {
     "title": "ETAPI",

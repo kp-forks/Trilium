@@ -1381,7 +1381,8 @@
     "date-and-time": "Date & time",
     "path": "Path",
     "database_backed_up_to": "Database has been backed up to {{backupFilePath}}",
-    "no_backup_yet": "no backup yet"
+    "no_backup_yet": "no backup yet",
+    "download": "Download"
   },
   "etapi": {
     "title": "ETAPI",
