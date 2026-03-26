@@ -70,6 +70,7 @@ function App() {
 
     return (
         <div class="setup-container">
+            <div class="drag-region" />
             {transitioning && prevState !== null && (
                 <div
                     class={`slide-page slide-out-${direction}`}

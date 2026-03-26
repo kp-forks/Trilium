@@ -250,6 +250,24 @@ body.setup.background-effects .setup-container {
     background: transparent;
 }
 
+/* macOS: draggable title bar region and traffic light buttons */
+body.setup.platform-darwin {
+    .drag-region {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        -webkit-app-region: drag;
+        z-index: 10;
+    }
+
+    .back-button {
+        -webkit-app-region: no-drag;
+        z-index: 11;
+    }
+}
+
 @keyframes lds-ring {
     0% {
         transform: rotate(0deg);
