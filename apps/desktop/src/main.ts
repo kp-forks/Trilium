@@ -18,6 +18,7 @@ import path, { join } from "path";
 
 import { deferred, LOCALES } from "../../../packages/commons/src";
 import { PRODUCT_NAME } from "./app-info";
+import DesktopPlatformProvider from "./platform_provider";
 
 async function main() {
     const userDataPath = getUserData();
@@ -136,6 +137,7 @@ async function main() {
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),
         schema: fs.readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
+        platform: new DesktopPlatformProvider(),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,
         extraAppInfo: {
             nodeVersion: process.version,

@@ -1,7 +1,7 @@
 import backupService from "./backup.js";
 import { getSql } from "./sql/index.js";
 import { getLog } from "./log.js";
-import { crash } from "./utils/index.js";
+import { getPlatform } from "./platform.js";
 import appInfo from "./app_info.js";
 import * as cls from "./context.js";
 import { t } from "i18next";
@@ -20,8 +20,7 @@ async function migrate() {
     const currentDbVersion = getDbVersion();
 
     if (currentDbVersion < 214) {
-        await crash(t("migration.old_version"));
-        return;
+        getPlatform().crash(t("migration.old_version"));
     }
 
     // backup before attempting migration
@@ -59,8 +58,7 @@ async function migrate() {
                 log.info(`Migration to version ${mig.dbVersion} has been successful.`);
             } catch (e: any) {
                 console.error(e);
-                crash(t("migration.error_message", { version: mig.dbVersion, stack: e.stack }));
-                break; // crash() is sometimes async
+                getPlatform().crash(t("migration.error_message", { version: mig.dbVersion, stack: e.stack }));
             }
         }
     });
@@ -126,7 +124,7 @@ async function migrateIfNecessary() {
     const currentDbVersion = getDbVersion();
 
     if (currentDbVersion > appInfo.dbVersion && process.env.TRILIUM_IGNORE_DB_VERSION !== "true") {
-        await crash(t("migration.wrong_db_version", { version: currentDbVersion, targetVersion: appInfo.dbVersion }));
+        getPlatform().crash(t("migration.wrong_db_version", { version: currentDbVersion, targetVersion: appInfo.dbVersion }));
     }
 
     if (!isDbUpToDate()) {

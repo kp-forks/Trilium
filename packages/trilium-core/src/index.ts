@@ -8,6 +8,7 @@ import { initRequest, RequestProvider } from "./services/request";
 import { initTranslations, TranslationProvider } from "./services/i18n";
 import { initSchema } from "./services/sql_init";
 import appInfo from "./services/app_info";
+import PlatformProvider, { initPlatform } from "./services/platform";
 
 export { getLog } from "./services/log";
 export type * from "./services/sql/types";
@@ -90,13 +91,16 @@ export { default as consistency_checks } from "./services/consistency_checks";
 export { default as content_hash } from "./services/content_hash";
 export { default as sync_mutex } from "./services/sync_mutex";
 export { default as setup } from "./services/setup";
+export { getPlatform, type PlatformProvider } from "./services/platform";
+export { t } from "i18next";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, schema, extraAppInfo }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, schema, extraAppInfo, platform }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
     translations: TranslationProvider,
+    platform: PlatformProvider,
     schema: string,
     messaging?: MessagingProvider,
     request?: RequestProvider,
@@ -105,6 +109,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
         dataDirectory: string;
     };
 }) {
+    initPlatform(platform);
     initLog();
     await initTranslations(translations);
     initCrypto(crypto);

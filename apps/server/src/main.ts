@@ -10,6 +10,7 @@ import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
+import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";
 import port from "./services/port.js";
 import NodeRequestProvider from "./services/request.js";
@@ -54,6 +55,7 @@ async function startApplication() {
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),
         schema: fs.readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
+        platform: new ServerPlatformProvider(),
         translations: (await import("./services/i18n.js")).initializeTranslations,
         extraAppInfo: {
             nodeVersion: process.version,

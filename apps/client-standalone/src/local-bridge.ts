@@ -2,6 +2,10 @@ import LocalServerWorker from "./local-server-worker?worker";
 let localWorker: Worker | null = null;
 const pending = new Map();
 
+function showFatalErrorDialog(message: string) {
+    alert(message);
+}
+
 export function startLocalServerWorker() {
     if (localWorker) return localWorker;
     localWorker = new LocalServerWorker();
@@ -18,6 +22,13 @@ export function startLocalServerWorker() {
 
     localWorker.onmessage = (event) => {
         const msg = event.data;
+
+        // Handle fatal platform crashes (shown as a dialog to the user)
+        if (msg?.type === "FATAL_ERROR") {
+            console.error("[LocalBridge] Fatal error:", msg.message);
+            showFatalErrorDialog(msg.message);
+            return;
+        }
 
         // Handle worker error reports
         if (msg?.type === "WORKER_ERROR") {
