@@ -7,16 +7,15 @@ import { t } from "./i18n.js";
 import options from "./options.js";
 import server from "./server.js";
 import toastService from "./toast.js";
-import toast from "./toast.js";
 import utils from "./utils.js";
 
 type MessageHandler = (message: WebSocketMessage) => void;
 let messageHandlers: MessageHandler[] = [];
 
 let ws: WebSocket;
-let lastAcceptedEntityChangeId = window.glob.maxEntityChangeIdAtLoad;
-let lastAcceptedEntityChangeSyncId = window.glob.maxEntityChangeSyncIdAtLoad;
-let lastProcessedEntityChangeId = window.glob.maxEntityChangeIdAtLoad;
+let lastAcceptedEntityChangeId = window.glob.maxEntityChangeIdAtLoad ?? 0;
+let lastAcceptedEntityChangeSyncId = window.glob.maxEntityChangeSyncIdAtLoad ?? 0;
+let lastProcessedEntityChangeId = window.glob.maxEntityChangeIdAtLoad ?? 0;
 let lastPingTs: number;
 let frontendUpdateDataQueue: EntityChange[] = [];
 
@@ -261,7 +260,7 @@ async function sendPing() {
 
     if (Date.now() - lastPingTs > 30000) {
         console.warn(utils.now(), "Lost websocket connection to the backend");
-        toast.showPersistent({
+        toastService.showPersistent({
             id: "lost-websocket-connection",
             title: t("ws.lost-websocket-connection-title"),
             message: t("ws.lost-websocket-connection-message"),
@@ -270,7 +269,7 @@ async function sendPing() {
     }
 
     if (ws.readyState === ws.OPEN) {
-        toast.closePersistent("lost-websocket-connection");
+        toastService.closePersistent("lost-websocket-connection");
         ws.send(
             JSON.stringify({
                 type: "ping",

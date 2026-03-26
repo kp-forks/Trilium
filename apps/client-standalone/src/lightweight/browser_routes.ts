@@ -241,34 +241,19 @@ function bootstrapRoute(): BootstrapDefinition {
     const assetPath = ".";
 
     const isDbInitialized = sql_init.isDbInitialized();
-    const commonItems = getSharedBootstrapItems(assetPath, isDbInitialized);
-
-    if (!isDbInitialized) {
-        return {
-            ...commonItems,
-            isStandalone: true,
-            baseApiUrl: "../api/",
-        };
-    }
-
-    return {
-        ...commonItems,
-        appPath: assetPath,
-        device: false, // Let the client detect device type.
-        csrfToken: "dummy-csrf-token",
-        themeCssUrl: false,
-        themeUseNextAsBase: "next",
-        triliumVersion: packageJson.version,
-        baseApiUrl: "../api/",
-        headingStyle: "plain",
-        layoutOrientation: "vertical",
-        platform: "web",
+    const commonItems = {
+        ...getSharedBootstrapItems(assetPath, isDbInitialized),
         isDev: import.meta.env.DEV,
+        isStandalone: true,
+        themeCssUrl: false as const,
+        themeUseNextAsBase: "next" as const,
         isMainWindow: true,
         isElectron: false,
-        isStandalone: true,
         hasNativeTitleBar: false,
         hasBackgroundEffects: false,
+        triliumVersion: packageJson.version,
+        device: false as const, // Let the client detect device type.
+        appPath: assetPath,
 
         // TODO: Fill properly
         currentLocale: { id: "en", name: "English", rtl: false },
@@ -276,6 +261,24 @@ function bootstrapRoute(): BootstrapDefinition {
         instanceName: null,
         appCssNoteIds: [],
         TRILIUM_SAFE_MODE: false
+    };
+
+    if (!isDbInitialized) {
+        return {
+            ...commonItems,
+            isStandalone: true,
+            baseApiUrl: "../api/",
+            isProtectedSessionAvailable: false,
+        };
+    }
+
+    return {
+        ...commonItems,
+        csrfToken: "dummy-csrf-token",
+        baseApiUrl: "../api/",
+        headingStyle: "plain",
+        layoutOrientation: "vertical",
+        platform: "web",
     };
 }
 

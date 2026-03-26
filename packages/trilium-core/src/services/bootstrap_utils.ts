@@ -12,14 +12,20 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
     const commonItems = {
         assetPath,
         dbInitialized,
+        currentLocale,
+        isRtl: !!currentLocale.rtl,
+        isProtectedSessionAvailable: false,
+        layoutOrientation: "vertical" as const,
+        headingStyle: "plain" as const,
+        componentId: "",
         ...getIconConfig(assetPath)
     };
 
     if (!dbInitialized) {
         return {
             ...commonItems,
-            themeCssUrl: false,
-            themeUseNextAsBase: "next"
+            themeCssUrl: false as const,
+            themeUseNextAsBase: "next" as const
         };
     }
 
@@ -27,11 +33,9 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         ...commonItems,
         headingStyle: options.getOption("headingStyle") as "plain" | "underline" | "markdown",
         layoutOrientation: options.getOption("layoutOrientation") as "vertical" | "horizontal",
-        maxEntityChangeIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
-        maxEntityChangeSyncIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
+        maxEntityChangeIdAtLoad: sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
+        maxEntityChangeSyncIdAtLoad: sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
         isProtectedSessionAvailable: protected_session.isProtectedSessionAvailable(),
-        currentLocale,
-        isRtl: !!currentLocale.rtl,
     }
 }
 

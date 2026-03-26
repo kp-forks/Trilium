@@ -313,9 +313,9 @@ export interface DefinitionObject {
 }
 
 /**
- * Subset of bootstrap items that are available both in the main client and in the setup page.
+ * Bootstrap items that the client needs to start up. These are sent by the server in the HTML and made available as `window.glob`.
  */
-export interface BootstrapCommonItems {
+export type BootstrapDefinition = {
     dbInitialized: boolean;
     baseApiUrl: string;
     assetPath: string;
@@ -323,24 +323,17 @@ export interface BootstrapCommonItems {
     themeUseNextAsBase?: "next" | "next-light" | "next-dark";
     iconPackCss: string;
     iconRegistry: IconRegistry;
-}
-
-/**
- * Bootstrap items that the client needs to start up. These are sent by the server in the HTML and made available as `window.glob`.
- */
-export type BootstrapDefinition = BootstrapCommonItems & ({
-    dbInitialized: true;
     device: "mobile" | "desktop" | "print" | false;
-    csrfToken: string;
+    csrfToken?: string;
     headingStyle: "plain" | "underline" | "markdown";
     layoutOrientation: "vertical" | "horizontal";
     platform?: typeof process.platform | "web";
     isElectron: boolean;
-    isStandalone?: boolean;
+    isStandalone: boolean;
     hasNativeTitleBar: boolean;
     hasBackgroundEffects: boolean;
-    maxEntityChangeIdAtLoad: number;
-    maxEntityChangeSyncIdAtLoad: number;
+    maxEntityChangeIdAtLoad?: number;
+    maxEntityChangeSyncIdAtLoad?: number;
     instanceName: string | null;
     appCssNoteIds: string[];
     isDev: boolean;
@@ -351,9 +344,8 @@ export type BootstrapDefinition = BootstrapCommonItems & ({
     currentLocale: Locale;
     isRtl: boolean;
     TRILIUM_SAFE_MODE: boolean;
-} | {
-    dbInitialized: false;
-});
+    componentId?: string;
+};
 
 /**
  * Response for /api/setup/status.
