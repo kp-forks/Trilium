@@ -121,8 +121,7 @@ async function main() {
         }, 10_000);
     });
 
-    await initializeTranslations();
-    await initializeDatabase(true);
+    // TODO: Initialize core.
 
     // Wait for becca to be loaded before importing data
     const { becca_loader: beccaLoader } = await import("@triliumnext/core");

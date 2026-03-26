@@ -13,7 +13,8 @@
   },
   "include": [
     "**/*.ts",
-    "../server/src/*.d.ts"
+    "../server/src/*.d.ts",
+    "package.json"
   ],
   "exclude": [
     "eslint.config.js",
