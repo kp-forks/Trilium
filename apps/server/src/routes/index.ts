@@ -46,12 +46,10 @@ export function bootstrap(req: Request, res: Response) {
             hasBackgroundEffects: isElectron && (isWindows11 || isMac),
             isMainWindow: true,
             appCssNoteIds: [],
-            themeCssUrl: false as const
         } satisfies BootstrapDefinition);
         return;
     }
 
-    const options = optionService.getOptionMap();
 
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
@@ -59,8 +57,7 @@ export function bootstrap(req: Request, res: Response) {
     });
     log.info(`CSRF token generation: ${csrfToken ? "Successful" : "Failed"}`);
 
-    const theme = options.theme;
-    const themeNote = attributeService.getNoteWithLabel("appTheme", theme);
+    const options = optionService.getOptionMap();
     const nativeTitleBarVisible = options.nativeTitleBarVisible === "true";
     const iconPacks = iconPackService.getIconPacks();
 
@@ -68,8 +65,6 @@ export function bootstrap(req: Request, res: Response) {
         ...commonItems,
         dbInitialized: true,
         csrfToken,
-        themeCssUrl: getThemeCssUrl(theme, themeNote),
-        themeUseNextAsBase: themeNote?.getAttributeValue("label", "appThemeBase") as "next" | "next-light" | "next-dark",
         platform: process.platform,
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
@@ -121,25 +116,4 @@ function getView(req: Request): View {
     }
 
     return "desktop";
-}
-
-function getThemeCssUrl(theme: string, themeNote: BNote | null) {
-    if (theme === "auto") {
-        return `${assetPath}/stylesheets/theme.css`;
-    } else if (theme === "light") {
-        // light theme is always loaded as baseline
-        return false;
-    } else if (theme === "dark") {
-        return `${assetPath}/stylesheets/theme-dark.css`;
-    } else if (theme === "next") {
-        return `${assetPath}/stylesheets/theme-next.css`;
-    } else if (theme === "next-light") {
-        return `${assetPath}/stylesheets/theme-next-light.css`;
-    } else if (theme === "next-dark") {
-        return `${assetPath}/stylesheets/theme-next-dark.css`;
-    } else if (!process.env.TRILIUM_SAFE_MODE && themeNote) {
-        return `api/notes/download/${themeNote.noteId}`;
-    }
-    // baseline light theme
-    return false;
 }

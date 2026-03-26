@@ -245,8 +245,6 @@ function bootstrapRoute(): BootstrapDefinition {
         ...getSharedBootstrapItems(assetPath, isDbInitialized),
         isDev: import.meta.env.DEV,
         isStandalone: true,
-        themeCssUrl: false as const,
-        themeUseNextAsBase: "next" as const,
         isMainWindow: true,
         isElectron: false,
         hasNativeTitleBar: false,
