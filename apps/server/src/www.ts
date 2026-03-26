@@ -61,7 +61,7 @@ export default async function startTriliumServer() {
     const sessionParser = (await import("./routes/session_parser.js")).default;
     (getMessagingProvider() as WebSocketMessagingProvider).init(httpServer, sessionParser);
 
-    if (utils.isElectron) {
+    if (utils.isElectron()) {
         const electronRouting = await import("./routes/electron.js");
         electronRouting.default(app);
     }
@@ -154,7 +154,7 @@ function startHttpServer(app: Express) {
             }
         }
 
-        if (utils.isElectron) {
+        if (utils.isElectron()) {
             import("electron").then(({ app, dialog }) => {
                 // Not all situations require showing an error dialog. When Trilium is already open,
                 // clicking the shortcut, the software icon, or the taskbar icon, or when creating a new window,
