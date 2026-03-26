@@ -15,7 +15,7 @@ interface ElectronProcess {
     platform: string;
 }
 
-interface CustomGlobals extends BootstrapDefinition {
+interface CustomGlobals extends Extract<BootstrapDefinition, { dbInitialized: true }> {
     isDesktop: typeof utils.isDesktop;
     isMobile: typeof utils.isMobile;
     getComponentByEl: typeof appContext.getComponentByEl;
