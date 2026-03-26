@@ -7,6 +7,9 @@ const QUERY_TO_ENV: Record<string, string> = {
 };
 
 export default class StandalonePlatformProvider implements PlatformProvider {
+    readonly isElectron = false;
+    readonly isMac = false;
+    readonly isWindows = false;
 
     private envMap: Record<string, string> = {};
 

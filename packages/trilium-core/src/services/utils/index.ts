@@ -1,4 +1,5 @@
 import { getCrypto } from "../encryption/crypto";
+import { getPlatform } from "../platform";
 import { sanitizeFileName } from "../sanitizer";
 import { encodeBase64 } from "./binary";
 import { extensions as mimeToExt, types as extToMime } from "mime-types";
@@ -7,10 +8,9 @@ import unescape from "unescape";
 import { basename, extname } from "./path";
 import { NoteMeta } from "../../meta";
 
-// TODO: Implement platform detection.
-export const isElectron = false;
-export const isMac = false;
-export const isWindows = false;
+export function isElectron() { return getPlatform().isElectron; }
+export function isMac() { return getPlatform().isMac; }
+export function isWindows() { return getPlatform().isWindows; }
 
 // render and book are string note in the sense that they are expected to contain empty string
 const STRING_NOTE_TYPES = new Set(["text", "code", "relationMap", "search", "render", "book", "mermaid", "canvas", "webView"]);
