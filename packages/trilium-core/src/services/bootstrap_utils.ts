@@ -44,7 +44,7 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         maxEntityChangeIdAtLoad: sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
         maxEntityChangeSyncIdAtLoad: sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
         isProtectedSessionAvailable: protected_session.isProtectedSessionAvailable(),
-        themeCssUrl: getThemeCssUrl(theme, commonItems.assetPath, themeNote),
+        themeCssUrl: getThemeCssUrl(theme, commonItems.assetPath, themeNote) as string | false,
         themeUseNextAsBase: themeNote?.getAttributeValue("label", "appThemeBase") as "next" | "next-light" | "next-dark",
     }
 }
