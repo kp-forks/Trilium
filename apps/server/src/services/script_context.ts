@@ -1,6 +1,7 @@
-import { toObject } from "./utils.js";
-import BackendScriptApi from "./backend_script_api.js";
+import { utils } from "@triliumnext/core";
+
 import type BNote from "../becca/entities/bnote.js";
+import BackendScriptApi from "./backend_script_api.js";
 import type { ApiParams } from "./backend_script_api_interface.js";
 
 type Module = {
@@ -16,8 +17,8 @@ class ScriptContext {
     constructor(allNotes: BNote[], apiParams: ApiParams) {
         this.allNotes = allNotes;
         this.modules = {};
-        this.notes = toObject(allNotes, (note) => [note.noteId, note]);
-        this.apis = toObject(allNotes, (note) => [note.noteId, new BackendScriptApi(note, apiParams)]);
+        this.notes = utils.toObject(allNotes, (note) => [note.noteId, note]);
+        this.apis = utils.toObject(allNotes, (note) => [note.noteId, new BackendScriptApi(note, apiParams)]);
     }
 
     require(moduleNoteIds: string[]) {

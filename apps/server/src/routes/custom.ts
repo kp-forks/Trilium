@@ -1,3 +1,4 @@
+import { utils } from "@triliumnext/core";
 import type { Request, Response, Router } from "express";
 
 import becca from "../becca/becca.js";
@@ -6,7 +7,6 @@ import cls from "../services/cls.js";
 import log from "../services/log.js";
 import scriptService from "../services/script.js";
 import sql from "../services/sql.js";
-import { normalizeCustomHandlerPattern,safeExtractMessageAndStackFromError } from "../services/utils.js";
 import fileService from "./api/files.js";
 
 function handleRequest(req: Request, res: Response) {
@@ -41,7 +41,7 @@ function handleRequest(req: Request, res: Response) {
         }
 
         // Get normalized patterns to handle both trailing slash cases
-        const patterns = normalizeCustomHandlerPattern(attr.value);
+        const patterns = utils.normalizeCustomHandlerPattern(attr.value);
         let match: RegExpMatchArray | null = null;
 
         try {
@@ -54,7 +54,7 @@ function handleRequest(req: Request, res: Response) {
                 }
             }
         } catch (e: unknown) {
-            const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
+            const [errMessage, errStack] = utils.safeExtractMessageAndStackFromError(e);
             log.error(`Testing path for label '${attr.attributeId}', regex '${attr.value}' failed with error: ${errMessage}, stack: ${errStack}`);
             continue;
         }
@@ -75,7 +75,7 @@ function handleRequest(req: Request, res: Response) {
                     res
                 });
             } catch (e: unknown) {
-                const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
+                const [errMessage, errStack] = utils.safeExtractMessageAndStackFromError(e);
                 log.error(`Custom handler '${note.noteId}' failed with: ${errMessage}, ${errStack}`);
                 res.setHeader("Content-Type", "text/plain").status(500).send(errMessage);
             }
