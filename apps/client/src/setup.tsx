@@ -167,7 +167,7 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
 
     useEffect(() => {
         if (stats.initialized) {
-            location.href = "setup";
+            onSetupFinished();
         }
     }, [stats.initialized]);
 
@@ -250,9 +250,7 @@ function CreateNewDocumentOptions({ setState }: { setState: (state: State) => vo
 
 function CreateNewDocumentInProgress({ withDemo = false }: { withDemo?: boolean }) {
     useEffect(() => {
-        server.post(`setup/new-document${withDemo ? "" : "?skipDemoDb"}`).then(() => {
-            location.href = "setup";
-        });
+        server.post(`setup/new-document${withDemo ? "" : "?skipDemoDb"}`).then(onSetupFinished);
     }, [ withDemo ]);
 
     return (
@@ -500,6 +498,15 @@ function networkScore(addr: string): number {
     if (/^172\.(1[6-9]|2\d|3[01])\./.test(addr)) return 2;
     if (addr.includes(":")) return 4; // IPv6
     return 3;
+}
+
+function onSetupFinished() {
+    if (isElectron()) {
+        // On Electron we need to use the setup route because it handles the closing of the setup window and opening the main app window.
+        location.href = "setup";
+    } else {
+        location.reload();
+    }
 }
 
 main();
