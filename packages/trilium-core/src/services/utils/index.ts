@@ -4,7 +4,7 @@ import { encodeBase64 } from "./binary";
 import { extensions as mimeToExt, types as extToMime } from "mime-types";
 import escape from "escape-html";
 import unescape from "unescape";
-import path from "path";
+import { basename, extname } from "./path";
 import { NoteMeta } from "../../meta";
 
 // TODO: Implement platform detection.
@@ -161,8 +161,7 @@ export function formatDownloadTitle(fileName: string, type: string | null, mime:
         if (mimeLc === "application/octet-stream") return "";
 
         // if fileName has an extension matching the mime already - reuse it
-        const dotIdx = fileName.lastIndexOf(".");
-        const ext = dotIdx !== -1 ? fileName.substring(dotIdx + 1).toLowerCase() : "";
+        const ext = extname(fileName).toLowerCase().replace(".", "");
         if (ext && extToMime[ext] === mimeLc) return "";
 
         // as last resort try to get extension from mimeType
@@ -207,7 +206,7 @@ export function escapeRegExp(str: string) {
 }
 
 export function removeFileExtension(filePath: string, mime?: string) {
-    const extension = path.extname(filePath).toLowerCase();
+    const extension = extname(filePath).toLowerCase();
 
     if (mime?.startsWith("video/") || mime?.startsWith("audio/")) {
         return filePath.substring(0, filePath.length - extension.length);
@@ -233,8 +232,8 @@ export function getNoteTitle(filePath: string, replaceUnderscoresWithSpaces: boo
     const trimmedNoteMeta = noteMeta?.title?.trim();
     if (trimmedNoteMeta) return trimmedNoteMeta;
 
-    const basename = path.basename(removeFileExtension(filePath, noteMeta?.mime));
-    return replaceUnderscoresWithSpaces ? basename.replace(/_/g, " ").trim() : basename;
+    const fileBasename = basename(removeFileExtension(filePath, noteMeta?.mime));
+    return replaceUnderscoresWithSpaces ? fileBasename.replace(/_/g, " ").trim() : fileBasename;
 }
 
 // try to turn 'true' and 'false' strings from process.env variables into boolean values or undefined
