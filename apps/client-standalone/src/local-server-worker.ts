@@ -69,6 +69,7 @@ let coreModule: typeof import("@triliumnext/core") | null = null;
 let router: BrowserRouter | null = null;
 let initPromise: Promise<void> | null = null;
 let initError: Error | null = null;
+let queryString = "";
 
 /**
  * Load all required modules using dynamic imports.
@@ -153,7 +154,7 @@ async function initialize(): Promise<void> {
                 crypto: new BrowserCryptoProvider(),
                 messaging: messagingProvider!,
                 request: new FetchRequestProvider(),
-                platform: new StandalonePlatformProvider(),
+                platform: new StandalonePlatformProvider(queryString),
                 translations: translationProvider,
                 schema: schemaModule.default,
                 dbConfig: {
@@ -241,7 +242,14 @@ initialize().catch(err => {
 
 self.onmessage = async (event) => {
     const msg = event.data;
-    if (!msg || msg.type !== "LOCAL_REQUEST") return;
+    if (!msg) return;
+
+    if (msg.type === "INIT") {
+        queryString = msg.queryString || "";
+        return;
+    }
+
+    if (msg.type !== "LOCAL_REQUEST") return;
 
     const { id, request } = msg;
 

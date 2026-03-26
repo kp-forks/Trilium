@@ -6,4 +6,8 @@ export default class DesktopPlatformProvider implements PlatformProvider {
         electron.dialog.showErrorBox(t("modals.error_title"), message);
         electron.app.exit(1);
     }
+
+    getEnv(key: string): string | undefined {
+        return process.env[key];
+    }
 }

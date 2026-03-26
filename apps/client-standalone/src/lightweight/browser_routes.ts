@@ -4,7 +4,7 @@
  */
 
 import { BootstrapDefinition } from '@triliumnext/commons';
-import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
+import { entity_changes, getContext, getPlatform, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { type BrowserRequest, BrowserRouter } from './browser_router';
@@ -255,9 +255,7 @@ function bootstrapRoute(): BootstrapDefinition {
         device: false as const, // Let the client detect device type.
         appPath: assetPath,
         instanceName: "standalone",
-
-        // TODO: Fill properly
-        TRILIUM_SAFE_MODE: false
+        TRILIUM_SAFE_MODE: !!getPlatform().getEnv("TRILIUM_SAFE_MODE")
     };
 
     if (!isDbInitialized) {

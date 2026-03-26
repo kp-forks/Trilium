@@ -5,4 +5,8 @@ export default class ServerPlatformProvider implements PlatformProvider {
         getLog().error(message);
         process.exit(1);
     }
+
+    getEnv(key: string): string | undefined {
+        return process.env[key];
+    }
 }
