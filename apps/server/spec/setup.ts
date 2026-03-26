@@ -1,7 +1,12 @@
 import { beforeAll } from "vitest";
-import i18next from "i18next";
+import { readFileSync } from "fs";
 import { join } from "path";
-import { setDayjsLocale } from "@triliumnext/commons";
+import { initializeCore } from "@triliumnext/core";
+import ClsHookedExecutionContext from "../src/cls_provider.js";
+import NodejsCryptoProvider from "../src/crypto_provider.js";
+import ServerPlatformProvider from "../src/platform_provider.js";
+import BetterSqlite3Provider from "../src/sql_provider.js";
+import { initializeTranslations } from "../src/services/i18n.js";
 
 // Initialize environment variables.
 process.env.TRILIUM_DATA_DIR = join(__dirname, "db");
@@ -11,20 +16,20 @@ process.env.TRILIUM_ENV = "dev";
 process.env.TRILIUM_PUBLIC_SERVER = "http://localhost:4200";
 
 beforeAll(async () => {
-    // Initialize the translations manually to avoid any side effects.
-    const Backend = (await import("i18next-fs-backend")).default;
+    const dbProvider = new BetterSqlite3Provider();
+    dbProvider.loadFromMemory();
 
-    // Initialize translations
-    await i18next.use(Backend).init({
-        lng: "en",
-        fallbackLng: "en",
-        ns: "server",
-        backend: {
-            loadPath: join(__dirname, "../src/assets/translations/{{lng}}/{{ns}}.json")
+    await initializeCore({
+        dbConfig: {
+            provider: dbProvider,
+            isReadOnly: false,
+            onTransactionCommit() {},
+            onTransactionRollback() {}
         },
-        showSupportNotice: false
+        crypto: new NodejsCryptoProvider(),
+        executionContext: new ClsHookedExecutionContext(),
+        schema: readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
+        platform: new ServerPlatformProvider(),
+        translations: initializeTranslations
     });
-
-    // Initialize dayjs
-    await setDayjsLocale("en");
 });
