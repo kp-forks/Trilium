@@ -739,6 +739,9 @@ importers:
       '@triliumnext/client':
         specifier: workspace:*
         version: link:../client
+      '@triliumnext/core':
+        specifier: workspace:*
+        version: link:../../packages/trilium-core
       '@triliumnext/desktop':
         specifier: workspace:*
         version: link:../desktop
@@ -17536,6 +17539,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-export-word@47.6.1':
     dependencies:
@@ -17665,8 +17670,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-icons@47.6.1': {}
 
@@ -17684,8 +17687,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-import-word@47.6.1':
     dependencies:
@@ -17698,6 +17699,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-indent@47.6.1':
     dependencies:

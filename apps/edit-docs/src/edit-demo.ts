@@ -34,8 +34,8 @@ async function setOptions() {
 }
 
 async function registerHandlers() {
-    const events = (await import("@triliumnext/server/src/services/events.js")).default;
-    const eraseService = (await import("@triliumnext/server/src/services/erase.js")).default;
+    const { events } = await import("@triliumnext/core");
+    const { erase: eraseService } = await import("@triliumnext/core");
     const debouncer = debounce(async () => {
         console.log("Exporting data");
         eraseService.eraseUnusedAttachmentsNow();
