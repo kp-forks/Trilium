@@ -95,6 +95,7 @@ export { default as setup } from "./services/setup";
 export { getPlatform, type PlatformProvider } from "./services/platform";
 export { t } from "i18next";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
+export type * from "./meta";
 
 export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, schema, extraAppInfo, platform }: {
     dbConfig: SqlServiceParams,

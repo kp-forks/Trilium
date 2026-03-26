@@ -192,7 +192,6 @@ export function waitForStreamToFinish(stream: any): Promise<void> {
 }
 
 export default {
-    compareVersions,
     constantTimeCompare,
     escapeHtml,
     escapeRegExp,

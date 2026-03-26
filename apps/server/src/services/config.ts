@@ -19,7 +19,7 @@
  * ╚════════════════════════════════════════════════════════════════════════════╝
  */
 
-import utils from "@triliumnext/core";
+import { utils } from "@triliumnext/core";
 import fs from "fs";
 import ini from "ini";
 import path from "path";
