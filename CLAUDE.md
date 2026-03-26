@@ -39,17 +39,26 @@ pnpm typecheck                 # TypeScript type check across all projects
 
 **Running a single test file**: `pnpm --filter server test spec/etapi/search.spec.ts`
 
+## Main Applications
+
+The four main apps share `packages/trilium-core/` for business logic but differ in runtime:
+
+- **client** (`apps/client/`): Preact frontend with jQuery widget system. Shared UI layer used by both server and desktop.
+- **server** (`apps/server/`): Node.js backend (Express, better-sqlite3). Serves the client and provides REST/WebSocket APIs.
+- **desktop** (`apps/desktop/`): Electron wrapper around server + client, running both in a single process.
+- **standalone** (`apps/client-standalone/` + `apps/standalone-desktop/`): Runs the entire stack in the browser — server logic compiled to WASM via sql.js, executed in a service worker. No Node.js dependency at runtime.
+
 ## Monorepo Structure
 
 ```
 apps/
-  client/               # Frontend (jQuery + Preact, shared by server & desktop)
-  client-standalone/    # Standalone lightweight client
+  client/               # Preact frontend (shared by server, desktop, standalone)
   server/               # Node.js backend (Express, better-sqlite3)
-  desktop/              # Electron wrapper
+  desktop/              # Electron (bundles server + client)
+  client-standalone/    # Standalone client (WASM + service workers, no Node.js)
+  standalone-desktop/   # Standalone desktop variant
   server-e2e/           # Playwright E2E tests for server
   web-clipper/          # Browser extension
-  standalone-desktop/   # Standalone desktop app
   website/              # Project website
   db-compare/, dump-db/, edit-docs/, build-docs/, icon-pack-builder/
 
