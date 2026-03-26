@@ -4,6 +4,7 @@ export default {
 
         return {
             attachmentId: null,
+            title: ""
         };
     }
 }

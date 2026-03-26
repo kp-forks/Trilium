@@ -14,6 +14,6 @@ export function getSql(): SqlService {
     return sql;
 }
 
-export function rebuildIntegrationTestDatabase(path: string) {
+export function rebuildIntegrationTestDatabase(path?: string) {
     throw new Error("Not implemented");
 }

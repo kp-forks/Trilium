@@ -5,6 +5,7 @@ import mimeTypes from "mime-types";
 import escape from "escape-html";
 import unescape from "unescape";
 import path from "path";
+import { NoteMeta } from "../../meta";
 
 // TODO: Implement platform detection.
 export const isElectron = false;

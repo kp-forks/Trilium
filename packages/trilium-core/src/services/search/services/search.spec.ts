@@ -3,7 +3,7 @@ import searchService from "./search.js";
 import BNote from "../../../becca/entities/bnote.js";
 import BBranch from "../../../becca/entities/bbranch.js";
 import SearchContext from "../search_context.js";
-import dateUtils from "../../date_utils.js";
+import dateUtils from "../../utils/date.js";
 import becca from "../../../becca/becca.js";
 import { findNoteByTitle, note, NoteBuilder } from "../../../test/becca_mocking.js";
 

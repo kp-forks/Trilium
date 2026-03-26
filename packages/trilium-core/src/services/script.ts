@@ -1,6 +1,6 @@
 import type BNote from "../becca/entities/bnote";
 
-export function executeNoteNoException(script: unknown) {
+export function executeNoteNoException(script: unknown, { originEntity: unknown }) {
     console.warn("Skipped script execution");
 }
 
