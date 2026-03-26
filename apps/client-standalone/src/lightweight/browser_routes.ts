@@ -254,12 +254,9 @@ function bootstrapRoute(): BootstrapDefinition {
         triliumVersion: packageJson.version,
         device: false as const, // Let the client detect device type.
         appPath: assetPath,
+        instanceName: "standalone",
 
         // TODO: Fill properly
-        currentLocale: { id: "en", name: "English", rtl: false },
-        isRtl: false,
-        instanceName: null,
-        appCssNoteIds: [],
         TRILIUM_SAFE_MODE: false
     };
 

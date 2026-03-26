@@ -93,7 +93,6 @@ function register(app: express.Application) {
     });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
-    route(GET, "/api/notes/:noteId/open", [auth.checkApiAuthOrElectron], filesRoute.openFile);
     asyncRoute(
         GET,
         "/api/notes/:noteId/open-partial",
@@ -104,15 +103,11 @@ function register(app: express.Application) {
             }
         })
     );
-    route(GET, "/api/notes/:noteId/download", [auth.checkApiAuthOrElectron], filesRoute.downloadFile);
-    // this "hacky" path is used for easier referencing of CSS resources
-    route(GET, "/api/notes/download/:noteId", [auth.checkApiAuthOrElectron], filesRoute.downloadFile);
     apiRoute(PST, "/api/notes/:noteId/save-to-tmp-dir", filesRoute.saveNoteToTmpDir);
     apiRoute(PST, "/api/notes/:noteId/upload-modified-file", filesRoute.uploadModifiedFileToNote);
 
     // TODO: Bring back attachment uploading
     // route(PST, "/api/notes/:noteId/attachments/upload", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], attachmentsApiRoute.uploadAttachment, apiResultHandler);
-    route(GET, "/api/attachments/:attachmentId/open", [auth.checkApiAuthOrElectron], filesRoute.openAttachment);
     asyncRoute(
         GET,
         "/api/attachments/:attachmentId/open-partial",

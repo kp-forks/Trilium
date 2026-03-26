@@ -24,6 +24,7 @@ import autocompleteApiRoute from "./api/autocomplete";
 import similarNotesRoute from "./api/similar_notes";
 import imageRoute from "./api/image";
 import setupApiRoute from "./api/setup";
+import filesRoute from "./api/files";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -190,6 +191,14 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     asyncApiRoute(GET, "/api/similar-notes/:noteId", similarNotesRoute.getSimilarNotes);
     apiRoute(PST, "/api/relation-map", relationMapApiRoute.getRelationMap);
     apiRoute(GET, "/api/recent-changes/:ancestorNoteId", recentChangesApiRoute.getRecentChanges);
+
+    //#region Files
+    route(GET, "/api/notes/:noteId/open", [checkApiAuthOrElectron], filesRoute.openFile);
+    route(GET, "/api/notes/:noteId/download", [checkApiAuthOrElectron], filesRoute.downloadFile);
+    // this "hacky" path is used for easier referencing of CSS resources
+    route(GET, "/api/notes/download/:noteId", [checkApiAuthOrElectron], filesRoute.downloadFile);
+    route(GET, "/api/attachments/:attachmentId/open", [checkApiAuthOrElectron], filesRoute.openAttachment);
+    //#endregion
 }
 
 /** Handling common patterns. If entity is not caught, serialization to JSON will fail */

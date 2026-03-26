@@ -1,17 +1,14 @@
 import { ValidationError } from "@triliumnext/core";
 import chokidar from "chokidar";
-import type { Request, Response } from "express";
+import type { Request } from "express";
 import fs from "fs";
 import { Readable } from "stream";
 import tmp from "tmp";
 
 import becca from "../../becca/becca.js";
-import type BAttachment from "../../becca/entities/battachment.js";
-import type BNote from "../../becca/entities/bnote.js";
 import dataDirs from "../../services/data_dir.js";
 import log from "../../services/log.js";
 import noteService from "../../services/notes.js";
-import protectedSessionService from "../../services/protected_session.js";
 import utils from "../../services/utils.js";
 import ws from "../../services/ws.js";
 
@@ -63,49 +60,6 @@ function updateAttachment(req: Request<{ attachmentId: string }>) {
         uploaded: true
     };
 }
-
-function downloadData(noteOrAttachment: BNote | BAttachment, res: Response, contentDisposition: boolean) {
-    if (noteOrAttachment.isProtected && !protectedSessionService.isProtectedSessionAvailable()) {
-        return res.status(401).send("Protected session not available");
-    }
-
-    if (contentDisposition) {
-        const fileName = noteOrAttachment.getFileName();
-
-        res.setHeader("Content-Disposition", utils.getContentDisposition(fileName));
-    }
-
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.setHeader("Content-Type", noteOrAttachment.mime);
-
-    res.send(noteOrAttachment.getContent());
-}
-
-function downloadNoteInt(noteId: string, res: Response, contentDisposition = true) {
-    const note = becca.getNote(noteId);
-
-    if (!note) {
-        return res.setHeader("Content-Type", "text/plain").status(404).send(`Note '${noteId}' doesn't exist.`);
-    }
-
-    return downloadData(note, res, contentDisposition);
-}
-
-function downloadAttachmentInt(attachmentId: string, res: Response, contentDisposition = true) {
-    const attachment = becca.getAttachment(attachmentId);
-
-    if (!attachment) {
-        return res.setHeader("Content-Type", "text/plain").status(404).send(`Attachment '${attachmentId}' doesn't exist.`);
-    }
-
-    return downloadData(attachment, res, contentDisposition);
-}
-
-const downloadFile = (req: Request<{ noteId: string }>, res: Response) => downloadNoteInt(req.params.noteId, res, true);
-const openFile = (req: Request<{ noteId: string }>, res: Response) => downloadNoteInt(req.params.noteId, res, false);
-
-const downloadAttachment = (req: Request<{ attachmentId: string }>, res: Response) => downloadAttachmentInt(req.params.attachmentId, res, true);
-const openAttachment = (req: Request<{ attachmentId: string }>, res: Response) => downloadAttachmentInt(req.params.attachmentId, res, false);
 
 function fileContentProvider(req: Request<{ noteId: string }>) {
     // Read the file name from route params.
@@ -248,13 +202,8 @@ function uploadModifiedFileToAttachment(req: Request<{ attachmentId: string }>) 
 export default {
     updateFile,
     updateAttachment,
-    openFile,
     fileContentProvider,
-    downloadFile,
-    downloadNoteInt,
     saveNoteToTmpDir,
-    openAttachment,
-    downloadAttachment,
     saveAttachmentToTmpDir,
     attachmentContentProvider,
     uploadModifiedFileToNote,

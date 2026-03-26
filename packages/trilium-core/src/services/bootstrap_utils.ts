@@ -4,6 +4,7 @@ import protected_session from "./protected_session";
 import { generateCss, generateIconRegistry, getIconPacks, MIME_TO_EXTENSION_MAPPINGS } from "./icon_packs";
 import options from "./options";
 import { getCurrentLocale } from "./i18n";
+import attributes from "./attributes";
 
 export default function getSharedBootstrapItems(assetPath: string, dbInitialized: boolean) {
     const sql = getSql();
@@ -18,6 +19,7 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         layoutOrientation: "vertical" as const,
         headingStyle: "plain" as const,
         componentId: "",
+        appCssNoteIds: getAppCssNoteIds(),
         ...getIconConfig(assetPath)
     };
 
@@ -51,4 +53,8 @@ export function getIconConfig(assetPath: string): Pick<BootstrapDefinition, "ico
             .filter(Boolean)
             .join("\n\n"),
     };
+}
+
+function getAppCssNoteIds() {
+    return attributes.getNotesWithLabel("appCss").map((note) => note.noteId);
 }

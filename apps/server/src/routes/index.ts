@@ -76,7 +76,6 @@ export function bootstrap(req: Request, res: Response) {
             && isElectron
             && (isWindows11 || isMac)
             && !nativeTitleBarVisible,
-        appCssNoteIds: getAppCssNoteIds(),
         isMainWindow: view === "mobile" ? true : !req.query.extraWindow,
         iconPackCss: iconPacks
             .map((p: iconPackService.ProcessedIconPack) => iconPackService.generateCss(p, p.builtin
@@ -143,8 +142,4 @@ function getThemeCssUrl(theme: string, themeNote: BNote | null) {
     }
     // baseline light theme
     return false;
-}
-
-function getAppCssNoteIds() {
-    return attributeService.getNotesWithLabel("appCss").map((note) => note.noteId);
 }

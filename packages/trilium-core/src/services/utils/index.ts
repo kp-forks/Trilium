@@ -1,7 +1,7 @@
 import { getCrypto } from "../encryption/crypto";
 import { sanitizeFileName } from "../sanitizer";
 import { encodeBase64 } from "./binary";
-import mimeTypes from "mime-types";
+import { extensions as mimeToExt, types as extToMime } from "mime-types";
 import escape from "escape-html";
 import unescape from "unescape";
 import path from "path";
@@ -161,12 +161,13 @@ export function formatDownloadTitle(fileName: string, type: string | null, mime:
         if (mimeLc === "application/octet-stream") return "";
 
         // if fileName has an extension matching the mime already - reuse it
-        const mimeTypeFromFileName = mimeTypes.lookup(fileName);
-        if (mimeTypeFromFileName === mimeLc) return "";
+        const dotIdx = fileName.lastIndexOf(".");
+        const ext = dotIdx !== -1 ? fileName.substring(dotIdx + 1).toLowerCase() : "";
+        if (ext && extToMime[ext] === mimeLc) return "";
 
         // as last resort try to get extension from mimeType
-        const extensions = mimeTypes.extension(mime);
-        return extensions ? `.${extensions}` : "";
+        const exts = mimeToExt[mime];
+        return exts?.length ? `.${exts[0]}` : "";
     };
 
     return `${fileNameBase}${getExtension()}`;
