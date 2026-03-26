@@ -118,9 +118,7 @@ function register(app: express.Application) {
             }
         })
     );
-    route(GET, "/api/attachments/:attachmentId/download", [auth.checkApiAuthOrElectron], filesRoute.downloadAttachment);
-    // this "hacky" path is used for easier referencing of CSS resources
-    route(GET, "/api/attachments/download/:attachmentId", [auth.checkApiAuthOrElectron], filesRoute.downloadAttachment);
+
     apiRoute(PST, "/api/attachments/:attachmentId/save-to-tmp-dir", filesRoute.saveAttachmentToTmpDir);
     apiRoute(PST, "/api/attachments/:attachmentId/upload-modified-file", filesRoute.uploadModifiedFileToAttachment);
     route(PUT, "/api/attachments/:attachmentId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateAttachment, apiResultHandler);

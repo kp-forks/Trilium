@@ -97,6 +97,7 @@ export { getPlatform, type PlatformProvider } from "./services/platform";
 export { t } from "i18next";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 export type * from "./meta";
+export * as routeHelpers from "./routes/helpers";
 
 export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";

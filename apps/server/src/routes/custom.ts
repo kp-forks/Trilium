@@ -1,4 +1,4 @@
-import { utils } from "@triliumnext/core";
+import { routeHelpers,utils } from "@triliumnext/core";
 import type { Request, Response, Router } from "express";
 
 import becca from "../becca/becca.js";
@@ -7,7 +7,6 @@ import cls from "../services/cls.js";
 import log from "../services/log.js";
 import scriptService from "../services/script.js";
 import sql from "../services/sql.js";
-import fileService from "./api/files.js";
 
 function handleRequest(req: Request, res: Response) {
 
@@ -80,7 +79,7 @@ function handleRequest(req: Request, res: Response) {
                 res.setHeader("Content-Type", "text/plain").status(500).send(errMessage);
             }
         } else if (attr.name === "customResourceProvider") {
-            fileService.downloadNoteInt(attr.noteId, res);
+            routeHelpers.downloadNoteInt(attr.noteId, res);
         } else {
             throw new Error(`Unrecognized attribute name '${attr.name}'`);
         }
