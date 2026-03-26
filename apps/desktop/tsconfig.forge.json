@@ -9,7 +9,7 @@
       "node",
       "express"
     ],
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.forge.tsbuildinfo"
   },
   "include": [
     "**/*.ts",
@@ -19,5 +19,13 @@
     "eslint.config.js",
     "eslint.config.cjs",
     "eslint.config.mjs"
+  ],
+  "references": [
+    {
+      "path": "../server/tsconfig.app.json"
+    },
+    {
+      "path": "../../packages/commons/tsconfig.lib.json"
+    }
   ]
 }
