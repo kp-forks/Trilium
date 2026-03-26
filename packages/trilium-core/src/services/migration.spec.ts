@@ -1,18 +1,16 @@
 import { describe, expect, it } from "vitest";
-import cls from "./cls.js";
+import { getContext } from "./context.js";
 
 describe("Migration", () => {
     it("migrates from v214", async () => {
         await new Promise<void>((resolve) => {
-            cls.init(async () => {
-                await import("../app.js");
-
-                const sql = (await (import("./sql.js"))).default;
-                sql.rebuildIntegrationTestDatabase("spec/db/document_v214.db");
+            getContext().init(async () => {
+                const { getSql, rebuildIntegrationTestDatabase } = (await (import("./sql/index.js")));
+                rebuildIntegrationTestDatabase("spec/db/document_v214.db");
 
                 const migration = (await import("./migration.js")).default;
                 await migration.migrateIfNecessary();
-                expect(sql.getValue("SELECT count(*) FROM blobs")).toBe(118);
+                expect(getSql().getValue("SELECT count(*) FROM blobs")).toBe(118);
                 resolve();
             });
         });

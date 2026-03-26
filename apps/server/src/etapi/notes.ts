@@ -1,4 +1,4 @@
-import { NoteParams } from "@triliumnext/core";
+import { NoteParams, SearchParams } from "@triliumnext/core";
 import type { Request, Router } from "express";
 import type { ParsedQs } from "qs";
 
@@ -9,7 +9,6 @@ import zipImportService from "../services/import/zip.js";
 import noteService from "../services/notes.js";
 import SearchContext from "../services/search/search_context.js";
 import searchService from "../services/search/services/search.js";
-import type { SearchParams } from "../services/search/services/types.js";
 import TaskContext from "../services/task_context.js";
 import utils from "../services/utils.js";
 import eu from "./etapi_utils.js";

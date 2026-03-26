@@ -78,6 +78,7 @@ export type { NotePojo } from "./becca/becca-interface";
 export { default as NoteSet } from "./services/search/note_set";
 export { default as SearchContext } from "./services/search/search_context";
 export { default as search } from "./services/search/services/search";
+export { type SearchParams } from "./services/search/services/types";
 export { default as note_service } from "./services/notes";
 export type { NoteParams } from "./services/notes";
 export * as sanitize from "./services/sanitizer";
