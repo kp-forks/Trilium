@@ -18,10 +18,6 @@
   "set_password": {
     "password": "Passord"
   },
-  "setup": {
-    "next": "Neste",
-    "title": "Konfigurasjon"
-  },
   "login": {
     "title": "Logg inn",
     "password": "Passord",
