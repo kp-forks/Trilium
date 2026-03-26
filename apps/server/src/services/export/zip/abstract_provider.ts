@@ -1,4 +1,5 @@
 import { NoteType } from "@triliumnext/commons";
+import { ExportFormat } from "@triliumnext/core";
 import { Archiver } from "archiver";
 import mimeTypes from "mime-types";
 

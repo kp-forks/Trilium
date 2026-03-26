@@ -1,10 +1,11 @@
-import BNote from "../becca/entities/bnote.js";
-import BBranch from "../becca/entities/bbranch.js";
-import BAttribute from "../becca/entities/battribute.js";
-import becca from "../becca/becca.js";
-import randtoken from "rand-token";
-import type SearchResult from "../services/search/search_result.js";
 import type { NoteRow, NoteType } from "@triliumnext/commons";
+import { SearchResult } from "@triliumnext/core";
+import randtoken from "rand-token";
+
+import becca from "../becca/becca.js";
+import BAttribute from "../becca/entities/battribute.js";
+import BBranch from "../becca/entities/bbranch.js";
+import BNote from "../becca/entities/bnote.js";
 randtoken.generator({ source: "crypto" });
 
 export function findNoteByTitle(searchResults: Array<SearchResult>, title: string): BNote | undefined {
@@ -63,7 +64,7 @@ export function note(title: string, extraParams: Partial<NoteRow> = {}) {
     const row = Object.assign(
         {
             noteId: id(),
-            title: title,
+            title,
             type: "text" as NoteType,
             mime: "text/html"
         },
