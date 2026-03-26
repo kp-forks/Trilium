@@ -66,7 +66,7 @@ async function startApplication() {
     await startTriliumServer();
 
     if (!sql_init.isDbInitialized()) {
-        getLog().info(t("sql_init.db_not_initialized_server", { port }));
+        getLog().banner(t("sql_init.db_not_initialized_server", { port }));
     }
 }
 

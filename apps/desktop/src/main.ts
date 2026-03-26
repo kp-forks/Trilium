@@ -180,7 +180,7 @@ async function onReady() {
 
         tray.createTray();
     } else {
-        getLog().info(t("sql_init.db_not_initialized_desktop"));
+        getLog().banner(t("sql_init.db_not_initialized_desktop"));
         await windowService.createSetupWindow();
     }
 
