@@ -710,22 +710,22 @@ describe("Search", () => {
         // Create a moderate-sized dataset to test performance
         const countries = ["Austria", "Belgium", "Croatia", "Denmark", "Estonia", "Finland", "Germany", "Hungary", "Ireland", "Japan"];
         const europeanCountries = note("Europe");
-        
+
         countries.forEach(country => {
             europeanCountries.child(note(country).label("type", "country").label("continent", "Europe"));
         });
-        
+
         rootNote.child(europeanCountries);
 
         const searchContext = new SearchContext();
         const startTime = Date.now();
-        
+
         // Perform a search that exercises multiple features
         const searchResults = searchService.findResultsWithQuery("#type=country AND continent", searchContext);
-        
+
         const endTime = Date.now();
         const duration = endTime - startTime;
-        
+
         // Search should complete in under 1 second for reasonable dataset
         expect(duration).toBeLessThan(1000);
         expect(searchResults.length).toEqual(10);
@@ -748,14 +748,14 @@ describe("Search", () => {
 
         // Get note titles in result order
         const resultTitles = searchResults.map(r => becca.notes[r.noteId].title);
-        
+
         // Find all exact matches (contain "analysis")
-        const exactMatchIndices = resultTitles.map((title, index) => 
+        const exactMatchIndices = resultTitles.map((title, index) =>
             title.toLowerCase().includes("analysis") ? index : -1
         ).filter(index => index !== -1);
-        
+
         // Find all fuzzy matches (contain typos)
-        const fuzzyMatchIndices = resultTitles.map((title, index) => 
+        const fuzzyMatchIndices = resultTitles.map((title, index) =>
             (title.includes("Anaylsis") || title.includes("Anlaysis")) ? index : -1
         ).filter(index => index !== -1);
 
@@ -765,7 +765,7 @@ describe("Search", () => {
         // CRITICAL: All exact matches must appear before all fuzzy matches
         const lastExactIndex = Math.max(...exactMatchIndices);
         const firstFuzzyIndex = Math.min(...fuzzyMatchIndices);
-        
+
         expect(lastExactIndex).toBeLessThan(firstFuzzyIndex);
     });
 
