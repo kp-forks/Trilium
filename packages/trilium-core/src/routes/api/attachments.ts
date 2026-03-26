@@ -46,7 +46,7 @@ function saveAttachment(req: Request<{ noteId: string }>) {
 
 function uploadAttachment(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
-    const { file } = req;
+    const { file } = req as any; // TODO: Add support for file upload in type definitions and remove 'as any' cast
 
     if (!file) {
         return {

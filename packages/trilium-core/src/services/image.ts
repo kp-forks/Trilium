@@ -6,5 +6,9 @@ export default {
             attachmentId: null,
             title: ""
         };
+    },
+
+    updateImage(noteId: string, imageBuffer: Uint8Array, title: string) {
+        console.warn("Image update ignored", noteId, title);
     }
 }

@@ -548,7 +548,7 @@ async function downloadImage(noteId: string, imageUrl: string) {
                 });
             });
         } else {
-            imageBuffer = await request.getImage(unescapedUrl);
+            imageBuffer = new Uint8Array(await request.getImage(unescapedUrl));
         }
 
         const parsedUrl = url.parse(unescapedUrl);
