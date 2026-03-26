@@ -166,6 +166,9 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(PST, "/api/special-notes/launchers/:parentNoteId/:launcherType", specialNotesRoute.createLauncher);
     apiRoute(PUT, "/api/special-notes/api-script-launcher", specialNotesRoute.createOrUpdateScriptLauncherFromApi);
 
+    apiRoute(PST, "/api/note-map/:noteId/tree", noteMapRoute.getTreeMap);
+    apiRoute(PST, "/api/note-map/:noteId/link", noteMapRoute.getLinkMap);
+    apiRoute(GET, "/api/note-map/:noteId/backlinks", noteMapRoute.getBacklinks);
     apiRoute(GET, "/api/note-map/:noteId/backlink-count", noteMapRoute.getBacklinkCount);
 
     apiRoute(PST, "/api/recent-notes", recentNotesRoute.addRecentNote);

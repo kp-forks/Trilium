@@ -772,9 +772,6 @@ importers:
       html-to-text:
         specifier: 9.0.5
         version: 9.0.5
-      node-html-parser:
-        specifier: 7.1.0
-        version: 7.1.0
       sucrase:
         specifier: 3.35.1
         version: 3.35.1
@@ -1716,6 +1713,9 @@ importers:
       mime-types:
         specifier: 3.0.2
         version: 3.0.2
+      node-html-parser:
+        specifier: 7.1.0
+        version: 7.1.0
       sanitize-filename:
         specifier: 1.6.4
         version: 1.6.4
@@ -17665,6 +17665,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-icons@47.6.1': {}
 
@@ -17682,6 +17684,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-import-word@47.6.1':
     dependencies:
@@ -17829,8 +17833,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-operations-compressor@47.6.1':
     dependencies:

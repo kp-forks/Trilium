@@ -32,7 +32,6 @@
   "dependencies": {
     "better-sqlite3": "12.8.0",
     "html-to-text": "9.0.5",
-    "node-html-parser": "7.1.0",
     "sucrase": "3.35.1"
   },
   "devDependencies": {
