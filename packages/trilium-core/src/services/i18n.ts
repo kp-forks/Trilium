@@ -28,14 +28,12 @@ function getCurrentLanguage(): LOCALE_IDS {
     let language: string | null = null;
     if (sql_init.isDbInitialized()) {
         language = options.getOptionOrNull("locale");
+        if (!language) {
+            console.info("Language option not found, falling back to en.");
+        }
     }
 
-    if (!language) {
-        console.info("Language option not found, falling back to en.");
-        language = "en";
-    }
-
-    return language as LOCALE_IDS;
+    return (language ?? "en") as LOCALE_IDS;
 }
 
 export async function changeLanguage(locale: string) {
@@ -44,6 +42,11 @@ export async function changeLanguage(locale: string) {
 }
 
 export function getCurrentLocale() {
+    if (!sql_init.isDbInitialized()) {
+        // If DB is not initialized, we cannot get the locale from options, so we return English as a default.
+        return LOCALES.find(l => l.id === "en")!;
+    }
+
     const localeId = options.getOptionOrNull("locale") ?? "en";
     const currentLocale = LOCALES.find(l => l.id === localeId);
     if (!currentLocale) return LOCALES.find(l => l.id === "en")!;

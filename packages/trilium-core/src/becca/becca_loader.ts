@@ -17,14 +17,12 @@ import { getContext } from "../services/context.js";
 
 export const beccaLoaded = new Promise<void>(async (res, rej) => {
     // We have to import async since options init requires keyboard actions which require translations.
-    const options_init = (await import("../services/options_init.js")).default;
+    const { initStartupOptions } = await import("../services/options_init.js");
 
     dbReady.then(() => {
         getContext().init(() => {
             load();
-
-            options_init.initStartupOptions();
-
+            getSql().transactional(() => initStartupOptions());
             res();
         });
     });
@@ -289,6 +287,8 @@ eventService.subscribeBeccaLoader(eventService.ENTER_PROTECTED_SESSION, () => {
 });
 
 eventService.subscribeBeccaLoader(eventService.LEAVE_PROTECTED_SESSION, load);
+
+export { load, reload };
 
 export default {
     load,

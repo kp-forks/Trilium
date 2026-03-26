@@ -1,5 +1,5 @@
 import { BootstrapDefinition } from "@triliumnext/commons";
-import { getSharedBootstrapItems, getSql, icon_packs as iconPackService } from "@triliumnext/core";
+import { getSharedBootstrapItems, getSql, icon_packs as iconPackService, sql_init } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import packageJson from "../../package.json" with { type: "json" };
@@ -16,8 +16,6 @@ import { generateCsrfToken } from "./csrf_protection.js";
 type View = "desktop" | "mobile" | "print";
 
 export function bootstrap(req: Request, res: Response) {
-    const options = optionService.getOptionMap();
-
     // csrf-csrf v4 binds CSRF tokens to the session ID via HMAC. With saveUninitialized: false,
     // a brand-new session is never persisted unless explicitly modified, so its cookie is never
     // sent to the browser — meaning every request gets a different ephemeral session ID, and
@@ -26,6 +24,19 @@ export function bootstrap(req: Request, res: Response) {
     if (!req.session.csrfInitialized) {
         req.session.csrfInitialized = true;
     }
+
+    const isDbInitialized = sql_init.isDbInitialized();
+    const commonItems = getSharedBootstrapItems(assetPath, isDbInitialized);
+    if (!isDbInitialized) {
+        res.send({
+            ...commonItems,
+            baseApiUrl: "api/",
+            componentId: ""
+        });
+        return;
+    }
+
+    const options = optionService.getOptionMap();
 
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
@@ -41,7 +52,8 @@ export function bootstrap(req: Request, res: Response) {
     const sql = getSql();
 
     res.send({
-        ...getSharedBootstrapItems(assetPath),
+        ...commonItems,
+        dbInitialized: true,
         device: view,
         csrfToken,
         themeCssUrl: getThemeCssUrl(theme, themeNote),

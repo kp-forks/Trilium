@@ -1,8 +1,6 @@
 import { type BindableValue, default as sqlite3InitModule } from "@sqlite.org/sqlite-wasm";
 import type { DatabaseProvider, RunResult, Statement, Transaction } from "@triliumnext/core";
 
-import demoDbSql from "./db.sql?raw";
-
 // Type definitions for SQLite WASM (the library doesn't export these directly)
 type Sqlite3Module = Awaited<ReturnType<typeof sqlite3InitModule>>;
 type Sqlite3Database = InstanceType<Sqlite3Module["oo1"]["DB"]>;
@@ -431,30 +429,8 @@ export default class BrowserSqlProvider implements DatabaseProvider {
         this.opfsDbPath = undefined; // Not using OPFS
         this.db.exec("PRAGMA journal_mode = WAL");
 
-        // Initialize with demo data for in-memory databases
-        // (since they won't persist anyway)
-        this.initializeDemoDatabase();
-
         const loadTime = performance.now() - startTime;
         console.log(`[BrowserSqlProvider] In-memory database created in ${loadTime.toFixed(2)}ms`);
-    }
-
-    /**
-     * Initialize the database with demo/starter data.
-     * This should only be called once when creating a new database.
-     *
-     * For OPFS databases, this is called automatically only if the database
-     * doesn't already exist.
-     */
-    initializeDemoDatabase(): void {
-        this.ensureDb();
-        console.log("[BrowserSqlProvider] Initializing database with demo data...");
-        const startTime = performance.now();
-
-        this.db!.exec(demoDbSql);
-
-        const loadTime = performance.now() - startTime;
-        console.log(`[BrowserSqlProvider] Demo data loaded in ${loadTime.toFixed(2)}ms`);
     }
 
     loadFromBuffer(buffer: Uint8Array): void {

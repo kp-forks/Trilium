@@ -112,6 +112,8 @@ function loadIcons() {
 }
 
 function setBodyAttributes() {
+    if (!glob.dbInitialized) return;
+
     const { device, headingStyle, layoutOrientation, platform, isElectron, hasNativeTitleBar, hasBackgroundEffects, currentLocale } = window.glob;
     const classesToSet = [
         device,
@@ -132,6 +134,11 @@ function setBodyAttributes() {
 }
 
 async function loadScripts() {
+    if (!glob.dbInitialized) {
+        await import("./setup.js");
+        return;
+    }
+
     switch (glob.device) {
         case "mobile":
             await import("./mobile.js");

@@ -4,7 +4,7 @@
  */
 
 import { BootstrapDefinition } from '@triliumnext/commons';
-import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes } from '@triliumnext/core';
+import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { type BrowserRequest, BrowserRouter } from './browser_router';
@@ -178,10 +178,23 @@ function apiResultHandler(_req: any, res: ResultHandlerResponse, result: unknown
 }
 
 /**
- * No-op auth middleware for standalone — there's no authentication.
+ * No-op middleware stubs for standalone mode.
+ *
+ * In a browser context there is no network authentication, rate limiting,
+ * or multi-user access, so all auth/rate-limit middleware is a no-op.
+ *
+ * `checkAppNotInitialized` still guards setup routes: if the database is
+ * already initialised the middleware throws so the route handler is never
+ * reached (mirrors the server behaviour).
  */
-function checkApiAuth() {
-    // No authentication in standalone mode.
+function noopMiddleware() {
+    // No-op.
+}
+
+function checkAppNotInitialized() {
+    if (sql_init.isDbInitialized()) {
+        throw new Error("App already initialized.");
+    }
 }
 
 /**
@@ -206,11 +219,15 @@ export function registerRoutes(router: BrowserRouter): void {
     const apiRoute = createApiRoute(router, true);
     routes.buildSharedApiRoutes({
         route: createRoute(router),
+        asyncRoute: createRoute(router),
         apiRoute,
         asyncApiRoute: createApiRoute(router, false),
         apiResultHandler,
-        checkApiAuth,
-        checkApiAuthOrElectron: checkApiAuth
+        checkApiAuth: noopMiddleware,
+        checkApiAuthOrElectron: noopMiddleware,
+        checkAppNotInitialized,
+        checkCredentials: noopMiddleware,
+        loginRateLimiter: noopMiddleware
     });
     apiRoute('get', '/bootstrap', bootstrapRoute);
 
@@ -220,11 +237,22 @@ export function registerRoutes(router: BrowserRouter): void {
     apiRoute("get", "/api/system-checks", () => ({ isCpuArchMismatch: false }));
 }
 
-function bootstrapRoute() {
+function bootstrapRoute(): BootstrapDefinition {
     const assetPath = ".";
 
+    const isDbInitialized = sql_init.isDbInitialized();
+    const commonItems = getSharedBootstrapItems(assetPath, isDbInitialized);
+
+    if (!isDbInitialized) {
+        return {
+            ...commonItems,
+            isStandalone: true,
+            baseApiUrl: "../api/",
+        };
+    }
+
     return {
-        ...getSharedBootstrapItems(assetPath),
+        ...commonItems,
         appPath: assetPath,
         device: false, // Let the client detect device type.
         csrfToken: "dummy-csrf-token",
@@ -248,7 +276,7 @@ function bootstrapRoute() {
         instanceName: null,
         appCssNoteIds: [],
         TRILIUM_SAFE_MODE: false
-    } satisfies BootstrapDefinition;
+    };
 }
 
 /**

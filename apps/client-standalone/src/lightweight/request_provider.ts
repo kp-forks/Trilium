@@ -51,20 +51,27 @@ export default class FetchRequestProvider implements RequestProvider {
             if ([200, 201, 204].includes(response.status)) {
                 const text = await response.text();
                 return text.trim() ? JSON.parse(text) : null;
-            } else {
-                const text = await response.text();
-                let errorMessage: string;
-                try {
-                    const json = JSON.parse(text);
-                    errorMessage = json?.message || "";
-                } catch {
-                    errorMessage = text.substring(0, 100);
-                }
-                throw new Error(`Request to ${opts.method} ${opts.url} failed, error: ${response.status} ${response.statusText} ${errorMessage}`);
             }
+            const text = await response.text();
+            let errorMessage: string;
+            try {
+                const json = JSON.parse(text);
+                errorMessage = json?.message || "";
+            } catch {
+                errorMessage = text.substring(0, 100);
+            }
+            throw new Error(`${response.status} ${opts.method} ${opts.url}: ${errorMessage}`);
+
         } catch (e: any) {
             if (e.name === "AbortError") {
-                throw new Error(`Request to ${opts.method} ${opts.url} failed, error: timeout after ${opts.timeout}ms`);
+                throw new Error(`${opts.method} ${opts.url} failed, error: timeout after ${opts.timeout}ms`);
+            }
+            if (e instanceof TypeError && e.message === "Failed to fetch") {
+                const isCrossOrigin = !opts.url.startsWith(location.origin);
+                if (isCrossOrigin) {
+                    throw new Error(`Request to ${opts.url} was blocked. The server may not allow requests from this origin (CORS), or it may be unreachable.`);
+                }
+                throw new Error(`Request to ${opts.url} failed. The server may be unreachable.`);
             }
             throw e;
         } finally {
@@ -78,7 +85,7 @@ export default class FetchRequestProvider implements RequestProvider {
         const response = await fetch(imageUrl);
 
         if (!response.ok) {
-            throw new Error(`Request to GET ${imageUrl} failed, error: ${response.status} ${response.statusText}`);
+            throw new Error(`${response.status} GET ${imageUrl} failed`);
         }
 
         return await response.arrayBuffer();

@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import cls from "../services/cls.js";
-import sql from "../services/sql.js";
+import * as cls from "../services/context.js";
+import { getSql } from "../services/sql/index.js";
 import becca from "../becca/becca.js";
 import becca_loader from "../becca/becca_loader.js";
 import migration from "./0233__migrate_geo_map_to_collection.js";
@@ -19,12 +19,14 @@ import migration from "./0233__migrate_geo_map_to_collection.js";
  * test data into the database, then verifies the migration transforms the data correctly.
  */
 describe("Migration 0233: Migrate geoMap to collection", () => {
+    const sql = getSql();
+
     beforeEach(async () => {
         // Set up a clean in-memory database for each test
         sql.rebuildIntegrationTestDatabase();
 
         await new Promise<void>((resolve) => {
-            cls.init(() => {
+            cls.getContext().init(() => {
                 becca_loader.load();
                 resolve();
             });
@@ -33,7 +35,7 @@ describe("Migration 0233: Migrate geoMap to collection", () => {
 
     it("should migrate geoMap notes to book type with viewConfig attachment", async () => {
         await new Promise<void>((resolve) => {
-            cls.init(() => {
+            cls.getContext().init(() => {
                 // Create a test geoMap note with content
                 const geoMapContent = JSON.stringify({
                     markers: [
@@ -164,7 +166,7 @@ describe("Migration 0233: Migrate geoMap to collection", () => {
 
     it("should handle existing viewConfig attachments with same title", async () => {
         await new Promise<void>((resolve) => {
-            cls.init(() => {
+            cls.getContext().init(() => {
                 const geoMapContent = JSON.stringify({ test: "data" });
                 const testNoteId = "test_geo_note_existing";
                 const testBlobId = "test_blob_geo_existing";
@@ -226,7 +228,7 @@ describe("Migration 0233: Migrate geoMap to collection", () => {
 
     it("should handle protected geoMap notes appropriately", async () => {
         await new Promise<void>((resolve, reject) => {
-            cls.init(() => {
+            cls.getContext().init(() => {
                 const geoMapContent = JSON.stringify({
                     markers: [{ lat: 51.5074, lng: -0.1278, title: "London" }],
                     center: { lat: 51.5074, lng: -0.1278 },

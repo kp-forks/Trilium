@@ -1,6 +1,8 @@
-import type { Request, Response } from "express";
-import optionService from "../../services/options.js";
 import type { OptionMap } from "@triliumnext/commons";
+import { sql_init } from "@triliumnext/core";
+import type { Request, Response } from "express";
+
+import optionService from "../../services/options.js";
 
 const SYSTEM_SANS_SERIF = [
     "system-ui",
@@ -22,7 +24,7 @@ const SYSTEM_MONOSPACE = ["ui-monospace", "SFMono-Regular", "SF Mono", "Consolas
 function getFontCss(req: Request, res: Response) {
     res.setHeader("Content-Type", "text/css");
 
-    if (!optionService.getOptionBool("overrideThemeFonts")) {
+    if (!sql_init.isDbInitialized() || !optionService.getOptionBool("overrideThemeFonts")) {
         res.send("");
 
         return;

@@ -3,12 +3,16 @@
  * are loaded later and will result in an empty string.
  */
 
-import { initializeCore } from "@triliumnext/core";
+import { getLog,initializeCore, sql_init } from "@triliumnext/core";
+import fs from "fs";
+import { t } from "i18next";
 import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
+import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";
+import port from "./services/port.js";
 import NodeRequestProvider from "./services/request.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "./sql_provider.js";
@@ -44,12 +48,14 @@ async function startApplication() {
 
                 // the maxEntityChangeId has been incremented during failed transaction, need to recalculate
                 entity_changes.recalculateMaxEntityChangeId();
-            },
+            }
         },
         crypto: new NodejsCryptoProvider(),
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),
+        schema: fs.readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
+        platform: new ServerPlatformProvider(),
         translations: (await import("./services/i18n.js")).initializeTranslations,
         extraAppInfo: {
             nodeVersion: process.version,
@@ -58,6 +64,10 @@ async function startApplication() {
     });
     const startTriliumServer = (await import("./www.js")).default;
     await startTriliumServer();
+
+    if (!sql_init.isDbInitialized()) {
+        getLog().banner(t("sql_init.db_not_initialized_server", { port }));
+    }
 }
 
 startApplication();

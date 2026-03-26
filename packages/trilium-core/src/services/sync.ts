@@ -26,6 +26,7 @@ import { getCrypto } from "./encryption/crypto.js";
 let proxyToggle = true;
 
 let outstandingPullCount = 0;
+let totalPullCount: number | null = null;
 
 interface CheckResponse {
     maxEntityChangeId: number;
@@ -172,6 +173,10 @@ async function pullChanges(syncContext: SyncContext) {
 
         outstandingPullCount = resp.outstandingPullCount;
 
+        if (totalPullCount === null) {
+            totalPullCount = entityChanges.length + outstandingPullCount;
+        }
+
         const pulledDate = Date.now();
 
         getSql().transactional(() => {
@@ -201,6 +206,8 @@ async function pullChanges(syncContext: SyncContext) {
     }
 
     log.info("Finished pull");
+
+    totalPullCount = null;
 }
 
 async function pushChanges(syncContext: SyncContext) {
@@ -450,6 +457,10 @@ function getOutstandingPullCount() {
     return outstandingPullCount;
 }
 
+function getTotalPullCount() {
+    return totalPullCount;
+}
+
 function startSyncTimer() {
     becca_loader.beccaLoaded.then(() => {
         setInterval(cls.wrap(sync), 60000);
@@ -467,6 +478,7 @@ export default {
     login,
     getEntityChangeRecords,
     getOutstandingPullCount,
+    getTotalPullCount,
     getMaxEntityChangeId,
     startSyncTimer
 };

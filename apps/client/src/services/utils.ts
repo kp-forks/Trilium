@@ -905,6 +905,10 @@ export function getErrorMessage(e: unknown) {
 
 }
 
+export function replaceHtmlEscapedSlashes(str: string) {
+    return str.replace(/&#x2F;/g, "/");
+}
+
 /**
  * Handles left or right placement of e.g. tooltips in case of right-to-left languages. If the current language is a RTL one, then left and right are swapped. Other directions are unaffected.
  * @param placement a string optionally containing a "left" or "right" value.

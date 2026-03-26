@@ -1,16 +1,17 @@
-import options from "./options.js";
+import { type Locale, LOCALE_IDS, setDayjsLocale } from "@triliumnext/commons";
 import i18next from "i18next";
 import i18nextHttpBackend from "i18next-http-backend";
-import server from "./server.js";
-import { LOCALE_IDS, setDayjsLocale, type Locale } from "@triliumnext/commons";
 import { initReactI18next } from "react-i18next";
+
+import options from "./options.js";
+import server from "./server.js";
 
 let locales: Locale[] | null;
 
 /**
  * A deferred promise that resolves when translations are initialized.
  */
-export let translationsInitializedPromise = $.Deferred();
+export const translationsInitializedPromise = $.Deferred();
 
 export async function initLocale() {
     const locale = ((options.get("locale") as string) || "en") as LOCALE_IDS;
@@ -34,7 +35,7 @@ export async function initLocale() {
 
 export function getAvailableLocales() {
     if (!locales) {
-        throw new Error("Tried to load list of locales, but localization is not yet initialized.")
+        throw new Error("Tried to load list of locales, but localization is not yet initialized.");
     }
 
     return locales;

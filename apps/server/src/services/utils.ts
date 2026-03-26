@@ -99,17 +99,6 @@ export function stripTags(text: string) {
     return text.replace(/<(?:.|\n)*?>/gm, "");
 }
 
-export async function crash(message: string) {
-    if (isElectron) {
-        const electron = await import("electron");
-        electron.dialog.showErrorBox(t("modals.error_title"), message);
-        electron.app.exit(1);
-    } else {
-        log.error(message);
-        process.exit(1);
-    }
-}
-
 /** @deprecated */
 export function getContentDisposition(filename: string) {
     return coreUtils.getContentDisposition(filename);
@@ -405,7 +394,6 @@ export function waitForStreamToFinish(stream: any): Promise<void> {
 export default {
     compareVersions,
     constantTimeCompare,
-    crash,
     envToBoolean,
     escapeHtml,
     escapeRegExp,

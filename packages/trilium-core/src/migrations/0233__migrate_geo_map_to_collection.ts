@@ -1,11 +1,10 @@
-import { becca_loader } from "@triliumnext/core";
-
 import becca from "../becca/becca";
-import cls from "../services/cls.js";
+import becca_loader from "../becca/becca_loader";
+import { getContext } from "../services/context";
 import hidden_subtree from "../services/hidden_subtree";
 
 export default () => {
-    cls.init(() => {
+    getContext().init(() => {
         becca_loader.load();
 
         // Ensure the geomap template is generated.

@@ -56,6 +56,7 @@ let WorkerMessagingProvider: typeof import('./lightweight/messaging_provider').d
 let BrowserExecutionContext: typeof import('./lightweight/cls_provider').default;
 let BrowserCryptoProvider: typeof import('./lightweight/crypto_provider').default;
 let FetchRequestProvider: typeof import('./lightweight/request_provider').default;
+let StandalonePlatformProvider: typeof import('./lightweight/platform_provider').default;
 let translationProvider: typeof import('./lightweight/translation_provider').default;
 let createConfiguredRouter: typeof import('./lightweight/browser_routes').createConfiguredRouter;
 
@@ -81,6 +82,7 @@ async function loadModules(): Promise<void> {
         clsModule,
         cryptoModule,
         requestModule,
+        platformModule,
         translationModule,
         routesModule
     ] = await Promise.all([
@@ -89,6 +91,7 @@ async function loadModules(): Promise<void> {
         import('./lightweight/cls_provider.js'),
         import('./lightweight/crypto_provider.js'),
         import('./lightweight/request_provider.js'),
+        import('./lightweight/platform_provider.js'),
         import('./lightweight/translation_provider.js'),
         import('./lightweight/browser_routes.js')
     ]);
@@ -98,6 +101,7 @@ async function loadModules(): Promise<void> {
     BrowserExecutionContext = clsModule.default;
     BrowserCryptoProvider = cryptoModule.default;
     FetchRequestProvider = requestModule.default;
+    StandalonePlatformProvider = platformModule.default;
     translationProvider = translationModule.default;
     createConfiguredRouter = routesModule.createConfiguredRouter;
 
@@ -132,15 +136,6 @@ async function initialize(): Promise<void> {
             if (sqlProvider!.isOpfsAvailable()) {
                 console.log("[Worker] OPFS available, loading persistent database...");
                 sqlProvider!.loadFromOpfs("/trilium.db");
-
-                // Check if database is initialized (schema exists)
-                if (!sqlProvider!.isDbInitialized()) {
-                    console.log("[Worker] Database not initialized, loading demo data...");
-                    sqlProvider!.initializeDemoDatabase();
-                    console.log("[Worker] Demo data loaded");
-                } else {
-                    console.log("[Worker] Existing initialized database loaded");
-                }
             } else {
                 // Fall back to in-memory database (non-persistent)
                 console.warn("[Worker] OPFS not available, using in-memory database (data will not persist)");
@@ -151,13 +146,16 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Database loaded");
 
             console.log("[Worker] Loading @triliumnext/core...");
+            const schemaModule = await import("@triliumnext/core/src/assets/schema.sql?raw");
             coreModule = await import("@triliumnext/core");
             await coreModule.initializeCore({
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
                 messaging: messagingProvider!,
                 request: new FetchRequestProvider(),
+                platform: new StandalonePlatformProvider(),
                 translations: translationProvider,
+                schema: schemaModule.default,
                 dbConfig: {
                     provider: sqlProvider!,
                     isReadOnly: false,
@@ -177,8 +175,16 @@ async function initialize(): Promise<void> {
             router = createConfiguredRouter();
             console.log("[Worker] Router configured");
 
-            console.log("[Worker] Initializing becca...");
-            await coreModule.becca_loader.beccaLoaded;
+            // initializeDb runs initDbConnection inside an execution context,
+            // which resolves dbReady — required before beccaLoaded can settle.
+            coreModule.sql_init.initializeDb();
+
+            if (coreModule.sql_init.isDbInitialized()) {
+                console.log("[Worker] Database already initialized, loading becca...");
+                await coreModule.becca_loader.beccaLoaded;
+            } else {
+                console.log("[Worker] Database not initialized, skipping becca load (will be loaded during DB initialization)");
+            }
 
             console.log("[Worker] Initialization complete");
         } catch (error) {

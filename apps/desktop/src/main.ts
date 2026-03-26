@@ -1,17 +1,24 @@
-import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
-import { t } from "i18next";
-
-import { app, globalShortcut, BrowserWindow } from "electron";
-import sqlInit from "@triliumnext/server/src/services/sql_init.js";
-import windowService from "@triliumnext/server/src/services/window.js";
-import tray from "@triliumnext/server/src/services/tray.js";
+import { getLog, initializeCore, sql_init } from "@triliumnext/core";
+import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
+import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
+import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import options from "@triliumnext/server/src/services/options.js";
+import port from "@triliumnext/server/src/services/port.js";
+import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
+import tray from "@triliumnext/server/src/services/tray.js";
+import windowService from "@triliumnext/server/src/services/window.js";
+import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
+import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
+import { app, BrowserWindow,globalShortcut } from "electron";
 import electronDebug from "electron-debug";
 import electronDl from "electron-dl";
-import { PRODUCT_NAME } from "./app-info";
-import port from "@triliumnext/server/src/services/port.js";
-import { join } from "path";
+import fs from "fs";
+import { t } from "i18next";
+import path, { join } from "path";
+
 import { deferred, LOCALES } from "../../../packages/commons/src";
+import { PRODUCT_NAME } from "./app-info";
+import DesktopPlatformProvider from "./platform_provider";
 
 async function main() {
     const userDataPath = getUserData();
@@ -82,7 +89,7 @@ async function main() {
         }
     });
 
-    await initializeTranslations();
+    // await initializeTranslations();
 
     const isPrimaryInstance = (await import("electron")).app.requestSingleInstanceLock();
     if (!isPrimaryInstance) {
@@ -93,9 +100,55 @@ async function main() {
     // this is to disable electron warning spam in the dev console (local development only)
     process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 
+    const { DOCUMENT_PATH } = (await import("@triliumnext/server/src/services/data_dir.js")).default;
+    const config = (await import("@triliumnext/server/src/services/config.js")).default;
+
+    const dbProvider = new BetterSqlite3Provider();
+    dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
+
+    await initializeCore({
+        dbConfig: {
+            provider: dbProvider,
+            isReadOnly: config.General.readOnly,
+            async onTransactionCommit() {
+                const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
+                ws.sendTransactionEntityChangesToAllClients();
+            },
+            async onTransactionRollback() {
+                const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+                const becca_loader = (await import("@triliumnext/core")).becca_loader;
+                const entity_changes = (await import("@triliumnext/server/src/services/entity_changes.js")).default;
+                const log = (await import("@triliumnext/server/src/services/log")).default;
+
+                const entityChangeIds = cls.getAndClearEntityChangeIds();
+
+                if (entityChangeIds.length > 0) {
+                    log.info("Transaction rollback dirtied the becca, forcing reload.");
+
+                    becca_loader.load();
+                }
+
+                // the maxEntityChangeId has been incremented during failed transaction, need to recalculate
+                entity_changes.recalculateMaxEntityChangeId();
+            }
+        },
+        crypto: new NodejsCryptoProvider(),
+        request: new NodeRequestProvider(),
+        executionContext: new ClsHookedExecutionContext(),
+        messaging: new WebSocketMessagingProvider(),
+        schema: fs.readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
+        platform: new DesktopPlatformProvider(),
+        translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,
+        extraAppInfo: {
+            nodeVersion: process.version,
+            dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)
+        }
+    });
+
     const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
     await startTriliumServer();
     console.log("Server loaded");
+
     serverInitializedPromise.resolve();
 }
 
@@ -112,8 +165,8 @@ async function onReady() {
 
     // if db is not initialized -> setup process
     // if db is initialized, then we need to wait until the migration process is finished
-    if (sqlInit.isDbInitialized()) {
-        await sqlInit.dbReady;
+    if (sql_init.isDbInitialized()) {
+        await sql_init.dbReady;
 
         await windowService.createMainWindow(app);
 
@@ -127,6 +180,7 @@ async function onReady() {
 
         tray.createTray();
     } else {
+        getLog().banner(t("sql_init.db_not_initialized_desktop"));
         await windowService.createSetupWindow();
     }
 
@@ -141,7 +195,7 @@ function getElectronLocale() {
     // For RTL, we have to force the UI locale to align the window buttons properly.
     if (formattingLocale && !correspondingLocale?.rtl) return formattingLocale;
 
-    return uiLocale || "en"
+    return uiLocale || "en";
 }
 
 main();

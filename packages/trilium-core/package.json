@@ -10,7 +10,7 @@
     "@braintree/sanitize-url": "7.1.1",
     "@triliumnext/commons": "workspace:*",
     "escape-html": "1.0.3",
-    "i18next": "25.7.3",
+    "i18next": "25.10.3",
     "mime-types": "3.0.2",
     "sanitize-filename": "1.6.4",
     "sanitize-html": "2.17.2",

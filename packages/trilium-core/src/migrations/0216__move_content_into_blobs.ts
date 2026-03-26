@@ -1,5 +1,5 @@
-import sql from "../services/sql.js";
-import utils from "../services/utils.js";
+import { getSql } from "../services/sql/index";
+import { hashedBlobId } from "../services/utils/index";
 
 interface NoteContentsRow {
     noteId: string;
@@ -17,9 +17,10 @@ interface NoteRevisionContents {
 export default () => {
     const existingBlobIds = new Set();
 
+    const sql = getSql();
     for (const noteId of sql.getColumn<string>(/*sql*/`SELECT noteId FROM note_contents`)) {
         const row = sql.getRow<NoteContentsRow>(/*sql*/`SELECT noteId, content, dateModified, utcDateModified FROM note_contents WHERE noteId = ?`, [noteId]);
-        const blobId = utils.hashedBlobId(row.content);
+        const blobId = hashedBlobId(row.content);
 
         if (!existingBlobIds.has(blobId)) {
             existingBlobIds.add(blobId);
@@ -42,7 +43,7 @@ export default () => {
 
     for (const noteRevisionId of sql.getColumn(/*sql*/`SELECT noteRevisionId FROM note_revision_contents`)) {
         const row = sql.getRow<NoteRevisionContents>(/*sql*/`SELECT noteRevisionId, content, utcDateModified FROM note_revision_contents WHERE noteRevisionId = ?`, [noteRevisionId]);
-        const blobId = utils.hashedBlobId(row.content);
+        const blobId = hashedBlobId(row.content);
 
         if (!existingBlobIds.has(blobId)) {
             existingBlobIds.add(blobId);
