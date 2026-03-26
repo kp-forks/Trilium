@@ -32,9 +32,9 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-type State = "selectLanguage" | "firstOptions" | "createNewDocumentOptions" | "createNewDocumentWithDemo" | "createNewDocumentEmpty" | "syncFromDesktop" | "syncFromServer" | "syncInProgress" | "syncFailed";
+type State = "selectLanguage" | "firstOptions" | "createNewDocumentOptions" | "createNewDocumentWithDemo" | "createNewDocumentEmpty" | "syncFromDesktop" | "syncFromServer" | "syncFromServerInProgress" | "syncFromDesktopInProgress" | "syncFailed";
 
-const STATE_ORDER: State[] = ["selectLanguage", "firstOptions", "createNewDocumentOptions", "createNewDocumentWithDemo", "createNewDocumentEmpty", "syncFromDesktop", "syncFromServer", "syncInProgress", "syncFailed"];
+const STATE_ORDER: State[] = ["selectLanguage", "firstOptions", "createNewDocumentOptions", "createNewDocumentWithDemo", "createNewDocumentEmpty", "syncFromDesktop", "syncFromServer", "syncFromServerInProgress", "syncFromDesktopInProgress", "syncFailed"];
 
 function renderState(state: State, setState: (state: State) => void) {
     switch (state) {
@@ -45,7 +45,8 @@ function renderState(state: State, setState: (state: State) => void) {
         case "createNewDocumentEmpty": return <CreateNewDocumentInProgress />;
         case "syncFromServer": return <SyncFromServer setState={setState} />;
         case "syncFromDesktop": return <SyncFromDesktop setState={setState} />;
-        case "syncInProgress": return <SyncInProgress device="server" />;
+        case "syncFromServerInProgress": return <SyncInProgress device="server" />;
+        case "syncFromDesktopInProgress": return <SyncInProgress device="desktop" />;
         default: return null;
     }
 }
@@ -286,7 +287,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             });
 
             if (resp.result === "success") {
-                setState("syncInProgress");
+                setState("syncFromServerInProgress");
             } else if (resp.error.includes("Incorrect password")) {
                 setIsWrongPassword(true);
             } else {
@@ -354,6 +355,16 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 
 function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
     const networkAddresses = getNetworkAddresses();
+
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            const status = await server.get<{ schemaExists: boolean }>("setup/status");
+            if (status.schemaExists) {
+                setState("syncFromDesktopInProgress");
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [setState]);
 
     return (
         <SetupPage
