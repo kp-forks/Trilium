@@ -108,7 +108,6 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
 ]);
 
 function getOptions() {
-    console.log("Got opts");
     const optionMap = optionService.getOptionMap();
     const resultMap: Record<string, string> = {};
 
