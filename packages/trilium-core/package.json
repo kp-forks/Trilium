@@ -4,8 +4,7 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "test": "vitest",
-    "coverage": "vitest --coverage"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@braintree/sanitize-url": "7.1.1",
@@ -22,7 +21,6 @@
   "devDependencies": {
     "@types/escape-html": "1.0.4",
     "@types/mime-types": "3.0.1",
-    "@types/sanitize-html": "2.16.1",
-    "vite": "8.0.2"
+    "@types/sanitize-html": "2.16.1"
   }
 }

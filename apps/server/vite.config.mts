@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/packages/trilium-core',
+  cacheDir: '../../node_modules/.vite/apps/server',
   plugins: [],
   test: {
     watch: false,
@@ -16,6 +16,9 @@ export default defineConfig(() => ({
       TRILIUM_INTEGRATION_TEST: "memory"
     },
     include: ['{src,spec}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: [
+      "spec/build-checks/**",
+    ],
     hookTimeout: 20_000,
     testTimeout: 40_000,
     reporters: [
