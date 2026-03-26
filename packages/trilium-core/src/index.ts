@@ -8,7 +8,7 @@ import { initRequest, RequestProvider } from "./services/request";
 import { initTranslations, TranslationProvider } from "./services/i18n";
 import { initSchema } from "./services/sql_init";
 import appInfo from "./services/app_info";
-import PlatformProvider, { initPlatform } from "./services/platform";
+import { type PlatformProvider, initPlatform } from "./services/platform";
 
 export { getLog } from "./services/log";
 export type * from "./services/sql/types";
@@ -114,7 +114,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
     await initTranslations(translations);
     initCrypto(crypto);
     initContext(executionContext);
-    initSql(new SqlService(dbConfig, getLog()), dbConfig.onDatabaseNotInitialized);
+    initSql(new SqlService(dbConfig, getLog()));
     initSchema(schema);
     Object.assign(appInfo, extraAppInfo);
     if (messaging) {

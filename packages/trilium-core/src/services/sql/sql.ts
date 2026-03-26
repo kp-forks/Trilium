@@ -11,7 +11,6 @@ export interface SqlServiceParams {
     provider: DatabaseProvider;
     onTransactionRollback: () => void;
     onTransactionCommit: () => void;
-    onDatabaseNotInitialized?: () => void;
     isReadOnly: boolean;
 }
 
