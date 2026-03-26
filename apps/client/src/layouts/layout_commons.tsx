@@ -7,6 +7,7 @@ import RecentChangesDialog from "../widgets/dialogs/recent_changes.js";
 import PromptDialog from "../widgets/dialogs/prompt.js";
 import AddLinkDialog from "../widgets/dialogs/add_link.js";
 import IncludeNoteDialog from "../widgets/dialogs/include_note.js";
+import LinkEmbedDialog from "../widgets/dialogs/link_embed.js";
 import BulkActionsDialog from "../widgets/dialogs/bulk_actions.js";
 import BranchPrefixDialog from "../widgets/dialogs/branch_prefix.js";
 import SortChildNotesDialog from "../widgets/dialogs/sort_child_notes.js";
@@ -35,6 +36,7 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<BranchPrefixDialog />)
         .child(<SortChildNotesDialog />)
         .child(<IncludeNoteDialog />)
+        .child(<LinkEmbedDialog />)
         .child(<NoteTypeChooserDialog />)
         .child(<JumpToNoteDialog />)
         .child(<AddLinkDialog />)

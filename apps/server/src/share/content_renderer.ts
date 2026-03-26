@@ -318,6 +318,36 @@ function renderText(result: Result, note: SNote | BNote) {
     };
     const document = parse(result.content || "", parseOpts);
 
+    // Process link mentions (inline).
+    for (const mentionEl of document.querySelectorAll("span.link-mention")) {
+        const url = mentionEl.getAttribute("data-url");
+        if (!url) continue;
+        const hostname = safeHostnameForShare(url);
+        const favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`;
+        mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+            `<img class="link-embed-mention-favicon" src="${escapeHtml(favicon)}" width="16" height="16">` +
+            `<span class="link-embed-mention-title">${escapeHtml(hostname)}</span></a>`;
+    }
+
+    // Process link embeds (block).
+    for (const embedEl of document.querySelectorAll("section.link-embed")) {
+        const url = embedEl.getAttribute("data-url");
+        const embedType = embedEl.getAttribute("data-embed-type");
+        if (!url) continue;
+
+        if (embedType === "youtube") {
+            const videoId = extractYouTubeVideoIdForShare(url);
+            if (videoId) {
+                embedEl.innerHTML = `<div class="link-embed-video"><iframe src="https://www.youtube-nocookie.com/embed/${escapeHtml(videoId)}?rel=0" frameborder="0" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;aspect-ratio:16/9;border:none;"></iframe></div>`;
+            }
+        } else {
+            const hostname = safeHostnameForShare(url);
+            embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+                `<div class="link-embed-card-image-wrapper"><div class="link-embed-card-image-placeholder">&#128279;</div></div>` +
+                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(hostname)}</div><div class="link-embed-card-url">${escapeHtml(url)}</div></div></a>`;
+        }
+    }
+
     // Process include notes.
     for (const includeNoteEl of document.querySelectorAll("section.include-note")) {
         const noteId = includeNoteEl.getAttribute("data-note-id");
@@ -503,6 +533,15 @@ function renderWebView(note: SNote | BNote, result: Result) {
     if (!url) return;
 
     result.content = `<iframe class="webview" src="${sanitizeUrl(url)}" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>`;
+}
+
+function extractYouTubeVideoIdForShare(url: string): string | null {
+    const match = url.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+}
+
+function safeHostnameForShare(url: string): string {
+    try { return new URL(url).hostname; } catch { return url; }
 }
 
 export default {

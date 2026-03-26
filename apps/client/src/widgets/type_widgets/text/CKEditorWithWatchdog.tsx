@@ -4,6 +4,7 @@ import { HTMLProps, RefObject, useEffect, useImperativeHandle, useRef, useState 
 
 import froca from "../../../services/froca";
 import link from "../../../services/link";
+import linkEmbedService from "../../../services/link_embed";
 import { useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteContext, useSyncedRef, useTriliumOption } from "../../react/hooks";
 import { buildConfig, BuildEditorOptions } from "./config";
 
@@ -18,6 +19,8 @@ export interface CKEditorApi {
     addHtmlToEditor(html: string): void;
     addIncludeNote(noteId: string, boxSize?: BoxSize): void;
     addImage(noteId: string): Promise<void>;
+    addLinkEmbed(url: string, embedType: string): void;
+    addLinkMention(url: string): void;
 }
 
 interface CKEditorWithWatchdogProps extends Pick<HTMLProps<HTMLDivElement>, "className" | "tabIndex"> {
@@ -140,11 +143,37 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
                 editor?.execute("insertImage", { source: src });
             });
         },
+        addLinkEmbed(url: string, embedType: string) {
+            const editor = watchdogRef.current?.editor;
+            if (!editor) return;
+
+            editor.model.change((writer) => {
+                editor.model.insertContent(
+                    writer.createElement("linkEmbed", { url, embedType })
+                );
+            });
+        },
+        addLinkMention(url: string) {
+            const editor = watchdogRef.current?.editor;
+            if (!editor) return;
+
+            editor.model.change((writer) => {
+                editor.model.insertContent(
+                    writer.createElement("linkMention", { url })
+                );
+            });
+        },
     }));
 
     useLegacyImperativeHandlers({
         async loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string | null = null) {
             await link.loadReferenceLinkTitle($el, href);
+        },
+        loadLinkEmbedPreview(url: string, embedType: string, $el: JQuery<HTMLElement>) {
+            linkEmbedService.renderPreview(url, embedType, $el);
+        },
+        loadLinkMentionPreview(url: string, $el: JQuery<HTMLElement>) {
+            linkEmbedService.renderMention(url, $el);
         }
     });
 

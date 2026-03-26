@@ -9,6 +9,8 @@ declare global {
         loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string): Promise<void>;
         createNoteForReferenceLink(title: string): Promise<string>;
         loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>): void;
+        loadLinkEmbedPreview(url: string, embedType: string, $el: JQuery<HTMLElement>): void;
+        loadLinkMentionPreview(url: string, $el: JQuery<HTMLElement>): void;
     }
 
     var glob: {

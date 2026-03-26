@@ -17,6 +17,7 @@ import { useNoteBlob, useNoteLabel, useTriliumEvent, useTriliumOptionBool } from
 import { RawHtmlBlock } from "../../react/RawHtml";
 import TouchBar, { TouchBarButton, TouchBarSpacer } from "../../react/TouchBar";
 import { TypeWidgetProps } from "../type_widget";
+import linkEmbedService from "../../../services/link_embed";
 import { applyReferenceLinks } from "./read_only_helper";
 import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./utils";
 
@@ -36,6 +37,7 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
         rewriteMermaidDiagramsInContainer(container);
         applyInlineMermaid(container);
         applyIncludedNotes(container);
+        applyLinkEmbeds(container);
         applyMath(container);
         applyReferenceLinks(container);
         formatCodeBlocks($(container));
@@ -95,6 +97,21 @@ function applyIncludedNotes(container: HTMLDivElement) {
         const noteId = includedNote.dataset.noteId;
         if (!noteId) continue;
         loadIncludedNote(noteId, $(includedNote));
+    }
+}
+
+function applyLinkEmbeds(container: HTMLDivElement) {
+    for (const embed of container.querySelectorAll<HTMLElement>("section.link-embed")) {
+        const url = embed.dataset.url;
+        const embedType = embed.dataset.embedType;
+        if (!url) continue;
+        linkEmbedService.renderPreview(url, embedType || "opengraph", $(embed));
+    }
+
+    for (const mention of container.querySelectorAll<HTMLElement>("span.link-mention")) {
+        const url = mention.dataset.url;
+        if (!url) continue;
+        linkEmbedService.renderMention(url, $(mention));
     }
 }
 

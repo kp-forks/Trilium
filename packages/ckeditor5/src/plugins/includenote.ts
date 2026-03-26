@@ -1,5 +1,6 @@
-import { ButtonView, Command, Plugin, toWidget, Widget, type Editor, type Observable } from 'ckeditor5';
+import { ButtonView, Command, Plugin, toWidget, Widget, type Observable } from 'ckeditor5';
 import noteIcon from '../icons/note.svg?raw';
+import { preventCKEditorHandling } from './widget_utils.js';
 
 export const COMMAND_NAME = 'insertIncludeNote';
 
@@ -154,25 +155,3 @@ class InsertIncludeNoteCommand extends Command {
 	}
 }
 
-/**
- * Hack coming from https://github.com/ckeditor/ckeditor5/issues/4465
- * Source issue: https://github.com/zadam/trilium/issues/1117
- */
-function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
-	// Prevent the editor from listening on below events in order to stop rendering selection.
-
-	// commenting out click events to allow link click handler to still work
-	//domElement.addEventListener( 'click', stopEventPropagationAndHackRendererFocus, { capture: true } );
-	domElement.addEventListener( 'mousedown', stopEventPropagationAndHackRendererFocus, { capture: true } );
-	domElement.addEventListener( 'focus', stopEventPropagationAndHackRendererFocus, { capture: true } );
-
-	// Prevents TAB handling or other editor keys listeners which might be executed on editors selection.
-	domElement.addEventListener( 'keydown', stopEventPropagationAndHackRendererFocus, { capture: true } );
-
-	function stopEventPropagationAndHackRendererFocus( evt: Event ) {
-		evt.stopPropagation();
-		// This prevents rendering changed view selection thus preventing to changing DOM selection while inside a widget.
-        //@ts-expect-error: We are accessing a private field.
-		editor.editing.view._renderer.isFocused = false;
-	}
-}
