@@ -1,11 +1,10 @@
-import { NoteParams, SearchParams } from "@triliumnext/core";
+import { NoteParams, SearchParams, zipImportService } from "@triliumnext/core";
 import type { Request, Router } from "express";
 import type { ParsedQs } from "qs";
 
 import becca from "../becca/becca.js";
 import zipExportService from "../services/export/zip.js";
 import type { ExportFormat } from "../services/export/zip/abstract_provider.js";
-import zipImportService from "../services/import/zip.js";
 import noteService from "../services/notes.js";
 import SearchContext from "../services/search/search_context.js";
 import searchService from "../services/search/services/search.js";

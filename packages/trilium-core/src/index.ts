@@ -100,6 +100,8 @@ export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 export type * from "./meta";
 export * as routeHelpers from "./routes/helpers";
 
+export { default as zipImportService } from "./services/import/zip";
+
 export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";
 
