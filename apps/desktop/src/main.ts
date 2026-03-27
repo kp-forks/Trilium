@@ -141,6 +141,7 @@ async function main() {
         schema: fs.readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
         platform: new DesktopPlatformProvider(),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,
+        getDemoArchive: async () => fs.readFileSync(require.resolve("@triliumnext/server/src/assets/db/demo.zip")),
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)

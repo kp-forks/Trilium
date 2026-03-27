@@ -6,7 +6,7 @@ import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
 import { initRequest, RequestProvider } from "./services/request";
 import { initTranslations, TranslationProvider } from "./services/i18n";
-import { initSchema } from "./services/sql_init";
+import { initSchema, initDemoArchive } from "./services/sql_init";
 import appInfo from "./services/app_info";
 import { type PlatformProvider, initPlatform } from "./services/platform";
 import { type ZipProvider, initZipProvider } from "./services/import/zip_provider";
@@ -103,7 +103,7 @@ export * as routeHelpers from "./routes/helpers";
 export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, zip, translations, messaging, request, schema, extraAppInfo, platform }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, zip, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
@@ -113,6 +113,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     schema: string,
     messaging?: MessagingProvider,
     request?: RequestProvider,
+    getDemoArchive?: () => Promise<Uint8Array | null>,
     extraAppInfo?: {
         nodeVersion: string;
         dataDirectory: string;
@@ -126,6 +127,9 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     initContext(executionContext);
     initSql(new SqlService(dbConfig, getLog()));
     initSchema(schema);
+    if (getDemoArchive) {
+        initDemoArchive(getDemoArchive);
+    }
     Object.assign(appInfo, extraAppInfo);
     if (messaging) {
         initMessaging(messaging);

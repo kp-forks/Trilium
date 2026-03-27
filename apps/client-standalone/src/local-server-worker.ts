@@ -162,6 +162,11 @@ async function initialize(): Promise<void> {
                 platform: new StandalonePlatformProvider(queryString),
                 translations: translationProvider,
                 schema: schemaModule.default,
+                getDemoArchive: async () => {
+                    const response = await fetch("/server-assets/db/demo.zip");
+                    if (!response.ok) return null;
+                    return new Uint8Array(await response.arrayBuffer());
+                },
                 dbConfig: {
                     provider: sqlProvider!,
                     isReadOnly: false,

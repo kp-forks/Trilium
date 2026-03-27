@@ -15,9 +15,14 @@ import migrationService from "./migration";
 export const dbReady = deferred<void>();
 
 let schema: string;
+let getDemoArchive: (() => Promise<Uint8Array | null>) | null = null;
 
 export function initSchema(schemaStr: string) {
     schema = schemaStr;
+}
+
+export function initDemoArchive(fn: () => Promise<Uint8Array | null>) {
+    getDemoArchive = fn;
 }
 
 function schemaExists() {
@@ -177,13 +182,15 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
     });
 
     // Import demo content.
-    log.info("Importing demo content...");
-
-    const dummyTaskContext = new TaskContext("no-progress-reporting", "importNotes", null);
-
-    // if (demoFile) {
-    //     await zipImportService.importZip(dummyTaskContext, demoFile, rootNote);
-    // }
+    if (getDemoArchive) {
+        log.info("Importing demo content...");
+        const demoFile = await getDemoArchive();
+        if (demoFile) {
+            const { default: zipImportService } = await import("./import/zip.js");
+            const dummyTaskContext = new TaskContext("no-progress-reporting", "importNotes", null);
+            await zipImportService.importZip(dummyTaskContext, demoFile, rootNote);
+        }
+    }
 
     // Post-demo.
     sql.transactional(() => {
