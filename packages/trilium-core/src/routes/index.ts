@@ -198,7 +198,11 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(PST, "/api/bulk-action/affected-notes", bulkActionRoute.getAffectedNoteCount);
 
     apiRoute(GET, "/api/app-info", appInfoRoute.getAppInfo);
+
     apiRoute(GET, "/api/other/icon-usage", otherRoute.getIconUsage);
+    apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);
+    apiRoute(PST, "/api/other/to-markdown", otherRoute.toMarkdown);
+
     asyncApiRoute(GET, "/api/similar-notes/:noteId", similarNotesRoute.getSimilarNotes);
     apiRoute(PST, "/api/relation-map", relationMapApiRoute.getRelationMap);
     apiRoute(GET, "/api/recent-changes/:ancestorNoteId", recentChangesApiRoute.getRecentChanges);

@@ -8,9 +8,9 @@ import becca from "../../becca/becca.js";
 import type BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import type TaskContext from "../task_context.js";
-import { escapeHtml,getContentDisposition } from "../utils.js";
+import { escapeHtml,getContentDisposition } from "../utils/index.js";
 import mdService from "./markdown.js";
-import type { ExportFormat } from "./zip/abstract_provider.js";
+import { ExportFormat } from "../../meta.js";
 
 function exportSingleNote(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Response) {
     const note = branch.getNote();

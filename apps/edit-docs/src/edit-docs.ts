@@ -1,7 +1,6 @@
 import debounce from "@triliumnext/client/src/services/debounce.js";
+import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/core";
 import cls from "@triliumnext/server/src/services/cls.js";
-import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/server/src/services/export/zip/abstract_provider.js";
-import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
 import { parseNoteMetaFile } from "@triliumnext/server/src/services/in_app_help.js";
 import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
 import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
@@ -11,7 +10,7 @@ import yaml from "js-yaml";
 import path from "path";
 
 import packageJson from "../package.json" with { type: "json" };
-import { extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
+import { extractZip, importData, startElectron } from "./utils.js";
 
 interface NoteMapping {
     rootNoteId: string;
@@ -153,7 +152,7 @@ async function exportData(noteId: string, format: ExportFormat, outputPath: stri
         await fsExtra.mkdir(outputPath);
 
         // First export as zip.
-        const { exportToZipFile } = (await import("@triliumnext/server/src/services/export/zip.js")).default;
+        const { zipExportService } = (await import("@triliumnext/core"));
 
         const exportOpts: AdvancedExportOptions = {};
         if (format === "html") {
@@ -205,7 +204,7 @@ async function exportData(noteId: string, format: ExportFormat, outputPath: stri
             };
         }
 
-        await exportToZipFile(noteId, format, zipFilePath, exportOpts);
+        await zipExportService.exportToZipFile(noteId, format, zipFilePath, exportOpts);
         await extractZip(zipFilePath, outputPath, ignoredFiles);
     } finally {
         if (await fsExtra.exists(zipFilePath)) {

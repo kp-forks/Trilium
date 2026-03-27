@@ -41,7 +41,6 @@
     "@triliumnext/core": "workspace:*",
     "@triliumnext/express-partial-content": "workspace:*",
     "@triliumnext/highlightjs": "workspace:*",
-    "@triliumnext/turndown-plugin-gfm": "workspace:*",
     "@types/archiver": "7.0.0",
     "@types/better-sqlite3": "7.6.13",
     "@types/cls-hooked": "4.3.9",

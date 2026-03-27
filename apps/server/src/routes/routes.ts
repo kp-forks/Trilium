@@ -26,7 +26,6 @@ import filesRoute from "./api/files.js";
 import fontsRoute from "./api/fonts.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
-import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
 import scriptRoute from "./api/script.js";
@@ -193,8 +192,6 @@ function register(app: express.Application) {
 
     asyncApiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
-    apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);
-    apiRoute(PST, "/api/other/to-markdown", otherRoute.toMarkdown);
 
     shareRoutes.register(router);
 

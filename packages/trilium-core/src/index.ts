@@ -103,6 +103,10 @@ export * as routeHelpers from "./routes/helpers";
 
 export { getZipProvider, type ZipProvider } from "./services/import/zip_provider";
 export { default as zipImportService } from "./services/import/zip";
+export { default as zipExportService } from "./services/export/zip";
+export { type AdvancedExportOptions } from "./services/export/zip/abstract_provider";
+export { ZipExportProvider } from "./services/export/zip/abstract_provider";
+export { type ExportFormat } from "./meta";
 
 export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";

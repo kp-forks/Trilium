@@ -2,9 +2,9 @@ import fs from "fs";
 import html from "html";
 import path from "path";
 
-import type NoteMeta from "../../meta/note_meta.js";
-import { escapeHtml, getResourceDir, isDev } from "../../utils";
+import { escapeHtml, getResourceDir, isDev } from "../../utils/index";
 import { ZipExportProvider } from "./abstract_provider.js";
+import { NoteMeta } from "../../../meta";
 
 export default class HtmlExportProvider extends ZipExportProvider {
 

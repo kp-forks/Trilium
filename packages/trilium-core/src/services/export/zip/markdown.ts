@@ -1,4 +1,4 @@
-import NoteMeta from "../../meta/note_meta";
+import { NoteMeta } from "../../../meta.js";
 import mdService from "../markdown.js";
 import { ZipExportProvider } from "./abstract_provider.js";
 

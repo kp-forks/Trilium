@@ -1,5 +1,5 @@
 import { type AttributeRow, dayjs, formatLogMessage } from "@triliumnext/commons";
-import { type AbstractBeccaEntity, Becca, branches as branchService, NoteParams, SearchContext, sync_mutex as syncMutex } from "@triliumnext/core";
+import { type AbstractBeccaEntity, Becca, branches as branchService, NoteParams, SearchContext, sync_mutex as syncMutex,zipExportService } from "@triliumnext/core";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import xml2js from "xml2js";
@@ -19,7 +19,6 @@ import backupService from "./backup.js";
 import cloningService from "./cloning.js";
 import config from "./config.js";
 import dateNoteService from "./date_notes.js";
-import exportService from "./export/zip.js";
 import log from "./log.js";
 import noteService from "./notes.js";
 import optionsService from "./options.js";
@@ -662,7 +661,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
         return { note: launcherNote };
     };
 
-    this.exportSubtreeToZipFile = async (noteId, format, zipFilePath) => await exportService.exportToZipFile(noteId, format, zipFilePath);
+    this.exportSubtreeToZipFile = async (noteId, format, zipFilePath) => await zipExportService.exportToZipFile(noteId, format, zipFilePath);
 
     this.runOnFrontend = async (_script, params = []) => {
         let script: string;

@@ -1,3 +1,4 @@
+import { ExportFormat, icon_packs as iconPackService, ZipExportProvider } from "@triliumnext/core";
 import ejs from "ejs";
 import fs, { readdirSync, readFileSync } from "fs";
 import { convert as convertToText } from "html-to-text";
@@ -9,12 +10,10 @@ import type BBranch from "../../../becca/entities/bbranch.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import { getClientDir, getShareThemeAssetDir } from "../../../routes/assets";
 import { getDefaultTemplatePath, readTemplate, renderNoteForExport } from "../../../share/content_renderer";
-import { icon_packs as iconPackService } from "@triliumnext/core";
 import log from "../../log";
 import NoteMeta, { NoteMetaFile } from "../../meta/note_meta";
 import { RESOURCE_DIR } from "../../resource_dir";
 import { getResourceDir, isDev } from "../../utils";
-import { ExportFormat, ZipExportProvider } from "./abstract_provider.js";
 
 const shareThemeAssetDir = getShareThemeAssetDir();
 

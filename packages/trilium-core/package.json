@@ -9,6 +9,7 @@
   "dependencies": {
     "@braintree/sanitize-url": "7.1.1",
     "@triliumnext/commons": "workspace:*",
+    "@triliumnext/turndown-plugin-gfm": "workspace:*",
     "async-mutex": "0.5.0",
     "chardet": "2.1.1",
     "escape-html": "1.0.3",

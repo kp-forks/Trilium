@@ -1,5 +1,4 @@
 import { NoteType } from "@triliumnext/commons";
-import { ValidationError } from "@triliumnext/core";
 import archiver from "archiver";
 import type { Response } from "express";
 import fs from "fs";
@@ -10,19 +9,16 @@ import packageInfo from "../../../package.json" with { type: "json" };
 import becca from "../../becca/becca.js";
 import BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
-import dateUtils from "../date_utils.js";
-import log from "../log.js";
-import type AttachmentMeta from "../meta/attachment_meta.js";
-import type AttributeMeta from "../meta/attribute_meta.js";
-import type NoteMeta from "../meta/note_meta.js";
-import type { NoteMetaFile } from "../meta/note_meta.js";
+import dateUtils from "../utils/date.js";
+import log, { getLog } from "../log.js";
 import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
-import { getContentDisposition, waitForStreamToFinish } from "../utils.js";
-import { AdvancedExportOptions, type ExportFormat, ZipExportProviderData } from "./zip/abstract_provider.js";
+import { getContentDisposition, waitForStreamToFinish } from "../utils/index"
+import { AdvancedExportOptions, ZipExportProviderData } from "./zip/abstract_provider.js";
 import HtmlExportProvider from "./zip/html.js";
 import MarkdownExportProvider from "./zip/markdown.js";
-import ShareThemeExportProvider from "./zip/share_theme.js";
+import { AttachmentMeta, AttributeMeta, ExportFormat, NoteMeta, NoteMetaFile } from "../../meta";
+import { ValidationError } from "../../errors";
 
 async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Response | fs.WriteStream, setHeaders = true, zipExportOptions?: AdvancedExportOptions) {
     if (!["html", "markdown", "share"].includes(format)) {
@@ -34,6 +30,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
     });
     const rewriteFn = (zipExportOptions?.customRewriteLinks ? zipExportOptions?.customRewriteLinks(rewriteLinks, getNoteTargetUrl) : rewriteLinks);
     const provider = buildProvider();
+    const log = getLog();
 
     const noteIdToMeta: Record<string, NoteMeta> = {};
 
@@ -52,7 +49,8 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             case "markdown":
                 return new MarkdownExportProvider(providerData);
             case "share":
-                return new ShareThemeExportProvider(providerData);
+                // TODO: Reintroduce share format.
+                // return new ShareThemeExportProvider(providerData);
             default:
                 throw new Error();
         }
@@ -483,7 +481,7 @@ async function exportToZipFile(noteId: string, format: ExportFormat, zipFilePath
     await exportToZip(taskContext, note.getParentBranches()[0], format, fileOutputStream, false, zipExportOptions);
     await waitForStreamToFinish(fileOutputStream);
 
-    log.info(`Exported '${noteId}' with format '${format}' to '${zipFilePath}'`);
+    getLog().info(`Exported '${noteId}' with format '${format}' to '${zipFilePath}'`);
 }
 
 export default {
