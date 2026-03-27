@@ -430,17 +430,17 @@ importers:
         specifier: 0.1.3
         version: 0.1.3(@types/leaflet@1.9.21)(leaflet@1.9.4)(maplibre-gl@5.6.1)
       '@mermaid-js/layout-elk':
-        specifier: 0.2.0
-        version: 0.2.0(mermaid@11.13.0)
+        specifier: 0.2.1
+        version: 0.2.1(mermaid@11.13.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.4.0)
+        version: 5.0.1(mind-elixir@5.9.3)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
       '@preact/signals':
-        specifier: 2.5.1
-        version: 2.5.1(preact@10.29.0)
+        specifier: 2.8.2
+        version: 2.8.2(preact@10.29.0)
       '@sqlite.org/sqlite-wasm':
         specifier: 3.51.1-build2
         version: 3.51.1-build2
@@ -466,8 +466,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/splitjs
       '@zumer/snapdom':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.6.0
+        version: 2.6.0
       autocomplete.js:
         specifier: 0.38.1
         version: 0.38.1
@@ -490,23 +490,23 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       force-graph:
-        specifier: 1.51.0
-        version: 1.51.0
+        specifier: 1.51.2
+        version: 1.51.2
       globals:
-        specifier: 17.0.0
-        version: 17.0.0
+        specifier: 17.4.0
+        version: 17.4.0
       i18next:
-        specifier: 25.10.9
-        version: 25.10.9(typescript@5.9.3)
+        specifier: 25.10.10
+        version: 25.10.10(typescript@5.9.3)
       i18next-http-backend:
         specifier: 3.0.2
         version: 3.0.2(encoding@0.1.13)
       jquery:
-        specifier: 3.7.1
-        version: 3.7.1
+        specifier: 4.0.0
+        version: 4.0.0
       jquery.fancytree:
         specifier: 2.38.5
-        version: 2.38.5(jquery@3.7.1)
+        version: 2.38.5(jquery@4.0.0)
       js-sha1:
         specifier: 0.7.0
         version: 0.7.0
@@ -520,8 +520,8 @@ importers:
         specifier: 2.15.6
         version: 2.15.6
       katex:
-        specifier: 0.16.27
-        version: 0.16.27
+        specifier: 0.16.43
+        version: 0.16.43
       knockout:
         specifier: 3.5.1
         version: 3.5.1
@@ -535,38 +535,38 @@ importers:
         specifier: 8.11.1
         version: 8.11.1
       marked:
-        specifier: 17.0.1
-        version: 17.0.1
+        specifier: 17.0.5
+        version: 17.0.5
       mermaid:
         specifier: 11.13.0
         version: 11.13.0
       mind-elixir:
-        specifier: 5.4.0
-        version: 5.4.0
+        specifier: 5.9.3
+        version: 5.9.3
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
       panzoom:
-        specifier: 9.4.3
-        version: 9.4.3
+        specifier: 9.4.4
+        version: 9.4.4
       preact:
         specifier: 10.29.0
         version: 10.29.0
       react-i18next:
-        specifier: 16.5.1
-        version: 16.5.1(i18next@25.10.9(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        specifier: 16.6.6
+        version: 16.6.6(i18next@25.10.10(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       react-window:
-        specifier: 2.2.3
-        version: 2.2.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: 2.2.7
+        version: 2.2.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       reveal.js:
-        specifier: 5.2.1
-        version: 5.2.1
+        specifier: 6.0.0
+        version: 6.0.0
       svg-pan-zoom:
         specifier: 3.6.2
         version: 3.6.2
       tabulator-tables:
-        specifier: 6.3.1
-        version: 6.3.1
+        specifier: 6.4.0
+        version: 6.4.0
       vanilla-js-wheel-zoom:
         specifier: 9.0.4
         version: 9.0.4
@@ -581,8 +581,8 @@ importers:
         specifier: 5.2.10
         version: 5.2.10
       '@types/jquery':
-        specifier: 3.5.33
-        version: 3.5.33
+        specifier: 4.0.0
+        version: 4.0.0
       '@types/leaflet':
         specifier: 1.9.21
         version: 1.9.21
@@ -599,20 +599,20 @@ importers:
         specifier: 6.3.1
         version: 6.3.1
       copy-webpack-plugin:
-        specifier: 13.0.1
-        version: 13.0.1(webpack@5.101.3(esbuild@0.27.4))
+        specifier: 14.0.0
+        version: 14.0.0(webpack@5.101.3(esbuild@0.27.4))
       cross-env:
         specifier: 7.0.3
         version: 7.0.3
       happy-dom:
-        specifier: 20.0.11
-        version: 20.0.11
+        specifier: 20.8.8
+        version: 20.8.8(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       script-loader:
         specifier: 0.7.2
         version: 0.7.2
       vite-plugin-static-copy:
-        specifier: 3.1.4
-        version: 3.1.4(vite@8.0.2(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: 3.4.0
+        version: 3.4.0(vite@8.0.2(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2))
 
   apps/db-compare:
     dependencies:
@@ -4172,11 +4172,6 @@ packages:
   '@mdn/browser-compat-data@5.7.6':
     resolution: {integrity: sha512-7xdrMX0Wk7grrTZQwAoy1GkvPMFoizStUoL+VmtUkAxegbCCec+3FKwOM6yc/uGU5+BEczQHXAlWiqvM8JeENg==}
 
-  '@mermaid-js/layout-elk@0.2.0':
-    resolution: {integrity: sha512-vjjYGnCCjYlIA/rR7M//eFi0rHM6dsMyN1JQKfckpt30DTC/esrw36hcrvA2FNPHaqh3Q/SyBWzddyaky8EtUQ==}
-    peerDependencies:
-      mermaid: 11.13.0
-
   '@mermaid-js/layout-elk@0.2.1':
     resolution: {integrity: sha512-MX9jwhMyd5zDcFsYcl3duDUkKhjVRUCGEQrdCeNV5hCIR6+3FuDDbRbFmvVbAu15K1+juzsYGG+K8MDvCY1Amg==}
     peerDependencies:
@@ -4591,11 +4586,6 @@ packages:
 
   '@preact/signals-core@1.14.0':
     resolution: {integrity: sha512-AowtCcCU/33lFlh1zRFf/u+12rfrhtNakj7UpaGEsmMwUKpKWMVvcktOGcwBBNiB4lWrZWc01LhiyyzVklJyaQ==}
-
-  '@preact/signals@2.5.1':
-    resolution: {integrity: sha512-VPjk5YFt7i11Fi4UK0tzaEe5xLwfhUxXL3l89ocxQ5aPz7bRo8M5+N73LjBMPklyXKYKz6YsNo4Smp8n6nplng==}
-    peerDependencies:
-      preact: 10.29.0
 
   '@preact/signals@2.8.2':
     resolution: {integrity: sha512-gym5yoa64c+0w2kL7zRAAjY548qzWXbbuOfjsK9F1nWrEqooDwyWnih5SNdonjhQSp27zUqYh7UrxIRnkCyFCA==}
@@ -6363,9 +6353,6 @@ packages:
   '@types/ini@4.1.1':
     resolution: {integrity: sha512-MIyNUZipBTbyUNnhvuXJTY7B6qNI78meck9Jbv3wk0OgNwRyOOVEKDutAkOs1snB/tx0FafyR6/SN4Ps0hZPeg==}
 
-  '@types/jquery@3.5.33':
-    resolution: {integrity: sha512-SeyVJXlCZpEki5F0ghuYe+L+PprQta6nRZqhONt9F13dWBtR/ftoaIbdRQ7cis7womE+X2LKhsDdDtkkDhJS6g==}
-
   '@types/jquery@4.0.0':
     resolution: {integrity: sha512-Z+to+A2VkaHq1DfI2oSwsoCdhCHMpTSgjWzNcbNlRGYzksDBpPUgEcAL+RQjOBJRaLoEAOHXxqDGBVP+BblBwg==}
 
@@ -6517,9 +6504,6 @@ packages:
 
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
-
-  '@types/sizzle@2.3.10':
-    resolution: {integrity: sha512-TC0dmN0K8YcWEAEfiPi5gJP14eJe30TTGjkvek3iM/1NdHHsdCA/Td6GvNndMOo/iSnIsZ4HuuhrYPDAmbxzww==}
 
   '@types/sockjs@0.3.36':
     resolution: {integrity: sha512-MK9V6NzAS1+Ud7JV9lJLFqW85VbC9dq3LmwZCuBe4wBDgKC0Kj/jd8Xl+nSviU+Qc3+m7umHHyHg//2KSa0a0Q==}
@@ -7465,9 +7449,6 @@ packages:
   '@zip.js/zip.js@2.8.11':
     resolution: {integrity: sha512-0fztsk/0ryJ+2PPr9EyXS5/Co7OK8q3zY/xOoozEWaUsL5x+C0cyZ4YyMuUffOO2Dx/rAdq4JMPqW0VUtm+vzA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
-
-  '@zumer/snapdom@2.0.1':
-    resolution: {integrity: sha512-78/qbYl2FTv4H6qaXcNfAujfIOSzdvs83NW63VbyC9QA3sqNPfPvhn4xYMO6Gy11hXwJUEhd0z65yKiNzDwy9w==}
 
   '@zumer/snapdom@2.6.0':
     resolution: {integrity: sha512-JpPPkuMzozRVX6KArgCiMgLpgVW82kWgyoFk5DWGKE5msWGEshXEUdQHLLEyZRO7qioI1pI+yaBJz81tEP9gPg==}
@@ -8581,12 +8562,6 @@ packages:
 
   copy-anything@2.0.6:
     resolution: {integrity: sha512-1j20GZTsvKNkc4BY3NpMOM8tt///wY3FpIzozTOFO2ffuZcV61nojHXVKIy3WM+7ADCy5FVhdZYHYDdgTU0yJw==}
-
-  copy-webpack-plugin@13.0.1:
-    resolution: {integrity: sha512-J+YV3WfhY6W/Xf9h+J1znYuqTye2xkBUIGyTPWuBAT27qajBa5mR4f8WBmfDY3YjRftT2kqZZiLi1qf0H+UOFw==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      webpack: ^5.1.0
 
   copy-webpack-plugin@14.0.0:
     resolution: {integrity: sha512-3JLW90aBGeaTLpM7mYQKpnVdgsUZRExY55giiZgLuX/xTQRUs1dOCwbBnWnvY6Q6rfZoXMNwzOQJCSZPppfqXA==}
@@ -9990,10 +9965,6 @@ packages:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
 
-  force-graph@1.51.0:
-    resolution: {integrity: sha512-aTnihCmiMA0ItLJLCbrQYS9mzriopW24goFPgUnKAAmAlPogTSmFWqoBPMXzIfPb7bs04Hur5zEI4WYgLW3Sig==}
-    engines: {node: '>=12'}
-
   force-graph@1.51.2:
     resolution: {integrity: sha512-zZNdMqx8qIQGurgnbgYIUsdXxSfvhfRSIdncsKGv/twUOZpwCsk9hPHmdjdcme1+epATgb41G0rkIGHJ0Wydng==}
     engines: {node: '>=12'}
@@ -10299,10 +10270,6 @@ packages:
     resolution: {integrity: sha512-c/c15i26VrJ4IRt5Z89DnIzCGDn9EcebibhAOjw5ibqEHsE1wLUgkPn9RDmNcUKyU87GeaL633nyJ+pplFR2ZQ==}
     engines: {node: '>=18'}
 
-  globals@17.0.0:
-    resolution: {integrity: sha512-gv5BeD2EssA793rlFWVPMMCqefTlpusw6/2TbAVMy0FzcG8wKJn4O+NqJ4+XWmmwrayJgw5TzrmWjFgmz1XPqw==}
-    engines: {node: '>=18'}
-
   globals@17.4.0:
     resolution: {integrity: sha512-hjrNztw/VajQwOLsMNT1cbJiH2muO3OROCHnbehc8eY5JyD2gqz4AcMHPqgaOR59DjgUjYAYLeH699g/eWi2jw==}
     engines: {node: '>=18'}
@@ -10358,10 +10325,6 @@ packages:
     resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
     engines: {node: '>=0.4.7'}
     hasBin: true
-
-  happy-dom@20.0.11:
-    resolution: {integrity: sha512-QsCdAUHAmiDeKeaNojb1OHOPF7NjcWPBR7obdu3NwH2a/oyQaLg5d0aaCy/9My6CdPChYF07dvz5chaXBGaD4g==}
-    engines: {node: '>=20.0.0'}
 
   happy-dom@20.8.8:
     resolution: {integrity: sha512-5/F8wxkNxYtsN0bXfMwIyNLZ9WYsoOYPbmoluqVJqv8KBUbcyKZawJ7uYK4WTX8IHBLYv+VXIwfeNDPy1oKMwQ==}
@@ -10650,14 +10613,6 @@ packages:
 
   i18next@25.10.10:
     resolution: {integrity: sha512-cqUW2Z3EkRx7NqSyywjkgCLK7KLCL6IFVFcONG7nVYIJ3ekZ1/N5jUsihHV6Bq37NfhgtczxJcxduELtjTwkuQ==}
-    peerDependencies:
-      typescript: ^5 || ^6
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  i18next@25.10.9:
-    resolution: {integrity: sha512-hQY9/bFoQKGlSKMlaCuLR8w1h5JjieqrsnZvEmj1Ja6Ec7fbyc4cTrCsY9mb9Sd8YQ/swsrKz1S9M8AcvVI70w==}
     peerDependencies:
       typescript: ^5 || ^6
     peerDependenciesMeta:
@@ -11211,9 +11166,6 @@ packages:
     peerDependencies:
       jquery: '>=1.9'
 
-  jquery@3.7.1:
-    resolution: {integrity: sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==}
-
   jquery@4.0.0:
     resolution: {integrity: sha512-TXCHVR3Lb6TZdtw1l3RTLf8RBWVGexdxL6AC8/e0xZKEpBflBsjh9/8LXw+dkNFuOyW9B7iB3O1sP7hS0Kiacg==}
 
@@ -11370,10 +11322,6 @@ packages:
   karma@6.4.4:
     resolution: {integrity: sha512-LrtUxbdvt1gOpo3gxG+VAJlJAEMhbWlM4YrFQgql98FwF7+K8K12LYO4hnDdUkNjeztYrOXEMqgTajSWgmtI/w==}
     engines: {node: '>= 10'}
-    hasBin: true
-
-  katex@0.16.27:
-    resolution: {integrity: sha512-aeQoDkuRWSqQN6nSvVCEFvfXdqo1OQiCmmW1kc9xSdjutPv7BGO7pqY9sQRJpMOGrEdfDgF2TfRXe5eUAD2Waw==}
     hasBin: true
 
   katex@0.16.43:
@@ -11827,11 +11775,6 @@ packages:
     engines: {node: '>= 20'}
     hasBin: true
 
-  marked@17.0.1:
-    resolution: {integrity: sha512-boeBdiS0ghpWcSwoNm/jJBwdpFaMnZWRzjA6SkUMYb40SVaN1x7mmfGKp0jvexGcx+7y2La5zRZsYFZI6Qpypg==}
-    engines: {node: '>= 20'}
-    hasBin: true
-
   marked@17.0.5:
     resolution: {integrity: sha512-6hLvc0/JEbRjRgzI6wnT2P1XuM1/RrrDEX0kPt0N7jGm1133g6X7DlxFasUIx+72aKAr904GTxhSLDrd5DIlZg==}
     engines: {node: '>= 20'}
@@ -12091,9 +12034,6 @@ packages:
   mimic-response@3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
-
-  mind-elixir@5.4.0:
-    resolution: {integrity: sha512-yxXajDWoSF6id8b2LKxlhXidxH/v6mx4JV+isrtsZ62RGCMsRbjUMFO9xOfTVH8vyxWhsbCkiAP6/i5hqbyk6w==}
 
   mind-elixir@5.9.3:
     resolution: {integrity: sha512-OTTO6ofvDuzN4fxuBngqhQLJmIqModr2NgQb4OY+5DGRt54B+YNAvNnlspYwUXXGq2Rbht1DhXgeU4dr4CUy6Q==}
@@ -12805,9 +12745,6 @@ packages:
 
   pako@2.1.0:
     resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
-
-  panzoom@9.4.3:
-    resolution: {integrity: sha512-xaxCpElcRbQsUtIdwlrZA90P90+BHip4Vda2BC8MEb4tkI05PmR6cKECdqUCZ85ZvBHjpI9htJrZBxV5Gp/q/w==}
 
   panzoom@9.4.4:
     resolution: {integrity: sha512-r1KfkNZvsBw59IPq7Yy+GWZnZE1YCG/t7aG6caSkij/TBqdxTzmxNTm/lHf3h6qlVMFisIGIO+lgS2Ym23PIoA==}
@@ -13593,22 +13530,6 @@ packages:
     peerDependencies:
       react: ^19.2.4
 
-  react-i18next@16.5.1:
-    resolution: {integrity: sha512-Hks6UIRZWW4c+qDAnx1csVsCGYeIR4MoBGQgJ+NUoNnO6qLxXuf8zu0xdcinyXUORgGzCdRsexxO1Xzv3sTdnw==}
-    peerDependencies:
-      i18next: '>= 25.6.2'
-      react: '>= 16.8.0'
-      react-dom: '*'
-      react-native: '*'
-      typescript: ^5
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-native:
-        optional: true
-      typescript:
-        optional: true
-
   react-i18next@16.6.6:
     resolution: {integrity: sha512-ZgL2HUoW34UKUkOV7uSQFE1CDnRPD+tCR3ywSuWH7u2iapnz86U8Bi3Vrs620qNDzCf1F47NxglCEkchCTDOHw==}
     peerDependencies:
@@ -13687,12 +13608,6 @@ packages:
     peerDependencies:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
-
-  react-window@2.2.3:
-    resolution: {integrity: sha512-gTRqQYC8ojbiXyd9duYFiSn2TJw0ROXCgYjenOvNKITWzK0m0eCvkUsEUM08xvydkMh7ncp+LE0uS3DeNGZxnQ==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
 
   react-window@2.2.7:
     resolution: {integrity: sha512-SH5nvfUQwGHYyriDUAOt7wfPsfG9Qxd6OdzQxl5oQ4dsSsUicqQvjV7dR+NqZ4coY0fUn3w1jnC5PwzIUWEg5w==}
@@ -13920,10 +13835,6 @@ packages:
   reusify@1.1.0:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
-
-  reveal.js@5.2.1:
-    resolution: {integrity: sha512-r7//6mIM5p34hFiDMvYfXgyjXqGRta+/psd9YtytsgRlrpRzFv4RbH76TXd2qD+7ZPZEbpBDhdRhJaFgfQ7zNQ==}
-    engines: {node: '>=18.0.0'}
 
   reveal.js@6.0.0:
     resolution: {integrity: sha512-RayDr1FL3Jglnf6p9xHGJ0U18va96PiuLs/JHnd1cdDOXvC+3lsXKe6ujl7PX0pvnhNW2Tpqnr6PEKpJVO2exw==}
@@ -14946,9 +14857,6 @@ packages:
     resolution: {integrity: sha512-9kY+CygyYM6j02t5YFHbNz2FN5QmYGv9zAjVp4lCDjlCw7amdckXlEt/bjMhUIfj4ThGRE4gCUH5+yGnNuPo5A==}
     engines: {node: '>=10.0.0'}
 
-  tabulator-tables@6.3.1:
-    resolution: {integrity: sha512-qFW7kfadtcaISQIibKAIy0f3eeIXUVi8242Vly1iJfMD79kfEGzfczNuPBN/80hDxHzQJXYbmJ8VipI40hQtfA==}
-
   tabulator-tables@6.4.0:
     resolution: {integrity: sha512-Lxh+leFNoBo/Yyr4USs6gxqbfo8anYUaUMmoT91pfVLtoUgl/dE+qV7ahnFrKVMCYYqGG33aIMPR7FzpPBaNYA==}
 
@@ -15653,12 +15561,6 @@ packages:
     peerDependenciesMeta:
       vite:
         optional: true
-
-  vite-plugin-static-copy@3.1.4:
-    resolution: {integrity: sha512-iCmr4GSw4eSnaB+G8zc2f4dxSuDjbkjwpuBLLGvQYR9IW7rnDzftnUjOH5p4RYR+d4GsiBqXRvzuFhs5bnzVyw==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    peerDependencies:
-      vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
   vite-plugin-static-copy@3.4.0:
     resolution: {integrity: sha512-ekryzCw0ouAOE8tw4RvVL/dfqguXzumsV3FBKoKso4MQ1MUUrUXtl5RI4KpJQUNGqFEsg9kxl4EvDl02YtA9VQ==}
@@ -17723,8 +17625,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-import-word@47.6.1':
     dependencies:
@@ -17748,8 +17648,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-inspector@5.0.0': {}
 
@@ -17760,8 +17658,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-line-height@47.6.1':
     dependencies:
@@ -17786,8 +17682,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-list-multi-level@47.6.1':
     dependencies:
@@ -17858,6 +17752,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-merge-fields@47.6.1':
     dependencies:
@@ -20192,12 +20088,6 @@ snapshots:
 
   '@mdn/browser-compat-data@5.7.6': {}
 
-  '@mermaid-js/layout-elk@0.2.0(mermaid@11.13.0)':
-    dependencies:
-      d3: 7.9.0
-      elkjs: 0.9.3
-      mermaid: 11.13.0
-
   '@mermaid-js/layout-elk@0.2.1(mermaid@11.13.0)':
     dependencies:
       d3: 7.9.0
@@ -20242,10 +20132,6 @@ snapshots:
       resolve: 1.22.10
 
   '@microsoft/tsdoc@0.15.1': {}
-
-  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.4.0)':
-    dependencies:
-      mind-elixir: 5.4.0
 
   '@mind-elixir/node-menu@5.0.1(mind-elixir@5.9.3)':
     dependencies:
@@ -20649,11 +20535,6 @@ snapshots:
       - supports-color
 
   '@preact/signals-core@1.14.0': {}
-
-  '@preact/signals@2.5.1(preact@10.29.0)':
-    dependencies:
-      '@preact/signals-core': 1.14.0
-      preact: 10.29.0
 
   '@preact/signals@2.8.2(preact@10.29.0)':
     dependencies:
@@ -22571,10 +22452,6 @@ snapshots:
 
   '@types/ini@4.1.1': {}
 
-  '@types/jquery@3.5.33':
-    dependencies:
-      '@types/sizzle': 2.3.10
-
   '@types/jquery@4.0.0': {}
 
   '@types/js-yaml@4.0.9': {}
@@ -22740,8 +22617,6 @@ snapshots:
       '@types/node': 22.18.12
 
   '@types/sinonjs__fake-timers@8.1.5': {}
-
-  '@types/sizzle@2.3.10': {}
 
   '@types/sockjs@0.3.36':
     dependencies:
@@ -24743,8 +24618,6 @@ snapshots:
 
   '@zip.js/zip.js@2.8.11': {}
 
-  '@zumer/snapdom@2.0.1': {}
-
   '@zumer/snapdom@2.6.0': {}
 
   abab@2.0.6: {}
@@ -26059,15 +25932,6 @@ snapshots:
     dependencies:
       is-what: 3.14.1
     optional: true
-
-  copy-webpack-plugin@13.0.1(webpack@5.101.3(esbuild@0.27.4)):
-    dependencies:
-      glob-parent: 6.0.2
-      normalize-path: 3.0.0
-      schema-utils: 4.3.2
-      serialize-javascript: 6.0.2
-      tinyglobby: 0.2.15
-      webpack: 5.101.3(esbuild@0.27.4)
 
   copy-webpack-plugin@14.0.0(webpack@5.101.3(esbuild@0.27.4)):
     dependencies:
@@ -27955,24 +27819,6 @@ snapshots:
     dependencies:
       is-callable: 1.2.7
 
-  force-graph@1.51.0:
-    dependencies:
-      '@tweenjs/tween.js': 25.0.0
-      accessor-fn: 1.5.3
-      bezier-js: 6.1.4
-      canvas-color-tracker: 1.3.2
-      d3-array: 3.2.4
-      d3-drag: 3.0.0
-      d3-force-3d: 3.0.6
-      d3-scale: 4.0.2
-      d3-scale-chromatic: 3.1.0
-      d3-selection: 3.0.0
-      d3-zoom: 3.0.0
-      float-tooltip: 1.7.5
-      index-array-by: 1.4.2
-      kapsule: 1.16.3
-      lodash-es: 4.17.23
-
   force-graph@1.51.2:
     dependencies:
       '@tweenjs/tween.js': 25.0.0
@@ -28336,8 +28182,6 @@ snapshots:
 
   globals@16.5.0: {}
 
-  globals@17.0.0: {}
-
   globals@17.4.0: {}
 
   globalthis@1.0.4:
@@ -28399,12 +28243,6 @@ snapshots:
       wordwrap: 1.0.0
     optionalDependencies:
       uglify-js: 3.19.3
-
-  happy-dom@20.0.11:
-    dependencies:
-      '@types/node': 20.19.25
-      '@types/whatwg-mimetype': 3.0.2
-      whatwg-mimetype: 3.0.0
 
   happy-dom@20.8.8(bufferutil@4.0.9)(utf-8-validate@6.0.5):
     dependencies:
@@ -28824,12 +28662,6 @@ snapshots:
       - encoding
 
   i18next@25.10.10(typescript@5.9.3):
-    dependencies:
-      '@babel/runtime': 7.29.2
-    optionalDependencies:
-      typescript: 5.9.3
-
-  i18next@25.10.9(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.2
     optionalDependencies:
@@ -29307,15 +29139,9 @@ snapshots:
 
   jquery-hotkeys@0.2.2: {}
 
-  jquery.fancytree@2.38.5(jquery@3.7.1):
-    dependencies:
-      jquery: 3.7.1
-
   jquery.fancytree@2.38.5(jquery@4.0.0):
     dependencies:
       jquery: 4.0.0
-
-  jquery@3.7.1: {}
 
   jquery@4.0.0: {}
 
@@ -29525,10 +29351,6 @@ snapshots:
       - debug
       - supports-color
       - utf-8-validate
-
-  katex@0.16.27:
-    dependencies:
-      commander: 8.3.0
 
   katex@0.16.43:
     dependencies:
@@ -30065,8 +29887,6 @@ snapshots:
 
   marked@16.4.2: {}
 
-  marked@17.0.1: {}
-
   marked@17.0.5: {}
 
   marked@4.3.0: {}
@@ -30507,8 +30327,6 @@ snapshots:
   mimic-response@1.0.1: {}
 
   mimic-response@3.1.0: {}
-
-  mind-elixir@5.4.0: {}
 
   mind-elixir@5.9.3: {}
 
@@ -31354,12 +31172,6 @@ snapshots:
 
   pako@2.1.0: {}
 
-  panzoom@9.4.3:
-    dependencies:
-      amator: 1.1.0
-      ngraph.events: 1.2.2
-      wheel: 1.0.0
-
   panzoom@9.4.4:
     dependencies:
       amator: 1.1.0
@@ -32137,17 +31949,6 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
-  react-i18next@16.5.1(i18next@25.10.9(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3):
-    dependencies:
-      '@babel/runtime': 7.29.2
-      html-parse-stringify: 3.0.1
-      i18next: 25.10.9(typescript@5.9.3)
-      react: 19.2.4
-      use-sync-external-store: 1.6.0(react@19.2.4)
-    optionalDependencies:
-      react-dom: 19.2.4(react@19.2.4)
-      typescript: 5.9.3
-
   react-i18next@16.6.6(i18next@25.10.10(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.2
@@ -32230,11 +32031,6 @@ snapshots:
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-
-  react-window@2.2.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
-    dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
@@ -32538,8 +32334,6 @@ snapshots:
   retry@0.13.1: {}
 
   reusify@1.1.0: {}
-
-  reveal.js@5.2.1: {}
 
   reveal.js@6.0.0: {}
 
@@ -33826,8 +33620,6 @@ snapshots:
       string-width: 4.2.3
       strip-ansi: 6.0.1
 
-  tabulator-tables@6.3.1: {}
-
   tabulator-tables@6.4.0: {}
 
   tailwind-merge@2.6.0: {}
@@ -34629,14 +34421,6 @@ snapshots:
       - '@types/node'
       - rollup
       - supports-color
-
-  vite-plugin-static-copy@3.1.4(vite@8.0.2(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2)):
-    dependencies:
-      chokidar: 3.6.0
-      p-map: 7.0.4
-      picocolors: 1.1.1
-      tinyglobby: 0.2.15
-      vite: 8.0.2(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2)
 
   vite-plugin-static-copy@3.4.0(vite@8.0.2(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
