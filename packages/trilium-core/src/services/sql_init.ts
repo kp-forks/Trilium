@@ -182,7 +182,7 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
     });
 
     // Import demo content.
-    if (getDemoArchive) {
+    if (!skipDemoDb && getDemoArchive) {
         log.info("Importing demo content...");
         const demoFile = await getDemoArchive();
         if (demoFile) {
