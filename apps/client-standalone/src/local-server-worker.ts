@@ -55,6 +55,7 @@ let BrowserSqlProvider: typeof import('./lightweight/sql_provider').default;
 let WorkerMessagingProvider: typeof import('./lightweight/messaging_provider').default;
 let BrowserExecutionContext: typeof import('./lightweight/cls_provider').default;
 let BrowserCryptoProvider: typeof import('./lightweight/crypto_provider').default;
+let BrowserZipProvider: typeof import('./lightweight/zip_provider').default;
 let FetchRequestProvider: typeof import('./lightweight/request_provider').default;
 let StandalonePlatformProvider: typeof import('./lightweight/platform_provider').default;
 let translationProvider: typeof import('./lightweight/translation_provider').default;
@@ -82,6 +83,7 @@ async function loadModules(): Promise<void> {
         messagingModule,
         clsModule,
         cryptoModule,
+        zipModule,
         requestModule,
         platformModule,
         translationModule,
@@ -91,6 +93,7 @@ async function loadModules(): Promise<void> {
         import('./lightweight/messaging_provider.js'),
         import('./lightweight/cls_provider.js'),
         import('./lightweight/crypto_provider.js'),
+        import('./lightweight/zip_provider.js'),
         import('./lightweight/request_provider.js'),
         import('./lightweight/platform_provider.js'),
         import('./lightweight/translation_provider.js'),
@@ -101,6 +104,7 @@ async function loadModules(): Promise<void> {
     WorkerMessagingProvider = messagingModule.default;
     BrowserExecutionContext = clsModule.default;
     BrowserCryptoProvider = cryptoModule.default;
+    BrowserZipProvider = zipModule.default;
     FetchRequestProvider = requestModule.default;
     StandalonePlatformProvider = platformModule.default;
     translationProvider = translationModule.default;
@@ -152,6 +156,7 @@ async function initialize(): Promise<void> {
             await coreModule.initializeCore({
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
+                zip: new BrowserZipProvider(),
                 messaging: messagingProvider!,
                 request: new FetchRequestProvider(),
                 platform: new StandalonePlatformProvider(queryString),

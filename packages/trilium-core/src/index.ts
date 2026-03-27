@@ -9,6 +9,7 @@ import { initTranslations, TranslationProvider } from "./services/i18n";
 import { initSchema } from "./services/sql_init";
 import appInfo from "./services/app_info";
 import { type PlatformProvider, initPlatform } from "./services/platform";
+import { type ZipProvider, initZipProvider } from "./services/import/zip_provider";
 
 export { getLog } from "./services/log";
 export type * from "./services/sql/types";
@@ -102,10 +103,11 @@ export * as routeHelpers from "./routes/helpers";
 export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, schema, extraAppInfo, platform }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, zip, translations, messaging, request, schema, extraAppInfo, platform }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
+    zip: ZipProvider,
     translations: TranslationProvider,
     platform: PlatformProvider,
     schema: string,
@@ -120,6 +122,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
     initLog();
     await initTranslations(translations);
     initCrypto(crypto);
+    initZipProvider(zip);
     initContext(executionContext);
     initSql(new SqlService(dbConfig, getLog()));
     initSchema(schema);

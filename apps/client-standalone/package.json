@@ -40,6 +40,7 @@
     "color": "5.0.3",
     "debounce": "3.0.0",
     "draggabilly": "3.0.0",
+    "fflate": "0.8.2",
     "force-graph": "1.51.2",
     "globals": "17.4.0",
     "i18next": "25.10.10",

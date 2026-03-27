@@ -10,6 +10,7 @@ import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
+import NodejsZipProvider from "./zip_provider.js";
 import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";
 import port from "./services/port.js";
@@ -51,6 +52,7 @@ async function startApplication() {
             }
         },
         crypto: new NodejsCryptoProvider(),
+        zip: new NodejsZipProvider(),
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),

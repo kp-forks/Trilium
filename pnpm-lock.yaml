@@ -489,6 +489,9 @@ importers:
       draggabilly:
         specifier: 3.0.0
         version: 3.0.0
+      fflate:
+        specifier: 0.8.2
+        version: 0.8.2
       force-graph:
         specifier: 1.51.2
         version: 1.51.2
@@ -17694,6 +17697,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-list-multi-level@47.6.1':
     dependencies:

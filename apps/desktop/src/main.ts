@@ -1,6 +1,7 @@
 import { getLog, initializeCore, sql_init } from "@triliumnext/core";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
+import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import options from "@triliumnext/server/src/services/options.js";
 import port from "@triliumnext/server/src/services/port.js";
@@ -133,6 +134,7 @@ async function main() {
             }
         },
         crypto: new NodejsCryptoProvider(),
+        zip: new NodejsZipProvider(),
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),

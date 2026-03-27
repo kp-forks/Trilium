@@ -1,7 +1,6 @@
 import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
-import path from "path";
-import type { Stream } from "stream";
-import yauzl from "yauzl";
+import { basename, dirname } from "../utils/path.js";
+import { getZipProvider } from "./zip_provider.js";
 
 import becca from "../../becca/becca.js";
 import BAttachment from "../../becca/entities/battachment.js";
@@ -138,7 +137,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         if (parentNoteMeta?.noteId) {
             parentNoteId = parentNoteMeta.isImportRoot ? importRootNote.noteId : getNewNoteId(parentNoteMeta.noteId);
         } else {
-            const parentPath = path.dirname(filePath);
+            const parentPath = dirname(filePath);
 
             if (parentPath === ".") {
                 parentNoteId = importRootNote.noteId;
@@ -267,10 +266,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
                 url = url.substr(2);
             }
 
-            absUrl = path.dirname(filePath);
+            absUrl = dirname(filePath);
 
             while (url.startsWith("../")) {
-                absUrl = path.dirname(absUrl);
+                absUrl = dirname(absUrl);
 
                 url = url.substr(3);
             }
@@ -342,9 +341,9 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
             const target = getEntityIdFromRelativeUrl(url, filePath);
 
             if (target.attachmentId) {
-                return `src="api/attachments/${target.attachmentId}/image/${path.basename(url)}"`;
+                return `src="api/attachments/${target.attachmentId}/image/${basename(url)}"`;
             } else if (target.noteId) {
-                return `src="api/images/${target.noteId}/${path.basename(url)}"`;
+                return `src="api/images/${target.noteId}/${basename(url)}"`;
             }
             return match;
 
@@ -390,7 +389,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         return content;
     }
 
-    function processNoteContent(noteMeta: NoteMeta | undefined, type: string, mime: string, content: string | Buffer, noteTitle: string, filePath: string) {
+    function processNoteContent(noteMeta: NoteMeta | undefined, type: string, mime: string, content: string | Uint8Array, noteTitle: string, filePath: string) {
         if ((noteMeta?.format === "markdown" || (!noteMeta && taskContext.data?.textImportedAsText && ["text/markdown", "text/x-markdown", "text/mdx"].includes(mime))) && typeof content === "string") {
             content = markdownService.renderToHtml(content, noteTitle);
         }
@@ -412,7 +411,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         return content;
     }
 
-    function saveNote(filePath: string, content: string | Buffer) {
+    function saveNote(filePath: string, content: string | Uint8Array) {
         const { parentNoteMeta, noteMeta, attachmentMeta } = getMeta(filePath);
 
         if (noteMeta?.noImport) {
@@ -549,46 +548,42 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
                 noteId,
                 type: "label",
                 name: "originalFileName",
-                value: path.basename(filePath)
+                value: basename(filePath)
             });
         }
     }
 
     // we're running two passes in order to obtain critical information first (meta file and root)
     const topLevelItems = new Set<string>();
-    await readZipFile(fileBuffer, async (zipfile: yauzl.ZipFile, entry: yauzl.Entry) => {
+    const zipProvider = getZipProvider();
+
+    await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
         // make sure that the meta file is loaded before the rest of the files is processed.
         if (filePath === "!!!meta.json") {
-            const content = await readContent(zipfile, entry);
-
-            metaFile = JSON.parse(content.toString("utf-8"));
+            const content = await readContent();
+            metaFile = JSON.parse(new TextDecoder("utf-8").decode(content));
         }
 
         // determine the root of the .zip (i.e. if it has only one top-level folder then the root is that folder, or the root of the archive if there are multiple top-level folders).
         const firstSlash = filePath.indexOf("/");
         const topLevelPath = (firstSlash !== -1 ? filePath.substring(0, firstSlash) : filePath);
         topLevelItems.add(topLevelPath);
-
-        zipfile.readEntry();
     });
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
 
-    await readZipFile(fileBuffer, async (zipfile: yauzl.ZipFile, entry: yauzl.Entry) => {
+    await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
         if (/\/$/.test(entry.fileName)) {
             saveDirectory(filePath);
         } else if (filePath !== "!!!meta.json") {
-            const content = await readContent(zipfile, entry);
-
-            saveNote(filePath, content);
+            saveNote(filePath, await readContent());
         }
 
         taskContext.increaseProgressCount();
-        zipfile.readEntry();
     });
 
     for (const noteId of createdNoteIds) {
@@ -635,43 +630,6 @@ function normalizeFilePath(filePath: string): string {
     }
 
     return filePath;
-}
-
-function streamToBuffer(stream: Stream): Promise<Buffer> {
-    const chunks: Uint8Array[] = [];
-    stream.on("data", (chunk) => chunks.push(chunk));
-
-    return new Promise((res, rej) => stream.on("end", () => res(Buffer.concat(chunks))));
-}
-
-export function readContent(zipfile: yauzl.ZipFile, entry: yauzl.Entry): Promise<Buffer> {
-    return new Promise((res, rej) => {
-        zipfile.openReadStream(entry, (err, readStream) => {
-            if (err) rej(err);
-            if (!readStream) throw new Error("Unable to read content.");
-
-            streamToBuffer(readStream).then(res);
-        });
-    });
-}
-
-export function readZipFile(buffer: Uint8Array, processEntryCallback: (zipfile: yauzl.ZipFile, entry: yauzl.Entry) => Promise<void>) {
-    return new Promise<void>((res, rej) => {
-        yauzl.fromBuffer(Buffer.from(buffer), { lazyEntries: true, validateEntrySizes: false }, (err, zipfile) => {
-            if (err) rej(err);
-            if (!zipfile) throw new Error("Unable to read zip file.");
-
-            zipfile.readEntry();
-            zipfile.on("entry", async (entry) => {
-                try {
-                    await processEntryCallback(zipfile, entry);
-                } catch (e) {
-                    rej(e);
-                }
-            });
-            zipfile.on("end", res);
-        });
-    });
 }
 
 function resolveNoteType(type: string | undefined): NoteType {
