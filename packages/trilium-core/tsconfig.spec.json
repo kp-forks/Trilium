@@ -2,6 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/vitest",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2020",
     "types": [
       "vitest"
     ],    
