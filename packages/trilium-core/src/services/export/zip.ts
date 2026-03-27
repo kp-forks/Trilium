@@ -1,5 +1,4 @@
 import { NoteType } from "@triliumnext/commons";
-import path from "path";
 import sanitize from "sanitize-filename";
 
 import packageInfo from "../../../package.json" with { type: "json" };
@@ -17,6 +16,7 @@ import HtmlExportProvider from "./zip/html.js";
 import MarkdownExportProvider from "./zip/markdown.js";
 import { AttachmentMeta, AttributeMeta, ExportFormat, NoteMeta, NoteMetaFile } from "../../meta";
 import { ValidationError } from "../../errors";
+import { extname } from "../utils/path";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Record<string, any>, setHeaders = true, zipExportOptions?: AdvancedExportOptions) {
@@ -91,7 +91,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             fileName = fileName.slice(0, 30 - croppedExt.length) + croppedExt;
         }
 
-        const existingExtension = path.extname(fileName).toLowerCase();
+        const existingExtension = extname(fileName).toLowerCase();
         const newExtension = provider.mapExtension(type, mime, existingExtension, format);
 
         // if the note is already named with the extension (e.g. "image.jpg"), then it's silly to append the exact same extension again

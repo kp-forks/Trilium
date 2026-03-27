@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import fs from "fs";
-import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import becca from "../../becca/becca.js";
@@ -13,7 +12,7 @@ import { getContext } from "../context.js";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 
 async function testImport(fileName: string, mimetype: string) {
-    const buffer = fs.readFileSync(path.join(scriptDir, "samples", fileName));
+    const buffer = fs.readFileSync(`${scriptDir}/samples/${fileName}`);
     const taskContext = TaskContext.getInstance("import-mdx", "importNotes", {
         textImportedAsText: true,
         codeImportedAsCode: true

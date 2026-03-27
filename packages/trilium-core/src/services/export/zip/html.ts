@@ -1,8 +1,6 @@
-import fs from "fs";
 import html from "html";
-import path from "path";
 
-import { escapeHtml, isDev } from "../../utils/index";
+import { escapeHtml } from "../../utils/index";
 import { ZipExportProvider } from "./abstract_provider.js";
 import { NoteMeta } from "../../../meta";
 
