@@ -1,17 +1,18 @@
-import { becca_loader, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import path from "path";
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
-import cls from "../../services/cls.js";
 import enexImportService from "../../services/import/enex.js";
 import opmlImportService from "../../services/import/opml.js";
 import singleImportService from "../../services/import/single.js";
 import zipImportService from "../../services/import/zip.js";
-import log from "../../services/log.js";
+import log, { getLog } from "../../services/log.js";
 import TaskContext from "../../services/task_context.js";
-import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
+import { safeExtractMessageAndStackFromError } from "../../services/utils/index.js";
+import * as cls from "../../services/context.js";
+import { ValidationError } from "../../errors.js";
+import becca_loader from "../../becca/becca_loader.js";
 
 async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
@@ -72,7 +73,7 @@ async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
         const message = `Import failed with following error: '${errMessage}'. More details might be in the logs.`;
         taskContext.reportError(message);
 
-        log.error(message + errStack);
+        getLog().error(message + errStack);
 
         return [500, message];
     }
@@ -126,7 +127,7 @@ function importAttachmentsToNote(req: Request<{ parentNoteId: string }>) {
         const message = `Import failed with following error: '${errMessage}'. More details might be in the logs.`;
         taskContext.reportError(message);
 
-        log.error(message + errStack);
+        getLog().error(message + errStack);
 
         return [500, message];
     }

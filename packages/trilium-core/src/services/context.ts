@@ -77,3 +77,7 @@ export function getAndClearEntityChangeIds() {
 
     return entityChangeIds;
 }
+
+export function ignoreEntityChangeIds() {
+    getContext().set("ignoreEntityChangeIds", true);
+}

@@ -46,10 +46,6 @@ function putEntityChange(entityChange: EntityChange) {
     cls.putEntityChange(entityChange);
 }
 
-function ignoreEntityChangeIds() {
-    cls.getContext().set("ignoreEntityChangeIds", true);
-}
-
 function get(key: string) {
     return cls.getContext().get(key);
 }
@@ -62,7 +58,10 @@ function reset() {
     cls.getContext().reset();
 }
 
+/** @deprecated */
 export const wrap = cls.wrap;
+/** @deprecated */
+export const ignoreEntityChangeIds = cls.ignoreEntityChangeIds;
 
 export default {
     init,
