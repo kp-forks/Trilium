@@ -7,7 +7,7 @@ interface ImportRequest<P> extends Request<P> {
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
-import enexImportService from "../../services/import/enex.js";
+// import enexImportService from "../../services/import/enex.js";
 import opmlImportService from "../../services/import/opml.js";
 import singleImportService from "../../services/import/single.js";
 import zipImportService from "../../services/import/zip.js";
@@ -64,12 +64,12 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
                 return importResult;
             }
         } else if (extension === ".enex" && options.explodeArchives) {
-            const importResult = await enexImportService.importEnex(taskContext, file, parentNote);
-            if (!Array.isArray(importResult)) {
-                note = importResult;
-            } else {
-                return importResult;
-            }
+            // const importResult = await enexImportService.importEnex(taskContext, file, parentNote);
+            // if (!Array.isArray(importResult)) {
+            //     note = importResult;
+            // } else {
+            //     return importResult;
+            // }
         } else {
             note = singleImportService.importSingleFile(taskContext, file, parentNote);
         }

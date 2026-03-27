@@ -123,6 +123,45 @@ function createRoute(router: BrowserRouter) {
 }
 
 /**
+ * Async variant of createRoute for handlers that return Promises (e.g. import).
+ * Uses transactionalAsync (manual BEGIN/COMMIT/ROLLBACK) instead of the synchronous
+ * transactional() wrapper, which would commit an empty transaction immediately when
+ * passed an async callback.
+ */
+function createAsyncRoute(router: BrowserRouter) {
+    return (method: HttpMethod, path: string, _middleware: any[], handler: (req: any, res: any) => Promise<unknown>, resultHandler?: ((req: any, res: any, result: unknown) => unknown) | null) => {
+        router.register(method, path, (req: BrowserRequest) => {
+            return getContext().init(async () => {
+                setContextFromHeaders(req);
+                const expressLikeReq = toExpressLikeReq(req);
+                const mockRes = createMockExpressResponse();
+                const result = await getSql().transactionalAsync(() => handler(expressLikeReq, mockRes));
+
+                // If the handler used the mock response (e.g. image routes that call res.send()),
+                // return it as a raw response so BrowserRouter doesn't JSON-serialize it.
+                if (mockRes._used) {
+                    return {
+                        [RAW_RESPONSE]: true as const,
+                        status: mockRes._status,
+                        headers: mockRes._headers,
+                        body: mockRes._body
+                    };
+                }
+
+                if (resultHandler) {
+                    // Create a minimal response object that captures what apiResultHandler sets.
+                    const res = createResultHandlerResponse();
+                    resultHandler(expressLikeReq, res, result);
+                    return res.result;
+                }
+
+                return result;
+            });
+        });
+    };
+}
+
+/**
  * Creates a mock Express response object that captures calls to set(), send(), sendStatus(), etc.
  * Used for route handlers (like image routes) that write directly to the response.
  */
@@ -220,7 +259,7 @@ export function registerRoutes(router: BrowserRouter): void {
     const apiRoute = createApiRoute(router, true);
     routes.buildSharedApiRoutes({
         route: createRoute(router),
-        asyncRoute: createRoute(router),
+        asyncRoute: createAsyncRoute(router),
         apiRoute,
         asyncApiRoute: createApiRoute(router, false),
         apiResultHandler,

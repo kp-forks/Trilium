@@ -501,9 +501,12 @@ export default class BrowserSqlProvider implements DatabaseProvider {
 
         // Helper function to execute within a transaction
         const executeTransaction = (beginStatement: string, ...args: unknown[]): T => {
-            // If we're already in a transaction, use SAVEPOINTs for nesting
-            // This mimics better-sqlite3's behavior
-            if (self._inTransaction) {
+            // If we're already in a transaction (either tracked via JS flag or via actual SQLite
+            // autocommit state), use SAVEPOINTs for nesting — this handles the case where a manual
+            // BEGIN was issued directly (e.g. transactionalAsync) without going through transaction().
+            const sqliteInTransaction = self.db?.pointer !== undefined
+                && (self.sqlite3!.capi as any).sqlite3_get_autocommit(self.db!.pointer) === 0;
+            if (self._inTransaction || sqliteInTransaction) {
                 const savepointName = `sp_${++savepointCounter}_${Date.now()}`;
                 self.db!.exec(`SAVEPOINT ${savepointName}`);
                 try {
