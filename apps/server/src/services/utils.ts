@@ -13,6 +13,7 @@ export const isWindows11 = isWindows && osVersion[0] === 10 && osVersion[2] >= 2
 
 export const isElectron = !!process.versions["electron"];
 
+/** @deprecated Use `isDev()` from `@triliumnext/core` instead. */
 export const isDev = !!(process.env.TRILIUM_ENV && process.env.TRILIUM_ENV === "dev");
 
 /** @deprecated */

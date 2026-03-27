@@ -8,6 +8,7 @@ import unescape from "unescape";
 import { basename, extname } from "./path";
 import { NoteMeta } from "../../meta";
 
+export function isDev() { return getPlatform().getEnv("TRILIUM_ENV") === "dev"; }
 export function isElectron() { return getPlatform().isElectron; }
 export function isMac() { return getPlatform().isMac; }
 export function isWindows() { return getPlatform().isWindows; }

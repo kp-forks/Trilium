@@ -10,11 +10,11 @@ import becca from "../../becca/becca.js";
 import BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import dateUtils from "../utils/date.js";
-import log, { getLog } from "../log.js";
+import { getLog } from "../log.js";
 import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
 import { getContentDisposition, waitForStreamToFinish } from "../utils/index"
-import { AdvancedExportOptions, ZipExportProviderData } from "./zip/abstract_provider.js";
+import { AdvancedExportOptions, ZipExportProvider, ZipExportProviderData } from "./zip/abstract_provider.js";
 import HtmlExportProvider from "./zip/html.js";
 import MarkdownExportProvider from "./zip/markdown.js";
 import { AttachmentMeta, AttributeMeta, ExportFormat, NoteMeta, NoteMetaFile } from "../../meta";
@@ -34,7 +34,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
     const noteIdToMeta: Record<string, NoteMeta> = {};
 
-    function buildProvider() {
+    function buildProvider(): ZipExportProvider {
         const providerData: ZipExportProviderData = {
             getNoteTargetUrl,
             archive,

@@ -170,7 +170,7 @@ export default class HtmlExportProvider extends ZipExportProvider {
             return;
         }
 
-        const cssFile = isDev
+        const cssFile = isDev()
             ? path.join(__dirname, "../../../../../../node_modules/ckeditor5/dist/ckeditor5-content.css")
             : path.join(getResourceDir(), "ckeditor5-content.css");
         const cssContent = fs.readFileSync(cssFile, "utf-8");
