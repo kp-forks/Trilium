@@ -1,7 +1,7 @@
 .about-dialog {
 
     body.light-theme & {
-        --donate-button-color: #d78382;
+        --donate-button-color: #e33f3b;
     }
 
     body.dark-theme & {
