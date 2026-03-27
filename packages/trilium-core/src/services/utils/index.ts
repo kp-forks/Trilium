@@ -276,7 +276,7 @@ export function stringToInt(val: string | undefined) {
  * @returns An array of patterns to match both with and without trailing slash
  */
 export function normalizeCustomHandlerPattern(pattern: string | null | undefined): (string | null | undefined)[] {
-    if (!pattern || typeof pattern !== 'string') {
+    if (!pattern || typeof pattern !== "string") {
         return [pattern];
     }
 
@@ -287,32 +287,32 @@ export function normalizeCustomHandlerPattern(pattern: string | null | undefined
     }
 
     // If pattern already ends with optional trailing slash, return as-is
-    if (pattern.endsWith('/?$') || pattern.endsWith('/?)')) {
+    if (pattern.endsWith("/?$") || pattern.endsWith("/?)")) {
         return [pattern];
     }
 
     // If pattern ends with $, handle it specially
-    if (pattern.endsWith('$')) {
+    if (pattern.endsWith("$")) {
         const basePattern = pattern.slice(0, -1);
 
         // If already ends with slash, create both versions
-        if (basePattern.endsWith('/')) {
-            const withoutSlash = `${basePattern.slice(0, -1)  }$`;
+        if (basePattern.endsWith("/")) {
+            const withoutSlash = `${basePattern.slice(0, -1)}$`;
             const withSlash = pattern;
             return [withoutSlash, withSlash];
         }
         // Add optional trailing slash
-        const withSlash = `${basePattern  }/?$`;
+        const withSlash = `${basePattern}/?$`;
         return [withSlash];
 
     }
 
     // For patterns without $, add both versions
-    if (pattern.endsWith('/')) {
+    if (pattern.endsWith("/")) {
         const withoutSlash = pattern.slice(0, -1);
         return [withoutSlash, pattern];
     }
-    const withSlash = `${pattern  }/`;
+    const withSlash = `${pattern}/`;
     return [pattern, withSlash];
 
 }

@@ -505,19 +505,19 @@ describe.todo("#getResourceDir", () => {});
 
 describe("#isElectron", () => {
     it("should export a boolean", () => {
-        expect(utils.isElectron).toBeTypeOf("boolean");
+        expect(utils.isElectron()).toBeTypeOf("boolean");
     });
 });
 
 describe("#isMac", () => {
     it("should export a boolean", () => {
-        expect(utils.isMac).toBeTypeOf("boolean");
+        expect(utils.isMac()).toBeTypeOf("boolean");
     });
 });
 
 describe("#isWindows", () => {
     it("should export a boolean", () => {
-        expect(utils.isWindows).toBeTypeOf("boolean");
+        expect(utils.isWindows()).toBeTypeOf("boolean");
     });
 });
 

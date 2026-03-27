@@ -15,13 +15,13 @@ function buildDescendantCountMap(noteIdsToCount: string[]) {
         throw new Error("noteIdsToCount: type error");
     }
 
-    const noteIdToCountMap = Object.create(null);
+    const noteIdToCountMap: Record<string, number> = Object.create(null);
 
-    function getCount(noteId: string) {
+    function getCount(noteId: string): number {
         if (!(noteId in noteIdToCountMap)) {
             const note = becca.getNote(noteId);
             if (!note) {
-                return;
+                return 0;
             }
 
             const hiddenImageNoteIds = note.getRelations("imageLink").map((rel) => rel.value);
@@ -258,7 +258,6 @@ export function findExcerpts(sourceNote: BNote, referencedNoteId: string) {
     removeImages(document);
 
     for (const linkEl of document.querySelectorAll("a")) {
-        console.log("Got ", linkEl.innerHTML);
         const href = linkEl.getAttribute("href");
 
         if (!href || !href.endsWith(referencedNoteId)) {

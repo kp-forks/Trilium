@@ -6,6 +6,7 @@ import optionService from "./options";
 import { getCurrentLocale } from "./i18n";
 import attributes from "./attributes";
 import BNote from "../becca/entities/bnote";
+import { getPlatform } from "./platform";
 
 export default function getSharedBootstrapItems(assetPath: string, dbInitialized: boolean) {
     const sql = getSql();
@@ -20,7 +21,6 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         layoutOrientation: "vertical" as const,
         headingStyle: "plain" as const,
         componentId: "",
-        appCssNoteIds: getAppCssNoteIds(),
         ...getIconConfig(assetPath)
     };
 
@@ -29,7 +29,8 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         return {
             ...commonItems,
             themeCssUrl: false as const,
-            themeUseNextAsBase: "next" as const
+            themeUseNextAsBase: "next" as const,
+            appCssNoteIds: []
         };
     }
 
@@ -46,6 +47,7 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         isProtectedSessionAvailable: protected_session.isProtectedSessionAvailable(),
         themeCssUrl: getThemeCssUrl(theme, commonItems.assetPath, themeNote) as string | false,
         themeUseNextAsBase: themeNote?.getAttributeValue("label", "appThemeBase") as "next" | "next-light" | "next-dark",
+        appCssNoteIds: getAppCssNoteIds(),
     }
 }
 
@@ -81,7 +83,7 @@ function getThemeCssUrl(theme: string, assetPath: string, themeNote: BNote | nul
         return `${assetPath}/stylesheets/theme-next-light.css`;
     } else if (theme === "next-dark") {
         return `${assetPath}/stylesheets/theme-next-dark.css`;
-    } else if (!process.env.TRILIUM_SAFE_MODE && themeNote) {
+    } else if (!getPlatform().getEnv("TRILIUM_SAFE_MODE") && themeNote) {
         return `api/notes/download/${themeNote.noteId}`;
     }
     // baseline light theme
