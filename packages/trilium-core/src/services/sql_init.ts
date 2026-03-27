@@ -192,13 +192,13 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
         }
     }
 
-    // Post-demo.
+    // Post-demo: pick the first visible (non-system) child of root as the start note.
+    // System notes have IDs starting with "_" and should not be navigated to on startup.
+    // Falls back to "root" if no visible child exists (e.g. empty database).
     sql.transactional(() => {
-        // this needs to happen after ZIP import,
-        // the previous solution was to move option initialization here, but then the important parts of initialization
-        // are not all in one transaction (because ZIP import is async and thus not transactional)
-
-        const startNoteId = sql.getValue("SELECT noteId FROM branches WHERE parentNoteId = 'root' AND isDeleted = 0 ORDER BY notePosition");
+        const startNoteId = sql.getValue<string | null>(
+            "SELECT noteId FROM branches WHERE parentNoteId = 'root' AND isDeleted = 0 AND substr(noteId, 1, 1) != '_' ORDER BY notePosition"
+        ) ?? "root";
 
         optionService.setOption(
             "openNoteContexts",
