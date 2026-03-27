@@ -62,7 +62,7 @@ export function startElectron(callback: () => void): DeferredPromise<void> {
 
 export async function importData(path: string) {
     const buffer = await createImportZip(path);
-    const importService = (await import("@triliumnext/server/src/services/import/zip.js")).default;
+    const { zipImportService } = (await import("@triliumnext/core"));
     const context = new TaskContext("no-progress-reporting", "importNotes", null);
     const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
 
@@ -70,7 +70,7 @@ export async function importData(path: string) {
     if (!rootNote) {
         throw new Error("Missing root note for import.");
     }
-    await importService.importZip(context, buffer, rootNote, {
+    await zipImportService.importZip(context, buffer, rootNote, {
         preserveIds: true
     });
 }
@@ -106,19 +106,18 @@ function waitForEnd(archive: Archiver, stream: WriteStream) {
 export async function extractZip(zipFilePath: string, outputPath: string, ignoredFiles?: Set<string>) {
     const promise = deferred<void>();
     setTimeout(async () => {
-        // Then extract the zip.
-        const { readZipFile, readContent } = (await import("@triliumnext/server/src/services/import/zip.js"));
-        await readZipFile(await fs.readFile(zipFilePath), async (zip, entry) => {
+        const { getZipProvider } = (await import("@triliumnext/core"));
+        const zipProvider = getZipProvider();
+        const buffer = await fs.readFile(zipFilePath);
+        await zipProvider.readZipFile(buffer, async (entry, readContent) => {
             // We ignore directories since they can appear out of order anyway.
             if (!entry.fileName.endsWith("/") && !ignoredFiles?.has(entry.fileName)) {
                 const destPath = path.join(outputPath, entry.fileName);
-                const fileContent = await readContent(zip, entry);
+                const fileContent = await readContent();
 
                 await fsExtra.mkdirs(path.dirname(destPath));
                 await fs.writeFile(destPath, fileContent);
             }
-
-            zip.readEntry();
         });
         promise.resolve();
     }, 1000);
