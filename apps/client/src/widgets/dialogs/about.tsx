@@ -197,6 +197,7 @@ function ContributorListItem({data, onHover}: {data: Contributor, onHover?: Hove
 
     useTooltip(linkRef, (data.role) ? {
         title: t(`about.role_brief_history.${data.role}`),
+        customClass: "about-dialog-brief-history-tooltip",
         placement: "bottom",
         offset: [0, 10],
         delay: 500

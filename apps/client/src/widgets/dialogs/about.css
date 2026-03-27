@@ -115,6 +115,10 @@
     }
 }
 
+.about-dialog-brief-history-tooltip {
+    --main-font-size: .85em;
+}
+
 @keyframes icon-intro {
     from {
         opacity: 0;
