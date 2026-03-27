@@ -29,7 +29,7 @@ interface ImportZipOpts {
     preserveIds?: boolean;
 }
 
-async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Buffer, importRootNote: BNote, opts?: ImportZipOpts): Promise<BNote> {
+async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, opts?: ImportZipOpts): Promise<BNote> {
     /** maps from original noteId (in ZIP file) to newly generated noteId */
     const noteIdMap: Record<string, string> = {};
     /** type maps from original attachmentId (in ZIP file) to newly generated attachmentId */
@@ -655,9 +655,9 @@ export function readContent(zipfile: yauzl.ZipFile, entry: yauzl.Entry): Promise
     });
 }
 
-export function readZipFile(buffer: Buffer, processEntryCallback: (zipfile: yauzl.ZipFile, entry: yauzl.Entry) => Promise<void>) {
+export function readZipFile(buffer: Uint8Array, processEntryCallback: (zipfile: yauzl.ZipFile, entry: yauzl.Entry) => Promise<void>) {
     return new Promise<void>((res, rej) => {
-        yauzl.fromBuffer(buffer, { lazyEntries: true, validateEntrySizes: false }, (err, zipfile) => {
+        yauzl.fromBuffer(Buffer.from(buffer), { lazyEntries: true, validateEntrySizes: false }, (err, zipfile) => {
             if (err) rej(err);
             if (!zipfile) throw new Error("Unable to read zip file.");
 

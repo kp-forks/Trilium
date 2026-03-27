@@ -73,21 +73,21 @@ export function wrapStringOrBuffer(stringOrBuffer: string | Uint8Array) {
  * @param data the string or buffer to process.
  * @returns the string representation of the buffer, or the same string is it's a string.
  */
-export function processStringOrBuffer(data: string | Buffer | null) {
+export function processStringOrBuffer(data: string | Uint8Array | null) {
     if (!data) {
         return "";
     }
 
-    if (!Buffer.isBuffer(data)) {
+    if (typeof data === "string") {
         return data;
     }
 
     const detectedEncoding = chardet.detect(data);
     switch (detectedEncoding) {
         case "UTF-16LE":
-            return stripBom(data.toString("utf-16le"));
+            return stripBom(new TextDecoder("utf-16le").decode(data));
         case "UTF-8":
         default:
-            return data.toString("utf-8");
+            return utf8Decoder.decode(data);
     }
 }
