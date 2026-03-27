@@ -101,7 +101,7 @@ export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 export type * from "./meta";
 export * as routeHelpers from "./routes/helpers";
 
-export { getZipProvider, type ZipProvider } from "./services/import/zip_provider";
+export { getZipProvider, type ZipArchive, type ZipProvider } from "./services/import/zip_provider";
 export { default as zipImportService } from "./services/import/zip";
 export { default as zipExportService } from "./services/export/zip";
 export { type AdvancedExportOptions } from "./services/export/zip/abstract_provider";

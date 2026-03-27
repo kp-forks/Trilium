@@ -1,7 +1,4 @@
 import { NoteType } from "@triliumnext/commons";
-import archiver from "archiver";
-import type { Response } from "express";
-import fs from "fs";
 import path from "path";
 import sanitize from "sanitize-filename";
 
@@ -13,21 +10,21 @@ import dateUtils from "../utils/date.js";
 import { getLog } from "../log.js";
 import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
-import { getContentDisposition, waitForStreamToFinish } from "../utils/index"
+import { getZipProvider, type ZipArchive } from "../import/zip_provider.js";
+import { getContentDisposition } from "../utils/index"
 import { AdvancedExportOptions, ZipExportProvider, ZipExportProviderData } from "./zip/abstract_provider.js";
 import HtmlExportProvider from "./zip/html.js";
 import MarkdownExportProvider from "./zip/markdown.js";
 import { AttachmentMeta, AttributeMeta, ExportFormat, NoteMeta, NoteMetaFile } from "../../meta";
 import { ValidationError } from "../../errors";
 
-async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Response | fs.WriteStream, setHeaders = true, zipExportOptions?: AdvancedExportOptions) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Record<string, any>, setHeaders = true, zipExportOptions?: AdvancedExportOptions) {
     if (!["html", "markdown", "share"].includes(format)) {
         throw new ValidationError(`Only 'html', 'markdown' and 'share' allowed as export format, '${format}' given`);
     }
 
-    const archive = archiver("zip", {
-        zlib: { level: 9 } // Sets the compression level.
-    });
+    const archive = getZipProvider().createZipArchive();
     const rewriteFn = (zipExportOptions?.customRewriteLinks ? zipExportOptions?.customRewriteLinks(rewriteLinks, getNoteTargetUrl) : rewriteLinks);
     const provider = buildProvider();
     const log = getLog();
@@ -341,7 +338,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
             content = prepareContent(noteMeta.title, content, noteMeta, undefined);
 
-            archive.append(typeof content === "string" ? content : Buffer.from(content), {
+            archive.append(typeof content === "string" ? content : new Uint8Array(content), {
                 name: filePathPrefix + noteMeta.dataFileName
             });
 
@@ -359,7 +356,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         if (noteMeta.dataFileName) {
             const content = prepareContent(noteMeta.title, note.getContent(), noteMeta, note);
 
-            archive.append(content as string | Buffer, {
+            archive.append(content as string | Uint8Array, {
                 name: filePathPrefix + noteMeta.dataFileName,
                 date: dateUtils.parseDateTime(note.utcDateModified)
             });
@@ -375,7 +372,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             const attachment = note.getAttachmentById(attachmentMeta.attachmentId);
             const content = attachment.getContent();
 
-            archive.append(typeof content === "string" ? content : Buffer.from(content), {
+            archive.append(typeof content === "string" ? content : new Uint8Array(content), {
                 name: filePathPrefix + attachmentMeta.dataFileName,
                 date: dateUtils.parseDateTime(note.utcDateModified)
             });
@@ -469,7 +466,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
 
 async function exportToZipFile(noteId: string, format: ExportFormat, zipFilePath: string, zipExportOptions?: AdvancedExportOptions) {
-    const fileOutputStream = fs.createWriteStream(zipFilePath);
+    const { destination, waitForFinish } = getZipProvider().createFileStream(zipFilePath);
     const taskContext = new TaskContext("no-progress-reporting", "export", null);
 
     const note = becca.getNote(noteId);
@@ -478,8 +475,8 @@ async function exportToZipFile(noteId: string, format: ExportFormat, zipFilePath
         throw new ValidationError(`Note ${noteId} not found.`);
     }
 
-    await exportToZip(taskContext, note.getParentBranches()[0], format, fileOutputStream, false, zipExportOptions);
-    await waitForStreamToFinish(fileOutputStream);
+    await exportToZip(taskContext, note.getParentBranches()[0], format, destination as Record<string, any>, false, zipExportOptions);
+    await waitForFinish();
 
     getLog().info(`Exported '${noteId}' with format '${format}' to '${zipFilePath}'`);
 }

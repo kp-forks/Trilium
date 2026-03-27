@@ -1,5 +1,5 @@
 import { type AttributeRow, dayjs, formatLogMessage } from "@triliumnext/commons";
-import { type AbstractBeccaEntity, Becca, branches as branchService, NoteParams, SearchContext, sync_mutex as syncMutex,zipExportService } from "@triliumnext/core";
+import { type AbstractBeccaEntity, Becca, branches as branchService, NoteParams, SearchContext, sync_mutex as syncMutex, zipExportService } from "@triliumnext/core";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import xml2js from "xml2js";

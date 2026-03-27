@@ -1,10 +1,10 @@
 import { NoteType } from "@triliumnext/commons";
-import { Archiver } from "archiver";
 import mimeTypes from "mime-types";
 
 import type BBranch from "../../../becca/entities/bbranch.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import { ExportFormat, NoteMeta, NoteMetaFile } from "../../../meta.js";
+import type { ZipArchive } from "../../import/zip_provider.js";
 
 type RewriteLinksFn = (content: string, noteMeta: NoteMeta) => string;
 
@@ -29,7 +29,7 @@ export interface AdvancedExportOptions {
 export interface ZipExportProviderData {
     branch: BBranch;
     getNoteTargetUrl: (targetNoteId: string, sourceMeta: NoteMeta) => string | null;
-    archive: Archiver;
+    archive: ZipArchive;
     zipExportOptions: AdvancedExportOptions | undefined;
     rewriteFn: RewriteLinksFn;
 }
@@ -37,7 +37,7 @@ export interface ZipExportProviderData {
 export abstract class ZipExportProvider {
     branch: BBranch;
     getNoteTargetUrl: (targetNoteId: string, sourceMeta: NoteMeta) => string | null;
-    archive: Archiver;
+    archive: ZipArchive;
     zipExportOptions?: AdvancedExportOptions;
     rewriteFn: RewriteLinksFn;
 
