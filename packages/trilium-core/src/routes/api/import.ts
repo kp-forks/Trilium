@@ -1,9 +1,7 @@
 import type { Request } from "express";
 import type { File } from "../../services/import/common.js";
 
-interface ImportRequest<P> extends Request<P> {
-    file?: File;
-}
+type ImportRequest<P> = Omit<Request<P>, "file"> & { file?: File };
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
@@ -64,6 +62,7 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
                 return importResult;
             }
         } else if (extension === ".enex" && options.explodeArchives) {
+            throw "ENEX import is currently not supported. Please use the desktop app to import ENEX files and then sync with the server.";
             // const importResult = await enexImportService.importEnex(taskContext, file, parentNote);
             // if (!Array.isArray(importResult)) {
             //     note = importResult;

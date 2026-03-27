@@ -1,8 +1,8 @@
+import { RenderMarkdownResponse, ToMarkdownResponse } from "@triliumnext/commons";
+import { markdownImportService } from "@triliumnext/core";
 import type { Request } from "express";
 
-import markdownService from "../../services/import/markdown.js";
 import markdown from "../../services/export/markdown.js";
-import { RenderMarkdownResponse, ToMarkdownResponse } from "@triliumnext/commons";
 
 function renderMarkdown(req: Request) {
     const { markdownContent } = req.body;
@@ -10,7 +10,7 @@ function renderMarkdown(req: Request) {
         throw new Error('markdownContent parameter is required and must be a string');
     }
     return {
-        htmlContent: markdownService.renderToHtml(markdownContent, "")
+        htmlContent: markdownImportService.renderToHtml(markdownContent, "")
     } satisfies RenderMarkdownResponse;
 }
 
