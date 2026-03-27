@@ -14,19 +14,22 @@ import contributors from "../../../../../contributors.json";
 import { Fragment } from "preact/jsx-runtime";
 import { ComponentChildren } from "preact";
 import clsx from "clsx";
+import { useMemo } from "react";
+import { memo } from "preact/compat";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
     const [shown, setShown] = useState(false);
     const [isNightly, setNightly] = useState(false);
-    const iconRef = useRef<HTMLDivElement>(null);
+    const [iconName, setIconName] = useState("default");
+    const [altIconName, setAltIconName] = useState<string | null>(null);
 
     const onLoad = useCallback(async () => {
         if (!appInfo) {
             const info = await server.get<AppInfo>("app-info");
             if (info.appVersion.includes("test")) {
                 setNightly(true);
-                setAltIcon("nightly");
+                setIconName("nightly");
             }
             setAppInfo(info);
         }
@@ -35,32 +38,31 @@ export default function AboutDialog() {
 
     useTriliumEvent("openAboutDialog", onLoad);
 
-    const setAltIcon = useCallback((iconId: string | null) => {
-        /* The alternate icon is set by directly accessing the DOM to prevent the dialog being
-         * rerendered. A rerender while an element is hovered and displaying a tooltip in the same
-         * time, will cause the tooltip to break. */
-        if (iconId) {
-            iconRef.current?.setAttribute("data-alt-icon", iconId);
-        } else {
-            iconRef.current?.removeAttribute("data-alt-icon");
-        }
-    }, []);
-
     const createContributorHoverHandler = useCallback(() => {
         let timeoutID;
         return (contributor: Contributor, isHovering: boolean) => {
             if (contributor.role === "original-dev") {
                 if (isHovering) {
                     timeoutID = setTimeout(() => {
-                        setAltIcon("classic");
+                        setAltIconName("classic");
                     }, 500);
                 } else {
                     clearTimeout(timeoutID);
-                    setAltIcon(null);
+                    setAltIconName(null);
                 }
             }
         }
     }, []);
+
+    /* Cache the contributor list to prevent its rerendering.
+     * When the icon changes, it triggers a rerender of the dialog. If this happens while an
+     * element with a tooltip is hovered, its tooltip will break. */
+    const CachedContributors = useMemo(() => memo(function CachedContributors() {
+        return <Contributors 
+            data={contributors as ContributorList}
+            onHover={createContributorHoverHandler()}
+            />
+    }), []);
 
     return (
         <Modal
@@ -71,7 +73,7 @@ export default function AboutDialog() {
         >
            <div className="about-dialog-content">
                
-                <div ref={iconRef} className={"icon"} />
+                <div className={"icon"} data-icon={altIconName ?? iconName} />
                 <h2>Trilium Notes {isNightly && <span className="channel-name">Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
                     triliumnotes.org
@@ -103,10 +105,7 @@ export default function AboutDialog() {
                     <tr>
                         <td>{t("about.contributors_label")}</td>
                         <td className="contributor-list use-tn-links">
-                            <Contributors 
-                                data={contributors as ContributorList}
-                                onHover={createContributorHoverHandler()}
-                            />
+                            <CachedContributors />
 
                             <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
                                 {t("about.contributor_full_list")}

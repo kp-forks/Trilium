@@ -14,21 +14,21 @@
         width: 160px;
         height: 160px;
 
-        &:not([data-alt-icon]) {
+        &[data-icon="default"] {
             background-image: url(../../assets/icon.svg);
         }
 
-        &[data-alt-icon="nightly"] {
+        &[data-icon="nightly"] {
             background-image: url(../../assets/icon-nightly.svg);
         }
 
-        &:not([data-alt-icon]),
-        &[data-alt-icon="nightly"] {
+        &[data-icon="default"],
+        &[data-icon="nightly"] {
             animation: icon-intro 500ms ease-out;
             will-change: opacity, transform;
         }
 
-        &[data-alt-icon="classic"] {
+        &[data-icon="classic"] {
             mask-image: url(../../assets/icon-classic.svg);
             background-color: var(--muted-text-color);
             animation: icon-classic-intro 300ms ease-in-out;
