@@ -1,13 +1,13 @@
-import { NotFoundError, ValidationError } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import becca from "../../becca/becca.js";
 import opmlExportService from "../../services/export/opml.js";
 import singleExportService from "../../services/export/single.js";
 import zipExportService from "../../services/export/zip.js";
-import log from "../../services/log.js";
+import { getLog } from "../../services/log.js";
 import TaskContext from "../../services/task_context.js";
-import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
+import { safeExtractMessageAndStackFromError } from "../../services/utils/index.js";
+import { NotFoundError, ValidationError } from "../../errors.js";
 
 function exportBranch(req: Request<{ branchId: string; type: string; format: string; version: string; taskId: string }>, res: Response) {
     const { branchId, type, format, version, taskId } = req.params;
@@ -15,7 +15,7 @@ function exportBranch(req: Request<{ branchId: string; type: string; format: str
 
     if (!branch) {
         const message = `Cannot export branch '${branchId}' since it does not exist.`;
-        log.error(message);
+        getLog().error(message);
 
         res.setHeader("Content-Type", "text/plain").status(500).send(message);
         return;
@@ -41,7 +41,7 @@ function exportBranch(req: Request<{ branchId: string; type: string; format: str
         const message = `Export failed with following error: '${errMessage}'. More details might be in the logs.`;
         taskContext.reportError(message);
 
-        log.error(errMessage + errStack);
+        getLog().error(errMessage + errStack);
 
         res.setHeader("Content-Type", "text/plain").status(500).send(message);
     }
