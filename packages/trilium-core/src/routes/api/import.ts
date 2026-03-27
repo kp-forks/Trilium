@@ -1,5 +1,10 @@
 import type { Request } from "express";
 import path from "path";
+import type { File } from "../../services/import/common.js";
+
+interface ImportRequest<P> extends Request<P> {
+    file?: File;
+}
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
@@ -14,7 +19,7 @@ import * as cls from "../../services/context.js";
 import { ValidationError } from "../../errors.js";
 import becca_loader from "../../becca/becca_loader.js";
 
-async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
+async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
     const { taskId, last } = req.body;
 
@@ -66,7 +71,7 @@ async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
                 return importResult;
             }
         } else {
-            note = await singleImportService.importSingleFile(taskContext, file, parentNote);
+            note = singleImportService.importSingleFile(taskContext, file, parentNote);
         }
     } catch (e: unknown) {
         const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
@@ -100,7 +105,7 @@ async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
     return note.getPojo();
 }
 
-function importAttachmentsToNote(req: Request<{ parentNoteId: string }>) {
+function importAttachmentsToNote(req: ImportRequest<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
     const { taskId, last } = req.body;
 

@@ -35,6 +35,7 @@ function toExpressLikeReq(req: BrowserRequest) {
         body: req.body,
         headers: req.headers ?? {},
         method: req.method,
+        file: req.file,
         get originalUrl() { return req.url; }
     };
 }
@@ -227,7 +228,9 @@ export function registerRoutes(router: BrowserRouter): void {
         checkApiAuthOrElectron: noopMiddleware,
         checkAppNotInitialized,
         checkCredentials: noopMiddleware,
-        loginRateLimiter: noopMiddleware
+        loginRateLimiter: noopMiddleware,
+        uploadMiddlewareWithErrorHandling: noopMiddleware,
+        csrfMiddleware: noopMiddleware
     });
     apiRoute('get', '/bootstrap', bootstrapRoute);
 

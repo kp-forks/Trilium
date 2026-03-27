@@ -45,9 +45,11 @@ interface SharedApiRoutesContext {
     checkAppNotInitialized: any;
     loginRateLimiter: any;
     checkCredentials: any;
+    uploadMiddlewareWithErrorHandling: any;
+    csrfMiddleware: any;
 }
 
-export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRoute, checkApiAuth, apiResultHandler, checkApiAuthOrElectron, checkAppNotInitialized, checkCredentials, loginRateLimiter }: SharedApiRoutesContext) {
+export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRoute, checkApiAuth, apiResultHandler, checkApiAuthOrElectron, checkAppNotInitialized, checkCredentials, loginRateLimiter, uploadMiddlewareWithErrorHandling, csrfMiddleware }: SharedApiRoutesContext) {
     apiRoute(GET, '/api/tree', treeApiRoute.getTree);
     apiRoute(PST, '/api/tree/load', treeApiRoute.load);
 

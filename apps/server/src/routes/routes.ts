@@ -88,7 +88,9 @@ function register(app: express.Application) {
         checkApiAuthOrElectron: auth.checkApiAuthOrElectron,
         checkAppNotInitialized: auth.checkAppNotInitialized,
         checkCredentials: auth.checkCredentials,
-        loginRateLimiter
+        loginRateLimiter,
+        uploadMiddlewareWithErrorHandling,
+        csrfMiddleware
     });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
