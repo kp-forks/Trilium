@@ -1,3 +1,6 @@
+import chardet from "chardet";
+import stripBom from "strip-bom";
+
 const utf8Decoder = new TextDecoder("utf-8");
 const utf8Encoder = new TextEncoder();
 
@@ -57,5 +60,34 @@ export function wrapStringOrBuffer(stringOrBuffer: string | Uint8Array) {
         return encodeUtf8(stringOrBuffer);
     } else {
         return stringOrBuffer;
+    }
+}
+
+/**
+ * For buffers, they are scanned for a supported encoding and decoded (UTF-8, UTF-16). In some cases, the BOM is also stripped.
+ *
+ * For strings, they are returned immediately without any transformation.
+ *
+ * For nullish values, an empty string is returned.
+ *
+ * @param data the string or buffer to process.
+ * @returns the string representation of the buffer, or the same string is it's a string.
+ */
+export function processStringOrBuffer(data: string | Buffer | null) {
+    if (!data) {
+        return "";
+    }
+
+    if (!Buffer.isBuffer(data)) {
+        return data;
+    }
+
+    const detectedEncoding = chardet.detect(data);
+    switch (detectedEncoding) {
+        case "UTF-16LE":
+            return stripBom(data.toString("utf-16le"));
+        case "UTF-8":
+        default:
+            return data.toString("utf-8");
     }
 }

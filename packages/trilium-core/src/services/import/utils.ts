@@ -1,6 +1,4 @@
-"use strict";
-
-import { unescapeHtml } from "../utils.js";
+import { unescapeHtml } from "../utils";
 
 function handleH1(content: string, title: string) {
     let isFirstH1Handled = false;

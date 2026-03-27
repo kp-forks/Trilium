@@ -1,7 +1,4 @@
-
-
 import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
-import { sanitize, utils } from "@triliumnext/core";
 import path from "path";
 import type { Stream } from "stream";
 import yauzl from "yauzl";
@@ -12,16 +9,17 @@ import BAttribute from "../../becca/entities/battribute.js";
 import BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import attributeService from "../../services/attributes.js";
-import log from "../../services/log.js";
+import { getLog } from "../../services/log.js";
 import noteService from "../../services/notes.js";
-import { newEntityId, processStringOrBuffer, unescapeHtml } from "../../services/utils.js";
-import type AttributeMeta from "../meta/attribute_meta.js";
-import type NoteMeta from "../meta/note_meta.js";
+import { getNoteTitle, newEntityId, removeFileExtension, unescapeHtml } from "../../services/utils/index.js";
+import { processStringOrBuffer } from "../../services/utils/binary.js";
 import protectedSessionService from "../protected_session.js";
 import type TaskContext from "../task_context.js";
 import treeService from "../tree.js";
 import markdownService from "./markdown.js";
 import mimeService from "./mime.js";
+import { AttributeMeta, NoteMeta } from "../../meta.js";
+import { sanitizeHtml } from "../sanitizer.js";
 
 interface MetaFile {
     files: NoteMeta[];
@@ -162,7 +160,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
 
         // in case we lack metadata, we treat e.g. "Programming.html" and "Programming" as the same note
         // (one data file, the other directory for children)
-        const filePathNoExt = utils.removeFileExtension(filePath);
+        const filePathNoExt = removeFileExtension(filePath);
 
         if (filePathNoExt in createdPaths) {
             return createdPaths[filePathNoExt];
@@ -199,7 +197,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             }
 
             if (!attributeService.isAttributeType(attr.type)) {
-                log.error(`Unrecognized attribute type ${attr.type}`);
+                getLog().error(`Unrecognized attribute type ${attr.type}`);
                 continue;
             }
 
@@ -217,8 +215,8 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             }
 
             if (taskContext.data?.safeImport) {
-                attr.name = sanitize.sanitizeHtml(attr.name);
-                attr.value = sanitize.sanitizeHtml(attr.value);
+                attr.name = sanitizeHtml(attr.name);
+                attr.value = sanitizeHtml(attr.value);
             }
 
             attributes.push(attr);
@@ -234,7 +232,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             return;
         }
 
-        const noteTitle = utils.getNoteTitle(filePath, !!taskContext.data?.replaceUnderscoresWithSpaces, noteMeta);
+        const noteTitle = getNoteTitle(filePath, !!taskContext.data?.replaceUnderscoresWithSpaces, noteMeta);
         const parentNoteId = getParentNoteId(filePath, parentNoteMeta);
 
         if (!parentNoteId) {
@@ -318,7 +316,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
         });
 
         if (taskContext.data?.safeImport) {
-            content = sanitize.sanitizeHtml(content);
+            content = sanitizeHtml(content);
         }
 
         content = content.replace(/<html.*<body[^>]*>/gis, "");
@@ -333,7 +331,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             try {
                 url = decodeURIComponent(url).trim();
             } catch (e: any) {
-                log.error(`Cannot parse image URL '${url}', keeping original. Error: ${e.message}.`);
+                getLog().error(`Cannot parse image URL '${url}', keeping original. Error: ${e.message}.`);
                 return `src="${url}"`;
             }
 
@@ -356,7 +354,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             try {
                 url = decodeURIComponent(url).trim();
             } catch (e: any) {
-                log.error(`Cannot parse link URL '${url}', keeping original. Error: ${e.message}.`);
+                getLog().error(`Cannot parse link URL '${url}', keeping original. Error: ${e.message}.`);
                 return `href="${url}"`;
             }
 
@@ -467,7 +465,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             content = processStringOrBuffer(content);
         }
 
-        const noteTitle = utils.getNoteTitle(filePath, taskContext.data?.replaceUnderscoresWithSpaces || false, noteMeta);
+        const noteTitle = getNoteTitle(filePath, taskContext.data?.replaceUnderscoresWithSpaces || false, noteMeta);
 
         content = processNoteContent(noteMeta, type, mime, content, noteTitle || "", filePath);
 
@@ -613,7 +611,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
         if (attr.type !== "relation" || attr.value in becca.notes) {
             new BAttribute(attr).save();
         } else {
-            log.info(`Relation not imported since the target note doesn't exist: ${JSON.stringify(attr)}`);
+            getLog().info(`Relation not imported since the target note doesn't exist: ${JSON.stringify(attr)}`);
         }
     }
 

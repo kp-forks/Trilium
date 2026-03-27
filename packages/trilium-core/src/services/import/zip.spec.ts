@@ -7,9 +7,9 @@ import zip, { removeTriliumTags } from "./zip.js";
 import becca from "../../becca/becca.js";
 import BNote from "../../becca/entities/bnote.js";
 import TaskContext from "../task_context.js";
-import cls from "../cls.js";
 import sql_init from "../sql_init.js";
 import { trimIndentation } from "@triliumnext/commons";
+import { getContext } from "../context.js";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 
 async function testImport(fileName: string) {
@@ -19,7 +19,7 @@ async function testImport(fileName: string) {
     });
 
     return new Promise<{ importedNote: BNote; rootNote: BNote }>((resolve, reject) => {
-        cls.init(async () => {
+        getContext().init(async () => {
             const rootNote = becca.getNote("root");
             if (!rootNote) {
                 expect(rootNote).toBeTruthy();

@@ -1,5 +1,5 @@
 export default {
-    saveImageToAttachment(noteId: string, imageBuffer: Uint8Array, title: string, b1: boolean, b2: boolean) {
+    saveImageToAttachment(noteId: string, imageBuffer: Uint8Array, title: string, b1?: boolean, b2?: boolean) {
         console.warn("Image save ignored", noteId, title);
 
         return {
@@ -10,5 +10,13 @@ export default {
 
     updateImage(noteId: string, imageBuffer: Uint8Array, title: string) {
         console.warn("Image update ignored", noteId, title);
+    },
+
+    saveImage(noteId: string, imageBuffer: Uint8Array, title: string, b1?: boolean, b2?: boolean) {
+        console.warn("Image save ignored", noteId, title);
+
+        return {
+            note: null
+        };
     }
 }
