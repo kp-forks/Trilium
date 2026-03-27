@@ -25,10 +25,6 @@ export function randomString(length: number): string {
     return coreUtils.randomString(length);
 }
 
-export function md5(content: crypto.BinaryLike) {
-    return crypto.createHash("md5").update(content).digest("hex");
-}
-
 /** @deprecated */
 export function hashedBlobId(content: string | Buffer) {
     return coreUtils.hashedBlobId(content);
@@ -177,7 +173,6 @@ export default {
     isMac,
     isStringNote,
     isWindows,
-    md5,
     newEntityId,
     normalize,
     quoteRegex,

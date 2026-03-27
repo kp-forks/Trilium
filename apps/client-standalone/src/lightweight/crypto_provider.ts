@@ -2,6 +2,7 @@ import type { CryptoProvider } from "@triliumnext/core";
 import { sha1 } from "js-sha1";
 import { sha256 } from "js-sha256";
 import { sha512 } from "js-sha512";
+import { md5 } from "js-md5";
 
 interface Cipher {
     update(data: Uint8Array): Uint8Array;
@@ -15,11 +16,18 @@ const CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
  */
 export default class BrowserCryptoProvider implements CryptoProvider {
 
-    createHash(algorithm: "sha1" | "sha512", content: string | Uint8Array): Uint8Array {
+    createHash(algorithm: "md5" | "sha1" | "sha512", content: string | Uint8Array): Uint8Array {
         const data = typeof content === "string" ? content :
                 new TextDecoder().decode(content);
 
-        const hexHash = algorithm === "sha1" ? sha1(data) : sha512(data);
+        let hexHash: string;
+        if (algorithm === "md5") {
+            hexHash = md5(data);
+        } else if (algorithm === "sha1") {
+            hexHash = sha1(data);
+        } else {
+            hexHash = sha512(data);
+        }
 
         // Convert hex string to Uint8Array
         const bytes = new Uint8Array(hexHash.length / 2);

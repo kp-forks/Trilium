@@ -20,6 +20,11 @@ export function hash(text: string) {
     return encodeBase64(getCrypto().createHash("sha1", text.normalize()));
 }
 
+export function md5(content: string | Uint8Array) {
+    const bytes = getCrypto().createHash("md5", content);
+    return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export function isStringNote(type: string | undefined, mime: string) {
     return (type && STRING_NOTE_TYPES.has(type)) || mime.startsWith("text/") || STRING_MIME_TYPES.has(mime);
 }
