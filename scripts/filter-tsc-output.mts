@@ -26,14 +26,24 @@ const filtered = lines.filter(
 
 let errorIndex = 0;
 const numbered: string[] = [];
+const seen = new Set<string>();
+let skipContinuation = false;
 
 for (const line of filtered) {
     if (ERROR_LINE_PATTERN.test(line)) {
+        if (seen.has(line)) {
+            skipContinuation = true;
+            continue;
+        }
+        seen.add(line);
+        skipContinuation = false;
         errorIndex++;
         numbered.push(`[${errorIndex}] ${line}`);
     } else if (line.trim()) {
         // Continuation line (indented context for multi-line errors)
-        numbered.push(line);
+        if (!skipContinuation) {
+            numbered.push(line);
+        }
     }
 }
 

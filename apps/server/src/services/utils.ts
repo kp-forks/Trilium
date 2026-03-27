@@ -1,9 +1,7 @@
-import { getCrypto,utils as coreUtils } from "@triliumnext/core";
-import chardet from "chardet";
+import { binary_utils,getCrypto, utils as coreUtils } from "@triliumnext/core";
 import crypto from "crypto";
 import { release as osRelease } from "os";
 import path from "path";
-import stripBom from "strip-bom";
 
 const osVersion = osRelease().split('.').map(Number);
 
@@ -25,10 +23,6 @@ export function newEntityId() {
 /** @deprecated */
 export function randomString(length: number): string {
     return coreUtils.randomString(length);
-}
-
-export function md5(content: crypto.BinaryLike) {
-    return crypto.createHash("md5").update(content).digest("hex");
 }
 
 /** @deprecated */
@@ -138,35 +132,6 @@ export function getResourceDir() {
     return path.join(__dirname, "..");
 }
 
-/**
- * For buffers, they are scanned for a supported encoding and decoded (UTF-8, UTF-16). In some cases, the BOM is also stripped.
- *
- * For strings, they are returned immediately without any transformation.
- *
- * For nullish values, an empty string is returned.
- *
- * @param data the string or buffer to process.
- * @returns the string representation of the buffer, or the same string is it's a string.
- */
-export function processStringOrBuffer(data: string | Buffer | null) {
-    if (!data) {
-        return "";
-    }
-
-    if (!Buffer.isBuffer(data)) {
-        return data;
-    }
-
-    const detectedEncoding = chardet.detect(data);
-    switch (detectedEncoding) {
-        case "UTF-16LE":
-            return stripBom(data.toString("utf-16le"));
-        case "UTF-8":
-        default:
-            return data.toString("utf-8");
-    }
-}
-
 /** @deprecated */
 export const escapeHtml = coreUtils.escapeHtml;
 /** @deprecated */
@@ -183,6 +148,7 @@ export const isEmptyOrWhitespace = coreUtils.isEmptyOrWhitespace;
 export const normalizeUrl = coreUtils.normalizeUrl;
 export const timeLimit = coreUtils.timeLimit;
 export const sanitizeSqlIdentifier = coreUtils.sanitizeSqlIdentifier;
+export const processStringOrBuffer = binary_utils.processStringOrBuffer;
 
 export function waitForStreamToFinish(stream: any): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -207,7 +173,6 @@ export default {
     isMac,
     isStringNote,
     isWindows,
-    md5,
     newEntityId,
     normalize,
     quoteRegex,

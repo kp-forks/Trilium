@@ -1,6 +1,5 @@
 import { EditedNotesResponse, RevisionItem, RevisionPojo } from "@triliumnext/commons";
 import type { Request, Response } from "express";
-import path from "path";
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
@@ -10,6 +9,7 @@ import eraseService from "../../services/erase.js";
 import { NotePojo } from "../../becca/becca-interface.js";
 import { becca_service, binary_utils, cls, getSql } from "../../index.js";
 import { formatDownloadTitle, getContentDisposition } from "../../services/utils/index.js";
+import { extname } from "../../services/utils/path.js";
 
 interface NotePath {
     noteId: string;
@@ -67,7 +67,7 @@ function getRevisionFilename(revision: BRevision) {
         throw new Error("Missing creation date for revision.");
     }
 
-    const extension = path.extname(filename);
+    const extension = extname(filename);
     const date = revision.dateCreated
         .substr(0, 19)
         .replace(" ", "_")

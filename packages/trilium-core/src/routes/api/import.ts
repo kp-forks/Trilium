@@ -1,19 +1,23 @@
-import { becca_loader, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
-import path from "path";
+import type { File } from "../../services/import/common.js";
+
+type ImportRequest<P> = Omit<Request<P>, "file"> & { file?: File };
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
-import cls from "../../services/cls.js";
-import enexImportService from "../../services/import/enex.js";
+// import enexImportService from "../../services/import/enex.js";
 import opmlImportService from "../../services/import/opml.js";
 import singleImportService from "../../services/import/single.js";
 import zipImportService from "../../services/import/zip.js";
-import log from "../../services/log.js";
+import { getLog } from "../../services/log.js";
 import TaskContext from "../../services/task_context.js";
-import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
+import { safeExtractMessageAndStackFromError } from "../../services/utils/index.js";
+import * as cls from "../../services/context.js";
+import { ValidationError } from "../../errors.js";
+import becca_loader from "../../becca/becca_loader.js";
+import { extname } from "../../services/utils/path.js";
 
-async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
+async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
     const { taskId, last } = req.body;
 
@@ -34,7 +38,7 @@ async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
 
     const parentNote = becca.getNoteOrThrow(parentNoteId);
 
-    const extension = path.extname(file.originalname).toLowerCase();
+    const extension = extname(file.originalname).toLowerCase();
 
     // running all the event handlers on imported notes (and attributes) is slow
     // and may produce unintended consequences
@@ -58,21 +62,22 @@ async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
                 return importResult;
             }
         } else if (extension === ".enex" && options.explodeArchives) {
-            const importResult = await enexImportService.importEnex(taskContext, file, parentNote);
-            if (!Array.isArray(importResult)) {
-                note = importResult;
-            } else {
-                return importResult;
-            }
+            throw "ENEX import is currently not supported. Please use the desktop app to import ENEX files and then sync with the server.";
+            // const importResult = await enexImportService.importEnex(taskContext, file, parentNote);
+            // if (!Array.isArray(importResult)) {
+            //     note = importResult;
+            // } else {
+            //     return importResult;
+            // }
         } else {
-            note = await singleImportService.importSingleFile(taskContext, file, parentNote);
+            note = singleImportService.importSingleFile(taskContext, file, parentNote);
         }
     } catch (e: unknown) {
         const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
         const message = `Import failed with following error: '${errMessage}'. More details might be in the logs.`;
         taskContext.reportError(message);
 
-        log.error(message + errStack);
+        getLog().error(message + errStack);
 
         return [500, message];
     }
@@ -99,7 +104,7 @@ async function importNotesToBranch(req: Request<{ parentNoteId: string }>) {
     return note.getPojo();
 }
 
-function importAttachmentsToNote(req: Request<{ parentNoteId: string }>) {
+function importAttachmentsToNote(req: ImportRequest<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
     const { taskId, last } = req.body;
 
@@ -126,7 +131,7 @@ function importAttachmentsToNote(req: Request<{ parentNoteId: string }>) {
         const message = `Import failed with following error: '${errMessage}'. More details might be in the logs.`;
         taskContext.reportError(message);
 
-        log.error(message + errStack);
+        getLog().error(message + errStack);
 
         return [500, message];
     }

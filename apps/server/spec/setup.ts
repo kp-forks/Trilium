@@ -4,6 +4,7 @@ import { join } from "path";
 import { initializeCore } from "@triliumnext/core";
 import ClsHookedExecutionContext from "../src/cls_provider.js";
 import NodejsCryptoProvider from "../src/crypto_provider.js";
+import NodejsZipProvider from "../src/zip_provider.js";
 import ServerPlatformProvider from "../src/platform_provider.js";
 import BetterSqlite3Provider from "../src/sql_provider.js";
 import { initializeTranslations } from "../src/services/i18n.js";
@@ -27,6 +28,7 @@ beforeAll(async () => {
             onTransactionRollback() {}
         },
         crypto: new NodejsCryptoProvider(),
+        zip: new NodejsZipProvider(),
         executionContext: new ClsHookedExecutionContext(),
         schema: readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
         platform: new ServerPlatformProvider(),

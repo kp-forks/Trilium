@@ -1,20 +1,22 @@
 import type { AttributeType } from "@triliumnext/commons";
 import { dayjs } from "@triliumnext/commons";
-import { sanitize, utils } from "@triliumnext/core";
 import sax from "sax";
 import stream from "stream";
 import { Throttle } from "stream-throttle";
 
 import type BNote from "../../becca/entities/bnote.js";
-import date_utils from "../date_utils.js";
+import date_utils from "../utils/date.js";
+import * as utils from "../utils/index.js";
 import imageService from "../image.js";
-import log from "../log.js";
+import { getLog } from "../log.js";
 import noteService from "../notes.js";
 import protectedSessionService from "../protected_session.js";
-import sql from "../sql.js";
 import type TaskContext from "../task_context.js";
-import { escapeHtml, fromBase64,md5 } from "../utils.js";
+import { escapeHtml, md5 } from "../utils/index.js";
+import { decodeBase64 } from "../utils/binary.js";
 import type { File } from "./common.js";
+import { sanitizeHtml } from "../sanitizer.js";
+import { getSql } from "../sql/index.js";
 
 /**
  * date format is e.g. 20181121T193703Z or 2013-04-14T16:19:00.000Z (Mac evernote, see #3496)
@@ -38,7 +40,7 @@ interface Attribute {
 
 interface Resource {
     title: string;
-    content?: Buffer | string;
+    content?: Uint8Array | string;
     mime?: string;
     attributes: Attribute[];
 }
@@ -117,7 +119,7 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
             "\u2611 "
         );
 
-        content = sanitize.sanitizeHtml(content);
+        content = sanitizeHtml(content);
 
         return content;
     }
@@ -138,7 +140,7 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
 
     saxStream.on("error", (e) => {
         // unhandled errors will throw, since this is a proper node event emitter.
-        log.error(`error when parsing ENEX file: ${e}`);
+        getLog().error(`error when parsing ENEX file: ${e}`);
         // clear the error
         (saxStream._parser as any).error = null;
         saxStream._parser.resume();
@@ -235,6 +237,8 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
         }
     });
 
+    const sql = getSql();
+
     function updateDates(note: BNote, utcDateCreated?: string, utcDateModified?: string) {
         // it's difficult to force custom dateCreated and dateModified to Note entity, so we do it post-creation with SQL
         const dateCreated = formatDateTimeToLocalDbFormat(utcDateCreated, false);
@@ -295,7 +299,7 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
             }
 
             if (typeof resource.content === "string") {
-                resource.content = fromBase64(resource.content);
+                resource.content = decodeBase64(resource.content);
             }
 
             const hash = md5(resource.content);
@@ -359,7 +363,7 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
                         content += imageLink;
                     }
                 } catch (e: any) {
-                    log.error(`error when saving image from ENEX file: ${e.message}`);
+                    getLog().error(`error when saving image from ENEX file: ${e.message}`);
                     createFileNote();
                 }
             } else {
@@ -367,7 +371,7 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
             }
         }
 
-        content = sanitize.sanitizeHtml(content);
+        content = sanitizeHtml(content);
 
         // save updated content with links to files/images
         noteEntity.setContent(content);

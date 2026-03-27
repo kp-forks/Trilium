@@ -25,7 +25,6 @@ import etapiTokensApiRoutes from "./api/etapi_tokens.js";
 import exportRoute from "./api/export.js";
 import filesRoute from "./api/files.js";
 import fontsRoute from "./api/fonts.js";
-import importRoute from "./api/import.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import otherRoute from "./api/other.js";
@@ -89,7 +88,9 @@ function register(app: express.Application) {
         checkApiAuthOrElectron: auth.checkApiAuthOrElectron,
         checkAppNotInitialized: auth.checkAppNotInitialized,
         checkCredentials: auth.checkCredentials,
-        loginRateLimiter
+        loginRateLimiter,
+        uploadMiddlewareWithErrorHandling,
+        csrfMiddleware
     });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
@@ -130,8 +131,6 @@ function register(app: express.Application) {
     // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
 
     route(GET, "/api/branches/:branchId/export/:type/:format/:version/:taskId", [auth.checkApiAuthOrElectron], exportRoute.exportBranch);
-    asyncRoute(PST, "/api/notes/:parentNoteId/notes-import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importNotesToBranch, apiResultHandler);
-    route(PST, "/api/notes/:parentNoteId/attachments-import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importAttachmentsToNote, apiResultHandler);
 
     // :filename is not used by trilium, but instead used for "save as" to assign a human-readable filename
 

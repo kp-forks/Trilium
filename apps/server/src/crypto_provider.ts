@@ -6,7 +6,7 @@ const randtoken = generator({ source: "crypto" });
 
 export default class NodejsCryptoProvider implements CryptoProvider {
 
-    createHash(algorithm: "sha1", content: string | Uint8Array): Uint8Array {
+    createHash(algorithm: "md5" | "sha1" | "sha512", content: string | Uint8Array): Uint8Array {
         return crypto.createHash(algorithm).update(content).digest();
     }
 

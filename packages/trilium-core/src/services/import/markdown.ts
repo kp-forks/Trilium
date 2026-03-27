@@ -1,17 +1,15 @@
-
-
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO } from "@triliumnext/commons";
 import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
-import { sanitize } from "@triliumnext/core";
 import { parse, Renderer, type Tokens,use } from "marked";
 
 import { ADMONITION_TYPE_MAPPINGS } from "../export/markdown.js";
-import utils from "../utils.js";
 import wikiLinkInternalLink from "./markdown/wikilink_internal_link.js";
 import wikiLinkTransclusion from "./markdown/wikilink_transclusion.js";
 import importUtils from "./utils.js";
+import { escapeHtml } from "../utils/index.js";
+import { sanitizeHtml } from "../sanitizer.js";
 
-const escape = utils.escapeHtml;
+const escape = escapeHtml;
 
 /**
  * Keep renderer code up to date with https://github.com/markedjs/marked/blob/master/src/Renderer.ts.
@@ -151,7 +149,7 @@ function renderToHtml(content: string, title: string) {
 
     // h1 handling needs to come before sanitization
     html = importUtils.handleH1(html, title);
-    html = sanitize.sanitizeHtml(html);
+    html = sanitizeHtml(html);
 
     // Add a trailing semicolon to CSS styles.
     html = html.replaceAll(/(<(img|figure|col).*?style=".*?)"/g, "$1;\"");

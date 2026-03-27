@@ -312,6 +312,26 @@ export class SqlService {
         }
     }
 
+    /**
+     * Async-safe transaction wrapper for use in Web Workers and other single-threaded async contexts.
+     * Uses manual BEGIN/COMMIT/ROLLBACK because the synchronous `transactional()` cannot await promises.
+     */
+    async transactionalAsync<T>(func: () => Promise<T>): Promise<T> {
+        this.execute("BEGIN IMMEDIATE");
+        try {
+            const result = await func();
+            this.execute("COMMIT");
+            if (!this.dbConnection.inTransaction) {
+                this.params.onTransactionCommit();
+            }
+            return result;
+        } catch (e) {
+            this.execute("ROLLBACK");
+            this.params.onTransactionRollback();
+            throw e;
+        }
+    }
+
     fillParamList(paramIds: string[] | Set<string>, truncate = true) {
         if ("length" in paramIds && paramIds.length === 0) {
             return;

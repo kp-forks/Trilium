@@ -16,3 +16,12 @@ export function basename(filePath: string): string {
     const lastSlash = Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\"));
     return filePath.substring(lastSlash + 1);
 }
+
+/** Returns the directory part of a file path, or "." if there is none. */
+export function dirname(filePath: string): string {
+    const normalized = filePath.replace(/\\/g, "/");
+    const lastSlash = normalized.lastIndexOf("/");
+    if (lastSlash === -1) return ".";
+    if (lastSlash === 0) return "/";
+    return normalized.substring(0, lastSlash);
+}

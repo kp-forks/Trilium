@@ -6,10 +6,10 @@ import { dirname } from "path";
 import becca from "../../becca/becca.js";
 import BNote from "../../becca/entities/bnote.js";
 import TaskContext from "../task_context.js";
-import cls from "../cls.js";
 import sql_init from "../sql_init.js";
 import single from "./single.js";
 import stripBom from "strip-bom";
+import { getContext } from "../context.js";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 
 async function testImport(fileName: string, mimetype: string) {
@@ -20,7 +20,7 @@ async function testImport(fileName: string, mimetype: string) {
     });
 
     return new Promise<{ buffer: Buffer; importedNote: BNote }>((resolve, reject) => {
-        cls.init(async () => {
+        getContext().init(async () => {
             const rootNote = becca.getNote("root");
             if (!rootNote) {
                 reject("Missing root note.");
@@ -36,6 +36,10 @@ async function testImport(fileName: string, mimetype: string) {
                 },
                 rootNote as BNote
             );
+            if (importedNote === null) {
+                reject("Import failed.");
+                return;
+            }
             resolve({
                 buffer,
                 importedNote
