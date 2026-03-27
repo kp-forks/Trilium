@@ -115,7 +115,7 @@ export default function AboutDialog() {
                     
                     <tr>
                         <td>{t("about.data_directory")}</td>
-                        <td className="selectable-text">
+                        <td className="selectable-text" style={{wordBreak: "break-all"}}>
                             {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} />)}
                         </td>
                     </tr>
