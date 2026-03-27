@@ -11,27 +11,22 @@ import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
 import { getZipProvider } from "../zip_provider.js";
 import { getContentDisposition } from "../utils/index"
-import { AdvancedExportOptions, ZipExportProvider, ZipExportProviderData } from "./zip/abstract_provider.js";
-import HtmlExportProvider from "./zip/html.js";
-import MarkdownExportProvider from "./zip/markdown.js";
+import { AdvancedExportOptions, ZipExportProviderData } from "./zip/abstract_provider.js";
+import { getZipExportProviderFactory } from "./zip_export_provider_factory.js";
 import { AttachmentMeta, AttributeMeta, ExportFormat, NoteMeta, NoteMetaFile } from "../../meta";
 import { ValidationError } from "../../errors";
 import { extname } from "../utils/path";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Record<string, any>, setHeaders = true, zipExportOptions?: AdvancedExportOptions) {
-    if (!["html", "markdown", "share"].includes(format)) {
-        throw new ValidationError(`Only 'html', 'markdown' and 'share' allowed as export format, '${format}' given`);
-    }
-
     const archive = getZipProvider().createZipArchive();
     const rewriteFn = (zipExportOptions?.customRewriteLinks ? zipExportOptions?.customRewriteLinks(rewriteLinks, getNoteTargetUrl) : rewriteLinks);
-    const provider = buildProvider();
+    const provider = await buildProvider();
     const log = getLog();
 
     const noteIdToMeta: Record<string, NoteMeta> = {};
 
-    function buildProvider(): ZipExportProvider {
+    async function buildProvider() {
         const providerData: ZipExportProviderData = {
             getNoteTargetUrl,
             archive,
@@ -40,17 +35,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             zipExportOptions
         };
 
-        switch (format) {
-            case "html":
-                return new HtmlExportProvider(providerData);
-            case "markdown":
-                return new MarkdownExportProvider(providerData);
-            case "share":
-                // TODO: Reintroduce share format.
-                // return new ShareThemeExportProvider(providerData);
-            default:
-                throw new Error();
-        }
+        return getZipExportProviderFactory()(format, providerData);
     }
 
     function getUniqueFilename(existingFileNames: Record<string, number>, fileName: string) {

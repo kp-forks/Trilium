@@ -2,6 +2,7 @@ import { beforeAll } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { initializeCore } from "@triliumnext/core";
+import { serverZipExportProviderFactory } from "../src/services/export/zip/factory.js";
 import ClsHookedExecutionContext from "../src/cls_provider.js";
 import NodejsCryptoProvider from "../src/crypto_provider.js";
 import NodejsZipProvider from "../src/zip_provider.js";
@@ -29,6 +30,7 @@ beforeAll(async () => {
         },
         crypto: new NodejsCryptoProvider(),
         zip: new NodejsZipProvider(),
+        zipExportProviderFactory: serverZipExportProviderFactory,
         executionContext: new ClsHookedExecutionContext(),
         schema: readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
         platform: new ServerPlatformProvider(),

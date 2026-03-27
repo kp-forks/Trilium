@@ -157,6 +157,7 @@ async function initialize(): Promise<void> {
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
                 zip: new BrowserZipProvider(),
+                zipExportProviderFactory: (await import("./lightweight/zip_export_provider_factory.js")).standaloneZipExportProviderFactory,
                 messaging: messagingProvider!,
                 request: new FetchRequestProvider(),
                 platform: new StandalonePlatformProvider(queryString),

@@ -3,7 +3,7 @@
  * are loaded later and will result in an empty string.
  */
 
-import { getLog,initializeCore, sql_init } from "@triliumnext/core";
+import { getLog, initializeCore, sql_init } from "@triliumnext/core";
 import fs from "fs";
 import { t } from "i18next";
 import path from "path";
@@ -53,6 +53,7 @@ async function startApplication() {
         },
         crypto: new NodejsCryptoProvider(),
         zip: new NodejsZipProvider(),
+        zipExportProviderFactory: (await import("./services/export/zip/factory.js")).serverZipExportProviderFactory,
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),

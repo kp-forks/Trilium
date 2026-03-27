@@ -1,6 +1,5 @@
 import { renderSpreadsheetToHtml } from "@triliumnext/commons";
-import { sanitize } from "@triliumnext/core";
-import { icon_packs as iconPackService } from "@triliumnext/core";
+import { icon_packs as iconPackService, sanitize, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
@@ -16,7 +15,7 @@ import BNote from "../becca/entities/bnote.js";
 import assetPath, { assetUrlFragment } from "../services/asset_path.js";
 import log from "../services/log.js";
 import options from "../services/options.js";
-import utils, { getResourceDir, isDev, safeExtractMessageAndStackFromError } from "../services/utils.js";
+import { getResourceDir, isDev } from "../services/utils.js";
 import SAttachment from "./shaca/entities/sattachment.js";
 import SBranch from "./shaca/entities/sbranch.js";
 import type SNote from "./shaca/entities/snote.js";
@@ -224,7 +223,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
                     return ejs.render(content, opts, { includer });
                 }
             } catch (e: unknown) {
-                const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
+                const [errMessage, errStack] = utils.safeExtractMessageAndStackFromError(e);
                 log.error(`Rendering user provided share template (${templateId}) threw exception ${errMessage} with stacktrace: ${errStack}`);
             }
         }
