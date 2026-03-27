@@ -1,14 +1,24 @@
 import html from "html";
 
 import { escapeHtml } from "../../utils/index";
-import { ZipExportProvider } from "./abstract_provider.js";
+import { ZipExportProvider, ZipExportProviderData } from "./abstract_provider.js";
 import { NoteMeta } from "../../../meta";
+
+export interface HtmlExportProviderOptions {
+    contentCss?: string;
+}
 
 export default class HtmlExportProvider extends ZipExportProvider {
 
     private navigationMeta: NoteMeta | null = null;
     private indexMeta: NoteMeta | null = null;
     private cssMeta: NoteMeta | null = null;
+    private options: HtmlExportProviderOptions;
+
+    constructor(data: ZipExportProviderData, options?: HtmlExportProviderOptions) {
+        super(data);
+        this.options = options ?? {};
+    }
 
     prepareMeta(metaFile) {
         if (this.zipExportOptions?.skipExtraFiles) return;
@@ -168,12 +178,9 @@ export default class HtmlExportProvider extends ZipExportProvider {
             return;
         }
 
-        // TODO: Bring back CSS.
-        // const cssFile = isDev()
-        //     ? path.join(__dirname, "../../../../../../node_modules/ckeditor5/dist/ckeditor5-content.css")
-        //     : path.join(getResourceDir(), "ckeditor5-content.css");
-        // const cssContent = fs.readFileSync(cssFile, "utf-8");
-        // this.archive.append(cssContent, { name: cssMeta.dataFileName });
+        if (this.options.contentCss) {
+            this.archive.append(this.options.contentCss, { name: cssMeta.dataFileName });
+        }
     }
 
 }
