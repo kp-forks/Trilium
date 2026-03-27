@@ -9,7 +9,7 @@ import { initTranslations, TranslationProvider } from "./services/i18n";
 import { initSchema, initDemoArchive } from "./services/sql_init";
 import appInfo from "./services/app_info";
 import { type PlatformProvider, initPlatform } from "./services/platform";
-import { type ZipProvider, initZipProvider } from "./services/import/zip_provider";
+import { type ZipProvider, initZipProvider } from "./services/zip_provider";
 import markdown from "./services/import/markdown";
 
 export { getLog } from "./services/log";
@@ -101,7 +101,7 @@ export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 export type * from "./meta";
 export * as routeHelpers from "./routes/helpers";
 
-export { getZipProvider, type ZipArchive, type ZipProvider } from "./services/import/zip_provider";
+export { getZipProvider, type ZipArchive, type ZipProvider } from "./services/zip_provider";
 export { default as zipImportService } from "./services/import/zip";
 export { default as zipExportService } from "./services/export/zip";
 export { type AdvancedExportOptions } from "./services/export/zip/abstract_provider";

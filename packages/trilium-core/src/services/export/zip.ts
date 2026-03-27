@@ -9,7 +9,7 @@ import dateUtils from "../utils/date.js";
 import { getLog } from "../log.js";
 import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
-import { getZipProvider, type ZipArchive } from "../import/zip_provider.js";
+import { getZipProvider } from "../zip_provider.js";
 import { getContentDisposition } from "../utils/index"
 import { AdvancedExportOptions, ZipExportProvider, ZipExportProviderData } from "./zip/abstract_provider.js";
 import HtmlExportProvider from "./zip/html.js";

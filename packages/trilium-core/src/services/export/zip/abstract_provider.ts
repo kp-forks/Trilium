@@ -4,7 +4,7 @@ import mimeTypes from "mime-types";
 import type BBranch from "../../../becca/entities/bbranch.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import { ExportFormat, NoteMeta, NoteMetaFile } from "../../../meta.js";
-import type { ZipArchive } from "../../import/zip_provider.js";
+import type { ZipArchive } from "../../zip_provider.js";
 
 type RewriteLinksFn = (content: string, noteMeta: NoteMeta) => string;
 

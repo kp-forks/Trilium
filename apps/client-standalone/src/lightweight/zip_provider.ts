@@ -1,4 +1,4 @@
-import type { FileStream, ZipArchive, ZipEntry, ZipProvider } from "@triliumnext/core/src/services/import/zip_provider.js";
+import type { FileStream, ZipArchive, ZipEntry, ZipProvider } from "@triliumnext/core/src/services/zip_provider.js";
 import { strToU8, unzip, zipSync } from "fflate";
 
 type ZipOutput = {
