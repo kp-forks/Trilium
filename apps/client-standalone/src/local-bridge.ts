@@ -9,6 +9,7 @@ function showFatalErrorDialog(message: string) {
 export function startLocalServerWorker() {
     if (localWorker) return localWorker;
     localWorker = new LocalServerWorker();
+    localWorker.postMessage({ type: "INIT", queryString: location.search });
 
     // Handle worker errors during initialization
     localWorker.onerror = (event) => {

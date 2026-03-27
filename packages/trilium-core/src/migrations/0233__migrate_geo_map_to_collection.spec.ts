@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import * as cls from "../services/context.js";
-import { getSql } from "../services/sql/index.js";
+import { getSql, rebuildIntegrationTestDatabase } from "../services/sql/index.js";
 import becca from "../becca/becca.js";
 import becca_loader from "../becca/becca_loader.js";
 import migration from "./0233__migrate_geo_map_to_collection.js";
@@ -23,7 +23,7 @@ describe("Migration 0233: Migrate geoMap to collection", () => {
 
     beforeEach(async () => {
         // Set up a clean in-memory database for each test
-        sql.rebuildIntegrationTestDatabase();
+        rebuildIntegrationTestDatabase();
 
         await new Promise<void>((resolve) => {
             cls.getContext().init(() => {

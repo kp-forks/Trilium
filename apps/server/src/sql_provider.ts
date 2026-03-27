@@ -44,7 +44,8 @@ export default class BetterSqlite3Provider implements DatabaseProvider {
 
     prepare(query: string): Statement {
         if (!this.dbConnection) throw new Error("DB not open.");
-        return this.dbConnection.prepare(query);
+        // Cast is safe: better-sqlite3 only returns bigint when safeIntegers() is enabled, which we don't use.
+        return this.dbConnection.prepare(query) as unknown as Statement;
     }
 
     transaction<T>(func: (statement: Statement) => T): Transaction {

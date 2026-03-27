@@ -121,11 +121,10 @@ async function main() {
         }, 10_000);
     });
 
-    await initializeTranslations();
-    await initializeDatabase(true);
+    // TODO: Initialize core.
 
     // Wait for becca to be loaded before importing data
-    const beccaLoader = await import("@triliumnext/server/src/becca/becca_loader.js");
+    const { becca_loader: beccaLoader } = await import("@triliumnext/core");
     await beccaLoader.beccaLoaded;
 
     cls.init(async () => {
@@ -252,8 +251,8 @@ async function cleanUpMeta(outputPath: string, minify: boolean) {
 }
 
 async function registerHandlers() {
-    const events = (await import("@triliumnext/server/src/services/events.js")).default;
-    const eraseService = (await import("@triliumnext/server/src/services/erase.js")).default;
+    const { events } = await import("@triliumnext/core");
+    const { erase: eraseService } = await import("@triliumnext/core");
     const debouncer = debounce(async () => {
         eraseService.eraseUnusedAttachmentsNow();
 

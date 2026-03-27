@@ -1,4 +1,5 @@
 import { NoteType } from "@triliumnext/commons";
+import { ExportFormat } from "@triliumnext/core";
 import { Archiver } from "archiver";
 import mimeTypes from "mime-types";
 
@@ -6,9 +7,9 @@ import type BBranch from "../../../becca/entities/bbranch.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import type { default as NoteMeta, NoteMetaFile } from "../../meta/note_meta.js";
 
-type RewriteLinksFn = (content: string, noteMeta: NoteMeta) => string;
+export type { ExportFormat, NoteMeta } from "@triliumnext/core";
 
-export type ExportFormat = "html" | "markdown" | "share";
+type RewriteLinksFn = (content: string, noteMeta: NoteMeta) => string;
 
 export interface AdvancedExportOptions {
     /**

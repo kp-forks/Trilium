@@ -284,7 +284,7 @@ function RevisionContent({ noteContent, revisionItem, fullRevision, showDiff }: 
     }
 }
 
-function RevisionContentText({ content }: { content: string | Buffer<ArrayBufferLike> | undefined }) {
+function RevisionContentText({ content }: { content: string | Uint8Array | undefined }) {
     const contentRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (contentRef.current?.querySelector("span.math-tex")) {
@@ -296,7 +296,7 @@ function RevisionContentText({ content }: { content: string | Buffer<ArrayBuffer
 
 function RevisionContentDiff({ noteContent, itemContent, itemType }: {
     noteContent?: string,
-    itemContent: string | Buffer<ArrayBufferLike> | undefined,
+    itemContent: string | Uint8Array | undefined,
     itemType: string
 }) {
     const contentRef = useRef<HTMLDivElement>(null);

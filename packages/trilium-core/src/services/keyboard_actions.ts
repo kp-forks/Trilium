@@ -20,7 +20,7 @@ function getDefaultKeyboardActions() {
             friendlyName: t("keyboard_action_names.back-in-note-history"),
             iconClass: "bx bxs-chevron-left",
             // Mac has a different history navigation shortcuts - https://github.com/zadam/trilium/issues/376
-            defaultShortcuts: isMac ? ["CommandOrControl+["] : ["Alt+Left"],
+            defaultShortcuts: isMac() ? ["CommandOrControl+["] : ["Alt+Left"],
             description: t("keyboard_actions.back-in-note-history"),
             scope: "window"
         },
@@ -29,7 +29,7 @@ function getDefaultKeyboardActions() {
             friendlyName: t("keyboard_action_names.forward-in-note-history"),
             iconClass: "bx bxs-chevron-right",
             // Mac has a different history navigation shortcuts - https://github.com/zadam/trilium/issues/376
-            defaultShortcuts: isMac ? ["CommandOrControl+]"] : ["Alt+Right"],
+            defaultShortcuts: isMac() ? ["CommandOrControl+]"] : ["Alt+Right"],
             description: t("keyboard_actions.forward-in-note-history"),
             scope: "window"
         },
@@ -153,7 +153,7 @@ function getDefaultKeyboardActions() {
             actionName: "moveNoteUp",
             friendlyName: t("keyboard_action_names.move-note-up"),
             iconClass: "bx bx-up-arrow-alt",
-            defaultShortcuts: isMac ? ["Alt+Up"] : ["CommandOrControl+Up"],
+            defaultShortcuts: isMac() ? ["Alt+Up"] : ["CommandOrControl+Up"],
             description: t("keyboard_actions.move-note-up"),
             scope: "note-tree"
         },
@@ -161,7 +161,7 @@ function getDefaultKeyboardActions() {
             actionName: "moveNoteDown",
             friendlyName: t("keyboard_action_names.move-note-down"),
             iconClass: "bx bx-down-arrow-alt",
-            defaultShortcuts: isMac ? ["Alt+Down"] : ["CommandOrControl+Down"],
+            defaultShortcuts: isMac() ? ["Alt+Down"] : ["CommandOrControl+Down"],
             description: t("keyboard_actions.move-note-down"),
             scope: "note-tree"
         },
@@ -169,7 +169,7 @@ function getDefaultKeyboardActions() {
             actionName: "moveNoteUpInHierarchy",
             friendlyName: t("keyboard_action_names.move-note-up-in-hierarchy"),
             iconClass: "bx bx-arrow-from-bottom",
-            defaultShortcuts: isMac ? ["Alt+Left"] : ["CommandOrControl+Left"],
+            defaultShortcuts: isMac() ? ["Alt+Left"] : ["CommandOrControl+Left"],
             description: t("keyboard_actions.move-note-up-in-hierarchy"),
             scope: "note-tree"
         },
@@ -177,7 +177,7 @@ function getDefaultKeyboardActions() {
             actionName: "moveNoteDownInHierarchy",
             friendlyName: t("keyboard_action_names.move-note-down-in-hierarchy"),
             iconClass: "bx bx-arrow-from-top",
-            defaultShortcuts: isMac ? ["Alt+Right"] : ["CommandOrControl+Right"],
+            defaultShortcuts: isMac() ? ["Alt+Right"] : ["CommandOrControl+Right"],
             description: t("keyboard_actions.move-note-down-in-hierarchy"),
             scope: "note-tree"
         },
@@ -282,7 +282,7 @@ function getDefaultKeyboardActions() {
             actionName: "openNewTab",
             friendlyName: t("keyboard_action_names.open-new-tab"),
             iconClass: "bx bx-plus",
-            defaultShortcuts: isElectron ? ["CommandOrControl+T"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+T"] : [],
             description: t("keyboard_actions.open-new-tab"),
             scope: "window"
         },
@@ -290,7 +290,7 @@ function getDefaultKeyboardActions() {
             actionName: "closeActiveTab",
             friendlyName: t("keyboard_action_names.close-active-tab"),
             iconClass: "bx bx-minus",
-            defaultShortcuts: isElectron ? ["CommandOrControl+W"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+W"] : [],
             description: t("keyboard_actions.close-active-tab"),
             scope: "window"
         },
@@ -298,7 +298,7 @@ function getDefaultKeyboardActions() {
             actionName: "reopenLastTab",
             friendlyName: t("keyboard_action_names.reopen-last-tab"),
             iconClass: "bx bx-undo",
-            defaultShortcuts: isElectron ? ["CommandOrControl+Shift+T"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+Shift+T"] : [],
             isElectronOnly: true,
             description: t("keyboard_actions.reopen-last-tab"),
             scope: "window"
@@ -307,7 +307,7 @@ function getDefaultKeyboardActions() {
             actionName: "activateNextTab",
             friendlyName: t("keyboard_action_names.activate-next-tab"),
             iconClass: "bx bx-skip-next",
-            defaultShortcuts: isElectron ? ["CommandOrControl+Tab", "CommandOrControl+PageDown"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+Tab", "CommandOrControl+PageDown"] : [],
             description: t("keyboard_actions.activate-next-tab"),
             scope: "window"
         },
@@ -315,7 +315,7 @@ function getDefaultKeyboardActions() {
             actionName: "activatePreviousTab",
             friendlyName: t("keyboard_action_names.activate-previous-tab"),
             iconClass: "bx bx-skip-previous",
-            defaultShortcuts: isElectron ? ["CommandOrControl+Shift+Tab", "CommandOrControl+PageUp"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+Shift+Tab", "CommandOrControl+PageUp"] : [],
             description: t("keyboard_actions.activate-previous-tab"),
             scope: "window"
         },
@@ -757,7 +757,7 @@ function getDefaultKeyboardActions() {
             actionName: "openDevTools",
             friendlyName: t("keyboard_action_names.open-developer-tools"),
             iconClass: "bx bx-bug-alt",
-            defaultShortcuts: isElectron ? ["CommandOrControl+Shift+I"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+Shift+I"] : [],
             isElectronOnly: true,
             description: t("keyboard_actions.open-dev-tools"),
             scope: "window"
@@ -766,7 +766,7 @@ function getDefaultKeyboardActions() {
             actionName: "findInText",
             friendlyName: t("keyboard_action_names.find-in-text"),
             iconClass: "bx bx-search",
-            defaultShortcuts: isElectron ? ["CommandOrControl+F"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+F"] : [],
             description: t("keyboard_actions.find-in-text"),
             scope: "window"
         },
@@ -790,7 +790,7 @@ function getDefaultKeyboardActions() {
             actionName: "zoomOut",
             friendlyName: t("keyboard_action_names.zoom-out"),
             iconClass: "bx bx-zoom-out",
-            defaultShortcuts: isElectron ? ["CommandOrControl+-"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+-"] : [],
             isElectronOnly: true,
             description: t("keyboard_actions.zoom-out"),
             scope: "window"
@@ -800,7 +800,7 @@ function getDefaultKeyboardActions() {
             friendlyName: t("keyboard_action_names.zoom-in"),
             iconClass: "bx bx-zoom-in",
             description: t("keyboard_actions.zoom-in"),
-            defaultShortcuts: isElectron ? ["CommandOrControl+="] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+="] : [],
             isElectronOnly: true,
             scope: "window"
         },
@@ -809,7 +809,7 @@ function getDefaultKeyboardActions() {
             friendlyName: t("keyboard_action_names.reset-zoom-level"),
             iconClass: "bx bx-search-alt",
             description: t("keyboard_actions.reset-zoom-level"),
-            defaultShortcuts: isElectron ? ["CommandOrControl+0"] : [],
+            defaultShortcuts: isElectron() ? ["CommandOrControl+0"] : [],
             isElectronOnly: true,
             scope: "window"
         },
@@ -834,7 +834,7 @@ function getDefaultKeyboardActions() {
     /*
      * Apply macOS-specific tweaks.
      */
-    const platformModifier = isMac ? "Meta" : "Ctrl";
+    const platformModifier = isMac() ? "Meta" : "Ctrl";
 
     for (const action of DEFAULT_KEYBOARD_ACTIONS) {
         if ("defaultShortcuts" in action && action.defaultShortcuts) {

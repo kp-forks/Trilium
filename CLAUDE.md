@@ -4,149 +4,197 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Trilium Notes is a hierarchical note-taking application with advanced features like synchronization, scripting, and rich text editing. It's built as a TypeScript monorepo using pnpm, with multiple applications and shared packages.
+Trilium Notes is a hierarchical note-taking application with synchronization, scripting, and rich text editing. TypeScript monorepo using pnpm with multiple apps and shared packages.
 
 ## Development Commands
 
-### Setup
-- `pnpm install` - Install all dependencies
-- `corepack enable` - Enable pnpm if not available
+```bash
+# Setup
+corepack enable && pnpm install
 
-### Running Applications
-- `pnpm run server:start` - Start development server (http://localhost:8080)
-- `pnpm run server:start-prod` - Run server in production mode
+# Run
+pnpm server:start              # Dev server at http://localhost:8080
+pnpm desktop:start             # Electron dev app
+pnpm standalone:start          # Standalone client dev
 
-### Building
-- `pnpm run client:build` - Build client application
-- `pnpm run server:build` - Build server application
-- `pnpm run electron:build` - Build desktop application
+# Build
+pnpm client:build              # Frontend
+pnpm server:build              # Backend
+pnpm desktop:build             # Electron
 
-### Testing
-- `pnpm test:all` - Run all tests (parallel + sequential)
-- `pnpm test:parallel` - Run tests that can run in parallel
-- `pnpm test:sequential` - Run tests that must run sequentially (server, ckeditor5-mermaid, ckeditor5-math)
-- `pnpm coverage` - Generate coverage reports
+# Test
+pnpm test:all                  # All tests (parallel + sequential)
+pnpm test:parallel             # Client + most package tests
+pnpm test:sequential           # Server, ckeditor5-mermaid, ckeditor5-math (shared DB)
+pnpm --filter server test      # Single package tests
+pnpm coverage                  # Coverage reports
 
-## Architecture Overview
+# Lint & Format
+pnpm dev:linter-check          # ESLint check
+pnpm dev:linter-fix            # ESLint fix
+pnpm dev:format-check          # Format check (stricter stylistic rules)
+pnpm dev:format-fix            # Format fix
+pnpm typecheck                 # TypeScript type check across all projects
+```
 
-### Monorepo Structure
-- **apps/**: Runnable applications
-  - `client/` - Frontend application (shared by server and desktop)
-  - `server/` - Node.js server with web interface
-  - `desktop/` - Electron desktop application
-  - `web-clipper/` - Browser extension for saving web content
-  - Additional tools: `db-compare`, `dump-db`, `edit-docs`
+**Running a single test file**: `pnpm --filter server test spec/etapi/search.spec.ts`
 
-- **packages/**: Shared libraries
-  - `commons/` - Shared interfaces and utilities
-  - `ckeditor5/` - Custom rich text editor with Trilium-specific plugins
-  - `codemirror/` - Code editor customizations
-  - `highlightjs/` - Syntax highlighting
-  - Custom CKEditor plugins: `ckeditor5-admonition`, `ckeditor5-footnotes`, `ckeditor5-math`, `ckeditor5-mermaid`
+## Main Applications
 
-### Core Architecture Patterns
+The four main apps share `packages/trilium-core/` for business logic but differ in runtime:
 
-#### Three-Layer Cache System
-- **Becca** (Backend Cache): Server-side entity cache (`apps/server/src/becca/`)
-- **Froca** (Frontend Cache): Client-side mirror of backend data (`apps/client/src/services/froca.ts`)
-- **Shaca** (Share Cache): Optimized cache for shared/published notes (`apps/server/src/share/`)
+- **client** (`apps/client/`): Preact frontend with jQuery widget system. Shared UI layer used by both server and desktop.
+- **server** (`apps/server/`): Node.js backend (Express, better-sqlite3). Serves the client and provides REST/WebSocket APIs.
+- **desktop** (`apps/desktop/`): Electron wrapper around server + client, running both in a single process.
+- **standalone** (`apps/client-standalone/` + `apps/standalone-desktop/`): Runs the entire stack in the browser — server logic compiled to WASM via sql.js, executed in a service worker. No Node.js dependency at runtime.
 
-#### Entity System
-Core entities are defined in `apps/server/src/becca/entities/`:
-- `BNote` - Notes with content and metadata
-- `BBranch` - Hierarchical relationships between notes (allows multiple parents)
-- `BAttribute` - Key-value metadata attached to notes
-- `BRevision` - Note version history
-- `BOption` - Application configuration
+## Monorepo Structure
 
-#### Widget-Based UI
-Frontend uses a widget system (`apps/client/src/widgets/`):
-- `BasicWidget` - Base class for all UI components
-- `NoteContextAwareWidget` - Widgets that respond to note changes
-- `RightPanelWidget` - Widgets displayed in the right panel
+```
+apps/
+  client/               # Preact frontend (shared by server, desktop, standalone)
+  server/               # Node.js backend (Express, better-sqlite3)
+  desktop/              # Electron (bundles server + client)
+  client-standalone/    # Standalone client (WASM + service workers, no Node.js)
+  standalone-desktop/   # Standalone desktop variant
+  server-e2e/           # Playwright E2E tests for server
+  web-clipper/          # Browser extension
+  website/              # Project website
+  db-compare/, dump-db/, edit-docs/, build-docs/, icon-pack-builder/
+
+packages/
+  trilium-core/         # Core business logic: entities, services, SQL, sync
+  commons/              # Shared interfaces and utilities
+  ckeditor5/            # Custom rich text editor bundle
+  codemirror/           # Code editor integration
+  highlightjs/          # Syntax highlighting
+  share-theme/          # Theme for shared/published notes
+  ckeditor5-admonition/, ckeditor5-footnotes/, ckeditor5-math/, ckeditor5-mermaid/
+  ckeditor5-keyboard-marker/, express-partial-content/, pdfjs-viewer/, splitjs/
+  turndown-plugin-gfm/
+```
+
+Use `pnpm --filter <package-name> <command>` to run commands in specific packages.
+
+## Core Architecture
+
+### Three-Layer Cache System
+
+All data access goes through cache layers — never bypass with direct DB queries:
+
+- **Becca** (`packages/trilium-core/src/becca/`): Server-side entity cache. Access via `becca.notes[noteId]`.
+- **Froca** (`apps/client/src/services/froca.ts`): Client-side mirror synced via WebSocket. Access via `froca.getNote()`.
+- **Shaca** (`apps/server/src/share/`): Optimized cache for shared/published notes.
+
+**Critical**: Always use cache methods, not direct DB writes. Cache methods create `EntityChange` records needed for synchronization.
+
+### Entity System
+
+Core entities live in `packages/trilium-core/src/becca/entities/` (not `apps/server/`):
+
+- `BNote` — Notes with content and metadata
+- `BBranch` — Multi-parent tree relationships (cloning supported)
+- `BAttribute` — Key-value metadata (labels and relations)
+- `BRevision` — Version history
+- `BOption` — Application configuration
+- `BBlob` — Binary content storage
+
+Entities extend `AbstractBeccaEntity<T>` with built-in change tracking, hash generation, and date management.
+
+### Entity Change & Sync Protocol
+
+Every entity modification creates an `EntityChange` record driving sync:
+1. Login with HMAC authentication (document secret + timestamp)
+2. Push changes → Pull changes → Push again (conflict resolution)
+3. Content hash verification with retry loop
+
+Sync services: `packages/trilium-core/src/services/sync.ts`, `syncMutexService`, `syncUpdateService`.
+
+### Widget-Based UI
+
+Frontend widgets in `apps/client/src/widgets/`:
+- `BasicWidget` / `TypedBasicWidget` — Base classes (jQuery `this.$widget` for DOM)
+- `NoteContextAwareWidget` — Responds to note changes
+- `RightPanelWidget` — Sidebar widgets with position ordering
 - Type-specific widgets in `type_widgets/` directory
 
-#### API Architecture
-- **Internal API**: REST endpoints in `apps/server/src/routes/api/`
-- **ETAPI**: External API for third-party integrations (`apps/server/src/etapi/`)
-- **WebSocket**: Real-time synchronization (`apps/server/src/services/ws.ts`)
+**Widget lifecycle**: `doRenderBody()` for initial render, `refreshWithNote()` for note changes, `entitiesReloadedEvent({loadResults})` for entity updates. Uses jQuery — don't mix React patterns.
 
-### Key Files for Understanding Architecture
+Fluent builder pattern: `.child()`, `.class()`, `.css()` chaining with position-based ordering.
 
-1. **Application Entry Points**:
-   - `apps/server/src/main.ts` - Server startup
-   - `apps/client/src/desktop.ts` - Client initialization
+### API Architecture
 
-2. **Core Services**:
-   - `apps/server/src/becca/becca.ts` - Backend data management
-   - `apps/client/src/services/froca.ts` - Frontend data synchronization
-   - `apps/server/src/services/backend_script_api.ts` - Scripting API
+- **Internal API** (`apps/server/src/routes/api/`): REST endpoints, trusts frontend
+- **ETAPI** (`apps/server/src/etapi/`): External API with basic auth tokens — maintain backwards compatibility
+- **WebSocket** (`apps/server/src/services/ws.ts`): Real-time sync
 
-3. **Database Schema**:
-   - `apps/server/src/assets/db/schema.sql` - Core database structure
+### Platform Abstraction
 
-4. **Configuration**:
-   - `package.json` - Project dependencies and scripts
+`packages/trilium-core/src/services/platform.ts` defines `PlatformProvider` interface with implementations in `apps/desktop/`, `apps/server/`, and `apps/client-standalone/`. Singleton via `initPlatform()`/`getPlatform()`.
 
-## Note Types and Features
+**PlatformProvider** provides:
+- `crash(message)` — Platform-specific fatal error handling
+- `getEnv(key)` — Environment variable access (server/desktop use `process.env`, standalone maps URL query params like `?safeMode` → `TRILIUM_SAFE_MODE`)
+- `isElectron`, `isMac`, `isWindows` — Platform detection flags
 
-Trilium supports multiple note types, each with specialized widgets:
-- **Text**: Rich text with CKEditor5 (markdown import/export)
-- **Code**: Syntax-highlighted code editing with CodeMirror
-- **File**: Binary file attachments
-- **Image**: Image display with editing capabilities
-- **Canvas**: Drawing/diagramming with Excalidraw
-- **Mermaid**: Diagram generation
-- **Relation Map**: Visual note relationship mapping
-- **Web View**: Embedded web pages
-- **Doc/Book**: Hierarchical documentation structure
+**Critical rules for `trilium-core`**:
+- **No `process.env` in core** — use `getPlatform().getEnv()` instead (not available in standalone/browser)
+- **No `import path from "path"` in core** — Node's `path` module is externalized in browser builds. Use `packages/trilium-core/src/services/utils/path.ts` for `extname()`/`basename()` equivalents
+- **No Node.js built-in modules in core** — core runs in both Node.js and the browser (standalone). Use platform-agnostic alternatives or platform providers
+- **Platform detection via functions** — `isElectron()`, `isMac()`, `isWindows()` from `utils/index.ts` are functions (not constants) that call `getPlatform()`. They can only be called after `initializeCore()`, not at module top-level. If used in static definitions, wrap in a closure: `value: () => isWindows() ? "0.9" : "1.0"`
+- **Barrel import caution** — `import { x } from "@triliumnext/core"` loads ALL core exports. Early-loading modules like `config.ts` should import specific subpaths (e.g. `@triliumnext/core/src/services/utils/index`) to avoid circular dependencies or initialization ordering issues
+- **Electron IPC** — In desktop mode, client API calls use Electron IPC (not HTTP). The IPC handler in `apps/server/src/routes/electron.ts` must be registered via `utils.isElectron` from the **server's** utils (which correctly checks `process.versions["electron"]`), not from core's utils
 
-## Development Guidelines
+### Database
 
-### Testing Strategy
-- Server tests run sequentially due to shared database
-- Client tests can run in parallel
-- E2E tests use Playwright for both server and desktop apps
-- Build validation tests check artifact integrity
+SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/services/sql/` with `DatabaseProvider` interface, prepared statement caching, and transaction support.
 
-### Scripting System
-Trilium provides powerful user scripting capabilities:
-- Frontend scripts run in browser context
-- Backend scripts run in Node.js context with full API access
-- Script API documentation available in `docs/Script API/`
+- Schema: `apps/server/src/assets/db/schema.sql`
+- Migrations: `apps/server/src/migrations/YYMMDD_HHMM__description.sql`
 
-### Internationalization
-- Translation files in `apps/client/src/translations/`
-- Supported languages: English, German, Spanish, French, Romanian, Chinese
+### Attribute Inheritance
 
-### Security Considerations
-- Per-note encryption with granular protected sessions
-- CSRF protection for API endpoints
-- OpenID and TOTP authentication support
-- Sanitization of user-generated content
+Three inheritance mechanisms:
+1. **Standard**: `note.getInheritableAttributes()` walks parent tree
+2. **Child prefix**: `child:label` on parent copies to children
+3. **Template relation**: `#template=noteNoteId` includes template's inheritable attributes
 
-## Common Development Tasks
+Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 
-### Adding New Note Types
-1. Create widget in `apps/client/src/widgets/type_widgets/`
-2. Register in `apps/client/src/services/note_types.ts`
-3. Add backend handling in `apps/server/src/services/notes.ts`
+## Important Patterns
 
-### Extending Search
-- Search expressions handled in `apps/server/src/services/search/`
-- Add new search operators in search context files
+- **Protected notes**: Check `note.isContentAvailable()` before accessing content; use `note.getTitleOrProtected()` for safe title access
+- **Long operations**: Use `TaskContext` for progress reporting via WebSocket
+- **Event system** (`packages/trilium-core/src/services/events.ts`): Events emitted in order (notes → branches → attributes) during load for referential integrity
+- **Search**: Expression-based, scoring happens in-memory — cannot add SQL-level LIMIT/OFFSET without losing scoring
+- **Widget cleanup**: Unsubscribe from events in `cleanup()`/`doDestroy()` to prevent memory leaks
 
-### Custom CKEditor Plugins
-- Create new package in `packages/` following existing plugin structure
-- Register in `packages/ckeditor5/src/plugins.ts`
+## Code Style
 
-### Database Migrations
-- Add migration scripts in `apps/server/src/migrations/`
-- Update schema in `apps/server/src/assets/db/schema.sql`
+- 4-space indentation, semicolons always required
+- Double quotes (enforced by format config)
+- Max line length: 100 characters
+- Unix line endings
+- Import sorting via `eslint-plugin-simple-import-sort`
 
-## Build System Notes
-- Uses pnpm for monorepo management
-- Vite for fast development builds
-- ESBuild for production optimization
-- pnpm workspaces for dependency management
-- Docker support with multi-stage builds
+## Testing
+
+- **Server tests** (`apps/server/spec/`): Vitest, must run sequentially (shared DB), forks pool, max 6 workers
+- **Client tests** (`apps/client/src/`): Vitest with happy-dom environment, can run in parallel
+- **E2E tests** (`apps/server-e2e/`): Playwright, Chromium, server started automatically on port 8082
+- **ETAPI tests** (`apps/server/spec/etapi/`): External API contract tests
+
+## Documentation
+
+- `docs/Script API/` — Auto-generated, never edit directly
+- `docs/User Guide/` — Edit via `pnpm edit-docs:edit-docs`, not manually
+- `docs/Developer Guide/` and `docs/Release Notes/` — Safe for direct Markdown editing
+
+## Key Entry Points
+
+- `apps/server/src/main.ts` — Server startup
+- `apps/client/src/desktop.ts` — Client initialization
+- `packages/trilium-core/src/becca/becca.ts` — Backend data management
+- `apps/client/src/services/froca.ts` — Frontend cache
+- `apps/server/src/routes/routes.ts` — API route registration
+- `packages/trilium-core/src/services/sql/sql.ts` — Database abstraction

@@ -93,7 +93,7 @@ function returnAttachedImage(req: Request<{ attachmentId: string }>, res: Respon
 
 function updateImage(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
-    const { file } = req;
+    const { file } = req as any;  // TODO: Add support for file upload in type definitions and remove 'as any' cast
 
     const _note = becca.getNoteOrThrow(noteId);
 

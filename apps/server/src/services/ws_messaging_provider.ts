@@ -24,7 +24,7 @@ export default class WebSocketMessagingProvider implements MessagingProvider {
     init(httpServer: HttpServer, sessionParser: express.RequestHandler) {
         this.webSocketServer = new WebSocketServer({
             verifyClient: (info, done) => {
-                sessionParser(info.req as express.Request, {}, () => {
+                sessionParser(info.req as express.Request, {} as express.Response, () => {
                     const allowed = isElectron || (info.req as any).session.loggedIn || (config.General && config.General.noAuthentication);
 
                     if (!allowed) {

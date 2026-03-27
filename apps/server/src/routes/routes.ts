@@ -28,7 +28,6 @@ import fontsRoute from "./api/fonts.js";
 import importRoute from "./api/import.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
-import noteMapRoute from "./api/note_map.js";
 import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
@@ -94,7 +93,6 @@ function register(app: express.Application) {
     });
 
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
-    route(GET, "/api/notes/:noteId/open", [auth.checkApiAuthOrElectron], filesRoute.openFile);
     asyncRoute(
         GET,
         "/api/notes/:noteId/open-partial",
@@ -105,15 +103,11 @@ function register(app: express.Application) {
             }
         })
     );
-    route(GET, "/api/notes/:noteId/download", [auth.checkApiAuthOrElectron], filesRoute.downloadFile);
-    // this "hacky" path is used for easier referencing of CSS resources
-    route(GET, "/api/notes/download/:noteId", [auth.checkApiAuthOrElectron], filesRoute.downloadFile);
     apiRoute(PST, "/api/notes/:noteId/save-to-tmp-dir", filesRoute.saveNoteToTmpDir);
     apiRoute(PST, "/api/notes/:noteId/upload-modified-file", filesRoute.uploadModifiedFileToNote);
 
     // TODO: Bring back attachment uploading
     // route(PST, "/api/notes/:noteId/attachments/upload", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], attachmentsApiRoute.uploadAttachment, apiResultHandler);
-    route(GET, "/api/attachments/:attachmentId/open", [auth.checkApiAuthOrElectron], filesRoute.openAttachment);
     asyncRoute(
         GET,
         "/api/attachments/:attachmentId/open-partial",
@@ -124,9 +118,7 @@ function register(app: express.Application) {
             }
         })
     );
-    route(GET, "/api/attachments/:attachmentId/download", [auth.checkApiAuthOrElectron], filesRoute.downloadAttachment);
-    // this "hacky" path is used for easier referencing of CSS resources
-    route(GET, "/api/attachments/download/:attachmentId", [auth.checkApiAuthOrElectron], filesRoute.downloadAttachment);
+
     apiRoute(PST, "/api/attachments/:attachmentId/save-to-tmp-dir", filesRoute.saveAttachmentToTmpDir);
     apiRoute(PST, "/api/attachments/:attachmentId/upload-modified-file", filesRoute.uploadModifiedFileToAttachment);
     route(PUT, "/api/attachments/:attachmentId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateAttachment, apiResultHandler);
@@ -209,10 +201,6 @@ function register(app: express.Application) {
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
     apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);
     apiRoute(PST, "/api/other/to-markdown", otherRoute.toMarkdown);
-
-    apiRoute(PST, "/api/note-map/:noteId/tree", noteMapRoute.getTreeMap);
-    apiRoute(PST, "/api/note-map/:noteId/link", noteMapRoute.getLinkMap);
-    apiRoute(GET, "/api/note-map/:noteId/backlinks", noteMapRoute.getBacklinks);
 
     shareRoutes.register(router);
 

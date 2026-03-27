@@ -12,7 +12,8 @@ export default class LogService {
         console.error("ERROR: ", message);
     }
 
-    banner(message: string) {
+    banner(message: string | undefined) {
+        if (!message) return;
         const maxContent = 76; // 80 - 4 (border + padding)
         const words = message.split(" ");
         const lines: string[] = [];

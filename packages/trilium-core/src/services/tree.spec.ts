@@ -4,8 +4,8 @@ import becca from "../becca/becca.js";
 import BBranch from "../becca/entities/bbranch.js";
 import BNote from "../becca/entities/bnote.js";
 import tree from "./tree.js";
-import cls from "./cls.js";
 import {buildNote} from "../test/becca_easy_mocking.js";
+import { getContext } from "./context.js";
 
 describe("Tree", () => {
     let rootNote!: NoteBuilder;
@@ -58,7 +58,7 @@ describe("Tree", () => {
                 ],
                 "#sorted": "",
             });
-            cls.init(() => {
+            getContext().init(() => {
                 tree.sortNotesIfNeeded(note.noteId);
             });
             const orderedTitles = note.children.map((child) => child.title);
@@ -85,7 +85,7 @@ describe("Tree", () => {
 
         // Sort a few times to ensure that the resulting order is the same.
         for (let i = 0; i < 5; i++) {
-            cls.init(() => {
+            getContext().init(() => {
                 tree.sortNotesIfNeeded(rootNote.note.noteId);
             });
 
@@ -106,7 +106,7 @@ describe("Tree", () => {
             ],
             "#sorted": ""
         });
-        cls.init(() => {
+        getContext().init(() => {
             tree.sortNotesIfNeeded(note.noteId);
         });
         const orderedTitles = note.children.map((child) => child.title);
@@ -126,7 +126,7 @@ describe("Tree", () => {
             "#sorted": "",
             "#sortDirection": "desc"
         });
-        cls.init(() => {
+        getContext().init(() => {
             tree.sortNotesIfNeeded(note.noteId);
         });
         const orderedTitles = note.children.map((child) => child.title);
@@ -148,7 +148,7 @@ describe("Tree", () => {
             "#sorted": "",
             "#sortFoldersFirst": ""
         });
-        cls.init(() => {
+        getContext().init(() => {
             tree.sortNotesIfNeeded(note.noteId);
         });
         const orderedTitles = note.children.map((child) => child.title);
@@ -169,7 +169,7 @@ describe("Tree", () => {
                 "#sorted": "",
                 "#sortNatural": ""
             });
-            cls.init(() => {
+            getContext().init(() => {
                 tree.sortNotesIfNeeded(note.noteId);
             });
             const orderedTitles = note.children.map((child) => child.title);

@@ -1,7 +1,7 @@
 
 
 import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
-import { sanitize } from "@triliumnext/core";
+import { sanitize, utils } from "@triliumnext/core";
 import path from "path";
 import type { Stream } from "stream";
 import yauzl from "yauzl";
@@ -14,7 +14,7 @@ import type BNote from "../../becca/entities/bnote.js";
 import attributeService from "../../services/attributes.js";
 import log from "../../services/log.js";
 import noteService from "../../services/notes.js";
-import { getNoteTitle, newEntityId, processStringOrBuffer, removeFileExtension, unescapeHtml } from "../../services/utils.js";
+import { newEntityId, processStringOrBuffer, unescapeHtml } from "../../services/utils.js";
 import type AttributeMeta from "../meta/attribute_meta.js";
 import type NoteMeta from "../meta/note_meta.js";
 import protectedSessionService from "../protected_session.js";
@@ -162,7 +162,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
 
         // in case we lack metadata, we treat e.g. "Programming.html" and "Programming" as the same note
         // (one data file, the other directory for children)
-        const filePathNoExt = removeFileExtension(filePath);
+        const filePathNoExt = utils.removeFileExtension(filePath);
 
         if (filePathNoExt in createdPaths) {
             return createdPaths[filePathNoExt];
@@ -234,7 +234,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             return;
         }
 
-        const noteTitle = getNoteTitle(filePath, !!taskContext.data?.replaceUnderscoresWithSpaces, noteMeta);
+        const noteTitle = utils.getNoteTitle(filePath, !!taskContext.data?.replaceUnderscoresWithSpaces, noteMeta);
         const parentNoteId = getParentNoteId(filePath, parentNoteMeta);
 
         if (!parentNoteId) {
@@ -467,7 +467,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             content = processStringOrBuffer(content);
         }
 
-        const noteTitle = getNoteTitle(filePath, taskContext.data?.replaceUnderscoresWithSpaces || false, noteMeta);
+        const noteTitle = utils.getNoteTitle(filePath, taskContext.data?.replaceUnderscoresWithSpaces || false, noteMeta);
 
         content = processNoteContent(noteMeta, type, mime, content, noteTitle || "", filePath);
 

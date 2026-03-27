@@ -1,5 +1,5 @@
 import { BackupDatabaseNowResponse, DatabaseCheckIntegrityResponse } from "@triliumnext/commons";
-import { becca_loader, ValidationError } from "@triliumnext/core";
+import { becca_loader, rebuildIntegrationTestDatabase as rebuildIntegrationTestDatabaseCore,ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 
 import anonymizationService from "../../services/anonymization.js";
@@ -30,7 +30,7 @@ function findAndFixConsistencyIssues() {
 }
 
 async function rebuildIntegrationTestDatabase() {
-    sql.rebuildIntegrationTestDatabase();
+    rebuildIntegrationTestDatabaseCore();
     sql_init.initializeDb();
     becca_loader.load();
 }

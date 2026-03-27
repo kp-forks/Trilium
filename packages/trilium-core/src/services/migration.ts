@@ -24,7 +24,7 @@ async function migrate() {
     }
 
     // backup before attempting migration
-    if (!process.env.TRILIUM_INTEGRATION_TEST) {
+    if (!getPlatform().getEnv("TRILIUM_INTEGRATION_TEST")) {
         await backupService.backupNow(
             // creating a special backup for version 0.60.4, the changes in 0.61 are major.
             currentDbVersion === 214 ? `before-migration-v060` : "before-migration"
@@ -123,7 +123,7 @@ function isDbUpToDate() {
 async function migrateIfNecessary() {
     const currentDbVersion = getDbVersion();
 
-    if (currentDbVersion > appInfo.dbVersion && process.env.TRILIUM_IGNORE_DB_VERSION !== "true") {
+    if (currentDbVersion > appInfo.dbVersion && getPlatform().getEnv("TRILIUM_IGNORE_DB_VERSION") !== "true") {
         getPlatform().crash(t("migration.wrong_db_version", { version: currentDbVersion, targetVersion: appInfo.dbVersion }));
     }
 

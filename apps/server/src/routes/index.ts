@@ -10,7 +10,7 @@ import attributeService from "../services/attributes.js";
 import config from "../services/config.js";
 import log from "../services/log.js";
 import optionService from "../services/options.js";
-import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
+import { isDev, isElectron, isMac, isWindows, isWindows11 } from "../services/utils.js";
 import { generateCsrfToken } from "./csrf_protection.js";
 
 type View = "desktop" | "mobile" | "print";
@@ -25,18 +25,31 @@ export function bootstrap(req: Request, res: Response) {
         req.session.csrfInitialized = true;
     }
 
+    const view = getView(req);
     const isDbInitialized = sql_init.isDbInitialized();
-    const commonItems = getSharedBootstrapItems(assetPath, isDbInitialized);
+    const commonItems = {
+        ...getSharedBootstrapItems(assetPath, isDbInitialized),
+        baseApiUrl: "api/",
+        appPath,
+        isStandalone: false,
+        isElectron,
+        isDev,
+        triliumVersion: packageJson.version,
+        device: view,
+        TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE,
+        instanceName: config.General ? config.General.instanceName : null
+    };
     if (!isDbInitialized) {
         res.send({
             ...commonItems,
-            baseApiUrl: "api/",
-            componentId: ""
-        });
+            hasNativeTitleBar: false,
+            hasBackgroundEffects: isElectron && (isWindows11 || isMac),
+            isMainWindow: true,
+            appCssNoteIds: [],
+        } satisfies BootstrapDefinition);
         return;
     }
 
-    const options = optionService.getOptionMap();
 
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
@@ -44,43 +57,27 @@ export function bootstrap(req: Request, res: Response) {
     });
     log.info(`CSRF token generation: ${csrfToken ? "Successful" : "Failed"}`);
 
-    const view = getView(req);
-    const theme = options.theme;
-    const themeNote = attributeService.getNoteWithLabel("appTheme", theme);
+    const options = optionService.getOptionMap();
     const nativeTitleBarVisible = options.nativeTitleBarVisible === "true";
     const iconPacks = iconPackService.getIconPacks();
-    const sql = getSql();
 
     res.send({
         ...commonItems,
         dbInitialized: true,
-        device: view,
         csrfToken,
-        themeCssUrl: getThemeCssUrl(theme, themeNote),
-        themeUseNextAsBase: themeNote?.getAttributeValue("label", "appThemeBase") as "next" | "next-light" | "next-dark",
         platform: process.platform,
-        isElectron,
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
             && isElectron
             && (isWindows11 || isMac)
             && !nativeTitleBarVisible,
-        maxEntityChangeIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
-        maxEntityChangeSyncIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
-        instanceName: config.General ? config.General.instanceName : null,
-        appCssNoteIds: getAppCssNoteIds(),
-        isDev,
         isMainWindow: view === "mobile" ? true : !req.query.extraWindow,
-        triliumVersion: packageJson.version,
-        appPath,
-        baseApiUrl: 'api/',
         iconPackCss: iconPacks
             .map((p: iconPackService.ProcessedIconPack) => iconPackService.generateCss(p, p.builtin
                 ? `${assetPath}/fonts/${p.fontAttachmentId}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
                 : `api/attachments/download/${p.fontAttachmentId}`))
             .filter(Boolean)
             .join("\n\n"),
-        TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE
     } satisfies BootstrapDefinition);
 }
 
@@ -119,29 +116,4 @@ function getView(req: Request): View {
     }
 
     return "desktop";
-}
-
-function getThemeCssUrl(theme: string, themeNote: BNote | null) {
-    if (theme === "auto") {
-        return `${assetPath}/stylesheets/theme.css`;
-    } else if (theme === "light") {
-        // light theme is always loaded as baseline
-        return false;
-    } else if (theme === "dark") {
-        return `${assetPath}/stylesheets/theme-dark.css`;
-    } else if (theme === "next") {
-        return `${assetPath}/stylesheets/theme-next.css`;
-    } else if (theme === "next-light") {
-        return `${assetPath}/stylesheets/theme-next-light.css`;
-    } else if (theme === "next-dark") {
-        return `${assetPath}/stylesheets/theme-next-dark.css`;
-    } else if (!process.env.TRILIUM_SAFE_MODE && themeNote) {
-        return `api/notes/download/${themeNote.noteId}`;
-    }
-    // baseline light theme
-    return false;
-}
-
-function getAppCssNoteIds() {
-    return attributeService.getNotesWithLabel("appCss").map((note) => note.noteId);
 }

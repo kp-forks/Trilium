@@ -1,10 +1,9 @@
-"use strict";
-
-import { getContentDisposition, stripTags } from "../utils.js";
-import becca from "../../becca/becca.js";
-import type TaskContext from "../task_context.js";
-import type BBranch from "../../becca/entities/bbranch.js";
+import { utils } from "@triliumnext/core";
 import type { Response } from "express";
+
+import becca from "../../becca/becca.js";
+import type BBranch from "../../becca/entities/bbranch.js";
+import type TaskContext from "../task_context.js";
 
 function exportToOpml(taskContext: TaskContext<"export">, branch: BBranch, version: string, res: Response) {
     if (!["1.0", "2.0"].includes(version)) {
@@ -59,7 +58,7 @@ function exportToOpml(taskContext: TaskContext<"export">, branch: BBranch, versi
 
     const filename = `${branch.prefix ? `${branch.prefix} - ` : ""}${note.title}.opml`;
 
-    res.setHeader("Content-Disposition", getContentDisposition(filename));
+    res.setHeader("Content-Disposition", utils.getContentDisposition(filename));
     res.setHeader("Content-Type", "text/x-opml");
 
     res.write(`<?xml version="1.0" encoding="UTF-8"?>
@@ -83,7 +82,7 @@ function exportToOpml(taskContext: TaskContext<"export">, branch: BBranch, versi
 function prepareText(text: string) {
     const newLines = text.replace(/(<p[^>]*>|<br\s*\/?>)/g, "\n").replace(/&nbsp;/g, " "); // nbsp isn't in XML standard (only HTML)
 
-    const stripped = stripTags(newLines);
+    const stripped = utils.stripTags(newLines);
 
     const escaped = escapeXmlAttribute(stripped);
 

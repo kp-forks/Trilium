@@ -3,6 +3,11 @@
  */
 export interface PlatformProvider {
     crash(message: string): void;
+    /** Returns the value of an environment variable, or undefined if not set. */
+    getEnv(key: string): string | undefined;
+    readonly isElectron: boolean;
+    readonly isMac: boolean;
+    readonly isWindows: boolean;
 }
 
 let platformProvider: PlatformProvider | null = null;

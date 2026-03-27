@@ -4,7 +4,7 @@
  */
 
 import { BootstrapDefinition } from '@triliumnext/commons';
-import { entity_changes, getContext, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
+import { entity_changes, getContext, getPlatform, getSharedBootstrapItems, getSql, routes, sql_init } from '@triliumnext/core';
 
 import packageJson from '../../package.json' with { type: 'json' };
 import { type BrowserRequest, BrowserRouter } from './browser_router';
@@ -241,41 +241,36 @@ function bootstrapRoute(): BootstrapDefinition {
     const assetPath = ".";
 
     const isDbInitialized = sql_init.isDbInitialized();
-    const commonItems = getSharedBootstrapItems(assetPath, isDbInitialized);
+    const commonItems = {
+        ...getSharedBootstrapItems(assetPath, isDbInitialized),
+        isDev: import.meta.env.DEV,
+        isStandalone: true,
+        isMainWindow: true,
+        isElectron: false,
+        hasNativeTitleBar: false,
+        hasBackgroundEffects: false,
+        triliumVersion: packageJson.version,
+        device: false as const, // Let the client detect device type.
+        appPath: assetPath,
+        instanceName: "standalone",
+        TRILIUM_SAFE_MODE: !!getPlatform().getEnv("TRILIUM_SAFE_MODE")
+    };
 
     if (!isDbInitialized) {
         return {
             ...commonItems,
-            isStandalone: true,
             baseApiUrl: "../api/",
+            isProtectedSessionAvailable: false,
         };
     }
 
     return {
         ...commonItems,
-        appPath: assetPath,
-        device: false, // Let the client detect device type.
         csrfToken: "dummy-csrf-token",
-        themeCssUrl: false,
-        themeUseNextAsBase: "next",
-        triliumVersion: packageJson.version,
         baseApiUrl: "../api/",
         headingStyle: "plain",
         layoutOrientation: "vertical",
         platform: "web",
-        isDev: import.meta.env.DEV,
-        isMainWindow: true,
-        isElectron: false,
-        isStandalone: true,
-        hasNativeTitleBar: false,
-        hasBackgroundEffects: false,
-
-        // TODO: Fill properly
-        currentLocale: { id: "en", name: "English", rtl: false },
-        isRtl: false,
-        instanceName: null,
-        appCssNoteIds: [],
-        TRILIUM_SAFE_MODE: false
     };
 }
 

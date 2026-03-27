@@ -1,14 +1,16 @@
 import { getCrypto } from "../encryption/crypto";
+import { getPlatform } from "../platform";
 import { sanitizeFileName } from "../sanitizer";
 import { encodeBase64 } from "./binary";
-import mimeTypes from "mime-types";
+import { extensions as mimeToExt, types as extToMime } from "mime-types";
 import escape from "escape-html";
 import unescape from "unescape";
+import { basename, extname } from "./path";
+import { NoteMeta } from "../../meta";
 
-// TODO: Implement platform detection.
-export const isElectron = false;
-export const isMac = false;
-export const isWindows = false;
+export function isElectron() { return getPlatform().isElectron; }
+export function isMac() { return getPlatform().isMac; }
+export function isWindows() { return getPlatform().isWindows; }
 
 // render and book are string note in the sense that they are expected to contain empty string
 const STRING_NOTE_TYPES = new Set(["text", "code", "relationMap", "search", "render", "book", "mermaid", "canvas", "webView"]);
@@ -159,12 +161,12 @@ export function formatDownloadTitle(fileName: string, type: string | null, mime:
         if (mimeLc === "application/octet-stream") return "";
 
         // if fileName has an extension matching the mime already - reuse it
-        const mimeTypeFromFileName = mimeTypes.lookup(fileName);
-        if (mimeTypeFromFileName === mimeLc) return "";
+        const ext = extname(fileName).toLowerCase().replace(".", "");
+        if (ext && extToMime[ext] === mimeLc) return "";
 
         // as last resort try to get extension from mimeType
-        const extensions = mimeTypes.extension(mime);
-        return extensions ? `.${extensions}` : "";
+        const exts = mimeToExt[mime];
+        return exts?.length ? `.${exts[0]}` : "";
     };
 
     return `${fileNameBase}${getExtension()}`;
@@ -201,4 +203,201 @@ export function isEmptyOrWhitespace(str: string | null | undefined) {
 
 export function escapeRegExp(str: string) {
     return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}
+
+export function removeFileExtension(filePath: string, mime?: string) {
+    const extension = extname(filePath).toLowerCase();
+
+    if (mime?.startsWith("video/") || mime?.startsWith("audio/")) {
+        return filePath.substring(0, filePath.length - extension.length);
+    }
+
+    switch (extension) {
+        case ".md":
+        case ".mdx":
+        case ".markdown":
+        case ".html":
+        case ".htm":
+        case ".excalidraw":
+        case ".mermaid":
+        case ".mmd":
+        case ".pdf":
+            return filePath.substring(0, filePath.length - extension.length);
+        default:
+            return filePath;
+    }
+}
+
+export function getNoteTitle(filePath: string, replaceUnderscoresWithSpaces: boolean, noteMeta?: NoteMeta) {
+    const trimmedNoteMeta = noteMeta?.title?.trim();
+    if (trimmedNoteMeta) return trimmedNoteMeta;
+
+    const fileBasename = basename(removeFileExtension(filePath, noteMeta?.mime));
+    return replaceUnderscoresWithSpaces ? fileBasename.replace(/_/g, " ").trim() : fileBasename;
+}
+
+// try to turn 'true' and 'false' strings from process.env variables into boolean values or undefined
+export function envToBoolean(val: string | undefined) {
+    if (val === undefined || typeof val !== "string") return undefined;
+
+    const valLc = val.toLowerCase().trim();
+
+    if (valLc === "true") return true;
+    if (valLc === "false") return false;
+
+    return undefined;
+}
+
+/**
+ * Parses a string value to an integer. If the resulting number is NaN or undefined, the result is also undefined.
+ *
+ * @param val the value to parse.
+ * @returns the parsed value.
+ */
+export function stringToInt(val: string | undefined) {
+    if (!val) {
+        return undefined;
+    }
+
+    const parsed = parseInt(val, 10);
+    if (Number.isNaN(parsed)) {
+        return undefined;
+    }
+
+    return parsed;
+}
+
+
+/**
+ * Normalizes a path pattern for custom request handlers.
+ * Ensures both trailing slash and non-trailing slash versions are handled.
+ *
+ * @param pattern The original pattern from customRequestHandler attribute
+ * @returns An array of patterns to match both with and without trailing slash
+ */
+export function normalizeCustomHandlerPattern(pattern: string | null | undefined): (string | null | undefined)[] {
+    if (!pattern || typeof pattern !== "string") {
+        return [pattern];
+    }
+
+    pattern = pattern.trim();
+
+    if (!pattern) {
+        return [pattern];
+    }
+
+    // If pattern already ends with optional trailing slash, return as-is
+    if (pattern.endsWith("/?$") || pattern.endsWith("/?)")) {
+        return [pattern];
+    }
+
+    // If pattern ends with $, handle it specially
+    if (pattern.endsWith("$")) {
+        const basePattern = pattern.slice(0, -1);
+
+        // If already ends with slash, create both versions
+        if (basePattern.endsWith("/")) {
+            const withoutSlash = `${basePattern.slice(0, -1)}$`;
+            const withSlash = pattern;
+            return [withoutSlash, withSlash];
+        }
+        // Add optional trailing slash
+        const withSlash = `${basePattern}/?$`;
+        return [withSlash];
+
+    }
+
+    // For patterns without $, add both versions
+    if (pattern.endsWith("/")) {
+        const withoutSlash = pattern.slice(0, -1);
+        return [withoutSlash, pattern];
+    }
+    const withSlash = `${pattern}/`;
+    return [pattern, withSlash];
+
+}
+
+export function formatUtcTime(time: string) {
+    return time.replace("T", " ").substring(0, 19);
+}
+
+// TODO: Deduplicate with client utils
+export function formatSize(size: number | null | undefined) {
+    if (size === null || size === undefined) {
+        return "";
+    }
+
+    size = Math.max(Math.round(size / 1024), 1);
+
+    if (size < 1024) {
+        return `${size} KiB`;
+    }
+    return `${Math.round(size / 102.4) / 10} MiB`;
+
+}
+
+export function slugify(text: string) {
+    return text
+        .normalize("NFC") // keep composed form, preserves accents
+        .toLowerCase()
+        .replace(/[^\p{Letter}\p{Number}]+/gu, "-") // replace non-letter/number with "-"
+        .replace(/(^-|-$)+/g, ""); // trim dashes
+}
+
+export function stripTags(text: string) {
+    return text.replace(/<(?:.|\n)*?>/gm, "");
+}
+
+export function toObject<T, K extends string | number | symbol, V>(array: T[], fn: (item: T) => [K, V]): Record<K, V> {
+    const obj: Record<K, V> = {} as Record<K, V>; // TODO: unsafe?
+
+    for (const item of array) {
+        const ret = fn(item);
+
+        obj[ret[0]] = ret[1];
+    }
+
+    return obj;
+}
+
+// TODO: Deduplicate with src/public/app/services/utils.ts
+/**
+ * Compares two semantic version strings.
+ * Returns:
+ *   1  if v1 is greater than v2
+ *   0  if v1 is equal to v2
+ *   -1 if v1 is less than v2
+ *
+ * @param v1 First version string
+ * @param v2 Second version string
+ * @returns
+ */
+export function compareVersions(v1: string, v2: string): number {
+    // Remove 'v' prefix and everything after dash if present
+    v1 = v1.replace(/^v/, "").split("-")[0];
+    v2 = v2.replace(/^v/, "").split("-")[0];
+
+    const v1parts = v1.split(".").map(Number);
+    const v2parts = v2.split(".").map(Number);
+
+    // Pad shorter version with zeros
+    while (v1parts.length < 3) v1parts.push(0);
+    while (v2parts.length < 3) v2parts.push(0);
+
+    // Compare major version
+    if (v1parts[0] !== v2parts[0]) {
+        return v1parts[0] > v2parts[0] ? 1 : -1;
+    }
+
+    // Compare minor version
+    if (v1parts[1] !== v2parts[1]) {
+        return v1parts[1] > v2parts[1] ? 1 : -1;
+    }
+
+    // Compare patch version
+    if (v1parts[2] !== v2parts[2]) {
+        return v1parts[2] > v2parts[2] ? 1 : -1;
+    }
+
+    return 0;
 }

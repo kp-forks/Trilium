@@ -102,8 +102,7 @@ function internalRoute<P extends ParamsDictionary>(method: HttpMethod, path: str
                 return;
             }
 
-            if (result?.then) {
-                // promise
+            if (result instanceof Promise) {
                 result.then((promiseResult: unknown) => handleResponse(resultHandler, req, res, promiseResult, start)).catch((e: unknown) => handleException(e, method, path, res));
             } else {
                 handleResponse(resultHandler, req, res, result, start);

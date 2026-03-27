@@ -1,6 +1,7 @@
 import { type KeyboardShortcutWithRequiredActionName, type OptionMap, type OptionNames, SANITIZER_DEFAULT_ALLOWED_TAGS } from "@triliumnext/commons";
 
 import appInfo from "./app_info.js";
+import { getPlatform } from "./platform.js";
 import dateUtils from "./utils/date.js";
 import keyboardActions from "./keyboard_actions.js";
 import { getLog } from "./log.js";
@@ -79,7 +80,7 @@ const defaultOptions: DefaultOption[] = [
     { name: "revisionSnapshotNumberLimit", value: "-1", isSynced: true },
     { name: "protectedSessionTimeout", value: "600", isSynced: true },
     { name: "protectedSessionTimeoutTimeScale", value: "60", isSynced: true },
-    { name: "zoomFactor", value: isWindows ? "0.9" : "1.0", isSynced: false },
+    { name: "zoomFactor", value: () => isWindows() ? "0.9" : "1.0", isSynced: false },
     { name: "overrideThemeFonts", value: "false", isSynced: false },
     { name: "mainFontFamily", value: "theme", isSynced: false },
     { name: "mainFontSize", value: "100", isSynced: false },
@@ -237,12 +238,12 @@ export function initStartupOptions() {
         }
     }
 
-    if (process.env.TRILIUM_START_NOTE_ID || process.env.TRILIUM_SAFE_MODE) {
+    if (getPlatform().getEnv("TRILIUM_START_NOTE_ID") || getPlatform().getEnv("TRILIUM_SAFE_MODE")) {
         optionService.setOption(
             "openNoteContexts",
             JSON.stringify([
                 {
-                    notePath: process.env.TRILIUM_START_NOTE_ID || "root",
+                    notePath: getPlatform().getEnv("TRILIUM_START_NOTE_ID") || "root",
                     active: true
                 }
             ])

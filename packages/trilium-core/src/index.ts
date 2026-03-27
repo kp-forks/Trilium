@@ -8,7 +8,7 @@ import { initRequest, RequestProvider } from "./services/request";
 import { initTranslations, TranslationProvider } from "./services/i18n";
 import { initSchema } from "./services/sql_init";
 import appInfo from "./services/app_info";
-import PlatformProvider, { initPlatform } from "./services/platform";
+import { type PlatformProvider, initPlatform } from "./services/platform";
 
 export { getLog } from "./services/log";
 export type * from "./services/sql/types";
@@ -77,7 +77,9 @@ export type { NotePojo } from "./becca/becca-interface";
 
 export { default as NoteSet } from "./services/search/note_set";
 export { default as SearchContext } from "./services/search/search_context";
-export { default as search } from "./services/search/services/search";
+export { default as search, } from "./services/search/services/search";
+export { type default as SearchResult } from "./services/search/search_result";
+export { type SearchParams } from "./services/search/services/types";
 export { default as note_service } from "./services/notes";
 export type { NoteParams } from "./services/notes";
 export * as sanitize from "./services/sanitizer";
@@ -94,6 +96,11 @@ export { default as setup } from "./services/setup";
 export { getPlatform, type PlatformProvider } from "./services/platform";
 export { t } from "i18next";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
+export type * from "./meta";
+export * as routeHelpers from "./routes/helpers";
+
+export * as becca_easy_mocking from "./test/becca_easy_mocking";
+export * as becca_mocking from "./test/becca_mocking";
 
 export async function initializeCore({ dbConfig, executionContext, crypto, translations, messaging, request, schema, extraAppInfo, platform }: {
     dbConfig: SqlServiceParams,
@@ -114,7 +121,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, trans
     await initTranslations(translations);
     initCrypto(crypto);
     initContext(executionContext);
-    initSql(new SqlService(dbConfig, getLog()), dbConfig.onDatabaseNotInitialized);
+    initSql(new SqlService(dbConfig, getLog()));
     initSchema(schema);
     Object.assign(appInfo, extraAppInfo);
     if (messaging) {

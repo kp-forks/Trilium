@@ -1,5 +1,5 @@
 export default {
-    backupNow() {
+    backupNow(name: string) {
         console.warn("Backup not yet available.");
     }
 }

@@ -1,9 +1,9 @@
-import { extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
-import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
 import debounce from "@triliumnext/client/src/services/debounce.js";
+import cls from "@triliumnext/server/src/services/cls.js";
 import fs from "fs/promises";
 import { join } from "path";
-import cls from "@triliumnext/server/src/services/cls.js";
+
+import { extractZip, importData, startElectron } from "./utils.js";
 
 // Paths are relative to apps/edit-docs/dist.
 const DEMO_ZIP_PATH = join(__dirname, "../../server/src/assets/db/demo.zip");
@@ -15,8 +15,7 @@ async function main() {
         setTimeout(() => registerHandlers(), 10_000);
     });
 
-    await initializeTranslations();
-    await initializeDatabase(true);
+    // TODO: Initialize core.
     cls.init(async () => {
         await importData(DEMO_ZIP_DIR_PATH);
         setOptions();
@@ -34,8 +33,8 @@ async function setOptions() {
 }
 
 async function registerHandlers() {
-    const events = (await import("@triliumnext/server/src/services/events.js")).default;
-    const eraseService = (await import("@triliumnext/server/src/services/erase.js")).default;
+    const { events } = await import("@triliumnext/core");
+    const { erase: eraseService } = await import("@triliumnext/core");
     const debouncer = debounce(async () => {
         console.log("Exporting data");
         eraseService.eraseUnusedAttachmentsNow();

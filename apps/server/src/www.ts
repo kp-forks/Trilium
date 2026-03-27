@@ -1,4 +1,4 @@
-import { getMessagingProvider } from "@triliumnext/core";
+import { getMessagingProvider, utils } from "@triliumnext/core";
 import type { Express } from "express";
 import fs from "fs";
 import http from "http";
@@ -12,7 +12,6 @@ import host from "./services/host.js";
 import log from "./services/log.js";
 import port from "./services/port.js";
 import { getDbSize } from "./services/sql_init.js";
-import utils, { formatSize, formatUtcTime } from "./services/utils.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 
 const MINIMUM_NODE_VERSION = "20.0.0";
@@ -62,7 +61,7 @@ export default async function startTriliumServer() {
     const sessionParser = (await import("./routes/session_parser.js")).default;
     (getMessagingProvider() as WebSocketMessagingProvider).init(httpServer, sessionParser);
 
-    if (utils.isElectron) {
+    if (utils.isElectron()) {
         const electronRouting = await import("./routes/electron.js");
         electronRouting.default(app);
     }
@@ -71,9 +70,9 @@ export default async function startTriliumServer() {
 async function displayStartupMessage() {
     log.info(`\n${LOGO.replace("[version]", appInfo.appVersion)}`);
     log.info(`📦 Versions:    app=${appInfo.appVersion} db=${appInfo.dbVersion} sync=${appInfo.syncVersion} clipper=${appInfo.clipperProtocolVersion}`);
-    log.info(`🔧 Build:       ${formatUtcTime(appInfo.buildDate)} (${appInfo.buildRevision.substring(0, 10)})`);
+    log.info(`🔧 Build:       ${utils.formatUtcTime(appInfo.buildDate)} (${appInfo.buildRevision.substring(0, 10)})`);
     log.info(`📂 Data dir:    ${appInfo.dataDirectory}`);
-    log.info(`⏰ UTC time:    ${formatUtcTime(appInfo.utcDateTime)}`);
+    log.info(`⏰ UTC time:    ${utils.formatUtcTime(appInfo.utcDateTime)}`);
 
     // for perf. issues it's good to know the rough configuration
     const cpuInfos = (await import("os")).cpus();
@@ -82,7 +81,7 @@ async function displayStartupMessage() {
         const cpuModel = (cpuInfos[0].model || "").trimEnd();
         log.info(`💻 CPU:         ${cpuModel} (${cpuInfos.length}-core @ ${cpuInfos[0].speed} Mhz)`);
     }
-    log.info(`💾 DB size:     ${formatSize(getDbSize() * 1024)}`);
+    log.info(`💾 DB size:     ${utils.formatSize(getDbSize() * 1024)}`);
     log.info("");
 }
 
@@ -155,7 +154,7 @@ function startHttpServer(app: Express) {
             }
         }
 
-        if (utils.isElectron) {
+        if (utils.isElectron()) {
             import("electron").then(({ app, dialog }) => {
                 // Not all situations require showing an error dialog. When Trilium is already open,
                 // clicking the shortcut, the software icon, or the taskbar icon, or when creating a new window,
