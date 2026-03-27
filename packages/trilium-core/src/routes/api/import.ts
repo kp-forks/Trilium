@@ -1,5 +1,4 @@
 import type { Request } from "express";
-import path from "path";
 import type { File } from "../../services/import/common.js";
 
 interface ImportRequest<P> extends Request<P> {
@@ -12,12 +11,13 @@ import enexImportService from "../../services/import/enex.js";
 import opmlImportService from "../../services/import/opml.js";
 import singleImportService from "../../services/import/single.js";
 import zipImportService from "../../services/import/zip.js";
-import log, { getLog } from "../../services/log.js";
+import { getLog } from "../../services/log.js";
 import TaskContext from "../../services/task_context.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils/index.js";
 import * as cls from "../../services/context.js";
 import { ValidationError } from "../../errors.js";
 import becca_loader from "../../becca/becca_loader.js";
+import { extname } from "../../services/utils/path.js";
 
 async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>) {
     const { parentNoteId } = req.params;
@@ -40,7 +40,7 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
 
     const parentNote = becca.getNoteOrThrow(parentNoteId);
 
-    const extension = path.extname(file.originalname).toLowerCase();
+    const extension = extname(file.originalname).toLowerCase();
 
     // running all the event handlers on imported notes (and attributes) is slow
     // and may produce unintended consequences

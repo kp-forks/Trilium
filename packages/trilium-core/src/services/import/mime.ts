@@ -1,8 +1,8 @@
 "use strict";
 
-import mimeTypes from "mime-types";
-import path from "path";
+import { types as extToMime } from "mime-types";
 import type { NoteType, TaskData } from "@triliumnext/commons";
+import { extname } from "../utils/path";
 
 const CODE_MIME_TYPES = new Set([
     "application/json",
@@ -84,10 +84,10 @@ function getMime(fileName: string) {
         return "text/x-dockerfile";
     }
 
-    const ext = path.extname(fileNameLc);
+    const ext = extname(fileNameLc);
     const mimeFromExt = EXTENSION_TO_MIME.get(ext);
 
-    return mimeFromExt || mimeTypes.lookup(fileNameLc);
+    return mimeFromExt || extToMime[ext.slice(1)] || false;
 }
 
 function getType(options: TaskData<"importNotes">, mime: string): NoteType {
