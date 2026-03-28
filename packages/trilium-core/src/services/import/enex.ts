@@ -1,8 +1,6 @@
 import type { AttributeType } from "@triliumnext/commons";
 import { dayjs } from "@triliumnext/commons";
 import sax from "sax";
-import stream from "stream";
-import { Throttle } from "stream-throttle";
 
 import type BNote from "../../becca/entities/bnote.js";
 import date_utils from "../utils/date.js";
@@ -59,8 +57,8 @@ interface Note {
 let note: Partial<Note> = {};
 let resource: Resource;
 
-function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote): Promise<BNote> {
-    const saxStream = sax.createStream(true);
+function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote): BNote {
+    const parser = sax.parser(true);
 
     const rootNoteTitle = file.originalname.toLowerCase().endsWith(".enex") ? file.originalname.substr(0, file.originalname.length - 5) : file.originalname;
 
@@ -138,15 +136,14 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
         }
     }
 
-    saxStream.on("error", (e) => {
-        // unhandled errors will throw, since this is a proper node event emitter.
+    parser.onerror = (e) => {
         getLog().error(`error when parsing ENEX file: ${e}`);
-        // clear the error
-        (saxStream._parser as any).error = null;
-        saxStream._parser.resume();
-    });
+        // clear the error and resume
+        parser.error = null;
+        parser.resume();
+    };
 
-    saxStream.on("text", (text) => {
+    parser.ontext = (text) => {
         const currentTag = getCurrentTag();
         const previousTag = getPreviousTag();
 
@@ -209,13 +206,9 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
             }
             // unknown tags are just ignored
         }
-    });
+    };
 
-    saxStream.on("attribute", (attr) => {
-        // an attribute.  attr has "name" and "value"
-    });
-
-    saxStream.on("opentag", (tag) => {
+    parser.onopentag = (tag) => {
         path.push(tag.name);
 
         if (tag.name === "note") {
@@ -235,7 +228,7 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
                 note.resources.push(resource);
             }
         }
-    });
+    };
 
     const sql = getSql();
 
@@ -381,38 +374,22 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
         updateDates(noteEntity, utcDateCreated, utcDateModified);
     }
 
-    saxStream.on("closetag", (tag) => {
+    parser.onclosetag = (tag) => {
         path.pop();
 
         if (tag === "note") {
             saveNote();
         }
-    });
+    };
 
-    saxStream.on("opencdata", () => {
-        //console.log("opencdata");
-    });
-
-    saxStream.on("cdata", (text) => {
+    parser.oncdata = (text) => {
         note.content += text;
-    });
+    };
 
-    saxStream.on("closecdata", () => {
-        //console.log("closecdata");
-    });
+    const content = typeof file.buffer === "string" ? file.buffer : new TextDecoder().decode(file.buffer);
+    parser.write(content).close();
 
-    return new Promise((resolve, reject) => {
-        // resolve only when we parse the whole document AND saving of all notes have been finished
-        saxStream.on("end", () => resolve(rootNote));
-
-        const bufferStream = new stream.PassThrough();
-        bufferStream.end(file.buffer);
-
-        bufferStream
-            // rate limiting to improve responsiveness during / after import
-            .pipe(new Throttle({ rate: 500000 }))
-            .pipe(saxStream);
-    });
+    return rootNote;
 }
 
 function formatDateTimeToLocalDbFormat(

@@ -199,7 +199,15 @@ export function randomSecureToken(bytes = 32) {
 }
 
 export function safeExtractMessageAndStackFromError(err: unknown): [errMessage: string, errStack: string | undefined] {
-    return (err instanceof Error) ? [err.message, err.stack] as const : ["Unknown Error", undefined] as const;
+    if (err instanceof Error) {
+        return [err.message, err.stack] as const;
+    }
+
+    if (typeof err === "string") {
+        return [err, undefined] as const;
+    }
+
+    return ["Unknown Error", undefined] as const;
 }
 
 export function isEmptyOrWhitespace(str: string | null | undefined) {
