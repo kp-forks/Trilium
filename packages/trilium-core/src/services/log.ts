@@ -14,7 +14,8 @@ export default class LogService {
 
     banner(message: string | undefined) {
         if (!message) return;
-        const maxContent = 76; // 80 - 4 (border + padding)
+        const termWidth = (typeof process !== "undefined" && process.stdout?.columns) || 80;
+        const maxContent = termWidth - 4; // border + padding
         const words = message.split(" ");
         const lines: string[] = [];
         let current = "";
