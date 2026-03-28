@@ -61,6 +61,9 @@ export default async function startTriliumServer() {
     const sessionParser = (await import("./routes/session_parser.js")).default;
     (getMessagingProvider() as WebSocketMessagingProvider).init(httpServer, sessionParser);
 
+    const ws = (await import("./services/ws.js")).default;
+    ws.init();
+
     if (utils.isElectron()) {
         const electronRouting = await import("./routes/electron.js");
         electronRouting.default(app);
