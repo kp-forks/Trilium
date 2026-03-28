@@ -115,6 +115,7 @@ export * as becca_mocking from "./test/becca_mocking";
 export { default as markdownImportService } from "./services/import/markdown";
 
 export { default as scriptService } from "./services/script";
+export * as scheduler from "./services/scheduler";
 
 export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive }: {
     dbConfig: SqlServiceParams,

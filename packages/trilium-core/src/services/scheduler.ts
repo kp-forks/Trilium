@@ -1,12 +1,12 @@
-import { protected_session, scriptService } from "@triliumnext/core";
-
 import type BNote from "../becca/entities/bnote.js";
 import attributeService from "../services/attributes.js";
-import cls from "./cls.js";
 import config from "./config.js";
+import * as cls from "./context.js";
 import hiddenSubtreeService from "./hidden_subtree.js";
-import log from "./log.js";
+import { getLog } from "./log.js";
 import options from "./options.js";
+import protected_session from "./protected_session.js";
+import scriptService from "./script.js";
 import sqlInit from "./sql_init.js";
 import ws from "./ws.js";
 
@@ -14,7 +14,7 @@ function getRunAtHours(note: BNote): number[] {
     try {
         return note.getLabelValues("runAtHour").map((hour) => parseInt(hour));
     } catch (e: any) {
-        log.error(`Could not parse runAtHour for note ${note.noteId}: ${e.message}`);
+        getLog().error(`Could not parse runAtHour for note ${note.noteId}: ${e.message}`);
 
         return [];
     }
@@ -40,7 +40,7 @@ export function startScheduler() {
     // is also checked before importing the demo.zip, so no need to do it again.
     if (sqlInit.isDbInitialized()) {
         console.log("Checking hidden subtree.");
-        sqlInit.dbReady.then(() => cls.init(() => hiddenSubtreeService.checkHiddenSubtree()));
+        sqlInit.dbReady.then(() => cls.getContext().init(() => hiddenSubtreeService.checkHiddenSubtree()));
     }
 
     // Periodic checks.
@@ -76,7 +76,7 @@ function checkProtectedSessionExpiration() {
     const lastProtectedSessionOperationDate = protected_session.getLastProtectedSessionOperationDate();
     if (protected_session.isProtectedSessionAvailable() && lastProtectedSessionOperationDate && Date.now() - lastProtectedSessionOperationDate > protectedSessionTimeout * 1000) {
         protected_session.resetDataKey();
-        log.info("Expiring protected session");
+        getLog().info("Expiring protected session");
         ws.reloadFrontend("leaving protected session");
     }
 }
