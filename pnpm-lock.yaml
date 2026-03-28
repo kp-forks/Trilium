@@ -157,6 +157,13 @@ importers:
         version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(@vitest/browser-webdriverio@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.8.9(bufferutil@4.0.9)(utf-8-validate@6.0.5))(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(msw@2.7.5(@types/node@24.12.0)(typescript@5.9.3))(vite@8.0.3(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2))
 
   apps/build-docs:
+    dependencies:
+      '@triliumnext/core':
+        specifier: workspace:*
+        version: link:../../packages/trilium-core
+      '@triliumnext/server':
+        specifier: workspace:*
+        version: link:../server
     devDependencies:
       '@redocly/cli':
         specifier: 2.25.2
@@ -17620,6 +17627,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-icons@47.6.1': {}
 
@@ -17637,6 +17646,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-import-word@47.6.1':
     dependencies:
@@ -17660,6 +17671,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-inspector@5.0.0': {}
 
@@ -17670,6 +17683,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-line-height@47.6.1':
     dependencies:
@@ -17694,6 +17709,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-list-multi-level@47.6.1':
     dependencies:
@@ -17718,6 +17735,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-markdown-gfm@47.6.1':
     dependencies:
@@ -17755,6 +17774,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-mention@47.6.1(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)':
     dependencies:
@@ -25550,6 +25571,8 @@ snapshots:
   ckeditor5-collaboration@47.6.1:
     dependencies:
       '@ckeditor/ckeditor5-collaboration-core': 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   ckeditor5-premium-features@47.6.1(bufferutil@4.0.9)(ckeditor5@47.6.1)(utf-8-validate@6.0.5):
     dependencies:

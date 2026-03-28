@@ -15,6 +15,10 @@
   "author": "Elian Doran <contact@eliandoran.me>",
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.33.0",
+  "dependencies": {
+    "@triliumnext/core": "workspace:*",
+    "@triliumnext/server": "workspace:*"
+  },
   "devDependencies": {
     "@redocly/cli": "2.25.2",
     "archiver": "7.0.1",
