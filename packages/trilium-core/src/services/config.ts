@@ -1,7 +1,8 @@
 // TODO: Real implementation.
 export default {
     General: {
-        readOnly: false
+        readOnly: false,
+        instanceName: "",
     },
     Sync: {
         syncServerHost: "",

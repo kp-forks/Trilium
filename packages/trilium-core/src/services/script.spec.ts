@@ -6,7 +6,7 @@ import BBranch from "../becca/entities/bbranch.js";
 import BNote from "../becca/entities/bnote.js";
 import { buildNote } from "../test/becca_easy_mocking.js";
 import { NoteBuilder } from "../test/becca_mocking.js";
-import cls from "./cls.js";
+import { getContext } from "./context.js";
 import { buildJsx, executeBundle, getScriptBundle } from "./script.js";
 
 describe("Script", () => {
@@ -51,7 +51,7 @@ describe("Script", () => {
     });
 
     it("returns result from script", () => {
-        cls.init(() => {
+        getContext().init(() => {
             const result = executeBundle({
                 script: `return "world";`,
                 html: "",
@@ -68,7 +68,7 @@ describe("Script", () => {
         });
 
         it("dayjs is available", () => {
-            cls.init(() => {
+            getContext().init(() => {
                 const bundle = getScriptBundle(scriptNote, true, "backend", [], `return api.dayjs().format("YYYY-MM-DD");`);
                 expect(bundle).toBeDefined();
                 const result = executeBundle(bundle!);
@@ -77,7 +77,7 @@ describe("Script", () => {
         });
 
         it("dayjs is-same-or-before plugin exists", () => {
-            cls.init(() => {
+            getContext().init(() => {
                 const bundle = getScriptBundle(scriptNote, true, "backend", [], `return api.dayjs("2023-10-01").isSameOrBefore(api.dayjs("2023-10-02"));`);
                 expect(bundle).toBeDefined();
                 const result = executeBundle(bundle!);
