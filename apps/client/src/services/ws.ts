@@ -88,12 +88,8 @@ export async function dispatchMessage(message: WebSocketMessage) {
     } else if (messageType === "toast") {
         toastService.showMessage(msg.message);
     } else if (messageType === "execute-script") {
-        // TODO: Remove after porting the file
-        // @ts-ignore
-        const bundleService = (await import("./bundle.js")).default as any;
-        // TODO: Remove after porting the file
-        // @ts-ignore
-        const froca = (await import("./froca.js")).default as any;
+        const bundleService = (await import("./bundle.js")).default;
+        const froca = (await import("./froca.js")).default;
         const originEntity = msg.originEntityId ? await froca.getNote(msg.originEntityId) : null;
 
         bundleService.getAndExecuteBundle(msg.currentNoteId, originEntity, msg.script, msg.params);

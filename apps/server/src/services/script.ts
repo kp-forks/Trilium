@@ -1,3 +1,4 @@
+import { ScriptParams } from "@triliumnext/commons";
 import { binary_utils } from "@triliumnext/core";
 import { transform } from "sucrase";
 
@@ -16,8 +17,6 @@ export interface Bundle {
     allNotes?: BNote[];
     allNoteIds?: string[];
 }
-
-type ScriptParams = any[];
 
 function executeNote(note: BNote, apiParams: ApiParams) {
     if (!note.isJavaScript() || note.getScriptEnv() !== "backend" || !note.isContentAvailable()) {

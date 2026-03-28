@@ -369,3 +369,5 @@ export type SetupSyncFromServerResponse = {
     result: "failure";
     error: string;
 }
+
+export type ScriptParams = any[];
