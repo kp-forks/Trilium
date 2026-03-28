@@ -27,6 +27,7 @@ import setupApiRoute from "./api/setup";
 import filesRoute from "./api/files";
 import importRoute from "./api/import";
 import exportRoute from "./api/export";
+import scriptRoute from "./api/script";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -216,6 +217,16 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     route(GET, "/api/attachments/:attachmentId/download", [checkApiAuthOrElectron], filesRoute.downloadAttachment);
     // this "hacky" path is used for easier referencing of CSS resources
     route(GET, "/api/attachments/download/:attachmentId", [checkApiAuthOrElectron], filesRoute.downloadAttachment);
+    //#endregion
+
+    //#region Export
+    asyncRoute(PST, "/api/script/exec", [checkApiAuth, csrfMiddleware], scriptRoute.exec, apiResultHandler);
+
+    apiRoute(PST, "/api/script/run/:noteId", scriptRoute.run);
+    apiRoute(GET, "/api/script/startup", scriptRoute.getStartupBundles);
+    apiRoute(GET, "/api/script/widgets", scriptRoute.getWidgetBundles);
+    apiRoute(PST, "/api/script/bundle/:noteId", scriptRoute.getBundle);
+    apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
     //#endregion
 }
 

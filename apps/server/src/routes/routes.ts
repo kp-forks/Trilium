@@ -28,7 +28,6 @@ import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
-import scriptRoute from "./api/script.js";
 import senderRoute from "./api/sender.js";
 import systemInfoRoute from "./api/system_info.js";
 import totp from './api/totp.js';
@@ -176,14 +175,6 @@ function register(app: express.Application) {
     asyncRoute(PST, "/api/database/find-and-fix-consistency-issues", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.findAndFixConsistencyIssues, apiResultHandler);
 
     apiRoute(GET, "/api/database/check-integrity", databaseRoute.checkIntegrity);
-
-    asyncRoute(PST, "/api/script/exec", [auth.checkApiAuth, csrfMiddleware], scriptRoute.exec, apiResultHandler);
-
-    apiRoute(PST, "/api/script/run/:noteId", scriptRoute.run);
-    apiRoute(GET, "/api/script/startup", scriptRoute.getStartupBundles);
-    apiRoute(GET, "/api/script/widgets", scriptRoute.getWidgetBundles);
-    apiRoute(PST, "/api/script/bundle/:noteId", scriptRoute.getBundle);
-    apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
 
     // no CSRF since this is called from android app
     route(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
