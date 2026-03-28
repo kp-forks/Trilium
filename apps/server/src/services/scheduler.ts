@@ -1,4 +1,4 @@
-import { protected_session } from "@triliumnext/core";
+import { protected_session, scriptService } from "@triliumnext/core";
 
 import type BNote from "../becca/entities/bnote.js";
 import attributeService from "../services/attributes.js";
@@ -7,7 +7,6 @@ import config from "./config.js";
 import hiddenSubtreeService from "./hidden_subtree.js";
 import log from "./log.js";
 import options from "./options.js";
-import scriptService from "./script.js";
 import sqlInit from "./sql_init.js";
 import ws from "./ws.js";
 
