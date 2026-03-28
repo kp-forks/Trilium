@@ -57,7 +57,7 @@ interface Note {
 let note: Partial<Note> = {};
 let resource: Resource;
 
-function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote): BNote {
+async function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote): Promise<BNote> {
     const parser = sax.parser(true);
 
     const rootNoteTitle = file.originalname.toLowerCase().endsWith(".enex") ? file.originalname.substr(0, file.originalname.length - 5) : file.originalname;
@@ -387,7 +387,14 @@ function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentN
     };
 
     const content = typeof file.buffer === "string" ? file.buffer : new TextDecoder().decode(file.buffer);
-    parser.write(content).close();
+
+    const CHUNK_SIZE = 64 * 1024;
+    for (let i = 0; i < content.length; i += CHUNK_SIZE) {
+        parser.write(content.slice(i, i + CHUNK_SIZE));
+        // Yield to the event loop between chunks to avoid blocking the server.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    parser.close();
 
     return rootNote;
 }
