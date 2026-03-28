@@ -20,7 +20,7 @@ export default function FormRadioGroup({ values, ...restProps }: FormRadioProps)
                 if (!el) return null;
                 const { value, label, inlineDescription } = el;
                 return (
-                    <div className="form-checkbox">
+                    <div className="form-checkbox" key={value}>
                         <FormRadio
                             value={value}
                             label={label} inlineDescription={inlineDescription}
@@ -40,7 +40,7 @@ export function FormInlineRadioGroup({ values, ...restProps }: FormRadioProps) {
             {values.map((el) => {
                 if (!el) return null;
                 const { value, label, inlineDescription } = el;
-                return <FormRadio value={value} label={label} inlineDescription={inlineDescription} {...restProps} />;
+                return <FormRadio key={value} value={value} label={label} inlineDescription={inlineDescription} {...restProps} />;
             })}
         </div>
     );

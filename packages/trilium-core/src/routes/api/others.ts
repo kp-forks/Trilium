@@ -4,12 +4,12 @@ import { RenderMarkdownResponse, ToMarkdownResponse } from "@triliumnext/commons
 import type { Request } from "express";
 
 import markdown from "../../services/export/markdown.js";
-import { markdownImportService } from "../..";
+import { markdownImportService, ValidationError } from "../..";
 
 function renderMarkdown(req: Request) {
     const { markdownContent } = req.body;
-    if (!markdownContent || typeof markdownContent !== 'string') {
-        throw new Error('markdownContent parameter is required and must be a string');
+    if (typeof markdownContent !== 'string') {
+        throw new ValidationError('markdownContent parameter is required and must be a string');
     }
     return {
         htmlContent: markdownImportService.renderToHtml(markdownContent, "")
@@ -18,8 +18,8 @@ function renderMarkdown(req: Request) {
 
 function toMarkdown(req: Request) {
     const { htmlContent } = req.body;
-    if (!htmlContent || typeof htmlContent !== 'string') {
-        throw new Error('htmlContent parameter is required and must be a string');
+    if (typeof htmlContent !== 'string') {
+        throw new ValidationError('htmlContent parameter is required and must be a string');
     }
     return {
         markdownContent: markdown.toMarkdown(htmlContent)
