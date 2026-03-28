@@ -6,7 +6,7 @@ import { getResourceDir, isDev } from "../../utils.js";
 
 function readContentCss(): string {
     const cssFile = isDev
-        ? path.join(__dirname, "../../../../../../node_modules/ckeditor5/dist/ckeditor5-content.css")
+        ? path.join(require.resolve("ckeditor5/ckeditor5-content.css"))
         : path.join(getResourceDir(), "ckeditor5-content.css");
     return fs.readFileSync(cssFile, "utf-8");
 }
