@@ -25,21 +25,29 @@ async function streamChat(req: Request, res: Response) {
         return;
     }
 
-    // Set up SSE headers
+    // Set up SSE headers - disable compression and buffering for real-time streaming
     res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
+    res.setHeader("Content-Encoding", "none"); // Disable compression
     res.flushHeaders();
 
     // Mark response as handled to prevent double-handling by apiResultHandler
     (res as any).triliumResponseHandled = true;
+
+    // Type assertion for flush method (available when compression is used)
+    const flushableRes = res as Response & { flush?: () => void };
 
     try {
         const provider = getProvider(config.provider || "anthropic");
 
         for await (const chunk of provider.streamCompletion(messages, config)) {
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            // Flush immediately to ensure real-time streaming
+            if (typeof flushableRes.flush === "function") {
+                flushableRes.flush();
+            }
         }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
