@@ -1,4 +1,4 @@
-import { getMessagingProvider, utils } from "@triliumnext/core";
+import { getMessagingProvider, getPlatform, utils } from "@triliumnext/core";
 import type { Express } from "express";
 import fs from "fs";
 import http from "http";
@@ -155,20 +155,13 @@ function startHttpServer(app: Express) {
         }
 
         if (utils.isElectron()) {
-            import("electron").then(({ app, dialog }) => {
-                // Not all situations require showing an error dialog. When Trilium is already open,
-                // clicking the shortcut, the software icon, or the taskbar icon, or when creating a new window,
-                // should simply focus on the existing window or open a new one, without displaying an error message.
-                if ("code" in error && error.code === "EADDRINUSE" && (process.argv.includes("--new-window") || !app.requestSingleInstanceLock())) {
-                    console.error(message);
-                } else {
-                    dialog.showErrorBox("Error while initializing the server", message);
-                }
-                process.exit(1);
-            });
+            if ("code" in error && error.code === "EADDRINUSE" && (process.argv.includes("--new-window") || !app.requestSingleInstanceLock())) {
+                console.error(message);
+            } else {
+                getPlatform().crash(`Error while initializing the server: ${message}`);
+            }
         } else {
-            console.error(message);
-            process.exit(1);
+            getPlatform().crash(message);
         }
     });
 
