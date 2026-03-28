@@ -1,9 +1,14 @@
 import { type AttributeRow, dayjs, formatLogMessage } from "@triliumnext/commons";
-import { type AbstractBeccaEntity, Becca, branches as branchService, NoteParams, SearchContext, sync_mutex as syncMutex, zipExportService } from "@triliumnext/core";
+import AbstractBeccaEntity from "../becca/entities/abstract_becca_entity";
+import Becca from "../becca/becca-interface";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import xml2js from "xml2js";
-
+import branchService from "./branches";
+import { NoteParams } from "./notes.js";
+import SearchContext from "./search/search_context";
+import syncMutex from "./sync_mutex";
+import zipExportService from "./export/zip";
 import becca from "../becca/becca.js";
 import type BAttachment from "../becca/entities/battachment.js";
 import type BAttribute from "../becca/entities/battribute.js";
@@ -19,15 +24,15 @@ import backupService from "./backup.js";
 import cloningService from "./cloning.js";
 import config from "./config.js";
 import dateNoteService from "./date_notes.js";
-import log from "./log.js";
+import log, { getLog } from "./log.js";
 import noteService from "./notes.js";
 import optionsService from "./options.js";
 import searchService from "./search/services/search.js";
 import SpacedUpdate from "./spaced_update.js";
 import specialNotesService from "./special_notes.js";
-import sql from "./sql.js";
+import { getSql } from "./sql/index";
 import treeService from "./tree.js";
-import { escapeHtml, randomString, unescapeHtml } from "./utils.js";
+import { escapeHtml, randomString, unescapeHtml } from "./utils/index";
 import ws from "./ws.js";
 
 /**
@@ -519,7 +524,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
             extraOptions.content = content;
         }
 
-        return sql.transactional(() => {
+        return getSql().transactional(() => {
             const { note, branch } = noteService.createNewNote(extraOptions);
 
             for (const attr of _extraOptions.attributes || []) {
@@ -539,9 +544,11 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     this.logMessages = {};
     this.logSpacedUpdates = {};
 
+    const logInstance = getLog();
+    const sql = getSql();
     this.log = (rawMessage) => {
         const message = formatLogMessage(rawMessage);
-        log.info(message);
+        logInstance.info(message);
 
         if (!this.startNote) {
             return;

@@ -31,8 +31,7 @@
   },
   "dependencies": {
     "better-sqlite3": "12.8.0",
-    "html-to-text": "9.0.5",
-    "sucrase": "3.35.1"
+    "html-to-text": "9.0.5"
   },
   "devDependencies": {
     "@braintree/sanitize-url": "7.1.2",

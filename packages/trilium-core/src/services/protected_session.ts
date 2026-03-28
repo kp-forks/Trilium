@@ -65,5 +65,6 @@ export default {
     encrypt,
     decrypt,
     decryptString,
-    touchProtectedSession
+    touchProtectedSession,
+    getLastProtectedSessionOperationDate
 };

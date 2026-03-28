@@ -198,6 +198,8 @@ async function initialize(): Promise<void> {
                 console.log("[Worker] Database not initialized, skipping becca load (will be loaded during DB initialization)");
             }
 
+            coreModule.scheduler.startScheduler();
+
             console.log("[Worker] Initialization complete");
         } catch (error) {
             initError = error instanceof Error ? error : new Error(String(error));

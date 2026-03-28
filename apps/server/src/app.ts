@@ -101,15 +101,13 @@ export default async function buildApp() {
     custom.register(app);
     error_handlers.register(app);
 
-    const { sync, consistency_checks } = await import("@triliumnext/core");
+    const { sync, consistency_checks, scheduler } = await import("@triliumnext/core");
     sync.startSyncTimer();
 
     await import("./services/backup.js");
 
     consistency_checks.startConsistencyChecks();
-
-    const { startScheduler } = await import("./services/scheduler.js");
-    startScheduler();
+    scheduler.startScheduler();
 
     erase.startScheduledCleanup();
 

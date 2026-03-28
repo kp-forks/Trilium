@@ -11,7 +11,6 @@ import appInfo from "./services/app_info";
 import { type PlatformProvider, initPlatform } from "./services/platform";
 import { type ZipProvider, initZipProvider } from "./services/zip_provider";
 import { type ZipExportProviderFactory, initZipExportProviderFactory } from "./services/export/zip_export_provider_factory";
-import markdown from "./services/import/markdown";
 
 export { getLog } from "./services/log";
 export type * from "./services/sql/types";
@@ -114,6 +113,9 @@ export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";
 
 export { default as markdownImportService } from "./services/import/markdown";
+
+export { default as scriptService } from "./services/script";
+export * as scheduler from "./services/scheduler";
 
 export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive }: {
     dbConfig: SqlServiceParams,

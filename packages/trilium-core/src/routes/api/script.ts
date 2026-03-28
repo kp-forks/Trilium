@@ -5,9 +5,9 @@ import type { Request } from "express";
 import becca from "../../becca/becca.js";
 import attributeService from "../../services/attributes.js";
 import scriptService, { type Bundle } from "../../services/script.js";
-import sql from "../../services/sql.js";
 import syncService from "../../services/sync.js";
-import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
+import { safeExtractMessageAndStackFromError } from "../../services/utils/index.js";
+import { getSql } from "../../services/sql/index.js";
 
 interface ScriptBody {
     script: string;
@@ -28,7 +28,7 @@ async function exec(req: Request) {
 
         const execute = (body: ScriptBody) => scriptService.executeScript(body.script, body.params, body.startNoteId, body.currentNoteId, body.originEntityName, body.originEntityId);
 
-        const result = body.transactional ? sql.transactional(() => execute(body)) : await execute(body);
+        const result = body.transactional ? getSql().transactional(() => execute(body)) : await execute(body);
 
         return {
             success: true,
@@ -72,20 +72,18 @@ function getStartupBundles(req: Request) {
     if (!process.env.TRILIUM_SAFE_MODE) {
         if (req.query.mobile === "true") {
             return getBundlesWithLabel("run", "mobileStartup");
-        } 
+        }
         return getBundlesWithLabel("run", "frontendStartup");
-        
-    } 
+
+    }
     return [];
-    
 }
 
 function getWidgetBundles() {
     if (!process.env.TRILIUM_SAFE_MODE) {
         return getBundlesWithLabel("widget");
-    } 
+    }
     return [];
-    
 }
 
 function getRelationBundles(req: Request<{ noteId: string, relationName: string }>) {

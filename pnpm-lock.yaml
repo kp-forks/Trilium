@@ -781,9 +781,6 @@ importers:
       html-to-text:
         specifier: 9.0.5
         version: 9.0.5
-      sucrase:
-        specifier: 3.35.1
-        version: 3.35.1
     devDependencies:
       '@braintree/sanitize-url':
         specifier: 7.1.2
@@ -1728,6 +1725,9 @@ importers:
       strip-bom:
         specifier: 5.0.0
         version: 5.0.0
+      sucrase:
+        specifier: 3.35.1
+        version: 3.35.1
       unescape:
         specifier: 1.0.1
         version: 1.0.1
@@ -17620,8 +17620,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-icons@47.6.1': {}
 
@@ -17639,8 +17637,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-import-word@47.6.1':
     dependencies:
