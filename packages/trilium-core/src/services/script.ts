@@ -20,7 +20,7 @@ export interface Bundle {
 
 function executeNote(note: BNote, apiParams: ApiParams) {
     if (!note.isJavaScript() || note.getScriptEnv() !== "backend" || !note.isContentAvailable()) {
-        getLog().info(`Cannot execute note ${note.noteId} "${note.title}", note must be of type "Code: JS backend"`);
+        getLog().info(`Cannot execute note ${note.noteId} "${note.getTitleOrProtected()}", note must be of type "Code: JS backend"`);
 
         return;
     }
