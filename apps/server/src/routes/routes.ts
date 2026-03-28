@@ -34,6 +34,7 @@ import fontsRoute from "./api/fonts.js";
 import imageRoute from "./api/image.js";
 import importRoute from "./api/import.js";
 import keysRoute from "./api/keys.js";
+import llmChatRoute from "./api/llm_chat.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import noteMapRoute from "./api/note_map.js";
@@ -322,6 +323,9 @@ function register(app: express.Application) {
     apiRoute(GET, "/api/script/widgets", scriptRoute.getWidgetBundles);
     apiRoute(PST, "/api/script/bundle/:noteId", scriptRoute.getBundle);
     apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
+
+    // LLM chat streaming endpoint (SSE)
+    asyncRoute(PST, "/api/llm-chat/stream", [auth.checkApiAuth, csrfMiddleware], llmChatRoute.streamChat, null);
 
     // no CSRF since this is called from android app
     route(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);

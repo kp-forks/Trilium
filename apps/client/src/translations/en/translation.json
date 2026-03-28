@@ -1599,6 +1599,7 @@
     "geo-map": "Geo Map",
     "beta-feature": "Beta",
     "ai-chat": "AI Chat",
+    "llm-chat": "AI Chat",
     "task-list": "Task List",
     "new-feature": "New",
     "collections": "Collections",
@@ -1609,6 +1610,12 @@
     "toggle-off": "Unprotect the note",
     "toggle-on-hint": "Note is not protected, click to make it protected",
     "toggle-off-hint": "Note is protected, click to make it unprotected"
+  },
+  "llm_chat": {
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "sending": "Sending...",
+    "empty_state": "Start a conversation by typing a message below."
   },
   "shared_switch": {
     "shared": "Shared",
