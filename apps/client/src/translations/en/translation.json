@@ -1615,7 +1615,10 @@
     "placeholder": "Type a message...",
     "send": "Send",
     "sending": "Sending...",
-    "empty_state": "Start a conversation by typing a message below."
+    "empty_state": "Start a conversation by typing a message below.",
+    "searching_web": "Searching the web...",
+    "web_search": "Web search",
+    "sources": "Sources"
   },
   "shared_switch": {
     "shared": "Shared",

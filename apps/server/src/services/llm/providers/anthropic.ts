@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { LlmProvider, LlmMessage, LlmStreamChunk, LlmProviderConfig } from "../types.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
-const DEFAULT_MAX_TOKENS = 4096;
+const DEFAULT_MAX_TOKENS = 8096;
 
 export class AnthropicProvider implements LlmProvider {
     name = "anthropic";
@@ -23,8 +23,20 @@ export class AnthropicProvider implements LlmProvider {
         const systemPrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
         const chatMessages = messages.filter(m => m.role !== "system");
 
+        // Build tools array - using 'unknown' assertion for server-side tools
+        // that may not be in the SDK types yet
+        const tools: unknown[] = [];
+        if (config.enableWebSearch) {
+            tools.push({
+                type: "web_search_20250305",
+                name: "web_search",
+                max_uses: 5 // Limit searches per request
+            });
+        }
+
         try {
-            const stream = this.client.messages.stream({
+            // Cast tools to any since server-side tools may not be in SDK types yet
+            const streamParams: Anthropic.Messages.MessageStreamParams = {
                 model: config.model || DEFAULT_MODEL,
                 max_tokens: config.maxTokens || DEFAULT_MAX_TOKENS,
                 system: systemPrompt,
@@ -32,11 +44,60 @@ export class AnthropicProvider implements LlmProvider {
                     role: m.role as "user" | "assistant",
                     content: m.content
                 }))
-            });
+            };
+
+            if (tools.length > 0) {
+                (streamParams as any).tools = tools;
+            }
+
+            const stream = this.client.messages.stream(streamParams);
 
             for await (const event of stream) {
-                if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-                    yield { type: "text", content: event.delta.text };
+                // Handle different event types
+                if (event.type === "content_block_start") {
+                    const block = event.content_block;
+                    if (block.type === "tool_use") {
+                        yield {
+                            type: "tool_use",
+                            toolName: block.name,
+                            toolInput: {} // Input comes in deltas
+                        };
+                    }
+                } else if (event.type === "content_block_delta") {
+                    const delta = event.delta;
+                    if (delta.type === "text_delta") {
+                        yield { type: "text", content: delta.text };
+                    } else if (delta.type === "input_json_delta") {
+                        // Tool input is being streamed - we could accumulate it
+                        // For now, we already emitted tool_use at start
+                    }
+                } else if (event.type === "content_block_stop") {
+                    // Content block finished
+                    // For server-side tools, results come in subsequent blocks
+                }
+
+                // Handle server-side tool results (for web_search)
+                // These appear as special content blocks in the response
+                if (event.type === "message_delta") {
+                    // Check for citations in stop_reason or other metadata
+                }
+            }
+
+            // Get the final message to extract any citations
+            const finalMessage = await stream.finalMessage();
+            for (const block of finalMessage.content) {
+                if (block.type === "text") {
+                    // Check for citations in the text block
+                    // Anthropic returns citations as part of the content
+                    if ("citations" in block && Array.isArray((block as any).citations)) {
+                        for (const citation of (block as any).citations) {
+                            yield {
+                                type: "citation",
+                                url: citation.url || citation.source,
+                                title: citation.title
+                            };
+                        }
+                    }
                 }
             }
 

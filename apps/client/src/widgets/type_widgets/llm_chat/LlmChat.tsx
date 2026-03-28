@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
-import { streamChatCompletion, type ChatMessage as ChatMessageData } from "../../../services/llm_chat.js";
+import { streamChatCompletion, type ChatMessage as ChatMessageData, type Citation } from "../../../services/llm_chat.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
 import ChatMessage from "./ChatMessage.js";
@@ -11,20 +11,23 @@ interface StoredMessage {
     role: "user" | "assistant" | "system";
     content: string;
     createdAt: string;
+    citations?: Citation[];
 }
 
 interface LlmChatContent {
     version: 1;
     messages: StoredMessage[];
+    enableWebSearch?: boolean;
 }
-
-const EMPTY_CONTENT: LlmChatContent = { version: 1, messages: [] };
 
 export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [messages, setMessages] = useState<StoredMessage[]>([]);
     const [input, setInput] = useState("");
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingContent, setStreamingContent] = useState("");
+    const [toolActivity, setToolActivity] = useState<string | null>(null);
+    const [pendingCitations, setPendingCitations] = useState<Citation[]>([]);
+    const [enableWebSearch, setEnableWebSearch] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -35,14 +38,14 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, streamingContent, scrollToBottom]);
+    }, [messages, streamingContent, toolActivity, scrollToBottom]);
 
     const spacedUpdate = useEditorSpacedUpdate({
         note,
         noteType: "llmChat",
         noteContext,
         getData: () => {
-            const content: LlmChatContent = { version: 1, messages };
+            const content: LlmChatContent = { version: 1, messages, enableWebSearch };
             return { content: JSON.stringify(content) };
         },
         onContentChange: (content) => {
@@ -53,6 +56,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
             try {
                 const parsed: LlmChatContent = JSON.parse(content);
                 setMessages(parsed.messages || []);
+                if (typeof parsed.enableWebSearch === "boolean") {
+                    setEnableWebSearch(parsed.enableWebSearch);
+                }
             } catch (e) {
                 console.error("Failed to parse LLM chat content:", e);
                 setMessages([]);
@@ -65,6 +71,8 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         if (!input.trim() || isStreaming) return;
 
         setError(null);
+        setToolActivity(null);
+        setPendingCitations([]);
 
         const userMessage: StoredMessage = {
             id: crypto.randomUUID(),
@@ -80,6 +88,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         setStreamingContent("");
 
         let assistantContent = "";
+        const citations: Citation[] = [];
 
         const apiMessages: ChatMessageData[] = newMessages.map(m => ({
             role: m.role,
@@ -88,16 +97,28 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
         await streamChatCompletion(
             apiMessages,
-            {},
+            { enableWebSearch },
             {
                 onChunk: (text) => {
                     assistantContent += text;
                     setStreamingContent(assistantContent);
+                    setToolActivity(null); // Clear tool activity when text starts
+                },
+                onToolUse: (toolName, _input) => {
+                    const toolLabel = toolName === "web_search"
+                        ? t("llm_chat.searching_web")
+                        : `Using ${toolName}...`;
+                    setToolActivity(toolLabel);
+                },
+                onCitation: (citation) => {
+                    citations.push(citation);
+                    setPendingCitations([...citations]);
                 },
                 onError: (errorMsg) => {
                     console.error("Chat error:", errorMsg);
                     setError(errorMsg);
                     setIsStreaming(false);
+                    setToolActivity(null);
                 },
                 onDone: () => {
                     if (assistantContent) {
@@ -105,17 +126,20 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                             id: crypto.randomUUID(),
                             role: "assistant",
                             content: assistantContent,
-                            createdAt: new Date().toISOString()
+                            createdAt: new Date().toISOString(),
+                            citations: citations.length > 0 ? citations : undefined
                         };
                         setMessages(prev => [...prev, assistantMessage]);
                     }
                     setStreamingContent("");
+                    setPendingCitations([]);
                     setIsStreaming(false);
+                    setToolActivity(null);
                     spacedUpdate.scheduleUpdate();
                 }
             }
         );
-    }, [input, isStreaming, messages, spacedUpdate]);
+    }, [input, isStreaming, messages, enableWebSearch, spacedUpdate]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -123,6 +147,11 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
             handleSubmit(e);
         }
     }, [handleSubmit]);
+
+    const toggleWebSearch = useCallback(() => {
+        setEnableWebSearch(prev => !prev);
+        spacedUpdate.scheduleUpdate();
+    }, [spacedUpdate]);
 
     return (
         <div className="llm-chat-container">
@@ -135,13 +164,20 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 {messages.map(msg => (
                     <ChatMessage key={msg.id} message={msg} />
                 ))}
+                {toolActivity && (
+                    <div className="llm-chat-tool-activity">
+                        <span className="llm-chat-tool-spinner" />
+                        {toolActivity}
+                    </div>
+                )}
                 {isStreaming && streamingContent && (
                     <ChatMessage
                         message={{
                             id: "streaming",
                             role: "assistant",
                             content: streamingContent,
-                            createdAt: new Date().toISOString()
+                            createdAt: new Date().toISOString(),
+                            citations: pendingCitations.length > 0 ? pendingCitations : undefined
                         }}
                         isStreaming
                     />
@@ -154,23 +190,37 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 <div ref={messagesEndRef} />
             </div>
             <form className="llm-chat-input-form" onSubmit={handleSubmit}>
-                <textarea
-                    ref={textareaRef}
-                    className="llm-chat-input"
-                    value={input}
-                    onInput={(e) => setInput((e.target as HTMLTextAreaElement).value)}
-                    placeholder={t("llm_chat.placeholder")}
-                    disabled={isStreaming}
-                    onKeyDown={handleKeyDown}
-                    rows={3}
-                />
-                <button
-                    type="submit"
-                    className="llm-chat-send-btn"
-                    disabled={isStreaming || !input.trim()}
-                >
-                    {isStreaming ? t("llm_chat.sending") : t("llm_chat.send")}
-                </button>
+                <div className="llm-chat-input-row">
+                    <textarea
+                        ref={textareaRef}
+                        className="llm-chat-input"
+                        value={input}
+                        onInput={(e) => setInput((e.target as HTMLTextAreaElement).value)}
+                        placeholder={t("llm_chat.placeholder")}
+                        disabled={isStreaming}
+                        onKeyDown={handleKeyDown}
+                        rows={3}
+                    />
+                    <button
+                        type="submit"
+                        className="llm-chat-send-btn"
+                        disabled={isStreaming || !input.trim()}
+                    >
+                        {isStreaming ? t("llm_chat.sending") : t("llm_chat.send")}
+                    </button>
+                </div>
+                <div className="llm-chat-options">
+                    <label className="llm-chat-toggle">
+                        <input
+                            type="checkbox"
+                            checked={enableWebSearch}
+                            onChange={toggleWebSearch}
+                            disabled={isStreaming}
+                        />
+                        <span className="bx bx-globe" />
+                        {t("llm_chat.web_search")}
+                    </label>
+                </div>
             </form>
         </div>
     );

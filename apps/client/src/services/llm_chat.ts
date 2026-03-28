@@ -9,10 +9,19 @@ export interface ChatConfig {
     provider?: string;
     model?: string;
     systemPrompt?: string;
+    enableWebSearch?: boolean;
+}
+
+export interface Citation {
+    url: string;
+    title?: string;
 }
 
 export interface StreamCallbacks {
     onChunk: (text: string) => void;
+    onToolUse?: (toolName: string, input: Record<string, unknown>) => void;
+    onToolResult?: (toolName: string, result: string) => void;
+    onCitation?: (citation: Citation) => void;
     onError: (error: string) => void;
     onDone: () => void;
 }
@@ -67,6 +76,15 @@ export async function streamChatCompletion(
                         switch (data.type) {
                             case "text":
                                 callbacks.onChunk(data.content);
+                                break;
+                            case "tool_use":
+                                callbacks.onToolUse?.(data.toolName, data.toolInput);
+                                break;
+                            case "tool_result":
+                                callbacks.onToolResult?.(data.toolName, data.result);
+                                break;
+                            case "citation":
+                                callbacks.onCitation?.({ url: data.url, title: data.title });
                                 break;
                             case "error":
                                 callbacks.onError(data.error);

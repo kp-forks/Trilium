@@ -67,6 +67,77 @@
     51%, 100% { opacity: 0; }
 }
 
+/* Tool activity indicator */
+.llm-chat-tool-activity {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    background: var(--accented-background-color);
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+    max-width: 85%;
+}
+
+.llm-chat-tool-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--muted-text-color);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: llm-chat-spin 0.8s linear infinite;
+}
+
+@keyframes llm-chat-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Citations */
+.llm-chat-citations {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--main-border-color);
+}
+
+.llm-chat-citations-label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+    margin-bottom: 0.25rem;
+}
+
+.llm-chat-citations-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.llm-chat-citations-list li {
+    font-size: 0.8rem;
+}
+
+.llm-chat-citations-list a {
+    color: var(--link-color, #007bff);
+    text-decoration: none;
+    padding: 0.125rem 0.5rem;
+    background: var(--accented-background-color);
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.llm-chat-citations-list a:hover {
+    text-decoration: underline;
+}
+
+/* Error */
 .llm-chat-error {
     padding: 0.75rem 1rem;
     margin-bottom: 1rem;
@@ -76,11 +147,18 @@
     color: var(--danger-text-color, #c00);
 }
 
+/* Input form */
 .llm-chat-input-form {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
     padding-top: 1rem;
     border-top: 1px solid var(--main-border-color);
+}
+
+.llm-chat-input-row {
+    display: flex;
+    gap: 0.5rem;
     align-items: flex-end;
 }
 
@@ -126,6 +204,41 @@
 }
 
 .llm-chat-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Options row */
+.llm-chat-options {
+    display: flex;
+    gap: 1rem;
+    padding-left: 0.25rem;
+}
+
+.llm-chat-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+    cursor: pointer;
+    user-select: none;
+}
+
+.llm-chat-toggle input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.llm-chat-toggle .bx {
+    font-size: 1rem;
+}
+
+.llm-chat-toggle:has(input:checked) {
+    color: var(--main-text-color);
+}
+
+.llm-chat-toggle:has(input:disabled) {
     opacity: 0.5;
     cursor: not-allowed;
 }
