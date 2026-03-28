@@ -77,7 +77,6 @@ function getStartupBundles(req: Request) {
 
     }
     return [];
-
 }
 
 function getWidgetBundles() {
@@ -85,7 +84,6 @@ function getWidgetBundles() {
         return getBundlesWithLabel("widget");
     }
     return [];
-
 }
 
 function getRelationBundles(req: Request<{ noteId: string, relationName: string }>) {
