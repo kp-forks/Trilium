@@ -11,6 +11,7 @@ import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
 import migrationService from "./migration.js";
 import noteService from "./notes.js";
 import { getLog } from "./log.js";
+import { getSql } from "./sql/index.js";
 
 export const LBTPL_ROOT = "_lbTplRoot";
 export const LBTPL_BASE = "_lbTplBase";
@@ -282,7 +283,9 @@ function checkHiddenSubtree(force = false, extraOpts: CheckHiddenExtraOpts = {})
         hiddenSubtreeDefinition = buildHiddenSubtreeDefinition(helpSubtree);
     }
 
-    checkHiddenSubtreeRecursively("root", hiddenSubtreeDefinition, extraOpts);
+    getSql().transactional(() => {
+        checkHiddenSubtreeRecursively("root", hiddenSubtreeDefinition, extraOpts);
+    });
 
     try {
         cleanUpHelp(helpSubtree);
