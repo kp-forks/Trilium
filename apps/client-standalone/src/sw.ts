@@ -162,6 +162,13 @@ self.addEventListener("fetch", (event) => {
     // Only handle same-origin
     if (url.origin !== self.location.origin) return;
 
+    // API-ish: local-first via bridge (must be checked before navigate handling,
+    // because export triggers a navigation to an /api/ URL)
+    if (isLocalFirst(url)) {
+        event.respondWith(forwardToClientLocalServer(event.request, event.clientId));
+        return;
+    }
+
     // HTML files: network-first to ensure updates are reflected immediately
     if (event.request.mode === "navigate" || url.pathname.endsWith(".html")) {
         event.respondWith(networkFirst(event.request));
@@ -169,14 +176,8 @@ self.addEventListener("fetch", (event) => {
     }
 
     // Static assets: cache-first for performance
-    if (event.request.method === "GET" && !isLocalFirst(url)) {
+    if (event.request.method === "GET") {
         event.respondWith(cacheFirst(event.request));
-        return;
-    }
-
-    // API-ish: local-first via bridge
-    if (isLocalFirst(url)) {
-        event.respondWith(forwardToClientLocalServer(event.request, event.clientId));
         return;
     }
 

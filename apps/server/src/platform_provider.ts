@@ -6,7 +6,7 @@ export default class ServerPlatformProvider implements PlatformProvider {
     readonly isWindows = process.platform === "win32";
 
     crash(message: string): void {
-        getLog().error(message);
+        getLog().banner(message);
         process.exit(1);
     }
 

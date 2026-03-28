@@ -9,7 +9,8 @@ import { initTranslations, TranslationProvider } from "./services/i18n";
 import { initSchema, initDemoArchive } from "./services/sql_init";
 import appInfo from "./services/app_info";
 import { type PlatformProvider, initPlatform } from "./services/platform";
-import { type ZipProvider, initZipProvider } from "./services/import/zip_provider";
+import { type ZipProvider, initZipProvider } from "./services/zip_provider";
+import { type ZipExportProviderFactory, initZipExportProviderFactory } from "./services/export/zip_export_provider_factory";
 import markdown from "./services/import/markdown";
 
 export { getLog } from "./services/log";
@@ -101,15 +102,20 @@ export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 export type * from "./meta";
 export * as routeHelpers from "./routes/helpers";
 
-export { getZipProvider, type ZipProvider } from "./services/import/zip_provider";
+export { getZipProvider, type ZipArchive, type ZipProvider } from "./services/zip_provider";
 export { default as zipImportService } from "./services/import/zip";
+export { default as zipExportService } from "./services/export/zip";
+export { type AdvancedExportOptions, type ZipExportProviderData } from "./services/export/zip/abstract_provider";
+export { ZipExportProvider } from "./services/export/zip/abstract_provider";
+export { type ZipExportProviderFactory } from "./services/export/zip_export_provider_factory";
+export { type ExportFormat } from "./meta";
 
 export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";
 
 export { default as markdownImportService } from "./services/import/markdown";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, zip, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
@@ -117,6 +123,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     translations: TranslationProvider,
     platform: PlatformProvider,
     schema: string,
+    zipExportProviderFactory: ZipExportProviderFactory,
     messaging?: MessagingProvider,
     request?: RequestProvider,
     getDemoArchive?: () => Promise<Uint8Array | null>,
@@ -130,6 +137,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     await initTranslations(translations);
     initCrypto(crypto);
     initZipProvider(zip);
+    initZipExportProviderFactory(zipExportProviderFactory);
     initContext(executionContext);
     initSql(new SqlService(dbConfig, getLog()));
     initSchema(schema);

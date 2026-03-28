@@ -2,7 +2,6 @@ import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type Note
 import fs from "fs";
 import html2plaintext from "html2plaintext";
 import { t } from "i18next";
-import path from "path";
 import url from "url";
 
 import becca from "../becca/becca.js";
@@ -28,6 +27,7 @@ import { getSql } from "./sql/index.js";
 import { sanitizeHtml } from "./sanitizer.js";
 import { ValidationError } from "../errors.js";
 import * as cls from "./context.js";
+import { basename } from "./utils/path.js";
 
 interface FoundLink {
     name: "imageLink" | "internalLink" | "includeNoteLink" | "relationMapLink";
@@ -552,7 +552,7 @@ async function downloadImage(noteId: string, imageUrl: string) {
         }
 
         const parsedUrl = url.parse(unescapedUrl);
-        const title = path.basename(parsedUrl.pathname || "");
+        const title = basename(parsedUrl.pathname || "");
 
         const attachment = imageService.saveImageToAttachment(noteId, imageBuffer, title, true, true);
 

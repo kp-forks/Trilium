@@ -26,6 +26,7 @@ import imageRoute from "./api/image";
 import setupApiRoute from "./api/setup";
 import filesRoute from "./api/files";
 import importRoute from "./api/import";
+import exportRoute from "./api/export";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -116,6 +117,7 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(PUT, "/api/branches/:branchId/set-prefix", branchesApiRoute.setPrefix);
     apiRoute(PUT, "/api/branches/set-prefix-batch", branchesApiRoute.setPrefixBatch);
 
+    // :filename is not used by trilium, but instead used for "save as" to assign a human-readable filename
     route(GET, "/api/revisions/:revisionId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromRevision);
     route(GET, "/api/attachments/:attachmentId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnAttachedImage);
     route(GET, "/api/images/:noteId/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromNote);
@@ -139,8 +141,11 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     route(PST, "/api/sync/queue-sector/:entityName/:sector", [checkApiAuth], syncApiRoute.queueSector, apiResultHandler);
     route(GET, "/api/sync/stats", [], syncApiRoute.getStats, apiResultHandler);
 
+    //#region Import/export
     asyncRoute(PST, "/api/notes/:parentNoteId/notes-import", [checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importNotesToBranch, apiResultHandler);
     route(PST, "/api/notes/:parentNoteId/attachments-import", [checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importAttachmentsToNote, apiResultHandler);
+    asyncRoute(GET, "/api/branches/:branchId/export/:type/:format/:version/:taskId", [checkApiAuthOrElectron], exportRoute.exportBranch);
+    //#endregion
 
     apiRoute(GET, "/api/quick-search/:searchString", searchRoute.quickSearch);
     apiRoute(GET, "/api/search-note/:noteId", searchRoute.searchFromNote);
@@ -193,7 +198,11 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(PST, "/api/bulk-action/affected-notes", bulkActionRoute.getAffectedNoteCount);
 
     apiRoute(GET, "/api/app-info", appInfoRoute.getAppInfo);
+
     apiRoute(GET, "/api/other/icon-usage", otherRoute.getIconUsage);
+    apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);
+    apiRoute(PST, "/api/other/to-markdown", otherRoute.toMarkdown);
+
     asyncApiRoute(GET, "/api/similar-notes/:noteId", similarNotesRoute.getSimilarNotes);
     apiRoute(PST, "/api/relation-map", relationMapApiRoute.getRelationMap);
     apiRoute(GET, "/api/recent-changes/:ancestorNoteId", recentChangesApiRoute.getRecentChanges);

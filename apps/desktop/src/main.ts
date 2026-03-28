@@ -135,6 +135,7 @@ async function main() {
         },
         crypto: new NodejsCryptoProvider(),
         zip: new NodejsZipProvider(),
+        zipExportProviderFactory: (await import("@triliumnext/server/src/services/export/zip/factory.js")).serverZipExportProviderFactory,
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),

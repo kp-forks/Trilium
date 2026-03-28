@@ -22,12 +22,10 @@ import backendLogRoute from "./api/backend_log.js";
 import clipperRoute from "./api/clipper.js";
 import databaseRoute from "./api/database.js";
 import etapiTokensApiRoutes from "./api/etapi_tokens.js";
-import exportRoute from "./api/export.js";
 import filesRoute from "./api/files.js";
 import fontsRoute from "./api/fonts.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
-import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
 import scriptRoute from "./api/script.js";
@@ -130,10 +128,6 @@ function register(app: express.Application) {
     // TODO: Re-enable once we support route()
     // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
 
-    route(GET, "/api/branches/:branchId/export/:type/:format/:version/:taskId", [auth.checkApiAuthOrElectron], exportRoute.exportBranch);
-
-    // :filename is not used by trilium, but instead used for "save as" to assign a human-readable filename
-
     apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
 
@@ -198,8 +192,6 @@ function register(app: express.Application) {
 
     asyncApiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
-    apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);
-    apiRoute(PST, "/api/other/to-markdown", otherRoute.toMarkdown);
 
     shareRoutes.register(router);
 

@@ -166,6 +166,7 @@ function createAsyncRoute(router: BrowserRouter) {
  * Used for route handlers (like image routes) that write directly to the response.
  */
 function createMockExpressResponse() {
+    const chunks: string[] = [];
     const res = {
         _used: false,
         _status: 200,
@@ -177,6 +178,10 @@ function createMockExpressResponse() {
         },
         setHeader(name: string, value: string) {
             res._headers[name] = value;
+            return res;
+        },
+        removeHeader(name: string) {
+            delete res._headers[name];
             return res;
         },
         status(code: number) {
@@ -191,6 +196,15 @@ function createMockExpressResponse() {
         sendStatus(code: number) {
             res._used = true;
             res._status = code;
+            return res;
+        },
+        write(chunk: string) {
+            chunks.push(chunk);
+            return true;
+        },
+        end() {
+            res._used = true;
+            res._body = chunks.join("");
             return res;
         }
     };

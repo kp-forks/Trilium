@@ -1,6 +1,6 @@
 import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
 import { basename, dirname } from "../utils/path.js";
-import { getZipProvider } from "./zip_provider.js";
+import { getZipProvider } from "../zip_provider.js";
 
 import becca from "../../becca/becca.js";
 import BAttachment from "../../becca/entities/battachment.js";

@@ -8,9 +8,10 @@ import becca from "../../becca/becca.js";
 import type BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import type TaskContext from "../task_context.js";
-import { escapeHtml,getContentDisposition } from "../utils.js";
+import { escapeHtml,getContentDisposition } from "../utils/index.js";
 import mdService from "./markdown.js";
-import type { ExportFormat } from "./zip/abstract_provider.js";
+import { ExportFormat } from "../../meta.js";
+import { encodeBase64 } from "../utils/binary.js";
 
 function exportSingleNote(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Response) {
     const note = branch.getNote();
@@ -88,11 +89,11 @@ function inlineAttachments(content: string) {
         }
 
         const imageContent = note.getContent();
-        if (!Buffer.isBuffer(imageContent)) {
+        if (typeof imageContent === "string") {
             return match;
         }
 
-        const base64Content = imageContent.toString("base64");
+        const base64Content = encodeBase64(imageContent);
         const srcValue = `data:${note.mime};base64,${base64Content}`;
 
         return `src="${srcValue}"`;
@@ -105,11 +106,11 @@ function inlineAttachments(content: string) {
         }
 
         const attachmentContent = attachment.getContent();
-        if (!Buffer.isBuffer(attachmentContent)) {
+        if (typeof attachmentContent === "string") {
             return match;
         }
 
-        const base64Content = attachmentContent.toString("base64");
+        const base64Content = encodeBase64(attachmentContent);
         const srcValue = `data:${attachment.mime};base64,${base64Content}`;
 
         return `src="${srcValue}"`;
@@ -122,11 +123,11 @@ function inlineAttachments(content: string) {
         }
 
         const attachmentContent = attachment.getContent();
-        if (!Buffer.isBuffer(attachmentContent)) {
+        if (typeof attachmentContent === "string") {
             return match;
         }
 
-        const base64Content = attachmentContent.toString("base64");
+        const base64Content = encodeBase64(attachmentContent);
         const hrefValue = `data:${attachment.mime};base64,${base64Content}`;
 
         return `href="${hrefValue}" download="${escapeHtml(attachment.title)}"`;

@@ -1,6 +1,30 @@
-import type { ZipEntry, ZipProvider } from "@triliumnext/core/src/services/import/zip_provider.js";
+import type { FileStream, ZipArchive, ZipEntry, ZipProvider } from "@triliumnext/core/src/services/zip_provider.js";
+import archiver, { type Archiver } from "archiver";
+import fs from "fs";
 import type { Stream } from "stream";
-import yauzl from "yauzl";
+import * as yauzl from "yauzl";
+
+class NodejsZipArchive implements ZipArchive {
+    readonly #archive: Archiver;
+
+    constructor() {
+        this.#archive = archiver("zip", {
+            zlib: { level: 9 }
+        });
+    }
+
+    append(content: string | Uint8Array, options: { name: string; date?: Date }) {
+        this.#archive.append(typeof content === "string" ? content : Buffer.from(content), options);
+    }
+
+    pipe(destination: unknown) {
+        this.#archive.pipe(destination as NodeJS.WritableStream);
+    }
+
+    finalize(): Promise<void> {
+        return this.#archive.finalize();
+    }
+}
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
     const chunks: Uint8Array[] = [];
@@ -12,6 +36,21 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
 }
 
 export default class NodejsZipProvider implements ZipProvider {
+    createZipArchive(): ZipArchive {
+        return new NodejsZipArchive();
+    }
+
+    createFileStream(filePath: string): FileStream {
+        const stream = fs.createWriteStream(filePath);
+        return {
+            destination: stream,
+            waitForFinish: () => new Promise((resolve, reject) => {
+                stream.on("finish", resolve);
+                stream.on("error", reject);
+            })
+        };
+    }
+
     readZipFile(
         buffer: Uint8Array,
         processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>

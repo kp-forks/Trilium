@@ -54,8 +54,8 @@ async function registerHandlers() {
 }
 
 async function exportData() {
-    const { exportToZipFile } = (await import("@triliumnext/server/src/services/export/zip.js")).default;
-    await exportToZipFile("root", "html", DEMO_ZIP_PATH);
+    const { zipExportService } = (await import("@triliumnext/core"));
+    await zipExportService.exportToZipFile("root", "html", DEMO_ZIP_PATH);
 }
 
 main();
