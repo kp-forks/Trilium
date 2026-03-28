@@ -29,6 +29,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [pendingCitations, setPendingCitations] = useState<Citation[]>([]);
     const [enableWebSearch, setEnableWebSearch] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [shouldSave, setShouldSave] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -40,12 +41,24 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         scrollToBottom();
     }, [messages, streamingContent, toolActivity, scrollToBottom]);
 
+    // Use a ref to store the latest messages for getData
+    const messagesRef = useRef(messages);
+    messagesRef.current = messages;
+
+    const enableWebSearchRef = useRef(enableWebSearch);
+    enableWebSearchRef.current = enableWebSearch;
+
     const spacedUpdate = useEditorSpacedUpdate({
         note,
         noteType: "llmChat",
         noteContext,
         getData: () => {
-            const content: LlmChatContent = { version: 1, messages, enableWebSearch };
+            // Use refs to get the latest values, avoiding stale closure issues
+            const content: LlmChatContent = {
+                version: 1,
+                messages: messagesRef.current,
+                enableWebSearch: enableWebSearchRef.current
+            };
             return { content: JSON.stringify(content) };
         },
         onContentChange: (content) => {
@@ -65,6 +78,14 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
             }
         }
     });
+
+    // Trigger save after state updates when shouldSave is set
+    useEffect(() => {
+        if (shouldSave) {
+            setShouldSave(false);
+            spacedUpdate.scheduleUpdate();
+        }
+    }, [shouldSave, spacedUpdate]);
 
     const handleSubmit = useCallback(async (e: Event) => {
         e.preventDefault();
@@ -135,7 +156,8 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     setPendingCitations([]);
                     setIsStreaming(false);
                     setToolActivity(null);
-                    spacedUpdate.scheduleUpdate();
+                    // Trigger save after state updates via useEffect
+                    setShouldSave(true);
                 }
             }
         );
@@ -150,8 +172,8 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
     const toggleWebSearch = useCallback(() => {
         setEnableWebSearch(prev => !prev);
-        spacedUpdate.scheduleUpdate();
-    }, [spacedUpdate]);
+        setShouldSave(true);
+    }, []);
 
     return (
         <div className="llm-chat-container">
