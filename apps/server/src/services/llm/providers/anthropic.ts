@@ -36,7 +36,7 @@ const BASE_MODELS: Omit<ModelInfo, "costMultiplier">[] = [
     {
         id: "claude-3-5-haiku-20241022",
         name: "Claude 3.5 Haiku",
-        pricing: { input: 0.8, output: 4 }
+        pricing: { input: 1, output: 5 }
     },
     {
         id: "claude-3-5-sonnet-20241022",
