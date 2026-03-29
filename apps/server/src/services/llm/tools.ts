@@ -7,6 +7,7 @@ import { tool } from "ai";
 import { z } from "zod";
 
 import becca from "../../becca/becca.js";
+import noteService from "../notes.js";
 import SearchContext from "../search/search_context.js";
 import searchService from "../search/services/search.js";
 
@@ -137,11 +138,52 @@ export const appendToNote = tool({
 });
 
 /**
+ * Create a new note.
+ */
+export const createNote = tool({
+    description: "Create a new note in the user's knowledge base. Returns the created note's ID and title.",
+    inputSchema: z.object({
+        parentNoteId: z.string().describe("The ID of the parent note where the new note will be created. Use 'root' for top-level notes."),
+        title: z.string().describe("The title of the new note"),
+        content: z.string().describe("The content of the note (HTML for text notes, plain text for code notes)"),
+        type: z.enum(["text", "code"]).optional().describe("The type of note to create. Defaults to 'text'.")
+    }),
+    execute: async ({ parentNoteId, title, content, type = "text" }) => {
+        const parentNote = becca.getNote(parentNoteId);
+        if (!parentNote) {
+            return { error: "Parent note not found" };
+        }
+        if (parentNote.isProtected) {
+            return { error: "Cannot create note under a protected parent" };
+        }
+
+        try {
+            const { note } = noteService.createNewNote({
+                parentNoteId,
+                title,
+                content,
+                type
+            });
+
+            return {
+                success: true,
+                noteId: note.noteId,
+                title: note.title,
+                type: note.type
+            };
+        } catch (err) {
+            return { error: err instanceof Error ? err.message : "Failed to create note" };
+        }
+    }
+});
+
+/**
  * All available note tools.
  */
 export const noteTools = {
     search_notes: searchNotes,
     read_note: readNote,
     update_note_content: updateNoteContent,
-    append_to_note: appendToNote
+    append_to_note: appendToNote,
+    create_note: createNote
 };
