@@ -10,7 +10,7 @@ import SearchContext from "./search/search_context.js";
 import { LBTPL_NOTE_LAUNCHER, LBTPL_CUSTOM_WIDGET, LBTPL_SPACER, LBTPL_SCRIPT } from "./hidden_subtree.js";
 import { t } from "i18next";
 import BNote from '../becca/entities/bnote.js';
-import { SaveSearchNoteResponse, SaveSqlConsoleResponse } from "@triliumnext/commons";
+import { SaveSearchNoteResponse, SaveSqlConsoleResponse, SaveLlmChatResponse } from "@triliumnext/commons";
 
 function getInboxNote(date: string) {
     const workspaceNote = hoistedNoteService.getWorkspaceNote();
@@ -121,6 +121,58 @@ function saveSearchNote(searchNoteId: string) {
     }
 
     return result satisfies SaveSearchNoteResponse;
+}
+
+function createLlmChat() {
+    const { note } = noteService.createNewNote({
+        parentNoteId: getMonthlyParentNoteId("_llmChat", "llmChat"),
+        title: `${t("special_notes.llm_chat_prefix")} ${dateUtils.localNowDateTime()}`,
+        content: JSON.stringify({
+            version: 1,
+            messages: []
+        }),
+        type: "llmChat",
+        mime: "application/json"
+    });
+
+    note.setLabel("iconClass", "bx bx-message-square-dots");
+    note.setLabel("keepCurrentHoisting");
+
+    return note;
+}
+
+function getLlmChatHome() {
+    const workspaceNote = hoistedNoteService.getWorkspaceNote();
+    if (!workspaceNote) {
+        throw new Error("Unable to find workspace note");
+    }
+
+    if (!workspaceNote.isRoot()) {
+        return workspaceNote.searchNoteInSubtree("#workspaceLlmChatHome") || workspaceNote.searchNoteInSubtree("#llmChatHome") || workspaceNote;
+    } else {
+        const today = dateUtils.localNowDate();
+
+        return workspaceNote.searchNoteInSubtree("#llmChatHome") || dateNoteService.getDayNote(today);
+    }
+}
+
+function saveLlmChat(llmChatNoteId: string) {
+    const llmChatNote = becca.getNote(llmChatNoteId);
+    if (!llmChatNote) {
+        throw new Error(`Unable to find LLM chat note ID: ${llmChatNoteId}`);
+    }
+
+    const llmChatHome = getLlmChatHome();
+
+    const result = llmChatNote.cloneTo(llmChatHome.noteId);
+
+    for (const parentBranch of llmChatNote.getParentBranches()) {
+        if (parentBranch.parentNote?.hasAncestor("_hidden")) {
+            parentBranch.markAsDeleted();
+        }
+    }
+
+    return result satisfies SaveLlmChatResponse;
 }
 
 function getMonthlyParentNoteId(rootNoteId: string, prefix: string) {
@@ -282,6 +334,8 @@ export default {
     saveSqlConsole,
     createSearchNote,
     saveSearchNote,
+    createLlmChat,
+    saveLlmChat,
     createLauncher,
     resetLauncher,
     createOrUpdateScriptLauncherFromApi

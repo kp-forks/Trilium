@@ -84,6 +84,14 @@ async function createSearchNote(opts = {}) {
     return await froca.getNote(note.noteId);
 }
 
+async function createLlmChat() {
+    const note = await server.post<FNoteRow>("special-notes/llm-chat");
+
+    await ws.waitForMaxKnownEntityChangeId();
+
+    return await froca.getNote(note.noteId);
+}
+
 export default {
     getInboxNote,
     getTodayNote,
@@ -94,5 +102,6 @@ export default {
     getMonthNote,
     getYearNote,
     createSqlConsole,
-    createSearchNote
+    createSearchNote,
+    createLlmChat
 };

@@ -67,6 +67,12 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 icon: "bx-data"
             },
             {
+                id: "_llmChat",
+                title: t("hidden-subtree.llm-chat-history-title"),
+                type: "doc",
+                icon: "bx-message-square-dots"
+            },
+            {
                 id: "_share",
                 title: t("hidden-subtree.shared-notes-title"),
                 type: "doc",

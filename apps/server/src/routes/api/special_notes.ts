@@ -86,6 +86,14 @@ function createSearchNote(req: Request) {
     return specialNotesService.createSearchNote(searchString, ancestorNoteId);
 }
 
+function createLlmChat() {
+    return specialNotesService.createLlmChat();
+}
+
+function saveLlmChat(req: Request) {
+    return specialNotesService.saveLlmChat(req.body.llmChatNoteId);
+}
+
 function getHoistedNote() {
     return becca.getNote(cls.getHoistedNoteId());
 }
@@ -119,6 +127,8 @@ export default {
     saveSqlConsole,
     createSearchNote,
     saveSearchNote,
+    createLlmChat,
+    saveLlmChat,
     createLauncher,
     resetLauncher,
     createOrUpdateScriptLauncherFromApi
