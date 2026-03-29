@@ -10,6 +10,7 @@ export interface ChatConfig {
     model?: string;
     systemPrompt?: string;
     enableWebSearch?: boolean;
+    enableExtendedThinking?: boolean;
 }
 
 export interface Citation {

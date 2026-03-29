@@ -1618,7 +1618,8 @@
     "empty_state": "Start a conversation by typing a message below.",
     "searching_web": "Searching the web...",
     "web_search": "Web search",
-    "sources": "Sources"
+    "sources": "Sources",
+    "extended_thinking": "Extended thinking"
   },
   "shared_switch": {
     "shared": "Shared",

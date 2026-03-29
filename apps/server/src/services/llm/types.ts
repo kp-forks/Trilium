@@ -27,6 +27,8 @@ export interface LlmProviderConfig {
     systemPrompt?: string;
     /** Enable web search tool */
     enableWebSearch?: boolean;
+    /** Enable extended thinking for deeper reasoning */
+    enableExtendedThinking?: boolean;
 }
 
 export interface LlmProvider {

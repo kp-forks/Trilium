@@ -18,6 +18,7 @@ interface LlmChatContent {
     version: 1;
     messages: StoredMessage[];
     enableWebSearch?: boolean;
+    enableExtendedThinking?: boolean;
 }
 
 export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
@@ -28,6 +29,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<Citation[]>([]);
     const [enableWebSearch, setEnableWebSearch] = useState(true);
+    const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [shouldSave, setShouldSave] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -48,6 +50,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const enableWebSearchRef = useRef(enableWebSearch);
     enableWebSearchRef.current = enableWebSearch;
 
+    const enableExtendedThinkingRef = useRef(enableExtendedThinking);
+    enableExtendedThinkingRef.current = enableExtendedThinking;
+
     const spacedUpdate = useEditorSpacedUpdate({
         note,
         noteType: "llmChat",
@@ -57,7 +62,8 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
             const content: LlmChatContent = {
                 version: 1,
                 messages: messagesRef.current,
-                enableWebSearch: enableWebSearchRef.current
+                enableWebSearch: enableWebSearchRef.current,
+                enableExtendedThinking: enableExtendedThinkingRef.current
             };
             return { content: JSON.stringify(content) };
         },
@@ -71,6 +77,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 setMessages(parsed.messages || []);
                 if (typeof parsed.enableWebSearch === "boolean") {
                     setEnableWebSearch(parsed.enableWebSearch);
+                }
+                if (typeof parsed.enableExtendedThinking === "boolean") {
+                    setEnableExtendedThinking(parsed.enableExtendedThinking);
                 }
             } catch (e) {
                 console.error("Failed to parse LLM chat content:", e);
@@ -118,7 +127,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
         await streamChatCompletion(
             apiMessages,
-            { enableWebSearch },
+            { enableWebSearch, enableExtendedThinking },
             {
                 onChunk: (text) => {
                     assistantContent += text;
@@ -161,7 +170,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 }
             }
         );
-    }, [input, isStreaming, messages, enableWebSearch, spacedUpdate]);
+    }, [input, isStreaming, messages, enableWebSearch, enableExtendedThinking]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -172,6 +181,11 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
     const toggleWebSearch = useCallback(() => {
         setEnableWebSearch(prev => !prev);
+        setShouldSave(true);
+    }, []);
+
+    const toggleExtendedThinking = useCallback(() => {
+        setEnableExtendedThinking(prev => !prev);
         setShouldSave(true);
     }, []);
 
@@ -241,6 +255,16 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         />
                         <span className="bx bx-globe" />
                         {t("llm_chat.web_search")}
+                    </label>
+                    <label className="llm-chat-toggle">
+                        <input
+                            type="checkbox"
+                            checked={enableExtendedThinking}
+                            onChange={toggleExtendedThinking}
+                            disabled={isStreaming}
+                        />
+                        <span className="bx bx-brain" />
+                        {t("llm_chat.extended_thinking")}
                     </label>
                 </div>
             </form>

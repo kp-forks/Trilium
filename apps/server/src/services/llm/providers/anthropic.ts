@@ -50,6 +50,14 @@ export class AnthropicProvider implements LlmProvider {
                 (streamParams as any).tools = tools;
             }
 
+            // Enable extended thinking for deeper reasoning
+            if (config.enableExtendedThinking) {
+                (streamParams as any).thinking = {
+                    type: "enabled",
+                    budget_tokens: 10000 // Allow up to 10k tokens for thinking
+                };
+            }
+
             const stream = this.client.messages.stream(streamParams);
 
             for await (const event of stream) {
