@@ -16,6 +16,10 @@ interface ChatInputBarProps {
     chat: UseLlmChatReturn;
     /** Number of rows for the textarea (default: 3) */
     rows?: number;
+    /** Current active note ID (for note context toggle) */
+    activeNoteId?: string;
+    /** Current active note title (for note context toggle) */
+    activeNoteTitle?: string;
     /** Custom submit handler (overrides chat.handleSubmit) */
     onSubmit?: (e: Event) => void;
     /** Custom key down handler (overrides chat.handleKeyDown) */
@@ -33,6 +37,8 @@ interface ChatInputBarProps {
 export default function ChatInputBar({
     chat,
     rows = 3,
+    activeNoteId,
+    activeNoteTitle,
     onSubmit,
     onKeyDown,
     onWebSearchChange,
@@ -62,6 +68,16 @@ export default function ChatInputBar({
         chat.setSelectedModel(model);
         onModelChange?.(model);
     };
+
+    const handleNoteContextToggle = () => {
+        if (chat.contextNoteId) {
+            chat.setContextNoteId(undefined);
+        } else if (activeNoteId) {
+            chat.setContextNoteId(activeNoteId);
+        }
+    };
+
+    const isNoteContextEnabled = !!chat.contextNoteId && !!activeNoteId;
 
     const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
     const currentModels = chat.availableModels.filter(m => !m.isLegacy);
@@ -143,6 +159,20 @@ export default function ChatInputBar({
                             disabled={chat.isStreaming}
                         />
                     </Dropdown>
+                    {activeNoteId && activeNoteTitle && (
+                        <button
+                            type="button"
+                            className={`llm-chat-note-context ${isNoteContextEnabled ? "active" : ""}`}
+                            onClick={handleNoteContextToggle}
+                            disabled={chat.isStreaming}
+                            title={isNoteContextEnabled
+                                ? t("llm_chat.note_context_enabled", { title: activeNoteTitle })
+                                : t("llm_chat.note_context_disabled")}
+                        >
+                            <span className={`bx ${isNoteContextEnabled ? "bx-file" : "bx-file-blank"}`} />
+                            <span className="llm-chat-note-context-title">{activeNoteTitle}</span>
+                        </button>
+                    )}
                     {chat.lastPromptTokens > 0 && (
                         <div
                             className="llm-chat-context-indicator"

@@ -29,7 +29,7 @@ export default function SidebarChat() {
     const historyDropdownRef = useRef<BootstrapDropdown | null>(null);
 
     // Get the current active note context
-    const { noteId: activeNoteId } = useActiveNoteContext();
+    const { noteId: activeNoteId, note: activeNote } = useActiveNoteContext();
 
     // Use shared chat hook with sidebar-specific options
     const chat = useLlmChat(
@@ -304,6 +304,8 @@ export default function SidebarChat() {
                 <ChatInputBar
                     chat={chat}
                     rows={2}
+                    activeNoteId={activeNoteId ?? undefined}
+                    activeNoteTitle={activeNote?.title}
                     onSubmit={handleSubmit}
                     onKeyDown={handleKeyDown}
                 />
