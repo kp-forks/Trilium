@@ -19,6 +19,8 @@ function calculateCost(inputTokens: number, outputTokens: number, pricing?: Mode
 }
 
 export interface StreamOptions {
+    /** Model identifier for display */
+    model?: string;
     /** Model pricing for cost calculation (from provider) */
     pricing?: ModelPricing;
 }
@@ -86,7 +88,8 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
                     promptTokens: usage.inputTokens,
                     completionTokens: usage.outputTokens,
                     totalTokens: usage.inputTokens + usage.outputTokens,
-                    cost
+                    cost,
+                    model: options.model
                 }
             };
         }

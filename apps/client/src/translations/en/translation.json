@@ -1627,7 +1627,9 @@
     "input": "Input",
     "result": "Result",
     "tokens_used": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens",
-    "tokens_used_with_cost": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})"
+    "tokens_used_with_cost": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})",
+    "tokens_used_with_model": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})"
   },
   "shared_switch": {
     "shared": "Shared",

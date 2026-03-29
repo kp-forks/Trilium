@@ -50,6 +50,8 @@ export interface LlmUsage {
     totalTokens: number;
     /** Estimated cost in USD (if available) */
     cost?: number;
+    /** Model identifier used for this response */
+    model?: string;
 }
 
 /**
