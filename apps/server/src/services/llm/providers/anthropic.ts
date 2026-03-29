@@ -2,6 +2,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { streamText, stepCountIs, type CoreMessage } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
+import becca from "../../../becca/becca.js";
 import { noteTools } from "../tools.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
@@ -94,6 +95,42 @@ const MODEL_PRICING: Record<string, ModelPricing> = Object.fromEntries(
     AVAILABLE_MODELS.map(m => [m.id, m.pricing])
 );
 
+/**
+ * Build context string from the current note being viewed.
+ */
+function buildNoteContext(noteId: string): string | null {
+    const note = becca.getNote(noteId);
+    if (!note) {
+        return null;
+    }
+
+    const parts: string[] = [];
+    parts.push(`The user is currently viewing a note titled "${note.title}" (ID: ${noteId}).`);
+
+    // Add note type context
+    if (note.type !== "text") {
+        parts.push(`Note type: ${note.type}`);
+    }
+
+    // Add content for text notes (truncate if too long)
+    if (note.type === "text" || note.type === "code") {
+        try {
+            const content = note.getContent();
+            if (typeof content === "string" && content.trim()) {
+                const maxLength = 4000;
+                const truncated = content.length > maxLength
+                    ? content.substring(0, maxLength) + "\n... (content truncated)"
+                    : content;
+                parts.push(`\nNote content:\n\`\`\`\n${truncated}\n\`\`\``);
+            }
+        } catch {
+            // Content not available
+        }
+    }
+
+    return parts.join("\n");
+}
+
 export class AnthropicProvider implements LlmProvider {
     name = "anthropic";
 
@@ -106,8 +143,18 @@ export class AnthropicProvider implements LlmProvider {
     }
 
     chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
-        const systemPrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
+        let systemPrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
         const chatMessages = messages.filter(m => m.role !== "system");
+
+        // Add note context if viewing a note
+        if (config.contextNoteId) {
+            const noteContext = buildNoteContext(config.contextNoteId);
+            if (noteContext) {
+                systemPrompt = systemPrompt
+                    ? `${systemPrompt}\n\n${noteContext}`
+                    : noteContext;
+            }
+        }
 
         // Convert to AI SDK message format
         const coreMessages: CoreMessage[] = chatMessages.map(m => ({

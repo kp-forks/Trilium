@@ -7,6 +7,7 @@ import server from "../../services/server.js";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormListItem } from "../react/FormList.js";
+import { useActiveNoteContext } from "../react/hooks.js";
 import NoItems from "../react/NoItems.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
@@ -27,12 +28,20 @@ export default function SidebarChat() {
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
     const historyDropdownRef = useRef<BootstrapDropdown | null>(null);
 
+    // Get the current active note context
+    const { noteId: activeNoteId } = useActiveNoteContext();
+
     // Use shared chat hook with sidebar-specific options
     const chat = useLlmChat(
         // onMessagesChange - trigger save
         () => setShouldSave(true),
         { defaultEnableNoteTools: true, supportsExtendedThinking: true }
     );
+
+    // Update chat context when active note changes
+    useEffect(() => {
+        chat.setContextNoteId(activeNoteId ?? undefined);
+    }, [activeNoteId, chat.setContextNoteId]);
 
     // Ref to access chat methods in effects without triggering re-runs
     const chatRef = useRef(chat);

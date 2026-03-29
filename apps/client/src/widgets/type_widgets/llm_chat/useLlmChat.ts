@@ -15,6 +15,8 @@ export interface LlmChatOptions {
     defaultEnableNoteTools?: boolean;
     /** Whether extended thinking is supported */
     supportsExtendedThinking?: boolean;
+    /** Initial context note ID (the note the user is viewing) */
+    contextNoteId?: string;
 }
 
 export interface UseLlmChatReturn {
@@ -31,6 +33,7 @@ export interface UseLlmChatReturn {
     enableWebSearch: boolean;
     enableNoteTools: boolean;
     enableExtendedThinking: boolean;
+    contextNoteId: string | undefined;
     lastPromptTokens: number;
     messagesEndRef: React.RefObject<HTMLDivElement>;
     textareaRef: React.RefObject<HTMLTextAreaElement>;
@@ -42,6 +45,7 @@ export interface UseLlmChatReturn {
     setEnableWebSearch: (value: boolean) => void;
     setEnableNoteTools: (value: boolean) => void;
     setEnableExtendedThinking: (value: boolean) => void;
+    setContextNoteId: (noteId: string | undefined) => void;
 
     // Actions
     handleSubmit: (e: Event) => Promise<void>;
@@ -55,7 +59,7 @@ export function useLlmChat(
     onMessagesChange?: (messages: StoredMessage[]) => void,
     options: LlmChatOptions = {}
 ): UseLlmChatReturn {
-    const { defaultEnableNoteTools = false, supportsExtendedThinking = false } = options;
+    const { defaultEnableNoteTools = false, supportsExtendedThinking = false, contextNoteId: initialContextNoteId } = options;
 
     const [messages, setMessagesInternal] = useState<StoredMessage[]>([]);
     const [input, setInput] = useState("");
@@ -69,6 +73,7 @@ export function useLlmChat(
     const [enableWebSearch, setEnableWebSearch] = useState(true);
     const [enableNoteTools, setEnableNoteTools] = useState(defaultEnableNoteTools);
     const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
+    const [contextNoteId, setContextNoteId] = useState<string | undefined>(initialContextNoteId);
     const [lastPromptTokens, setLastPromptTokens] = useState<number>(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -84,6 +89,8 @@ export function useLlmChat(
     enableNoteToolsRef.current = enableNoteTools;
     const enableExtendedThinkingRef = useRef(enableExtendedThinking);
     enableExtendedThinkingRef.current = enableExtendedThinking;
+    const contextNoteIdRef = useRef(contextNoteId);
+    contextNoteIdRef.current = contextNoteId;
 
     // Wrapper to call onMessagesChange when messages update
     const setMessages = useCallback((newMessages: StoredMessage[]) => {
@@ -195,7 +202,8 @@ export function useLlmChat(
         const streamOptions: Parameters<typeof streamChatCompletion>[1] = {
             model: selectedModel || undefined,
             enableWebSearch,
-            enableNoteTools
+            enableNoteTools,
+            contextNoteId
         };
         if (supportsExtendedThinking) {
             streamOptions.enableExtendedThinking = enableExtendedThinking;
@@ -294,7 +302,7 @@ export function useLlmChat(
                 }
             }
         );
-    }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, enableExtendedThinking, supportsExtendedThinking, setMessages]);
+    }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, enableExtendedThinking, contextNoteId, supportsExtendedThinking, setMessages]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -317,6 +325,7 @@ export function useLlmChat(
         enableWebSearch,
         enableNoteTools,
         enableExtendedThinking,
+        contextNoteId,
         lastPromptTokens,
         messagesEndRef,
         textareaRef,
@@ -328,6 +337,7 @@ export function useLlmChat(
         setEnableWebSearch,
         setEnableNoteTools,
         setEnableExtendedThinking,
+        setContextNoteId,
 
         // Actions
         handleSubmit,

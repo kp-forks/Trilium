@@ -39,6 +39,8 @@ export interface LlmChatConfig {
     enableExtendedThinking?: boolean;
     /** Token budget for extended thinking (default: 10000) */
     thinkingBudget?: number;
+    /** Current note context (note ID the user is viewing) */
+    contextNoteId?: string;
 }
 
 /**
