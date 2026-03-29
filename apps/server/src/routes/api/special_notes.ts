@@ -86,8 +86,13 @@ function createSearchNote(req: Request) {
     return specialNotesService.createSearchNote(searchString, ancestorNoteId);
 }
 
-function createLlmChat() {
-    return specialNotesService.createLlmChat();
+function createLlmChat(req: Request) {
+    const sourceNoteId = req.body.sourceNoteId;
+    return specialNotesService.createLlmChat(sourceNoteId);
+}
+
+function getOrCreateLlmChatForNote(req: Request<{ noteId: string }>) {
+    return specialNotesService.getOrCreateLlmChatForNote(req.params.noteId);
 }
 
 function saveLlmChat(req: Request) {
@@ -128,6 +133,7 @@ export default {
     createSearchNote,
     saveSearchNote,
     createLlmChat,
+    getOrCreateLlmChatForNote,
     saveLlmChat,
     createLauncher,
     resetLauncher,

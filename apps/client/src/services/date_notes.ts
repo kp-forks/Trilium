@@ -84,8 +84,20 @@ async function createSearchNote(opts = {}) {
     return await froca.getNote(note.noteId);
 }
 
-async function createLlmChat() {
-    const note = await server.post<FNoteRow>("special-notes/llm-chat");
+async function createLlmChat(sourceNoteId?: string) {
+    const note = await server.post<FNoteRow>("special-notes/llm-chat", { sourceNoteId });
+
+    await ws.waitForMaxKnownEntityChangeId();
+
+    return await froca.getNote(note.noteId);
+}
+
+/**
+ * Gets an existing LLM chat linked to the given note, or creates a new one.
+ * Used by sidebar chat to maintain 1:1 mapping between notes and their chats.
+ */
+async function getOrCreateLlmChatForNote(noteId: string) {
+    const note = await server.get<FNoteRow>(`special-notes/llm-chat-for-note/${noteId}`);
 
     await ws.waitForMaxKnownEntityChangeId();
 
@@ -103,5 +115,6 @@ export default {
     getYearNote,
     createSqlConsole,
     createSearchNote,
-    createLlmChat
+    createLlmChat,
+    getOrCreateLlmChatForNote
 };

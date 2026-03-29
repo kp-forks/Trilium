@@ -123,10 +123,13 @@ function saveSearchNote(searchNoteId: string) {
     return result satisfies SaveSearchNoteResponse;
 }
 
-function createLlmChat() {
+function createLlmChat(sourceNoteId?: string) {
+    const sourceNote = sourceNoteId ? becca.getNote(sourceNoteId) : null;
+    const titleSuffix = sourceNote ? sourceNote.title : dateUtils.localNowDateTime();
+
     const { note } = noteService.createNewNote({
         parentNoteId: getMonthlyParentNoteId("_llmChat", "llmChat"),
-        title: `${t("special_notes.llm_chat_prefix")} ${dateUtils.localNowDateTime()}`,
+        title: `${t("special_notes.llm_chat_prefix")} ${titleSuffix}`,
         content: JSON.stringify({
             version: 1,
             messages: []
@@ -138,7 +141,31 @@ function createLlmChat() {
     note.setLabel("iconClass", "bx bx-message-square-dots");
     note.setLabel("keepCurrentHoisting");
 
+    // Link to source note if provided
+    if (sourceNoteId) {
+        note.setRelation("sourceNote", sourceNoteId);
+    }
+
     return note;
+}
+
+/**
+ * Gets an existing LLM chat linked to the given note, or creates a new one.
+ * Used by sidebar chat to maintain 1:1 mapping between notes and their chats.
+ */
+function getOrCreateLlmChatForNote(sourceNoteId: string) {
+    // Search for existing chat with this source note relation
+    const existingChat = searchService.findFirstNoteWithQuery(
+        `~sourceNote.noteId="${sourceNoteId}"`,
+        new SearchContext({ ancestorNoteId: "_llmChat" })
+    );
+
+    if (existingChat) {
+        return existingChat;
+    }
+
+    // Create new chat linked to this note
+    return createLlmChat(sourceNoteId);
 }
 
 function getLlmChatHome() {
@@ -335,6 +362,7 @@ export default {
     createSearchNote,
     saveSearchNote,
     createLlmChat,
+    getOrCreateLlmChatForNote,
     saveLlmChat,
     createLauncher,
     resetLauncher,

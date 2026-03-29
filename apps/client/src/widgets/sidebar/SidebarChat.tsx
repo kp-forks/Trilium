@@ -9,7 +9,7 @@ import options from "../../services/options.js";
 import server from "../../services/server.js";
 import { randomString } from "../../services/utils.js";
 import ActionButton from "../react/ActionButton.js";
-import { useTriliumEvent } from "../react/hooks.js";
+import { useActiveNoteContext, useTriliumEvent } from "../react/hooks.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import RightPanelWidget from "./RightPanelWidget.js";
 import "./SidebarChat.css";
@@ -49,10 +49,12 @@ interface ModelOption extends LlmModelInfo {
 
 /**
  * Sidebar chat widget that appears in the right panel.
- * Uses a hidden LLM chat note for persistence.
+ * Uses a hidden LLM chat note for persistence, with 1:1 mapping to the active note.
  */
 export default function SidebarChat() {
+    const { note: activeNote } = useActiveNoteContext();
     const [visible, setVisible] = useState(false);
+    const [sourceNoteId, setSourceNoteId] = useState<string | null>(null);
     const [chatNoteId, setChatNoteId] = useState<string | null>(null);
     const [messages, setMessages] = useState<StoredMessage[]>([]);
     const [input, setInput] = useState("");
@@ -69,29 +71,55 @@ export default function SidebarChat() {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
+    // Initialize chat for a specific note
+    const initializeChatForNote = useCallback(async (noteId: string) => {
+        try {
+            const note = await dateNoteService.getOrCreateLlmChatForNote(noteId);
+            if (note) {
+                setSourceNoteId(noteId);
+                setChatNoteId(note.noteId);
+                // Load existing messages if any
+                await loadChatContent(note.noteId);
+            }
+        } catch (err) {
+            console.error("Failed to initialize sidebar chat:", err);
+        }
+    }, []);
+
+    // Track when active note changes and load/create corresponding chat
+    useEffect(() => {
+        if (!visible || !activeNote) return;
+
+        const noteId = activeNote.noteId;
+        // Don't switch chats if we're already on this note's chat
+        if (noteId === sourceNoteId) return;
+
+        // Load or create chat for the new note
+        initializeChatForNote(noteId);
+    }, [activeNote, visible, sourceNoteId, initializeChatForNote]);
+
     // Listen for toggle event
     useTriliumEvent("toggleSidebarChat", useCallback(() => {
         setVisible(v => {
             const newValue = !v;
-            if (newValue && !chatNoteId) {
-                // Create a new chat when first opened
-                initializeChat();
+            if (newValue && activeNote) {
+                initializeChatForNote(activeNote.noteId);
             }
             return newValue;
         });
-    }, [chatNoteId]));
+    }, [activeNote, initializeChatForNote]));
 
     // Listen for open event (always opens, creates chat if needed)
     useTriliumEvent("openSidebarChat", useCallback(() => {
         setVisible(true);
-        if (!chatNoteId) {
-            initializeChat();
+        if (activeNote) {
+            initializeChatForNote(activeNote.noteId);
         }
         // Ensure right pane is visible
         if (!options.is("rightPaneVisible")) {
             appContext.triggerEvent("toggleRightPane", {});
         }
-    }, [chatNoteId]));
+    }, [activeNote, initializeChatForNote]));
 
     // Fetch available models on mount
     useEffect(() => {
@@ -119,18 +147,6 @@ export default function SidebarChat() {
     useEffect(() => {
         scrollToBottom();
     }, [messages, streamingContent, streamingThinking, toolActivity, scrollToBottom]);
-
-    const initializeChat = async () => {
-        try {
-            const note = await dateNoteService.createLlmChat();
-            if (note) {
-                setChatNoteId(note.noteId);
-                setMessages([]);
-            }
-        } catch (err) {
-            console.error("Failed to create sidebar chat:", err);
-        }
-    };
 
     const loadChatContent = async (noteId: string) => {
         try {
@@ -311,24 +327,31 @@ export default function SidebarChat() {
     }, [handleSubmit]);
 
     const handleNewChat = useCallback(async () => {
-        // Save current chat first if it has messages
-        if (chatNoteId && messages.length > 0) {
-            await saveChat(messages);
+        if (!activeNote) return;
+        // Clear messages for a fresh start with the same note
+        setMessages([]);
+        // Save cleared state
+        if (chatNoteId) {
+            await saveChat([]);
         }
-        // Create a new chat
-        await initializeChat();
-    }, [chatNoteId, messages, saveChat]);
+    }, [activeNote, chatNoteId, saveChat]);
 
     const handleSaveChat = useCallback(async () => {
         if (!chatNoteId) return;
         try {
             await server.post("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
-            // After saving, create a new chat for continued use
-            await initializeChat();
+            // Clear the current chat after saving (note link is preserved)
+            setMessages([]);
+            // Force reload to get a fresh chat for this note
+            if (activeNote) {
+                setSourceNoteId(null);
+                setChatNoteId(null);
+                initializeChatForNote(activeNote.noteId);
+            }
         } catch (err) {
             console.error("Failed to save chat to permanent location:", err);
         }
-    }, [chatNoteId]);
+    }, [chatNoteId, activeNote, initializeChatForNote]);
 
     if (!visible) {
         return null;
