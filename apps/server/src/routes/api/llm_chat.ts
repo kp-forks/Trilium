@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+
 import { getProvider, type LlmMessage, type LlmProviderConfig } from "../../services/llm/index.js";
 
 interface ChatRequest {
@@ -34,7 +35,7 @@ async function streamChat(req: Request, res: Response) {
     res.flushHeaders();
 
     // Mark response as handled to prevent double-handling by apiResultHandler
-    (res as any).triliumResponseHandled = true;
+    res.triliumResponseHandled = true;
 
     // Type assertion for flush method (available when compression is used)
     const flushableRes = res as Response & { flush?: () => void };
