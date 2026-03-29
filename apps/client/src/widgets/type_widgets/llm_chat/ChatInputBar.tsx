@@ -14,6 +14,8 @@ function formatTokenCount(tokens: number): string {
 interface ChatInputBarProps {
     /** The chat hook result */
     chat: UseLlmChatReturn;
+    /** Number of rows for the textarea (default: 3) */
+    rows?: number;
     /** Custom submit handler (overrides chat.handleSubmit) */
     onSubmit?: (e: Event) => void;
     /** Custom key down handler (overrides chat.handleKeyDown) */
@@ -30,6 +32,7 @@ interface ChatInputBarProps {
 
 export default function ChatInputBar({
     chat,
+    rows = 3,
     onSubmit,
     onKeyDown,
     onWebSearchChange,
@@ -79,7 +82,7 @@ export default function ChatInputBar({
                 placeholder={t("llm_chat.placeholder")}
                 disabled={chat.isStreaming}
                 onKeyDown={handleKeyDown}
-                rows={3}
+                rows={rows}
             />
             <div className="llm-chat-options">
                 <div className="llm-chat-model-selector">

@@ -10,6 +10,11 @@
 
 .sidebar-chat-container .llm-chat-input-form {
     flex-shrink: 0; /* Keep input bar from shrinking */
+
+    .llm-chat-input {
+        font-size: 0.9em;
+        padding: 0.5em;
+    }
 }
 
 .sidebar-chat-messages {

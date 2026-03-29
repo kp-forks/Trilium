@@ -294,6 +294,7 @@ export default function SidebarChat() {
                 </div>
                 <ChatInputBar
                     chat={chat}
+                    rows={2}
                     onSubmit={handleSubmit}
                     onKeyDown={handleKeyDown}
                 />
