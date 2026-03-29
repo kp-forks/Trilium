@@ -45,8 +45,9 @@ const BASE_MODELS: Omit<ModelInfo, "costMultiplier">[] = [
     }
 ];
 
-// Find cheapest model as baseline for cost multiplier
-const baselineCost = Math.min(...BASE_MODELS.map(m => effectiveCost(m.pricing)));
+// Use default model (Sonnet) as baseline for cost multiplier
+const baselineModel = BASE_MODELS.find(m => m.isDefault) || BASE_MODELS[0];
+const baselineCost = effectiveCost(baselineModel.pricing);
 
 // Build models with cost multipliers
 const AVAILABLE_MODELS: ModelInfo[] = BASE_MODELS.map(m => ({
