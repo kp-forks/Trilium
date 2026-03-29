@@ -16,8 +16,9 @@ export interface ChatConfig {
 }
 
 export interface Citation {
-    url: string;
+    url?: string;
     title?: string;
+    citedText?: string;
 }
 
 export interface StreamCallbacks {
@@ -91,7 +92,9 @@ export async function streamChatCompletion(
                                 callbacks.onToolResult?.(data.toolName, data.result);
                                 break;
                             case "citation":
-                                callbacks.onCitation?.({ url: data.url, title: data.title });
+                                if (data.citation) {
+                                    callbacks.onCitation?.(data.citation);
+                                }
                                 break;
                             case "error":
                                 callbacks.onError(data.error);

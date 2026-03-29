@@ -88,18 +88,39 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                         {t("llm_chat.sources")}
                     </div>
                     <ul className="llm-chat-citations-list">
-                        {message.citations.map((citation, idx) => (
-                            <li key={idx}>
-                                <a
-                                    href={citation.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    title={citation.url}
-                                >
-                                    {citation.title || new URL(citation.url).hostname}
-                                </a>
-                            </li>
-                        ))}
+                        {message.citations.map((citation, idx) => {
+                            // Determine display text: title, URL hostname, or cited text
+                            let displayText = citation.title;
+                            if (!displayText && citation.url) {
+                                try {
+                                    displayText = new URL(citation.url).hostname;
+                                } catch {
+                                    displayText = citation.url;
+                                }
+                            }
+                            if (!displayText) {
+                                displayText = citation.citedText?.slice(0, 50) || `Source ${idx + 1}`;
+                            }
+
+                            return (
+                                <li key={idx}>
+                                    {citation.url ? (
+                                        <a
+                                            href={citation.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title={citation.citedText || citation.url}
+                                        >
+                                            {displayText}
+                                        </a>
+                                    ) : (
+                                        <span title={citation.citedText}>
+                                            {displayText}
+                                        </span>
+                                    )}
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             )}

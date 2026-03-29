@@ -9,6 +9,19 @@ export interface LlmMessage {
 }
 
 /**
+ * Citation information extracted from LLM responses.
+ * May include URL (for web search) or document metadata (for document citations).
+ */
+export interface LlmCitation {
+    /** Source URL (typically from web search) */
+    url?: string;
+    /** Document or page title */
+    title?: string;
+    /** The text that was cited */
+    citedText?: string;
+}
+
+/**
  * Stream chunk types for real-time updates.
  */
 export type LlmStreamChunk =
@@ -16,7 +29,7 @@ export type LlmStreamChunk =
     | { type: "thinking"; content: string }
     | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
     | { type: "tool_result"; toolName: string; result: string }
-    | { type: "citation"; url: string; title?: string }
+    | { type: "citation"; citation: LlmCitation }
     | { type: "error"; error: string }
     | { type: "done" };
 
