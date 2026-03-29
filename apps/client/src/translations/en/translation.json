@@ -2264,5 +2264,9 @@
     "sample_xy": "XY",
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa"
+  },
+  "llm": {
+    "settings_title": "AI / LLM",
+    "settings_description": "Configure AI and Large Language Model integrations."
   }
 }
