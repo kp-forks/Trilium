@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
+import type { LlmMessage } from "@triliumnext/commons";
 
-import { getProvider, type LlmMessage, type LlmProviderConfig } from "../../services/llm/index.js";
+import { getProvider, type LlmProviderConfig } from "../../services/llm/index.js";
 
 interface ChatRequest {
     messages: LlmMessage[];

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { LlmMessage, LlmStreamChunk } from "@triliumnext/commons";
 
-import type { LlmMessage, LlmProvider, LlmProviderConfig,LlmStreamChunk } from "../types.js";
+import type { LlmProvider, LlmProviderConfig } from "../types.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_MAX_TOKENS = 8096;

@@ -1,7 +1,7 @@
+import type { LlmCitation } from "@triliumnext/commons";
 import { useMemo } from "preact/hooks";
 import { marked } from "marked";
 import { t } from "../../../services/i18n.js";
-import type { Citation } from "../../../services/llm_chat.js";
 import "./LlmChat.css";
 
 // Configure marked for safe rendering
@@ -17,7 +17,7 @@ interface StoredMessage {
     role: "user" | "assistant" | "system";
     content: string;
     createdAt: string;
-    citations?: Citation[];
+    citations?: LlmCitation[];
     /** Message type for special rendering. Defaults to "message" if omitted. */
     type?: MessageType;
 }

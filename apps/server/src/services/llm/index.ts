@@ -23,4 +23,4 @@ export function clearProviderCache(): void {
     cachedProviders = {};
 }
 
-export * from "./types.js";
+export type { LlmProvider, LlmProviderConfig } from "./types.js";

@@ -1,6 +1,7 @@
+import type { LlmCitation, LlmMessage } from "@triliumnext/commons";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
-import { streamChatCompletion, type ChatMessage as ChatMessageData, type Citation } from "../../../services/llm_chat.js";
+import { streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
@@ -14,7 +15,7 @@ interface StoredMessage {
     role: "user" | "assistant" | "system";
     content: string;
     createdAt: string;
-    citations?: Citation[];
+    citations?: LlmCitation[];
     /** Message type for special rendering. Defaults to "message" if omitted. */
     type?: MessageType;
 }
@@ -33,7 +34,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [streamingContent, setStreamingContent] = useState("");
     const [streamingThinking, setStreamingThinking] = useState("");
     const [toolActivity, setToolActivity] = useState<string | null>(null);
-    const [pendingCitations, setPendingCitations] = useState<Citation[]>([]);
+    const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
     const [enableWebSearch, setEnableWebSearch] = useState(true);
     const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -126,9 +127,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
         let assistantContent = "";
         let thinkingContent = "";
-        const citations: Citation[] = [];
+        const citations: LlmCitation[] = [];
 
-        const apiMessages: ChatMessageData[] = newMessages.map(m => ({
+        const apiMessages: LlmMessage[] = newMessages.map(m => ({
             role: m.role,
             content: m.content
         }));

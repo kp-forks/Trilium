@@ -1,32 +1,12 @@
+import type { LlmMessage, LlmCitation, LlmChatConfig } from "@triliumnext/commons";
 import server from "./server.js";
-
-export interface ChatMessage {
-    role: "user" | "assistant" | "system";
-    content: string;
-}
-
-export interface ChatConfig {
-    provider?: string;
-    model?: string;
-    systemPrompt?: string;
-    enableWebSearch?: boolean;
-    enableExtendedThinking?: boolean;
-    /** Token budget for extended thinking (default: 10000) */
-    thinkingBudget?: number;
-}
-
-export interface Citation {
-    url?: string;
-    title?: string;
-    citedText?: string;
-}
 
 export interface StreamCallbacks {
     onChunk: (text: string) => void;
     onThinking?: (text: string) => void;
     onToolUse?: (toolName: string, input: Record<string, unknown>) => void;
     onToolResult?: (toolName: string, result: string) => void;
-    onCitation?: (citation: Citation) => void;
+    onCitation?: (citation: LlmCitation) => void;
     onError: (error: string) => void;
     onDone: () => void;
 }
@@ -35,8 +15,8 @@ export interface StreamCallbacks {
  * Stream a chat completion from the LLM API using Server-Sent Events.
  */
 export async function streamChatCompletion(
-    messages: ChatMessage[],
-    config: ChatConfig,
+    messages: LlmMessage[],
+    config: LlmChatConfig,
     callbacks: StreamCallbacks
 ): Promise<void> {
     const headers = await server.getHeaders();
@@ -103,7 +83,7 @@ export async function streamChatCompletion(
                                 callbacks.onDone();
                                 break;
                         }
-                    } catch (e) {
+                    } catch {
                         // Ignore JSON parse errors for partial data
                     }
                 }
