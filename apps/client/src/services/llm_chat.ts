@@ -1,5 +1,13 @@
-import type { LlmMessage, LlmCitation, LlmChatConfig, LlmUsage } from "@triliumnext/commons";
+import type { LlmMessage, LlmCitation, LlmChatConfig, LlmUsage, LlmModelInfo } from "@triliumnext/commons";
 import server from "./server.js";
+
+/**
+ * Fetch available models for a provider.
+ */
+export async function getAvailableModels(provider: string = "anthropic"): Promise<LlmModelInfo[]> {
+    const response = await server.get<{ models: LlmModelInfo[] }>(`llm-chat/models?provider=${encodeURIComponent(provider)}`);
+    return response.models;
+}
 
 export interface StreamCallbacks {
     onChunk: (text: string) => void;

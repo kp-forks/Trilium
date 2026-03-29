@@ -1,7 +1,7 @@
-import type { LlmCitation, LlmMessage, LlmUsage } from "@triliumnext/commons";
+import type { LlmCitation, LlmMessage, LlmModelInfo, LlmUsage } from "@triliumnext/commons";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
-import { streamChatCompletion } from "../../../services/llm_chat.js";
+import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
@@ -34,6 +34,7 @@ interface StoredMessage {
 interface LlmChatContent {
     version: 1;
     messages: StoredMessage[];
+    selectedModel?: string;
     enableWebSearch?: boolean;
     enableNoteTools?: boolean;
     enableExtendedThinking?: boolean;
@@ -47,6 +48,8 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [streamingThinking, setStreamingThinking] = useState("");
     const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
+    const [availableModels, setAvailableModels] = useState<LlmModelInfo[]>([]);
+    const [selectedModel, setSelectedModel] = useState<string>("");
     const [enableWebSearch, setEnableWebSearch] = useState(true);
     const [enableNoteTools, setEnableNoteTools] = useState(false);
     const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
@@ -54,6 +57,22 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [shouldSave, setShouldSave] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Fetch available models on mount
+    useEffect(() => {
+        getAvailableModels().then(models => {
+            setAvailableModels(models);
+            // Set default model if not already selected
+            if (!selectedModel) {
+                const defaultModel = models.find(m => m.isDefault) || models[0];
+                if (defaultModel) {
+                    setSelectedModel(defaultModel.id);
+                }
+            }
+        }).catch(err => {
+            console.error("Failed to fetch available models:", err);
+        });
+    }, []);
 
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -76,6 +95,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const enableExtendedThinkingRef = useRef(enableExtendedThinking);
     enableExtendedThinkingRef.current = enableExtendedThinking;
 
+    const selectedModelRef = useRef(selectedModel);
+    selectedModelRef.current = selectedModel;
+
     const spacedUpdate = useEditorSpacedUpdate({
         note,
         noteType: "llmChat",
@@ -85,6 +107,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
             const content: LlmChatContent = {
                 version: 1,
                 messages: messagesRef.current,
+                selectedModel: selectedModelRef.current || undefined,
                 enableWebSearch: enableWebSearchRef.current,
                 enableNoteTools: enableNoteToolsRef.current,
                 enableExtendedThinking: enableExtendedThinkingRef.current
@@ -99,6 +122,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
             try {
                 const parsed: LlmChatContent = JSON.parse(content);
                 setMessages(parsed.messages || []);
+                if (parsed.selectedModel) {
+                    setSelectedModel(parsed.selectedModel);
+                }
                 if (typeof parsed.enableWebSearch === "boolean") {
                     setEnableWebSearch(parsed.enableWebSearch);
                 }
@@ -158,7 +184,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
         await streamChatCompletion(
             apiMessages,
-            { enableWebSearch, enableNoteTools, enableExtendedThinking },
+            { model: selectedModel || undefined, enableWebSearch, enableNoteTools, enableExtendedThinking },
             {
                 onChunk: (text) => {
                     assistantContent += text;
@@ -253,7 +279,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 }
             }
         );
-    }, [input, isStreaming, messages, enableWebSearch, enableExtendedThinking]);
+    }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, enableExtendedThinking]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -274,6 +300,12 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
     const toggleExtendedThinking = useCallback(() => {
         setEnableExtendedThinking(prev => !prev);
+        setShouldSave(true);
+    }, []);
+
+    const handleModelChange = useCallback((e: Event) => {
+        const newModel = (e.target as HTMLSelectElement).value;
+        setSelectedModel(newModel);
         setShouldSave(true);
     }, []);
 
@@ -346,6 +378,21 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     </button>
                 </div>
                 <div className="llm-chat-options">
+                    <div className="llm-chat-model-selector">
+                        <span className="bx bx-chip" />
+                        <select
+                            value={selectedModel}
+                            onChange={handleModelChange}
+                            disabled={isStreaming}
+                            className="llm-chat-model-select"
+                        >
+                            {availableModels.map(model => (
+                                <option key={model.id} value={model.id}>
+                                    {model.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <label className="llm-chat-toggle">
                         <input
                             type="checkbox"

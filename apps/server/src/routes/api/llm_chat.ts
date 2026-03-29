@@ -64,6 +64,23 @@ async function streamChat(req: Request, res: Response) {
     }
 }
 
+/**
+ * Get available models for a provider.
+ */
+function getModels(req: Request, res: Response) {
+    const provider = req.query.provider as string || "anthropic";
+
+    try {
+        const llmProvider = getProvider(provider);
+        const models = llmProvider.getAvailableModels();
+        res.json({ models });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        res.status(400).json({ error: errorMessage });
+    }
+}
+
 export default {
-    streamChat
+    streamChat,
+    getModels
 };

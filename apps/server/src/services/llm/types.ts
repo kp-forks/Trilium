@@ -30,6 +30,20 @@ export interface ModelPricing {
     output: number;
 }
 
+/**
+ * Information about an available model.
+ */
+export interface ModelInfo {
+    /** Model identifier (e.g., "claude-sonnet-4-20250514") */
+    id: string;
+    /** Human-readable name (e.g., "Claude Sonnet 4") */
+    name: string;
+    /** Pricing per million tokens */
+    pricing: ModelPricing;
+    /** Whether this is the default model */
+    isDefault?: boolean;
+}
+
 export interface LlmProvider {
     name: string;
 
@@ -46,4 +60,9 @@ export interface LlmProvider {
      * Get pricing for a model. Returns undefined if pricing is not available.
      */
     getModelPricing(model: string): ModelPricing | undefined;
+
+    /**
+     * Get list of available models for this provider.
+     */
+    getAvailableModels(): ModelInfo[];
 }

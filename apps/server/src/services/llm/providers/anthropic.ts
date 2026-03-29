@@ -3,26 +3,44 @@ import { streamText, stepCountIs, type CoreMessage } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
 import { noteTools } from "../tools.js";
-import type { LlmProvider, LlmProviderConfig, ModelPricing, StreamResult } from "../types.js";
+import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_MAX_TOKENS = 8096;
 
 /**
- * Pricing per million tokens for Anthropic models (USD).
+ * Available Anthropic models with pricing (USD per million tokens).
  */
-const MODEL_PRICING: Record<string, ModelPricing> = {
-    // Claude Sonnet 4
-    "claude-sonnet-4-20250514": { input: 3, output: 15 },
-    // Claude Opus 4
-    "claude-opus-4-20250514": { input: 15, output: 75 },
-    // Claude Haiku 3.5
-    "claude-3-5-haiku-20241022": { input: 0.8, output: 4 },
-    "claude-3-5-haiku-latest": { input: 0.8, output: 4 },
-    // Claude Sonnet 3.5
-    "claude-3-5-sonnet-20241022": { input: 3, output: 15 },
-    "claude-3-5-sonnet-latest": { input: 3, output: 15 },
-};
+const AVAILABLE_MODELS: ModelInfo[] = [
+    // Claude 4 family
+    {
+        id: "claude-sonnet-4-20250514",
+        name: "Claude Sonnet 4",
+        pricing: { input: 3, output: 15 },
+        isDefault: true
+    },
+    {
+        id: "claude-opus-4-20250514",
+        name: "Claude Opus 4",
+        pricing: { input: 15, output: 75 }
+    },
+    // Claude 3.5 family
+    {
+        id: "claude-3-5-haiku-20241022",
+        name: "Claude 3.5 Haiku",
+        pricing: { input: 0.8, output: 4 }
+    },
+    {
+        id: "claude-3-5-sonnet-20241022",
+        name: "Claude 3.5 Sonnet",
+        pricing: { input: 3, output: 15 }
+    }
+];
+
+// Build pricing lookup from available models
+const MODEL_PRICING: Record<string, ModelPricing> = Object.fromEntries(
+    AVAILABLE_MODELS.map(m => [m.id, m.pricing])
+);
 
 export class AnthropicProvider implements LlmProvider {
     name = "anthropic";
@@ -100,5 +118,9 @@ export class AnthropicProvider implements LlmProvider {
 
     getModelPricing(model: string): ModelPricing | undefined {
         return MODEL_PRICING[model];
+    }
+
+    getAvailableModels(): ModelInfo[] {
+        return AVAILABLE_MODELS;
     }
 }

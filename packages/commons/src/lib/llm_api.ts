@@ -42,6 +42,30 @@ export interface LlmChatConfig {
 }
 
 /**
+ * Pricing per million tokens for a model.
+ */
+export interface LlmModelPricing {
+    /** Cost per million input tokens in USD */
+    input: number;
+    /** Cost per million output tokens in USD */
+    output: number;
+}
+
+/**
+ * Information about an available LLM model.
+ */
+export interface LlmModelInfo {
+    /** Model identifier (e.g., "claude-sonnet-4-20250514") */
+    id: string;
+    /** Human-readable name (e.g., "Claude Sonnet 4") */
+    name: string;
+    /** Pricing per million tokens */
+    pricing: LlmModelPricing;
+    /** Whether this is the default model */
+    isDefault?: boolean;
+}
+
+/**
  * Token usage information from the LLM response.
  */
 export interface LlmUsage {
