@@ -63,6 +63,8 @@ export interface LlmModelInfo {
     pricing: LlmModelPricing;
     /** Whether this is the default model */
     isDefault?: boolean;
+    /** Whether this is a legacy/older model */
+    isLegacy?: boolean;
     /** Cost multiplier relative to the cheapest model (1x = cheapest) */
     costMultiplier?: number;
     /** Maximum context window size in tokens */

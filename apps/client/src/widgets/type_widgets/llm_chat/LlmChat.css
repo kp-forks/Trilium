@@ -325,6 +325,12 @@
         margin-left: 0.5em;
         color: var(--muted-text-color);
     }
+
+    /* Position legacy models submenu to open upward */
+    .dropdown-submenu .dropdown-menu {
+        bottom: 0;
+        top: auto;
+    }
 }
 
 .llm-chat-model-select.select-button {

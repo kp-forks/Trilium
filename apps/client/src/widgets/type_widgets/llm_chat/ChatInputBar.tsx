@@ -2,7 +2,7 @@ import type { RefObject } from "preact";
 
 import { t } from "../../../services/i18n.js";
 import Dropdown from "../../react/Dropdown.js";
-import { FormListItem } from "../../react/FormList.js";
+import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../../react/FormList.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
 
 /** Format token count with thousands separators */
@@ -60,6 +60,8 @@ export default function ChatInputBar({
     };
 
     const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
+    const currentModels = chat.availableModels.filter(m => !m.isLegacy);
+    const legacyModels = chat.availableModels.filter(m => m.isLegacy);
     const contextWindow = currentModel?.contextWindow || 200000;
     const percentage = Math.min((chat.lastPromptTokens / contextWindow) * 100, 100);
     const isWarning = percentage > 75;
@@ -95,15 +97,34 @@ export default function ChatInputBar({
                         disabled={chat.isStreaming}
                         buttonClassName="llm-chat-model-select"
                     >
-                        {chat.availableModels.map(model => (
+                        {currentModels.map(model => (
                             <FormListItem
                                 key={model.id}
                                 onClick={() => handleModelSelect(model.id)}
                                 checked={chat.selectedModel === model.id}
                             >
-                                {model.name}<small>({model.costDescription})</small>
+                                {model.name} <small>({model.costDescription})</small>
                             </FormListItem>
                         ))}
+                        {legacyModels.length > 0 && (
+                            <>
+                                <FormDropdownDivider />
+                                <FormDropdownSubmenu
+                                    icon="bx bx-history"
+                                    title={t("llm_chat.legacy_models")}
+                                >
+                                    {legacyModels.map(model => (
+                                        <FormListItem
+                                            key={model.id}
+                                            onClick={() => handleModelSelect(model.id)}
+                                            checked={chat.selectedModel === model.id}
+                                        >
+                                            {model.name} <small>({model.costDescription})</small>
+                                        </FormListItem>
+                                    ))}
+                                </FormDropdownSubmenu>
+                            </>
+                        )}
                     </Dropdown>
                 </div>
                 <label className="llm-chat-toggle">

@@ -1621,6 +1621,7 @@
     "note_tools": "Note access",
     "sources": "Sources",
     "extended_thinking": "Extended thinking",
+    "legacy_models": "Legacy models",
     "thinking": "Thinking...",
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",
