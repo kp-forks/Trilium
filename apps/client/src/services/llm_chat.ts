@@ -11,6 +11,8 @@ export interface ChatConfig {
     systemPrompt?: string;
     enableWebSearch?: boolean;
     enableExtendedThinking?: boolean;
+    /** Token budget for extended thinking (default: 10000) */
+    thinkingBudget?: number;
 }
 
 export interface Citation {

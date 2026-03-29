@@ -29,6 +29,8 @@ export interface LlmProviderConfig {
     enableWebSearch?: boolean;
     /** Enable extended thinking for deeper reasoning */
     enableExtendedThinking?: boolean;
+    /** Token budget for extended thinking (default: 10000) */
+    thinkingBudget?: number;
 }
 
 export interface LlmProvider {
