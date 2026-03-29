@@ -150,6 +150,7 @@
     background: var(--danger-background-color, #fee);
     border: 1px solid var(--danger-border-color, #fcc);
     color: var(--danger-text-color, #c00);
+    user-select: text;
 }
 
 /* Input form */
