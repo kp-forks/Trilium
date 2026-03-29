@@ -508,7 +508,9 @@ type EventMappings = {
     contentSafeMarginChanged: {
         top: number;
         noteContext: NoteContext;
-    }
+    };
+    toggleSidebarChat: {};
+    openSidebarChat: {};
 };
 
 export type EventListener<T extends EventNames> = {

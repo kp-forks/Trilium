@@ -1632,6 +1632,12 @@
     "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})",
     "tokens": "tokens"
   },
+  "sidebar_chat": {
+    "title": "AI Chat",
+    "launcher_title": "Open AI Chat",
+    "new_chat": "Start new chat",
+    "save_chat": "Save chat to notes"
+  },
   "shared_switch": {
     "shared": "Shared",
     "toggle-on-title": "Share the note",

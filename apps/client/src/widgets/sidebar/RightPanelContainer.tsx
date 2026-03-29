@@ -19,6 +19,7 @@ import PdfAttachments from "./pdf/PdfAttachments";
 import PdfLayers from "./pdf/PdfLayers";
 import PdfPages from "./pdf/PdfPages";
 import RightPanelWidget from "./RightPanelWidget";
+import SidebarChat from "./SidebarChat";
 import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
@@ -90,6 +91,11 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
         {
             el: <HighlightsList />,
             enabled: noteType === "text" && highlightsList.length > 0,
+        },
+        {
+            el: <SidebarChat />,
+            enabled: true,
+            position: 1000
         },
         ...widgetsByParent.getLegacyWidgets("right-pane").map((widget) => ({
             el: <CustomLegacyWidget key={widget._noteId} originalWidget={widget as LegacyRightPanelWidget} />,

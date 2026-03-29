@@ -12,6 +12,7 @@ import HistoryNavigationButton from "./HistoryNavigation";
 import { LaunchBarContext } from "./launch_bar_widgets";
 import { CommandButton, CustomWidget, NoteLauncher, QuickSearchLauncherWidget, ScriptLauncher, TodayLauncher } from "./LauncherDefinitions";
 import ProtectedSessionStatusWidget from "./ProtectedSessionStatusWidget";
+import SidebarChatButton from "./SidebarChatButton";
 import SpacerWidget from "./SpacerWidget";
 import SyncStatus from "./SyncStatus";
 
@@ -98,6 +99,8 @@ function initBuiltinWidget(note: FNote, isHorizontalLayout: boolean) {
             return <QuickSearchLauncherWidget />;
         case "mobileTabSwitcher":
             return <TabSwitcher />;
+        case "sidebarChat":
+            return <SidebarChatButton />;
         default:
             console.warn(`Unrecognized builtin widget ${builtinWidget} for launcher ${note.noteId} "${note.title}"`);
     }
