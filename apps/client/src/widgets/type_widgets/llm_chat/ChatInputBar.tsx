@@ -23,12 +23,6 @@ interface ChatInputBarProps {
     onExtendedThinkingChange?: () => void;
     /** Callback when model changes */
     onModelChange?: (model: string) => void;
-    /** Whether to show the model selector */
-    showModelSelector?: boolean;
-    /** Whether to show the extended thinking toggle */
-    showExtendedThinking?: boolean;
-    /** Whether to show the context pie chart */
-    showContextPie?: boolean;
 }
 
 export default function ChatInputBar({
@@ -38,10 +32,7 @@ export default function ChatInputBar({
     onWebSearchChange,
     onNoteToolsChange,
     onExtendedThinkingChange,
-    onModelChange,
-    showModelSelector = false,
-    showExtendedThinking = false,
-    showContextPie = false
+    onModelChange
 }: ChatInputBarProps) {
     const handleSubmit = onSubmit ?? chat.handleSubmit;
     const handleKeyDown = onKeyDown ?? chat.handleKeyDown;
@@ -66,6 +57,13 @@ export default function ChatInputBar({
         onModelChange?.(model);
     };
 
+    const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
+    const contextWindow = currentModel?.contextWindow || 200000;
+    const percentage = Math.min((chat.lastPromptTokens / contextWindow) * 100, 100);
+    const isWarning = percentage > 75;
+    const isCritical = percentage > 90;
+    const pieColor = isCritical ? "var(--danger-color, #d9534f)" : isWarning ? "var(--warning-color, #f0ad4e)" : "var(--main-selection-color, #007bff)";
+
     return (
         <form className="llm-chat-input-form" onSubmit={handleSubmit}>
             <div className="llm-chat-input-row">
@@ -88,21 +86,19 @@ export default function ChatInputBar({
                 </button>
             </div>
             <div className="llm-chat-options">
-                {showModelSelector && (
-                    <div className="llm-chat-model-selector">
-                        <span className="bx bx-chip" />
-                        <FormDropdownList
-                            values={chat.availableModels}
-                            keyProperty="id"
-                            titleProperty="name"
-                            descriptionProperty="costDescription"
-                            currentValue={chat.selectedModel}
-                            onChange={handleModelSelect}
-                            disabled={chat.isStreaming}
-                            buttonClassName="llm-chat-model-select"
-                        />
-                    </div>
-                )}
+                <div className="llm-chat-model-selector">
+                    <span className="bx bx-chip" />
+                    <FormDropdownList
+                        values={chat.availableModels}
+                        keyProperty="id"
+                        titleProperty="name"
+                        descriptionProperty="costDescription"
+                        currentValue={chat.selectedModel}
+                        onChange={handleModelSelect}
+                        disabled={chat.isStreaming}
+                        buttonClassName="llm-chat-model-select"
+                    />
+                </div>
                 <label className="llm-chat-toggle">
                     <input
                         type="checkbox"
@@ -123,36 +119,25 @@ export default function ChatInputBar({
                     <span className="bx bx-note" />
                     {t("llm_chat.note_tools")}
                 </label>
-                {showExtendedThinking && (
-                    <label className="llm-chat-toggle">
-                        <input
-                            type="checkbox"
-                            checked={chat.enableExtendedThinking}
-                            onChange={handleExtendedThinkingToggle}
-                            disabled={chat.isStreaming}
-                        />
-                        <span className="bx bx-brain" />
-                        {t("llm_chat.extended_thinking")}
-                    </label>
+                <label className="llm-chat-toggle">
+                    <input
+                        type="checkbox"
+                        checked={chat.enableExtendedThinking}
+                        onChange={handleExtendedThinkingToggle}
+                        disabled={chat.isStreaming}
+                    />
+                    <span className="bx bx-brain" />
+                    {t("llm_chat.extended_thinking")}
+                </label>
+                {chat.lastPromptTokens > 0 && (
+                    <div
+                        className="llm-chat-context-pie"
+                        title={`${formatTokenCount(chat.lastPromptTokens)} / ${formatTokenCount(contextWindow)} ${t("llm_chat.tokens")} (${percentage.toFixed(0)}%)`}
+                        style={{
+                            background: `conic-gradient(${pieColor} ${percentage}%, var(--accented-background-color) ${percentage}%)`
+                        }}
+                    />
                 )}
-                {showContextPie && chat.lastPromptTokens > 0 && (() => {
-                    const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
-                    const contextWindow = currentModel?.contextWindow || 200000;
-                    const percentage = Math.min((chat.lastPromptTokens / contextWindow) * 100, 100);
-                    const isWarning = percentage > 75;
-                    const isCritical = percentage > 90;
-                    const color = isCritical ? "var(--danger-color, #d9534f)" : isWarning ? "var(--warning-color, #f0ad4e)" : "var(--main-selection-color, #007bff)";
-
-                    return (
-                        <div
-                            className="llm-chat-context-pie"
-                            title={`${formatTokenCount(chat.lastPromptTokens)} / ${formatTokenCount(contextWindow)} ${t("llm_chat.tokens")} (${percentage.toFixed(0)}%)`}
-                            style={{
-                                background: `conic-gradient(${color} ${percentage}%, var(--accented-background-color) ${percentage}%)`
-                            }}
-                        />
-                    );
-                })()}
             </div>
         </form>
     );

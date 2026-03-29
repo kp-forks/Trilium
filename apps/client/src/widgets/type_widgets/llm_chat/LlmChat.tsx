@@ -102,9 +102,6 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 onNoteToolsChange={triggerSave}
                 onExtendedThinkingChange={triggerSave}
                 onModelChange={triggerSave}
-                showModelSelector
-                showExtendedThinking
-                showContextPie
             />
         </div>
     );

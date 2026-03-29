@@ -31,7 +31,7 @@ export default function SidebarChat() {
     const chat = useLlmChat(
         // onMessagesChange - trigger save
         () => setShouldSave(true),
-        { defaultEnableNoteTools: true, supportsExtendedThinking: false }
+        { defaultEnableNoteTools: true, supportsExtendedThinking: true }
     );
 
     // Ref to access chat methods in effects without triggering re-runs
