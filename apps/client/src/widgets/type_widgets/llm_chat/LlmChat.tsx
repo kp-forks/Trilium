@@ -381,27 +381,6 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 )}
                 <div ref={messagesEndRef} />
             </div>
-            {lastPromptTokens > 0 && (() => {
-                const currentModel = availableModels.find(m => m.id === selectedModel);
-                const contextWindow = currentModel?.contextWindow || 200000;
-                const percentage = Math.min((lastPromptTokens / contextWindow) * 100, 100);
-                const isWarning = percentage > 75;
-                const isCritical = percentage > 90;
-
-                return (
-                    <div className="llm-chat-context-window">
-                        <div className="llm-chat-context-bar">
-                            <div
-                                className={`llm-chat-context-fill ${isCritical ? "critical" : isWarning ? "warning" : ""}`}
-                                style={{ width: `${percentage}%` }}
-                            />
-                        </div>
-                        <span className="llm-chat-context-label">
-                            {formatTokenCount(lastPromptTokens)} / {formatTokenCount(contextWindow)} {t("llm_chat.tokens")} ({percentage.toFixed(0)}%)
-                        </span>
-                    </div>
-                );
-            })()}
             <form className="llm-chat-input-form" onSubmit={handleSubmit}>
                 <div className="llm-chat-input-row">
                     <textarea
@@ -466,6 +445,24 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         <span className="bx bx-brain" />
                         {t("llm_chat.extended_thinking")}
                     </label>
+                    {lastPromptTokens > 0 && (() => {
+                        const currentModel = availableModels.find(m => m.id === selectedModel);
+                        const contextWindow = currentModel?.contextWindow || 200000;
+                        const percentage = Math.min((lastPromptTokens / contextWindow) * 100, 100);
+                        const isWarning = percentage > 75;
+                        const isCritical = percentage > 90;
+                        const color = isCritical ? "var(--danger-color, #d9534f)" : isWarning ? "var(--warning-color, #f0ad4e)" : "var(--main-selection-color, #007bff)";
+
+                        return (
+                            <div
+                                className="llm-chat-context-pie"
+                                title={`${formatTokenCount(lastPromptTokens)} / ${formatTokenCount(contextWindow)} ${t("llm_chat.tokens")} (${percentage.toFixed(0)}%)`}
+                                style={{
+                                    background: `conic-gradient(${color} ${percentage}%, var(--accented-background-color) ${percentage}%)`
+                                }}
+                            />
+                        );
+                    })()}
                 </div>
             </form>
         </div>
