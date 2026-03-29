@@ -1,7 +1,8 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamText, type CoreMessage } from "ai";
+import { streamText, stepCountIs, type CoreMessage } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
+import { noteTools } from "../tools.js";
 import type { LlmProvider, LlmProviderConfig, StreamResult } from "../types.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
@@ -55,14 +56,27 @@ export class AnthropicProvider implements LlmProvider {
             );
         }
 
-        // Enable web search if configured
+        // Build tools object
+        const tools: Record<string, unknown> = {};
+
         if (config.enableWebSearch) {
-            const webSearchTool = anthropic.tools.webSearch_20250305({
+            tools.web_search = anthropic.tools.webSearch_20250305({
                 maxUses: 5
             });
-            streamOptions.tools = {
-                web_search: webSearchTool
-            };
+        }
+
+        if (config.enableNoteTools) {
+            Object.assign(tools, noteTools);
+        }
+
+        if (Object.keys(tools).length > 0) {
+            streamOptions.tools = tools;
+            // Allow multiple tool use cycles before final response
+            streamOptions.maxSteps = 5;
+            // Override default stopWhen which stops after 1 step
+            streamOptions.stopWhen = stepCountIs(5);
+            // Let model decide when to use tools vs respond with text
+            streamOptions.toolChoice = "auto";
         }
 
         return streamText(streamOptions);

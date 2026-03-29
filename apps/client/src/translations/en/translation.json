@@ -1618,6 +1618,7 @@
     "empty_state": "Start a conversation by typing a message below.",
     "searching_web": "Searching the web...",
     "web_search": "Web search",
+    "note_tools": "Note access",
     "sources": "Sources",
     "extended_thinking": "Extended thinking",
     "thinking": "Thinking...",

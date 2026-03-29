@@ -24,6 +24,7 @@ interface LlmChatContent {
     version: 1;
     messages: StoredMessage[];
     enableWebSearch?: boolean;
+    enableNoteTools?: boolean;
     enableExtendedThinking?: boolean;
 }
 
@@ -36,6 +37,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
     const [enableWebSearch, setEnableWebSearch] = useState(true);
+    const [enableNoteTools, setEnableNoteTools] = useState(false);
     const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [shouldSave, setShouldSave] = useState(false);
@@ -57,6 +59,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const enableWebSearchRef = useRef(enableWebSearch);
     enableWebSearchRef.current = enableWebSearch;
 
+    const enableNoteToolsRef = useRef(enableNoteTools);
+    enableNoteToolsRef.current = enableNoteTools;
+
     const enableExtendedThinkingRef = useRef(enableExtendedThinking);
     enableExtendedThinkingRef.current = enableExtendedThinking;
 
@@ -70,6 +75,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 version: 1,
                 messages: messagesRef.current,
                 enableWebSearch: enableWebSearchRef.current,
+                enableNoteTools: enableNoteToolsRef.current,
                 enableExtendedThinking: enableExtendedThinkingRef.current
             };
             return { content: JSON.stringify(content) };
@@ -84,6 +90,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 setMessages(parsed.messages || []);
                 if (typeof parsed.enableWebSearch === "boolean") {
                     setEnableWebSearch(parsed.enableWebSearch);
+                }
+                if (typeof parsed.enableNoteTools === "boolean") {
+                    setEnableNoteTools(parsed.enableNoteTools);
                 }
                 if (typeof parsed.enableExtendedThinking === "boolean") {
                     setEnableExtendedThinking(parsed.enableExtendedThinking);
@@ -136,7 +145,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
         await streamChatCompletion(
             apiMessages,
-            { enableWebSearch, enableExtendedThinking },
+            { enableWebSearch, enableNoteTools, enableExtendedThinking },
             {
                 onChunk: (text) => {
                     assistantContent += text;
@@ -227,6 +236,11 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         setShouldSave(true);
     }, []);
 
+    const toggleNoteTools = useCallback(() => {
+        setEnableNoteTools(prev => !prev);
+        setShouldSave(true);
+    }, []);
+
     const toggleExtendedThinking = useCallback(() => {
         setEnableExtendedThinking(prev => !prev);
         setShouldSave(true);
@@ -310,6 +324,16 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         />
                         <span className="bx bx-globe" />
                         {t("llm_chat.web_search")}
+                    </label>
+                    <label className="llm-chat-toggle">
+                        <input
+                            type="checkbox"
+                            checked={enableNoteTools}
+                            onChange={toggleNoteTools}
+                            disabled={isStreaming}
+                        />
+                        <span className="bx bx-note" />
+                        {t("llm_chat.note_tools")}
                     </label>
                     <label className="llm-chat-toggle">
                         <input

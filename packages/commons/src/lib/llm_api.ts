@@ -33,6 +33,8 @@ export interface LlmChatConfig {
     systemPrompt?: string;
     /** Enable web search tool */
     enableWebSearch?: boolean;
+    /** Enable note tools (search and read notes) */
+    enableNoteTools?: boolean;
     /** Enable extended thinking for deeper reasoning */
     enableExtendedThinking?: boolean;
     /** Token budget for extended thinking (default: 10000) */
