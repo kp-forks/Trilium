@@ -2,6 +2,7 @@ import type { RefObject } from "preact";
 
 import { t } from "../../../services/i18n.js";
 import ActionButton from "../../react/ActionButton.js";
+import Button from "../../react/Button.js";
 import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
@@ -160,18 +161,18 @@ export default function ChatInputBar({
                         />
                     </Dropdown>
                     {activeNoteId && activeNoteTitle && (
-                        <button
-                            type="button"
+                        <Button
+                            text={activeNoteTitle}
+                            icon={isNoteContextEnabled ? "bx-file" : "bx-file-blank"}
+                            kind="lowProfile"
+                            size="micro"
                             className={`llm-chat-note-context ${isNoteContextEnabled ? "active" : ""}`}
                             onClick={handleNoteContextToggle}
                             disabled={chat.isStreaming}
                             title={isNoteContextEnabled
                                 ? t("llm_chat.note_context_enabled", { title: activeNoteTitle })
                                 : t("llm_chat.note_context_disabled")}
-                        >
-                            <span className={`bx ${isNoteContextEnabled ? "bx-file" : "bx-file-blank"}`} />
-                            <span className="llm-chat-note-context-title">{activeNoteTitle}</span>
-                        </button>
+                        />
                     )}
                     {chat.lastPromptTokens > 0 && (
                         <div
