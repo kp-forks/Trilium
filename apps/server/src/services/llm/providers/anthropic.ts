@@ -5,7 +5,7 @@ import type { LlmMessage } from "@triliumnext/commons";
 import { noteTools } from "../tools.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 8096;
 
 /**
@@ -18,30 +18,51 @@ function effectiveCost(pricing: ModelPricing): number {
 
 /**
  * Available Anthropic models with pricing (USD per million tokens).
+ * Source: https://docs.anthropic.com/en/docs/about-claude/models
  */
 const BASE_MODELS: Omit<ModelInfo, "costMultiplier">[] = [
-    // Claude 4 family
+    // ===== Current Models =====
     {
-        id: "claude-sonnet-4-20250514",
-        name: "Claude Sonnet 4",
+        id: "claude-sonnet-4-6",
+        name: "Claude Sonnet 4.6",
         pricing: { input: 3, output: 15 },
         isDefault: true
     },
     {
-        id: "claude-opus-4-20250514",
-        name: "Claude Opus 4",
-        pricing: { input: 15, output: 75 }
+        id: "claude-opus-4-6",
+        name: "Claude Opus 4.6",
+        pricing: { input: 5, output: 25 }
     },
-    // Claude 3.5 family
     {
-        id: "claude-3-5-haiku-20241022",
-        name: "Claude 3.5 Haiku",
+        id: "claude-haiku-4-5-20251001",
+        name: "Claude Haiku 4.5",
         pricing: { input: 1, output: 5 }
     },
+    // ===== Legacy Models =====
     {
-        id: "claude-3-5-sonnet-20241022",
-        name: "Claude 3.5 Sonnet",
+        id: "claude-sonnet-4-5-20250929",
+        name: "Claude Sonnet 4.5",
         pricing: { input: 3, output: 15 }
+    },
+    {
+        id: "claude-opus-4-5-20251101",
+        name: "Claude Opus 4.5",
+        pricing: { input: 5, output: 25 }
+    },
+    {
+        id: "claude-opus-4-1-20250805",
+        name: "Claude Opus 4.1",
+        pricing: { input: 15, output: 75 }
+    },
+    {
+        id: "claude-sonnet-4-20250514",
+        name: "Claude Sonnet 4.0",
+        pricing: { input: 3, output: 15 }
+    },
+    {
+        id: "claude-opus-4-20250514",
+        name: "Claude Opus 4.0",
+        pricing: { input: 15, output: 75 }
     }
 ];
 
