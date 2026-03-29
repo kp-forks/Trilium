@@ -153,6 +153,11 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 if (typeof parsed.enableExtendedThinking === "boolean") {
                     setEnableExtendedThinking(parsed.enableExtendedThinking);
                 }
+                // Restore last prompt tokens from the most recent message with usage
+                const lastUsage = [...(parsed.messages || [])].reverse().find(m => m.usage)?.usage;
+                if (lastUsage) {
+                    setLastPromptTokens(lastUsage.promptTokens);
+                }
             } catch (e) {
                 console.error("Failed to parse LLM chat content:", e);
                 setMessages([]);
