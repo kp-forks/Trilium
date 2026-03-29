@@ -149,22 +149,21 @@
     cursor: not-allowed;
 }
 
-/* Make the widget grow to fill available space */
-.widget.grow {
+/* Make the sidebar chat widget grow to fill available space when expanded */
+.widget.grow:not(.collapsed) {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.widget.grow:not(.collapsed) .body-wrapper {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
 }
 
-.widget.grow .body-wrapper {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.widget.grow .card-body {
+.widget.grow:not(.collapsed) .card-body {
     flex: 1;
     min-height: 0;
     overflow: hidden;
