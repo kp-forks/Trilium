@@ -1,50 +1,13 @@
-import type { LlmCitation, LlmMessage, LlmModelInfo, LlmUsage } from "@triliumnext/commons";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
+
 import { t } from "../../../services/i18n.js";
-import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
-import { randomString } from "../../../services/utils.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import FormDropdownList from "../../react/FormDropdownList.js";
 import { TypeWidgetProps } from "../type_widget.js";
 import ChatMessage from "./ChatMessage.js";
+import type { LlmChatContent } from "./llm_chat_types.js";
+import { useLlmChat } from "./useLlmChat.js";
 import "./LlmChat.css";
-
-type MessageType = "message" | "error" | "thinking";
-
-interface ToolCall {
-    id: string;
-    toolName: string;
-    input: Record<string, unknown>;
-    result?: string;
-}
-
-interface StoredMessage {
-    id: string;
-    role: "user" | "assistant" | "system";
-    content: string;
-    createdAt: string;
-    citations?: LlmCitation[];
-    /** Message type for special rendering. Defaults to "message" if omitted. */
-    type?: MessageType;
-    /** Tool calls made during this response */
-    toolCalls?: ToolCall[];
-    /** Token usage for this response */
-    usage?: LlmUsage;
-}
-
-interface LlmChatContent {
-    version: 1;
-    messages: StoredMessage[];
-    selectedModel?: string;
-    enableWebSearch?: boolean;
-    enableNoteTools?: boolean;
-    enableExtendedThinking?: boolean;
-}
-
-/** Extended model info with cost description for dropdown display */
-interface ModelOption extends LlmModelInfo {
-    costDescription?: string;
-}
 
 /** Format token count with thousands separators */
 function formatTokenCount(tokens: number): string {
@@ -52,115 +15,33 @@ function formatTokenCount(tokens: number): string {
 }
 
 export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
-    const [messages, setMessages] = useState<StoredMessage[]>([]);
-    const [input, setInput] = useState("");
-    const [isStreaming, setIsStreaming] = useState(false);
-    const [streamingContent, setStreamingContent] = useState("");
-    const [streamingThinking, setStreamingThinking] = useState("");
-    const [toolActivity, setToolActivity] = useState<string | null>(null);
-    const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
-    const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
-    const [selectedModel, setSelectedModel] = useState<string>("");
-    const [enableWebSearch, setEnableWebSearch] = useState(true);
-    const [enableNoteTools, setEnableNoteTools] = useState(false);
-    const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [shouldSave, setShouldSave] = useState(false);
-    const [lastPromptTokens, setLastPromptTokens] = useState<number>(0);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    // Fetch available models on mount
-    useEffect(() => {
-        getAvailableModels().then(models => {
-            // Add cost description for display
-            const modelsWithDescription = models.map(m => ({
-                ...m,
-                costDescription: m.costMultiplier
-                    ? `${m.costMultiplier}x cost`
-                    : undefined
-            }));
-            setAvailableModels(modelsWithDescription);
-            // Set default model if not already selected
-            if (!selectedModel) {
-                const defaultModel = models.find(m => m.isDefault) || models[0];
-                if (defaultModel) {
-                    setSelectedModel(defaultModel.id);
-                }
-            }
-        }).catch(err => {
-            console.error("Failed to fetch available models:", err);
-        });
-    }, []);
-
-    const scrollToBottom = useCallback(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, []);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages, streamingContent, streamingThinking, toolActivity, scrollToBottom]);
-
-    // Use a ref to store the latest messages for getData
-    const messagesRef = useRef(messages);
-    messagesRef.current = messages;
-
-    const enableWebSearchRef = useRef(enableWebSearch);
-    enableWebSearchRef.current = enableWebSearch;
-
-    const enableNoteToolsRef = useRef(enableNoteTools);
-    enableNoteToolsRef.current = enableNoteTools;
-
-    const enableExtendedThinkingRef = useRef(enableExtendedThinking);
-    enableExtendedThinkingRef.current = enableExtendedThinking;
-
-    const selectedModelRef = useRef(selectedModel);
-    selectedModelRef.current = selectedModel;
+    const chat = useLlmChat(
+        // onMessagesChange - trigger save
+        () => setShouldSave(true),
+        { defaultEnableNoteTools: false, supportsExtendedThinking: true }
+    );
 
     const spacedUpdate = useEditorSpacedUpdate({
         note,
         noteType: "llmChat",
         noteContext,
         getData: () => {
-            // Use refs to get the latest values, avoiding stale closure issues
-            const content: LlmChatContent = {
-                version: 1,
-                messages: messagesRef.current,
-                selectedModel: selectedModelRef.current || undefined,
-                enableWebSearch: enableWebSearchRef.current,
-                enableNoteTools: enableNoteToolsRef.current,
-                enableExtendedThinking: enableExtendedThinkingRef.current
-            };
+            const content = chat.getContent();
             return { content: JSON.stringify(content) };
         },
         onContentChange: (content) => {
             if (!content) {
-                setMessages([]);
+                chat.clearMessages();
                 return;
             }
             try {
                 const parsed: LlmChatContent = JSON.parse(content);
-                setMessages(parsed.messages || []);
-                if (parsed.selectedModel) {
-                    setSelectedModel(parsed.selectedModel);
-                }
-                if (typeof parsed.enableWebSearch === "boolean") {
-                    setEnableWebSearch(parsed.enableWebSearch);
-                }
-                if (typeof parsed.enableNoteTools === "boolean") {
-                    setEnableNoteTools(parsed.enableNoteTools);
-                }
-                if (typeof parsed.enableExtendedThinking === "boolean") {
-                    setEnableExtendedThinking(parsed.enableExtendedThinking);
-                }
-                // Restore last prompt tokens from the most recent message with usage
-                const lastUsage = [...(parsed.messages || [])].reverse().find(m => m.usage)?.usage;
-                if (lastUsage) {
-                    setLastPromptTokens(lastUsage.promptTokens);
-                }
+                chat.loadFromContent(parsed);
             } catch (e) {
                 console.error("Failed to parse LLM chat content:", e);
-                setMessages([]);
+                chat.clearMessages();
             }
         }
     });
@@ -173,254 +54,109 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         }
     }, [shouldSave, spacedUpdate]);
 
-    const handleSubmit = useCallback(async (e: Event) => {
-        e.preventDefault();
-        if (!input.trim() || isStreaming) return;
-
-        setError(null);
-        setToolActivity(null);
-        setPendingCitations([]);
-
-        const userMessage: StoredMessage = {
-            id: randomString(),
-            role: "user",
-            content: input.trim(),
-            createdAt: new Date().toISOString()
-        };
-
-        const newMessages = [...messages, userMessage];
-        setMessages(newMessages);
-        setInput("");
-        setIsStreaming(true);
-        setStreamingContent("");
-        setStreamingThinking("");
-
-        let assistantContent = "";
-        let thinkingContent = "";
-        const citations: LlmCitation[] = [];
-        const toolCalls: ToolCall[] = [];
-        let usage: LlmUsage | undefined;
-
-        const apiMessages: LlmMessage[] = newMessages.map(m => ({
-            role: m.role,
-            content: m.content
-        }));
-
-        await streamChatCompletion(
-            apiMessages,
-            { model: selectedModel || undefined, enableWebSearch, enableNoteTools, enableExtendedThinking },
-            {
-                onChunk: (text) => {
-                    assistantContent += text;
-                    setStreamingContent(assistantContent);
-                    setToolActivity(null); // Clear tool activity when text starts
-                },
-                onThinking: (text) => {
-                    thinkingContent += text;
-                    setStreamingThinking(thinkingContent);
-                    setToolActivity(t("llm_chat.thinking"));
-                },
-                onToolUse: (toolName, toolInput) => {
-                    const toolLabel = toolName === "web_search"
-                        ? t("llm_chat.searching_web")
-                        : `Using ${toolName}...`;
-                    setToolActivity(toolLabel);
-                    // Track the tool call
-                    toolCalls.push({
-                        id: randomString(),
-                        toolName,
-                        input: toolInput
-                    });
-                },
-                onToolResult: (toolName, result) => {
-                    // Find the most recent tool call with this name and add the result
-                    const toolCall = [...toolCalls].reverse().find(tc => tc.toolName === toolName && !tc.result);
-                    if (toolCall) {
-                        toolCall.result = result;
-                    }
-                },
-                onCitation: (citation) => {
-                    citations.push(citation);
-                    setPendingCitations([...citations]);
-                },
-                onUsage: (u) => {
-                    usage = u;
-                    setLastPromptTokens(u.promptTokens);
-                },
-                onError: (errorMsg) => {
-                    console.error("Chat error:", errorMsg);
-                    // Persist error as an assistant message
-                    const errorMessage: StoredMessage = {
-                        id: randomString(),
-                        role: "assistant",
-                        content: errorMsg,
-                        createdAt: new Date().toISOString(),
-                        type: "error"
-                    };
-                    setMessages(prev => [...prev, errorMessage]);
-                    setStreamingContent("");
-                    setStreamingThinking("");
-                    setIsStreaming(false);
-                    setToolActivity(null);
-                    setShouldSave(true);
-                },
-                onDone: () => {
-                    const newMessages: StoredMessage[] = [];
-
-                    // Save thinking as a separate message if present
-                    if (thinkingContent) {
-                        newMessages.push({
-                            id: randomString(),
-                            role: "assistant",
-                            content: thinkingContent,
-                            createdAt: new Date().toISOString(),
-                            type: "thinking"
-                        });
-                    }
-
-                    if (assistantContent || toolCalls.length > 0) {
-                        newMessages.push({
-                            id: randomString(),
-                            role: "assistant",
-                            content: assistantContent,
-                            createdAt: new Date().toISOString(),
-                            citations: citations.length > 0 ? citations : undefined,
-                            toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
-                            usage
-                        });
-                    }
-
-                    if (newMessages.length > 0) {
-                        setMessages(prev => [...prev, ...newMessages]);
-                    }
-
-                    setStreamingContent("");
-                    setStreamingThinking("");
-                    setPendingCitations([]);
-                    setIsStreaming(false);
-                    setToolActivity(null);
-                    // Trigger save after state updates via useEffect
-                    setShouldSave(true);
-                }
-            }
-        );
-    }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, enableExtendedThinking]);
-
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSubmit(e);
-        }
-    }, [handleSubmit]);
-
     const toggleWebSearch = useCallback(() => {
-        setEnableWebSearch(prev => !prev);
+        chat.setEnableWebSearch(!chat.enableWebSearch);
         setShouldSave(true);
-    }, []);
+    }, [chat]);
 
     const toggleNoteTools = useCallback(() => {
-        setEnableNoteTools(prev => !prev);
+        chat.setEnableNoteTools(!chat.enableNoteTools);
         setShouldSave(true);
-    }, []);
+    }, [chat]);
 
     const toggleExtendedThinking = useCallback(() => {
-        setEnableExtendedThinking(prev => !prev);
+        chat.setEnableExtendedThinking(!chat.enableExtendedThinking);
         setShouldSave(true);
-    }, []);
+    }, [chat]);
 
     const handleModelChange = useCallback((newModel: string) => {
-        setSelectedModel(newModel);
+        chat.setSelectedModel(newModel);
         setShouldSave(true);
-    }, []);
+    }, [chat]);
 
     return (
         <div className="llm-chat-container">
             <div className="llm-chat-messages">
-                {messages.length === 0 && !isStreaming && (
+                {chat.messages.length === 0 && !chat.isStreaming && (
                     <div className="llm-chat-empty">
                         {t("llm_chat.empty_state")}
                     </div>
                 )}
-                {messages.map(msg => (
+                {chat.messages.map(msg => (
                     <ChatMessage key={msg.id} message={msg} />
                 ))}
-                {toolActivity && !streamingThinking && (
+                {chat.toolActivity && !chat.streamingThinking && (
                     <div className="llm-chat-tool-activity">
                         <span className="llm-chat-tool-spinner" />
-                        {toolActivity}
+                        {chat.toolActivity}
                     </div>
                 )}
-                {isStreaming && streamingThinking && (
+                {chat.isStreaming && chat.streamingThinking && (
                     <ChatMessage
                         message={{
                             id: "streaming-thinking",
                             role: "assistant",
-                            content: streamingThinking,
+                            content: chat.streamingThinking,
                             createdAt: new Date().toISOString(),
                             type: "thinking"
                         }}
                         isStreaming
                     />
                 )}
-                {isStreaming && streamingContent && (
+                {chat.isStreaming && chat.streamingContent && (
                     <ChatMessage
                         message={{
                             id: "streaming",
                             role: "assistant",
-                            content: streamingContent,
+                            content: chat.streamingContent,
                             createdAt: new Date().toISOString(),
-                            citations: pendingCitations.length > 0 ? pendingCitations : undefined
+                            citations: chat.pendingCitations.length > 0 ? chat.pendingCitations : undefined
                         }}
                         isStreaming
                     />
                 )}
-                {error && (
-                    <div className="llm-chat-error">
-                        {error}
-                    </div>
-                )}
-                <div ref={messagesEndRef} />
+                <div ref={chat.messagesEndRef} />
             </div>
-            <form className="llm-chat-input-form" onSubmit={handleSubmit}>
+            <form className="llm-chat-input-form" onSubmit={chat.handleSubmit}>
                 <div className="llm-chat-input-row">
                     <textarea
-                        ref={textareaRef}
+                        ref={chat.textareaRef}
                         className="llm-chat-input"
-                        value={input}
-                        onInput={(e) => setInput((e.target as HTMLTextAreaElement).value)}
+                        value={chat.input}
+                        onInput={(e) => chat.setInput((e.target as HTMLTextAreaElement).value)}
                         placeholder={t("llm_chat.placeholder")}
-                        disabled={isStreaming}
-                        onKeyDown={handleKeyDown}
+                        disabled={chat.isStreaming}
+                        onKeyDown={chat.handleKeyDown}
                         rows={3}
                     />
                     <button
                         type="submit"
                         className="llm-chat-send-btn"
-                        disabled={isStreaming || !input.trim()}
+                        disabled={chat.isStreaming || !chat.input.trim()}
                     >
-                        {isStreaming ? t("llm_chat.sending") : t("llm_chat.send")}
+                        {chat.isStreaming ? t("llm_chat.sending") : t("llm_chat.send")}
                     </button>
                 </div>
                 <div className="llm-chat-options">
                     <div className="llm-chat-model-selector">
                         <span className="bx bx-chip" />
                         <FormDropdownList
-                            values={availableModels}
+                            values={chat.availableModels}
                             keyProperty="id"
                             titleProperty="name"
                             descriptionProperty="costDescription"
-                            currentValue={selectedModel}
+                            currentValue={chat.selectedModel}
                             onChange={handleModelChange}
-                            disabled={isStreaming}
+                            disabled={chat.isStreaming}
                             buttonClassName="llm-chat-model-select"
                         />
                     </div>
                     <label className="llm-chat-toggle">
                         <input
                             type="checkbox"
-                            checked={enableWebSearch}
+                            checked={chat.enableWebSearch}
                             onChange={toggleWebSearch}
-                            disabled={isStreaming}
+                            disabled={chat.isStreaming}
                         />
                         <span className="bx bx-globe" />
                         {t("llm_chat.web_search")}
@@ -428,9 +164,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     <label className="llm-chat-toggle">
                         <input
                             type="checkbox"
-                            checked={enableNoteTools}
+                            checked={chat.enableNoteTools}
                             onChange={toggleNoteTools}
-                            disabled={isStreaming}
+                            disabled={chat.isStreaming}
                         />
                         <span className="bx bx-note" />
                         {t("llm_chat.note_tools")}
@@ -438,17 +174,17 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     <label className="llm-chat-toggle">
                         <input
                             type="checkbox"
-                            checked={enableExtendedThinking}
+                            checked={chat.enableExtendedThinking}
                             onChange={toggleExtendedThinking}
-                            disabled={isStreaming}
+                            disabled={chat.isStreaming}
                         />
                         <span className="bx bx-brain" />
                         {t("llm_chat.extended_thinking")}
                     </label>
-                    {lastPromptTokens > 0 && (() => {
-                        const currentModel = availableModels.find(m => m.id === selectedModel);
+                    {chat.lastPromptTokens > 0 && (() => {
+                        const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
                         const contextWindow = currentModel?.contextWindow || 200000;
-                        const percentage = Math.min((lastPromptTokens / contextWindow) * 100, 100);
+                        const percentage = Math.min((chat.lastPromptTokens / contextWindow) * 100, 100);
                         const isWarning = percentage > 75;
                         const isCritical = percentage > 90;
                         const color = isCritical ? "var(--danger-color, #d9534f)" : isWarning ? "var(--warning-color, #f0ad4e)" : "var(--main-selection-color, #007bff)";
@@ -456,7 +192,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         return (
                             <div
                                 className="llm-chat-context-pie"
-                                title={`${formatTokenCount(lastPromptTokens)} / ${formatTokenCount(contextWindow)} ${t("llm_chat.tokens")} (${percentage.toFixed(0)}%)`}
+                                title={`${formatTokenCount(chat.lastPromptTokens)} / ${formatTokenCount(contextWindow)} ${t("llm_chat.tokens")} (${percentage.toFixed(0)}%)`}
                                 style={{
                                     background: `conic-gradient(${color} ${percentage}%, var(--accented-background-color) ${percentage}%)`
                                 }}
