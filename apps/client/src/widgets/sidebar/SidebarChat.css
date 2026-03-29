@@ -16,18 +16,6 @@
     gap: 0.5rem;
 }
 
-.sidebar-chat-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--muted-text-color);
-    font-style: italic;
-    font-size: 0.9rem;
-    text-align: center;
-    padding: 1rem;
-}
-
 /* Reuse llm-chat-message styles but make them more compact */
 .sidebar-chat-messages .llm-chat-message {
     padding: 0.5rem 0.75rem;

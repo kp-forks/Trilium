@@ -7,6 +7,7 @@ import { getAvailableModels, streamChatCompletion } from "../../services/llm_cha
 import server from "../../services/server.js";
 import { randomString } from "../../services/utils.js";
 import ActionButton from "../react/ActionButton.js";
+import NoItems from "../react/NoItems.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import RightPanelWidget from "./RightPanelWidget.js";
 import "./SidebarChat.css";
@@ -373,9 +374,10 @@ export default function SidebarChat() {
             <div className="sidebar-chat-container">
                 <div className="sidebar-chat-messages">
                     {messages.length === 0 && !isStreaming && (
-                        <div className="sidebar-chat-empty">
-                            {t("llm_chat.empty_state")}
-                        </div>
+                        <NoItems
+                            icon="bx bx-conversation"
+                            text={t("sidebar_chat.empty_state")}
+                        />
                     )}
                     {messages.map(msg => (
                         <ChatMessage key={msg.id} message={msg} />

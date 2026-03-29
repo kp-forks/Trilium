@@ -1636,7 +1636,8 @@
     "title": "AI Chat",
     "launcher_title": "Open AI Chat",
     "new_chat": "Start new chat",
-    "save_chat": "Save chat to notes"
+    "save_chat": "Save chat to notes",
+    "empty_state": "Start a conversation"
   },
   "shared_switch": {
     "shared": "Shared",
