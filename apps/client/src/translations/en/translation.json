@@ -1622,7 +1622,10 @@
     "sources": "Sources",
     "extended_thinking": "Extended thinking",
     "thinking": "Thinking...",
-    "thought_process": "Thought process"
+    "thought_process": "Thought process",
+    "tool_calls": "{{count}} tool call(s)",
+    "input": "Input",
+    "result": "Result"
   },
   "shared_switch": {
     "shared": "Shared",

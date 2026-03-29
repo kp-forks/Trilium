@@ -10,6 +10,13 @@ import "./LlmChat.css";
 
 type MessageType = "message" | "error" | "thinking";
 
+interface ToolCall {
+    id: string;
+    toolName: string;
+    input: Record<string, unknown>;
+    result?: string;
+}
+
 interface StoredMessage {
     id: string;
     role: "user" | "assistant" | "system";
@@ -18,6 +25,8 @@ interface StoredMessage {
     citations?: LlmCitation[];
     /** Message type for special rendering. Defaults to "message" if omitted. */
     type?: MessageType;
+    /** Tool calls made during this response */
+    toolCalls?: ToolCall[];
 }
 
 interface LlmChatContent {
@@ -137,6 +146,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         let assistantContent = "";
         let thinkingContent = "";
         const citations: LlmCitation[] = [];
+        const toolCalls: ToolCall[] = [];
 
         const apiMessages: LlmMessage[] = newMessages.map(m => ({
             role: m.role,
@@ -157,11 +167,24 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     setStreamingThinking(thinkingContent);
                     setToolActivity(t("llm_chat.thinking"));
                 },
-                onToolUse: (toolName, _input) => {
+                onToolUse: (toolName, toolInput) => {
                     const toolLabel = toolName === "web_search"
                         ? t("llm_chat.searching_web")
                         : `Using ${toolName}...`;
                     setToolActivity(toolLabel);
+                    // Track the tool call
+                    toolCalls.push({
+                        id: randomString(),
+                        toolName,
+                        input: toolInput
+                    });
+                },
+                onToolResult: (toolName, result) => {
+                    // Find the most recent tool call with this name and add the result
+                    const toolCall = [...toolCalls].reverse().find(tc => tc.toolName === toolName && !tc.result);
+                    if (toolCall) {
+                        toolCall.result = result;
+                    }
                 },
                 onCitation: (citation) => {
                     citations.push(citation);
@@ -198,13 +221,14 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         });
                     }
 
-                    if (assistantContent) {
+                    if (assistantContent || toolCalls.length > 0) {
                         newMessages.push({
                             id: randomString(),
                             role: "assistant",
                             content: assistantContent,
                             createdAt: new Date().toISOString(),
-                            citations: citations.length > 0 ? citations : undefined
+                            citations: citations.length > 0 ? citations : undefined,
+                            toolCalls: toolCalls.length > 0 ? toolCalls : undefined
                         });
                     }
 

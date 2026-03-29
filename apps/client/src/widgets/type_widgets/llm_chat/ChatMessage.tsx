@@ -12,6 +12,13 @@ marked.setOptions({
 
 type MessageType = "message" | "error" | "thinking";
 
+interface ToolCall {
+    id: string;
+    toolName: string;
+    input: Record<string, unknown>;
+    result?: string;
+}
+
 interface StoredMessage {
     id: string;
     role: "user" | "assistant" | "system";
@@ -20,6 +27,8 @@ interface StoredMessage {
     citations?: LlmCitation[];
     /** Message type for special rendering. Defaults to "message" if omitted. */
     type?: MessageType;
+    /** Tool calls made during this response */
+    toolCalls?: ToolCall[];
 }
 
 interface Props {
@@ -81,6 +90,42 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                     message.content
                 )}
             </div>
+            {message.toolCalls && message.toolCalls.length > 0 && (
+                <details className="llm-chat-tool-calls">
+                    <summary className="llm-chat-tool-calls-summary">
+                        <span className="bx bx-wrench" />
+                        {t("llm_chat.tool_calls", { count: message.toolCalls.length })}
+                    </summary>
+                    <div className="llm-chat-tool-calls-list">
+                        {message.toolCalls.map((tool) => (
+                            <div key={tool.id} className="llm-chat-tool-call">
+                                <div className="llm-chat-tool-call-name">
+                                    {tool.toolName}
+                                </div>
+                                <div className="llm-chat-tool-call-input">
+                                    <strong>{t("llm_chat.input")}:</strong>
+                                    <pre>{JSON.stringify(tool.input, null, 2)}</pre>
+                                </div>
+                                {tool.result && (
+                                    <div className="llm-chat-tool-call-result">
+                                        <strong>{t("llm_chat.result")}:</strong>
+                                        <pre>{(() => {
+                                            if (typeof tool.result === "string" && (tool.result.startsWith("{") || tool.result.startsWith("["))) {
+                                                try {
+                                                    return JSON.stringify(JSON.parse(tool.result), null, 2);
+                                                } catch {
+                                                    return tool.result;
+                                                }
+                                            }
+                                            return tool.result;
+                                        })()}</pre>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </details>
+            )}
             {message.citations && message.citations.length > 0 && (
                 <div className="llm-chat-citations">
                     <div className="llm-chat-citations-label">
