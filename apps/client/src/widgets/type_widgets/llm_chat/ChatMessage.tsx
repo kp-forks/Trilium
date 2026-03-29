@@ -10,12 +10,16 @@ marked.setOptions({
     gfm: true // GitHub Flavored Markdown
 });
 
+type MessageType = "message" | "error";
+
 interface StoredMessage {
     id: string;
     role: "user" | "assistant" | "system";
     content: string;
     createdAt: string;
     citations?: Citation[];
+    /** Message type for special rendering. Defaults to "message" if omitted. */
+    type?: MessageType;
 }
 
 interface Props {
@@ -25,22 +29,29 @@ interface Props {
 
 export default function ChatMessage({ message, isStreaming }: Props) {
     const roleLabel = message.role === "user" ? "You" : "Assistant";
+    const isError = message.type === "error";
 
-    // Only render markdown for assistant messages
+    // Only render markdown for assistant messages (not errors)
     const renderedContent = useMemo(() => {
-        if (message.role === "assistant") {
+        if (message.role === "assistant" && !isError) {
             return marked.parse(message.content) as string;
         }
         return null;
-    }, [message.content, message.role]);
+    }, [message.content, message.role, isError]);
+
+    const messageClasses = [
+        "llm-chat-message",
+        `llm-chat-message-${message.role}`,
+        isError && "llm-chat-message-error"
+    ].filter(Boolean).join(" ");
 
     return (
-        <div className={`llm-chat-message llm-chat-message-${message.role}`}>
+        <div className={messageClasses}>
             <div className="llm-chat-message-role">
-                {roleLabel}
+                {isError ? "Error" : roleLabel}
             </div>
             <div className="llm-chat-message-content">
-                {message.role === "assistant" ? (
+                {message.role === "assistant" && !isError ? (
                     <>
                         <div
                             className="llm-chat-markdown"

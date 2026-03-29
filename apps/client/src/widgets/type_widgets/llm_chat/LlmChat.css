@@ -153,6 +153,17 @@
     user-select: text;
 }
 
+/* Error message (persisted in conversation) */
+.llm-chat-message-error {
+    background: var(--danger-background-color, #fee);
+    border: 1px solid var(--danger-border-color, #fcc);
+    color: var(--danger-text-color, #c00);
+}
+
+.llm-chat-message-error .llm-chat-message-role {
+    color: var(--danger-text-color, #c00);
+}
+
 /* Input form */
 .llm-chat-input-form {
     display: flex;

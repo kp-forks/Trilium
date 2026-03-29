@@ -6,12 +6,16 @@ import { TypeWidgetProps } from "../type_widget.js";
 import ChatMessage from "./ChatMessage.js";
 import "./LlmChat.css";
 
+type MessageType = "message" | "error";
+
 interface StoredMessage {
     id: string;
     role: "user" | "assistant" | "system";
     content: string;
     createdAt: string;
     citations?: Citation[];
+    /** Message type for special rendering. Defaults to "message" if omitted. */
+    type?: MessageType;
 }
 
 interface LlmChatContent {
@@ -146,9 +150,19 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 },
                 onError: (errorMsg) => {
                     console.error("Chat error:", errorMsg);
-                    setError(errorMsg);
+                    // Persist error as an assistant message
+                    const errorMessage: StoredMessage = {
+                        id: crypto.randomUUID(),
+                        role: "assistant",
+                        content: errorMsg,
+                        createdAt: new Date().toISOString(),
+                        type: "error"
+                    };
+                    setMessages(prev => [...prev, errorMessage]);
+                    setStreamingContent("");
                     setIsStreaming(false);
                     setToolActivity(null);
+                    setShouldSave(true);
                 },
                 onDone: () => {
                     if (assistantContent) {
