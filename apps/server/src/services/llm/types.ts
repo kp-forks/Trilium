@@ -20,6 +20,16 @@ export interface LlmProviderConfig extends LlmChatConfig {
  */
 export type StreamResult = ReturnType<typeof streamText>;
 
+/**
+ * Pricing per million tokens for a model.
+ */
+export interface ModelPricing {
+    /** Cost per million input tokens in USD */
+    input: number;
+    /** Cost per million output tokens in USD */
+    output: number;
+}
+
 export interface LlmProvider {
     name: string;
 
@@ -31,4 +41,9 @@ export interface LlmProvider {
         messages: LlmMessage[],
         config: LlmProviderConfig
     ): StreamResult;
+
+    /**
+     * Get pricing for a model. Returns undefined if pricing is not available.
+     */
+    getModelPricing(model: string): ModelPricing | undefined;
 }

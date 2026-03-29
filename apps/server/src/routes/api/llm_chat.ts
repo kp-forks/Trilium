@@ -46,9 +46,10 @@ async function streamChat(req: Request, res: Response) {
         const provider = getProvider(config.provider || "anthropic");
         const result = provider.chat(messages, config);
 
-        // Pass model for cost calculation
+        // Get pricing from provider for cost calculation
         const model = config.model || "claude-sonnet-4-20250514";
-        for await (const chunk of streamToChunks(result, { model })) {
+        const pricing = provider.getModelPricing(model);
+        for await (const chunk of streamToChunks(result, { pricing })) {
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
             // Flush immediately to ensure real-time streaming
             if (typeof flushableRes.flush === "function") {
