@@ -1,4 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { createAnthropic, type AnthropicProvider as AnthropicSDKProvider } from "@ai-sdk/anthropic";
 import { streamText, stepCountIs, type CoreMessage } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
@@ -133,13 +133,13 @@ function buildNoteContext(noteId: string): string | null {
 
 export class AnthropicProvider implements LlmProvider {
     name = "anthropic";
+    private anthropic: AnthropicSDKProvider;
 
-    constructor() {
-        const apiKey = process.env.ANTHROPIC_API_KEY;
+    constructor(apiKey: string) {
         if (!apiKey) {
-            throw new Error("ANTHROPIC_API_KEY environment variable is required");
+            throw new Error("API key is required for Anthropic provider");
         }
-        // The anthropic provider reads ANTHROPIC_API_KEY from env automatically
+        this.anthropic = createAnthropic({ apiKey });
     }
 
     chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
@@ -162,7 +162,7 @@ export class AnthropicProvider implements LlmProvider {
             content: m.content
         }));
 
-        const model = anthropic(config.model || DEFAULT_MODEL);
+        const model = this.anthropic(config.model || DEFAULT_MODEL);
 
         // Build options for streamText
         const streamOptions: Parameters<typeof streamText>[0] = {
@@ -193,7 +193,7 @@ export class AnthropicProvider implements LlmProvider {
         const tools: Record<string, unknown> = {};
 
         if (config.enableWebSearch) {
-            tools.web_search = anthropic.tools.webSearch_20250305({
+            tools.web_search = this.anthropic.tools.webSearch_20250305({
                 maxUses: 5
             });
         }

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import type { LlmMessage } from "@triliumnext/commons";
 
-import { getProvider, type LlmProviderConfig } from "../../services/llm/index.js";
+import { getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
 import { streamToChunks } from "../../services/llm/stream.js";
 
 interface ChatRequest {
@@ -43,7 +43,13 @@ async function streamChat(req: Request, res: Response) {
     const flushableRes = res as Response & { flush?: () => void };
 
     try {
-        const provider = getProvider(config.provider || "anthropic");
+        if (!hasConfiguredProviders()) {
+            res.write(`data: ${JSON.stringify({ type: "error", error: "No LLM providers configured. Please add a provider in Options → AI / LLM." })}\n\n`);
+            res.end();
+            return;
+        }
+
+        const provider = getProviderByType(config.provider || "anthropic");
         const result = provider.chat(messages, config);
 
         // Get pricing from provider for cost calculation
@@ -68,10 +74,15 @@ async function streamChat(req: Request, res: Response) {
  * Get available models for a provider.
  */
 function getModels(req: Request, res: Response) {
-    const provider = req.query.provider as string || "anthropic";
+    const providerType = req.query.provider as string || "anthropic";
 
     try {
-        const llmProvider = getProvider(provider);
+        if (!hasConfiguredProviders()) {
+            res.status(400).json({ error: "No LLM providers configured. Please add a provider in Options → AI / LLM." });
+            return;
+        }
+
+        const llmProvider = getProviderByType(providerType);
         const models = llmProvider.getAvailableModels();
         res.json({ models });
     } catch (error) {
