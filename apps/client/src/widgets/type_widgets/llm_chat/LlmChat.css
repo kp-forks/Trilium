@@ -565,3 +565,42 @@
 .llm-chat-usage-text {
     font-family: var(--monospace-font-family, monospace);
 }
+
+/* Context window indicator */
+.llm-chat-context-window {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+}
+
+.llm-chat-context-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--accented-background-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.llm-chat-context-fill {
+    height: 100%;
+    background: var(--main-selection-color, #007bff);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.llm-chat-context-fill.warning {
+    background: var(--warning-color, #f0ad4e);
+}
+
+.llm-chat-context-fill.critical {
+    background: var(--danger-color, #d9534f);
+}
+
+.llm-chat-context-label {
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
+    font-family: var(--monospace-font-family, monospace);
+    white-space: nowrap;
+}

@@ -26,43 +26,51 @@ const BASE_MODELS: Omit<ModelInfo, "costMultiplier">[] = [
         id: "claude-sonnet-4-6",
         name: "Claude Sonnet 4.6",
         pricing: { input: 3, output: 15 },
+        contextWindow: 200000,
         isDefault: true
     },
     {
         id: "claude-opus-4-6",
         name: "Claude Opus 4.6",
-        pricing: { input: 5, output: 25 }
+        pricing: { input: 5, output: 25 },
+        contextWindow: 200000
     },
     {
         id: "claude-haiku-4-5-20251001",
         name: "Claude Haiku 4.5",
-        pricing: { input: 1, output: 5 }
+        pricing: { input: 1, output: 5 },
+        contextWindow: 200000
     },
     // ===== Legacy Models =====
     {
         id: "claude-sonnet-4-5-20250929",
         name: "Claude Sonnet 4.5",
-        pricing: { input: 3, output: 15 }
+        pricing: { input: 3, output: 15 },
+        contextWindow: 200000
     },
     {
         id: "claude-opus-4-5-20251101",
         name: "Claude Opus 4.5",
-        pricing: { input: 5, output: 25 }
+        pricing: { input: 5, output: 25 },
+        contextWindow: 200000
     },
     {
         id: "claude-opus-4-1-20250805",
         name: "Claude Opus 4.1",
-        pricing: { input: 15, output: 75 }
+        pricing: { input: 15, output: 75 },
+        contextWindow: 200000
     },
     {
         id: "claude-sonnet-4-20250514",
         name: "Claude Sonnet 4.0",
-        pricing: { input: 3, output: 15 }
+        pricing: { input: 3, output: 15 },
+        contextWindow: 200000
     },
     {
         id: "claude-opus-4-20250514",
         name: "Claude Opus 4.0",
-        pricing: { input: 15, output: 75 }
+        pricing: { input: 15, output: 75 },
+        contextWindow: 200000
     }
 ];
 

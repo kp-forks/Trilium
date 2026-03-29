@@ -65,6 +65,8 @@ export interface LlmModelInfo {
     isDefault?: boolean;
     /** Cost multiplier relative to the cheapest model (1x = cheapest) */
     costMultiplier?: number;
+    /** Maximum context window size in tokens */
+    contextWindow?: number;
 }
 
 /**
