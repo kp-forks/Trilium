@@ -8,6 +8,7 @@ import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormListItem } from "../react/FormList.js";
 import NoItems from "../react/NoItems.js";
+import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
 import { useLlmChat } from "../type_widgets/llm_chat/useLlmChat.js";
@@ -291,48 +292,12 @@ export default function SidebarChat() {
                     )}
                     <div ref={chat.messagesEndRef} />
                 </div>
-                <div className="sidebar-chat-input-area">
-                    <textarea
-                        ref={chat.textareaRef}
-                        className="sidebar-chat-input"
-                        value={chat.input}
-                        onInput={(e) => chat.setInput((e.target as HTMLTextAreaElement).value)}
-                        placeholder={t("llm_chat.placeholder")}
-                        disabled={chat.isStreaming}
-                        onKeyDown={handleKeyDown}
-                        rows={2}
-                    />
-                    <div className="sidebar-chat-actions">
-                        <div className="sidebar-chat-options">
-                            <label className="sidebar-chat-toggle" title={t("llm_chat.web_search")}>
-                                <input
-                                    type="checkbox"
-                                    checked={chat.enableWebSearch}
-                                    onChange={() => chat.setEnableWebSearch(!chat.enableWebSearch)}
-                                    disabled={chat.isStreaming}
-                                />
-                                <span className="bx bx-globe" />
-                            </label>
-                            <label className="sidebar-chat-toggle" title={t("llm_chat.note_tools")}>
-                                <input
-                                    type="checkbox"
-                                    checked={chat.enableNoteTools}
-                                    onChange={() => chat.setEnableNoteTools(!chat.enableNoteTools)}
-                                    disabled={chat.isStreaming}
-                                />
-                                <span className="bx bx-note" />
-                            </label>
-                        </div>
-                        <button
-                            type="button"
-                            className="sidebar-chat-send-btn"
-                            disabled={chat.isStreaming || !chat.input.trim()}
-                            onClick={handleSubmit}
-                        >
-                            <span className="bx bx-send" />
-                        </button>
-                    </div>
-                </div>
+                <ChatInputBar
+                    chat={chat}
+                    onSubmit={handleSubmit}
+                    onKeyDown={handleKeyDown}
+                    compact
+                />
             </div>
         </RightPanelWidget>
     );
