@@ -73,23 +73,17 @@ async function streamChat(req: Request, res: Response) {
 /**
  * Get available models for a provider.
  */
-function getModels(req: Request, res: Response) {
+function getModels(req: Request, _res: Response) {
     const providerType = req.query.provider as string || "anthropic";
 
-    try {
-        // Return empty array when no providers configured - client handles this gracefully
-        if (!hasConfiguredProviders()) {
-            res.json({ models: [] });
-            return;
-        }
-
-        const llmProvider = getProviderByType(providerType);
-        const models = llmProvider.getAvailableModels();
-        res.json({ models });
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        res.status(400).json({ error: errorMessage });
+    // Return empty array when no providers configured - client handles this gracefully
+    if (!hasConfiguredProviders()) {
+        return { models: [] };
     }
+
+    const llmProvider = getProviderByType(providerType);
+    const models = llmProvider.getAvailableModels();
+    return { models };
 }
 
 export default {
