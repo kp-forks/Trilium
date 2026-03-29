@@ -155,10 +155,7 @@ function createLlmChat(sourceNoteId?: string) {
  */
 function getOrCreateLlmChatForNote(sourceNoteId: string) {
     // Search for existing chat with this source note relation
-    const existingChat = searchService.findFirstNoteWithQuery(
-        `~sourceNote.noteId="${sourceNoteId}"`,
-        new SearchContext({ ancestorNoteId: "_llmChat" })
-    );
+    const existingChat = findLlmChatForNote(sourceNoteId);
 
     if (existingChat) {
         return existingChat;
@@ -166,6 +163,17 @@ function getOrCreateLlmChatForNote(sourceNoteId: string) {
 
     // Create new chat linked to this note
     return createLlmChat(sourceNoteId);
+}
+
+/**
+ * Finds an existing LLM chat linked to the given note, without creating one.
+ * Returns null if no chat exists for this note.
+ */
+function findLlmChatForNote(sourceNoteId: string) {
+    return searchService.findFirstNoteWithQuery(
+        `~sourceNote.noteId="${sourceNoteId}"`,
+        new SearchContext({ ancestorNoteId: "_llmChat" })
+    );
 }
 
 function getLlmChatHome() {
@@ -362,6 +370,7 @@ export default {
     createSearchNote,
     saveSearchNote,
     createLlmChat,
+    findLlmChatForNote,
     getOrCreateLlmChatForNote,
     saveLlmChat,
     createLauncher,

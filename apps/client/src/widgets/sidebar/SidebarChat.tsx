@@ -71,55 +71,83 @@ export default function SidebarChat() {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-    // Initialize chat for a specific note
-    const initializeChatForNote = useCallback(async (noteId: string) => {
+    // Load existing chat for a note (without creating one)
+    const loadExistingChatForNote = useCallback(async (noteId: string) => {
         try {
-            const note = await dateNoteService.getOrCreateLlmChatForNote(noteId);
-            if (note) {
-                setSourceNoteId(noteId);
-                setChatNoteId(note.noteId);
-                // Load existing messages if any
-                await loadChatContent(note.noteId);
+            // First, check if a chat already exists for this note
+            const existingChat = await dateNoteService.findLlmChatForNote(noteId);
+
+            setSourceNoteId(noteId);
+
+            if (existingChat) {
+                setChatNoteId(existingChat.noteId);
+                await loadChatContent(existingChat.noteId);
+            } else {
+                // No existing chat - just track the source note, don't create yet
+                setChatNoteId(null);
+                setMessages([]);
             }
         } catch (err) {
-            console.error("Failed to initialize sidebar chat:", err);
+            console.error("Failed to load sidebar chat:", err);
         }
     }, []);
 
-    // Track when active note changes and load/create corresponding chat
+    // Create chat note on demand (when user sends first message)
+    const ensureChatNoteExists = useCallback(async (): Promise<string | null> => {
+        if (chatNoteId) {
+            return chatNoteId;
+        }
+
+        if (!sourceNoteId) {
+            return null;
+        }
+
+        try {
+            const note = await dateNoteService.getOrCreateLlmChatForNote(sourceNoteId);
+            if (note) {
+                setChatNoteId(note.noteId);
+                return note.noteId;
+            }
+        } catch (err) {
+            console.error("Failed to create sidebar chat:", err);
+        }
+        return null;
+    }, [chatNoteId, sourceNoteId]);
+
+    // Track when active note changes and load existing chat
     useEffect(() => {
         if (!visible || !activeNote) return;
 
         const noteId = activeNote.noteId;
-        // Don't switch chats if we're already on this note's chat
+        // Don't switch if we're already on this note
         if (noteId === sourceNoteId) return;
 
-        // Load or create chat for the new note
-        initializeChatForNote(noteId);
-    }, [activeNote, visible, sourceNoteId, initializeChatForNote]);
+        // Load existing chat for the new note (don't create)
+        loadExistingChatForNote(noteId);
+    }, [activeNote, visible, sourceNoteId, loadExistingChatForNote]);
 
     // Listen for toggle event
     useTriliumEvent("toggleSidebarChat", useCallback(() => {
         setVisible(v => {
             const newValue = !v;
             if (newValue && activeNote) {
-                initializeChatForNote(activeNote.noteId);
+                loadExistingChatForNote(activeNote.noteId);
             }
             return newValue;
         });
-    }, [activeNote, initializeChatForNote]));
+    }, [activeNote, loadExistingChatForNote]));
 
-    // Listen for open event (always opens, creates chat if needed)
+    // Listen for open event (always opens)
     useTriliumEvent("openSidebarChat", useCallback(() => {
         setVisible(true);
         if (activeNote) {
-            initializeChatForNote(activeNote.noteId);
+            loadExistingChatForNote(activeNote.noteId);
         }
         // Ensure right pane is visible
         if (!options.is("rightPaneVisible")) {
             appContext.triggerEvent("toggleRightPane", {});
         }
-    }, [activeNote, initializeChatForNote]));
+    }, [activeNote, loadExistingChatForNote]));
 
     // Fetch available models on mount
     useEffect(() => {
@@ -194,6 +222,13 @@ export default function SidebarChat() {
     const handleSubmit = useCallback(async (e: Event) => {
         e.preventDefault();
         if (!input.trim() || isStreaming) return;
+
+        // Ensure chat note exists before sending (lazy creation)
+        const noteId = await ensureChatNoteExists();
+        if (!noteId) {
+            console.error("Cannot send message: no chat note available");
+            return;
+        }
 
         setToolActivity(null);
         setPendingCitations([]);
@@ -317,7 +352,7 @@ export default function SidebarChat() {
                 }
             }
         );
-    }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, saveChat]);
+    }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, saveChat, ensureChatNoteExists]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -346,12 +381,12 @@ export default function SidebarChat() {
             if (activeNote) {
                 setSourceNoteId(null);
                 setChatNoteId(null);
-                initializeChatForNote(activeNote.noteId);
+                loadExistingChatForNote(activeNote.noteId);
             }
         } catch (err) {
             console.error("Failed to save chat to permanent location:", err);
         }
-    }, [chatNoteId, activeNote, initializeChatForNote]);
+    }, [chatNoteId, activeNote, loadExistingChatForNote]);
 
     if (!visible) {
         return null;

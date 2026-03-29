@@ -91,6 +91,12 @@ function createLlmChat(req: Request) {
     return specialNotesService.createLlmChat(sourceNoteId);
 }
 
+function findLlmChatForNote(req: Request<{ noteId: string }>) {
+    const chat = specialNotesService.findLlmChatForNote(req.params.noteId);
+    // Return null explicitly if no chat found (not undefined)
+    return chat || null;
+}
+
 function getOrCreateLlmChatForNote(req: Request<{ noteId: string }>) {
     return specialNotesService.getOrCreateLlmChatForNote(req.params.noteId);
 }
@@ -133,6 +139,7 @@ export default {
     createSearchNote,
     saveSearchNote,
     createLlmChat,
+    findLlmChatForNote,
     getOrCreateLlmChatForNote,
     saveLlmChat,
     createLauncher,
