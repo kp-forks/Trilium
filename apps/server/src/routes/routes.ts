@@ -293,8 +293,8 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/special-notes/search-note", specialNotesRoute.createSearchNote);
     apiRoute(PST, "/api/special-notes/save-search-note", specialNotesRoute.saveSearchNote);
     apiRoute(PST, "/api/special-notes/llm-chat", specialNotesRoute.createLlmChat);
-    apiRoute(GET, "/api/special-notes/find-llm-chat-for-note/:noteId", specialNotesRoute.findLlmChatForNote);
-    apiRoute(GET, "/api/special-notes/llm-chat-for-note/:noteId", specialNotesRoute.getOrCreateLlmChatForNote);
+    apiRoute(GET, "/api/special-notes/most-recent-llm-chat", specialNotesRoute.getMostRecentLlmChat);
+    apiRoute(GET, "/api/special-notes/get-or-create-llm-chat", specialNotesRoute.getOrCreateLlmChat);
     apiRoute(PST, "/api/special-notes/save-llm-chat", specialNotesRoute.saveLlmChat);
     apiRoute(PST, "/api/special-notes/launchers/:noteId/reset", specialNotesRoute.resetLauncher);
     apiRoute(PST, "/api/special-notes/launchers/:parentNoteId/:launcherType", specialNotesRoute.createLauncher);

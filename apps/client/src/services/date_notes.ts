@@ -84,8 +84,8 @@ async function createSearchNote(opts = {}) {
     return await froca.getNote(note.noteId);
 }
 
-async function createLlmChat(sourceNoteId?: string) {
-    const note = await server.post<FNoteRow>("special-notes/llm-chat", { sourceNoteId });
+async function createLlmChat() {
+    const note = await server.post<FNoteRow>("special-notes/llm-chat");
 
     await ws.waitForMaxKnownEntityChangeId();
 
@@ -93,11 +93,11 @@ async function createLlmChat(sourceNoteId?: string) {
 }
 
 /**
- * Finds an existing LLM chat linked to the given note, without creating one.
- * Returns null if no chat exists for this note.
+ * Gets the most recently modified LLM chat.
+ * Returns null if no chat exists.
  */
-async function findLlmChatForNote(noteId: string) {
-    const note = await server.get<FNoteRow | null>(`special-notes/find-llm-chat-for-note/${noteId}`);
+async function getMostRecentLlmChat() {
+    const note = await server.get<FNoteRow | null>("special-notes/most-recent-llm-chat");
 
     if (!note) {
         return null;
@@ -109,11 +109,11 @@ async function findLlmChatForNote(noteId: string) {
 }
 
 /**
- * Gets an existing LLM chat linked to the given note, or creates a new one.
- * Used by sidebar chat to maintain 1:1 mapping between notes and their chats.
+ * Gets the most recent LLM chat, or creates a new one if none exists.
+ * Used by sidebar chat for persistent conversations across page refreshes.
  */
-async function getOrCreateLlmChatForNote(noteId: string) {
-    const note = await server.get<FNoteRow>(`special-notes/llm-chat-for-note/${noteId}`);
+async function getOrCreateLlmChat() {
+    const note = await server.get<FNoteRow>("special-notes/get-or-create-llm-chat");
 
     await ws.waitForMaxKnownEntityChangeId();
 
@@ -132,6 +132,6 @@ export default {
     createSqlConsole,
     createSearchNote,
     createLlmChat,
-    findLlmChatForNote,
-    getOrCreateLlmChatForNote
+    getMostRecentLlmChat,
+    getOrCreateLlmChat
 };

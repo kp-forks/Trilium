@@ -86,19 +86,18 @@ function createSearchNote(req: Request) {
     return specialNotesService.createSearchNote(searchString, ancestorNoteId);
 }
 
-function createLlmChat(req: Request) {
-    const sourceNoteId = req.body.sourceNoteId;
-    return specialNotesService.createLlmChat(sourceNoteId);
+function createLlmChat() {
+    return specialNotesService.createLlmChat();
 }
 
-function findLlmChatForNote(req: Request<{ noteId: string }>) {
-    const chat = specialNotesService.findLlmChatForNote(req.params.noteId);
+function getMostRecentLlmChat() {
+    const chat = specialNotesService.getMostRecentLlmChat();
     // Return null explicitly if no chat found (not undefined)
     return chat || null;
 }
 
-function getOrCreateLlmChatForNote(req: Request<{ noteId: string }>) {
-    return specialNotesService.getOrCreateLlmChatForNote(req.params.noteId);
+function getOrCreateLlmChat() {
+    return specialNotesService.getOrCreateLlmChat();
 }
 
 function saveLlmChat(req: Request) {
@@ -139,8 +138,8 @@ export default {
     createSearchNote,
     saveSearchNote,
     createLlmChat,
-    findLlmChatForNote,
-    getOrCreateLlmChatForNote,
+    getMostRecentLlmChat,
+    getOrCreateLlmChat,
     saveLlmChat,
     createLauncher,
     resetLauncher,

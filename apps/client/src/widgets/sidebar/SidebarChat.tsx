@@ -7,7 +7,6 @@ import { getAvailableModels, streamChatCompletion } from "../../services/llm_cha
 import server from "../../services/server.js";
 import { randomString } from "../../services/utils.js";
 import ActionButton from "../react/ActionButton.js";
-import { useActiveNoteContext } from "../react/hooks.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import RightPanelWidget from "./RightPanelWidget.js";
 import "./SidebarChat.css";
@@ -47,11 +46,10 @@ interface ModelOption extends LlmModelInfo {
 
 /**
  * Sidebar chat widget that appears in the right panel.
- * Uses a hidden LLM chat note for persistence, with 1:1 mapping to the active note.
+ * Uses a hidden LLM chat note for persistence across all notes.
+ * The same chat persists when switching between notes.
  */
 export default function SidebarChat() {
-    const { note: activeNote } = useActiveNoteContext();
-    const [sourceNoteId, setSourceNoteId] = useState<string | null>(null);
     const [chatNoteId, setChatNoteId] = useState<string | null>(null);
     const [messages, setMessages] = useState<StoredMessage[]>([]);
     const [input, setInput] = useState("");
@@ -68,19 +66,16 @@ export default function SidebarChat() {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-    // Load existing chat for a note (without creating one)
-    const loadExistingChatForNote = useCallback(async (noteId: string) => {
+    // Load the most recent chat on mount
+    const loadMostRecentChat = useCallback(async () => {
         try {
-            // First, check if a chat already exists for this note
-            const existingChat = await dateNoteService.findLlmChatForNote(noteId);
-
-            setSourceNoteId(noteId);
+            const existingChat = await dateNoteService.getMostRecentLlmChat();
 
             if (existingChat) {
                 setChatNoteId(existingChat.noteId);
                 await loadChatContent(existingChat.noteId);
             } else {
-                // No existing chat - just track the source note, don't create yet
+                // No existing chat - will create on first message
                 setChatNoteId(null);
                 setMessages([]);
             }
@@ -95,12 +90,8 @@ export default function SidebarChat() {
             return chatNoteId;
         }
 
-        if (!sourceNoteId) {
-            return null;
-        }
-
         try {
-            const note = await dateNoteService.getOrCreateLlmChatForNote(sourceNoteId);
+            const note = await dateNoteService.getOrCreateLlmChat();
             if (note) {
                 setChatNoteId(note.noteId);
                 return note.noteId;
@@ -109,19 +100,12 @@ export default function SidebarChat() {
             console.error("Failed to create sidebar chat:", err);
         }
         return null;
-    }, [chatNoteId, sourceNoteId]);
+    }, [chatNoteId]);
 
-    // Track when active note changes and load existing chat
+    // Load the most recent chat on mount
     useEffect(() => {
-        if (!activeNote) return;
-
-        const noteId = activeNote.noteId;
-        // Don't switch if we're already on this note
-        if (noteId === sourceNoteId) return;
-
-        // Load existing chat for the new note (don't create)
-        loadExistingChatForNote(noteId);
-    }, [activeNote, sourceNoteId, loadExistingChatForNote]);
+        loadMostRecentChat();
+    }, [loadMostRecentChat]);
 
     // Fetch available models on mount
     useEffect(() => {
@@ -336,31 +320,32 @@ export default function SidebarChat() {
     }, [handleSubmit]);
 
     const handleNewChat = useCallback(async () => {
-        if (!activeNote) return;
-        // Clear messages for a fresh start with the same note
-        setMessages([]);
-        // Save cleared state
-        if (chatNoteId) {
-            await saveChat([]);
+        // Create a fresh new chat
+        try {
+            const note = await dateNoteService.createLlmChat();
+            if (note) {
+                setChatNoteId(note.noteId);
+                setMessages([]);
+            }
+        } catch (err) {
+            console.error("Failed to create new chat:", err);
         }
-    }, [activeNote, chatNoteId, saveChat]);
+    }, []);
 
     const handleSaveChat = useCallback(async () => {
         if (!chatNoteId) return;
         try {
             await server.post("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
-            // Clear the current chat after saving (note link is preserved)
-            setMessages([]);
-            // Force reload to get a fresh chat for this note
-            if (activeNote) {
-                setSourceNoteId(null);
-                setChatNoteId(null);
-                loadExistingChatForNote(activeNote.noteId);
+            // Create a new empty chat after saving
+            const note = await dateNoteService.createLlmChat();
+            if (note) {
+                setChatNoteId(note.noteId);
+                setMessages([]);
             }
         } catch (err) {
             console.error("Failed to save chat to permanent location:", err);
         }
-    }, [chatNoteId, activeNote, loadExistingChatForNote]);
+    }, [chatNoteId]);
 
     return (
         <RightPanelWidget

@@ -123,13 +123,10 @@ function saveSearchNote(searchNoteId: string) {
     return result satisfies SaveSearchNoteResponse;
 }
 
-function createLlmChat(sourceNoteId?: string) {
-    const sourceNote = sourceNoteId ? becca.getNote(sourceNoteId) : null;
-    const titleSuffix = sourceNote ? sourceNote.title : dateUtils.localNowDateTime();
-
+function createLlmChat() {
     const { note } = noteService.createNewNote({
         parentNoteId: getMonthlyParentNoteId("_llmChat", "llmChat"),
-        title: `${t("special_notes.llm_chat_prefix")} ${titleSuffix}`,
+        title: `${t("special_notes.llm_chat_prefix")} ${dateUtils.localNowDateTime()}`,
         content: JSON.stringify({
             version: 1,
             messages: []
@@ -141,39 +138,41 @@ function createLlmChat(sourceNoteId?: string) {
     note.setLabel("iconClass", "bx bx-message-square-dots");
     note.setLabel("keepCurrentHoisting");
 
-    // Link to source note if provided
-    if (sourceNoteId) {
-        note.setRelation("sourceNote", sourceNoteId);
-    }
-
     return note;
 }
 
 /**
- * Gets an existing LLM chat linked to the given note, or creates a new one.
- * Used by sidebar chat to maintain 1:1 mapping between notes and their chats.
+ * Gets the most recently modified LLM chat note.
+ * Used by sidebar chat to persist conversation across page refreshes.
+ * Returns null if no chat exists.
  */
-function getOrCreateLlmChatForNote(sourceNoteId: string) {
-    // Search for existing chat with this source note relation
-    const existingChat = findLlmChatForNote(sourceNoteId);
+function getMostRecentLlmChat() {
+    // Search for all llmChat notes and return the most recently modified
+    const results = searchService.searchNotes(
+        "note.type = llmChat",
+        new SearchContext({
+            ancestorNoteId: "_llmChat",
+            limit: 1,
+            orderBy: "note.utcDateModified",
+            orderDirection: "desc"
+        })
+    );
+
+    return results.length > 0 ? results[0] : null;
+}
+
+/**
+ * Gets the most recent LLM chat or creates a new one if none exists.
+ * Used by sidebar chat for persistent conversations.
+ */
+function getOrCreateLlmChat() {
+    const existingChat = getMostRecentLlmChat();
 
     if (existingChat) {
         return existingChat;
     }
 
-    // Create new chat linked to this note
-    return createLlmChat(sourceNoteId);
-}
-
-/**
- * Finds an existing LLM chat linked to the given note, without creating one.
- * Returns null if no chat exists for this note.
- */
-function findLlmChatForNote(sourceNoteId: string) {
-    return searchService.findFirstNoteWithQuery(
-        `~sourceNote.noteId="${sourceNoteId}"`,
-        new SearchContext({ ancestorNoteId: "_llmChat" })
-    );
+    return createLlmChat();
 }
 
 function getLlmChatHome() {
@@ -370,8 +369,8 @@ export default {
     createSearchNote,
     saveSearchNote,
     createLlmChat,
-    findLlmChatForNote,
-    getOrCreateLlmChatForNote,
+    getMostRecentLlmChat,
+    getOrCreateLlmChat,
     saveLlmChat,
     createLauncher,
     resetLauncher,
