@@ -1,7 +1,9 @@
 import type { RefObject } from "preact";
-import type { UseLlmChatReturn } from "./useLlmChat.js";
+
 import { t } from "../../../services/i18n.js";
-import FormDropdownList from "../../react/FormDropdownList.js";
+import Dropdown from "../../react/Dropdown.js";
+import { FormListItem } from "../../react/FormList.js";
+import type { UseLlmChatReturn } from "./useLlmChat.js";
 
 /** Format token count with thousands separators */
 function formatTokenCount(tokens: number): string {
@@ -88,16 +90,21 @@ export default function ChatInputBar({
             <div className="llm-chat-options">
                 <div className="llm-chat-model-selector">
                     <span className="bx bx-chip" />
-                    <FormDropdownList
-                        values={chat.availableModels}
-                        keyProperty="id"
-                        titleProperty="name"
-                        descriptionProperty="costDescription"
-                        currentValue={chat.selectedModel}
-                        onChange={handleModelSelect}
+                    <Dropdown
+                        text={<>{currentModel?.name}</>}
                         disabled={chat.isStreaming}
                         buttonClassName="llm-chat-model-select"
-                    />
+                    >
+                        {chat.availableModels.map(model => (
+                            <FormListItem
+                                key={model.id}
+                                onClick={() => handleModelSelect(model.id)}
+                                checked={chat.selectedModel === model.id}
+                            >
+                                {model.name}<small>({model.costDescription})</small>
+                            </FormListItem>
+                        ))}
+                    </Dropdown>
                 </div>
                 <label className="llm-chat-toggle">
                     <input

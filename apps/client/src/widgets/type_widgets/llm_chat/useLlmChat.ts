@@ -96,7 +96,7 @@ export function useLlmChat(
         getAvailableModels().then(models => {
             const modelsWithDescription = models.map(m => ({
                 ...m,
-                costDescription: m.costMultiplier ? `${m.costMultiplier}x cost` : undefined
+                costDescription: m.costMultiplier ? `${m.costMultiplier}x` : undefined
             }));
             setAvailableModels(modelsWithDescription);
             if (!selectedModel) {

@@ -320,6 +320,11 @@
 
 .llm-chat-model-selector .dropdown {
     display: flex;
+
+    small {
+        margin-left: 0.5em;
+        color: var(--muted-text-color);
+    }
 }
 
 .llm-chat-model-select.select-button {
