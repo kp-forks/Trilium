@@ -6,7 +6,7 @@ import { TypeWidgetProps } from "../type_widget.js";
 import ChatMessage from "./ChatMessage.js";
 import "./LlmChat.css";
 
-type MessageType = "message" | "error";
+type MessageType = "message" | "error" | "thinking";
 
 interface StoredMessage {
     id: string;
@@ -30,6 +30,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [input, setInput] = useState("");
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingContent, setStreamingContent] = useState("");
+    const [streamingThinking, setStreamingThinking] = useState("");
     const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<Citation[]>([]);
     const [enableWebSearch, setEnableWebSearch] = useState(true);
@@ -45,7 +46,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, streamingContent, toolActivity, scrollToBottom]);
+    }, [messages, streamingContent, streamingThinking, toolActivity, scrollToBottom]);
 
     // Use a ref to store the latest messages for getData
     const messagesRef = useRef(messages);
@@ -120,8 +121,10 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         setInput("");
         setIsStreaming(true);
         setStreamingContent("");
+        setStreamingThinking("");
 
         let assistantContent = "";
+        let thinkingContent = "";
         const citations: Citation[] = [];
 
         const apiMessages: ChatMessageData[] = newMessages.map(m => ({
@@ -137,6 +140,11 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     assistantContent += text;
                     setStreamingContent(assistantContent);
                     setToolActivity(null); // Clear tool activity when text starts
+                },
+                onThinking: (text) => {
+                    thinkingContent += text;
+                    setStreamingThinking(thinkingContent);
+                    setToolActivity(t("llm_chat.thinking"));
                 },
                 onToolUse: (toolName, _input) => {
                     const toolLabel = toolName === "web_search"
@@ -160,22 +168,41 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     };
                     setMessages(prev => [...prev, errorMessage]);
                     setStreamingContent("");
+                    setStreamingThinking("");
                     setIsStreaming(false);
                     setToolActivity(null);
                     setShouldSave(true);
                 },
                 onDone: () => {
+                    const newMessages: StoredMessage[] = [];
+
+                    // Save thinking as a separate message if present
+                    if (thinkingContent) {
+                        newMessages.push({
+                            id: crypto.randomUUID(),
+                            role: "assistant",
+                            content: thinkingContent,
+                            createdAt: new Date().toISOString(),
+                            type: "thinking"
+                        });
+                    }
+
                     if (assistantContent) {
-                        const assistantMessage: StoredMessage = {
+                        newMessages.push({
                             id: crypto.randomUUID(),
                             role: "assistant",
                             content: assistantContent,
                             createdAt: new Date().toISOString(),
                             citations: citations.length > 0 ? citations : undefined
-                        };
-                        setMessages(prev => [...prev, assistantMessage]);
+                        });
                     }
+
+                    if (newMessages.length > 0) {
+                        setMessages(prev => [...prev, ...newMessages]);
+                    }
+
                     setStreamingContent("");
+                    setStreamingThinking("");
                     setPendingCitations([]);
                     setIsStreaming(false);
                     setToolActivity(null);
@@ -214,11 +241,23 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 {messages.map(msg => (
                     <ChatMessage key={msg.id} message={msg} />
                 ))}
-                {toolActivity && (
+                {toolActivity && !streamingThinking && (
                     <div className="llm-chat-tool-activity">
                         <span className="llm-chat-tool-spinner" />
                         {toolActivity}
                     </div>
+                )}
+                {isStreaming && streamingThinking && (
+                    <ChatMessage
+                        message={{
+                            id: "streaming-thinking",
+                            role: "assistant",
+                            content: streamingThinking,
+                            createdAt: new Date().toISOString(),
+                            type: "thinking"
+                        }}
+                        isStreaming
+                    />
                 )}
                 {isStreaming && streamingContent && (
                     <ChatMessage

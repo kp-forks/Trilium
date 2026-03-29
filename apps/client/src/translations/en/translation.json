@@ -1619,7 +1619,9 @@
     "searching_web": "Searching the web...",
     "web_search": "Web search",
     "sources": "Sources",
-    "extended_thinking": "Extended thinking"
+    "extended_thinking": "Extended thinking",
+    "thinking": "Thinking...",
+    "thought_process": "Thought process"
   },
   "shared_switch": {
     "shared": "Shared",

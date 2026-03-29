@@ -10,7 +10,7 @@ marked.setOptions({
     gfm: true // GitHub Flavored Markdown
 });
 
-type MessageType = "message" | "error";
+type MessageType = "message" | "error" | "thinking";
 
 interface StoredMessage {
     id: string;
@@ -30,20 +30,38 @@ interface Props {
 export default function ChatMessage({ message, isStreaming }: Props) {
     const roleLabel = message.role === "user" ? "You" : "Assistant";
     const isError = message.type === "error";
+    const isThinking = message.type === "thinking";
 
-    // Only render markdown for assistant messages (not errors)
+    // Render markdown for assistant messages (not errors or thinking)
     const renderedContent = useMemo(() => {
-        if (message.role === "assistant" && !isError) {
+        if (message.role === "assistant" && !isError && !isThinking) {
             return marked.parse(message.content) as string;
         }
         return null;
-    }, [message.content, message.role, isError]);
+    }, [message.content, message.role, isError, isThinking]);
 
     const messageClasses = [
         "llm-chat-message",
         `llm-chat-message-${message.role}`,
-        isError && "llm-chat-message-error"
+        isError && "llm-chat-message-error",
+        isThinking && "llm-chat-message-thinking"
     ].filter(Boolean).join(" ");
+
+    // Render thinking messages in a collapsible details element
+    if (isThinking) {
+        return (
+            <details className={messageClasses}>
+                <summary className="llm-chat-thinking-summary">
+                    <span className="bx bx-brain" />
+                    {t("llm_chat.thought_process")}
+                </summary>
+                <div className="llm-chat-message-content llm-chat-thinking-content">
+                    {message.content}
+                    {isStreaming && <span className="llm-chat-cursor" />}
+                </div>
+            </details>
+        );
+    }
 
     return (
         <div className={messageClasses}>

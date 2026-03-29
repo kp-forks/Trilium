@@ -13,6 +13,7 @@ export interface LlmMessage {
  */
 export type LlmStreamChunk =
     | { type: "text"; content: string }
+    | { type: "thinking"; content: string }
     | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
     | { type: "tool_result"; toolName: string; result: string }
     | { type: "citation"; url: string; title?: string }

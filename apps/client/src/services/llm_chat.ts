@@ -22,6 +22,7 @@ export interface Citation {
 
 export interface StreamCallbacks {
     onChunk: (text: string) => void;
+    onThinking?: (text: string) => void;
     onToolUse?: (toolName: string, input: Record<string, unknown>) => void;
     onToolResult?: (toolName: string, result: string) => void;
     onCitation?: (citation: Citation) => void;
@@ -79,6 +80,9 @@ export async function streamChatCompletion(
                         switch (data.type) {
                             case "text":
                                 callbacks.onChunk(data.content);
+                                break;
+                            case "thinking":
+                                callbacks.onThinking?.(data.content);
                                 break;
                             case "tool_use":
                                 callbacks.onToolUse?.(data.toolName, data.toolInput);

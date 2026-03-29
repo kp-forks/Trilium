@@ -59,6 +59,7 @@ export class AnthropicProvider implements LlmProvider {
                     type: "enabled",
                     budget_tokens: thinkingBudget
                 };
+                console.log(`[LLM] Extended thinking enabled with budget: ${thinkingBudget} tokens`);
             }
 
             const stream = this.client.messages.stream(streamParams);
@@ -73,11 +74,15 @@ export class AnthropicProvider implements LlmProvider {
                             toolName: block.name,
                             toolInput: {} // Input comes in deltas
                         };
+                    } else if (block.type === "thinking") {
+                        console.log("[LLM] Thinking block started");
                     }
                 } else if (event.type === "content_block_delta") {
                     const delta = event.delta;
                     if (delta.type === "text_delta") {
                         yield { type: "text", content: delta.text };
+                    } else if (delta.type === "thinking_delta") {
+                        yield { type: "thinking", content: (delta as any).thinking };
                     } else if (delta.type === "input_json_delta") {
                         // Tool input is being streamed - we could accumulate it
                         // For now, we already emitted tool_use at start
