@@ -218,12 +218,6 @@
     border-top: 1px solid var(--main-border-color);
 }
 
-.llm-chat-input-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-end;
-}
-
 .llm-chat-input {
     flex: 1;
     min-height: 60px;
@@ -249,60 +243,20 @@
     cursor: not-allowed;
 }
 
-.llm-chat-send-btn {
-    padding: 0.75rem 1.5rem;
-    background: var(--button-background-color);
-    border: 1px solid var(--button-border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: inherit;
-    color: var(--button-text-color);
-    transition: background-color 0.15s ease;
-}
-
-.llm-chat-send-btn:hover:not(:disabled) {
-    background: var(--button-hover-background-color, var(--button-background-color));
-}
-
-.llm-chat-send-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 /* Options row */
 .llm-chat-options {
     display: flex;
-    gap: 1rem;
-    padding-left: 0.25rem;
-}
-
-.llm-chat-toggle {
-    display: flex;
     align-items: center;
-    gap: 0.375rem;
-    font-size: 0.85rem;
-    color: var(--muted-text-color);
-    cursor: pointer;
-    user-select: none;
+    gap: 0.75rem;
 }
 
-.llm-chat-toggle input[type="checkbox"] {
-    margin: 0;
-    cursor: pointer;
+.llm-chat-send-btn {
+    margin-left: auto;
+    font-size: 1.25rem;
 }
 
-.llm-chat-toggle .bx {
-    font-size: 1rem;
-}
-
-.llm-chat-toggle:has(input:checked) {
-    color: var(--main-text-color);
-}
-
-.llm-chat-toggle:has(input:disabled) {
-    opacity: 0.5;
-    cursor: not-allowed;
+.llm-chat-send-btn.disabled {
+    opacity: 0.4;
 }
 
 /* Model selector */
@@ -577,12 +531,23 @@
     font-family: var(--monospace-font-family, monospace);
 }
 
-/* Context window pie indicator */
-.llm-chat-context-pie {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    margin-left: auto;
+/* Context window indicator */
+.llm-chat-context-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: 0.5rem;
     cursor: help;
+}
+
+.llm-chat-context-pie {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
     flex-shrink: 0;
+}
+
+.llm-chat-context-text {
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
 }

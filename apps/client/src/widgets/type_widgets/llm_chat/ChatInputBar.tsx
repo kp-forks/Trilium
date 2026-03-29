@@ -1,6 +1,7 @@
 import type { RefObject } from "preact";
 
 import { t } from "../../../services/i18n.js";
+import ActionButton from "../../react/ActionButton.js";
 import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
@@ -70,25 +71,16 @@ export default function ChatInputBar({
 
     return (
         <form className="llm-chat-input-form" onSubmit={handleSubmit}>
-            <div className="llm-chat-input-row">
-                <textarea
-                    ref={chat.textareaRef as RefObject<HTMLTextAreaElement>}
-                    className="llm-chat-input"
-                    value={chat.input}
-                    onInput={(e) => chat.setInput((e.target as HTMLTextAreaElement).value)}
-                    placeholder={t("llm_chat.placeholder")}
-                    disabled={chat.isStreaming}
-                    onKeyDown={handleKeyDown}
-                    rows={3}
-                />
-                <button
-                    type="submit"
-                    className="llm-chat-send-btn"
-                    disabled={chat.isStreaming || !chat.input.trim()}
-                >
-                    {chat.isStreaming ? t("llm_chat.sending") : t("llm_chat.send")}
-                </button>
-            </div>
+            <textarea
+                ref={chat.textareaRef as RefObject<HTMLTextAreaElement>}
+                className="llm-chat-input"
+                value={chat.input}
+                onInput={(e) => chat.setInput((e.target as HTMLTextAreaElement).value)}
+                placeholder={t("llm_chat.placeholder")}
+                disabled={chat.isStreaming}
+                onKeyDown={handleKeyDown}
+                rows={3}
+            />
             <div className="llm-chat-options">
                 <div className="llm-chat-model-selector">
                     <span className="bx bx-chip" />
@@ -148,16 +140,28 @@ export default function ChatInputBar({
                             disabled={chat.isStreaming}
                         />
                     </Dropdown>
+                    {chat.lastPromptTokens > 0 && (
+                        <div
+                            className="llm-chat-context-indicator"
+                            title={`${formatTokenCount(chat.lastPromptTokens)} / ${formatTokenCount(contextWindow)} ${t("llm_chat.tokens")}`}
+                        >
+                            <div
+                                className="llm-chat-context-pie"
+                                style={{
+                                    background: `conic-gradient(${pieColor} ${percentage}%, var(--accented-background-color) ${percentage}%)`
+                                }}
+                            />
+                            <span className="llm-chat-context-text">{t("llm_chat.context_used", { percentage: percentage.toFixed(0) })}</span>
+                        </div>
+                    )}
                 </div>
-                {chat.lastPromptTokens > 0 && (
-                    <div
-                        className="llm-chat-context-pie"
-                        title={`${formatTokenCount(chat.lastPromptTokens)} / ${formatTokenCount(contextWindow)} ${t("llm_chat.tokens")} (${percentage.toFixed(0)}%)`}
-                        style={{
-                            background: `conic-gradient(${pieColor} ${percentage}%, var(--accented-background-color) ${percentage}%)`
-                        }}
-                    />
-                )}
+                <ActionButton
+                    icon={chat.isStreaming ? "bx bx-loader-alt bx-spin" : "bx bx-send"}
+                    text={chat.isStreaming ? t("llm_chat.sending") : t("llm_chat.send")}
+                    onClick={handleSubmit}
+                    disabled={chat.isStreaming || !chat.input.trim()}
+                    className="llm-chat-send-btn"
+                />
             </div>
         </form>
     );
