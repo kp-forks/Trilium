@@ -2,7 +2,7 @@ import type { RefObject } from "preact";
 
 import { t } from "../../../services/i18n.js";
 import Dropdown from "../../react/Dropdown.js";
-import { FormDropdownDivider, FormDropdownSubmenu, FormListItem } from "../../react/FormList.js";
+import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
 
 /** Format token count with thousands separators */
@@ -39,18 +39,18 @@ export default function ChatInputBar({
     const handleSubmit = onSubmit ?? chat.handleSubmit;
     const handleKeyDown = onKeyDown ?? chat.handleKeyDown;
 
-    const handleWebSearchToggle = () => {
-        chat.setEnableWebSearch(!chat.enableWebSearch);
+    const handleWebSearchToggle = (newValue: boolean) => {
+        chat.setEnableWebSearch(newValue);
         onWebSearchChange?.();
     };
 
-    const handleNoteToolsToggle = () => {
-        chat.setEnableNoteTools(!chat.enableNoteTools);
+    const handleNoteToolsToggle = (newValue: boolean) => {
+        chat.setEnableNoteTools(newValue);
         onNoteToolsChange?.();
     };
 
-    const handleExtendedThinkingToggle = () => {
-        chat.setEnableExtendedThinking(!chat.enableExtendedThinking);
+    const handleExtendedThinkingToggle = (newValue: boolean) => {
+        chat.setEnableExtendedThinking(newValue);
         onExtendedThinkingChange?.();
     };
 
@@ -125,38 +125,30 @@ export default function ChatInputBar({
                                 </FormDropdownSubmenu>
                             </>
                         )}
+                        <FormDropdownDivider />
+                        <FormListToggleableItem
+                            icon="bx bx-globe"
+                            title={t("llm_chat.web_search")}
+                            currentValue={chat.enableWebSearch}
+                            onChange={handleWebSearchToggle}
+                            disabled={chat.isStreaming}
+                        />
+                        <FormListToggleableItem
+                            icon="bx bx-note"
+                            title={t("llm_chat.note_tools")}
+                            currentValue={chat.enableNoteTools}
+                            onChange={handleNoteToolsToggle}
+                            disabled={chat.isStreaming}
+                        />
+                        <FormListToggleableItem
+                            icon="bx bx-brain"
+                            title={t("llm_chat.extended_thinking")}
+                            currentValue={chat.enableExtendedThinking}
+                            onChange={handleExtendedThinkingToggle}
+                            disabled={chat.isStreaming}
+                        />
                     </Dropdown>
                 </div>
-                <label className="llm-chat-toggle">
-                    <input
-                        type="checkbox"
-                        checked={chat.enableWebSearch}
-                        onChange={handleWebSearchToggle}
-                        disabled={chat.isStreaming}
-                    />
-                    <span className="bx bx-globe" />
-                    {t("llm_chat.web_search")}
-                </label>
-                <label className="llm-chat-toggle">
-                    <input
-                        type="checkbox"
-                        checked={chat.enableNoteTools}
-                        onChange={handleNoteToolsToggle}
-                        disabled={chat.isStreaming}
-                    />
-                    <span className="bx bx-note" />
-                    {t("llm_chat.note_tools")}
-                </label>
-                <label className="llm-chat-toggle">
-                    <input
-                        type="checkbox"
-                        checked={chat.enableExtendedThinking}
-                        onChange={handleExtendedThinkingToggle}
-                        disabled={chat.isStreaming}
-                    />
-                    <span className="bx bx-brain" />
-                    {t("llm_chat.extended_thinking")}
-                </label>
                 {chat.lastPromptTokens > 0 && (
                     <div
                         className="llm-chat-context-pie"
