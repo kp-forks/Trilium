@@ -7,7 +7,6 @@ import server from "../../services/server.js";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormListItem } from "../react/FormList.js";
-import Icon from "../react/Icon.js";
 import NoItems from "../react/NoItems.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
@@ -205,7 +204,8 @@ export default function SidebarChat() {
                         onClick={handleNewChat}
                     />
                     <Dropdown
-                        text={<Icon icon="bx bx-history" />}
+                        text=""
+                        buttonClassName="bx bx-history"
                         title={t("sidebar_chat.history")}
                         iconAction
                         hideToggleArrow
