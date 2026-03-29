@@ -1,9 +1,13 @@
+import type { Dropdown as BootstrapDropdown } from "bootstrap";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-import dateNoteService from "../../services/date_notes.js";
+import dateNoteService, { type RecentLlmChat } from "../../services/date_notes.js";
 import { t } from "../../services/i18n.js";
 import server from "../../services/server.js";
 import ActionButton from "../react/ActionButton.js";
+import Dropdown from "../react/Dropdown.js";
+import { FormListItem } from "../react/FormList.js";
+import Icon from "../react/Icon.js";
 import NoItems from "../react/NoItems.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
@@ -19,7 +23,9 @@ import "./SidebarChat.css";
 export default function SidebarChat() {
     const [chatNoteId, setChatNoteId] = useState<string | null>(null);
     const [shouldSave, setShouldSave] = useState(false);
+    const [recentChats, setRecentChats] = useState<RecentLlmChat[]>([]);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+    const historyDropdownRef = useRef<BootstrapDropdown | null>(null);
 
     // Use shared chat hook with sidebar-specific options
     const chat = useLlmChat(
@@ -159,6 +165,32 @@ export default function SidebarChat() {
         }
     }, [chatNoteId, chat]);
 
+    const loadRecentChats = useCallback(async () => {
+        try {
+            const chats = await dateNoteService.getRecentLlmChats(10);
+            setRecentChats(chats);
+        } catch (err) {
+            console.error("Failed to load recent chats:", err);
+        }
+    }, []);
+
+    const handleSelectChat = useCallback(async (noteId: string) => {
+        historyDropdownRef.current?.hide();
+
+        if (noteId === chatNoteId) return;
+
+        try {
+            const blob = await server.get<{ content: string }>(`notes/${noteId}/blob`);
+            if (blob?.content) {
+                const parsed: LlmChatContent = JSON.parse(blob.content);
+                setChatNoteId(noteId);
+                chat.loadFromContent(parsed);
+            }
+        } catch (err) {
+            console.error("Failed to load selected chat:", err);
+        }
+    }, [chatNoteId, chat]);
+
     return (
         <RightPanelWidget
             id="sidebar-chat"
@@ -172,6 +204,40 @@ export default function SidebarChat() {
                         title={t("sidebar_chat.new_chat")}
                         onClick={handleNewChat}
                     />
+                    <Dropdown
+                        text={<Icon icon="bx bx-history" />}
+                        title={t("sidebar_chat.history")}
+                        iconAction
+                        hideToggleArrow
+                        dropdownContainerClassName="tn-dropdown-menu-scrollable"
+                        dropdownOptions={{ popperConfig: { strategy: "fixed" } }}
+                        dropdownRef={historyDropdownRef}
+                        onShown={loadRecentChats}
+                    >
+                        {recentChats.length === 0 ? (
+                            <li className="sidebar-chat-history-empty">
+                                {t("sidebar_chat.no_chats")}
+                            </li>
+                        ) : (
+                            recentChats.map(chatItem => (
+                                <FormListItem
+                                    key={chatItem.noteId}
+                                    icon="bx bx-message-square-dots"
+                                    className={chatItem.noteId === chatNoteId ? "active" : ""}
+                                    onClick={() => handleSelectChat(chatItem.noteId)}
+                                >
+                                    <div className="sidebar-chat-history-item-content">
+                                        {chatItem.noteId === chatNoteId
+                                            ? <strong>{chatItem.title}</strong>
+                                            : <span>{chatItem.title}</span>}
+                                        <span className="sidebar-chat-history-date">
+                                            {new Date(chatItem.dateModified).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                </FormListItem>
+                            ))
+                        )}
+                    </Dropdown>
                     <ActionButton
                         icon="bx bx-save"
                         text=""

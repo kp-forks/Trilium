@@ -177,3 +177,30 @@
 .sidebar-chat-messages .llm-chat-markdown code {
     font-size: 0.85em;
 }
+
+/* History dropdown */
+.sidebar-chat-history-empty {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+}
+
+.sidebar-chat-history-item-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.sidebar-chat-history-item-content span,
+.sidebar-chat-history-item-content strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-chat-history-date {
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
+    margin-top: 0.125rem;
+}

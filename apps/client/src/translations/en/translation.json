@@ -1637,7 +1637,10 @@
     "launcher_title": "Open AI Chat",
     "new_chat": "Start new chat",
     "save_chat": "Save chat to notes",
-    "empty_state": "Start a conversation"
+    "empty_state": "Start a conversation",
+    "history": "Chat history",
+    "recent_chats": "Recent chats",
+    "no_chats": "No previous chats"
   },
   "shared_switch": {
     "shared": "Shared",

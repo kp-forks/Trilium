@@ -120,6 +120,19 @@ async function getOrCreateLlmChat() {
     return await froca.getNote(note.noteId);
 }
 
+export interface RecentLlmChat {
+    noteId: string;
+    title: string;
+    dateModified: string;
+}
+
+/**
+ * Gets a list of recent LLM chats for the history popup.
+ */
+async function getRecentLlmChats(limit: number = 10): Promise<RecentLlmChat[]> {
+    return await server.get<RecentLlmChat[]>(`special-notes/recent-llm-chats?limit=${limit}`);
+}
+
 export default {
     getInboxNote,
     getTodayNote,
@@ -133,5 +146,6 @@ export default {
     createSearchNote,
     createLlmChat,
     getMostRecentLlmChat,
-    getOrCreateLlmChat
+    getOrCreateLlmChat,
+    getRecentLlmChats
 };

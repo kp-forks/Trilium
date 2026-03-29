@@ -175,6 +175,28 @@ function getOrCreateLlmChat() {
     return createLlmChat();
 }
 
+/**
+ * Gets a list of recent LLM chat notes.
+ * Used by sidebar chat history popup.
+ */
+function getRecentLlmChats(limit: number = 10) {
+    const results = searchService.searchNotes(
+        "note.type = llmChat",
+        new SearchContext({
+            ancestorNoteId: "_llmChat",
+            limit,
+            orderBy: "note.utcDateModified",
+            orderDirection: "desc"
+        })
+    );
+
+    return results.map(note => ({
+        noteId: note.noteId,
+        title: note.title,
+        dateModified: note.utcDateModified
+    }));
+}
+
 function getLlmChatHome() {
     const workspaceNote = hoistedNoteService.getWorkspaceNote();
     if (!workspaceNote) {
@@ -371,6 +393,7 @@ export default {
     createLlmChat,
     getMostRecentLlmChat,
     getOrCreateLlmChat,
+    getRecentLlmChats,
     saveLlmChat,
     createLauncher,
     resetLauncher,

@@ -295,6 +295,7 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/special-notes/llm-chat", specialNotesRoute.createLlmChat);
     apiRoute(GET, "/api/special-notes/most-recent-llm-chat", specialNotesRoute.getMostRecentLlmChat);
     apiRoute(GET, "/api/special-notes/get-or-create-llm-chat", specialNotesRoute.getOrCreateLlmChat);
+    apiRoute(GET, "/api/special-notes/recent-llm-chats", specialNotesRoute.getRecentLlmChats);
     apiRoute(PST, "/api/special-notes/save-llm-chat", specialNotesRoute.saveLlmChat);
     apiRoute(PST, "/api/special-notes/launchers/:noteId/reset", specialNotesRoute.resetLauncher);
     apiRoute(PST, "/api/special-notes/launchers/:parentNoteId/:launcherType", specialNotesRoute.createLauncher);
