@@ -1,4 +1,4 @@
-import type { LlmMessage, LlmCitation, LlmChatConfig } from "@triliumnext/commons";
+import type { LlmMessage, LlmCitation, LlmChatConfig, LlmUsage } from "@triliumnext/commons";
 import server from "./server.js";
 
 export interface StreamCallbacks {
@@ -7,6 +7,7 @@ export interface StreamCallbacks {
     onToolUse?: (toolName: string, input: Record<string, unknown>) => void;
     onToolResult?: (toolName: string, result: string) => void;
     onCitation?: (citation: LlmCitation) => void;
+    onUsage?: (usage: LlmUsage) => void;
     onError: (error: string) => void;
     onDone: () => void;
 }
@@ -74,6 +75,11 @@ export async function streamChatCompletion(
                             case "citation":
                                 if (data.citation) {
                                     callbacks.onCitation?.(data.citation);
+                                }
+                                break;
+                            case "usage":
+                                if (data.usage) {
+                                    callbacks.onUsage?.(data.usage);
                                 }
                                 break;
                             case "error":

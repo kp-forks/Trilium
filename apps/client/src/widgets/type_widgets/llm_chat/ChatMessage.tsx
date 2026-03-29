@@ -1,4 +1,4 @@
-import type { LlmCitation } from "@triliumnext/commons";
+import type { LlmCitation, LlmUsage } from "@triliumnext/commons";
 import { useMemo } from "preact/hooks";
 import { marked } from "marked";
 import { t } from "../../../services/i18n.js";
@@ -29,6 +29,8 @@ interface StoredMessage {
     type?: MessageType;
     /** Tool calls made during this response */
     toolCalls?: ToolCall[];
+    /** Token usage for this response */
+    usage?: LlmUsage;
 }
 
 interface Props {
@@ -167,6 +169,18 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                             );
                         })}
                     </ul>
+                </div>
+            )}
+            {message.usage && typeof message.usage.promptTokens === "number" && (
+                <div className="llm-chat-usage">
+                    <span className="bx bx-chip" />
+                    <span className="llm-chat-usage-text">
+                        {t("llm_chat.tokens_used", {
+                            prompt: message.usage.promptTokens.toLocaleString(),
+                            completion: message.usage.completionTokens.toLocaleString(),
+                            total: message.usage.totalTokens.toLocaleString()
+                        })}
+                    </span>
                 </div>
             )}
         </div>

@@ -3,6 +3,7 @@
  */
 
 import type { LlmStreamChunk } from "@triliumnext/commons";
+
 import type { StreamResult } from "./types.js";
 
 /**
@@ -56,6 +57,19 @@ export async function* streamToChunks(result: StreamResult): AsyncIterable<LlmSt
                     yield { type: "error", error: String(part.error) };
                     break;
             }
+        }
+
+        // Get usage information after stream completes
+        const usage = await result.usage;
+        if (usage && typeof usage.inputTokens === "number" && typeof usage.outputTokens === "number") {
+            yield {
+                type: "usage",
+                usage: {
+                    promptTokens: usage.inputTokens,
+                    completionTokens: usage.outputTokens,
+                    totalTokens: usage.inputTokens + usage.outputTokens
+                }
+            };
         }
 
         yield { type: "done" };

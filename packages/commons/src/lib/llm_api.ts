@@ -42,6 +42,15 @@ export interface LlmChatConfig {
 }
 
 /**
+ * Token usage information from the LLM response.
+ */
+export interface LlmUsage {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+}
+
+/**
  * Stream chunk types for real-time SSE updates.
  * Defines the protocol between server and client.
  */
@@ -51,5 +60,6 @@ export type LlmStreamChunk =
     | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
     | { type: "tool_result"; toolName: string; result: string }
     | { type: "citation"; citation: LlmCitation }
+    | { type: "usage"; usage: LlmUsage }
     | { type: "error"; error: string }
     | { type: "done" };

@@ -1625,7 +1625,8 @@
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",
     "input": "Input",
-    "result": "Result"
+    "result": "Result",
+    "tokens_used": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens"
   },
   "shared_switch": {
     "shared": "Shared",

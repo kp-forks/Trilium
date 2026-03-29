@@ -505,3 +505,23 @@
     max-height: 200px;
     overflow-y: auto;
 }
+
+/* Token usage display */
+.llm-chat-usage {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--main-border-color);
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
+}
+
+.llm-chat-usage .bx {
+    font-size: 0.875rem;
+}
+
+.llm-chat-usage-text {
+    font-family: var(--monospace-font-family, monospace);
+}

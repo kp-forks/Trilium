@@ -1,4 +1,4 @@
-import type { LlmCitation, LlmMessage } from "@triliumnext/commons";
+import type { LlmCitation, LlmMessage, LlmUsage } from "@triliumnext/commons";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import { streamChatCompletion } from "../../../services/llm_chat.js";
@@ -27,6 +27,8 @@ interface StoredMessage {
     type?: MessageType;
     /** Tool calls made during this response */
     toolCalls?: ToolCall[];
+    /** Token usage for this response */
+    usage?: LlmUsage;
 }
 
 interface LlmChatContent {
@@ -147,6 +149,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         let thinkingContent = "";
         const citations: LlmCitation[] = [];
         const toolCalls: ToolCall[] = [];
+        let usage: LlmUsage | undefined;
 
         const apiMessages: LlmMessage[] = newMessages.map(m => ({
             role: m.role,
@@ -190,6 +193,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     citations.push(citation);
                     setPendingCitations([...citations]);
                 },
+                onUsage: (u) => {
+                    usage = u;
+                },
                 onError: (errorMsg) => {
                     console.error("Chat error:", errorMsg);
                     // Persist error as an assistant message
@@ -228,7 +234,8 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                             content: assistantContent,
                             createdAt: new Date().toISOString(),
                             citations: citations.length > 0 ? citations : undefined,
-                            toolCalls: toolCalls.length > 0 ? toolCalls : undefined
+                            toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+                            usage
                         });
                     }
 
