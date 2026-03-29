@@ -77,8 +77,9 @@ function getModels(req: Request, res: Response) {
     const providerType = req.query.provider as string || "anthropic";
 
     try {
+        // Return empty array when no providers configured - client handles this gracefully
         if (!hasConfiguredProviders()) {
-            res.status(400).json({ error: "No LLM providers configured. Please add a provider in Options → AI / LLM." });
+            res.json({ models: [] });
             return;
         }
 

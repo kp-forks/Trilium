@@ -1,4 +1,5 @@
 import type { RefObject } from "preact";
+import { useState, useCallback } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import ActionButton from "../../react/ActionButton.js";
@@ -6,6 +7,8 @@ import Button from "../../react/Button.js";
 import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
+import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
+import options from "../../../services/options.js";
 
 /** Format token count with thousands separators */
 function formatTokenCount(tokens: number): string {
@@ -47,6 +50,8 @@ export default function ChatInputBar({
     onExtendedThinkingChange,
     onModelChange
 }: ChatInputBarProps) {
+    const [showAddProviderModal, setShowAddProviderModal] = useState(false);
+
     const handleSubmit = onSubmit ?? chat.handleSubmit;
     const handleKeyDown = onKeyDown ?? chat.handleKeyDown;
 
@@ -78,6 +83,15 @@ export default function ChatInputBar({
         }
     };
 
+    const handleAddProvider = useCallback(async (provider: LlmProviderConfig) => {
+        // Get current providers and add the new one
+        const currentProviders = options.getJson("llmProviders") || [];
+        const newProviders = [...currentProviders, provider];
+        await options.save("llmProviders", JSON.stringify(newProviders));
+        // Refresh models to pick up the new provider
+        chat.refreshModels();
+    }, [chat]);
+
     const isNoteContextEnabled = !!chat.contextNoteId && !!activeNoteId;
 
     const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
@@ -88,6 +102,28 @@ export default function ChatInputBar({
     const isWarning = percentage > 75;
     const isCritical = percentage > 90;
     const pieColor = isCritical ? "var(--danger-color, #d9534f)" : isWarning ? "var(--warning-color, #f0ad4e)" : "var(--main-selection-color, #007bff)";
+
+    // Show setup prompt if no provider is configured
+    if (!chat.isCheckingProvider && !chat.hasProvider) {
+        return (
+            <div className="llm-chat-no-provider">
+                <div className="llm-chat-no-provider-content">
+                    <span className="bx bx-bot llm-chat-no-provider-icon" />
+                    <p>{t("llm_chat.no_provider_message")}</p>
+                    <Button
+                        text={t("llm_chat.add_provider")}
+                        icon="bx bx-plus"
+                        onClick={() => setShowAddProviderModal(true)}
+                    />
+                </div>
+                <AddProviderModal
+                    show={showAddProviderModal}
+                    onHidden={() => setShowAddProviderModal(false)}
+                    onSave={handleAddProvider}
+                />
+            </div>
+        );
+    }
 
     return (
         <form className="llm-chat-input-form" onSubmit={handleSubmit}>
@@ -163,7 +199,7 @@ export default function ChatInputBar({
                     {activeNoteId && activeNoteTitle && (
                         <Button
                             text={activeNoteTitle}
-                            icon={isNoteContextEnabled ? "bx-file" : "bx-file-blank"}
+                            icon={isNoteContextEnabled ? "bx-file" : "bx-hide"}
                             kind="lowProfile"
                             size="micro"
                             className={`llm-chat-note-context ${isNoteContextEnabled ? "active" : ""}`}

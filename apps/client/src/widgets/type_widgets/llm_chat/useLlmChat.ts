@@ -37,6 +37,10 @@ export interface UseLlmChatReturn {
     lastPromptTokens: number;
     messagesEndRef: React.RefObject<HTMLDivElement>;
     textareaRef: React.RefObject<HTMLTextAreaElement>;
+    /** Whether a provider is configured and available */
+    hasProvider: boolean;
+    /** Whether we're still checking for providers */
+    isCheckingProvider: boolean;
 
     // Setters
     setInput: (value: string) => void;
@@ -53,6 +57,8 @@ export interface UseLlmChatReturn {
     loadFromContent: (content: LlmChatContent) => void;
     getContent: () => LlmChatContent;
     clearMessages: () => void;
+    /** Refresh the provider/models list */
+    refreshModels: () => void;
 }
 
 export function useLlmChat(
@@ -75,6 +81,8 @@ export function useLlmChat(
     const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
     const [contextNoteId, setContextNoteId] = useState<string | undefined>(initialContextNoteId);
     const [lastPromptTokens, setLastPromptTokens] = useState<number>(0);
+    const [hasProvider, setHasProvider] = useState<boolean>(true); // Assume true initially
+    const [isCheckingProvider, setIsCheckingProvider] = useState<boolean>(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -99,13 +107,16 @@ export function useLlmChat(
     }, [onMessagesChange]);
 
     // Fetch available models on mount
-    useEffect(() => {
+    const refreshModels = useCallback(() => {
+        setIsCheckingProvider(true);
         getAvailableModels().then(models => {
             const modelsWithDescription = models.map(m => ({
                 ...m,
                 costDescription: m.costMultiplier ? `${m.costMultiplier}x` : undefined
             }));
             setAvailableModels(modelsWithDescription);
+            setHasProvider(models.length > 0);
+            setIsCheckingProvider(false);
             if (!selectedModel) {
                 const defaultModel = models.find(m => m.isDefault) || models[0];
                 if (defaultModel) {
@@ -114,7 +125,13 @@ export function useLlmChat(
             }
         }).catch(err => {
             console.error("Failed to fetch available models:", err);
+            setHasProvider(false);
+            setIsCheckingProvider(false);
         });
+    }, [selectedModel]);
+
+    useEffect(() => {
+        refreshModels();
     }, []);
 
     // Scroll to bottom when content changes
@@ -329,6 +346,8 @@ export function useLlmChat(
         lastPromptTokens,
         messagesEndRef,
         textareaRef,
+        hasProvider,
+        isCheckingProvider,
 
         // Setters
         setInput,
@@ -344,6 +363,7 @@ export function useLlmChat(
         handleKeyDown,
         loadFromContent,
         getContent,
-        clearMessages
+        clearMessages,
+        refreshModels
     };
 }

@@ -316,15 +316,18 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--muted-text-color);
+    opacity: 0.5;
+    background: none;
+    border: none;
 }
 
 .llm-chat-note-context.tn-low-profile:hover:not(:disabled) {
-    color: var(--main-text-color);
+    opacity: 0.8;
+    background: none;
 }
 
 .llm-chat-note-context.tn-low-profile.active {
-    color: var(--main-text-color);
+    opacity: 1;
 }
 
 /* Markdown styles */
@@ -567,4 +570,32 @@
 .llm-chat-context-text {
     font-size: 0.75rem;
     color: var(--muted-text-color);
+}
+
+/* No provider state */
+.llm-chat-no-provider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-top: 1px solid var(--main-border-color);
+}
+
+.llm-chat-no-provider-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+    color: var(--muted-text-color);
+}
+
+.llm-chat-no-provider-icon {
+    font-size: 2rem;
+    opacity: 0.5;
+}
+
+.llm-chat-no-provider-content p {
+    margin: 0;
+    font-size: 0.9rem;
 }
