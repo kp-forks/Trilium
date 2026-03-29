@@ -1626,7 +1626,8 @@
     "tool_calls": "{{count}} tool call(s)",
     "input": "Input",
     "result": "Result",
-    "tokens_used": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens"
+    "tokens_used": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens",
+    "tokens_used_with_cost": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})"
   },
   "shared_switch": {
     "shared": "Shared",

@@ -175,11 +175,19 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                 <div className="llm-chat-usage">
                     <span className="bx bx-chip" />
                     <span className="llm-chat-usage-text">
-                        {t("llm_chat.tokens_used", {
-                            prompt: message.usage.promptTokens.toLocaleString(),
-                            completion: message.usage.completionTokens.toLocaleString(),
-                            total: message.usage.totalTokens.toLocaleString()
-                        })}
+                        {message.usage.cost != null
+                            ? t("llm_chat.tokens_used_with_cost", {
+                                prompt: message.usage.promptTokens.toLocaleString(),
+                                completion: message.usage.completionTokens.toLocaleString(),
+                                total: message.usage.totalTokens.toLocaleString(),
+                                cost: message.usage.cost.toFixed(4)
+                            })
+                            : t("llm_chat.tokens_used", {
+                                prompt: message.usage.promptTokens.toLocaleString(),
+                                completion: message.usage.completionTokens.toLocaleString(),
+                                total: message.usage.totalTokens.toLocaleString()
+                            })
+                        }
                     </span>
                 </div>
             )}
