@@ -330,7 +330,7 @@ function register(app: express.Application) {
     apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
 
     // LLM chat endpoints
-    asyncRoute(PST, "/api/llm-chat/stream", [auth.checkApiAuth, csrfMiddleware], llmChatRoute.streamChat, null);
+    asyncRoute(PST, "/api/llm-chat/stream", [auth.checkApiAuthOrElectron, csrfMiddleware], llmChatRoute.streamChat, null);
     apiRoute(GET, "/api/llm-chat/models", llmChatRoute.getModels);
 
     // no CSRF since this is called from android app
