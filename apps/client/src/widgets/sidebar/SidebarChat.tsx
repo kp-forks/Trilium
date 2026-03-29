@@ -1,15 +1,13 @@
 import type { LlmCitation, LlmMessage, LlmModelInfo, LlmUsage } from "@triliumnext/commons";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-import appContext from "../../components/app_context.js";
 import dateNoteService from "../../services/date_notes.js";
 import { t } from "../../services/i18n.js";
 import { getAvailableModels, streamChatCompletion } from "../../services/llm_chat.js";
-import options from "../../services/options.js";
 import server from "../../services/server.js";
 import { randomString } from "../../services/utils.js";
 import ActionButton from "../react/ActionButton.js";
-import { useActiveNoteContext, useTriliumEvent } from "../react/hooks.js";
+import { useActiveNoteContext } from "../react/hooks.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import RightPanelWidget from "./RightPanelWidget.js";
 import "./SidebarChat.css";
@@ -53,7 +51,6 @@ interface ModelOption extends LlmModelInfo {
  */
 export default function SidebarChat() {
     const { note: activeNote } = useActiveNoteContext();
-    const [visible, setVisible] = useState(false);
     const [sourceNoteId, setSourceNoteId] = useState<string | null>(null);
     const [chatNoteId, setChatNoteId] = useState<string | null>(null);
     const [messages, setMessages] = useState<StoredMessage[]>([]);
@@ -116,7 +113,7 @@ export default function SidebarChat() {
 
     // Track when active note changes and load existing chat
     useEffect(() => {
-        if (!visible || !activeNote) return;
+        if (!activeNote) return;
 
         const noteId = activeNote.noteId;
         // Don't switch if we're already on this note
@@ -124,30 +121,7 @@ export default function SidebarChat() {
 
         // Load existing chat for the new note (don't create)
         loadExistingChatForNote(noteId);
-    }, [activeNote, visible, sourceNoteId, loadExistingChatForNote]);
-
-    // Listen for toggle event
-    useTriliumEvent("toggleSidebarChat", useCallback(() => {
-        setVisible(v => {
-            const newValue = !v;
-            if (newValue && activeNote) {
-                loadExistingChatForNote(activeNote.noteId);
-            }
-            return newValue;
-        });
-    }, [activeNote, loadExistingChatForNote]));
-
-    // Listen for open event (always opens)
-    useTriliumEvent("openSidebarChat", useCallback(() => {
-        setVisible(true);
-        if (activeNote) {
-            loadExistingChatForNote(activeNote.noteId);
-        }
-        // Ensure right pane is visible
-        if (!options.is("rightPaneVisible")) {
-            appContext.triggerEvent("toggleRightPane", {});
-        }
-    }, [activeNote, loadExistingChatForNote]));
+    }, [activeNote, sourceNoteId, loadExistingChatForNote]);
 
     // Fetch available models on mount
     useEffect(() => {
@@ -387,10 +361,6 @@ export default function SidebarChat() {
             console.error("Failed to save chat to permanent location:", err);
         }
     }, [chatNoteId, activeNote, loadExistingChatForNote]);
-
-    if (!visible) {
-        return null;
-    }
 
     return (
         <RightPanelWidget
