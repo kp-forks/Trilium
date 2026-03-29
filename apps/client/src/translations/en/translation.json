@@ -1632,7 +1632,9 @@
     "tokens_used_with_model": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens",
     "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})",
     "tokens": "tokens",
-    "context_used": "{{percentage}}% used"
+    "context_used": "{{percentage}}% used",
+    "note_context_enabled": "Click to disable note context: {{title}}",
+    "note_context_disabled": "Click to include current note in context"
   },
   "sidebar_chat": {
     "title": "AI Chat",
@@ -2267,6 +2269,18 @@
   },
   "llm": {
     "settings_title": "AI / LLM",
-    "settings_description": "Configure AI and Large Language Model integrations."
+    "settings_description": "Configure AI and Large Language Model integrations.",
+    "add_provider": "Add Provider",
+    "add_provider_title": "Add AI Provider",
+    "configured_providers": "Configured Providers",
+    "no_providers_configured": "No providers configured yet.",
+    "provider_name": "Name",
+    "provider_type": "Provider",
+    "actions": "Actions",
+    "delete_provider": "Delete",
+    "delete_provider_confirmation": "Are you sure you want to delete the provider \"{{name}}\"?",
+    "api_key": "API Key",
+    "api_key_placeholder": "Enter your API key",
+    "cancel": "Cancel"
   }
 }
