@@ -12,15 +12,6 @@
     padding-bottom: 1rem;
 }
 
-.llm-chat-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--muted-text-color);
-    font-style: italic;
-}
-
 .llm-chat-message {
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;

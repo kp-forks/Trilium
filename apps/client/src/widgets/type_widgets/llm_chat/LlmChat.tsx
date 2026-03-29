@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
+import NoItems from "../../react/NoItems.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
 import ChatInputBar from "./ChatInputBar.js";
@@ -57,9 +58,10 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         <div className="llm-chat-container">
             <div className="llm-chat-messages">
                 {chat.messages.length === 0 && !chat.isStreaming && (
-                    <div className="llm-chat-empty">
-                        {t("llm_chat.empty_state")}
-                    </div>
+                    <NoItems
+                        icon="bx bx-conversation"
+                        text={t("llm_chat.empty_state")}
+                    />
                 )}
                 {chat.messages.map(msg => (
                     <ChatMessage key={msg.id} message={msg} />
