@@ -29,8 +29,6 @@ interface ChatInputBarProps {
     showExtendedThinking?: boolean;
     /** Whether to show the context pie chart */
     showContextPie?: boolean;
-    /** Compact mode for sidebar */
-    compact?: boolean;
 }
 
 export default function ChatInputBar({
@@ -43,8 +41,7 @@ export default function ChatInputBar({
     onModelChange,
     showModelSelector = false,
     showExtendedThinking = false,
-    showContextPie = false,
-    compact = false
+    showContextPie = false
 }: ChatInputBarProps) {
     const handleSubmit = onSubmit ?? chat.handleSubmit;
     const handleKeyDown = onKeyDown ?? chat.handleKeyDown;
@@ -69,54 +66,6 @@ export default function ChatInputBar({
         onModelChange?.(model);
     };
 
-    if (compact) {
-        return (
-            <div className="llm-chat-input-bar compact">
-                <textarea
-                    ref={chat.textareaRef as RefObject<HTMLTextAreaElement>}
-                    className="llm-chat-input"
-                    value={chat.input}
-                    onInput={(e) => chat.setInput((e.target as HTMLTextAreaElement).value)}
-                    placeholder={t("llm_chat.placeholder")}
-                    disabled={chat.isStreaming}
-                    onKeyDown={handleKeyDown}
-                    rows={2}
-                />
-                <div className="llm-chat-input-bar-actions">
-                    <div className="llm-chat-input-bar-options">
-                        <label className="llm-chat-toggle" title={t("llm_chat.web_search")}>
-                            <input
-                                type="checkbox"
-                                checked={chat.enableWebSearch}
-                                onChange={handleWebSearchToggle}
-                                disabled={chat.isStreaming}
-                            />
-                            <span className="bx bx-globe" />
-                        </label>
-                        <label className="llm-chat-toggle" title={t("llm_chat.note_tools")}>
-                            <input
-                                type="checkbox"
-                                checked={chat.enableNoteTools}
-                                onChange={handleNoteToolsToggle}
-                                disabled={chat.isStreaming}
-                            />
-                            <span className="bx bx-note" />
-                        </label>
-                    </div>
-                    <button
-                        type="button"
-                        className="llm-chat-send-btn"
-                        disabled={chat.isStreaming || !chat.input.trim()}
-                        onClick={handleSubmit}
-                    >
-                        <span className="bx bx-send" />
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // Full mode for main LLM chat
     return (
         <form className="llm-chat-input-form" onSubmit={handleSubmit}>
             <div className="llm-chat-input-row">

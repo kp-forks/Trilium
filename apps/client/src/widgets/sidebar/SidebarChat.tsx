@@ -296,7 +296,6 @@ export default function SidebarChat() {
                     chat={chat}
                     onSubmit={handleSubmit}
                     onKeyDown={handleKeyDown}
-                    compact
                 />
             </div>
         </RightPanelWidget>
