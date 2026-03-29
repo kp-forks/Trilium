@@ -94,7 +94,7 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
         },
         {
             el: <SidebarChat />,
-            enabled: true,
+            enabled: noteType !== "llmChat",
             position: 1000
         },
         ...widgetsByParent.getLegacyWidgets("right-pane").map((widget) => ({
