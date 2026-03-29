@@ -4,6 +4,7 @@ import { t } from "../../../services/i18n.js";
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
+import FormDropdownList from "../../react/FormDropdownList.js";
 import { TypeWidgetProps } from "../type_widget.js";
 import ChatMessage from "./ChatMessage.js";
 import "./LlmChat.css";
@@ -303,8 +304,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         setShouldSave(true);
     }, []);
 
-    const handleModelChange = useCallback((e: Event) => {
-        const newModel = (e.target as HTMLSelectElement).value;
+    const handleModelChange = useCallback((newModel: string) => {
         setSelectedModel(newModel);
         setShouldSave(true);
     }, []);
@@ -380,18 +380,15 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 <div className="llm-chat-options">
                     <div className="llm-chat-model-selector">
                         <span className="bx bx-chip" />
-                        <select
-                            value={selectedModel}
+                        <FormDropdownList
+                            values={availableModels}
+                            keyProperty="id"
+                            titleProperty="name"
+                            currentValue={selectedModel}
                             onChange={handleModelChange}
                             disabled={isStreaming}
-                            className="llm-chat-model-select"
-                        >
-                            {availableModels.map(model => (
-                                <option key={model.id} value={model.id}>
-                                    {model.name}
-                                </option>
-                            ))}
-                        </select>
+                            buttonClassName="llm-chat-model-select"
+                        />
                     </div>
                     <label className="llm-chat-toggle">
                         <input

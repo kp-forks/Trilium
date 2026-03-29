@@ -318,7 +318,11 @@
     font-size: 1rem;
 }
 
-.llm-chat-model-select {
+.llm-chat-model-selector .dropdown {
+    display: flex;
+}
+
+.llm-chat-model-select.select-button {
     padding: 0.25rem 0.5rem;
     border: 1px solid var(--main-border-color);
     border-radius: 4px;
@@ -327,14 +331,16 @@
     font-family: inherit;
     font-size: 0.85rem;
     cursor: pointer;
+    min-width: 140px;
+    text-align: left;
 }
 
-.llm-chat-model-select:focus {
+.llm-chat-model-select.select-button:focus {
     outline: none;
     border-color: var(--main-selection-color);
 }
 
-.llm-chat-model-select:disabled {
+.llm-chat-model-select.select-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
