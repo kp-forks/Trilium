@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { LlmMessage } from "@triliumnext/commons";
 
 import { getProvider, type LlmProviderConfig } from "../../services/llm/index.js";
+import { streamToChunks } from "../../services/llm/stream.js";
 
 interface ChatRequest {
     messages: LlmMessage[];
@@ -43,8 +44,9 @@ async function streamChat(req: Request, res: Response) {
 
     try {
         const provider = getProvider(config.provider || "anthropic");
+        const result = provider.chat(messages, config);
 
-        for await (const chunk of provider.streamCompletion(messages, config)) {
+        for await (const chunk of streamToChunks(result)) {
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
             // Flush immediately to ensure real-time streaming
             if (typeof flushableRes.flush === "function") {

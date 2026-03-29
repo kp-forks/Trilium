@@ -4,7 +4,8 @@
  * should be imported from @triliumnext/commons.
  */
 
-import type { LlmChatConfig, LlmMessage, LlmStreamChunk } from "@triliumnext/commons";
+import type { LlmChatConfig, LlmMessage } from "@triliumnext/commons";
+import type { streamText } from "ai";
 
 /**
  * Extended provider config with server-specific options.
@@ -14,15 +15,20 @@ export interface LlmProviderConfig extends LlmChatConfig {
     temperature?: number;
 }
 
+/**
+ * Result type from streamText - the AI SDK's unified streaming interface.
+ */
+export type StreamResult = ReturnType<typeof streamText>;
+
 export interface LlmProvider {
     name: string;
 
     /**
-     * Stream a chat completion response.
-     * Yields chunks as they arrive from the LLM.
+     * Create a streaming chat completion.
+     * Returns the AI SDK StreamResult which is provider-agnostic.
      */
-    streamCompletion(
+    chat(
         messages: LlmMessage[],
         config: LlmProviderConfig
-    ): AsyncIterable<LlmStreamChunk>;
+    ): StreamResult;
 }
