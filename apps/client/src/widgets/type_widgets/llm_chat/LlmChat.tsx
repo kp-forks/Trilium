@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import { streamChatCompletion, type ChatMessage as ChatMessageData, type Citation } from "../../../services/llm_chat.js";
+import { randomString } from "../../../services/utils.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
 import ChatMessage from "./ChatMessage.js";
@@ -110,7 +111,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
         setPendingCitations([]);
 
         const userMessage: StoredMessage = {
-            id: crypto.randomUUID(),
+            id: randomString(),
             role: "user",
             content: input.trim(),
             createdAt: new Date().toISOString()
@@ -160,7 +161,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     console.error("Chat error:", errorMsg);
                     // Persist error as an assistant message
                     const errorMessage: StoredMessage = {
-                        id: crypto.randomUUID(),
+                        id: randomString(),
                         role: "assistant",
                         content: errorMsg,
                         createdAt: new Date().toISOString(),
@@ -179,7 +180,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                     // Save thinking as a separate message if present
                     if (thinkingContent) {
                         newMessages.push({
-                            id: crypto.randomUUID(),
+                            id: randomString(),
                             role: "assistant",
                             content: thinkingContent,
                             createdAt: new Date().toISOString(),
@@ -189,7 +190,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
 
                     if (assistantContent) {
                         newMessages.push({
-                            id: crypto.randomUUID(),
+                            id: randomString(),
                             role: "assistant",
                             content: assistantContent,
                             createdAt: new Date().toISOString(),

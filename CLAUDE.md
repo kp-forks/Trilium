@@ -125,6 +125,10 @@ Trilium provides powerful user scripting capabilities:
 - OpenID and TOTP authentication support
 - Sanitization of user-generated content
 
+### Client-Side API Restrictions
+- **Do not use `crypto.randomUUID()`** or other Web Crypto APIs that require secure contexts - Trilium can run over HTTP, not just HTTPS
+- Use `randomString()` from `apps/client/src/services/utils.ts` for generating IDs instead
+
 ## Common Development Tasks
 
 ### Adding New Note Types
