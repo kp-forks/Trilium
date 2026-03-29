@@ -42,6 +42,8 @@ export interface ModelInfo {
     pricing: ModelPricing;
     /** Whether this is the default model */
     isDefault?: boolean;
+    /** Cost multiplier relative to the cheapest model (1x = cheapest) */
+    costMultiplier?: number;
 }
 
 export interface LlmProvider {

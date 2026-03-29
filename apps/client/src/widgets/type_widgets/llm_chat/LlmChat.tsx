@@ -41,6 +41,11 @@ interface LlmChatContent {
     enableExtendedThinking?: boolean;
 }
 
+/** Extended model info with cost description for dropdown display */
+interface ModelOption extends LlmModelInfo {
+    costDescription?: string;
+}
+
 export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [messages, setMessages] = useState<StoredMessage[]>([]);
     const [input, setInput] = useState("");
@@ -49,7 +54,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const [streamingThinking, setStreamingThinking] = useState("");
     const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
-    const [availableModels, setAvailableModels] = useState<LlmModelInfo[]>([]);
+    const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
     const [selectedModel, setSelectedModel] = useState<string>("");
     const [enableWebSearch, setEnableWebSearch] = useState(true);
     const [enableNoteTools, setEnableNoteTools] = useState(false);
@@ -62,7 +67,14 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     // Fetch available models on mount
     useEffect(() => {
         getAvailableModels().then(models => {
-            setAvailableModels(models);
+            // Add cost description for display
+            const modelsWithDescription = models.map(m => ({
+                ...m,
+                costDescription: m.costMultiplier
+                    ? `${m.costMultiplier}x cost`
+                    : undefined
+            }));
+            setAvailableModels(modelsWithDescription);
             // Set default model if not already selected
             if (!selectedModel) {
                 const defaultModel = models.find(m => m.isDefault) || models[0];
@@ -384,6 +396,7 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                             values={availableModels}
                             keyProperty="id"
                             titleProperty="name"
+                            descriptionProperty="costDescription"
                             currentValue={selectedModel}
                             onChange={handleModelChange}
                             disabled={isStreaming}

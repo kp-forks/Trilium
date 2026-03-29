@@ -9,9 +9,17 @@ const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_MAX_TOKENS = 8096;
 
 /**
+ * Calculate effective cost for comparison (weighted average: 1 input + 3 output).
+ * Output is weighted more heavily as it's typically the dominant cost factor.
+ */
+function effectiveCost(pricing: ModelPricing): number {
+    return (pricing.input + 3 * pricing.output) / 4;
+}
+
+/**
  * Available Anthropic models with pricing (USD per million tokens).
  */
-const AVAILABLE_MODELS: ModelInfo[] = [
+const BASE_MODELS: Omit<ModelInfo, "costMultiplier">[] = [
     // Claude 4 family
     {
         id: "claude-sonnet-4-20250514",
@@ -36,6 +44,15 @@ const AVAILABLE_MODELS: ModelInfo[] = [
         pricing: { input: 3, output: 15 }
     }
 ];
+
+// Find cheapest model as baseline for cost multiplier
+const baselineCost = Math.min(...BASE_MODELS.map(m => effectiveCost(m.pricing)));
+
+// Build models with cost multipliers
+const AVAILABLE_MODELS: ModelInfo[] = BASE_MODELS.map(m => ({
+    ...m,
+    costMultiplier: Math.round((effectiveCost(m.pricing) / baselineCost) * 10) / 10
+}));
 
 // Build pricing lookup from available models
 const MODEL_PRICING: Record<string, ModelPricing> = Object.fromEntries(
