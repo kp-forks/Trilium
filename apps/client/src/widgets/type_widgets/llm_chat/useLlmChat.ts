@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
-import type { LlmChatContent, StoredMessage, ToolCall } from "./llm_chat_types.js";
+import type { ContentBlock, LlmChatContent, StoredMessage, ToolCall } from "./llm_chat_types.js";
 
 export interface ModelOption extends LlmModelInfo {
     costDescription?: string;
@@ -205,15 +205,28 @@ export function useLlmChat(
         setStreamingContent("");
         setStreamingThinking("");
 
-        let assistantContent = "";
         let thinkingContent = "";
+        const contentBlocks: ContentBlock[] = [];
         const citations: LlmCitation[] = [];
-        const toolCalls: ToolCall[] = [];
         let usage: LlmUsage | undefined;
+
+        /** Get or create the last text block to append streaming text to. */
+        function lastTextBlock(): ContentBlock & { type: "text" } {
+            const last = contentBlocks[contentBlocks.length - 1];
+            if (last?.type === "text") {
+                return last;
+            }
+            const block: ContentBlock = { type: "text", content: "" };
+            contentBlocks.push(block);
+            return block as ContentBlock & { type: "text" };
+        }
 
         const apiMessages: LlmMessage[] = newMessages.map(m => ({
             role: m.role,
-            content: m.content
+            content: typeof m.content === "string" ? m.content : m.content
+                .filter((b): b is ContentBlock & { type: "text" } => b.type === "text")
+                .map(b => b.content)
+                .join("")
         }));
 
         const streamOptions: Parameters<typeof streamChatCompletion>[1] = {
@@ -231,8 +244,11 @@ export function useLlmChat(
             streamOptions,
             {
                 onChunk: (text) => {
-                    assistantContent += text;
-                    setStreamingContent(assistantContent);
+                    lastTextBlock().content += text;
+                    setStreamingContent(contentBlocks
+                        .filter((b): b is ContentBlock & { type: "text" } => b.type === "text")
+                        .map(b => b.content)
+                        .join(""));
                     setToolActivity(null);
                 },
                 onThinking: (text) => {
@@ -245,16 +261,23 @@ export function useLlmChat(
                         ? t("llm_chat.searching_web")
                         : `Using ${toolName}...`;
                     setToolActivity(toolLabel);
-                    toolCalls.push({
-                        id: randomString(),
-                        toolName,
-                        input: toolInput
+                    contentBlocks.push({
+                        type: "tool_call",
+                        toolCall: {
+                            id: randomString(),
+                            toolName,
+                            input: toolInput
+                        }
                     });
                 },
                 onToolResult: (toolName, result) => {
-                    const toolCall = [...toolCalls].reverse().find(tc => tc.toolName === toolName && !tc.result);
-                    if (toolCall) {
-                        toolCall.result = result;
+                    // Find the most recent tool_call block for this tool without a result
+                    for (let i = contentBlocks.length - 1; i >= 0; i--) {
+                        const block = contentBlocks[i];
+                        if (block.type === "tool_call" && block.toolCall.toolName === toolName && !block.toolCall.result) {
+                            block.toolCall.result = result;
+                            break;
+                        }
                     }
                 },
                 onCitation: (citation) => {
@@ -294,14 +317,13 @@ export function useLlmChat(
                         });
                     }
 
-                    if (assistantContent || toolCalls.length > 0) {
+                    if (contentBlocks.length > 0) {
                         finalNewMessages.push({
                             id: randomString(),
                             role: "assistant",
-                            content: assistantContent,
+                            content: contentBlocks,
                             createdAt: new Date().toISOString(),
                             citations: citations.length > 0 ? citations : undefined,
-                            toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
                             usage
                         });
                     }
