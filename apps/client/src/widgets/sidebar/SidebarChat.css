@@ -30,9 +30,16 @@
 /* Reuse llm-chat-message styles but make them more compact */
 .sidebar-chat-messages .llm-chat-message {
     padding: 0.5rem 0.75rem;
+    margin-top: 0;
     margin-bottom: 0;
     max-width: 100%;
     font-size: 0.9rem;
+}
+
+/* Usage footer: pull it closer to the message above by collapsing the flex gap */
+.sidebar-chat-messages .llm-chat-usage {
+    margin-top: -0.35rem;
+    margin-bottom: 0;
 }
 
 .sidebar-chat-messages .llm-chat-message-role {

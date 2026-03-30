@@ -126,83 +126,85 @@ export default function ChatMessage({ message, isStreaming }: Props) {
     const hasBlockContent = Array.isArray(message.content);
 
     return (
-        <div className={messageClasses}>
-            <div className="llm-chat-message-role">
-                {isError ? "Error" : roleLabel}
-            </div>
-            <div className="llm-chat-message-content">
-                {message.role === "assistant" && !isError ? (
-                    hasBlockContent ? (
-                        renderContentBlocks(message.content as ContentBlock[], isStreaming)
+        <>
+            <div className={messageClasses}>
+                <div className="llm-chat-message-role">
+                    {isError ? "Error" : roleLabel}
+                </div>
+                <div className="llm-chat-message-content">
+                    {message.role === "assistant" && !isError ? (
+                        hasBlockContent ? (
+                            renderContentBlocks(message.content as ContentBlock[], isStreaming)
+                        ) : (
+                            <>
+                                <div
+                                    className="llm-chat-markdown"
+                                    dangerouslySetInnerHTML={{ __html: renderedContent || "" }}
+                                />
+                                {isStreaming && <span className="llm-chat-cursor" />}
+                            </>
+                        )
                     ) : (
-                        <>
-                            <div
-                                className="llm-chat-markdown"
-                                dangerouslySetInnerHTML={{ __html: renderedContent || "" }}
-                            />
-                            {isStreaming && <span className="llm-chat-cursor" />}
-                        </>
-                    )
-                ) : (
-                    textContent
+                        textContent
+                    )}
+                </div>
+                {legacyToolCalls && legacyToolCalls.length > 0 && (
+                    <details className="llm-chat-tool-calls">
+                        <summary className="llm-chat-tool-calls-summary">
+                            <span className="bx bx-wrench" />
+                            {t("llm_chat.tool_calls", { count: legacyToolCalls.length })}
+                        </summary>
+                        <div className="llm-chat-tool-calls-list">
+                            {legacyToolCalls.map((tool) => (
+                                <ToolCallCard key={tool.id} toolCall={tool} />
+                            ))}
+                        </div>
+                    </details>
+                )}
+                {message.citations && message.citations.length > 0 && (
+                    <div className="llm-chat-citations">
+                        <div className="llm-chat-citations-label">
+                            <span className="bx bx-link" />
+                            {t("llm_chat.sources")}
+                        </div>
+                        <ul className="llm-chat-citations-list">
+                            {message.citations.map((citation, idx) => {
+                                // Determine display text: title, URL hostname, or cited text
+                                let displayText = citation.title;
+                                if (!displayText && citation.url) {
+                                    try {
+                                        displayText = new URL(citation.url).hostname;
+                                    } catch {
+                                        displayText = citation.url;
+                                    }
+                                }
+                                if (!displayText) {
+                                    displayText = citation.citedText?.slice(0, 50) || `Source ${idx + 1}`;
+                                }
+
+                                return (
+                                    <li key={idx}>
+                                        {citation.url ? (
+                                            <a
+                                                href={citation.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                title={citation.citedText || citation.url}
+                                            >
+                                                {displayText}
+                                            </a>
+                                        ) : (
+                                            <span title={citation.citedText}>
+                                                {displayText}
+                                            </span>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
                 )}
             </div>
-            {legacyToolCalls && legacyToolCalls.length > 0 && (
-                <details className="llm-chat-tool-calls">
-                    <summary className="llm-chat-tool-calls-summary">
-                        <span className="bx bx-wrench" />
-                        {t("llm_chat.tool_calls", { count: legacyToolCalls.length })}
-                    </summary>
-                    <div className="llm-chat-tool-calls-list">
-                        {legacyToolCalls.map((tool) => (
-                            <ToolCallCard key={tool.id} toolCall={tool} />
-                        ))}
-                    </div>
-                </details>
-            )}
-            {message.citations && message.citations.length > 0 && (
-                <div className="llm-chat-citations">
-                    <div className="llm-chat-citations-label">
-                        <span className="bx bx-link" />
-                        {t("llm_chat.sources")}
-                    </div>
-                    <ul className="llm-chat-citations-list">
-                        {message.citations.map((citation, idx) => {
-                            // Determine display text: title, URL hostname, or cited text
-                            let displayText = citation.title;
-                            if (!displayText && citation.url) {
-                                try {
-                                    displayText = new URL(citation.url).hostname;
-                                } catch {
-                                    displayText = citation.url;
-                                }
-                            }
-                            if (!displayText) {
-                                displayText = citation.citedText?.slice(0, 50) || `Source ${idx + 1}`;
-                            }
-
-                            return (
-                                <li key={idx}>
-                                    {citation.url ? (
-                                        <a
-                                            href={citation.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            title={citation.citedText || citation.url}
-                                        >
-                                            {displayText}
-                                        </a>
-                                    ) : (
-                                        <span title={citation.citedText}>
-                                            {displayText}
-                                        </span>
-                                    )}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
-            )}
             {message.usage && typeof message.usage.promptTokens === "number" && (
                 <div className="llm-chat-usage">
                     {message.usage.model && (
@@ -227,6 +229,6 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                     )}
                 </div>
             )}
-        </div>
+        </>
     );
 }
