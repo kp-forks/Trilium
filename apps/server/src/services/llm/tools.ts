@@ -138,8 +138,8 @@ export const appendToNote = tool({
         if (note.isProtected) {
             return { error: "Note is protected and cannot be modified" };
         }
-        if (note.type !== "text" && note.type !== "code") {
-            return { error: `Cannot append to note type: ${note.type}` };
+        if (!note.hasStringContent()) {
+            return { error: `Cannot update content for note type: ${note.type}` };
         }
 
         const existingContent = note.getContent();
