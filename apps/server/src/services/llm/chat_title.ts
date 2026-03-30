@@ -3,9 +3,19 @@ import { getProvider } from "./index.js";
 import log from "../log.js";
 import { t } from "i18next";
 
+/** Default title prefixes that indicate the note hasn't been manually renamed. */
+function hasDefaultTitle(title: string): boolean {
+    // "Chat: <timestamp>" from sidebar/API-created chats
+    const chatPrefix = t("special_notes.llm_chat_prefix");
+    // "New note" from manually created chats
+    const newNoteTitle = t("notes.new-note");
+
+    return title.startsWith(chatPrefix) || title === newNoteTitle;
+}
+
 /**
  * Generate a short descriptive title for a chat note based on the first user message,
- * then rename the note. Only renames if the note still has the default "Chat: ..." title.
+ * then rename the note. Only renames if the note still has a default title.
  */
 export async function generateChatTitle(chatNoteId: string, firstMessage: string): Promise<void> {
     const note = becca.getNote(chatNoteId);
@@ -13,9 +23,7 @@ export async function generateChatTitle(chatNoteId: string, firstMessage: string
         return;
     }
 
-    // Only rename notes that still have the default timestamp-based title
-    const defaultPrefix = t("special_notes.llm_chat_prefix");
-    if (!note.title.startsWith(defaultPrefix)) {
+    if (!hasDefaultTitle(note.title)) {
         return;
     }
 
