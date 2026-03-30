@@ -105,8 +105,7 @@ function buildNoteHint(noteId: string): string | null {
         return null;
     }
 
-    const typeInfo = note.type !== "text" ? ` (type: ${note.type})` : "";
-    return `The user is currently viewing a note titled "${note.title}"${typeInfo}. Use the get_current_note tool to read its content if needed.`;
+    return `The user is currently viewing a ${note.type} note titled "${note.title}". Use the get_current_note tool to read its content if needed.`;
 }
 
 export class AnthropicProvider implements LlmProvider {
