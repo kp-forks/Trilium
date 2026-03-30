@@ -7,6 +7,7 @@ import { tool } from "ai";
 import { z } from "zod";
 
 import becca from "../../becca/becca.js";
+import attributeService from "../attributes.js";
 import markdownExport from "../export/markdown.js";
 import markdownImport from "../import/markdown.js";
 import noteService from "../notes.js";
@@ -210,6 +211,127 @@ export const createNote = tool({
 });
 
 /**
+ * Get all owned attributes (labels/relations) of a note.
+ */
+export const getAttributes = tool({
+    description: "Get all attributes (labels and relations) of a note. Labels store text values; relations link to other notes by ID.",
+    inputSchema: z.object({
+        noteId: z.string().describe("The ID of the note")
+    }),
+    execute: async ({ noteId }) => {
+        const note = becca.getNote(noteId);
+        if (!note) {
+            return { error: "Note not found" };
+        }
+
+        return note.getOwnedAttributes()
+            .filter((attr) => !attr.isAutoLink())
+            .map((attr) => ({
+                attributeId: attr.attributeId,
+                type: attr.type,
+                name: attr.name,
+                value: attr.value,
+                isInheritable: attr.isInheritable
+            }));
+    }
+});
+
+/**
+ * Get a single attribute by its ID.
+ */
+export const getAttribute = tool({
+    description: "Get a single attribute by its ID.",
+    inputSchema: z.object({
+        attributeId: z.string().describe("The ID of the attribute")
+    }),
+    execute: async ({ attributeId }) => {
+        const attribute = becca.getAttribute(attributeId);
+        if (!attribute) {
+            return { error: "Attribute not found" };
+        }
+
+        return {
+            attributeId: attribute.attributeId,
+            noteId: attribute.noteId,
+            type: attribute.type,
+            name: attribute.name,
+            value: attribute.value,
+            isInheritable: attribute.isInheritable
+        };
+    }
+});
+
+/**
+ * Add or update an attribute on a note.
+ */
+export const setAttribute = tool({
+    description: "Add or update an attribute on a note. If an attribute with the same type and name exists, it is updated; otherwise a new one is created. Use type 'label' for text values, 'relation' for linking to another note (value must be a noteId).",
+    inputSchema: z.object({
+        noteId: z.string().describe("The ID of the note"),
+        type: z.enum(["label", "relation"]).describe("The attribute type"),
+        name: z.string().describe("The attribute name"),
+        value: z.string().optional().describe("The attribute value (for relations, this must be a target noteId)")
+    }),
+    execute: async ({ noteId, type, name, value = "" }) => {
+        const note = becca.getNote(noteId);
+        if (!note) {
+            return { error: "Note not found" };
+        }
+        if (note.isProtected) {
+            return { error: "Note is protected and cannot be modified" };
+        }
+        if (attributeService.isAttributeDangerous(type, name)) {
+            return { error: `Attribute '${name}' is potentially dangerous and cannot be set by the LLM` };
+        }
+        if (type === "relation" && value && !becca.getNote(value)) {
+            return { error: "Target note not found for relation" };
+        }
+
+        note.setAttribute(type, name, value);
+
+        return {
+            success: true,
+            noteId: note.noteId,
+            type,
+            name,
+            value
+        };
+    }
+});
+
+/**
+ * Remove an attribute from a note.
+ */
+export const deleteAttribute = tool({
+    description: "Remove an attribute from a note by its attribute ID.",
+    inputSchema: z.object({
+        noteId: z.string().describe("The ID of the note that owns the attribute"),
+        attributeId: z.string().describe("The ID of the attribute to delete")
+    }),
+    execute: async ({ noteId, attributeId }) => {
+        const attribute = becca.getAttribute(attributeId);
+        if (!attribute) {
+            return { error: "Attribute not found" };
+        }
+        if (attribute.noteId !== noteId) {
+            return { error: "Attribute does not belong to the specified note" };
+        }
+
+        const note = becca.getNote(noteId);
+        if (note?.isProtected) {
+            return { error: "Note is protected and cannot be modified" };
+        }
+
+        attribute.markAsDeleted();
+
+        return {
+            success: true,
+            attributeId
+        };
+    }
+});
+
+/**
  * Read the content of the note the user is currently viewing.
  * Created dynamically so it captures the contextNoteId.
  */
@@ -246,5 +368,9 @@ export const noteTools = {
     read_note: readNote,
     update_note_content: updateNoteContent,
     append_to_note: appendToNote,
-    create_note: createNote
+    create_note: createNote,
+    get_attributes: getAttributes,
+    get_attribute: getAttribute,
+    set_attribute: setAttribute,
+    delete_attribute: deleteAttribute
 };
