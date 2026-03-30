@@ -23,6 +23,7 @@ export async function generateChatTitle(chatNoteId: string, firstMessage: string
     const title = await provider.generateTitle(firstMessage);
     if (title) {
         note.title = title;
+        note.save();
         log.info(`Auto-renamed chat note ${chatNoteId} to "${title}"`);
     }
 }
