@@ -7,9 +7,38 @@ import { tool } from "ai";
 import { z } from "zod";
 
 import becca from "../../becca/becca.js";
+import markdownExport from "../export/markdown.js";
+import markdownImport from "../import/markdown.js";
 import noteService from "../notes.js";
 import SearchContext from "../search/search_context.js";
 import searchService from "../search/services/search.js";
+
+/**
+ * Convert note content to a format suitable for LLM consumption.
+ * Text notes are converted from HTML to Markdown to reduce token usage.
+ */
+function getNoteContentForLlm(note: { type: string; getContent: () => string | Buffer }) {
+    const content = note.getContent();
+    if (typeof content !== "string") {
+        return "[binary content]";
+    }
+    if (note.type === "text") {
+        return markdownExport.toMarkdown(content);
+    }
+    return content;
+}
+
+/**
+ * Convert LLM-provided content to a format suitable for storage.
+ * For text notes, converts Markdown to HTML.
+ */
+function setNoteContentFromLlm(note: { type: string; title: string; setContent: (content: string) => void }, content: string) {
+    if (note.type === "text") {
+        note.setContent(markdownImport.renderToHtml(content, note.title));
+    } else {
+        note.setContent(content);
+    }
+}
 
 /**
  * Search for notes in the knowledge base.
@@ -39,7 +68,7 @@ export const searchNotes = tool({
  * Read the content of a specific note.
  */
 export const readNote = tool({
-    description: "Read the full content of a note by its ID. Use search_notes first to find relevant note IDs.",
+    description: "Read the full content of a note by its ID. Use search_notes first to find relevant note IDs. Text notes are returned as Markdown.",
     inputSchema: z.object({
         noteId: z.string().describe("The ID of the note to read")
     }),
@@ -52,12 +81,11 @@ export const readNote = tool({
             return { error: "Note is protected" };
         }
 
-        const content = note.getContent();
         return {
             noteId: note.noteId,
             title: note.title,
             type: note.type,
-            content: typeof content === "string" ? content : "[binary content]"
+            content: getNoteContentForLlm(note)
         };
     }
 });
@@ -66,10 +94,10 @@ export const readNote = tool({
  * Update the content of a note.
  */
 export const updateNoteContent = tool({
-    description: "Replace the entire content of a note. Use this to completely rewrite a note's content. For text notes, provide HTML content.",
+    description: "Replace the entire content of a note. Use this to completely rewrite a note's content. For text notes, provide Markdown content.",
     inputSchema: z.object({
         noteId: z.string().describe("The ID of the note to update"),
-        content: z.string().describe("The new content for the note (HTML for text notes, plain text for code notes)")
+        content: z.string().describe("The new content for the note (Markdown for text notes, plain text for code notes)")
     }),
     execute: async ({ noteId, content }) => {
         const note = becca.getNote(noteId);
@@ -83,7 +111,7 @@ export const updateNoteContent = tool({
             return { error: `Cannot update content for note type: ${note.type}` };
         }
 
-        note.setContent(content);
+        setNoteContentFromLlm(note, content);
         return {
             success: true,
             noteId: note.noteId,
@@ -96,10 +124,10 @@ export const updateNoteContent = tool({
  * Append content to a note.
  */
 export const appendToNote = tool({
-    description: "Append content to the end of an existing note. For text notes, the content will be added as a new paragraph.",
+    description: "Append content to the end of an existing note. For text notes, provide Markdown content.",
     inputSchema: z.object({
         noteId: z.string().describe("The ID of the note to append to"),
-        content: z.string().describe("The content to append (HTML for text notes, plain text for code notes)")
+        content: z.string().describe("The content to append (Markdown for text notes, plain text for code notes)")
     }),
     execute: async ({ noteId, content }) => {
         const note = becca.getNote(noteId);
@@ -120,11 +148,9 @@ export const appendToNote = tool({
 
         let newContent: string;
         if (note.type === "text") {
-            // For text notes, wrap in paragraph if not already HTML
-            const contentToAppend = content.startsWith("<") ? content : `<p>${content}</p>`;
-            newContent = existingContent + contentToAppend;
+            const htmlToAppend = markdownImport.renderToHtml(content, note.title);
+            newContent = existingContent + htmlToAppend;
         } else {
-            // For code notes, just append with newline
             newContent = existingContent + (existingContent.endsWith("\n") ? "" : "\n") + content;
         }
 
@@ -145,7 +171,7 @@ export const createNote = tool({
     inputSchema: z.object({
         parentNoteId: z.string().describe("The ID of the parent note where the new note will be created. Use 'root' for top-level notes."),
         title: z.string().describe("The title of the new note"),
-        content: z.string().describe("The content of the note (HTML for text notes, plain text for code notes)"),
+        content: z.string().describe("The content of the note (Markdown for text notes, plain text for code notes)"),
         type: z.enum(["text", "code"]).optional().describe("The type of note to create. Defaults to 'text'.")
     }),
     execute: async ({ parentNoteId, title, content, type = "text" }) => {
@@ -157,11 +183,15 @@ export const createNote = tool({
             return { error: "Cannot create note under a protected parent" };
         }
 
+        const htmlContent = type === "text"
+            ? markdownImport.renderToHtml(content, title)
+            : content;
+
         try {
             const { note } = noteService.createNewNote({
                 parentNoteId,
                 title,
-                content,
+                content: htmlContent,
                 type
             });
 
@@ -195,12 +225,11 @@ export function currentNoteTools(contextNoteId: string) {
                     return { error: "Note is protected" };
                 }
 
-                const content = note.getContent();
                 return {
                     noteId: note.noteId,
                     title: note.title,
                     type: note.type,
-                    content: typeof content === "string" ? content : "[binary content]"
+                    content: getNoteContentForLlm(note)
                 };
             }
         })
