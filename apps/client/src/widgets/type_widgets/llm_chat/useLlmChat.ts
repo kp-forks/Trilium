@@ -170,9 +170,7 @@ export function useLlmChat(
         }
         // Restore last prompt tokens from the most recent message with usage
         const lastUsage = [...(content.messages || [])].reverse().find(m => m.usage)?.usage;
-        if (lastUsage) {
-            setLastPromptTokens(lastUsage.promptTokens);
-        }
+        setLastPromptTokens(lastUsage?.promptTokens ?? 0);
     }, [supportsExtendedThinking]);
 
     // Get current state as content object (uses refs to avoid stale closures)
