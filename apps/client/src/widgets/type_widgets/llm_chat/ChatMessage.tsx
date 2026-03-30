@@ -1,13 +1,11 @@
 import "./LlmChat.css";
 
-import type { LlmCitation, LlmUsage } from "@triliumnext/commons";
 import { marked } from "marked";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
-import type { ContentBlock, StoredMessage, ToolCall } from "./llm_chat_types.js";
-import { getMessageText, getMessageToolCalls } from "./llm_chat_types.js";
+import { type ContentBlock, getMessageText, type StoredMessage, type ToolCall } from "./llm_chat_types.js";
 
 function shortenNumber(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -127,7 +125,7 @@ export default function ChatMessage({ message, isStreaming }: Props) {
     const hasBlockContent = Array.isArray(message.content);
 
     return (
-        <>
+        <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`}>
             <div className={messageClasses}>
                 <div className="llm-chat-message-role">
                     {isError ? "Error" : roleLabel}
@@ -241,6 +239,6 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                     </>
                 )}
             </div>
-        </>
+        </div>
     );
 }
