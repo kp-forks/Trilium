@@ -1157,7 +1157,9 @@
     "title": "Experimental Options",
     "disclaimer": "These options are experimental and may cause instability. Use with caution.",
     "new_layout_name": "New Layout",
-    "new_layout_description": "Try out the new layout for a more modern look and improved usability. Subject to heavy change in the upcoming releases."
+    "new_layout_description": "Try out the new layout for a more modern look and improved usability. Subject to heavy change in the upcoming releases.",
+    "llm_name": "AI / LLM Chat",
+    "llm_description": "Enable the AI chat sidebar and LLM chat notes powered by large language models."
   },
   "fonts": {
     "theme_defined": "Theme defined",

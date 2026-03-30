@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
+import { isExperimentalFeatureEnabled } from "../../services/experimental_features";
 import froca from "../../services/froca";
 import { isDesktop, isMobile } from "../../services/utils";
 import TabSwitcher from "../mobile_widgets/TabSwitcher";
@@ -100,7 +101,7 @@ function initBuiltinWidget(note: FNote, isHorizontalLayout: boolean) {
         case "mobileTabSwitcher":
             return <TabSwitcher />;
         case "sidebarChat":
-            return <SidebarChatButton />;
+            return isExperimentalFeatureEnabled("llm") ? <SidebarChatButton /> : undefined;
         default:
             console.warn(`Unrecognized builtin widget ${builtinWidget} for launcher ${note.noteId} "${note.title}"`);
     }

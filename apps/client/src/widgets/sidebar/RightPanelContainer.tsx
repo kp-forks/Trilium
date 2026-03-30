@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import { WidgetsByParent } from "../../services/bundle";
+import { isExperimentalFeatureEnabled } from "../../services/experimental_features";
 import { t } from "../../services/i18n";
 import options from "../../services/options";
 import { DEFAULT_GUTTER_SIZE } from "../../services/resizer";
@@ -94,7 +95,7 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
         },
         {
             el: <SidebarChat />,
-            enabled: noteType !== "llmChat",
+            enabled: noteType !== "llmChat" && isExperimentalFeatureEnabled("llm"),
             position: 1000
         },
         ...widgetsByParent.getLegacyWidgets("right-pane").map((widget) => ({

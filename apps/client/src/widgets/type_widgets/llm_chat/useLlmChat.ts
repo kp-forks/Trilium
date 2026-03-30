@@ -192,6 +192,7 @@ export function useLlmChat(
 
     const clearMessages = useCallback(() => {
         setMessages([]);
+        setLastPromptTokens(0);
     }, [setMessages]);
 
     const handleSubmit = useCallback(async (e: Event) => {
