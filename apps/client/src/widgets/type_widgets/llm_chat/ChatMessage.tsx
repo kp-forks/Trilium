@@ -1,10 +1,18 @@
+import "./LlmChat.css";
+
 import type { LlmCitation, LlmUsage } from "@triliumnext/commons";
-import { useMemo } from "preact/hooks";
 import { marked } from "marked";
+import { useMemo } from "preact/hooks";
+
 import { t } from "../../../services/i18n.js";
 import type { ContentBlock, StoredMessage, ToolCall } from "./llm_chat_types.js";
 import { getMessageText, getMessageToolCalls } from "./llm_chat_types.js";
-import "./LlmChat.css";
+
+function shortenNumber(n: number): string {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
+    return n.toString();
+}
 
 // Configure marked for safe rendering
 marked.setOptions({
@@ -197,37 +205,26 @@ export default function ChatMessage({ message, isStreaming }: Props) {
             )}
             {message.usage && typeof message.usage.promptTokens === "number" && (
                 <div className="llm-chat-usage">
-                    <span className="bx bx-chip" />
-                    <span className="llm-chat-usage-text">
-                        {message.usage.model && message.usage.cost != null
-                            ? t("llm_chat.tokens_used_with_model_and_cost", {
-                                model: message.usage.model,
-                                prompt: message.usage.promptTokens.toLocaleString(),
-                                completion: message.usage.completionTokens.toLocaleString(),
-                                total: message.usage.totalTokens.toLocaleString(),
-                                cost: message.usage.cost.toFixed(4)
-                            })
-                            : message.usage.model
-                            ? t("llm_chat.tokens_used_with_model", {
-                                model: message.usage.model,
-                                prompt: message.usage.promptTokens.toLocaleString(),
-                                completion: message.usage.completionTokens.toLocaleString(),
-                                total: message.usage.totalTokens.toLocaleString()
-                            })
-                            : message.usage.cost != null
-                            ? t("llm_chat.tokens_used_with_cost", {
-                                prompt: message.usage.promptTokens.toLocaleString(),
-                                completion: message.usage.completionTokens.toLocaleString(),
-                                total: message.usage.totalTokens.toLocaleString(),
-                                cost: message.usage.cost.toFixed(4)
-                            })
-                            : t("llm_chat.tokens_used", {
-                                prompt: message.usage.promptTokens.toLocaleString(),
-                                completion: message.usage.completionTokens.toLocaleString(),
-                                total: message.usage.totalTokens.toLocaleString()
-                            })
-                        }
+                    {message.usage.model && (
+                        <span className="llm-chat-usage-model">{message.usage.model}</span>
+                    )}
+                    <span className="llm-chat-usage-separator">·</span>
+                    <span
+                        className="llm-chat-usage-tokens"
+                        title={t("llm_chat.tokens_detail", {
+                            prompt: message.usage.promptTokens.toLocaleString(),
+                            completion: message.usage.completionTokens.toLocaleString()
+                        })}
+                    >
+                        <span className="bx bx-chip" />{" "}
+                        {t("llm_chat.total_tokens", { total: shortenNumber(message.usage.totalTokens) })}
                     </span>
+                    {message.usage.cost != null && (
+                        <>
+                            <span className="llm-chat-usage-separator">·</span>
+                            <span className="llm-chat-usage-cost">~${message.usage.cost.toFixed(4)}</span>
+                        </>
+                    )}
                 </div>
             )}
         </div>

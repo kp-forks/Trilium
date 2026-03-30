@@ -619,13 +619,26 @@
     border-top: 1px solid var(--main-border-color);
     font-size: 0.75rem;
     color: var(--muted-text-color);
+    cursor: default;
 }
 
 .llm-chat-usage .bx {
     font-size: 0.875rem;
 }
 
-.llm-chat-usage-text {
+.llm-chat-usage-model {
+    font-weight: 500;
+}
+
+.llm-chat-usage-separator {
+    opacity: 0.5;
+}
+
+.llm-chat-usage-tokens {
+    font-family: var(--monospace-font-family, monospace);
+}
+
+.llm-chat-usage-cost {
     font-family: var(--monospace-font-family, monospace);
 }
 
