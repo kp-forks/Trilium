@@ -84,7 +84,7 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
 }
 
 export default function ChatMessage({ message, isStreaming }: Props) {
-    const roleLabel = message.role === "user" ? "You" : "Assistant";
+    const roleLabel = message.role === "user" ? t("llm_chat.role_user") : t("llm_chat.role_assistant");
     const isError = message.type === "error";
     const isThinking = message.type === "thinking";
     const textContent = typeof message.content === "string" ? message.content : getMessageText(message.content);
