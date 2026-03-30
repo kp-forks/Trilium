@@ -111,6 +111,7 @@ export const updateNoteContent = tool({
             return { error: `Cannot update content for note type: ${note.type}` };
         }
 
+        note.saveRevision();
         setNoteContentFromLlm(note, content);
         return {
             success: true,
@@ -154,6 +155,7 @@ export const appendToNote = tool({
             newContent = existingContent + (existingContent.endsWith("\n") ? "" : "\n") + content;
         }
 
+        note.saveRevision();
         note.setContent(newContent);
         return {
             success: true,
