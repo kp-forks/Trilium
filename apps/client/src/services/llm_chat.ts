@@ -1,4 +1,5 @@
-import type { LlmMessage, LlmCitation, LlmChatConfig, LlmUsage, LlmModelInfo } from "@triliumnext/commons";
+import type { LlmChatConfig, LlmCitation, LlmMessage, LlmModelInfo,LlmUsage } from "@triliumnext/commons";
+
 import server from "./server.js";
 
 /**
@@ -98,7 +99,7 @@ export async function streamChatCompletion(
                                 break;
                         }
                     } catch {
-                        // Ignore JSON parse errors for partial data
+                        console.error("Failed to parse SSE data line:", line, e);
                     }
                 }
             }

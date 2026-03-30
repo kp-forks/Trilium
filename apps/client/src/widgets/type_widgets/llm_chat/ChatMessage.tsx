@@ -1,11 +1,11 @@
 import "./LlmChat.css";
 
-import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
+import { SanitizedHtml } from "../../react/RawHtml.js";
 import { type ContentBlock, getMessageText, type StoredMessage, type ToolCall } from "./llm_chat_types.js";
 
 function shortenNumber(n: number): string {
@@ -20,10 +20,9 @@ marked.setOptions({
     gfm: true // GitHub Flavored Markdown
 });
 
-/** Parse markdown and sanitize the resulting HTML to prevent XSS. */
+/** Parse markdown to HTML. Sanitization is handled by SanitizedHtml. */
 function renderMarkdown(markdown: string): string {
-    const raw = marked.parse(markdown) as string;
-    return DOMPurify.sanitize(raw);
+    return marked.parse(markdown) as string;
 }
 
 interface Props {
@@ -75,10 +74,7 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
             const html = renderMarkdown(block.content);
             return (
                 <div key={idx}>
-                    <div
-                        className="llm-chat-markdown"
-                        dangerouslySetInnerHTML={{ __html: html }}
-                    />
+                    <SanitizedHtml className="llm-chat-markdown" html={html} />
                     {isStreaming && idx === blocks.length - 1 && <span className="llm-chat-cursor" />}
                 </div>
             );
@@ -143,10 +139,7 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                             renderContentBlocks(message.content as ContentBlock[], isStreaming)
                         ) : (
                             <>
-                                <div
-                                    className="llm-chat-markdown"
-                                    dangerouslySetInnerHTML={{ __html: renderedContent || "" }}
-                                />
+                                <SanitizedHtml className="llm-chat-markdown" html={renderedContent || ""} />
                                 {isStreaming && <span className="llm-chat-cursor" />}
                             </>
                         )
