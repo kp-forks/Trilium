@@ -46,6 +46,8 @@ export interface ModelInfo {
     costMultiplier?: number;
     /** Maximum context window size in tokens */
     contextWindow?: number;
+    /** Whether this is a legacy/older model */
+    isLegacy?: boolean;
 }
 
 export interface LlmProvider {

@@ -223,8 +223,7 @@ export default function SidebarChat() {
                 <>
                     <ActionButton
                         icon="bx bx-plus"
-                        text=""
-                        title={t("sidebar_chat.new_chat")}
+                        text={t("sidebar_chat.new_chat")}
                         onClick={handleNewChat}
                     />
                     <Dropdown
@@ -264,8 +263,7 @@ export default function SidebarChat() {
                     </Dropdown>
                     <ActionButton
                         icon="bx bx-save"
-                        text=""
-                        title={t("sidebar_chat.save_chat")}
+                        text={t("sidebar_chat.save_chat")}
                         onClick={handleSaveChat}
                         disabled={chat.messages.length === 0}
                     />

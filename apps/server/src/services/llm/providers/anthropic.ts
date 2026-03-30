@@ -1,5 +1,5 @@
 import { createAnthropic, type AnthropicProvider as AnthropicSDKProvider } from "@ai-sdk/anthropic";
-import { generateText, streamText, stepCountIs, type CoreMessage } from "ai";
+import { generateText, streamText, stepCountIs, type CoreMessage, type ToolSet } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
@@ -191,7 +191,7 @@ export class AnthropicProvider implements LlmProvider {
         }
 
         // Build tools object
-        const tools: Record<string, unknown> = {};
+        const tools: ToolSet = {};
 
         if (config.enableWebSearch) {
             tools.web_search = this.anthropic.tools.webSearch_20250305({
@@ -211,8 +211,6 @@ export class AnthropicProvider implements LlmProvider {
         if (Object.keys(tools).length > 0) {
             streamOptions.tools = tools;
             // Allow multiple tool use cycles before final response
-            streamOptions.maxSteps = 5;
-            // Override default stopWhen which stops after 1 step
             streamOptions.stopWhen = stepCountIs(5);
             // Let model decide when to use tools vs respond with text
             streamOptions.toolChoice = "auto";
@@ -232,7 +230,7 @@ export class AnthropicProvider implements LlmProvider {
     async generateTitle(firstMessage: string): Promise<string> {
         const { text } = await generateText({
             model: this.anthropic(TITLE_MODEL),
-            maxTokens: TITLE_MAX_TOKENS,
+            maxOutputTokens: TITLE_MAX_TOKENS,
             messages: [
                 {
                     role: "user",

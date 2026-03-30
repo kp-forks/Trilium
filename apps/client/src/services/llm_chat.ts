@@ -98,7 +98,7 @@ export async function streamChatCompletion(
                                 callbacks.onDone();
                                 break;
                         }
-                    } catch {
+                    } catch (e) {
                         console.error("Failed to parse SSE data line:", line, e);
                     }
                 }
