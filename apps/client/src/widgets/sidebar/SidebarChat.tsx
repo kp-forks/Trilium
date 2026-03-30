@@ -9,7 +9,7 @@ import server from "../../services/server.js";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormListItem } from "../react/FormList.js";
-import { useActiveNoteContext } from "../react/hooks.js";
+import { useActiveNoteContext, useNote, useNoteProperty } from "../react/hooks.js";
 import NoItems from "../react/NoItems.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
@@ -31,6 +31,10 @@ export default function SidebarChat() {
 
     // Get the current active note context
     const { noteId: activeNoteId, note: activeNote } = useActiveNoteContext();
+
+    // Reactively watch the chat note's title (updates via WebSocket sync after auto-rename)
+    const chatNote = useNote(chatNoteId);
+    const chatTitle = useNoteProperty(chatNote, "title") || t("sidebar_chat.title");
 
     // Use shared chat hook with sidebar-specific options
     const chat = useLlmChat(
@@ -213,7 +217,7 @@ export default function SidebarChat() {
     return (
         <RightPanelWidget
             id="sidebar-chat"
-            title={t("sidebar_chat.title")}
+            title={chatTitle}
             grow
             buttons={
                 <>
