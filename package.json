@@ -18,6 +18,7 @@
     "desktop:start": "pnpm run --filter desktop dev",
     "desktop:build": "pnpm run --filter desktop build",
     "desktop:start-prod": "pnpm run --filter desktop start-prod",
+    "desktop:start-prod-no-dir": "pnpm run --filter desktop start-prod-no-dir",
     "edit-docs:edit-docs": "pnpm run --filter edit-docs edit-docs",
     "edit-docs:build": "pnpm run --filter edit-docs build",
     "website:start": "pnpm run --filter website dev",
