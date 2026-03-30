@@ -1642,7 +1642,9 @@
     "note_context_enabled": "Click to disable note context: {{title}}",
     "note_context_disabled": "Click to include current note in context",
     "no_provider_message": "No AI provider configured. Add one to start chatting.",
-    "add_provider": "Add AI Provider"
+    "add_provider": "Add AI Provider",
+    "role_user": "You",
+    "role_assistant": "Assistant"
   },
   "sidebar_chat": {
     "title": "AI Chat",

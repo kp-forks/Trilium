@@ -1,5 +1,6 @@
 import "./LlmChat.css";
 
+import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { useMemo } from "preact/hooks";
 
@@ -18,6 +19,12 @@ marked.setOptions({
     breaks: true, // Convert \n to <br>
     gfm: true // GitHub Flavored Markdown
 });
+
+/** Parse markdown and sanitize the resulting HTML to prevent XSS. */
+function renderMarkdown(markdown: string): string {
+    const raw = marked.parse(markdown) as string;
+    return DOMPurify.sanitize(raw);
+}
 
 interface Props {
     message: StoredMessage;
@@ -65,7 +72,7 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
 function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
     return blocks.map((block, idx) => {
         if (block.type === "text") {
-            const html = marked.parse(block.content) as string;
+            const html = renderMarkdown(block.content);
             return (
                 <div key={idx}>
                     <div
@@ -92,7 +99,7 @@ export default function ChatMessage({ message, isStreaming }: Props) {
     // Render markdown for assistant messages with legacy string content
     const renderedContent = useMemo(() => {
         if (message.role === "assistant" && !isError && !isThinking && typeof message.content === "string") {
-            return marked.parse(message.content) as string;
+            return renderMarkdown(message.content);
         }
         return null;
     }, [message.content, message.role, isError, isThinking]);
