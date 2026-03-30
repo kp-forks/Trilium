@@ -153,7 +153,7 @@ function getMostRecentLlmChat() {
         new SearchContext({
             ancestorNoteId: "_llmChat",
             limit: 1,
-            orderBy: "note.utcDateModified",
+            orderBy: "utcDateModified",
             orderDirection: "desc"
         })
     );
@@ -185,7 +185,7 @@ function getRecentLlmChats(limit: number = 10) {
         new SearchContext({
             ancestorNoteId: "_llmChat",
             limit,
-            orderBy: "note.utcDateModified",
+            orderBy: "utcDateModified",
             orderDirection: "desc"
         })
     );
