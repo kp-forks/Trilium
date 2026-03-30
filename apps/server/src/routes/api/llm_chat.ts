@@ -52,10 +52,11 @@ async function streamChat(req: Request, res: Response) {
         const provider = getProviderByType(config.provider || "anthropic");
         const result = provider.chat(messages, config);
 
-        // Get pricing from provider for cost calculation
-        const model = config.model || "claude-sonnet-4-20250514";
-        const pricing = provider.getModelPricing(model);
-        for await (const chunk of streamToChunks(result, { model, pricing })) {
+        // Get pricing and display name for the model
+        const modelId = config.model || "claude-sonnet-4-6";
+        const pricing = provider.getModelPricing(modelId);
+        const modelDisplayName = provider.getAvailableModels().find(m => m.id === modelId)?.name || modelId;
+        for await (const chunk of streamToChunks(result, { model: modelDisplayName, pricing })) {
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
             // Flush immediately to ensure real-time streaming
             if (typeof flushableRes.flush === "function") {
