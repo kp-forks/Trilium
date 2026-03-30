@@ -5,6 +5,7 @@ import { marked } from "marked";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
+import utils from "../../../services/utils.js";
 import type { ContentBlock, StoredMessage, ToolCall } from "./llm_chat_types.js";
 import { getMessageText, getMessageToolCalls } from "./llm_chat_types.js";
 
@@ -205,30 +206,41 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                     </div>
                 )}
             </div>
-            {message.usage && typeof message.usage.promptTokens === "number" && (
-                <div className="llm-chat-usage">
-                    {message.usage.model && (
-                        <span className="llm-chat-usage-model">{message.usage.model}</span>
-                    )}
-                    <span className="llm-chat-usage-separator">·</span>
-                    <span
-                        className="llm-chat-usage-tokens"
-                        title={t("llm_chat.tokens_detail", {
-                            prompt: message.usage.promptTokens.toLocaleString(),
-                            completion: message.usage.completionTokens.toLocaleString()
-                        })}
-                    >
-                        <span className="bx bx-chip" />{" "}
-                        {t("llm_chat.total_tokens", { total: shortenNumber(message.usage.totalTokens) })}
-                    </span>
-                    {message.usage.cost != null && (
-                        <>
-                            <span className="llm-chat-usage-separator">·</span>
-                            <span className="llm-chat-usage-cost">~${message.usage.cost.toFixed(4)}</span>
-                        </>
-                    )}
-                </div>
-            )}
+            <div className={`llm-chat-footer llm-chat-footer-${message.role}`}>
+                <span
+                    className="llm-chat-footer-time"
+                    title={utils.formatDateTime(new Date(message.createdAt))}
+                >
+                    {utils.formatTime(new Date(message.createdAt))}
+                </span>
+                {message.usage && typeof message.usage.promptTokens === "number" && (
+                    <>
+                        {message.usage.model && (
+                            <>
+                                <span className="llm-chat-usage-separator">·</span>
+                                <span className="llm-chat-usage-model">{message.usage.model}</span>
+                            </>
+                        )}
+                        <span className="llm-chat-usage-separator">·</span>
+                        <span
+                            className="llm-chat-usage-tokens"
+                            title={t("llm_chat.tokens_detail", {
+                                prompt: message.usage.promptTokens.toLocaleString(),
+                                completion: message.usage.completionTokens.toLocaleString()
+                            })}
+                        >
+                            <span className="bx bx-chip" />{" "}
+                            {t("llm_chat.total_tokens", { total: shortenNumber(message.usage.totalTokens) })}
+                        </span>
+                        {message.usage.cost != null && (
+                            <>
+                                <span className="llm-chat-usage-separator">·</span>
+                                <span className="llm-chat-usage-cost">~${message.usage.cost.toFixed(4)}</span>
+                            </>
+                        )}
+                    </>
+                )}
+            </div>
         </>
     );
 }

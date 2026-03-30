@@ -24,8 +24,8 @@
     margin-top: 0;
 }
 
-/* Collapse gap between the usage footer and the next message */
-.llm-chat-usage + .llm-chat-message {
+/* Collapse gap between the footer and the next message */
+.llm-chat-footer + .llm-chat-message {
     margin-top: 0.5rem;
 }
 
@@ -618,8 +618,8 @@
     color: var(--danger-color, #dc3545);
 }
 
-/* Token usage display (sits below the message bubble) */
-.llm-chat-usage {
+/* Message footer (timestamp + token usage, sits below the bubble) */
+.llm-chat-footer {
     display: flex;
     align-items: center;
     gap: 0.375rem;
@@ -630,8 +630,16 @@
     cursor: default;
 }
 
-.llm-chat-usage .bx {
+.llm-chat-footer-user {
+    justify-content: flex-end;
+}
+
+.llm-chat-footer .bx {
     font-size: 0.875rem;
+}
+
+.llm-chat-footer-time {
+    cursor: help;
 }
 
 .llm-chat-usage-model {
@@ -643,6 +651,7 @@
 }
 
 .llm-chat-usage-tokens {
+    cursor: help;
     font-family: var(--monospace-font-family, monospace);
 }
 
