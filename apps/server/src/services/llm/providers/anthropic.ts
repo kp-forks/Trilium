@@ -133,11 +133,34 @@ export class AnthropicProvider implements LlmProvider {
             }
         }
 
-        // Convert to AI SDK message format
-        const coreMessages: CoreMessage[] = chatMessages.map(m => ({
-            role: m.role as "user" | "assistant",
-            content: m.content
-        }));
+        // Convert to AI SDK message format with cache control breakpoints.
+        // The system prompt and conversation history (all but the last user message)
+        // are stable across turns, so we mark them for caching to reduce costs.
+        const CACHE_CONTROL = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
+
+        const coreMessages: CoreMessage[] = [];
+
+        // System prompt as a cacheable message
+        if (systemPrompt) {
+            coreMessages.push({
+                role: "system",
+                content: systemPrompt,
+                providerOptions: CACHE_CONTROL
+            });
+        }
+
+        // Conversation messages
+        for (let i = 0; i < chatMessages.length; i++) {
+            const m = chatMessages[i];
+            const isLastBeforeNewTurn = i === chatMessages.length - 2;
+            coreMessages.push({
+                role: m.role as "user" | "assistant",
+                content: m.content,
+                // Cache breakpoint on the second-to-last message:
+                // everything up to here is identical across consecutive turns.
+                ...(isLastBeforeNewTurn && { providerOptions: CACHE_CONTROL })
+            });
+        }
 
         const model = this.anthropic(config.model || DEFAULT_MODEL);
 
@@ -145,8 +168,7 @@ export class AnthropicProvider implements LlmProvider {
         const streamOptions: Parameters<typeof streamText>[0] = {
             model,
             messages: coreMessages,
-            maxOutputTokens: config.maxTokens || DEFAULT_MAX_TOKENS,
-            system: systemPrompt
+            maxOutputTokens: config.maxTokens || DEFAULT_MAX_TOKENS
         };
 
         // Enable extended thinking for deeper reasoning
