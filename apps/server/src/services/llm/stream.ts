@@ -49,15 +49,19 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
                     };
                     break;
 
-                case "tool-result":
+                case "tool-result": {
+                    const output = part.output;
+                    const isError = typeof output === "object" && output !== null && "error" in output;
                     yield {
                         type: "tool_result",
                         toolName: part.toolName,
-                        result: typeof part.output === "string"
-                            ? part.output
-                            : JSON.stringify(part.output)
+                        result: typeof output === "string"
+                            ? output
+                            : JSON.stringify(output),
+                        isError
                     };
                     break;
+                }
 
                 case "source":
                     // Citation from web search (only URL sources have url property)

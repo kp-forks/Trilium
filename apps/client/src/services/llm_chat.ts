@@ -13,7 +13,7 @@ export interface StreamCallbacks {
     onChunk: (text: string) => void;
     onThinking?: (text: string) => void;
     onToolUse?: (toolName: string, input: Record<string, unknown>) => void;
-    onToolResult?: (toolName: string, result: string) => void;
+    onToolResult?: (toolName: string, result: string, isError?: boolean) => void;
     onCitation?: (citation: LlmCitation) => void;
     onUsage?: (usage: LlmUsage) => void;
     onError: (error: string) => void;
@@ -78,7 +78,7 @@ export async function streamChatCompletion(
                                 callbacks.onToolUse?.(data.toolName, data.toolInput);
                                 break;
                             case "tool_result":
-                                callbacks.onToolResult?.(data.toolName, data.result);
+                                callbacks.onToolResult?.(data.toolName, data.result, data.isError);
                                 break;
                             case "citation":
                                 if (data.citation) {

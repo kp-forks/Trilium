@@ -18,11 +18,17 @@ interface Props {
 }
 
 function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
+    const classes = [
+        "llm-chat-tool-call-inline",
+        toolCall.isError && "llm-chat-tool-call-error"
+    ].filter(Boolean).join(" ");
+
     return (
-        <details className="llm-chat-tool-call-inline">
+        <details className={classes}>
             <summary className="llm-chat-tool-call-inline-summary">
-                <span className="bx bx-wrench" />
+                <span className={toolCall.isError ? "bx bx-error-circle" : "bx bx-wrench"} />
                 {toolCall.toolName}
+                {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
             </summary>
             <div className="llm-chat-tool-call-inline-body">
                 <div className="llm-chat-tool-call-input">
@@ -30,8 +36,8 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
                     <pre>{JSON.stringify(toolCall.input, null, 2)}</pre>
                 </div>
                 {toolCall.result && (
-                    <div className="llm-chat-tool-call-result">
-                        <strong>{t("llm_chat.result")}:</strong>
+                    <div className={`llm-chat-tool-call-result ${toolCall.isError ? "llm-chat-tool-call-result-error" : ""}`}>
+                        <strong>{toolCall.isError ? t("llm_chat.error") : t("llm_chat.result")}:</strong>
                         <pre>{(() => {
                             if (typeof toolCall.result === "string" && (toolCall.result.startsWith("{") || toolCall.result.startsWith("["))) {
                                 try {

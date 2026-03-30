@@ -270,12 +270,13 @@ export function useLlmChat(
                         }
                     });
                 },
-                onToolResult: (toolName, result) => {
+                onToolResult: (toolName, result, isError) => {
                     // Find the most recent tool_call block for this tool without a result
                     for (let i = contentBlocks.length - 1; i >= 0; i--) {
                         const block = contentBlocks[i];
                         if (block.type === "tool_call" && block.toolCall.toolName === toolName && !block.toolCall.result) {
                             block.toolCall.result = result;
+                            block.toolCall.isError = isError;
                             break;
                         }
                     }

@@ -1627,6 +1627,8 @@
     "tool_calls": "{{count}} tool call(s)",
     "input": "Input",
     "result": "Result",
+    "error": "Error",
+    "tool_error": "failed",
     "tokens_used": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens",
     "tokens_used_with_cost": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})",
     "tokens_used_with_model": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens",

@@ -94,7 +94,7 @@ export type LlmStreamChunk =
     | { type: "text"; content: string }
     | { type: "thinking"; content: string }
     | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
-    | { type: "tool_result"; toolName: string; result: string }
+    | { type: "tool_result"; toolName: string; result: string; isError?: boolean }
     | { type: "citation"; citation: LlmCitation }
     | { type: "usage"; usage: LlmUsage }
     | { type: "error"; error: string }

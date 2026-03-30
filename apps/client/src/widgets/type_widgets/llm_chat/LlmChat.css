@@ -588,6 +588,27 @@
     margin-top: 0.5rem;
 }
 
+/* Tool call error styling */
+.llm-chat-tool-call-error {
+    border-left-color: var(--danger-color, #dc3545);
+}
+
+.llm-chat-tool-call-error .llm-chat-tool-call-inline-summary {
+    color: var(--danger-color, #dc3545);
+}
+
+.llm-chat-tool-call-error-badge {
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-family: var(--main-font-family);
+    color: var(--danger-color, #dc3545);
+    opacity: 0.8;
+}
+
+.llm-chat-tool-call-result-error pre {
+    color: var(--danger-color, #dc3545);
+}
+
 /* Token usage display */
 .llm-chat-usage {
     display: flex;

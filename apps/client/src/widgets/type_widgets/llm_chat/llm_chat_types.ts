@@ -7,6 +7,7 @@ export interface ToolCall {
     toolName: string;
     input: Record<string, unknown>;
     result?: string;
+    isError?: boolean;
 }
 
 /** A block of text content (rendered as Markdown for assistant messages). */
