@@ -16,8 +16,13 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     const chat = useLlmChat(
         // onMessagesChange - trigger save
         () => setShouldSave(true),
-        { defaultEnableNoteTools: false, supportsExtendedThinking: true }
+        { defaultEnableNoteTools: false, supportsExtendedThinking: true, chatNoteId: note?.noteId }
     );
+
+    // Keep chatNoteId in sync when the note changes
+    useEffect(() => {
+        chat.setChatNoteId(note?.noteId);
+    }, [note?.noteId, chat.setChatNoteId]);
 
     const spacedUpdate = useEditorSpacedUpdate({
         note,

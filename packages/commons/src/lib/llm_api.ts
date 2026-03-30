@@ -41,6 +41,8 @@ export interface LlmChatConfig {
     thinkingBudget?: number;
     /** Current note context (note ID the user is viewing) */
     contextNoteId?: string;
+    /** The note ID of the chat note (used for auto-renaming on first message) */
+    chatNoteId?: string;
 }
 
 /**

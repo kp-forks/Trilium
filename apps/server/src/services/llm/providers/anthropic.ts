@@ -1,13 +1,15 @@
 import { createAnthropic, type AnthropicProvider as AnthropicSDKProvider } from "@ai-sdk/anthropic";
-import { streamText, stepCountIs, type CoreMessage } from "ai";
+import { generateText, streamText, stepCountIs, type CoreMessage } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
-import { noteTools, currentNoteTools } from "../tools.js";
+import { noteTools, attributeTools, currentNoteTools } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 8096;
+const TITLE_MODEL = "claude-haiku-4-5-20251001";
+const TITLE_MAX_TOKENS = 30;
 
 /**
  * Calculate effective cost for comparison (weighted average: 1 input + 3 output).
@@ -203,6 +205,7 @@ export class AnthropicProvider implements LlmProvider {
 
         if (config.enableNoteTools) {
             Object.assign(tools, noteTools);
+            Object.assign(tools, attributeTools);
         }
 
         if (Object.keys(tools).length > 0) {
@@ -224,5 +227,20 @@ export class AnthropicProvider implements LlmProvider {
 
     getAvailableModels(): ModelInfo[] {
         return AVAILABLE_MODELS;
+    }
+
+    async generateTitle(firstMessage: string): Promise<string> {
+        const { text } = await generateText({
+            model: this.anthropic(TITLE_MODEL),
+            maxTokens: TITLE_MAX_TOKENS,
+            messages: [
+                {
+                    role: "user",
+                    content: `Summarize the following message as a very short chat title (max 6 words). Reply with ONLY the title, no quotes or punctuation at the end.\n\nMessage: ${firstMessage}`
+                }
+            ]
+        });
+
+        return text.trim();
     }
 }

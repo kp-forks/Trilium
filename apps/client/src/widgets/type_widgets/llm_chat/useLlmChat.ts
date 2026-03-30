@@ -17,6 +17,8 @@ export interface LlmChatOptions {
     supportsExtendedThinking?: boolean;
     /** Initial context note ID (the note the user is viewing) */
     contextNoteId?: string;
+    /** The chat note ID (used for auto-renaming on first message) */
+    chatNoteId?: string;
 }
 
 export interface UseLlmChatReturn {
@@ -50,6 +52,7 @@ export interface UseLlmChatReturn {
     setEnableNoteTools: (value: boolean) => void;
     setEnableExtendedThinking: (value: boolean) => void;
     setContextNoteId: (noteId: string | undefined) => void;
+    setChatNoteId: (noteId: string | undefined) => void;
 
     // Actions
     handleSubmit: (e: Event) => Promise<void>;
@@ -65,7 +68,7 @@ export function useLlmChat(
     onMessagesChange?: (messages: StoredMessage[]) => void,
     options: LlmChatOptions = {}
 ): UseLlmChatReturn {
-    const { defaultEnableNoteTools = false, supportsExtendedThinking = false, contextNoteId: initialContextNoteId } = options;
+    const { defaultEnableNoteTools = false, supportsExtendedThinking = false, contextNoteId: initialContextNoteId, chatNoteId: initialChatNoteId } = options;
 
     const [messages, setMessagesInternal] = useState<StoredMessage[]>([]);
     const [input, setInput] = useState("");
@@ -80,6 +83,7 @@ export function useLlmChat(
     const [enableNoteTools, setEnableNoteTools] = useState(defaultEnableNoteTools);
     const [enableExtendedThinking, setEnableExtendedThinking] = useState(false);
     const [contextNoteId, setContextNoteId] = useState<string | undefined>(initialContextNoteId);
+    const [chatNoteId, setChatNoteIdState] = useState<string | undefined>(initialChatNoteId);
     const [lastPromptTokens, setLastPromptTokens] = useState<number>(0);
     const [hasProvider, setHasProvider] = useState<boolean>(true); // Assume true initially
     const [isCheckingProvider, setIsCheckingProvider] = useState<boolean>(true);
@@ -97,6 +101,12 @@ export function useLlmChat(
     enableNoteToolsRef.current = enableNoteTools;
     const enableExtendedThinkingRef = useRef(enableExtendedThinking);
     enableExtendedThinkingRef.current = enableExtendedThinking;
+    const chatNoteIdRef = useRef(chatNoteId);
+    chatNoteIdRef.current = chatNoteId;
+    const setChatNoteId = useCallback((noteId: string | undefined) => {
+        chatNoteIdRef.current = noteId;
+        setChatNoteIdState(noteId);
+    }, []);
     const contextNoteIdRef = useRef(contextNoteId);
     contextNoteIdRef.current = contextNoteId;
 
@@ -233,7 +243,8 @@ export function useLlmChat(
             model: selectedModel || undefined,
             enableWebSearch,
             enableNoteTools,
-            contextNoteId
+            contextNoteId,
+            chatNoteId: chatNoteIdRef.current
         };
         if (supportsExtendedThinking) {
             streamOptions.enableExtendedThinking = enableExtendedThinking;
@@ -380,6 +391,7 @@ export function useLlmChat(
         setEnableNoteTools,
         setEnableExtendedThinking,
         setContextNoteId,
+        setChatNoteId,
 
         // Actions
         handleSubmit,

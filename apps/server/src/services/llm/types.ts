@@ -69,4 +69,10 @@ export interface LlmProvider {
      * Get list of available models for this provider.
      */
     getAvailableModels(): ModelInfo[];
+
+    /**
+     * Generate a short title summarizing a message.
+     * Used for auto-renaming chat notes. Should use a fast, cheap model.
+     */
+    generateTitle(firstMessage: string): Promise<string>;
 }

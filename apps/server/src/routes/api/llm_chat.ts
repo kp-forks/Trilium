@@ -3,6 +3,7 @@ import type { LlmMessage } from "@triliumnext/commons";
 
 import { getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
 import { streamToChunks } from "../../services/llm/stream.js";
+import { generateChatTitle } from "../../services/llm/chat_title.js";
 
 interface ChatRequest {
     messages: LlmMessage[];
@@ -61,6 +62,16 @@ async function streamChat(req: Request, res: Response) {
             // Flush immediately to ensure real-time streaming
             if (typeof flushableRes.flush === "function") {
                 flushableRes.flush();
+            }
+        }
+        // Auto-generate a title for the chat note on the first user message
+        const userMessages = messages.filter(m => m.role === "user");
+        if (userMessages.length === 1 && config.chatNoteId) {
+            try {
+                await generateChatTitle(config.chatNoteId, userMessages[0].content);
+            } catch (err) {
+                // Title generation is best-effort; don't fail the chat
+                console.error("Failed to generate chat title:", err);
             }
         }
     } catch (error) {

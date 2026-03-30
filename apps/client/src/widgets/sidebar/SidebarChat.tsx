@@ -44,6 +44,11 @@ export default function SidebarChat() {
         chat.setContextNoteId(activeNoteId ?? undefined);
     }, [activeNoteId, chat.setContextNoteId]);
 
+    // Sync chatNoteId into the hook for auto-title generation
+    useEffect(() => {
+        chat.setChatNoteId(chatNoteId ?? undefined);
+    }, [chatNoteId, chat.setChatNoteId]);
+
     // Ref to access chat methods in effects without triggering re-runs
     const chatRef = useRef(chat);
     chatRef.current = chat;
@@ -136,6 +141,10 @@ export default function SidebarChat() {
             console.error("Cannot send message: no chat note available");
             return;
         }
+
+        // Ensure the hook has the chatNoteId before submitting (state update from
+        // setChatNoteId above won't be visible until next render)
+        chat.setChatNoteId(noteId);
 
         // Delegate to shared handler
         await chat.handleSubmit(e);
