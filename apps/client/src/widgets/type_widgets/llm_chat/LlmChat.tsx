@@ -1,21 +1,22 @@
-import { useCallback, useEffect, useState } from "preact/hooks";
+import "./LlmChat.css";
+
+import { useCallback, useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
-import NoItems from "../../react/NoItems.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
+import NoItems from "../../react/NoItems.js";
 import { TypeWidgetProps } from "../type_widget.js";
 import ChatInputBar from "./ChatInputBar.js";
 import ChatMessage from "./ChatMessage.js";
 import type { LlmChatContent } from "./llm_chat_types.js";
 import { useLlmChat } from "./useLlmChat.js";
-import "./LlmChat.css";
 
 export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
-    const [shouldSave, setShouldSave] = useState(false);
+    const spacedUpdateRef = useRef<{ scheduleUpdate: () => void }>(null);
 
     const chat = useLlmChat(
         // onMessagesChange - trigger save
-        () => setShouldSave(true),
+        () => spacedUpdateRef.current?.scheduleUpdate(),
         { defaultEnableNoteTools: false, supportsExtendedThinking: true, chatNoteId: note?.noteId }
     );
 
@@ -46,17 +47,10 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
             }
         }
     });
-
-    // Trigger save after state updates when shouldSave is set
-    useEffect(() => {
-        if (shouldSave) {
-            setShouldSave(false);
-            spacedUpdate.scheduleUpdate();
-        }
-    }, [shouldSave, spacedUpdate]);
+    spacedUpdateRef.current = spacedUpdate;
 
     const triggerSave = useCallback(() => {
-        setShouldSave(true);
+        spacedUpdateRef.current?.scheduleUpdate();
     }, []);
 
     return (
