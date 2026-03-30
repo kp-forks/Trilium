@@ -178,6 +178,36 @@ export const createNote = tool({
 });
 
 /**
+ * Read the content of the note the user is currently viewing.
+ * Created dynamically so it captures the contextNoteId.
+ */
+export function currentNoteTools(contextNoteId: string) {
+    return {
+        get_current_note: tool({
+            description: "Read the content of the note the user is currently viewing. Call this when the user asks about or refers to their current note.",
+            inputSchema: z.object({}),
+            execute: async () => {
+                const note = becca.getNote(contextNoteId);
+                if (!note) {
+                    return { error: "Note not found" };
+                }
+                if (note.isProtected) {
+                    return { error: "Note is protected" };
+                }
+
+                const content = note.getContent();
+                return {
+                    noteId: note.noteId,
+                    title: note.title,
+                    type: note.type,
+                    content: typeof content === "string" ? content : "[binary content]"
+                };
+            }
+        })
+    };
+}
+
+/**
  * All available note tools.
  */
 export const noteTools = {

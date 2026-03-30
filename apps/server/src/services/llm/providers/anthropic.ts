@@ -3,7 +3,7 @@ import { streamText, stepCountIs, type CoreMessage } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
-import { noteTools } from "../tools.js";
+import { noteTools, currentNoteTools } from "../tools.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -96,39 +96,17 @@ const MODEL_PRICING: Record<string, ModelPricing> = Object.fromEntries(
 );
 
 /**
- * Build context string from the current note being viewed.
+ * Build a lightweight context hint about the current note (title + type only, no content).
+ * The full content is available via the get_current_note tool.
  */
-function buildNoteContext(noteId: string): string | null {
+function buildNoteHint(noteId: string): string | null {
     const note = becca.getNote(noteId);
     if (!note) {
         return null;
     }
 
-    const parts: string[] = [];
-    parts.push(`The user is currently viewing a note titled "${note.title}" (ID: ${noteId}).`);
-
-    // Add note type context
-    if (note.type !== "text") {
-        parts.push(`Note type: ${note.type}`);
-    }
-
-    // Add content for text notes (truncate if too long)
-    if (note.type === "text" || note.type === "code") {
-        try {
-            const content = note.getContent();
-            if (typeof content === "string" && content.trim()) {
-                const maxLength = 4000;
-                const truncated = content.length > maxLength
-                    ? content.substring(0, maxLength) + "\n... (content truncated)"
-                    : content;
-                parts.push(`\nNote content:\n\`\`\`\n${truncated}\n\`\`\``);
-            }
-        } catch {
-            // Content not available
-        }
-    }
-
-    return parts.join("\n");
+    const typeInfo = note.type !== "text" ? ` (type: ${note.type})` : "";
+    return `The user is currently viewing a note titled "${note.title}"${typeInfo}. Use the get_current_note tool to read its content if needed.`;
 }
 
 export class AnthropicProvider implements LlmProvider {
@@ -146,13 +124,13 @@ export class AnthropicProvider implements LlmProvider {
         let systemPrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
         const chatMessages = messages.filter(m => m.role !== "system");
 
-        // Add note context if viewing a note
+        // Add a lightweight hint about the current note (content available via tool)
         if (config.contextNoteId) {
-            const noteContext = buildNoteContext(config.contextNoteId);
-            if (noteContext) {
+            const noteHint = buildNoteHint(config.contextNoteId);
+            if (noteHint) {
                 systemPrompt = systemPrompt
-                    ? `${systemPrompt}\n\n${noteContext}`
-                    : noteContext;
+                    ? `${systemPrompt}\n\n${noteHint}`
+                    : noteHint;
             }
         }
 
@@ -196,6 +174,10 @@ export class AnthropicProvider implements LlmProvider {
             tools.web_search = this.anthropic.tools.webSearch_20250305({
                 maxUses: 5
             });
+        }
+
+        if (config.contextNoteId) {
+            Object.assign(tools, currentNoteTools(config.contextNoteId));
         }
 
         if (config.enableNoteTools) {
