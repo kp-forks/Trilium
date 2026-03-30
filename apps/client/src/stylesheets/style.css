@@ -1750,8 +1750,11 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     justify-content: space-between;
     align-items: baseline;
     font-weight: bold;
-    text-transform: uppercase;
     color: var(--muted-text-color) !important;
+}
+
+#right-pane .card-header-title {
+    text-transform: uppercase;
 }
 
 #right-pane .card-header-buttons {

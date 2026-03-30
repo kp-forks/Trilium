@@ -1,3 +1,5 @@
+import "./SidebarChat.css";
+
 import type { Dropdown as BootstrapDropdown } from "bootstrap";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
@@ -14,7 +16,6 @@ import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
 import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
 import { useLlmChat } from "../type_widgets/llm_chat/useLlmChat.js";
 import RightPanelWidget from "./RightPanelWidget.js";
-import "./SidebarChat.css";
 
 /**
  * Sidebar chat widget that appears in the right panel.
@@ -225,9 +226,9 @@ export default function SidebarChat() {
                         onShown={loadRecentChats}
                     >
                         {recentChats.length === 0 ? (
-                            <li className="sidebar-chat-history-empty">
+                            <FormListItem disabled>
                                 {t("sidebar_chat.no_chats")}
-                            </li>
+                            </FormListItem>
                         ) : (
                             recentChats.map(chatItem => (
                                 <FormListItem
