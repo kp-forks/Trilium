@@ -1,9 +1,11 @@
-import type { Request, Response } from "express";
 import type { LlmMessage } from "@triliumnext/commons";
+import type { Request, Response } from "express";
 
+import { generateChatTitle } from "../../services/llm/chat_title.js";
 import { getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
 import { streamToChunks } from "../../services/llm/stream.js";
-import { generateChatTitle } from "../../services/llm/chat_title.js";
+import log from "../../services/log.js";
+import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
 
 interface ChatRequest {
     messages: LlmMessage[];
@@ -34,7 +36,6 @@ async function streamChat(req: Request, res: Response) {
     res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
-    res.setHeader("Content-Encoding", "none"); // Disable compression
     res.flushHeaders();
 
     // Mark response as handled to prevent double-handling by apiResultHandler
@@ -46,7 +47,6 @@ async function streamChat(req: Request, res: Response) {
     try {
         if (!hasConfiguredProviders()) {
             res.write(`data: ${JSON.stringify({ type: "error", error: "No LLM providers configured. Please add a provider in Options → AI / LLM." })}\n\n`);
-            res.end();
             return;
         }
 
@@ -54,7 +54,12 @@ async function streamChat(req: Request, res: Response) {
         const result = provider.chat(messages, config);
 
         // Get pricing and display name for the model
-        const modelId = config.model || "claude-sonnet-4-6";
+        const modelId = config.model || provider.getAvailableModels().find(m => m.isDefault)?.id;
+        if (!modelId) {
+            res.write(`data: ${JSON.stringify({ type: "error", error: "No model specified and no default model available for the provider." })}\n\n`);
+            return;
+        }
+
         const pricing = provider.getModelPricing(modelId);
         const modelDisplayName = provider.getAvailableModels().find(m => m.id === modelId)?.name || modelId;
         for await (const chunk of streamToChunks(result, { model: modelDisplayName, pricing })) {
@@ -71,7 +76,7 @@ async function streamChat(req: Request, res: Response) {
                 await generateChatTitle(config.chatNoteId, userMessages[0].content);
             } catch (err) {
                 // Title generation is best-effort; don't fail the chat
-                console.error("Failed to generate chat title:", err);
+                log.error(`Failed to generate chat title: ${safeExtractMessageAndStackFromError(err)}`);
             }
         }
     } catch (error) {

@@ -56,7 +56,7 @@ export const searchNotes = tool({
             if (!note) return null;
             return {
                 noteId: note.noteId,
-                title: note.title,
+                title: note.getTitleOrProtected(),
                 type: note.type
             };
         }).filter(Boolean);
@@ -76,13 +76,13 @@ export const readNote = tool({
         if (!note) {
             return { error: "Note not found" };
         }
-        if (note.isProtected) {
+        if (!note.isContentAvailable()) {
             return { error: "Note is protected" };
         }
 
         return {
             noteId: note.noteId,
-            title: note.title,
+            title: note.getTitleOrProtected(),
             type: note.type,
             content: getNoteContentForLlm(note)
         };
@@ -103,7 +103,7 @@ export const updateNoteContent = tool({
         if (!note) {
             return { error: "Note not found" };
         }
-        if (note.isProtected) {
+        if (!note.isContentAvailable()) {
             return { error: "Note is protected and cannot be modified" };
         }
         if (!note.hasStringContent()) {
@@ -115,7 +115,7 @@ export const updateNoteContent = tool({
         return {
             success: true,
             noteId: note.noteId,
-            title: note.title
+            title: note.getTitleOrProtected()
         };
     }
 });
@@ -134,7 +134,7 @@ export const appendToNote = tool({
         if (!note) {
             return { error: "Note not found" };
         }
-        if (note.isProtected) {
+        if (!note.isContentAvailable()) {
             return { error: "Note is protected and cannot be modified" };
         }
         if (!note.hasStringContent()) {
@@ -148,7 +148,7 @@ export const appendToNote = tool({
 
         let newContent: string;
         if (note.type === "text") {
-            const htmlToAppend = markdownImport.renderToHtml(content, note.title);
+            const htmlToAppend = markdownImport.renderToHtml(content, note.getTitleOrProtected());
             newContent = existingContent + htmlToAppend;
         } else {
             newContent = existingContent + (existingContent.endsWith("\n") ? "" : "\n") + content;
@@ -159,7 +159,7 @@ export const appendToNote = tool({
         return {
             success: true,
             noteId: note.noteId,
-            title: note.title
+            title: note.getTitleOrProtected()
         };
     }
 });
@@ -180,7 +180,7 @@ export const createNote = tool({
         if (!parentNote) {
             return { error: "Parent note not found" };
         }
-        if (parentNote.isProtected) {
+        if (!parentNote.isContentAvailable()) {
             return { error: "Cannot create note under a protected parent" };
         }
 
@@ -199,7 +199,7 @@ export const createNote = tool({
             return {
                 success: true,
                 noteId: note.noteId,
-                title: note.title,
+                title: note.getTitleOrProtected(),
                 type: note.type
             };
         } catch (err) {
@@ -222,13 +222,13 @@ export function currentNoteTools(contextNoteId: string) {
                 if (!note) {
                     return { error: "Note not found" };
                 }
-                if (note.isProtected) {
+                if (!note.isContentAvailable()) {
                     return { error: "Note is protected" };
                 }
 
                 return {
                     noteId: note.noteId,
-                    title: note.title,
+                    title: note.getTitleOrProtected(),
                     type: note.type,
                     content: getNoteContentForLlm(note)
                 };

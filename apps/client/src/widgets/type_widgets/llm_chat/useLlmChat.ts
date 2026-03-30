@@ -1,10 +1,11 @@
 import type { LlmCitation, LlmMessage, LlmModelInfo, LlmUsage } from "@triliumnext/commons";
+import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
-import type { ContentBlock, LlmChatContent, StoredMessage, ToolCall } from "./llm_chat_types.js";
+import type { ContentBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
 
 export interface ModelOption extends LlmModelInfo {
     costDescription?: string;
@@ -37,8 +38,8 @@ export interface UseLlmChatReturn {
     enableExtendedThinking: boolean;
     contextNoteId: string | undefined;
     lastPromptTokens: number;
-    messagesEndRef: React.RefObject<HTMLDivElement>;
-    textareaRef: React.RefObject<HTMLTextAreaElement>;
+    messagesEndRef: RefObject<HTMLDivElement>;
+    textareaRef: RefObject<HTMLTextAreaElement>;
     /** Whether a provider is configured and available */
     hasProvider: boolean;
     /** Whether we're still checking for providers */

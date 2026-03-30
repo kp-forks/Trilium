@@ -1,6 +1,6 @@
 import "./LlmChat.css";
 
-import { marked } from "marked";
+import { Marked } from "marked";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -15,14 +15,14 @@ function shortenNumber(n: number): string {
 }
 
 // Configure marked for safe rendering
-marked.setOptions({
+const markedInstance = new Marked({
     breaks: true, // Convert \n to <br>
     gfm: true // GitHub Flavored Markdown
 });
 
 /** Parse markdown to HTML. Sanitization is handled by SanitizedHtml. */
 function renderMarkdown(markdown: string): string {
-    return marked.parse(markdown) as string;
+    return markedInstance.parse(markdown) as string;
 }
 
 interface Props {

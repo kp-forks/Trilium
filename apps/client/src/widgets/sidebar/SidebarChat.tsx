@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import dateNoteService, { type RecentLlmChat } from "../../services/date_notes.js";
 import { t } from "../../services/i18n.js";
 import server from "../../services/server.js";
+import { formatDateTime } from "../../utils/formatters";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormListItem } from "../react/FormList.js";
@@ -80,6 +81,13 @@ export default function SidebarChat() {
                 console.error("Failed to save chat:", err);
             }
         }, 500);
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = undefined;
+            }
+        };
     }, [shouldSave, chatNoteId, chat]);
 
     // Load the most recent chat on mount (runs once)
@@ -254,7 +262,7 @@ export default function SidebarChat() {
                                             ? <strong>{chatItem.title}</strong>
                                             : <span>{chatItem.title}</span>}
                                         <span className="sidebar-chat-history-date">
-                                            {new Date(chatItem.dateModified).toLocaleDateString()}
+                                            {formatDateTime(new Date(chatItem.dateModified), "short", "short")}
                                         </span>
                                     </div>
                                 </FormListItem>
