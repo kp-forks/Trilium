@@ -107,7 +107,7 @@ export const updateNoteContent = tool({
         if (note.isProtected) {
             return { error: "Note is protected and cannot be modified" };
         }
-        if (note.type !== "text" && note.type !== "code") {
+        if (!note.hasStringContent()) {
             return { error: `Cannot update content for note type: ${note.type}` };
         }
 
