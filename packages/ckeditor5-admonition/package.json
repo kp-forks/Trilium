@@ -36,7 +36,7 @@
     "stylelint": "17.6.0",
     "stylelint-config-ckeditor5": ">=9.1.0",
     "ts-node": "10.9.2",
-    "typescript": "5.9.3",
+    "typescript": "6.0.2",
     "vite-plugin-svgo": "2.0.0",
     "vitest": "4.1.2",
     "webdriverio": "9.27.0"
