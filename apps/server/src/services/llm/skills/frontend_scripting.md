@@ -123,8 +123,11 @@ import { ActionButton, Button, LinkButton, Modal,
 ### Render notes (JSX)
 
 For rendering custom content inside a note:
-1. Create a JSX code note that exports a default component.
-2. Create a parent note and set `~renderNote` relation pointing to the JSX note.
+1. Create a "render note" (type: Render Note) where you want the content to appear.
+2. Create a JSX code note **as a child** of the render note, exporting a default component.
+3. On the render note, add a `~renderNote` relation pointing to the child JSX note.
+
+IMPORTANT: Always create the JSX code note as a child of the render note, not as a sibling or at the root. This keeps them organized together.
 
 ```jsx
 export default function MyRenderNote() {
