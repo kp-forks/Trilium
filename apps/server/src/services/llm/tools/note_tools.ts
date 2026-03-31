@@ -43,15 +43,23 @@ function setNoteContentFromLlm(note: { type: string; title: string; setContent: 
  * Search for notes in the knowledge base.
  */
 export const searchNotes = tool({
-    description: "Search for notes in the user's knowledge base. Returns note metadata including title, type, and IDs.",
+    description: "Search for notes in the user's knowledge base using Trilium search syntax. Load the 'search_syntax' skill first if unsure about query format. Returns note metadata including title, type, and IDs.",
     inputSchema: z.object({
-        query: z.string().describe("Search query (supports Trilium search syntax)")
+        query: z.string().describe("Search query in Trilium search syntax (e.g. '#book #year >= 2000', 'tolkien #fantasy')"),
+        fastSearch: z.boolean().optional().describe("If true, skip content search (only titles and attributes). Faster for large databases."),
+        includeArchivedNotes: z.boolean().optional().describe("If true, include archived notes in results."),
+        ancestorNoteId: z.string().optional().describe("Limit search to a subtree rooted at this note ID."),
+        limit: z.number().optional().describe("Maximum number of results to return. Defaults to 10.")
     }),
-    execute: async ({ query }) => {
-        const searchContext = new SearchContext({});
+    execute: async ({ query, fastSearch, includeArchivedNotes, ancestorNoteId, limit = 10 }) => {
+        const searchContext = new SearchContext({
+            fastSearch,
+            includeArchivedNotes,
+            ancestorNoteId
+        });
         const results = searchService.findResultsWithQuery(query, searchContext);
 
-        return results.slice(0, 10).map(sr => {
+        return results.slice(0, limit).map(sr => {
             const note = becca.notes[sr.noteId];
             if (!note) return null;
             return {

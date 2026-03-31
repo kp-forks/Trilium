@@ -1,0 +1,66 @@
+/**
+ * LLM skills — on-demand instruction sets that an LLM can load when it needs
+ * specialized knowledge (e.g. search syntax). Only names and descriptions are
+ * included in the system prompt; full content is fetched via the load_skill tool.
+ */
+
+import { tool } from "ai";
+import { readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { z } from "zod";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+interface SkillDefinition {
+    name: string;
+    description: string;
+    file: string;
+}
+
+const SKILLS: SkillDefinition[] = [
+    {
+        name: "search_syntax",
+        description: "Trilium search query syntax reference — labels, relations, note properties, boolean logic, ordering, and more.",
+        file: "search_syntax.md"
+    }
+];
+
+function loadSkillContent(name: string): string | null {
+    const skill = SKILLS.find((s) => s.name === name);
+    if (!skill) {
+        return null;
+    }
+    return readFileSync(join(__dirname, skill.file), "utf-8");
+}
+
+/**
+ * Returns a summary of available skills for inclusion in the system prompt.
+ */
+export function getSkillsSummary(): string {
+    return SKILLS
+        .map((s) => `- **${s.name}**: ${s.description}`)
+        .join("\n");
+}
+
+/**
+ * The load_skill tool — lets the LLM fetch full instructions on demand.
+ */
+export const loadSkill = tool({
+    description: "Load a skill to get specialized instructions. Available skills:\n"
+        + SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n"),
+    inputSchema: z.object({
+        name: z.string().describe("The skill name to load")
+    }),
+    execute: async ({ name }) => {
+        const content = loadSkillContent(name);
+        if (!content) {
+            return { error: `Unknown skill: '${name}'. Available: ${SKILLS.map((s) => s.name).join(", ")}` };
+        }
+        return { skill: name, instructions: content };
+    }
+});
+
+export const skillTools = {
+    load_skill: loadSkill
+};
