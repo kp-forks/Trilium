@@ -195,6 +195,13 @@
     "header": {
         "get-started": "Commencer",
         "documentation": "Documentation",
-        "support-us": "Soutenez-nous"
+        "support-us": "Soutenez-nous",
+        "resources": "Ressources"
+    },
+    "resources": {
+        "title": "Ressources",
+        "icon_packs": "Packs d'icônes",
+        "download": "Télécharger",
+        "website": "Site Internet"
     }
 }

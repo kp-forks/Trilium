@@ -140,6 +140,10 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
 
     seenCallToActions: string;
     experimentalFeatures: string;
+
+    // AI / LLM
+    /** JSON array of configured LLM providers with their API keys */
+    llmProviders: string;
 }
 
 export type OptionNames = keyof OptionDefinitions;

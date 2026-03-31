@@ -1,0 +1,319 @@
+import "./SidebarChat.css";
+
+import type { Dropdown as BootstrapDropdown } from "bootstrap";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+
+import dateNoteService, { type RecentLlmChat } from "../../services/date_notes.js";
+import { t } from "../../services/i18n.js";
+import server from "../../services/server.js";
+import { formatDateTime } from "../../utils/formatters";
+import ActionButton from "../react/ActionButton.js";
+import Dropdown from "../react/Dropdown.js";
+import { FormListItem } from "../react/FormList.js";
+import { useActiveNoteContext, useEditorSpacedUpdate, useNote, useNoteProperty } from "../react/hooks.js";
+import NoItems from "../react/NoItems.js";
+import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
+import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
+import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
+import { useLlmChat } from "../type_widgets/llm_chat/useLlmChat.js";
+import RightPanelWidget from "./RightPanelWidget.js";
+
+/**
+ * Sidebar chat widget that appears in the right panel.
+ * Uses a hidden LLM chat note for persistence across all notes.
+ * The same chat persists when switching between notes.
+ */
+export default function SidebarChat() {
+    const [chatNoteId, setChatNoteId] = useState<string | null>(null);
+    const [recentChats, setRecentChats] = useState<RecentLlmChat[]>([]);
+    const spacedUpdateRef = useRef<{ scheduleUpdate: () => void }>(null);
+    const historyDropdownRef = useRef<BootstrapDropdown | null>(null);
+
+    // Get the current active note context
+    const { noteId: activeNoteId, note: activeNote } = useActiveNoteContext();
+
+    // Reactively watch the chat note's title (updates via WebSocket sync after auto-rename)
+    const chatNote = useNote(chatNoteId);
+    const chatTitle = useNoteProperty(chatNote, "title") || t("sidebar_chat.title");
+
+    // Use shared chat hook with sidebar-specific options
+    const chat = useLlmChat(
+        // onMessagesChange - trigger save
+        () => spacedUpdateRef.current?.scheduleUpdate(),
+        { defaultEnableNoteTools: true, supportsExtendedThinking: true }
+    );
+
+    // Ref to access chat methods in callbacks without triggering re-runs
+    const chatRef = useRef(chat);
+    chatRef.current = chat;
+
+    // Persistence via useEditorSpacedUpdate (same mechanism as the LlmChat type widget).
+    // When chatNote is null (before lazy creation), saves are no-ops.
+    const spacedUpdate = useEditorSpacedUpdate({
+        note: chatNote,
+        noteType: "llmChat",
+        noteContext: null,
+        getData: () => {
+            const content = chatRef.current.getContent();
+            return { content: JSON.stringify(content) };
+        },
+        onContentChange: (content) => {
+            if (!content) {
+                chatRef.current.clearMessages();
+                return;
+            }
+            try {
+                const parsed: LlmChatContent = JSON.parse(content);
+                chatRef.current.loadFromContent(parsed);
+            } catch (e) {
+                console.error("Failed to parse LLM chat content:", e);
+                chatRef.current.clearMessages();
+            }
+        }
+    });
+    spacedUpdateRef.current = spacedUpdate;
+
+    // Update chat context when active note changes
+    useEffect(() => {
+        chat.setContextNoteId(activeNoteId ?? undefined);
+    }, [activeNoteId, chat.setContextNoteId]);
+
+    // Sync chatNoteId into the hook for auto-title generation
+    useEffect(() => {
+        chat.setChatNoteId(chatNoteId ?? undefined);
+    }, [chatNoteId, chat.setChatNoteId]);
+
+    // Load the most recent chat on mount (runs once)
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadMostRecentChat = async () => {
+            try {
+                const existingChat = await dateNoteService.getMostRecentLlmChat();
+
+                if (cancelled) return;
+
+                if (existingChat) {
+                    setChatNoteId(existingChat.noteId);
+                } else {
+                    // No existing chat - will create on first message
+                    setChatNoteId(null);
+                    chatRef.current.clearMessages();
+                }
+            } catch (err) {
+                console.error("Failed to load sidebar chat:", err);
+            }
+        };
+
+        loadMostRecentChat();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // Custom submit handler that ensures chat note exists first
+    const handleSubmit = useCallback(async (e: Event) => {
+        e.preventDefault();
+        if (!chat.input.trim() || chat.isStreaming) return;
+
+        // Ensure chat note exists before sending (lazy creation)
+        let noteId = chatNoteId;
+        if (!noteId) {
+            try {
+                const note = await dateNoteService.getOrCreateLlmChat();
+                if (note) {
+                    setChatNoteId(note.noteId);
+                    noteId = note.noteId;
+                }
+            } catch (err) {
+                console.error("Failed to create sidebar chat:", err);
+                return;
+            }
+        }
+
+        if (!noteId) {
+            console.error("Cannot send message: no chat note available");
+            return;
+        }
+
+        // Ensure the hook has the chatNoteId before submitting (state update from
+        // setChatNoteId above won't be visible until next render)
+        chat.setChatNoteId(noteId);
+
+        // Delegate to shared handler
+        await chat.handleSubmit(e);
+    }, [chatNoteId, chat]);
+
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit(e);
+        }
+    }, [handleSubmit]);
+
+    const handleNewChat = useCallback(async () => {
+        // Save any pending changes before switching
+        await spacedUpdate.updateNowIfNecessary();
+
+        try {
+            const note = await dateNoteService.createLlmChat();
+            if (note) {
+                setChatNoteId(note.noteId);
+                chatRef.current.clearMessages();
+            }
+        } catch (err) {
+            console.error("Failed to create new chat:", err);
+        }
+    }, [spacedUpdate]);
+
+    const handleSaveChat = useCallback(async () => {
+        if (!chatNoteId) return;
+
+        // Save any pending changes before moving the chat
+        await spacedUpdate.updateNowIfNecessary();
+
+        try {
+            await server.post("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
+            // Create a new empty chat after saving
+            const note = await dateNoteService.createLlmChat();
+            if (note) {
+                setChatNoteId(note.noteId);
+                chatRef.current.clearMessages();
+            }
+        } catch (err) {
+            console.error("Failed to save chat to permanent location:", err);
+        }
+    }, [chatNoteId, spacedUpdate]);
+
+    const loadRecentChats = useCallback(async () => {
+        try {
+            const chats = await dateNoteService.getRecentLlmChats(10);
+            setRecentChats(chats);
+        } catch (err) {
+            console.error("Failed to load recent chats:", err);
+        }
+    }, []);
+
+    const handleSelectChat = useCallback(async (noteId: string) => {
+        historyDropdownRef.current?.hide();
+
+        if (noteId === chatNoteId) return;
+
+        // Save any pending changes before switching
+        await spacedUpdate.updateNowIfNecessary();
+
+        setChatNoteId(noteId);
+    }, [chatNoteId, spacedUpdate]);
+
+    return (
+        <RightPanelWidget
+            id="sidebar-chat"
+            title={chatTitle}
+            grow
+            buttons={
+                <>
+                    <ActionButton
+                        icon="bx bx-plus"
+                        text={t("sidebar_chat.new_chat")}
+                        onClick={handleNewChat}
+                    />
+                    <Dropdown
+                        text=""
+                        buttonClassName="bx bx-history"
+                        title={t("sidebar_chat.history")}
+                        iconAction
+                        hideToggleArrow
+                        dropdownContainerClassName="tn-dropdown-menu-scrollable"
+                        dropdownOptions={{ popperConfig: { strategy: "fixed" } }}
+                        dropdownRef={historyDropdownRef}
+                        onShown={loadRecentChats}
+                    >
+                        {recentChats.length === 0 ? (
+                            <FormListItem disabled>
+                                {t("sidebar_chat.no_chats")}
+                            </FormListItem>
+                        ) : (
+                            recentChats.map(chatItem => (
+                                <FormListItem
+                                    key={chatItem.noteId}
+                                    icon="bx bx-message-square-dots"
+                                    className={chatItem.noteId === chatNoteId ? "active" : ""}
+                                    onClick={() => handleSelectChat(chatItem.noteId)}
+                                >
+                                    <div className="sidebar-chat-history-item-content">
+                                        {chatItem.noteId === chatNoteId
+                                            ? <strong>{chatItem.title}</strong>
+                                            : <span>{chatItem.title}</span>}
+                                        <span className="sidebar-chat-history-date">
+                                            {formatDateTime(new Date(chatItem.dateModified), "short", "short")}
+                                        </span>
+                                    </div>
+                                </FormListItem>
+                            ))
+                        )}
+                    </Dropdown>
+                    <ActionButton
+                        icon="bx bx-save"
+                        text={t("sidebar_chat.save_chat")}
+                        onClick={handleSaveChat}
+                        disabled={chat.messages.length === 0}
+                    />
+                </>
+            }
+        >
+            <div className="sidebar-chat-container">
+                <div className="sidebar-chat-messages">
+                    {chat.messages.length === 0 && !chat.isStreaming && (
+                        <NoItems
+                            icon="bx bx-conversation"
+                            text={t("sidebar_chat.empty_state")}
+                        />
+                    )}
+                    {chat.messages.map(msg => (
+                        <ChatMessage key={msg.id} message={msg} />
+                    ))}
+                    {chat.toolActivity && !chat.streamingThinking && (
+                        <div className="llm-chat-tool-activity">
+                            <span className="llm-chat-tool-spinner" />
+                            {chat.toolActivity}
+                        </div>
+                    )}
+                    {chat.isStreaming && chat.streamingThinking && (
+                        <ChatMessage
+                            message={{
+                                id: "streaming-thinking",
+                                role: "assistant",
+                                content: chat.streamingThinking,
+                                createdAt: new Date().toISOString(),
+                                type: "thinking"
+                            }}
+                            isStreaming
+                        />
+                    )}
+                    {chat.isStreaming && chat.streamingContent && (
+                        <ChatMessage
+                            message={{
+                                id: "streaming",
+                                role: "assistant",
+                                content: chat.streamingContent,
+                                createdAt: new Date().toISOString(),
+                                citations: chat.pendingCitations.length > 0 ? chat.pendingCitations : undefined
+                            }}
+                            isStreaming
+                        />
+                    )}
+                    <div ref={chat.messagesEndRef} />
+                </div>
+                <ChatInputBar
+                    chat={chat}
+                    rows={2}
+                    activeNoteId={activeNoteId ?? undefined}
+                    activeNoteTitle={activeNote?.title}
+                    onSubmit={handleSubmit}
+                    onKeyDown={handleKeyDown}
+                />
+            </div>
+        </RightPanelWidget>
+    );
+}

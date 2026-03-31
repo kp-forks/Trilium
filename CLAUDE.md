@@ -125,6 +125,15 @@ Trilium provides powerful user scripting capabilities:
 - OpenID and TOTP authentication support
 - Sanitization of user-generated content
 
+### Client-Side API Restrictions
+- **Do not use `crypto.randomUUID()`** or other Web Crypto APIs that require secure contexts - Trilium can run over HTTP, not just HTTPS
+- Use `randomString()` from `apps/client/src/services/utils.ts` for generating IDs instead
+
+### Shared Types Policy
+- Types shared between client and server belong in `@triliumnext/commons` (`packages/commons/src/lib/`)
+- Import shared types directly from `@triliumnext/commons` - do not re-export them from app-specific modules
+- Keep app-specific types (e.g., `LlmProvider` for server, `StreamCallbacks` for client) in their respective apps
+
 ## Common Development Tasks
 
 ### Adding New Note Types
