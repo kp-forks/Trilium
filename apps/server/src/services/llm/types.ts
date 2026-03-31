@@ -38,6 +38,8 @@ export interface ModelInfo {
     id: string;
     /** Human-readable name (e.g., "Claude Sonnet 4") */
     name: string;
+    /** Provider type that owns this model (e.g., "anthropic", "openai") */
+    provider?: string;
     /** Pricing per million tokens */
     pricing: ModelPricing;
     /** Whether this is the default model */
