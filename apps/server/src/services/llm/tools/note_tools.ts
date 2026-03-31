@@ -186,14 +186,27 @@ export const appendToNote = tool({
  * Create a new note.
  */
 export const createNote = tool({
-    description: "Create a new note in the user's knowledge base. Returns the created note's ID and title.",
+    description: [
+        "Create a new note in the user's knowledge base. Returns the created note's ID and title.",
+        "Set type to 'text' for rich text notes (content in Markdown) or 'code' for code notes (must also set mime).",
+        "Common mime values for code notes:",
+        "'application/javascript;env=frontend' (JS frontend),",
+        "'application/javascript;env=backend' (JS backend),",
+        "'text/jsx' (Preact JSX, preferred for frontend widgets),",
+        "'text/css', 'text/html', 'application/json', 'text/x-python', 'text/x-sh'."
+    ].join(" "),
     inputSchema: z.object({
-        parentNoteId: z.string().describe("The ID of the parent note where the new note will be created. Use 'root' for top-level notes."),
+        parentNoteId: z.string().describe("The ID of the parent note. Use 'root' for top-level notes."),
         title: z.string().describe("The title of the new note"),
         content: z.string().describe("The content of the note (Markdown for text notes, plain text for code notes)"),
-        type: z.enum(["text", "code"]).optional().describe("The type of note to create. Defaults to 'text'.")
+        type: z.enum(["text", "code"]).describe("The type of note to create."),
+        mime: z.string().optional().describe("MIME type, REQUIRED for code notes (e.g. 'application/javascript;env=backend', 'text/jsx'). Ignored for text notes.")
     }),
-    execute: async ({ parentNoteId, title, content, type = "text" }) => {
+    execute: async ({ parentNoteId, title, content, type, mime }) => {
+        if (type === "code" && !mime) {
+            return { error: "mime is required when creating code notes" };
+        }
+
         const parentNote = becca.getNote(parentNoteId);
         if (!parentNote) {
             return { error: "Parent note not found" };
@@ -211,7 +224,8 @@ export const createNote = tool({
                 parentNoteId,
                 title,
                 content: htmlContent,
-                type
+                type,
+                ...(mime ? { mime } : {})
             });
 
             return {
