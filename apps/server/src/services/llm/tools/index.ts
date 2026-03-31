@@ -5,3 +5,4 @@
 
 export { noteTools, currentNoteTools } from "./note_tools.js";
 export { attributeTools } from "./attribute_tools.js";
+export { hierarchyTools } from "./hierarchy_tools.js";

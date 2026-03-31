@@ -3,7 +3,7 @@ import { generateText, streamText, stepCountIs, type CoreMessage, type ToolSet }
 import type { LlmMessage } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
-import { noteTools, attributeTools, currentNoteTools } from "../tools/index.js";
+import { noteTools, attributeTools, hierarchyTools, currentNoteTools } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -206,6 +206,7 @@ export class AnthropicProvider implements LlmProvider {
         if (config.enableNoteTools) {
             Object.assign(tools, noteTools);
             Object.assign(tools, attributeTools);
+            Object.assign(tools, hierarchyTools);
         }
 
         if (Object.keys(tools).length > 0) {
