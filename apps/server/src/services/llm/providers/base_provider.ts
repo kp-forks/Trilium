@@ -3,7 +3,7 @@
  * tool assembly, model pricing, and title generation.
  */
 
-import { generateText, streamText, stepCountIs, type CoreMessage, type ToolSet } from "ai";
+import { generateText, streamText, stepCountIs, type ModelMessage, type ToolSet } from "ai";
 import type { LanguageModel } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
@@ -94,10 +94,10 @@ export abstract class BaseProvider implements LlmProvider {
     }
 
     /**
-     * Build the CoreMessage array from LlmMessages (no provider-specific options).
+     * Build the ModelMessage array from LlmMessages (no provider-specific options).
      */
-    protected buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): CoreMessage[] {
-        const coreMessages: CoreMessage[] = [];
+    protected buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): ModelMessage[] {
+        const coreMessages: ModelMessage[] = [];
 
         if (systemPrompt) {
             coreMessages.push({ role: "system", content: systemPrompt });

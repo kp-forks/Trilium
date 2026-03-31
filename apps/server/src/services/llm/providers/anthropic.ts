@@ -1,5 +1,5 @@
 import { createAnthropic, type AnthropicProvider as AnthropicSDKProvider } from "@ai-sdk/anthropic";
-import { stepCountIs, streamText, type CoreMessage, type ToolSet } from "ai";
+import { stepCountIs, streamText, type ModelMessage, type ToolSet } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
 import type { LlmProviderConfig, StreamResult } from "../types.js";
@@ -98,9 +98,9 @@ export class AnthropicProvider extends BaseProvider {
     /**
      * Override buildMessages to add Anthropic-specific cache control breakpoints.
      */
-    protected override buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): CoreMessage[] {
+    protected override buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): ModelMessage[] {
         const CACHE_CONTROL = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
-        const coreMessages: CoreMessage[] = [];
+        const coreMessages: ModelMessage[] = [];
 
         if (systemPrompt) {
             coreMessages.push({
