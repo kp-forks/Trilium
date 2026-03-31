@@ -2,151 +2,25 @@
 
 Frontend scripts run in the browser. They can manipulate the UI, navigate notes, show dialogs, and create custom widgets.
 
+IMPORTANT: Always prefer Preact JSX widgets over legacy jQuery widgets. Use JSX code notes with `import`/`export` syntax.
+
 ## Creating a frontend script
 
-1. Create a Code note with language "JS frontend" (or "JSX" for Preact widgets).
-2. Run manually (Execute button) or set `#run=frontendStartup` to auto-run on startup.
+1. Create a Code note with language "JSX" (preferred) or "JS frontend" (legacy only).
+2. Add `#widget` label for widgets, or `#run=frontendStartup` for auto-run scripts.
 3. For mobile, use `#run=mobileStartup` instead.
 
 ## Script types
 
-| Type | Description | Required attribute |
+| Type | Language | Required attribute |
 |---|---|---|
-| Regular script | Runs with current app/note context | `#run=frontendStartup` (optional) |
-| Custom widget | UI element in various positions | `#widget` |
-| Launch bar widget | Button in the launch bar | `#widget` |
-| Render note | Custom content inside a note | None (used via render relation) |
+| Custom widget | JSX (preferred) | `#widget` |
+| Regular script | JS frontend | `#run=frontendStartup` (optional) |
+| Render note | JSX | None (used via `~renderNote` relation) |
 
-## Script API (`api` global)
+## Custom widgets (Preact JSX) — preferred
 
-### Navigation & tabs
-- `api.activateNote(notePath)` - navigate to a note
-- `api.activateNewNote(notePath)` - navigate and wait for sync
-- `api.openTabWithNote(notePath, activate?)` - open in new tab
-- `api.openSplitWithNote(notePath, activate?)` - open in new split
-- `api.getActiveContextNote()` - get currently active note
-- `api.getActiveContextNotePath()` - get path of active note
-- `api.setHoistedNoteId(noteId)` - hoist/unhoist note in current tab
-
-### Note access & search
-- `api.getNote(noteId)` - get note by ID
-- `api.getNotes(noteIds)` - bulk fetch notes
-- `api.searchForNotes(searchString)` - search with full query syntax
-- `api.searchForNote(searchString)` - search returning first result
-- `api.reloadNotes(noteIds)` - refresh cache from backend
-
-### Calendar/date notes
-- `api.getTodayNote()` - get/create today's note
-- `api.getDayNote(date)` - get/create day note for date
-- `api.getWeekNote(date)` / `api.getMonthNote(month)` / `api.getYearNote(year)`
-
-### Editor access
-- `api.getActiveContextTextEditor()` - get CKEditor instance
-- `api.getActiveContextCodeEditor()` - get CodeMirror instance
-- `api.addTextToActiveContextEditor(text)` - insert text into active editor
-
-### Dialogs & notifications
-- `api.showMessage(msg)` - show info toast
-- `api.showError(msg)` - show error toast
-- `api.showInfoDialog(msg)` - show info dialog
-- `api.showConfirmDialog(msg)` - show confirm dialog (returns boolean)
-- `api.showPromptDialog(msg)` - show prompt dialog (returns user input)
-
-### Links
-- `api.createLink(notePath, { title?, showTooltip?, showNoteIcon? })` - create jQuery link element
-
-### Backend integration
-- `api.runOnBackend(func, params)` - execute a function on the backend (sync)
-
-### Protection
-- `api.protectNote(noteId, protect)` - protect/unprotect note
-- `api.protectSubTree(noteId, protect)` - protect/unprotect subtree
-
-### UI interaction
-- `api.triggerCommand(name, data)` - trigger a command
-- `api.triggerEvent(name, data)` - trigger an event
-- `api.bindGlobalShortcut(shortcut, handler, namespace?)` - add keyboard shortcut
-
-### Utilities
-- `api.formatDateISO(date)` - format as YYYY-MM-DD
-- `api.randomString(length)` - generate random string
-- `api.dayjs` - day.js library
-- `api.log(message)` - log to script log pane
-
-### Widget base classes
-- `api.BasicWidget` - base widget class
-- `api.NoteContextAwareWidget` - widget aware of note context changes
-- `api.RightPanelWidget` - right sidebar widget
-
-## FNote object
-
-Available via `api.getNote()`, `api.getActiveContextNote()`, etc.
-
-### Properties
-- `note.noteId`, `note.title`, `note.type`, `note.mime`
-- `note.isProtected`, `note.isArchived`
-
-### Content
-- `note.getContent()` - get note content
-- `note.getJsonContent()` - parse content as JSON
-
-### Hierarchy
-- `note.getParentNotes()` / `note.getChildNotes()`
-- `note.hasChildren()`, `note.getSubtreeNoteIds()`
-
-### Attributes
-- `note.getAttributes(type?, name?)` - get all attributes (including inherited)
-- `note.getOwnedAttributes(type?, name?)` - get only owned attributes
-- `note.hasAttribute(type, name)` - check for attribute
-
-## Custom widgets (legacy jQuery)
-
-```javascript
-class MyWidget extends api.BasicWidget {
-    get position() { return 1; }
-    get parentWidget() { return "center-pane"; }
-
-    doRender() {
-        this.$widget = $("<div>");
-        this.$widget.append($("<button>Click me</button>")
-            .on("click", () => api.showMessage("Hello!")));
-        return this.$widget;
-    }
-}
-
-module.exports = new MyWidget();
-```
-
-### Widget locations (`parentWidget` values)
-- `left-pane` - alongside the note tree
-- `center-pane` - in the content area, spanning all splits
-- `note-detail-pane` - inside a note (split-aware, export class not instance, use static parentWidget)
-- `right-pane` - in the right sidebar (use `RightPanelWidget`)
-
-### Note context aware widget
-
-```javascript
-class MyWidget extends api.NoteContextAwareWidget {
-    static get parentWidget() { return "note-detail-pane"; }
-    get position() { return 100; }
-
-    doRender() {
-        this.$widget = $("<div>");
-        return this.$widget;
-    }
-
-    async refreshWithNote(note) {
-        // Called when the active note changes
-        this.$widget.text(`Current note: ${note.title}`);
-    }
-}
-
-module.exports = MyWidget; // Export class, not instance!
-```
-
-## Custom widgets (Preact JSX)
-
-Requires JSX language enabled in Options -> Code Notes.
+### Basic widget
 
 ```jsx
 import { defineWidget } from "trilium:preact";
@@ -168,30 +42,194 @@ export default defineWidget({
 });
 ```
 
-### Preact imports
-- `import { showMessage, getNote, ... } from "trilium:api"` - API methods
-- `import { useState, useEffect, ... } from "trilium:preact"` - hooks
-- `import { defineWidget, defineLauncherWidget } from "trilium:preact"` - widget helpers
-- Built-in components: Button, ActionButton, Modal, NoteAutocomplete, FormTextBox, FormToggle, etc.
+### Note context aware widget (reacts to active note)
 
-## Example: launcher button
+```jsx
+import { defineWidget, useNoteContext, useNoteProperty } from "trilium:preact";
 
-```javascript
-// Set #run=frontendStartup
-api.createOrUpdateLauncher({
-    id: "my-task-button",
-    type: "customWidget",
-    title: "New Task",
-    icon: "bx bx-task",
-    action: async () => {
-        const todayNote = await api.getTodayNote();
-        await api.runOnBackend(async (parentNoteId) => {
-            api.createTextNote(parentNoteId, "New Task", "");
-        }, [todayNote.noteId]);
+export default defineWidget({
+    parent: "note-detail-pane",
+    position: 10,
+    render: () => {
+        const { note } = useNoteContext();
+        const title = useNoteProperty(note, "title");
+        return <span>Current note: {title}</span>;
     }
 });
 ```
 
+### Right panel widget (sidebar)
+
+```jsx
+import { defineWidget, RightPanelWidget, useState, useEffect } from "trilium:preact";
+
+export default defineWidget({
+    parent: "right-pane",
+    position: 1,
+    render() {
+        const [time, setTime] = useState();
+        useEffect(() => {
+            const interval = setInterval(() => {
+                setTime(new Date().toLocaleString());
+            }, 1000);
+            return () => clearInterval(interval);
+        });
+        return (
+            <RightPanelWidget id="my-clock" title="Clock">
+                <p>The time is: {time}</p>
+            </RightPanelWidget>
+        );
+    }
+});
+```
+
+### Widget locations (`parent` values)
+
+| Value | Description | Notes |
+|---|---|---|
+| `left-pane` | Alongside the note tree | |
+| `center-pane` | Content area, spanning all splits | |
+| `note-detail-pane` | Inside a note, split-aware | Use `useNoteContext()` hook |
+| `right-pane` | Right sidebar section | Wrap in `<RightPanelWidget>` |
+
+### Preact imports
+
+```jsx
+// API methods
+import { showMessage, showError, getNote, searchForNotes, activateNote,
+         runOnBackend, getActiveContextNote } from "trilium:api";
+
+// Hooks and components
+import { defineWidget, defineLauncherWidget,
+         useState, useEffect, useCallback, useMemo, useRef,
+         useNoteContext, useActiveNoteContext, useNoteProperty,
+         RightPanelWidget } from "trilium:preact";
+
+// Built-in UI components
+import { ActionButton, Button, LinkButton, Modal,
+         NoteAutocomplete, FormTextBox, FormToggle, FormCheckbox,
+         FormDropdownList, FormGroup, FormText, FormTextArea,
+         Icon, LoadingSpinner, Slider, Collapsible } from "trilium:preact";
+```
+
+### Custom hooks
+
+- `useNoteContext()` - returns `{ note }` for the current note context (use in `note-detail-pane`)
+- `useActiveNoteContext()` - returns `{ note, noteId }` for the active note (works from any widget location)
+- `useNoteProperty(note, propName)` - reactively watches a note property (e.g. "title", "type")
+
+### Render notes (JSX)
+
+For rendering custom content inside a note:
+1. Create a JSX code note that exports a default component.
+2. Create a parent note and set `~renderNote` relation pointing to the JSX note.
+
+```jsx
+export default function MyRenderNote() {
+    return (
+        <>
+            <h1>Custom rendered content</h1>
+            <p>This appears inside the note.</p>
+        </>
+    );
+}
+```
+
+## Script API
+
+In JSX, use `import { method } from "trilium:api"`. In JS frontend, use the `api` global.
+
+### Navigation & tabs
+- `activateNote(notePath)` - navigate to a note
+- `activateNewNote(notePath)` - navigate and wait for sync
+- `openTabWithNote(notePath, activate?)` - open in new tab
+- `openSplitWithNote(notePath, activate?)` - open in new split
+- `getActiveContextNote()` - get currently active note
+- `getActiveContextNotePath()` - get path of active note
+- `setHoistedNoteId(noteId)` - hoist/unhoist note
+
+### Note access & search
+- `getNote(noteId)` - get note by ID
+- `getNotes(noteIds)` - bulk fetch notes
+- `searchForNotes(searchString)` - search with full query syntax
+- `searchForNote(searchString)` - search returning first result
+
+### Calendar/date notes
+- `getTodayNote()` - get/create today's note
+- `getDayNote(date)` / `getWeekNote(date)` / `getMonthNote(month)` / `getYearNote(year)`
+
+### Editor access
+- `getActiveContextTextEditor()` - get CKEditor instance
+- `getActiveContextCodeEditor()` - get CodeMirror instance
+- `addTextToActiveContextEditor(text)` - insert text into active editor
+
+### Dialogs & notifications
+- `showMessage(msg)` - info toast
+- `showError(msg)` - error toast
+- `showConfirmDialog(msg)` - confirm dialog (returns boolean)
+- `showPromptDialog(msg)` - prompt dialog (returns user input)
+
+### Backend integration
+- `runOnBackend(func, params)` - execute a function on the backend
+
+### UI interaction
+- `triggerCommand(name, data)` - trigger a command
+- `bindGlobalShortcut(shortcut, handler, namespace?)` - add keyboard shortcut
+
+### Utilities
+- `formatDateISO(date)` - format as YYYY-MM-DD
+- `randomString(length)` - generate random string
+- `dayjs` - day.js library
+- `log(message)` - log to script log pane
+
+## FNote object
+
+Available via `getNote()`, `getActiveContextNote()`, `useNoteContext()`, etc.
+
+### Properties
+- `note.noteId`, `note.title`, `note.type`, `note.mime`
+- `note.isProtected`, `note.isArchived`
+
+### Content
+- `note.getContent()` - get note content
+- `note.getJsonContent()` - parse content as JSON
+
+### Hierarchy
+- `note.getParentNotes()` / `note.getChildNotes()`
+- `note.hasChildren()`, `note.getSubtreeNoteIds()`
+
+### Attributes
+- `note.getAttributes(type?, name?)` - all attributes (including inherited)
+- `note.getOwnedAttributes(type?, name?)` - only owned attributes
+- `note.hasAttribute(type, name)` - check for attribute
+
+## Legacy jQuery widgets (avoid if possible)
+
+Only use legacy widgets if you specifically need jQuery or cannot use JSX.
+
+```javascript
+// Language: JS frontend, Label: #widget
+class MyWidget extends api.BasicWidget {
+    get position() { return 1; }
+    get parentWidget() { return "center-pane"; }
+
+    doRender() {
+        this.$widget = $("<div>");
+        this.$widget.append($("<button>Click me</button>")
+            .on("click", () => api.showMessage("Hello!")));
+        return this.$widget;
+    }
+}
+module.exports = new MyWidget();
+```
+
+Key differences from Preact:
+- Use `api.` global instead of imports
+- `get parentWidget()` instead of `parent` field
+- `module.exports = new MyWidget()` (instance) for most widgets
+- `module.exports = MyWidget` (class, no `new`) for `note-detail-pane`
+- Right pane: extend `api.RightPanelWidget`, override `doRenderBody()` instead of `doRender()`
+
 ## Module system
 
-Child notes of a script act as modules. For JS frontend, use `module.exports` and function parameters. For JSX, use `import`/`export` syntax.
+For JSX, use `import`/`export` syntax between notes. For JS frontend, use `module.exports` and function parameters matching child note titles.
