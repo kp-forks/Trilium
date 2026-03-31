@@ -5,7 +5,7 @@
  */
 
 import { tool } from "ai";
-import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { z } from "zod";
@@ -36,12 +36,12 @@ const SKILLS: SkillDefinition[] = [
     }
 ];
 
-function loadSkillContent(name: string): string | null {
+async function loadSkillContent(name: string): Promise<string | null> {
     const skill = SKILLS.find((s) => s.name === name);
     if (!skill) {
         return null;
     }
-    return readFileSync(join(__dirname, skill.file), "utf-8");
+    return readFile(join(__dirname, skill.file), "utf-8");
 }
 
 /**
@@ -63,7 +63,7 @@ export const loadSkill = tool({
         name: z.string().describe("The skill name to load")
     }),
     execute: async ({ name }) => {
-        const content = loadSkillContent(name);
+        const content = await loadSkillContent(name);
         if (!content) {
             return { error: `Unknown skill: '${name}'. Available: ${SKILLS.map((s) => s.name).join(", ")}` };
         }

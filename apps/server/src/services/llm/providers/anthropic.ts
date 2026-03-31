@@ -113,9 +113,13 @@ export class AnthropicProvider extends BaseProvider {
         for (let i = 0; i < chatMessages.length; i++) {
             const m = chatMessages[i];
             const isLastBeforeNewTurn = i === chatMessages.length - 2;
+            // Anthropic rejects empty text content blocks. Replace empty
+            // content (e.g. tool-only assistant turns) with a placeholder
+            // to preserve conversation flow.
+            const content = m.content || "(tool use)";
             coreMessages.push({
                 role: m.role as "user" | "assistant",
-                content: m.content,
+                content,
                 ...(isLastBeforeNewTurn && { providerOptions: CACHE_CONTROL })
             });
         }
@@ -132,7 +136,7 @@ export class AnthropicProvider extends BaseProvider {
         }
 
         const systemPrompt = this.buildSystemPrompt(messages, config);
-        const chatMessages = messages.filter(m => m.role !== "system" && m.content);
+        const chatMessages = messages.filter(m => m.role !== "system");
         const coreMessages = this.buildMessages(chatMessages, systemPrompt);
 
         const thinkingBudget = config.thinkingBudget || 10000;

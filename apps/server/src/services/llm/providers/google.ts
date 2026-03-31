@@ -15,14 +15,14 @@ const { models: AVAILABLE_MODELS, pricing: MODEL_PRICING } = buildModelList([
         id: "gemini-2.5-pro",
         name: "Gemini 2.5 Pro",
         pricing: { input: 1.25, output: 10 },
-        contextWindow: 1048576,
-        isDefault: true
+        contextWindow: 1048576
     },
     {
         id: "gemini-2.5-flash",
         name: "Gemini 2.5 Flash",
         pricing: { input: 0.3, output: 2.5 },
-        contextWindow: 1048576
+        contextWindow: 1048576,
+        isDefault: true
     },
     {
         id: "gemini-2.5-flash-lite",
