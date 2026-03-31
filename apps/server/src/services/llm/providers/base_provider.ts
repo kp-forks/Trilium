@@ -114,10 +114,19 @@ export abstract class BaseProvider implements LlmProvider {
     }
 
     /**
+     * Add provider-specific web search tool. Override in subclasses that support it.
+     */
+    protected addWebSearchTool(_tools: ToolSet): void {}
+
+    /**
      * Build the tool set based on config.
      */
     protected buildTools(config: LlmProviderConfig): ToolSet {
         const tools: ToolSet = {};
+
+        if (config.enableWebSearch) {
+            this.addWebSearchTool(tools);
+        }
 
         if (config.contextNoteId) {
             Object.assign(tools, currentNoteTools(config.contextNoteId));

@@ -89,19 +89,17 @@ export class AnthropicProvider extends BaseProvider {
         return this.anthropic(modelId);
     }
 
+    protected override addWebSearchTool(tools: ToolSet): void {
+        tools.web_search = this.anthropic.tools.webSearch_20250305({
+            maxUses: 5
+        });
+    }
+
     /**
-     * Override chat to add Anthropic-specific features:
-     * - Prompt caching via providerOptions
-     * - Extended thinking
-     * - Web search tool
+     * Override buildMessages to add Anthropic-specific cache control breakpoints.
      */
-    override chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
-        const systemPrompt = this.buildSystemPrompt(messages, config);
-        const chatMessages = messages.filter(m => m.role !== "system");
-
-        // Anthropic-specific: cache control breakpoints on system prompt and conversation history
+    protected override buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): CoreMessage[] {
         const CACHE_CONTROL = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
-
         const coreMessages: CoreMessage[] = [];
 
         if (systemPrompt) {
@@ -122,38 +120,39 @@ export class AnthropicProvider extends BaseProvider {
             });
         }
 
+        return coreMessages;
+    }
+
+    /**
+     * Override chat to add Anthropic-specific extended thinking support.
+     */
+    override chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
+        if (!config.enableExtendedThinking) {
+            return super.chat(messages, config);
+        }
+
+        const systemPrompt = this.buildSystemPrompt(messages, config);
+        const chatMessages = messages.filter(m => m.role !== "system");
+        const coreMessages = this.buildMessages(chatMessages, systemPrompt);
+
+        const thinkingBudget = config.thinkingBudget || 10000;
+        const maxTokens = Math.max(config.maxTokens || 8096, thinkingBudget + 4000);
+
         const streamOptions: Parameters<typeof streamText>[0] = {
             model: this.createModel(config.model || this.defaultModel),
             messages: coreMessages,
-            maxOutputTokens: config.maxTokens || 8096
-        };
-
-        // Anthropic-specific: extended thinking
-        if (config.enableExtendedThinking) {
-            const thinkingBudget = config.thinkingBudget || 10000;
-            streamOptions.providerOptions = {
+            maxOutputTokens: maxTokens,
+            providerOptions: {
                 anthropic: {
                     thinking: {
                         type: "enabled",
                         budgetTokens: thinkingBudget
                     }
                 }
-            };
-            streamOptions.maxOutputTokens = Math.max(
-                streamOptions.maxOutputTokens || 8096,
-                thinkingBudget + 4000
-            );
-        }
+            }
+        };
 
-        // Build tools (shared + Anthropic-specific web search)
-        const tools: ToolSet = this.buildTools(config);
-
-        if (config.enableWebSearch) {
-            tools.web_search = this.anthropic.tools.webSearch_20250305({
-                maxUses: 5
-            });
-        }
-
+        const tools = this.buildTools(config);
         if (Object.keys(tools).length > 0) {
             streamOptions.tools = tools;
             streamOptions.stopWhen = stepCountIs(5);

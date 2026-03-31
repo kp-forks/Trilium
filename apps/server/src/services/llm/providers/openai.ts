@@ -1,4 +1,5 @@
 import { createOpenAI, type OpenAIProvider as OpenAISDKProvider } from "@ai-sdk/openai";
+import type { ToolSet } from "ai";
 
 import { BaseProvider, buildModelList } from "./base_provider.js";
 
@@ -75,5 +76,9 @@ export class OpenAiProvider extends BaseProvider {
 
     protected createModel(modelId: string) {
         return this.openai(modelId);
+    }
+
+    protected override addWebSearchTool(tools: ToolSet): void {
+        tools.web_search = this.openai.tools.webSearch();
     }
 }
