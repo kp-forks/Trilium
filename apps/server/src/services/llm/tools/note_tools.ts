@@ -43,9 +43,19 @@ function setNoteContentFromLlm(note: { type: string; title: string; setContent: 
  * Search for notes in the knowledge base.
  */
 export const searchNotes = tool({
-    description: "Search for notes in the user's knowledge base using Trilium search syntax. Load the 'search_syntax' skill first if unsure about query format. Returns note metadata including title, type, and IDs.",
+    description: [
+        "Search for notes in the user's knowledge base using Trilium search syntax.",
+        "For complex queries (boolean logic, relations, regex, ordering), load the 'search_syntax' skill first via load_skill.",
+        "Common patterns:",
+        "- Full-text: 'rings tolkien' (notes containing both words)",
+        "- By label: '#book', '#status = done', '#year >= 2000'",
+        "- By type: 'note.type = code'",
+        "- By relation: '~author', '~author.title *= Tolkien'",
+        "- Combined: 'tolkien #book' (full-text + label filter)",
+        "- Negation: '#!archived' (notes WITHOUT label)"
+    ].join(" "),
     inputSchema: z.object({
-        query: z.string().describe("Search query in Trilium search syntax (e.g. '#book #year >= 2000', 'tolkien #fantasy')"),
+        query: z.string().describe("Search query in Trilium search syntax"),
         fastSearch: z.boolean().optional().describe("If true, skip content search (only titles and attributes). Faster for large databases."),
         includeArchivedNotes: z.boolean().optional().describe("If true, include archived notes in results."),
         ancestorNoteId: z.string().optional().describe("Limit search to a subtree rooted at this note ID."),

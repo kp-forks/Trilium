@@ -3,6 +3,7 @@ import { generateText, streamText, stepCountIs, type CoreMessage, type ToolSet }
 import type { LlmMessage } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
+import { getSkillsSummary } from "../skills/index.js";
 import { noteTools, attributeTools, hierarchyTools, skillTools, currentNoteTools } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
@@ -133,6 +134,14 @@ export class AnthropicProvider implements LlmProvider {
                     ? `${systemPrompt}\n\n${noteHint}`
                     : noteHint;
             }
+        }
+
+        // Add skills hint so the LLM knows to load skills before complex operations
+        if (config.enableNoteTools) {
+            const skillsHint = `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`;
+            systemPrompt = systemPrompt
+                ? `${systemPrompt}\n\n${skillsHint}`
+                : skillsHint;
         }
 
         // Convert to AI SDK message format with cache control breakpoints.
