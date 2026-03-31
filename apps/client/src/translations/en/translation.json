@@ -2277,6 +2277,20 @@
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa"
   },
+  "mind-map": {
+    "addChild": "Add child",
+    "addParent": "Add parent",
+    "addSibling": "Add sibling",
+    "removeNode": "Remove node",
+    "focus": "Focus Mode",
+    "cancelFocus": "Cancel Focus Mode",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "link": "Link",
+    "linkBidirectional": "Bidirectional Link",
+    "clickTips": "Please click the target node",
+    "summary": "Summary"
+  },
   "llm": {
     "settings_title": "AI / LLM",
     "settings_description": "Configure AI and Large Language Model integrations.",

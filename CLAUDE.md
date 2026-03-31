@@ -118,6 +118,8 @@ Trilium provides powerful user scripting capabilities:
 ### Internationalization
 - Translation files in `apps/client/src/translations/`
 - Supported languages: English, German, Spanish, French, Romanian, Chinese
+- **Only add new translation keys to `en/translation.json`** — translations for other languages are managed via Weblate and will be contributed by the community
+- Third-party components (e.g., mind-map context menu) should use i18next `t()` for their labels, with the English strings added to `en/translation.json` under a dedicated namespace (e.g., `"mind-map"`)
 
 ### Security Considerations
 - Per-note encryption with granular protected sessions
