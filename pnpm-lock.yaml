@@ -559,6 +559,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: ^2.0.0
         version: 2.0.71(zod@4.3.6)
+      '@ai-sdk/google':
+        specifier: ^2.0.64
+        version: 2.0.64(zod@4.3.6)
       '@ai-sdk/openai':
         specifier: 2.0.101
         version: 2.0.101(zod@4.3.6)
@@ -1547,6 +1550,12 @@ packages:
 
   '@ai-sdk/gateway@2.0.65':
     resolution: {integrity: sha512-yaWzvQQWgAzV0m3eidfpRub1+PggDOr2hLnSOI+L2ZispyJ/7EoSzhjKzNCADj6PHnnPaOMH933Xhl1Z/NSxJw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/google@2.0.64':
+    resolution: {integrity: sha512-FUVSkdpC+j2o3anRHabJ5UXXPfnqs8uRkv5zh5x4u8p1e7C4y+YtTxeTD2aSSMGV+8ef+VNEAp5gponXpwKk0g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -16049,6 +16058,12 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
+  '@ai-sdk/google@2.0.64(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.1
+      '@ai-sdk/provider-utils': 3.0.22(zod@4.3.6)
+      zod: 4.3.6
+
   '@ai-sdk/openai@2.0.101(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
@@ -17408,8 +17423,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-horizontal-line@47.6.1':
     dependencies:
@@ -17419,8 +17432,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-html-embed@47.6.1':
     dependencies:
@@ -17430,8 +17441,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-html-support@47.6.1':
     dependencies:
@@ -17447,8 +17456,6 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-icons@47.6.1': {}
 
@@ -17489,8 +17496,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-inspector@5.0.0': {}
 

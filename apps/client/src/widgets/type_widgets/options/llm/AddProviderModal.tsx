@@ -20,7 +20,8 @@ export interface ProviderType {
 
 export const PROVIDER_TYPES: ProviderType[] = [
     { id: "anthropic", name: "Anthropic" },
-    { id: "openai", name: "OpenAI" }
+    { id: "openai", name: "OpenAI" },
+    { id: "google", name: "Google Gemini" }
 ];
 
 interface AddProviderModalProps {

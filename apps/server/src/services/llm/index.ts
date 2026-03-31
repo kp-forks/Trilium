@@ -1,5 +1,6 @@
 import type { LlmProvider, ModelInfo } from "./types.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
+import { GoogleProvider } from "./providers/google.js";
 import { OpenAiProvider } from "./providers/openai.js";
 import optionService from "../options.js";
 import log from "../log.js";
@@ -18,7 +19,8 @@ export interface LlmProviderSetup {
 /** Factory functions for creating provider instances */
 const providerFactories: Record<string, (apiKey: string) => LlmProvider> = {
     anthropic: (apiKey) => new AnthropicProvider(apiKey),
-    openai: (apiKey) => new OpenAiProvider(apiKey)
+    openai: (apiKey) => new OpenAiProvider(apiKey),
+    google: (apiKey) => new GoogleProvider(apiKey)
 };
 
 /** Cache of instantiated providers by their config ID */
