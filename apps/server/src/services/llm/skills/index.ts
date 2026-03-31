@@ -4,13 +4,15 @@
  * included in the system prompt; full content is fetched via the load_skill tool.
  */
 
-import { tool } from "ai";
 import { readFile } from "fs/promises";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { join } from "path";
+
+import { tool } from "ai";
 import { z } from "zod";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import resourceDir from "../../resource_dir.js";
+
+const SKILLS_DIR = join(resourceDir.RESOURCE_DIR, "llm", "skills");
 
 interface SkillDefinition {
     name: string;
@@ -41,7 +43,7 @@ async function loadSkillContent(name: string): Promise<string | null> {
     if (!skill) {
         return null;
     }
-    return readFile(join(__dirname, skill.file), "utf-8");
+    return readFile(join(SKILLS_DIR, skill.file), "utf-8");
 }
 
 /**

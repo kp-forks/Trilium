@@ -153,6 +153,12 @@ Trilium provides powerful user scripting capabilities:
 - Add migration scripts in `apps/server/src/migrations/`
 - Update schema in `apps/server/src/assets/db/schema.sql`
 
+### Server-Side Static Assets
+- Static assets (templates, SQL, translations, etc.) go in `apps/server/src/assets/`
+- Access them at runtime via `RESOURCE_DIR` from `apps/server/src/services/resource_dir.ts` (e.g. `path.join(RESOURCE_DIR, "llm", "skills", "file.md")`)
+- **Do not use `import.meta.url`/`fileURLToPath`** to resolve file paths — the server is bundled into CJS for production, so `import.meta.url` will not point to the source directory
+- **Do not use `__dirname` with relative paths** from source files — after bundling, `__dirname` points to the bundle output, not the original source tree
+
 ## Build System Notes
 - Uses pnpm for monorepo management
 - Vite for fast development builds
