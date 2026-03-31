@@ -23,6 +23,16 @@ const SKILLS: SkillDefinition[] = [
         name: "search_syntax",
         description: "Trilium search query syntax reference — labels, relations, note properties, boolean logic, ordering, and more.",
         file: "search_syntax.md"
+    },
+    {
+        name: "backend_scripting",
+        description: "Backend (Node.js) scripting API — creating notes, handling events, accessing entities, database operations, and automation.",
+        file: "backend_scripting.md"
+    },
+    {
+        name: "frontend_scripting",
+        description: "Frontend (browser) scripting API — UI widgets, navigation, dialogs, editor access, Preact/JSX components, and keyboard shortcuts.",
+        file: "frontend_scripting.md"
     }
 ];
 
