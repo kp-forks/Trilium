@@ -10,8 +10,6 @@ import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
 import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
 import migrationService from "./migration.js";
 import noteService from "./notes.js";
-import { getLog } from "./log.js";
-import { getSql } from "./sql/index.js";
 
 export const LBTPL_ROOT = "_lbTplRoot";
 export const LBTPL_BASE = "_lbTplBase";
@@ -66,6 +64,12 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 title: t("hidden-subtree.sql-console-history-title"),
                 type: "doc",
                 icon: "bx-data"
+            },
+            {
+                id: "_llmChat",
+                title: t("hidden-subtree.llm-chat-history-title"),
+                type: "doc",
+                icon: "bx-message-square-dots"
             },
             {
                 id: "_share",
@@ -248,6 +252,7 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { id: "_optionsEtapi", title: t("hidden-subtree.etapi-title"), type: "contentWidget", icon: "bx-extension" },
                     { id: "_optionsBackup", title: t("hidden-subtree.backup-title"), type: "contentWidget", icon: "bx-data" },
                     { id: "_optionsSync", title: t("hidden-subtree.sync-title"), type: "contentWidget", icon: "bx-wifi" },
+                    { id: "_optionsLlm", title: t("hidden-subtree.llm-title"), type: "contentWidget", icon: "bx-bot" },
                     { id: "_optionsAi", title: "AI Chat", type: "contentWidget", enforceDeleted: true },
                     { id: "_optionsOther", title: t("hidden-subtree.other"), type: "contentWidget", icon: "bx-dots-horizontal" },
                     { id: "_optionsLocalization", title: t("hidden-subtree.localization"), type: "contentWidget", icon: "bx-world" },

@@ -152,14 +152,28 @@ SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/servi
 - Schema: `apps/server/src/assets/db/schema.sql`
 - Migrations: `apps/server/src/migrations/YYMMDD_HHMM__description.sql`
 
-### Attribute Inheritance
+### Internationalization
+- Translation files in `apps/client/src/translations/`
+- Supported languages: English, German, Spanish, French, Romanian, Chinese
+- **Only add new translation keys to `en/translation.json`** — translations for other languages are managed via Weblate and will be contributed by the community
+- Third-party components (e.g., mind-map context menu) should use i18next `t()` for their labels, with the English strings added to `en/translation.json` under a dedicated namespace (e.g., `"mind-map"`)
 
 Three inheritance mechanisms:
 1. **Standard**: `note.getInheritableAttributes()` walks parent tree
 2. **Child prefix**: `child:label` on parent copies to children
 3. **Template relation**: `#template=noteNoteId` includes template's inheritable attributes
 
+### Attribute Inheritance
+
 Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
+### Client-Side API Restrictions
+- **Do not use `crypto.randomUUID()`** or other Web Crypto APIs that require secure contexts - Trilium can run over HTTP, not just HTTPS
+- Use `randomString()` from `apps/client/src/services/utils.ts` for generating IDs instead
+
+### Shared Types Policy
+- Types shared between client and server belong in `@triliumnext/commons` (`packages/commons/src/lib/`)
+- Import shared types directly from `@triliumnext/commons` - do not re-export them from app-specific modules
+- Keep app-specific types (e.g., `LlmProvider` for server, `StreamCallbacks` for client) in their respective apps
 
 ## Important Patterns
 
@@ -198,3 +212,16 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 - `apps/client/src/services/froca.ts` — Frontend cache
 - `apps/server/src/routes/routes.ts` — API route registration
 - `packages/trilium-core/src/services/sql/sql.ts` — Database abstraction
+
+### Server-Side Static Assets
+- Static assets (templates, SQL, translations, etc.) go in `apps/server/src/assets/`
+- Access them at runtime via `RESOURCE_DIR` from `apps/server/src/services/resource_dir.ts` (e.g. `path.join(RESOURCE_DIR, "llm", "skills", "file.md")`)
+- **Do not use `import.meta.url`/`fileURLToPath`** to resolve file paths — the server is bundled into CJS for production, so `import.meta.url` will not point to the source directory
+- **Do not use `__dirname` with relative paths** from source files — after bundling, `__dirname` points to the bundle output, not the original source tree
+
+## Build System Notes
+- Uses pnpm for monorepo management
+- Vite for fast development builds
+- ESBuild for production optimization
+- pnpm workspaces for dependency management
+- Docker support with multi-stage builds

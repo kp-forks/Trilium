@@ -210,7 +210,10 @@ const defaultOptions: DefaultOption[] = [
         ]),
         isSynced: true
     },
-    { name: "experimentalFeatures", value: "[]", isSynced: true }
+    { name: "experimentalFeatures", value: "[]", isSynced: true },
+
+    // AI / LLM
+    { name: "llmProviders", value: "[]", isSynced: false }
 ];
 
 /**

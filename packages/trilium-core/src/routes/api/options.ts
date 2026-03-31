@@ -104,7 +104,8 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "experimentalFeatures",
     "newLayout",
     "mfaEnabled",
-    "mfaMethod"
+    "mfaMethod",
+    "llmProviders"
 ]);
 
 function getOptions() {

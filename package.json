@@ -19,6 +19,7 @@
     "desktop:build": "pnpm run --filter desktop build",
     "desktop:start-prod": "pnpm run --filter desktop start-prod",
     "standalone:start": "pnpm run --filter client-standalone dev",
+    "desktop:start-prod-no-dir": "pnpm run --filter desktop start-prod-no-dir",
     "edit-docs:edit-docs": "pnpm run --filter edit-docs edit-docs",
     "edit-docs:build": "pnpm run --filter edit-docs build",
     "website:start": "pnpm run --filter website dev",
@@ -137,7 +138,8 @@
       "lodash@>=4.0.0 <=4.17.22": ">=4.17.23",
       "diff@<4.0.4": ">=4.0.4",
       "diff@>=6.0.0 <8.0.3": ">=8.0.3",
-      "tar@<7.5.7": ">=7.5.7"
+      "tar@<7.5.7": ">=7.5.7",
+      "zod@<3.25.76": ">=4.0.0"
     },
     "ignoredBuiltDependencies": [
       "sqlite3"

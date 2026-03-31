@@ -215,6 +215,8 @@ export interface ConvertAttachmentToNoteResponse {
 
 export type SaveSqlConsoleResponse = CloneResponse;
 
+export type SaveLlmChatResponse = CloneResponse;
+
 export interface BacklinkCountResponse {
     count: number;
 }

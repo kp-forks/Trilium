@@ -928,6 +928,7 @@ export default {
     parseDate,
     formatDateISO,
     formatDateTime,
+    formatTime,
     formatTimeInterval,
     formatSize,
     localNowDateTime,
