@@ -111,6 +111,11 @@
 
             &.donate-link {
                 color: var(--donate-button-color);
+
+                &:hover i {
+                    animation: heartbeat 600ms ease-in-out;
+                    animation-iteration-count: 3;
+                }
             }
         }
     }
@@ -137,6 +142,18 @@
     } to {
         opacity: 1;
         transform: rotate(0deg) scale(1.25); 
+    }
+}
+
+@keyframes heartbeat {
+    0% {
+        transform: scale(1);
+    } 50% {
+        transform: scale(1.15);
+    } 75% {
+        transform: scale(1);
+    } 100% {
+        transform: scale(1);
     }
 }
 
