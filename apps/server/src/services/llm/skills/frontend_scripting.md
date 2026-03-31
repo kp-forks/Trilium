@@ -4,6 +4,8 @@ Frontend scripts run in the browser. They can manipulate the UI, navigate notes,
 
 IMPORTANT: Always prefer Preact JSX widgets over legacy jQuery widgets. Use JSX code notes with `import`/`export` syntax.
 
+CRITICAL: In JSX notes, always use top-level `import` statements (e.g. `import { useState } from "trilium:preact"`). NEVER use dynamic `await import()` for Preact imports — this will break hooks and components. Dynamic imports are not needed because JSX notes natively support ES module `import`/`export` syntax.
+
 ## Creating a frontend script
 
 1. Create a Code note with language "JSX" (preferred) or "JS frontend" (legacy only).
