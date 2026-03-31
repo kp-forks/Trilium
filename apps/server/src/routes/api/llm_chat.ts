@@ -2,7 +2,7 @@ import type { LlmMessage } from "@triliumnext/commons";
 import type { Request, Response } from "express";
 
 import { generateChatTitle } from "../../services/llm/chat_title.js";
-import { getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
+import { getAllModels, getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
 import { streamToChunks } from "../../services/llm/stream.js";
 import log from "../../services/log.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
@@ -88,19 +88,14 @@ async function streamChat(req: Request, res: Response) {
 }
 
 /**
- * Get available models for a provider.
+ * Get available models from all configured providers.
  */
-function getModels(req: Request, _res: Response) {
-    const providerType = req.query.provider as string || "anthropic";
-
-    // Return empty array when no providers configured - client handles this gracefully
+function getModels(_req: Request, _res: Response) {
     if (!hasConfiguredProviders()) {
         return { models: [] };
     }
 
-    const llmProvider = getProviderByType(providerType);
-    const models = llmProvider.getAvailableModels();
-    return { models };
+    return { models: getAllModels() };
 }
 
 export default {

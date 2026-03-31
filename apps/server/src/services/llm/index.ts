@@ -1,4 +1,4 @@
-import type { LlmProvider } from "./types.js";
+import type { LlmProvider, ModelInfo } from "./types.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { OpenAiProvider } from "./providers/openai.js";
 import optionService from "../options.js";
@@ -95,6 +95,35 @@ export function getProviderByType(providerType: string): LlmProvider {
  */
 export function hasConfiguredProviders(): boolean {
     return getConfiguredProviders().length > 0;
+}
+
+/**
+ * Get all models from all configured providers, tagged with their provider type.
+ */
+export function getAllModels(): ModelInfo[] {
+    const configs = getConfiguredProviders();
+    const seenProviderTypes = new Set<string>();
+    const allModels: ModelInfo[] = [];
+
+    for (const config of configs) {
+        // Only include models once per provider type (not per config instance)
+        if (seenProviderTypes.has(config.provider)) {
+            continue;
+        }
+        seenProviderTypes.add(config.provider);
+
+        try {
+            const provider = getProvider(config.id);
+            const models = provider.getAvailableModels();
+            for (const model of models) {
+                allModels.push({ ...model, provider: config.provider });
+            }
+        } catch (e) {
+            log.error(`Failed to get models from provider ${config.provider}: ${e}`);
+        }
+    }
+
+    return allModels;
 }
 
 /**
