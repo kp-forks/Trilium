@@ -34,6 +34,7 @@ import fontsRoute from "./api/fonts.js";
 import imageRoute from "./api/image.js";
 import importRoute from "./api/import.js";
 import keysRoute from "./api/keys.js";
+import llmChatRoute from "./api/llm_chat.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import noteMapRoute from "./api/note_map.js";
@@ -291,6 +292,11 @@ function register(app: express.Application) {
     asyncApiRoute(PST, "/api/special-notes/save-sql-console", specialNotesRoute.saveSqlConsole);
     apiRoute(PST, "/api/special-notes/search-note", specialNotesRoute.createSearchNote);
     apiRoute(PST, "/api/special-notes/save-search-note", specialNotesRoute.saveSearchNote);
+    apiRoute(PST, "/api/special-notes/llm-chat", specialNotesRoute.createLlmChat);
+    apiRoute(GET, "/api/special-notes/most-recent-llm-chat", specialNotesRoute.getMostRecentLlmChat);
+    apiRoute(GET, "/api/special-notes/get-or-create-llm-chat", specialNotesRoute.getOrCreateLlmChat);
+    apiRoute(GET, "/api/special-notes/recent-llm-chats", specialNotesRoute.getRecentLlmChats);
+    apiRoute(PST, "/api/special-notes/save-llm-chat", specialNotesRoute.saveLlmChat);
     apiRoute(PST, "/api/special-notes/launchers/:noteId/reset", specialNotesRoute.resetLauncher);
     apiRoute(PST, "/api/special-notes/launchers/:parentNoteId/:launcherType", specialNotesRoute.createLauncher);
     apiRoute(PUT, "/api/special-notes/api-script-launcher", specialNotesRoute.createOrUpdateScriptLauncherFromApi);
@@ -322,6 +328,10 @@ function register(app: express.Application) {
     apiRoute(GET, "/api/script/widgets", scriptRoute.getWidgetBundles);
     apiRoute(PST, "/api/script/bundle/:noteId", scriptRoute.getBundle);
     apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
+
+    // LLM chat endpoints
+    asyncRoute(PST, "/api/llm-chat/stream", [auth.checkApiAuthOrElectron, csrfMiddleware], llmChatRoute.streamChat, null);
+    apiRoute(GET, "/api/llm-chat/models", llmChatRoute.getModels);
 
     // no CSRF since this is called from android app
     route(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);

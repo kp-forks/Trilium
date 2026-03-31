@@ -55,7 +55,16 @@ export default async function buildApp() {
     });
 
     if (!utils.isElectron) {
-        app.use(compression()); // HTTP compression
+        app.use(compression({
+            // Skip compression for SSE endpoints to enable real-time streaming
+            filter: (req, res) => {
+                // Skip compression for LLM chat streaming endpoint
+                if (req.path === "/api/llm-chat/stream") {
+                    return false;
+                }
+                return compression.filter(req, res);
+            }
+        }));
     }
 
     let resourcePolicy = config["Network"]["corsResourcePolicy"] as 'same-origin' | 'same-site' | 'cross-origin' | undefined;
