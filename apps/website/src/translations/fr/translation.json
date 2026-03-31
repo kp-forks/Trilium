@@ -202,6 +202,7 @@
         "title": "Ressources",
         "icon_packs": "Packs d'icônes",
         "download": "Télécharger",
-        "website": "Site Internet"
+        "website": "Site Internet",
+        "icon_packs_intro": "Élargissez la sélection d’icônes disponibles pour vos notes en utilisant un pack d’icônes. Pour plus d'informations sur les packs d'icônes, consultez <DocumentationLink>la documentation officielle</DocumentationLink>."
     }
 }
