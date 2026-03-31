@@ -2230,19 +2230,5 @@
     "sample_xy": "XY 圖表",
     "sample_venn": "韋恩圖",
     "sample_ishikawa": "魚骨圖"
-  },
-  "mind-map": {
-    "addChild": "插入子節點",
-    "addParent": "插入父節點",
-    "addSibling": "插入同級節點",
-    "removeNode": "刪除節點",
-    "focus": "專注",
-    "cancelFocus": "取消專注",
-    "moveUp": "上移",
-    "moveDown": "下移",
-    "link": "連接",
-    "linkBidirectional": "雙向連接",
-    "clickTips": "請點擊目標節點",
-    "summary": "摘要"
   }
 }

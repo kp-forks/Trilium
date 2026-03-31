@@ -2230,19 +2230,5 @@
     "sample_xy": "XY",
     "sample_venn": "Mengen",
     "sample_ishikawa": "Ursache-Wirkung"
-  },
-  "mind-map": {
-    "addChild": "Kindknoten hinzufügen",
-    "addParent": "Elternknoten hinzufügen",
-    "addSibling": "Geschwisterknoten hinzufügen",
-    "removeNode": "Knoten entfernen",
-    "focus": "Fokusmodus",
-    "cancelFocus": "Fokusmodus abbrechen",
-    "moveUp": "Nach oben verschieben",
-    "moveDown": "Nach unten verschieben",
-    "link": "Link",
-    "linkBidirectional": "Zweiseitiger Link",
-    "clickTips": "Bitte klicken Sie auf den Zielknoten",
-    "summary": "Zusammenfassung"
   }
 }

@@ -2215,19 +2215,5 @@
     "sample_venn": "韦恩图",
     "sample_ishikawa": "鱼骨图",
     "placeholder": "输入你的美人鱼图的内容，或者使用下面的示例图之一。"
-  },
-  "mind-map": {
-    "addChild": "插入子节点",
-    "addParent": "插入父节点",
-    "addSibling": "插入同级节点",
-    "removeNode": "删除节点",
-    "focus": "专注",
-    "cancelFocus": "取消专注",
-    "moveUp": "上移",
-    "moveDown": "下移",
-    "link": "连接",
-    "linkBidirectional": "双向连接",
-    "clickTips": "请点击目标节点",
-    "summary": "摘要"
   }
 }

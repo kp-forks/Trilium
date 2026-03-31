@@ -103,19 +103,5 @@
     "are_you_sure_remove_note": "\"{{title}}\" notunu ilişki haritasından kaldırmak istediğinize emin misiniz?. ",
     "also_delete_note": "Notu da sil",
     "if_you_dont_check": "Bunu işaretlemezseniz, not yalnızca ilişki haritasından kaldırılacaktır."
-  },
-  "mind-map": {
-    "addChild": "Add child",
-    "addParent": "Add parent",
-    "addSibling": "Add sibling",
-    "removeNode": "Remove node",
-    "focus": "Focus Mode",
-    "cancelFocus": "Cancel Focus Mode",
-    "moveUp": "Move up",
-    "moveDown": "Move down",
-    "link": "Link",
-    "linkBidirectional": "Bidirectional Link",
-    "clickTips": "Please click the target node",
-    "summary": "Summary"
   }
 }

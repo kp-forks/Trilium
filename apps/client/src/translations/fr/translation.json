@@ -1982,19 +1982,5 @@
   },
   "calendar_view": {
     "delete_note": "Effacer la note..."
-  },
-  "mind-map": {
-    "addChild": "Ajout enfant",
-    "addParent": "Ajout parent",
-    "addSibling": "Ajout voisin",
-    "removeNode": "Supprimer",
-    "focus": "Cibler",
-    "cancelFocus": "Retour",
-    "moveUp": "Monter",
-    "moveDown": "Descendre",
-    "link": "Lier",
-    "linkBidirectional": "Lien bidirectionnel",
-    "clickTips": "Cliquer sur le noeud cible",
-    "summary": "Annoter"
   }
 }

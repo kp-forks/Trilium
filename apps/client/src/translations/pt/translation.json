@@ -2123,19 +2123,5 @@
     "pages_other": "{{count}} páginas",
     "pages_alt": "Página {{pageNumber}}",
     "pages_loading": "A carregar..."
-  },
-  "mind-map": {
-    "addChild": "Adicionar item filho",
-    "addParent": "Adicionar item pai",
-    "addSibling": "Adicionar item irmão",
-    "removeNode": "Remover item",
-    "focus": "Modo Foco",
-    "cancelFocus": "Cancelar Modo Foco",
-    "moveUp": "Mover para cima",
-    "moveDown": "Mover para baixo",
-    "link": "Link",
-    "linkBidirectional": "Link bidirecional",
-    "clickTips": "Favor clicar no item alvo",
-    "summary": "Resumo"
   }
 }

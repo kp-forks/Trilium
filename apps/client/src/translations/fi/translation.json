@@ -146,19 +146,5 @@
   },
   "call_to_action": {
     "dismiss": "Hylkää"
-  },
-  "mind-map": {
-    "addChild": "Lisää lapsi",
-    "addParent": "Lisää vanhempi",
-    "addSibling": "Lisää sisarus",
-    "removeNode": "Poista solmu",
-    "focus": "Kohdistustila",
-    "cancelFocus": "Peruuta kohdistustila",
-    "moveUp": "Siirrä ylös",
-    "moveDown": "Siirrä alas",
-    "link": "Linkki",
-    "linkBidirectional": "Kaksisuuntainen linkki",
-    "clickTips": "Klikkaa kohdesolmua",
-    "summary": "Yhteenveto"
   }
 }
