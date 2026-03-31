@@ -1718,7 +1718,8 @@
     "new-feature": "Nuovo",
     "collections": "Collezioni",
     "ai-chat": "Chat con IA",
-    "spreadsheet": "Foglio di calcolo"
+    "spreadsheet": "Foglio di calcolo",
+    "llm-chat": "Chat con IA"
   },
   "protect_note": {
     "toggle-on": "Proteggi la nota",
@@ -2051,7 +2052,9 @@
     "title": "Opzioni sperimentali",
     "disclaimer": "Queste opzioni sono sperimentali e potrebbero causare instabilità. Usare con cautela.",
     "new_layout_name": "Nuovo layout",
-    "new_layout_description": "Prova il nuovo layout per un look più moderno e una maggiore usabilità. Soggetto a modifiche significative nelle prossime versioni."
+    "new_layout_description": "Prova il nuovo layout per un look più moderno e una maggiore usabilità. Soggetto a modifiche significative nelle prossime versioni.",
+    "llm_name": "Chat con IA / LLM",
+    "llm_description": "Attiva la barra laterale della chat con IA e le note della chat LLM basate su modelli linguistici di grandi dimensioni."
   },
   "server": {
     "unknown_http_error_title": "Errore di comunicazione con il server",
@@ -2245,5 +2248,64 @@
     "sample_xy": "XY",
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa"
+  },
+  "llm_chat": {
+    "placeholder": "Scrivi un messaggio...",
+    "send": "Invia",
+    "sending": "Invio in corso...",
+    "empty_state": "Inizia una conversazione scrivendo un messaggio qui sotto.",
+    "searching_web": "Ricerca sul web...",
+    "web_search": "Ricerca sul web",
+    "note_tools": "Nota di accesso",
+    "sources": "Fonti",
+    "extended_thinking": "Riflessioni approfondite",
+    "legacy_models": "Modelli precedenti",
+    "thinking": "Sto riflettendo...",
+    "thought_process": "Processo mentale",
+    "tool_calls": "{{count}} chiamata/e di funzione",
+    "input": "Dati in ingresso",
+    "result": "Risultato",
+    "error": "Errore",
+    "tool_error": "fallito",
+    "total_tokens": "{{total}} gettoni",
+    "tokens_detail": "{{prompt}} prompt + {{completion}} completamento",
+    "tokens_used": "{{prompt}} prompt + {{completion}} completamento = {{total}} token",
+    "tokens_used_with_cost": "{{prompt}} prompt + {{completion}} completamento = {{total}} token (~${{cost}})",
+    "tokens_used_with_model": "{{model}}: {{prompt}} prompt + {{completion}} completamento = {{total}} token",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} prompt + {{completion}} completamento = {{total}} token (~${{cost}})",
+    "tokens": "tokens",
+    "context_used": "{{percentage}}% utilizzato",
+    "note_context_enabled": "Clicca qui per disattivare il contesto della nota: {{title}}",
+    "note_context_disabled": "Clicca per includere la nota corrente nel contesto",
+    "no_provider_message": "Non è stato configurato alcun fornitore di IA. Aggiungine uno per iniziare a chattare.",
+    "add_provider": "Aggiungi un fornitore di IA",
+    "role_user": "Tu",
+    "role_assistant": "Assistente"
+  },
+  "sidebar_chat": {
+    "title": "Chat AI",
+    "launcher_title": "Apri Chat AI",
+    "new_chat": "Inizia una nuova chat",
+    "save_chat": "Salva la chat negli appunti",
+    "empty_state": "Avvia una conversazione",
+    "history": "Cronologia delle chat",
+    "recent_chats": "Conversazioni recenti",
+    "no_chats": "Nessuna conversazione precedente"
+  },
+  "llm": {
+    "settings_title": "AI / LLM",
+    "settings_description": "Configurare le integrazioni con l'intelligenza artificiale e i modelli linguistici di grandi dimensioni.",
+    "add_provider": "Aggiungi fornitore",
+    "add_provider_title": "Aggiungi un fornitore di IA",
+    "configured_providers": "Fornitori configurati",
+    "no_providers_configured": "Non sono stati ancora configurati fornitori.",
+    "provider_name": "Nome",
+    "provider_type": "Fornitore",
+    "actions": "Azioni",
+    "delete_provider": "Elimina",
+    "delete_provider_confirmation": "Sei sicuro di voler eliminare il provider \"{{name}}\"?",
+    "api_key": "Chiave API",
+    "api_key_placeholder": "Inserisci la tua chiave API",
+    "cancel": "Annulla"
   }
 }
