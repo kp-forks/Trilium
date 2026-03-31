@@ -1157,7 +1157,9 @@
     "title": "Experimental Options",
     "disclaimer": "These options are experimental and may cause instability. Use with caution.",
     "new_layout_name": "New Layout",
-    "new_layout_description": "Try out the new layout for a more modern look and improved usability. Subject to heavy change in the upcoming releases."
+    "new_layout_description": "Try out the new layout for a more modern look and improved usability. Subject to heavy change in the upcoming releases.",
+    "llm_name": "AI / LLM Chat",
+    "llm_description": "Enable the AI chat sidebar and LLM chat notes powered by large language models."
   },
   "fonts": {
     "theme_defined": "Theme defined",
@@ -1599,6 +1601,7 @@
     "geo-map": "Geo Map",
     "beta-feature": "Beta",
     "ai-chat": "AI Chat",
+    "llm-chat": "AI Chat",
     "task-list": "Task List",
     "new-feature": "New",
     "collections": "Collections",
@@ -1609,6 +1612,49 @@
     "toggle-off": "Unprotect the note",
     "toggle-on-hint": "Note is not protected, click to make it protected",
     "toggle-off-hint": "Note is protected, click to make it unprotected"
+  },
+  "llm_chat": {
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "sending": "Sending...",
+    "empty_state": "Start a conversation by typing a message below.",
+    "searching_web": "Searching the web...",
+    "web_search": "Web search",
+    "note_tools": "Note access",
+    "sources": "Sources",
+    "extended_thinking": "Extended thinking",
+    "legacy_models": "Legacy models",
+    "thinking": "Thinking...",
+    "thought_process": "Thought process",
+    "tool_calls": "{{count}} tool call(s)",
+    "input": "Input",
+    "result": "Result",
+    "error": "Error",
+    "tool_error": "failed",
+    "total_tokens": "{{total}} tokens",
+    "tokens_detail": "{{prompt}} prompt + {{completion}} completion",
+    "tokens_used": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens",
+    "tokens_used_with_cost": "{{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})",
+    "tokens_used_with_model": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} prompt + {{completion}} completion = {{total}} tokens (~${{cost}})",
+    "tokens": "tokens",
+    "context_used": "{{percentage}}% used",
+    "note_context_enabled": "Click to disable note context: {{title}}",
+    "note_context_disabled": "Click to include current note in context",
+    "no_provider_message": "No AI provider configured. Add one to start chatting.",
+    "add_provider": "Add AI Provider",
+    "role_user": "You",
+    "role_assistant": "Assistant"
+  },
+  "sidebar_chat": {
+    "title": "AI Chat",
+    "launcher_title": "Open AI Chat",
+    "new_chat": "Start new chat",
+    "save_chat": "Save chat to notes",
+    "empty_state": "Start a conversation",
+    "history": "Chat history",
+    "recent_chats": "Recent chats",
+    "no_chats": "No previous chats"
   },
   "shared_switch": {
     "shared": "Shared",
@@ -2244,5 +2290,21 @@
     "linkBidirectional": "Bidirectional Link",
     "clickTips": "Please click the target node",
     "summary": "Summary"
+  },
+  "llm": {
+    "settings_title": "AI / LLM",
+    "settings_description": "Configure AI and Large Language Model integrations.",
+    "add_provider": "Add Provider",
+    "add_provider_title": "Add AI Provider",
+    "configured_providers": "Configured Providers",
+    "no_providers_configured": "No providers configured yet.",
+    "provider_name": "Name",
+    "provider_type": "Provider",
+    "actions": "Actions",
+    "delete_provider": "Delete",
+    "delete_provider_confirmation": "Are you sure you want to delete the provider \"{{name}}\"?",
+    "api_key": "API Key",
+    "api_key_placeholder": "Enter your API key",
+    "cancel": "Cancel"
   }
 }

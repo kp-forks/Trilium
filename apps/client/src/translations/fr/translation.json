@@ -28,7 +28,10 @@
     },
     "widget-render-error": {
       "title": "Rendu impossible d'un widget React custom"
-    }
+    },
+    "widget-missing-parent": "Le widget personnalisé ne possède pas la propriété obligatoire '{{property}}'.\n\nSi ce script est destiné à être exécuté sans élément d’interface utilisateur, utilisez plutôt '#run=frontendStartup'.",
+    "open-script-note": "Ouvrir la note du script",
+    "scripting-error": "Erreur de script personnalisée: {{title}}"
   },
   "add_link": {
     "add_link": "Ajouter un lien",
@@ -766,7 +769,8 @@
     "filter": "Filtre",
     "filter-none": "Toutes les icônes",
     "filter-default": "Icônes par défaut",
-    "icon_tooltip": "{{name}}\nPack d'icônes : {{iconPack}}"
+    "icon_tooltip": "{{name}}\nPack d'icônes : {{iconPack}}",
+    "no_results": "Aucune icône trouvée."
   },
   "basic_properties": {
     "note_type": "Type de note",
@@ -793,7 +797,8 @@
     "expand_tooltip": "Développe les éléments enfants directs de cette collection (à un niveau). Pour plus d'options, appuyez sur la flèche à droite.",
     "expand_first_level": "Développer les enfants directs",
     "expand_nth_level": "Développer sur {{depth}} niveaux",
-    "expand_all_levels": "Développer tous les niveaux"
+    "expand_all_levels": "Développer tous les niveaux",
+    "hide_child_notes": "Masquer les notes enfants dans l’arborescence"
   },
   "edited_notes": {
     "no_edited_notes_found": "Aucune note modifiée ce jour-là...",
@@ -806,7 +811,7 @@
     "file_type": "Type de fichier",
     "file_size": "Taille du fichier",
     "download": "Télécharger",
-    "open": "Ouvrir",
+    "open": "Ouvrir dans une nouvelle fenêtre",
     "upload_new_revision": "Téléverser une nouvelle version",
     "upload_success": "Une nouvelle version de fichier a été téléversée.",
     "upload_failed": "Le téléversement d'une nouvelle version de fichier a échoué.",
@@ -826,7 +831,8 @@
   },
   "inherited_attribute_list": {
     "title": "Attributs hérités",
-    "no_inherited_attributes": "Aucun attribut hérité."
+    "no_inherited_attributes": "Aucun attribut hérité.",
+    "none": "aucun"
   },
   "note_info_widget": {
     "note_id": "Identifiant de la note",
@@ -903,7 +909,8 @@
     "unknown_search_option": "Option de recherche inconnue {{searchOptionName}}",
     "search_note_saved": "La note de recherche a été enregistrée dans {{- notePathTitle}}",
     "actions_executed": "Les actions ont été exécutées.",
-    "view_options": "Afficher les options:"
+    "view_options": "Afficher les options:",
+    "option": "option"
   },
   "similar_notes": {
     "title": "Notes similaires",
@@ -997,7 +1004,7 @@
     "no_attachments": "Cette note ne contient aucune pièce jointe."
   },
   "book": {
-    "no_children_help": "Cette note de type Livre n'a aucune note enfant, donc il n'y a rien à afficher. Consultez le <a href=\"https://triliumnext.github.io/Docs/Wiki/book-note.html\">wiki</a> pour plus de détails.",
+    "no_children_help": "Cette collection ne contient pas de notes enfants, il n'y a donc rien à afficher.",
     "drag_locked_title": "Edition verrouillée",
     "drag_locked_message": "Le glisser-déposer n'est pas autorisé car l'édition de cette collection est verrouillé."
   },
@@ -1367,7 +1374,8 @@
     "description": "Description",
     "reload_app": "Recharger l'application pour appliquer les modifications",
     "set_all_to_default": "Réinitialiser aux valeurs par défaut",
-    "confirm_reset": "Voulez-vous vraiment réinitialiser tous les raccourcis clavier par défaut ?"
+    "confirm_reset": "Voulez-vous vraiment réinitialiser tous les raccourcis clavier par défaut ?",
+    "no_results": "Aucun raccourci correspondant à '{{filter}}'"
   },
   "spellcheck": {
     "title": "Vérification orthographique",
@@ -1402,7 +1410,7 @@
     "will_be_deleted_in": "Cette pièce jointe sera automatiquement supprimée dans {{time}}",
     "will_be_deleted_soon": "Cette pièce jointe sera bientôt supprimée automatiquement",
     "deletion_reason": ", car la pièce jointe n'est pas liée dans le contenu de la note. Pour empêcher la suppression, ajoutez à nouveau le lien de la pièce jointe dans le contenu d'une note ou convertissez la pièce jointe en note.",
-    "role_and_size": "Rôle : {{role}}, Taille : {{size}}",
+    "role_and_size": "Rôle : {{role}}, Taille : {{size}}, MIME: {{- mimeType}}",
     "link_copied": "Lien de pièce jointe copié dans le presse-papiers.",
     "unrecognized_role": "Rôle de pièce jointe « {{role}} » non reconnu."
   },
@@ -1456,7 +1464,8 @@
     "convert-to-attachment-confirm": "Êtes-vous sûr de vouloir convertir les notes sélectionnées en pièces jointes de leurs notes parentes ?",
     "archive": "Archive",
     "unarchive": "Désarchiver",
-    "open-in-popup": "Modification rapide"
+    "open-in-popup": "Modification rapide",
+    "open-in-a-new-window": "Ouvrir dans une nouvelle fenêtre"
   },
   "shared_info": {
     "shared_publicly": "Cette note est partagée publiquement sur {{- link}}.",
@@ -1834,7 +1843,7 @@
   "book_properties_config": {
     "hide-weekends": "Masquer les week-ends",
     "display-week-numbers": "Afficher les numéros de semaine",
-    "map-style": "Style de carte :",
+    "map-style": "Style de carte",
     "max-nesting-depth": "Profondeur d'imbrication maximale :",
     "raster": "Trame",
     "vector_light": "Vecteur (clair)",
@@ -1982,5 +1991,41 @@
   },
   "calendar_view": {
     "delete_note": "Effacer la note..."
+  },
+  "media": {
+    "play": "Lire (Espace)",
+    "pause": "Pause (Espace)",
+    "back-10s": "Retour arrière 10s (flèche gauche)",
+    "forward-30s": "Avance 30s",
+    "mute": "Silence (M)",
+    "unmute": "Réactiver le son (M)",
+    "playback-speed": "Vitesse de lecture",
+    "loop": "Boucle",
+    "disable-loop": "Désactiver la boucle",
+    "rotate": "Rotation",
+    "picture-in-picture": "Image dans l'image",
+    "exit-picture-in-picture": "Sortir de Image dans l'image",
+    "fullscreen": "Plein-écran (F)",
+    "exit-fullscreen": "Sortir du mode plein-écran",
+    "unsupported-format": "L'aperçu multimédia n'est pas disponible pour ce format de fichier:\n{{mime}}",
+    "zoom-to-fit": "Zoom pour remplir",
+    "zoom-reset": "Annuler zoom pour remplir"
+  },
+  "render": {
+    "setup_title": "Afficher du HTML personnalisé ou Preact JSX dans cette note",
+    "setup_create_sample_preact": "Créer un exemple de note avec Preact",
+    "setup_create_sample_html": "Créer un exemple de note avec HTML",
+    "setup_sample_created": "Un exemple de note a été créé en tant que note enfant.",
+    "disabled_description": "Ces notes de rendu proviennent d'une source externe. Pour vous protéger de contenu malveillant, elle n'est pas activée par défaut. Assurez-vous de faire confiance à la source avant de l’activer.",
+    "disabled_button_enable": "Activer la note de rendu"
+  },
+  "web_view_setup": {
+    "title": "Créez la vue de la page Web directement dans Trilium",
+    "url_placeholder": "Entrez ou collez l'adresse du site Web, par exemple https://triliumnotes.org",
+    "create_button": "Créer une vue Web",
+    "invalid_url_title": "Adresse invalide",
+    "invalid_url_message": "Insérer une adresse Web valide, par exemple https://triliumnotes.org.",
+    "disabled_description": "Cette vue Web a été importée à partir d'une source externe. Pour vous protéger du phishing ou du contenu malveillant, elle ne se charge pas automatiquement. Vous pouvez l'activer si vous faites confiance à la source.",
+    "disabled_button_enable": "Activer la vue Web"
   }
 }
