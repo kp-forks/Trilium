@@ -144,7 +144,7 @@ export abstract class BaseProvider implements LlmProvider {
 
     chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
         const systemPrompt = this.buildSystemPrompt(messages, config);
-        const chatMessages = messages.filter(m => m.role !== "system");
+        const chatMessages = messages.filter(m => m.role !== "system" && m.content);
         const coreMessages = this.buildMessages(chatMessages, systemPrompt);
 
         const streamOptions: Parameters<typeof streamText>[0] = {

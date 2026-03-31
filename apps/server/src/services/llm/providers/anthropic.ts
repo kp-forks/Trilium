@@ -132,7 +132,7 @@ export class AnthropicProvider extends BaseProvider {
         }
 
         const systemPrompt = this.buildSystemPrompt(messages, config);
-        const chatMessages = messages.filter(m => m.role !== "system");
+        const chatMessages = messages.filter(m => m.role !== "system" && m.content);
         const coreMessages = this.buildMessages(chatMessages, systemPrompt);
 
         const thinkingBudget = config.thinkingBudget || 10000;
