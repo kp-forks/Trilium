@@ -104,7 +104,7 @@ export interface SavedData {
 
 export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, onContentChange, dataSaved, updateInterval }: {
     noteType: NoteType;
-    note: FNote,
+    note: FNote | null | undefined,
     noteContext: NoteContext | null | undefined,
     getData: () => Promise<SavedData | undefined> | SavedData | undefined,
     onContentChange: (newContent: string) => void,
@@ -118,8 +118,8 @@ export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, on
         return async () => {
             const data = await getData();
 
-            // for read only notes
-            if (data === undefined || note.type !== noteType) return;
+            // for read only notes, or if note is not yet available (e.g. lazy creation)
+            if (data === undefined || !note || note.type !== noteType) return;
 
             protected_session_holder.touchProtectedSessionIfNecessary(note);
 
@@ -138,7 +138,7 @@ export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, on
 
     // React to note/blob changes.
     useEffect(() => {
-        if (!blob) return;
+        if (!blob || !note) return;
         noteSavedDataStore.set(note.noteId, blob.content);
         spacedUpdate.allowUpdateWithoutChange(() => onContentChange(blob.content));
     }, [ blob ]);

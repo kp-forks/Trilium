@@ -10,7 +10,7 @@ import { formatDateTime } from "../../utils/formatters";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormListItem } from "../react/FormList.js";
-import { useActiveNoteContext, useNote, useNoteProperty } from "../react/hooks.js";
+import { useActiveNoteContext, useEditorSpacedUpdate, useNote, useNoteProperty } from "../react/hooks.js";
 import NoItems from "../react/NoItems.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
@@ -25,9 +25,8 @@ import RightPanelWidget from "./RightPanelWidget.js";
  */
 export default function SidebarChat() {
     const [chatNoteId, setChatNoteId] = useState<string | null>(null);
-    const [shouldSave, setShouldSave] = useState(false);
     const [recentChats, setRecentChats] = useState<RecentLlmChat[]>([]);
-    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+    const spacedUpdateRef = useRef<{ scheduleUpdate: () => void }>(null);
     const historyDropdownRef = useRef<BootstrapDropdown | null>(null);
 
     // Get the current active note context
@@ -40,9 +39,39 @@ export default function SidebarChat() {
     // Use shared chat hook with sidebar-specific options
     const chat = useLlmChat(
         // onMessagesChange - trigger save
-        () => setShouldSave(true),
+        () => spacedUpdateRef.current?.scheduleUpdate(),
         { defaultEnableNoteTools: true, supportsExtendedThinking: true }
     );
+
+    // Ref to access chat methods in callbacks without triggering re-runs
+    const chatRef = useRef(chat);
+    chatRef.current = chat;
+
+    // Persistence via useEditorSpacedUpdate (same mechanism as the LlmChat type widget).
+    // When chatNote is null (before lazy creation), saves are no-ops.
+    const spacedUpdate = useEditorSpacedUpdate({
+        note: chatNote,
+        noteType: "llmChat",
+        noteContext: null,
+        getData: () => {
+            const content = chatRef.current.getContent();
+            return { content: JSON.stringify(content) };
+        },
+        onContentChange: (content) => {
+            if (!content) {
+                chatRef.current.clearMessages();
+                return;
+            }
+            try {
+                const parsed: LlmChatContent = JSON.parse(content);
+                chatRef.current.loadFromContent(parsed);
+            } catch (e) {
+                console.error("Failed to parse LLM chat content:", e);
+                chatRef.current.clearMessages();
+            }
+        }
+    });
+    spacedUpdateRef.current = spacedUpdate;
 
     // Update chat context when active note changes
     useEffect(() => {
@@ -53,42 +82,6 @@ export default function SidebarChat() {
     useEffect(() => {
         chat.setChatNoteId(chatNoteId ?? undefined);
     }, [chatNoteId, chat.setChatNoteId]);
-
-    // Ref to access chat methods in effects without triggering re-runs
-    const chatRef = useRef(chat);
-    chatRef.current = chat;
-
-    // Handle debounced save when shouldSave is triggered
-    useEffect(() => {
-        if (!shouldSave || !chatNoteId) {
-            setShouldSave(false);
-            return;
-        }
-
-        setShouldSave(false);
-
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
-
-        saveTimeoutRef.current = setTimeout(async () => {
-            const content = chat.getContent();
-            try {
-                await server.put(`notes/${chatNoteId}/data`, {
-                    content: JSON.stringify(content)
-                });
-            } catch (err) {
-                console.error("Failed to save chat:", err);
-            }
-        }, 500);
-
-        return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-                saveTimeoutRef.current = undefined;
-            }
-        };
-    }, [shouldSave, chatNoteId, chat]);
 
     // Load the most recent chat on mount (runs once)
     useEffect(() => {
@@ -102,16 +95,6 @@ export default function SidebarChat() {
 
                 if (existingChat) {
                     setChatNoteId(existingChat.noteId);
-                    // Load content inline to avoid dependency issues
-                    try {
-                        const blob = await server.get<{ content: string }>(`notes/${existingChat.noteId}/blob`);
-                        if (!cancelled && blob?.content) {
-                            const parsed: LlmChatContent = JSON.parse(blob.content);
-                            chatRef.current.loadFromContent(parsed);
-                        }
-                    } catch (err) {
-                        console.error("Failed to load chat content:", err);
-                    }
                 } else {
                     // No existing chat - will create on first message
                     setChatNoteId(null);
@@ -170,31 +153,38 @@ export default function SidebarChat() {
     }, [handleSubmit]);
 
     const handleNewChat = useCallback(async () => {
+        // Save any pending changes before switching
+        await spacedUpdate.updateNowIfNecessary();
+
         try {
             const note = await dateNoteService.createLlmChat();
             if (note) {
                 setChatNoteId(note.noteId);
-                chat.clearMessages();
+                chatRef.current.clearMessages();
             }
         } catch (err) {
             console.error("Failed to create new chat:", err);
         }
-    }, [chat]);
+    }, [spacedUpdate]);
 
     const handleSaveChat = useCallback(async () => {
         if (!chatNoteId) return;
+
+        // Save any pending changes before moving the chat
+        await spacedUpdate.updateNowIfNecessary();
+
         try {
             await server.post("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
             // Create a new empty chat after saving
             const note = await dateNoteService.createLlmChat();
             if (note) {
                 setChatNoteId(note.noteId);
-                chat.clearMessages();
+                chatRef.current.clearMessages();
             }
         } catch (err) {
             console.error("Failed to save chat to permanent location:", err);
         }
-    }, [chatNoteId, chat]);
+    }, [chatNoteId, spacedUpdate]);
 
     const loadRecentChats = useCallback(async () => {
         try {
@@ -210,17 +200,11 @@ export default function SidebarChat() {
 
         if (noteId === chatNoteId) return;
 
-        try {
-            const blob = await server.get<{ content: string }>(`notes/${noteId}/blob`);
-            if (blob?.content) {
-                const parsed: LlmChatContent = JSON.parse(blob.content);
-                setChatNoteId(noteId);
-                chat.loadFromContent(parsed);
-            }
-        } catch (err) {
-            console.error("Failed to load selected chat:", err);
-        }
-    }, [chatNoteId, chat]);
+        // Save any pending changes before switching
+        await spacedUpdate.updateNowIfNecessary();
+
+        setChatNoteId(noteId);
+    }, [chatNoteId, spacedUpdate]);
 
     return (
         <RightPanelWidget
