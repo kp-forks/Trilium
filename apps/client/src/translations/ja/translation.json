@@ -2215,5 +2215,19 @@
     "sample_xy": "XY チャート",
     "sample_venn": "ベン図",
     "sample_ishikawa": "石川図"
+  },
+  "mind-map": {
+    "addChild": "子ノードを追加する",
+    "addParent": "親ノードを追加します",
+    "addSibling": "兄弟ノードを追加する",
+    "removeNode": "ノードを削除",
+    "focus": "集中",
+    "cancelFocus": "集中解除",
+    "moveUp": "上へ移動",
+    "moveDown": "下へ移動",
+    "link": "コネクト",
+    "linkBidirectional": "双方向リンク",
+    "clickTips": "ターゲットノードをクリックしてください",
+    "summary": "概要"
   }
 }

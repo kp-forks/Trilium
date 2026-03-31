@@ -119,5 +119,19 @@
     "clone_notes_to": "Kloon de notities naar...",
     "help_on_links": "Hulp op links",
     "notes_to_clone": "Notities om te klonen"
+  },
+  "mind-map": {
+    "addChild": "Kind toevoegen",
+    "addParent": "Ouder toevoegen",
+    "addSibling": "Broer/Zus toevoegen",
+    "removeNode": "Knoop verwijderen",
+    "focus": "Focusmodus",
+    "cancelFocus": "Focusmodus annuleren",
+    "moveUp": "Omhoog verplaatsen",
+    "moveDown": "Omlaag verplaatsen",
+    "link": "Link",
+    "linkBidirectional": "Bidirectionele link",
+    "clickTips": "Klik op de doelknoop",
+    "summary": "Samenvatting"
   }
 }

@@ -2137,5 +2137,19 @@
     "title_few": "{{count}} taburi",
     "title_other": "{{count}} de taburi",
     "more_options": "Mai multe opțiuni"
+  },
+  "mind-map": {
+    "addChild": "Adaugă sub-nod",
+    "addParent": "Adaugă nod părinte",
+    "addSibling": "Adaugă nod la același nivel",
+    "removeNode": "Șterge nodul",
+    "focus": "Focalizare",
+    "cancelFocus": "Anulează focalizarea",
+    "moveUp": "Mută în sus",
+    "moveDown": "Mută în jos",
+    "link": "Creează legătură",
+    "linkBidirectional": "Creează legătură bidirecțională",
+    "clickTips": "Click pe nodul țintă",
+    "summary": "Rezumat"
   }
 }

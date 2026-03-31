@@ -2245,5 +2245,19 @@
     "sample_xy": "XY",
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa"
+  },
+  "mind-map": {
+    "addChild": "Aggiungi figlio",
+    "addParent": "Aggiungi genitore",
+    "addSibling": "Aggiungi fratello",
+    "removeNode": "Rimuovi nodo",
+    "focus": "Modalità Focus",
+    "cancelFocus": "Annulla Modalità Focus",
+    "moveUp": "Sposta su",
+    "moveDown": "Sposta giù",
+    "link": "Collega",
+    "linkBidirectional": "Collegamento bidirezionale",
+    "clickTips": "Si prega di fare clic sul nodo di destinazione",
+    "summary": "Unisci nodi"
   }
 }

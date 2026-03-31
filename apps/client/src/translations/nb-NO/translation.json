@@ -78,5 +78,19 @@
   },
   "recent_changes": {
     "undelete_link": "gjenopprett"
+  },
+  "mind-map": {
+    "addChild": "Legg til barn",
+    "addParent": "Legg til forelder",
+    "addSibling": "Legg til søsken",
+    "removeNode": "Fjern node",
+    "focus": "Fokusmodus",
+    "cancelFocus": "Avbryt fokusmodus",
+    "moveUp": "Flytt opp",
+    "moveDown": "Flytt ned",
+    "link": "Lenke",
+    "linkBidirectional": "Toveis lenke",
+    "clickTips": "Klikk på målnoden",
+    "summary": "Sammendrag"
   }
 }

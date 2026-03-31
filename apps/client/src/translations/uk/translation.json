@@ -1998,5 +1998,19 @@
     "setup_create_sample_preact": "Створіть зразок нотатки за допомогою Preact",
     "setup_create_sample_html": "Створити зразок нотатки за допомогою HTML",
     "setup_sample_created": "Зразок нотатки було створено як дочірню нотатку."
+  },
+  "mind-map": {
+    "addChild": "Add child",
+    "addParent": "Add parent",
+    "addSibling": "Add sibling",
+    "removeNode": "Remove node",
+    "focus": "Focus Mode",
+    "cancelFocus": "Cancel Focus Mode",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "link": "Link",
+    "linkBidirectional": "Bidirectional Link",
+    "clickTips": "Please click the target node",
+    "summary": "Summary"
   }
 }

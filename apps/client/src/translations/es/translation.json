@@ -2244,5 +2244,19 @@
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa",
     "sample_treemap": "Mapa de árbol"
+  },
+  "mind-map": {
+    "addChild": "Agregar hijo",
+    "addParent": "Agregar padre",
+    "addSibling": "Agregar hermano",
+    "removeNode": "Eliminar nodo",
+    "focus": "Modo Enfoque",
+    "cancelFocus": "Cancelar Modo Enfoque",
+    "moveUp": "Mover hacia arriba",
+    "moveDown": "Mover hacia abajo",
+    "link": "Enlace",
+    "linkBidirectional": "Enlace bidireccional",
+    "clickTips": "Por favor haga clic en el nodo de destino",
+    "summary": "Resumen"
   }
 }

@@ -36,5 +36,19 @@
   "add_link": {
     "add_link": "Infoga länk",
     "help_on_links": "Hjälp om länkar"
+  },
+  "mind-map": {
+    "addChild": "Lägg till barn",
+    "addParent": "Lägg till förälder",
+    "addSibling": "Lägg till syskon",
+    "removeNode": "Ta bort nod",
+    "focus": "Fokusläge",
+    "cancelFocus": "Avbryt fokusläge",
+    "moveUp": "Flytta upp",
+    "moveDown": "Flytta ner",
+    "link": "Länk",
+    "linkBidirectional": "Tvåvägslänk",
+    "clickTips": "Klicka på målnoden",
+    "summary": "Sammanfattning"
   }
 }
