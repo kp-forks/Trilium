@@ -13,7 +13,6 @@ import type React from "react";
 import contributors from "../../../../../contributors.json"; 
 import { Fragment } from "preact/jsx-runtime";
 import { ComponentChildren } from "preact";
-import clsx from "clsx";
 import { useMemo } from "react";
 import { memo } from "preact/compat";
 
@@ -40,8 +39,8 @@ export default function AboutDialog() {
 
     const createContributorHoverHandler = useCallback(() => {
         let timeoutID;
-        return (contributor: Contributor, isHovering: boolean) => {
-            if (contributor.role === "original-dev") {
+        return (contributor: Contributor, isHovering: boolean, part: "name" | "role") => {
+            if (part === "role" && contributor.role === "original-dev") {
                 if (isHovering) {
                     timeoutID = setTimeout(() => {
                         setAltIconName("classic");
@@ -177,7 +176,7 @@ function FooterLink(props: {children: ComponentChildren, text: string, url: stri
     </a>
 }
 
-type HoverCallback = (contributor: Contributor, isHovering: boolean) => void;
+type HoverCallback = (contributor: Contributor, isHovering: boolean, part: "name" | "role") => void;
 
 function Contributors({data, onHover}: {data: ContributorList, onHover?: HoverCallback}) {
     return data.contributors.slice(0, 10).map((c, index, array) => {
@@ -192,10 +191,10 @@ function Contributors({data, onHover}: {data: ContributorList, onHover?: HoverCa
 
 
 function ContributorListItem({data, onHover}: {data: Contributor, onHover?: HoverCallback}) {
-    const linkRef = useRef<HTMLAnchorElement>(null);
+    const roleRef = useRef<HTMLSpanElement>(null);
     const roleString = (data.role) ? t(`about.contributor_roles.${data.role}`) : "";
 
-    useTooltip(linkRef, (data.role) ? {
+    useTooltip(roleRef, (data.role) ? {
         title: t(`about.role_brief_history.${data.role}`),
         customClass: "about-dialog-brief-history-tooltip",
         placement: "bottom",
@@ -205,17 +204,22 @@ function ContributorListItem({data, onHover}: {data: Contributor, onHover?: Hove
 
     return <>
         <a
-            ref={linkRef}
-            className={clsx({"has-tooltip": !!data.role})}
             href={data.url}
             target="_blank"
-            onMouseEnter={(e) => onHover?.(data, true)}
-            onMouseLeave={(e) => onHover?.(data, false)}>
-
+            onMouseEnter={(e) => onHover?.(data, true, "name")}
+            onMouseLeave={(e) => onHover?.(data, false, "name")}>
+    
             {data.fullName ?? data.name}
         </a>
 
-        {roleString && <span>&nbsp;({roleString})</span>} 
+        {roleString && <span
+            className="contributor-role" 
+            ref={roleRef}
+            onMouseEnter={(e) => onHover?.(data, true, "role")}
+            onMouseLeave={(e) => onHover?.(data, false, "role")}>
+            
+            ({roleString})
+        </span>} 
     </>
 }
 

@@ -68,9 +68,10 @@
         a, span {
             white-space: nowrap;
         }
-
-        a.has-tooltip {
-            text-decoration: underline dotted var(--main-text-color) !important;
+        
+        .contributor-role {
+            text-decoration: underline dotted var(--main-text-color);
+            cursor: help;
         }
     }
 
