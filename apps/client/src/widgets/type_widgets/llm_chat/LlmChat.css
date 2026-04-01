@@ -514,7 +514,6 @@
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: var(--main-text-color);
-    font-family: var(--monospace-font-family, monospace);
 }
 
 .llm-chat-tool-call-input,
@@ -542,12 +541,11 @@
     overflow-y: auto;
 }
 
-/* Inline tool call cards (timeline style) */
+/* Inline tool call cards */
 .llm-chat-tool-call-inline {
     margin: 0.5rem 0;
-    background: var(--accented-background-color);
-    border-radius: 6px;
-    border-left: 3px solid var(--muted-text-color);
+    border: 1px solid var(--main-border-color);
+    border-radius: 8px;
     font-size: 0.85rem;
 }
 
@@ -560,7 +558,6 @@
     list-style: none;
     font-weight: 500;
     color: var(--muted-text-color);
-    font-family: var(--monospace-font-family, monospace);
 }
 
 .llm-chat-tool-call-inline-summary::-webkit-details-marker {
@@ -610,7 +607,7 @@
 
 /* Tool call error styling */
 .llm-chat-tool-call-error {
-    border-left-color: var(--danger-color, #dc3545);
+    border-color: var(--danger-color, #dc3545);
 }
 
 .llm-chat-tool-call-error .llm-chat-tool-call-inline-summary {
@@ -620,7 +617,6 @@
 .llm-chat-tool-call-error-badge {
     font-size: 0.75rem;
     font-weight: 400;
-    font-family: var(--main-font-family);
     color: var(--danger-color, #dc3545);
     opacity: 0.8;
 }

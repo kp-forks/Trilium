@@ -30,6 +30,12 @@ interface Props {
     isStreaming?: boolean;
 }
 
+function toolCallIcon(toolCall: ToolCall): string {
+    if (toolCall.isError) return "bx bx-error-circle";
+    if (toolCall.result) return "bx bx-check";
+    return "bx bx-loader-alt bx-spin";
+}
+
 function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
     const classes = [
         "llm-chat-tool-call-inline",
@@ -39,7 +45,7 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
     return (
         <details className={classes}>
             <summary className="llm-chat-tool-call-inline-summary">
-                <span className={toolCall.isError ? "bx bx-error-circle" : "bx bx-wrench"} />
+                <span className={toolCallIcon(toolCall)} />
                 {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
                 {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
             </summary>
