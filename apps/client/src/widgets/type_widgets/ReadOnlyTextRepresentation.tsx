@@ -3,6 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
+import { formatDateTime } from "../../services/utils";
 import { TypeWidgetProps } from "./type_widget";
 
 interface TextRepresentationResponse {
@@ -99,9 +100,11 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
                     }}>
                         {state.text}
                     </pre>
-                    <div style={{ fontSize: "0.9em", color: "var(--muted-text-color)", marginTop: "10px", fontStyle: "italic" }}>
-                        {t("ocr.extracted_on", { date: state.extractedAt ? new Date(state.extractedAt).toLocaleString() : t("ocr.unknown_date") })}
-                    </div>
+                    {state.extractedAt && (
+                        <div style={{ fontSize: "0.9em", color: "var(--muted-text-color)", marginTop: "10px", fontStyle: "italic" }}>
+                            {t("ocr.extracted_on", { date: formatDateTime(new Date(state.extractedAt)) })}
+                        </div>
+                    )}
                 </>
             )}
 
