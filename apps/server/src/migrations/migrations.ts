@@ -14,15 +14,15 @@ const MIGRATIONS: (SqlMigration | JsMigration)[] = [
             ALTER TABLE blobs ADD COLUMN textRepresentation TEXT DEFAULT NULL;
 
             -- Add OCR last processed timestamp to blobs table
-            ALTER TABLE blobs ADD COLUMN ocr_last_processed TEXT DEFAULT NULL;
+            ALTER TABLE blobs ADD COLUMN textExtractionLastProcessed TEXT DEFAULT NULL;
 
             -- Create index for text representation searches
             CREATE INDEX IF NOT EXISTS idx_blobs_textRepresentation
             ON blobs (textRepresentation);
 
             -- Create index for OCR last processed timestamp
-            CREATE INDEX IF NOT EXISTS idx_blobs_ocr_last_processed
-            ON blobs (ocr_last_processed);
+            CREATE INDEX IF NOT EXISTS idx_blobs_textExtractionLastProcessed
+            ON blobs (textExtractionLastProcessed);
         `
     },
     // Add missing database indices for query performance

@@ -27,7 +27,7 @@ export interface OCRProcessingOptions {
 interface OCRBlobRow {
     blobId: string;
     textRepresentation: string;
-    ocr_last_processed?: string;
+    textExtractionLastProcessed?: string;
 }
 
 /**
@@ -236,7 +236,7 @@ class OCRService {
             sql.execute(`
                 UPDATE blobs SET
                     textRepresentation = ?,
-                    ocr_last_processed = ?
+                    textExtractionLastProcessed = ?
                 WHERE blobId = ?
             `, [
                 ocrResult.text,
@@ -563,9 +563,9 @@ class OCRService {
         try {
             const blobInfo = sql.getRow<{
                 utcDateModified: string;
-                ocr_last_processed: string | null;
+                textExtractionLastProcessed: string | null;
             }>(`
-                SELECT utcDateModified, ocr_last_processed
+                SELECT utcDateModified, textExtractionLastProcessed
                 FROM blobs
                 WHERE blobId = ?
             `, [blobId]);
@@ -575,13 +575,13 @@ class OCRService {
             }
 
             // If OCR was never processed, it needs processing
-            if (!blobInfo.ocr_last_processed) {
+            if (!blobInfo.textExtractionLastProcessed) {
                 return true;
             }
 
             // If blob was modified after last OCR processing, it needs re-processing
             const blobModified = new Date(blobInfo.utcDateModified);
-            const lastOcrProcessed = new Date(blobInfo.ocr_last_processed);
+            const lastOcrProcessed = new Date(blobInfo.textExtractionLastProcessed);
 
             return blobModified > lastOcrProcessed;
         } catch (error) {
@@ -591,7 +591,7 @@ class OCRService {
     }
 
     /**
-     * Invalidate OCR results for a blob (clear textRepresentation and ocr_last_processed)
+     * Invalidate OCR results for a blob (clear textRepresentation and textExtractionLastProcessed)
      */
     invalidateOCRResult(blobId: string): void {
         if (!blobId) {
@@ -602,7 +602,7 @@ class OCRService {
             sql.execute(`
                 UPDATE blobs SET
                     textRepresentation = NULL,
-                    ocr_last_processed = NULL
+                    textExtractionLastProcessed = NULL
                 WHERE blobId = ?
             `, [blobId]);
 
@@ -653,8 +653,8 @@ class OCRService {
                 AND n.isDeleted = 0
                 AND n.blobId IS NOT NULL
                 AND (
-                    b.ocr_last_processed IS NULL
-                    OR b.utcDateModified > b.ocr_last_processed
+                    b.textExtractionLastProcessed IS NULL
+                    OR b.utcDateModified > b.textExtractionLastProcessed
                 )
             `);
 
@@ -693,8 +693,8 @@ class OCRService {
                 AND a.isDeleted = 0
                 AND a.blobId IS NOT NULL
                 AND (
-                    b.ocr_last_processed IS NULL
-                    OR b.utcDateModified > b.ocr_last_processed
+                    b.textExtractionLastProcessed IS NULL
+                    OR b.utcDateModified > b.textExtractionLastProcessed
                 )
             `);
 
