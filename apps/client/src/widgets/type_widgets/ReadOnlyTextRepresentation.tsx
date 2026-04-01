@@ -82,9 +82,9 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
 
             {state.kind === "loaded" && (
                 <>
-                    <pre className="text-representation-content">
+                    <div className="text-representation-content">
                         {state.text}
-                    </pre>
+                    </div>
                     {state.extractedAt && (
                         <div className="text-representation-meta">
                             {t("ocr.extracted_on", { date: formatDateTime(new Date(state.extractedAt)) })}

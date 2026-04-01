@@ -19,8 +19,6 @@
 
 .text-representation-content {
     white-space: pre-wrap;
-    font-family: var(--detail-text-font-family);
-    font-size: var(--detail-text-font-size);
     line-height: 1.6;
     border: 1px solid var(--main-border-color);
     border-radius: 4px;
