@@ -110,11 +110,6 @@ class OCRService {
      * Process OCR for a note (image type)
      */
     async processNoteOCR(noteId: string, options: OCRProcessingOptions = {}): Promise<OCRResult | null> {
-        if (!this.isOCREnabled()) {
-            log.info('OCR is disabled in settings');
-            return null;
-        }
-
         const note = becca.getNote(noteId);
         if (!note) {
             log.error(`Note ${noteId} not found`);
@@ -168,11 +163,6 @@ class OCRService {
      * Process OCR for an attachment
      */
     async processAttachmentOCR(attachmentId: string, options: OCRProcessingOptions = {}): Promise<OCRResult | null> {
-        if (!this.isOCREnabled()) {
-            log.info('OCR is disabled in settings');
-            return null;
-        }
-
         const attachment = becca.getAttachment(attachmentId);
         if (!attachment) {
             log.error(`Attachment ${attachmentId} not found`);

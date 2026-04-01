@@ -49,10 +49,6 @@ async function processNoteOCR(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
     const { language = 'eng', forceReprocess = false } = req.body || {};
 
-    if (!ocrService.isOCREnabled()) {
-        return [400, { success: false, message: 'OCR is not enabled in settings' }];
-    }
-
     const note = becca.getNote(noteId);
     if (!note) {
         return [404, { success: false, message: 'Note not found' }];
@@ -110,10 +106,6 @@ async function processNoteOCR(req: Request<{ noteId: string }>) {
 async function processAttachmentOCR(req: Request<{ attachmentId: string }>) {
     const { attachmentId } = req.params;
     const { language = 'eng', forceReprocess = false } = req.body || {};
-
-    if (!ocrService.isOCREnabled()) {
-        return [400, { success: false, message: 'OCR is not enabled in settings' }];
-    }
 
     const attachment = becca.getAttachment(attachmentId);
     if (!attachment) {
