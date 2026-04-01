@@ -1,11 +1,11 @@
-import FlexContainer from "./flex_container.js";
 import appContext, { type CommandData, type CommandListenerData, type EventData, type EventNames, type NoteSwitchedContext } from "../../components/app_context.js";
+import Component from "../../components/component.js";
+import NoteContext from "../../components/note_context.js";
+import splitService from "../../services/resizer.js";
+import { isMobile } from "../../services/utils.js";
 import type BasicWidget from "../basic_widget.js";
-import type NoteContext from "../../components/note_context.js";
-
-interface NoteContextEvent {
-    noteContext: NoteContext;
-}
+import NoteContextAwareWidget from "../note_context_aware_widget.js";
+import FlexContainer from "./flex_container.js";
 
 interface SplitNoteWidget extends BasicWidget {
     hasBeenAlreadyShown?: boolean;
@@ -51,10 +51,15 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
         await widget.handleEvent("setNoteContext", { noteContext });
 
         this.child(widget);
+
+        if (noteContext.mainNtxId && noteContext.ntxId && !isMobile()) {
+            splitService.setupNoteSplitResizer([noteContext.mainNtxId,noteContext.ntxId]);
+        }
     }
 
     async openNewNoteSplitEvent({ ntxId, notePath, hoistedNoteId, viewScope }: EventData<"openNewNoteSplit">) {
-        const mainNtxId = appContext.tabManager.getActiveMainContext()?.ntxId;
+        const activeContext = appContext.tabManager.getActiveMainContext();
+        const mainNtxId = activeContext?.ntxId;
         if (!mainNtxId) {
             console.warn("Missing main note context ID");
             return;
@@ -68,22 +73,30 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
 
         hoistedNoteId = hoistedNoteId || appContext.tabManager.getActiveContext()?.hoistedNoteId;
 
-        const noteContext = await appContext.tabManager.openEmptyTab(null, hoistedNoteId, mainNtxId);
-        if (!noteContext.ntxId) {
-            logError("Failed to create new note context!");
-            return;
+
+        const subContexts = activeContext.getSubContexts();
+        let noteContext: NoteContext | undefined;
+        if (isMobile() && subContexts.length > 1) {
+            noteContext = subContexts.find(s => s.ntxId !== ntxId);
+        }
+        if (!noteContext) {
+            noteContext = await appContext.tabManager.openEmptyTab(null, hoistedNoteId, mainNtxId);
+            // remove the original position of newly created note context
+            const ntxIds = appContext.tabManager.children.map((c) => c.ntxId).filter((id) => id !== noteContext?.ntxId) as string[];
+
+            // insert the note context after the originating note context
+            if (!noteContext.ntxId) {
+                logError("Failed to create new note context!");
+                return;
+            }
+            ntxIds.splice(ntxIds.indexOf(ntxId) + 1, 0, noteContext.ntxId);
+
+            this.triggerCommand("noteContextReorder", { ntxIdsInOrder: ntxIds });
+
+            // move the note context rendered widget after the originating widget
+            this.$widget.find(`[data-ntx-id="${noteContext.ntxId}"]`).insertAfter(this.$widget.find(`[data-ntx-id="${ntxId}"]`));
         }
 
-        // remove the original position of newly created note context
-        const ntxIds = appContext.tabManager.children.map((c) => c.ntxId).filter((id) => id !== noteContext.ntxId) as string[];
-
-        // insert the note context after the originating note context
-        ntxIds.splice(ntxIds.indexOf(ntxId) + 1, 0, noteContext.ntxId);
-
-        this.triggerCommand("noteContextReorder", { ntxIdsInOrder: ntxIds });
-
-        // move the note context rendered widget after the originating widget
-        this.$widget.find(`[data-ntx-id="${noteContext.ntxId}"]`).insertAfter(this.$widget.find(`[data-ntx-id="${ntxId}"]`));
 
         await appContext.tabManager.activateNoteContext(noteContext.ntxId);
 
@@ -94,10 +107,23 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
         }
     }
 
-    closeThisNoteSplitCommand({ ntxId }: CommandListenerData<"closeThisNoteSplit">) {
-        if (ntxId) {
-            appContext.tabManager.removeNoteContext(ntxId);
+    async closeThisNoteSplitCommand({ ntxId }: CommandListenerData<"closeThisNoteSplit">) {
+        if (!ntxId) return;
+        const contexts = appContext.tabManager.noteContexts;
+        const currentIndex = contexts.findIndex((c) => c.ntxId === ntxId);
+        if (currentIndex === -1) return;
+
+        const isRemoveMainContext = contexts[currentIndex].isMainContext();
+        if (isRemoveMainContext && currentIndex + 1 < contexts.length) {
+            const ntxIds = contexts.map((c) => c.ntxId).filter((c) => !!c) as string[];
+            this.triggerCommand("noteContextReorder", {
+                ntxIdsInOrder: ntxIds,
+                oldMainNtxId: ntxId,
+                newMainNtxId: ntxIds[currentIndex + 1]
+            });
         }
+
+        await appContext.tabManager.removeNoteContext(ntxId);
     }
 
     async moveThisNoteSplitCommand({ ntxId, isMovingLeft }: CommandListenerData<"moveThisNoteSplit">) {
@@ -136,6 +162,8 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
 
         // activate context that now contains the original note
         await appContext.tabManager.activateNoteContext(isMovingLeft ? ntxIds[leftIndex + 1] : ntxIds[leftIndex]);
+
+        splitService.moveNoteSplitResizer(ntxIds[leftIndex]);
     }
 
     activeContextChangedEvent() {
@@ -152,20 +180,33 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
         for (const ntxId of ntxIds) {
             this.$widget.find(`[data-ntx-id="${ntxId}"]`).remove();
 
+            const widget = this.widgets[ntxId];
+            recursiveCleanup(widget);
             delete this.widgets[ntxId];
         }
+
+        splitService.delNoteSplitResizer(ntxIds);
     }
 
-    contextsReopenedEvent({ ntxId, afterNtxId }: EventData<"contextsReopened">) {
-        if (ntxId === undefined || afterNtxId === undefined) {
-            // no single split reopened
-            return;
+    contextsReopenedEvent({ ntxId, mainNtxId, afterNtxId }: EventData<"contextsReopened">) {
+        if (ntxId !== undefined && afterNtxId !== undefined) {
+            this.$widget.find(`[data-ntx-id="${ntxId}"]`).insertAfter(this.$widget.find(`[data-ntx-id="${afterNtxId}"]`));
+        } else if (mainNtxId) {
+            const contexts = appContext.tabManager.noteContexts;
+            const nextIndex = contexts.findIndex(c => c.ntxId === mainNtxId);
+            const beforeNtxId = (nextIndex !== -1 && nextIndex + 1 < contexts.length) ? contexts[nextIndex + 1].ntxId : null;
+
+            this.$widget.find(`[data-ntx-id="${mainNtxId}"]`).insertBefore(this.$widget.find(`[data-ntx-id="${beforeNtxId}"]`));
         }
-        this.$widget.find(`[data-ntx-id="${ntxId}"]`).insertAfter(this.$widget.find(`[data-ntx-id="${afterNtxId}"]`));
     }
 
     async refresh() {
         this.toggleExt(true);
+
+        // Mark the active note context.
+        for (const child of this.children as NoteContextAwareWidget[]) {
+            child.$widget.toggleClass("active", !!child.noteContext?.isActive());
+        }
     }
 
     toggleInt(show: boolean) {} // not needed
@@ -204,16 +245,16 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
                 widget.hasBeenAlreadyShown = true;
 
                 return [widget.handleEvent("noteSwitched", noteSwitchedContext), this.refreshNotShown(noteSwitchedContext)];
-            } else {
-                return Promise.resolve();
             }
+            return Promise.resolve();
+
         }
 
         if (name === "activeContextChanged") {
             return this.refreshNotShown(data as EventData<"activeContextChanged">);
-        } else {
-            return super.handleEventInChildren(name, data);
         }
+        return super.handleEventInChildren(name, data);
+
     }
 
     refreshNotShown(data: NoteSwitchedContext | EventData<"activeContextChanged">) {
@@ -235,5 +276,14 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
         this.refresh();
 
         return Promise.all(promises);
+    }
+}
+
+function recursiveCleanup(widget: Component) {
+    for (const child of widget.children) {
+        recursiveCleanup(child);
+    }
+    if ("cleanup" in widget && typeof widget.cleanup === "function") {
+        widget.cleanup();
     }
 }

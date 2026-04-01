@@ -1,5 +1,5 @@
-import { expect, Locator, Page } from "@playwright/test";
 import type { BrowserContext } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 
 interface GotoOpts {
     url?: string;
@@ -8,6 +8,10 @@ interface GotoOpts {
 }
 
 const BASE_URL = "http://127.0.0.1:8082";
+
+interface DropdownLocator extends Locator {
+    selectOptionByText: (text: string) => Promise<void>;
+}
 
 export default class App {
     readonly page: Page;
@@ -22,6 +26,7 @@ export default class App {
     readonly currentNoteSplitTitle: Locator;
     readonly currentNoteSplitContent: Locator;
     readonly sidebar: Locator;
+    private isMobile: boolean = false;
 
     constructor(page: Page, context: BrowserContext) {
         this.page = page;
@@ -33,12 +38,14 @@ export default class App {
         this.noteTreeHoistedNote = this.noteTree.locator(".fancytree-node", { has: page.locator(".unhoist-button") });
         this.launcherBar = page.locator("#launcher-container");
         this.currentNoteSplit = page.locator(".note-split:not(.hidden-ext)");
-        this.currentNoteSplitTitle = this.currentNoteSplit.locator(".note-title");
+        this.currentNoteSplitTitle = this.currentNoteSplit.locator(".note-title").first();
         this.currentNoteSplitContent = this.currentNoteSplit.locator(".note-detail-printable.visible");
         this.sidebar = page.locator("#right-pane");
     }
 
     async goto({ url, isMobile, preserveTabs }: GotoOpts = {}) {
+        this.isMobile = !!isMobile;
+
         await this.context.addCookies([
             {
                 url: BASE_URL,
@@ -55,7 +62,7 @@ export default class App {
 
         // Wait for the page to load.
         if (url === "/") {
-            await expect(this.page.locator(".tree")).toContainText("Trilium Integration Test");
+            await expect(this.page.locator(".tree", { hasText: "Trilium Integration Test" })).toBeVisible();
             if (!preserveTabs) {
                 await this.closeAllTabs();
             }
@@ -64,20 +71,27 @@ export default class App {
 
     async goToNoteInNewTab(noteTitle: string) {
         const autocomplete = this.currentNoteSplit.locator(".note-autocomplete");
+        await expect(autocomplete).toBeVisible();
         await autocomplete.fill(noteTitle);
 
         const resultsSelector = this.currentNoteSplit.locator(".note-detail-empty-results");
         await expect(resultsSelector).toContainText(noteTitle);
-        await resultsSelector.locator(".aa-suggestion", { hasText: noteTitle })
-            .nth(1) // Select the second one, as the first one is "Create a new note"
-            .click();
+        const suggestionSelector = resultsSelector.locator(".aa-suggestion")
+            .nth(1); // Select the second one (best candidate), as the first one is "Create a new note"
+        await expect(suggestionSelector).toContainText(noteTitle);
+        await suggestionSelector.click();
     }
 
     async goToSettings() {
         await this.page.locator(".launcher-button.bx-cog").click();
     }
 
-    getTab(tabIndex: number) {
+    async getTab(tabIndex: number) {
+        if (this.isMobile) {
+            await this.launcherBar.locator(".mobile-tab-switcher").click();
+            return this.page.locator(".modal.tab-bar-modal .tab-card").nth(tabIndex);
+        }
+
         return this.tabBar.locator(".note-tab-wrapper").nth(tabIndex);
     }
 
@@ -91,7 +105,8 @@ export default class App {
     async closeAllTabs() {
         await this.triggerCommand("closeAllTabs");
         // Page in Playwright is not updated somehow, need to click on the tab to make sure it's rendered
-        await this.getTab(0).click();
+        const tab = await this.getTab(0);
+        await tab.click();
     }
 
     /**
@@ -119,7 +134,7 @@ export default class App {
         const noteActionsButton = this.currentNoteSplit.locator(".note-actions");
         await noteActionsButton.click();
 
-        const dropdownMenu = noteActionsButton.locator(".dropdown-menu");
+        const dropdownMenu = noteActionsButton.locator(".dropdown-menu").first();
         await this.page.waitForTimeout(100);
         await expect(dropdownMenu).toBeVisible();
         dropdownMenu.getByText(itemToFind).click();
@@ -157,4 +172,14 @@ export default class App {
             })
         ).toBeOK();
     }
+
+    dropdown(_locator: Locator): DropdownLocator {
+        const locator = _locator as DropdownLocator;
+        locator.selectOptionByText = async (text: string) => {
+            await locator.locator(".dropdown-toggle").click();
+            await locator.locator(".dropdown-item", { hasText: text }).click();
+        };
+        return locator;
+    }
+
 }

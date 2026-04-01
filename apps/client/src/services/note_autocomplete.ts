@@ -36,10 +36,12 @@ export interface Suggestion {
     commandId?: string;
     commandDescription?: string;
     commandShortcut?: string;
+    attributeSnippet?: string;
+    highlightedAttributeSnippet?: string;
 }
 
-interface Options {
-    container?: HTMLElement;
+export interface Options {
+    container?: HTMLElement | null;
     fastSearch?: boolean;
     allowCreatingNotes?: boolean;
     allowJumpToSearchNotes?: boolean;
@@ -82,12 +84,12 @@ async function autocompleteSource(term: string, cb: (rows: Suggestion[]) => void
     // Check if we're in command mode
     if (options.isCommandPalette && term.startsWith(">")) {
         const commandQuery = term.substring(1).trim();
-        
+
         // Get commands (all if no query, filtered if query provided)
-        const commands = commandQuery.length === 0 
+        const commands = commandQuery.length === 0
             ? commandRegistry.getAllCommands()
             : commandRegistry.searchCommands(commandQuery);
-            
+
         // Convert commands to suggestions
         const commandSuggestions: Suggestion[] = commands.map(cmd => ({
             action: "command",
@@ -99,7 +101,7 @@ async function autocompleteSource(term: string, cb: (rows: Suggestion[]) => void
             commandShortcut: cmd.shortcut,
             icon: cmd.icon
         }));
-        
+
         cb(commandSuggestions);
         return;
     }
@@ -323,7 +325,33 @@ function initNoteAutocomplete($el: JQuery<HTMLElement>, options?: Options) {
                             html += '</div>';
                             return html;
                         }
-                        return `<span class="${suggestion.icon ?? "bx bx-note"}"></span> ${suggestion.highlightedNotePathTitle}`;
+                        // Add special class for search-notes action
+                        const actionClass = suggestion.action === "search-notes" ? "search-notes-action" : "";
+
+                        // Choose appropriate icon based on action
+                        let iconClass = suggestion.icon ?? "bx bx-note";
+                        if (suggestion.action === "search-notes") {
+                            iconClass = "bx bx-search";
+                        } else if (suggestion.action === "create-note") {
+                            iconClass = "bx bx-plus";
+                        } else if (suggestion.action === "external-link") {
+                            iconClass = "bx bx-link-external";
+                        }
+
+                        // Simplified HTML structure without nested divs
+                        let html = `<div class="note-suggestion ${actionClass}">`;
+                        html += `<span class="icon ${iconClass}"></span>`;
+                        html += `<span class="text">`;
+                        html += `<span class="search-result-title">${suggestion.highlightedNotePathTitle}</span>`;
+
+                        // Add attribute snippet inline if available
+                        if (suggestion.highlightedAttributeSnippet) {
+                            html += `<span class="search-result-attributes">${suggestion.highlightedAttributeSnippet}</span>`;
+                        }
+
+                        html += `</span>`;
+                        html += `</div>`;
+                        return html;
                     }
                 },
                 // we can't cache identical searches because notes can be created / renamed, new recent notes can be added
@@ -450,6 +478,21 @@ function init() {
             .val(note ? note.title : "")
             .setSelectedNotePath(noteId);
     };
+}
+
+/**
+ * Convenience function which triggers the display of recent notes in the autocomplete input and focuses it.
+ *
+ * @param inputElement - The input element to trigger recent notes on.
+ */
+export function triggerRecentNotes(inputElement: HTMLInputElement | null | undefined) {
+    if (!inputElement) {
+        return;
+    }
+
+    const $el = $(inputElement);
+    showRecentNotes($el);
+    $el.trigger("focus").trigger("select");
 }
 
 export default {

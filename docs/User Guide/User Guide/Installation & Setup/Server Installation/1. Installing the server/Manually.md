@@ -26,12 +26,12 @@ sudo apt install libpng16-16 libpng-dev pkg-config autoconf libtool build-essent
 
 ### Download
 
-You can either download source code zip/tar from [https://github.com/TriliumNext/Notes/releases/latest](https://github.com/TriliumNext/Notes/releases/latest).
+You can either download source code zip/tar from [https://github.com/TriliumNext/Trilium/releases/latest](https://github.com/TriliumNext/Trilium/releases/latest).
 
 For the latest version including betas, clone Git repository **from** `main` **branch** with:
 
 ```
-git clone -b main https://github.com/triliumnext/notes.git
+git clone -b main https://github.com/triliumnext/trilium.git
 ```
 
 ## Installation
@@ -62,4 +62,4 @@ The application by default starts up on port 8080, so you can open your browser 
 
 ## TLS
 
-Don't forget to [configure TLS](../TLS%20Configuration.md) which is required for secure usage!
+Don't forget to [configure TLS](../HTTPS%20\(TLS\).md) which is required for secure usage!

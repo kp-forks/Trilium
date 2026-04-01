@@ -1,9 +1,11 @@
+import { AppInfo } from "@triliumnext/commons";
 import path from "path";
-import build from "./build.js";
+
 import packageJson from "../../package.json" with { type: "json" };
+import build from "./build.js";
 import dataDir from "./data_dir.js";
 
-const APP_DB_VERSION = 234;
+const APP_DB_VERSION = 236;
 const SYNC_VERSION = 37;
 const CLIPPER_PROTOCOL_VERSION = "1.0";
 
@@ -16,5 +18,5 @@ export default {
     buildRevision: build.buildRevision,
     dataDirectory: path.resolve(dataDir.TRILIUM_DATA_DIR),
     clipperProtocolVersion: CLIPPER_PROTOCOL_VERSION,
-    utcDateTime: new Date().toISOString() // for timezone inference
-};
+    utcDateTime: new Date().toISOString()
+} satisfies AppInfo;

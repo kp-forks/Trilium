@@ -1,0 +1,188 @@
+/**
+ * Base class for LLM providers. Handles shared logic for system prompt building,
+ * tool assembly, model pricing, and title generation.
+ */
+
+import { generateText, streamText, stepCountIs, type ModelMessage, type ToolSet } from "ai";
+import type { LanguageModel } from "ai";
+import type { LlmMessage } from "@triliumnext/commons";
+
+import becca from "../../../becca/becca.js";
+import { getSkillsSummary } from "../skills/index.js";
+import { noteTools, attributeTools, hierarchyTools, skillTools, currentNoteTools } from "../tools/index.js";
+import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
+
+const DEFAULT_MAX_TOKENS = 8096;
+const TITLE_MAX_TOKENS = 30;
+
+/**
+ * Calculate effective cost for comparison (weighted average: 1 input + 3 output).
+ * Output is weighted more heavily as it's typically the dominant cost factor.
+ */
+function effectiveCost(pricing: ModelPricing): number {
+    return (pricing.input + 3 * pricing.output) / 4;
+}
+
+/**
+ * Build a lightweight context hint about the current note (title + type only, no content).
+ */
+function buildNoteHint(noteId: string): string | null {
+    const note = becca.getNote(noteId);
+    if (!note) {
+        return null;
+    }
+
+    return `The user is currently viewing a ${note.type} note titled "${note.title}". Use the get_current_note tool to read its content if needed.`;
+}
+
+/**
+ * Build the model list with cost multipliers from a base model definition array.
+ */
+export function buildModelList(baseModels: Omit<ModelInfo, "costMultiplier">[]): {
+    models: ModelInfo[];
+    pricing: Record<string, ModelPricing>;
+} {
+    const baselineModel = baseModels.find(m => m.isDefault) || baseModels[0];
+    const baselineCost = effectiveCost(baselineModel.pricing);
+
+    const models = baseModels.map(m => ({
+        ...m,
+        costMultiplier: Math.round((effectiveCost(m.pricing) / baselineCost) * 10) / 10
+    }));
+
+    const pricing = Object.fromEntries(
+        models.map(m => [m.id, m.pricing])
+    );
+
+    return { models, pricing };
+}
+
+export abstract class BaseProvider implements LlmProvider {
+    abstract name: string;
+
+    protected abstract defaultModel: string;
+    protected abstract titleModel: string;
+    protected abstract availableModels: ModelInfo[];
+    protected abstract modelPricing: Record<string, ModelPricing>;
+
+    /** Create a language model instance for the given model ID. */
+    protected abstract createModel(modelId: string): LanguageModel;
+
+    /**
+     * Build the system prompt with note hints and skills summary.
+     */
+    protected buildSystemPrompt(messages: LlmMessage[], config: LlmProviderConfig): string | undefined {
+        let systemPrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
+
+        if (config.contextNoteId) {
+            const noteHint = buildNoteHint(config.contextNoteId);
+            if (noteHint) {
+                systemPrompt = systemPrompt
+                    ? `${systemPrompt}\n\n${noteHint}`
+                    : noteHint;
+            }
+        }
+
+        if (config.enableNoteTools) {
+            const skillsHint = `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`;
+            systemPrompt = systemPrompt
+                ? `${systemPrompt}\n\n${skillsHint}`
+                : skillsHint;
+        }
+
+        return systemPrompt;
+    }
+
+    /**
+     * Build the ModelMessage array from LlmMessages (no provider-specific options).
+     */
+    protected buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): ModelMessage[] {
+        const coreMessages: ModelMessage[] = [];
+
+        if (systemPrompt) {
+            coreMessages.push({ role: "system", content: systemPrompt });
+        }
+
+        for (const m of chatMessages) {
+            coreMessages.push({
+                role: m.role as "user" | "assistant",
+                content: m.content
+            });
+        }
+
+        return coreMessages;
+    }
+
+    /**
+     * Add provider-specific web search tool. Override in subclasses that support it.
+     */
+    protected addWebSearchTool(_tools: ToolSet): void {}
+
+    /**
+     * Build the tool set based on config.
+     */
+    protected buildTools(config: LlmProviderConfig): ToolSet {
+        const tools: ToolSet = {};
+
+        if (config.enableWebSearch) {
+            this.addWebSearchTool(tools);
+        }
+
+        if (config.contextNoteId) {
+            Object.assign(tools, currentNoteTools(config.contextNoteId));
+        }
+
+        if (config.enableNoteTools) {
+            Object.assign(tools, noteTools);
+            Object.assign(tools, attributeTools);
+            Object.assign(tools, hierarchyTools);
+            Object.assign(tools, skillTools);
+        }
+
+        return tools;
+    }
+
+    chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
+        const systemPrompt = this.buildSystemPrompt(messages, config);
+        const chatMessages = messages.filter(m => m.role !== "system");
+        const coreMessages = this.buildMessages(chatMessages, systemPrompt);
+
+        const streamOptions: Parameters<typeof streamText>[0] = {
+            model: this.createModel(config.model || this.defaultModel),
+            messages: coreMessages,
+            maxOutputTokens: config.maxTokens || DEFAULT_MAX_TOKENS
+        };
+
+        const tools = this.buildTools(config);
+        if (Object.keys(tools).length > 0) {
+            streamOptions.tools = tools;
+            streamOptions.stopWhen = stepCountIs(5);
+            streamOptions.toolChoice = "auto";
+        }
+
+        return streamText(streamOptions);
+    }
+
+    getModelPricing(model: string): ModelPricing | undefined {
+        return this.modelPricing[model];
+    }
+
+    getAvailableModels(): ModelInfo[] {
+        return this.availableModels;
+    }
+
+    async generateTitle(firstMessage: string): Promise<string> {
+        const { text } = await generateText({
+            model: this.createModel(this.titleModel),
+            maxOutputTokens: TITLE_MAX_TOKENS,
+            messages: [
+                {
+                    role: "user",
+                    content: `Summarize the following message as a very short chat title (max 6 words). Reply with ONLY the title, no quotes or punctuation at the end.\n\nMessage: ${firstMessage}`
+                }
+            ]
+        });
+
+        return text.trim();
+    }
+}

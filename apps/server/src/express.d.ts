@@ -17,6 +17,11 @@ export declare module "express-serve-static-core" {
             "user-agent"?: string;
         };
     }
+
+    interface Response {
+        /** Set to true to prevent apiResultHandler from double-handling the response (e.g., for SSE streams) */
+        triliumResponseHandled?: boolean;
+    }
 }
 
 export declare module "express-session" {
@@ -26,5 +31,7 @@ export declare module "express-session" {
             totpEnabled: boolean;
             ssoEnabled: boolean;
         };
+        /** Set during /bootstrap to mark the session as modified so express-session persists it and sends the cookie. */
+        csrfInitialized?: true;
     }
 }

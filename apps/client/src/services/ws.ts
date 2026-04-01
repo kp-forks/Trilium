@@ -6,9 +6,11 @@ import frocaUpdater from "./froca_updater.js";
 import appContext from "../components/app_context.js";
 import { t } from "./i18n.js";
 import type { EntityChange } from "../server_types.js";
+import { WebSocketMessage } from "@triliumnext/commons";
+import toast from "./toast.js";
 
-type MessageHandler = (message: any) => void;
-const messageHandlers: MessageHandler[] = [];
+type MessageHandler = (message: WebSocketMessage) => void;
+let messageHandlers: MessageHandler[] = [];
 
 let ws: WebSocket;
 let lastAcceptedEntityChangeId = window.glob.maxEntityChangeIdAtLoad;
@@ -47,8 +49,12 @@ function logInfo(message: string) {
 window.logError = logError;
 window.logInfo = logInfo;
 
-function subscribeToMessages(messageHandler: MessageHandler) {
+export function subscribeToMessages(messageHandler: MessageHandler) {
     messageHandlers.push(messageHandler);
+}
+
+export function unsubscribeToMessage(messageHandler: MessageHandler) {
+    messageHandlers = messageHandlers.filter(handler => handler !== messageHandler);
 }
 
 // used to serialize frontend update operations
@@ -127,49 +133,6 @@ async function handleMessage(event: MessageEvent<any>) {
         appContext.triggerEvent("apiLogMessages", { noteId: message.noteId, messages: message.messages });
     } else if (message.type === "toast") {
         toastService.showMessage(message.message);
-    } else if (message.type === "llm-stream") {
-        // ENHANCED LOGGING FOR DEBUGGING
-        console.log(`[WS-CLIENT] >>> RECEIVED LLM STREAM MESSAGE <<<`);
-        console.log(`[WS-CLIENT] Message details: sessionId=${message.sessionId}, hasContent=${!!message.content}, contentLength=${message.content ? message.content.length : 0}, hasThinking=${!!message.thinking}, hasToolExecution=${!!message.toolExecution}, isDone=${!!message.done}`);
-
-        if (message.content) {
-            console.log(`[WS-CLIENT] CONTENT PREVIEW: "${message.content.substring(0, 50)}..."`);
-        }
-
-        // Create the event with detailed logging
-        console.log(`[WS-CLIENT] Creating CustomEvent 'llm-stream-message'`);
-        const llmStreamEvent = new CustomEvent('llm-stream-message', { detail: message });
-
-        // Dispatch to multiple targets to ensure delivery
-        try {
-            console.log(`[WS-CLIENT] Dispatching event to window`);
-            window.dispatchEvent(llmStreamEvent);
-            console.log(`[WS-CLIENT] Event dispatched to window`);
-
-            // Also try document for completeness
-            console.log(`[WS-CLIENT] Dispatching event to document`);
-            document.dispatchEvent(new CustomEvent('llm-stream-message', { detail: message }));
-            console.log(`[WS-CLIENT] Event dispatched to document`);
-        } catch (err) {
-            console.error(`[WS-CLIENT] Error dispatching event:`, err);
-        }
-
-        // Debug current listeners (though we can't directly check for specific event listeners)
-        console.log(`[WS-CLIENT] Active event listeners should receive this message now`);
-
-        // Detailed logging based on message type
-        if (message.content) {
-            console.log(`[WS-CLIENT] Content message: ${message.content.length} chars`);
-        } else if (message.thinking) {
-            console.log(`[WS-CLIENT] Thinking update: "${message.thinking}"`);
-        } else if (message.toolExecution) {
-            console.log(`[WS-CLIENT] Tool execution: action=${message.toolExecution.action}, tool=${message.toolExecution.tool || 'unknown'}`);
-            if (message.toolExecution.result) {
-                console.log(`[WS-CLIENT] Tool result preview: "${String(message.toolExecution.result).substring(0, 50)}..."`);
-            }
-        } else if (message.done) {
-            console.log(`[WS-CLIENT] Completion signal received`);
-        }
     } else if (message.type === "execute-script") {
         // TODO: Remove after porting the file
         // @ts-ignore
@@ -273,13 +236,17 @@ function connectWebSocket() {
 
 async function sendPing() {
     if (Date.now() - lastPingTs > 30000) {
-        console.log(
-            utils.now(),
-            "Lost websocket connection to the backend. If you keep having this issue repeatedly, you might want to check your reverse proxy (nginx, apache) configuration and allow/unblock WebSocket."
-        );
+        console.warn(utils.now(), "Lost websocket connection to the backend");
+        toast.showPersistent({
+            id: "lost-websocket-connection",
+            title: t("ws.lost-websocket-connection-title"),
+            message: t("ws.lost-websocket-connection-message"),
+            icon: "no-signal"
+        });
     }
 
     if (ws.readyState === ws.OPEN) {
+        toast.closePersistent("lost-websocket-connection");
         ws.send(
             JSON.stringify({
                 type: "ping",
@@ -294,6 +261,8 @@ async function sendPing() {
 }
 
 setTimeout(() => {
+    if (glob.device === "print") return;
+
     ws = connectWebSocket();
 
     lastPingTs = Date.now();

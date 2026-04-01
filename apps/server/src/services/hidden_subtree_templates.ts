@@ -1,7 +1,13 @@
-import { HiddenSubtreeItem } from "@triliumnext/commons";
+import { HiddenSubtreeAttribute, HiddenSubtreeItem } from "@triliumnext/commons";
 import { t } from "i18next";
 
 export default function buildHiddenSubtreeTemplates() {
+    const hideSubtreeAttributes: HiddenSubtreeAttribute = {
+        name: "subtreeHidden",
+        type: "label",
+        value: "false"
+    };
+
     const templates: HiddenSubtreeItem = {
         id: "_templates",
         title: t("hidden_subtree_templates.built-in-templates"),
@@ -93,6 +99,7 @@ export default function buildHiddenSubtreeTemplates() {
                         name: "hidePromotedAttributes",
                         type: "label"
                     },
+                    hideSubtreeAttributes,
                     {
                         name: "label:startDate",
                         type: "label",
@@ -133,6 +140,7 @@ export default function buildHiddenSubtreeTemplates() {
                         name: "collection",
                         type: "label"
                     },
+                    hideSubtreeAttributes,
                     {
                         name: "viewType",
                         type: "label",
@@ -163,6 +171,7 @@ export default function buildHiddenSubtreeTemplates() {
                         name: "hidePromotedAttributes",
                         type: "label"
                     },
+                    hideSubtreeAttributes,
                     {
                         name: "label:geolocation",
                         type: "label",
@@ -194,6 +203,7 @@ export default function buildHiddenSubtreeTemplates() {
                         name: "hidePromotedAttributes",
                         type: "label"
                     },
+                    hideSubtreeAttributes,
                     {
                         name: "label:status",
                         type: "label",
@@ -234,8 +244,85 @@ export default function buildHiddenSubtreeTemplates() {
                     }
                 ]
             },
+            {
+                id: "_template_presentation_slide",
+                type: "text",
+                title: t("hidden_subtree_templates.presentation_slide"),
+                icon: "bx bx-rectangle",
+                attributes: [
+                    {
+                        name: "slide",
+                        type: "label"
+                    },
+                    {
+                        name: "label:slide:background",
+                        type: "label",
+                        value: `promoted,alias=${t("hidden_subtree_templates.background")},single,color`
+                    }
+                ]
+            },
+            {
+                id: "_template_presentation",
+                type: "book",
+                title: t("hidden_subtree_templates.presentation"),
+                icon: "bx bx-slideshow",
+                attributes: [
+                    {
+                        name: "template",
+                        type: "label"
+                    },
+                    {
+                        name: "viewType",
+                        type: "label",
+                        value: "presentation"
+                    },
+                    {
+                        name: "collection",
+                        type: "label"
+                    },
+                    {
+                        name: "child:template",
+                        type: "relation",
+                        value: "_template_presentation_slide"
+                    }
+                ],
+                children: [
+                    {
+                        id: "_template_presentation_first",
+                        type: "text",
+                        title: t("hidden_subtree_templates.presentation_slide_first"),
+                        content: t("hidden_subtree_templates.presentation_slide_first"),
+                        attributes: [
+                            {
+                                name: "template",
+                                type: "relation",
+                                value: "_template_presentation_slide"
+                            }
+                        ]
+                    },
+                    {
+                        id: "_template_presentation_second",
+                        type: "text",
+                        title: t("hidden_subtree_templates.presentation_slide_second"),
+                        content: t("hidden_subtree_templates.presentation_slide_second"),
+                        attributes: [
+                            {
+                                name: "template",
+                                type: "relation",
+                                value: "_template_presentation_slide"
+                            }
+                        ]
+                    }
+                ]
+            }
         ]
     };
+
+    // Enforce attributes.
+    templates.enforceAttributes = true;
+    for (const template of templates.children ?? []) {
+        template.enforceAttributes = true;
+    }
 
     return templates;
 }

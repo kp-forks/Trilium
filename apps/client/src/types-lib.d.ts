@@ -51,3 +51,25 @@ declare module "leaflet" {
         markers?: GPXMarker | undefined;
     }
 }
+
+declare global {
+    interface Navigator {
+        /** Returns a boolean indicating whether the browser is running in standalone mode. Available on Apple's iOS Safari only. */
+        standalone?: boolean;
+        /** Returns the WindowControlsOverlay interface which exposes information about the geometry of the title bar in desktop Progressive Web Apps, and an event to know whenever it changes. */
+        windowControlsOverlay?: unknown;
+    }
+}
+
+declare module "preact" {
+    namespace JSX {
+        interface ElectronWebViewElement extends JSX.HTMLAttributes<HTMLElement> {
+            src: string;
+            class: string;
+        }
+
+        interface IntrinsicElements {
+            webview: ElectronWebViewElement;
+        }
+    }
+}

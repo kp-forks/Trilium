@@ -1,17 +1,19 @@
-"use strict";
+
 
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
-import SearchContext from "../../services/search/search_context.js";
-import searchService, { EMPTY_RESULT, type SearchNoteResult } from "../../services/search/services/search.js";
+import beccaService from "../../becca/becca_service.js";
+import ValidationError from "../../errors/validation_error.js";
+import attributeFormatter from "../../services/attribute_formatter.js";
 import bulkActionService from "../../services/bulk_actions.js";
 import cls from "../../services/cls.js";
-import attributeFormatter from "../../services/attribute_formatter.js";
-import ValidationError from "../../errors/validation_error.js";
+import hoistedNoteService from "../../services/hoisted_note.js";
+import SearchContext from "../../services/search/search_context.js";
 import type SearchResult from "../../services/search/search_result.js";
+import searchService, { EMPTY_RESULT, type SearchNoteResult } from "../../services/search/services/search.js";
 
-function searchFromNote(req: Request): SearchNoteResult {
+function searchFromNote(req: Request<{ noteId: string }>): SearchNoteResult {
     const note = becca.getNoteOrThrow(req.params.noteId);
 
     if (!note) {
@@ -26,7 +28,7 @@ function searchFromNote(req: Request): SearchNoteResult {
     return searchService.searchFromNote(note);
 }
 
-function searchAndExecute(req: Request) {
+function searchAndExecute(req: Request<{ noteId: string }>) {
     const note = becca.getNoteOrThrow(req.params.noteId);
 
     if (!note) {
@@ -43,24 +45,57 @@ function searchAndExecute(req: Request) {
     bulkActionService.executeActionsFromNote(note, searchResultNoteIds);
 }
 
-function quickSearch(req: Request) {
+function quickSearch(req: Request<{ searchString: string }>) {
     const { searchString } = req.params;
 
     const searchContext = new SearchContext({
         fastSearch: false,
         includeArchivedNotes: false,
-        fuzzyAttributeSearch: false
+        includeHiddenNotes: true,
+        fuzzyAttributeSearch: true,
+        ignoreInternalAttributes: true,
+        ancestorNoteId: hoistedNoteService.isHoistedInHiddenSubtree() ? "root" : hoistedNoteService.getHoistedNoteId()
     });
 
-    const resultNoteIds = searchService.findResultsWithQuery(searchString, searchContext).map((sr) => sr.noteId);
+    // Execute search with our context
+    const allSearchResults = searchService.findResultsWithQuery(searchString, searchContext);
+    const trimmed = allSearchResults.slice(0, 200);
+
+    // Extract snippets using highlightedTokens from our context
+    for (const result of trimmed) {
+        result.contentSnippet = searchService.extractContentSnippet(result.noteId, searchContext.highlightedTokens);
+        result.attributeSnippet = searchService.extractAttributeSnippet(result.noteId, searchContext.highlightedTokens);
+    }
+
+    // Highlight the results
+    searchService.highlightSearchResults(trimmed, searchContext.highlightedTokens, searchContext.ignoreInternalAttributes);
+
+    // Map to API format
+    const searchResults = trimmed.map((result) => {
+        const { title, icon } = beccaService.getNoteTitleAndIcon(result.noteId);
+        return {
+            notePath: result.notePath,
+            noteTitle: title,
+            notePathTitle: result.notePathTitle,
+            highlightedNotePathTitle: result.highlightedNotePathTitle,
+            contentSnippet: result.contentSnippet,
+            highlightedContentSnippet: result.highlightedContentSnippet,
+            attributeSnippet: result.attributeSnippet,
+            highlightedAttributeSnippet: result.highlightedAttributeSnippet,
+            icon
+        };
+    });
+
+    const resultNoteIds = searchResults.map((result) => result.notePath.split("/").pop()).filter(Boolean) as string[];
 
     return {
         searchResultNoteIds: resultNoteIds,
+        searchResults,
         error: searchContext.getError()
     };
 }
 
-function search(req: Request) {
+function search(req: Request<{ searchString: string }>) {
     const { searchString } = req.params;
 
     const searchContext = new SearchContext({

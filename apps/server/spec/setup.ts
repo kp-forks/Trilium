@@ -1,7 +1,7 @@
 import { beforeAll } from "vitest";
 import i18next from "i18next";
 import { join } from "path";
-import dayjs from "dayjs";
+import { setDayjsLocale } from "@triliumnext/commons";
 
 // Initialize environment variables.
 process.env.TRILIUM_DATA_DIR = join(__dirname, "db");
@@ -21,10 +21,10 @@ beforeAll(async () => {
         ns: "server",
         backend: {
             loadPath: join(__dirname, "../src/assets/translations/{{lng}}/{{ns}}.json")
-        }
+        },
+        showSupportNotice: false
     });
 
     // Initialize dayjs
-    await import("dayjs/locale/en.js");
-    dayjs.locale("en");
+    await setDayjsLocale("en");
 });

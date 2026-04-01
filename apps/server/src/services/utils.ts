@@ -1,23 +1,28 @@
-"use strict";
 
 import chardet from "chardet";
-import stripBom from "strip-bom";
 import crypto from "crypto";
-import { generator } from "rand-token";
-import unescape from "unescape";
 import escape from "escape-html";
-import sanitize from "sanitize-filename";
-import mimeTypes from "mime-types";
-import path from "path";
-import type NoteMeta from "./meta/note_meta.js";
-import log from "./log.js";
 import { t } from "i18next";
+import mimeTypes from "mime-types";
+import { release as osRelease } from "os";
+import path from "path";
+import { generator } from "rand-token";
+import sanitize from "sanitize-filename";
+import stripBom from "strip-bom";
+import unescape from "unescape";
+
+import log from "./log.js";
+import type NoteMeta from "./meta/note_meta.js";
+
+const osVersion = osRelease().split('.').map(Number);
 
 const randtoken = generator({ source: "crypto" });
 
 export const isMac = process.platform === "darwin";
 
 export const isWindows = process.platform === "win32";
+
+export const isWindows11 = isWindows && osVersion[0] === 10 && osVersion[2] >= 22000;
 
 export const isElectron = !!process.versions["electron"];
 
@@ -67,6 +72,36 @@ export function hmac(secret: any, value: any) {
     const hmac = crypto.createHmac("sha256", Buffer.from(secret.toString(), "ascii"));
     hmac.update(value.toString());
     return hmac.digest("base64");
+}
+
+/**
+ * Constant-time string comparison to prevent timing attacks.
+ * Uses crypto.timingSafeEqual to ensure comparison time is independent
+ * of how many characters match.
+ *
+ * @param a First string to compare
+ * @param b Second string to compare
+ * @returns true if strings are equal, false otherwise
+ * @note Returns false for null/undefined/non-string inputs. Empty strings are considered equal.
+ */
+export function constantTimeCompare(a: string | null | undefined, b: string | null | undefined): boolean {
+    // Handle null/undefined/non-string cases safely
+    if (typeof a !== "string" || typeof b !== "string") {
+        return false;
+    }
+
+    const bufA = Buffer.from(a, "utf-8");
+    const bufB = Buffer.from(b, "utf-8");
+
+    // If lengths differ, we still do a constant-time comparison
+    // to avoid leaking length information through timing
+    if (bufA.length !== bufB.length) {
+        // Compare bufA against itself to maintain constant time behavior
+        crypto.timingSafeEqual(bufA, bufA);
+        return false;
+    }
+
+    return crypto.timingSafeEqual(bufA, bufB);
 }
 
 export function hash(text: string) {
@@ -126,7 +161,7 @@ export function getContentDisposition(filename: string) {
 }
 
 // render and book are string note in the sense that they are expected to contain empty string
-const STRING_NOTE_TYPES = new Set(["text", "code", "relationMap", "search", "render", "book", "mermaid", "canvas"]);
+const STRING_NOTE_TYPES = new Set(["text", "code", "relationMap", "search", "render", "book", "mermaid", "canvas", "webView"]);
 const STRING_MIME_TYPES = new Set(["application/javascript", "application/x-javascript", "application/json", "application/x-sql", "image/svg+xml"]);
 
 export function isStringNote(type: string | undefined, mime: string) {
@@ -169,8 +204,12 @@ export function formatDownloadTitle(fileName: string, type: string | null, mime:
     return `${fileNameBase}${getExtension()}`;
 }
 
-export function removeTextFileExtension(filePath: string) {
+export function removeFileExtension(filePath: string, mime?: string) {
     const extension = path.extname(filePath).toLowerCase();
+
+    if (mime?.startsWith("video/") || mime?.startsWith("audio/")) {
+        return filePath.substring(0, filePath.length - extension.length);
+    }
 
     switch (extension) {
         case ".md":
@@ -181,6 +220,7 @@ export function removeTextFileExtension(filePath: string) {
         case ".excalidraw":
         case ".mermaid":
         case ".mmd":
+        case ".pdf":
             return filePath.substring(0, filePath.length - extension.length);
         default:
             return filePath;
@@ -191,7 +231,7 @@ export function getNoteTitle(filePath: string, replaceUnderscoresWithSpaces: boo
     const trimmedNoteMeta = noteMeta?.title?.trim();
     if (trimmedNoteMeta) return trimmedNoteMeta;
 
-    const basename = path.basename(removeTextFileExtension(filePath));
+    const basename = path.basename(removeFileExtension(filePath, noteMeta?.mime));
     return replaceUnderscoresWithSpaces ? basename.replace(/_/g, " ").trim() : basename;
 }
 
@@ -222,27 +262,6 @@ export function timeLimit<T>(promise: Promise<T>, limitMs: number, errorMessage?
             }
         }, limitMs);
     });
-}
-
-export interface DeferredPromise<T> extends Promise<T> {
-    resolve: (value: T | PromiseLike<T>) => void;
-    reject: (reason?: any) => void;
-}
-
-export function deferred<T>(): DeferredPromise<T> {
-    return (() => {
-        let resolve!: (value: T | PromiseLike<T>) => void;
-        let reject!: (reason?: any) => void;
-
-        let promise = new Promise<T>((res, rej) => {
-            resolve = res;
-            reject = rej;
-        }) as DeferredPromise<T>;
-
-        promise.resolve = resolve;
-        promise.reject = reject;
-        return promise as DeferredPromise<T>;
-    })();
 }
 
 export function removeDiacritic(str: string) {
@@ -279,6 +298,25 @@ export function envToBoolean(val: string | undefined) {
     if (valLc === "false") return false;
 
     return undefined;
+}
+
+/**
+ * Parses a string value to an integer. If the resulting number is NaN or undefined, the result is also undefined.
+ *
+ * @param val the value to parse.
+ * @returns the parsed value.
+ */
+export function stringToInt(val: string | undefined) {
+    if (!val) {
+        return undefined;
+    }
+
+    const parsed = parseInt(val, 10);
+    if (Number.isNaN(parsed)) {
+        return undefined;
+    }
+
+    return parsed;
 }
 
 /**
@@ -378,7 +416,7 @@ export function safeExtractMessageAndStackFromError(err: unknown): [errMessage: 
 /**
  * Normalizes URL by removing trailing slashes and fixing double slashes.
  * Preserves the protocol (http://, https://) but removes trailing slashes from the rest.
- * 
+ *
  * @param url The URL to normalize
  * @returns The normalized URL without trailing slashes
  */
@@ -389,26 +427,26 @@ export function normalizeUrl(url: string | null | undefined): string | null | un
 
     // Trim whitespace
     url = url.trim();
-    
+
     if (!url) {
         return url;
     }
 
     // Fix double slashes (except in protocol) first
     url = url.replace(/([^:]\/)\/+/g, '$1');
-    
+
     // Remove trailing slash, but preserve protocol
     if (url.endsWith('/') && !url.match(/^https?:\/\/$/)) {
         url = url.slice(0, -1);
     }
-    
+
     return url;
 }
 
 /**
  * Normalizes a path pattern for custom request handlers.
  * Ensures both trailing slash and non-trailing slash versions are handled.
- * 
+ *
  * @param pattern The original pattern from customRequestHandler attribute
  * @returns An array of patterns to match both with and without trailing slash
  */
@@ -418,7 +456,7 @@ export function normalizeCustomHandlerPattern(pattern: string | null | undefined
     }
 
     pattern = pattern.trim();
-    
+
     if (!pattern) {
         return [pattern];
     }
@@ -431,34 +469,67 @@ export function normalizeCustomHandlerPattern(pattern: string | null | undefined
     // If pattern ends with $, handle it specially
     if (pattern.endsWith('$')) {
         const basePattern = pattern.slice(0, -1);
-        
+
         // If already ends with slash, create both versions
         if (basePattern.endsWith('/')) {
-            const withoutSlash = basePattern.slice(0, -1) + '$';
+            const withoutSlash = `${basePattern.slice(0, -1)  }$`;
             const withSlash = pattern;
             return [withoutSlash, withSlash];
-        } else {
-            // Add optional trailing slash
-            const withSlash = basePattern + '/?$';
-            return [withSlash];
         }
+        // Add optional trailing slash
+        const withSlash = `${basePattern  }/?$`;
+        return [withSlash];
+
     }
 
     // For patterns without $, add both versions
     if (pattern.endsWith('/')) {
         const withoutSlash = pattern.slice(0, -1);
         return [withoutSlash, pattern];
-    } else {
-        const withSlash = pattern + '/';
-        return [pattern, withSlash];
     }
+    const withSlash = `${pattern  }/`;
+    return [pattern, withSlash];
+
 }
 
+export function formatUtcTime(time: string) {
+    return time.replace("T", " ").substring(0, 19);
+}
+
+// TODO: Deduplicate with client utils
+export function formatSize(size: number | null | undefined) {
+    if (size === null || size === undefined) {
+        return "";
+    }
+
+    size = Math.max(Math.round(size / 1024), 1);
+
+    if (size < 1024) {
+        return `${size} KiB`;
+    }
+    return `${Math.round(size / 102.4) / 10} MiB`;
+
+}
+
+function slugify(text: string) {
+    return text
+        .normalize("NFC") // keep composed form, preserves accents
+        .toLowerCase()
+        .replace(/[^\p{Letter}\p{Number}]+/gu, "-") // replace non-letter/number with "-"
+        .replace(/(^-|-$)+/g, ""); // trim dashes
+}
+
+export function waitForStreamToFinish(stream: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+        stream.on("finish", () => resolve());
+        stream.on("error", (err) => reject(err));
+    });
+}
 
 export default {
     compareVersions,
+    constantTimeCompare,
     crash,
-    deferred,
     envToBoolean,
     escapeHtml,
     escapeRegExp,
@@ -485,14 +556,16 @@ export default {
     randomSecureToken,
     randomString,
     removeDiacritic,
-    removeTextFileExtension,
+    removeFileExtension,
     replaceAll,
     safeExtractMessageAndStackFromError,
     sanitizeSqlIdentifier,
     stripTags,
+    slugify,
     timeLimit,
     toBase64,
     toMap,
     toObject,
-    unescapeHtml
+    unescapeHtml,
+    waitForStreamToFinish
 };

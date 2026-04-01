@@ -29,7 +29,7 @@ describe("etapi/patch-note", () => {
             })
             .expect(201);
 
-        const createdNoteId = response.body.note.noteId as string;
+        createdNoteId = response.body.note.noteId as string;
         expect(createdNoteId).toBeTruthy();
     });
 

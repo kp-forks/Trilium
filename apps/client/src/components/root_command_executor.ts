@@ -1,15 +1,12 @@
-import Component from "./component.js";
-import appContext, { type CommandData, type CommandListenerData } from "./app_context.js";
 import dateNoteService from "../services/date_notes.js";
-import treeService from "../services/tree.js";
-import openService from "../services/open.js";
-import protectedSessionService from "../services/protected_session.js";
-import options from "../services/options.js";
 import froca from "../services/froca.js";
-import utils from "../services/utils.js";
-import LlmChatPanel from "../widgets/llm_chat_panel.js";
-import toastService from "../services/toast.js";
-import noteCreateService from "../services/note_create.js";
+import openService from "../services/open.js";
+import options from "../services/options.js";
+import protectedSessionService from "../services/protected_session.js";
+import treeService from "../services/tree.js";
+import utils, { openInReusableSplit } from "../services/utils.js";
+import appContext, { type CommandListenerData } from "./app_context.js";
+import Component from "./component.js";
 
 export default class RootCommandExecutor extends Component {
     editReadOnlyNoteCommand() {
@@ -43,8 +40,6 @@ export default class RootCommandExecutor extends Component {
         const noteContext = await appContext.tabManager.openTabWithNoteWithHoisting(searchNote.noteId, {
             activate: true
         });
-
-        appContext.triggerCommand("focusOnSearchDefinition", { ntxId: noteContext.ntxId });
     }
 
     async searchInSubtreeCommand({ notePath }: CommandListenerData<"searchInSubtree">) {
@@ -66,6 +61,13 @@ export default class RootCommandExecutor extends Component {
         const mime = appContext.tabManager.getActiveContextNoteMime();
         if (noteId) {
             openService.openNoteCustom(noteId, mime || "");
+        }
+    }
+
+    openNoteOnServerCommand() {
+        const noteId = appContext.tabManager.getActiveContextNoteId();
+        if (noteId) {
+            openService.openNoteOnServer(noteId);
         }
     }
 
@@ -186,7 +188,8 @@ export default class RootCommandExecutor extends Component {
     }
 
     toggleTrayCommand() {
-        if (!utils.isElectron()) return;
+        if (!utils.isElectron() || options.is("disableTray")) return;
+
         const { BrowserWindow } = utils.dynamicRequire("@electron/remote");
         const windows = BrowserWindow.getAllWindows() as Electron.BaseWindow[];
         const isVisible = windows.every((w) => w.isVisible());
@@ -199,6 +202,19 @@ export default class RootCommandExecutor extends Component {
         $body.toggleClass("zen");
         const isEnabled = $body.hasClass("zen");
         appContext.triggerEvent("zenModeChanged", { isEnabled });
+    }
+
+    async toggleRibbonTabNoteMapCommand(data: CommandListenerData<"toggleRibbonTabNoteMap">) {
+        const { isExperimentalFeatureEnabled } = await import("../services/experimental_features.js");
+        const isNewLayout = isExperimentalFeatureEnabled("new-layout");
+        if (!isNewLayout) {
+            this.triggerEvent("toggleRibbonTabNoteMap", data);
+            return;
+        }
+
+        const activeContext = appContext.tabManager.getActiveContext();
+        if (!activeContext?.notePath) return;
+        openInReusableSplit(activeContext.notePath, "note-map");
     }
 
     firstTabCommand() {
@@ -243,34 +259,4 @@ export default class RootCommandExecutor extends Component {
         }
     }
 
-    async createAiChatCommand() {
-        try {
-            // Create a new AI Chat note at the root level
-            const rootNoteId = "root";
-
-            const result = await noteCreateService.createNote(rootNoteId, {
-                title: "New AI Chat",
-                type: "aiChat",
-                content: JSON.stringify({
-                    messages: [],
-                    title: "New AI Chat"
-                })
-            });
-
-            if (!result.note) {
-                toastService.showError("Failed to create AI Chat note");
-                return;
-            }
-
-            await appContext.tabManager.openTabWithNoteWithHoisting(result.note.noteId, {
-                activate: true
-            });
-
-            toastService.showMessage("Created new AI Chat note");
-        }
-        catch (e) {
-            console.error("Error creating AI Chat note:", e);
-            toastService.showError("Failed to create AI Chat note: " + (e as Error).message);
-        }
-    }
 }

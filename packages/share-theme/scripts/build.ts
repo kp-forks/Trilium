@@ -1,9 +1,9 @@
-import fs from "node:fs";
 import path from "node:path";
 // import {fileURLToPath} from "node:url";
 
 import dotenv from "dotenv";
 import * as esbuild from "esbuild";
+import { writeFileSync } from "node:fs";
 
 
 // const fileURL = fileURLToPath(import.meta.url);
@@ -46,29 +46,40 @@ for (const mod of modulesRequested) {
 if (!entryPoints.length) for (const mod of modules) entryPoints.push(makeEntry(mod));
 
 
-async function runBuild() {
+async function runBuild(watch: boolean) {
     const before = performance.now();
-    await esbuild.build({
+    const opts: esbuild.BuildOptions = {
         entryPoints: entryPoints,
         bundle: true,
+        splitting: true,
         outdir: path.join(rootDir, "dist"),
-        format: "cjs",
+        format: "esm",
         target: ["chrome96"],
         loader: {
             ".png": "dataurl",
             ".gif": "dataurl",
-            ".woff": "dataurl",
-            ".woff2": "dataurl",
-            ".ttf": "dataurl",
+            ".woff": "file",
+            ".woff2": "file",
+            ".ttf": "file",
+            ".eot": "empty",
+            ".svg": "empty",
             ".html": "text",
             ".css": "css"
         },
         logLevel: "info",
         metafile: true,
         minify: process.argv.includes("--minify")
-    });
-    const after = performance.now();
-    console.log(`Build actually took ${(after - before).toFixed(2)}ms`);
+    };
+    if (watch) {
+        const ctx = esbuild.context(opts);
+        (await ctx).watch();
+    } else {
+        const result = await esbuild.build(opts);
+        const after = performance.now();
+        writeFileSync("meta.json", JSON.stringify(result.metafile, null, 2));
+        console.log(`Build actually took ${(after - before).toFixed(2)}ms`);
+    }
 }
 
-runBuild().catch(console.error);
+const watch = process.argv.includes("--watch");
+runBuild(watch).catch(console.error);

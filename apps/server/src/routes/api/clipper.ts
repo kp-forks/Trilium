@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import jsdom from "jsdom";
+import { parse } from "node-html-parser";
 import path from "path";
 
 import type BNote from "../../becca/entities/bnote.js";
@@ -16,7 +16,6 @@ import log from "../../services/log.js";
 import noteService from "../../services/notes.js";
 import utils from "../../services/utils.js";
 import ws from "../../services/ws.js";
-const { JSDOM } = jsdom;
 
 interface Image {
     src: string;
@@ -39,7 +38,7 @@ async function addClipping(req: Request) {
     if (!clippingNote) {
         clippingNote = noteService.createNewNote({
             parentNoteId: clipperInbox.noteId,
-            title: title,
+            title,
             content: "",
             type: "text"
         }).note;
@@ -147,7 +146,7 @@ async function createNote(req: Request) {
     };
 }
 
-function processContent(images: Image[], note: BNote, content: string) {
+export function processContent(images: Image[], note: BNote, content: string) {
     let rewrittenContent = htmlSanitizer.sanitize(content);
 
     if (images) {
@@ -181,15 +180,15 @@ function processContent(images: Image[], note: BNote, content: string) {
         rewrittenContent = `<p>${rewrittenContent}</p>`;
     }
     // Create a JSDOM object from the existing HTML content
-    const dom = new JSDOM(rewrittenContent);
+    const dom = parse(rewrittenContent);
 
     // Get the content inside the body tag and serialize it
-    rewrittenContent = dom.window.document.body.innerHTML;
+    rewrittenContent = dom.innerHTML ?? "";
 
     return rewrittenContent;
 }
 
-function openNote(req: Request) {
+function openNote(req: Request<{ noteId: string }>) {
     if (utils.isElectron) {
         ws.sendMessageToAllClients({
             type: "openNote",
@@ -199,11 +198,11 @@ function openNote(req: Request) {
         return {
             result: "ok"
         };
-    } else {
-        return {
-            result: "open-in-browser"
-        };
-    }
+    } 
+    return {
+        result: "open-in-browser"
+    };
+    
 }
 
 function handshake() {
@@ -213,7 +212,7 @@ function handshake() {
     };
 }
 
-async function findNotesByUrl(req: Request) {
+async function findNotesByUrl(req: Request<{ noteUrl: string }>) {
     const pageUrl = req.params.noteUrl;
     const clipperInbox = await getClipperInboxNote();
     const foundPage = findClippingNote(clipperInbox, pageUrl, null);

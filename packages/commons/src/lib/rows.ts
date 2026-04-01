@@ -3,7 +3,7 @@
 
 export interface AttachmentRow {
     attachmentId?: string;
-    ownerId?: string;
+    ownerId: string;
     role: string;
     mime: string;
     title: string;
@@ -12,11 +12,13 @@ export interface AttachmentRow {
     isProtected?: boolean;
     dateModified?: string;
     utcDateModified?: string;
-    utcDateScheduledForErasureSince?: string;
+    utcDateScheduledForErasureSince?: string | null;
     isDeleted?: boolean;
     deleteId?: string;
     contentLength?: number;
     content?: Buffer | string;
+    /** If set to `"base64"`, the `content` string will be decoded from base64 to binary before storage. */
+    encoding?: "base64";
 }
 
 export interface RevisionRow {
@@ -28,10 +30,10 @@ export interface RevisionRow {
     title: string;
     blobId?: string;
     dateLastEdited?: string;
-    dateCreated: string;
+    dateCreated?: string;
     utcDateLastEdited?: string;
     utcDateCreated: string;
-    utcDateModified: string;
+    utcDateModified?: string;
     contentLength?: number;
 }
 
@@ -120,7 +122,9 @@ export const ALLOWED_NOTE_TYPES = [
     "book",
     "webView",
     "code",
-    "mindMap"
+    "mindMap",
+    "spreadsheet",
+    "llmChat"
 ] as const;
 export type NoteType = (typeof ALLOWED_NOTE_TYPES)[number];
 

@@ -15,7 +15,7 @@ Vedi [fotografie](https://triliumnext.github.io/Docs/Wiki/screenshot-tour) per u
 Sentiti libero di unirti alle nostre discussioni ufficiali e alla nostra comunità. Siamo concentrati sullo sviluppo di Trilium e ci piacerebbe sapere quali funzioni, suggerimenti o eventuali problemi hai!
 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (Per discussioni sincrone)
-- [Discussioni Github](https://github.com/TriliumNext/Notes/discussions) (Per discussioni asincrone)
+- [Discussioni Github](https://github.com/TriliumNext/Trilium/discussions) (Per discussioni asincrone)
 - [Wiki](https://triliumnext.github.io/Docs/) (Per le domande più comuni e le guide per l'utente)
 
 Le due stanze linkate sopra sono connesse e contengono gli stessi messaggi, quindi puoi usare XMPP o Matrix da qualsiasi client tu preferisca, praticamente su qualsiasi piattaforma!
@@ -53,7 +53,7 @@ Le due stanze linkate sopra sono connesse e contengono gli stessi messaggi, quin
 
 Trilium è fornito come applicazione desktop (Linux e Windows) o come applicazione web ospitata sul tuo server (Linux). La versione desktop per Mac OS è disponibile, ma [non è supportata](https://triliumnext.github.io/Docs/Wiki/faq#mac-os-support).
 
-* Se vuoi usare Trilium sul tuo desktop, scarica il rilascio binario per la tua piattaforma dall'[ultimo rilascio](https://github.com/TriliumNext/Notes/releases/latest), decomprimi l'archivio e avvia l'eseguibile ```trilium```.
+* Se vuoi usare Trilium sul tuo desktop, scarica il rilascio binario per la tua piattaforma dall'[ultimo rilascio](https://github.com/TriliumNext/Trilium/releases/latest), decomprimi l'archivio e avvia l'eseguibile ```trilium```.
 * Se vuoi installare Trilium su un server, segui [questa pagina](https://triliumnext.github.io/Docs/Wiki/server-installation).
   * Per ora solo Chrome e Firefox sono i browser supportati (testati).
 

@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
+
 import utils from "./utils.js";
 
 type TestCase<T extends (...args: any) => any> = [desc: string, fnParams: Parameters<T>, expected: ReturnType<T>];
@@ -120,7 +121,7 @@ describe("#toObject", () => {
             { testPropA: "keyA", testPropB: "valueA" },
             { testPropA: "keyB", testPropB: "valueB" }
         ];
-        const fn: TestListFn = (testListEntry: TestListEntry) => [ testListEntry.testPropA + "_fn", testListEntry.testPropB + "_fn" ];
+        const fn: TestListFn = (testListEntry: TestListEntry) => [ `${testListEntry.testPropA  }_fn`, `${testListEntry.testPropB  }_fn` ];
 
         const result = utils.toObject(testList, fn);
         expect(result).toStrictEqual({
@@ -240,8 +241,8 @@ describe.todo("#quoteRegex", () => {});
 
 describe.todo("#replaceAll", () => {});
 
-describe("#removeTextFileExtension", () => {
-    const testCases: TestCase<typeof utils.removeTextFileExtension>[] = [
+describe("#removeFileExtension", () => {
+    const testCases: TestCase<typeof utils.removeFileExtension>[] = [
         [ "w/ 'test.md' it should strip '.md'", [ "test.md" ], "test" ],
         [ "w/ 'test.markdown' it should strip '.markdown'", [ "test.markdown" ], "test" ],
         [ "w/ 'test.html' it should strip '.html'", [ "test.html" ], "test" ],
@@ -252,7 +253,7 @@ describe("#removeTextFileExtension", () => {
     testCases.forEach((testCase) => {
         const [ desc, fnParams, expected ] = testCase;
         it(desc, () => {
-            const result = utils.removeTextFileExtension(...fnParams);
+            const result = utils.removeFileExtension(...fnParams);
             expect(result).toStrictEqual(expected);
         });
     });
@@ -377,14 +378,6 @@ describe("#timeLimit", () => {
         //@ts-expect-error - passing in illegal type 'object'
         expect(utils.timeLimit({ test: 1 }, 200)).toStrictEqual({ test: 1 });
     });
-});
-
-describe("#deferred", () => {
-    it("should return a promise", () => {
-        const result = utils.deferred();
-        expect(result).toBeInstanceOf(Promise);
-    });
-    // TriliumNextTODO: Add further tests!
 });
 
 describe("#removeDiacritic", () => {
@@ -679,5 +672,36 @@ describe("#normalizeCustomHandlerPattern", () => {
             const result = utils.normalizeCustomHandlerPattern(...fnParams);
             expect(result).toStrictEqual(expected);
         });
+    });
+});
+
+describe("#slugify", () => {
+    it("should return a slugified string", () => {
+        const testString = "This is a Test String! With unicode & Special #Chars.";
+        const expectedSlug = "this-is-a-test-string-with-unicode-special-chars";
+        const result = utils.slugify(testString);
+        expect(result).toBe(expectedSlug);
+    });
+
+    it("supports CJK characters without alteration", () => {
+        const testString = "测试中文字符";
+        const expectedSlug = "测试中文字符";
+        const result = utils.slugify(testString);
+        expect(result).toBe(expectedSlug);
+    });
+
+    it("supports Cyrillic characters without alteration", () => {
+        const testString = "Тестирование кириллических символов";
+        const expectedSlug = "тестирование-кириллических-символов";
+        const result = utils.slugify(testString);
+        expect(result).toBe(expectedSlug);
+    });
+
+    // preserves diacritic marks
+    it("preserves diacritic marks", () => {
+        const testString = "Café naïve façade jalapeño";
+        const expectedSlug = "café-naïve-façade-jalapeño";
+        const result = utils.slugify(testString);
+        expect(result).toBe(expectedSlug);
     });
 });

@@ -1,12 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [ "ESNext" ],
+    "lib": [ "ESNext", "DOM.Iterable" ],
     "outDir": "dist",
     "types": [
-      "node"
+      "node",
+      "preact"
     ],
     "rootDir": "src",
+    "jsx": "react-jsx",
+		"jsxImportSource": "preact",
     "module": "esnext",
     "moduleResolution": "bundler",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
@@ -33,6 +36,7 @@
   ],
   "include": [
     "src/**/*.ts",
+    "src/**/*.tsx",
     "src/**/*.json"
   ],
   "references": [

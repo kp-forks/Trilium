@@ -1,4 +1,4 @@
-export type LabelType = "text" | "number" | "boolean" | "date" | "datetime" | "time" | "url" | "color";
+export type LabelType = "text" | "textarea" | "number" | "boolean" | "date" | "datetime" | "time" | "url" | "color";
 type Multiplicity = "single" | "multi";
 
 export interface DefinitionObject {
@@ -17,7 +17,7 @@ function parse(value: string) {
     for (const token of tokens) {
         if (token === "promoted") {
             defObj.isPromoted = true;
-        } else if (["text", "number", "boolean", "date", "datetime", "time", "url", "color"].includes(token)) {
+        } else if (["text", "textarea", "number", "boolean", "date", "datetime", "time", "url", "color"].includes(token)) {
             defObj.labelType = token as LabelType;
         } else if (["single", "multi"].includes(token)) {
             defObj.multiplicity = token as Multiplicity;
@@ -39,6 +39,17 @@ function parse(value: string) {
     }
 
     return defObj;
+}
+
+/**
+ * For an attribute definition name (e.g. `label:TEST:TEST1`), extracts its type (label) and name (TEST:TEST1).
+ * @param definitionAttrName the attribute definition name, without the leading `#` (e.g. `label:TEST:TEST1`)
+ * @return a tuple of [type, name].
+ */
+export function extractAttributeDefinitionTypeAndName(definitionAttrName: string): [ "label" | "relation", string ] {
+    const valueType = definitionAttrName.startsWith("label:") ? "label" : "relation";
+    const valueName = definitionAttrName.substring(valueType.length + 1);
+    return [ valueType, valueName ];
 }
 
 export default {

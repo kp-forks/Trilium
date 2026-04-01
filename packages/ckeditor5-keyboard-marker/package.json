@@ -11,18 +11,7 @@
     "ckeditor5-package-generator"
   ],
   "type": "module",
-  "main": "dist/index.ts",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./*": "./dist/*",
-    "./browser/*": null,
-    "./package.json": "./package.json"
-  },
+  "main": "src/index.ts",
   "author": "Marek Lewandowski",
   "license": "GPL-3.0",
   "homepage": "https://github.com/mlewand/ckeditor5-keyboard-marker",
@@ -35,28 +24,28 @@
     "ckeditor5-metadata.json"
   ],
   "devDependencies": {
-    "@ckeditor/ckeditor5-dev-build-tools": "43.1.0",
+    "@ckeditor/ckeditor5-dev-build-tools": "55.3.0",
     "@ckeditor/ckeditor5-inspector": ">=4.1.0",
-    "@ckeditor/ckeditor5-package-tools": "^4.0.0",
-    "@typescript-eslint/eslint-plugin": "~8.38.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "@vitest/browser": "^3.0.5",
-    "@vitest/coverage-istanbul": "^3.0.5",
-    "ckeditor5": "46.0.0",
-    "eslint": "^9.0.0",
+    "@ckeditor/ckeditor5-package-tools": "5.1.0",
+    "@typescript-eslint/eslint-plugin": "8.57.2",
+    "@typescript-eslint/parser": "8.57.2",
+    "@vitest/browser": "4.1.2",
+    "@vitest/coverage-istanbul": "4.1.2",
+    "ckeditor5": "47.6.1",
+    "eslint": "10.1.0",
     "eslint-config-ckeditor5": ">=9.1.0",
-    "http-server": "^14.1.0",
-    "lint-staged": "^16.0.0",
-    "stylelint": "^16.0.0",
+    "http-server": "14.1.1",
+    "lint-staged": "16.4.0",
+    "stylelint": "17.6.0",
     "stylelint-config-ckeditor5": ">=9.1.0",
-    "ts-node": "^10.9.1",
-    "typescript": "5.8.3",
-    "vite-plugin-svgo": "~2.0.0",
-    "vitest": "^3.0.5",
-    "webdriverio": "^9.0.7"
+    "ts-node": "10.9.2",
+    "typescript": "6.0.2",
+    "vite-plugin-svgo": "2.0.0",
+    "vitest": "4.1.2",
+    "webdriverio": "9.27.0"
   },
   "peerDependencies": {
-    "ckeditor5": "46.0.0"
+    "ckeditor5": "47.6.1"
   },
   "scripts": {
     "build": "node ./scripts/build-dist.mjs",
@@ -79,13 +68,5 @@
     "**/*.css": [
       "stylelint --quiet --allow-empty-input"
     ]
-  },
-  "nx": {
-    "name": "ckeditor5-keyboard-marker",
-    "targets": {
-      "build": {
-        "cache": "true"
-      }
-    }
   }
 }

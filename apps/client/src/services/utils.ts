@@ -1,19 +1,28 @@
-import dayjs from "dayjs";
-import type { ViewScope } from "./link.js";
+import { dayjs } from "@triliumnext/commons";
+import { snapdom } from "@zumer/snapdom";
+
+import FNote from "../entities/fnote";
+import type { ViewMode, ViewScope } from "./link.js";
 
 const SVG_MIME = "image/svg+xml";
 
 export const isShare = !window.glob;
 
-function reloadFrontendApp(reason?: string) {
+export function reloadFrontendApp(reason?: string) {
     if (reason) {
         logInfo(`Frontend app reload: ${reason}`);
     }
 
-    window.location.reload();
+    if (isElectron()) {
+        for (const window of dynamicRequire("@electron/remote").BrowserWindow.getAllWindows()) {
+            window.reload();
+        }
+    } else {
+        window.location.reload();
+    }
 }
 
-function restartDesktopApp() {
+export function restartDesktopApp() {
     if (!isElectron()) {
         reloadFrontendApp();
         return;
@@ -44,27 +53,6 @@ function parseDate(str: string) {
     } catch (e: any) {
         throw new Error(`Can't parse date from '${str}': ${e.message} ${e.stack}`);
     }
-}
-
-// Source: https://stackoverflow.com/a/30465299/4898894
-function getMonthsInDateRange(startDate: string, endDate: string) {
-    const start = startDate.split("-");
-    const end = endDate.split("-");
-    const startYear = parseInt(start[0]);
-    const endYear = parseInt(end[0]);
-    const dates: string[] = [];
-
-    for (let i = startYear; i <= endYear; i++) {
-        const endMonth = i != endYear ? 11 : parseInt(end[1]) - 1;
-        const startMon = i === startYear ? parseInt(start[1]) - 1 : 0;
-
-        for (let j = startMon; j <= endMonth; j = j > 12 ? j % 12 || 11 : j + 1) {
-            const month = j + 1;
-            const displayMonth = month < 10 ? "0" + month : month;
-            dates.push([i, displayMonth].join("-"));
-        }
-    }
-    return dates;
 }
 
 function padNum(num: number) {
@@ -125,12 +113,11 @@ function formatDateISO(date: Date) {
     return `${date.getFullYear()}-${padNum(date.getMonth() + 1)}-${padNum(date.getDate())}`;
 }
 
-function formatDateTime(date: Date, userSuppliedFormat?: string): string {
+export function formatDateTime(date: Date, userSuppliedFormat?: string): string {
     if (userSuppliedFormat?.trim()) {
         return dayjs(date).format(userSuppliedFormat);
-    } else {
-        return `${formatDate(date)} ${formatTime(date)}`;
     }
+    return `${formatDate(date)} ${formatTime(date)}`;
 }
 
 function localNowDateTime() {
@@ -144,17 +131,29 @@ function now() {
 /**
  * Returns `true` if the client is currently running under Electron, or `false` if running in a web browser.
  */
-function isElectron() {
+export function isElectron() {
     return !!(window && window.process && window.process.type);
 }
 
-function isMac() {
+/**
+ * Returns `true` if the client is running as a PWA, otherwise `false`.
+ */
+export function isPWA() {
+    return (
+        window.matchMedia('(display-mode: standalone)').matches
+        || window.matchMedia('(display-mode: window-controls-overlay)').matches
+        || window.navigator.standalone
+        || window.navigator.windowControlsOverlay
+    );
+}
+
+export function isMac() {
     return navigator.platform.indexOf("Mac") > -1;
 }
 
 export const hasTouchBar = (isMac() && isElectron());
 
-function isCtrlKey(evt: KeyboardEvent | MouseEvent | JQuery.ClickEvent | JQuery.ContextMenuEvent | JQuery.TriggeredEvent | React.PointerEvent<HTMLCanvasElement> | JQueryEventObject) {
+export function isCtrlKey(evt: KeyboardEvent | MouseEvent | JQuery.ClickEvent | JQuery.ContextMenuEvent | JQuery.TriggeredEvent | React.PointerEvent<HTMLCanvasElement> | JQueryEventObject) {
     return (!isMac() && evt.ctrlKey) || (isMac() && evt.metaKey);
 }
 
@@ -177,7 +176,7 @@ const entityMap: Record<string, string> = {
     "=": "&#x3D;"
 };
 
-function escapeHtml(str: string) {
+export function escapeHtml(str: string) {
     return str.replace(/[&<>"'`=\/]/g, (s) => entityMap[s]);
 }
 
@@ -185,14 +184,20 @@ export function escapeQuotes(value: string) {
     return value.replaceAll('"', "&quot;");
 }
 
-function formatSize(size: number) {
-    size = Math.max(Math.round(size / 1024), 1);
-
-    if (size < 1024) {
-        return `${size} KiB`;
-    } else {
-        return `${Math.round(size / 102.4) / 10} MiB`;
+export function formatSize(size: number | null | undefined) {
+    if (size === null || size === undefined) {
+        return "";
     }
+
+    if (size === 0) {
+        return "0 B";
+    }
+
+    const k = 1024;
+    const sizes = ["B", "KiB", "MiB", "GiB"];
+    const i = Math.floor(Math.log(size) / Math.log(k));
+
+    return `${Math.round((size / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
 }
 
 function toObject<T, R>(array: T[], fn: (arg0: T) => [key: string, value: R]) {
@@ -207,7 +212,7 @@ function toObject<T, R>(array: T[], fn: (arg0: T) => [key: string, value: R]) {
     return obj;
 }
 
-function randomString(len: number) {
+export function randomString(len: number = 16) {
     let text = "";
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -218,7 +223,7 @@ function randomString(len: number) {
     return text;
 }
 
-function isMobile() {
+export function isMobile() {
     return (
         window.glob?.device === "mobile" ||
         // window.glob.device is not available in setup
@@ -236,7 +241,7 @@ export function isIOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent);
 }
 
-function isDesktop() {
+export function isDesktop() {
     return (
         window.glob?.device === "desktop" ||
         // window.glob.device is not available in setup
@@ -274,7 +279,7 @@ function getMimeTypeClass(mime: string) {
     return `mime-${mime.toLowerCase().replace(/[\W_]+/g, "-")}`;
 }
 
-function isHtmlEmpty(html: string) {
+export function isHtmlEmpty(html: string) {
     if (!html) {
         return true;
     } else if (typeof html !== "string") {
@@ -292,7 +297,53 @@ function isHtmlEmpty(html: string) {
     );
 }
 
-async function clearBrowserCache() {
+function formatHtml(html: string) {
+    let indent = "\n";
+    const tab = "\t";
+    let i = 0;
+    const pre: { indent: string; tag: string }[] = [];
+
+    html = html
+        .replace(new RegExp("<pre>([\\s\\S]+?)?</pre>"), (x) => {
+            pre.push({ indent: "", tag: x });
+            return `<--TEMPPRE${i++}/-->`;
+        })
+        .replace(new RegExp("<[^<>]+>[^<]?", "g"), (x) => {
+            let ret;
+            const tagRegEx = /<\/?([^\s/>]+)/.exec(x);
+            const tag = tagRegEx ? tagRegEx[1] : "";
+            const p = new RegExp("<--TEMPPRE(\\d+)/-->").exec(x);
+
+            if (p) {
+                const pInd = parseInt(p[1]);
+                pre[pInd].indent = indent;
+            }
+
+            if (["area", "base", "br", "col", "command", "embed", "hr", "img", "input", "keygen", "link", "menuitem", "meta", "param", "source", "track", "wbr"].indexOf(tag) >= 0) {
+                // self closing tag
+                ret = indent + x;
+            } else if (x.indexOf("</") < 0) {
+                //open tag
+                if (x.charAt(x.length - 1) !== ">") ret = indent + x.substr(0, x.length - 1) + indent + tab + x.substr(x.length - 1, x.length);
+                else ret = indent + x;
+                !p && (indent += tab);
+            } else {
+                //close tag
+                indent = indent.substr(0, indent.length - 1);
+                if (x.charAt(x.length - 1) !== ">") ret = indent + x.substr(0, x.length - 1) + indent + x.substr(x.length - 1, x.length);
+                else ret = indent + x;
+            }
+            return ret;
+        });
+
+    for (i = pre.length; i--;) {
+        html = html.replace(`<--TEMPPRE${i}/-->`, pre[i].tag.replace("<pre>", "<pre>\n").replace("</pre>", `${pre[i].indent}</pre>`));
+    }
+
+    return html.charAt(0) === "\n" ? html.substr(1, html.length - 1) : html;
+}
+
+export async function clearBrowserCache() {
     if (isElectron()) {
         const win = dynamicRequire("@electron/remote").getCurrentWindow();
         await win.webContents.session.clearCache();
@@ -306,14 +357,20 @@ function copySelectionToClipboard() {
     }
 }
 
-function dynamicRequire(moduleName: string) {
+type dynamicRequireMappings = {
+    "@electron/remote": typeof import("@electron/remote"),
+    "electron": typeof import("electron"),
+    "child_process": typeof import("child_process")
+};
+
+export function dynamicRequire<T extends keyof dynamicRequireMappings>(moduleName: T): Awaited<dynamicRequireMappings[T]>{
     if (typeof __non_webpack_require__ !== "undefined") {
         return __non_webpack_require__(moduleName);
-    } else {
-        // explicitly pass as string and not as expression to suppress webpack warning
-        // 'Critical dependency: the request of a dependency is an expression'
-        return require(`${moduleName}`);
     }
+    // explicitly pass as string and not as expression to suppress webpack warning
+    // 'Critical dependency: the request of a dependency is an expression'
+    return require(`${moduleName}`);
+
 }
 
 function timeLimit<T>(promise: Promise<T>, limitMs: number, errorMessage?: string) {
@@ -374,32 +431,51 @@ async function openInAppHelp($button: JQuery<HTMLElement>) {
 
     const inAppHelpPage = $button.attr("data-in-app-help");
     if (inAppHelpPage) {
-        // Dynamic import to avoid import issues in tests.
-        const appContext = (await import("../components/app_context.js")).default;
-        const activeContext = appContext.tabManager.getActiveContext();
-        if (!activeContext) {
-            return;
-        }
-        const subContexts = activeContext.getSubContexts();
-        const targetNote = `_help_${inAppHelpPage}`;
-        const helpSubcontext = subContexts.find((s) => s.viewScope?.viewMode === "contextual-help");
-        const viewScope: ViewScope = {
-            viewMode: "contextual-help",
-        };
-        if (!helpSubcontext) {
-            // The help is not already open, open a new split with it.
-            const { ntxId } = subContexts[subContexts.length - 1];
-            appContext.triggerCommand("openNewNoteSplit", {
-                ntxId,
-                notePath: targetNote,
-                hoistedNoteId: "_help",
-                viewScope
-            })
-        } else {
-            // There is already a help window open, make sure it opens on the right note.
-            helpSubcontext.setNote(targetNote, { viewScope });
-        }
+        openInAppHelpFromUrl(inAppHelpPage);
+    }
+}
+
+/**
+ * Opens the in-app help at the given page in a split note. If there already is a split note open with a help page, it will be replaced by this one.
+ *
+ * @param inAppHelpPage the ID of the help note (excluding the `_help_` prefix).
+ * @returns a promise that resolves once the help has been opened.
+ */
+export function openInAppHelpFromUrl(inAppHelpPage: string) {
+    return openInReusableSplit(`_help_${inAppHelpPage}`, "contextual-help");
+}
+
+/**
+ * Similar to opening a new note in a split, but re-uses an existing split if there is already one open with the same view mode.
+ *
+ * @param targetNoteId the note ID to open in the split.
+ * @param targetViewMode the view mode of the split to open the note in.
+ * @param openOpts additional options for opening the note.
+ */
+export async function openInReusableSplit(targetNoteId: string, targetViewMode: ViewMode, openOpts: {
+    hoistedNoteId?: string;
+} = {}) {
+    // Dynamic import to avoid import issues in tests.
+    const appContext = (await import("../components/app_context.js")).default;
+    const activeContext = appContext.tabManager.getActiveContext();
+    if (!activeContext) {
         return;
+    }
+    const subContexts = activeContext.getSubContexts();
+    const existingSubcontext = subContexts.find((s) => s.viewScope?.viewMode === targetViewMode);
+    const viewScope: ViewScope = { viewMode: targetViewMode };
+    if (!existingSubcontext) {
+        // The target split is not already open, open a new split with it.
+        const { ntxId } = subContexts[subContexts.length - 1];
+        appContext.triggerCommand("openNewNoteSplit", {
+            ntxId,
+            notePath: targetNoteId,
+            hoistedNoteId: openOpts.hoistedNoteId,
+            viewScope
+        });
+    } else {
+        // There is already a target split open, make sure it opens on the right note.
+        existingSubcontext.setNote(targetNoteId, { viewScope });
     }
 }
 
@@ -428,15 +504,15 @@ function sleep(time_ms: number) {
     });
 }
 
-function escapeRegExp(str: string) {
+export function escapeRegExp(str: string) {
     return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
 function areObjectsEqual(...args: unknown[]) {
     let i;
     let l;
-    let leftChain: Object[];
-    let rightChain: Object[];
+    let leftChain: object[];
+    let rightChain: object[];
 
     function compare2Objects(x: unknown, y: unknown) {
         let p;
@@ -561,21 +637,73 @@ function copyHtmlToClipboard(content: string) {
     document.removeEventListener("copy", listener);
 }
 
-// TODO: Set to FNote once the file is ported.
-function createImageSrcUrl(note: { noteId: string; title: string }) {
+export function createImageSrcUrl(note: FNote) {
     return `api/images/${note.noteId}/${encodeURIComponent(note.title)}?timestamp=${Date.now()}`;
 }
 
+
+
+
+
 /**
- * Given a string representation of an SVG, triggers a download of the file on the client device.
+ * Helper function to prepare an element for snapdom rendering.
+ * Handles string parsing and temporary DOM attachment for style computation.
+ *
+ * @param source - Either an SVG/HTML string to be parsed, or an existing SVG/HTML element.
+ * @returns An object containing the prepared element and a cleanup function.
+ *          The cleanup function removes temporarily attached elements from the DOM,
+ *          or is a no-op if the element was already in the DOM.
+ */
+function prepareElementForSnapdom(source: string | SVGElement | HTMLElement): {
+    element: SVGElement | HTMLElement;
+    cleanup: () => void;
+} {
+    if (typeof source === 'string') {
+        const parser = new DOMParser();
+
+        // Detect if content is SVG or HTML
+        const isSvg = source.trim().startsWith('<svg');
+        const mimeType = isSvg ? SVG_MIME : 'text/html';
+
+        const doc = parser.parseFromString(source, mimeType);
+        const element = doc.documentElement;
+
+        // Temporarily attach to DOM for proper style computation
+        element.style.position = 'absolute';
+        element.style.left = '-9999px';
+        element.style.top = '-9999px';
+        document.body.appendChild(element);
+
+        return {
+            element,
+            cleanup: () => document.body.removeChild(element)
+        };
+    }
+
+    return {
+        element: source,
+        cleanup: () => {} // No-op for existing elements
+    };
+}
+
+/**
+ * Downloads an SVG using snapdom for proper rendering. Can accept either an SVG string, an SVG element, or an HTML element.
  *
  * @param nameWithoutExtension the name of the file. The .svg suffix is automatically added to it.
- * @param svgContent the content of the SVG file download.
+ * @param svgSource either an SVG string, an SVGElement, or an HTMLElement to be downloaded.
  */
-function downloadSvg(nameWithoutExtension: string, svgContent: string) {
-    const filename = `${nameWithoutExtension}.svg`;
-    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`;
-    triggerDownload(filename, dataUrl);
+async function downloadAsSvg(nameWithoutExtension: string, svgSource: string | SVGElement | HTMLElement) {
+    const { element, cleanup } = prepareElementForSnapdom(svgSource);
+
+    try {
+        const result = await snapdom(element, {
+            backgroundColor: "transparent",
+            scale: 2
+        });
+        triggerDownload(`${nameWithoutExtension}.svg`, result.url);
+    } finally {
+        cleanup();
+    }
 }
 
 /**
@@ -596,62 +724,26 @@ function triggerDownload(fileName: string, dataUrl: string) {
 
     document.body.removeChild(element);
 }
-
 /**
- * Given a string representation of an SVG, renders the SVG to PNG and triggers a download of the file on the client device.
- *
- * Note that the SVG must specify its width and height as attributes in order for it to be rendered.
+ * Downloads an SVG as PNG using snapdom. Can accept either an SVG string, an SVG element, or an HTML element.
  *
  * @param nameWithoutExtension the name of the file. The .png suffix is automatically added to it.
- * @param svgContent the content of the SVG file download.
- * @returns a promise which resolves if the operation was successful, or rejects if it failed (permissions issue or some other issue).
+ * @param svgSource either an SVG string, an SVGElement, or an HTMLElement to be converted to PNG.
  */
-function downloadSvgAsPng(nameWithoutExtension: string, svgContent: string) {
-    return new Promise<void>((resolve, reject) => {
-        // First, we need to determine the width and the height from the input SVG.
-        const result = getSizeFromSvg(svgContent);
-        if (!result) {
-            reject();
-            return;
-        }
+async function downloadAsPng(nameWithoutExtension: string, svgSource: string | SVGElement | HTMLElement) {
+    const { element, cleanup } = prepareElementForSnapdom(svgSource);
 
-        // Convert the image to a blob.
-        const { width, height } = result;
-
-        // Create an image element and load the SVG.
-        const imageEl = new Image();
-        imageEl.width = width;
-        imageEl.height = height;
-        imageEl.crossOrigin = "anonymous";
-        imageEl.onload = () => {
-            try {
-                // Draw the image with a canvas.
-                const canvasEl = document.createElement("canvas");
-                canvasEl.width = imageEl.width;
-                canvasEl.height = imageEl.height;
-                document.body.appendChild(canvasEl);
-
-                const ctx = canvasEl.getContext("2d");
-                if (!ctx) {
-                    reject();
-                }
-
-                ctx?.drawImage(imageEl, 0, 0);
-
-                const imgUri = canvasEl.toDataURL("image/png")
-                triggerDownload(`${nameWithoutExtension}.png`, imgUri);
-                document.body.removeChild(canvasEl);
-                resolve();
-            } catch (e) {
-                console.warn(e);
-                reject();
-            }
-        };
-        imageEl.onerror = (e) => reject(e);
-        imageEl.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`;
-    });
+    try {
+        const result = await snapdom(element, {
+            backgroundColor: "transparent",
+            scale: 2
+        });
+        const pngImg = await result.toPng();
+        await triggerDownload(`${nameWithoutExtension}.png`, pngImg.src);
+    } finally {
+        cleanup();
+    }
 }
-
 export function getSizeFromSvg(svgContent: string) {
     const svgDocument = (new DOMParser()).parseFromString(svgContent, SVG_MIME);
 
@@ -673,11 +765,11 @@ export function getSizeFromSvg(svgContent: string) {
         return {
             width: parseFloat(width),
             height: parseFloat(height)
-        }
-    } else {
-        console.warn("SVG export error", svgDocument.documentElement);
-        return null;
+        };
     }
+    console.warn("SVG export error", svgDocument.documentElement);
+    return null;
+
 }
 
 /**
@@ -731,8 +823,96 @@ function isUpdateAvailable(latestVersion: string | null | undefined, currentVers
     return compareVersions(latestVersion, currentVersion) > 0;
 }
 
-function isLaunchBarConfig(noteId: string) {
+export function isLaunchBarConfig(noteId: string) {
     return ["_lbRoot", "_lbAvailableLaunchers", "_lbVisibleLaunchers", "_lbMobileRoot", "_lbMobileAvailableLaunchers", "_lbMobileVisibleLaunchers"].includes(noteId);
+}
+
+/**
+ * Adds a class to the <body> of the page, where the class name is formed via a prefix and a value.
+ * Useful for configurable options such as `heading-style-markdown`, where `heading-style` is the prefix and `markdown` is the dynamic value.
+ * There is no separator between the prefix and the value, if needed it has to be supplied manually to the prefix.
+ *
+ * @param prefix the prefix.
+ * @param value the value to be appended to the prefix.
+ */
+export function toggleBodyClass(prefix: string, value: string) {
+    const $body = $("body");
+    for (const clazz of Array.from($body[0].classList)) {
+        // create copy to safely iterate over while removing classes
+        if (clazz.startsWith(prefix)) {
+            $body.removeClass(clazz);
+        }
+    }
+
+    $body.addClass(prefix + value);
+}
+
+/**
+ * Basic comparison for equality between the two arrays. The values are strictly checked via `===`.
+ *
+ * @param a the first array to compare.
+ * @param b the second array to compare.
+ * @returns `true` if both arrays are equals, `false` otherwise.
+ */
+export function arrayEqual<T>(a: T[], b: T[]) {
+    if (a === b) {
+        return true;
+    }
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    for (let i=0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+export type Indexed<T extends object> = T & { index: number };
+
+/**
+ * Given an object array, alters every object in the array to have an index field assigned to it.
+ *
+ * @param items the objects to be numbered.
+ * @returns the same object for convenience, with the type changed to indicate the new index field.
+ */
+export function numberObjectsInPlace<T extends object>(items: T[]): Indexed<T>[] {
+    let index = 0;
+    for (const item of items) {
+        (item as Indexed<T>).index = index++;
+    }
+    return items as Indexed<T>[];
+}
+
+export function mapToKeyValueArray<K extends string | number | symbol, V>(map: Record<K, V>) {
+    const values: { key: K, value: V }[] = [];
+    for (const [ key, value ] of Object.entries(map)) {
+        values.push({ key: key as K, value: value as V });
+    }
+    return values;
+}
+
+export function getErrorMessage(e: unknown) {
+    if (e && typeof e === "object" && "message" in e && typeof e.message === "string") {
+        return e.message;
+    }
+    return "Unknown error";
+
+}
+
+/**
+ * Handles left or right placement of e.g. tooltips in case of right-to-left languages. If the current language is a RTL one, then left and right are swapped. Other directions are unaffected.
+ * @param placement a string optionally containing a "left" or "right" value.
+ * @returns a left/right value swapped if needed, or the same as input otherwise.
+ */
+export function handleRightToLeftPlacement<T extends string>(placement: T) {
+    if (!glob.isRtl) return placement;
+    if (placement === "left") return "right";
+    if (placement === "right") return "left";
+    return placement;
 }
 
 export default {
@@ -740,14 +920,15 @@ export default {
     restartDesktopApp,
     reloadTray,
     parseDate,
-    getMonthsInDateRange,
     formatDateISO,
     formatDateTime,
+    formatTime,
     formatTimeInterval,
     formatSize,
     localNowDateTime,
     now,
     isElectron,
+    isPWA,
     isMac,
     isCtrlKey,
     assertArguments,
@@ -760,6 +941,7 @@ export default {
     getNoteTypeClass,
     getMimeTypeClass,
     isHtmlEmpty,
+    formatHtml,
     clearBrowserCache,
     copySelectionToClipboard,
     dynamicRequire,
@@ -774,8 +956,8 @@ export default {
     areObjectsEqual,
     copyHtmlToClipboard,
     createImageSrcUrl,
-    downloadSvg,
-    downloadSvgAsPng,
+    downloadAsSvg,
+    downloadAsPng,
     compareVersions,
     isUpdateAvailable,
     isLaunchBarConfig

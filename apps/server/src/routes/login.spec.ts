@@ -1,9 +1,11 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import supertest, { type Response } from "supertest";
+import { dayjs } from "@triliumnext/commons";
 import type { Application } from "express";
-import dayjs from "dayjs";
-import { type SQLiteSessionStore } from "./session_parser.js";
 import { SessionData } from "express-session";
+import supertest, { type Response } from "supertest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+import cls from "../services/cls.js";
+import { type SQLiteSessionStore } from "./session_parser.js";
 
 let app: Application;
 let sessionStore: SQLiteSessionStore;
@@ -18,12 +20,16 @@ describe("Login Route test", () => {
         ({ sessionStore, CLEAN_UP_INTERVAL } = (await import("./session_parser.js")));
     });
 
+    afterAll(() => {
+        vi.useRealTimers();
+    });
+
     it("should return the login page, when using a GET request", async () => {
 
         // RegExp for login page specific string in HTML
         const res = await supertest(app)
             .get("/login")
-            .expect(200)
+            .expect(200);
 
         expect(res.text).toMatch(/assets\/v[0-9.a-z]+\/src\/login\.js/);
 
@@ -34,7 +40,7 @@ describe("Login Route test", () => {
         await supertest(app)
             .post("/login")
             .send({ password: "fakePassword" })
-            .expect(401)
+            .expect(401);
 
     });
 
@@ -68,7 +74,7 @@ describe("Login Route test", () => {
 
             // ignore the seconds in the comparison, just to avoid flakiness in tests,
             // if for some reason execution is slow between calculation of expected and actual
-            expect(actualExpiresDate.slice(0,23)).toBe(expectedExpiresDate.slice(0,23))
+            expect(actualExpiresDate.slice(0,23)).toBe(expectedExpiresDate.slice(0,23));
         });
 
         it("sets the correct sesssion data", async () => {
@@ -106,7 +112,7 @@ describe("Login Route test", () => {
             expect(expiry).toBeTruthy();
 
             vi.setSystemTime(expiry!);
-            vi.advanceTimersByTime(CLEAN_UP_INTERVAL);
+            cls.init(() => vi.advanceTimersByTime(CLEAN_UP_INTERVAL));
             ({ session } = await getSessionFromCookie(setCookieHeader));
             expect(session).toBeFalsy();
         });
@@ -120,14 +126,14 @@ describe("Login Route test", () => {
             res = await supertest(app)
                 .post("/login")
                 .send({ password: "demo1234" })
-                .expect(302)
+                .expect(302);
 
             setCookieHeader = res.headers["set-cookie"][0];
         });
 
         it("does not set Expires", async () => {
             // match for e.g. "Expires=Wed, 07 May 2025 07:02:59 GMT;"
-            expect(setCookieHeader).not.toMatch(/Expires=(?<date>[\w\s,:]+)/)
+            expect(setCookieHeader).not.toMatch(/Expires=(?<date>[\w\s,:]+)/);
         });
 
         it("stores the session in the database", async () => {

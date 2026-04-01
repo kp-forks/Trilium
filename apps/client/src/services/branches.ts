@@ -1,12 +1,12 @@
-import utils from "./utils.js";
-import server from "./server.js";
-import toastService, { type ToastOptions } from "./toast.js";
+import appContext from "../components/app_context.js";
+import type { ResolveOptions } from "../widgets/dialogs/delete_notes.js";
 import froca from "./froca.js";
 import hoistedNoteService from "./hoisted_note.js";
-import ws from "./ws.js";
-import appContext from "../components/app_context.js";
 import { t } from "./i18n.js";
-import type { ResolveOptions } from "../widgets/dialogs/delete_notes.js";
+import server from "./server.js";
+import toastService, { type ToastOptionsWithRequiredId } from "./toast.js";
+import utils from "./utils.js";
+import ws from "./ws.js";
 
 // TODO: Deduplicate type with server
 interface Response {
@@ -66,7 +66,7 @@ async function moveAfterBranch(branchIdsToMove: string[], afterBranchId: string)
     }
 }
 
-async function moveToParentNote(branchIdsToMove: string[], newParentBranchId: string) {
+async function moveToParentNote(branchIdsToMove: string[], newParentBranchId: string, componentId?: string) {
     const newParentBranch = froca.getBranch(newParentBranchId);
     if (!newParentBranch) {
         return;
@@ -86,7 +86,7 @@ async function moveToParentNote(branchIdsToMove: string[], newParentBranchId: st
             continue;
         }
 
-        const resp = await server.put<Response>(`branches/${branchIdToMove}/move-to/${newParentBranchId}`);
+        const resp = await server.put<Response>(`branches/${branchIdToMove}/move-to/${newParentBranchId}`, undefined, componentId);
 
         if (!resp.success) {
             toastService.showError(resp.message);
@@ -103,7 +103,7 @@ async function moveToParentNote(branchIdsToMove: string[], newParentBranchId: st
  * @param moveToParent whether to automatically go to the parent note path after a succesful delete. Usually makes sense if deleting the active note(s).
  * @returns promise that returns false if the operation was cancelled or there was nothing to delete, true if the operation succeeded.
  */
-async function deleteNotes(branchIdsToDelete: string[], forceDeleteAllClones = false, moveToParent = true) {
+async function deleteNotes(branchIdsToDelete: string[], forceDeleteAllClones = false, moveToParent = true, componentId?: string) {
     branchIdsToDelete = filterRootNote(branchIdsToDelete);
 
     if (branchIdsToDelete.length === 0) {
@@ -139,9 +139,9 @@ async function deleteNotes(branchIdsToDelete: string[], forceDeleteAllClones = f
         const branch = froca.getBranch(branchIdToDelete);
 
         if (deleteAllClones && branch) {
-            await server.remove(`notes/${branch.noteId}${query}`);
+            await server.remove(`notes/${branch.noteId}${query}`, componentId);
         } else {
-            await server.remove(`branches/${branchIdToDelete}${query}`);
+            await server.remove(`branches/${branchIdToDelete}${query}`, componentId);
         }
     }
 
@@ -176,11 +176,6 @@ async function moveNodeUpInHierarchy(node: Fancytree.FancytreeNode) {
         toastService.showError(resp.message);
         return;
     }
-
-    if (!hoistedNoteService.isTopLevelNode(node) && node.getParent().getChildren().length <= 1) {
-        node.getParent().folder = false;
-        node.getParent().renderTitle();
-    }
 }
 
 function filterSearchBranches(branchIds: string[]) {
@@ -200,17 +195,17 @@ function filterRootNote(branchIds: string[]) {
     });
 }
 
-function makeToast(id: string, message: string): ToastOptions {
+function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
     return {
-        id: id,
+        id,
         title: t("branches.delete-status"),
-        message: message,
+        message,
         icon: "trash"
     };
 }
 
 ws.subscribeToMessages(async (message) => {
-    if (message.taskType !== "deleteNotes") {
+    if (!("taskType" in message) || message.taskType !== "deleteNotes") {
         return;
     }
 
@@ -221,14 +216,14 @@ ws.subscribeToMessages(async (message) => {
         toastService.showPersistent(makeToast(message.taskId, t("branches.delete-notes-in-progress", { count: message.progressCount })));
     } else if (message.type === "taskSucceeded") {
         const toast = makeToast(message.taskId, t("branches.delete-finished-successfully"));
-        toast.closeAfter = 5000;
+        toast.timeout = 5000;
 
         toastService.showPersistent(toast);
     }
 });
 
 ws.subscribeToMessages(async (message) => {
-    if (message.taskType !== "undeleteNotes") {
+    if (!("taskType" in message) || message.taskType !== "undeleteNotes") {
         return;
     }
 
@@ -239,7 +234,7 @@ ws.subscribeToMessages(async (message) => {
         toastService.showPersistent(makeToast(message.taskId, t("branches.undeleting-notes-in-progress", { count: message.progressCount })));
     } else if (message.type === "taskSucceeded") {
         const toast = makeToast(message.taskId, t("branches.undeleting-notes-finished-successfully"));
-        toast.closeAfter = 5000;
+        toast.timeout = 5000;
 
         toastService.showPersistent(toast);
     }
@@ -247,7 +242,7 @@ ws.subscribeToMessages(async (message) => {
 
 async function cloneNoteToBranch(childNoteId: string, parentBranchId: string, prefix?: string) {
     const resp = await server.put<Response>(`notes/${childNoteId}/clone-to-branch/${parentBranchId}`, {
-        prefix: prefix
+        prefix
     });
 
     if (!resp.success) {
@@ -257,7 +252,7 @@ async function cloneNoteToBranch(childNoteId: string, parentBranchId: string, pr
 
 async function cloneNoteToParentNote(childNoteId: string, parentNoteId: string, prefix?: string) {
     const resp = await server.put<Response>(`notes/${childNoteId}/clone-to-note/${parentNoteId}`, {
-        prefix: prefix
+        prefix
     });
 
     if (!resp.success) {

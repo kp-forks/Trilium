@@ -1,78 +1,72 @@
-import { isElectron } from "../services/utils.js";
-import express from "express";
-
-import auth from "../services/auth.js";
-import openID from '../services/open_id.js';
-import totp from './api/totp.js';
-import recoveryCodes from './api/recovery_codes.js';
-import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
 import { createPartialContentHandler } from "@triliumnext/express-partial-content";
+import express from "express";
 import rateLimit from "express-rate-limit";
 
-// page routes
-import setupRoute from "./setup.js";
-import loginRoute from "./login.js";
-import indexRoute from "./index.js";
-
-// API routes
-import treeApiRoute from "./api/tree.js";
-import notesApiRoute from "./api/notes.js";
-import branchesApiRoute from "./api/branches.js";
-import attachmentsApiRoute from "./api/attachments.js";
-import autocompleteApiRoute from "./api/autocomplete.js";
-import cloningApiRoute from "./api/cloning.js";
-import revisionsApiRoute from "./api/revisions.js";
-import recentChangesApiRoute from "./api/recent_changes.js";
-import optionsApiRoute from "./api/options.js";
-import passwordApiRoute from "./api/password.js";
-import syncApiRoute from "./api/sync.js";
-import loginApiRoute from "./api/login.js";
-import recentNotesRoute from "./api/recent_notes.js";
-import appInfoRoute from "./api/app_info.js";
-import exportRoute from "./api/export.js";
-import importRoute from "./api/import.js";
-import setupApiRoute from "./api/setup.js";
-import sqlRoute from "./api/sql.js";
-import databaseRoute from "./api/database.js";
-import imageRoute from "./api/image.js";
-import attributesRoute from "./api/attributes.js";
-import scriptRoute from "./api/script.js";
-import senderRoute from "./api/sender.js";
-import filesRoute from "./api/files.js";
-import searchRoute from "./api/search.js";
-import bulkActionRoute from "./api/bulk_action.js";
-import specialNotesRoute from "./api/special_notes.js";
-import noteMapRoute from "./api/note_map.js";
-import clipperRoute from "./api/clipper.js";
-import similarNotesRoute from "./api/similar_notes.js";
-import keysRoute from "./api/keys.js";
-import backendLogRoute from "./api/backend_log.js";
-import statsRoute from "./api/stats.js";
-import fontsRoute from "./api/fonts.js";
-import etapiTokensApiRoutes from "./api/etapi_tokens.js";
-import relationMapApiRoute from "./api/relation-map.js";
-import otherRoute from "./api/other.js";
-import metricsRoute from "./api/metrics.js";
-import shareRoutes from "../share/routes.js";
-import ollamaRoute from "./api/ollama.js";
-import openaiRoute from "./api/openai.js";
-import anthropicRoute from "./api/anthropic.js";
-import llmRoute from "./api/llm.js";
-import ocrRoute from "./api/ocr.js";
-import systemInfoRoute from "./api/system_info.js";
-
-import etapiAuthRoutes from "../etapi/auth.js";
 import etapiAppInfoRoutes from "../etapi/app_info.js";
 import etapiAttachmentRoutes from "../etapi/attachments.js";
 import etapiAttributeRoutes from "../etapi/attributes.js";
-import etapiBranchRoutes from "../etapi/branches.js";
-import etapiNoteRoutes from "../etapi/notes.js";
-import etapiSpecialNoteRoutes from "../etapi/special_notes.js";
-import etapiSpecRoute from "../etapi/spec.js";
+import etapiAuthRoutes from "../etapi/auth.js";
 import etapiBackupRoute from "../etapi/backup.js";
+import etapiBranchRoutes from "../etapi/branches.js";
 import etapiMetricsRoute from "../etapi/metrics.js";
-import apiDocsRoute from "./api_docs.js";
+import etapiNoteRoutes from "../etapi/notes.js";
+import etapiRevisionsRoutes from "../etapi/revisions.js";
+import etapiSpecRoute from "../etapi/spec.js";
+import etapiSpecialNoteRoutes from "../etapi/special_notes.js";
+import auth from "../services/auth.js";
+import openID from '../services/open_id.js';
+import { isElectron } from "../services/utils.js";
+import shareRoutes from "../share/routes.js";
+import appInfoRoute from "./api/app_info.js";
+import attachmentsApiRoute from "./api/attachments.js";
+import attributesRoute from "./api/attributes.js";
+import autocompleteApiRoute from "./api/autocomplete.js";
+import backendLogRoute from "./api/backend_log.js";
+import branchesApiRoute from "./api/branches.js";
+import bulkActionRoute from "./api/bulk_action.js";
+import clipperRoute from "./api/clipper.js";
+import cloningApiRoute from "./api/cloning.js";
+import databaseRoute from "./api/database.js";
+import etapiTokensApiRoutes from "./api/etapi_tokens.js";
+import exportRoute from "./api/export.js";
+import filesRoute from "./api/files.js";
+import fontsRoute from "./api/fonts.js";
+import imageRoute from "./api/image.js";
+import importRoute from "./api/import.js";
+import keysRoute from "./api/keys.js";
+import llmChatRoute from "./api/llm_chat.js";
+import loginApiRoute from "./api/login.js";
+import metricsRoute from "./api/metrics.js";
+import noteMapRoute from "./api/note_map.js";
+import notesApiRoute from "./api/notes.js";
+import ocrRoute from "./api/ocr.js";
+import optionsApiRoute from "./api/options.js";
+import otherRoute from "./api/other.js";
+import passwordApiRoute from "./api/password.js";
+import recentChangesApiRoute from "./api/recent_changes.js";
+import recentNotesRoute from "./api/recent_notes.js";
+import recoveryCodes from './api/recovery_codes.js';
+import relationMapApiRoute from "./api/relation-map.js";
+import revisionsApiRoute from "./api/revisions.js";
+import scriptRoute from "./api/script.js";
+import searchRoute from "./api/search.js";
+import senderRoute from "./api/sender.js";
+import setupApiRoute from "./api/setup.js";
+import similarNotesRoute from "./api/similar_notes.js";
+import specialNotesRoute from "./api/special_notes.js";
+import sqlRoute from "./api/sql.js";
+import statsRoute from "./api/stats.js";
+import syncApiRoute from "./api/sync.js";
+import systemInfoRoute from "./api/system_info.js";
+import totp from './api/totp.js';
+// API routes
+import treeApiRoute from "./api/tree.js";
+import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
+import * as indexRoute from "./index.js";
+import loginRoute from "./login.js";
 import { apiResultHandler, apiRoute, asyncApiRoute, asyncRoute, route, router, uploadMiddlewareWithErrorHandling } from "./route_api.js";
+// page routes
+import setupRoute from "./setup.js";
 
 const GET = "get",
     PST = "post",
@@ -81,7 +75,6 @@ const GET = "get",
     DEL = "delete";
 
 function register(app: express.Application) {
-    route(GET, "/", [auth.checkAuth, csrfMiddleware], indexRoute.index);
     route(GET, "/login", [auth.checkAppInitialized, auth.checkPasswordSet], loginRoute.loginPage);
     route(GET, "/set-password", [auth.checkAppInitialized, auth.checkPasswordNotSet], loginRoute.setPasswordPage);
 
@@ -91,6 +84,7 @@ function register(app: express.Application) {
         skipSuccessfulRequests: true // successful auth to rate-limited ETAPI routes isn't counted. However, successful auth to /login is still counted!
     });
 
+    route(GET, "/bootstrap", [ auth.checkAuth ], indexRoute.bootstrap);
     route(PST, "/login", [loginRateLimiter], loginRoute.login);
     route(PST, "/logout", [csrfMiddleware, auth.checkAuth], loginRoute.logout);
     route(PST, "/set-password", [auth.checkAppInitialized, auth.checkPasswordNotSet], loginRoute.setPassword);
@@ -156,6 +150,7 @@ function register(app: express.Application) {
     apiRoute(PUT, "/api/branches/:branchId/expanded-subtree/:expanded", branchesApiRoute.setExpandedForSubtree);
     apiRoute(DEL, "/api/branches/:branchId", branchesApiRoute.deleteBranch);
     apiRoute(PUT, "/api/branches/:branchId/set-prefix", branchesApiRoute.setPrefix);
+    apiRoute(PUT, "/api/branches/set-prefix-batch", branchesApiRoute.setPrefixBatch);
 
     apiRoute(GET, "/api/notes/:noteId/attachments", attachmentsApiRoute.getAttachments);
     apiRoute(PST, "/api/notes/:noteId/attachments", attachmentsApiRoute.saveAttachment);
@@ -298,6 +293,11 @@ function register(app: express.Application) {
     asyncApiRoute(PST, "/api/special-notes/save-sql-console", specialNotesRoute.saveSqlConsole);
     apiRoute(PST, "/api/special-notes/search-note", specialNotesRoute.createSearchNote);
     apiRoute(PST, "/api/special-notes/save-search-note", specialNotesRoute.saveSearchNote);
+    apiRoute(PST, "/api/special-notes/llm-chat", specialNotesRoute.createLlmChat);
+    apiRoute(GET, "/api/special-notes/most-recent-llm-chat", specialNotesRoute.getMostRecentLlmChat);
+    apiRoute(GET, "/api/special-notes/get-or-create-llm-chat", specialNotesRoute.getOrCreateLlmChat);
+    apiRoute(GET, "/api/special-notes/recent-llm-chats", specialNotesRoute.getRecentLlmChats);
+    apiRoute(PST, "/api/special-notes/save-llm-chat", specialNotesRoute.saveLlmChat);
     apiRoute(PST, "/api/special-notes/launchers/:noteId/reset", specialNotesRoute.resetLauncher);
     apiRoute(PST, "/api/special-notes/launchers/:parentNoteId/:launcherType", specialNotesRoute.createLauncher);
     apiRoute(PUT, "/api/special-notes/api-script-launcher", specialNotesRoute.createOrUpdateScriptLauncherFromApi);
@@ -330,6 +330,10 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/script/bundle/:noteId", scriptRoute.getBundle);
     apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
 
+    // LLM chat endpoints
+    asyncRoute(PST, "/api/llm-chat/stream", [auth.checkApiAuthOrElectron, csrfMiddleware], llmChatRoute.streamChat, null);
+    apiRoute(GET, "/api/llm-chat/models", llmChatRoute.getModels);
+
     // no CSRF since this is called from android app
     route(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
     asyncRoute(PST, "/api/sender/image", [auth.checkEtapiToken, uploadMiddlewareWithErrorHandling], senderRoute.uploadImage, apiResultHandler);
@@ -349,6 +353,7 @@ function register(app: express.Application) {
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
     apiRoute(GET, "/api/other/icon-usage", otherRoute.getIconUsage);
     apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);
+    apiRoute(PST, "/api/other/to-markdown", otherRoute.toMarkdown);
     apiRoute(GET, "/api/recent-changes/:ancestorNoteId", recentChangesApiRoute.getRecentChanges);
     apiRoute(GET, "/api/edited-notes/:date", revisionsApiRoute.getEditedNotesOnDate);
 
@@ -364,27 +369,13 @@ function register(app: express.Application) {
     etapiAttachmentRoutes.register(router);
     etapiAttributeRoutes.register(router);
     etapiBranchRoutes.register(router);
+    // Register revisions routes BEFORE notes routes so /etapi/notes/history is matched before /etapi/notes/:noteId
+    etapiRevisionsRoutes.register(router);
     etapiNoteRoutes.register(router);
     etapiSpecialNoteRoutes.register(router);
     etapiSpecRoute.register(router);
     etapiBackupRoute.register(router);
     etapiMetricsRoute.register(router);
-
-    // LLM Chat API
-    asyncApiRoute(PST, "/api/llm/chat", llmRoute.createSession);
-    asyncApiRoute(GET, "/api/llm/chat", llmRoute.listSessions);
-    asyncApiRoute(GET, "/api/llm/chat/:sessionId", llmRoute.getSession);
-    asyncApiRoute(PATCH, "/api/llm/chat/:sessionId", llmRoute.updateSession);
-    asyncApiRoute(DEL, "/api/llm/chat/:chatNoteId", llmRoute.deleteSession);
-    asyncApiRoute(PST, "/api/llm/chat/:chatNoteId/messages", llmRoute.sendMessage);
-    asyncApiRoute(PST, "/api/llm/chat/:chatNoteId/messages/stream", llmRoute.streamMessage);
-
-
-
-    // LLM provider endpoints - moved under /api/llm/providers hierarchy
-    asyncApiRoute(GET, "/api/llm/providers/ollama/models", ollamaRoute.listModels);
-    asyncApiRoute(GET, "/api/llm/providers/openai/models", openaiRoute.listModels);
-    asyncApiRoute(GET, "/api/llm/providers/anthropic/models", anthropicRoute.listModels);
 
     // OCR API
     asyncApiRoute(PST, "/api/ocr/process-note/:noteId", ocrRoute.processNoteOCR);
@@ -395,9 +386,6 @@ function register(app: express.Application) {
     asyncApiRoute(GET, "/api/ocr/stats", ocrRoute.getOCRStats);
     asyncApiRoute(DEL, "/api/ocr/delete/:blobId", ocrRoute.deleteOCRResults);
     asyncApiRoute(GET, "/api/ocr/notes/:noteId/text", ocrRoute.getNoteOCRText);
-
-    // API Documentation
-    apiDocsRoute(app);
 
     app.use("", router);
 }

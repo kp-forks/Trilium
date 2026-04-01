@@ -5,7 +5,8 @@
 button.btn.btn-primary,
 button.btn.btn-secondary,
 button.btn.btn-sm:not(.select-button),
-button.btn.btn-success {
+button.btn.btn-success,
+button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel, .ck-button-replaceall, .ck-button-replace).ck-button_with-text {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -16,12 +17,17 @@ button.btn.btn-success {
     padding: 4px 16px;
     background: var(--cmd-button-background-color);
     color: var(--cmd-button-text-color);
+
+    &.dropdown-toggle-split {
+        min-width: unset;
+    }
 }
 
 button.btn.btn-primary:hover,
 button.btn.btn-secondary:hover,
 button.btn.btn-sm:not(.select-button):hover,
-button.btn.btn-success:hover {
+button.btn.btn-success:hover,
+button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel, .ck-button-replaceall, .ck-button-replace).ck-button_with-text:not(.ck-disabled):hover {
     background: var(--cmd-button-hover-background-color);
     color: var(--cmd-button-hover-text-color);
 }
@@ -29,7 +35,8 @@ button.btn.btn-success:hover {
 button.btn.btn-primary:active,
 button.btn.btn-secondary:active,
 button.btn.btn-sm:not(.select-button):active,
-button.btn.btn-success:active {
+button.btn.btn-success:active,
+button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel, .ck-button-replaceall, .ck-button-replace).ck-button_with-text:not(.ck-disabled):active {
     opacity: 0.85;
     box-shadow: unset;
     background: var(--cmd-button-background-color) !important;
@@ -40,24 +47,27 @@ button.btn.btn-success:active {
 button.btn.btn-primary:disabled,
 button.btn.btn-secondary:disabled,
 button.btn.btn-sm:not(.select-button):disabled,
-button.btn.btn-success:disabled {
+button.btn.btn-success:disabled,
+button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel, .ck-button-replaceall, .ck-button-replace).ck-button_with-text.ck-disabled {
     opacity: var(--cmd-button-disabled-opacity);
 }
 
 button.btn.btn-primary:focus-visible,
 button.btn.btn-secondary:focus-visible,
 button.btn.btn-sm:not(.select-button):focus-visible,
-button.btn.btn-success:focus-visible {
+button.btn.btn-success:focus-visible,
+button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel, .ck-button-replaceall, .ck-button-replace).ck-button_with-text:not(.ck-disabled):focus-visible,
+.tn-focusable-button:focus-visible {
     outline: 2px solid var(--input-focus-outline-color);
 }
 
 /* Button's icon */
-button.btn.btn-primary span.bx,
-button.btn.btn-secondary span.bx,
-button.btn.btn-sm span.bx,
-button.btn.btn-success span.bx {
+button.btn.btn-primary span.tn-icon,
+button.btn.btn-secondary span.tn-icon,
+button.btn.btn-sm span.tn-icon,
+button.btn.btn-success span.tn-icon {
     color: var(--cmd-button-icon-color);
-    padding-right: 0.35em;
+    padding-inline-end: 0.35em;
     font-size: 1.2em;
 }
 
@@ -66,7 +76,7 @@ button.btn.btn-primary kbd,
 button.btn.btn-secondary kbd,
 button.btn.btn-sm kbd,
 button.btn.btn-success kbd {
-    margin-left: 0.5em;
+    margin-inline-start: 0.5em;
     background: var(--cmd-button-keyboard-shortcut-background);
     color: var(--cmd-button-keyboard-shortcut-color);
     font-size: 0.6em;
@@ -75,11 +85,27 @@ button.btn.btn-success kbd {
 }
 
 /*
+ * Low profile buttons
+ */
+
+button.tn-low-profile {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: inherit;
+}
+
+button.tn-low-profile:hover {
+    background-color: var(--icon-button-hover-background);
+}
+
+/*
  * Icon buttons
  */
 
 :root .icon-action:not(.global-menu-button),
-:root .btn.tn-tool-button,
+:root .tn-tool-button,
 :root .btn-group .tn-tool-button:not(:last-child),
 :root .btn-group .tn-tool-button:last-child {
     width: var(--icon-button-size);
@@ -91,8 +117,13 @@ button.btn.btn-success kbd {
     color: var(--icon-button-color);
 }
 
+:root .btn-group .icon-action:last-child {
+    border-top-left-radius: unset !important;
+    border-bottom-left-radius: unset !important;
+}
+
 .btn-group .tn-tool-button + .tn-tool-button {
-    margin-left: 4px !important;
+    margin-inline-start: 4px !important;
 }
 
 /* The "x" icon button */
@@ -114,6 +145,10 @@ button.btn.btn-success kbd {
     font-size: calc(var(--icon-button-size) * var(--icon-button-icon-ratio));
 }
 
+:root .icon-action.disabled::before {
+    opacity: .5;
+}
+
 :root .icon-action:not(.global-menu-button):hover,
 :root .icon-action:not(.global-menu-button).show,
 :root .tn-tool-button:hover,
@@ -132,7 +167,15 @@ button.btn.btn-success kbd {
     outline: 2px solid var(--input-focus-outline-color);
 }
 
-/* 
+/* Button groups */
+
+/* Active button */
+:root .btn-group button.btn.active {
+    background-color: var(--button-group-active-button-background);
+    color: var(--button-group-active-button-text-color);
+}
+
+/*
  * Input boxes
  */
 
@@ -149,8 +192,11 @@ input[type="password"],
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"],
+:root input.ck.ck-input-text,
+:root input.ck.ck-input-number,
 textarea.form-control,
 textarea,
+:root textarea.ck.ck-textarea,
 .tn-input-field {
     outline: 3px solid transparent;
     outline-offset: 6px;
@@ -167,8 +213,11 @@ input[type="password"]:hover,
 input[type="date"]:hover,
 input[type="time"]:hover,
 input[type="datetime-local"]:hover,
+:root input.ck.ck-input-text:not([readonly="true"]):hover,
+:root input.ck.ck-input-number:not([readonly="true"]):hover,
 textarea.form-control:hover,
 textarea:hover,
+:root textarea.ck.ck-textarea:hover,
 .tn-input-field:hover {
     background: var(--input-hover-background);
     color: var(--input-hover-color);
@@ -181,8 +230,11 @@ input[type="password"]:focus,
 input[type="date"]:focus,
 input[type="time"]:focus,
 input[type="datetime-local"]:focus,
+:root input.ck.ck-input-text:not([readonly="true"]):focus,
+:root input.ck.ck-input-number:not([readonly="true"]):focus,
 textarea.form-control:focus,
 textarea:focus,
+:root textarea.ck.ck-textarea:focus,
 .tn-input-field:focus,
 .tn-input-field:focus-within {
     box-shadow: unset;
@@ -218,7 +270,7 @@ input::selection,
     outline-offset: 6px;
     background: var(--input-background-color);
     border-radius: 6px;
-    padding-right: 8px;
+    padding-inline-end: 8px;
     color: var(--quick-search-color);
     flex-wrap: nowrap;
 }
@@ -321,6 +373,11 @@ label.input-group.tn-number-unit-pair input {
     padding-inline-end: 0;
 }
 
+:root .input-group > pre[aria-hidden="true"] {
+    margin: 0;
+    padding: 0;
+}
+
 /* Combo box-like dropdown buttons */
 
 .select-button.dropdown-toggle::after {
@@ -338,11 +395,18 @@ select.form-control,
 
     outline: 3px solid transparent;
     outline-offset: 6px;
-    padding-right: calc(15px + 1.5rem);
-    background: var(--input-background-color) var(--dropdown-arrow);
+    padding-inline-end: calc(15px + 1.5rem);
+    background: var(--input-background-color) var(--dropdown-arrow);;
     color: var(--input-text-color);
     border: unset;
     border-radius: 0.375rem;
+}
+
+body[dir=rtl] select,
+body[dir=rtl] select.form-select,
+body[dir=rtl] select.form-control,
+body[dir=rtl] .select-button.dropdown-toggle.btn {
+    background-position: left 0.75rem center;
 }
 
 select:hover,
@@ -361,7 +425,8 @@ button.select-button.dropdown-toggle.btn:active {
 select:focus,
 select.form-select:focus,
 select.form-control:focus,
-.select-button.dropdown-toggle.btn:focus {
+.select-button.dropdown-toggle.btn:focus,
+.select-button.focus-outline:focus {
     box-shadow: unset;
     outline: 3px solid var(--input-focus-outline-color);
     outline-offset: 0;
@@ -384,7 +449,7 @@ optgroup {
     line-height: 40px;
 }
 
-/* 
+/*
  * File input
  *
  * <label class="tn-file-input tn-input-field">
@@ -425,7 +490,7 @@ optgroup {
     content: "\eae1";
     width: 2em;
     height: 100%;
-    right: 0;
+    inset-inline-end: 0;
     top: 0;
     font-size: 1.2em;
     font-family: boxicons;
@@ -443,7 +508,7 @@ optgroup {
         --box-label-gap: 0.5em;
 
         position: relative;
-        padding-left: calc(var(--box-size) + var(--box-label-gap)) !important;
+        padding-inline-start: calc(var(--box-size) + var(--box-label-gap)) !important;
         user-select: none;
     }
 
@@ -452,9 +517,10 @@ optgroup {
     label.tn-checkbox > input[type="checkbox"] {
         position: absolute;
         top: 0;
-        left: 0;
+        inset-inline-start: 0;
         width: var(--box-size);
         height: 100%;
+        margin: unset;
         opacity: 0 !important;
     }
 
@@ -465,7 +531,7 @@ optgroup {
         content: "";
         position: absolute;
         top: 50%;
-        left: 0;
+        inset-inline-start: 0;
         translate: 0 -50%;
         width: var(--box-size);
         height: var(--box-size);
@@ -596,8 +662,8 @@ body a.tn-link:visited,
     border-radius: 4px;
     background: var(--background);
     color: var(--link-color);
-    font-weight: normal;
-    text-decoration: underline;
+    font-weight: 500;
+    text-decoration: none;
 
     transition:
         background-color 200ms ease-out,
@@ -612,10 +678,12 @@ body a.tn-link:focus-visible,
 }
 
 body a.tn-link:hover,
-.use-tn-links a:hover {
+.use-tn-links a:hover,
+.use-tn-links a.ck-widget_selected {
     box-shadow: 0 0 0 4px var(--link-hover-background);
     --background: var(--link-hover-background);
     color: var(--link-hover-color);
+    text-decoration: underline;
 
     transition:
         background-color 100ms ease-in,
@@ -745,4 +813,36 @@ input[type="range"] {
         scrollbar-color: unset;
         scrollbar-width: unset;
     }
+}
+
+/*
+ * Centered forms
+ */
+
+.tn-centered-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20vh;
+}
+
+.tn-centered-form .form-group {
+    text-align: center;
+    color: var(--muted-text-color);
+}
+
+.tn-centered-form .form-icon {
+    font-size: 140px;
+    color: var(--main-border-color);
+}
+
+.tn-centered-form .protected-session-password {
+    margin-inline: auto;
+    max-width: 350px;
+    text-align: center;
+}
+
+.tn-centered-form .input-group,
+.tn-centered-form button {
+    margin-top: 12px;
 }

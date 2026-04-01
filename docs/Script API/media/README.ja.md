@@ -34,7 +34,7 @@ Trilium Notes は、大規模な個人知識ベースの構築に焦点を当て
 
 Trilium は、デスクトップアプリケーション（Linux、Windows）またはサーバー上でホストされるウェブアプリケーション（Linux）として提供されます。 Mac OS のデスクトップビルドも利用可能ですが、 [unsupported](https://triliumnext.github.io/Docs/Wiki/faq#mac-os-support) となっています。
 
-* デスクトップで Trilium を使用したい場合は、 [latest release](https://github.com/TriliumNext/Notes/releases/latest) からお使いのプラットフォームのバイナリリリースをダウンロードし、パッケージを解凍して ``trilium`` の実行ファイルを実行してください。
+* デスクトップで Trilium を使用したい場合は、 [latest release](https://github.com/TriliumNext/Trilium/releases/latest) からお使いのプラットフォームのバイナリリリースをダウンロードし、パッケージを解凍して ``trilium`` の実行ファイルを実行してください。
 * サーバーに Trilium をインストールする場合は、[このページ](https://triliumnext.github.io/Docs/Wiki/server-installation)に従ってください。
   * 現在、対応（動作確認）しているブラウザは、最近の Chrome と Firefox のみです。
 

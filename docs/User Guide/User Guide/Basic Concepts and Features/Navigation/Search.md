@@ -13,7 +13,7 @@ Note search enables you to find notes by searching for text in the title, conten
 To search for notes, click on the magnifying glass icon on the toolbar or press the keyboard [shortcut](../Keyboard%20Shortcuts.md).
 
 1.  Set the text to search for in the _Search string_ field.
-    1.  Apart from searching for words ad-literam, there is also the possibility to search for attributes or properties of notes.
+    1.  Apart from searching for words literally, there is also the possibility to search for attributes or properties of notes.
     2.  See the examples below for more information.
 2.  To limit the search to a note and its sub-children, set a note in _Ancestor_.
     1.  This value is also pre-filled if the search is triggered from a [hoisted note](Note%20Hoisting.md) or a [workspace](Workspaces.md).
@@ -66,10 +66,25 @@ The options available are:
 *   `#book #publicationYear = 1954`: Find notes with the "book" label and "publicationYear" set to 1954.
 *   `#genre *=* fan`: Find notes with the "genre" label containing the substring "fan". Additional operators include `*=*` for "contains", `=*` for "starts with", `*=` for "ends with", and `!=` for "is not equal to".
 *   `#book #publicationYear >= 1950 #publicationYear < 1960`: Use numeric operators to find all books published in the 1950s.
-*   `#dateNote >= TODAY-30`: A "smart search" to find notes with the "dateNote" label within the last 30 days. Supported smart values include NOW +- seconds, TODAY +- days, MONTH +- months, YEAR +- years.
+*   `#dateNote >= TODAY-30`: Find notes with the "dateNote" label within the last 30 days. Supported date values include NOW +- seconds, TODAY +- days, MONTH +- months, YEAR +- years.
 *   `~author.title *=* Tolkien`: Find notes related to an author whose title contains "Tolkien".
 *   `#publicationYear %= '19[0-9]{2}'`: Use the '%=' operator to match a regular expression (regex). This feature has been available since Trilium 0.52.
 *   `note.content %= '\\d{2}:\\d{2} (PM|AM)'`: Find notes that mention a time. Backslashes in a regex must be escaped.
+
+### Fuzzy Search
+
+Trilium supports fuzzy search operators that find results with typos or spelling variations:
+
+*   `#title ~= trilim`: Fuzzy exact match - finds notes with titles like "Trilium" even if you typed "trilim" (with typo)
+*   `#content ~* progra`: Fuzzy contains match - finds notes containing words like "program", "programmer", "programming" even with slight misspellings
+*   `note.content ~* develpment`: Will find notes containing "development" despite the typo
+
+**Important notes about fuzzy search:**
+
+*   Fuzzy search requires at least 3 characters in the search term
+*   Maximum edit distance is 2 characters (number of character changes needed)
+*   Diacritics are normalized (e.g., "café" matches "cafe")
+*   Fuzzy matches work best for finding content with minor typos or spelling variations
 
 ### Advanced Use Cases
 
@@ -117,6 +132,31 @@ Some queries can only be expressed with negation:
 
 This query finds all book notes not in the "Tolkien" subtree.
 
+## Progressive Search Strategy
+
+Trilium uses a progressive search strategy that performs exact matching first, then adds fuzzy matching when needed.
+
+### How Progressive Search Works
+
+1.  **Phase 1 - Exact Matching**: When you search, Trilium first looks for exact matches of your search terms. This handles the vast majority of searches (90%+) and returns results almost instantly.
+2.  **Phase 2 - Fuzzy Fallback**: If Phase 1 doesn't find enough high-quality results (fewer than 5 results with good relevance scores), Trilium automatically adds fuzzy matching to find results with typos or spelling variations.
+3.  **Result Ordering**: Exact matches always appear before fuzzy matches, regardless of individual scores. This ensures that when you search for "project", notes containing the exact word "project" will appear before notes containing similar words like "projects" or "projection".
+
+### Progressive Search Behavior
+
+*   **Speed**: Most searches complete using only exact matching
+*   **Ordering**: Exact matches appear before fuzzy matches
+*   **Fallback**: Fuzzy matching activates when exact matches return fewer than 5 results
+*   **Identification**: Results indicate whether they are exact or fuzzy matches
+
+### Search Performance
+
+Search system specifications:
+
+*   Content size limit: 10MB per note (previously 50KB)
+*   Edit distance calculations for fuzzy matching
+*   Infinite scrolling in Quick Search
+
 ## Under the Hood
 
 ### Label and Relation Shortcuts
@@ -142,7 +182,7 @@ However, common label and relation searches have shortcut syntax:
 
 ### Separating Full-Text and Attribute Parts
 
-Search syntax allows combining full-text search with attribute-based search seamlessly. For example, `tolkien #book` contains:
+Search syntax allows combining full-text search with attribute-based search. For example, `tolkien #book` contains:
 
 1.  Full-text tokens - `tolkien`
 2.  Attribute expressions - `#book`
@@ -182,3 +222,20 @@ This finds notes created in May 2019. Numeric operators like `#publicationYear >
 You can open Trilium and automatically trigger a search by including the search [url encoded](https://meyerweb.com/eric/tools/dencoder/) string in the URL:
 
 `http://localhost:8080/#?searchString=abc`
+
+## Search Configuration
+
+### Parameters
+
+| Parameter | Value | Description |
+| --- | --- | --- |
+| MIN\_FUZZY\_TOKEN\_LENGTH | 3 | Minimum characters for fuzzy matching |
+| MAX\_EDIT\_DISTANCE | 2 | Maximum character changes allowed |
+| RESULT\_SUFFICIENCY\_THRESHOLD | 5 | Minimum exact results before fuzzy fallback |
+| MAX\_CONTENT\_SIZE | 10MB | Maximum note content size for search processing |
+
+### Limits
+
+*   Searched note content is limited to 10MB per note to prevent performance issues
+*   Notes exceeding this limit will still be included in title and attribute searches
+*   Fuzzy matching requires tokens of at least 3 characters

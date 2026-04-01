@@ -1,12 +1,12 @@
-import treeService from "../services/tree.js";
-import froca from "../services/froca.js";
-import contextMenu, { type MenuCommandItem, type MenuItem } from "./context_menu.js";
-import dialogService from "../services/dialog.js";
-import server from "../services/server.js";
-import { t } from "../services/i18n.js";
+import type { ContextMenuCommandData,FilteredCommandNames } from "../components/app_context.js";
 import type { SelectMenuItemEventListener } from "../components/events.js";
+import dialogService from "../services/dialog.js";
+import froca from "../services/froca.js";
+import { t } from "../services/i18n.js";
+import server from "../services/server.js";
+import treeService from "../services/tree.js";
 import type NoteTreeWidget from "../widgets/note_tree.js";
-import type { FilteredCommandNames, ContextMenuCommandData } from "../components/app_context.js";
+import contextMenu, { type MenuCommandItem, type MenuItem } from "./context_menu.js";
 
 type LauncherCommandNames = FilteredCommandNames<ContextMenuCommandData>;
 
@@ -32,8 +32,8 @@ export default class LauncherContextMenu implements SelectMenuItemEventListener<
         const note = this.node.data.noteId ? await froca.getNote(this.node.data.noteId) : null;
         const parentNoteId = this.node.getParent().data.noteId;
 
-        const isVisibleRoot = note?.noteId === "_lbVisibleLaunchers";
-        const isAvailableRoot = note?.noteId === "_lbAvailableLaunchers";
+        const isVisibleRoot = note?.noteId === "_lbVisibleLaunchers" || note?.noteId === "_lbMobileVisibleLaunchers";
+        const isAvailableRoot = note?.noteId === "_lbAvailableLaunchers" || note?.noteId === "_lbMobileAvailableLaunchers";
         const isVisibleItem = parentNoteId === "_lbVisibleLaunchers" || parentNoteId === "_lbMobileVisibleLaunchers";
         const isAvailableItem = parentNoteId === "_lbAvailableLaunchers" || parentNoteId === "_lbMobileAvailableLaunchers";
         const isItem = isVisibleItem || isAvailableItem;
@@ -45,16 +45,16 @@ export default class LauncherContextMenu implements SelectMenuItemEventListener<
             isVisibleRoot || isAvailableRoot ? { title: t("launcher_context_menu.add-script-launcher"), command: "addScriptLauncher", uiIcon: "bx bx-code-curly" } : null,
             isVisibleRoot || isAvailableRoot ? { title: t("launcher_context_menu.add-custom-widget"), command: "addWidgetLauncher", uiIcon: "bx bx-customize" } : null,
             isVisibleRoot || isAvailableRoot ? { title: t("launcher_context_menu.add-spacer"), command: "addSpacerLauncher", uiIcon: "bx bx-dots-horizontal" } : null,
-            isVisibleRoot || isAvailableRoot ? { title: "----" } : null,
+            isVisibleRoot || isAvailableRoot ? { kind: "separator" } : null,
 
             isAvailableItem ? { title: t("launcher_context_menu.move-to-visible-launchers"), command: "moveLauncherToVisible", uiIcon: "bx bx-show", enabled: true } : null,
             isVisibleItem ? { title: t("launcher_context_menu.move-to-available-launchers"), command: "moveLauncherToAvailable", uiIcon: "bx bx-hide", enabled: true } : null,
-            isVisibleItem || isAvailableItem ? { title: "----" } : null,
+            isVisibleItem || isAvailableItem ? { kind: "separator" } : null,
 
             { title: `${t("launcher_context_menu.duplicate-launcher")}`, command: "duplicateSubtree", uiIcon: "bx bx-outline", enabled: isItem },
             { title: `${t("launcher_context_menu.delete")}`, command: "deleteNotes", uiIcon: "bx bx-trash destructive-action-icon", enabled: canBeDeleted },
 
-            { title: "----" },
+            { kind: "separator" },
 
             { title: t("launcher_context_menu.reset"), command: "resetLauncher", uiIcon: "bx bx-reset destructive-action-icon", enabled: canBeReset }
         ];

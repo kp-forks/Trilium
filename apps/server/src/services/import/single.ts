@@ -1,20 +1,18 @@
-"use strict";
-
-import type BNote from "../../becca/entities/bnote.js";
-import type TaskContext from "../task_context.js";
-
-import noteService from "../../services/notes.js";
-import imageService from "../../services/image.js";
-import protectedSessionService from "../protected_session.js";
-import markdownService from "./markdown.js";
-import mimeService from "./mime.js";
-import { getNoteTitle, processStringOrBuffer } from "../../services/utils.js";
-import importUtils from "./utils.js";
-import htmlSanitizer from "../html_sanitizer.js";
-import type { File } from "./common.js";
 import type { NoteType } from "@triliumnext/commons";
 
-function importSingleFile(taskContext: TaskContext, file: File, parentNote: BNote) {
+import type BNote from "../../becca/entities/bnote.js";
+import imageService from "../../services/image.js";
+import noteService from "../../services/notes.js";
+import { getNoteTitle, processStringOrBuffer } from "../../services/utils.js";
+import htmlSanitizer from "../html_sanitizer.js";
+import protectedSessionService from "../protected_session.js";
+import type TaskContext from "../task_context.js";
+import type { File } from "./common.js";
+import markdownService from "./markdown.js";
+import mimeService from "./mime.js";
+import importUtils from "./utils.js";
+
+function importSingleFile(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const mime = mimeService.getMime(file.originalname) || file.mimetype;
 
     if (taskContext?.data?.textImportedAsText) {
@@ -42,7 +40,7 @@ function importSingleFile(taskContext: TaskContext, file: File, parentNote: BNot
     return importFile(taskContext, file, parentNote);
 }
 
-function importImage(file: File, parentNote: BNote, taskContext: TaskContext) {
+function importImage(file: File, parentNote: BNote, taskContext: TaskContext<"importNotes">) {
     if (typeof file.buffer === "string") {
         throw new Error("Invalid file content for image.");
     }
@@ -53,16 +51,17 @@ function importImage(file: File, parentNote: BNote, taskContext: TaskContext) {
     return note;
 }
 
-function importFile(taskContext: TaskContext, file: File, parentNote: BNote) {
+function importFile(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const originalName = file.originalname;
 
+    const mime = mimeService.getMime(originalName) || file.mimetype;
     const { note } = noteService.createNewNote({
         parentNoteId: parentNote.noteId,
-        title: originalName,
+        title: getNoteTitle(originalName, mime === "application/pdf", { mime }),
         content: file.buffer,
         isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable(),
         type: "file",
-        mime: mimeService.getMime(originalName) || file.mimetype
+        mime
     });
 
     note.addLabel("originalFileName", originalName);
@@ -72,7 +71,7 @@ function importFile(taskContext: TaskContext, file: File, parentNote: BNote) {
     return note;
 }
 
-function importCodeNote(taskContext: TaskContext, file: File, parentNote: BNote) {
+function importCodeNote(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const title = getNoteTitle(file.originalname, !!taskContext.data?.replaceUnderscoresWithSpaces);
     const content = processStringOrBuffer(file.buffer);
     const detectedMime = mimeService.getMime(file.originalname) || file.mimetype;
@@ -88,7 +87,7 @@ function importCodeNote(taskContext: TaskContext, file: File, parentNote: BNote)
         title,
         content,
         type,
-        mime: mime,
+        mime,
         isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable()
     });
 
@@ -97,7 +96,7 @@ function importCodeNote(taskContext: TaskContext, file: File, parentNote: BNote)
     return note;
 }
 
-function importCustomType(taskContext: TaskContext, file: File, parentNote: BNote, type: NoteType, mime: string) {
+function importCustomType(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote, type: NoteType, mime: string) {
     const title = getNoteTitle(file.originalname, !!taskContext.data?.replaceUnderscoresWithSpaces);
     const content = processStringOrBuffer(file.buffer);
 
@@ -106,7 +105,7 @@ function importCustomType(taskContext: TaskContext, file: File, parentNote: BNot
         title,
         content,
         type,
-        mime: mime,
+        mime,
         isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable()
     });
 
@@ -115,7 +114,7 @@ function importCustomType(taskContext: TaskContext, file: File, parentNote: BNot
     return note;
 }
 
-function importPlainText(taskContext: TaskContext, file: File, parentNote: BNote) {
+function importPlainText(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const title = getNoteTitle(file.originalname, !!taskContext.data?.replaceUnderscoresWithSpaces);
     const plainTextContent = processStringOrBuffer(file.buffer);
     const htmlContent = convertTextToHtml(plainTextContent);
@@ -150,7 +149,7 @@ function convertTextToHtml(text: string) {
     return text;
 }
 
-function importMarkdown(taskContext: TaskContext, file: File, parentNote: BNote) {
+function importMarkdown(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const title = getNoteTitle(file.originalname, !!taskContext.data?.replaceUnderscoresWithSpaces);
 
     const markdownContent = processStringOrBuffer(file.buffer);
@@ -174,7 +173,7 @@ function importMarkdown(taskContext: TaskContext, file: File, parentNote: BNote)
     return note;
 }
 
-function importHtml(taskContext: TaskContext, file: File, parentNote: BNote) {
+function importHtml(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     let content = processStringOrBuffer(file.buffer);
 
     // Try to get title from HTML first, fall back to filename
@@ -202,7 +201,7 @@ function importHtml(taskContext: TaskContext, file: File, parentNote: BNote) {
     return note;
 }
 
-function importAttachment(taskContext: TaskContext, file: File, parentNote: BNote) {
+function importAttachment(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const mime = mimeService.getMime(file.originalname) || file.mimetype;
 
     if (mime.startsWith("image/") && typeof file.buffer !== "string") {
@@ -214,7 +213,7 @@ function importAttachment(taskContext: TaskContext, file: File, parentNote: BNot
             title: file.originalname,
             content: file.buffer,
             role: "file",
-            mime: mime
+            mime
         });
 
         taskContext.increaseProgressCount();

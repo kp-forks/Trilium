@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import utils from "../services/utils.js";
 import optionService from "../services/options.js";
 import myScryptService from "../services/encryption/my_scrypt.js";
@@ -11,9 +12,10 @@ import totp from '../services/totp.js';
 import recoveryCodeService from '../services/encryption/recovery_codes.js';
 import openID from '../services/open_id.js';
 import openIDEncryption from '../services/encryption/open_id_encryption.js';
+import { getCurrentLocale } from "../services/i18n.js";
 
 function loginPage(req: Request, res: Response) {
-    // Login page is triggered twice. Once here, and another time if the password is failed.
+    // Login page is triggered twice. Once here, and another time (see sendLoginError) if the password is failed.
     res.render('login', {
         wrongPassword: false,
         wrongTotp: false,
@@ -24,6 +26,7 @@ function loginPage(req: Request, res: Response) {
         assetPath: assetPath,
         assetPathFragment: assetUrlFragment,
         appPath: appPath,
+        currentLocale: getCurrentLocale()
     });
 }
 
@@ -31,7 +34,8 @@ function setPasswordPage(req: Request, res: Response) {
     res.render("set_password", {
         error: false,
         assetPath,
-        appPath
+        appPath,
+        currentLocale: getCurrentLocale()
     });
 }
 
@@ -56,7 +60,8 @@ function setPassword(req: Request, res: Response) {
         res.render("set_password", {
             error,
             assetPath,
-            appPath
+            appPath,
+            currentLocale: getCurrentLocale()
         });
         return;
     }
@@ -156,7 +161,11 @@ function verifyPassword(submittedPassword: string) {
 
     const guess_hashed = myScryptService.getVerificationHash(submittedPassword);
 
-    return guess_hashed.equals(hashed_password);
+    // Use constant-time comparison to prevent timing attacks
+    if (hashed_password.length !== guess_hashed.length) {
+        return false;
+    }
+    return crypto.timingSafeEqual(guess_hashed, hashed_password);
 }
 
 function sendLoginError(req: Request, res: Response, errorType: 'password' | 'totp' = 'password') {
@@ -175,6 +184,7 @@ function sendLoginError(req: Request, res: Response, errorType: 'password' | 'to
         assetPath: assetPath,
         assetPathFragment: assetUrlFragment,
         appPath: appPath,
+        currentLocale: getCurrentLocale()
     });
 }
 

@@ -10,18 +10,27 @@ export default defineConfig(() => ({
     globals: true,
     setupFiles: ["./spec/setup.ts"],
     environment: "node",
+    env: {
+      NODE_ENV: "development",
+      TRILIUM_DATA_DIR: "./spec/db",
+      TRILIUM_INTEGRATION_TEST: "memory"
+    },
     include: ['{src,spec}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [
       "spec/build-checks/**",
     ],
+    hookTimeout: 20_000,
+    testTimeout: 40_000,
     reporters: [
-      "verbose"
+      "verbose",
+      ["html", { outputFile: "./test-output/vitest/html/index.html" }]
     ],
     coverage: {
       reportsDirectory: './test-output/vitest/coverage',
       provider: 'v8' as const,
       reporter: [ "text", "html" ]
     },
-    pool: "threads"
+    pool: "forks",
+    maxWorkers: 6
   },
 }));

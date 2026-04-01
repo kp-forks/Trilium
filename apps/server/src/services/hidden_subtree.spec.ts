@@ -1,21 +1,23 @@
-import { describe, it, expect } from "vitest";
+import { deferred, LOCALES } from "@triliumnext/commons";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import becca from "../becca/becca.js";
+import becca_loader from "../becca/becca_loader.js";
+import branches from "./branches.js";
 import cls from "./cls.js";
 import hiddenSubtreeService from "./hidden_subtree.js";
-import sql_init from "./sql_init.js";
-import branches from "./branches.js";
-import becca from "../becca/becca.js";
-import { LOCALES } from "@triliumnext/commons";
 import { changeLanguage } from "./i18n.js";
-import { deferred } from "./utils.js";
+import notes from "./notes.js";
+import sql_init from "./sql_init.js";
 
 describe("Hidden Subtree", () => {
-    describe("Launcher movement persistence", () => {
-        beforeAll(async () => {
-            sql_init.initializeDb();
-            await sql_init.dbReady;
-            cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
-        });
+    beforeAll(async () => {
+        sql_init.initializeDb();
+        await sql_init.dbReady;
+        cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
+    });
 
+    describe("Launcher movement persistence", () => {
         it("should persist launcher movement between visible and available after integrity check", () => {
             // Move backend log to visible launchers.
             const backendLogBranch = becca.getBranchFromChildAndParent("_lbBackendLog", "_lbAvailableLaunchers");
@@ -83,6 +85,53 @@ describe("Hidden Subtree", () => {
             expect(updatedJumpToNote?.title).not.toBe("Renamed");
         });
 
+        it("enforces renames of templates", () => {
+            const boardTemplate = becca.getNote("_template_board");
+            expect(boardTemplate).toBeDefined();
+            boardTemplate!.title = "My renamed board";
+
+            cls.init(() => {
+                boardTemplate!.save();
+                hiddenSubtreeService.checkHiddenSubtree(true);
+            });
+
+            const updatedBoardTemplate = becca.getNote("_template_board");
+            expect(updatedBoardTemplate).toBeDefined();
+            expect(updatedBoardTemplate?.title).not.toBe("My renamed board");
+        });
+
+        it("enforces webviewSrc of templates", () => {
+            const apiRefNote = becca.getNote("_help_9qPsTWBorUhQ");
+            expect(apiRefNote).toBeDefined();
+
+            cls.init(() => {
+                apiRefNote!.setAttribute("label", "webViewSrc", "foo");
+                apiRefNote!.save();
+                hiddenSubtreeService.checkHiddenSubtree(true);
+            });
+
+            const updatedApiRefNote = becca.getNote("_help_9qPsTWBorUhQ");
+            expect(updatedApiRefNote).toBeDefined();
+            expect(updatedApiRefNote?.getLabelValue("webViewSrc")).not.toBe("foo");
+        });
+
+        it("maintains launchers hidden, if they were shown by default but moved by the user", () => {
+            const launcher = becca.getNote("_lbCalendar");
+            const branch = launcher?.getParentBranches()[0];
+            expect(branch).toBeDefined();
+            expect(branch!.parentNoteId).toBe("_lbVisibleLaunchers");
+            expect(launcher).toBeDefined();
+
+            cls.init(() => {
+                branches.moveBranchToNote(branch!, "_lbAvailableLaunchers");
+                hiddenSubtreeService.checkHiddenSubtree();
+            });
+
+            const newBranches = launcher?.getParentBranches().filter(b => !b.isDeleted);
+            expect(newBranches).toHaveLength(1);
+            expect(newBranches![0].parentNoteId).toBe("_lbAvailableLaunchers");
+        });
+
         it("can restore names in all languages", async () => {
             const done = deferred<void>();
             cls.wrap(async () => {
@@ -100,6 +149,59 @@ describe("Hidden Subtree", () => {
                 done.resolve();
             })();
             await done;
+        });
+    });
+
+    describe("Hidden subtree", () => {
+        it("cleans up exclude from note map at the root", async () => {
+            const hiddenSubtree = becca.getNoteOrThrow("_hidden");
+            cls.init(() => hiddenSubtree.addLabel("excludeFromNoteMap"));
+            expect(hiddenSubtree.hasLabel("excludeFromNoteMap")).toBeTruthy();
+            cls.init(() => hiddenSubtreeService.checkHiddenSubtree());
+            expect(hiddenSubtree.hasLabel("excludeFromNoteMap")).toBeFalsy();
+        });
+
+        it("cleans up attribute change in templates", () => {
+            const template = becca.getNoteOrThrow("_template_table");
+            cls.init(() => {
+                template.setLabel("subtreeHidden", "foo");
+                hiddenSubtreeService.checkHiddenSubtree();
+            });
+            expect(template.getLabelValue("subtreeHidden")).toBe("false");
+        });
+
+        it("cleans up item to be deleted", async () => {
+            const noteId = "_lbLlmChat";
+            let llmNote = becca.getNote(noteId);
+
+            cls.init(() => {
+                if (!llmNote) {
+                    llmNote = notes.createNewNote({
+                        parentNoteId: "_lbVisibleLaunchers",
+                        noteId,
+                        title: "LLM chat",
+                        type: "launcher",
+                        content: ""
+                    }).note;
+                }
+
+                hiddenSubtreeService.checkHiddenSubtree();
+                becca_loader.reload("test");
+            });
+
+            llmNote = becca.getNote(noteId);
+            expect(llmNote).toBeFalsy();
+        });
+
+        it("fixes attribute of wrong type", () => {
+            const template = becca.getNoteOrThrow("_template_table");
+            cls.init(() => {
+                template.setAttribute("relation", "template", "root");
+                hiddenSubtreeService.checkHiddenSubtree();
+            });
+            const attr = template.getAttributes().find(a => a.name === "template");
+            expect(attr).toBeDefined();
+            expect(attr?.type).toBe("label");
         });
     });
 });

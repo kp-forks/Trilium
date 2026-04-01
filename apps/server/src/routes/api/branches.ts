@@ -1,24 +1,23 @@
-"use strict";
-
-import sql from "../../services/sql.js";
-import utils from "../../services/utils.js";
-import entityChangesService from "../../services/entity_changes.js";
-import treeService from "../../services/tree.js";
-import eraseService from "../../services/erase.js";
-import becca from "../../becca/becca.js";
-import TaskContext from "../../services/task_context.js";
-import branchService from "../../services/branches.js";
-import log from "../../services/log.js";
-import ValidationError from "../../errors/validation_error.js";
-import eventService from "../../services/events.js";
 import type { Request } from "express";
+
+import becca from "../../becca/becca.js";
+import ValidationError from "../../errors/validation_error.js";
+import branchService from "../../services/branches.js";
+import entityChangesService from "../../services/entity_changes.js";
+import eraseService from "../../services/erase.js";
+import eventService from "../../services/events.js";
+import log from "../../services/log.js";
+import sql from "../../services/sql.js";
+import TaskContext from "../../services/task_context.js";
+import treeService from "../../services/tree.js";
+import utils from "../../services/utils.js";
 
 /**
  * Code in this file deals with moving and cloning branches. The relationship between note and parent note is unique
  * for not deleted branches. There may be multiple deleted note-parent note relationships.
  */
 
-function moveBranchToParent(req: Request) {
+function moveBranchToParent(req: Request<{ branchId: string, parentBranchId: string }>) {
     const { branchId, parentBranchId } = req.params;
 
     const branchToMove = becca.getBranch(branchId);
@@ -31,7 +30,7 @@ function moveBranchToParent(req: Request) {
     return branchService.moveBranchToBranch(branchToMove, targetParentBranch, branchId);
 }
 
-function moveBranchBeforeNote(req: Request) {
+function moveBranchBeforeNote(req: Request<{ branchId: string, beforeBranchId: string }>) {
     const { branchId, beforeBranchId } = req.params;
 
     const branchToMove = becca.getBranchOrThrow(branchId);
@@ -79,7 +78,7 @@ function moveBranchBeforeNote(req: Request) {
     return { success: true };
 }
 
-function moveBranchAfterNote(req: Request) {
+function moveBranchAfterNote(req: Request<{ branchId: string, afterBranchId: string }>) {
     const { branchId, afterBranchId } = req.params;
 
     const branchToMove = becca.getBranchOrThrow(branchId);
@@ -128,7 +127,7 @@ function moveBranchAfterNote(req: Request) {
     return { success: true };
 }
 
-function setExpanded(req: Request) {
+function setExpanded(req: Request<{ branchId: string, expanded: string }>) {
     const { branchId } = req.params;
     const expanded = parseInt(req.params.expanded);
 
@@ -150,7 +149,7 @@ function setExpanded(req: Request) {
     }
 }
 
-function setExpandedForSubtree(req: Request) {
+function setExpandedForSubtree(req: Request<{ branchId: string, expanded: string }>) {
     const { branchId } = req.params;
     const expanded = parseInt(req.params.expanded);
 
@@ -163,6 +162,7 @@ function setExpandedForSubtree(req: Request) {
             SELECT branches.branchId, branches.noteId FROM branches
                 JOIN tree ON branches.parentNoteId = tree.noteId
             WHERE branches.isDeleted = 0
+                AND branches.isExpanded = 1
         )
         SELECT branchId FROM tree`,
         [branchId]
@@ -231,12 +231,12 @@ function setExpandedForSubtree(req: Request) {
  *       - session: []
  *     tags: ["data"]
  */
-function deleteBranch(req: Request) {
+function deleteBranch(req: Request<{ branchId: string }>) {
     const last = req.query.last === "true";
     const eraseNotes = req.query.eraseNotes === "true";
     const branch = becca.getBranchOrThrow(req.params.branchId);
 
-    const taskContext = TaskContext.getInstance(req.query.taskId as string, "deleteNotes");
+    const taskContext = TaskContext.getInstance(req.query.taskId as string, "deleteNotes", null);
 
     const deleteId = utils.randomString(10);
     let noteDeleted;
@@ -251,15 +251,15 @@ function deleteBranch(req: Request) {
     }
 
     if (last) {
-        taskContext.taskSucceeded();
+        taskContext.taskSucceeded(null);
     }
 
     return {
-        noteDeleted: noteDeleted
+        noteDeleted
     };
 }
 
-function setPrefix(req: Request) {
+function setPrefix(req: Request<{ branchId: string }>) {
     const branchId = req.params.branchId;
     //TriliumNextTODO: req.body arrives as string, so req.body.prefix will be undefined – did the code below ever even work?
     const prefix = utils.isEmptyOrWhitespace(req.body.prefix) ? null : req.body.prefix;
@@ -269,6 +269,38 @@ function setPrefix(req: Request) {
     branch.save();
 }
 
+function setPrefixBatch(req: Request) {
+    const { branchIds, prefix } = req.body;
+
+    if (!Array.isArray(branchIds)) {
+        throw new ValidationError("branchIds must be an array");
+    }
+
+    // Validate that prefix is a string or null/undefined to prevent prototype pollution
+    if (prefix !== null && prefix !== undefined && typeof prefix !== 'string') {
+        throw new ValidationError("prefix must be a string or null");
+    }
+
+    const normalizedPrefix = utils.isEmptyOrWhitespace(prefix) ? null : prefix;
+    let updatedCount = 0;
+
+    for (const branchId of branchIds) {
+        const branch = becca.getBranch(branchId);
+        if (branch) {
+            branch.prefix = normalizedPrefix;
+            branch.save();
+            updatedCount++;
+        } else {
+            log.info(`Branch ${branchId} not found, skipping prefix update`);
+        }
+    }
+
+    return {
+        success: true,
+        count: updatedCount
+    };
+}
+
 export default {
     moveBranchToParent,
     moveBranchBeforeNote,
@@ -276,5 +308,6 @@ export default {
     setExpanded,
     setExpandedForSubtree,
     deleteBranch,
-    setPrefix
+    setPrefix,
+    setPrefixBatch
 };

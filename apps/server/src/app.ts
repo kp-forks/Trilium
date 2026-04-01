@@ -1,25 +1,27 @@
-import express from "express";
-import path from "path";
-import favicon from "serve-favicon";
-import cookieParser from "cookie-parser";
-import helmet from "helmet";
-import compression from "compression";
-import config from "./services/config.js";
-import utils, { getResourceDir, isDev } from "./services/utils.js";
-import assets from "./routes/assets.js";
-import routes from "./routes/routes.js";
-import custom from "./routes/custom.js";
-import error_handlers from "./routes/error_handlers.js";
-import { startScheduledCleanup } from "./services/erase.js";
-import sql_init from "./services/sql_init.js";
-import { auth } from "express-openid-connect";
-import openID from "./services/open_id.js";
-import { t } from "i18next";
-import eventService from "./services/events.js";
-import log from "./services/log.js";
 import "./services/handlers.js";
 import "./becca/becca_loader.js";
+
+import compression from "compression";
+import cookieParser from "cookie-parser";
+import ejs from "ejs";
+import express from "express";
+import { auth } from "express-openid-connect";
+import helmet from "helmet";
+import { t } from "i18next";
+import path from "path";
+import favicon from "serve-favicon";
+
+import assets from "./routes/assets.js";
+import custom from "./routes/custom.js";
+import error_handlers from "./routes/error_handlers.js";
+import routes from "./routes/routes.js";
+import config from "./services/config.js";
+import { startScheduledCleanup } from "./services/erase.js";
+import log from "./services/log.js";
+import openID from "./services/open_id.js";
 import { RESOURCE_DIR } from "./services/resource_dir.js";
+import sql_init from "./services/sql_init.js";
+import utils, { getResourceDir, isDev } from "./services/utils.js";
 
 export default async function buildApp() {
     const app = express();
@@ -27,34 +29,13 @@ export default async function buildApp() {
     // Initialize DB
     sql_init.initializeDb();
 
-    // Listen for database initialization event
-    eventService.subscribe(eventService.DB_INITIALIZED, async () => {
-        try {
-            log.info("Database initialized, LLM features available");
-            log.info("LLM features ready");
-        } catch (error) {
-            console.error("Error initializing LLM features:", error);
-        }
-    });
-
-    // Initialize LLM features only if database is already initialized
-    if (sql_init.isDbInitialized()) {
-        try {
-            log.info("LLM features ready");
-        } catch (error) {
-            console.error("Error initializing LLM features:", error);
-        }
-    } else {
-        console.log("Database not initialized yet. LLM features will be initialized after setup.");
-    }
-
     const publicDir = isDev ? path.join(getResourceDir(), "../dist/public") : path.join(getResourceDir(), "public");
     const publicAssetsDir = path.join(publicDir, "assets");
     const assetsDir = RESOURCE_DIR;
 
     // view engine setup
     app.set("views", path.join(assetsDir, "views"));
-    app.engine("ejs", (await import("ejs")).renderFile);
+    app.engine("ejs", (filePath, options, callback) => ejs.renderFile(filePath, options, callback));
     app.set("view engine", "ejs");
 
     app.use((req, res, next) => {
@@ -74,13 +55,31 @@ export default async function buildApp() {
     });
 
     if (!utils.isElectron) {
-        app.use(compression()); // HTTP compression
+        app.use(compression({
+            // Skip compression for SSE endpoints to enable real-time streaming
+            filter: (req, res) => {
+                // Skip compression for LLM chat streaming endpoint
+                if (req.path === "/api/llm-chat/stream") {
+                    return false;
+                }
+                return compression.filter(req, res);
+            }
+        }));
+    }
+
+    let resourcePolicy = config["Network"]["corsResourcePolicy"] as 'same-origin' | 'same-site' | 'cross-origin' | undefined;
+    if(resourcePolicy !== 'same-origin' && resourcePolicy !== 'same-site' && resourcePolicy !== 'cross-origin') {
+        log.error(`Invalid CORS Resource Policy value: '${resourcePolicy}', defaulting to 'same-origin'`);
+        resourcePolicy = 'same-origin';
     }
 
     app.use(
         helmet({
             hidePoweredBy: false, // errors out in electron
             contentSecurityPolicy: false,
+            crossOriginResourcePolicy: {
+                policy: resourcePolicy
+            },
             crossOriginEmbedderPolicy: false
         })
     );
@@ -96,9 +95,10 @@ export default async function buildApp() {
     app.use(`/robots.txt`, express.static(path.join(publicAssetsDir, "robots.txt")));
     app.use(`/icon.png`, express.static(path.join(publicAssetsDir, "icon.png")));
 
-    const sessionParser = (await import("./routes/session_parser.js")).default;
+    const { default: sessionParser, startSessionCleanup } = await import("./routes/session_parser.js");
     app.use(sessionParser);
-    app.use(favicon(path.join(assetsDir, "icon.ico")));
+    startSessionCleanup();
+    app.use(favicon(path.join(assetsDir, isDev ? "icon-dev.ico" : "icon.ico")));
 
     if (openID.isOpenIDEnabled())
         app.use(auth(openID.generateOAuthConfig()));
@@ -108,16 +108,16 @@ export default async function buildApp() {
     custom.register(app);
     error_handlers.register(app);
 
-    // triggers sync timer
-    await import("./services/sync.js");
+    const { startSyncTimer } = await import("./services/sync.js");
+    startSyncTimer();
 
-    // triggers backup timer
     await import("./services/backup.js");
 
-    // trigger consistency checks timer
-    await import("./services/consistency_checks.js");
+    const { startConsistencyChecks } = await import("./services/consistency_checks.js");
+    startConsistencyChecks();
 
-    await import("./services/scheduler.js");
+    const { startScheduler } = await import("./services/scheduler.js");
+    startScheduler();
 
     startScheduledCleanup();
 

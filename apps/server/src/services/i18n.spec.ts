@@ -1,11 +1,12 @@
 import { LOCALES } from "@triliumnext/commons";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { describe, expect, it } from "vitest";
 
 describe("i18n", () => {
     it("translations are valid JSON", () => {
         for (const locale of LOCALES) {
-            if (locale.contentOnly) {
+            if (locale.contentOnly || locale.id === "en_rtl") {
                 continue;
             }
 

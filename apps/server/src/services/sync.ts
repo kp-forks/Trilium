@@ -17,7 +17,7 @@ import ws from "./ws.js";
 import entityChangesService from "./entity_changes.js";
 import entityConstructor from "../becca/entity_constructor.js";
 import becca from "../becca/becca.js";
-import type { EntityChange, EntityChangeRecord, EntityRow } from "./entity_changes_interface.js";
+import type { EntityChange, EntityChangeRecord, EntityRow } from "@triliumnext/commons";
 import type { CookieJar, ExecOpts } from "./request_interface.js";
 import setupService from "./setup.js";
 import consistency_checks from "./consistency_checks.js";
@@ -446,15 +446,17 @@ function getOutstandingPullCount() {
     return outstandingPullCount;
 }
 
-becca_loader.beccaLoaded.then(() => {
-    setInterval(cls.wrap(sync), 60000);
+export function startSyncTimer() {
+    becca_loader.beccaLoaded.then(() => {
+        setInterval(cls.wrap(sync), 60000);
 
-    // kickoff initial sync immediately, but should happen after initial consistency checks
-    setTimeout(cls.wrap(sync), 5000);
+        // kickoff initial sync immediately, but should happen after initial consistency checks
+        setTimeout(cls.wrap(sync), 5000);
 
-    // called just so ws.setLastSyncedPush() is called
-    getLastSyncedPush();
-});
+        // called just so ws.setLastSyncedPush() is called
+        getLastSyncedPush();
+    });
+}
 
 export default {
     sync,

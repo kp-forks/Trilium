@@ -5,6 +5,7 @@
 
 import { defineConfig } from 'vitest/config';
 import svg from 'vite-plugin-svgo';
+import { webdriverio } from "@vitest/browser-webdriverio";
 
 export default defineConfig( {
 	plugins: [
@@ -13,14 +14,16 @@ export default defineConfig( {
 	test: {
 		browser: {
 			enabled: true,
-			name: 'chrome',
-			provider: 'webdriverio',
-			providerOptions: {},
+			provider: webdriverio(),
 			headless: true,
-			ui: false
+			ui: false,
+			instances: [ { browser: 'chrome' } ]
 		},
 		include: [
 			'tests/**/*.[jt]s'
+		],
+		exclude: [
+			'tests/setup.ts'
 		],
 		globals: true,
 		watch: false,

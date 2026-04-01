@@ -1,17 +1,19 @@
-"use strict";
 
-import beccaService from "../../becca/becca_service.js";
-import utils from "../../services/utils.js";
-import sql from "../../services/sql.js";
-import cls from "../../services/cls.js";
-import path from "path";
-import becca from "../../becca/becca.js";
-import blobService from "../../services/blob.js";
-import eraseService from "../../services/erase.js";
+
+import { EditedNotesResponse, RevisionItem, RevisionPojo, RevisionRow } from "@triliumnext/commons";
 import type { Request, Response } from "express";
-import type BRevision from "../../becca/entities/brevision.js";
-import type BNote from "../../becca/entities/bnote.js";
+import path from "path";
+
+import becca from "../../becca/becca.js";
+import beccaService from "../../becca/becca_service.js";
 import type { NotePojo } from "../../becca/becca-interface.js";
+import type BNote from "../../becca/entities/bnote.js";
+import type BRevision from "../../becca/entities/brevision.js";
+import blobService from "../../services/blob.js";
+import cls from "../../services/cls.js";
+import eraseService from "../../services/erase.js";
+import sql from "../../services/sql.js";
+import utils from "../../services/utils.js";
 
 interface NotePath {
     noteId: string;
@@ -25,13 +27,13 @@ interface NotePojoWithNotePath extends NotePojo {
     notePath?: string[] | null;
 }
 
-function getRevisionBlob(req: Request) {
+function getRevisionBlob(req: Request<{ revisionId: string }>) {
     const preview = req.query.preview === "true";
 
     return blobService.getBlobPojo("revisions", req.params.revisionId, { preview });
 }
 
-function getRevisions(req: Request) {
+function getRevisions(req: Request<{ noteId: string }>) {
     return becca.getRevisionsFromQuery(
         `
         SELECT revisions.*,
@@ -41,10 +43,10 @@ function getRevisions(req: Request) {
         WHERE revisions.noteId = ?
         ORDER BY revisions.utcDateCreated DESC`,
         [req.params.noteId]
-    );
+    ) satisfies RevisionItem[];
 }
 
-function getRevision(req: Request) {
+function getRevision(req: Request<{ revisionId: string }>) {
     const revision = becca.getRevisionOrThrow(req.params.revisionId);
 
     if (revision.type === "file") {
@@ -59,7 +61,7 @@ function getRevision(req: Request) {
         }
     }
 
-    return revision;
+    return revision satisfies RevisionPojo;
 }
 
 function getRevisionFilename(revision: BRevision) {
@@ -84,7 +86,7 @@ function getRevisionFilename(revision: BRevision) {
     return filename;
 }
 
-function downloadRevision(req: Request, res: Response) {
+function downloadRevision(req: Request<{ revisionId: string }>, res: Response) {
     const revision = becca.getRevisionOrThrow(req.params.revisionId);
 
     if (!revision.isContentAvailable()) {
@@ -99,13 +101,13 @@ function downloadRevision(req: Request, res: Response) {
     res.send(revision.getContent());
 }
 
-function eraseAllRevisions(req: Request) {
+function eraseAllRevisions(req: Request<{ noteId: string }>) {
     const revisionIdsToErase = sql.getColumn<string>("SELECT revisionId FROM revisions WHERE noteId = ?", [req.params.noteId]);
 
     eraseService.eraseRevisions(revisionIdsToErase);
 }
 
-function eraseRevision(req: Request) {
+function eraseRevision(req: Request<{ revisionId: string }>) {
     eraseService.eraseRevisions([req.params.revisionId]);
 }
 
@@ -116,7 +118,7 @@ function eraseAllExcessRevisions() {
     });
 }
 
-function restoreRevision(req: Request) {
+function restoreRevision(req: Request<{ revisionId: string }>) {
     const revision = becca.getRevision(req.params.revisionId);
 
     if (revision) {
@@ -151,21 +153,21 @@ function restoreRevision(req: Request) {
 }
 
 function getEditedNotesOnDate(req: Request) {
-    const noteIds = sql.getColumn<string>(
-        `
+    const noteIds = sql.getColumn<string>(/*sql*/`\
         SELECT notes.*
         FROM notes
         WHERE noteId IN (
                 SELECT noteId FROM notes
-                WHERE notes.dateCreated LIKE :date
-                    OR notes.dateModified LIKE :date
+                WHERE
+                    (notes.dateCreated LIKE :date OR notes.dateModified LIKE :date)
+                    AND (notes.noteId NOT LIKE  '\\_%' ESCAPE '\\')
             UNION ALL
                 SELECT noteId FROM revisions
-                WHERE revisions.dateLastEdited LIKE :date
+                WHERE revisions.dateCreated LIKE :date
         )
         ORDER BY isDeleted
         LIMIT 50`,
-        { date: `${req.params.date}%` }
+    { date: `${req.params.date}%` }
     );
 
     let notes = becca.getNotes(noteIds, true);
@@ -183,7 +185,7 @@ function getEditedNotesOnDate(req: Request) {
         notePojo.notePath = notePath ? notePath.notePath : null;
 
         return notePojo;
-    });
+    }) satisfies EditedNotesResponse;
 }
 
 function getNotePathData(note: BNote): NotePath | undefined {
@@ -203,7 +205,7 @@ function getNotePathData(note: BNote): NotePath | undefined {
 
         return {
             noteId: note.noteId,
-            branchId: branchId,
+            branchId,
             title: noteTitle,
             notePath: retPath,
             path: retPath.join("/")

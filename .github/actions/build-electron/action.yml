@@ -21,7 +21,7 @@ runs:
   # Certificate setup
   - name: Import Apple certificates
     if: inputs.os == 'macos'
-    uses: apple-actions/import-codesign-certs@v5
+    uses: apple-actions/import-codesign-certs@v6
     with:
       p12-file-base64: ${{ env.APPLE_APP_CERTIFICATE_BASE64 }}
       p12-password: ${{ env.APPLE_APP_CERTIFICATE_PASSWORD }}
@@ -30,7 +30,7 @@ runs:
 
   - name: Install Installer certificate
     if: inputs.os == 'macos'
-    uses: apple-actions/import-codesign-certs@v5
+    uses: apple-actions/import-codesign-certs@v6
     with:
       p12-file-base64: ${{ env.APPLE_INSTALLER_CERTIFICATE_BASE64 }}
       p12-password: ${{ env.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
@@ -74,7 +74,7 @@ runs:
 
   - name: Update build info
     shell: ${{ inputs.shell }}
-    run: npm run chore:update-build-info
+    run: pnpm run chore:update-build-info
 
   # Critical debugging configuration
   - name: Run electron-forge build with enhanced logging
@@ -85,8 +85,10 @@ runs:
       APPLE_ID: ${{ env.APPLE_ID }}
       APPLE_ID_PASSWORD: ${{ env.APPLE_ID_PASSWORD }}
       WINDOWS_SIGN_EXECUTABLE: ${{ env.WINDOWS_SIGN_EXECUTABLE }}
+      WINDOWS_SIGN_ERROR_LOG: ${{ env.WINDOWS_SIGN_ERROR_LOG }}
       TRILIUM_ARTIFACT_NAME_HINT: TriliumNotes-${{ github.ref_name }}-${{ inputs.os }}-${{ inputs.arch }}
-    run: pnpm nx --project=desktop electron-forge:make -- --arch=${{ inputs.arch }} --platform=${{ inputs.forge_platform }}
+      TARGET_ARCH: ${{ inputs.arch }}
+    run: pnpm run --filter desktop electron-forge:make --arch=${{ inputs.arch }} --platform=${{ inputs.forge_platform }}
 
   # Add DMG signing step
   - name: Sign DMG
@@ -161,4 +163,26 @@ runs:
       if [ -n "$zip_file" ]; then
         echo "Found ZIP: $zip_file"
         echo "Note: ZIP files are not code signed, but their contents should be"
+      fi
+
+  - name: Sign the RPM
+    if: inputs.os == 'linux'
+    shell: ${{ inputs.shell }}
+    run: |
+      echo -n "$GPG_SIGNING_KEY" | base64 --decode | gpg --import
+
+      # Import the key into RPM for verification
+      gpg --export -a > pubkey
+      rpm --import pubkey
+      rm pubkey
+
+      # Sign the RPM
+      rpm_file=$(find ./apps/desktop/upload -name "*.rpm" -print -quit)
+      rpmsign --define "_gpg_name Trilium Notes Signing Key <triliumnotes@outlook.com>" --addsign "$rpm_file"
+      rpm -Kv "$rpm_file"
+
+      # Validate code signing
+      if ! rpm -K "$rpm_file" | grep -q "digests signatures OK"; then
+        echo .rpm file not signed
+        exit 1
       fi

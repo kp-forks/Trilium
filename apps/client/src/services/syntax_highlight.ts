@@ -1,10 +1,11 @@
-import { ensureMimeTypes, highlight, highlightAuto, loadTheme, Themes, type AutoHighlightResult, type HighlightResult, type Theme } from "@triliumnext/highlightjs";
+import { MimeType } from "@triliumnext/commons";
+import { type AutoHighlightResult, ensureMimeTypes, highlight, highlightAuto, type HighlightResult, loadTheme, type Theme,Themes } from "@triliumnext/highlightjs";
+
+import { copyText, copyTextWithToast } from "./clipboard_ext.js";
+import { t } from "./i18n.js";
 import mime_types from "./mime_types.js";
 import options from "./options.js";
-import { t } from "./i18n.js";
-import { copyText, copyTextWithToast } from "./clipboard_ext.js";
 import { isShare } from "./utils.js";
-import { MimeType } from "@triliumnext/commons";
 
 let highlightingLoaded = false;
 
@@ -24,7 +25,9 @@ export async function formatCodeBlocks($container: JQuery<HTMLElement>) {
             continue;
         }
 
-        applyCopyToClipboardButton($(codeBlock));
+        if (glob.device !== "print") {
+            applyCopyToClipboardButton($(codeBlock));
+        }
 
         if (syntaxHighlightingEnabled) {
             applySingleBlockSyntaxHighlight($(codeBlock), normalizedMimeType);
@@ -36,7 +39,9 @@ export function applyCopyToClipboardButton($codeBlock: JQuery<HTMLElement>) {
     const $copyButton = $("<button>")
         .addClass("bx component icon-action tn-tool-button bx-copy copy-button")
         .attr("title", t("code_block.copy_title"))
-        .on("click", () => {
+        .on("click", (e) => {
+            e.stopPropagation();
+
             if (!isShare) {
                 copyTextWithToast($codeBlock.text());
             } else {
@@ -59,7 +64,11 @@ export async function applySingleBlockSyntaxHighlight($codeBlock: JQuery<HTMLEle
         highlightedText = highlightAuto(text);
     } else if (normalizedMimeType) {
         await ensureMimeTypesForHighlighting(normalizedMimeType);
-        highlightedText = highlight(text, { language: normalizedMimeType });
+        try {
+            highlightedText = highlight(text, { language: normalizedMimeType });
+        } catch (e) {
+            console.warn("Unable to apply syntax highlight.", e);
+        }
     }
 
     if (highlightedText) {
@@ -68,13 +77,15 @@ export async function applySingleBlockSyntaxHighlight($codeBlock: JQuery<HTMLEle
 }
 
 export async function ensureMimeTypesForHighlighting(mimeTypeHint?: string) {
-    if (highlightingLoaded) {
+    if (!mimeTypeHint && highlightingLoaded) {
         return;
     }
 
     // Load theme.
-    const currentThemeName = String(options.get("codeBlockTheme"));
-    loadHighlightingTheme(currentThemeName);
+    if (!highlightingLoaded) {
+        const currentThemeName = String(options.get("codeBlockTheme"));
+        await loadHighlightingTheme(currentThemeName);
+    }
 
     // Load mime types.
     let mimeTypes: MimeType[];
@@ -86,7 +97,7 @@ export async function ensureMimeTypesForHighlighting(mimeTypeHint?: string) {
                 enabled: true,
                 mime: mimeTypeHint.replace("-", "/")
             }
-        ]
+        ];
     } else {
         mimeTypes = mime_types.getMimeTypes();
     }
@@ -96,17 +107,16 @@ export async function ensureMimeTypesForHighlighting(mimeTypeHint?: string) {
     highlightingLoaded = true;
 }
 
-export function loadHighlightingTheme(themeName: string) {
+export async function loadHighlightingTheme(themeName: string) {
     const themePrefix = "default:";
     let theme: Theme | null = null;
-    if (themeName.includes(themePrefix)) {
+    if (glob.device === "print") {
+        theme = Themes.vs;
+    } else if (themeName.includes(themePrefix)) {
         theme = Themes[themeName.substring(themePrefix.length)];
     }
-    if (!theme) {
-        theme = Themes.default;
-    }
 
-    loadTheme(theme);
+    await loadTheme(theme ?? Themes.default);
 }
 
 /**
@@ -117,9 +127,9 @@ export function isSyntaxHighlightEnabled() {
     if (!isShare) {
         const theme = options.get("codeBlockTheme");
         return !!theme && theme !== "none";
-    } else {
-        return true;
     }
+    return true;
+
 }
 
 /**

@@ -26,11 +26,11 @@ function getVersion(packageJsonPath: string) {
 function main() {
     const version = getVersion(join(__dirname, "..", "package.json"));
 
-    for (const appName of ["server", "client", "desktop"]) {
+    for (const appName of ["server", "client", "desktop", "edit-docs"]) {
         patchPackageJson(join(__dirname, "..", "apps", appName, "package.json"), version);
     }
 
-    for (const packageName of ["commons"]) {
+    for (const packageName of ["commons", "pdfjs-viewer"]) {
         patchPackageJson(join(__dirname, "..", "packages", packageName, "package.json"), version);
     }
 }

@@ -1,5 +1,5 @@
 # Using Docker
-Official docker images are published on docker hub for **AMD64**, **ARMv7** and **ARM64/v8**: [https://hub.docker.com/r/triliumnext/notes/](https://hub.docker.com/r/triliumnext/notes/)
+Official docker images are published on docker hub for **AMD64**, **ARMv7** and **ARM64/v8**: [https://hub.docker.com/r/triliumnext/trilium/](https://hub.docker.com/r/triliumnext/trilium/)
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ If you need help installing Docker, reference the [Docker Installation Docs](htt
 ### Grab the latest docker-compose.yml:
 
 ```
-wget https://raw.githubusercontent.com/TriliumNext/Notes/master/docker-compose.yml
+wget https://raw.githubusercontent.com/TriliumNext/Trilium/master/docker-compose.yml
 ```
 
 Optionally, edit the `docker-compose.yml` file to configure the container settings prior to starting it. Unless configured otherwise, the data directory will be `~/trilium-data` and the container will be accessible at port 8080.
@@ -34,10 +34,10 @@ docker compose up -d
 
 ### Pulling the Docker Image
 
-To pull the image, use the following command, replacing `[VERSION]` with the desired version or tag, such as `v0.91.6` or just `latest`. (See published tag names at [https://hub.docker.com/r/triliumnext/notes/tags](https://hub.docker.com/r/triliumnext/notes/tags).):
+To pull the image, use the following command, replacing `[VERSION]` with the desired version or tag, such as `v0.91.6` or just `latest`. (See published tag names at [https://hub.docker.com/r/triliumnext/trilium/tags](https://hub.docker.com/r/triliumnext/trilium/tags).):
 
 ```
-docker pull triliumnext/notes:v0.91.6
+docker pull triliumnext/trilium:v0.91.6
 ```
 
 **Warning:** Avoid using the "latest" tag, as it may automatically upgrade your instance to a new minor version, potentially disrupting sync setups or causing other issues.
@@ -53,7 +53,7 @@ Trilium requires a directory on the host system to store its data. This director
 Run the container to make it accessible only from the localhost. This setup is suitable for testing or when using a proxy server like Nginx or Apache.
 
 ```
-sudo docker run -t -i -p 127.0.0.1:8080:8080 -v ~/trilium-data:/home/node/trilium-data triliumnext/notes:[VERSION]
+sudo docker run -t -i -p 127.0.0.1:8080:8080 -v ~/trilium-data:/home/node/trilium-data triliumnext/trilium:[VERSION]
 ```
 
 1.  Verify the container is running using `docker ps`.
@@ -70,13 +70,13 @@ docker network create -d macvlan -o parent=eth0 --subnet 192.168.2.0/24 --gatewa
 Then, run the container with the network settings:
 
 ```
-docker run --net=mynet -d -p 127.0.0.1:8080:8080 -v ~/trilium-data:/home/node/trilium-data triliumnext/notes:-latest
+docker run --net=mynet -d -p 127.0.0.1:8080:8080 -v ~/trilium-data:/home/node/trilium-data triliumnext/trilium:-latest
 ```
 
 To set a different user ID (UID) and group ID (GID) for the saved data, use the `USER_UID` and `USER_GID` environment variables:
 
 ```
-docker run --net=mynet -d -p 127.0.0.1:8080:8080 -e "USER_UID=1001" -e "USER_GID=1001" -v ~/trilium-data:/home/node/trilium-data triliumnext/notes:-latest
+docker run --net=mynet -d -p 127.0.0.1:8080:8080 -e "USER_UID=1001" -e "USER_GID=1001" -v ~/trilium-data:/home/node/trilium-data triliumnext/trilium:-latest
 ```
 
 Find the local IP address using `docker inspect [container_name]` and access the service from devices on the local network.
@@ -91,7 +91,7 @@ docker inspect [container_name]
 To allow access from any IP address, run the container as follows:
 
 ```
-docker run -d -p 0.0.0.0:8080:8080 -v ~/trilium-data:/home/node/trilium-data triliumnext/notes:[VERSION]
+docker run -d -p 0.0.0.0:8080:8080 -v ~/trilium-data:/home/node/trilium-data triliumnext/trilium:[VERSION]
 ```
 
 Stop the container with `docker stop <CONTAINER ID>`, where the container ID is obtained from `docker ps`.
@@ -101,15 +101,15 @@ Stop the container with `docker stop <CONTAINER ID>`, where the container ID is 
 For a custom data directory, use:
 
 ```
--v ~/YourOwnDirectory:/home/node/trilium-data triliumnext/notes:[VERSION]
+-v ~/YourOwnDirectory:/home/node/trilium-data triliumnext/trilium:[VERSION]
 ```
 
-If you want to run your instance in a non-default way, please use the volume switch as follows: `-v ~/YourOwnDirectory:/home/node/trilium-data triliumnext/notes:<VERSION>`. It is important to be aware of how Docker works for volumes, with the first path being your own and the second the one to virtually bind to. [https://docs.docker.com/storage/volumes/](https://docs.docker.com/storage/volumes/) The path before the colon is the host directory, and the path after the colon is the container's path. More details can be found in the [Docker Volumes Documentation](https://docs.docker.com/storage/volumes/).
+If you want to run your instance in a non-default way, please use the volume switch as follows: `-v ~/YourOwnDirectory:/home/node/trilium-data triliumnext/trilium:<VERSION>`. It is important to be aware of how Docker works for volumes, with the first path being your own and the second the one to virtually bind to. [https://docs.docker.com/storage/volumes/](https://docs.docker.com/storage/volumes/) The path before the colon is the host directory, and the path after the colon is the container's path. More details can be found in the [Docker Volumes Documentation](https://docs.docker.com/storage/volumes/).
 
 ## Reverse Proxy
 
 1.  [Nginx](../2.%20Reverse%20proxy/Nginx.md)
-2.  [Apache](../2.%20Reverse%20proxy/Apache.md)
+2.  [Apache](../2.%20Reverse%20proxy/Apache%20using%20Docker.md)
 
 ### Note on --user Directive
 
@@ -132,10 +132,10 @@ Below are some commands to pull the rootless images:
 
 ```
 # For Debian-based image
-docker pull triliumnext/notes:rootless
+docker pull triliumnext/trilium:rootless
 
 # For Alpine-based image
-docker pull triliumnext/notes:rootless-alpine
+docker pull triliumnext/trilium:rootless-alpine
 ```
 
 ### Why Rootless?
@@ -171,13 +171,13 @@ TRILIUM_DATA_DIR=/path/to/your/data TRILIUM_UID=$(id -u) TRILIUM_GID=$(id -g) do
 
 ```
 # Build the image
-docker build -t triliumnext/notes:rootless -f apps/server/Dockerfile.rootless .
+docker build -t triliumnext/trilium:rootless -f apps/server/Dockerfile.rootless .
 
 # Run with default UID/GID (1000:1000)
-docker run -d --name trilium -p 8080:8080 -v ~/trilium-data:/home/trilium/trilium-data triliumnext/notes:rootless
+docker run -d --name trilium -p 8080:8080 -v ~/trilium-data:/home/trilium/trilium-data triliumnext/trilium:rootless
 
 # Run with custom UID/GID
-docker run -d --name trilium -p 8080:8080 --user $(id -u):$(id -g) -v ~/trilium-data:/home/trilium/trilium-data triliumnext/notes:rootless
+docker run -d --name trilium -p 8080:8080 --user $(id -u):$(id -g) -v ~/trilium-data:/home/trilium/trilium-data triliumnext/trilium:rootless
 
 ```
 
@@ -186,6 +186,8 @@ docker run -d --name trilium -p 8080:8080 --user $(id -u):$(id -g) -v ~/trilium-
 *   `TRILIUM_UID`: UID to use for the container process (passed to Docker's `--user` flag)
 *   `TRILIUM_GID`: GID to use for the container process (passed to Docker's `--user` flag)
 *   `TRILIUM_DATA_DIR`: Path to the data directory inside the container (default: `/home/node/trilium-data`)
+
+For a complete list of configuration environment variables (network settings, authentication, sync, etc.), see <a class="reference-link" href="../../../Advanced%20Usage/Configuration%20(config.ini%20or%20e.md">Configuration (config.ini or environment variables)</a>.
 
 ### Volume Permissions
 
@@ -224,11 +226,11 @@ If you would prefer, you can also customize the UID/GID at build time:
 ```
 # For Debian-based image with custom UID/GID
 docker build --build-arg USER=myuser --build-arg UID=1001 --build-arg GID=1001 \
-  -t triliumnext/notes:rootless-custom -f apps/server/Dockerfile.rootless .
+  -t triliumnext/trilium:rootless-custom -f apps/server/Dockerfile.rootless .
 
 # For Alpine-based image with custom UID/GID
 docker build --build-arg USER=myuser --build-arg UID=1001 --build-arg GID=1001 \
-  -t triliumnext/notes:alpine-rootless-custom -f apps/server/Dockerfile.alpine.rootless .
+  -t triliumnext/trilium:alpine-rootless-custom -f apps/server/Dockerfile.alpine.rootless .
 
 ```
 

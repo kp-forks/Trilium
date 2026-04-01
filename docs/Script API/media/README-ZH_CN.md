@@ -15,7 +15,7 @@ Trilium Notes 是一个层次化的笔记应用程序，专注于建立大型个
 欢迎加入我们的官方讨论和社区。我们专注于Trilium的开发，乐于听取您对功能、建议或问题的意见！
 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org)（用于同步讨论）
-- [Github Discussions](https://github.com/TriliumNext/Notes/discussions)（用于异步讨论）
+- [Github Discussions](https://github.com/TriliumNext/Trilium/discussions)（用于异步讨论）
 - [Wiki](https://triliumnext.github.io/Docs/)（用于常见操作问题和用户指南）
 
 上面链接的两个房间是镜像的，所以您可以在任意平台上使用XMPP或者Matrix来和我们交流。
@@ -55,7 +55,7 @@ Trilium Notes 是一个层次化的笔记应用程序，专注于建立大型个
 
 Trilium 可以用作桌面应用程序（Linux 和 Windows）或服务器（Linux）上托管的 Web 应用程序。虽然有 macOS 版本的桌面应用程序，但它[不受支持](https://triliumnext.github.io/Docs/Wiki/faq#mac-os-support)。
 
-* 如果要在桌面上使用 Trilium，请从[最新版本](https://github.com/TriliumNext/Notes/releases/latest)下载适用于您平台的二进制版本，解压缩该软件包并运行`trilium`可执行文件。
+* 如果要在桌面上使用 Trilium，请从[最新版本](https://github.com/TriliumNext/Trilium/releases/latest)下载适用于您平台的二进制版本，解压缩该软件包并运行`trilium`可执行文件。
 * 如果要在服务器上安装 Trilium，请参考[此页面](https://triliumnext.github.io/Docs/Wiki/server-installation)。
   * 当前仅支持（测试过）最近发布的 Chrome 和 Firefox 浏览器。
 
