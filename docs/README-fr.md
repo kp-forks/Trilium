@@ -107,11 +107,10 @@ Notre documentation est disponible sous plusieurs formats :
   fort avec granularité par note
 * Diagrammes d'esquisse, basés sur [Excalidraw](https://excalidraw.com/) (type
   de note "canvas"))
-* [Cartes de
-  relations](https://docs.triliumnotes.org/user-guide/note-types/relation-map)
-  et [cartes de
-  notes/liens](https://docs.triliumnotes.org/user-guide/note-types/note-map)
-  pour visualiser les notes et leurs liens
+* [Relation
+  maps](https://docs.triliumnotes.org/user-guide/note-types/relation-map) et
+  [note/link maps](https://docs.triliumnotes.org/user-guide/note-types/note-map)
+  pour visualiser les notes et leurs relations
 * Cartes mentales, basées sur [Mind Elixir] (https://docs.mind-elixir.com/)
 * [Cartes
   géographiques](https://docs.triliumnotes.org/user-guide/collections/geomap)
