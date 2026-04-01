@@ -11,6 +11,7 @@ import markdownImport from "../../import/markdown.js";
 import noteService from "../../notes.js";
 import SearchContext from "../../search/search_context.js";
 import searchService from "../../search/services/search.js";
+import { defineTools } from "./tool_registry.js";
 
 /**
  * Convert note content to a format suitable for LLM consumption.
@@ -39,203 +40,193 @@ function setNoteContentFromLlm(note: { type: string; title: string; setContent: 
     }
 }
 
-/**
- * Search for notes in the knowledge base.
- */
-export const searchNotes = tool({
-    description: [
-        "Search for notes in the user's knowledge base using Trilium search syntax.",
-        "For complex queries (boolean logic, relations, regex, ordering), load the 'search_syntax' skill first via load_skill.",
-        "Common patterns:",
-        "- Full-text: 'rings tolkien' (notes containing both words)",
-        "- By label: '#book', '#status = done', '#year >= 2000'",
-        "- By type: 'note.type = code'",
-        "- By relation: '~author', '~author.title *= Tolkien'",
-        "- Combined: 'tolkien #book' (full-text + label filter)",
-        "- Negation: '#!archived' (notes WITHOUT label)"
-    ].join(" "),
-    inputSchema: z.object({
-        query: z.string().describe("Search query in Trilium search syntax"),
-        fastSearch: z.boolean().optional().describe("If true, skip content search (only titles and attributes). Faster for large databases."),
-        includeArchivedNotes: z.boolean().optional().describe("If true, include archived notes in results."),
-        ancestorNoteId: z.string().optional().describe("Limit search to a subtree rooted at this note ID."),
-        limit: z.number().optional().describe("Maximum number of results to return. Defaults to 10.")
-    }),
-    execute: async ({ query, fastSearch, includeArchivedNotes, ancestorNoteId, limit = 10 }) => {
-        const searchContext = new SearchContext({
-            fastSearch,
-            includeArchivedNotes,
-            ancestorNoteId
-        });
-        const results = searchService.findResultsWithQuery(query, searchContext);
+export const noteTools = defineTools({
+    search_notes: {
+        description: [
+            "Search for notes in the user's knowledge base using Trilium search syntax.",
+            "For complex queries (boolean logic, relations, regex, ordering), load the 'search_syntax' skill first via load_skill.",
+            "Common patterns:",
+            "- Full-text: 'rings tolkien' (notes containing both words)",
+            "- By label: '#book', '#status = done', '#year >= 2000'",
+            "- By type: 'note.type = code'",
+            "- By relation: '~author', '~author.title *= Tolkien'",
+            "- Combined: 'tolkien #book' (full-text + label filter)",
+            "- Negation: '#!archived' (notes WITHOUT label)"
+        ].join(" "),
+        inputSchema: z.object({
+            query: z.string().describe("Search query in Trilium search syntax"),
+            fastSearch: z.boolean().optional().describe("If true, skip content search (only titles and attributes). Faster for large databases."),
+            includeArchivedNotes: z.boolean().optional().describe("If true, include archived notes in results."),
+            ancestorNoteId: z.string().optional().describe("Limit search to a subtree rooted at this note ID."),
+            limit: z.number().optional().describe("Maximum number of results to return. Defaults to 10.")
+        }),
+        execute: async ({ query, fastSearch, includeArchivedNotes, ancestorNoteId, limit = 10 }) => {
+            const searchContext = new SearchContext({
+                fastSearch,
+                includeArchivedNotes,
+                ancestorNoteId
+            });
+            const results = searchService.findResultsWithQuery(query, searchContext);
 
-        return results.slice(0, limit).map(sr => {
-            const note = becca.notes[sr.noteId];
-            if (!note) return null;
+            return results.slice(0, limit).map(sr => {
+                const note = becca.notes[sr.noteId];
+                if (!note) return null;
+                return {
+                    noteId: note.noteId,
+                    title: note.getTitleOrProtected(),
+                    type: note.type
+                };
+            }).filter(Boolean);
+        }
+    },
+
+    read_note: {
+        description: "Read the full content of a note by its ID. Use search_notes first to find relevant note IDs. Text notes are returned as Markdown.",
+        inputSchema: z.object({
+            noteId: z.string().describe("The ID of the note to read")
+        }),
+        execute: async ({ noteId }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+            if (!note.isContentAvailable()) {
+                return { error: "Note is protected" };
+            }
+
             return {
                 noteId: note.noteId,
                 title: note.getTitleOrProtected(),
-                type: note.type
+                type: note.type,
+                content: getNoteContentForLlm(note)
             };
-        }).filter(Boolean);
-    }
-});
-
-/**
- * Read the content of a specific note.
- */
-export const readNote = tool({
-    description: "Read the full content of a note by its ID. Use search_notes first to find relevant note IDs. Text notes are returned as Markdown.",
-    inputSchema: z.object({
-        noteId: z.string().describe("The ID of the note to read")
-    }),
-    execute: async ({ noteId }) => {
-        const note = becca.getNote(noteId);
-        if (!note) {
-            return { error: "Note not found" };
         }
-        if (!note.isContentAvailable()) {
-            return { error: "Note is protected" };
-        }
+    },
 
-        return {
-            noteId: note.noteId,
-            title: note.getTitleOrProtected(),
-            type: note.type,
-            content: getNoteContentForLlm(note)
-        };
-    }
-});
+    update_note_content: {
+        description: "Replace the entire content of a note. Use this to completely rewrite a note's content. For text notes, provide Markdown content.",
+        inputSchema: z.object({
+            noteId: z.string().describe("The ID of the note to update"),
+            content: z.string().describe("The new content for the note (Markdown for text notes, plain text for code notes)")
+        }),
+        mutates: true,
+        execute: async ({ noteId, content }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+            if (!note.isContentAvailable()) {
+                return { error: "Note is protected and cannot be modified" };
+            }
+            if (!note.hasStringContent()) {
+                return { error: `Cannot update content for note type: ${note.type}` };
+            }
 
-/**
- * Update the content of a note.
- */
-export const updateNoteContent = tool({
-    description: "Replace the entire content of a note. Use this to completely rewrite a note's content. For text notes, provide Markdown content.",
-    inputSchema: z.object({
-        noteId: z.string().describe("The ID of the note to update"),
-        content: z.string().describe("The new content for the note (Markdown for text notes, plain text for code notes)")
-    }),
-    execute: async ({ noteId, content }) => {
-        const note = becca.getNote(noteId);
-        if (!note) {
-            return { error: "Note not found" };
-        }
-        if (!note.isContentAvailable()) {
-            return { error: "Note is protected and cannot be modified" };
-        }
-        if (!note.hasStringContent()) {
-            return { error: `Cannot update content for note type: ${note.type}` };
-        }
-
-        note.saveRevision();
-        setNoteContentFromLlm(note, content);
-        return {
-            success: true,
-            noteId: note.noteId,
-            title: note.getTitleOrProtected()
-        };
-    }
-});
-
-/**
- * Append content to a note.
- */
-export const appendToNote = tool({
-    description: "Append content to the end of an existing note. For text notes, provide Markdown content.",
-    inputSchema: z.object({
-        noteId: z.string().describe("The ID of the note to append to"),
-        content: z.string().describe("The content to append (Markdown for text notes, plain text for code notes)")
-    }),
-    execute: async ({ noteId, content }) => {
-        const note = becca.getNote(noteId);
-        if (!note) {
-            return { error: "Note not found" };
-        }
-        if (!note.isContentAvailable()) {
-            return { error: "Note is protected and cannot be modified" };
-        }
-        if (!note.hasStringContent()) {
-            return { error: `Cannot update content for note type: ${note.type}` };
-        }
-
-        const existingContent = note.getContent();
-        if (typeof existingContent !== "string") {
-            return { error: "Note has binary content" };
-        }
-
-        let newContent: string;
-        if (note.type === "text") {
-            const htmlToAppend = markdownImport.renderToHtml(content, note.getTitleOrProtected());
-            newContent = existingContent + htmlToAppend;
-        } else {
-            newContent = existingContent + (existingContent.endsWith("\n") ? "" : "\n") + content;
-        }
-
-        note.saveRevision();
-        note.setContent(newContent);
-        return {
-            success: true,
-            noteId: note.noteId,
-            title: note.getTitleOrProtected()
-        };
-    }
-});
-
-/**
- * Create a new note.
- */
-export const createNote = tool({
-    description: [
-        "Create a new note in the user's knowledge base. Returns the created note's ID and title.",
-        "Set type to 'text' for rich text notes (content in Markdown) or 'code' for code notes (must also set mime).",
-        "Common mime values for code notes:",
-        "'application/javascript;env=frontend' (JS frontend),",
-        "'application/javascript;env=backend' (JS backend),",
-        "'text/jsx' (Preact JSX, preferred for frontend widgets),",
-        "'text/css', 'text/html', 'application/json', 'text/x-python', 'text/x-sh'."
-    ].join(" "),
-    inputSchema: z.object({
-        parentNoteId: z.string().describe("The ID of the parent note. Use 'root' for top-level notes."),
-        title: z.string().describe("The title of the new note"),
-        content: z.string().describe("The content of the note (Markdown for text notes, plain text for code notes)"),
-        type: z.enum(["text", "code"]).describe("The type of note to create."),
-        mime: z.string().optional().describe("MIME type, REQUIRED for code notes (e.g. 'application/javascript;env=backend', 'text/jsx'). Ignored for text notes.")
-    }),
-    execute: async ({ parentNoteId, title, content, type, mime }) => {
-        if (type === "code" && !mime) {
-            return { error: "mime is required when creating code notes" };
-        }
-
-        const parentNote = becca.getNote(parentNoteId);
-        if (!parentNote) {
-            return { error: "Parent note not found" };
-        }
-        if (!parentNote.isContentAvailable()) {
-            return { error: "Cannot create note under a protected parent" };
-        }
-
-        const htmlContent = type === "text"
-            ? markdownImport.renderToHtml(content, title)
-            : content;
-
-        try {
-            const { note } = noteService.createNewNote({
-                parentNoteId,
-                title,
-                content: htmlContent,
-                type,
-                ...(mime ? { mime } : {})
-            });
-
+            note.saveRevision();
+            setNoteContentFromLlm(note, content);
             return {
                 success: true,
                 noteId: note.noteId,
-                title: note.getTitleOrProtected(),
-                type: note.type
+                title: note.getTitleOrProtected()
             };
-        } catch (err) {
-            return { error: err instanceof Error ? err.message : "Failed to create note" };
+        }
+    },
+
+    append_to_note: {
+        description: "Append content to the end of an existing note. For text notes, provide Markdown content.",
+        inputSchema: z.object({
+            noteId: z.string().describe("The ID of the note to append to"),
+            content: z.string().describe("The content to append (Markdown for text notes, plain text for code notes)")
+        }),
+        mutates: true,
+        execute: async ({ noteId, content }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+            if (!note.isContentAvailable()) {
+                return { error: "Note is protected and cannot be modified" };
+            }
+            if (!note.hasStringContent()) {
+                return { error: `Cannot update content for note type: ${note.type}` };
+            }
+
+            const existingContent = note.getContent();
+            if (typeof existingContent !== "string") {
+                return { error: "Note has binary content" };
+            }
+
+            let newContent: string;
+            if (note.type === "text") {
+                const htmlToAppend = markdownImport.renderToHtml(content, note.getTitleOrProtected());
+                newContent = existingContent + htmlToAppend;
+            } else {
+                newContent = existingContent + (existingContent.endsWith("\n") ? "" : "\n") + content;
+            }
+
+            note.saveRevision();
+            note.setContent(newContent);
+            return {
+                success: true,
+                noteId: note.noteId,
+                title: note.getTitleOrProtected()
+            };
+        }
+    },
+
+    create_note: {
+        description: [
+            "Create a new note in the user's knowledge base. Returns the created note's ID and title.",
+            "Set type to 'text' for rich text notes (content in Markdown) or 'code' for code notes (must also set mime).",
+            "Common mime values for code notes:",
+            "'application/javascript;env=frontend' (JS frontend),",
+            "'application/javascript;env=backend' (JS backend),",
+            "'text/jsx' (Preact JSX, preferred for frontend widgets),",
+            "'text/css', 'text/html', 'application/json', 'text/x-python', 'text/x-sh'."
+        ].join(" "),
+        inputSchema: z.object({
+            parentNoteId: z.string().describe("The ID of the parent note. Use 'root' for top-level notes."),
+            title: z.string().describe("The title of the new note"),
+            content: z.string().describe("The content of the note (Markdown for text notes, plain text for code notes)"),
+            type: z.enum(["text", "code"]).describe("The type of note to create."),
+            mime: z.string().optional().describe("MIME type, REQUIRED for code notes (e.g. 'application/javascript;env=backend', 'text/jsx'). Ignored for text notes.")
+        }),
+        mutates: true,
+        execute: async ({ parentNoteId, title, content, type, mime }) => {
+            if (type === "code" && !mime) {
+                return { error: "mime is required when creating code notes" };
+            }
+
+            const parentNote = becca.getNote(parentNoteId);
+            if (!parentNote) {
+                return { error: "Parent note not found" };
+            }
+            if (!parentNote.isContentAvailable()) {
+                return { error: "Cannot create note under a protected parent" };
+            }
+
+            const htmlContent = type === "text"
+                ? markdownImport.renderToHtml(content, title)
+                : content;
+
+            try {
+                const { note } = noteService.createNewNote({
+                    parentNoteId,
+                    title,
+                    content: htmlContent,
+                    type,
+                    ...(mime ? { mime } : {})
+                });
+
+                return {
+                    success: true,
+                    noteId: note.noteId,
+                    title: note.getTitleOrProtected(),
+                    type: note.type
+                };
+            } catch (err) {
+                return { error: err instanceof Error ? err.message : "Failed to create note" };
+            }
         }
     }
 });
@@ -268,11 +259,3 @@ export function currentNoteTools(contextNoteId: string) {
         })
     };
 }
-
-export const noteTools = {
-    search_notes: searchNotes,
-    read_note: readNote,
-    update_note_content: updateNoteContent,
-    append_to_note: appendToNote,
-    create_note: createNote
-};

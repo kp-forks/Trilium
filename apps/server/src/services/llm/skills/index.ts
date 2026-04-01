@@ -7,10 +7,10 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
 
-import { tool } from "ai";
 import { z } from "zod";
 
 import resourceDir from "../../resource_dir.js";
+import { defineTools } from "../tools/tool_registry.js";
 
 const SKILLS_DIR = join(resourceDir.RESOURCE_DIR, "llm", "skills");
 
@@ -55,24 +55,19 @@ export function getSkillsSummary(): string {
         .join("\n");
 }
 
-/**
- * The load_skill tool — lets the LLM fetch full instructions on demand.
- */
-export const loadSkill = tool({
-    description: "Load a skill to get specialized instructions. Available skills:\n"
-        + SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n"),
-    inputSchema: z.object({
-        name: z.string().describe("The skill name to load")
-    }),
-    execute: async ({ name }) => {
-        const content = await loadSkillContent(name);
-        if (!content) {
-            return { error: `Unknown skill: '${name}'. Available: ${SKILLS.map((s) => s.name).join(", ")}` };
+export const skillTools = defineTools({
+    load_skill: {
+        description: "Load a skill to get specialized instructions. Available skills:\n"
+            + SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n"),
+        inputSchema: z.object({
+            name: z.string().describe("The skill name to load")
+        }),
+        execute: async ({ name }) => {
+            const content = await loadSkillContent(name);
+            if (!content) {
+                return { error: `Unknown skill: '${name}'. Available: ${SKILLS.map((s) => s.name).join(", ")}` };
+            }
+            return { skill: name, instructions: content };
         }
-        return { skill: name, instructions: content };
     }
 });
-
-export const skillTools = {
-    load_skill: loadSkill
-};

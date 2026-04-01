@@ -9,7 +9,7 @@ import type { LlmMessage } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
 import { getSkillsSummary } from "../skills/index.js";
-import { noteTools, attributeTools, hierarchyTools, skillTools, currentNoteTools } from "../tools/index.js";
+import { allToolRegistries, currentNoteTools } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
@@ -133,10 +133,9 @@ export abstract class BaseProvider implements LlmProvider {
         }
 
         if (config.enableNoteTools) {
-            Object.assign(tools, noteTools);
-            Object.assign(tools, attributeTools);
-            Object.assign(tools, hierarchyTools);
-            Object.assign(tools, skillTools);
+            for (const registry of allToolRegistries) {
+                Object.assign(tools, registry.toToolSet());
+            }
         }
 
         return tools;
