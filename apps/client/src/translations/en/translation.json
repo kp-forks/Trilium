@@ -2322,7 +2322,8 @@
       "delete_attribute": "Delete attribute",
       "get_child_notes": "Get child notes",
       "get_subtree": "Get subtree",
-      "load_skill": "Load skill"
+      "load_skill": "Load skill",
+      "in_parent": "in"
     }
   }
 }

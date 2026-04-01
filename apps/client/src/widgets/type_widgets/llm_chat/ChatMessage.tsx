@@ -31,12 +31,32 @@ interface Props {
     isStreaming?: boolean;
 }
 
-/** Extract a note ID from the tool call input, if present. */
-function getToolCallNoteId(toolCall: ToolCall): string | null {
+interface ToolCallNoteRefs {
+    /** The primary note the tool operates on or created. */
+    noteId: string | null;
+    /** The parent note, shown as "in <parent>" for creation tools. */
+    parentNoteId: string | null;
+}
+
+/** Extract note references from a tool call's input and result. */
+function getToolCallNoteRefs(toolCall: ToolCall): ToolCallNoteRefs {
     const input = toolCall.input;
-    if (!input) return null;
-    const id = (input.noteId ?? input.parentNoteId) as string | undefined;
-    return id || null;
+    const parentNoteId = (input?.parentNoteId as string) || null;
+
+    // For creation tools, the created note ID is in the result.
+    if (parentNoteId && toolCall.result) {
+        try {
+            const result = typeof toolCall.result === "string"
+                ? JSON.parse(toolCall.result)
+                : toolCall.result;
+            if (result?.noteId) {
+                return { noteId: result.noteId, parentNoteId };
+            }
+        } catch { /* ignore parse errors */ }
+    }
+
+    const noteId = (input?.noteId as string) || parentNoteId;
+    return { noteId: noteId || null, parentNoteId: null };
 }
 
 function toolCallIcon(toolCall: ToolCall): string {
@@ -50,7 +70,7 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
         "llm-chat-tool-call-inline",
         toolCall.isError && "llm-chat-tool-call-error"
     ].filter(Boolean).join(" ");
-    const refNoteId = getToolCallNoteId(toolCall);
+    const { noteId: refNoteId, parentNoteId: refParentId } = getToolCallNoteRefs(toolCall);
 
     return (
         <details className={classes}>
@@ -60,6 +80,12 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
                 {refNoteId && (
                     <span className="llm-chat-tool-call-note-ref">
                         <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />
+                        {refParentId && (
+                            <>
+                                {" "}{t("llm.tools.in_parent")}{" "}
+                                <NewNoteLink notePath={refParentId} showNoteIcon noPreview />
+                            </>
+                        )}
                     </span>
                 )}
                 {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
