@@ -1,3 +1,4 @@
+import { TextRepresentationResponse } from "@triliumnext/commons";
 import type { Request } from "express";
 
 import becca from "../../becca/becca.js";
@@ -301,7 +302,7 @@ async function getNoteOCRText(req: Request<{ noteId: string }>) {
         text: ocrText || '',
         hasOcr: !!ocrText,
         extractedAt
-    };
+    } satisfies TextRepresentationResponse;
 }
 
 export default {

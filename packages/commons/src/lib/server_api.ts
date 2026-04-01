@@ -288,6 +288,14 @@ export interface ToMarkdownResponse {
     markdownContent: string;
 }
 
+export interface TextRepresentationResponse {
+    success: boolean;
+    text: string;
+    hasOcr: boolean;
+    extractedAt: string | null;
+    message?: string;
+}
+
 export interface IconRegistry {
     sources: {
         prefix: string;

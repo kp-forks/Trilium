@@ -1,5 +1,6 @@
 import "./ReadOnlyTextRepresentation.css";
 
+import type { TextRepresentationResponse } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
@@ -7,14 +8,6 @@ import server from "../../services/server";
 import toast from "../../services/toast";
 import { formatDateTime } from "../../services/utils";
 import { TypeWidgetProps } from "./type_widget";
-
-interface TextRepresentationResponse {
-    success: boolean;
-    text: string;
-    hasOcr: boolean;
-    extractedAt: string | null;
-    message?: string;
-}
 
 type State =
     | { kind: "loading" }
