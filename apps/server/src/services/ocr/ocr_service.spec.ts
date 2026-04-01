@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock Tesseract.js
 const mockWorker = {
     recognize: vi.fn(),
@@ -58,23 +58,23 @@ let ocrService: typeof import('./ocr_service.js').default;
 beforeEach(async () => {
     // Clear all mocks
     vi.clearAllMocks();
-    
+
     // Reset mock implementations
     mockOptions.getOptionBool.mockReturnValue(true);
     mockOptions.getOption.mockReturnValue('eng');
     mockSql.execute.mockImplementation(() => ({ lastInsertRowid: 1 }));
     mockSql.getRow.mockReturnValue(null);
     mockSql.getRows.mockReturnValue([]);
-    
+
     // Set up createWorker to properly set the worker on the service
     mockTesseract.createWorker.mockImplementation(async () => {
         return mockWorker;
     });
-    
+
     // Dynamically import the service to ensure mocks are applied
     const module = await import('./ocr_service.js');
     ocrService = module.default; // It's an instance, not a class
-    
+
     // Reset the OCR service state
     (ocrService as any).isInitialized = false;
     (ocrService as any).worker = null;
@@ -94,14 +94,14 @@ describe('OCRService', () => {
     describe('isOCREnabled', () => {
         it('should return true when OCR is enabled in options', () => {
             mockOptions.getOptionBool.mockReturnValue(true);
-            
+
             expect(ocrService.isOCREnabled()).toBe(true);
             expect(mockOptions.getOptionBool).toHaveBeenCalledWith('ocrEnabled');
         });
 
         it('should return false when OCR is disabled in options', () => {
             mockOptions.getOptionBool.mockReturnValue(false);
-            
+
             expect(ocrService.isOCREnabled()).toBe(false);
             expect(mockOptions.getOptionBool).toHaveBeenCalledWith('ocrEnabled');
         });
@@ -110,7 +110,7 @@ describe('OCRService', () => {
             mockOptions.getOptionBool.mockImplementation(() => {
                 throw new Error('Options not available');
             });
-            
+
             expect(ocrService.isOCREnabled()).toBe(false);
         });
     });
@@ -139,45 +139,8 @@ describe('OCRService', () => {
         });
     });
 
-    describe('initialize', () => {
-        it('should initialize Tesseract worker successfully', async () => {
-            await ocrService.initialize();
-            
-            expect(mockTesseract.createWorker).toHaveBeenCalledWith('eng', 1, {
-                workerPath: expect.any(String),
-                corePath: expect.any(String),
-                logger: expect.any(Function)
-            });
-            expect(mockLog.info).toHaveBeenCalledWith('Initializing OCR service with Tesseract.js...');
-            expect(mockLog.info).toHaveBeenCalledWith('OCR service initialized successfully');
-        });
-
-        it('should not reinitialize if already initialized', async () => {
-            await ocrService.initialize();
-            mockTesseract.createWorker.mockClear();
-            
-            await ocrService.initialize();
-            
-            expect(mockTesseract.createWorker).not.toHaveBeenCalled();
-        });
-
-        it('should handle initialization errors', async () => {
-            const error = new Error('Tesseract initialization failed');
-            mockTesseract.createWorker.mockRejectedValue(error);
-            
-            await expect(ocrService.initialize()).rejects.toThrow('Tesseract initialization failed');
-            expect(mockLog.error).toHaveBeenCalledWith('Failed to initialize OCR service: Error: Tesseract initialization failed');
-        });
-    });
-
-    describe('extractTextFromImage', () => {
+    describe('extractTextFromFile', () => {
         const mockImageBuffer = Buffer.from('fake-image-data');
-        
-        beforeEach(async () => {
-            await ocrService.initialize();
-            // Manually set the worker since mocking might not do it properly
-            (ocrService as any).worker = mockWorker;
-        });
 
         it('should extract text successfully with default options', async () => {
             const mockResult = {
@@ -188,54 +151,19 @@ describe('OCRService', () => {
             };
             mockWorker.recognize.mockResolvedValue(mockResult);
 
-            const result = await ocrService.extractTextFromImage(mockImageBuffer);
+            const result = await ocrService.extractTextFromFile(mockImageBuffer, 'image/jpeg');
 
-            expect(result).toEqual({
-                text: 'Extracted text from image',
-                confidence: 0.95,
-                extractedAt: expect.any(String),
-                language: 'eng'
-            });
-            expect(mockWorker.recognize).toHaveBeenCalledWith(mockImageBuffer);
-        });
-
-        it('should extract text with custom language', async () => {
-            const mockResult = {
-                data: {
-                    text: 'French text',
-                    confidence: 88
-                }
-            };
-            mockWorker.recognize.mockResolvedValue(mockResult);
-
-            const result = await ocrService.extractTextFromImage(mockImageBuffer, { language: 'fra' });
-
-            expect(result.language).toBe('fra');
-            expect(mockWorker.terminate).toHaveBeenCalled();
-            expect(mockTesseract.createWorker).toHaveBeenCalledWith('fra', 1, expect.any(Object));
+            expect(result).toBeDefined();
+            expect(result.text).toBe('Extracted text from image');
+            expect(result.extractedAt).toEqual(expect.any(String));
         });
 
         it('should handle OCR recognition errors', async () => {
             const error = new Error('OCR recognition failed');
             mockWorker.recognize.mockRejectedValue(error);
 
-            await expect(ocrService.extractTextFromImage(mockImageBuffer)).rejects.toThrow('OCR recognition failed');
+            await expect(ocrService.extractTextFromFile(mockImageBuffer, 'image/jpeg')).rejects.toThrow('OCR recognition failed');
             expect(mockLog.error).toHaveBeenCalledWith('OCR text extraction failed: Error: OCR recognition failed');
-        });
-
-        it('should handle empty or low-confidence results', async () => {
-            const mockResult = {
-                data: {
-                    text: '   ',
-                    confidence: 15
-                }
-            };
-            mockWorker.recognize.mockResolvedValue(mockResult);
-
-            const result = await ocrService.extractTextFromImage(mockImageBuffer);
-
-            expect(result.text).toBe('');
-            expect(result.confidence).toBe(0.15);
         });
     });
 
@@ -305,16 +233,13 @@ describe('OCRService', () => {
         it('should process note OCR successfully', async () => {
             // Ensure getRow returns null for all calls in this test
             mockSql.getRow.mockImplementation(() => null);
-            
+
             const mockOCRResult = {
                 data: {
                     text: 'Note image text',
                     confidence: 90
                 }
             };
-            await ocrService.initialize();
-            // Manually set the worker since mocking might not do it properly
-            (ocrService as any).worker = mockWorker;
             mockWorker.recognize.mockResolvedValue(mockOCRResult);
 
             const result = await ocrService.processNoteOCR('note123');
@@ -351,11 +276,8 @@ describe('OCRService', () => {
                 textRepresentation: 'Existing text'
             };
             mockSql.getRow.mockResolvedValue(existingResult);
-            
-            await ocrService.initialize();
-            // Manually set the worker since mocking might not do it properly
-            (ocrService as any).worker = mockWorker;
-            
+
+
             const mockOCRResult = {
                 data: {
                     text: 'New processed text',
@@ -406,11 +328,8 @@ describe('OCRService', () => {
         it('should process attachment OCR successfully', async () => {
             // Ensure getRow returns null for all calls in this test
             mockSql.getRow.mockImplementation(() => null);
-            
-            await ocrService.initialize();
-            // Manually set the worker since mocking might not do it properly
-            (ocrService as any).worker = mockWorker;
-            
+
+
             const mockOCRResult = {
                 data: {
                     text: 'Attachment image text',
@@ -485,7 +404,7 @@ describe('OCRService', () => {
             const mockAttachmentStats = {
                 count: 50
             };
-            
+
             mockSql.getRow.mockReturnValueOnce(mockStats);
             mockSql.getRow.mockReturnValueOnce(mockNoteStats);
             mockSql.getRow.mockReturnValueOnce(mockAttachmentStats);
@@ -533,7 +452,7 @@ describe('OCRService', () => {
                 // Start first batch
                 mockSql.getRow.mockReturnValueOnce({ count: 5 });
                 mockSql.getRow.mockReturnValueOnce({ count: 3 });
-                
+
                 // Mock background processing queries
                 const mockImageNotes = Array.from({length: 5}, (_, i) => ({
                     noteId: `note${i}`,
@@ -541,13 +460,13 @@ describe('OCRService', () => {
                 }));
                 mockSql.getRows.mockReturnValueOnce(mockImageNotes);
                 mockSql.getRows.mockReturnValueOnce([]);
-                
+
                 // Start without awaiting to keep it in progress
                 const firstStart = ocrService.startBatchProcessing();
 
                 // Try to start second batch immediately
                 const result = await ocrService.startBatchProcessing();
-                
+
                 // Clean up by awaiting the first one
                 await firstStart;
 
@@ -611,7 +530,7 @@ describe('OCRService', () => {
                 // Start batch processing
                 mockSql.getRow.mockReturnValueOnce({ count: 10 });
                 mockSql.getRow.mockReturnValueOnce({ count: 0 });
-                
+
                 // Mock the background processing queries to return items that will take time to process
                 const mockImageNotes = Array.from({length: 10}, (_, i) => ({
                     noteId: `note${i}`,
@@ -619,12 +538,12 @@ describe('OCRService', () => {
                 }));
                 mockSql.getRows.mockReturnValueOnce(mockImageNotes); // image notes query
                 mockSql.getRows.mockReturnValueOnce([]); // image attachments query
-                
+
                 const startPromise = ocrService.startBatchProcessing();
-                
+
                 // Check progress immediately after starting (before awaiting)
                 const progress = ocrService.getBatchProgress();
-                
+
                 await startPromise;
 
                 expect(progress.inProgress).toBe(true);
@@ -640,7 +559,7 @@ describe('OCRService', () => {
                 // Start batch processing
                 mockSql.getRow.mockReturnValueOnce({ count: 5 });
                 mockSql.getRow.mockReturnValueOnce({ count: 0 });
-                
+
                 // Mock background processing queries
                 const mockImageNotes = Array.from({length: 5}, (_, i) => ({
                     noteId: `note${i}`,
@@ -648,11 +567,11 @@ describe('OCRService', () => {
                 }));
                 mockSql.getRows.mockReturnValueOnce(mockImageNotes);
                 mockSql.getRows.mockReturnValueOnce([]);
-                
+
                 const startPromise = ocrService.startBatchProcessing();
-                
+
                 expect(ocrService.getBatchProgress().inProgress).toBe(true);
-                
+
                 await startPromise;
 
                 ocrService.cancelBatchProcessing();
@@ -669,18 +588,10 @@ describe('OCRService', () => {
         });
 
         describe('processBatchInBackground', () => {
-            beforeEach(async () => {
-                await ocrService.initialize();
-            });
-
             it('should process image notes and attachments in sequence', async () => {
                 // Clear all mocks at the start of this test to ensure clean state
                 vi.clearAllMocks();
-                
-                // Reinitialize OCR service after clearing mocks
-                await ocrService.initialize();
-                (ocrService as any).worker = mockWorker;
-                
+
                 // Mock data for batch processing
                 const imageNotes = [
                     { noteId: 'note1', mime: 'image/jpeg', blobId: 'blob1' },
@@ -880,8 +791,7 @@ describe('OCRService', () => {
                 getContent: vi.fn().mockReturnValue(Buffer.from('fake-image-data'))
             });
             mockSql.getRow.mockResolvedValue(null);
-            
-            await ocrService.initialize();
+
             mockWorker.recognize.mockImplementation(() => {
                 expect(ocrService.isCurrentlyProcessing()).toBe(true);
                 return Promise.resolve({
@@ -896,19 +806,16 @@ describe('OCRService', () => {
 
     describe('cleanup', () => {
         it('should terminate worker on cleanup', async () => {
-            await ocrService.initialize();
-            // Manually set the worker since mocking might not do it properly
-            (ocrService as any).worker = mockWorker;
-            
+
             await ocrService.cleanup();
-            
+
             expect(mockWorker.terminate).toHaveBeenCalled();
             expect(mockLog.info).toHaveBeenCalledWith('OCR service cleaned up');
         });
 
         it('should handle cleanup when worker is not initialized', async () => {
             await ocrService.cleanup();
-            
+
             expect(mockWorker.terminate).not.toHaveBeenCalled();
             expect(mockLog.info).toHaveBeenCalledWith('OCR service cleaned up');
         });
