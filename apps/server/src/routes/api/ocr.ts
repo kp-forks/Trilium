@@ -71,7 +71,7 @@ async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
         if (!noteId) {
             res.status(400).json({
                 success: false,
-                error: 'Note ID is required'
+                message: 'Note ID is required'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -81,7 +81,7 @@ async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
         if (!ocrService.isOCREnabled()) {
             res.status(400).json({
                 success: false,
-                error: 'OCR is not enabled in settings'
+                message: 'OCR is not enabled in settings'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -92,7 +92,7 @@ async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
         if (!note) {
             res.status(404).json({
                 success: false,
-                error: 'Note not found'
+                message: 'Note not found'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -106,7 +106,7 @@ async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
         if (!result) {
             res.status(400).json({
                 success: false,
-                error: 'Note is not an image or has unsupported format'
+                message: 'Note is not an image or has unsupported format'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -122,7 +122,7 @@ async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
         log.error(`Error processing OCR for note: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            message: error instanceof Error ? error.message : String(error)
         });
         (res as any).triliumResponseHandled = true;
     }
@@ -177,7 +177,7 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res:
         if (!attachmentId) {
             res.status(400).json({
                 success: false,
-                error: 'Attachment ID is required'
+                message: 'Attachment ID is required'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -187,7 +187,7 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res:
         if (!ocrService.isOCREnabled()) {
             res.status(400).json({
                 success: false,
-                error: 'OCR is not enabled in settings'
+                message: 'OCR is not enabled in settings'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -198,7 +198,7 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res:
         if (!attachment) {
             res.status(404).json({
                 success: false,
-                error: 'Attachment not found'
+                message: 'Attachment not found'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -212,7 +212,7 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res:
         if (!result) {
             res.status(400).json({
                 success: false,
-                error: 'Attachment is not an image or has unsupported format'
+                message: 'Attachment is not an image or has unsupported format'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -228,7 +228,7 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res:
         log.error(`Error processing OCR for attachment: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            message: error instanceof Error ? error.message : String(error)
         });
         (res as any).triliumResponseHandled = true;
     }
@@ -281,7 +281,7 @@ async function searchOCR(req: Request, res: Response) {
         if (!searchText || typeof searchText !== 'string') {
             res.status(400).json({
                 success: false,
-                error: 'Search query is required'
+                message: 'Search query is required'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -299,7 +299,7 @@ async function searchOCR(req: Request, res: Response) {
         log.error(`Error searching OCR results: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            message: error instanceof Error ? error.message : String(error)
         });
         (res as any).triliumResponseHandled = true;
     }
@@ -347,7 +347,7 @@ async function batchProcessOCR(req: Request, res: Response) {
         log.error(`Error initiating batch OCR processing: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            message: error instanceof Error ? error.message : String(error)
         });
         (res as any).triliumResponseHandled = true;
     }
@@ -391,7 +391,7 @@ async function getBatchProgress(req: Request, res: Response) {
     } catch (error: unknown) {
         log.error(`Error getting batch OCR progress: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
-            error: error instanceof Error ? error.message : String(error)
+            message: error instanceof Error ? error.message : String(error)
         });
         (res as any).triliumResponseHandled = true;
     }
@@ -442,7 +442,7 @@ async function getOCRStats(req: Request, res: Response) {
         log.error(`Error getting OCR stats: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            message: error instanceof Error ? error.message : String(error)
         });
         (res as any).triliumResponseHandled = true;
     }
@@ -488,7 +488,7 @@ async function deleteOCRResults(req: Request<{ blobId: string }>, res: Response)
         if (!blobId) {
             res.status(400).json({
                 success: false,
-                error: 'Blob ID is required'
+                message: 'Blob ID is required'
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -506,7 +506,7 @@ async function deleteOCRResults(req: Request<{ blobId: string }>, res: Response)
         log.error(`Error deleting OCR results: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            message: error instanceof Error ? error.message : String(error)
         });
         (res as any).triliumResponseHandled = true;
     }
@@ -557,7 +557,7 @@ async function getNoteOCRText(req: Request<{ noteId: string }>, res: Response) {
         if (!note) {
             res.status(404).json({ 
                 success: false, 
-                error: 'Note not found' 
+                message: 'Note not found' 
             });
             (res as any).triliumResponseHandled = true;
             return;
@@ -594,7 +594,7 @@ async function getNoteOCRText(req: Request<{ noteId: string }>, res: Response) {
         log.error(`Error getting OCR text for note: ${error instanceof Error ? error.message : String(error)}`);
         res.status(500).json({
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            message: error instanceof Error ? error.message : 'Unknown error'
         });
         (res as any).triliumResponseHandled = true;
     }

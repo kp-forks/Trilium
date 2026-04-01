@@ -1,8 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
 
+import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
-import { t } from "../../services/i18n";
 import { TypeWidgetProps } from "./type_widget";
 
 interface TextRepresentationResponse {
@@ -10,7 +10,7 @@ interface TextRepresentationResponse {
     text: string;
     hasOcr: boolean;
     extractedAt: string | null;
-    error?: string;
+    message?: string;
 }
 
 type State =
@@ -30,7 +30,7 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
             const response = await server.get<TextRepresentationResponse>(`ocr/notes/${note.noteId}/text`);
 
             if (!response.success) {
-                setState({ kind: "error", message: response.error || t("ocr.failed_to_load") });
+                setState({ kind: "error", message: response.message || t("ocr.failed_to_load") });
                 return;
             }
 
@@ -51,16 +51,15 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
     async function processOCR() {
         setProcessing(true);
         try {
-            const response = await server.post<{ success: boolean; error?: string }>(`ocr/process-note/${note.noteId}`);
+            const response = await server.post<{ success: boolean; message?: string }>(`ocr/process-note/${note.noteId}`);
             if (response.success) {
                 toast.showMessage(t("ocr.processing_started"));
                 setTimeout(fetchText, 2000);
             } else {
-                throw new Error(response.error || t("ocr.processing_failed"));
+                toast.showError(response.message || t("ocr.processing_failed"));
             }
-        } catch (error: any) {
-            console.error("Error processing OCR:", error);
-            toast.showError(error.message || t("ocr.processing_failed"));
+        } catch {
+            // Server errors (4xx/5xx) are already shown as toasts by server.ts.
         } finally {
             setProcessing(false);
         }
