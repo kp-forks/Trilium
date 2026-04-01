@@ -28,6 +28,7 @@ export interface UseLlmChatReturn {
     input: string;
     isStreaming: boolean;
     streamingContent: string;
+    streamingBlocks: ContentBlock[];
     streamingThinking: string;
     toolActivity: string | null;
     pendingCitations: LlmCitation[];
@@ -75,6 +76,7 @@ export function useLlmChat(
     const [input, setInput] = useState("");
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingContent, setStreamingContent] = useState("");
+    const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
     const [streamingThinking, setStreamingThinking] = useState("");
     const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
@@ -213,6 +215,7 @@ export function useLlmChat(
         setInput("");
         setIsStreaming(true);
         setStreamingContent("");
+        setStreamingBlocks([]);
         setStreamingThinking("");
 
         let thinkingContent = "";
@@ -262,6 +265,7 @@ export function useLlmChat(
                         .filter((b): b is ContentBlock & { type: "text" } => b.type === "text")
                         .map(b => b.content)
                         .join(""));
+                    setStreamingBlocks([...contentBlocks]);
                     setToolActivity(null);
                 },
                 onThinking: (text) => {
@@ -282,6 +286,7 @@ export function useLlmChat(
                             input: toolInput
                         }
                     });
+                    setStreamingBlocks([...contentBlocks]);
                 },
                 onToolResult: (toolName, result, isError) => {
                     // Find the most recent tool_call block for this tool without a result
@@ -293,6 +298,7 @@ export function useLlmChat(
                             break;
                         }
                     }
+                    setStreamingBlocks([...contentBlocks]);
                 },
                 onCitation: (citation) => {
                     citations.push(citation);
@@ -314,6 +320,7 @@ export function useLlmChat(
                     const finalMessages = [...newMessages, errorMessage];
                     setMessages(finalMessages);
                     setStreamingContent("");
+                    setStreamingBlocks([]);
                     setStreamingThinking("");
                     setIsStreaming(false);
                     setToolActivity(null);
@@ -348,6 +355,7 @@ export function useLlmChat(
                     }
 
                     setStreamingContent("");
+                    setStreamingBlocks([]);
                     setStreamingThinking("");
                     setPendingCitations([]);
                     setIsStreaming(false);
@@ -370,6 +378,7 @@ export function useLlmChat(
         input,
         isStreaming,
         streamingContent,
+        streamingBlocks,
         streamingThinking,
         toolActivity,
         pendingCitations,

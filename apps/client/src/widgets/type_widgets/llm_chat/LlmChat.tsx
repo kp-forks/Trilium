@@ -83,12 +83,12 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         isStreaming
                     />
                 )}
-                {chat.isStreaming && chat.streamingContent && (
+                {chat.isStreaming && chat.streamingBlocks.length > 0 && (
                     <ChatMessage
                         message={{
                             id: "streaming",
                             role: "assistant",
-                            content: chat.streamingContent,
+                            content: chat.streamingBlocks,
                             createdAt: new Date().toISOString(),
                             citations: chat.pendingCitations.length > 0 ? chat.pendingCitations : undefined
                         }}
