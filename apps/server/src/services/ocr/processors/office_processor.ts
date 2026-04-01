@@ -1,8 +1,10 @@
 import * as officeParser from 'officeparser';
-import { FileProcessor } from './file_processor.js';
-import { OCRResult, OCRProcessingOptions } from '../ocr_service.js';
-import { ImageProcessor } from './image_processor.js';
+
 import log from '../../log.js';
+import options from '../../options.js';
+import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
+import { FileProcessor } from './file_processor.js';
+import { ImageProcessor } from './image_processor.js';
 
 /**
  * Office document processor for extracting text and images from DOCX/XLSX/PPTX files
@@ -51,9 +53,9 @@ export class OfficeProcessor extends FileProcessor {
 
             const result: OCRResult = {
                 text: combinedText,
-                confidence: confidence,
+                confidence,
                 extractedAt: new Date().toISOString(),
-                language: language,
+                language,
                 pageCount: 1 // Office documents are treated as single logical document
             };
 
@@ -97,7 +99,6 @@ export class OfficeProcessor extends FileProcessor {
      */
     private getDefaultOCRLanguage(): string {
         try {
-            const options = require('../../options.js').default;
             const ocrLanguage = options.getOption('ocrLanguage');
             if (!ocrLanguage) {
                 throw new Error('OCR language not configured in user settings');

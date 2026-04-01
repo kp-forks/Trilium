@@ -1,8 +1,10 @@
 import sharp from 'sharp';
-import { FileProcessor } from './file_processor.js';
-import { OCRResult, OCRProcessingOptions } from '../ocr_service.js';
-import { ImageProcessor } from './image_processor.js';
+
 import log from '../../log.js';
+import options from '../../options.js';
+import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
+import { FileProcessor } from './file_processor.js';
+import { ImageProcessor } from './image_processor.js';
 
 /**
  * TIFF processor for extracting text from multi-page TIFF files
@@ -45,7 +47,7 @@ export class TIFFProcessor extends FileProcessor {
             for (let page = 0; page < pageCount; page++) {
                 try {
                     log.info(`Processing TIFF page ${page + 1}/${pageCount}...`);
-                    
+
                     // Extract page as PNG buffer
                     const pageBuffer = await sharp(buffer, { page })
                         .png()
@@ -53,10 +55,10 @@ export class TIFFProcessor extends FileProcessor {
 
                     // OCR the page
                     const pageResult = await this.imageProcessor.extractText(pageBuffer, options);
-                    
+
                     if (pageResult.text.trim().length > 0) {
                         if (combinedText.length > 0) {
-                            combinedText += '\n\n--- Page ' + (page + 1) + ' ---\n';
+                            combinedText += `\n\n--- Page ${page + 1} ---\n`;
                         }
                         combinedText += pageResult.text;
                         totalConfidence += pageResult.confidence;
@@ -74,7 +76,7 @@ export class TIFFProcessor extends FileProcessor {
                 confidence: averageConfidence,
                 extractedAt: new Date().toISOString(),
                 language: options.language || this.getDefaultOCRLanguage(),
-                pageCount: pageCount
+                pageCount
             };
 
             log.info(`TIFF text extraction completed. Pages: ${pageCount}, Confidence: ${averageConfidence}%, Text length: ${result.text.length}`);
@@ -99,7 +101,6 @@ export class TIFFProcessor extends FileProcessor {
      */
     private getDefaultOCRLanguage(): string {
         try {
-            const options = require('../../options.js').default;
             const ocrLanguage = options.getOption('ocrLanguage');
             if (!ocrLanguage) {
                 throw new Error('OCR language not configured in user settings');
@@ -119,13 +120,13 @@ export class TIFFProcessor extends FileProcessor {
         if (!language || typeof language !== 'string') {
             return false;
         }
-        
+
         // Split by '+' for multi-language format
         const languages = language.split('+');
-        
+
         // Check each language code (should be 2-7 characters, alphanumeric with underscores)
         const validLanguagePattern = /^[a-zA-Z]{2,3}(_[a-zA-Z]{2,3})?$/;
-        
+
         return languages.every(lang => {
             const trimmed = lang.trim();
             return trimmed.length > 0 && validLanguagePattern.test(trimmed);

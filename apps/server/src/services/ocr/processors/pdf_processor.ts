@@ -1,9 +1,10 @@
 import * as pdfParse from 'pdf-parse';
-import { FileProcessor } from './file_processor.js';
-import { OCRResult, OCRProcessingOptions } from '../ocr_service.js';
-import { ImageProcessor } from './image_processor.js';
+
 import log from '../../log.js';
-import sharp from 'sharp';
+import options from '../../options.js';
+import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
+import { FileProcessor } from './file_processor.js';
+import { ImageProcessor } from './image_processor.js';
 
 /**
  * PDF processor for extracting text from PDF files
@@ -58,7 +59,7 @@ export class PDFProcessor extends FileProcessor {
     private async extractTextFromPDF(buffer: Buffer, options: OCRProcessingOptions): Promise<OCRResult> {
         try {
             const data = await pdfParse(buffer);
-            
+
             return {
                 text: data.text.trim(),
                 confidence: 0.99, // High confidence for direct text extraction
@@ -77,15 +78,15 @@ export class PDFProcessor extends FileProcessor {
             // Convert PDF to images and OCR each page
             // For now, we'll use a simple approach - convert first page to image
             // In a full implementation, we'd convert all pages
-            
+
             // This is a simplified implementation
             // In practice, you might want to use pdf2pic or similar library
             // to convert PDF pages to images for OCR
-            
+
             // For now, we'll return a placeholder result
             // indicating that OCR on PDF is not fully implemented
             log.info('PDF to image conversion not fully implemented, returning placeholder');
-            
+
             return {
                 text: '[PDF OCR not fully implemented - would convert PDF pages to images and OCR each page]',
                 confidence: 0.0,
@@ -112,7 +113,6 @@ export class PDFProcessor extends FileProcessor {
      */
     private getDefaultOCRLanguage(): string {
         try {
-            const options = require('../../options.js').default;
             const ocrLanguage = options.getOption('ocrLanguage');
             if (!ocrLanguage) {
                 throw new Error('OCR language not configured in user settings');
@@ -132,13 +132,13 @@ export class PDFProcessor extends FileProcessor {
         if (!language || typeof language !== 'string') {
             return false;
         }
-        
+
         // Split by '+' for multi-language format
         const languages = language.split('+');
-        
+
         // Check each language code (should be 2-7 characters, alphanumeric with underscores)
         const validLanguagePattern = /^[a-zA-Z]{2,3}(_[a-zA-Z]{2,3})?$/;
-        
+
         return languages.every(lang => {
             const trimmed = lang.trim();
             return trimmed.length > 0 && validLanguagePattern.test(trimmed);

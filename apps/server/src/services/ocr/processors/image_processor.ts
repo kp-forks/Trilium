@@ -1,8 +1,9 @@
 import Tesseract from 'tesseract.js';
-import { FileProcessor } from './file_processor.js';
-import { OCRResult, OCRProcessingOptions } from '../ocr_service.js';
+
 import log from '../../log.js';
 import options from '../../options.js';
+import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
+import { FileProcessor } from './file_processor.js';
 
 /**
  * Image processor for extracting text from image files using Tesseract
@@ -135,7 +136,6 @@ export class ImageProcessor extends FileProcessor {
      */
     private getDefaultOCRLanguage(): string {
         try {
-            const options = require('../../options.js').default;
             const ocrLanguage = options.getOption('ocrLanguage');
             if (!ocrLanguage) {
                 throw new Error('OCR language not configured in user settings');
@@ -161,8 +161,8 @@ export class ImageProcessor extends FileProcessor {
             };
         }
 
-        let filteredWords: string[] = [];
-        let validConfidences: number[] = [];
+        const filteredWords: string[] = [];
+        const validConfidences: number[] = [];
 
         // Tesseract provides word-level data
         if (data.words && Array.isArray(data.words)) {
@@ -182,13 +182,12 @@ export class ImageProcessor extends FileProcessor {
                     filteredText: data.text.trim(),
                     overallConfidence
                 };
-            } else {
-                log.info(`Entire text filtered out due to low confidence ${overallConfidence} (below threshold ${minConfidence})`);
-                return {
-                    filteredText: '',
-                    overallConfidence
-                };
             }
+            log.info(`Entire text filtered out due to low confidence ${overallConfidence} (below threshold ${minConfidence})`);
+            return {
+                filteredText: '',
+                overallConfidence
+            };
         }
 
         // Calculate average confidence of accepted words
