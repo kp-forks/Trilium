@@ -1,48 +1,51 @@
 import { t } from "../../../services/i18n";
-import FormCheckbox from "../../react/FormCheckbox";
-import FormGroup from "../../react/FormGroup";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
+import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function MediaSettings() {
     const [ downloadImagesAutomatically, setDownloadImagesAutomatically ] = useTriliumOptionBool("downloadImagesAutomatically");
     const [ compressImages, setCompressImages ] = useTriliumOptionBool("compressImages");
-    const [ imageMaxWidthHeight, setImageMaxWidthHeight ] = useTriliumOption("imageMaxWidthHeight"); 
+    const [ imageMaxWidthHeight, setImageMaxWidthHeight ] = useTriliumOption("imageMaxWidthHeight");
     const [ imageJpegQuality, setImageJpegQuality ] = useTriliumOption("imageJpegQuality");
 
     return (
         <OptionsSection title={t("images.images_section_title")}>
-            <FormGroup name="download-images-automatically" description={t("images.download_images_description")}>
-                <FormCheckbox                    
-                    label={t("images.download_images_automatically")}
-                    currentValue={downloadImagesAutomatically} onChange={setDownloadImagesAutomatically}
+            <OptionsRow name="download-images-automatically" label={t("images.download_images_automatically")} description={t("images.download_images_description")}>
+                <FormToggle
+                    switchOnName="" switchOffName=""
+                    currentValue={downloadImagesAutomatically}
+                    onChange={setDownloadImagesAutomatically}
                 />
-            </FormGroup>
+            </OptionsRow>
 
-            <hr/>
+            <OptionsRow name="image-compression-enabled" label={t("images.enable_image_compression")} description={t("images.enable_image_compression_description")}>
+                <FormToggle
+                    switchOnName="" switchOffName=""
+                    currentValue={compressImages}
+                    onChange={setCompressImages}
+                />
+            </OptionsRow>
 
-            <FormCheckbox
-                name="image-compression-enabled"
-                label={t("images.enable_image_compression")}
-                currentValue={compressImages} onChange={setCompressImages}
-            />
-
-            <FormGroup name="image-max-width-height" label={t("images.max_image_dimensions")} disabled={!compressImages}>
+            <OptionsRow name="image-max-width-height" label={t("images.max_image_dimensions")} description={t("images.max_image_dimensions_description")}>
                 <FormTextBoxWithUnit
                     type="number" min="1"
+                    disabled={!compressImages}
                     unit={t("images.max_image_dimensions_unit")}
                     currentValue={imageMaxWidthHeight} onChange={setImageMaxWidthHeight}
                 />
-            </FormGroup>
+            </OptionsRow>
 
-            <FormGroup name="image-jpeg-quality" label={t("images.jpeg_quality_description")} disabled={!compressImages}>
-                <FormTextBoxWithUnit                    
+            <OptionsRow name="image-jpeg-quality" label={t("images.jpeg_quality")} description={t("images.jpeg_quality_description")}>
+                <FormTextBoxWithUnit
                     min="10" max="100" type="number"
+                    disabled={!compressImages}
                     unit={t("units.percentage")}
                     currentValue={imageJpegQuality} onChange={setImageJpegQuality}
                 />
-            </FormGroup>
+            </OptionsRow>
         </OptionsSection>
     );
 }
