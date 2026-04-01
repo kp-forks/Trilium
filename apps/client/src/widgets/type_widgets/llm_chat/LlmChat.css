@@ -551,8 +551,9 @@
 
 .llm-chat-tool-call-inline-summary {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem;
     padding: 0.5rem 0.75rem;
     cursor: pointer;
     list-style: none;
@@ -564,18 +565,20 @@
     display: none;
 }
 
-.llm-chat-tool-call-inline-summary::before {
-    content: "▶";
-    font-size: 0.7em;
+.llm-chat-tool-call-inline-summary::after {
+    content: "▾";
+    margin-left: auto;
+    font-size: 1em;
     transition: transform 0.2s ease;
 }
 
-.llm-chat-tool-call-inline[open] .llm-chat-tool-call-inline-summary::before {
-    transform: rotate(90deg);
+.llm-chat-tool-call-inline[open] .llm-chat-tool-call-inline-summary::after {
+    transform: rotate(180deg);
 }
 
-.llm-chat-tool-call-inline-summary .bx {
+.llm-chat-tool-call-inline-summary > .bx {
     font-size: 1rem;
+    margin-right: 0.15rem;
 }
 
 .llm-chat-tool-call-note-ref {
