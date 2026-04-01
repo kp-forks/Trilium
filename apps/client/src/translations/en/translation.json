@@ -2306,6 +2306,7 @@
     "api_key": "API Key",
     "api_key_placeholder": "Enter your API key",
     "cancel": "Cancel",
+    "mcp_title": "MCP (Model Context Protocol)",
     "mcp_enabled": "Enable MCP server",
     "mcp_enabled_description": "Expose a Model Context Protocol (MCP) endpoint so that AI coding assistants (e.g. Claude Code, GitHub Copilot) can read and modify your notes. The endpoint is only accessible from localhost."
   }

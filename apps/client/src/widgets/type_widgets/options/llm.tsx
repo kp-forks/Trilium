@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from "preact/hooks";
 import { t } from "../../../services/i18n";
 import Button from "../../react/Button";
 import FormCheckbox from "../../react/FormCheckbox";
-import FormGroup from "../../react/FormGroup";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
 import ActionButton from "../../react/ActionButton";
@@ -35,34 +34,34 @@ export default function LlmSettings() {
     }, [providers, setProviders]);
 
     return (
-        <OptionsSection title={t("llm.settings_title")}>
-            <p>{t("llm.settings_description")}</p>
+        <>
+            <OptionsSection title={t("llm.settings_title")}>
+                <p className="form-text">{t("llm.settings_description")}</p>
 
-            <Button
-                size="small"
-                icon="bx bx-plus"
-                text={t("llm.add_provider")}
-                onClick={() => setShowAddModal(true)}
-            />
+                <Button
+                    size="small"
+                    icon="bx bx-plus"
+                    text={t("llm.add_provider")}
+                    onClick={() => setShowAddModal(true)}
+                />
 
-            <hr />
+                <hr />
 
-            <h5>{t("llm.configured_providers")}</h5>
-            <ProviderList
-                providers={providers}
-                onDelete={handleDeleteProvider}
-            />
+                <h5>{t("llm.configured_providers")}</h5>
+                <ProviderList
+                    providers={providers}
+                    onDelete={handleDeleteProvider}
+                />
 
-            <AddProviderModal
-                show={showAddModal}
-                onHidden={() => setShowAddModal(false)}
-                onSave={handleAddProvider}
-            />
-
-            <hr />
+                <AddProviderModal
+                    show={showAddModal}
+                    onHidden={() => setShowAddModal(false)}
+                    onSave={handleAddProvider}
+                />
+            </OptionsSection>
 
             <McpSettings />
-        </OptionsSection>
+        </>
     );
 }
 
@@ -70,14 +69,15 @@ function McpSettings() {
     const [mcpEnabled, setMcpEnabled] = useTriliumOptionBool("mcpEnabled");
 
     return (
-        <FormGroup name="mcpEnabled" description={t("llm.mcp_enabled_description")}>
+        <OptionsSection title={t("llm.mcp_title")}>
+            <p className="form-text">{t("llm.mcp_enabled_description")}</p>
             <FormCheckbox
                 name="mcp-enabled"
                 label={t("llm.mcp_enabled")}
                 currentValue={mcpEnabled}
                 onChange={setMcpEnabled}
             />
-        </FormGroup>
+        </OptionsSection>
     );
 }
 
