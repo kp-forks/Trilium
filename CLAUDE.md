@@ -161,6 +161,12 @@ Trilium provides powerful user scripting capabilities:
 - **Do not use `import.meta.url`/`fileURLToPath`** to resolve file paths — the server is bundled into CJS for production, so `import.meta.url` will not point to the source directory
 - **Do not use `__dirname` with relative paths** from source files — after bundling, `__dirname` points to the bundle output, not the original source tree
 
+## MCP Server
+- Trilium exposes an MCP (Model Context Protocol) server at `http://localhost:8080/mcp`, configured in `.mcp.json`
+- The MCP server is **only available when the Trilium server is running** (`pnpm run server:start`)
+- It provides tools for reading, searching, and modifying notes directly from the AI assistant
+- Use it to interact with actual note data when developing or debugging note-related features
+
 ## Build System Notes
 - Uses pnpm for monorepo management
 - Vite for fast development builds

@@ -213,6 +213,12 @@ When adding query parameters to ETAPI endpoints (`apps/server/src/etapi/`), main
 
 10. **Attribute inheritance can be complex** - When checking for labels/relations, use `note.getOwnedAttribute()` for direct attributes or `note.getAttribute()` for inherited ones. Don't assume attributes are directly on the note.
 
+## MCP Server
+- Trilium exposes an MCP (Model Context Protocol) server at `http://localhost:8080/mcp`, configured in `.mcp.json`
+- The MCP server is **only available when the Trilium server is running** (`pnpm run server:start`)
+- It provides tools for reading, searching, and modifying notes directly from the AI assistant
+- Use it to interact with actual note data when developing or debugging note-related features
+
 ## TypeScript Configuration
 
 - **Project references**: Monorepo uses TypeScript project references (`tsconfig.json`)
