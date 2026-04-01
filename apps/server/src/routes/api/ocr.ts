@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
-import ocrService from "../../services/ocr/ocr_service.js";
-import log from "../../services/log.js";
+import type { Request } from "express";
+
 import becca from "../../becca/becca.js";
+import ocrService from "../../services/ocr/ocr_service.js";
 import sql from "../../services/sql.js";
 
 /**
@@ -35,24 +35,6 @@ import sql from "../../services/sql.js";
  *     responses:
  *       '200':
  *         description: OCR processing completed successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 result:
- *                   type: object
- *                   properties:
- *                     text:
- *                       type: string
- *                     confidence:
- *                       type: number
- *                     extractedAt:
- *                       type: string
- *                     language:
- *                       type: string
  *       '400':
  *         description: Bad request - OCR disabled or unsupported file type
  *       '404':
@@ -63,69 +45,25 @@ import sql from "../../services/sql.js";
  *       - session: []
  *     tags: ["ocr"]
  */
-async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
-    try {
-        const { noteId } = req.params;
-        const { language = 'eng', forceReprocess = false } = req.body || {};
+async function processNoteOCR(req: Request<{ noteId: string }>) {
+    const { noteId } = req.params;
+    const { language = 'eng', forceReprocess = false } = req.body || {};
 
-        if (!noteId) {
-            res.status(400).json({
-                success: false,
-                message: 'Note ID is required'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        // Check if OCR is enabled
-        if (!ocrService.isOCREnabled()) {
-            res.status(400).json({
-                success: false,
-                message: 'OCR is not enabled in settings'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        // Verify note exists
-        const note = becca.getNote(noteId);
-        if (!note) {
-            res.status(404).json({
-                success: false,
-                message: 'Note not found'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        const result = await ocrService.processNoteOCR(noteId, {
-            language,
-            forceReprocess
-        });
-
-        if (!result) {
-            res.status(400).json({
-                success: false,
-                message: 'Note is not an image or has unsupported format'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        res.json({
-            success: true,
-            result
-        });
-        (res as any).triliumResponseHandled = true;
-
-    } catch (error: unknown) {
-        log.error(`Error processing OCR for note: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : String(error)
-        });
-        (res as any).triliumResponseHandled = true;
+    if (!ocrService.isOCREnabled()) {
+        return [400, { success: false, message: 'OCR is not enabled in settings' }];
     }
+
+    const note = becca.getNote(noteId);
+    if (!note) {
+        return [404, { success: false, message: 'Note not found' }];
+    }
+
+    const result = await ocrService.processNoteOCR(noteId, { language, forceReprocess });
+    if (!result) {
+        return [400, { success: false, message: 'Note is not an image or has unsupported format' }];
+    }
+
+    return { success: true, result };
 }
 
 /**
@@ -169,69 +107,25 @@ async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
  *       - session: []
  *     tags: ["ocr"]
  */
-async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res: Response) {
-    try {
-        const { attachmentId } = req.params;
-        const { language = 'eng', forceReprocess = false } = req.body || {};
+async function processAttachmentOCR(req: Request<{ attachmentId: string }>) {
+    const { attachmentId } = req.params;
+    const { language = 'eng', forceReprocess = false } = req.body || {};
 
-        if (!attachmentId) {
-            res.status(400).json({
-                success: false,
-                message: 'Attachment ID is required'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        // Check if OCR is enabled
-        if (!ocrService.isOCREnabled()) {
-            res.status(400).json({
-                success: false,
-                message: 'OCR is not enabled in settings'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        // Verify attachment exists
-        const attachment = becca.getAttachment(attachmentId);
-        if (!attachment) {
-            res.status(404).json({
-                success: false,
-                message: 'Attachment not found'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        const result = await ocrService.processAttachmentOCR(attachmentId, {
-            language,
-            forceReprocess
-        });
-
-        if (!result) {
-            res.status(400).json({
-                success: false,
-                message: 'Attachment is not an image or has unsupported format'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        res.json({
-            success: true,
-            result
-        });
-        (res as any).triliumResponseHandled = true;
-
-    } catch (error: unknown) {
-        log.error(`Error processing OCR for attachment: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : String(error)
-        });
-        (res as any).triliumResponseHandled = true;
+    if (!ocrService.isOCREnabled()) {
+        return [400, { success: false, message: 'OCR is not enabled in settings' }];
     }
+
+    const attachment = becca.getAttachment(attachmentId);
+    if (!attachment) {
+        return [404, { success: false, message: 'Attachment not found' }];
+    }
+
+    const result = await ocrService.processAttachmentOCR(attachmentId, { language, forceReprocess });
+    if (!result) {
+        return [400, { success: false, message: 'Attachment is not an image or has unsupported format' }];
+    }
+
+    return { success: true, result };
 }
 
 /**
@@ -250,22 +144,6 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res:
  *     responses:
  *       '200':
  *         description: Search results
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 results:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       blobId:
- *                         type: string
- *                       text:
- *                         type: string
  *       '400':
  *         description: Bad request - missing search query
  *       '500':
@@ -274,35 +152,15 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res:
  *       - session: []
  *     tags: ["ocr"]
  */
-async function searchOCR(req: Request, res: Response) {
-    try {
-        const { q: searchText } = req.query;
+async function searchOCR(req: Request) {
+    const { q: searchText } = req.query;
 
-        if (!searchText || typeof searchText !== 'string') {
-            res.status(400).json({
-                success: false,
-                message: 'Search query is required'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        const results = ocrService.searchOCRResults(searchText);
-
-        res.json({
-            success: true,
-            results
-        });
-        (res as any).triliumResponseHandled = true;
-
-    } catch (error: unknown) {
-        log.error(`Error searching OCR results: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : String(error)
-        });
-        (res as any).triliumResponseHandled = true;
+    if (!searchText || typeof searchText !== 'string') {
+        return [400, { success: false, message: 'Search query is required' }];
     }
+
+    const results = ocrService.searchOCRResults(searchText);
+    return { success: true, results };
 }
 
 /**
@@ -314,15 +172,6 @@ async function searchOCR(req: Request, res: Response) {
  *     responses:
  *       '200':
  *         description: Batch processing initiated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
  *       '400':
  *         description: Bad request - OCR disabled or already processing
  *       '500':
@@ -331,26 +180,12 @@ async function searchOCR(req: Request, res: Response) {
  *       - session: []
  *     tags: ["ocr"]
  */
-async function batchProcessOCR(req: Request, res: Response) {
-    try {
-        const result = await ocrService.startBatchProcessing();
-        
-        if (result.success) {
-            res.json(result);
-        } else {
-            res.status(400).json(result);
-        }
-        
-        (res as any).triliumResponseHandled = true;
-
-    } catch (error: unknown) {
-        log.error(`Error initiating batch OCR processing: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : String(error)
-        });
-        (res as any).triliumResponseHandled = true;
+async function batchProcessOCR() {
+    const result = await ocrService.startBatchProcessing();
+    if (!result.success) {
+        return [400, result];
     }
+    return result;
 }
 
 /**
@@ -362,39 +197,14 @@ async function batchProcessOCR(req: Request, res: Response) {
  *     responses:
  *       '200':
  *         description: Batch processing progress information
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 inProgress:
- *                   type: boolean
- *                 total:
- *                   type: number
- *                 processed:
- *                   type: number
- *                 percentage:
- *                   type: number
- *                 startTime:
- *                   type: string
  *       '500':
  *         description: Internal server error
  *     security:
  *       - session: []
  *     tags: ["ocr"]
  */
-async function getBatchProgress(req: Request, res: Response) {
-    try {
-        const progress = ocrService.getBatchProgress();
-        res.json(progress);
-        (res as any).triliumResponseHandled = true;
-    } catch (error: unknown) {
-        log.error(`Error getting batch OCR progress: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            message: error instanceof Error ? error.message : String(error)
-        });
-        (res as any).triliumResponseHandled = true;
-    }
+async function getBatchProgress() {
+    return ocrService.getBatchProgress();
 }
 
 /**
@@ -406,46 +216,14 @@ async function getBatchProgress(req: Request, res: Response) {
  *     responses:
  *       '200':
  *         description: OCR statistics
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 stats:
- *                   type: object
- *                   properties:
- *                     totalProcessed:
- *                       type: number
- *                     imageNotes:
- *                       type: number
- *                     imageAttachments:
- *                       type: number
  *       '500':
  *         description: Internal server error
  *     security:
  *       - session: []
  *     tags: ["ocr"]
  */
-async function getOCRStats(req: Request, res: Response) {
-    try {
-        const stats = ocrService.getOCRStats();
-
-        res.json({
-            success: true,
-            stats
-        });
-        (res as any).triliumResponseHandled = true;
-
-    } catch (error: unknown) {
-        log.error(`Error getting OCR stats: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : String(error)
-        });
-        (res as any).triliumResponseHandled = true;
-    }
+async function getOCRStats() {
+    return { success: true, stats: ocrService.getOCRStats() };
 }
 
 /**
@@ -464,15 +242,6 @@ async function getOCRStats(req: Request, res: Response) {
  *     responses:
  *       '200':
  *         description: OCR results deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
  *       '400':
  *         description: Bad request - invalid parameters
  *       '500':
@@ -481,35 +250,11 @@ async function getOCRStats(req: Request, res: Response) {
  *       - session: []
  *     tags: ["ocr"]
  */
-async function deleteOCRResults(req: Request<{ blobId: string }>, res: Response) {
-    try {
-        const { blobId } = req.params;
+async function deleteOCRResults(req: Request<{ blobId: string }>) {
+    const { blobId } = req.params;
 
-        if (!blobId) {
-            res.status(400).json({
-                success: false,
-                message: 'Blob ID is required'
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-
-        ocrService.deleteOCRResult(blobId);
-
-        res.json({
-            success: true,
-            message: `OCR results deleted for blob ${blobId}`
-        });
-        (res as any).triliumResponseHandled = true;
-
-    } catch (error: unknown) {
-        log.error(`Error deleting OCR results: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : String(error)
-        });
-        (res as any).triliumResponseHandled = true;
-    }
+    ocrService.deleteOCRResult(blobId);
+    return { success: true, message: `OCR results deleted for blob ${blobId}` };
 }
 
 /**
@@ -528,76 +273,43 @@ async function deleteOCRResults(req: Request<{ blobId: string }>, res: Response)
  *     responses:
  *       200:
  *         description: OCR text retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 text:
- *                   type: string
- *                   description: The extracted OCR text
- *                 hasOcr:
- *                   type: boolean
- *                   description: Whether OCR text exists for this note
- *                 extractedAt:
- *                   type: string
- *                   format: date-time
- *                   description: When the OCR was last processed
  *       404:
  *         description: Note not found
  *     tags: ["ocr"]
  */
-async function getNoteOCRText(req: Request<{ noteId: string }>, res: Response) {
-    try {
-        const { noteId } = req.params;
-        
-        const note = becca.getNote(noteId);
-        if (!note) {
-            res.status(404).json({ 
-                success: false, 
-                message: 'Note not found' 
-            });
-            (res as any).triliumResponseHandled = true;
-            return;
-        }
-        
-        // Get stored OCR result
-        let ocrText: string | null = null;
-        let extractedAt: string | null = null;
-        
-        if (note.blobId) {
-            const result = sql.getRow<{
-                textRepresentation: string | null;
-                textExtractionLastProcessed: string | null;
-            }>(`
-                SELECT textRepresentation, textExtractionLastProcessed
-                FROM blobs
-                WHERE blobId = ?
-            `, [note.blobId]);
-            
-            if (result) {
-                ocrText = result.textRepresentation;
-                extractedAt = result.textExtractionLastProcessed;
-            }
-        }
-        
-        res.json({
-            success: true,
-            text: ocrText || '',
-            hasOcr: !!ocrText,
-            extractedAt: extractedAt
-        });
-        (res as any).triliumResponseHandled = true;
-    } catch (error: unknown) {
-        log.error(`Error getting OCR text for note: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : 'Unknown error'
-        });
-        (res as any).triliumResponseHandled = true;
+async function getNoteOCRText(req: Request<{ noteId: string }>) {
+    const { noteId } = req.params;
+
+    const note = becca.getNote(noteId);
+    if (!note) {
+        return [404, { success: false, message: 'Note not found' }];
     }
+
+    let ocrText: string | null = null;
+    let extractedAt: string | null = null;
+
+    if (note.blobId) {
+        const result = sql.getRow<{
+            textRepresentation: string | null;
+            textExtractionLastProcessed: string | null;
+        }>(`
+            SELECT textRepresentation, textExtractionLastProcessed
+            FROM blobs
+            WHERE blobId = ?
+        `, [note.blobId]);
+
+        if (result) {
+            ocrText = result.textRepresentation;
+            extractedAt = result.textExtractionLastProcessed;
+        }
+    }
+
+    return {
+        success: true,
+        text: ocrText || '',
+        hasOcr: !!ocrText,
+        extractedAt
+    };
 }
 
 export default {
