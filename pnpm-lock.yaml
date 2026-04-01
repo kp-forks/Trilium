@@ -1464,8 +1464,8 @@ importers:
         version: link:../commons
     devDependencies:
       pdfjs-dist:
-        specifier: 5.5.207
-        version: 5.5.207
+        specifier: 5.6.205
+        version: 5.6.205
 
   packages/share-theme:
     dependencies:
@@ -12717,8 +12717,8 @@ packages:
     resolution: {integrity: sha512-XDF38WCH3z5OV/OVa8GKUNtLAyneuzbCisx7QUCF8Q6Nutx0WnJrQe5O+kOtBlLfRNUws98Y58Lblp+NJG5T4Q==}
     hasBin: true
 
-  pdfjs-dist@5.5.207:
-    resolution: {integrity: sha512-WMqqw06w1vUt9ZfT0gOFhMf3wHsWhaCrxGrckGs5Cci6ybDW87IvPaOd2pnBwT6BJuP/CzXDZxjFgmSULLdsdw==}
+  pdfjs-dist@5.6.205:
+    resolution: {integrity: sha512-tlUj+2IDa7G1SbvBNN74UHRLJybZDWYom+k6p5KIZl7huBvsA4APi6mKL+zCxd3tLjN5hOOEE9Tv7VdzO88pfg==}
     engines: {node: '>=20.19.0 || >=22.13.0 || >=24'}
 
   pe-library@1.0.1:
@@ -17248,6 +17248,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-editor-decoupled@47.6.1':
     dependencies:
@@ -17266,6 +17268,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-editor-multi-root@47.6.1':
     dependencies:
@@ -17288,6 +17292,8 @@ snapshots:
       '@ckeditor/ckeditor5-table': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-emoji@47.6.1':
     dependencies:
@@ -17313,8 +17319,6 @@ snapshots:
       '@ckeditor/ckeditor5-core': 47.6.1
       '@ckeditor/ckeditor5-engine': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-essentials@47.6.1':
     dependencies:
@@ -17346,6 +17350,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-export-word@47.6.1':
     dependencies:
@@ -17490,6 +17496,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-import-word@47.6.1':
     dependencies:
@@ -17502,6 +17510,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-indent@47.6.1':
     dependencies:
@@ -17627,6 +17637,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-merge-fields@47.6.1':
     dependencies:
@@ -17639,6 +17651,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-minimap@47.6.1':
     dependencies:
@@ -31226,7 +31240,7 @@ snapshots:
       ieee754: 1.2.1
       resolve-protobuf-schema: 2.1.0
 
-  pdfjs-dist@5.5.207:
+  pdfjs-dist@5.6.205:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.96
       node-readable-to-web-readable-stream: 0.4.2
