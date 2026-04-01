@@ -32,11 +32,13 @@ interface Props {
     isStreaming?: boolean;
 }
 
-interface ToolCallNoteRefs {
+interface ToolCallContext {
     /** The primary note the tool operates on or created. */
     noteId: string | null;
     /** The parent note, shown as "in <parent>" for creation tools. */
     parentNoteId: string | null;
+    /** Plain-text detail (e.g. skill name, search query) when no note ref is available. */
+    detailText: string | null;
 }
 
 /** Try to extract a noteId from the tool call's result JSON. */
@@ -52,8 +54,8 @@ function parseResultNoteId(toolCall: ToolCall): string | null {
     }
 }
 
-/** Extract note references from a tool call's input and result. */
-function getToolCallNoteRefs(toolCall: ToolCall): ToolCallNoteRefs {
+/** Extract contextual info from a tool call for display in the summary. */
+function getToolCallContext(toolCall: ToolCall): ToolCallContext {
     const input = toolCall.input;
     const parentNoteId = (input?.parentNoteId as string) || null;
 
@@ -61,12 +63,17 @@ function getToolCallNoteRefs(toolCall: ToolCall): ToolCallNoteRefs {
     if (parentNoteId) {
         const createdNoteId = parseResultNoteId(toolCall);
         if (createdNoteId) {
-            return { noteId: createdNoteId, parentNoteId };
+            return { noteId: createdNoteId, parentNoteId, detailText: null };
         }
     }
 
     const noteId = (input?.noteId as string) || parentNoteId || parseResultNoteId(toolCall);
-    return { noteId: noteId || null, parentNoteId: null };
+    if (noteId) {
+        return { noteId, parentNoteId: null, detailText: null };
+    }
+
+    const detailText = (input?.name ?? input?.query) as string | undefined;
+    return { noteId: null, parentNoteId: null, detailText: detailText || null };
 }
 
 function toolCallIcon(toolCall: ToolCall): string {
@@ -80,13 +87,16 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
         "llm-chat-tool-call-inline",
         toolCall.isError && "llm-chat-tool-call-error"
     ].filter(Boolean).join(" ");
-    const { noteId: refNoteId, parentNoteId: refParentId } = getToolCallNoteRefs(toolCall);
+    const { noteId: refNoteId, parentNoteId: refParentId, detailText } = getToolCallContext(toolCall);
 
     return (
         <details className={classes}>
             <summary className="llm-chat-tool-call-inline-summary">
                 <span className={toolCallIcon(toolCall)} />
                 {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
+                {detailText && (
+                    <span className="llm-chat-tool-call-detail">{detailText}</span>
+                )}
                 {refNoteId && (
                     <span className="llm-chat-tool-call-note-ref">
                         {refParentId ? (

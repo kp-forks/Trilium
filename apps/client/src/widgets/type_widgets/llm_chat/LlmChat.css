@@ -581,11 +581,13 @@
     margin-right: 0.15rem;
 }
 
+.llm-chat-tool-call-detail,
 .llm-chat-tool-call-note-ref {
     font-weight: 400;
     color: var(--main-text-color);
 }
 
+.llm-chat-tool-call-detail::before,
 .llm-chat-tool-call-note-ref::before {
     content: "—";
     margin-right: 0.35rem;
