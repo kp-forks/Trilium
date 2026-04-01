@@ -2323,7 +2323,7 @@
       "get_child_notes": "Get child notes",
       "get_subtree": "Get subtree",
       "load_skill": "Load skill",
-      "in_parent": "in"
+      "note_in_parent": "<Note/> in <Parent/>"
     }
   }
 }

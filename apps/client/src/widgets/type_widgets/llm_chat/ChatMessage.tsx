@@ -3,6 +3,7 @@ import "./LlmChat.css";
 import { Marked } from "marked";
 import { useMemo } from "preact/hooks";
 
+import { Trans } from "react-i18next";
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import { NewNoteLink } from "../../react/NoteLink.js";
@@ -79,12 +80,16 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
                 {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
                 {refNoteId && (
                     <span className="llm-chat-tool-call-note-ref">
-                        <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />
-                        {refParentId && (
-                            <>
-                                {" "}{t("llm.tools.in_parent")}{" "}
-                                <NewNoteLink notePath={refParentId} showNoteIcon noPreview />
-                            </>
+                        {refParentId ? (
+                            <Trans
+                                i18nKey="llm.tools.note_in_parent"
+                                components={{
+                                    Note: <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />,
+                                    Parent: <NewNoteLink notePath={refParentId} showNoteIcon noPreview />
+                                } as any}
+                            />
+                        ) : (
+                            <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />
                         )}
                     </span>
                 )}
