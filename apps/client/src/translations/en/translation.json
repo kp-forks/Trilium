@@ -2308,6 +2308,21 @@
     "cancel": "Cancel",
     "mcp_title": "MCP (Model Context Protocol)",
     "mcp_enabled": "Enable MCP server",
-    "mcp_enabled_description": "Expose a Model Context Protocol (MCP) endpoint so that AI coding assistants (e.g. Claude Code, GitHub Copilot) can read and modify your notes. The endpoint is only accessible from localhost."
+    "mcp_enabled_description": "Expose a Model Context Protocol (MCP) endpoint so that AI coding assistants (e.g. Claude Code, GitHub Copilot) can read and modify your notes. The endpoint is only accessible from localhost.",
+    "tools": {
+      "search_notes": "Search notes",
+      "read_note": "Read note",
+      "update_note_content": "Update note content",
+      "append_to_note": "Append to note",
+      "create_note": "Create note",
+      "get_current_note": "Read current note",
+      "get_attributes": "Get attributes",
+      "get_attribute": "Get attribute",
+      "set_attribute": "Set attribute",
+      "delete_attribute": "Delete attribute",
+      "get_child_notes": "Get child notes",
+      "get_subtree": "Get subtree",
+      "load_skill": "Load skill"
+    }
   }
 }

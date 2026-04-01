@@ -40,7 +40,7 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
         <details className={classes}>
             <summary className="llm-chat-tool-call-inline-summary">
                 <span className={toolCall.isError ? "bx bx-error-circle" : "bx bx-wrench"} />
-                {toolCall.toolName}
+                {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
                 {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
             </summary>
             <div className="llm-chat-tool-call-inline-body">
