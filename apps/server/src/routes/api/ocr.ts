@@ -569,16 +569,16 @@ async function getNoteOCRText(req: Request, res: Response) {
         
         if (note.blobId) {
             const result = sql.getRow<{
-                ocr_text: string | null;
+                textRepresentation: string | null;
                 ocr_last_processed: string | null;
             }>(`
-                SELECT ocr_text, ocr_last_processed
+                SELECT textRepresentation, ocr_last_processed
                 FROM blobs
                 WHERE blobId = ?
             `, [note.blobId]);
             
             if (result) {
-                ocrText = result.ocr_text;
+                ocrText = result.textRepresentation;
                 extractedAt = result.ocr_last_processed;
             }
         }

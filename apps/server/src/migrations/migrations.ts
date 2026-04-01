@@ -6,19 +6,19 @@
 
 // Migrations should be kept in descending order, so the latest migration is first.
 const MIGRATIONS: (SqlMigration | JsMigration)[] = [
-    // Add OCR text column and last processed timestamp to blobs table
+    // Add text representation column and last processed timestamp to blobs table
     {
         version: 236,
         sql: /*sql*/`\
-            -- Add OCR text column to blobs table
-            ALTER TABLE blobs ADD COLUMN ocr_text TEXT DEFAULT NULL;
+            -- Add text representation column to blobs table
+            ALTER TABLE blobs ADD COLUMN textRepresentation TEXT DEFAULT NULL;
 
             -- Add OCR last processed timestamp to blobs table
             ALTER TABLE blobs ADD COLUMN ocr_last_processed TEXT DEFAULT NULL;
 
-            -- Create index for OCR text searches
-            CREATE INDEX IF NOT EXISTS idx_blobs_ocr_text
-            ON blobs (ocr_text);
+            -- Create index for text representation searches
+            CREATE INDEX IF NOT EXISTS idx_blobs_textRepresentation
+            ON blobs (textRepresentation);
 
             -- Create index for OCR last processed timestamp
             CREATE INDEX IF NOT EXISTS idx_blobs_ocr_last_processed

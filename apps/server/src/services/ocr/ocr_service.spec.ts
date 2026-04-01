@@ -251,7 +251,7 @@ describe('OCRService', () => {
             await ocrService.storeOCRResult('blob123', ocrResult);
 
             expect(mockSql.execute).toHaveBeenCalledWith(
-                expect.stringContaining('UPDATE blobs SET ocr_text = ?'),
+                expect.stringContaining('UPDATE blobs SET textRepresentation = ?'),
                 ['Sample text', 'blob123']
             );
         });
@@ -331,7 +331,7 @@ describe('OCRService', () => {
 
         it('should return existing OCR result if forceReprocess is false', async () => {
             const existingResult = {
-                ocr_text: 'Existing text'
+                textRepresentation: 'Existing text'
             };
             mockSql.getRow.mockReturnValue(existingResult);
 
@@ -348,7 +348,7 @@ describe('OCRService', () => {
 
         it('should reprocess if forceReprocess is true', async () => {
             const existingResult = {
-                ocr_text: 'Existing text'
+                textRepresentation: 'Existing text'
             };
             mockSql.getRow.mockResolvedValue(existingResult);
             
@@ -445,7 +445,7 @@ describe('OCRService', () => {
             const mockResults = [
                 {
                     blobId: 'blob1',
-                    ocr_text: 'Sample search text'
+                    textRepresentation: 'Sample search text'
                 }
             ];
             mockSql.getRows.mockReturnValue(mockResults);
@@ -457,7 +457,7 @@ describe('OCRService', () => {
                 text: 'Sample search text'
             }]);
             expect(mockSql.getRows).toHaveBeenCalledWith(
-                expect.stringContaining('WHERE ocr_text LIKE ?'),
+                expect.stringContaining('WHERE textRepresentation LIKE ?'),
                 ['%search%']
             );
         });
@@ -851,7 +851,7 @@ describe('OCRService', () => {
             ocrService.deleteOCRResult('blob123');
 
             expect(mockSql.execute).toHaveBeenCalledWith(
-                expect.stringContaining('UPDATE blobs SET ocr_text = NULL'),
+                expect.stringContaining('UPDATE blobs SET textRepresentation = NULL'),
                 ['blob123']
             );
             expect(mockLog.info).toHaveBeenCalledWith('Deleted OCR result for blob blob123');

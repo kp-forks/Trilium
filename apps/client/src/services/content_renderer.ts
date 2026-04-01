@@ -32,7 +32,7 @@ export interface RenderOptions {
     includeArchivedNotes?: boolean;
     /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
     seenNoteIds?: Set<string>;
-    showOcrText?: boolean;
+    showTextRepresentation?: boolean;
 }
 
 const CODE_MIME_TYPES = new Set(["application/json"]);
@@ -181,7 +181,7 @@ async function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery
     imageContextMenuService.setupContextMenu($img);
 
     // Add OCR text display for image notes
-    if (entity instanceof FNote && options.showOcrText) {
+    if (entity instanceof FNote && options.showTextRepresentation) {
         await addOCRTextIfAvailable(entity, $renderedContent);
     }
 }
@@ -252,7 +252,7 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
     }
 
     // Add OCR text display for file notes
-    if (entity instanceof FNote && options.showOcrText) {
+    if (entity instanceof FNote && options.showTextRepresentation) {
         await addOCRTextIfAvailable(entity, $content);
     }
 

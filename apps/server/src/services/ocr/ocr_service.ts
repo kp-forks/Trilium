@@ -26,7 +26,7 @@ export interface OCRProcessingOptions {
 
 interface OCRBlobRow {
     blobId: string;
-    ocr_text: string;
+    textRepresentation: string;
     ocr_last_processed?: string;
 }
 
@@ -235,7 +235,7 @@ class OCRService {
             // Store OCR text and timestamp in blobs table
             sql.execute(`
                 UPDATE blobs SET
-                    ocr_text = ?,
+                    textRepresentation = ?,
                     ocr_last_processed = ?
                 WHERE blobId = ?
             `, [
@@ -261,14 +261,14 @@ class OCRService {
 
         try {
             const row = sql.getRow<{
-                ocr_text: string | null;
+                textRepresentation: string | null;
             }>(`
-                SELECT ocr_text
+                SELECT textRepresentation
                 FROM blobs
                 WHERE blobId = ?
             `, [blobId]);
 
-            if (!row || !row.ocr_text) {
+            if (!row || !row.textRepresentation) {
                 return null;
             }
 
@@ -276,7 +276,7 @@ class OCRService {
             // Note: we lose confidence, language, and extractedAt metadata
             // but gain simplicity by storing directly in blob
             return {
-                text: row.ocr_text,
+                text: row.textRepresentation,
                 confidence: 0.95, // Default high confidence for existing OCR
                 extractedAt: new Date().toISOString(),
                 language: 'eng'
@@ -293,10 +293,10 @@ class OCRService {
     searchOCRResults(searchText: string): Array<{ blobId: string; text: string }> {
         try {
             const query = `
-                SELECT blobId, ocr_text
+                SELECT blobId, textRepresentation
                 FROM blobs
-                WHERE ocr_text LIKE ?
-                AND ocr_text IS NOT NULL
+                WHERE textRepresentation LIKE ?
+                AND textRepresentation IS NOT NULL
             `;
             const params = [`%${searchText}%`];
 
@@ -304,7 +304,7 @@ class OCRService {
 
             return rows.map(row => ({
                 blobId: row.blobId,
-                text: row.ocr_text
+                text: row.textRepresentation
             }));
         } catch (error) {
             log.error(`Failed to search OCR results: ${error}`);
@@ -318,7 +318,7 @@ class OCRService {
     deleteOCRResult(blobId: string): void {
         try {
             sql.execute(`
-                UPDATE blobs SET ocr_text = NULL
+                UPDATE blobs SET textRepresentation = NULL
                 WHERE blobId = ?
             `, [blobId]);
 
@@ -346,7 +346,7 @@ class OCRService {
             }>(`
                 SELECT COUNT(*) as total_processed
                 FROM blobs
-                WHERE ocr_text IS NOT NULL AND ocr_text != ''
+                WHERE textRepresentation IS NOT NULL AND textRepresentation != ''
             `);
 
             // Count image notes with OCR
@@ -358,7 +358,7 @@ class OCRService {
                 JOIN blobs b ON n.blobId = b.blobId
                 WHERE n.type = 'image'
                 AND n.isDeleted = 0
-                AND b.ocr_text IS NOT NULL AND b.ocr_text != ''
+                AND b.textRepresentation IS NOT NULL AND b.textRepresentation != ''
             `);
 
             // Count image attachments with OCR
@@ -370,7 +370,7 @@ class OCRService {
                 JOIN blobs b ON a.blobId = b.blobId
                 WHERE a.role = 'image'
                 AND a.isDeleted = 0
-                AND b.ocr_text IS NOT NULL AND b.ocr_text != ''
+                AND b.textRepresentation IS NOT NULL AND b.textRepresentation != ''
             `);
 
             return {
@@ -591,7 +591,7 @@ class OCRService {
     }
 
     /**
-     * Invalidate OCR results for a blob (clear ocr_text and ocr_last_processed)
+     * Invalidate OCR results for a blob (clear textRepresentation and ocr_last_processed)
      */
     invalidateOCRResult(blobId: string): void {
         if (!blobId) {
@@ -601,7 +601,7 @@ class OCRService {
         try {
             sql.execute(`
                 UPDATE blobs SET
-                    ocr_text = NULL,
+                    textRepresentation = NULL,
                     ocr_last_processed = NULL
                 WHERE blobId = ?
             `, [blobId]);

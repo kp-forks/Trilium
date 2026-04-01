@@ -72,23 +72,23 @@ export default class OCRContentExpression extends Expression {
 
     private searchOCRContent(searchText: string): Array<{
         blobId: string;
-        ocr_text: string;
+        textRepresentation: string;
     }> {
         try {
             // Search in blobs table for OCR text
             const query = `
-                SELECT blobId, ocr_text
+                SELECT blobId, textRepresentation
                 FROM blobs
-                WHERE ocr_text LIKE ?
-                AND ocr_text IS NOT NULL
-                AND ocr_text != ''
+                WHERE textRepresentation LIKE ?
+                AND textRepresentation IS NOT NULL
+                AND textRepresentation != ''
                 LIMIT 50
             `;
             const params = [`%${searchText}%`];
 
             return sql.getRows<{
                 blobId: string;
-                ocr_text: string;
+                textRepresentation: string;
             }>(query, params);
         } catch (error) {
             console.error('Error searching OCR content:', error);

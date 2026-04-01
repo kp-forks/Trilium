@@ -140,10 +140,10 @@ class SearchResult {
 
             // Search for OCR results for this note and its attachments
             const ocrResults = sql.getRows(`
-                SELECT b.ocr_text
+                SELECT b.textRepresentation
                 FROM blobs b
-                WHERE b.ocr_text IS NOT NULL
-                  AND b.ocr_text != ''
+                WHERE b.textRepresentation IS NOT NULL
+                  AND b.textRepresentation != ''
                   AND (
                       b.blobId = (SELECT blobId FROM notes WHERE noteId = ? AND isDeleted = 0)
                       OR b.blobId IN (
@@ -152,9 +152,9 @@ class SearchResult {
                   )
             `, [this.noteId, this.noteId]);
 
-            for (const ocrResult of ocrResults as Array<{ocr_text: string}>) {
+            for (const ocrResult of ocrResults as Array<{textRepresentation: string}>) {
                 // Add score for OCR text matches
-                this.addScoreForStrings(tokens, ocrResult.ocr_text, factor);
+                this.addScoreForStrings(tokens, ocrResult.textRepresentation, factor);
             }
         } catch (error) {
             // Silently fail if OCR service is not available

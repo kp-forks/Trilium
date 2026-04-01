@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS "recent_notes"
 CREATE TABLE IF NOT EXISTS "blobs" (
                                                `blobId`	TEXT NOT NULL,
                                                `content`	TEXT NULL DEFAULT NULL,
-                                               `ocr_text` TEXT DEFAULT NULL,
+                                               `textRepresentation` TEXT DEFAULT NULL,
                                                `ocr_last_processed` TEXT DEFAULT NULL,
                                                `dateModified` TEXT NOT NULL,
                                                `utcDateModified` TEXT NOT NULL,
