@@ -3,7 +3,7 @@
  * These reuse the same logic as ETAPI without any HTTP overhead.
  */
 
-export { noteTools, currentNoteTools } from "./note_tools.js";
+export { noteTools } from "./note_tools.js";
 export { attributeTools } from "./attribute_tools.js";
 export { hierarchyTools } from "./hierarchy_tools.js";
 export { skillTools } from "../skills/index.js";

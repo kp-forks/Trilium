@@ -115,6 +115,7 @@ describe("mcp", () => {
             expect(toolNames).toContain("search_notes");
             expect(toolNames).toContain("read_note");
             expect(toolNames).toContain("create_note");
+            expect(toolNames).not.toContain("get_current_note");
         });
     });
 

@@ -42,6 +42,7 @@ export function createMcpServer(): McpServer {
 
     for (const registry of allToolRegistries) {
         for (const [name, def] of registry) {
+            if (def.needsContext) continue;
             registerTool(server, name, def);
         }
     }
