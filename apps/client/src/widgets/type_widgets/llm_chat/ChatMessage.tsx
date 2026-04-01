@@ -39,24 +39,33 @@ interface ToolCallNoteRefs {
     parentNoteId: string | null;
 }
 
+/** Try to extract a noteId from the tool call's result JSON. */
+function parseResultNoteId(toolCall: ToolCall): string | null {
+    if (!toolCall.result) return null;
+    try {
+        const result = typeof toolCall.result === "string"
+            ? JSON.parse(toolCall.result)
+            : toolCall.result;
+        return result?.noteId || null;
+    } catch {
+        return null;
+    }
+}
+
 /** Extract note references from a tool call's input and result. */
 function getToolCallNoteRefs(toolCall: ToolCall): ToolCallNoteRefs {
     const input = toolCall.input;
     const parentNoteId = (input?.parentNoteId as string) || null;
 
     // For creation tools, the created note ID is in the result.
-    if (parentNoteId && toolCall.result) {
-        try {
-            const result = typeof toolCall.result === "string"
-                ? JSON.parse(toolCall.result)
-                : toolCall.result;
-            if (result?.noteId) {
-                return { noteId: result.noteId, parentNoteId };
-            }
-        } catch { /* ignore parse errors */ }
+    if (parentNoteId) {
+        const createdNoteId = parseResultNoteId(toolCall);
+        if (createdNoteId) {
+            return { noteId: createdNoteId, parentNoteId };
+        }
     }
 
-    const noteId = (input?.noteId as string) || parentNoteId;
+    const noteId = (input?.noteId as string) || parentNoteId || parseResultNoteId(toolCall);
     return { noteId: noteId || null, parentNoteId: null };
 }
 
