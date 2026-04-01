@@ -98,17 +98,6 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
                     <div className="text-representation-empty">
                         <span className="bx bx-info-circle" />{" "}{t("ocr.no_text_available")}
                     </div>
-                    <button
-                        type="button"
-                        className="btn btn-secondary text-representation-process-btn"
-                        disabled={processing}
-                        onClick={processOCR}
-                    >
-                        {processing
-                            ? <><span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.processing")}</>
-                            : <><span className="bx bx-play" />{" "}{t("ocr.process_now")}</>
-                        }
-                    </button>
                     <div className="text-representation-meta">
                         {t("ocr.no_text_explanation")}
                     </div>
@@ -119,6 +108,20 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
                 <div className="text-representation-error">
                     <span className="bx bx-error" />{" "}{state.message}
                 </div>
+            )}
+
+            {state.kind !== "loading" && (
+                <button
+                    type="button"
+                    className="btn btn-secondary text-representation-process-btn"
+                    disabled={processing}
+                    onClick={processOCR}
+                >
+                    {processing
+                        ? <><span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.processing")}</>
+                        : <><span className="bx bx-play" />{" "}{t("ocr.process_now")}</>
+                    }
+                </button>
             )}
         </div>
     );
