@@ -5,7 +5,7 @@ import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import OptionsSection from "./components/OptionsSection";
 
-export default function ImageSettings() {
+export default function MediaSettings() {
     const [ downloadImagesAutomatically, setDownloadImagesAutomatically ] = useTriliumOptionBool("downloadImagesAutomatically");
     const [ compressImages, setCompressImages ] = useTriliumOptionBool("compressImages");
     const [ imageMaxWidthHeight, setImageMaxWidthHeight ] = useTriliumOption("imageMaxWidthHeight"); 
