@@ -68,6 +68,7 @@
     "@types/serve-static": "2.2.0",
     "@types/stream-throttle": "0.1.4",
     "@types/supertest": "7.2.0",
+    "@types/pdf-parse": "1.1.5",
     "@types/tesseract.js": "2.0.0",
     "@types/tmp": "0.2.6",
     "@types/turndown": "5.0.6",

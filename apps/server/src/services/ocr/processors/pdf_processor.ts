@@ -1,4 +1,4 @@
-import * as pdfParse from 'pdf-parse';
+import pdfParse from 'pdf-parse';
 
 import log from '../../log.js';
 import options from '../../options.js';
