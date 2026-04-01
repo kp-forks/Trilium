@@ -212,7 +212,8 @@ const defaultOptions: DefaultOption[] = [
     { name: "experimentalFeatures", value: "[]", isSynced: true },
 
     // AI / LLM
-    { name: "llmProviders", value: "[]", isSynced: false }
+    { name: "llmProviders", value: "[]", isSynced: false },
+    { name: "mcpEnabled", value: "false", isSynced: false }
 ];
 
 /**

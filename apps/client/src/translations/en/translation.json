@@ -2305,6 +2305,8 @@
     "delete_provider_confirmation": "Are you sure you want to delete the provider \"{{name}}\"?",
     "api_key": "API Key",
     "api_key_placeholder": "Enter your API key",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "mcp_enabled": "Enable MCP server",
+    "mcp_enabled_description": "Expose a Model Context Protocol (MCP) endpoint so that AI coding assistants (e.g. Claude Code, GitHub Copilot) can read and modify your notes. The endpoint is only accessible from localhost."
   }
 }

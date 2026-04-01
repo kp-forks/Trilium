@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState } from "preact/hooks";
 import { t } from "../../../services/i18n";
 import Button from "../../react/Button";
+import FormCheckbox from "../../react/FormCheckbox";
+import FormGroup from "../../react/FormGroup";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
 import ActionButton from "../../react/ActionButton";
 import dialog from "../../../services/dialog";
-import { useTriliumOption } from "../../react/hooks";
+import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 
 export default function LlmSettings() {
     const [providersJson, setProvidersJson] = useTriliumOption("llmProviders");
@@ -56,7 +58,26 @@ export default function LlmSettings() {
                 onHidden={() => setShowAddModal(false)}
                 onSave={handleAddProvider}
             />
+
+            <hr />
+
+            <McpSettings />
         </OptionsSection>
+    );
+}
+
+function McpSettings() {
+    const [mcpEnabled, setMcpEnabled] = useTriliumOptionBool("mcpEnabled");
+
+    return (
+        <FormGroup name="mcpEnabled" description={t("llm.mcp_enabled_description")}>
+            <FormCheckbox
+                name="mcp-enabled"
+                label={t("llm.mcp_enabled")}
+                currentValue={mcpEnabled}
+                onChange={setMcpEnabled}
+            />
+        </FormGroup>
     );
 }
 

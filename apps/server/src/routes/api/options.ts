@@ -105,7 +105,8 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "newLayout",
     "mfaEnabled",
     "mfaMethod",
-    "llmProviders"
+    "llmProviders",
+    "mcpEnabled"
 ]);
 
 function getOptions() {
