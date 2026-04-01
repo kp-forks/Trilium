@@ -446,7 +446,8 @@
     "and_more": "... et {{count}} plus.",
     "print_landscape": "Lors de l'exportation en PDF, change l'orientation de la page en paysage au lieu de portrait.",
     "print_page_size": "Lors de l'exportation en PDF, change la taille de la page. Valeurs supportées : <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
-    "color_type": "Couleur"
+    "color_type": "Couleur",
+    "textarea": "Texte multiligne"
   },
   "attribute_editor": {
     "help_text_body1": "Pour ajouter un label, tapez simplement par ex. <code>#rock</code>, ou si vous souhaitez également ajouter une valeur, tapez par ex. <code>#année = 2020</code>",
@@ -662,7 +663,8 @@
     "show-cheatsheet": "Afficher l'aide rapide",
     "toggle-zen-mode": "Zen Mode",
     "new-version-available": "Nouvelle mise à jour disponible",
-    "download-update": "Obtenir la version {{latestVersion}}"
+    "download-update": "Obtenir la version {{latestVersion}}",
+    "search_notes": "Rechercher notes"
   },
   "zen_mode": {
     "button_exit": "Sortir du Zen mode"
@@ -706,7 +708,8 @@
     "advanced": "Avancé",
     "export_as_image": "Exporter en tant qu'image",
     "export_as_image_png": "PNG",
-    "export_as_image_svg": "SVG (vectoriel)"
+    "export_as_image_svg": "SVG (vectoriel)",
+    "note_map": "Note Carte"
   },
   "onclick_button": {
     "no_click_handler": "Le widget bouton '{{componentId}}' n'a pas de gestionnaire de clic défini"
@@ -744,7 +747,7 @@
     "button_title": "Exporter le diagramme au format SVG"
   },
   "relation_map_buttons": {
-    "create_child_note_title": "Créer une nouvelle note enfant et l'ajouter à cette carte de relation",
+    "create_child_note_title": "Créer une note enfant et l'ajouter à la carte",
     "reset_pan_zoom_title": "Réinitialiser le panoramique et le zoom aux coordonnées et à la position initiales",
     "zoom_in_title": "Zoomer",
     "zoom_out_title": "Zoom arrière"
@@ -760,7 +763,9 @@
     "delete_this_note": "Supprimer cette note",
     "error_cannot_get_branch_id": "Impossible d'obtenir branchId pour notePath '{{notePath}}'",
     "error_unrecognized_command": "Commande non reconnue {{command}}",
-    "note_revisions": "Révision de la note"
+    "note_revisions": "Révision de la note",
+    "backlinks": "Rétro-liens",
+    "content_language_switcher": "Langue du contenu: {{language}}"
   },
   "note_icon": {
     "change_note_icon": "Changer l'icône de note",
@@ -770,7 +775,11 @@
     "filter-none": "Toutes les icônes",
     "filter-default": "Icônes par défaut",
     "icon_tooltip": "{{name}}\nPack d'icônes : {{iconPack}}",
-    "no_results": "Aucune icône trouvée."
+    "no_results": "Aucune icône trouvée.",
+    "search_placeholder_one": "Rechercher {{number}} icônes dans {{count}} packs",
+    "search_placeholder_many": "Rechercher {{number}} icônes dans {{count}} packs",
+    "search_placeholder_other": "Rechercher les icônes {{number}} dans les paquets {{count}}",
+    "search_placeholder_filtered": "Rechercher {{number}} icônes dans {{name}}"
   },
   "basic_properties": {
     "note_type": "Type de note",
@@ -1461,11 +1470,13 @@
     "import-into-note": "Importer dans la note",
     "apply-bulk-actions": "Appliquer des Actions groupées",
     "converted-to-attachments": "Les notes {{count}} ont été converties en pièces jointes.",
-    "convert-to-attachment-confirm": "Êtes-vous sûr de vouloir convertir les notes sélectionnées en pièces jointes de leurs notes parentes ?",
+    "convert-to-attachment-confirm": "Êtes-vous sûr de vouloir convertir les notes sélectionnées en pièces jointes de leurs notes parentales ? Cette opération s'applique uniquement aux notes d'image, les autres notes seront ignorées.",
     "archive": "Archive",
     "unarchive": "Désarchiver",
     "open-in-popup": "Modification rapide",
-    "open-in-a-new-window": "Ouvrir dans une nouvelle fenêtre"
+    "open-in-a-new-window": "Ouvrir dans une nouvelle fenêtre",
+    "hide-subtree": "Masquer le sous-arbre",
+    "show-subtree": "Afficher le sous-arbre"
   },
   "shared_info": {
     "shared_publicly": "Cette note est partagée publiquement sur {{- link}}.",
@@ -1494,7 +1505,10 @@
     "task-list": "Liste de tâches",
     "book": "Collection",
     "new-feature": "Nouveau",
-    "collections": "Collections"
+    "collections": "Collections",
+    "ai-chat": "Chat IA",
+    "llm-chat": "Chat AI",
+    "spreadsheet": "Feuille de calcul"
   },
   "protect_note": {
     "toggle-on": "Protéger la note",
@@ -1982,7 +1996,9 @@
     "title": "Options expérimentales",
     "disclaimer": "Ces options sont expérimentales et peuvent provoquer une instabilité. Utilisez avec prudence.",
     "new_layout_name": "Nouvelle mise en page",
-    "new_layout_description": "Essayez la nouvelle mise en page pour un look plus moderne et un usage améliorée. Sous réserve de changements importants dans les prochaines versions."
+    "new_layout_description": "Essayez la nouvelle mise en page pour un look plus moderne et un usage améliorée. Sous réserve de changements importants dans les prochaines versions.",
+    "llm_name": "AI / LLM Chat",
+    "llm_description": "Activer la barre de chat AI et les notes de chat LLM alimentées par de grands modèles de langage."
   },
   "read-only-info": {
     "read-only-note": "Vous consultez actuellement une note en lecture seule.",
@@ -2027,5 +2043,21 @@
     "invalid_url_message": "Insérer une adresse Web valide, par exemple https://triliumnotes.org.",
     "disabled_description": "Cette vue Web a été importée à partir d'une source externe. Pour vous protéger du phishing ou du contenu malveillant, elle ne se charge pas automatiquement. Vous pouvez l'activer si vous faites confiance à la source.",
     "disabled_button_enable": "Activer la vue Web"
+  },
+  "llm_chat": {
+    "placeholder": "Tapez un message...",
+    "send": "Envoyer",
+    "sending": "Envoi...",
+    "empty_state": "Démarrez une conversation en tapant un message ci-dessous.",
+    "searching_web": "Recherche sur le Web...",
+    "web_search": "Recherche sur le Web",
+    "note_tools": "Accès aux notes",
+    "sources": "Sources",
+    "extended_thinking": "Réflexion étendue",
+    "legacy_models": "Modèles hérités",
+    "thinking": "Réflexion...",
+    "thought_process": "Processus de réflexion",
+    "tool_calls": "{{count}} appel(s) d'outil",
+    "input": "Entrée"
   }
 }

@@ -3,10 +3,10 @@ import type { LlmChatConfig, LlmCitation, LlmMessage, LlmModelInfo,LlmUsage } fr
 import server from "./server.js";
 
 /**
- * Fetch available models for a provider.
+ * Fetch available models from all configured providers.
  */
-export async function getAvailableModels(provider: string = "anthropic"): Promise<LlmModelInfo[]> {
-    const response = await server.get<{ models?: LlmModelInfo[] }>(`llm-chat/models?provider=${encodeURIComponent(provider)}`);
+export async function getAvailableModels(): Promise<LlmModelInfo[]> {
+    const response = await server.get<{ models?: LlmModelInfo[] }>("llm-chat/models");
     return response.models ?? [];
 }
 

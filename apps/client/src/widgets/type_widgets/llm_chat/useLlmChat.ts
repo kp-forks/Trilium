@@ -239,8 +239,10 @@ export function useLlmChat(
                 .join("")
         }));
 
+        const selectedModelProvider = availableModels.find(m => m.id === selectedModel)?.provider;
         const streamOptions: Parameters<typeof streamChatCompletion>[1] = {
             model: selectedModel || undefined,
+            provider: selectedModelProvider,
             enableWebSearch,
             enableNoteTools,
             contextNoteId,
