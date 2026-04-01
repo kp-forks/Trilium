@@ -2058,6 +2058,31 @@
     "thinking": "Réflexion...",
     "thought_process": "Processus de réflexion",
     "tool_calls": "{{count}} appel(s) d'outil",
-    "input": "Entrée"
+    "input": "Entrée",
+    "result": "Résultat",
+    "error": "Erreur",
+    "tool_error": "échoué",
+    "total_tokens": "{{total}} jetons",
+    "tokens_detail": "{{prompt}} prompt + {{completion}} achèvement",
+    "tokens_used": "{{prompt}} prompt + {{completion}} achèvement = {{total}} jetons",
+    "tokens_used_with_cost": "{{prompt}} prompt + {{completion}} achèvement = {{total}} jetons (~${{cost}})",
+    "tokens_used_with_model": "{{model}}: {{prompt}} prompt + {{completion}} achèvement = {{total}} jetons",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} prompt + {{completion}} achèvement = {{total}} jetons (~${{cost}})",
+    "tokens": "jetons",
+    "context_used": "{{percentage}}% utilisé",
+    "note_context_enabled": "Cliquez pour désactiver le contexte de la note : {{title}}",
+    "note_context_disabled": "Cliquez pour inclure la note actuelle dans le contexte",
+    "no_provider_message": "Aucun fournisseur d'IA configuré. Ajoutez en un pour commencer à discuter.",
+    "add_provider": "Ajouter un fournisseur d'IA",
+    "role_user": "Vous",
+    "role_assistant": "Assistant"
+  },
+  "sidebar_chat": {
+    "title": "discussion IA",
+    "launcher_title": "Ouvrir la discussion IA",
+    "new_chat": "Démarrer une nouvelle discussion",
+    "save_chat": "Enregistrer la discussion dans les notes",
+    "empty_state": "Démarrer une conversation",
+    "history": "Historique des discussions"
   }
 }
