@@ -1,3 +1,5 @@
+import "./ReadOnlyTextRepresentation.css";
+
 import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
@@ -67,41 +69,24 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
     }
 
     return (
-        <div className="note-detail-printable" style={{ padding: "10px" }}>
-            <div style={{
-                marginBottom: "10px",
-                padding: "8px 12px",
-                backgroundColor: "var(--main-background-color)",
-                border: "1px solid var(--main-border-color)",
-                borderRadius: "4px",
-                fontWeight: 500
-            }}>
+        <div className="text-representation note-detail-printable">
+            <div className="text-representation-header">
                 <span className="bx bx-text" />{" "}{t("ocr.extracted_text_title")}
             </div>
 
             {state.kind === "loading" && (
-                <div style={{ textAlign: "center", padding: "30px", color: "var(--muted-text-color)" }}>
+                <div className="text-representation-loading">
                     <span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.loading_text")}
                 </div>
             )}
 
             {state.kind === "loaded" && (
                 <>
-                    <pre style={{
-                        whiteSpace: "pre-wrap",
-                        fontFamily: "var(--detail-text-font-family)",
-                        fontSize: "var(--detail-text-font-size)",
-                        lineHeight: 1.6,
-                        border: "1px solid var(--main-border-color)",
-                        borderRadius: "4px",
-                        padding: "15px",
-                        backgroundColor: "var(--accented-background-color)",
-                        minHeight: "100px"
-                    }}>
+                    <pre className="text-representation-content">
                         {state.text}
                     </pre>
                     {state.extractedAt && (
-                        <div style={{ fontSize: "0.9em", color: "var(--muted-text-color)", marginTop: "10px", fontStyle: "italic" }}>
+                        <div className="text-representation-meta">
                             {t("ocr.extracted_on", { date: formatDateTime(new Date(state.extractedAt)) })}
                         </div>
                     )}
@@ -110,13 +95,12 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
 
             {state.kind === "empty" && (
                 <>
-                    <div style={{ color: "var(--muted-text-color)", fontStyle: "italic", textAlign: "center", padding: "30px" }}>
+                    <div className="text-representation-empty">
                         <span className="bx bx-info-circle" />{" "}{t("ocr.no_text_available")}
                     </div>
                     <button
                         type="button"
-                        className="btn btn-secondary"
-                        style={{ marginTop: "15px" }}
+                        className="btn btn-secondary text-representation-process-btn"
                         disabled={processing}
                         onClick={processOCR}
                     >
@@ -125,21 +109,14 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
                             : <><span className="bx bx-play" />{" "}{t("ocr.process_now")}</>
                         }
                     </button>
-                    <div style={{ fontSize: "0.9em", color: "var(--muted-text-color)", marginTop: "10px", fontStyle: "italic" }}>
+                    <div className="text-representation-meta">
                         {t("ocr.no_text_explanation")}
                     </div>
                 </>
             )}
 
             {state.kind === "error" && (
-                <div style={{
-                    color: "var(--error-color)",
-                    backgroundColor: "var(--error-background-color)",
-                    border: "1px solid var(--error-border-color)",
-                    padding: "10px",
-                    borderRadius: "4px",
-                    marginTop: "10px"
-                }}>
+                <div className="text-representation-error">
                     <span className="bx bx-error" />{" "}{state.message}
                 </div>
             )}
