@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import supertest from "supertest";
 import { createNote, login } from "./utils.js";
 import config from "../../src/services/config.js";
+import becca from "../../src/becca/becca.js";
 import optionService from "../../src/services/options.js";
 import cls from "../../src/services/cls.js";
 
@@ -54,6 +55,21 @@ describe("mcp", () => {
                 .expect(403);
 
             expect(response.body.error).toContain("disabled");
+        });
+
+        it("rejects requests when mcpEnabled option does not exist", async () => {
+            const saved = becca.options["mcpEnabled"];
+            delete becca.options["mcpEnabled"];
+
+            try {
+                const response = await mcpPost(app)
+                    .send(jsonRpc("initialize"))
+                    .expect(403);
+
+                expect(response.body.error).toContain("disabled");
+            } finally {
+                becca.options["mcpEnabled"] = saved;
+            }
         });
 
         it("accepts requests when mcpEnabled is true", async () => {

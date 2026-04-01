@@ -16,7 +16,7 @@ import optionService from "../services/options.js";
 const LOCALHOST_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
 function mcpGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
-    if (!optionService.getOptionBool("mcpEnabled")) {
+    if (optionService.getOptionOrNull("mcpEnabled") !== "true") {
         res.status(403).json({ error: "MCP server is disabled. Enable it in Options > AI / LLM." });
         return;
     }
