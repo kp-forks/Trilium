@@ -63,7 +63,7 @@ import sql from "../../services/sql.js";
  *       - session: []
  *     tags: ["ocr"]
  */
-async function processNoteOCR(req: Request, res: Response) {
+async function processNoteOCR(req: Request<{ noteId: string }>, res: Response) {
     try {
         const { noteId } = req.params;
         const { language = 'eng', forceReprocess = false } = req.body || {};
@@ -169,7 +169,7 @@ async function processNoteOCR(req: Request, res: Response) {
  *       - session: []
  *     tags: ["ocr"]
  */
-async function processAttachmentOCR(req: Request, res: Response) {
+async function processAttachmentOCR(req: Request<{ attachmentId: string }>, res: Response) {
     try {
         const { attachmentId } = req.params;
         const { language = 'eng', forceReprocess = false } = req.body || {};
@@ -481,7 +481,7 @@ async function getOCRStats(req: Request, res: Response) {
  *       - session: []
  *     tags: ["ocr"]
  */
-async function deleteOCRResults(req: Request, res: Response) {
+async function deleteOCRResults(req: Request<{ blobId: string }>, res: Response) {
     try {
         const { blobId } = req.params;
 
@@ -549,7 +549,7 @@ async function deleteOCRResults(req: Request, res: Response) {
  *         description: Note not found
  *     tags: ["ocr"]
  */
-async function getNoteOCRText(req: Request, res: Response) {
+async function getNoteOCRText(req: Request<{ noteId: string }>, res: Response) {
     try {
         const { noteId } = req.params;
         

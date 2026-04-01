@@ -79,7 +79,7 @@ export const TYPE_MAPPINGS: Record<ExtendedNoteType, NoteTypeMapping> = {
         printable: true
     },
     readOnlyOCRText: {
-        view: () => import("./type_widgets/read_only_ocr_text"),
+        view: () => import("./type_widgets/ReadOnlyTextRepresentation"),
         className: "note-detail-ocr-text",
         printable: true
     },
