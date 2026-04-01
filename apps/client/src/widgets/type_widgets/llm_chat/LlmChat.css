@@ -578,6 +578,17 @@
     font-size: 1rem;
 }
 
+.llm-chat-tool-call-note-ref {
+    font-weight: 400;
+    color: var(--main-text-color);
+}
+
+.llm-chat-tool-call-note-ref::before {
+    content: "—";
+    margin-right: 0.35rem;
+    color: var(--muted-text-color);
+}
+
 .llm-chat-tool-call-inline-body {
     padding: 0 0.75rem 0.75rem;
 }

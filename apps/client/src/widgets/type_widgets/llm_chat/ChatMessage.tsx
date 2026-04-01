@@ -5,6 +5,7 @@ import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
+import { NewNoteLink } from "../../react/NoteLink.js";
 import { SanitizedHtml } from "../../react/RawHtml.js";
 import { type ContentBlock, getMessageText, type StoredMessage, type ToolCall } from "./llm_chat_types.js";
 
@@ -30,6 +31,14 @@ interface Props {
     isStreaming?: boolean;
 }
 
+/** Extract a note ID from the tool call input, if present. */
+function getToolCallNoteId(toolCall: ToolCall): string | null {
+    const input = toolCall.input;
+    if (!input) return null;
+    const id = (input.noteId ?? input.parentNoteId) as string | undefined;
+    return id || null;
+}
+
 function toolCallIcon(toolCall: ToolCall): string {
     if (toolCall.isError) return "bx bx-error-circle";
     if (toolCall.result) return "bx bx-check";
@@ -41,12 +50,18 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
         "llm-chat-tool-call-inline",
         toolCall.isError && "llm-chat-tool-call-error"
     ].filter(Boolean).join(" ");
+    const refNoteId = getToolCallNoteId(toolCall);
 
     return (
         <details className={classes}>
             <summary className="llm-chat-tool-call-inline-summary">
                 <span className={toolCallIcon(toolCall)} />
                 {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
+                {refNoteId && (
+                    <span className="llm-chat-tool-call-note-ref">
+                        <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />
+                    </span>
+                )}
                 {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
             </summary>
             <div className="llm-chat-tool-call-inline-body">
