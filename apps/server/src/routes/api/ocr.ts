@@ -274,66 +274,46 @@ async function deleteOCRResults(req: Request<{ blobId: string }>) {
  *         description: Note not found
  *     tags: ["ocr"]
  */
-async function getNoteOCRText(req: Request<{ noteId: string }>) {
-    const { noteId } = req.params;
+function getTextRepresentation(blobId: string | undefined): TextRepresentationResponse {
+    let ocrText: string | null = null;
 
-    const note = becca.getNote(noteId);
+    if (blobId) {
+        const result = sql.getRow<{
+            textRepresentation: string | null;
+        }>(`
+            SELECT textRepresentation
+            FROM blobs
+            WHERE blobId = ?
+        `, [blobId]);
+
+        if (result) {
+            ocrText = result.textRepresentation;
+        }
+    }
+
+    return {
+        success: true,
+        text: ocrText || '',
+        hasOcr: !!ocrText
+    };
+}
+
+async function getNoteOCRText(req: Request<{ noteId: string }>) {
+    const note = becca.getNote(req.params.noteId);
     if (!note) {
         return [404, { success: false, message: 'Note not found' }];
     }
 
-    let ocrText: string | null = null;
-
-    if (note.blobId) {
-        const result = sql.getRow<{
-            textRepresentation: string | null;
-        }>(`
-            SELECT textRepresentation
-            FROM blobs
-            WHERE blobId = ?
-        `, [note.blobId]);
-
-        if (result) {
-            ocrText = result.textRepresentation;
-        }
-    }
-
-    return {
-        success: true,
-        text: ocrText || '',
-        hasOcr: !!ocrText
-    } satisfies TextRepresentationResponse;
+    return getTextRepresentation(note.blobId);
 }
 
 async function getAttachmentOCRText(req: Request<{ attachmentId: string }>) {
-    const { attachmentId } = req.params;
-
-    const attachment = becca.getAttachment(attachmentId);
+    const attachment = becca.getAttachment(req.params.attachmentId);
     if (!attachment) {
         return [404, { success: false, message: 'Attachment not found' }];
     }
 
-    let ocrText: string | null = null;
-
-    if (attachment.blobId) {
-        const result = sql.getRow<{
-            textRepresentation: string | null;
-        }>(`
-            SELECT textRepresentation
-            FROM blobs
-            WHERE blobId = ?
-        `, [attachment.blobId]);
-
-        if (result) {
-            ocrText = result.textRepresentation;
-        }
-    }
-
-    return {
-        success: true,
-        text: ocrText || '',
-        hasOcr: !!ocrText
-    } satisfies TextRepresentationResponse;
+    return getTextRepresentation(attachment.blobId);
 }
 
 export default {

@@ -151,43 +151,15 @@ class OCRService {
             return null;
         }
 
-        // Check if note type and MIME type are supported
-        if (!['image', 'file'].includes(note.type)) {
-            log.info(`Note ${noteId} is not an image or file note, skipping OCR`);
-            return null;
-        }
-
-        if (!this.getProcessorForMimeType(note.mime)) {
-            log.info(`Note ${noteId} has unsupported MIME type ${note.mime} for text extraction, skipping`);
-            return null;
-        }
-
-        // Check if OCR already exists
-        if (!options.forceReprocess) {
-            const existingOCR = this.getStoredOCRResult(note.blobId);
-            if (existingOCR) {
-                log.info(`OCR already exists for note ${noteId}, returning cached result`);
-                return existingOCR;
-            }
-        }
-
-        try {
-            const content = note.getContent();
-            if (!content || !(content instanceof Buffer)) {
-                throw new Error(`Cannot get image content for note ${noteId}`);
-            }
-
-            const language = this.resolveOcrLanguage(noteId, options.language);
-            const ocrResult = await this.extractTextFromFile(content, note.mime, { ...options, language });
-
-            // Store OCR result in blob
-            await this.storeOCRResult(note.blobId, ocrResult);
-
-            return ocrResult;
-        } catch (error) {
-            log.error(`Failed to process OCR for note ${noteId}: ${error}`);
-            throw error;
-        }
+        return this.processEntityOCR({
+            entityId: noteId,
+            entityType: 'note',
+            category: note.type,
+            mime: note.mime,
+            blobId: note.blobId,
+            languageNoteId: noteId,
+            getContent: () => note.getContent()
+        }, options);
     }
 
     /**
@@ -200,41 +172,63 @@ class OCRService {
             return null;
         }
 
-        // Check if attachment role and MIME type are supported
-        if (!['image', 'file'].includes(attachment.role)) {
-            log.info(`Attachment ${attachmentId} is not an image or file, skipping OCR`);
+        return this.processEntityOCR({
+            entityId: attachmentId,
+            entityType: 'attachment',
+            category: attachment.role,
+            mime: attachment.mime,
+            blobId: attachment.blobId,
+            languageNoteId: attachment.ownerId,
+            getContent: () => attachment.getContent()
+        }, options);
+    }
+
+    /**
+     * Shared OCR processing logic for both notes and attachments.
+     */
+    private async processEntityOCR(entity: {
+        entityId: string;
+        entityType: string;
+        category: string;
+        mime: string;
+        blobId: string | undefined;
+        languageNoteId: string;
+        getContent: () => string | Buffer;
+    }, options: OCRProcessingOptions = {}): Promise<OCRResult | null> {
+        const { entityId, entityType, category, mime, blobId, languageNoteId } = entity;
+
+        if (!['image', 'file'].includes(category)) {
+            log.info(`${entityType} ${entityId} is not an image or file, skipping OCR`);
             return null;
         }
 
-        if (!this.getProcessorForMimeType(attachment.mime)) {
-            log.info(`Attachment ${attachmentId} has unsupported MIME type ${attachment.mime} for text extraction, skipping`);
+        if (!this.getProcessorForMimeType(mime)) {
+            log.info(`${entityType} ${entityId} has unsupported MIME type ${mime} for text extraction, skipping`);
             return null;
         }
 
-        // Check if OCR already exists
         if (!options.forceReprocess) {
-            const existingOCR = this.getStoredOCRResult(attachment.blobId);
+            const existingOCR = this.getStoredOCRResult(blobId);
             if (existingOCR) {
-                log.info(`OCR already exists for attachment ${attachmentId}, returning cached result`);
+                log.info(`OCR already exists for ${entityType} ${entityId}, returning cached result`);
                 return existingOCR;
             }
         }
 
         try {
-            const content = attachment.getContent();
+            const content = entity.getContent();
             if (!content || !(content instanceof Buffer)) {
-                throw new Error(`Cannot get image content for attachment ${attachmentId}`);
+                throw new Error(`Cannot get content for ${entityType} ${entityId}`);
             }
 
-            const language = this.resolveOcrLanguage(attachment.ownerId, options.language);
-            const ocrResult = await this.extractTextFromFile(content, attachment.mime, { ...options, language });
+            const language = this.resolveOcrLanguage(languageNoteId, options.language);
+            const ocrResult = await this.extractTextFromFile(content, mime, { ...options, language });
 
-            // Store OCR result in blob
-            await this.storeOCRResult(attachment.blobId, ocrResult);
+            await this.storeOCRResult(blobId, ocrResult);
 
             return ocrResult;
         } catch (error) {
-            log.error(`Failed to process OCR for attachment ${attachmentId}: ${error}`);
+            log.error(`Failed to process OCR for ${entityType} ${entityId}: ${error}`);
             throw error;
         }
     }
