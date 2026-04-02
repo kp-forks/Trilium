@@ -170,21 +170,14 @@ class OCRService {
             return null;
         }
 
-        // Check if note type and MIME type are supported for OCR
-        if (note.type === 'image') {
-            if (!this.isSupportedMimeType(note.mime)) {
-                log.info(`Image note ${noteId} has unsupported MIME type ${note.mime}, skipping OCR`);
-                return null;
-            }
-        } else if (note.type === 'file') {
-            // Check if file MIME type is supported by any processor
-            const processor = this.getProcessorForMimeType(note.mime);
-            if (!processor) {
-                log.info(`File note ${noteId} has unsupported MIME type ${note.mime} for OCR, skipping`);
-                return null;
-            }
-        } else {
+        // Check if note type and MIME type are supported
+        if (!['image', 'file'].includes(note.type)) {
             log.info(`Note ${noteId} is not an image or file note, skipping OCR`);
+            return null;
+        }
+
+        if (!this.getProcessorForMimeType(note.mime)) {
+            log.info(`Note ${noteId} has unsupported MIME type ${note.mime} for text extraction, skipping`);
             return null;
         }
 
@@ -226,21 +219,14 @@ class OCRService {
             return null;
         }
 
-        // Check if attachment role and MIME type are supported for OCR
-        if (attachment.role === 'image') {
-            if (!this.isSupportedMimeType(attachment.mime)) {
-                log.info(`Image attachment ${attachmentId} has unsupported MIME type ${attachment.mime}, skipping OCR`);
-                return null;
-            }
-        } else if (attachment.role === 'file') {
-            // Check if file MIME type is supported by any processor
-            const processor = this.getProcessorForMimeType(attachment.mime);
-            if (!processor) {
-                log.info(`File attachment ${attachmentId} has unsupported MIME type ${attachment.mime} for OCR, skipping`);
-                return null;
-            }
-        } else {
+        // Check if attachment role and MIME type are supported
+        if (!['image', 'file'].includes(attachment.role)) {
             log.info(`Attachment ${attachmentId} is not an image or file, skipping OCR`);
+            return null;
+        }
+
+        if (!this.getProcessorForMimeType(attachment.mime)) {
+            log.info(`Attachment ${attachmentId} has unsupported MIME type ${attachment.mime} for text extraction, skipping`);
             return null;
         }
 
