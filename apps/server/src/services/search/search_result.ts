@@ -1,6 +1,5 @@
 import becca from "../../becca/becca.js";
 import beccaService from "../../becca/becca_service.js";
-import sql from "../sql.js";
 import {
     calculateOptimizedEditDistance,
     FUZZY_SEARCH_CONFIG,
@@ -83,9 +82,6 @@ class SearchResult {
         this.addScoreForStrings(tokens, note.title, SCORE_WEIGHTS.TITLE_FACTOR, enableFuzzyMatching);
         this.addScoreForStrings(tokens, this.notePathTitle, SCORE_WEIGHTS.PATH_FACTOR, enableFuzzyMatching);
 
-        // Add OCR scoring - weight between title and content matches
-        this.addOCRScore(tokens, 1.5);
-
         if (note.isInHiddenSubtree()) {
             this.score = this.score / SCORE_WEIGHTS.HIDDEN_NOTE_PENALTY;
         }
@@ -128,32 +124,6 @@ class SearchResult {
             }
         }
         this.score += tokenScore;
-    }
-
-    addOCRScore(tokens: string[], factor: number) {
-        try {
-            // Search for OCR results for this note and its attachments
-            const ocrResults = sql.getRows(`
-                SELECT b.textRepresentation
-                FROM blobs b
-                WHERE b.textRepresentation IS NOT NULL
-                  AND b.textRepresentation != ''
-                  AND (
-                      b.blobId = (SELECT blobId FROM notes WHERE noteId = ? AND isDeleted = 0)
-                      OR b.blobId IN (
-                          SELECT blobId FROM attachments WHERE ownerId = ? AND isDeleted = 0
-                      )
-                  )
-            `, [this.noteId, this.noteId]);
-
-            for (const ocrResult of ocrResults as Array<{textRepresentation: string}>) {
-                // Add score for OCR text matches
-                this.addScoreForStrings(tokens, ocrResult.textRepresentation, factor);
-            }
-        } catch (error) {
-            // Silently fail if OCR service is not available
-            console.debug('OCR scoring failed:', error);
-        }
     }
 
     /**
