@@ -40,7 +40,7 @@ export class ImageProcessor extends FileProcessor {
             const result = await this.worker!.recognize(buffer);
 
             // Filter text based on minimum confidence threshold
-            const { filteredText, overallConfidence } = this.filterTextByConfidence(result.data, options);
+            const { filteredText, overallConfidence } = this.filterTextByConfidence(result.data);
 
             const ocrResult: OCRResult = {
                 text: filteredText,
@@ -93,7 +93,7 @@ export class ImageProcessor extends FileProcessor {
     /**
      * Filter text based on minimum confidence threshold
      */
-    private filterTextByConfidence(data: any, options: OCRProcessingOptions): { filteredText: string; overallConfidence: number } {
+    private filterTextByConfidence(data: any): { filteredText: string; overallConfidence: number } {
         const minConfidence = this.getMinConfidenceThreshold();
 
         // If no minimum confidence set, return original text

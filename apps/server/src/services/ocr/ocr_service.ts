@@ -219,7 +219,7 @@ class OCRService {
             const language = this.resolveOcrLanguage(languageNoteId, options.language);
             const ocrResult = await this.extractTextFromFile(content, mime, { ...options, language });
 
-            await this.storeOCRResult(blobId, ocrResult);
+            this.storeOCRResult(blobId, ocrResult);
 
             return ocrResult;
         } catch (error) {
@@ -231,7 +231,7 @@ class OCRService {
     /**
      * Store OCR result in blob
      */
-    async storeOCRResult(blobId: string | undefined, ocrResult: OCRResult): Promise<void> {
+    storeOCRResult(blobId: string | undefined, ocrResult: OCRResult): void {
         if (!blobId) {
             log.error('Cannot store OCR result: blobId is undefined');
             return;
