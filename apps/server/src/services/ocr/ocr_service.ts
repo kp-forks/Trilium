@@ -113,25 +113,6 @@ class OCRService {
         return "eng";
     }
 
-    /**
-     * Check if a MIME type is supported for OCR
-     */
-    isSupportedMimeType(mimeType: string): boolean {
-        if (!mimeType || typeof mimeType !== 'string') {
-            return false;
-        }
-
-        const supportedTypes = [
-            'image/jpeg',
-            'image/jpg',
-            'image/png',
-            'image/gif',
-            'image/bmp',
-            'image/tiff',
-            'image/webp'
-        ];
-        return supportedTypes.includes(mimeType.toLowerCase());
-    }
 
     /**
      * Extract text from file buffer using appropriate processor
@@ -590,16 +571,6 @@ class OCRService {
         return Array.from(supportedTypes);
     }
 
-    /**
-     * Check if a MIME type is supported by any processor
-     */
-    isSupportedByAnyProcessor(mimeType: string): boolean {
-        if (!mimeType) return false;
-
-        // Check if any processor can handle this MIME type
-        const processor = this.getProcessorForMimeType(mimeType);
-        return processor !== null;
-    }
 
     /**
      * Get blobs that need OCR processing (those without text representation)
