@@ -47,7 +47,7 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
     async function processOCR() {
         setProcessing(true);
         try {
-            const response = await server.post<{ success: boolean; message?: string }>(`ocr/process-note/${note.noteId}`);
+            const response = await server.post<{ success: boolean; message?: string }>(`ocr/process-note/${note.noteId}`, { forceReprocess: true });
             if (response.success) {
                 toast.showMessage(t("ocr.processing_started"));
                 setTimeout(fetchText, 2000);
