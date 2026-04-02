@@ -1,4 +1,6 @@
-import pdfParse from 'pdf-parse';
+// Import the actual library directly, bypassing the wrapper index.js
+// which tries to read a test PDF file at import time.
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 
 import log from '../../log.js';
 import { OCRProcessingOptions, OCRResult } from '../ocr_service.js';
