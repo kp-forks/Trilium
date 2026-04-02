@@ -440,24 +440,19 @@ function findFirstNoteWithQuery(query: string, searchContext: SearchContext): BN
  * or any of its attachment blobs.
  */
 function getTextRepresentationForNote(note: BNote): string | null {
-    const noteBlob = becca.getBlob({ blobId: note.blobId });
-    if (noteBlob?.textRepresentation) {
-        return noteBlob.textRepresentation;
-    }
+    // Query only textRepresentation to avoid loading large binary content into memory.
+    const row = sql.getRow<{ textRepresentation: string | null }>(`
+        SELECT b.textRepresentation FROM blobs b
+        WHERE b.textRepresentation IS NOT NULL
+          AND b.textRepresentation != ''
+          AND (
+              b.blobId = ?
+              OR b.blobId IN (SELECT blobId FROM attachments WHERE ownerId = ? AND isDeleted = 0)
+          )
+        LIMIT 1
+    `, [note.blobId, note.noteId]);
 
-    const attachmentBlobIds = sql.getColumn<string>(
-        `SELECT blobId FROM attachments WHERE ownerId = ? AND isDeleted = 0`,
-        [note.noteId]
-    );
-
-    for (const blobId of attachmentBlobIds) {
-        const blob = becca.getBlob({ blobId });
-        if (blob?.textRepresentation) {
-            return blob.textRepresentation;
-        }
-    }
-
-    return null;
+    return row?.textRepresentation ?? null;
 }
 
 function extractContentSnippet(noteId: string, searchTokens: string[], maxLength: number = 200): string {

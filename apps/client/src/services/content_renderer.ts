@@ -148,7 +148,7 @@ async function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery
     if (entity instanceof FNote) {
         url = `api/images/${entity.noteId}/${encodedTitle}?${Math.random()}`;
     } else if (entity instanceof FAttachment) {
-        url = `api/attachments/${entity.attachmentId}/image/${encodedTitle}?${entity.utcDateModified}">`;
+        url = `api/attachments/${entity.attachmentId}/image/${encodedTitle}?${entity.utcDateModified}`;
     }
 
     $renderedContent // styles needed for the zoom to work well
