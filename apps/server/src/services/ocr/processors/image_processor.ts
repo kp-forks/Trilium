@@ -90,16 +90,6 @@ export class ImageProcessor extends FileProcessor {
         this.currentLanguage = language;
     }
 
-    async cleanup(): Promise<void> {
-        if (this.worker) {
-            await this.worker.terminate();
-            this.worker = null;
-        }
-        this.currentLanguage = null;
-        log.info('Image OCR processor cleaned up');
-    }
-
-
 
     /**
      * Filter text based on minimum confidence threshold

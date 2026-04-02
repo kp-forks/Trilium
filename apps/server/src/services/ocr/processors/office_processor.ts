@@ -53,7 +53,4 @@ export class OfficeProcessor extends FileProcessor {
         return 'office';
     }
 
-    async cleanup(): Promise<void> {
-        // Nothing to clean up.
-    }
 }

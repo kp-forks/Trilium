@@ -86,7 +86,4 @@ export class TIFFProcessor extends FileProcessor {
         return 'tiff';
     }
 
-    async cleanup(): Promise<void> {
-        await this.imageProcessor.cleanup();
-    }
 }

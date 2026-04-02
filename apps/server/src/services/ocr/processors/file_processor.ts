@@ -23,11 +23,4 @@ export abstract class FileProcessor {
      * Get list of MIME types supported by this processor
      */
     abstract getSupportedMimeTypes(): string[];
-
-    /**
-     * Clean up any resources
-     */
-    cleanup(): Promise<void> {
-        return Promise.resolve();
-    }
 }

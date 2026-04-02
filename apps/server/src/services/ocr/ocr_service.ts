@@ -1,5 +1,4 @@
 import { getTesseractCode } from '@triliumnext/commons';
-import Tesseract from 'tesseract.js';
 
 import becca from '../../becca/becca.js';
 import blobService from '../blob.js';
@@ -38,7 +37,6 @@ interface OCRBlobRow {
  * Uses Tesseract.js for text recognition
  */
 class OCRService {
-    private worker: Tesseract.Worker | null = null;
     private isProcessing = false;
     private processors: Map<string, FileProcessor> = new Map();
 
@@ -380,17 +378,6 @@ class OCRService {
             log.error(`Failed to get OCR stats: ${error}`);
             return { totalProcessed: 0, imageNotes: 0, imageAttachments: 0 };
         }
-    }
-
-    /**
-     * Clean up OCR service
-     */
-    async cleanup(): Promise<void> {
-        if (this.worker) {
-            await this.worker.terminate();
-            this.worker = null;
-        }
-        log.info('OCR service cleaned up');
     }
 
     /**

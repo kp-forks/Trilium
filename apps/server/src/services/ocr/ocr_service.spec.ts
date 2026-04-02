@@ -804,20 +804,4 @@ describe('OCRService', () => {
         });
     });
 
-    describe('cleanup', () => {
-        it('should terminate worker on cleanup', async () => {
-
-            await ocrService.cleanup();
-
-            expect(mockWorker.terminate).toHaveBeenCalled();
-            expect(mockLog.info).toHaveBeenCalledWith('OCR service cleaned up');
-        });
-
-        it('should handle cleanup when worker is not initialized', async () => {
-            await ocrService.cleanup();
-
-            expect(mockWorker.terminate).not.toHaveBeenCalled();
-            expect(mockLog.info).toHaveBeenCalledWith('OCR service cleaned up');
-        });
-    });
 });

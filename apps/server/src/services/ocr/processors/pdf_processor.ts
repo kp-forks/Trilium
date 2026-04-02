@@ -35,7 +35,4 @@ export class PDFProcessor extends FileProcessor {
         return 'pdf';
     }
 
-    async cleanup(): Promise<void> {
-        // Nothing to clean up.
-    }
 }
