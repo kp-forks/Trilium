@@ -435,21 +435,51 @@ function findFirstNoteWithQuery(query: string, searchContext: SearchContext): BN
     return searchResults.length > 0 ? becca.notes[searchResults[0].noteId] : null;
 }
 
+/**
+ * Returns the first non-empty textRepresentation for a note's own blob
+ * or any of its attachment blobs.
+ */
+function getTextRepresentationForNote(note: BNote): string | null {
+    const noteBlob = becca.getBlob({ blobId: note.blobId });
+    if (noteBlob?.textRepresentation) {
+        return noteBlob.textRepresentation;
+    }
+
+    const attachmentBlobIds = sql.getColumn<string>(
+        `SELECT blobId FROM attachments WHERE ownerId = ? AND isDeleted = 0`,
+        [note.noteId]
+    );
+
+    for (const blobId of attachmentBlobIds) {
+        const blob = becca.getBlob({ blobId });
+        if (blob?.textRepresentation) {
+            return blob.textRepresentation;
+        }
+    }
+
+    return null;
+}
+
 function extractContentSnippet(noteId: string, searchTokens: string[], maxLength: number = 200): string {
     const note = becca.notes[noteId];
     if (!note) {
         return "";
     }
 
-    // Only extract content for text-based notes
-    if (!["text", "code", "mermaid", "canvas", "mindMap"].includes(note.type)) {
-        return "";
-    }
-
     try {
-        let content = note.getContent();
-        
-        if (!content || typeof content !== "string") {
+        let content: string | undefined;
+
+        if (["text", "code", "mermaid", "canvas", "mindMap"].includes(note.type)) {
+            const raw = note.getContent();
+            if (raw && typeof raw === "string") {
+                content = raw;
+            }
+        } else {
+            // For non-text notes (image, file), use OCR text representation
+            content = getTextRepresentationForNote(note) || undefined;
+        }
+
+        if (!content) {
             return "";
         }
 
