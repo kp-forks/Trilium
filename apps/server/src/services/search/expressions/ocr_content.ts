@@ -1,98 +1,69 @@
-import Expression from "./expression.js";
-import SearchContext from "../search_context.js";
-import NoteSet from "../note_set.js";
-import sql from "../../sql.js";
 import becca from "../../../becca/becca.js";
+import NoteSet from "../note_set.js";
+import type SearchContext from "../search_context.js";
+import Expression from "./expression.js";
 
 /**
- * Search expression for finding text within OCR-extracted content from images
+ * Search expression for finding text within OCR-extracted content (textRepresentation)
+ * from image notes and their attachments.
  */
 export default class OCRContentExpression extends Expression {
-    private searchText: string;
+    private tokens: string[];
 
-    constructor(searchText: string) {
+    constructor(tokens: string[]) {
         super();
-        this.searchText = searchText;
+        this.tokens = tokens;
     }
 
     execute(inputNoteSet: NoteSet, executionContext: object, searchContext: SearchContext): NoteSet {
         const resultNoteSet = new NoteSet();
-        const ocrResults = this.searchOCRContent(this.searchText);
 
-        for (const ocrResult of ocrResults) {
-            // Find notes that use this blob
-            const notes = sql.getRows<{noteId: string}>(`
-                SELECT noteId FROM notes 
-                WHERE blobId = ? AND isDeleted = 0
-            `, [ocrResult.blobId]);
-
-            for (const noteRow of notes) {
-                const note = becca.getNote(noteRow.noteId);
-                if (note && !note.isDeleted && inputNoteSet.hasNoteId(note.noteId)) {
-                    resultNoteSet.add(note);
-                }
-            }
-
-            // Find attachments that use this blob and their parent notes
-            const attachments = sql.getRows<{ownerId: string}>(`
-                SELECT ownerId FROM attachments
-                WHERE blobId = ? AND isDeleted = 0
-            `, [ocrResult.blobId]);
-
-            for (const attachmentRow of attachments) {
-                const note = becca.getNote(attachmentRow.ownerId);
-                if (note && !note.isDeleted && inputNoteSet.hasNoteId(note.noteId)) {
-                    resultNoteSet.add(note);
-                }
+        for (const note of inputNoteSet.notes) {
+            if (this.noteMatchesOCR(note.noteId)) {
+                resultNoteSet.add(note);
             }
         }
 
-        // Add highlight tokens for OCR matches
-        if (ocrResults.length > 0) {
-            const tokens = this.extractHighlightTokens(this.searchText);
-            searchContext.highlightedTokens.push(...tokens);
+        if (resultNoteSet.notes.length > 0) {
+            const highlightTokens = this.tokens
+                .filter(token => token.length > 2)
+                .map(token => token.toLowerCase());
+            searchContext.highlightedTokens.push(...highlightTokens);
         }
 
         return resultNoteSet;
     }
 
+    /**
+     * Check if a note (or its attachments) has OCR text matching all tokens.
+     */
+    private noteMatchesOCR(noteId: string): boolean {
+        const note = becca.notes[noteId];
+        if (!note) return false;
 
-    private searchOCRContent(searchText: string): Array<{
-        blobId: string;
-        textRepresentation: string;
-    }> {
-        try {
-            // Search in blobs table for OCR text
-            const query = `
-                SELECT blobId, textRepresentation
-                FROM blobs
-                WHERE textRepresentation LIKE ?
-                AND textRepresentation IS NOT NULL
-                AND textRepresentation != ''
-                LIMIT 50
-            `;
-            const params = [`%${searchText}%`];
+        // Collect all textRepresentation values for this note
+        const texts: string[] = [];
 
-            return sql.getRows<{
-                blobId: string;
-                textRepresentation: string;
-            }>(query, params);
-        } catch (error) {
-            console.error('Error searching OCR content:', error);
-            return [];
+        const noteBlob = becca.getBlob({ blobId: note.blobId });
+        if (noteBlob?.textRepresentation) {
+            texts.push(noteBlob.textRepresentation.toLowerCase());
         }
-    }
 
+        for (const attachment of note.getAttachments()) {
+            const blob = becca.getBlob({ blobId: attachment.blobId });
+            if (blob?.textRepresentation) {
+                texts.push(blob.textRepresentation.toLowerCase());
+            }
+        }
 
-    private extractHighlightTokens(searchText: string): string[] {
-        // Split search text into words and return them as highlight tokens
-        return searchText
-            .split(/\s+/)
-            .filter(token => token.length > 2)
-            .map(token => token.toLowerCase());
+        if (texts.length === 0) return false;
+
+        // All tokens must appear in at least one of the text representations
+        const combined = texts.join(" ");
+        return this.tokens.every(token => combined.includes(token.toLowerCase()));
     }
 
     toString(): string {
-        return `OCRContent('${this.searchText}')`;
+        return `OCRContent('${this.tokens.join("', '")}')`;
     }
 }

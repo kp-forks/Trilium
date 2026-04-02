@@ -50,23 +50,16 @@ function getFulltext(_tokens: TokenData[], searchContext: SearchContext, leading
                 new NoteContentFulltextExp("=", { tokens, flatText: true })
             ];
 
-            // Add OCR content search for each token
-            for (const token of tokens) {
-                exactMatchExpressions.push(new OCRContentExpression(token));
-            }
+            exactMatchExpressions.push(new OCRContentExpression(tokens));
 
             return new OrExp(exactMatchExpressions);
         }
 
         const searchExpressions: Expression[] = [
             new NoteFlatTextExp(tokens),
-            new NoteContentFulltextExp(operator, { tokens, flatText: true })
+            new NoteContentFulltextExp(operator, { tokens, flatText: true }),
+            new OCRContentExpression(tokens)
         ];
-
-        // Add OCR content search for each token
-        for (const token of tokens) {
-            searchExpressions.push(new OCRContentExpression(token));
-        }
 
         return new OrExp(searchExpressions);
     }
