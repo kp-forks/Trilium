@@ -777,8 +777,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0
       i18next:
-        specifier: 25.10.10
-        version: 25.10.10(typescript@6.0.2)
+        specifier: 26.0.1
+        version: 26.0.1(typescript@6.0.2)
       i18next-fs-backend:
         specifier: 2.6.1
         version: 2.6.1
@@ -10686,14 +10686,6 @@ packages:
   i18next-http-backend@3.0.2:
     resolution: {integrity: sha512-PdlvPnvIp4E1sYi46Ik4tBYh/v/NbYfFFgTjkwFl0is8A18s7/bx9aXqsrOax9WUbeNS6mD2oix7Z0yGGf6m5g==}
 
-  i18next@25.10.10:
-    resolution: {integrity: sha512-cqUW2Z3EkRx7NqSyywjkgCLK7KLCL6IFVFcONG7nVYIJ3ekZ1/N5jUsihHV6Bq37NfhgtczxJcxduELtjTwkuQ==}
-    peerDependencies:
-      typescript: ^5 || ^6
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
   i18next@26.0.1:
     resolution: {integrity: sha512-vtz5sXU4+nkCm8yEU+JJ6yYIx0mkg9e68W0G0PXpnOsmzLajNsW5o28DJMqbajxfsfq0gV3XdrBudsDQnwxfsQ==}
     peerDependencies:
@@ -17344,6 +17336,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       '@ckeditor/ckeditor5-widget': 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-cloud-services@47.6.1':
     dependencies:
@@ -17834,8 +17828,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-line-height@47.6.1':
     dependencies:
@@ -17950,8 +17942,6 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-operations-compressor@47.6.1':
     dependencies:
@@ -29018,12 +29008,6 @@ snapshots:
       cross-fetch: 4.0.0(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
-
-  i18next@25.10.10(typescript@6.0.2):
-    dependencies:
-      '@babel/runtime': 7.29.2
-    optionalDependencies:
-      typescript: 6.0.2
 
   i18next@26.0.1(typescript@6.0.2):
     dependencies:
