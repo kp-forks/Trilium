@@ -5,6 +5,7 @@ import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import FormToggle from "../../react/FormToggle";
+import Slider from "../../react/Slider";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
@@ -77,12 +78,11 @@ function OcrSettings() {
                 />
             </OptionsRow>
 
-            <OptionsRow name="ocr-min-confidence" label={t("images.ocr_min_confidence")} description={t("images.ocr_confidence_description")}>
-                <FormTextBoxWithUnit
-                    type="number" min="0" max="1" step="0.05"
-                    unit={t("images.ocr_confidence_unit")}
-                    currentValue={ocrMinConfidence}
-                    onChange={setOcrMinConfidence}
+            <OptionsRow name="ocr-min-confidence" label={`${t("images.ocr_min_confidence")} (${Math.round(parseFloat(ocrMinConfidence ?? "0.75") * 100)}%)`} description={t("images.ocr_confidence_description")}>
+                <Slider
+                    min={0} max={100} step={5}
+                    value={Math.round(parseFloat(ocrMinConfidence ?? "0.75") * 100)}
+                    onChange={(v) => setOcrMinConfidence(String(v / 100))}
                 />
             </OptionsRow>
 
