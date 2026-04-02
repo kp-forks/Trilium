@@ -215,7 +215,6 @@ const defaultOptions: DefaultOption[] = [
     { name: "llmProviders", value: "[]", isSynced: false },
 
     // OCR options
-    { name: "ocrEnabled", value: "false", isSynced: true },
     { name: "ocrAutoProcessImages", value: "true", isSynced: true },
     { name: "ocrMinConfidence", value: "0.55", isSynced: true },
 ];

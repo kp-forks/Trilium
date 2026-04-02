@@ -16,11 +16,6 @@ export default class OCRContentExpression extends Expression {
     }
 
     execute(inputNoteSet: NoteSet, executionContext: object, searchContext: SearchContext): NoteSet {
-        // Don't search OCR content if it's not enabled
-        if (!this.isOCRSearchEnabled()) {
-            return new NoteSet();
-        }
-
         const resultNoteSet = new NoteSet();
         const ocrResults = this.searchOCRContent(this.searchText);
 
@@ -61,14 +56,6 @@ export default class OCRContentExpression extends Expression {
         return resultNoteSet;
     }
 
-    private isOCRSearchEnabled(): boolean {
-        try {
-            const optionService = require('../../options.js').default;
-            return optionService.getOptionBool('ocrEnabled');
-        } catch {
-            return false;
-        }
-    }
 
     private searchOCRContent(searchText: string): Array<{
         blobId: string;

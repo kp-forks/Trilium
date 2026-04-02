@@ -1265,8 +1265,6 @@
     "jpeg_quality": "JPEG quality",
     "jpeg_quality_description": "Recommended range is 50–85. Lower values reduce file size, higher values preserve detail.",
     "ocr_section_title": "Text Extraction (OCR)",
-    "enable_ocr": "Enable text extraction",
-    "ocr_description": "Extract searchable text from images, PDFs, and Office documents (Word, Excel, PowerPoint).",
     "ocr_auto_process": "Auto-process new files",
     "ocr_auto_process_description": "Automatically extract text from newly uploaded or pasted files.",
     "ocr_min_confidence": "Minimum confidence",

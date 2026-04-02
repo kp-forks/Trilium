@@ -1,18 +1,17 @@
-"use strict";
+import imageType from "image-type";
+import isAnimated from "is-animated";
+import isSvg from "is-svg";
+import { Jimp } from "jimp";
+import sanitizeFilename from "sanitize-filename";
 
 import becca from "../becca/becca.js";
-import log from "./log.js";
-import protectedSessionService from "./protected_session.js";
-import noteService from "./notes.js";
-import optionService from "./options.js";
-import sql from "./sql.js";
-import { Jimp } from "jimp";
-import imageType from "image-type";
-import sanitizeFilename from "sanitize-filename";
-import isSvg from "is-svg";
-import isAnimated from "is-animated";
 import htmlSanitizer from "./html_sanitizer.js";
-import ocrService, { type OCRResult } from "./ocr/ocr_service.js";
+import log from "./log.js";
+import noteService from "./notes.js";
+import ocrService from "./ocr/ocr_service.js";
+import optionService from "./options.js";
+import protectedSessionService from "./protected_session.js";
+import sql from "./sql.js";
 
 async function processImage(uploadBuffer: Buffer, originalName: string, shrinkImageSwitch: boolean, noteId?: string) {
     const compressImages = optionService.getOptionBool("compressImages");
@@ -26,8 +25,7 @@ async function processImage(uploadBuffer: Buffer, originalName: string, shrinkIm
     }
 
     // Schedule OCR processing in the background for best quality
-    // Only auto-process if both OCR is enabled and auto-processing is enabled
-    if (noteId && ocrService.isOCREnabled() && optionService.getOptionBool("ocrAutoProcessImages") && origImageFormat) {
+    if (noteId && optionService.getOptionBool("ocrAutoProcessImages") && origImageFormat) {
         const imageMime = getImageMimeFromExtension(origImageFormat.ext);
         const supportedMimeTypes = ocrService.getAllSupportedMimeTypes();
 
@@ -41,14 +39,14 @@ async function processImage(uploadBuffer: Buffer, originalName: string, shrinkIm
                         // noteId could be either a note ID or attachment ID
                         const note = becca.getNote(noteId);
                         const attachment = becca.getAttachment(noteId);
-                        
+
                         let blobId: string | undefined;
                         if (note && note.blobId) {
                             blobId = note.blobId;
                         } else if (attachment && attachment.blobId) {
                             blobId = attachment.blobId;
                         }
-                        
+
                         if (blobId) {
                             await ocrService.storeOCRResult(blobId, ocrResult);
                             log.info(`Successfully processed OCR for image ${noteId} (${originalName})`);
@@ -83,9 +81,8 @@ async function processImage(uploadBuffer: Buffer, originalName: string, shrinkIm
 async function getImageType(buffer: Buffer) {
     if (isSvg(buffer.toString())) {
         return { ext: "svg" };
-    } else {
-        return (await imageType(buffer)) || { ext: "jpg" }; // optimistic JPG default
     }
+    return (await imageType(buffer)) || { ext: "jpg" }; // optimistic JPG default
 }
 
 function getImageMimeFromExtension(ext: string) {

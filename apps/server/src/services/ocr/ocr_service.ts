@@ -50,18 +50,6 @@ class OCRService {
     }
 
     /**
-     * Check if OCR is enabled in settings
-     */
-    isOCREnabled(): boolean {
-        try {
-            return options.getOptionBool('ocrEnabled');
-        } catch (error) {
-            log.error(`Failed to check OCR enabled status: ${error}`);
-            return false;
-        }
-    }
-
-    /**
      * Resolves the Tesseract language code(s) for OCR processing.
      *
      * Priority:
@@ -479,10 +467,6 @@ class OCRService {
             return { success: false, message: 'Batch processing already in progress' };
         }
 
-        if (!this.isOCREnabled()) {
-            return { success: false, message: 'OCR is disabled' };
-        }
-
         try {
             // Count total blobs needing OCR processing
             const blobsNeedingOCR = this.getBlobsNeedingOCR();
@@ -773,8 +757,8 @@ class OCRService {
      * Process OCR for all blobs that need it (auto-processing)
      */
     async processAllBlobsNeedingOCR(): Promise<void> {
-        if (!this.isOCREnabled()) {
-            log.info('OCR is disabled, skipping auto-processing');
+        if (!options.getOptionBool('ocrAutoProcessImages')) {
+            log.info('OCR auto-processing is disabled, skipping');
             return;
         }
 

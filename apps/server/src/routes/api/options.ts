@@ -108,8 +108,6 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "llmProviders",
 
     // OCR options
-    "ocrEnabled",
-    "ocrLanguage",
     "ocrAutoProcessImages",
     "ocrMinConfidence"
 ]);

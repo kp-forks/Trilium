@@ -1,6 +1,5 @@
 import becca from "../../becca/becca.js";
 import beccaService from "../../becca/becca_service.js";
-import options from "../options.js";
 import sql from "../sql.js";
 import {
     calculateOptimizedEditDistance,
@@ -133,11 +132,6 @@ class SearchResult {
 
     addOCRScore(tokens: string[], factor: number) {
         try {
-            // Check if OCR is enabled
-            if (!options.getOptionBool('ocrEnabled')) {
-                return;
-            }
-
             // Search for OCR results for this note and its attachments
             const ocrResults = sql.getRows(`
                 SELECT b.textRepresentation
