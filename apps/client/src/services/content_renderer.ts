@@ -1,6 +1,6 @@
 import "./content_renderer.css";
 
-import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import { normalizeMimeTypeForCKEditor, type TextRepresentationResponse } from "@triliumnext/commons";
 import { h, render } from "preact";
 import WheelZoom from 'vanilla-js-wheel-zoom';
 
@@ -15,6 +15,7 @@ import openService from "./open.js";
 import protectedSessionService from "./protected_session.js";
 import protectedSessionHolder from "./protected_session_holder.js";
 import renderService from "./render.js";
+import server from "./server.js";
 import { applySingleBlockSyntaxHighlight } from "./syntax_highlight.js";
 import utils, { getErrorMessage } from "./utils.js";
 
@@ -58,7 +59,7 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
     } else if (["image", "canvas", "mindMap", "spreadsheet"].includes(type)) {
         await renderImage(entity, $renderedContent, options);
     } else if (!options.tooltip && ["file", "pdf", "audio", "video"].includes(type)) {
-        await renderFile(entity, type, $renderedContent);
+        await renderFile(entity, type, $renderedContent, options);
     } else if (type === "mermaid") {
         await renderMermaid(entity, $renderedContent);
     } else if (type === "render" && entity instanceof FNote) {
@@ -153,7 +154,8 @@ async function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery
     $renderedContent // styles needed for the zoom to work well
         .css("display", "flex")
         .css("align-items", "center")
-        .css("justify-content", "center");
+        .css("justify-content", "center")
+        .css("flex-direction", "column");   // OCR text is displayed below the image.
 
     const $img = $("<img>")
         .attr("src", url || "")
@@ -180,7 +182,6 @@ async function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery
 
     imageContextMenuService.setupContextMenu($img);
 
-    // Add OCR text display for image notes
     if (entity instanceof FNote && options.showTextRepresentation) {
         await addOCRTextIfAvailable(entity, $renderedContent);
     }
@@ -188,22 +189,19 @@ async function renderImage(entity: FNote | FAttachment, $renderedContent: JQuery
 
 async function addOCRTextIfAvailable(note: FNote, $content: JQuery<HTMLElement>) {
     try {
-        const response = await fetch(`api/ocr/notes/${note.noteId}/text`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.hasOcr && data.text) {
-                const $ocrSection = $(`
-                    <div class="ocr-text-section">
-                        <div class="ocr-header">
-                            <span class="bx bx-text"></span> ${t("ocr.extracted_text")}
-                        </div>
-                        <div class="ocr-content"></div>
+        const data = await server.get<TextRepresentationResponse>(`ocr/notes/${note.noteId}/text`);
+        if (data.success && data.hasOcr && data.text) {
+            const $ocrSection = $(`
+                <div class="ocr-text-section">
+                    <div class="ocr-header">
+                        <span class="bx bx-text"></span> ${t("ocr.extracted_text")}
                     </div>
-                `);
+                    <div class="ocr-content"></div>
+                </div>
+            `);
 
-                $ocrSection.find('.ocr-content').text(data.text);
-                $content.append($ocrSection);
-            }
+            $ocrSection.find('.ocr-content').text(data.text);
+            $content.append($ocrSection);
         }
     } catch (error) {
         // Silently fail if OCR API is not available
@@ -251,7 +249,6 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
         $content.append($videoPreview);
     }
 
-    // Add OCR text display for file notes
     if (entity instanceof FNote && options.showTextRepresentation) {
         await addOCRTextIfAvailable(entity, $content);
     }

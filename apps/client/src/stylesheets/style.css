@@ -2643,11 +2643,11 @@ iframe.print-iframe {
 }
 
 .ocr-text-section {
-    margin: 10px 0;
     padding: 10px;
     background: var(--accented-background-color);
     border-left: 3px solid var(--main-border-color);
     text-align: left;
+    width: 100%;
 }
 
 .ocr-header {
