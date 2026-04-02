@@ -205,12 +205,9 @@ class OCRService {
             return null;
         }
 
-        if (!options.forceReprocess) {
-            const existingOCR = this.getStoredOCRResult(blobId);
-            if (existingOCR) {
-                log.info(`OCR already exists for ${entityType} ${entityId}, returning cached result`);
-                return existingOCR;
-            }
+        if (!options.forceReprocess && this.hasStoredOCRResult(blobId)) {
+            log.info(`OCR already exists for ${entityType} ${entityId}, skipping`);
+            return null;
         }
 
         try {
@@ -256,39 +253,19 @@ class OCRService {
     }
 
     /**
-     * Get stored OCR result from blob
+     * Check whether a blob already has a stored text representation.
      */
-    private getStoredOCRResult(blobId: string | undefined): OCRResult | null {
+    private hasStoredOCRResult(blobId: string | undefined): boolean {
         if (!blobId) {
-            return null;
+            return false;
         }
 
-        try {
-            const row = sql.getRow<{
-                textRepresentation: string | null;
-            }>(`
-                SELECT textRepresentation
-                FROM blobs
-                WHERE blobId = ?
-            `, [blobId]);
+        const row = sql.getRow<{ textRepresentation: string | null }>(
+            `SELECT textRepresentation FROM blobs WHERE blobId = ?`,
+            [blobId]
+        );
 
-            if (!row || !row.textRepresentation) {
-                return null;
-            }
-
-            // Return basic OCR result from stored text
-            // Note: we lose confidence, language, and extractedAt metadata
-            // but gain simplicity by storing directly in blob
-            return {
-                text: row.textRepresentation,
-                confidence: 0.95, // Default high confidence for existing OCR
-                extractedAt: new Date().toISOString(),
-                language: 'eng'
-            };
-        } catch (error) {
-            log.error(`Failed to get OCR result for blob ${blobId}: ${error}`);
-            return null;
-        }
+        return !!row?.textRepresentation;
     }
 
     /**
