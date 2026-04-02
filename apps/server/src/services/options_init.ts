@@ -216,7 +216,7 @@ const defaultOptions: DefaultOption[] = [
 
     // OCR options
     { name: "ocrAutoProcessImages", value: "true", isSynced: true },
-    { name: "ocrMinConfidence", value: "0.55", isSynced: true },
+    { name: "ocrMinConfidence", value: "0.75", isSynced: true },
 ];
 
 /**
