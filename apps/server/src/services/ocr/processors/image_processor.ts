@@ -19,7 +19,6 @@ export class ImageProcessor extends FileProcessor {
         'image/png',
         'image/gif',
         'image/bmp',
-        'image/tiff',
         'image/webp'
     ];
 

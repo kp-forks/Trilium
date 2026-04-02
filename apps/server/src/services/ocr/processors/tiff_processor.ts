@@ -9,12 +9,10 @@ import { ImageProcessor } from './image_processor.js';
  * TIFF processor for extracting text from multi-page TIFF files
  */
 export class TIFFProcessor extends FileProcessor {
-    private imageProcessor: ImageProcessor;
     private readonly supportedTypes = ['image/tiff', 'image/tif'];
 
-    constructor() {
+    constructor(private imageProcessor: ImageProcessor) {
         super();
-        this.imageProcessor = new ImageProcessor();
     }
 
     canProcess(mimeType: string): boolean {

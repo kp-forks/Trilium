@@ -41,10 +41,10 @@ class OCRService {
     private processors: Map<string, FileProcessor> = new Map();
 
     constructor() {
-        // Initialize file processors
-        this.processors.set('image', new ImageProcessor());
+        const imageProcessor = new ImageProcessor();
+        this.processors.set('image', imageProcessor);
         this.processors.set('pdf', new PDFProcessor());
-        this.processors.set('tiff', new TIFFProcessor());
+        this.processors.set('tiff', new TIFFProcessor(imageProcessor));
         this.processors.set('office', new OfficeProcessor());
     }
 
