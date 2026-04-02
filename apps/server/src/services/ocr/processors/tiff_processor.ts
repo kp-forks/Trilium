@@ -74,7 +74,6 @@ export class TIFFProcessor extends FileProcessor {
                 pageCount
             };
 
-            log.info(`TIFF text extraction completed. Pages: ${pageCount}, Confidence: ${averageConfidence}%, Text length: ${result.text.length}`);
             return result;
 
         } catch (error) {

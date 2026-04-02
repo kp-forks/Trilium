@@ -51,7 +51,6 @@ export class ImageProcessor extends FileProcessor {
                 pageCount: 1
             };
 
-            log.info(`Image OCR extraction completed. Confidence: ${ocrResult.confidence}%, Text length: ${ocrResult.text.length}`);
             return ocrResult;
 
         } catch (error) {

@@ -54,7 +54,6 @@ export class OfficeProcessor extends FileProcessor {
                 pageCount: 1 // Office documents are treated as single logical document
             };
 
-            log.info(`Office document text extraction completed. Confidence: ${confidence}%, Text length: ${result.text.length}`);
             return result;
 
         } catch (error) {

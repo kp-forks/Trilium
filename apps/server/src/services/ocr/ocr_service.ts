@@ -148,7 +148,7 @@ class OCRService {
 
             const result = await processor.extractText(fileBuffer, options);
 
-            log.info(`OCR extraction completed. Confidence: ${result.confidence}%, Text length: ${result.text.length}`);
+            log.info(`OCR extraction completed. Confidence: ${Math.round(result.confidence * 100)}%, Text length: ${result.text.length}`);
             return result;
 
         } catch (error) {
