@@ -10,12 +10,7 @@ const MIGRATIONS: (SqlMigration | JsMigration)[] = [
     {
         version: 236,
         sql: /*sql*/`\
-            -- Add text representation column to blobs table
             ALTER TABLE blobs ADD COLUMN textRepresentation TEXT DEFAULT NULL;
-
-            -- Create index for text representation searches
-            CREATE INDEX IF NOT EXISTS idx_blobs_textRepresentation
-            ON blobs (textRepresentation);
         `
     },
     // Add missing database indices for query performance
