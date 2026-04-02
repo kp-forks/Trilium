@@ -620,7 +620,9 @@ class OCRService {
      */
     getBlobsNeedingOCR(): Array<{ blobId: string; mimeType: string; entityType: 'note' | 'attachment'; entityId: string }> {
         try {
-            // Get notes with blobs that need OCR (both image notes and file notes with supported MIME types)
+            const supportedMimes = this.getAllSupportedMimeTypes();
+            const placeholders = supportedMimes.map(() => '?').join(', ');
+
             const noteBlobs = sql.getRows<{
                 blobId: string;
                 mimeType: string;
@@ -629,35 +631,12 @@ class OCRService {
                 SELECT n.blobId, n.mime as mimeType, n.noteId as entityId
                 FROM notes n
                 JOIN blobs b ON n.blobId = b.blobId
-                WHERE (
-                    n.type = 'image'
-                    OR (
-                        n.type = 'file'
-                        AND n.mime IN (
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                            'application/msword',
-                            'application/vnd.ms-excel',
-                            'application/vnd.ms-powerpoint',
-                            'application/rtf',
-                            'application/pdf',
-                            'image/jpeg',
-                            'image/jpg',
-                            'image/png',
-                            'image/gif',
-                            'image/bmp',
-                            'image/tiff',
-                            'image/webp'
-                        )
-                    )
-                )
+                WHERE (n.type = 'image' OR (n.type = 'file' AND n.mime IN (${placeholders})))
                 AND n.isDeleted = 0
                 AND n.blobId IS NOT NULL
                 AND b.textRepresentation IS NULL
-            `);
+            `, supportedMimes);
 
-            // Get attachments with blobs that need OCR (both image and file attachments with supported MIME types)
             const attachmentBlobs = sql.getRows<{
                 blobId: string;
                 mimeType: string;
@@ -666,33 +645,11 @@ class OCRService {
                 SELECT a.blobId, a.mime as mimeType, a.attachmentId as entityId
                 FROM attachments a
                 JOIN blobs b ON a.blobId = b.blobId
-                WHERE (
-                    a.role = 'image'
-                    OR (
-                        a.role = 'file'
-                        AND a.mime IN (
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                            'application/msword',
-                            'application/vnd.ms-excel',
-                            'application/vnd.ms-powerpoint',
-                            'application/rtf',
-                            'application/pdf',
-                            'image/jpeg',
-                            'image/jpg',
-                            'image/png',
-                            'image/gif',
-                            'image/bmp',
-                            'image/tiff',
-                            'image/webp'
-                        )
-                    )
-                )
+                WHERE (a.role = 'image' OR (a.role = 'file' AND a.mime IN (${placeholders})))
                 AND a.isDeleted = 0
                 AND a.blobId IS NOT NULL
                 AND b.textRepresentation IS NULL
-            `);
+            `, supportedMimes);
 
             // Combine results
             const result = [
