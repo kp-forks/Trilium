@@ -380,11 +380,8 @@ function register(app: express.Application) {
     // OCR API
     asyncApiRoute(PST, "/api/ocr/process-note/:noteId", ocrRoute.processNoteOCR);
     asyncApiRoute(PST, "/api/ocr/process-attachment/:attachmentId", ocrRoute.processAttachmentOCR);
-    asyncApiRoute(GET, "/api/ocr/search", ocrRoute.searchOCR);
     asyncApiRoute(PST, "/api/ocr/batch-process", ocrRoute.batchProcessOCR);
     asyncApiRoute(GET, "/api/ocr/batch-progress", ocrRoute.getBatchProgress);
-    asyncApiRoute(GET, "/api/ocr/stats", ocrRoute.getOCRStats);
-    asyncApiRoute(DEL, "/api/ocr/delete/:blobId", ocrRoute.deleteOCRResults);
     asyncApiRoute(GET, "/api/ocr/notes/:noteId/text", ocrRoute.getNoteOCRText);
     asyncApiRoute(GET, "/api/ocr/attachments/:attachmentId/text", ocrRoute.getAttachmentOCRText);
 

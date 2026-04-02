@@ -27,17 +27,11 @@ export interface OCRProcessingOptions {
     enablePDFTextExtraction?: boolean;
 }
 
-interface OCRBlobRow {
-    blobId: string;
-    textRepresentation: string;
-}
-
 /**
  * OCR Service for extracting text from images and other OCR-able objects
  * Uses Tesseract.js for text recognition
  */
 class OCRService {
-    private isProcessing = false;
     private processors: Map<string, FileProcessor> = new Map();
 
     constructor() {
@@ -116,27 +110,17 @@ class OCRService {
      * Extract text from file buffer using appropriate processor
      */
     async extractTextFromFile(fileBuffer: Buffer, mimeType: string, options: OCRProcessingOptions = {}): Promise<OCRResult> {
-        try {
-            log.info(`Starting OCR text extraction for MIME type: ${mimeType} with language: ${options.language || "eng"}`);
-            this.isProcessing = true;
+        log.info(`Starting OCR text extraction for MIME type: ${mimeType} with language: ${options.language || "eng"}`);
 
-            // Find appropriate processor
-            const processor = this.getProcessorForMimeType(mimeType);
-            if (!processor) {
-                throw new Error(`No processor found for MIME type: ${mimeType}`);
-            }
-
-            const result = await processor.extractText(fileBuffer, options);
-
-            log.info(`OCR extraction completed. Confidence: ${Math.round(result.confidence * 100)}%, Text length: ${result.text.length}`);
-            return result;
-
-        } catch (error) {
-            log.error(`OCR text extraction failed: ${error}`);
-            throw error;
-        } finally {
-            this.isProcessing = false;
+        const processor = this.getProcessorForMimeType(mimeType);
+        if (!processor) {
+            throw new Error(`No processor found for MIME type: ${mimeType}`);
         }
+
+        const result = await processor.extractText(fileBuffer, options);
+
+        log.info(`OCR extraction completed. Confidence: ${Math.round(result.confidence * 100)}%, Text length: ${result.text.length}`);
+        return result;
     }
 
     /**
@@ -266,102 +250,6 @@ class OCRService {
         );
 
         return !!row?.textRepresentation;
-    }
-
-    /**
-     * Search for text in OCR results
-     */
-    searchOCRResults(searchText: string): Array<{ blobId: string; text: string }> {
-        try {
-            const query = `
-                SELECT blobId, textRepresentation
-                FROM blobs
-                WHERE textRepresentation LIKE ?
-                AND textRepresentation IS NOT NULL
-            `;
-            const params = [`%${searchText}%`];
-
-            const rows = sql.getRows<OCRBlobRow>(query, params);
-
-            return rows.map(row => ({
-                blobId: row.blobId,
-                text: row.textRepresentation
-            }));
-        } catch (error) {
-            log.error(`Failed to search OCR results: ${error}`);
-            return [];
-        }
-    }
-
-    /**
-     * Delete OCR results for a blob
-     */
-    deleteOCRResult(blobId: string): void {
-        try {
-            sql.execute(`UPDATE blobs SET textRepresentation = NULL WHERE blobId = ?`, [blobId]);
-
-            this.putBlobEntityChange(blobId);
-
-            log.info(`Deleted OCR result for blob ${blobId}`);
-        } catch (error) {
-            log.error(`Failed to delete OCR result for blob ${blobId}: ${error}`);
-            throw error;
-        }
-    }
-
-    /**
-     * Get OCR statistics
-     */
-    getOCRStats(): { totalProcessed: number; imageNotes: number; imageAttachments: number } {
-        try {
-            const stats = sql.getRow<{
-                total_processed: number;
-            }>(`
-                SELECT COUNT(*) as total_processed
-                FROM blobs
-                WHERE textRepresentation IS NOT NULL AND textRepresentation != ''
-            `);
-
-            // Count image notes with OCR
-            const noteStats = sql.getRow<{
-                count: number;
-            }>(`
-                SELECT COUNT(*) as count
-                FROM notes n
-                JOIN blobs b ON n.blobId = b.blobId
-                WHERE n.type = 'image'
-                AND n.isDeleted = 0
-                AND b.textRepresentation IS NOT NULL AND b.textRepresentation != ''
-            `);
-
-            // Count image attachments with OCR
-            const attachmentStats = sql.getRow<{
-                count: number;
-            }>(`
-                SELECT COUNT(*) as count
-                FROM attachments a
-                JOIN blobs b ON a.blobId = b.blobId
-                WHERE a.role = 'image'
-                AND a.isDeleted = 0
-                AND b.textRepresentation IS NOT NULL AND b.textRepresentation != ''
-            `);
-
-            return {
-                totalProcessed: stats?.total_processed || 0,
-                imageNotes: noteStats?.count || 0,
-                imageAttachments: attachmentStats?.count || 0
-            };
-        } catch (error) {
-            log.error(`Failed to get OCR stats: ${error}`);
-            return { totalProcessed: 0, imageNotes: 0, imageAttachments: 0 };
-        }
-    }
-
-    /**
-     * Check if currently processing
-     */
-    isCurrentlyProcessing(): boolean {
-        return this.isProcessing;
     }
 
     // Batch processing state

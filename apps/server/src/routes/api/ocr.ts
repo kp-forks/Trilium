@@ -127,41 +127,6 @@ async function processAttachmentOCR(req: Request<{ attachmentId: string }>) {
 
 /**
  * @swagger
- * /api/ocr/search:
- *   get:
- *     summary: Search for text in OCR results
- *     operationId: ocr-search
- *     parameters:
- *       - name: q
- *         in: query
- *         required: true
- *         schema:
- *           type: string
- *         description: Search query text
- *     responses:
- *       '200':
- *         description: Search results
- *       '400':
- *         description: Bad request - missing search query
- *       '500':
- *         description: Internal server error
- *     security:
- *       - session: []
- *     tags: ["ocr"]
- */
-async function searchOCR(req: Request) {
-    const { q: searchText } = req.query;
-
-    if (!searchText || typeof searchText !== 'string') {
-        return [400, { success: false, message: 'Search query is required' }];
-    }
-
-    const results = ocrService.searchOCRResults(searchText);
-    return { success: true, results };
-}
-
-/**
- * @swagger
  * /api/ocr/batch-process:
  *   post:
  *     summary: Process OCR for all images without existing OCR results
@@ -202,56 +167,6 @@ async function batchProcessOCR() {
  */
 async function getBatchProgress() {
     return ocrService.getBatchProgress();
-}
-
-/**
- * @swagger
- * /api/ocr/stats:
- *   get:
- *     summary: Get OCR processing statistics
- *     operationId: ocr-get-stats
- *     responses:
- *       '200':
- *         description: OCR statistics
- *       '500':
- *         description: Internal server error
- *     security:
- *       - session: []
- *     tags: ["ocr"]
- */
-async function getOCRStats() {
-    return { success: true, stats: ocrService.getOCRStats() };
-}
-
-/**
- * @swagger
- * /api/ocr/delete/{blobId}:
- *   delete:
- *     summary: Delete OCR results for a specific blob
- *     operationId: ocr-delete-results
- *     parameters:
- *       - name: blobId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the blob
- *     responses:
- *       '200':
- *         description: OCR results deleted successfully
- *       '400':
- *         description: Bad request - invalid parameters
- *       '500':
- *         description: Internal server error
- *     security:
- *       - session: []
- *     tags: ["ocr"]
- */
-async function deleteOCRResults(req: Request<{ blobId: string }>) {
-    const { blobId } = req.params;
-
-    ocrService.deleteOCRResult(blobId);
-    return { success: true, message: `OCR results deleted for blob ${blobId}` };
 }
 
 /**
@@ -319,11 +234,8 @@ async function getAttachmentOCRText(req: Request<{ attachmentId: string }>) {
 export default {
     processNoteOCR,
     processAttachmentOCR,
-    searchOCR,
     batchProcessOCR,
     getBatchProgress,
-    getOCRStats,
-    deleteOCRResults,
     getNoteOCRText,
     getAttachmentOCRText
 };
