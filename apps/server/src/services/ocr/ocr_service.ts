@@ -1,13 +1,15 @@
+import { getTesseractCode } from '@triliumnext/commons';
 import Tesseract from 'tesseract.js';
-import log from '../log.js';
-import sql from '../sql.js';
+
 import becca from '../../becca/becca.js';
+import log from '../log.js';
 import options from '../options.js';
+import sql from '../sql.js';
+import { FileProcessor } from './processors/file_processor.js';
 import { ImageProcessor } from './processors/image_processor.js';
+import { OfficeProcessor } from './processors/office_processor.js';
 import { PDFProcessor } from './processors/pdf_processor.js';
 import { TIFFProcessor } from './processors/tiff_processor.js';
-import { OfficeProcessor } from './processors/office_processor.js';
-import { FileProcessor } from './processors/file_processor.js';
 
 export interface OCRResult {
     text: string;
@@ -60,6 +62,69 @@ class OCRService {
     }
 
     /**
+     * Resolves the Tesseract language code(s) for OCR processing.
+     *
+     * Priority:
+     * 1. Explicitly passed `language` option (e.g. from API call)
+     * 2. The note's `language` label (mapped via {@link getTesseractCode})
+     * 3. All enabled content languages joined with `+`
+     * 4. The UI locale
+     * 5. Fallback to `eng`
+     */
+    resolveOcrLanguage(noteId?: string, explicitLanguage?: string): string {
+        // 1. Explicit language from caller
+        if (explicitLanguage) {
+            return explicitLanguage;
+        }
+
+        // 2. Note's language label
+        if (noteId) {
+            const note = becca.getNote(noteId);
+            const noteLanguage = note?.getLabelValue("language");
+            if (noteLanguage) {
+                const code = getTesseractCode(noteLanguage);
+                if (code) {
+                    return code;
+                }
+            }
+        }
+
+        // 3. All enabled content languages
+        try {
+            const languagesJson = options.getOption("languages");
+            const enabledLanguages = JSON.parse(languagesJson || "[]") as string[];
+            if (enabledLanguages.length > 0) {
+                const codes = enabledLanguages
+                    .map((id) => getTesseractCode(id))
+                    .filter((code): code is string => code !== null);
+                // Deduplicate (e.g. en + en-GB both map to eng)
+                const unique = [...new Set(codes)];
+                if (unique.length > 0) {
+                    return unique.join("+");
+                }
+            }
+        } catch {
+            // Fall through
+        }
+
+        // 4. UI locale
+        try {
+            const uiLocale = options.getOption("locale");
+            if (uiLocale) {
+                const code = getTesseractCode(uiLocale);
+                if (code) {
+                    return code;
+                }
+            }
+        } catch {
+            // Fall through
+        }
+
+        // 5. Fallback
+        return "eng";
+    }
+
+    /**
      * Check if a MIME type is supported for OCR
      */
     isSupportedMimeType(mimeType: string): boolean {
@@ -84,7 +149,7 @@ class OCRService {
      */
     async extractTextFromFile(fileBuffer: Buffer, mimeType: string, options: OCRProcessingOptions = {}): Promise<OCRResult> {
         try {
-            log.info(`Starting OCR text extraction for MIME type: ${mimeType}`);
+            log.info(`Starting OCR text extraction for MIME type: ${mimeType} with language: ${options.language || "auto-detect"}`);
             this.isProcessing = true;
 
             // Find appropriate processor
@@ -147,7 +212,8 @@ class OCRService {
                 throw new Error(`Cannot get image content for note ${noteId}`);
             }
 
-            const ocrResult = await this.extractTextFromFile(content, note.mime, options);
+            const language = this.resolveOcrLanguage(noteId, options.language);
+            const ocrResult = await this.extractTextFromFile(content, note.mime, { ...options, language });
 
             // Store OCR result in blob
             await this.storeOCRResult(note.blobId, ocrResult);
@@ -200,7 +266,8 @@ class OCRService {
                 throw new Error(`Cannot get image content for attachment ${attachmentId}`);
             }
 
-            const ocrResult = await this.extractTextFromFile(content, attachment.mime, options);
+            const language = this.resolveOcrLanguage(attachment.ownerId, options.language);
+            const ocrResult = await this.extractTextFromFile(content, attachment.mime, { ...options, language });
 
             // Store OCR result in blob
             await this.storeOCRResult(attachment.blobId, ocrResult);

@@ -1,7 +1,6 @@
 import pdfParse from 'pdf-parse';
 
 import log from '../../log.js';
-import options from '../../options.js';
 import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
 import { FileProcessor } from './file_processor.js';
 import { ImageProcessor } from './image_processor.js';
@@ -31,12 +30,6 @@ export class PDFProcessor extends FileProcessor {
         try {
             log.info('Starting PDF text extraction...');
 
-            // Validate language format
-            const language = options.language || this.getDefaultOCRLanguage();
-            if (!this.isValidLanguageFormat(language)) {
-                throw new Error(`Invalid OCR language format: ${language}. Use format like 'eng' or 'ron+eng'`);
-            }
-
             // First try to extract existing text from PDF
             if (options.enablePDFTextExtraction !== false) {
                 const textResult = await this.extractTextFromPDF(buffer, options);
@@ -64,7 +57,7 @@ export class PDFProcessor extends FileProcessor {
                 text: data.text.trim(),
                 confidence: 0.99, // High confidence for direct text extraction
                 extractedAt: new Date().toISOString(),
-                language: options.language || this.getDefaultOCRLanguage(),
+                language: options.language || "eng",
                 pageCount: data.numpages
             };
         } catch (error) {
@@ -91,7 +84,7 @@ export class PDFProcessor extends FileProcessor {
                 text: '[PDF OCR not fully implemented - would convert PDF pages to images and OCR each page]',
                 confidence: 0.0,
                 extractedAt: new Date().toISOString(),
-                language: options.language || this.getDefaultOCRLanguage(),
+                language: options.language || "eng",
                 pageCount: 1
             };
         } catch (error) {
@@ -106,42 +99,5 @@ export class PDFProcessor extends FileProcessor {
 
     async cleanup(): Promise<void> {
         await this.imageProcessor.cleanup();
-    }
-
-    /**
-     * Get default OCR language from options
-     */
-    private getDefaultOCRLanguage(): string {
-        try {
-            const ocrLanguage = options.getOption('ocrLanguage');
-            if (!ocrLanguage) {
-                throw new Error('OCR language not configured in user settings');
-            }
-            return ocrLanguage;
-        } catch (error) {
-            log.error(`Failed to get default OCR language: ${error}`);
-            throw new Error('OCR language must be configured in settings before processing');
-        }
-    }
-
-    /**
-     * Validate OCR language format
-     * Supports single language (eng) or multi-language (ron+eng)
-     */
-    private isValidLanguageFormat(language: string): boolean {
-        if (!language || typeof language !== 'string') {
-            return false;
-        }
-
-        // Split by '+' for multi-language format
-        const languages = language.split('+');
-
-        // Check each language code (should be 2-7 characters, alphanumeric with underscores)
-        const validLanguagePattern = /^[a-zA-Z]{2,3}(_[a-zA-Z]{2,3})?$/;
-
-        return languages.every(lang => {
-            const trimmed = lang.trim();
-            return trimmed.length > 0 && validLanguagePattern.test(trimmed);
-        });
     }
 }

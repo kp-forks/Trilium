@@ -1,5 +1,5 @@
 import { t } from "../../../services/i18n";
-import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
+import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import OptionsRow from "./components/OptionsRow";
@@ -62,7 +62,6 @@ function ImageSettings() {
 function OcrSettings() {
     const [ ocrEnabled, setOcrEnabled ] = useTriliumOptionBool("ocrEnabled");
     const [ ocrAutoProcess, setOcrAutoProcess ] = useTriliumOptionBool("ocrAutoProcessImages");
-    const [ ocrLanguage, setOcrLanguage ] = useTriliumOption("ocrLanguage");
     const [ ocrMinConfidence, setOcrMinConfidence ] = useTriliumOption("ocrMinConfidence");
 
     return (
@@ -81,14 +80,6 @@ function OcrSettings() {
                     currentValue={ocrAutoProcess}
                     onChange={setOcrAutoProcess}
                     disabled={!ocrEnabled}
-                />
-            </OptionsRow>
-
-            <OptionsRow name="ocr-language" label={t("images.ocr_language")} description={t("images.ocr_language_description")}>
-                <FormTextBox
-                    disabled={!ocrEnabled}
-                    currentValue={ocrLanguage}
-                    onChange={setOcrLanguage}
                 />
             </OptionsRow>
 

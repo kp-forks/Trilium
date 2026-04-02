@@ -1,7 +1,6 @@
 import sharp from 'sharp';
 
 import log from '../../log.js';
-import options from '../../options.js';
 import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
 import { FileProcessor } from './file_processor.js';
 import { ImageProcessor } from './image_processor.js';
@@ -30,11 +29,7 @@ export class TIFFProcessor extends FileProcessor {
         try {
             log.info('Starting TIFF text extraction...');
 
-            // Validate language format
-            const language = options.language || this.getDefaultOCRLanguage();
-            if (!this.isValidLanguageFormat(language)) {
-                throw new Error(`Invalid OCR language format: ${language}. Use format like 'eng' or 'ron+eng'`);
-            }
+            const language = options.language || "eng";
 
             // Check if this is a multi-page TIFF
             const metadata = await sharp(buffer).metadata();
@@ -75,7 +70,7 @@ export class TIFFProcessor extends FileProcessor {
                 text: combinedText.trim(),
                 confidence: averageConfidence,
                 extractedAt: new Date().toISOString(),
-                language: options.language || this.getDefaultOCRLanguage(),
+                language,
                 pageCount
             };
 
@@ -94,42 +89,5 @@ export class TIFFProcessor extends FileProcessor {
 
     async cleanup(): Promise<void> {
         await this.imageProcessor.cleanup();
-    }
-
-    /**
-     * Get default OCR language from options
-     */
-    private getDefaultOCRLanguage(): string {
-        try {
-            const ocrLanguage = options.getOption('ocrLanguage');
-            if (!ocrLanguage) {
-                throw new Error('OCR language not configured in user settings');
-            }
-            return ocrLanguage;
-        } catch (error) {
-            log.error(`Failed to get default OCR language: ${error}`);
-            throw new Error('OCR language must be configured in settings before processing');
-        }
-    }
-
-    /**
-     * Validate OCR language format
-     * Supports single language (eng) or multi-language (ron+eng)
-     */
-    private isValidLanguageFormat(language: string): boolean {
-        if (!language || typeof language !== 'string') {
-            return false;
-        }
-
-        // Split by '+' for multi-language format
-        const languages = language.split('+');
-
-        // Check each language code (should be 2-7 characters, alphanumeric with underscores)
-        const validLanguagePattern = /^[a-zA-Z]{2,3}(_[a-zA-Z]{2,3})?$/;
-
-        return languages.every(lang => {
-            const trimmed = lang.trim();
-            return trimmed.length > 0 && validLanguagePattern.test(trimmed);
-        });
     }
 }

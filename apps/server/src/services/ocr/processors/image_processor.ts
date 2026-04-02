@@ -43,7 +43,7 @@ export class ImageProcessor extends FileProcessor {
 
             // Set language if specified and different from current
             // Support multi-language format like 'ron+eng'
-            const language = options.language || this.getDefaultOCRLanguage();
+            const language = options.language || "eng";
 
             // Validate language format
             if (!this.isValidLanguageFormat(language)) {
@@ -72,7 +72,7 @@ export class ImageProcessor extends FileProcessor {
                 text: filteredText,
                 confidence: overallConfidence,
                 extractedAt: new Date().toISOString(),
-                language: options.language || this.getDefaultOCRLanguage(),
+                language: options.language || "eng",
                 pageCount: 1
             };
 
@@ -105,7 +105,7 @@ export class ImageProcessor extends FileProcessor {
             log.info(`Using worker path: ${workerPath}`);
             log.info(`Using core path: ${corePath}`);
 
-            this.worker = await Tesseract.createWorker(this.getDefaultOCRLanguage(), 1, {
+            this.worker = await Tesseract.createWorker("eng", 1, {
                 workerPath,
                 corePath,
                 logger: (m: { status: string; progress: number }) => {
@@ -131,21 +131,7 @@ export class ImageProcessor extends FileProcessor {
         log.info('Image OCR processor cleaned up');
     }
 
-    /**
-     * Get default OCR language from options
-     */
-    private getDefaultOCRLanguage(): string {
-        try {
-            const ocrLanguage = options.getOption('ocrLanguage');
-            if (!ocrLanguage) {
-                throw new Error('OCR language not configured in user settings');
-            }
-            return ocrLanguage;
-        } catch (error) {
-            log.error(`Failed to get default OCR language: ${error}`);
-            throw new Error('OCR language must be configured in settings before processing');
-        }
-    }
+
 
     /**
      * Filter text based on minimum confidence threshold
