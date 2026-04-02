@@ -27,8 +27,10 @@ import sql from "../../services/sql.js";
  *             properties:
  *               language:
  *                 type: string
- *                 description: OCR language code (e.g. 'eng', 'fra', 'deu')
- *                 default: 'eng'
+ *                 description: >
+ *                   Tesseract language code to use (e.g. 'eng', 'fra', 'deu', 'eng+fra').
+ *                   If omitted, the language is resolved automatically from the note's language label,
+ *                   the enabled content languages, or the UI locale.
  *               forceReprocess:
  *                 type: boolean
  *                 description: Force reprocessing even if OCR already exists
@@ -37,7 +39,7 @@ import sql from "../../services/sql.js";
  *       '200':
  *         description: OCR processing completed successfully
  *       '400':
- *         description: Bad request - OCR disabled or unsupported file type
+ *         description: Bad request - unsupported file type
  *       '404':
  *         description: Note not found
  *       '500':
@@ -48,7 +50,7 @@ import sql from "../../services/sql.js";
  */
 async function processNoteOCR(req: Request<{ noteId: string }>) {
     const { noteId } = req.params;
-    const { language = 'eng', forceReprocess = false } = req.body || {};
+    const { language, forceReprocess = false } = req.body || {};
 
     const note = becca.getNote(noteId);
     if (!note) {
@@ -85,8 +87,10 @@ async function processNoteOCR(req: Request<{ noteId: string }>) {
  *             properties:
  *               language:
  *                 type: string
- *                 description: OCR language code (e.g. 'eng', 'fra', 'deu')
- *                 default: 'eng'
+ *                 description: >
+ *                   Tesseract language code to use (e.g. 'eng', 'fra', 'deu', 'eng+fra').
+ *                   If omitted, the language is resolved automatically from the owner note's language label,
+ *                   the enabled content languages, or the UI locale.
  *               forceReprocess:
  *                 type: boolean
  *                 description: Force reprocessing even if OCR already exists
@@ -95,7 +99,7 @@ async function processNoteOCR(req: Request<{ noteId: string }>) {
  *       '200':
  *         description: OCR processing completed successfully
  *       '400':
- *         description: Bad request - OCR disabled or unsupported file type
+ *         description: Bad request - unsupported file type
  *       '404':
  *         description: Attachment not found
  *       '500':
@@ -106,7 +110,7 @@ async function processNoteOCR(req: Request<{ noteId: string }>) {
  */
 async function processAttachmentOCR(req: Request<{ attachmentId: string }>) {
     const { attachmentId } = req.params;
-    const { language = 'eng', forceReprocess = false } = req.body || {};
+    const { language, forceReprocess = false } = req.body || {};
 
     const attachment = becca.getAttachment(attachmentId);
     if (!attachment) {
