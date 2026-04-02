@@ -5,6 +5,8 @@ import { OCRProcessingOptions, OCRResult } from '../ocr_service.js';
 import { FileProcessor } from './file_processor.js';
 
 const SUPPORTED_TYPES = [
+    // PDF
+    'application/pdf',
     // Office Open XML
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',   // DOCX
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',         // XLSX

@@ -39,11 +39,6 @@ declare module "@triliumnext/share-theme/styles.css" {
     export default content;
 }
 
-declare module "pdf-parse/lib/pdf-parse.js" {
-    import pdfParse from "pdf-parse";
-    export default pdfParse;
-}
-
 declare module '*.css' {}
 declare module '*?raw' {
   const src: string
