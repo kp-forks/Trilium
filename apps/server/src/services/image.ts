@@ -13,7 +13,12 @@ import optionService from "./options.js";
 import protectedSessionService from "./protected_session.js";
 import sql from "./sql.js";
 
-async function processImage(uploadBuffer: Buffer, originalName: string, shrinkImageSwitch: boolean, noteId?: string) {
+interface ProcessImageOCRTarget {
+    noteId?: string;
+    attachmentId?: string;
+}
+
+async function processImage(uploadBuffer: Buffer, originalName: string, shrinkImageSwitch: boolean, ocrTarget?: ProcessImageOCRTarget) {
     const compressImages = optionService.getOptionBool("compressImages");
     const origImageFormat = await getImageType(uploadBuffer);
 
@@ -25,17 +30,20 @@ async function processImage(uploadBuffer: Buffer, originalName: string, shrinkIm
     }
 
     // Schedule OCR processing in the background for best quality
-    if (noteId && optionService.getOptionBool("ocrAutoProcessImages") && origImageFormat) {
+    if (ocrTarget && optionService.getOptionBool("ocrAutoProcessImages") && origImageFormat) {
         const imageMime = getImageMimeFromExtension(origImageFormat.ext);
         const supportedMimeTypes = ocrService.getAllSupportedMimeTypes();
 
         if (supportedMimeTypes.includes(imageMime)) {
-            // Process OCR asynchronously without blocking image creation
             setImmediate(async () => {
                 try {
-                    await ocrService.processNoteOCR(noteId);
+                    if (ocrTarget.noteId) {
+                        await ocrService.processNoteOCR(ocrTarget.noteId);
+                    } else if (ocrTarget.attachmentId) {
+                        await ocrService.processAttachmentOCR(ocrTarget.attachmentId);
+                    }
                 } catch (error) {
-                    log.error(`Failed to process OCR for image ${noteId}: ${error}`);
+                    log.error(`Failed to process OCR for image ${ocrTarget.noteId || ocrTarget.attachmentId}: ${error}`);
                 }
             });
         }
@@ -88,7 +96,7 @@ function updateImage(noteId: string, uploadBuffer: Buffer, originalName: string)
     note.setLabel("originalFileName", originalName);
 
     // resizing images asynchronously since JIMP does not support sync operation
-    processImage(uploadBuffer, originalName, true, noteId).then(({ buffer, imageFormat }) => {
+    processImage(uploadBuffer, originalName, true, { noteId }).then(({ buffer, imageFormat }) => {
         sql.transactional(() => {
             note.mime = getImageMimeFromExtension(imageFormat.ext);
             note.save();
@@ -124,7 +132,7 @@ function saveImage(parentNoteId: string, uploadBuffer: Buffer, originalName: str
     note.addLabel("originalFileName", originalName);
 
     // resizing images asynchronously since JIMP does not support sync operation
-    processImage(uploadBuffer, originalName, shrinkImageSwitch, note.noteId).then(({ buffer, imageFormat }) => {
+    processImage(uploadBuffer, originalName, shrinkImageSwitch, { noteId: note.noteId }).then(({ buffer, imageFormat }) => {
         sql.transactional(() => {
             note.mime = getImageMimeFromExtension(imageFormat.ext);
 
@@ -175,7 +183,7 @@ function saveImageToAttachment(noteId: string, uploadBuffer: Buffer, originalNam
     }, 5000);
 
     // resizing images asynchronously since JIMP does not support sync operation
-    processImage(uploadBuffer, originalName, !!shrinkImageSwitch, attachment.attachmentId).then(({ buffer, imageFormat }) => {
+    processImage(uploadBuffer, originalName, !!shrinkImageSwitch, { attachmentId: attachment.attachmentId }).then(({ buffer, imageFormat }) => {
         sql.transactional(() => {
             // re-read, might be changed in the meantime
             if (!attachment.attachmentId) {
