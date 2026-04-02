@@ -25,6 +25,7 @@
     padding: 15px;
     background-color: var(--accented-background-color);
     min-height: 100px;
+    user-select: text;
 }
 
 .text-representation-meta {
