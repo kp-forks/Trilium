@@ -335,13 +335,6 @@ class OCRService {
     }
 
     /**
-     * Process OCR for all files that don't have OCR results yet or need reprocessing
-     */
-    async processAllImages(): Promise<void> {
-        return this.processAllBlobsNeedingOCR();
-    }
-
-    /**
      * Get OCR statistics
      */
     getOCRStats(): { totalProcessed: number; imageNotes: number; imageAttachments: number } {
@@ -428,25 +421,23 @@ class OCRService {
         }
 
         try {
-            // Count total blobs needing OCR processing
             const blobsNeedingOCR = this.getBlobsNeedingOCR();
-            const totalCount = blobsNeedingOCR.length;
 
-            if (totalCount === 0) {
+            if (blobsNeedingOCR.length === 0) {
                 return { success: false, message: 'No images found that need OCR processing' };
             }
 
-            // Initialize batch processing state
             this.batchProcessingState = {
                 inProgress: true,
-                total: totalCount,
+                total: blobsNeedingOCR.length,
                 processed: 0,
                 startTime: new Date()
             };
 
             // Start processing in background
-            this.processBatchInBackground(blobsNeedingOCR).catch(error => {
+            this.processBlobs(blobsNeedingOCR).catch(error => {
                 log.error(`Batch processing failed: ${error instanceof Error ? error.message : String(error)}`);
+            }).finally(() => {
                 this.batchProcessingState.inProgress = false;
             });
 
@@ -469,49 +460,49 @@ class OCRService {
     }
 
     /**
-     * Process batch OCR in background with progress tracking
-     */
-    private async processBatchInBackground(blobsToProcess: Array<{ blobId: string; mimeType: string; entityType: 'note' | 'attachment'; entityId: string }>): Promise<void> {
-        try {
-            log.info('Starting batch OCR processing...');
-
-            for (const blobInfo of blobsToProcess) {
-                if (!this.batchProcessingState.inProgress) {
-                    break; // Stop if processing was cancelled
-                }
-
-                try {
-                    if (blobInfo.entityType === 'note') {
-                        await this.processNoteOCR(blobInfo.entityId);
-                    } else {
-                        await this.processAttachmentOCR(blobInfo.entityId);
-                    }
-                    this.batchProcessingState.processed++;
-                    // Add small delay to prevent overwhelming the system
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                } catch (error) {
-                    log.error(`Failed to process OCR for ${blobInfo.entityType} ${blobInfo.entityId}: ${error}`);
-                    this.batchProcessingState.processed++; // Count as processed even if failed
-                }
-            }
-
-            // Mark as completed
-            this.batchProcessingState.inProgress = false;
-            log.info(`Batch OCR processing completed. Processed ${this.batchProcessingState.processed} files.`);
-        } catch (error) {
-            log.error(`Batch OCR processing failed: ${error}`);
-            this.batchProcessingState.inProgress = false;
-            throw error;
-        }
-    }
-
-    /**
      * Cancel batch processing
      */
     cancelBatchProcessing(): void {
         if (this.batchProcessingState.inProgress) {
             this.batchProcessingState.inProgress = false;
             log.info('Batch OCR processing cancelled');
+        }
+    }
+
+    /**
+     * Process a list of blobs sequentially, updating batch progress.
+     */
+    private async processBlobs(blobs: Array<{ entityType: 'note' | 'attachment'; entityId: string }>): Promise<void> {
+        log.info(`Starting batch OCR processing of ${blobs.length} items...`);
+
+        for (const blob of blobs) {
+            if (!this.batchProcessingState.inProgress) {
+                break;
+            }
+
+            try {
+                await this.processOcrEntity(blob);
+            } catch (error) {
+                log.error(`Failed to process OCR for ${blob.entityType} ${blob.entityId}: ${error}`);
+            }
+
+            this.batchProcessingState.processed++;
+
+            // Small delay to prevent overwhelming the system
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        log.info(`Batch OCR processing completed. Processed ${this.batchProcessingState.processed} files.`);
+    }
+
+    /**
+     * Process OCR for a single entity (note or attachment) by type.
+     */
+    private async processOcrEntity(entity: { entityType: 'note' | 'attachment'; entityId: string }): Promise<void> {
+        if (entity.entityType === 'note') {
+            await this.processNoteOCR(entity.entityId);
+        } else {
+            await this.processAttachmentOCR(entity.entityId);
         }
     }
 
@@ -616,41 +607,6 @@ class OCRService {
         }
     }
 
-    /**
-     * Process OCR for all blobs that need it (auto-processing)
-     */
-    async processAllBlobsNeedingOCR(): Promise<void> {
-        if (!options.getOptionBool('ocrAutoProcessImages')) {
-            log.info('OCR auto-processing is disabled, skipping');
-            return;
-        }
-
-        const blobsNeedingOCR = this.getBlobsNeedingOCR();
-        if (blobsNeedingOCR.length === 0) {
-            log.info('No blobs need OCR processing');
-            return;
-        }
-
-        log.info(`Auto-processing OCR for ${blobsNeedingOCR.length} blobs...`);
-
-        for (const blobInfo of blobsNeedingOCR) {
-            try {
-                if (blobInfo.entityType === 'note') {
-                    await this.processNoteOCR(blobInfo.entityId);
-                } else {
-                    await this.processAttachmentOCR(blobInfo.entityId);
-                }
-
-                // Add small delay to prevent overwhelming the system
-                await new Promise(resolve => setTimeout(resolve, 100));
-            } catch (error) {
-                log.error(`Failed to auto-process OCR for ${blobInfo.entityType} ${blobInfo.entityId}: ${error}`);
-                // Continue with other blobs
-            }
-        }
-
-        log.info('Auto-processing OCR completed');
-    }
 }
 
 export default new OCRService();
