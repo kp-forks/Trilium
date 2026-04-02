@@ -1265,6 +1265,7 @@
     "jpeg_quality": "JPEG quality",
     "jpeg_quality_description": "Recommended range is 50–85. Lower values reduce file size, higher values preserve detail.",
     "ocr_section_title": "Text Extraction (OCR)",
+    "ocr_related_content_languages": "Content languages (used for text extraction)",
     "ocr_auto_process": "Auto-process new files",
     "ocr_auto_process_description": "Automatically extract text from newly uploaded or pasted files.",
     "ocr_min_confidence": "Minimum confidence",
@@ -1983,7 +1984,7 @@
   },
   "content_language": {
     "title": "Content languages",
-    "description": "Select one or more languages that should appear in the language selection in the Basic Properties section of a read-only or editable text note. This will allow features such as spell-checking or right-to-left support."
+    "description": "Select one or more languages that should appear in the language selection in the Basic Properties section of a read-only or editable text note. This will allow features such as spell-checking, right-to-left support and text extraction (OCR)."
   },
   "switch_layout_button": {
     "title_vertical": "Move editing pane to the bottom",

@@ -5,10 +5,11 @@ import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import FormToggle from "../../react/FormToggle";
-import Slider from "../../react/Slider";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import Slider from "../../react/Slider";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
+import RelatedSettings from "./components/RelatedSettings";
 
 export default function MediaSettings() {
     return (
@@ -68,25 +69,34 @@ function OcrSettings() {
     const [ ocrMinConfidence, setOcrMinConfidence ] = useTriliumOption("ocrMinConfidence");
 
     return (
-        <OptionsSection title={t("images.ocr_section_title")}>
-            <OptionsRow name="ocr-auto-process" label={t("images.ocr_auto_process")} description={t("images.ocr_auto_process_description")}>
-                <FormToggle
-                    switchOnName="" switchOffName=""
-                    currentValue={ocrAutoProcess}
-                    onChange={setOcrAutoProcess}
-                />
-            </OptionsRow>
+        <>
+            <OptionsSection title={t("images.ocr_section_title")}>
+                <OptionsRow name="ocr-auto-process" label={t("images.ocr_auto_process")} description={t("images.ocr_auto_process_description")}>
+                    <FormToggle
+                        switchOnName="" switchOffName=""
+                        currentValue={ocrAutoProcess}
+                        onChange={setOcrAutoProcess}
+                    />
+                </OptionsRow>
 
-            <OptionsRow name="ocr-min-confidence" label={`${t("images.ocr_min_confidence")} (${Math.round(parseFloat(ocrMinConfidence ?? "0.75") * 100)}%)`} description={t("images.ocr_confidence_description")}>
-                <Slider
-                    min={0} max={100} step={5}
-                    value={Math.round(parseFloat(ocrMinConfidence ?? "0.75") * 100)}
-                    onChange={(v) => setOcrMinConfidence(String(v / 100))}
-                />
-            </OptionsRow>
+                <OptionsRow name="ocr-min-confidence" label={`${t("images.ocr_min_confidence")} (${Math.round(parseFloat(ocrMinConfidence ?? "0.75") * 100)}%)`} description={t("images.ocr_confidence_description")}>
+                    <Slider
+                        min={0} max={100} step={5}
+                        value={Math.round(parseFloat(ocrMinConfidence ?? "0.75") * 100)}
+                        onChange={(v) => setOcrMinConfidence(String(v / 100))}
+                    />
+                </OptionsRow>
 
-            <BatchProcessing />
-        </OptionsSection>
+                <BatchProcessing />
+            </OptionsSection>
+
+            <RelatedSettings items={[
+                {
+                    title: t("images.ocr_related_content_languages"),
+                    targetPage: "_optionsLocalization"
+                }
+            ]} />
+        </>
     );
 }
 
