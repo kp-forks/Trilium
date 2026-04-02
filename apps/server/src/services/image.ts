@@ -33,25 +33,7 @@ async function processImage(uploadBuffer: Buffer, originalName: string, shrinkIm
             // Process OCR asynchronously without blocking image creation
             setImmediate(async () => {
                 try {
-                    const ocrResult = await ocrService.extractTextFromFile(uploadBuffer, imageMime);
-                    if (ocrResult) {
-                        // We need to get the entity again to get its blobId after it's been saved
-                        // noteId could be either a note ID or attachment ID
-                        const note = becca.getNote(noteId);
-                        const attachment = becca.getAttachment(noteId);
-
-                        let blobId: string | undefined;
-                        if (note && note.blobId) {
-                            blobId = note.blobId;
-                        } else if (attachment && attachment.blobId) {
-                            blobId = attachment.blobId;
-                        }
-
-                        if (blobId) {
-                            await ocrService.storeOCRResult(blobId, ocrResult);
-                            log.info(`Successfully processed OCR for image ${noteId} (${originalName})`);
-                        }
-                    }
+                    await ocrService.processNoteOCR(noteId);
                 } catch (error) {
                     log.error(`Failed to process OCR for image ${noteId}: ${error}`);
                 }

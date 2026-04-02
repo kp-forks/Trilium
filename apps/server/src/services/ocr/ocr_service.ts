@@ -137,7 +137,7 @@ class OCRService {
      */
     async extractTextFromFile(fileBuffer: Buffer, mimeType: string, options: OCRProcessingOptions = {}): Promise<OCRResult> {
         try {
-            log.info(`Starting OCR text extraction for MIME type: ${mimeType} with language: ${options.language || "auto-detect"}`);
+            log.info(`Starting OCR text extraction for MIME type: ${mimeType} with language: ${options.language || "eng"}`);
             this.isProcessing = true;
 
             // Find appropriate processor
