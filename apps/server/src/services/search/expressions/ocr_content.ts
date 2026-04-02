@@ -1,4 +1,5 @@
 import becca from "../../../becca/becca.js";
+import sql from "../../sql.js";
 import NoteSet from "../note_set.js";
 import type SearchContext from "../search_context.js";
 import Expression from "./expression.js";
@@ -6,6 +7,9 @@ import Expression from "./expression.js";
 /**
  * Search expression for finding text within OCR-extracted content (textRepresentation)
  * from image notes and their attachments.
+ *
+ * Uses a single SQL query to find all noteIds whose own blob or attachment blobs
+ * contain matching text, then intersects with the input note set.
  */
 export default class OCRContentExpression extends Expression {
     private tokens: string[];
@@ -17,9 +21,11 @@ export default class OCRContentExpression extends Expression {
 
     execute(inputNoteSet: NoteSet, executionContext: object, searchContext: SearchContext): NoteSet {
         const resultNoteSet = new NoteSet();
+        const matchingNoteIds = this.findNoteIdsWithMatchingOCR();
 
-        for (const note of inputNoteSet.notes) {
-            if (this.noteMatchesOCR(note.noteId)) {
+        for (const noteId of matchingNoteIds) {
+            const note = becca.notes[noteId];
+            if (note && inputNoteSet.hasNoteId(noteId)) {
                 resultNoteSet.add(note);
             }
         }
@@ -35,32 +41,37 @@ export default class OCRContentExpression extends Expression {
     }
 
     /**
-     * Check if a note (or its attachments) has OCR text matching all tokens.
+     * Find all noteIds that have OCR text matching all tokens, in a single query.
+     * Checks both the note's own blob and its attachment blobs.
      */
-    private noteMatchesOCR(noteId: string): boolean {
-        const note = becca.notes[noteId];
-        if (!note) return false;
+    private findNoteIdsWithMatchingOCR(): Set<string> {
+        if (this.tokens.length === 0) return new Set();
 
-        // Collect all textRepresentation values for this note
-        const texts: string[] = [];
+        // Build WHERE conditions: all tokens must appear in textRepresentation
+        const likeConditions = this.tokens.map(() => `b.textRepresentation LIKE ?`).join(' AND ');
+        const params = this.tokens.map(token => `%${token}%`);
 
-        const noteBlob = becca.getBlob({ blobId: note.blobId });
-        if (noteBlob?.textRepresentation) {
-            texts.push(noteBlob.textRepresentation.toLowerCase());
-        }
+        // Find notes whose own blob matches
+        const noteIds = sql.getColumn<string>(`
+            SELECT n.noteId
+            FROM notes n
+            JOIN blobs b ON n.blobId = b.blobId
+            WHERE b.textRepresentation IS NOT NULL
+              AND n.isDeleted = 0
+              AND ${likeConditions}
+        `, params);
 
-        for (const attachment of note.getAttachments()) {
-            const blob = becca.getBlob({ blobId: attachment.blobId });
-            if (blob?.textRepresentation) {
-                texts.push(blob.textRepresentation.toLowerCase());
-            }
-        }
+        // Find notes that own attachments whose blob matches
+        const attachmentOwnerIds = sql.getColumn<string>(`
+            SELECT a.ownerId
+            FROM attachments a
+            JOIN blobs b ON a.blobId = b.blobId
+            WHERE b.textRepresentation IS NOT NULL
+              AND a.isDeleted = 0
+              AND ${likeConditions}
+        `, params);
 
-        if (texts.length === 0) return false;
-
-        // All tokens must appear in at least one of the text representations
-        const combined = texts.join(" ");
-        return this.tokens.every(token => combined.includes(token.toLowerCase()));
+        return new Set([...noteIds, ...attachmentOwnerIds]);
     }
 
     toString(): string {
