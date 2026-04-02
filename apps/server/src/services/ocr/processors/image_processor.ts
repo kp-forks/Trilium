@@ -1,5 +1,7 @@
+import fs from 'fs';
 import Tesseract from 'tesseract.js';
 
+import dataDirs from '../../data_dir.js';
 import log from '../../log.js';
 import options from '../../options.js';
 import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
@@ -55,6 +57,7 @@ export class ImageProcessor extends FileProcessor {
                 await this.worker.terminate();
                 log.info(`Initializing Tesseract worker for language(s): ${language}`);
                 this.worker = await Tesseract.createWorker(language, 1, {
+                    cachePath: dataDirs.OCR_CACHE_DIR,
                     logger: (m: { status: string; progress: number }) => {
                         if (m.status === 'recognizing text') {
                             log.info(`Image OCR progress (${language}): ${Math.round(m.progress * 100)}%`);
@@ -97,8 +100,9 @@ export class ImageProcessor extends FileProcessor {
         try {
             log.info('Initializing image OCR processor with Tesseract.js...');
 
+            fs.mkdirSync(dataDirs.OCR_CACHE_DIR, { recursive: true });
+
             // Configure proper paths for Node.js environment
-            const tesseractDir = require.resolve('tesseract.js').replace('/src/index.js', '');
             const workerPath = require.resolve('tesseract.js/src/worker-script/node/index.js');
             const corePath = require.resolve('tesseract.js-core/tesseract-core.wasm.js');
 
@@ -108,6 +112,7 @@ export class ImageProcessor extends FileProcessor {
             this.worker = await Tesseract.createWorker("eng", 1, {
                 workerPath,
                 corePath,
+                cachePath: dataDirs.OCR_CACHE_DIR,
                 logger: (m: { status: string; progress: number }) => {
                     if (m.status === 'recognizing text') {
                         log.info(`Image OCR progress: ${Math.round(m.progress * 100)}%`);
