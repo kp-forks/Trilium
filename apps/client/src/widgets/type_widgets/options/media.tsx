@@ -52,12 +52,11 @@ function ImageSettings() {
                 />
             </OptionsRow>
 
-            <OptionsRow name="image-jpeg-quality" label={t("images.jpeg_quality")} description={t("images.jpeg_quality_description")}>
-                <FormTextBoxWithUnit
-                    min="10" max="100" type="number"
-                    disabled={!compressImages}
-                    unit={t("units.percentage")}
-                    currentValue={imageJpegQuality} onChange={setImageJpegQuality}
+            <OptionsRow name="image-jpeg-quality" label={`${t("images.jpeg_quality")} (${imageJpegQuality ?? 75}%)`} description={t("images.jpeg_quality_description")}>
+                <Slider
+                    min={10} max={100} step={5}
+                    value={parseInt(imageJpegQuality ?? "75", 10)}
+                    onChange={(v) => setImageJpegQuality(String(v))}
                 />
             </OptionsRow>
         </OptionsSection>
