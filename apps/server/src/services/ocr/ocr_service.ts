@@ -2,6 +2,8 @@ import { getTesseractCode } from '@triliumnext/commons';
 import Tesseract from 'tesseract.js';
 
 import becca from '../../becca/becca.js';
+import blobService from '../blob.js';
+import entityChangesService from '../entity_changes.js';
 import log from '../log.js';
 import options from '../options.js';
 import sql from '../sql.js';
@@ -277,17 +279,14 @@ class OCRService {
         }
 
         try {
-            // Store OCR text and timestamp in blobs table
             sql.execute(`
                 UPDATE blobs SET
                     textRepresentation = ?,
                     textExtractionLastProcessed = ?
                 WHERE blobId = ?
-            `, [
-                ocrResult.text,
-                new Date().toISOString(),
-                blobId
-            ]);
+            `, [ocrResult.text, new Date().toISOString(), blobId]);
+
+            this.putBlobEntityChange(blobId);
 
             log.info(`Stored OCR result for blob ${blobId}`);
         } catch (error) {
@@ -363,9 +362,11 @@ class OCRService {
     deleteOCRResult(blobId: string): void {
         try {
             sql.execute(`
-                UPDATE blobs SET textRepresentation = NULL
+                UPDATE blobs SET textRepresentation = NULL, textExtractionLastProcessed = NULL
                 WHERE blobId = ?
             `, [blobId]);
+
+            this.putBlobEntityChange(blobId);
 
             log.info(`Deleted OCR result for blob ${blobId}`);
         } catch (error) {
@@ -558,6 +559,29 @@ class OCRService {
     /**
      * Get processor for a given MIME type
      */
+    /**
+     * Notifies the sync system that a blob has changed, without modifying the blob's identity.
+     */
+    private putBlobEntityChange(blobId: string): void {
+        const blob = becca.getBlob({ blobId });
+        if (!blob || !blob.blobId) return;
+
+        const hash = blobService.calculateContentHash({
+            blobId: blob.blobId,
+            content: blob.content,
+            textRepresentation: blob.textRepresentation,
+            utcDateModified: blob.utcDateModified!
+        });
+        entityChangesService.putEntityChange({
+            entityName: "blobs",
+            entityId: blobId,
+            hash,
+            isErased: false,
+            utcDateChanged: blob.utcDateModified,
+            isSynced: true
+        });
+    }
+
     private getProcessorForMimeType(mimeType: string): FileProcessor | null {
         for (const processor of this.processors.values()) {
             if (processor.canProcess(mimeType)) {
@@ -641,11 +665,11 @@ class OCRService {
 
         try {
             sql.execute(`
-                UPDATE blobs SET
-                    textRepresentation = NULL,
-                    textExtractionLastProcessed = NULL
+                UPDATE blobs SET textRepresentation = NULL, textExtractionLastProcessed = NULL
                 WHERE blobId = ?
             `, [blobId]);
+
+            this.putBlobEntityChange(blobId);
 
             log.info(`Invalidated OCR result for blob ${blobId}`);
         } catch (error) {

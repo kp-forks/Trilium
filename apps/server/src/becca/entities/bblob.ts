@@ -10,7 +10,7 @@ class BBlob extends AbstractBeccaEntity<BBlob> {
         return "blobId";
     }
     static get hashedProperties() {
-        return ["blobId", "content", "textRepresentation"];
+        return ["blobId", "content"];
     }
 
     content!: string | Buffer;
@@ -40,6 +40,11 @@ class BBlob extends AbstractBeccaEntity<BBlob> {
             dateModified: this.dateModified,
             utcDateModified: this.utcDateModified
         };
+    }
+
+    protected getPojoToSave() {
+        const { contentLength: _, ...pojo } = this.getPojo();
+        return pojo;
     }
 }
 
