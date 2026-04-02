@@ -13,12 +13,7 @@ import optionService from "./options.js";
 import protectedSessionService from "./protected_session.js";
 import sql from "./sql.js";
 
-interface ProcessImageOCRTarget {
-    noteId?: string;
-    attachmentId?: string;
-}
-
-async function processImage(uploadBuffer: Buffer, originalName: string, shrinkImageSwitch: boolean, ocrTarget?: ProcessImageOCRTarget) {
+async function processImage(uploadBuffer: Buffer, originalName: string, shrinkImageSwitch: boolean) {
     const compressImages = optionService.getOptionBool("compressImages");
     const origImageFormat = await getImageType(uploadBuffer);
 
@@ -27,26 +22,6 @@ async function processImage(uploadBuffer: Buffer, originalName: string, shrinkIm
     } else if (isAnimated(uploadBuffer)) {
         // recompression of animated images will make them static
         shrinkImageSwitch = false;
-    }
-
-    // Schedule OCR processing in the background for best quality
-    if (ocrTarget && optionService.getOptionBool("ocrAutoProcessImages") && origImageFormat) {
-        const imageMime = getImageMimeFromExtension(origImageFormat.ext);
-        const supportedMimeTypes = ocrService.getAllSupportedMimeTypes();
-
-        if (supportedMimeTypes.includes(imageMime)) {
-            setImmediate(async () => {
-                try {
-                    if (ocrTarget.noteId) {
-                        await ocrService.processNoteOCR(ocrTarget.noteId);
-                    } else if (ocrTarget.attachmentId) {
-                        await ocrService.processAttachmentOCR(ocrTarget.attachmentId);
-                    }
-                } catch (error) {
-                    log.error(`Failed to process OCR for image ${ocrTarget.noteId || ocrTarget.attachmentId}: ${error}`);
-                }
-            });
-        }
     }
 
     let finalImageBuffer;
@@ -96,13 +71,15 @@ function updateImage(noteId: string, uploadBuffer: Buffer, originalName: string)
     note.setLabel("originalFileName", originalName);
 
     // resizing images asynchronously since JIMP does not support sync operation
-    processImage(uploadBuffer, originalName, true, { noteId }).then(({ buffer, imageFormat }) => {
+    processImage(uploadBuffer, originalName, true).then(({ buffer, imageFormat }) => {
         sql.transactional(() => {
             note.mime = getImageMimeFromExtension(imageFormat.ext);
             note.save();
 
             note.setContent(buffer);
         });
+
+        scheduleOcrForNote(noteId);
     });
 }
 
@@ -132,7 +109,7 @@ function saveImage(parentNoteId: string, uploadBuffer: Buffer, originalName: str
     note.addLabel("originalFileName", originalName);
 
     // resizing images asynchronously since JIMP does not support sync operation
-    processImage(uploadBuffer, originalName, shrinkImageSwitch, { noteId: note.noteId }).then(({ buffer, imageFormat }) => {
+    processImage(uploadBuffer, originalName, shrinkImageSwitch).then(({ buffer, imageFormat }) => {
         sql.transactional(() => {
             note.mime = getImageMimeFromExtension(imageFormat.ext);
 
@@ -145,6 +122,8 @@ function saveImage(parentNoteId: string, uploadBuffer: Buffer, originalName: str
 
             note.setContent(buffer, { forceSave: true });
         });
+
+        scheduleOcrForNote(note.noteId);
     });
 
     return {
@@ -183,13 +162,14 @@ function saveImageToAttachment(noteId: string, uploadBuffer: Buffer, originalNam
     }, 5000);
 
     // resizing images asynchronously since JIMP does not support sync operation
-    processImage(uploadBuffer, originalName, !!shrinkImageSwitch, { attachmentId: attachment.attachmentId }).then(({ buffer, imageFormat }) => {
+    const attachmentId = attachment.attachmentId;
+    processImage(uploadBuffer, originalName, !!shrinkImageSwitch).then(({ buffer, imageFormat }) => {
         sql.transactional(() => {
             // re-read, might be changed in the meantime
-            if (!attachment.attachmentId) {
+            if (!attachmentId) {
                 throw new Error("Missing attachment ID.");
             }
-            attachment = becca.getAttachmentOrThrow(attachment.attachmentId);
+            attachment = becca.getAttachmentOrThrow(attachmentId);
 
             attachment.mime = getImageMimeFromExtension(imageFormat.ext);
 
@@ -200,9 +180,35 @@ function saveImageToAttachment(noteId: string, uploadBuffer: Buffer, originalNam
 
             attachment.setContent(buffer, { forceSave: true });
         });
+
+        scheduleOcrForAttachment(attachmentId);
     });
 
     return attachment;
+}
+
+function scheduleOcrForNote(noteId: string) {
+    if (optionService.getOptionBool("ocrAutoProcessImages")) {
+        setImmediate(async () => {
+            try {
+                await ocrService.processNoteOCR(noteId);
+            } catch (error) {
+                log.error(`Failed to process OCR for note ${noteId}: ${error}`);
+            }
+        });
+    }
+}
+
+function scheduleOcrForAttachment(attachmentId: string | undefined) {
+    if (attachmentId && optionService.getOptionBool("ocrAutoProcessImages")) {
+        setImmediate(async () => {
+            try {
+                await ocrService.processAttachmentOCR(attachmentId);
+            } catch (error) {
+                log.error(`Failed to process OCR for attachment ${attachmentId}: ${error}`);
+            }
+        });
+    }
 }
 
 async function shrinkImage(buffer: Buffer, originalName: string) {
