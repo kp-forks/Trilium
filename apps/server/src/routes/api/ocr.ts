@@ -305,6 +305,37 @@ async function getNoteOCRText(req: Request<{ noteId: string }>) {
     } satisfies TextRepresentationResponse;
 }
 
+async function getAttachmentOCRText(req: Request<{ attachmentId: string }>) {
+    const { attachmentId } = req.params;
+
+    const attachment = becca.getAttachment(attachmentId);
+    if (!attachment) {
+        return [404, { success: false, message: 'Attachment not found' }];
+    }
+
+    let ocrText: string | null = null;
+
+    if (attachment.blobId) {
+        const result = sql.getRow<{
+            textRepresentation: string | null;
+        }>(`
+            SELECT textRepresentation
+            FROM blobs
+            WHERE blobId = ?
+        `, [attachment.blobId]);
+
+        if (result) {
+            ocrText = result.textRepresentation;
+        }
+    }
+
+    return {
+        success: true,
+        text: ocrText || '',
+        hasOcr: !!ocrText
+    } satisfies TextRepresentationResponse;
+}
+
 export default {
     processNoteOCR,
     processAttachmentOCR,
@@ -313,5 +344,6 @@ export default {
     getBatchProgress,
     getOCRStats,
     deleteOCRResults,
-    getNoteOCRText
+    getNoteOCRText,
+    getAttachmentOCRText
 };

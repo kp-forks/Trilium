@@ -2094,7 +2094,8 @@
     "process_now": "Process OCR",
     "processing": "Processing...",
     "processing_started": "OCR processing has been started. Please wait a moment and refresh.",
-    "processing_failed": "Failed to start OCR processing"
+    "processing_failed": "Failed to start OCR processing",
+    "view_extracted_text": "View extracted text (OCR)"
   },
   "command_palette": {
     "tree-action-name": "Tree: {{name}}",

@@ -14,7 +14,23 @@ type State =
     | { kind: "empty" }
     | { kind: "error"; message: string };
 
+interface TextRepresentationProps {
+    /** The API path to fetch OCR text from (e.g. `ocr/notes/{id}/text`). */
+    textUrl: string;
+    /** The API path to trigger OCR processing (e.g. `ocr/process-note/{id}`). */
+    processUrl: string;
+}
+
 export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
+    return (
+        <TextRepresentation
+            textUrl={`ocr/notes/${note.noteId}/text`}
+            processUrl={`ocr/process-note/${note.noteId}`}
+        />
+    );
+}
+
+export function TextRepresentation({ textUrl, processUrl }: TextRepresentationProps) {
     const [ state, setState ] = useState<State>({ kind: "loading" });
     const [ processing, setProcessing ] = useState(false);
 
@@ -22,7 +38,7 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
         setState({ kind: "loading" });
 
         try {
-            const response = await server.get<TextRepresentationResponse>(`ocr/notes/${note.noteId}/text`);
+            const response = await server.get<TextRepresentationResponse>(textUrl);
 
             if (!response.success) {
                 setState({ kind: "error", message: response.message || t("ocr.failed_to_load") });
@@ -41,12 +57,12 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
         }
     }
 
-    useEffect(() => { fetchText(); }, [ note.noteId ]);
+    useEffect(() => { fetchText(); }, [ textUrl ]);
 
     async function processOCR() {
         setProcessing(true);
         try {
-            const response = await server.post<{ success: boolean; message?: string }>(`ocr/process-note/${note.noteId}`, { forceReprocess: true });
+            const response = await server.post<{ success: boolean; message?: string }>(processUrl, { forceReprocess: true });
             if (response.success) {
                 toast.showMessage(t("ocr.processing_started"));
                 setTimeout(fetchText, 2000);
