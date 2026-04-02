@@ -668,9 +668,6 @@ importers:
       '@types/supertest':
         specifier: 7.2.0
         version: 7.2.0
-      '@types/tesseract.js':
-        specifier: 2.0.0
-        version: 2.0.0(encoding@0.1.13)
       '@types/tmp':
         specifier: 0.2.6
         version: 0.2.6
@@ -6574,10 +6571,6 @@ packages:
 
   '@types/tabulator-tables@6.3.1':
     resolution: {integrity: sha512-qL05wGXVy0yfWcF8LCE9+9uSeUIpeKdgpm8YmOAPTjLd3FaoZziPOhVxIiLzEhLTFfOvbuwnaWDm4v4i87diRQ==}
-
-  '@types/tesseract.js@2.0.0':
-    resolution: {integrity: sha512-t0uNy5L9Ynp/O/fu0+75/ot7lWZZRlwsVwaPQOeYud/V6a0B/JjfYvwnrA4TV6+R9xc1ioRLukqjhI8Spy5diw==}
-    deprecated: This is a stub types definition. tesseract.js provides its own type definitions, so you do not need this installed.
 
   '@types/through2@2.0.41':
     resolution: {integrity: sha512-ryQ0tidWkb1O1JuYvWKyMLYEtOWDqF5mHerJzKz/gQpoAaJq2l/dsMPBF0B5BNVT34rbARYJ5/tsZwLfUi2kwQ==}
@@ -17643,6 +17636,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-export-word@47.6.1':
     dependencies:
@@ -17805,6 +17800,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-indent@47.6.1':
     dependencies:
@@ -17828,6 +17825,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-line-height@47.6.1':
     dependencies:
@@ -17852,6 +17851,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-list-multi-level@47.6.1':
     dependencies:
@@ -17934,6 +17935,8 @@ snapshots:
       '@ckeditor/ckeditor5-widget': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-minimap@47.6.1':
     dependencies:
@@ -17942,6 +17945,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 47.6.1
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-operations-compressor@47.6.1':
     dependencies:
@@ -18160,6 +18165,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-table@47.6.1':
     dependencies:
@@ -18265,6 +18272,7 @@ snapshots:
       ckeditor5: 47.6.1
     transitivePeerDependencies:
       - bufferutil
+      - supports-color
       - utf-8-validate
 
   '@ckeditor/ckeditor5-utils@47.6.1':
@@ -22968,12 +22976,6 @@ snapshots:
 
   '@types/tabulator-tables@6.3.1': {}
 
-  '@types/tesseract.js@2.0.0(encoding@0.1.13)':
-    dependencies:
-      tesseract.js: 6.0.1(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
-
   '@types/through2@2.0.41':
     dependencies:
       '@types/node': 24.12.0
@@ -25876,6 +25878,8 @@ snapshots:
   ckeditor5-collaboration@47.6.1:
     dependencies:
       '@ckeditor/ckeditor5-collaboration-core': 47.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   ckeditor5-premium-features@47.6.1(bufferutil@4.0.9)(ckeditor5@47.6.1)(utf-8-validate@6.0.5):
     dependencies:
