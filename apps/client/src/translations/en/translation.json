@@ -1269,8 +1269,6 @@
     "ocr_description": "Extract searchable text from images, PDFs, and Office documents (Word, Excel, PowerPoint).",
     "ocr_auto_process": "Auto-process new files",
     "ocr_auto_process_description": "Automatically extract text from newly uploaded or pasted files.",
-    "ocr_language": "Language",
-    "ocr_language_description": "Tesseract language code for image OCR. Use + for multiple languages (e.g. eng+deu).",
     "ocr_min_confidence": "Minimum confidence",
     "ocr_confidence_unit": "(0.0-1.0)",
     "ocr_confidence_description": "Only extract text above this confidence threshold. Lower values include more text but may be less accurate.",
