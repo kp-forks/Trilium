@@ -12,7 +12,7 @@ import { FileProcessor } from './file_processor.js';
  */
 export class ImageProcessor extends FileProcessor {
     private worker: Tesseract.Worker | null = null;
-    private isInitialized = false;
+    private currentLanguage: string | null = null;
     private readonly supportedTypes = [
         'image/jpeg',
         'image/jpg',
@@ -32,41 +32,13 @@ export class ImageProcessor extends FileProcessor {
     }
 
     async extractText(buffer: Buffer, options: OCRProcessingOptions = {}): Promise<OCRResult> {
-        if (!this.isInitialized) {
-            await this.initialize();
-        }
-
-        if (!this.worker) {
-            throw new Error('Image processor worker not initialized');
-        }
+        const language = options.language || "eng";
+        await this.ensureWorker(language);
 
         try {
-            log.info('Starting image OCR text extraction...');
+            log.info(`Starting image OCR text extraction (language: ${language})...`);
 
-            // Set language if specified and different from current
-            // Support multi-language format like 'ron+eng'
-            const language = options.language || "eng";
-
-            // Validate language format
-            if (!this.isValidLanguageFormat(language)) {
-                throw new Error(`Invalid OCR language format: ${language}. Use format like 'eng' or 'ron+eng'`);
-            }
-
-            if (language !== 'eng') {
-                // For different languages, create a new worker
-                await this.worker.terminate();
-                log.info(`Initializing Tesseract worker for language(s): ${language}`);
-                this.worker = await Tesseract.createWorker(language, 1, {
-                    cachePath: dataDirs.OCR_CACHE_DIR,
-                    logger: (m: { status: string; progress: number }) => {
-                        if (m.status === 'recognizing text') {
-                            log.info(`Image OCR progress (${language}): ${Math.round(m.progress * 100)}%`);
-                        }
-                    }
-                });
-            }
-
-            const result = await this.worker.recognize(buffer);
+            const result = await this.worker!.recognize(buffer);
 
             // Filter text based on minimum confidence threshold
             const { filteredText, overallConfidence } = this.filterTextByConfidence(result.data, options);
@@ -75,7 +47,7 @@ export class ImageProcessor extends FileProcessor {
                 text: filteredText,
                 confidence: overallConfidence,
                 extractedAt: new Date().toISOString(),
-                language: options.language || "eng",
+                language,
                 pageCount: 1
             };
 
@@ -92,39 +64,31 @@ export class ImageProcessor extends FileProcessor {
         return 'image';
     }
 
-    private async initialize(): Promise<void> {
-        if (this.isInitialized) {
+    /**
+     * Ensures a Tesseract worker is ready for the given language.
+     * Creates a new worker if none exists or if the language has changed.
+     */
+    private async ensureWorker(language: string): Promise<void> {
+        if (this.worker && this.currentLanguage === language) {
             return;
         }
 
-        try {
-            log.info('Initializing image OCR processor with Tesseract.js...');
-
-            fs.mkdirSync(dataDirs.OCR_CACHE_DIR, { recursive: true });
-
-            // Configure proper paths for Node.js environment
-            const workerPath = require.resolve('tesseract.js/src/worker-script/node/index.js');
-            const corePath = require.resolve('tesseract.js-core/tesseract-core.wasm.js');
-
-            log.info(`Using worker path: ${workerPath}`);
-            log.info(`Using core path: ${corePath}`);
-
-            this.worker = await Tesseract.createWorker("eng", 1, {
-                workerPath,
-                corePath,
-                cachePath: dataDirs.OCR_CACHE_DIR,
-                logger: (m: { status: string; progress: number }) => {
-                    if (m.status === 'recognizing text') {
-                        log.info(`Image OCR progress: ${Math.round(m.progress * 100)}%`);
-                    }
-                }
-            });
-            this.isInitialized = true;
-            log.info('Image OCR processor initialized successfully');
-        } catch (error) {
-            log.error(`Failed to initialize image OCR processor: ${error}`);
-            throw error;
+        if (this.worker) {
+            await this.worker.terminate();
         }
+
+        fs.mkdirSync(dataDirs.OCR_CACHE_DIR, { recursive: true });
+
+        log.info(`Initializing Tesseract worker for language(s): ${language}`);
+        this.worker = await Tesseract.createWorker(language, 1, {
+            cachePath: dataDirs.OCR_CACHE_DIR,
+            logger: (m: { status: string; progress: number }) => {
+                if (m.status === 'recognizing text') {
+                    log.info(`Image OCR progress (${language}): ${Math.round(m.progress * 100)}%`);
+                }
+            }
+        });
+        this.currentLanguage = language;
     }
 
     async cleanup(): Promise<void> {
@@ -132,7 +96,7 @@ export class ImageProcessor extends FileProcessor {
             await this.worker.terminate();
             this.worker = null;
         }
-        this.isInitialized = false;
+        this.currentLanguage = null;
         log.info('Image OCR processor cleaned up');
     }
 
@@ -204,24 +168,4 @@ export class ImageProcessor extends FileProcessor {
         return parseFloat(minConfidence);
     }
 
-    /**
-     * Validate OCR language format
-     * Supports single language (eng) or multi-language (ron+eng)
-     */
-    private isValidLanguageFormat(language: string): boolean {
-        if (!language || typeof language !== 'string') {
-            return false;
-        }
-
-        // Split by '+' for multi-language format
-        const languages = language.split('+');
-
-        // Check each language code (should be 2-7 characters, alphanumeric with underscores)
-        const validLanguagePattern = /^[a-zA-Z]{2,3}(_[a-zA-Z]{2,3})?$/;
-
-        return languages.every(lang => {
-            const trimmed = lang.trim();
-            return trimmed.length > 0 && validLanguagePattern.test(trimmed);
-        });
-    }
 }
