@@ -292,7 +292,6 @@ export interface TextRepresentationResponse {
     success: boolean;
     text: string;
     hasOcr: boolean;
-    extractedAt: string | null;
     message?: string;
 }
 

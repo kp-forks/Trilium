@@ -31,7 +31,6 @@ export interface OCRProcessingOptions {
 interface OCRBlobRow {
     blobId: string;
     textRepresentation: string;
-    textExtractionLastProcessed?: string;
 }
 
 /**
@@ -189,11 +188,13 @@ class OCRService {
             return null;
         }
 
-        // Check if OCR already exists and is up-to-date
-        const existingOCR = this.getStoredOCRResult(note.blobId);
-        if (existingOCR && !options.forceReprocess && note.blobId && !this.needsReprocessing(note.blobId)) {
-            log.info(`OCR already exists and is up-to-date for note ${noteId}, returning cached result`);
-            return existingOCR;
+        // Check if OCR already exists
+        if (!options.forceReprocess) {
+            const existingOCR = this.getStoredOCRResult(note.blobId);
+            if (existingOCR) {
+                log.info(`OCR already exists for note ${noteId}, returning cached result`);
+                return existingOCR;
+            }
         }
 
         try {
@@ -243,11 +244,13 @@ class OCRService {
             return null;
         }
 
-        // Check if OCR already exists and is up-to-date
-        const existingOCR = this.getStoredOCRResult(attachment.blobId);
-        if (existingOCR && !options.forceReprocess && attachment.blobId && !this.needsReprocessing(attachment.blobId)) {
-            log.info(`OCR already exists and is up-to-date for attachment ${attachmentId}, returning cached result`);
-            return existingOCR;
+        // Check if OCR already exists
+        if (!options.forceReprocess) {
+            const existingOCR = this.getStoredOCRResult(attachment.blobId);
+            if (existingOCR) {
+                log.info(`OCR already exists for attachment ${attachmentId}, returning cached result`);
+                return existingOCR;
+            }
         }
 
         try {
@@ -280,11 +283,9 @@ class OCRService {
 
         try {
             sql.execute(`
-                UPDATE blobs SET
-                    textRepresentation = ?,
-                    textExtractionLastProcessed = ?
+                UPDATE blobs SET textRepresentation = ?
                 WHERE blobId = ?
-            `, [ocrResult.text, new Date().toISOString(), blobId]);
+            `, [ocrResult.text, blobId]);
 
             this.putBlobEntityChange(blobId);
 
@@ -361,10 +362,7 @@ class OCRService {
      */
     deleteOCRResult(blobId: string): void {
         try {
-            sql.execute(`
-                UPDATE blobs SET textRepresentation = NULL, textExtractionLastProcessed = NULL
-                WHERE blobId = ?
-            `, [blobId]);
+            sql.execute(`UPDATE blobs SET textRepresentation = NULL WHERE blobId = ?`, [blobId]);
 
             this.putBlobEntityChange(blobId);
 
@@ -618,68 +616,7 @@ class OCRService {
     }
 
     /**
-     * Check if blob needs OCR re-processing due to content changes
-     */
-    needsReprocessing(blobId: string): boolean {
-        if (!blobId) {
-            return false;
-        }
-
-        try {
-            const blobInfo = sql.getRow<{
-                utcDateModified: string;
-                textExtractionLastProcessed: string | null;
-            }>(`
-                SELECT utcDateModified, textExtractionLastProcessed
-                FROM blobs
-                WHERE blobId = ?
-            `, [blobId]);
-
-            if (!blobInfo) {
-                return false;
-            }
-
-            // If OCR was never processed, it needs processing
-            if (!blobInfo.textExtractionLastProcessed) {
-                return true;
-            }
-
-            // If blob was modified after last OCR processing, it needs re-processing
-            const blobModified = new Date(blobInfo.utcDateModified);
-            const lastOcrProcessed = new Date(blobInfo.textExtractionLastProcessed);
-
-            return blobModified > lastOcrProcessed;
-        } catch (error) {
-            log.error(`Failed to check if blob ${blobId} needs reprocessing: ${error}`);
-            return false;
-        }
-    }
-
-    /**
-     * Invalidate OCR results for a blob (clear textRepresentation and textExtractionLastProcessed)
-     */
-    invalidateOCRResult(blobId: string): void {
-        if (!blobId) {
-            return;
-        }
-
-        try {
-            sql.execute(`
-                UPDATE blobs SET textRepresentation = NULL, textExtractionLastProcessed = NULL
-                WHERE blobId = ?
-            `, [blobId]);
-
-            this.putBlobEntityChange(blobId);
-
-            log.info(`Invalidated OCR result for blob ${blobId}`);
-        } catch (error) {
-            log.error(`Failed to invalidate OCR result for blob ${blobId}: ${error}`);
-            throw error;
-        }
-    }
-
-    /**
-     * Get blobs that need OCR processing (modified after last OCR or never processed)
+     * Get blobs that need OCR processing (those without text representation)
      */
     getBlobsNeedingOCR(): Array<{ blobId: string; mimeType: string; entityType: 'note' | 'attachment'; entityId: string }> {
         try {
@@ -717,10 +654,7 @@ class OCRService {
                 )
                 AND n.isDeleted = 0
                 AND n.blobId IS NOT NULL
-                AND (
-                    b.textExtractionLastProcessed IS NULL
-                    OR b.utcDateModified > b.textExtractionLastProcessed
-                )
+                AND b.textRepresentation IS NULL
             `);
 
             // Get attachments with blobs that need OCR (both image and file attachments with supported MIME types)
@@ -757,10 +691,7 @@ class OCRService {
                 )
                 AND a.isDeleted = 0
                 AND a.blobId IS NOT NULL
-                AND (
-                    b.textExtractionLastProcessed IS NULL
-                    OR b.utcDateModified > b.textExtractionLastProcessed
-                )
+                AND b.textRepresentation IS NULL
             `);
 
             // Combine results

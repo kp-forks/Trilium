@@ -6,23 +6,16 @@
 
 // Migrations should be kept in descending order, so the latest migration is first.
 const MIGRATIONS: (SqlMigration | JsMigration)[] = [
-    // Add text representation column and last processed timestamp to blobs table
+    // Add text representation column to blobs table
     {
         version: 236,
         sql: /*sql*/`\
             -- Add text representation column to blobs table
             ALTER TABLE blobs ADD COLUMN textRepresentation TEXT DEFAULT NULL;
 
-            -- Add OCR last processed timestamp to blobs table
-            ALTER TABLE blobs ADD COLUMN textExtractionLastProcessed TEXT DEFAULT NULL;
-
             -- Create index for text representation searches
             CREATE INDEX IF NOT EXISTS idx_blobs_textRepresentation
             ON blobs (textRepresentation);
-
-            -- Create index for OCR last processed timestamp
-            CREATE INDEX IF NOT EXISTS idx_blobs_textExtractionLastProcessed
-            ON blobs (textExtractionLastProcessed);
         `
     },
     // Add missing database indices for query performance

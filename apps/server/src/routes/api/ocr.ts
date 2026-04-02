@@ -283,29 +283,25 @@ async function getNoteOCRText(req: Request<{ noteId: string }>) {
     }
 
     let ocrText: string | null = null;
-    let extractedAt: string | null = null;
 
     if (note.blobId) {
         const result = sql.getRow<{
             textRepresentation: string | null;
-            textExtractionLastProcessed: string | null;
         }>(`
-            SELECT textRepresentation, textExtractionLastProcessed
+            SELECT textRepresentation
             FROM blobs
             WHERE blobId = ?
         `, [note.blobId]);
 
         if (result) {
             ocrText = result.textRepresentation;
-            extractedAt = result.textExtractionLastProcessed;
         }
     }
 
     return {
         success: true,
         text: ocrText || '',
-        hasOcr: !!ocrText,
-        extractedAt
+        hasOcr: !!ocrText
     } satisfies TextRepresentationResponse;
 }
 

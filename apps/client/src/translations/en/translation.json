@@ -2090,7 +2090,6 @@
     "no_text_available": "No OCR text available",
     "no_text_explanation": "This note has not been processed for OCR text extraction or no text was found.",
     "failed_to_load": "Failed to load OCR text",
-    "extracted_on": "Extracted on: {{date}}",
     "process_now": "Process OCR",
     "processing": "Processing...",
     "processing_started": "OCR processing has been started. Please wait a moment and refresh.",

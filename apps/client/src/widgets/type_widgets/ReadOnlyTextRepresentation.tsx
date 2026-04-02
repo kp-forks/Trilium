@@ -6,12 +6,11 @@ import { useEffect, useState } from "preact/hooks";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
-import { formatDateTime } from "../../services/utils";
 import { TypeWidgetProps } from "./type_widget";
 
 type State =
     | { kind: "loading" }
-    | { kind: "loaded"; text: string; extractedAt: string | null }
+    | { kind: "loaded"; text: string }
     | { kind: "empty" }
     | { kind: "error"; message: string };
 
@@ -35,7 +34,7 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
                 return;
             }
 
-            setState({ kind: "loaded", text: response.text, extractedAt: response.extractedAt });
+            setState({ kind: "loaded", text: response.text });
         } catch (error: any) {
             console.error("Error loading text representation:", error);
             setState({ kind: "error", message: error.message || t("ocr.failed_to_load") });
@@ -78,11 +77,6 @@ export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
                     <div className="text-representation-content">
                         {state.text}
                     </div>
-                    {state.extractedAt && (
-                        <div className="text-representation-meta">
-                            {t("ocr.extracted_on", { date: formatDateTime(new Date(state.extractedAt)) })}
-                        </div>
-                    )}
                 </>
             )}
 
