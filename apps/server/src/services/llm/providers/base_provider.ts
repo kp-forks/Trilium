@@ -33,7 +33,7 @@ function buildNoteHint(noteId: string): string | null {
         return null;
     }
 
-    return `The user is currently viewing a ${note.type} note titled "${note.title}". Use the get_current_note tool to read its content if needed.`;
+    return `The user is currently viewing a ${note.type} note titled "${note.title}" (noteId: ${note.noteId}). This is the current note.`;
 }
 
 /**

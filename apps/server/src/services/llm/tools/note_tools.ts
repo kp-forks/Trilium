@@ -11,7 +11,7 @@ import markdownImport from "../../import/markdown.js";
 import noteService from "../../notes.js";
 import SearchContext from "../../search/search_context.js";
 import searchService from "../../search/services/search.js";
-import { defineTools, type ToolContext } from "./tool_registry.js";
+import { defineTools } from "./tool_registry.js";
 
 /**
  * Convert note content to a format suitable for LLM consumption.
@@ -245,28 +245,6 @@ export const noteTools = defineTools({
             } catch (err) {
                 return { error: err instanceof Error ? err.message : "Failed to create note" };
             }
-        }
-    },
-
-    get_current_note: {
-        description: "Read the content of the note the user is currently viewing. Call this when the user asks about or refers to their current note.",
-        inputSchema: z.object({}),
-        needsContext: true as const,
-        execute: async (_args: Record<string, never>, { contextNoteId }: ToolContext) => {
-            const note = becca.getNote(contextNoteId);
-            if (!note) {
-                return { error: "Note not found" };
-            }
-            if (!note.isContentAvailable()) {
-                return { error: "Note is protected" };
-            }
-
-            return {
-                noteId: note.noteId,
-                title: note.getTitleOrProtected(),
-                type: note.type,
-                content: getNoteContentForLlm(note)
-            };
         }
     }
 });

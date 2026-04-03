@@ -2346,7 +2346,6 @@
       "update_note_content": "Update note content",
       "append_to_note": "Append to note",
       "create_note": "Create note",
-      "get_current_note": "Read current note",
       "get_attributes": "Get attributes",
       "get_attribute": "Get attribute",
       "set_attribute": "Set attribute",
