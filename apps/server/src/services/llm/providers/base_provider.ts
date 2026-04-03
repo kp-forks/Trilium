@@ -8,6 +8,7 @@ import type { LanguageModel } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
 import becca from "../../../becca/becca.js";
+import mappers from "../../../etapi/mappers.js";
 import { getSkillsSummary } from "../skills/index.js";
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
@@ -24,7 +25,7 @@ function effectiveCost(pricing: ModelPricing): number {
 }
 
 /**
- * Build a lightweight context hint about the current note (title + type only, no content).
+ * Build a context hint about the current note with full metadata (same as get_note / ETAPI).
  */
 function buildNoteHint(noteId: string): string | null {
     const note = becca.getNote(noteId);
@@ -32,7 +33,8 @@ function buildNoteHint(noteId: string): string | null {
         return null;
     }
 
-    return `The user is currently viewing a ${note.type} note titled "${note.title}" (noteId: ${note.noteId}). This is the current note.`;
+    const metadata = JSON.stringify(mappers.mapNoteToPojo(note), null, 2);
+    return `The user is currently viewing the following note:\n${metadata}`;
 }
 
 /**
