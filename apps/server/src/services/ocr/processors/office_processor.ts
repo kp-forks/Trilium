@@ -4,6 +4,15 @@ import log from '../../log.js';
 import { OCRProcessingOptions, OCRResult } from '../ocr_service.js';
 import { FileProcessor } from './file_processor.js';
 
+// officeparser depends on pdfjs-dist which expects DOMMatrix at the
+// top level. Provide a minimal stub so it doesn't crash in Node.js
+// environments that lack it (e.g. Alpine Linux).
+if (!globalThis.DOMMatrix) {
+    globalThis.DOMMatrix = class DOMMatrix {
+        a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
+    } as unknown as typeof globalThis.DOMMatrix;
+}
+
 const SUPPORTED_TYPES = [
     // Office Open XML
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',   // DOCX
