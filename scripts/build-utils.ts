@@ -52,7 +52,6 @@ export default class BuildHelper {
                 "@electron/remote",
                 "better-sqlite3",
                 "pdfjs-dist",
-                "sharp",
                 "./xhr-sync-worker.js",
                 "vite"
             ],
