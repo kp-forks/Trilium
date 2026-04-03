@@ -601,7 +601,8 @@
     "new-feature": "New",
     "collections": "コレクション",
     "ai-chat": "AI チャット",
-    "spreadsheet": "スプレッドシート"
+    "spreadsheet": "スプレッドシート",
+    "llm-chat": "AI チャット"
   },
   "edited_notes": {
     "no_edited_notes_found": "この日の編集されたノートはまだありません...",
@@ -2050,7 +2051,9 @@
     "title": "実験オプション",
     "disclaimer": "これらのオプションは試験的なもので、動作が不安定になる可能性があります。注意してご使用ください。",
     "new_layout_name": "新しいレイアウト",
-    "new_layout_description": "よりモダンな外観と使いやすさが向上した新しいレイアウトをお試しください。今後のリリースで大幅な変更が加えられる可能性があります。"
+    "new_layout_description": "よりモダンな外観と使いやすさが向上した新しいレイアウトをお試しください。今後のリリースで大幅な変更が加えられる可能性があります。",
+    "llm_name": "AI / LLM チャット",
+    "llm_description": "大規模言語モデルを活用した AI チャットサイドバーと LLM チャットノートを有効にします。"
   },
   "breadcrumb_badges": {
     "read_only_explicit": "読み取り専用",
@@ -2215,5 +2218,78 @@
     "sample_xy": "XY チャート",
     "sample_venn": "ベン図",
     "sample_ishikawa": "石川図"
+  },
+  "llm_chat": {
+    "placeholder": "メッセージを入力してください…",
+    "send": "送信",
+    "sending": "送信中...",
+    "empty_state": "下記にメッセージを入力して会話を始めましょう。",
+    "searching_web": "ウェブ検索中…",
+    "web_search": "ウェブ検索",
+    "note_tools": "ノートへのアクセス",
+    "sources": "ソース",
+    "extended_thinking": "思考を拡張",
+    "legacy_models": "レガシーモデル",
+    "thinking": "思考中...",
+    "thought_process": "思考プロセス",
+    "tool_calls": "{{count}} 回のツール呼び出し",
+    "input": "入力",
+    "result": "結果",
+    "error": "エラー",
+    "tool_error": "失敗",
+    "total_tokens": "{{total}} トークン",
+    "tokens_detail": "{{prompt}} プロンプト + {{completion}} コンプリーション",
+    "tokens_used": "{{prompt}} プロンプト + {{completion}} コンプリーション = {{total}} トークン",
+    "tokens_used_with_cost": "{{prompt}} プロンプト + {{completion}} コンプリーション = {{total}} トークン (~${{cost}})",
+    "tokens_used_with_model": "{{model}}: {{prompt}} プロンプト + {{completion}} コンプリーション = {{total}} トークン",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} プロンプト + {{completion}} コンプリーション = {{total}} トークン (~${{cost}})",
+    "tokens": "トークン",
+    "context_used": "{{percentage}} % 使用済み",
+    "note_context_enabled": "クリックしてノートのコンテキストを無効にする: {{title}}",
+    "note_context_disabled": "クリックして現在のノートをコンテキストに含める",
+    "no_provider_message": "AI プロバイダーが設定されていません。チャットを開始するには、プロバイダーを追加してください。",
+    "add_provider": "AI プロバイダーを追加",
+    "role_user": "あなた",
+    "role_assistant": "アシスタント"
+  },
+  "sidebar_chat": {
+    "title": "AI チャット",
+    "launcher_title": "AI チャットを開く",
+    "new_chat": "新しいチャットを開始",
+    "save_chat": "チャットをノートに保存",
+    "empty_state": "会話を開始",
+    "history": "チャット履歴",
+    "recent_chats": "最近のチャット",
+    "no_chats": "過去のチャットはありません"
+  },
+  "mind-map": {
+    "addChild": "子ノードを追加",
+    "addParent": "親ノードを追加",
+    "addSibling": "兄弟ノードを追加",
+    "removeNode": "ノードを削除",
+    "focus": "フォーカスモード",
+    "cancelFocus": "フォーカスモードを解除",
+    "moveUp": "上に移動",
+    "moveDown": "下に移動",
+    "link": "リンク",
+    "linkBidirectional": "双方向リンク",
+    "clickTips": "対象ノードをクリックしてください",
+    "summary": "概要"
+  },
+  "llm": {
+    "settings_title": "AI / LLM",
+    "settings_description": "AI と大規模言語モデルの連携設定をします。",
+    "add_provider": "プロバイダーを追加",
+    "add_provider_title": "AI プロバイダーを追加",
+    "configured_providers": "設定済みプロバイダー",
+    "no_providers_configured": "まだプロバイダーが設定されていません。",
+    "provider_name": "名前",
+    "provider_type": "プロバイダー",
+    "actions": "アクション",
+    "delete_provider": "削除",
+    "delete_provider_confirmation": "プロバイダー \"{{name}}\" を削除してもよろしいですか？",
+    "api_key": "API キー",
+    "api_key_placeholder": "API キーを入力してください",
+    "cancel": "キャンセル"
   }
 }

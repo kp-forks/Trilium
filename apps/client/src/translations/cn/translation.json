@@ -1535,8 +1535,9 @@
     "new-feature": "新建",
     "collections": "集合",
     "book": "集合",
-    "ai-chat": "AI聊天",
-    "spreadsheet": "电子表格"
+    "ai-chat": "AI对话",
+    "spreadsheet": "电子表格",
+    "llm-chat": "AI对话"
   },
   "protect_note": {
     "toggle-on": "保护笔记",
@@ -2046,7 +2047,9 @@
     "title": "实验选项",
     "disclaimer": "这些选项处于实验阶段，可能导致系统不稳定。请谨慎使用。",
     "new_layout_name": "新布局",
-    "new_layout_description": "尝试全新布局，呈现更现代的外观并提升易用性。后续版本将进行重大调整。"
+    "new_layout_description": "尝试全新布局，呈现更现代的外观并提升易用性。后续版本将进行重大调整。",
+    "llm_name": "AI/大语言模型对话",
+    "llm_description": "启用由大语言模型驱动的 AI对话侧边栏和大语言模型对话笔记。"
   },
   "tab_history_navigation_buttons": {
     "go-back": "返回前一笔记",
@@ -2215,5 +2218,23 @@
     "sample_venn": "韦恩图",
     "sample_ishikawa": "鱼骨图",
     "placeholder": "输入你的美人鱼图的内容，或者使用下面的示例图之一。"
+  },
+  "llm_chat": {
+    "placeholder": "输入消息…",
+    "send": "发送",
+    "sending": "正在发送...",
+    "empty_state": "在下方输入消息，即可开始对话。",
+    "searching_web": "在网上搜索…",
+    "web_search": "联网搜索",
+    "sources": "来源",
+    "extended_thinking": "深度思考",
+    "legacy_models": "传统模型",
+    "thinking": "正在思考...",
+    "thought_process": "思考过程",
+    "tool_calls": "{{count}} 次工具调用",
+    "input": "输入",
+    "result": "结果",
+    "error": "错误",
+    "tool_error": "失败"
   }
 }
