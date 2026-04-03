@@ -1,4 +1,4 @@
-import "./LlmChat.css";
+import "./ChatMessage.css";
 
 import { Marked } from "marked";
 import { useMemo } from "preact/hooks";

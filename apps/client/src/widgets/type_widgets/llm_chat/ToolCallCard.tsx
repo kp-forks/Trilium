@@ -1,3 +1,5 @@
+import "./ToolCallCard.css";
+
 import { Trans } from "react-i18next";
 
 import { t } from "../../../services/i18n.js";
