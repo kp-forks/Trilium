@@ -270,7 +270,11 @@ function ajax(url: string, method: string, data: unknown, headers: Headers, opts
                 } else if (opts.silentInternalServerError && jqXhr.status === 500) {
                     // report nothing
                 } else {
-                    await reportError(method, url, jqXhr.status, jqXhr.responseText);
+                    try {
+                        await reportError(method, url, jqXhr.status, jqXhr.responseText);
+                    } catch {
+                        // reportError may throw (e.g. ValidationError); ensure rej() is still called below.
+                    }
                 }
 
                 rej(jqXhr.responseText);

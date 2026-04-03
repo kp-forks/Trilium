@@ -302,6 +302,7 @@ export type CommandMappings = {
     ninthTab: CommandData;
     lastTab: CommandData;
     showNoteSource: CommandData;
+    showNoteOCRText: CommandData;
     showSQLConsole: CommandData;
     showBackendLog: CommandData;
     showCheatsheet: CommandData;

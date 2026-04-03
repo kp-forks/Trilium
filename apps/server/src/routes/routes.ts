@@ -39,6 +39,7 @@ import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import noteMapRoute from "./api/note_map.js";
 import notesApiRoute from "./api/notes.js";
+import ocrRoute from "./api/ocr.js";
 import optionsApiRoute from "./api/options.js";
 import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
@@ -375,6 +376,14 @@ function register(app: express.Application) {
     etapiSpecRoute.register(router);
     etapiBackupRoute.register(router);
     etapiMetricsRoute.register(router);
+
+    // OCR API
+    asyncApiRoute(PST, "/api/ocr/process-note/:noteId", ocrRoute.processNoteOCR);
+    asyncApiRoute(PST, "/api/ocr/process-attachment/:attachmentId", ocrRoute.processAttachmentOCR);
+    asyncApiRoute(PST, "/api/ocr/batch-process", ocrRoute.batchProcessOCR);
+    asyncApiRoute(GET, "/api/ocr/batch-progress", ocrRoute.getBatchProgress);
+    asyncApiRoute(GET, "/api/ocr/notes/:noteId/text", ocrRoute.getNoteOCRText);
+    asyncApiRoute(GET, "/api/ocr/attachments/:attachmentId/text", ocrRoute.getAttachmentOCRText);
 
     app.use("", router);
 }
