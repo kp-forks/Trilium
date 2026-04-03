@@ -293,8 +293,11 @@ export function useLlmChat(
                     setStreamingBlocks([...contentBlocks]);
                 },
                 onCitation: (citation) => {
-                    citations.push(citation);
-                    setPendingCitations([...citations]);
+                    // Deduplicate by URL
+                    if (!citation.url || !citations.some(c => c.url === citation.url)) {
+                        citations.push(citation);
+                        setPendingCitations([...citations]);
+                    }
                 },
                 onUsage: (u) => {
                     usage = u;
