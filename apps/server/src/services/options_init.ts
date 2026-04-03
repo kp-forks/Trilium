@@ -212,7 +212,7 @@ const defaultOptions: DefaultOption[] = [
     { name: "experimentalFeatures", value: "[]", isSynced: true },
 
     // AI / LLM
-    { name: "llmProviders", value: "[]", isSynced: false },
+    { name: "llmProviders", value: "[]", isSynced: true },
     { name: "mcpEnabled", value: "false", isSynced: false },
 
     // OCR options
