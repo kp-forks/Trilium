@@ -7,6 +7,8 @@ import { generateText, streamText, stepCountIs, type ModelMessage, type ToolSet 
 import type { LanguageModel } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
+import yaml from "js-yaml";
+
 import becca from "../../../becca/becca.js";
 import mappers from "../../../etapi/mappers.js";
 import { getSkillsSummary } from "../skills/index.js";
@@ -33,7 +35,7 @@ function buildNoteHint(noteId: string): string | null {
         return null;
     }
 
-    const metadata = JSON.stringify(mappers.mapNoteToPojo(note), null, 2);
+    const metadata = yaml.dump(mappers.mapNoteToPojo(note), { lineWidth: -1 });
     return `The user is currently viewing the following note:\n${metadata}`;
 }
 
