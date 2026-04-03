@@ -92,11 +92,77 @@ export function getAttachmentContentPreview(att: BAttachment): string | null {
     return `${text.slice(0, ATTACHMENT_PREVIEW_MAX_LENGTH)}…`;
 }
 
+/** Limits for collections returned in system prompt context. */
+export const SYSTEM_PROMPT_LIMITS = {
+    childNotes: 20,
+    attributes: 20,
+    attachments: 20
+} as const;
+
+/** Limits for collections returned by the get_note tool. */
+export const TOOL_LIMITS = {
+    childNotes: 50,
+    attributes: 50,
+    attachments: 50
+} as const;
+
+interface NoteMetaLimits {
+    childNotes: number;
+    attributes: number;
+    attachments: number;
+}
+
+/**
+ * Truncate an array and return it with total count metadata.
+ * If the array exceeds `limit`, only the first `limit` items are returned.
+ */
+function truncated<T>(items: T[], limit: number) {
+    return {
+        totalCount: items.length,
+        results: items.slice(0, limit)
+    };
+}
+
 /**
  * Build the full metadata object for a note. Used by both the `get_note` tool
  * and the system prompt.
+ *
+ * @param limits — controls how many child notes, attributes, and attachments
+ *   are included. Use {@link SYSTEM_PROMPT_LIMITS} for the system prompt and
+ *   {@link TOOL_LIMITS} for the `get_note` tool.
  */
-export function getNoteMeta(note: BNote) {
+export function getNoteMeta(note: BNote, limits: NoteMetaLimits) {
+    const allChildNotes = note.getChildNotes().map((ch) => ({
+        noteId: ch.noteId,
+        title: ch.getTitleOrProtected()
+    }));
+
+    const allAttributes = note.getAttributes().map((attr) => ({
+        attributeId: attr.attributeId,
+        noteId: attr.noteId,
+        type: attr.type,
+        name: attr.name,
+        value: attr.value,
+        position: attr.position,
+        isInheritable: attr.isInheritable,
+        utcDateModified: attr.utcDateModified
+    }));
+
+    const allAttachments = note.getAttachments().map((att) => ({
+        attachmentId: att.attachmentId,
+        ownerId: att.ownerId,
+        role: att.role,
+        mime: att.mime,
+        title: att.title,
+        position: att.position,
+        blobId: att.blobId,
+        dateModified: att.dateModified,
+        utcDateModified: att.utcDateModified,
+        utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
+        contentLength: att.contentLength,
+        contentPreview: getAttachmentContentPreview(att)
+    }));
+
     return {
         noteId: note.noteId,
         isProtected: note.isProtected,
@@ -109,36 +175,11 @@ export function getNoteMeta(note: BNote) {
         utcDateCreated: note.utcDateCreated,
         utcDateModified: note.utcDateModified,
         parentNoteIds: note.getParentNotes().map((p) => p.noteId),
-        childNotes: note.getChildNotes().map((ch) => ({
-            noteId: ch.noteId,
-            title: ch.getTitleOrProtected()
-        })),
+        childNotes: truncated(allChildNotes, limits.childNotes),
         parentBranchIds: note.getParentBranches().map((p) => p.branchId),
         childBranchIds: note.getChildBranches().map((ch) => ch.branchId),
-        attributes: note.getAttributes().map((attr) => ({
-            attributeId: attr.attributeId,
-            noteId: attr.noteId,
-            type: attr.type,
-            name: attr.name,
-            value: attr.value,
-            position: attr.position,
-            isInheritable: attr.isInheritable,
-            utcDateModified: attr.utcDateModified
-        })),
+        attributes: truncated(allAttributes, limits.attributes),
         contentPreview: getContentPreview(note),
-        attachments: note.getAttachments().map((att) => ({
-            attachmentId: att.attachmentId,
-            ownerId: att.ownerId,
-            role: att.role,
-            mime: att.mime,
-            title: att.title,
-            position: att.position,
-            blobId: att.blobId,
-            dateModified: att.dateModified,
-            utcDateModified: att.utcDateModified,
-            utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
-            contentLength: att.contentLength,
-            contentPreview: getAttachmentContentPreview(att)
-        }))
+        attachments: truncated(allAttachments, limits.attachments)
     };
 }

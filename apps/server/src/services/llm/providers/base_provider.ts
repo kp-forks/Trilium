@@ -12,7 +12,7 @@ import yaml from "js-yaml";
 import becca from "../../../becca/becca.js";
 import { getSkillsSummary } from "../skills/index.js";
 import { allToolRegistries } from "../tools/index.js";
-import { getNoteMeta } from "../tools/helpers.js";
+import { SYSTEM_PROMPT_LIMITS, getNoteMeta } from "../tools/helpers.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
@@ -35,7 +35,7 @@ function buildNoteHint(noteId: string): string | null {
         return null;
     }
 
-    const metadata = yaml.dump(getNoteMeta(note), { lineWidth: -1 });
+    const metadata = yaml.dump(getNoteMeta(note, SYSTEM_PROMPT_LIMITS), { lineWidth: -1 });
     return [
         "The user is currently viewing the following note.",
         "Use this metadata (including contentPreview) to answer questions about the note without calling tools when possible.",

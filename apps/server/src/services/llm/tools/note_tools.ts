@@ -9,7 +9,7 @@ import markdownImport from "../../import/markdown.js";
 import noteService from "../../notes.js";
 import SearchContext from "../../search/search_context.js";
 import searchService from "../../search/services/search.js";
-import { getContentPreview, getNoteContentForLlm, getNoteMeta, setNoteContentFromLlm } from "./helpers.js";
+import { TOOL_LIMITS, getContentPreview, getNoteContentForLlm, getNoteMeta, setNoteContentFromLlm } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
 
 export const noteTools = defineTools({
@@ -71,7 +71,7 @@ export const noteTools = defineTools({
                 return { error: "Note not found" };
             }
 
-            return getNoteMeta(note);
+            return getNoteMeta(note, TOOL_LIMITS);
         }
     },
 
