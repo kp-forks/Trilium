@@ -1639,6 +1639,7 @@
     "web_search": "Web search",
     "note_tools": "Note access",
     "sources": "Sources",
+    "sources_summary": "{{count}} sources from {{sites}} sites",
     "extended_thinking": "Extended thinking",
     "legacy_models": "Legacy models",
     "thinking": "Thinking...",

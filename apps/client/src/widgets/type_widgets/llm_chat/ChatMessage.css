@@ -70,47 +70,43 @@
     51%, 100% { opacity: 0; }
 }
 
-/* Citations */
-.llm-chat-citations {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
+/* Citations table (inside a tool-call-card) */
+.llm-chat-citations-list {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.llm-chat-citations-list td {
+    padding: 0.25rem 0.75rem;
+}
+
+.llm-chat-citations-list tr + tr td {
     border-top: 1px solid var(--main-border-color);
 }
 
-.llm-chat-citations-label {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--muted-text-color);
-    margin-bottom: 0.25rem;
+.llm-chat-citation-title {
+    max-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.llm-chat-citations-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.llm-chat-citations-list li {
-    font-size: 0.8rem;
-}
-
-.llm-chat-citations-list a {
+.llm-chat-citation-title a {
     color: var(--link-color, #007bff);
     text-decoration: none;
-    padding: 0.125rem 0.5rem;
-    background: var(--accented-background-color);
-    border-radius: 4px;
-    display: inline-block;
 }
 
-.llm-chat-citations-list a:hover {
+.llm-chat-citation-title a:hover {
     text-decoration: underline;
+}
+
+.llm-chat-citation-site {
+    white-space: nowrap;
+    color: var(--muted-text-color);
+    font-size: 0.75rem;
+    text-align: right;
 }
 
 /* Error */

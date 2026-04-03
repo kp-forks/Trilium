@@ -3,6 +3,8 @@ import "./ChatMessage.css";
 import { Marked } from "marked";
 import { useMemo } from "preact/hooks";
 
+import type { LlmCitation } from "@triliumnext/commons";
+
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import { SanitizedHtml } from "../../react/RawHtml.js";
@@ -34,6 +36,65 @@ interface Props {
 type ContentGroup =
     | { type: "text"; block: TextBlock; index: number }
     | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number };
+
+function getUniqueSiteCount(citations: LlmCitation[]): number {
+    const hosts = new Set<string>();
+    for (const c of citations) {
+        if (c.url) {
+            try {
+                hosts.add(new URL(c.url).hostname);
+            } catch { /* ignore invalid URLs */ }
+        }
+    }
+    return hosts.size;
+}
+
+function CitationsSection({ citations }: { citations: LlmCitation[] }) {
+    const siteCount = getUniqueSiteCount(citations);
+    const summary = t("llm_chat.sources_summary", { count: citations.length, sites: siteCount });
+
+    return (
+        <div className="llm-chat-tool-call-card">
+            <details className="llm-chat-tool-call-section">
+                <summary className="llm-chat-tool-call-section-summary">
+                    <span className="bx bx-link" />
+                    {summary}
+                    <span className="bx bx-chevron-down llm-chat-tool-call-chevron" />
+                </summary>
+                <table className="llm-chat-citations-list">
+                    <tbody>
+                        {citations.map((citation, idx) => {
+                            const title = citation.title || citation.citedText?.slice(0, 80) || `Source ${idx + 1}`;
+                            let hostname: string | null = null;
+                            if (citation.url) {
+                                try {
+                                    hostname = new URL(citation.url).hostname;
+                                } catch { /* ignore */ }
+                            }
+
+                            return (
+                                <tr key={idx}>
+                                    <td className="llm-chat-citation-title">
+                                        {citation.url ? (
+                                            <a href={citation.url} target="_blank" rel="noopener noreferrer" title={citation.url}>
+                                                {title}
+                                            </a>
+                                        ) : (
+                                            <span>{title}</span>
+                                        )}
+                                    </td>
+                                    {hostname && (
+                                        <td className="llm-chat-citation-site">{hostname}</td>
+                                    )}
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </details>
+        </div>
+    );
+}
 
 export default function ChatMessage({ message, isStreaming }: Props) {
     const roleLabel = message.role === "user" ? t("llm_chat.role_user") : t("llm_chat.role_assistant");
@@ -95,47 +156,7 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                     )}
                 </div>
                 {message.citations && message.citations.length > 0 && (
-                    <div className="llm-chat-citations">
-                        <div className="llm-chat-citations-label">
-                            <span className="bx bx-link" />
-                            {t("llm_chat.sources")}
-                        </div>
-                        <ul className="llm-chat-citations-list">
-                            {message.citations.map((citation, idx) => {
-                                // Determine display text: title, URL hostname, or cited text
-                                let displayText = citation.title;
-                                if (!displayText && citation.url) {
-                                    try {
-                                        displayText = new URL(citation.url).hostname;
-                                    } catch {
-                                        displayText = citation.url;
-                                    }
-                                }
-                                if (!displayText) {
-                                    displayText = citation.citedText?.slice(0, 50) || `Source ${idx + 1}`;
-                                }
-
-                                return (
-                                    <li key={idx}>
-                                        {citation.url ? (
-                                            <a
-                                                href={citation.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                title={citation.citedText || citation.url}
-                                            >
-                                                {displayText}
-                                            </a>
-                                        ) : (
-                                            <span title={citation.citedText}>
-                                                {displayText}
-                                            </span>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
+                    <CitationsSection citations={message.citations} />
                 )}
             </div>
             <div className={`llm-chat-footer llm-chat-footer-${message.role}`}>
