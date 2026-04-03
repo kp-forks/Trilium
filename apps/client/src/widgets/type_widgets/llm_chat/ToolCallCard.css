@@ -14,7 +14,7 @@
 .llm-chat-tool-call-section-summary {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 0.25rem;
     padding: 0.5rem 0.75rem;
     cursor: pointer;

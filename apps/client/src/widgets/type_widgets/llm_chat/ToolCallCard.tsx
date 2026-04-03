@@ -52,8 +52,16 @@ function getToolCallContext(toolCall: ToolCall): ToolCallContext {
 
 function toolCallIcon(toolCall: ToolCall): string {
     if (toolCall.isError) return "bx bx-error-circle";
-    if (toolCall.result) return "bx bx-check";
-    return "bx bx-loader-alt bx-spin";
+    if (!toolCall.result) return "bx bx-loader-alt bx-spin";
+
+    const name = toolCall.toolName;
+    if (name.includes("search")) return "bx bx-search";
+    if (name.includes("note")) return "bx bx-note";
+    if (name.includes("attribute")) return "bx bx-purchase-tag";
+    if (name.includes("attachment")) return "bx bx-paperclip";
+    if (name.includes("skill")) return "bx bx-book-open";
+    if (name.includes("web")) return "bx bx-globe";
+    return "bx bx-wrench";
 }
 
 /** Try to parse a JSON string into a structured value. */
