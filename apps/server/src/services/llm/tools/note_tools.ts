@@ -170,7 +170,17 @@ export const noteTools = defineTools({
     create_note: {
         description: [
             "Create a new note in the user's knowledge base. Returns the created note's ID and title.",
-            "Set type to 'text' for rich text notes (content in Markdown) or 'code' for code notes (must also set mime).",
+            "Note types:",
+            "- 'text': rich text (provide content in Markdown)",
+            "- 'code': source code (must also set mime)",
+            "- 'render': displays output of a child code note (content is empty, add a code note as child and set ~renderNote relation)",
+            "- 'book': container that displays children as a book/list",
+            "- 'mermaid': Mermaid diagram source",
+            "- 'canvas': Excalidraw drawing (JSON content)",
+            "- 'webView': embedded web page (set content to URL or HTML)",
+            "- 'relationMap': visual map of note relations (JSON content)",
+            "- 'search': saved search (content is the search query)",
+            "- 'mindMap': mind map (JSON content)",
             "Common mime values for code notes:",
             "'application/javascript;env=frontend' (JS frontend),",
             "'application/javascript;env=backend' (JS backend),",
@@ -180,9 +190,9 @@ export const noteTools = defineTools({
         inputSchema: z.object({
             parentNoteId: z.string().describe("The ID of the parent note. Use 'root' for top-level notes."),
             title: z.string().describe("The title of the new note"),
-            content: z.string().describe("The content of the note (Markdown for text notes, plain text for code notes)"),
-            type: z.enum(["text", "code"]).describe("The type of note to create."),
-            mime: z.string().optional().describe("MIME type, REQUIRED for code notes (e.g. 'application/javascript;env=backend', 'text/jsx'). Ignored for text notes.")
+            content: z.string().describe("The content of the note (Markdown for text notes, plain text for code notes, empty string for render notes)"),
+            type: z.enum(["text", "code", "render", "book", "mermaid", "canvas", "webView", "relationMap", "search", "mindMap"]).describe("The type of note to create."),
+            mime: z.string().optional().describe("MIME type, REQUIRED for code notes (e.g. 'application/javascript;env=backend', 'text/jsx'). Ignored for other types.")
         }),
         mutates: true,
         execute: async ({ parentNoteId, title, content, type, mime }) => {
