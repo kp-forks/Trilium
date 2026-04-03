@@ -8,6 +8,7 @@ import type { LlmCitation } from "@triliumnext/commons";
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import { SanitizedHtml } from "../../react/RawHtml.js";
+import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import { type ContentBlock, getMessageText, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import ToolCallCard from "./ToolCallCard.js";
 
@@ -59,13 +60,8 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
     const summary = t("llm_chat.sources_summary", { count: citations.length, sites: siteCount });
 
     return (
-        <div className="llm-chat-tool-call-card">
-            <details className="llm-chat-tool-call-section">
-                <summary className="llm-chat-tool-call-section-summary">
-                    <span className="bx bx-link" />
-                    {summary}
-                    <span className="bx bx-chevron-down llm-chat-tool-call-chevron" />
-                </summary>
+        <ExpandableCard>
+            <ExpandableSection icon="bx bx-link" label={summary}>
                 <table className="llm-chat-citations-list">
                     <tbody>
                         {citations.map((citation, idx) => {
@@ -96,8 +92,8 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
                         })}
                     </tbody>
                 </table>
-            </details>
-        </div>
+            </ExpandableSection>
+        </ExpandableCard>
     );
 }
 

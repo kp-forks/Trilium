@@ -1,45 +1,4 @@
-/* Tool call card — groups sequential tool calls */
-.llm-chat-tool-call-card {
-    margin: 0.5rem 0;
-    border: 1px solid var(--main-border-color);
-    border-radius: 8px;
-    font-size: 0.85rem;
-    overflow: hidden;
-}
-
-/* Tool call section — individual tool call within a card */
-.llm-chat-tool-call-section + .llm-chat-tool-call-section {
-    border-top: 1px solid var(--main-border-color);
-}
-
-.llm-chat-tool-call-section-summary {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem 0.75rem;
-    cursor: pointer;
-    list-style: none;
-    font-weight: 500;
-}
-
-.llm-chat-tool-call-section-summary::-webkit-details-marker {
-    display: none;
-}
-
-.llm-chat-tool-call-section-summary .llm-chat-tool-call-chevron {
-    margin-left: auto;
-    transition: transform 0.2s ease;
-}
-
-.llm-chat-tool-call-section[open] .llm-chat-tool-call-chevron {
-    transform: rotate(180deg);
-}
-
-.llm-chat-tool-call-section-summary > .bx {
-    font-size: 1rem;
-    margin-right: 0.15rem;
-}
+/* Tool call specific styles (card/section structure is in ExpandableCard.css) */
 
 .llm-chat-tool-call-detail {
     font-weight: 400;
@@ -52,22 +11,18 @@
 }
 
 /* Section body (input + result) */
-.llm-chat-tool-call-section-body {
-    padding: 0;
-}
-
-.llm-chat-tool-call-section-body .llm-chat-tool-call-input,
-.llm-chat-tool-call-section-body .llm-chat-tool-call-result {
+.llm-chat-tool-call-input,
+.llm-chat-tool-call-result {
     padding: 0.5rem 0.75rem;
     max-height: 300px;
     overflow: auto;
 }
 
-.llm-chat-tool-call-section-body .llm-chat-tool-call-result {
+.llm-chat-tool-call-result {
     border-top: 1px solid var(--main-border-color);
 }
 
-.llm-chat-tool-call-section-body pre {
+.expandable-section-body pre {
     margin: 0;
     padding: 0.5rem;
     background: var(--main-background-color);
@@ -142,7 +97,7 @@
 }
 
 /* Tool call error styling */
-.llm-chat-tool-call-error .llm-chat-tool-call-section-summary {
+.llm-chat-tool-call-error .expandable-section-summary {
     color: var(--danger-color, #dc3545);
 }
 

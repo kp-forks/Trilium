@@ -4,6 +4,7 @@ import { Trans } from "react-i18next";
 
 import { t } from "../../../services/i18n.js";
 import { NewNoteLink } from "../../react/NoteLink.js";
+import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import type { ToolCall } from "./llm_chat_types.js";
 
 interface ToolCallContext {
@@ -145,60 +146,68 @@ function KeyValueTable({ data, className, depth = 0 }: { data: unknown; classNam
     );
 }
 
-/** A single tool call section within a ToolCallCard. */
-function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
+/** Build the label content for a tool call section. */
+function ToolCallLabel({ toolCall }: { toolCall: ToolCall }) {
     const { noteId: refNoteId, parentNoteId: refParentId, detailText } = getToolCallContext(toolCall);
     const hasError = toolCall.isError;
 
     return (
-        <details className={`llm-chat-tool-call-section ${hasError ? "llm-chat-tool-call-error" : ""}`}>
-            <summary className="llm-chat-tool-call-section-summary">
-                <span className={toolCallIcon(toolCall)} />
-                {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
-                {detailText && (
-                    <span className="llm-chat-tool-call-detail">{detailText}</span>
-                )}
-                {refNoteId && (
-                    <span className="llm-chat-tool-call-note-ref">
-                        {refParentId ? (
-                            <Trans
-                                i18nKey="llm.tools.note_in_parent"
-                                components={{
-                                    Note: <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />,
-                                    Parent: <NewNoteLink notePath={refParentId} showNoteIcon noPreview />
-                                } as any}
-                            />
-                        ) : (
-                            <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />
-                        )}
-                    </span>
-                )}
-                {hasError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
-                <span className="bx bx-chevron-down llm-chat-tool-call-chevron" />
-            </summary>
-            <div className="llm-chat-tool-call-section-body">
-                <div className="llm-chat-tool-call-input">
-                    <strong>{t("llm_chat.input")}</strong>
-                    <KeyValueTable data={toolCall.input} />
-                </div>
-                {toolCall.result && (
-                    <div className={`llm-chat-tool-call-result ${hasError ? "llm-chat-tool-call-result-error" : ""}`}>
-                        <strong>{hasError ? t("llm_chat.error") : t("llm_chat.result")}</strong>
-                        <KeyValueTable data={toolCall.result} />
-                    </div>
-                )}
+        <>
+            {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
+            {detailText && (
+                <span className="llm-chat-tool-call-detail">{detailText}</span>
+            )}
+            {refNoteId && (
+                <span className="llm-chat-tool-call-note-ref">
+                    {refParentId ? (
+                        <Trans
+                            i18nKey="llm.tools.note_in_parent"
+                            components={{
+                                Note: <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />,
+                                Parent: <NewNoteLink notePath={refParentId} showNoteIcon noPreview />
+                            } as any}
+                        />
+                    ) : (
+                        <NewNoteLink notePath={refNoteId} showNoteIcon noPreview />
+                    )}
+                </span>
+            )}
+            {hasError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
+        </>
+    );
+}
+
+/** A single tool call section within a ToolCallCard. */
+function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
+    const hasError = toolCall.isError;
+
+    return (
+        <ExpandableSection
+            icon={toolCallIcon(toolCall)}
+            label={<ToolCallLabel toolCall={toolCall} />}
+            className={hasError ? "llm-chat-tool-call-error" : ""}
+        >
+            <div className="llm-chat-tool-call-input">
+                <strong>{t("llm_chat.input")}</strong>
+                <KeyValueTable data={toolCall.input} />
             </div>
-        </details>
+            {toolCall.result && (
+                <div className={`llm-chat-tool-call-result ${hasError ? "llm-chat-tool-call-result-error" : ""}`}>
+                    <strong>{hasError ? t("llm_chat.error") : t("llm_chat.result")}</strong>
+                    <KeyValueTable data={toolCall.result} />
+                </div>
+            )}
+        </ExpandableSection>
     );
 }
 
 /** A card that groups one or more sequential tool calls together. */
 export default function ToolCallCard({ toolCalls }: { toolCalls: ToolCall[] }) {
     return (
-        <div className="llm-chat-tool-call-card">
+        <ExpandableCard>
             {toolCalls.map((tc, idx) => (
                 <ToolCallSection key={tc.id ?? idx} toolCall={tc} />
             ))}
-        </div>
+        </ExpandableCard>
     );
 }
