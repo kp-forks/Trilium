@@ -155,10 +155,11 @@ Trilium provides powerful user scripting capabilities:
 ### Adding New LLM Tools
 Tools are defined using `defineTools()` in `apps/server/src/services/llm/tools/` and automatically registered for both the LLM chat and MCP server.
 
-1. Add the tool definition in the appropriate module (`note_tools.ts`, `attribute_tools.ts`, `hierarchy_tools.ts`) or create a new module
-2. Each tool needs: `description`, `inputSchema` (Zod), `execute` function, and optionally `mutates: true` for write operations or `needsContext: true` for tools that need the current note context
+1. Add the tool definition in the appropriate module (`note_tools.ts`, `attribute_tools.ts`, `attachment_tools.ts`, `hierarchy_tools.ts`) or create a new module
+2. Each tool needs: `description`, `inputSchema` (Zod), `execute` function, and optionally `mutates: true` for write operations
 3. If creating a new module, wrap tools in `defineTools({...})` and add the registry to `allToolRegistries` in `tools/index.ts`
 4. Add a client-side friendly name in `apps/client/src/translations/en/translation.json` under `llm.tools.<tool_name>` — use **imperative tense** (e.g. "Search notes", "Create note", "Get attributes"), not present continuous
+5. Use ETAPI (`apps/server/src/etapi/`) as inspiration for what fields to expose, but **do not import ETAPI mappers** — inline the field mappings directly in the tool so the LLM layer stays decoupled from the API layer
 
 ### Database Migrations
 - Add migration scripts in `apps/server/src/migrations/`
