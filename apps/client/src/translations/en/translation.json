@@ -2354,7 +2354,8 @@
       "get_subtree": "Get subtree",
       "load_skill": "Load skill",
       "web_search": "Web search",
-      "note_in_parent": "<Note/> in <Parent/>"
+      "note_in_parent": "<Note/> in <Parent/>",
+      "get_attachments": "Get attachments"
     }
   }
 }
