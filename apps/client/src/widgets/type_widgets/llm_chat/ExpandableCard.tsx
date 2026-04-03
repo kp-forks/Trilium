@@ -15,7 +15,7 @@ export function ExpandableSection({ icon, label, className, children }: Expandab
         <details className={`expandable-section ${className ?? ""}`}>
             <summary className="expandable-section-summary">
                 <span className={icon} />
-                {label}
+                <span className="expandable-section-label">{label}</span>
                 <span className="bx bx-chevron-down expandable-section-chevron" />
             </summary>
             <div className="expandable-section-body">
@@ -26,13 +26,14 @@ export function ExpandableSection({ icon, label, className, children }: Expandab
 }
 
 interface ExpandableCardProps {
+    className?: string;
     children: ComponentChildren;
 }
 
 /** A bordered card that groups one or more ExpandableSections. */
-export function ExpandableCard({ children }: ExpandableCardProps) {
+export function ExpandableCard({ className, children }: ExpandableCardProps) {
     return (
-        <div className="expandable-card">
+        <div className={`expandable-card ${className ?? ""}`}>
             {children}
         </div>
     );

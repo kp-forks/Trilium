@@ -60,7 +60,7 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
     const summary = t("llm_chat.sources_summary", { count: citations.length, sites: siteCount });
 
     return (
-        <ExpandableCard>
+        <ExpandableCard className="llm-chat-citations-card">
             <ExpandableSection icon="bx bx-link" label={summary}>
                 <table className="llm-chat-citations-list">
                     <tbody>
@@ -98,7 +98,6 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
 }
 
 export default function ChatMessage({ message, isStreaming }: Props) {
-    const roleLabel = message.role === "user" ? t("llm_chat.role_user") : t("llm_chat.role_assistant");
     const isError = message.type === "error";
     const isThinking = message.type === "thinking";
     const textContent = typeof message.content === "string" ? message.content : getMessageText(message.content);
@@ -139,9 +138,7 @@ export default function ChatMessage({ message, isStreaming }: Props) {
     return (
         <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`}>
             <div className={messageClasses}>
-                <div className="llm-chat-message-role">
-                    {isError ? "Error" : roleLabel}
-                </div>
+                {isError && <div className="llm-chat-message-role">Error</div>}
                 <div className="llm-chat-message-content">
                     {message.role === "assistant" && !isError ? (
                         hasBlockContent ? (

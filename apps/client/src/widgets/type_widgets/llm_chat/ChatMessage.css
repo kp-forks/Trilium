@@ -12,6 +12,7 @@
 
 .llm-chat-message-wrapper-user {
     margin-left: auto;
+    max-width: 70%;
 }
 
 .llm-chat-message-wrapper-assistant {
@@ -70,7 +71,11 @@
     51%, 100% { opacity: 0; }
 }
 
-/* Citations table (inside a tool-call-card) */
+.expandable-card.llm-chat-citations-card {
+    max-width: 100%;
+}
+
+/* Citations table (inside an expandable card) */
 .llm-chat-citations-list {
     width: 100%;
     border-collapse: collapse;
