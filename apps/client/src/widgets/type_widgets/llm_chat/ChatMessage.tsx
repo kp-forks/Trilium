@@ -85,8 +85,6 @@ export default function ChatMessage({ message, isStreaming }: Props) {
         );
     }
 
-    // Legacy tool calls (from old format stored as separate field)
-    const legacyToolCalls = message.toolCalls;
     const hasBlockContent = Array.isArray(message.content);
 
     return (
@@ -109,19 +107,6 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                         textContent
                     )}
                 </div>
-                {legacyToolCalls && legacyToolCalls.length > 0 && (
-                    <details className="llm-chat-tool-calls">
-                        <summary className="llm-chat-tool-calls-summary">
-                            <span className="bx bx-wrench" />
-                            {t("llm_chat.tool_calls", { count: legacyToolCalls.length })}
-                        </summary>
-                        <div className="llm-chat-tool-calls-list">
-                            {legacyToolCalls.map((tool) => (
-                                <ToolCallCard key={tool.id} toolCall={tool} />
-                            ))}
-                        </div>
-                    </details>
-                )}
                 {message.citations && message.citations.length > 0 && (
                     <div className="llm-chat-citations">
                         <div className="llm-chat-citations-label">
