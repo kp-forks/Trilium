@@ -9,6 +9,7 @@ import sql from '../sql.js';
 import { FileProcessor } from './processors/file_processor.js';
 import { ImageProcessor } from './processors/image_processor.js';
 import { OfficeProcessor } from './processors/office_processor.js';
+import { PDFProcessor } from './processors/pdf_processor.js';
 
 export interface OCRResult {
     text: string;
@@ -34,6 +35,7 @@ class OCRService {
 
     constructor() {
         this.processors.set('image', new ImageProcessor());
+        this.processors.set('pdf', new PDFProcessor());
         this.processors.set('office', new OfficeProcessor());
     }
 
