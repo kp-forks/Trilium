@@ -37,16 +37,21 @@ type ContentGroup =
     | { type: "text"; block: TextBlock; index: number }
     | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number };
 
+/** Extract domain + TLD from a hostname (e.g. "www.example.co.uk" → "example.co.uk"). */
+function extractDomain(hostname: string): string {
+    return hostname.replace(/^www\./, "");
+}
+
 function getUniqueSiteCount(citations: LlmCitation[]): number {
-    const hosts = new Set<string>();
+    const domains = new Set<string>();
     for (const c of citations) {
         if (c.url) {
             try {
-                hosts.add(new URL(c.url).hostname);
+                domains.add(extractDomain(new URL(c.url).hostname));
             } catch { /* ignore invalid URLs */ }
         }
     }
-    return hosts.size;
+    return domains.size;
 }
 
 function CitationsSection({ citations }: { citations: LlmCitation[] }) {
@@ -65,10 +70,10 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
                     <tbody>
                         {citations.map((citation, idx) => {
                             const title = citation.title || citation.citedText?.slice(0, 80) || `Source ${idx + 1}`;
-                            let hostname: string | null = null;
+                            let domain: string | null = null;
                             if (citation.url) {
                                 try {
-                                    hostname = new URL(citation.url).hostname;
+                                    domain = extractDomain(new URL(citation.url).hostname);
                                 } catch { /* ignore */ }
                             }
 
@@ -76,15 +81,15 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
                                 <tr key={idx}>
                                     <td className="llm-chat-citation-title">
                                         {citation.url ? (
-                                            <a href={citation.url} target="_blank" rel="noopener noreferrer" title={citation.url}>
+                                            <a href={citation.url} target="_blank" rel="noopener noreferrer" title={title}>
                                                 {title}
                                             </a>
                                         ) : (
                                             <span>{title}</span>
                                         )}
                                     </td>
-                                    {hostname && (
-                                        <td className="llm-chat-citation-site">{hostname}</td>
+                                    {domain && (
+                                        <td className="llm-chat-citation-site">{domain}</td>
                                     )}
                                 </tr>
                             );
