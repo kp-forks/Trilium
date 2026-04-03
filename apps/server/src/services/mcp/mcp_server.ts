@@ -6,14 +6,13 @@
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import appInfo from "../app_info.js";
 import cls from "../cls.js";
-import sql from "../sql.js";
 import { allToolRegistries } from "../llm/tools/index.js";
-
-import type { ToolDefinition } from "../llm/tools/index.js";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { StaticToolDefinition } from "../llm/tools/tool_registry.js";
+import sql from "../sql.js";
 
 /**
  * Register a tool definition on the MCP server.
@@ -21,7 +20,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
  * Write operations are wrapped in CLS + transaction context so that
  * Becca entity tracking works correctly.
  */
-function registerTool(server: McpServer, name: string, def: ToolDefinition) {
+function registerTool(server: McpServer, name: string, def: StaticToolDefinition) {
     server.registerTool(name, {
         description: def.description,
         inputSchema: def.inputSchema
