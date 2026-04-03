@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 
+import type BNote from "../../../becca/entities/bnote.js";
 import becca from "../../../becca/becca.js";
 import mappers from "../../../etapi/mappers.js";
 import markdownExport from "../../export/markdown.js";
@@ -35,6 +36,17 @@ export function getContentPreview(note: { type: string; blobId?: string; getCont
     }
 
     return `${full.slice(0, CONTENT_PREVIEW_MAX_LENGTH)}…`;
+}
+
+/**
+ * Build the full metadata object for a note, matching ETAPI's format plus a
+ * short content preview. Used by both the `get_note` tool and the system prompt.
+ */
+export function getNoteMeta(note: BNote) {
+    return {
+        ...mappers.mapNoteToPojo(note),
+        contentPreview: getContentPreview(note)
+    };
 }
 
 /**
@@ -120,10 +132,7 @@ export const noteTools = defineTools({
                 return { error: "Note not found" };
             }
 
-            return {
-                ...mappers.mapNoteToPojo(note),
-                contentPreview: getContentPreview(note)
-            };
+            return getNoteMeta(note);
         }
     },
 

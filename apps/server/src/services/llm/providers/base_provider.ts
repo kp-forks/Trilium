@@ -10,10 +10,9 @@ import type { LlmMessage } from "@triliumnext/commons";
 import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
-import mappers from "../../../etapi/mappers.js";
 import { getSkillsSummary } from "../skills/index.js";
 import { allToolRegistries } from "../tools/index.js";
-import { getContentPreview } from "../tools/note_tools.js";
+import { getNoteMeta } from "../tools/note_tools.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
@@ -36,11 +35,7 @@ function buildNoteHint(noteId: string): string | null {
         return null;
     }
 
-    const data = {
-        ...mappers.mapNoteToPojo(note),
-        contentPreview: getContentPreview(note)
-    };
-    const metadata = yaml.dump(data, { lineWidth: -1 });
+    const metadata = yaml.dump(getNoteMeta(note), { lineWidth: -1 });
     return `The user is currently viewing the following note:\n${metadata}`;
 }
 
