@@ -54,40 +54,67 @@ function toolCallIcon(toolCall: ToolCall): string {
     return "bx bx-loader-alt bx-spin";
 }
 
-/** Format a value for display in the key-value table. */
-function formatValue(value: unknown): string {
-    if (value === null || value === undefined) return "";
-    if (typeof value === "string") return value;
-    if (typeof value === "number" || typeof value === "boolean") return String(value);
-    return JSON.stringify(value, null, 2);
-}
-
-/** Parse a JSON value (string or object) into a flat key-value record. */
-function parseData(data: unknown): Record<string, unknown> | null {
-    if (!data) return null;
-
-    let obj = data;
-    if (typeof obj === "string") {
+/** Try to parse a JSON string into a structured value. */
+function tryParseJson(data: unknown): unknown {
+    if (typeof data === "string") {
         try {
-            obj = JSON.parse(obj);
+            return JSON.parse(data);
         } catch {
-            return null;
+            return data;
         }
     }
-
-    if (typeof obj === "object" && obj !== null && !Array.isArray(obj)) {
-        return obj as Record<string, unknown>;
-    }
-
-    return null;
+    return data;
 }
 
-/** Renders a key-value data object as a compact two-column table. */
-function KeyValueTable({ data, className }: { data: unknown; className?: string }) {
-    const record = parseData(data);
+/** Check if a value is a plain object (not null, not array). */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
-    // Fall back to raw display for non-object data (arrays, plain strings).
-    if (!record) {
+const MAX_TABLE_DEPTH = 2;
+
+/** Render a single value — recurse for objects/arrays up to max depth. */
+function ValueCell({ value, depth }: { value: unknown; depth: number }) {
+    if (value === null || value === undefined) return <pre />;
+
+    // Beyond max depth, fall back to JSON.
+    if (depth >= MAX_TABLE_DEPTH) {
+        if (isPlainObject(value) || Array.isArray(value)) {
+            return <pre>{JSON.stringify(value, null, 2)}</pre>;
+        }
+        return <pre>{String(value)}</pre>;
+    }
+
+    if (isPlainObject(value)) {
+        return <KeyValueTable data={value} depth={depth} />;
+    }
+
+    if (Array.isArray(value)) {
+        if (value.length === 0) return <pre>{"[]"}</pre>;
+
+        // Array of objects: render each as a nested table.
+        if (value.every(isPlainObject)) {
+            return (
+                <div className="llm-chat-tool-call-table-array">
+                    {value.map((item, idx) => (
+                        <KeyValueTable key={idx} data={item} depth={depth} />
+                    ))}
+                </div>
+            );
+        }
+
+        // Array of primitives: comma-separated.
+        return <pre>{value.map(String).join(", ")}</pre>;
+    }
+
+    return <pre>{String(value)}</pre>;
+}
+
+/** Renders a data object as a recursive two-column key-value table. */
+function KeyValueTable({ data, className, depth = 0 }: { data: unknown; className?: string; depth?: number }) {
+    const obj = tryParseJson(data);
+
+    if (!isPlainObject(obj)) {
         const raw = typeof data === "string" ? data : JSON.stringify(data, null, 2);
         return <pre className={className}>{raw}</pre>;
     }
@@ -95,11 +122,11 @@ function KeyValueTable({ data, className }: { data: unknown; className?: string 
     return (
         <table className={`llm-chat-tool-call-table ${className ?? ""}`}>
             <tbody>
-                {Object.entries(record).map(([key, value]) => (
+                {Object.entries(obj).map(([key, value]) => (
                     <tr key={key}>
                         <td className="llm-chat-tool-call-table-key">{key}</td>
                         <td className="llm-chat-tool-call-table-value">
-                            <pre>{formatValue(value)}</pre>
+                            <ValueCell value={value} depth={depth + 1} />
                         </td>
                     </tr>
                 ))}
