@@ -109,7 +109,10 @@ export function getNoteMeta(note: BNote) {
         utcDateCreated: note.utcDateCreated,
         utcDateModified: note.utcDateModified,
         parentNoteIds: note.getParentNotes().map((p) => p.noteId),
-        childNoteIds: note.getChildNotes().map((ch) => ch.noteId),
+        childNotes: note.getChildNotes().map((ch) => ({
+            noteId: ch.noteId,
+            title: ch.getTitleOrProtected()
+        })),
         parentBranchIds: note.getParentBranches().map((p) => p.branchId),
         childBranchIds: note.getChildBranches().map((ch) => ch.branchId),
         attributes: note.getAttributes().map((attr) => ({
