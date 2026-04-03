@@ -16,7 +16,7 @@ async function main() {
     build.copy("/packages/share-theme/src/templates", "share-theme/templates/");
 
     // Copy node modules dependencies
-    build.copyNodeModules([ "better-sqlite3", "bindings", "file-uri-to-path", "pdfjs-dist", "@electron/remote" ]);
+    build.copyNodeModules([ "better-sqlite3", "bindings", "file-uri-to-path", "@electron/remote" ]);
     build.copy("/node_modules/ckeditor5/dist/ckeditor5-content.css", "ckeditor5-content.css");
 
     build.buildFrontend();

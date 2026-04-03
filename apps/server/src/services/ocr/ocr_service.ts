@@ -24,6 +24,7 @@ export interface OCRProcessingOptions {
     forceReprocess?: boolean;
     confidence?: number;
     enablePDFTextExtraction?: boolean;
+    mimeType?: string;
 }
 
 /**
@@ -114,7 +115,7 @@ class OCRService {
             throw new Error(`No processor found for MIME type: ${mimeType}`);
         }
 
-        const result = await processor.extractText(fileBuffer, options);
+        const result = await processor.extractText(fileBuffer, { ...options, mimeType });
 
         log.info(`OCR extraction completed. Confidence: ${Math.round(result.confidence * 100)}%, Text length: ${result.text.length}`);
         return result;

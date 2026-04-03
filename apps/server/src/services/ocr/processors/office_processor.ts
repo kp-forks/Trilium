@@ -1,53 +1,58 @@
-import * as officeParser from 'officeparser';
+import { parseExcel } from 'officeparser/dist/parsers/ExcelParser.js';
+import { parseOpenOffice } from 'officeparser/dist/parsers/OpenOfficeParser.js';
+import { parsePowerPoint } from 'officeparser/dist/parsers/PowerPointParser.js';
+import { parseWord } from 'officeparser/dist/parsers/WordParser.js';
+import type { OfficeParserConfig } from 'officeparser/dist/types.js';
 
 import log from '../../log.js';
 import { OCRProcessingOptions, OCRResult } from '../ocr_service.js';
 import { FileProcessor } from './file_processor.js';
 
-// officeparser depends on pdfjs-dist which expects DOMMatrix at the
-// top level. Provide a minimal stub so it doesn't crash in Node.js
-// environments that lack it (e.g. Alpine Linux).
-if (!globalThis.DOMMatrix) {
-    globalThis.DOMMatrix = class DOMMatrix {
-        a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
-    } as unknown as typeof globalThis.DOMMatrix;
-}
+type Parser = (buffer: Buffer, config: OfficeParserConfig) => Promise<{ toText(): string }>;
 
-const SUPPORTED_TYPES = [
+const PARSER_BY_MIME: Record<string, Parser> = {
     // Office Open XML
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',   // DOCX
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',         // XLSX
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': parseWord,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': parseExcel,
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': parsePowerPoint,
     // OpenDocument
-    'application/vnd.oasis.opendocument.text',                                  // ODT
-    'application/vnd.oasis.opendocument.spreadsheet',                            // ODS
-    'application/vnd.oasis.opendocument.presentation'                            // ODP
-];
+    'application/vnd.oasis.opendocument.text': parseOpenOffice,
+    'application/vnd.oasis.opendocument.spreadsheet': parseOpenOffice,
+    'application/vnd.oasis.opendocument.presentation': parseOpenOffice
+};
+
+const PARSER_CONFIG: OfficeParserConfig = {
+    outputErrorToConsole: false,
+    newlineDelimiter: '\n',
+    ignoreNotes: false,
+    putNotesAtLast: false
+};
 
 /**
  * Office document processor for extracting text from DOCX/XLSX/PPTX and ODT/ODS/ODP files.
+ * Uses individual parsers from officeparser v6 to avoid pulling in pdfjs-dist.
  */
 export class OfficeProcessor extends FileProcessor {
 
     canProcess(mimeType: string): boolean {
-        return SUPPORTED_TYPES.includes(mimeType);
+        return mimeType in PARSER_BY_MIME;
     }
 
     getSupportedMimeTypes(): string[] {
-        return [...SUPPORTED_TYPES];
+        return Object.keys(PARSER_BY_MIME);
     }
 
     async extractText(buffer: Buffer, options: OCRProcessingOptions = {}): Promise<OCRResult> {
-        log.info('Starting Office document text extraction...');
+        const mimeType = options.mimeType;
+        if (!mimeType || !(mimeType in PARSER_BY_MIME)) {
+            throw new Error(`Unsupported MIME type for Office processor: ${mimeType}`);
+        }
 
-        const text = await officeParser.parseOfficeAsync(buffer, {
-            outputErrorToConsole: false,
-            newlineDelimiter: '\n',
-            ignoreNotes: false,
-            putNotesAtLast: false
-        });
+        log.info(`Starting Office document text extraction for ${mimeType}...`);
 
-        const trimmed = (text || '').trim();
+        const parse = PARSER_BY_MIME[mimeType];
+        const ast = await parse(buffer, PARSER_CONFIG);
+        const trimmed = ast.toText().trim();
 
         return {
             text: trimmed,
