@@ -104,23 +104,33 @@ function setNoteContentFromLlm(note: { type: string; title: string; setContent: 
     }
 }
 
+const ATTACHMENT_PREVIEW_MAX_LENGTH = 200;
+
 /**
- * Determine how an attachment's content can be read by the LLM:
- * - "text": the attachment has string content (e.g. code, SVG, plain text)
- * - "ocr": the attachment is binary but has OCR/extracted text available
- * - "none": binary content with no text representation
+ * Return a short content preview for an attachment, or null if no readable
+ * content is available. For text attachments the raw content is used; for
+ * binary attachments (PDF, images) the OCR/extracted text is used when present.
  */
-function getAttachmentContentAvailability(att: BAttachment): "text" | "ocr" | "none" {
+function getAttachmentContentPreview(att: BAttachment): string | null {
+    let text: string | null = null;
+
     if (att.hasStringContent()) {
-        return "text";
+        const content = att.getContent();
+        text = typeof content === "string" ? content : content.toString("utf-8");
+    } else {
+        const blob = att.blobId ? becca.getBlob({ blobId: att.blobId }) : null;
+        text = blob?.textRepresentation ?? null;
     }
 
-    const blob = att.blobId ? becca.getBlob({ blobId: att.blobId }) : null;
-    if (blob?.textRepresentation) {
-        return "ocr";
+    if (!text) {
+        return null;
     }
 
-    return "none";
+    if (text.length <= ATTACHMENT_PREVIEW_MAX_LENGTH) {
+        return text;
+    }
+
+    return `${text.slice(0, ATTACHMENT_PREVIEW_MAX_LENGTH)}…`;
 }
 
 export const noteTools = defineTools({
@@ -327,7 +337,7 @@ export const noteTools = defineTools({
     },
 
     get_note_attachments: {
-        description: "List all attachments of a note by its ID. Returns metadata for each attachment, including how its content can be read (text, ocr, or none).",
+        description: "List all attachments of a note by its ID. Returns metadata and a short content preview for each attachment. Use get_attachment_content for the full content.",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note whose attachments to list")
         }),
@@ -349,7 +359,7 @@ export const noteTools = defineTools({
                 utcDateModified: att.utcDateModified,
                 utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
                 contentLength: att.contentLength,
-                contentAvailability: getAttachmentContentAvailability(att)
+                contentPreview: getAttachmentContentPreview(att)
             }));
         }
     }
