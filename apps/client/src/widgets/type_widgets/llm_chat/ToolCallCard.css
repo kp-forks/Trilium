@@ -20,7 +20,6 @@
     cursor: pointer;
     list-style: none;
     font-weight: 500;
-    color: var(--muted-text-color);
 }
 
 .llm-chat-tool-call-section-summary::-webkit-details-marker {
@@ -41,17 +40,14 @@
     margin-right: 0.15rem;
 }
 
-.llm-chat-tool-call-detail,
-.llm-chat-tool-call-note-ref {
+.llm-chat-tool-call-detail {
     font-weight: 400;
-    color: var(--main-text-color);
+    color: var(--muted-text-color);
 }
 
-.llm-chat-tool-call-detail::before,
-.llm-chat-tool-call-note-ref::before {
-    content: "—";
-    margin-right: 0.35rem;
-    color: var(--muted-text-color);
+.llm-chat-tool-call-note-ref {
+    font-weight: 400;
+    margin-left: 0.25rem;
 }
 
 /* Section body (input + result) */
