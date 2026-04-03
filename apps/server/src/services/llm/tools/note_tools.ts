@@ -68,7 +68,21 @@ export function getNoteMeta(note: BNote) {
             isInheritable: attr.isInheritable,
             utcDateModified: attr.utcDateModified
         })),
-        contentPreview: getContentPreview(note)
+        contentPreview: getContentPreview(note),
+        attachments: note.getAttachments().map((att) => ({
+            attachmentId: att.attachmentId,
+            ownerId: att.ownerId,
+            role: att.role,
+            mime: att.mime,
+            title: att.title,
+            position: att.position,
+            blobId: att.blobId,
+            dateModified: att.dateModified,
+            utcDateModified: att.utcDateModified,
+            utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
+            contentLength: att.contentLength,
+            contentPreview: getAttachmentContentPreview(att)
+        }))
     };
 }
 
@@ -333,34 +347,6 @@ export const noteTools = defineTools({
             } catch (err) {
                 return { error: err instanceof Error ? err.message : "Failed to create note" };
             }
-        }
-    },
-
-    get_note_attachments: {
-        description: "List all attachments of a note by its ID. Returns metadata and a short content preview for each attachment. Use get_attachment_content for the full content.",
-        inputSchema: z.object({
-            noteId: z.string().describe("The ID of the note whose attachments to list")
-        }),
-        execute: async ({ noteId }) => {
-            const note = becca.getNote(noteId);
-            if (!note) {
-                return { error: "Note not found" };
-            }
-
-            return note.getAttachments().map((att) => ({
-                attachmentId: att.attachmentId,
-                ownerId: att.ownerId,
-                role: att.role,
-                mime: att.mime,
-                title: att.title,
-                position: att.position,
-                blobId: att.blobId,
-                dateModified: att.dateModified,
-                utcDateModified: att.utcDateModified,
-                utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
-                contentLength: att.contentLength,
-                contentPreview: getAttachmentContentPreview(att)
-            }));
         }
     }
 });
