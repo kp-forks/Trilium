@@ -40,7 +40,7 @@ export const noteTools = defineTools({
             });
             const results = searchService.findResultsWithQuery(query, searchContext);
 
-            return results.slice(0, limit).map(sr => {
+            const notes = results.slice(0, limit).map(sr => {
                 const note = becca.notes[sr.noteId];
                 if (!note) return null;
                 const parentNote = note.getParentNotes()[0];
@@ -52,6 +52,11 @@ export const noteTools = defineTools({
                     contentPreview: getContentPreview(note)
                 };
             }).filter(Boolean);
+
+            return {
+                totalResults: results.length,
+                results: notes
+            };
         }
     },
 
