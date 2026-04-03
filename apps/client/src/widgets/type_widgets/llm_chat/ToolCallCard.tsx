@@ -168,6 +168,7 @@ export default function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
                     </span>
                 )}
                 {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
+                <span className="bx bx-chevron-down llm-chat-tool-call-chevron" />
             </summary>
             <div className="llm-chat-tool-call-inline-body">
                 <div className="llm-chat-tool-call-input">

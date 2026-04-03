@@ -100,14 +100,12 @@
     display: none;
 }
 
-.llm-chat-tool-call-inline-summary::after {
-    content: "▾";
+.llm-chat-tool-call-inline-summary .llm-chat-tool-call-chevron {
     margin-left: auto;
-    font-size: 1em;
     transition: transform 0.2s ease;
 }
 
-.llm-chat-tool-call-inline[open] .llm-chat-tool-call-inline-summary::after {
+.llm-chat-tool-call-inline[open] .llm-chat-tool-call-chevron {
     transform: rotate(180deg);
 }
 
