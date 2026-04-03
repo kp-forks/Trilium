@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 
+import type BAttachment from "../../../becca/entities/battachment.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import becca from "../../../becca/becca.js";
 import markdownExport from "../../export/markdown.js";
@@ -101,6 +102,25 @@ function setNoteContentFromLlm(note: { type: string; title: string; setContent: 
     } else {
         note.setContent(content);
     }
+}
+
+/**
+ * Determine how an attachment's content can be read by the LLM:
+ * - "text": the attachment has string content (e.g. code, SVG, plain text)
+ * - "ocr": the attachment is binary but has OCR/extracted text available
+ * - "none": binary content with no text representation
+ */
+function getAttachmentContentAvailability(att: BAttachment): "text" | "ocr" | "none" {
+    if (att.hasStringContent()) {
+        return "text";
+    }
+
+    const blob = att.blobId ? becca.getBlob({ blobId: att.blobId }) : null;
+    if (blob?.textRepresentation) {
+        return "ocr";
+    }
+
+    return "none";
 }
 
 export const noteTools = defineTools({
@@ -307,7 +327,7 @@ export const noteTools = defineTools({
     },
 
     get_note_attachments: {
-        description: "List all attachments of a note by its ID. Returns metadata for each attachment.",
+        description: "List all attachments of a note by its ID. Returns metadata for each attachment, including how its content can be read (text, ocr, or none).",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note whose attachments to list")
         }),
@@ -328,7 +348,8 @@ export const noteTools = defineTools({
                 dateModified: att.dateModified,
                 utcDateModified: att.utcDateModified,
                 utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
-                contentLength: att.contentLength
+                contentLength: att.contentLength,
+                contentAvailability: getAttachmentContentAvailability(att)
             }));
         }
     }

@@ -2356,7 +2356,8 @@
       "web_search": "Web search",
       "note_in_parent": "<Note/> in <Parent/>",
       "get_note_attachments": "Get note attachments",
-      "get_attachment": "Get attachment"
+      "get_attachment": "Get attachment",
+      "get_attachment_content": "Read attachment content"
     }
   }
 }
