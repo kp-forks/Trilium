@@ -709,7 +709,8 @@
     "advanced": "高级",
     "export_as_image": "导出为图像",
     "export_as_image_png": "PNG（栅格）",
-    "export_as_image_svg": "SVG（矢量图）"
+    "export_as_image_svg": "SVG（矢量图）",
+    "view_ocr_text": "查看 OCR 文本"
   },
   "onclick_button": {
     "no_click_handler": "按钮组件'{{componentId}}'没有定义点击处理程序"
@@ -1197,12 +1198,28 @@
   },
   "images": {
     "images_section_title": "图片",
-    "download_images_automatically": "自动下载图片以供离线使用。",
-    "download_images_description": "粘贴的 HTML 可能包含在线图片的引用，Trilium 会找到这些引用并下载图片，以便它们可以离线使用。",
-    "enable_image_compression": "启用图片压缩",
-    "max_image_dimensions": "图片的最大宽度/高度（超过此限制的图像将会被缩放）。",
-    "jpeg_quality_description": "JPEG 质量（10 - 最差质量，100 最佳质量，建议为 50 - 85）",
-    "max_image_dimensions_unit": "像素"
+    "download_images_automatically": "自动下载图片",
+    "download_images_description": "从粘贴的 HTML 代码中下载引用的在线图片，以便离线使用。",
+    "enable_image_compression": "图片压缩",
+    "max_image_dimensions": "最大图像尺寸",
+    "jpeg_quality_description": "建议范围为 50–85。较低的值可以减小文件大小，较高的值可以保留细节。",
+    "max_image_dimensions_unit": "像素",
+    "enable_image_compression_description": "上传或粘贴图片时，对其进行压缩和调整大小。",
+    "max_image_dimensions_description": "超过此尺寸的图片将自动调整大小。",
+    "jpeg_quality": "JPEG质量",
+    "ocr_section_title": "文本提取（OCR）",
+    "ocr_related_content_languages": "内容语言（用于文本提取）",
+    "ocr_auto_process": "自动处理新文件",
+    "ocr_auto_process_description": "自动从新上传或粘贴的文件中提取文本。",
+    "ocr_min_confidence": "最低置信度",
+    "ocr_confidence_description": "仅提取置信度高于此阈值的文本。较低的置信度阈值会包含更多文本，但可能准确性较低。",
+    "batch_ocr_title": "处理现有文件",
+    "batch_ocr_description": "从笔记中的所有现有图像、PDF 和 Office 文档中提取文本。这可能需要一些时间，具体取决于文件数量。",
+    "batch_ocr_start": "开始批量处理",
+    "batch_ocr_starting": "开始批量处理...",
+    "batch_ocr_progress": "正在处理 {{processed}} 个文件，共 {{total}} 个文件...",
+    "batch_ocr_completed": "批量处理完成！已处理 {{processed}} 个文件。",
+    "batch_ocr_error": "批量处理过程中出错：{{error}}"
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "附件清理超时",
@@ -2227,7 +2244,7 @@
     "searching_web": "在网上搜索…",
     "web_search": "联网搜索",
     "sources": "来源",
-    "extended_thinking": "深度思考",
+    "extended_thinking": "延伸思考",
     "legacy_models": "传统模型",
     "thinking": "正在思考...",
     "thought_process": "思考过程",
@@ -2235,6 +2252,62 @@
     "input": "输入",
     "result": "结果",
     "error": "错误",
-    "tool_error": "失败"
+    "tool_error": "失败",
+    "total_tokens": "{{total}} 个词元",
+    "tokens_detail": "{{prompt}} 提示词 + {{completion}} 补全",
+    "tokens_used": "{{prompt}} 提示词 + {{completion}} 补全= {{total}} 个词元",
+    "tokens_used_with_cost": "{{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元（约 ${{cost}}）",
+    "tokens_used_with_model": "{{model}}: {{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元（约 ${{cost}}）",
+    "tokens": "词元",
+    "context_used": "{{percentage}}% 使用率",
+    "note_context_enabled": "点击即可禁用笔记上下文：{{title}}",
+    "note_context_disabled": "点击即可将当前注释添加到上下文中",
+    "no_provider_message": "未配置人工智能提供商。添加一个即可开始对话。",
+    "add_provider": "添加人工智能提供商",
+    "role_user": "你",
+    "role_assistant": "助手",
+    "note_tools": "笔记访问"
+  },
+  "sidebar_chat": {
+    "title": "AI对话",
+    "launcher_title": "打开AI对话",
+    "new_chat": "开始新对话",
+    "save_chat": "将对话保存到笔记",
+    "empty_state": "开始对话",
+    "history": "对话历史",
+    "recent_chats": "最近对话",
+    "no_chats": "无历史对话"
+  },
+  "ocr": {
+    "extracted_text": "提取文本（OCR）",
+    "extracted_text_title": "提取文本（OCR）",
+    "loading_text": "正在加载OCR文本...",
+    "no_text_available": "暂无OCR文本",
+    "no_text_explanation": "该笔记未进行 OCR 文本提取处理，或未找到文本。",
+    "failed_to_load": "OCR文本加载失败",
+    "process_now": "处理 OCR",
+    "processing": "正在处理...",
+    "processing_started": "OCR识别已开始。请稍候片刻并刷新页面。",
+    "processing_failed": "OCR处理启动失败",
+    "view_extracted_text": "查看提取的文本（OCR）"
+  },
+  "mind-map": {
+    "addChild": "添加子节点",
+    "addParent": "添加父节点",
+    "addSibling": "添加同级节点",
+    "removeNode": "删除节点",
+    "focus": "专注模式",
+    "cancelFocus": "退出专注模式",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "link": "链接",
+    "linkBidirectional": "双向链接",
+    "clickTips": "请点击目标节点",
+    "summary": "总结"
+  },
+  "llm": {
+    "settings_description": "配置人工智能和大语言模型集成。",
+    "add_provider": "添加提供商"
   }
 }
