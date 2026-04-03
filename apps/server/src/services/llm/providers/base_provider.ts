@@ -3,16 +3,15 @@
  * tool assembly, model pricing, and title generation.
  */
 
-import { generateText, streamText, stepCountIs, type ModelMessage, type ToolSet } from "ai";
-import type { LanguageModel } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
-
+import type { LanguageModel } from "ai";
+import { generateText, type ModelMessage, stepCountIs, streamText, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
 import { getSkillsSummary } from "../skills/index.js";
+import { getNoteMeta,SYSTEM_PROMPT_LIMITS } from "../tools/helpers.js";
 import { allToolRegistries } from "../tools/index.js";
-import { SYSTEM_PROMPT_LIMITS, getNoteMeta } from "../tools/helpers.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
@@ -161,7 +160,7 @@ export abstract class BaseProvider implements LlmProvider {
         const tools = this.buildTools(config);
         if (Object.keys(tools).length > 0) {
             streamOptions.tools = tools;
-            streamOptions.stopWhen = stepCountIs(5);
+            streamOptions.stopWhen = stepCountIs(15);
             streamOptions.toolChoice = "auto";
         }
 
