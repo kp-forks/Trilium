@@ -113,7 +113,8 @@ describe("mcp", () => {
             const body = parseSseResponse(response.text);
             const toolNames: string[] = body.result.tools.map((t: { name: string }) => t.name);
             expect(toolNames).toContain("search_notes");
-            expect(toolNames).toContain("read_note");
+            expect(toolNames).toContain("get_note");
+            expect(toolNames).toContain("get_note_content");
             expect(toolNames).toContain("create_note");
             expect(toolNames).not.toContain("get_current_note");
         });
@@ -142,10 +143,26 @@ describe("mcp", () => {
             expect(content[0].text).toContain(noteId);
         });
 
-        it("reads a note by ID", async () => {
+        it("gets note metadata by ID", async () => {
             const response = await mcpPost(app)
                 .send(jsonRpc("tools/call", {
-                    name: "read_note",
+                    name: "get_note",
+                    arguments: { noteId }
+                }))
+                .expect(200);
+
+            const body = parseSseResponse(response.text);
+            expect(body.result).toBeDefined();
+            const parsed = JSON.parse(body.result.content[0].text);
+            expect(parsed.noteId).toBe(noteId);
+            expect(parsed.type).toBeDefined();
+            expect(parsed.attributes).toBeDefined();
+        });
+
+        it("reads note content by ID", async () => {
+            const response = await mcpPost(app)
+                .send(jsonRpc("tools/call", {
+                    name: "get_note_content",
                     arguments: { noteId }
                 }))
                 .expect(200);

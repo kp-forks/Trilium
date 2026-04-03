@@ -5,6 +5,7 @@
 import { z } from "zod";
 
 import becca from "../../../becca/becca.js";
+import mappers from "../../../etapi/mappers.js";
 import markdownExport from "../../export/markdown.js";
 import markdownImport from "../../import/markdown.js";
 import noteService from "../../notes.js";
@@ -84,7 +85,22 @@ export const noteTools = defineTools({
         }
     },
 
-    read_note: {
+    get_note: {
+        description: "Get a note's metadata by its ID. Returns title, type, mime, dates, parent/child relationships, and attributes. Does NOT return the note's content — use get_note_content for that.",
+        inputSchema: z.object({
+            noteId: z.string().describe("The ID of the note to retrieve")
+        }),
+        execute: async ({ noteId }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+
+            return mappers.mapNoteToPojo(note);
+        }
+    },
+
+    get_note_content: {
         description: "Read the full content of a note by its ID. Use search_notes first to find relevant note IDs. Text notes are returned as Markdown.",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to read")
@@ -100,8 +116,6 @@ export const noteTools = defineTools({
 
             return {
                 noteId: note.noteId,
-                title: note.getTitleOrProtected(),
-                type: note.type,
                 content: getNoteContentForLlm(note)
             };
         }
