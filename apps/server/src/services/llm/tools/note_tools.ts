@@ -13,6 +13,30 @@ import SearchContext from "../../search/search_context.js";
 import searchService from "../../search/services/search.js";
 import { defineTools } from "./tool_registry.js";
 
+const CONTENT_PREVIEW_MAX_LENGTH = 500;
+
+/**
+ * Return a short plain-text content preview for a note, truncated to
+ * {@link CONTENT_PREVIEW_MAX_LENGTH} characters. Useful for giving an LLM a
+ * glimpse of the content without sending the full body.
+ */
+export function getContentPreview(note: { type: string; blobId?: string; getContent: () => string | Buffer; isContentAvailable: () => boolean }): string | null {
+    if (!note.isContentAvailable()) {
+        return null;
+    }
+
+    const full = getNoteContentForLlm(note);
+    if (!full || full === "[binary content]") {
+        return null;
+    }
+
+    if (full.length <= CONTENT_PREVIEW_MAX_LENGTH) {
+        return full;
+    }
+
+    return `${full.slice(0, CONTENT_PREVIEW_MAX_LENGTH)}…`;
+}
+
 /**
  * Convert note content to a format suitable for LLM consumption.
  * Text notes are converted from HTML to Markdown to reduce token usage.
@@ -86,7 +110,7 @@ export const noteTools = defineTools({
     },
 
     get_note: {
-        description: "Get a note's metadata by its ID. Returns title, type, mime, dates, parent/child relationships, and attributes. Does NOT return the note's content — use get_note_content for that.",
+        description: "Get a note's metadata by its ID. Returns title, type, mime, dates, parent/child relationships, attributes, and a short content preview. Use get_note_content for the full content.",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to retrieve")
         }),
@@ -96,7 +120,10 @@ export const noteTools = defineTools({
                 return { error: "Note not found" };
             }
 
-            return mappers.mapNoteToPojo(note);
+            return {
+                ...mappers.mapNoteToPojo(note),
+                contentPreview: getContentPreview(note)
+            };
         }
     },
 
