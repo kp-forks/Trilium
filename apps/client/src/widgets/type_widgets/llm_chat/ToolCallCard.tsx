@@ -54,6 +54,60 @@ function toolCallIcon(toolCall: ToolCall): string {
     return "bx bx-loader-alt bx-spin";
 }
 
+/** Format a value for display in the key-value table. */
+function formatValue(value: unknown): string {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    return JSON.stringify(value, null, 2);
+}
+
+/** Parse a JSON value (string or object) into a flat key-value record. */
+function parseData(data: unknown): Record<string, unknown> | null {
+    if (!data) return null;
+
+    let obj = data;
+    if (typeof obj === "string") {
+        try {
+            obj = JSON.parse(obj);
+        } catch {
+            return null;
+        }
+    }
+
+    if (typeof obj === "object" && obj !== null && !Array.isArray(obj)) {
+        return obj as Record<string, unknown>;
+    }
+
+    return null;
+}
+
+/** Renders a key-value data object as a compact two-column table. */
+function KeyValueTable({ data, className }: { data: unknown; className?: string }) {
+    const record = parseData(data);
+
+    // Fall back to raw display for non-object data (arrays, plain strings).
+    if (!record) {
+        const raw = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+        return <pre className={className}>{raw}</pre>;
+    }
+
+    return (
+        <table className={`llm-chat-tool-call-table ${className ?? ""}`}>
+            <tbody>
+                {Object.entries(record).map(([key, value]) => (
+                    <tr key={key}>
+                        <td className="llm-chat-tool-call-table-key">{key}</td>
+                        <td className="llm-chat-tool-call-table-value">
+                            <pre>{formatValue(value)}</pre>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+}
+
 export default function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
     const classes = [
         "llm-chat-tool-call-inline",
@@ -89,21 +143,12 @@ export default function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
             <div className="llm-chat-tool-call-inline-body">
                 <div className="llm-chat-tool-call-input">
                     <strong>{t("llm_chat.input")}:</strong>
-                    <pre>{JSON.stringify(toolCall.input, null, 2)}</pre>
+                    <KeyValueTable data={toolCall.input} />
                 </div>
                 {toolCall.result && (
                     <div className={`llm-chat-tool-call-result ${toolCall.isError ? "llm-chat-tool-call-result-error" : ""}`}>
                         <strong>{toolCall.isError ? t("llm_chat.error") : t("llm_chat.result")}:</strong>
-                        <pre>{(() => {
-                            if (typeof toolCall.result === "string" && (toolCall.result.startsWith("{") || toolCall.result.startsWith("["))) {
-                                try {
-                                    return JSON.stringify(JSON.parse(toolCall.result), null, 2);
-                                } catch {
-                                    return toolCall.result;
-                                }
-                            }
-                            return toolCall.result;
-                        })()}</pre>
+                        <KeyValueTable data={toolCall.result} />
                     </div>
                 )}
             </div>
