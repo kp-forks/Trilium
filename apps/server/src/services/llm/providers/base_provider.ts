@@ -36,7 +36,13 @@ function buildNoteHint(noteId: string): string | null {
     }
 
     const metadata = yaml.dump(getNoteMeta(note), { lineWidth: -1 });
-    return `The user is currently viewing the following note:\n${metadata}`;
+    return [
+        "The user is currently viewing the following note.",
+        "Use this metadata (including contentPreview) to answer questions about the note without calling tools when possible.",
+        "Use get_note_content only if the preview is insufficient.",
+        "",
+        metadata
+    ].join("\n");
 }
 
 /**
