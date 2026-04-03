@@ -171,12 +171,12 @@ export default function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
             </summary>
             <div className="llm-chat-tool-call-inline-body">
                 <div className="llm-chat-tool-call-input">
-                    <strong>{t("llm_chat.input")}:</strong>
+                    <strong>{t("llm_chat.input")}</strong>
                     <KeyValueTable data={toolCall.input} />
                 </div>
                 {toolCall.result && (
                     <div className={`llm-chat-tool-call-result ${toolCall.isError ? "llm-chat-tool-call-result-error" : ""}`}>
-                        <strong>{toolCall.isError ? t("llm_chat.error") : t("llm_chat.result")}:</strong>
+                        <strong>{toolCall.isError ? t("llm_chat.error") : t("llm_chat.result")}</strong>
                         <KeyValueTable data={toolCall.result} />
                     </div>
                 )}

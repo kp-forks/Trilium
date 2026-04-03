@@ -55,17 +55,13 @@
     color: var(--main-text-color);
 }
 
-.llm-chat-tool-call-input,
-.llm-chat-tool-call-result {
-    margin-top: 0.5rem;
-}
-
 .llm-chat-tool-call-input strong,
 .llm-chat-tool-call-result strong {
     display: block;
     font-size: 0.75rem;
     color: var(--muted-text-color);
     margin-bottom: 0.25rem;
+    text-transform: uppercase;
 }
 
 .llm-chat-tool-call pre {
@@ -176,9 +172,9 @@
 }
 
 .llm-chat-tool-call-table td {
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0;
+    padding-right: 0.75rem;
     vertical-align: top;
-    border-bottom: 1px solid var(--main-border-color);
 }
 
 .llm-chat-tool-call-table tr:last-child td {
@@ -188,6 +184,7 @@
 .llm-chat-tool-call-table-key {
     font-weight: 600;
     white-space: nowrap;
+    width: 0;
     color: var(--muted-text-color);
 }
 
