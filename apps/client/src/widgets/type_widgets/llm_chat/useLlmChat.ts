@@ -279,12 +279,14 @@ export function useLlmChat(
                     setStreamingBlocks([...contentBlocks]);
                 },
                 onToolResult: (toolName, result, isError) => {
-                    // Find the most recent tool_call block for this tool without a result
+                    // Replace the matching block with a new object so Preact sees the change.
                     for (let i = contentBlocks.length - 1; i >= 0; i--) {
                         const block = contentBlocks[i];
                         if (block.type === "tool_call" && block.toolCall.toolName === toolName && !block.toolCall.result) {
-                            block.toolCall.result = result;
-                            block.toolCall.isError = isError;
+                            contentBlocks[i] = {
+                                type: "tool_call",
+                                toolCall: { ...block.toolCall, result, isError }
+                            };
                             break;
                         }
                     }
