@@ -105,7 +105,11 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "newLayout",
     "mfaEnabled",
     "mfaMethod",
-    "llmProviders"
+    "llmProviders",
+
+    // OCR options
+    "ocrAutoProcessImages",
+    "ocrMinConfidence"
 ]);
 
 function getOptions() {

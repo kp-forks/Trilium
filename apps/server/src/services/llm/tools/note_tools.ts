@@ -16,9 +16,14 @@ import searchService from "../../search/services/search.js";
  * Convert note content to a format suitable for LLM consumption.
  * Text notes are converted from HTML to Markdown to reduce token usage.
  */
-export function getNoteContentForLlm(note: { type: string; getContent: () => string | Buffer }) {
+export function getNoteContentForLlm(note: { type: string; blobId?: string; getContent: () => string | Buffer }) {
     const content = note.getContent();
     if (typeof content !== "string") {
+        // For binary content (images, files), use extracted text if available.
+        const blob = note.blobId ? becca.getBlob({ blobId: note.blobId }) : null;
+        if (blob?.textRepresentation) {
+            return `[extracted text from ${note.type}]\n${blob.textRepresentation}`;
+        }
         return "[binary content]";
     }
     if (note.type === "text") {

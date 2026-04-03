@@ -691,6 +691,7 @@
     "search_in_note": "Search in note",
     "note_source": "Note source",
     "note_attachments": "Note attachments",
+    "view_ocr_text": "View OCR text",
     "open_note_externally": "Open note externally",
     "open_note_externally_title": "File will be open in an external application and watched for changes. You'll then be able to upload the modified version back to Trilium.",
     "open_note_custom": "Open note custom",
@@ -1254,12 +1255,28 @@
   },
   "images": {
     "images_section_title": "Images",
-    "download_images_automatically": "Download images automatically for offline use.",
-    "download_images_description": "Pasted HTML can contain references to online images, Trilium will find those references and download the images so that they are available offline.",
-    "enable_image_compression": "Enable image compression",
-    "max_image_dimensions": "Max width / height of an image (image will be resized if it exceeds this setting).",
+    "download_images_automatically": "Download images automatically",
+    "download_images_description": "Download referenced online images from pasted HTML so they are available offline.",
+    "enable_image_compression": "Image compression",
+    "enable_image_compression_description": "Compress and resize images when they are uploaded or pasted.",
+    "max_image_dimensions": "Max image dimensions",
+    "max_image_dimensions_description": "Images exceeding this size will be resized automatically.",
     "max_image_dimensions_unit": "pixels",
-    "jpeg_quality_description": "JPEG quality (10 - worst quality, 100 - best quality, 50 - 85 is recommended)"
+    "jpeg_quality": "JPEG quality",
+    "jpeg_quality_description": "Recommended range is 50–85. Lower values reduce file size, higher values preserve detail.",
+    "ocr_section_title": "Text Extraction (OCR)",
+    "ocr_related_content_languages": "Content languages (used for text extraction)",
+    "ocr_auto_process": "Auto-process new files",
+    "ocr_auto_process_description": "Automatically extract text from newly uploaded or pasted files.",
+    "ocr_min_confidence": "Minimum confidence",
+    "ocr_confidence_description": "Only extract text above this confidence threshold. Lower values include more text but may be less accurate.",
+    "batch_ocr_title": "Process Existing Files",
+    "batch_ocr_description": "Extract text from all existing images, PDFs, and Office documents in your notes. This may take some time depending on the number of files.",
+    "batch_ocr_start": "Start Batch Processing",
+    "batch_ocr_starting": "Starting batch processing...",
+    "batch_ocr_progress": "Processing {{processed}} of {{total}} files...",
+    "batch_ocr_completed": "Batch processing completed! Processed {{processed}} files.",
+    "batch_ocr_error": "Error during batch processing: {{error}}"
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Attachment Erasure Timeout",
@@ -1967,7 +1984,7 @@
   },
   "content_language": {
     "title": "Content languages",
-    "description": "Select one or more languages that should appear in the language selection in the Basic Properties section of a read-only or editable text note. This will allow features such as spell-checking or right-to-left support."
+    "description": "Select one or more languages that should appear in the language selection in the Basic Properties section of a read-only or editable text note. This will allow features such as spell-checking, right-to-left support and text extraction (OCR)."
   },
   "switch_layout_button": {
     "title_vertical": "Move editing pane to the bottom",
@@ -2066,6 +2083,19 @@
   },
   "calendar_view": {
     "delete_note": "Delete note..."
+  },
+  "ocr": {
+    "extracted_text": "Extracted Text (OCR)",
+    "extracted_text_title": "Extracted Text (OCR)",
+    "loading_text": "Loading OCR text...",
+    "no_text_available": "No OCR text available",
+    "no_text_explanation": "This note has not been processed for OCR text extraction or no text was found.",
+    "failed_to_load": "Failed to load OCR text",
+    "process_now": "Process OCR",
+    "processing": "Processing...",
+    "processing_started": "OCR processing has been started. Please wait a moment and refresh.",
+    "processing_failed": "Failed to start OCR processing",
+    "view_extracted_text": "View extracted text (OCR)"
   },
   "command_palette": {
     "tree-action-name": "Tree: {{name}}",
