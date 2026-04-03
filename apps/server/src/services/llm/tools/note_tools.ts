@@ -9,7 +9,7 @@ import markdownImport from "../../import/markdown.js";
 import noteService from "../../notes.js";
 import SearchContext from "../../search/search_context.js";
 import searchService from "../../search/services/search.js";
-import { getNoteContentForLlm, getNoteMeta, setNoteContentFromLlm } from "./helpers.js";
+import { getContentPreview, getNoteContentForLlm, getNoteMeta, setNoteContentFromLlm } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
 
 export const noteTools = defineTools({
@@ -43,10 +43,13 @@ export const noteTools = defineTools({
             return results.slice(0, limit).map(sr => {
                 const note = becca.notes[sr.noteId];
                 if (!note) return null;
+                const parentNote = note.getParentNotes()[0];
                 return {
                     noteId: note.noteId,
                     title: note.getTitleOrProtected(),
-                    type: note.type
+                    type: note.type,
+                    parentTitle: parentNote?.getTitleOrProtected() ?? null,
+                    contentPreview: getContentPreview(note)
                 };
             }).filter(Boolean);
         }
