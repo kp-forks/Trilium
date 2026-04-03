@@ -2,7 +2,6 @@ import type { LlmCitation, LlmMessage, LlmModelInfo, LlmUsage } from "@triliumne
 import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-import { t } from "../../../services/i18n.js";
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import type { ContentBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
@@ -30,7 +29,6 @@ export interface UseLlmChatReturn {
     streamingContent: string;
     streamingBlocks: ContentBlock[];
     streamingThinking: string;
-    toolActivity: string | null;
     pendingCitations: LlmCitation[];
     availableModels: ModelOption[];
     selectedModel: string;
@@ -78,7 +76,6 @@ export function useLlmChat(
     const [streamingContent, setStreamingContent] = useState("");
     const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
     const [streamingThinking, setStreamingThinking] = useState("");
-    const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
     const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
     const [selectedModel, setSelectedModel] = useState<string>("");
@@ -154,7 +151,7 @@ export function useLlmChat(
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, streamingContent, streamingThinking, toolActivity, scrollToBottom]);
+    }, [messages, streamingContent, streamingThinking, scrollToBottom]);
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
@@ -200,7 +197,6 @@ export function useLlmChat(
         e.preventDefault();
         if (!input.trim() || isStreaming) return;
 
-        setToolActivity(null);
         setPendingCitations([]);
 
         const userMessage: StoredMessage = {
@@ -266,18 +262,12 @@ export function useLlmChat(
                         .map(b => b.content)
                         .join(""));
                     setStreamingBlocks([...contentBlocks]);
-                    setToolActivity(null);
                 },
                 onThinking: (text) => {
                     thinkingContent += text;
                     setStreamingThinking(thinkingContent);
-                    setToolActivity(t("llm_chat.thinking"));
                 },
                 onToolUse: (toolName, toolInput) => {
-                    const toolLabel = toolName === "web_search"
-                        ? t("llm_chat.searching_web")
-                        : `Using ${toolName}...`;
-                    setToolActivity(toolLabel);
                     contentBlocks.push({
                         type: "tool_call",
                         toolCall: {
@@ -323,7 +313,6 @@ export function useLlmChat(
                     setStreamingBlocks([]);
                     setStreamingThinking("");
                     setIsStreaming(false);
-                    setToolActivity(null);
                 },
                 onDone: () => {
                     const finalNewMessages: StoredMessage[] = [];
@@ -359,7 +348,6 @@ export function useLlmChat(
                     setStreamingThinking("");
                     setPendingCitations([]);
                     setIsStreaming(false);
-                    setToolActivity(null);
                 }
             }
         );
@@ -380,7 +368,6 @@ export function useLlmChat(
         streamingContent,
         streamingBlocks,
         streamingThinking,
-        toolActivity,
         pendingCitations,
         availableModels,
         selectedModel,

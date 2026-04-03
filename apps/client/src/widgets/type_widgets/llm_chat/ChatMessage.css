@@ -70,33 +70,6 @@
     51%, 100% { opacity: 0; }
 }
 
-/* Tool activity indicator */
-.llm-chat-tool-activity {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    margin-bottom: 1rem;
-    border-radius: 8px;
-    background: var(--accented-background-color);
-    color: var(--muted-text-color);
-    font-size: 0.9rem;
-    max-width: 85%;
-}
-
-.llm-chat-tool-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--muted-text-color);
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: llm-chat-spin 0.8s linear infinite;
-}
-
-@keyframes llm-chat-spin {
-    to { transform: rotate(360deg); }
-}
-
 /* Citations */
 .llm-chat-citations {
     margin-top: 0.75rem;

@@ -65,12 +65,6 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 {chat.messages.map(msg => (
                     <ChatMessage key={msg.id} message={msg} />
                 ))}
-                {chat.toolActivity && !chat.streamingThinking && (
-                    <div className="llm-chat-tool-activity">
-                        <span className="llm-chat-tool-spinner" />
-                        {chat.toolActivity}
-                    </div>
-                )}
                 {chat.isStreaming && chat.streamingThinking && (
                     <ChatMessage
                         message={{
