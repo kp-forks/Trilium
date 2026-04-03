@@ -2355,7 +2355,8 @@
       "load_skill": "Load skill",
       "web_search": "Web search",
       "note_in_parent": "<Note/> in <Parent/>",
-      "get_attachments": "Get attachments"
+      "get_note_attachments": "Get note attachments",
+      "get_attachment": "Get attachment"
     }
   }
 }

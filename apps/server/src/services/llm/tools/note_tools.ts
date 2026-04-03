@@ -273,5 +273,20 @@ export const noteTools = defineTools({
                 return { error: err instanceof Error ? err.message : "Failed to create note" };
             }
         }
+    },
+
+    get_note_attachments: {
+        description: "List all attachments of a note by its ID. Returns metadata for each attachment.",
+        inputSchema: z.object({
+            noteId: z.string().describe("The ID of the note whose attachments to list")
+        }),
+        execute: async ({ noteId }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+
+            return note.getAttachments().map((att) => mappers.mapAttachmentToPojo(att));
+        }
     }
 });
