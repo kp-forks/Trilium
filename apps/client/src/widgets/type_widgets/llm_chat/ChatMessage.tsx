@@ -2,10 +2,11 @@ import "./ChatMessage.css";
 
 import { Marked } from "marked";
 import { useMemo } from "preact/hooks";
+
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import { SanitizedHtml } from "../../react/RawHtml.js";
-import { type ContentBlock, getMessageText, type StoredMessage } from "./llm_chat_types.js";
+import { type ContentBlock, getMessageText, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import ToolCallCard from "./ToolCallCard.js";
 
 function shortenNumber(n: number): string {
@@ -30,23 +31,9 @@ interface Props {
     isStreaming?: boolean;
 }
 
-function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
-    return blocks.map((block, idx) => {
-        if (block.type === "text") {
-            const html = renderMarkdown(block.content);
-            return (
-                <div key={idx}>
-                    <SanitizedHtml className="llm-chat-markdown" html={html} />
-                    {isStreaming && idx === blocks.length - 1 && <span className="llm-chat-cursor" />}
-                </div>
-            );
-        }
-        if (block.type === "tool_call") {
-            return <ToolCallCard key={idx} toolCall={block.toolCall} />;
-        }
-        return null;
-    });
-}
+type ContentGroup =
+    | { type: "text"; block: TextBlock; index: number }
+    | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number };
 
 export default function ChatMessage({ message, isStreaming }: Props) {
     const roleLabel = message.role === "user" ? t("llm_chat.role_user") : t("llm_chat.role_assistant");
@@ -188,4 +175,41 @@ export default function ChatMessage({ message, isStreaming }: Props) {
             </div>
         </div>
     );
+}
+
+/** Group content blocks so that consecutive tool_calls are merged into one entry. */
+function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
+    const groups: ContentGroup[] = [];
+
+    for (let i = 0; i < blocks.length; i++) {
+        const block = blocks[i];
+        if (block.type === "tool_call") {
+            const last = groups[groups.length - 1];
+            if (last?.type === "tool_calls") {
+                last.blocks.push(block);
+            } else {
+                groups.push({ type: "tool_calls", blocks: [block], index: i });
+            }
+        } else {
+            groups.push({ type: "text", block, index: i });
+        }
+    }
+
+    return groups;
+}
+
+function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
+    return groupContentBlocks(blocks).map((group) => {
+        if (group.type === "text") {
+            const html = renderMarkdown(group.block.content);
+            return (
+                <div key={group.index}>
+                    <SanitizedHtml className="llm-chat-markdown" html={html} />
+                    {isStreaming && group.index === blocks.length - 1 && <span className="llm-chat-cursor" />}
+                </div>
+            );
+        }
+
+        return <ToolCallCard key={group.index} toolCalls={group.blocks.map((b) => b.toolCall)} />;
+    });
 }

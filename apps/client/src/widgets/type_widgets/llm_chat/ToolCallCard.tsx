@@ -137,16 +137,14 @@ function KeyValueTable({ data, className, depth = 0 }: { data: unknown; classNam
     );
 }
 
-export default function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
-    const classes = [
-        "llm-chat-tool-call-inline",
-        toolCall.isError && "llm-chat-tool-call-error"
-    ].filter(Boolean).join(" ");
+/** A single tool call section within a ToolCallCard. */
+function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
     const { noteId: refNoteId, parentNoteId: refParentId, detailText } = getToolCallContext(toolCall);
+    const hasError = toolCall.isError;
 
     return (
-        <details className={classes}>
-            <summary className="llm-chat-tool-call-inline-summary">
+        <details className={`llm-chat-tool-call-section ${hasError ? "llm-chat-tool-call-error" : ""}`}>
+            <summary className="llm-chat-tool-call-section-summary">
                 <span className={toolCallIcon(toolCall)} />
                 {t(`llm.tools.${toolCall.toolName}`, { defaultValue: toolCall.toolName })}
                 {detailText && (
@@ -167,21 +165,32 @@ export default function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
                         )}
                     </span>
                 )}
-                {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
+                {hasError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
                 <span className="bx bx-chevron-down llm-chat-tool-call-chevron" />
             </summary>
-            <div className="llm-chat-tool-call-inline-body">
+            <div className="llm-chat-tool-call-section-body">
                 <div className="llm-chat-tool-call-input">
                     <strong>{t("llm_chat.input")}</strong>
                     <KeyValueTable data={toolCall.input} />
                 </div>
                 {toolCall.result && (
-                    <div className={`llm-chat-tool-call-result ${toolCall.isError ? "llm-chat-tool-call-result-error" : ""}`}>
-                        <strong>{toolCall.isError ? t("llm_chat.error") : t("llm_chat.result")}</strong>
+                    <div className={`llm-chat-tool-call-result ${hasError ? "llm-chat-tool-call-result-error" : ""}`}>
+                        <strong>{hasError ? t("llm_chat.error") : t("llm_chat.result")}</strong>
                         <KeyValueTable data={toolCall.result} />
                     </div>
                 )}
             </div>
         </details>
+    );
+}
+
+/** A card that groups one or more sequential tool calls together. */
+export default function ToolCallCard({ toolCalls }: { toolCalls: ToolCall[] }) {
+    return (
+        <div className="llm-chat-tool-call-card">
+            {toolCalls.map((tc, idx) => (
+                <ToolCallSection key={tc.id ?? idx} toolCall={tc} />
+            ))}
+        </div>
     );
 }
