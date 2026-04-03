@@ -6,7 +6,6 @@ import { z } from "zod";
 
 import type BNote from "../../../becca/entities/bnote.js";
 import becca from "../../../becca/becca.js";
-import mappers from "../../../etapi/mappers.js";
 import markdownExport from "../../export/markdown.js";
 import markdownImport from "../../import/markdown.js";
 import noteService from "../../notes.js";
@@ -39,12 +38,35 @@ export function getContentPreview(note: { type: string; blobId?: string; getCont
 }
 
 /**
- * Build the full metadata object for a note, matching ETAPI's format plus a
- * short content preview. Used by both the `get_note` tool and the system prompt.
+ * Build the full metadata object for a note. Used by both the `get_note` tool
+ * and the system prompt.
  */
 export function getNoteMeta(note: BNote) {
     return {
-        ...mappers.mapNoteToPojo(note),
+        noteId: note.noteId,
+        isProtected: note.isProtected,
+        title: note.title,
+        type: note.type,
+        mime: note.mime,
+        blobId: note.blobId,
+        dateCreated: note.dateCreated,
+        dateModified: note.dateModified,
+        utcDateCreated: note.utcDateCreated,
+        utcDateModified: note.utcDateModified,
+        parentNoteIds: note.getParentNotes().map((p) => p.noteId),
+        childNoteIds: note.getChildNotes().map((ch) => ch.noteId),
+        parentBranchIds: note.getParentBranches().map((p) => p.branchId),
+        childBranchIds: note.getChildBranches().map((ch) => ch.branchId),
+        attributes: note.getAttributes().map((attr) => ({
+            attributeId: attr.attributeId,
+            noteId: attr.noteId,
+            type: attr.type,
+            name: attr.name,
+            value: attr.value,
+            position: attr.position,
+            isInheritable: attr.isInheritable,
+            utcDateModified: attr.utcDateModified
+        })),
         contentPreview: getContentPreview(note)
     };
 }
@@ -295,7 +317,19 @@ export const noteTools = defineTools({
                 return { error: "Note not found" };
             }
 
-            return note.getAttachments().map((att) => mappers.mapAttachmentToPojo(att));
+            return note.getAttachments().map((att) => ({
+                attachmentId: att.attachmentId,
+                ownerId: att.ownerId,
+                role: att.role,
+                mime: att.mime,
+                title: att.title,
+                position: att.position,
+                blobId: att.blobId,
+                dateModified: att.dateModified,
+                utcDateModified: att.utcDateModified,
+                utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
+                contentLength: att.contentLength
+            }));
         }
     }
 });

@@ -5,7 +5,6 @@
 import { z } from "zod";
 
 import becca from "../../../becca/becca.js";
-import mappers from "../../../etapi/mappers.js";
 import { defineTools } from "./tool_registry.js";
 
 export const attachmentTools = defineTools({
@@ -20,7 +19,19 @@ export const attachmentTools = defineTools({
                 return { error: "Attachment not found" };
             }
 
-            return mappers.mapAttachmentToPojo(attachment);
+            return {
+                attachmentId: attachment.attachmentId,
+                ownerId: attachment.ownerId,
+                role: attachment.role,
+                mime: attachment.mime,
+                title: attachment.title,
+                position: attachment.position,
+                blobId: attachment.blobId,
+                dateModified: attachment.dateModified,
+                utcDateModified: attachment.utcDateModified,
+                utcDateScheduledForErasureSince: attachment.utcDateScheduledForErasureSince,
+                contentLength: attachment.contentLength
+            };
         }
     }
 });
