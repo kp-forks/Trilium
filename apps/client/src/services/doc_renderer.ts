@@ -3,6 +3,22 @@ import { applyReferenceLinks } from "../widgets/type_widgets/text/read_only_help
 import { getCurrentLanguage } from "./i18n.js";
 import { formatCodeBlocks } from "./syntax_highlight.js";
 
+/**
+ * Validates a docName to prevent path traversal attacks.
+ * Allows forward slashes for subdirectories (e.g., "User Guide/Quick Start")
+ * but blocks traversal sequences and URL manipulation characters.
+ */
+export function isValidDocName(docName: string): boolean {
+    if (docName.includes("..") ||
+        docName.includes("\\") ||
+        docName.includes("?") ||
+        docName.includes("#") ||
+        docName.includes("%")) {
+        return false;
+    }
+    return true;
+}
+
 export default function renderDoc(note: FNote) {
     return new Promise<JQuery<HTMLElement>>((resolve) => {
         let docName = note.getLabelValue("docName");
@@ -49,6 +65,11 @@ async function processContent(url: string, $content: JQuery<HTMLElement>) {
 }
 
 function getUrl(docNameValue: string, language: string) {
+    if (!isValidDocName(docNameValue)) {
+        console.error(`Invalid docName: ${docNameValue}`);
+        return "";
+    }
+
     // Cannot have spaces in the URL due to how JQuery.load works.
     docNameValue = docNameValue.replaceAll(" ", "%20");
 
