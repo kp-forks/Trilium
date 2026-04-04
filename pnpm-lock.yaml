@@ -1485,8 +1485,8 @@ importers:
         version: link:../commons
     devDependencies:
       pdfjs-dist:
-        specifier: 5.5.207
-        version: 5.5.207
+        specifier: 5.6.205
+        version: 5.6.205
 
   packages/share-theme:
     dependencies:
@@ -12526,8 +12526,8 @@ packages:
     resolution: {integrity: sha512-XDF38WCH3z5OV/OVa8GKUNtLAyneuzbCisx7QUCF8Q6Nutx0WnJrQe5O+kOtBlLfRNUws98Y58Lblp+NJG5T4Q==}
     hasBin: true
 
-  pdfjs-dist@5.5.207:
-    resolution: {integrity: sha512-WMqqw06w1vUt9ZfT0gOFhMf3wHsWhaCrxGrckGs5Cci6ybDW87IvPaOd2pnBwT6BJuP/CzXDZxjFgmSULLdsdw==}
+  pdfjs-dist@5.6.205:
+    resolution: {integrity: sha512-tlUj+2IDa7G1SbvBNN74UHRLJybZDWYom+k6p5KIZl7huBvsA4APi6mKL+zCxd3tLjN5hOOEE9Tv7VdzO88pfg==}
     engines: {node: '>=20.19.0 || >=22.13.0 || >=24'}
 
   pe-library@1.0.1:
@@ -29979,7 +29979,7 @@ snapshots:
       '@xmldom/xmldom': 0.8.12
       concat-stream: 2.0.0
       file-type: 21.3.4
-      pdfjs-dist: 5.5.207
+      pdfjs-dist: 5.6.205
       tesseract.js: 7.0.0(encoding@0.1.13)
       yauzl: 3.3.0
     transitivePeerDependencies:
@@ -30347,7 +30347,7 @@ snapshots:
       ieee754: 1.2.1
       resolve-protobuf-schema: 2.1.0
 
-  pdfjs-dist@5.5.207:
+  pdfjs-dist@5.6.205:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.96
       node-readable-to-web-readable-stream: 0.4.2

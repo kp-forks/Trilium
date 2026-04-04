@@ -161,6 +161,12 @@ Tools are defined using `defineTools()` in `apps/server/src/services/llm/tools/`
 4. Add a client-side friendly name in `apps/client/src/translations/en/translation.json` under `llm.tools.<tool_name>` — use **imperative tense** (e.g. "Search notes", "Create note", "Get attributes"), not present continuous
 5. Use ETAPI (`apps/server/src/etapi/`) as inspiration for what fields to expose, but **do not import ETAPI mappers** — inline the field mappings directly in the tool so the LLM layer stays decoupled from the API layer
 
+### Updating PDF.js
+1. Update `pdfjs-dist` version in `packages/pdfjs-viewer/package.json`
+2. Run `npx tsx scripts/update-viewer.ts` from that directory
+3. Run `pnpm build` to verify success
+4. Commit all changes including updated viewer files
+
 ### Database Migrations
 - Add migration scripts in `apps/server/src/migrations/`
 - Update schema in `apps/server/src/assets/db/schema.sql`
