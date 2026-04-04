@@ -10,6 +10,8 @@ import markdownImport from "../../import/markdown.js";
 
 const CONTENT_PREVIEW_MAX_LENGTH = 500;
 const ATTACHMENT_PREVIEW_MAX_LENGTH = 200;
+/** Skip expensive content loading/conversion for notes larger than this. */
+const CONTENT_PREVIEW_SIZE_THRESHOLD = 10_000;
 
 /**
  * Return `true` if the value is truthy, otherwise `undefined`.
@@ -25,7 +27,7 @@ export function flag(value: boolean | undefined): true | undefined {
  * Convert note content to a format suitable for LLM consumption.
  * Text notes are converted from HTML to Markdown to reduce token usage.
  */
-export function getNoteContentForLlm(note: { type: string; blobId?: string; getContent: () => string | Buffer }) {
+export function getNoteContentForLlm(note: BNote) {
     const content = note.getContent();
     if (typeof content !== "string") {
         // For binary content (images, files), use extracted text if available.
@@ -45,7 +47,7 @@ export function getNoteContentForLlm(note: { type: string; blobId?: string; getC
  * Convert LLM-provided content to a format suitable for storage.
  * For text notes, converts Markdown to HTML.
  */
-export function setNoteContentFromLlm(note: { type: string; title: string; setContent: (content: string) => void }, content: string) {
+export function setNoteContentFromLlm(note: BNote, content: string) {
     if (note.type === "text") {
         note.setContent(markdownImport.renderToHtml(content, note.title));
     } else {
@@ -57,10 +59,20 @@ export function setNoteContentFromLlm(note: { type: string; title: string; setCo
  * Return a short plain-text content preview for a note, truncated to
  * {@link CONTENT_PREVIEW_MAX_LENGTH} characters. Useful for giving an LLM a
  * glimpse of the content without sending the full body.
+ *
+ * For large notes (>{@link CONTENT_PREVIEW_SIZE_THRESHOLD} bytes), returns a
+ * size hint instead of loading and converting the full content.
  */
-export function getContentPreview(note: { type: string; blobId?: string; getContent: () => string | Buffer; isContentAvailable: () => boolean }): string | null {
+export function getContentPreview(note: BNote): string | null {
     if (!note.isContentAvailable()) {
         return null;
+    }
+
+    // Check content size before loading to avoid expensive conversion for large notes
+    const blob = note.blobId ? becca.getBlob({ blobId: note.blobId }) : null;
+    if (blob && blob.contentLength > CONTENT_PREVIEW_SIZE_THRESHOLD) {
+        const sizeKb = Math.round(blob.contentLength / 1024);
+        return `[${sizeKb}KB - use get_note_content for full text]`;
     }
 
     const full = getNoteContentForLlm(note);
