@@ -777,8 +777,8 @@ importers:
         specifier: 26.0.2
         version: 26.0.2(typescript@6.0.2)
       i18next-fs-backend:
-        specifier: 2.6.1
-        version: 2.6.1
+        specifier: 2.6.3
+        version: 2.6.3
       image-type:
         specifier: 6.1.0
         version: 6.1.0
@@ -10493,8 +10493,8 @@ packages:
     resolution: {integrity: sha512-Y93lCzHYgGWdrJ66yIktxiaGULYc6oGiABxhcO5AufBeOyoIdZF7bIfLaOrbM0iGIOXQQgxxRrFEnb+Y6w1n4A==}
     engines: {node: '>=10.18'}
 
-  i18next-fs-backend@2.6.1:
-    resolution: {integrity: sha512-eYWTX7QT7kJ0sZyCPK6x1q+R63zvNKv2D6UdbMf15A8vNb2ZLyw4NNNZxPFwXlIv/U+oUtg8SakW6ZgJZcoqHQ==}
+  i18next-fs-backend@2.6.3:
+    resolution: {integrity: sha512-/5aW996nbolGh/qVU9urjAJ2QiXpiyGuhG8x/ZvvZQ3bMlrK+ouUdD6whS4e+sU9CCdUIzl7x/heEjsBh/3xtw==}
 
   i18next-http-backend@3.0.4:
     resolution: {integrity: sha512-udwrBIE6cNpqn1gRAqRULq3+7MzIIuaiKRWrz++dVz5SqWW2VwXmPJtAgkI0JtMLFaADC9qNmnZAxWAhsxXx2g==}
@@ -17369,8 +17369,6 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 47.6.1
       ckeditor5: 47.6.1
       es-toolkit: 1.39.5
-    transitivePeerDependencies:
-      - supports-color
 
   '@ckeditor/ckeditor5-editor-multi-root@47.6.1':
     dependencies:
@@ -28740,7 +28738,7 @@ snapshots:
 
   hyperdyperid@1.2.0: {}
 
-  i18next-fs-backend@2.6.1: {}
+  i18next-fs-backend@2.6.3: {}
 
   i18next-http-backend@3.0.4(encoding@0.1.13):
     dependencies:
