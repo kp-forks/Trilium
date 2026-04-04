@@ -30,7 +30,6 @@
     "ckeditor5": "48.0.0",
     "eslint": "10.1.0",
     "eslint-config-ckeditor5": ">=9.1.0",
-    "lint-staged": "16.4.0",
     "stylelint": "17.6.0",
     "stylelint-config-ckeditor5": ">=9.1.0",
     "typescript": "6.0.2",
@@ -51,13 +50,5 @@
     "stylelint": "stylelint --quiet --allow-empty-input 'theme/**/*.css'",
     "test": "vitest",
     "test:debug": "vitest --inspect-brk --no-file-parallelism --browser.headless=false"
-  },
-  "lint-staged": {
-    "**/*.{js,ts}": [
-      "eslint --quiet"
-    ],
-    "**/*.css": [
-      "stylelint --quiet --allow-empty-input"
-    ]
   }
 }
