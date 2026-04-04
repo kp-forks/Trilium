@@ -32,7 +32,6 @@ describe('ImageProcessor', () => {
         const imageBuffer = fs.readFileSync(sampleImagePath);
 
         const result = await processor.extractText(imageBuffer, { language: 'eng' });
-        console.log(result.text);
         expect(result.text).toContain('TriliumNext');
     }, 60000);
 });
