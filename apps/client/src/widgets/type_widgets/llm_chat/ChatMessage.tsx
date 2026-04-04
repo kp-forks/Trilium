@@ -1,13 +1,14 @@
 import "./ChatMessage.css";
 
-import { Marked } from "marked";
-import { useMemo } from "preact/hooks";
+import DOMPurify from "dompurify";
+import { Marked, type TokenizerAndRendererExtension } from "marked";
+import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import type { LlmCitation } from "@triliumnext/commons";
 
+import link from "../../../services/link.js";
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
-import { SanitizedHtml } from "../../react/RawHtml.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import { type ContentBlock, getMessageText, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import ToolCallCard from "./ToolCallCard.js";
@@ -18,15 +19,64 @@ function shortenNumber(n: number): string {
     return n.toString();
 }
 
+/** Wiki-link extension for internal note links: [[noteId]] */
+const wikiLinkExtension: TokenizerAndRendererExtension = {
+    name: "wikiLink",
+    level: "inline",
+    start(src) {
+        return src.indexOf("[[");
+    },
+    tokenizer(src) {
+        const match = /^\[\[([^\]]+?)\]\]/.exec(src);
+        if (match) {
+            return {
+                type: "wikiLink",
+                raw: match[0],
+                href: match[1].trim()
+            };
+        }
+    },
+    renderer(token) {
+        return `<a class="reference-link" href="#root/${token.href}">${token.href}</a>`;
+    }
+};
+
 // Configure marked for safe rendering
 const markedInstance = new Marked({
     breaks: true, // Convert \n to <br>
     gfm: true // GitHub Flavored Markdown
 });
+markedInstance.use({ extensions: [wikiLinkExtension] });
 
-/** Parse markdown to HTML. Sanitization is handled by SanitizedHtml. */
+/** Parse markdown to HTML. */
 function renderMarkdown(markdown: string): string {
     return markedInstance.parse(markdown) as string;
+}
+
+/** Renders markdown content with reference link title loading. */
+function MarkdownContent({ html, isStreaming }: { html: string; isStreaming?: boolean }) {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const referenceLinks = containerRef.current.querySelectorAll<HTMLAnchorElement>("a.reference-link");
+        for (const el of referenceLinks) {
+            link.loadReferenceLinkTitle($(el), el.href);
+        }
+    }, [html]);
+
+    return (
+        <>
+            <div
+                ref={containerRef}
+                className="llm-chat-markdown"
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+            />
+            {isStreaming && <span className="llm-chat-cursor" />}
+        </>
+    );
 }
 
 interface Props {
@@ -144,10 +194,7 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                         hasBlockContent ? (
                             renderContentBlocks(message.content as ContentBlock[], isStreaming)
                         ) : (
-                            <>
-                                <SanitizedHtml className="llm-chat-markdown" html={renderedContent || ""} />
-                                {isStreaming && <span className="llm-chat-cursor" />}
-                            </>
+                            <MarkdownContent html={renderedContent || ""} isStreaming={isStreaming} />
                         )
                     ) : (
                         textContent
@@ -221,10 +268,10 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
     return groupContentBlocks(blocks).map((group) => {
         if (group.type === "text") {
             const html = renderMarkdown(group.block.content);
+            const isLastBlock = group.index === blocks.length - 1;
             return (
                 <div key={group.index}>
-                    <SanitizedHtml className="llm-chat-markdown" html={html} />
-                    {isStreaming && group.index === blocks.length - 1 && <span className="llm-chat-cursor" />}
+                    <MarkdownContent html={html} isStreaming={isStreaming && isLastBlock} />
                 </div>
             );
         }

@@ -102,6 +102,9 @@ export abstract class BaseProvider implements LlmProvider {
             parts.push(
                 `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`
             );
+            parts.push(
+                `When referring to notes in your responses, use the wiki-link format [[noteId]] to create clickable internal links. Use the note ID (not the title) from tool results. For example: "You can find more details in [[ZjSfLhzlqNY6]]" or "See [[Rhw2szN2XMqH]] for the timeline."`
+            );
         } else {
             parts.push(
                 `You do not have access to the user's notes. If the user asks about their notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`
