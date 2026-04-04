@@ -1,10 +1,10 @@
 import "./ChatMessage.css";
 
 import DOMPurify from "dompurify";
-import { Marked, type TokenizerAndRendererExtension } from "marked";
+import { Marked } from "marked";
 import { useEffect, useMemo, useRef } from "preact/hooks";
 
-import type { LlmCitation } from "@triliumnext/commons";
+import { type LlmCitation, createWikiLinkExtension } from "@triliumnext/commons";
 
 import link from "../../../services/link.js";
 import { t } from "../../../services/i18n.js";
@@ -19,34 +19,14 @@ function shortenNumber(n: number): string {
     return n.toString();
 }
 
-/** Wiki-link extension for internal note links: [[noteId]] */
-const wikiLinkExtension: TokenizerAndRendererExtension = {
-    name: "wikiLink",
-    level: "inline",
-    start(src) {
-        return src.indexOf("[[");
-    },
-    tokenizer(src) {
-        const match = /^\[\[([^\]]+?)\]\]/.exec(src);
-        if (match) {
-            return {
-                type: "wikiLink",
-                raw: match[0],
-                href: match[1].trim()
-            };
-        }
-    },
-    renderer(token) {
-        return `<a class="reference-link" href="#root/${token.href}">${token.href}</a>`;
-    }
-};
-
-// Configure marked for safe rendering
+// Configure marked for safe rendering with client-side URL format
 const markedInstance = new Marked({
     breaks: true, // Convert \n to <br>
     gfm: true // GitHub Flavored Markdown
 });
-markedInstance.use({ extensions: [wikiLinkExtension] });
+markedInstance.use({
+    extensions: [createWikiLinkExtension({ formatHref: (id) => `#root/${id}` })]
+});
 
 /** Parse markdown to HTML. */
 function renderMarkdown(markdown: string): string {
