@@ -60,7 +60,7 @@ overrides:
   node-forge@<1.4.0: '>=1.4.0'
   handlebars@<4.7.9: '>=4.7.9'
   qs@<6.14.2: '>=6.14.2'
-  minimatch@<3.1.4: '>=3.1.4'
+  minimatch@<3.1.4: ^3.1.4
   serialize-javascript@<7.0.5: '>=7.0.5'
   webpack@<5.104.1: '>=5.104.1'
 
@@ -19270,7 +19270,7 @@ snapshots:
       '@rushstack/terminal': 0.15.3(@types/node@24.12.0)
       '@rushstack/ts-command-line': 5.0.1(@types/node@24.12.0)
       lodash: 4.18.1
-      minimatch: 10.2.4
+      minimatch: 3.1.5
       resolve: 1.22.10
       semver: 7.5.4
       source-map: 0.6.1
@@ -25561,7 +25561,7 @@ snapshots:
 
   dir-compare@4.2.0:
     dependencies:
-      minimatch: 10.2.4
+      minimatch: 3.1.5
       p-limit: 3.1.0
 
   dns-packet@5.6.1:
@@ -27111,7 +27111,7 @@ snapshots:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 10.2.4
+      minimatch: 3.1.5
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -28321,7 +28321,7 @@ snapshots:
       lodash: 4.18.1
       log4js: 6.9.1
       mime: 2.6.0
-      minimatch: 10.2.4
+      minimatch: 3.1.5
       mkdirp: 0.5.6
       qjobs: 1.2.0
       range-parser: 1.2.1
