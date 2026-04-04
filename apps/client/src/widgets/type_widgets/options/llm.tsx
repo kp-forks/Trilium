@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "preact/hooks";
 
 import dialog from "../../../services/dialog";
+import { isExperimentalFeatureEnabled } from "../../../services/experimental_features";
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
@@ -11,6 +12,23 @@ import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
 
 export default function LlmSettings() {
+    if (!isExperimentalFeatureEnabled("llm")) {
+        return (
+            <OptionsSection title={t("llm.settings_title")}>
+                <p className="form-text">{t("llm.feature_not_enabled")}</p>
+            </OptionsSection>
+        );
+    }
+
+    return (
+        <>
+            <ProviderSettings />
+            <McpSettings />
+        </>
+    );
+}
+
+function ProviderSettings() {
     const [providersJson, setProvidersJson] = useTriliumOption("llmProviders");
     const providers = useMemo<LlmProviderConfig[]>(() => {
         try {
@@ -36,34 +54,30 @@ export default function LlmSettings() {
     }, [providers, setProviders]);
 
     return (
-        <>
-            <OptionsSection title={t("llm.settings_title")}>
-                <p className="form-text">{t("llm.settings_description")}</p>
+        <OptionsSection title={t("llm.settings_title")}>
+            <p className="form-text">{t("llm.settings_description")}</p>
 
-                <Button
-                    size="small"
-                    icon="bx bx-plus"
-                    text={t("llm.add_provider")}
-                    onClick={() => setShowAddModal(true)}
-                />
+            <Button
+                size="small"
+                icon="bx bx-plus"
+                text={t("llm.add_provider")}
+                onClick={() => setShowAddModal(true)}
+            />
 
-                <hr />
+            <hr />
 
-                <h5>{t("llm.configured_providers")}</h5>
-                <ProviderList
-                    providers={providers}
-                    onDelete={handleDeleteProvider}
-                />
+            <h5>{t("llm.configured_providers")}</h5>
+            <ProviderList
+                providers={providers}
+                onDelete={handleDeleteProvider}
+            />
 
-                <AddProviderModal
-                    show={showAddModal}
-                    onHidden={() => setShowAddModal(false)}
-                    onSave={handleAddProvider}
-                />
-            </OptionsSection>
-
-            <McpSettings />
-        </>
+            <AddProviderModal
+                show={showAddModal}
+                onHidden={() => setShowAddModal(false)}
+                onSave={handleAddProvider}
+            />
+        </OptionsSection>
     );
 }
 

@@ -2323,6 +2323,7 @@
   "llm": {
     "settings_title": "AI / LLM",
     "settings_description": "Configure AI and Large Language Model integrations.",
+    "feature_not_enabled": "Enable the LLM experimental feature in Settings → Advanced → Experimental features to use AI integrations.",
     "add_provider": "Add Provider",
     "add_provider_title": "Add AI Provider",
     "configured_providers": "Configured Providers",
