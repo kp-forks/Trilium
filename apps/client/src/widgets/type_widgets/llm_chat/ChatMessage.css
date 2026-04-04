@@ -16,7 +16,7 @@
 }
 
 .llm-chat-message-wrapper-assistant {
-    margin-right: auto;
+    width: 100%;
 }
 
 /* Show footer only on hover */
@@ -136,46 +136,20 @@
     color: var(--danger-text-color, #c00);
 }
 
-/* Thinking message (collapsible) */
-.llm-chat-message-thinking {
-    background: var(--accented-background-color);
-    border: 1px dashed var(--main-border-color);
-    cursor: pointer;
+.llm-chat-thinking-card.expandable-card {
+    width: 100%;
+    max-width: 100%;
+    border-style: dashed;
+    margin-right: 0;
+    margin: 0;
 }
 
-.llm-chat-thinking-summary {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 500;
+.llm-chat-thinking-card .expandable-section-summary {
     color: var(--muted-text-color);
-    padding: 0.25rem 0;
-    list-style: none;
-}
-
-.llm-chat-thinking-summary::-webkit-details-marker {
-    display: none;
-}
-
-.llm-chat-thinking-summary::before {
-    content: "▶";
-    font-size: 0.7em;
-    transition: transform 0.2s ease;
-}
-
-.llm-chat-message-thinking[open] .llm-chat-thinking-summary::before {
-    transform: rotate(90deg);
-}
-
-.llm-chat-thinking-summary .bx {
-    font-size: 1rem;
 }
 
 .llm-chat-thinking-content {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--main-border-color);
+    padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
     color: var(--muted-text-color);
     white-space: pre-wrap;

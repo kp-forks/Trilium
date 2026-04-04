@@ -117,19 +117,19 @@ export default function ChatMessage({ message, isStreaming }: Props) {
         isThinking && "llm-chat-message-thinking"
     ].filter(Boolean).join(" ");
 
-    // Render thinking messages in a collapsible details element
+    // Render thinking messages in a collapsible card
     if (isThinking) {
         return (
-            <details className={messageClasses}>
-                <summary className="llm-chat-thinking-summary">
-                    <span className="bx bx-brain" />
-                    {t("llm_chat.thought_process")}
-                </summary>
-                <div className="llm-chat-message-content llm-chat-thinking-content">
-                    {textContent}
-                    {isStreaming && <span className="llm-chat-cursor" />}
-                </div>
-            </details>
+            <div className="llm-chat-message-wrapper llm-chat-message-wrapper-assistant">
+                <ExpandableCard className="llm-chat-thinking-card">
+                    <ExpandableSection icon="bx bx-brain" label={t("llm_chat.thought_process")}>
+                        <div className="llm-chat-thinking-content">
+                            {textContent}
+                            {isStreaming && <span className="llm-chat-cursor" />}
+                        </div>
+                    </ExpandableSection>
+                </ExpandableCard>
+            </div>
         );
     }
 
