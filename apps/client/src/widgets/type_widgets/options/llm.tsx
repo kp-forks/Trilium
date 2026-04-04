@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useState } from "preact/hooks";
+
+import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
+import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import FormCheckbox from "../../react/FormCheckbox";
+import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
-import ActionButton from "../../react/ActionButton";
-import dialog from "../../../services/dialog";
-import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 
 export default function LlmSettings() {
     const [providersJson, setProvidersJson] = useTriliumOption("llmProviders");
@@ -65,8 +66,14 @@ export default function LlmSettings() {
     );
 }
 
+function getMcpEndpointUrl() {
+    const port = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
+    return `http://localhost:${port}/mcp`;
+}
+
 function McpSettings() {
     const [mcpEnabled, setMcpEnabled] = useTriliumOptionBool("mcpEnabled");
+    const endpointUrl = useMemo(() => getMcpEndpointUrl(), []);
 
     return (
         <OptionsSection title={t("llm.mcp_title")}>
@@ -77,6 +84,20 @@ function McpSettings() {
                 currentValue={mcpEnabled}
                 onChange={setMcpEnabled}
             />
+
+            {mcpEnabled && (
+                <>
+                    <hr />
+                    <h5>{t("llm.mcp_endpoint_title")}</h5>
+                    <p className="form-text">{t("llm.mcp_endpoint_description")}</p>
+                    <input
+                        type="text"
+                        className="form-control"
+                        value={endpointUrl}
+                        readOnly
+                    />
+                </>
+            )}
         </OptionsSection>
     );
 }
