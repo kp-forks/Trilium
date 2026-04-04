@@ -1,3 +1,5 @@
+import "./ChatInputBar.css";
+
 import type { RefObject } from "preact";
 import { useState, useCallback } from "preact/hooks";
 

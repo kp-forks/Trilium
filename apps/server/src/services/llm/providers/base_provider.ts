@@ -3,13 +3,15 @@
  * tool assembly, model pricing, and title generation.
  */
 
-import { generateText, streamText, stepCountIs, type ModelMessage, type ToolSet } from "ai";
-import type { LanguageModel } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
+import type { LanguageModel } from "ai";
+import { generateText, type ModelMessage, stepCountIs, streamText, type ToolSet } from "ai";
+import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
 import { getSkillsSummary } from "../skills/index.js";
-import { noteTools, attributeTools, hierarchyTools, skillTools, currentNoteTools } from "../tools/index.js";
+import { getNoteMeta,SYSTEM_PROMPT_LIMITS } from "../tools/helpers.js";
+import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
@@ -24,7 +26,7 @@ function effectiveCost(pricing: ModelPricing): number {
 }
 
 /**
- * Build a lightweight context hint about the current note (title + type only, no content).
+ * Build a context hint about the current note with full metadata (same as get_note / ETAPI).
  */
 function buildNoteHint(noteId: string): string | null {
     const note = becca.getNote(noteId);
@@ -32,7 +34,14 @@ function buildNoteHint(noteId: string): string | null {
         return null;
     }
 
-    return `The user is currently viewing a ${note.type} note titled "${note.title}". Use the get_current_note tool to read its content if needed.`;
+    const metadata = yaml.dump(getNoteMeta(note, SYSTEM_PROMPT_LIMITS), { lineWidth: -1 });
+    return [
+        "The user is currently viewing the following note.",
+        "Use this metadata (including contentPreview) to answer questions about the note without calling tools when possible.",
+        "Use get_note_content only if the preview is insufficient.",
+        "",
+        metadata
+    ].join("\n");
 }
 
 /**
@@ -72,25 +81,48 @@ export abstract class BaseProvider implements LlmProvider {
      * Build the system prompt with note hints and skills summary.
      */
     protected buildSystemPrompt(messages: LlmMessage[], config: LlmProviderConfig): string | undefined {
-        let systemPrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
+        const parts: string[] = [];
 
+        // Base system prompt from config or messages
+        const basePrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
+        if (basePrompt) {
+            parts.push(basePrompt);
+        }
+
+        // Context note hint
         if (config.contextNoteId) {
             const noteHint = buildNoteHint(config.contextNoteId);
             if (noteHint) {
-                systemPrompt = systemPrompt
-                    ? `${systemPrompt}\n\n${noteHint}`
-                    : noteHint;
+                parts.push(noteHint);
             }
         }
 
+        // Note tools hint
         if (config.enableNoteTools) {
-            const skillsHint = `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`;
-            systemPrompt = systemPrompt
-                ? `${systemPrompt}\n\n${skillsHint}`
-                : skillsHint;
+            parts.push(
+                `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`
+            );
+            parts.push(
+                `When referring to notes in your responses, use the wiki-link format [[noteId]] to create clickable internal links. Use the note ID (not the title) from tool results. The link will automatically display the note's title and icon, so don't repeat the title in your text. For example: "You can find more details in [[ZjSfLhzlqNY6]]" instead of "You can find more details in the Meeting Notes note ([[ZjSfLhzlqNY6]])".`
+            );
+        } else if (config.contextNoteId) {
+            parts.push(
+                `You can see the current note's metadata above, but you cannot search or access other notes. If the user asks about other notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`
+            );
+        } else {
+            parts.push(
+                `You do not have access to the user's notes. If the user asks about their notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`
+            );
         }
 
-        return systemPrompt;
+        // Web search hint
+        if (!config.enableWebSearch) {
+            parts.push(
+                `You do not have access to web search. If the user asks for current/real-time information, news, or anything that requires searching the web, inform them that "Web search" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Web search").`
+            );
+        }
+
+        return parts.length > 0 ? parts.join("\n\n") : undefined;
     }
 
     /**
@@ -128,15 +160,10 @@ export abstract class BaseProvider implements LlmProvider {
             this.addWebSearchTool(tools);
         }
 
-        if (config.contextNoteId) {
-            Object.assign(tools, currentNoteTools(config.contextNoteId));
-        }
-
         if (config.enableNoteTools) {
-            Object.assign(tools, noteTools);
-            Object.assign(tools, attributeTools);
-            Object.assign(tools, hierarchyTools);
-            Object.assign(tools, skillTools);
+            for (const registry of allToolRegistries) {
+                Object.assign(tools, registry.toToolSet());
+            }
         }
 
         return tools;
@@ -156,7 +183,7 @@ export abstract class BaseProvider implements LlmProvider {
         const tools = this.buildTools(config);
         if (Object.keys(tools).length > 0) {
             streamOptions.tools = tools;
-            streamOptions.stopWhen = stepCountIs(5);
+            streamOptions.stopWhen = stepCountIs(15);
             streamOptions.toolChoice = "auto";
         }
 

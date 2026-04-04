@@ -105,8 +105,9 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "newLayout",
     "mfaEnabled",
     "mfaMethod",
+    // LLM options
     "llmProviders",
-
+    "mcpEnabled",
     // OCR options
     "ocrAutoProcessImages",
     "ocrMinConfidence"

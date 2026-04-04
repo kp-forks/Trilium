@@ -16,11 +16,13 @@ export default function OptionsRow({ name, label, description, children, centere
 
     return (
         <div className={`option-row ${centered ? "centered" : ""}`}>
-            <div className="option-row-main">
+            <div className="option-row-label">
                 {label && <label for={id}>{label}</label>}
+                {description && <small className="option-row-description">{description}</small>}
+            </div>
+            <div className="option-row-input">
                 {childWithId}
             </div>
-            {description && <small className="option-row-description">{description}</small>}
         </div>
     );
 }

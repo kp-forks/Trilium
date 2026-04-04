@@ -1,12 +1,17 @@
-import "./LlmChat.css";
+import "./ChatMessage.css";
 
+import DOMPurify from "dompurify";
 import { Marked } from "marked";
-import { useMemo } from "preact/hooks";
+import { useEffect, useMemo, useRef } from "preact/hooks";
 
+import { type LlmCitation, createWikiLinkExtension } from "@triliumnext/commons";
+
+import link from "../../../services/link.js";
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
-import { SanitizedHtml } from "../../react/RawHtml.js";
-import { type ContentBlock, getMessageText, type StoredMessage, type ToolCall } from "./llm_chat_types.js";
+import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
+import { type ContentBlock, getMessageText, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
+import ToolCallCard from "./ToolCallCard.js";
 
 function shortenNumber(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -14,15 +19,44 @@ function shortenNumber(n: number): string {
     return n.toString();
 }
 
-// Configure marked for safe rendering
+// Configure marked for safe rendering with client-side URL format
 const markedInstance = new Marked({
     breaks: true, // Convert \n to <br>
     gfm: true // GitHub Flavored Markdown
 });
+markedInstance.use({
+    extensions: [createWikiLinkExtension({ formatHref: (id) => `#root/${id}` })]
+});
 
-/** Parse markdown to HTML. Sanitization is handled by SanitizedHtml. */
+/** Parse markdown to HTML. */
 function renderMarkdown(markdown: string): string {
     return markedInstance.parse(markdown) as string;
+}
+
+/** Renders markdown content with reference link title loading. */
+function MarkdownContent({ html, isStreaming }: { html: string; isStreaming?: boolean }) {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const referenceLinks = containerRef.current.querySelectorAll<HTMLAnchorElement>("a.reference-link");
+        for (const el of referenceLinks) {
+            link.loadReferenceLinkTitle($(el), el.href);
+        }
+    }, [html]);
+
+    return (
+        <>
+            <div
+                ref={containerRef}
+                className="llm-chat-markdown"
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+            />
+            {isStreaming && <span className="llm-chat-cursor" />}
+        </>
+    );
 }
 
 interface Props {
@@ -30,64 +64,70 @@ interface Props {
     isStreaming?: boolean;
 }
 
-function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
-    const classes = [
-        "llm-chat-tool-call-inline",
-        toolCall.isError && "llm-chat-tool-call-error"
-    ].filter(Boolean).join(" ");
+type ContentGroup =
+    | { type: "text"; block: TextBlock; index: number }
+    | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number };
+
+/** Extract domain + TLD from a hostname (e.g. "www.example.co.uk" → "example.co.uk"). */
+function extractDomain(hostname: string): string {
+    return hostname.replace(/^www\./, "");
+}
+
+function getUniqueSiteCount(citations: LlmCitation[]): number {
+    const domains = new Set<string>();
+    for (const c of citations) {
+        if (c.url) {
+            try {
+                domains.add(extractDomain(new URL(c.url).hostname));
+            } catch { /* ignore invalid URLs */ }
+        }
+    }
+    return domains.size;
+}
+
+function CitationsSection({ citations }: { citations: LlmCitation[] }) {
+    const siteCount = getUniqueSiteCount(citations);
+    const summary = t("llm_chat.sources_summary", { count: citations.length, sites: siteCount });
 
     return (
-        <details className={classes}>
-            <summary className="llm-chat-tool-call-inline-summary">
-                <span className={toolCall.isError ? "bx bx-error-circle" : "bx bx-wrench"} />
-                {toolCall.toolName}
-                {toolCall.isError && <span className="llm-chat-tool-call-error-badge">{t("llm_chat.tool_error")}</span>}
-            </summary>
-            <div className="llm-chat-tool-call-inline-body">
-                <div className="llm-chat-tool-call-input">
-                    <strong>{t("llm_chat.input")}:</strong>
-                    <pre>{JSON.stringify(toolCall.input, null, 2)}</pre>
-                </div>
-                {toolCall.result && (
-                    <div className={`llm-chat-tool-call-result ${toolCall.isError ? "llm-chat-tool-call-result-error" : ""}`}>
-                        <strong>{toolCall.isError ? t("llm_chat.error") : t("llm_chat.result")}:</strong>
-                        <pre>{(() => {
-                            if (typeof toolCall.result === "string" && (toolCall.result.startsWith("{") || toolCall.result.startsWith("["))) {
+        <ExpandableCard className="llm-chat-citations-card">
+            <ExpandableSection icon="bx bx-link" label={summary}>
+                <table className="llm-chat-citations-list">
+                    <tbody>
+                        {citations.map((citation, idx) => {
+                            const title = citation.title || citation.citedText?.slice(0, 80) || `Source ${idx + 1}`;
+                            let domain: string | null = null;
+                            if (citation.url) {
                                 try {
-                                    return JSON.stringify(JSON.parse(toolCall.result), null, 2);
-                                } catch {
-                                    return toolCall.result;
-                                }
+                                    domain = extractDomain(new URL(citation.url).hostname);
+                                } catch { /* ignore */ }
                             }
-                            return toolCall.result;
-                        })()}</pre>
-                    </div>
-                )}
-            </div>
-        </details>
+
+                            return (
+                                <tr key={idx}>
+                                    <td className="llm-chat-citation-title">
+                                        {citation.url ? (
+                                            <a href={citation.url} target="_blank" rel="noopener noreferrer" title={title}>
+                                                {title}
+                                            </a>
+                                        ) : (
+                                            <span>{title}</span>
+                                        )}
+                                    </td>
+                                    {domain && (
+                                        <td className="llm-chat-citation-site">{domain}</td>
+                                    )}
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </ExpandableSection>
+        </ExpandableCard>
     );
 }
 
-function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
-    return blocks.map((block, idx) => {
-        if (block.type === "text") {
-            const html = renderMarkdown(block.content);
-            return (
-                <div key={idx}>
-                    <SanitizedHtml className="llm-chat-markdown" html={html} />
-                    {isStreaming && idx === blocks.length - 1 && <span className="llm-chat-cursor" />}
-                </div>
-            );
-        }
-        if (block.type === "tool_call") {
-            return <ToolCallCard key={idx} toolCall={block.toolCall} />;
-        }
-        return null;
-    });
-}
-
 export default function ChatMessage({ message, isStreaming }: Props) {
-    const roleLabel = message.role === "user" ? t("llm_chat.role_user") : t("llm_chat.role_assistant");
     const isError = message.type === "error";
     const isThinking = message.type === "thinking";
     const textContent = typeof message.content === "string" ? message.content : getMessageText(message.content);
@@ -107,101 +147,41 @@ export default function ChatMessage({ message, isStreaming }: Props) {
         isThinking && "llm-chat-message-thinking"
     ].filter(Boolean).join(" ");
 
-    // Render thinking messages in a collapsible details element
+    // Render thinking messages in a collapsible card
     if (isThinking) {
         return (
-            <details className={messageClasses}>
-                <summary className="llm-chat-thinking-summary">
-                    <span className="bx bx-brain" />
-                    {t("llm_chat.thought_process")}
-                </summary>
-                <div className="llm-chat-message-content llm-chat-thinking-content">
-                    {textContent}
-                    {isStreaming && <span className="llm-chat-cursor" />}
-                </div>
-            </details>
+            <div className="llm-chat-message-wrapper llm-chat-message-wrapper-assistant">
+                <ExpandableCard className="llm-chat-thinking-card">
+                    <ExpandableSection icon="bx bx-brain" label={t("llm_chat.thought_process")}>
+                        <div className="llm-chat-thinking-content">
+                            {textContent}
+                            {isStreaming && <span className="llm-chat-cursor" />}
+                        </div>
+                    </ExpandableSection>
+                </ExpandableCard>
+            </div>
         );
     }
 
-    // Legacy tool calls (from old format stored as separate field)
-    const legacyToolCalls = message.toolCalls;
     const hasBlockContent = Array.isArray(message.content);
 
     return (
         <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`}>
             <div className={messageClasses}>
-                <div className="llm-chat-message-role">
-                    {isError ? "Error" : roleLabel}
-                </div>
+                {isError && <div className="llm-chat-message-role">Error</div>}
                 <div className="llm-chat-message-content">
                     {message.role === "assistant" && !isError ? (
                         hasBlockContent ? (
                             renderContentBlocks(message.content as ContentBlock[], isStreaming)
                         ) : (
-                            <>
-                                <SanitizedHtml className="llm-chat-markdown" html={renderedContent || ""} />
-                                {isStreaming && <span className="llm-chat-cursor" />}
-                            </>
+                            <MarkdownContent html={renderedContent || ""} isStreaming={isStreaming} />
                         )
                     ) : (
                         textContent
                     )}
                 </div>
-                {legacyToolCalls && legacyToolCalls.length > 0 && (
-                    <details className="llm-chat-tool-calls">
-                        <summary className="llm-chat-tool-calls-summary">
-                            <span className="bx bx-wrench" />
-                            {t("llm_chat.tool_calls", { count: legacyToolCalls.length })}
-                        </summary>
-                        <div className="llm-chat-tool-calls-list">
-                            {legacyToolCalls.map((tool) => (
-                                <ToolCallCard key={tool.id} toolCall={tool} />
-                            ))}
-                        </div>
-                    </details>
-                )}
                 {message.citations && message.citations.length > 0 && (
-                    <div className="llm-chat-citations">
-                        <div className="llm-chat-citations-label">
-                            <span className="bx bx-link" />
-                            {t("llm_chat.sources")}
-                        </div>
-                        <ul className="llm-chat-citations-list">
-                            {message.citations.map((citation, idx) => {
-                                // Determine display text: title, URL hostname, or cited text
-                                let displayText = citation.title;
-                                if (!displayText && citation.url) {
-                                    try {
-                                        displayText = new URL(citation.url).hostname;
-                                    } catch {
-                                        displayText = citation.url;
-                                    }
-                                }
-                                if (!displayText) {
-                                    displayText = citation.citedText?.slice(0, 50) || `Source ${idx + 1}`;
-                                }
-
-                                return (
-                                    <li key={idx}>
-                                        {citation.url ? (
-                                            <a
-                                                href={citation.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                title={citation.citedText || citation.url}
-                                            >
-                                                {displayText}
-                                            </a>
-                                        ) : (
-                                            <span title={citation.citedText}>
-                                                {displayText}
-                                            </span>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
+                    <CitationsSection citations={message.citations} />
                 )}
             </div>
             <div className={`llm-chat-footer llm-chat-footer-${message.role}`}>
@@ -241,4 +221,41 @@ export default function ChatMessage({ message, isStreaming }: Props) {
             </div>
         </div>
     );
+}
+
+/** Group content blocks so that consecutive tool_calls are merged into one entry. */
+function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
+    const groups: ContentGroup[] = [];
+
+    for (let i = 0; i < blocks.length; i++) {
+        const block = blocks[i];
+        if (block.type === "tool_call") {
+            const last = groups[groups.length - 1];
+            if (last?.type === "tool_calls") {
+                last.blocks.push(block);
+            } else {
+                groups.push({ type: "tool_calls", blocks: [block], index: i });
+            }
+        } else {
+            groups.push({ type: "text", block, index: i });
+        }
+    }
+
+    return groups;
+}
+
+function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
+    return groupContentBlocks(blocks).map((group) => {
+        if (group.type === "text") {
+            const html = renderMarkdown(group.block.content);
+            const isLastBlock = group.index === blocks.length - 1;
+            return (
+                <div key={group.index}>
+                    <MarkdownContent html={html} isStreaming={isStreaming && isLastBlock} />
+                </div>
+            );
+        }
+
+        return <ToolCallCard key={group.index} toolCalls={group.blocks.map((b) => b.toolCall)} />;
+    });
 }

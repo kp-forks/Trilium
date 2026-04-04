@@ -77,9 +77,13 @@ export async function streamChatCompletion(
                                 break;
                             case "tool_use":
                                 callbacks.onToolUse?.(data.toolName, data.toolInput);
+                                // Yield to force Preact to commit the pending tool call
+                                // state before we process the result.
+                                await new Promise((r) => setTimeout(r, 1));
                                 break;
                             case "tool_result":
                                 callbacks.onToolResult?.(data.toolName, data.result, data.isError);
+                                await new Promise((r) => setTimeout(r, 1));
                                 break;
                             case "citation":
                                 if (data.citation) {
