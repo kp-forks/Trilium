@@ -289,6 +289,12 @@ View types are configured via `#viewType` label (e.g., `#viewType=table`). Each 
 - Register in `packages/ckeditor5/src/plugins.ts`
 - See `ckeditor5-admonition`, `ckeditor5-footnotes`, `ckeditor5-math`, `ckeditor5-mermaid` for examples
 
+### Updating PDF.js
+1. Update `pdfjs-dist` version in `packages/pdfjs-viewer/package.json`
+2. Run `npx tsx scripts/update-viewer.ts` from that directory
+3. Run `pnpm build` to verify success
+4. Commit all changes including updated viewer files
+
 ### Database Migrations
 - Add migration scripts in `apps/server/src/migrations/YYMMDD_HHMM__description.sql`
 - Update schema in `apps/server/src/assets/db/schema.sql`
