@@ -103,7 +103,7 @@ export abstract class BaseProvider implements LlmProvider {
                 `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`
             );
             parts.push(
-                `When referring to notes in your responses, use the wiki-link format [[noteId]] to create clickable internal links. Use the note ID (not the title) from tool results. For example: "You can find more details in [[ZjSfLhzlqNY6]]" or "See [[Rhw2szN2XMqH]] for the timeline."`
+                `When referring to notes in your responses, use the wiki-link format [[noteId]] to create clickable internal links. Use the note ID (not the title) from tool results. The link will automatically display the note's title and icon, so don't repeat the title in your text. For example: "You can find more details in [[ZjSfLhzlqNY6]]" instead of "You can find more details in the Meeting Notes note ([[ZjSfLhzlqNY6]])".`
             );
         } else {
             parts.push(
