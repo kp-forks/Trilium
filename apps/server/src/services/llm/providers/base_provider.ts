@@ -97,6 +97,11 @@ export abstract class BaseProvider implements LlmProvider {
             systemPrompt = systemPrompt
                 ? `${systemPrompt}\n\n${skillsHint}`
                 : skillsHint;
+        } else {
+            const noToolsHint = `You do not have access to the user's notes. If the user asks about their notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`;
+            systemPrompt = systemPrompt
+                ? `${systemPrompt}\n\n${noToolsHint}`
+                : noToolsHint;
         }
 
         return systemPrompt;
