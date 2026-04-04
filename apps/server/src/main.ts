@@ -10,13 +10,13 @@ import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
-import NodejsZipProvider from "./zip_provider.js";
 import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";
 import port from "./services/port.js";
 import NodeRequestProvider from "./services/request.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "./sql_provider.js";
+import NodejsZipProvider from "./zip_provider.js";
 
 async function startApplication() {
     const config = (await import("./services/config.js")).default;

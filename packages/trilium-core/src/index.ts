@@ -113,6 +113,7 @@ export * as becca_easy_mocking from "./test/becca_easy_mocking";
 export * as becca_mocking from "./test/becca_mocking";
 
 export { default as markdownImportService } from "./services/import/markdown";
+export { default as markdownExportService } from "./services/export/markdown";
 
 export { default as scriptService } from "./services/script";
 export { default as BackendScriptApi, type Api as BackendScriptApiInterface } from "./services/backend_script_api";

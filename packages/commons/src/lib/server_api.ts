@@ -336,7 +336,7 @@ export type BootstrapDefinition = {
     csrfToken?: string;
     headingStyle: "plain" | "underline" | "markdown";
     layoutOrientation: "vertical" | "horizontal";
-    platform?: typeof process.platform | "web";
+    platform?: "aix" | "android" | "darwin" | "freebsd" | "haiku" | "linux" | "openbsd" | "sunos" | "win32" | "cygwin" | "netbsd" | "web";
     isElectron: boolean;
     isStandalone: boolean;
     hasNativeTitleBar: boolean;

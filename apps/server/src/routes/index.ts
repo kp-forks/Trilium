@@ -1,16 +1,14 @@
 import { BootstrapDefinition } from "@triliumnext/commons";
-import { getSharedBootstrapItems, getSql, icon_packs as iconPackService, sql_init } from "@triliumnext/core";
+import { getSharedBootstrapItems, icon_packs as iconPackService, sql_init } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import packageJson from "../../package.json" with { type: "json" };
-import type BNote from "../becca/entities/bnote.js";
 import appPath from "../services/app_path.js";
 import assetPath from "../services/asset_path.js";
-import attributeService from "../services/attributes.js";
 import config from "../services/config.js";
 import log from "../services/log.js";
 import optionService from "../services/options.js";
-import { isDev, isElectron, isMac, isWindows, isWindows11 } from "../services/utils.js";
+import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
 import { generateCsrfToken } from "./csrf_protection.js";
 
 type View = "desktop" | "mobile" | "print";

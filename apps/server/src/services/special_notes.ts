@@ -99,6 +99,10 @@ function getLlmChatHome() {
 }
 
 function saveLlmChat(llmChatNoteId: string | null) {
+    if (!llmChatNoteId) {
+        throw new Error(`Missing chat note ID`);
+    }
+
     const llmChatNote = becca.getNote(llmChatNoteId);
     if (!llmChatNote) {
         throw new Error(`Unable to find LLM chat note ID: ${llmChatNoteId}`);

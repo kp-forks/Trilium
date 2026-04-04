@@ -1,5 +1,5 @@
 import becca from "../../../becca/becca.js";
-import sql from "../../sql.js";
+import { getSql } from "../../sql/index.js";
 import NoteSet from "../note_set.js";
 import type SearchContext from "../search_context.js";
 import Expression from "./expression.js";
@@ -52,6 +52,7 @@ export default class OCRContentExpression extends Expression {
         const params = this.tokens.map(token => `%${token}%`);
 
         // Find notes whose own blob matches
+        const sql = getSql();
         const noteIds = sql.getColumn<string>(`
             SELECT n.noteId
             FROM notes n

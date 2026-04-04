@@ -467,7 +467,7 @@ importers:
         version: 0.2.1(mermaid@11.13.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.9.3)
+        version: 5.0.1(mind-elixir@5.10.0)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
@@ -499,8 +499,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/splitjs
       '@zumer/snapdom':
-        specifier: 2.6.0
-        version: 2.6.0
+        specifier: 2.7.0
+        version: 2.7.0
       autocomplete.js:
         specifier: 0.38.1
         version: 0.38.1
@@ -532,11 +532,11 @@ importers:
         specifier: 17.4.0
         version: 17.4.0
       i18next:
-        specifier: 25.10.10
-        version: 25.10.10(typescript@6.0.2)
+        specifier: 26.0.3
+        version: 26.0.3(typescript@6.0.2)
       i18next-http-backend:
-        specifier: 3.0.2
-        version: 3.0.2(encoding@0.1.13)
+        specifier: 3.0.4
+        version: 3.0.4(encoding@0.1.13)
       jquery:
         specifier: 4.0.0
         version: 4.0.0
@@ -580,8 +580,8 @@ importers:
         specifier: 11.13.0
         version: 11.13.0
       mind-elixir:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 5.10.0
+        version: 5.10.0
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -592,8 +592,8 @@ importers:
         specifier: 10.29.0
         version: 10.29.0
       react-i18next:
-        specifier: 17.0.0
-        version: 17.0.0(i18next@25.10.10(typescript@6.0.2))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)
+        specifier: 17.0.2
+        version: 17.0.2(i18next@26.0.3(typescript@6.0.2))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)
       react-window:
         specifier: 2.2.7
         version: 2.2.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -650,8 +650,8 @@ importers:
         specifier: 0.7.2
         version: 0.7.2
       vite-plugin-static-copy:
-        specifier: 3.4.0
-        version: 3.4.0(vite@8.0.3(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.3))
+        specifier: 4.0.0
+        version: 4.0.0(vite@8.0.3(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.3))
 
   apps/db-compare:
     dependencies:
@@ -829,6 +829,12 @@ importers:
       html-to-text:
         specifier: 9.0.5
         version: 9.0.5
+      i18next:
+        specifier: 26.0.3
+        version: 26.0.3(typescript@6.0.2)
+      i18next-fs-backend:
+        specifier: 2.6.3
+        version: 2.6.3
       js-yaml:
         specifier: 4.1.1
         version: 4.1.1
@@ -1007,12 +1013,6 @@ importers:
       https-proxy-agent:
         specifier: 8.0.0
         version: 8.0.0
-      i18next:
-        specifier: 26.0.3
-        version: 26.0.3(typescript@6.0.2)
-      i18next-fs-backend:
-        specifier: 2.6.3
-        version: 2.6.3
       image-type:
         specifier: 6.1.0
         version: 6.1.0
@@ -1708,8 +1708,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3
       i18next:
-        specifier: 25.10.10
-        version: 25.10.10(typescript@6.0.2)
+        specifier: 26.0.3
+        version: 26.0.3(typescript@6.0.2)
       mime-types:
         specifier: 3.0.2
         version: 3.0.2
@@ -6903,9 +6903,6 @@ packages:
     resolution: {integrity: sha512-0fztsk/0ryJ+2PPr9EyXS5/Co7OK8q3zY/xOoozEWaUsL5x+C0cyZ4YyMuUffOO2Dx/rAdq4JMPqW0VUtm+vzA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
-  '@zumer/snapdom@2.6.0':
-    resolution: {integrity: sha512-JpPPkuMzozRVX6KArgCiMgLpgVW82kWgyoFk5DWGKE5msWGEshXEUdQHLLEyZRO7qioI1pI+yaBJz81tEP9gPg==}
-
   '@zumer/snapdom@2.7.0':
     resolution: {integrity: sha512-ZiELKzDszeFOazPQ/ExXzgtdoW9jADVjDjInr5XDAlVdCx0RbNsFiG7RLyM48XnA7EyCA9yTvmXSc3ElDrTRqA==}
 
@@ -7968,9 +7965,6 @@ packages:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
     engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
     hasBin: true
-
-  cross-fetch@4.0.0:
-    resolution: {integrity: sha512-e4a5N8lVvuLgAWgnCrLr2PP0YyDOTHa9H/Rj54dirp61qXnNq46m82bRhNqIA5VccJtWBvPTFRV3TtvHUKPB1g==}
 
   cross-fetch@4.1.0:
     resolution: {integrity: sha512-uKm5PU+MHTootlWEY+mZ4vvXoCn4fLQxT9dSc1sXVMSFkINTJVN8cAQROpwcKm8bJ/c7rgZVIBWzH5T78sNZZw==}
@@ -9761,19 +9755,8 @@ packages:
   i18next-fs-backend@2.6.3:
     resolution: {integrity: sha512-/5aW996nbolGh/qVU9urjAJ2QiXpiyGuhG8x/ZvvZQ3bMlrK+ouUdD6whS4e+sU9CCdUIzl7x/heEjsBh/3xtw==}
 
-  i18next-http-backend@3.0.2:
-    resolution: {integrity: sha512-PdlvPnvIp4E1sYi46Ik4tBYh/v/NbYfFFgTjkwFl0is8A18s7/bx9aXqsrOax9WUbeNS6mD2oix7Z0yGGf6m5g==}
-
   i18next-http-backend@3.0.4:
     resolution: {integrity: sha512-udwrBIE6cNpqn1gRAqRULq3+7MzIIuaiKRWrz++dVz5SqWW2VwXmPJtAgkI0JtMLFaADC9qNmnZAxWAhsxXx2g==}
-
-  i18next@25.10.10:
-    resolution: {integrity: sha512-cqUW2Z3EkRx7NqSyywjkgCLK7KLCL6IFVFcONG7nVYIJ3ekZ1/N5jUsihHV6Bq37NfhgtczxJcxduELtjTwkuQ==}
-    peerDependencies:
-      typescript: ^5 || ^6
-    peerDependenciesMeta:
-      typescript:
-        optional: true
 
   i18next@26.0.3:
     resolution: {integrity: sha512-1571kXINxHKY7LksWp8wP+zP0YqHSSpl/OW0Y0owFEf2H3s8gCAffWaZivcz14rMkOvn3R/psiQxVsR9t2Nafg==}
@@ -11089,9 +11072,6 @@ packages:
   mind-elixir@5.10.0:
     resolution: {integrity: sha512-AY/tDXz8stMbx0MIutdn63Dz0uwY1VVMKIxCqOOA2hg5WGdCGm2qqEZF498deLDxoZbL+hDf1SwBWzvWADBoPA==}
 
-  mind-elixir@5.9.3:
-    resolution: {integrity: sha512-OTTO6ofvDuzN4fxuBngqhQLJmIqModr2NgQb4OY+5DGRt54B+YNAvNnlspYwUXXGq2Rbht1DhXgeU4dr4CUy6Q==}
-
   minimatch@10.2.4:
     resolution: {integrity: sha512-oRjTw/97aTBN0RHbYCdtF1MQfvusSIBQM0IZEgzl6426+8jSC0nF1a/GmnVLpfB9yyr6g6FTqWqiZVbxrtaCIg==}
     engines: {node: 18 || 20 || >=22}
@@ -12373,22 +12353,6 @@ packages:
     resolution: {integrity: sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==}
     peerDependencies:
       react: ^19.2.4
-
-  react-i18next@17.0.0:
-    resolution: {integrity: sha512-L7aqwOePCExt6nlF7000lN2YKWnR7IpSpQId9sj01798Xn3LAncBdTHKl9lA/nr+YrG78BTqWPJxq9mlrrmH7Q==}
-    peerDependencies:
-      i18next: '>= 25.10.10'
-      react: '>= 16.8.0'
-      react-dom: '*'
-      react-native: '*'
-      typescript: ^5 || ^6
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-native:
-        optional: true
-      typescript:
-        optional: true
 
   react-i18next@17.0.2:
     resolution: {integrity: sha512-shBftH2vaTWK2Bsp7FiL+cevx3xFJlvFxmsDFQSrJc+6twHkP0tv/bGa01VVWzpreUVVwU+3Hev5iFqRg65RwA==}
@@ -14256,12 +14220,6 @@ packages:
     peerDependenciesMeta:
       vite:
         optional: true
-
-  vite-plugin-static-copy@3.4.0:
-    resolution: {integrity: sha512-ekryzCw0ouAOE8tw4RvVL/dfqguXzumsV3FBKoKso4MQ1MUUrUXtl5RI4KpJQUNGqFEsg9kxl4EvDl02YtA9VQ==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    peerDependencies:
-      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
   vite-plugin-static-copy@4.0.0:
     resolution: {integrity: sha512-TTf6cVTV4M2pH2Wfr3zhevdRsIQezfm2ltDkSfkjqvvdryJHYQyNoPISvuytX3r9jFZV0yVeMYyGTsAvAH2XLw==}
@@ -17985,10 +17943,6 @@ snapshots:
   '@mind-elixir/node-menu@5.0.1(mind-elixir@5.10.0)':
     dependencies:
       mind-elixir: 5.10.0
-
-  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.9.3)':
-    dependencies:
-      mind-elixir: 5.9.3
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -22177,8 +22131,6 @@ snapshots:
 
   '@zip.js/zip.js@2.8.11': {}
 
-  '@zumer/snapdom@2.6.0': {}
-
   '@zumer/snapdom@2.7.0': {}
 
   abbrev@1.1.1: {}
@@ -23437,12 +23389,6 @@ snapshots:
   cross-env@7.0.3:
     dependencies:
       cross-spawn: 7.0.6
-
-  cross-fetch@4.0.0(encoding@0.1.13):
-    dependencies:
-      node-fetch: 2.7.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
 
   cross-fetch@4.1.0(encoding@0.1.13):
     dependencies:
@@ -25797,23 +25743,11 @@ snapshots:
 
   i18next-fs-backend@2.6.3: {}
 
-  i18next-http-backend@3.0.2(encoding@0.1.13):
-    dependencies:
-      cross-fetch: 4.0.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
-
   i18next-http-backend@3.0.4(encoding@0.1.13):
     dependencies:
       cross-fetch: 4.1.0(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
-
-  i18next@25.10.10(typescript@6.0.2):
-    dependencies:
-      '@babel/runtime': 7.29.2
-    optionalDependencies:
-      typescript: 6.0.2
 
   i18next@26.0.3(typescript@6.0.2):
     dependencies:
@@ -27286,8 +27220,6 @@ snapshots:
 
   mind-elixir@5.10.0: {}
 
-  mind-elixir@5.9.3: {}
-
   minimatch@10.2.4:
     dependencies:
       brace-expansion: 5.0.5
@@ -28644,17 +28576,6 @@ snapshots:
     dependencies:
       react: 19.2.4
       scheduler: 0.27.0
-
-  react-i18next@17.0.0(i18next@25.10.10(typescript@6.0.2))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2):
-    dependencies:
-      '@babel/runtime': 7.29.2
-      html-parse-stringify: 3.0.1
-      i18next: 25.10.10(typescript@6.0.2)
-      react: 19.2.4
-      use-sync-external-store: 1.6.0(react@19.2.4)
-    optionalDependencies:
-      react-dom: 19.2.4(react@19.2.4)
-      typescript: 6.0.2
 
   react-i18next@17.0.2(i18next@26.0.3(typescript@6.0.2))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2):
     dependencies:
@@ -30842,14 +30763,6 @@ snapshots:
       - '@types/node'
       - rollup
       - supports-color
-
-  vite-plugin-static-copy@3.4.0(vite@8.0.3(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.3)):
-    dependencies:
-      chokidar: 3.6.0
-      p-map: 7.0.4
-      picocolors: 1.1.1
-      tinyglobby: 0.2.15
-      vite: 8.0.3(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.3)
 
   vite-plugin-static-copy@4.0.0(vite@8.0.3(@types/node@24.12.0)(esbuild@0.27.4)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:
