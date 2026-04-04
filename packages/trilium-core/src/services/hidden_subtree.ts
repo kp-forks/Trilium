@@ -10,6 +10,7 @@ import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
 import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
 import migrationService from "./migration.js";
 import noteService from "./notes.js";
+import { getLog } from "./log.js";
 
 export const LBTPL_ROOT = "_lbTplRoot";
 export const LBTPL_BASE = "_lbTplBase";
@@ -245,7 +246,8 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { id: "_optionsShortcuts", title: t("hidden-subtree.shortcuts-title"), type: "contentWidget", icon: "bxs-keyboard" },
                     { id: "_optionsTextNotes", title: t("hidden-subtree.text-notes"), type: "contentWidget", icon: "bx-text" },
                     { id: "_optionsCodeNotes", title: t("hidden-subtree.code-notes-title"), type: "contentWidget", icon: "bx-code" },
-                    { id: "_optionsImages", title: t("hidden-subtree.images-title"), type: "contentWidget", icon: "bx-image" },
+                    { id: "_optionsImages", title: "Images", type: "contentWidget", enforceDeleted: true },
+                    { id: "_optionsMedia", title: t("hidden-subtree.images-title"), type: "contentWidget", icon: "bx-image" },
                     { id: "_optionsSpellcheck", title: t("hidden-subtree.spellcheck-title"), type: "contentWidget", icon: "bx-check-double" },
                     { id: "_optionsPassword", title: t("hidden-subtree.password-title"), type: "contentWidget", icon: "bx-lock" },
                     { id: '_optionsMFA', title: t('hidden-subtree.multi-factor-authentication-title'), type: 'contentWidget', icon: 'bx-lock ' },

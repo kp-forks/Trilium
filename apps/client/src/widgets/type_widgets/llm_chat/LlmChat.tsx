@@ -65,12 +65,6 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                 {chat.messages.map(msg => (
                     <ChatMessage key={msg.id} message={msg} />
                 ))}
-                {chat.toolActivity && !chat.streamingThinking && (
-                    <div className="llm-chat-tool-activity">
-                        <span className="llm-chat-tool-spinner" />
-                        {chat.toolActivity}
-                    </div>
-                )}
                 {chat.isStreaming && chat.streamingThinking && (
                     <ChatMessage
                         message={{
@@ -83,12 +77,12 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         isStreaming
                     />
                 )}
-                {chat.isStreaming && chat.streamingContent && (
+                {chat.isStreaming && chat.streamingBlocks.length > 0 && (
                     <ChatMessage
                         message={{
                             id: "streaming",
                             role: "assistant",
-                            content: chat.streamingContent,
+                            content: chat.streamingBlocks,
                             createdAt: new Date().toISOString(),
                             citations: chat.pendingCitations.length > 0 ? chat.pendingCitations : undefined
                         }}

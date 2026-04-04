@@ -157,6 +157,7 @@ SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/servi
 - Supported languages: English, German, Spanish, French, Romanian, Chinese
 - **Only add new translation keys to `en/translation.json`** — translations for other languages are managed via Weblate and will be contributed by the community
 - Third-party components (e.g., mind-map context menu) should use i18next `t()` for their labels, with the English strings added to `en/translation.json` under a dedicated namespace (e.g., `"mind-map"`)
+- When a translated string contains **interpolated components** (e.g. links, note references) whose order may vary across languages, use `<Trans>` from `react-i18next` instead of `t()`. This lets translators reorder components freely (e.g. `"<Note/> in <Parent/>"` vs `"in <Parent/>, <Note/>"`)
 
 Three inheritance mechanisms:
 1. **Standard**: `note.getInheritableAttributes()` walks parent tree
@@ -213,11 +214,36 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 - `apps/server/src/routes/routes.ts` — API route registration
 - `packages/trilium-core/src/services/sql/sql.ts` — Database abstraction
 
+### Adding New LLM Tools
+Tools are defined using `defineTools()` in `apps/server/src/services/llm/tools/` and automatically registered for both the LLM chat and MCP server.
+
+1. Add the tool definition in the appropriate module (`note_tools.ts`, `attribute_tools.ts`, `attachment_tools.ts`, `hierarchy_tools.ts`) or create a new module
+2. Each tool needs: `description`, `inputSchema` (Zod), `execute` function, and optionally `mutates: true` for write operations
+3. If creating a new module, wrap tools in `defineTools({...})` and add the registry to `allToolRegistries` in `tools/index.ts`
+4. Add a client-side friendly name in `apps/client/src/translations/en/translation.json` under `llm.tools.<tool_name>` — use **imperative tense** (e.g. "Search notes", "Create note", "Get attributes"), not present continuous
+5. Use ETAPI (`apps/server/src/etapi/`) as inspiration for what fields to expose, but **do not import ETAPI mappers** — inline the field mappings directly in the tool so the LLM layer stays decoupled from the API layer
+
+### Updating PDF.js
+1. Update `pdfjs-dist` version in `packages/pdfjs-viewer/package.json`
+2. Run `npx tsx scripts/update-viewer.ts` from that directory
+3. Run `pnpm build` to verify success
+4. Commit all changes including updated viewer files
+
+### Database Migrations
+- Add migration scripts in `apps/server/src/migrations/`
+- Update schema in `apps/server/src/assets/db/schema.sql`
+
 ### Server-Side Static Assets
 - Static assets (templates, SQL, translations, etc.) go in `apps/server/src/assets/`
 - Access them at runtime via `RESOURCE_DIR` from `apps/server/src/services/resource_dir.ts` (e.g. `path.join(RESOURCE_DIR, "llm", "skills", "file.md")`)
 - **Do not use `import.meta.url`/`fileURLToPath`** to resolve file paths — the server is bundled into CJS for production, so `import.meta.url` will not point to the source directory
 - **Do not use `__dirname` with relative paths** from source files — after bundling, `__dirname` points to the bundle output, not the original source tree
+
+## MCP Server
+- Trilium exposes an MCP (Model Context Protocol) server at `http://localhost:8080/mcp`, configured in `.mcp.json`
+- The MCP server is **only available when the Trilium server is running** (`pnpm run server:start`)
+- It provides tools for reading, searching, and modifying notes directly from the AI assistant
+- Use it to interact with actual note data when developing or debugging note-related features
 
 ## Build System Notes
 - Uses pnpm for monorepo management

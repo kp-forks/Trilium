@@ -1,10 +1,7 @@
-import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO } from "@triliumnext/commons";
-import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
-import { parse, Renderer, type Tokens,use } from "marked";
+import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor, transclusionExtension, wikiLinkExtension } from "@triliumnext/commons";
+import { parse, Renderer, type Tokens, use } from "marked";
 
 import { ADMONITION_TYPE_MAPPINGS } from "../export/markdown.js";
-import wikiLinkInternalLink from "./markdown/wikilink_internal_link.js";
-import wikiLinkTransclusion from "./markdown/wikilink_transclusion.js";
 import importUtils from "./utils.js";
 import { escapeHtml } from "../utils/index.js";
 import { sanitizeHtml } from "../sanitizer.js";
@@ -134,8 +131,8 @@ function renderToHtml(content: string, title: string) {
     use({
         // Order is important, especially for wikilinks.
         extensions: [
-            wikiLinkTransclusion,
-            wikiLinkInternalLink
+            transclusionExtension,
+            wikiLinkExtension
         ]
     });
 

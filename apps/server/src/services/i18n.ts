@@ -15,8 +15,7 @@ export async function initializeTranslations(i18nextInstance: typeof i18next, lo
         ns: "server",
         backend: {
             loadPath: join(resourceDir, "assets/translations/{{lng}}/{{ns}}.json")
-        },
-        showSupportNotice: false
+        }
     });
 
     // Initialize dayjs locale.

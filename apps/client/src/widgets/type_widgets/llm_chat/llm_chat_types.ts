@@ -42,11 +42,6 @@ export function getMessageText(content: string | ContentBlock[]): string {
  * Extract tool calls from message content blocks.
  */
 export function getMessageToolCalls(message: StoredMessage): ToolCall[] {
-    // Legacy format: tool calls stored in separate field
-    if (message.toolCalls) {
-        return message.toolCalls;
-    }
-    // Block format: extract from content blocks
     if (Array.isArray(message.content)) {
         return message.content
             .filter((b): b is ToolCallBlock => b.type === "tool_call")
@@ -64,8 +59,6 @@ export interface StoredMessage {
     citations?: LlmCitation[];
     /** Message type for special rendering. Defaults to "message" if omitted. */
     type?: MessageType;
-    /** @deprecated Tool calls are now inline in content blocks. Kept for backward compatibility. */
-    toolCalls?: ToolCall[];
     /** Token usage for this response */
     usage?: LlmUsage;
 }

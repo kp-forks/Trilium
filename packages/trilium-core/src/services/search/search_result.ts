@@ -1,6 +1,5 @@
-import becca_service from "../../becca/becca_service";
-
 import becca from "../../becca/becca.js";
+import becca_service from "../../becca/becca_service.js";
 import {
     calculateOptimizedEditDistance,
     FUZZY_SEARCH_CONFIG,
@@ -126,7 +125,6 @@ class SearchResult {
         }
         this.score += tokenScore;
     }
-
 
     /**
      * Checks if the query matches as a complete word in the text

@@ -520,7 +520,7 @@
     "custom_name_label": "Nome del motore di ricerca personalizzato",
     "custom_name_placeholder": "Personalizza il nome del motore di ricerca",
     "custom_url_label": "L'URL del motore di ricerca personalizzato deve includere {keyword} come segnaposto per il termine di ricerca.",
-    "custom_url_placeholder": "Personalizza indirizzo url del motore di ricerca"
+    "custom_url_placeholder": "Personalizza indirizzo URL del motore di ricerca"
   },
   "sql_table_schemas": {
     "tables": "Tabelle"
@@ -2278,9 +2278,7 @@
     "note_context_enabled": "Clicca qui per disattivare il contesto della nota: {{title}}",
     "note_context_disabled": "Clicca per includere la nota corrente nel contesto",
     "no_provider_message": "Non è stato configurato alcun fornitore di IA. Aggiungine uno per iniziare a chattare.",
-    "add_provider": "Aggiungi un fornitore di IA",
-    "role_user": "Tu",
-    "role_assistant": "Assistente"
+    "add_provider": "Aggiungi un fornitore di IA"
   },
   "sidebar_chat": {
     "title": "Chat AI",

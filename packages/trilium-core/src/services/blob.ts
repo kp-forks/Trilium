@@ -51,8 +51,8 @@ function processContent(content: Uint8Array | string | null, isProtected: boolea
     return content;
 }
 
-function calculateContentHash({ blobId, content }: Pick<BlobRow, "blobId" | "content">) {
-    return hash(`${blobId}|${content.toString()}`);
+function calculateContentHash({ blobId, content, textRepresentation }: Pick<BlobRow, "blobId" | "content" | "textRepresentation">) {
+    return hash(`${blobId}|${content.toString()}|${textRepresentation ?? ""}`);
 }
 
 export default {

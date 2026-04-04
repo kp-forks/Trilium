@@ -4,13 +4,13 @@
  * included in the system prompt; full content is fetched via the load_skill tool.
  */
 
-import { readFile } from "fs/promises";
+import { readFileSync } from "fs";
 import { join } from "path";
 
-import { tool } from "ai";
 import { z } from "zod";
 
 import resourceDir from "../../resource_dir.js";
+import { defineTools } from "../tools/tool_registry.js";
 
 const SKILLS_DIR = join(resourceDir.RESOURCE_DIR, "llm", "skills");
 
@@ -38,12 +38,12 @@ const SKILLS: SkillDefinition[] = [
     }
 ];
 
-async function loadSkillContent(name: string): Promise<string | null> {
+function loadSkillContent(name: string): string | null {
     const skill = SKILLS.find((s) => s.name === name);
     if (!skill) {
         return null;
     }
-    return readFile(join(SKILLS_DIR, skill.file), "utf-8");
+    return readFileSync(join(SKILLS_DIR, skill.file), "utf-8");
 }
 
 /**
@@ -55,24 +55,19 @@ export function getSkillsSummary(): string {
         .join("\n");
 }
 
-/**
- * The load_skill tool — lets the LLM fetch full instructions on demand.
- */
-export const loadSkill = tool({
-    description: "Load a skill to get specialized instructions. Available skills:\n"
-        + SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n"),
-    inputSchema: z.object({
-        name: z.string().describe("The skill name to load")
-    }),
-    execute: async ({ name }) => {
-        const content = await loadSkillContent(name);
-        if (!content) {
-            return { error: `Unknown skill: '${name}'. Available: ${SKILLS.map((s) => s.name).join(", ")}` };
+export const skillTools = defineTools({
+    load_skill: {
+        description: "Load a skill to get specialized instructions. Available skills:\n"
+            + SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n"),
+        inputSchema: z.object({
+            name: z.string().describe("The skill name to load")
+        }),
+        execute: ({ name }) => {
+            const content = loadSkillContent(name);
+            if (!content) {
+                return { error: `Unknown skill: '${name}'. Available: ${SKILLS.map((s) => s.name).join(", ")}` };
+            }
+            return { skill: name, instructions: content };
         }
-        return { skill: name, instructions: content };
     }
 });
-
-export const skillTools = {
-    load_skill: loadSkill
-};

@@ -8,6 +8,7 @@ import tmp from "tmp";
 import buildApp from "./app.js";
 import appInfo from "./services/app_info.js";
 import config from "./services/config.js";
+import { registerOcrHandlers } from "./services/handlers.js";
 import host from "./services/host.js";
 import log from "./services/log.js";
 import port from "./services/port.js";
@@ -68,6 +69,8 @@ export default async function startTriliumServer() {
         const electronRouting = await import("./routes/electron.js");
         electronRouting.default(app);
     }
+
+    registerOcrHandlers();
 }
 
 async function displayStartupMessage() {

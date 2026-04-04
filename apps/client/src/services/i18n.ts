@@ -25,8 +25,7 @@ export async function initLocale() {
         backend: {
             loadPath: `${window.glob.assetPath}/translations/{{lng}}/{{ns}}.json`
         },
-        returnEmptyString: false,
-        showSupportNotice: false
+        returnEmptyString: false
     });
 
     await setDayjsLocale(locale);

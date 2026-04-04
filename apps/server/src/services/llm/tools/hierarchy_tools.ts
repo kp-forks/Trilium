@@ -2,34 +2,11 @@
  * LLM tools for navigating the note hierarchy (tree structure, branches).
  */
 
-import { tool } from "ai";
 import { z } from "zod";
 
 import becca from "../../../becca/becca.js";
 import type BNote from "../../../becca/entities/bnote.js";
-
-/**
- * Get the child notes of a given note.
- */
-export const getChildNotes = tool({
-    description: "Get the immediate child notes of a note. Returns each child's ID, title, type, and whether it has children of its own. Use noteId 'root' to list top-level notes.",
-    inputSchema: z.object({
-        noteId: z.string().describe("The ID of the parent note (use 'root' for top-level)")
-    }),
-    execute: async ({ noteId }) => {
-        const note = becca.getNote(noteId);
-        if (!note) {
-            return { error: "Note not found" };
-        }
-
-        return note.getChildNotes().map((child) => ({
-            noteId: child.noteId,
-            title: child.getTitleOrProtected(),
-            type: child.type,
-            childCount: child.getChildNotes().length
-        }));
-    }
-});
+import { defineTools } from "./tool_registry.js";
 
 //#region Subtree tool implementation
 const MAX_DEPTH = 5;
@@ -75,28 +52,42 @@ function buildSubtree(note: BNote, depth: number, maxDepth: number): SubtreeNode
 
     return node;
 }
-
-/**
- * Get a subtree of notes up to a specified depth.
- */
-export const getSubtree = tool({
-    description: "Get a nested subtree of notes starting from a given note, traversing multiple levels deep. Useful for understanding the structure of a section of the note tree. Each level shows up to 10 children.",
-    inputSchema: z.object({
-        noteId: z.string().describe("The ID of the root note for the subtree (use 'root' for the entire tree)"),
-        depth: z.number().min(1).max(MAX_DEPTH).optional().describe(`How many levels deep to traverse (1-${MAX_DEPTH}). Defaults to 2.`)
-    }),
-    execute: async ({ noteId, depth = 2 }) => {
-        const note = becca.getNote(noteId);
-        if (!note) {
-            return { error: "Note not found" };
-        }
-
-        return buildSubtree(note, 0, depth);
-    }
-});
 //#endregion
 
-export const hierarchyTools = {
-    get_child_notes: getChildNotes,
-    get_subtree: getSubtree
-};
+export const hierarchyTools = defineTools({
+    get_child_notes: {
+        description: "Get the immediate child notes of a note. Returns each child's ID, title, type, and whether it has children of its own. Use noteId 'root' to list top-level notes.",
+        inputSchema: z.object({
+            noteId: z.string().describe("The ID of the parent note (use 'root' for top-level)")
+        }),
+        execute: ({ noteId }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+
+            return note.getChildNotes().map((child) => ({
+                noteId: child.noteId,
+                title: child.getTitleOrProtected(),
+                type: child.type,
+                childCount: child.getChildNotes().length
+            }));
+        }
+    },
+
+    get_subtree: {
+        description: "Get a nested subtree of notes starting from a given note, traversing multiple levels deep. Useful for understanding the structure of a section of the note tree. Each level shows up to 10 children.",
+        inputSchema: z.object({
+            noteId: z.string().describe("The ID of the root note for the subtree (use 'root' for the entire tree)"),
+            depth: z.number().min(1).max(MAX_DEPTH).optional().describe(`How many levels deep to traverse (1-${MAX_DEPTH}). Defaults to 2.`)
+        }),
+        execute: ({ noteId, depth = 2 }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+
+            return buildSubtree(note, 0, depth);
+        }
+    }
+});

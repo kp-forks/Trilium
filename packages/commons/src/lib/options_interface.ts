@@ -144,6 +144,14 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     // AI / LLM
     /** JSON array of configured LLM providers with their API keys */
     llmProviders: string;
+    /** Whether the MCP (Model Context Protocol) server endpoint is enabled. */
+    mcpEnabled: boolean;
+
+    // OCR options
+    ocrEnabled: boolean;
+    ocrLanguage: string;
+    ocrAutoProcessImages: boolean;
+    ocrMinConfidence: string;
 }
 
 export type OptionNames = keyof OptionDefinitions;
