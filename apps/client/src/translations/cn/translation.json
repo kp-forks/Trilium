@@ -2265,8 +2265,6 @@
     "note_context_disabled": "点击即可将当前注释添加到上下文中",
     "no_provider_message": "未配置人工智能提供商。添加一个即可开始对话。",
     "add_provider": "添加人工智能提供商",
-    "role_user": "你",
-    "role_assistant": "助手",
     "note_tools": "笔记访问"
   },
   "sidebar_chat": {

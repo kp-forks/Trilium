@@ -2265,9 +2265,7 @@
     "note_context_enabled": "クリックしてノートのコンテキストを無効にする: {{title}}",
     "note_context_disabled": "クリックして現在のノートをコンテキストに含める",
     "no_provider_message": "AI プロバイダーが設定されていません。チャットを開始するには、プロバイダーを追加してください。",
-    "add_provider": "AI プロバイダーを追加",
-    "role_user": "あなた",
-    "role_assistant": "アシスタント"
+    "add_provider": "AI プロバイダーを追加"
   },
   "sidebar_chat": {
     "title": "AI チャット",

@@ -2113,9 +2113,7 @@
     "note_context_enabled": "Cliquez pour désactiver le contexte de la note : {{title}}",
     "note_context_disabled": "Cliquez pour inclure la note actuelle dans le contexte",
     "no_provider_message": "Aucun fournisseur d'IA configuré. Ajoutez en un pour commencer à discuter.",
-    "add_provider": "Ajouter un fournisseur d'IA",
-    "role_user": "Vous",
-    "role_assistant": "Assistant"
+    "add_provider": "Ajouter un fournisseur d'IA"
   },
   "sidebar_chat": {
     "title": "discussion IA",
