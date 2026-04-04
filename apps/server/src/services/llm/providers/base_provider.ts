@@ -104,6 +104,13 @@ export abstract class BaseProvider implements LlmProvider {
                 : noToolsHint;
         }
 
+        if (!config.enableWebSearch) {
+            const noWebSearchHint = `You do not have access to web search. If the user asks for current/real-time information, news, or anything that requires searching the web, inform them that "Web search" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Web search").`;
+            systemPrompt = systemPrompt
+                ? `${systemPrompt}\n\n${noWebSearchHint}`
+                : noWebSearchHint;
+        }
+
         return systemPrompt;
     }
 
