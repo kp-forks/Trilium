@@ -12,13 +12,35 @@ import { tool } from "ai";
 import type { z } from "zod";
 import type { ToolSet } from "ai";
 
-export interface ToolDefinition {
+import sql from "../../sql.js";
+
+/**
+ * Type constraint that rejects Promises at compile time.
+ * Works by requiring `then` to be void if present - Promises have `then: Function`.
+ */
+type NotAPromise<T> = T & { then?: void };
+
+interface MutatingToolDefinition {
     description: string;
     inputSchema: z.ZodType;
-    /** Whether this tool modifies data (needs CLS + transaction wrapping). */
-    mutates?: boolean;
-    execute: (args: any) => Promise<unknown>;
+    /** Marks this tool as modifying data (needs CLS + transaction wrapping). */
+    mutates: true;
+    /**
+     * Execute the tool synchronously. Must NOT be async because better-sqlite3
+     * transactions are synchronous and would commit before awaits complete.
+     */
+    execute: (args: any) => NotAPromise<object>;
 }
+
+interface ReadOnlyToolDefinition {
+    description: string;
+    inputSchema: z.ZodType;
+    mutates?: false;
+    /** Execute the tool. May be async for read-only operations. */
+    execute: (args: any) => unknown;
+}
+
+export type ToolDefinition = MutatingToolDefinition | ReadOnlyToolDefinition;
 
 /**
  * A named collection of tool definitions that can be iterated or converted
@@ -34,14 +56,20 @@ export class ToolRegistry implements Iterable<[string, ToolDefinition]> {
 
     /**
      * Convert to an AI SDK ToolSet for use with the LLM chat providers.
+     * Mutating tools are wrapped in a transaction for consistency with MCP.
+     * (CLS context is provided by the route handler.)
      */
     toToolSet(): ToolSet {
         const set: ToolSet = {};
         for (const [name, def] of this) {
+            const execute = def.mutates
+                ? (args: unknown) => sql.transactional(() => def.execute(args))
+                : def.execute;
+
             set[name] = tool({
                 description: def.description,
                 inputSchema: def.inputSchema,
-                execute: def.execute
+                execute
             });
         }
         return set;
@@ -53,9 +81,13 @@ export class ToolRegistry implements Iterable<[string, ToolDefinition]> {
  *
  * ```ts
  * export const noteTools = defineTools({
- *     search_notes: { description: "...", inputSchema: z.object({...}), execute: async (args) => {...} },
+ *     search_notes: { description: "...", inputSchema: z.object({...}), execute: (args) => {...} },
+ *     create_note: { description: "...", inputSchema: z.object({...}), mutates: true, execute: (args) => {...} },
  * });
  * ```
+ *
+ * Note: Mutating tools (mutates: true) MUST have synchronous execute functions
+ * because better-sqlite3 transactions are synchronous.
  */
 export function defineTools(tools: Record<string, ToolDefinition>): ToolRegistry {
     return new ToolRegistry(tools);

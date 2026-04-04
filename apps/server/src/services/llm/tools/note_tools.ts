@@ -103,7 +103,7 @@ export const noteTools = defineTools({
             content: z.string().describe("The new content for the note (Markdown for text notes, plain text for code notes)")
         }),
         mutates: true,
-        execute: async ({ noteId, content }) => {
+        execute: ({ noteId, content }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -132,7 +132,7 @@ export const noteTools = defineTools({
             content: z.string().describe("The content to append (Markdown for text notes, plain text for code notes)")
         }),
         mutates: true,
-        execute: async ({ noteId, content }) => {
+        execute: ({ noteId, content }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -195,7 +195,7 @@ export const noteTools = defineTools({
             mime: z.string().optional().describe("MIME type, REQUIRED for code notes (e.g. 'application/javascript;env=backend', 'text/jsx'). Ignored for other types.")
         }),
         mutates: true,
-        execute: async ({ parentNoteId, title, content, type, mime }) => {
+        execute: ({ parentNoteId, title, content, type, mime }) => {
             if (type === "code" && !mime) {
                 return { error: "mime is required when creating code notes" };
             }

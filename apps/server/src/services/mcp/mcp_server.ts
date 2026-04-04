@@ -24,11 +24,15 @@ function registerTool(server: McpServer, name: string, def: ToolDefinition) {
     server.registerTool(name, {
         description: def.description,
         inputSchema: def.inputSchema
-    }, async (args: any): Promise<CallToolResult> => {
-        const run = () => def.execute(args);
-        const result = def.mutates
-            ? await cls.init(() => sql.transactional(run))
-            : await run();
+    }, (args: any): CallToolResult => {
+        const result = cls.init(() => {
+            cls.set("componentId", "mcp");
+
+            return def.mutates
+                ? sql.transactional(() => def.execute(args))
+                : def.execute(args);
+        });
+
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
     });
 }

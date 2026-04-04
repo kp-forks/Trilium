@@ -64,7 +64,7 @@ export const attributeTools = defineTools({
             value: z.string().optional().describe("The attribute value (for relations, this must be a target noteId)")
         }),
         mutates: true,
-        execute: async ({ noteId, type, name, value = "" }) => {
+        execute: ({ noteId, type, name, value = "" }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -98,7 +98,7 @@ export const attributeTools = defineTools({
             attributeId: z.string().describe("The ID of the attribute to delete")
         }),
         mutates: true,
-        execute: async ({ noteId, attributeId }) => {
+        execute: ({ noteId, attributeId }) => {
             const attribute = becca.getAttribute(attributeId);
             if (!attribute) {
                 return { error: "Attribute not found" };
