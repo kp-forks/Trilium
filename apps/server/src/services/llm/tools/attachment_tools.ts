@@ -25,11 +25,7 @@ export const attachmentTools = defineTools({
                 role: attachment.role,
                 mime: attachment.mime,
                 title: attachment.title,
-                position: attachment.position,
-                blobId: attachment.blobId,
                 dateModified: attachment.dateModified,
-                utcDateModified: attachment.utcDateModified,
-                utcDateScheduledForErasureSince: attachment.utcDateScheduledForErasureSince,
                 contentLength: attachment.contentLength
             };
         }

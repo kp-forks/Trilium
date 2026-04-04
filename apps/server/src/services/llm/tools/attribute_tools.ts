@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import becca from "../../../becca/becca.js";
 import attributeService from "../../attributes.js";
+import { flag } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
 
 export const attributeTools = defineTools({
@@ -27,7 +28,7 @@ export const attributeTools = defineTools({
                     type: attr.type,
                     name: attr.name,
                     value: attr.value,
-                    isInheritable: attr.isInheritable
+                    isInheritable: flag(attr.isInheritable)
                 }));
         }
     },
@@ -49,7 +50,7 @@ export const attributeTools = defineTools({
                 type: attribute.type,
                 name: attribute.name,
                 value: attribute.value,
-                isInheritable: attribute.isInheritable
+                isInheritable: flag(attribute.isInheritable)
             };
         }
     },

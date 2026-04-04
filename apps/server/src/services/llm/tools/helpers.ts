@@ -12,6 +12,16 @@ const CONTENT_PREVIEW_MAX_LENGTH = 500;
 const ATTACHMENT_PREVIEW_MAX_LENGTH = 200;
 
 /**
+ * Return `true` if the value is truthy, otherwise `undefined`.
+ * Since `undefined` values are omitted from JSON serialization,
+ * this effectively includes the field only when true.
+ * Usage: `{ isInheritable: flag(attr.isInheritable) }`
+ */
+export function flag(value: boolean | undefined): true | undefined {
+    return value ? true : undefined;
+}
+
+/**
  * Convert note content to a format suitable for LLM consumption.
  * Text notes are converted from HTML to Markdown to reduce token usage.
  */
@@ -139,45 +149,31 @@ export function getNoteMeta(note: BNote, limits: NoteMetaLimits) {
 
     const allAttributes = note.getAttributes().map((attr) => ({
         attributeId: attr.attributeId,
-        noteId: attr.noteId,
         type: attr.type,
         name: attr.name,
         value: attr.value,
-        position: attr.position,
-        isInheritable: attr.isInheritable,
-        utcDateModified: attr.utcDateModified
+        isInheritable: flag(attr.isInheritable)
     }));
 
     const allAttachments = note.getAttachments().map((att) => ({
         attachmentId: att.attachmentId,
-        ownerId: att.ownerId,
         role: att.role,
         mime: att.mime,
         title: att.title,
-        position: att.position,
-        blobId: att.blobId,
-        dateModified: att.dateModified,
-        utcDateModified: att.utcDateModified,
-        utcDateScheduledForErasureSince: att.utcDateScheduledForErasureSince,
         contentLength: att.contentLength,
         contentPreview: getAttachmentContentPreview(att)
     }));
 
     return {
         noteId: note.noteId,
-        isProtected: note.isProtected,
+        isProtected: flag(note.isProtected),
         title: note.title,
         type: note.type,
         mime: note.mime,
-        blobId: note.blobId,
         dateCreated: note.dateCreated,
         dateModified: note.dateModified,
-        utcDateCreated: note.utcDateCreated,
-        utcDateModified: note.utcDateModified,
         parentNoteIds: note.getParentNotes().map((p) => p.noteId),
         childNotes: truncated(allChildNotes, limits.childNotes),
-        parentBranchIds: note.getParentBranches().map((p) => p.branchId),
-        childBranchIds: note.getChildBranches().map((ch) => ch.branchId),
         attributes: truncated(allAttributes, limits.attributes),
         contentPreview: getContentPreview(note),
         attachments: truncated(allAttachments, limits.attachments)
