@@ -2255,7 +2255,7 @@
     "tool_error": "失败",
     "total_tokens": "{{total}} 个词元",
     "tokens_detail": "{{prompt}} 提示词 + {{completion}} 补全",
-    "tokens_used": "{{prompt}} 提示词 + {{completion}} 补全= {{total}} 个词元",
+    "tokens_used": "{{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元",
     "tokens_used_with_cost": "{{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元（约 ${{cost}}）",
     "tokens_used_with_model": "{{model}}: {{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元",
     "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元（约 ${{cost}}）",
