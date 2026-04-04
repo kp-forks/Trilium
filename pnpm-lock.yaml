@@ -44,10 +44,10 @@ overrides:
 
 patchedDependencies:
   '@ckeditor/ckeditor5-code-block':
-    hash: 2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95
+    hash: 1530be090e4f5235e197fb6208a8e8230e3355d5633fc7cad2b2e892659e9c04
     path: patches/@ckeditor__ckeditor5-code-block.patch
   '@ckeditor/ckeditor5-mention':
-    hash: 5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d
+    hash: 70377e48a04e2f45abba79aa35f3d5527ec7aa7ffce44056f9957a49a24a4a60
     path: patches/@ckeditor__ckeditor5-mention.patch
 
 importers:
@@ -16438,7 +16438,7 @@ snapshots:
       '@ckeditor/ckeditor5-upload': 48.0.0
       '@ckeditor/ckeditor5-utils': 48.0.0
 
-  '@ckeditor/ckeditor5-code-block@48.0.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)':
+  '@ckeditor/ckeditor5-code-block@48.0.0(patch_hash=1530be090e4f5235e197fb6208a8e8230e3355d5633fc7cad2b2e892659e9c04)':
     dependencies:
       '@ckeditor/ckeditor5-clipboard': 48.0.0
       '@ckeditor/ckeditor5-core': 48.0.0
@@ -16654,7 +16654,7 @@ snapshots:
     dependencies:
       '@ckeditor/ckeditor5-core': 48.0.0
       '@ckeditor/ckeditor5-icons': 48.0.0
-      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)
+      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=70377e48a04e2f45abba79aa35f3d5527ec7aa7ffce44056f9957a49a24a4a60)
       '@ckeditor/ckeditor5-typing': 48.0.0
       '@ckeditor/ckeditor5-ui': 48.0.0
       '@ckeditor/ckeditor5-utils': 48.0.0
@@ -16934,7 +16934,7 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 48.0.0
       '@ckeditor/ckeditor5-widget': 48.0.0
 
-  '@ckeditor/ckeditor5-mention@48.0.0(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)':
+  '@ckeditor/ckeditor5-mention@48.0.0(patch_hash=70377e48a04e2f45abba79aa35f3d5527ec7aa7ffce44056f9957a49a24a4a60)':
     dependencies:
       '@ckeditor/ckeditor5-core': 48.0.0
       '@ckeditor/ckeditor5-engine': 48.0.0
@@ -16949,7 +16949,7 @@ snapshots:
       '@ckeditor/ckeditor5-engine': 48.0.0
       '@ckeditor/ckeditor5-icons': 48.0.0
       '@ckeditor/ckeditor5-image': 48.0.0
-      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)
+      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=70377e48a04e2f45abba79aa35f3d5527ec7aa7ffce44056f9957a49a24a4a60)
       '@ckeditor/ckeditor5-ui': 48.0.0
       '@ckeditor/ckeditor5-utils': 48.0.0
       '@ckeditor/ckeditor5-widget': 48.0.0
@@ -17119,7 +17119,7 @@ snapshots:
       '@ckeditor/ckeditor5-core': 48.0.0
       '@ckeditor/ckeditor5-heading': 48.0.0
       '@ckeditor/ckeditor5-icons': 48.0.0
-      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)
+      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=70377e48a04e2f45abba79aa35f3d5527ec7aa7ffce44056f9957a49a24a4a60)
       '@ckeditor/ckeditor5-style': 48.0.0
       '@ckeditor/ckeditor5-template': 48.0.0
       '@ckeditor/ckeditor5-ui': 48.0.0
@@ -17190,7 +17190,7 @@ snapshots:
   '@ckeditor/ckeditor5-track-changes@48.0.0':
     dependencies:
       '@ckeditor/ckeditor5-clipboard': 48.0.0
-      '@ckeditor/ckeditor5-code-block': 48.0.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)
+      '@ckeditor/ckeditor5-code-block': 48.0.0(patch_hash=1530be090e4f5235e197fb6208a8e8230e3355d5633fc7cad2b2e892659e9c04)
       '@ckeditor/ckeditor5-collaboration-core': 48.0.0
       '@ckeditor/ckeditor5-comments': 48.0.0
       '@ckeditor/ckeditor5-core': 48.0.0
@@ -24604,7 +24604,7 @@ snapshots:
       '@ckeditor/ckeditor5-ckfinder': 48.0.0
       '@ckeditor/ckeditor5-clipboard': 48.0.0
       '@ckeditor/ckeditor5-cloud-services': 48.0.0
-      '@ckeditor/ckeditor5-code-block': 48.0.0(patch_hash=2361d8caad7d6b5bddacc3a3b4aa37dbfba260b1c1b22a450413a79c1bb1ce95)
+      '@ckeditor/ckeditor5-code-block': 48.0.0(patch_hash=1530be090e4f5235e197fb6208a8e8230e3355d5633fc7cad2b2e892659e9c04)
       '@ckeditor/ckeditor5-core': 48.0.0
       '@ckeditor/ckeditor5-easy-image': 48.0.0
       '@ckeditor/ckeditor5-editor-balloon': 48.0.0
@@ -24632,7 +24632,7 @@ snapshots:
       '@ckeditor/ckeditor5-list': 48.0.0
       '@ckeditor/ckeditor5-markdown-gfm': 48.0.0
       '@ckeditor/ckeditor5-media-embed': 48.0.0
-      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=5981fb59ba35829e4dff1d39cf771000f8a8fdfa7a34b51d8af9549541f2d62d)
+      '@ckeditor/ckeditor5-mention': 48.0.0(patch_hash=70377e48a04e2f45abba79aa35f3d5527ec7aa7ffce44056f9957a49a24a4a60)
       '@ckeditor/ckeditor5-minimap': 48.0.0
       '@ckeditor/ckeditor5-page-break': 48.0.0
       '@ckeditor/ckeditor5-paragraph': 48.0.0
