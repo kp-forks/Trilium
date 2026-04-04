@@ -81,37 +81,41 @@ export abstract class BaseProvider implements LlmProvider {
      * Build the system prompt with note hints and skills summary.
      */
     protected buildSystemPrompt(messages: LlmMessage[], config: LlmProviderConfig): string | undefined {
-        let systemPrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
+        const parts: string[] = [];
 
+        // Base system prompt from config or messages
+        const basePrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
+        if (basePrompt) {
+            parts.push(basePrompt);
+        }
+
+        // Context note hint
         if (config.contextNoteId) {
             const noteHint = buildNoteHint(config.contextNoteId);
             if (noteHint) {
-                systemPrompt = systemPrompt
-                    ? `${systemPrompt}\n\n${noteHint}`
-                    : noteHint;
+                parts.push(noteHint);
             }
         }
 
+        // Note tools hint
         if (config.enableNoteTools) {
-            const skillsHint = `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`;
-            systemPrompt = systemPrompt
-                ? `${systemPrompt}\n\n${skillsHint}`
-                : skillsHint;
+            parts.push(
+                `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`
+            );
         } else {
-            const noToolsHint = `You do not have access to the user's notes. If the user asks about their notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`;
-            systemPrompt = systemPrompt
-                ? `${systemPrompt}\n\n${noToolsHint}`
-                : noToolsHint;
+            parts.push(
+                `You do not have access to the user's notes. If the user asks about their notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`
+            );
         }
 
+        // Web search hint
         if (!config.enableWebSearch) {
-            const noWebSearchHint = `You do not have access to web search. If the user asks for current/real-time information, news, or anything that requires searching the web, inform them that "Web search" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Web search").`;
-            systemPrompt = systemPrompt
-                ? `${systemPrompt}\n\n${noWebSearchHint}`
-                : noWebSearchHint;
+            parts.push(
+                `You do not have access to web search. If the user asks for current/real-time information, news, or anything that requires searching the web, inform them that "Web search" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Web search").`
+            );
         }
 
-        return systemPrompt;
+        return parts.length > 0 ? parts.join("\n\n") : undefined;
     }
 
     /**
