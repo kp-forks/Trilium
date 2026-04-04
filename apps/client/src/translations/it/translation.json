@@ -2278,9 +2278,7 @@
     "note_context_enabled": "Clicca qui per disattivare il contesto della nota: {{title}}",
     "note_context_disabled": "Clicca per includere la nota corrente nel contesto",
     "no_provider_message": "Non è stato configurato alcun fornitore di IA. Aggiungine uno per iniziare a chattare.",
-    "add_provider": "Aggiungi un fornitore di IA",
-    "role_user": "Tu",
-    "role_assistant": "Assistente"
+    "add_provider": "Aggiungi un fornitore di IA"
   },
   "sidebar_chat": {
     "title": "Chat AI",
