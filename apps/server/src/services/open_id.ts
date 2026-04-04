@@ -1,14 +1,15 @@
+import crypto from "crypto";
 import type { NextFunction, Request, Response } from "express";
-import openIDEncryption from "./encryption/open_id_encryption.js";
-import sqlInit from "./sql_init.js";
-import options from "./options.js";
 import type { Session } from "express-openid-connect";
-import sql from "./sql.js";
-import config from "./config.js";
 
+import config from "./config.js";
+import openIDEncryption from "./encryption/open_id_encryption.js";
+import options from "./options.js";
+import sql from "./sql.js";
+import sqlInit from "./sql_init.js";
 
 function checkOpenIDConfig() {
-    const missingVars: string[] = []
+    const missingVars: string[] = [];
     if (config.MultiFactorAuthentication.oauthBaseUrl === "") {
         missingVars.push("oauthBaseUrl");
     }
@@ -27,7 +28,7 @@ function isOpenIDEnabled() {
 
 function isUserSaved() {
     const data = sql.getValue<string>("SELECT isSetup FROM user_data;");
-    return data === "true" ? true : false;
+    return data === "true";
 }
 
 function getUsername() {
@@ -80,13 +81,13 @@ function isTokenValid(req: Request, res: Response, next: NextFunction) {
                 };
             });
         return result;
-    } else {
-        return {
-            success: false,
-            message: "Token not set up",
-            user: userStatus,
-        };
-    }
+    } 
+    return {
+        success: false,
+        message: "Token not set up",
+        user: userStatus,
+    };
+    
 }
 
 function getSSOIssuerName() {
@@ -121,11 +122,11 @@ function generateOAuthConfig() {
             scope: "openid profile email",
             access_type: "offline",
             prompt: "consent",
-            state: "random_state_" + Math.random().toString(36).substring(2)
+            state: crypto.randomUUID()
         },
         routes: authRoutes,
         idpLogout: true,
-        logoutParams: logoutParams,
+        logoutParams,
         afterCallback: async (req: Request, res: Response, session: Session) => {
             if (!sqlInit.isDbInitialized()) return session;
 
