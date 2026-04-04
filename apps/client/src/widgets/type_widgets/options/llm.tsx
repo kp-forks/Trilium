@@ -4,8 +4,9 @@ import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
-import FormCheckbox from "../../react/FormCheckbox";
+import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
 
@@ -77,26 +78,23 @@ function McpSettings() {
 
     return (
         <OptionsSection title={t("llm.mcp_title")}>
-            <p className="form-text">{t("llm.mcp_enabled_description")}</p>
-            <FormCheckbox
-                name="mcp-enabled"
-                label={t("llm.mcp_enabled")}
-                currentValue={mcpEnabled}
-                onChange={setMcpEnabled}
-            />
+            <OptionsRow name="mcp-enabled" label={t("llm.mcp_enabled")} description={t("llm.mcp_enabled_description")}>
+                <FormToggle
+                    switchOnName="" switchOffName=""
+                    currentValue={mcpEnabled}
+                    onChange={setMcpEnabled}
+                />
+            </OptionsRow>
 
             {mcpEnabled && (
-                <>
-                    <hr />
-                    <h5>{t("llm.mcp_endpoint_title")}</h5>
-                    <p className="form-text">{t("llm.mcp_endpoint_description")}</p>
+                <OptionsRow name="mcp-endpoint" label={t("llm.mcp_endpoint_title")} description={t("llm.mcp_endpoint_description")}>
                     <input
                         type="text"
                         className="form-control"
                         value={endpointUrl}
                         readOnly
                     />
-                </>
+                </OptionsRow>
             )}
         </OptionsSection>
     );
