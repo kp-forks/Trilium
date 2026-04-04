@@ -6,8 +6,9 @@ import { isNixOS } from "./utils.mjs";
 
 const workspaceRoot = join(import.meta.dirname, "..");
 
-// On NixOS, re-execute this script inside `nix develop` to get access to Python and other build tools
-if (isNixOS() && !process.env.IN_NIX_SHELL) {
+// On NixOS, re-execute this script inside `nix develop` to get access to Python and other build tools.
+// Skip this if we're already inside a nix shell or a nix build (NIX_BUILD_TOP is set during `nix build`).
+if (isNixOS() && !process.env.IN_NIX_SHELL && !process.env.NIX_BUILD_TOP) {
     console.log("Detected NixOS, re-running electron-rebuild inside 'nix develop'...");
     try {
         execSync("nix develop -c pnpm exec tsx scripts/electron-rebuild.mts", {
