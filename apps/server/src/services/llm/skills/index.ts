@@ -4,7 +4,7 @@
  * included in the system prompt; full content is fetched via the load_skill tool.
  */
 
-import { readFile } from "fs/promises";
+import { readFileSync } from "fs";
 import { join } from "path";
 
 import { z } from "zod";
@@ -38,12 +38,12 @@ const SKILLS: SkillDefinition[] = [
     }
 ];
 
-async function loadSkillContent(name: string): Promise<string | null> {
+function loadSkillContent(name: string): string | null {
     const skill = SKILLS.find((s) => s.name === name);
     if (!skill) {
         return null;
     }
-    return readFile(join(SKILLS_DIR, skill.file), "utf-8");
+    return readFileSync(join(SKILLS_DIR, skill.file), "utf-8");
 }
 
 /**
@@ -62,8 +62,8 @@ export const skillTools = defineTools({
         inputSchema: z.object({
             name: z.string().describe("The skill name to load")
         }),
-        execute: async ({ name }) => {
-            const content = await loadSkillContent(name);
+        execute: ({ name }) => {
+            const content = loadSkillContent(name);
             if (!content) {
                 return { error: `Unknown skill: '${name}'. Available: ${SKILLS.map((s) => s.name).join(", ")}` };
             }
