@@ -36,8 +36,8 @@ interface ReadOnlyToolDefinition {
     description: string;
     inputSchema: z.ZodType;
     mutates?: false;
-    /** Execute the tool. May be async for read-only operations. */
-    execute: (args: any) => unknown;
+    /** Execute the tool synchronously. Kept sync for consistency with MCP. */
+    execute: (args: any) => NotAPromise<object>;
 }
 
 export type ToolDefinition = MutatingToolDefinition | ReadOnlyToolDefinition;
@@ -86,8 +86,8 @@ export class ToolRegistry implements Iterable<[string, ToolDefinition]> {
  * });
  * ```
  *
- * Note: Mutating tools (mutates: true) MUST have synchronous execute functions
- * because better-sqlite3 transactions are synchronous.
+ * Note: All tools MUST have synchronous execute functions (no async/await)
+ * because better-sqlite3 transactions are synchronous and MCP expects sync results.
  */
 export function defineTools(tools: Record<string, ToolDefinition>): ToolRegistry {
     return new ToolRegistry(tools);

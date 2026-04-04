@@ -13,7 +13,7 @@ export const attachmentTools = defineTools({
         inputSchema: z.object({
             attachmentId: z.string().describe("The ID of the attachment to retrieve")
         }),
-        execute: async ({ attachmentId }) => {
+        execute: ({ attachmentId }) => {
             const attachment = becca.getAttachment(attachmentId);
             if (!attachment) {
                 return { error: "Attachment not found" };
@@ -36,7 +36,7 @@ export const attachmentTools = defineTools({
         inputSchema: z.object({
             attachmentId: z.string().describe("The ID of the attachment to read")
         }),
-        execute: async ({ attachmentId }) => {
+        execute: ({ attachmentId }) => {
             const attachment = becca.getAttachment(attachmentId);
             if (!attachment) {
                 return { error: "Attachment not found" };

@@ -32,7 +32,7 @@ export const noteTools = defineTools({
             ancestorNoteId: z.string().optional().describe("Limit search to a subtree rooted at this note ID."),
             limit: z.number().optional().describe("Maximum number of results to return. Defaults to 10.")
         }),
-        execute: async ({ query, fastSearch, includeArchivedNotes, ancestorNoteId, limit = 10 }) => {
+        execute: ({ query, fastSearch, includeArchivedNotes, ancestorNoteId, limit = 10 }) => {
             const searchContext = new SearchContext({
                 fastSearch,
                 includeArchivedNotes,
@@ -65,7 +65,7 @@ export const noteTools = defineTools({
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to retrieve")
         }),
-        execute: async ({ noteId }) => {
+        execute: ({ noteId }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -80,7 +80,7 @@ export const noteTools = defineTools({
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to read")
         }),
-        execute: async ({ noteId }) => {
+        execute: ({ noteId }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };

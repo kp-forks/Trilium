@@ -15,7 +15,7 @@ export const attributeTools = defineTools({
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note")
         }),
-        execute: async ({ noteId }) => {
+        execute: ({ noteId }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -38,7 +38,7 @@ export const attributeTools = defineTools({
         inputSchema: z.object({
             attributeId: z.string().describe("The ID of the attribute")
         }),
-        execute: async ({ attributeId }) => {
+        execute: ({ attributeId }) => {
             const attribute = becca.getAttribute(attributeId);
             if (!attribute) {
                 return { error: "Attribute not found" };

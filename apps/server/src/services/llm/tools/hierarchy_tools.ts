@@ -60,7 +60,7 @@ export const hierarchyTools = defineTools({
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the parent note (use 'root' for top-level)")
         }),
-        execute: async ({ noteId }) => {
+        execute: ({ noteId }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -81,7 +81,7 @@ export const hierarchyTools = defineTools({
             noteId: z.string().describe("The ID of the root note for the subtree (use 'root' for the entire tree)"),
             depth: z.number().min(1).max(MAX_DEPTH).optional().describe(`How many levels deep to traverse (1-${MAX_DEPTH}). Defaults to 2.`)
         }),
-        execute: async ({ noteId, depth = 2 }) => {
+        execute: ({ noteId, depth = 2 }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
