@@ -13,7 +13,16 @@ import { createMcpServer } from "../services/mcp/mcp_server.js";
 import log from "../services/log.js";
 import optionService from "../services/options.js";
 
-const LOCALHOST_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+function isLoopback(addr: string | undefined): boolean {
+    if (!addr) return false;
+    // IPv6 loopback
+    if (addr === "::1") return true;
+    // IPv4 loopback (127.0.0.0/8)
+    if (addr.startsWith("127.")) return true;
+    // IPv4-mapped IPv6 loopback
+    if (addr.startsWith("::ffff:127.")) return true;
+    return false;
+}
 
 function mcpGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
     if (optionService.getOptionOrNull("mcpEnabled") !== "true") {
@@ -21,7 +30,7 @@ function mcpGuard(req: express.Request, res: express.Response, next: express.Nex
         return;
     }
 
-    if (!LOCALHOST_ADDRESSES.has(req.socket.remoteAddress ?? "")) {
+    if (!isLoopback(req.socket.remoteAddress)) {
         res.status(403).json({ error: "MCP is only available from localhost" });
         return;
     }
