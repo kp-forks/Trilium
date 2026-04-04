@@ -1,5 +1,18 @@
 import type { TokenizerAndRendererExtension } from "marked";
 
+/**
+ * Escapes HTML special characters to prevent XSS attacks.
+ * Used for both attribute values and text content.
+ */
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 export interface WikiLinkOptions {
     /** Format the href for the link. Defaults to `/${noteId}` */
     formatHref?: (noteId: string) => string;
@@ -40,7 +53,7 @@ export function createWikiLinkExtension(options: WikiLinkOptions = {}): Tokenize
 
         renderer(token) {
             const noteId = token.href as string;
-            return `<a class="reference-link" href="${formatHref(noteId)}">${token.text}</a>`;
+            return `<a class="reference-link" href="${escapeHtml(formatHref(noteId))}">${escapeHtml(token.text as string)}</a>`;
         }
     };
 }
@@ -82,7 +95,7 @@ export function createTransclusionExtension(options: TransclusionOptions = {}): 
 
         renderer(token) {
             const noteId = token.href as string;
-            return `<img src="${formatSrc(noteId)}">`;
+            return `<img src="${escapeHtml(formatSrc(noteId))}">`;
         }
     };
 }

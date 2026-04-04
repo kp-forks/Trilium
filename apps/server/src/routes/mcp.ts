@@ -30,7 +30,9 @@ function mcpGuard(req: express.Request, res: express.Response, next: express.Nex
         return;
     }
 
-    if (!isLoopback(req.socket.remoteAddress)) {
+    // Use req.ip which respects trust proxy settings, falling back to socket address
+    const clientIp = req.ip || req.socket.remoteAddress;
+    if (!isLoopback(clientIp)) {
         res.status(403).json({ error: "MCP is only available from localhost" });
         return;
     }

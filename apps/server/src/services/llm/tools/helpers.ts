@@ -2,9 +2,9 @@
  * Shared helpers for LLM tools — content conversion, metadata building, and previews.
  */
 
+import becca from "../../../becca/becca.js";
 import type BAttachment from "../../../becca/entities/battachment.js";
 import type BNote from "../../../becca/entities/bnote.js";
-import becca from "../../../becca/becca.js";
 import markdownExport from "../../export/markdown.js";
 import markdownImport from "../../import/markdown.js";
 
@@ -179,7 +179,7 @@ export function getNoteMeta(note: BNote, limits: NoteMetaLimits) {
     return {
         noteId: note.noteId,
         isProtected: flag(note.isProtected),
-        title: note.title,
+        title: note.getTitleOrProtected(),
         type: note.type,
         mime: note.mime,
         dateCreated: note.dateCreated,

@@ -83,7 +83,7 @@ function ProviderSettings() {
 
 function getMcpEndpointUrl() {
     const port = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
-    return `http://localhost:${port}/mcp`;
+    return `${window.location.protocol}//localhost:${port}/mcp`;
 }
 
 function McpSettings() {
