@@ -6,6 +6,13 @@
 
 // Migrations should be kept in descending order, so the latest migration is first.
 const MIGRATIONS: (SqlMigration | JsMigration)[] = [
+    // Add text representation column to blobs table
+    {
+        version: 236,
+        sql: /*sql*/`\
+            ALTER TABLE blobs ADD COLUMN textRepresentation TEXT DEFAULT NULL;
+        `
+    },
     // Add missing database indices for query performance
     {
         version: 235,

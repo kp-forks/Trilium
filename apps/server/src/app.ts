@@ -14,6 +14,7 @@ import favicon from "serve-favicon";
 import assets from "./routes/assets.js";
 import custom from "./routes/custom.js";
 import error_handlers from "./routes/error_handlers.js";
+import mcpRoutes from "./routes/mcp.js";
 import routes from "./routes/routes.js";
 import config from "./services/config.js";
 import { startScheduledCleanup } from "./services/erase.js";
@@ -58,8 +59,8 @@ export default async function buildApp() {
         app.use(compression({
             // Skip compression for SSE endpoints to enable real-time streaming
             filter: (req, res) => {
-                // Skip compression for LLM chat streaming endpoint
-                if (req.path === "/api/llm-chat/stream") {
+                // Skip compression for SSE-capable endpoints
+                if (req.path === "/api/llm-chat/stream" || req.path === "/mcp") {
                     return false;
                 }
                 return compression.filter(req, res);
@@ -89,6 +90,10 @@ export default async function buildApp() {
     app.use(express.raw({ limit: "500mb" }));
     app.use(express.urlencoded({ extended: false }));
     app.use(cookieParser());
+
+    // MCP is registered before session/auth middleware — it uses its own
+    // localhost-only guard and does not require Trilium authentication.
+    mcpRoutes.register(app);
 
     app.use(express.static(path.join(publicDir, "root")));
     app.use(`/manifest.webmanifest`, express.static(path.join(publicAssetsDir, "manifest.webmanifest")));
