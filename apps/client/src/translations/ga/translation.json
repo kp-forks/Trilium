@@ -2308,9 +2308,7 @@
     "note_context_enabled": "Cliceáil chun comhthéacs nótaí a dhíchumasú: {{title}}",
     "note_context_disabled": "Cliceáil chun an nóta reatha a chur san áireamh i gcomhthéacs",
     "no_provider_message": "Níl aon soláthraí AI cumraithe. Cuir ceann leis chun comhrá a thosú.",
-    "add_provider": "Cuir Soláthraí AI leis",
-    "role_user": "Tusa",
-    "role_assistant": "Cúntóir"
+    "add_provider": "Cuir Soláthraí AI leis"
   },
   "sidebar_chat": {
     "title": "Comhrá AI",

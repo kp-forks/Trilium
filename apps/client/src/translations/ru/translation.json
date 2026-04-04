@@ -2246,8 +2246,6 @@
     "note_context_disabled": "Нажмите, чтобы включить текущую заметку в контекст",
     "no_provider_message": "Не выбран провайдер ИИ. Добавьте его для начала общения.",
     "add_provider": "Добавить провайдера ИИ",
-    "role_user": "Вы",
-    "role_assistant": "Ассистент",
     "tokens_detail": "{{prompt}} (промт) + {{completion}} (ответ)",
     "tokens_used": "{{prompt}} (промт) + {{completion}} (ответ) = {{total}} токен(а/ов)",
     "tokens_used_with_cost": "{{prompt}} (промт) + {{completion}} (ответ) = {{total}} токен(а/ов) (~${{cost}})",
