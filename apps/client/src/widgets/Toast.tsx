@@ -5,7 +5,6 @@ import { useEffect } from "preact/hooks";
 
 import { removeToastFromStore, ToastOptionsWithRequiredId, toasts } from "../services/toast";
 import Icon from "./react/Icon";
-import { RawHtmlBlock } from "./react/RawHtml";
 import Button from "./react/Button";
 
 export default function ToastContainer() {
@@ -54,7 +53,7 @@ function Toast({ id, title, timeout, progress, message, icon, buttons }: ToastOp
                 <div class="toast-icon">{toastIcon}</div>
             )}
 
-            <RawHtmlBlock className="toast-body" html={message} />
+            <div className="toast-body">{message}</div>
 
             {!title && <div class="toast-header">{closeButton}</div>}
 
