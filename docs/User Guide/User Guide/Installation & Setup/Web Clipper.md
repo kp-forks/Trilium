@@ -14,7 +14,7 @@ Trilium Web Clipper officially supports the following web browsers:
 
 The extension is available from the official browser web stores:
 
-*   **Firefox**: [Trilium Web Clipper on Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/trilium-notes-web-clipper/)
+*   **Firefox**: [Trilium Web Clipper on Firefox Add-ons](https://addons.mozilla.org/firefox/addon/trilium-notes-web-clipper/)
 *   **Chrome**: [Trilium Web Clipper on Chrome Web Store](https://chromewebstore.google.com/detail/trilium-web-clipper/ofoiklieachadcaeffficgjaajojpkpi)
 
 ## Functionality
