@@ -1150,8 +1150,8 @@ importers:
         specifier: 48.0.0
         version: 48.0.0
       mathlive:
-        specifier: 0.109.0
-        version: 0.109.0
+        specifier: 0.109.1
+        version: 0.109.1
     devDependencies:
       '@ckeditor/ckeditor5-dev-build-tools':
         specifier: 55.3.0
@@ -10572,8 +10572,8 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
-  mathlive@0.109.0:
-    resolution: {integrity: sha512-geMbW4sLmxYCKR46C2pJ5osdur8lJdUnKJ96KITvx2JGjypJT+GLW1d3XA09sXHEPLOV36tWbMCUrSiVYMU5Iw==}
+  mathlive@0.109.1:
+    resolution: {integrity: sha512-TXNkTzdJnk/6SFt0Oezy3bpZkH7aCDriuh2usLhVX8dMS5TMmx/rLd7+T1W2b9VCbEZcXABzhmm6ZMxYr8sFXg==}
 
   mathml-tag-names@4.0.0:
     resolution: {integrity: sha512-aa6AU2Pcx0VP/XWnh8IGL0SYSgQHDT6Ucror2j2mXeFAlN3ahaNs8EZtG1YiticMkSLj3Gt6VPFfZogt7G5iFQ==}
@@ -26512,7 +26512,7 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mathlive@0.109.0:
+  mathlive@0.109.1:
     dependencies:
       '@cortex-js/compute-engine': 0.30.2
 
