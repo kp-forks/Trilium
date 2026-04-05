@@ -1,9 +1,11 @@
 import fs from 'fs';
+import path from 'path';
 import Tesseract from 'tesseract.js';
 
 import dataDirs from '../../data_dir.js';
 import log from '../../log.js';
 import options from '../../options.js';
+import { getResourceDir, isDev } from '../../utils.js';
 import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
 import { FileProcessor } from './file_processor.js';
 
@@ -79,14 +81,27 @@ export class ImageProcessor extends FileProcessor {
         fs.mkdirSync(dataDirs.OCR_CACHE_DIR, { recursive: true });
 
         log.info(`Initializing Tesseract worker for language(s): ${language}`);
-        this.worker = await Tesseract.createWorker(language, 1, {
+
+        const workerOptions: Record<string, unknown> = {
             cachePath: dataDirs.OCR_CACHE_DIR,
             logger: (m: { status: string; progress: number }) => {
                 if (m.status === 'recognizing text') {
                     log.info(`Image OCR progress (${language}): ${Math.round(m.progress * 100)}%`);
                 }
             }
-        });
+        };
+
+        // In production the server is bundled, so tesseract.js's default
+        // __dirname-based worker path is wrong. Point it at the copy we
+        // place in dist/node_modules during the build step.
+        if (!isDev) {
+            workerOptions.workerPath = path.join(
+                getResourceDir(),
+                'node_modules', 'tesseract.js', 'src', 'worker-script', 'node', 'index.js'
+            );
+        }
+
+        this.worker = await Tesseract.createWorker(language, 1, workerOptions);
         this.currentLanguage = language;
     }
 
