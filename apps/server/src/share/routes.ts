@@ -9,28 +9,12 @@ import SearchContext from "../services/search/search_context.js";
 import type SNote from "./shaca/entities/snote.js";
 import type SAttachment from "./shaca/entities/sattachment.js";
 import { getDefaultTemplatePath, renderNoteContent } from "./content_renderer.js";
-import utils from "../services/utils.js";
+import utils, { sanitizeSvg } from "../services/utils.js";
 
 function addNoIndexHeader(note: SNote, res: Response) {
     if (note.isLabelTruthy("shareDisallowRobotIndexing")) {
         res.setHeader("X-Robots-Tag", "noindex");
     }
-}
-
-/**
- * Sanitize SVG to remove potentially dangerous elements and attributes.
- * This prevents XSS via script injection in SVG exports.
- */
-function sanitizeSvg(svg: string): string {
-    return svg
-        // Remove script elements
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        // Remove on* event handlers (onclick, onload, onerror, etc.)
-        .replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '')
-        .replace(/\s+on\w+\s*=\s*[^\s>]+/gi, '')
-        // Remove javascript: URLs
-        .replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"')
-        .replace(/xlink:href\s*=\s*["']javascript:[^"']*["']/gi, 'xlink:href="#"');
 }
 
 function requestCredentials(res: Response) {

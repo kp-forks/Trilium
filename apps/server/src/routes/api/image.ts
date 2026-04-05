@@ -1,12 +1,14 @@
-"use strict";
 
-import imageService from "../../services/image.js";
-import becca from "../../becca/becca.js";
-import fs from "fs";
+
 import type { Request, Response } from "express";
+import fs from "fs";
+
+import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
 import type BRevision from "../../becca/entities/brevision.js";
+import imageService from "../../services/image.js";
 import { RESOURCE_DIR } from "../../services/resource_dir.js";
+import { sanitizeSvg } from "../../services/utils.js";
 
 function returnImageFromNote(req: Request, res: Response) {
     const image = becca.getNote(req.params.noteId);
@@ -37,28 +39,33 @@ function returnImageInt(image: BNote | BRevision | null, res: Response) {
     } else {
         res.set("Content-Type", image.mime);
         res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-        res.send(image.getContent());
+
+        if (image.mime === "image/svg+xml") {
+            sendSanitizedSvg(res, image.getContent());
+        } else {
+            res.send(image.getContent());
+        }
     }
 }
 
 export function renderSvgAttachment(image: BNote | BRevision, res: Response, attachmentName: string) {
-    let svg: string | Buffer = `<svg xmlns="http://www.w3.org/2000/svg"></svg>`;
+    let svgContent: string | Buffer = `<svg xmlns="http://www.w3.org/2000/svg"></svg>`;
     const attachment = image.getAttachmentByTitle(attachmentName);
 
     if (attachment) {
-        svg = attachment.getContent();
+        svgContent = attachment.getContent();
     } else {
         // backwards compatibility, before attachments, the SVG was stored in the main note content as a separate key
         const contentSvg = image.getJsonContentSafely()?.svg;
 
         if (contentSvg) {
-            svg = contentSvg;
+            svgContent = contentSvg;
         }
     }
 
     res.set("Content-Type", "image/svg+xml");
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.send(svg);
+    sendSanitizedSvg(res, svgContent);
 }
 
 function returnAttachedImage(req: Request, res: Response) {
@@ -75,7 +82,12 @@ function returnAttachedImage(req: Request, res: Response) {
 
     res.set("Content-Type", attachment.mime);
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.send(attachment.getContent());
+
+    if (attachment.mime === "image/svg+xml") {
+        sendSanitizedSvg(res, attachment.getContent());
+    } else {
+        res.send(attachment.getContent());
+    }
 }
 
 function updateImage(req: Request) {
@@ -116,3 +128,9 @@ export default {
     returnAttachedImage,
     updateImage
 };
+
+function sendSanitizedSvg(res: Response, content: string | Buffer) {
+    const svgString = typeof content === "string" ? content : content.toString("utf-8");
+    res.set("Content-Security-Policy", "script-src 'none'");
+    res.send(sanitizeSvg(svgString));
+}
