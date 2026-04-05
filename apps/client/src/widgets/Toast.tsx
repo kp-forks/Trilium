@@ -42,20 +42,23 @@ function Toast({ id, title, timeout, progress, message, icon, buttons }: ToastOp
             id={`toast-${id}`}
         >
             {title ? (
-                <div class="toast-header">
-                    <strong class="me-auto">
-                        {toastIcon}
-                        <span class="toast-title">{title}</span>
-                    </strong>
-                    {closeButton}
-                </div>
+                <>
+                    <div class="toast-header">
+                        <strong class="me-auto">
+                            {toastIcon}
+                            <span class="toast-title">{title}</span>
+                        </strong>
+                        {closeButton}
+                    </div>
+                    <div className="toast-body">{message}</div>
+                </>
             ) : (
-                <div class="toast-icon">{toastIcon}</div>
+                <div class="toast-main-row">
+                    <div class="toast-icon">{toastIcon}</div>
+                    <div className="toast-body">{message}</div>
+                    <div class="toast-close">{closeButton}</div>
+                </div>
             )}
-
-            <div className="toast-body">{message}</div>
-
-            {!title && <div class="toast-header">{closeButton}</div>}
 
             {buttons && (
                 <div class="toast-buttons">
