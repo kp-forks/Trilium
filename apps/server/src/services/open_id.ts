@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { Session } from "express-openid-connect";
 
@@ -60,34 +59,31 @@ function getOAuthStatus() {
     };
 }
 
-function isTokenValid(req: Request, res: Response, next: NextFunction) {
+async function isTokenValid(req: Request, res: Response, next: NextFunction) {
     const userStatus = openIDEncryption.isSubjectIdentifierSaved();
 
     if (req.oidc !== undefined) {
-        const result = req.oidc
-            .fetchUserInfo()
-            .then((result) => {
-                return {
-                    success: true,
-                    message: "Token is valid",
-                    user: userStatus,
-                };
-            })
-            .catch((result) => {
-                return {
-                    success: false,
-                    message: "Token is not valid",
-                    user: userStatus,
-                };
-            });
-        return result;
-    } 
+        try {
+            await req.oidc.fetchUserInfo();
+            return {
+                success: true,
+                message: "Token is valid",
+                user: userStatus,
+            };
+        } catch {
+            return {
+                success: false,
+                message: "Token is not valid",
+                user: userStatus,
+            };
+        }
+    }
+
     return {
         success: false,
         message: "Token not set up",
         user: userStatus,
     };
-    
 }
 
 function getSSOIssuerName() {
@@ -122,7 +118,6 @@ function generateOAuthConfig() {
             scope: "openid profile email",
             access_type: "offline",
             prompt: "consent",
-            state: crypto.randomUUID()
         },
         routes: authRoutes,
         idpLogout: true,
