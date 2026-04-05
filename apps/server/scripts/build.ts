@@ -12,13 +12,6 @@ async function main() {
 
     // Copy node modules dependencies
     build.copyNodeModules([ "better-sqlite3", "bindings", "file-uri-to-path" ]);
-
-    // Tesseract.js worker runs in a separate worker_thread and needs its
-    // source files (+ WASM core + transitive deps) on disk — they cannot be bundled.
-    build.copyNodeModules([
-        "tesseract.js", "tesseract.js-core", "wasm-feature-detect",
-        "regenerator-runtime", "is-url", "bmp-js"
-    ]);
     build.copy("/node_modules/ckeditor5/dist/ckeditor5-content.css", "ckeditor5-content.css");
 
     build.buildFrontend();
