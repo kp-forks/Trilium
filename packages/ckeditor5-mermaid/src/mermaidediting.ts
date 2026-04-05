@@ -183,7 +183,7 @@ export default class MermaidEditing extends Plugin {
 			const mermaidSource = data.item.getAttribute( 'source' ) as string;
 			const domElement = this.toDomElement( domDocument );
 
-			domElement.innerHTML = mermaidSource;
+			domElement.textContent = mermaidSource;
 
 			window.setTimeout( () => {
 				// @todo: by the looks of it the domElement needs to be hooked to tree in order to allow for rendering.
@@ -219,7 +219,7 @@ export default class MermaidEditing extends Plugin {
 					const domPreviewWrapper = domConverter.viewToDom(child);
 
 					if ( domPreviewWrapper ) {
-						domPreviewWrapper.innerHTML = newSource;
+						domPreviewWrapper.textContent = newSource;
 						domPreviewWrapper.removeAttribute( 'data-processed' );
 
 						this._renderMermaid( domPreviewWrapper );
