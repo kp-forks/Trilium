@@ -24,7 +24,7 @@
     "ckeditor5-metadata.json"
   ],
   "devDependencies": {
-    "@ckeditor/ckeditor5-dev-build-tools": "55.3.0",
+    "@ckeditor/ckeditor5-dev-build-tools": "55.3.1",
     "@ckeditor/ckeditor5-inspector": ">=4.1.0",
     "@typescript-eslint/eslint-plugin": "8.58.0",
     "@typescript-eslint/parser": "8.58.0",
