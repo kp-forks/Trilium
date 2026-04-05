@@ -17,6 +17,22 @@ function addNoIndexHeader(note: SNote, res: Response) {
     }
 }
 
+/**
+ * Sanitize SVG to remove potentially dangerous elements and attributes.
+ * This prevents XSS via script injection in SVG exports.
+ */
+function sanitizeSvg(svg: string): string {
+    return svg
+        // Remove script elements
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        // Remove on* event handlers (onclick, onload, onerror, etc.)
+        .replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\s+on\w+\s*=\s*[^\s>]+/gi, '')
+        // Remove javascript: URLs
+        .replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"')
+        .replace(/xlink:href\s*=\s*["']javascript:[^"']*["']/gi, 'xlink:href="#"');
+}
+
 function requestCredentials(res: Response) {
     res.setHeader("WWW-Authenticate", 'Basic realm="User Visible Realm", charset="UTF-8"').sendStatus(401);
 }
@@ -102,9 +118,10 @@ function renderImageAttachment(image: SNote, res: Response, attachmentName: stri
         }
     }
 
-    const svg = svgString;
+    const svg = sanitizeSvg(svgString);
     res.set("Content-Type", "image/svg+xml");
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.set("Content-Security-Policy", "script-src 'none'");
     res.send(svg);
 }
 
