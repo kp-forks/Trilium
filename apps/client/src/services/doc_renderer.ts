@@ -9,14 +9,9 @@ import { formatCodeBlocks } from "./syntax_highlight.js";
  * but blocks traversal sequences and URL manipulation characters.
  */
 export function isValidDocName(docName: string): boolean {
-    if (docName.includes("..") ||
-        docName.includes("\\") ||
-        docName.includes("?") ||
-        docName.includes("#") ||
-        docName.includes("%")) {
-        return false;
-    }
-    return true;
+    // Allow alphanumeric characters, spaces, underscores, hyphens, and forward slashes.
+    const validDocNameRegex = /^[a-zA-Z0-9_/\- ]+$/;
+    return validDocNameRegex.test(docName);
 }
 
 export default function renderDoc(note: FNote) {
@@ -59,7 +54,7 @@ async function processContent(url: string, $content: JQuery<HTMLElement>) {
     // Images are relative to the docnote but that will not work when rendered in the application since the path breaks.
     $content.find("img").each((i, el) => {
         const $img = $(el);
-        $img.attr("src", `${dir  }/${  $img.attr("src")}`);
+        $img.attr("src", `${dir}/${$img.attr("src")}`);
     });
 
     formatCodeBlocks($content);
