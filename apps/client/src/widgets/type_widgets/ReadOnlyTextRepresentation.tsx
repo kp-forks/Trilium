@@ -1,6 +1,6 @@
 import "./ReadOnlyTextRepresentation.css";
 
-import type { TextRepresentationResponse } from "@triliumnext/commons";
+import type { OCRProcessResponse, TextRepresentationResponse } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
@@ -62,10 +62,27 @@ export function TextRepresentation({ textUrl, processUrl }: TextRepresentationPr
     async function processOCR() {
         setProcessing(true);
         try {
-            const response = await server.post<{ success: boolean; message?: string }>(processUrl, { forceReprocess: true });
+            const response = await server.post<OCRProcessResponse>(processUrl, { forceReprocess: true });
             if (response.success) {
-                toast.showMessage(t("ocr.processing_started"));
-                setTimeout(fetchText, 2000);
+                const result = response.result;
+                const minConfidence = response.minConfidence ?? 0;
+
+                // Check if text was filtered due to low confidence
+                if (result && !result.text && result.confidence > 0 && minConfidence > 0) {
+                    const confidencePercent = Math.round(result.confidence * 100);
+                    const thresholdPercent = Math.round(minConfidence * 100);
+                    toast.showMessage(
+                        t("ocr.text_filtered_low_confidence", {
+                            confidence: confidencePercent,
+                            threshold: thresholdPercent
+                        }),
+                        10000, // Show for 10 seconds since this is important info
+                        "bx bx-info-circle"
+                    );
+                } else {
+                    toast.showMessage(t("ocr.processing_complete"));
+                }
+                setTimeout(fetchText, 500);
             } else {
                 toast.showError(response.message || t("ocr.processing_failed"));
             }
