@@ -302,6 +302,7 @@ export type CommandMappings = {
     ninthTab: CommandData;
     lastTab: CommandData;
     showNoteSource: CommandData;
+    showNoteOCRText: CommandData;
     showSQLConsole: CommandData;
     showBackendLog: CommandData;
     showCheatsheet: CommandData;
@@ -508,7 +509,7 @@ type EventMappings = {
     contentSafeMarginChanged: {
         top: number;
         noteContext: NoteContext;
-    }
+    };
 };
 
 export type EventListener<T extends EventNames> = {

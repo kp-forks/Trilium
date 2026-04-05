@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import type { CSSProperties, HTMLProps, RefObject } from "preact/compat";
 
 import { sanitizeNoteContentHtml } from "../../services/sanitize_content.js";
@@ -16,16 +17,16 @@ export default function RawHtml({containerRef, ...props}: RawHtmlProps & { conta
 }
 
 export function RawHtmlBlock({containerRef, ...props}: RawHtmlProps & { containerRef?: RefObject<HTMLDivElement>}) {
-    return <div ref={containerRef} {...getProps(props)} />
+    return <div ref={containerRef} {...getProps(props)} />;
 }
 
 function getProps({ className, html, style, onClick }: RawHtmlProps) {
     return {
-        className: className,
+        className,
         dangerouslySetInnerHTML: getHtml(html ?? ""),
         style,
         onClick
-    }
+    };
 }
 
 export function getHtml(html: string | HTMLElement | JQuery<HTMLElement>) {
@@ -40,4 +41,20 @@ export function getHtml(html: string | HTMLElement | JQuery<HTMLElement>) {
     return {
         __html: sanitizeNoteContentHtml(html as string)
     };
+}
+
+/**
+ * Renders HTML content sanitized via DOMPurify to prevent XSS.
+ * Use this instead of {@link RawHtml} when the HTML originates from
+ * untrusted sources (e.g. LLM responses, user-generated markdown).
+ */
+export function SanitizedHtml({ className, html, style }: { className?: string; html: string; style?: CSSProperties }) {
+    return (
+        <div
+            className={className}
+            style={style}
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+        />
+    );
 }

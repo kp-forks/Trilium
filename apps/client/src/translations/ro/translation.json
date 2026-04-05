@@ -875,7 +875,7 @@
     "print_note": "Imprimare notiță",
     "re_render_note": "Reinterpretare notiță",
     "save_revision": "Salvează o nouă revizie",
-    "advanced": "Advansat",
+    "advanced": "Avansat",
     "search_in_note": "Caută în notiță",
     "convert_into_attachment_failed": "Nu s-a putut converti notița „{{title}}”.",
     "convert_into_attachment_successful": "Notița „{{title}}” a fost convertită în atașament.",

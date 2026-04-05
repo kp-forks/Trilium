@@ -214,6 +214,8 @@ export interface ConvertAttachmentToNoteResponse {
 
 export type SaveSqlConsoleResponse = CloneResponse;
 
+export type SaveLlmChatResponse = CloneResponse;
+
 export interface BacklinkCountResponse {
     count: number;
 }
@@ -284,6 +286,13 @@ export interface RenderMarkdownResponse {
 
 export interface ToMarkdownResponse {
     markdownContent: string;
+}
+
+export interface TextRepresentationResponse {
+    success: boolean;
+    text: string;
+    hasOcr: boolean;
+    message?: string;
 }
 
 export interface IconRegistry {

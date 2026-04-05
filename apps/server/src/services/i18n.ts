@@ -18,8 +18,7 @@ export async function initializeTranslations() {
         ns: "server",
         backend: {
             loadPath: join(resourceDir, "assets/translations/{{lng}}/{{ns}}.json")
-        },
-        showSupportNotice: false
+        }
     });
 
     // Initialize dayjs locale.

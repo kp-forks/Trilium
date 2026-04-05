@@ -104,7 +104,13 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "experimentalFeatures",
     "newLayout",
     "mfaEnabled",
-    "mfaMethod"
+    "mfaMethod",
+    // LLM options
+    "llmProviders",
+    "mcpEnabled",
+    // OCR options
+    "ocrAutoProcessImages",
+    "ocrMinConfidence"
 ]);
 
 // Options that contain secrets (API keys, tokens, etc.).
