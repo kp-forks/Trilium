@@ -53,8 +53,7 @@ export default class BuildHelper {
                 "better-sqlite3",
                 "pdfjs-dist",
                 "./xhr-sync-worker.js",
-                "vite",
-                "tesseract.js"
+                "vite"
             ],
             metafile: true,
             splitting: false,
