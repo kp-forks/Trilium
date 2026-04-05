@@ -447,10 +447,10 @@ importers:
         version: 7.11.1
       '@electron-forge/plugin-fuses':
         specifier: 7.11.1
-        version: 7.11.1(@electron/fuses@2.1.1)
+        version: 7.11.1(@electron/fuses@1.0.0)
       '@electron/fuses':
-        specifier: 2.1.1
-        version: 2.1.1
+        specifier: 1.0.0
+        version: 1.0.0
       '@triliumnext/commons':
         specifier: workspace:*
         version: link:../../packages/commons
@@ -2394,10 +2394,8 @@ packages:
     engines: {node: '>=10.12.0'}
     hasBin: true
 
-  '@electron/fuses@2.1.1':
-    resolution: {integrity: sha512-38ho27/mtUV/LpsZ1LCDJUomKBBSUZDk/qBH4FNNtoN5fmnkmWDcIp5pm1Kv3InqhRjKZKs7Jzx+wWZNMArHrA==}
-    engines: {node: '>=22.12.0'}
-    hasBin: true
+  '@electron/fuses@1.0.0':
+    resolution: {integrity: sha512-VjWIlZHEB7a93tXl+6tX2YzN+s1/mS0RM8WX4GZlMOqAzlmRfTMP6pp0MM0LtkzWZB+KQOv+zJt5Dlgdik+DUQ==}
 
   '@electron/get@2.0.3':
     resolution: {integrity: sha512-Qkzpg2s9GnVV2I2BjRksUi43U5e6+zaQMcjoJy0C+C5oxaKl+fmckGDQFtRpZpZV0NQekuZZ+tGz7EA9TVnQtQ==}
@@ -17620,11 +17618,11 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@electron-forge/plugin-fuses@7.11.1(@electron/fuses@2.1.1)':
+  '@electron-forge/plugin-fuses@7.11.1(@electron/fuses@1.0.0)':
     dependencies:
       '@electron-forge/plugin-base': 7.11.1
       '@electron-forge/shared-types': 7.11.1
-      '@electron/fuses': 2.1.1
+      '@electron/fuses': 1.0.0
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -17711,7 +17709,9 @@ snapshots:
       glob: 7.2.3
       minimatch: 3.1.2
 
-  '@electron/fuses@2.1.1': {}
+  '@electron/fuses@1.0.0':
+    dependencies:
+      fs-extra: 9.1.0
 
   '@electron/get@2.0.3':
     dependencies:
