@@ -99,9 +99,10 @@ function register(router: Router) {
         }
 
         // Validate MIME type for image notes (check both current and new type/mime)
-        const effectiveType = req.body.type || note.type;
-        const effectiveMime = req.body.mime || note.mime;
-        if (effectiveType === "image" && effectiveMime && !effectiveMime.startsWith("image/")) {
+        const effectiveType = req.body.type ?? note.type;
+        const effectiveMime = req.body.mime ?? note.mime;
+        const normalizedEffectiveMime = typeof effectiveMime === "string" ? effectiveMime.toLowerCase() : effectiveMime;
+        if (effectiveType === "image" && normalizedEffectiveMime && !normalizedEffectiveMime.startsWith("image/")) {
             throw new eu.EtapiError(400, "INVALID_MIME_FOR_IMAGE", `MIME type '${effectiveMime}' is not allowed for image notes. MIME must start with 'image/'.`);
         }
 
