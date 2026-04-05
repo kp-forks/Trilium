@@ -67,7 +67,7 @@ function register(router: Router) {
         const params = _params as NoteParams;
 
         // Validate MIME type for image notes
-        if (params.type === "image" && params.mime && !params.mime.startsWith("image/")) {
+        if (params.type === "image" && params.mime && !params.mime.toLowerCase().startsWith("image/")) {
             throw new eu.EtapiError(400, "INVALID_MIME_FOR_IMAGE", `MIME type '${params.mime}' is not allowed for image notes. MIME must start with 'image/'.`);
         }
 
