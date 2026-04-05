@@ -2307,7 +2307,9 @@
     "sample_user_journey": "User Journey",
     "sample_xy": "XY",
     "sample_venn": "Venn",
-    "sample_ishikawa": "Ishikawa"
+    "sample_ishikawa": "Ishikawa",
+    "sample_treeview": "TreeView",
+    "sample_wardley": "Wardley Map"
   },
   "mind-map": {
     "addChild": "Add child",
