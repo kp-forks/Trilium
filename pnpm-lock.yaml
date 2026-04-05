@@ -462,12 +462,6 @@ importers:
       electron-squirrel-startup:
         specifier: 1.0.1
         version: 1.0.1
-      jquery-hotkeys:
-        specifier: 0.2.2
-        version: 0.2.2
-      jquery.fancytree:
-        specifier: 2.38.5
-        version: 2.38.5(jquery@4.0.0)
     devDependencies:
       '@electron-forge/cli':
         specifier: 7.11.1
@@ -10200,9 +10194,6 @@ packages:
 
   jpeg-js@0.4.4:
     resolution: {integrity: sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg==}
-
-  jquery-hotkeys@0.2.2:
-    resolution: {integrity: sha512-1LWIp+1ZQUluPsWEJ4Ett0CRfgGsGRGU7wTlj1TBBq0hWl7fLYxl/DyARku0fz9x8lIYi6v5VXJwZx8cpJmdpQ==}
 
   jquery.fancytree@2.38.5:
     resolution: {integrity: sha512-6ntTplhfYKWz74GLpeeE9B62VqhsF+bd80gLZRDD1gl7Vv9WTqqQrCsrGMMu0PB6JLhNOXhf17xIcYpARG+N3g==}
@@ -26255,8 +26246,6 @@ snapshots:
       react: 19.2.4
 
   jpeg-js@0.4.4: {}
-
-  jquery-hotkeys@0.2.2: {}
 
   jquery.fancytree@2.38.5(jquery@4.0.0):
     dependencies:
