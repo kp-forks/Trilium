@@ -9,7 +9,7 @@ import SearchContext from "../services/search/search_context.js";
 import type SNote from "./shaca/entities/snote.js";
 import type SAttachment from "./shaca/entities/sattachment.js";
 import { getDefaultTemplatePath, renderNoteContent } from "./content_renderer.js";
-import utils from "../services/utils.js";
+import utils, { sanitizeSvg } from "../services/utils.js";
 
 function addNoIndexHeader(note: SNote, res: Response) {
     if (note.isLabelTruthy("shareDisallowRobotIndexing")) {
@@ -102,9 +102,10 @@ function renderImageAttachment(image: SNote, res: Response, attachmentName: stri
         }
     }
 
-    const svg = svgString;
+    const svg = sanitizeSvg(svgString);
     res.set("Content-Type", "image/svg+xml");
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.set("Content-Security-Policy", "script-src 'none'");
     res.send(svg);
 }
 
