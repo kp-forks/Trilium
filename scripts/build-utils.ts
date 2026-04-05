@@ -68,6 +68,14 @@ export default class BuildHelper {
             minify: true
         });
         writeFileSync(join(this.outDir, "meta.json"), JSON.stringify(result.metafile));
+
+        // Tesseract.js is marked as external above because its worker runs in
+        // a separate worker_thread. Copy the worker source, WASM core and all
+        // transitive runtime deps so they are available in dist/node_modules.
+        this.copyNodeModules([
+            "tesseract.js", "tesseract.js-core", "wasm-feature-detect",
+            "regenerator-runtime", "is-url", "bmp-js"
+        ]);
     }
 
     buildFrontend() {
