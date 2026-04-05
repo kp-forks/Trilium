@@ -2095,7 +2095,8 @@
     "processing_started": "OCR processing has been started. Please wait a moment and refresh.",
     "processing_complete": "OCR processing complete.",
     "processing_failed": "Failed to start OCR processing",
-    "text_filtered_low_confidence": "OCR detected text with {{confidence}}% confidence, but it was discarded because your minimum threshold is {{threshold}}%.\n\nYou can adjust the threshold in Options → Media.",
+    "text_filtered_low_confidence": "OCR detected text with {{confidence}}% confidence, but it was discarded because your minimum threshold is {{threshold}}%.",
+    "open_media_settings": "Open Settings",
     "view_extracted_text": "View extracted text (OCR)"
   },
   "command_palette": {

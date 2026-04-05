@@ -3,9 +3,11 @@ import "./ReadOnlyTextRepresentation.css";
 import type { OCRProcessResponse, TextRepresentationResponse } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
+import appContext from "../../components/app_context";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
+import { randomString } from "../../services/utils";
 import { TypeWidgetProps } from "./type_widget";
 
 type State =
@@ -71,14 +73,22 @@ export function TextRepresentation({ textUrl, processUrl }: TextRepresentationPr
                 if (result && !result.text && result.confidence > 0 && minConfidence > 0) {
                     const confidencePercent = Math.round(result.confidence * 100);
                     const thresholdPercent = Math.round(minConfidence * 100);
-                    toast.showMessage(
-                        t("ocr.text_filtered_low_confidence", {
+                    toast.showPersistent({
+                        id: `ocr-low-confidence-${randomString(8)}`,
+                        icon: "bx bx-info-circle",
+                        message: t("ocr.text_filtered_low_confidence", {
                             confidence: confidencePercent,
                             threshold: thresholdPercent
                         }),
-                        10000, // Show for 10 seconds since this is important info
-                        "bx bx-info-circle"
-                    );
+                        timeout: 15000,
+                        buttons: [{
+                            text: t("ocr.open_media_settings"),
+                            onClick: ({ dismissToast }) => {
+                                appContext.tabManager.openInNewTab("_optionsMedia", null, true);
+                                dismissToast();
+                            }
+                        }]
+                    });
                 } else {
                     toast.showMessage(t("ocr.processing_complete"));
                 }
