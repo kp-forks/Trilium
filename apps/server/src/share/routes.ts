@@ -1,16 +1,14 @@
+import type { NextFunction, Request, Response, Router } from "express";
 import safeCompare from "safe-compare";
 
-import type { NextFunction, Request, Response, Router } from "express";
-
+import SearchContext from "../services/search/search_context.js";
+import searchService from "../services/search/services/search.js";
+import utils, { sanitizeSvg } from "../services/utils.js";
+import { getDefaultTemplatePath, renderNoteContent } from "./content_renderer.js";
+import type SAttachment from "./shaca/entities/sattachment.js";
+import type SNote from "./shaca/entities/snote.js";
 import shaca from "./shaca/shaca.js";
 import shacaLoader from "./shaca/shaca_loader.js";
-import searchService from "../services/search/services/search.js";
-import SearchContext from "../services/search/search_context.js";
-import type SNote from "./shaca/entities/snote.js";
-import type SAttachment from "./shaca/entities/sattachment.js";
-import { getDefaultTemplatePath, renderNoteContent } from "./content_renderer.js";
-import utils from "../services/utils.js";
-import { sanitizeSvg, setSvgHeaders } from "../services/svg_sanitizer.js";
 import { isShareDbReady } from "./sql.js";
 
 function assertShareDbReady(_req: Request, res: Response, next: NextFunction) {
@@ -105,17 +103,19 @@ function renderImageAttachment(image: SNote, res: Response, attachmentName: stri
             && possibleSvgContent !== null
             && "svg" in possibleSvgContent
             && typeof possibleSvgContent.svg === "string")
-                ? possibleSvgContent.svg
-                : null;
+            ? possibleSvgContent.svg
+            : null;
 
         if (contentSvg) {
             svgString = contentSvg;
         }
     }
 
-    const sanitized = sanitizeSvg(svgString);
-    setSvgHeaders(res);
-    res.send(sanitized);
+    const svg = sanitizeSvg(svgString);
+    res.set("Content-Type", "image/svg+xml");
+    res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.set("Content-Security-Policy", "script-src 'none'");
+    res.send(svg);
 }
 
 function render404(res: Response) {
@@ -342,7 +342,7 @@ function register(router: Router) {
             return;
         }
 
-        const searchContext = new SearchContext({ ancestorNoteId: ancestorNoteId });
+        const searchContext = new SearchContext({ ancestorNoteId });
         const searchResults = searchService.findResultsWithQuery(search, searchContext);
         const filteredResults = searchResults.map((sr) => {
             const fullNote = shaca.notes[sr.noteId];

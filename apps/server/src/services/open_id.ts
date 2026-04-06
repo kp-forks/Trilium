@@ -1,15 +1,14 @@
 import type { NextFunction, Request, Response } from "express";
-import crypto from "crypto";
-import openIDEncryption from "./encryption/open_id_encryption.js";
-import sqlInit from "./sql_init.js";
-import options from "./options.js";
 import type { Session } from "express-openid-connect";
-import sql from "./sql.js";
-import config from "./config.js";
 
+import config from "./config.js";
+import openIDEncryption from "./encryption/open_id_encryption.js";
+import options from "./options.js";
+import sql from "./sql.js";
+import sqlInit from "./sql_init.js";
 
 function checkOpenIDConfig() {
-    const missingVars: string[] = []
+    const missingVars: string[] = [];
     if (config.MultiFactorAuthentication.oauthBaseUrl === "") {
         missingVars.push("oauthBaseUrl");
     }
@@ -28,7 +27,7 @@ function isOpenIDEnabled() {
 
 function isUserSaved() {
     const data = sql.getValue<string>("SELECT isSetup FROM user_data;");
-    return data === "true" ? true : false;
+    return data === "true";
 }
 
 function getUsername() {
@@ -60,34 +59,31 @@ function getOAuthStatus() {
     };
 }
 
-function isTokenValid(req: Request, res: Response, next: NextFunction) {
+async function isTokenValid(req: Request, res: Response, next: NextFunction) {
     const userStatus = openIDEncryption.isSubjectIdentifierSaved();
 
     if (req.oidc !== undefined) {
-        const result = req.oidc
-            .fetchUserInfo()
-            .then((result) => {
-                return {
-                    success: true,
-                    message: "Token is valid",
-                    user: userStatus,
-                };
-            })
-            .catch((result) => {
-                return {
-                    success: false,
-                    message: "Token is not valid",
-                    user: userStatus,
-                };
-            });
-        return result;
-    } else {
-        return {
-            success: false,
-            message: "Token not set up",
-            user: userStatus,
-        };
+        try {
+            await req.oidc.fetchUserInfo();
+            return {
+                success: true,
+                message: "Token is valid",
+                user: userStatus,
+            };
+        } catch {
+            return {
+                success: false,
+                message: "Token is not valid",
+                user: userStatus,
+            };
+        }
     }
+
+    return {
+        success: false,
+        message: "Token not set up",
+        user: userStatus,
+    };
 }
 
 function getSSOIssuerName() {
@@ -122,11 +118,10 @@ function generateOAuthConfig() {
             scope: "openid profile email",
             access_type: "offline",
             prompt: "consent",
-            state: crypto.randomBytes(32).toString("hex")
         },
         routes: authRoutes,
         idpLogout: true,
-        logoutParams: logoutParams,
+        logoutParams,
         afterCallback: async (req: Request, res: Response, session: Session) => {
             if (!sqlInit.isDbInitialized()) return session;
 
