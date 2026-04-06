@@ -201,6 +201,8 @@ describe( 'MermaidEditing', () => {
 					let domPreviewContainer, renderMermaidStub;
 
 					beforeEach( () => {
+						renderMermaidStub = vi.spyOn( editor.plugins.get( 'MermaidEditing' ), '_renderMermaid' );
+
 						// Using editor.setData() instead of setModelData helper because of #11365.
 						editor.setData(
 							'<pre spellcheck="false">' +
@@ -210,20 +212,20 @@ describe( 'MermaidEditing', () => {
 
 						const previewContainerView = editor.editing.view.document.getRoot().getChild( 0 ).getChild( 2 );
 						domPreviewContainer = editor.editing.view.domConverter.viewToDom( previewContainerView );
-
-						renderMermaidStub = vi.spyOn( editor.plugins.get( 'MermaidEditing' ), '_renderMermaid' );
 					} );
 
 					afterEach( () => {
 						vi.clearAllMocks();
 					} );
 
-					it( 'has proper inner text set during the initial conversion', () => {
-						expect( domPreviewContainer.textContent ).to.equal( 'flowchart TB\nA --> B\nB --> C' );
+					it( 'calls render with source during the initial conversion', () => {
+						expect( renderMermaidStub ).toBeCalledWith( domPreviewContainer, 'flowchart TB\nA --> B\nB --> C' );
 					} );
 
-					it( 'has proper inner text set after a model\'s attribute change', () => {
+					it( 'calls render with updated source after a model\'s attribute change', () => {
 						const { model } = editor;
+
+						renderMermaidStub.mockClear();
 
 						const mermaidModel = model.document.getRoot().getChild( 0 );
 
@@ -231,19 +233,7 @@ describe( 'MermaidEditing', () => {
 							writer.setAttribute( 'source', 'abc', mermaidModel );
 						} );
 
-						expect( domPreviewContainer.textContent ).to.equal( 'abc' );
-					} );
-
-					it( 'calls mermaid render function after a model\'s attribute change', () => {
-						const { model } = editor;
-
-						const mermaidModel = model.document.getRoot().getChild( 0 );
-
-						model.change( writer => {
-							writer.setAttribute( 'source', 'abc', mermaidModel );
-						} );
-
-						expect(renderMermaidStub).toBeCalledWith(domPreviewContainer);
+						expect( renderMermaidStub ).toBeCalledWith( domPreviewContainer, 'abc' );
 					} );
 				} );
 			} );
