@@ -30,11 +30,13 @@ const sqliteWasmPlugin = viteStaticCopy({
     targets: [
         {
             src: "../../../node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/sqlite3.wasm",
-            dest: "assets"
+            dest: "assets",
+            rename: { stripBase: true }
         },
         {
             src: "../../../node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/sqlite3-opfs-async-proxy.js",
-            dest: "assets"
+            dest: "assets",
+            rename: { stripBase: true }
         }
     ]
 });
