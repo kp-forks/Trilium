@@ -88,7 +88,7 @@ describe("custom_dictionary", () => {
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("banana");
         });
 
-        it("merges note and local words when both have content", async () => {
+        it("only loads note words when both note and local have content", async () => {
             becca.reset();
             buildNote({
                 id: "_customDictionary",
@@ -100,10 +100,12 @@ describe("custom_dictionary", () => {
 
             await customDictionary.loadForSession(session);
 
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(3);
+            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(2);
+            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("apple");
+            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("banana");
         });
 
-        it("clears local dictionary after merging", async () => {
+        it("clears local dictionary when note has content", async () => {
             becca.reset();
             buildNote({
                 id: "_customDictionary",
@@ -118,22 +120,6 @@ describe("custom_dictionary", () => {
             expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(2);
             expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("banana");
             expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("cherry");
-        });
-
-        it("does not save when local words are a subset of note words", async () => {
-            becca.reset();
-            buildNote({
-                id: "_customDictionary",
-                title: "Custom Dictionary",
-                type: "code",
-                content: "apple\nbanana\ncherry"
-            });
-            const session = mockSession(["apple", "banana"]);
-
-            await customDictionary.loadForSession(session);
-
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(3);
-            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(2);
         });
 
         it("handles note with whitespace and blank lines", async () => {
@@ -151,6 +137,26 @@ describe("custom_dictionary", () => {
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(2);
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("apple");
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("banana");
+        });
+
+        it("does not re-add words removed from the note but present locally", async () => {
+            becca.reset();
+            buildNote({
+                id: "_customDictionary",
+                title: "Custom Dictionary",
+                type: "code",
+                content: "apple\nbanana"
+            });
+            // "cherry" was previously in the note but user removed it;
+            // it still lingers in Electron's local dictionary.
+            const session = mockSession(["apple", "banana", "cherry"]);
+
+            await customDictionary.loadForSession(session);
+
+            // Only note words should be loaded, not "cherry".
+            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("apple");
+            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("banana");
+            expect(session.addWordToSpellCheckerDictionary).not.toHaveBeenCalledWith("cherry");
         });
 
         it("handles missing dictionary note gracefully", async () => {

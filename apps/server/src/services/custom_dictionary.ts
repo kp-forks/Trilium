@@ -84,17 +84,10 @@ async function loadForSession(session: Session) {
         log.info(`Importing ${localWords.length} words from local spellchecker dictionary.`);
         merged = new Set(localWords);
         saveWords(merged);
-        clearFromLocalDictionary(session, localWords);
-    } else if (noteWords.size > 0 && localWords.length > 0) {
-        // Merge both sources so no words are lost.
-        const before = noteWords.size;
-        for (const w of localWords) {
-            merged.add(w);
-        }
-        if (merged.size > before) {
-            log.info(`Merged ${merged.size - before} new words from local dictionary.`);
-            saveWords(merged);
-        }
+    }
+
+    // Clear local dictionary so the note remains the single source of truth.
+    if (localWords.length > 0) {
         clearFromLocalDictionary(session, localWords);
     }
 
