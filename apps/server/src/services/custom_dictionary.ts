@@ -53,6 +53,17 @@ function addWord(word: string) {
 }
 
 /**
+ * Removes all words from Electron's local spellchecker dictionary
+ * so they are not re-imported on subsequent startups.
+ */
+function clearFromLocalDictionary(session: Session, localWords: string[]) {
+    for (const word of localWords) {
+        session.removeWordFromSpellCheckerDictionary(word);
+    }
+    log.info(`Cleared ${localWords.length} words from local spellchecker dictionary.`);
+}
+
+/**
  * Loads the custom dictionary into Electron's spellchecker session,
  * performing a one-time import of locally stored words on first use.
  */
@@ -73,6 +84,7 @@ async function loadForSession(session: Session) {
         log.info(`Importing ${localWords.length} words from local spellchecker dictionary.`);
         merged = new Set(localWords);
         saveWords(merged);
+        clearFromLocalDictionary(session, localWords);
     } else if (noteWords.size > 0 && localWords.length > 0) {
         // Merge both sources so no words are lost.
         const before = noteWords.size;
@@ -83,6 +95,7 @@ async function loadForSession(session: Session) {
             log.info(`Merged ${merged.size - before} new words from local dictionary.`);
             saveWords(merged);
         }
+        clearFromLocalDictionary(session, localWords);
     }
 
     // Load all words into Electron's spellchecker.

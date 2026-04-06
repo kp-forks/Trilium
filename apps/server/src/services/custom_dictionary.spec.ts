@@ -24,7 +24,8 @@ vi.mock("./sql.js", () => ({
 function mockSession(localWords: string[] = []) {
     return {
         listWordsInSpellCheckerDictionary: vi.fn().mockResolvedValue(localWords),
-        addWordToSpellCheckerDictionary: vi.fn()
+        addWordToSpellCheckerDictionary: vi.fn(),
+        removeWordFromSpellCheckerDictionary: vi.fn()
     } as any;
 }
 
@@ -47,6 +48,7 @@ describe("custom_dictionary", () => {
             await customDictionary.loadForSession(session);
 
             expect(session.addWordToSpellCheckerDictionary).not.toHaveBeenCalled();
+            expect(session.removeWordFromSpellCheckerDictionary).not.toHaveBeenCalled();
         });
 
         it("imports local words when note is empty (one-time import)", async () => {
@@ -57,6 +59,16 @@ describe("custom_dictionary", () => {
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(2);
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("hello");
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("world");
+        });
+
+        it("clears local dictionary after one-time import", async () => {
+            const session = mockSession(["hello", "world"]);
+
+            await customDictionary.loadForSession(session);
+
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(2);
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("hello");
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("world");
         });
 
         it("loads note words into session when no local words exist", async () => {
@@ -91,6 +103,23 @@ describe("custom_dictionary", () => {
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(3);
         });
 
+        it("clears local dictionary after merging", async () => {
+            becca.reset();
+            buildNote({
+                id: "_customDictionary",
+                title: "Custom Dictionary",
+                type: "code",
+                content: "apple\nbanana"
+            });
+            const session = mockSession(["banana", "cherry"]);
+
+            await customDictionary.loadForSession(session);
+
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(2);
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("banana");
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("cherry");
+        });
+
         it("does not save when local words are a subset of note words", async () => {
             becca.reset();
             buildNote({
@@ -104,6 +133,7 @@ describe("custom_dictionary", () => {
             await customDictionary.loadForSession(session);
 
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(3);
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(2);
         });
 
         it("handles note with whitespace and blank lines", async () => {
