@@ -5,6 +5,7 @@ import type { NativeImage, TouchBar } from "electron";
 import { ColumnComponent } from "tabulator-tables";
 
 import type { Attribute } from "../services/attribute_parser.js";
+import bundleService from "../services/bundle.js";
 import froca from "../services/froca.js";
 import { initLocale, t } from "../services/i18n.js";
 import keyboardActionsService from "../services/keyboard_actions.js";
@@ -578,7 +579,6 @@ export class AppContext extends Component {
 
         this.tabManager.loadTabs();
 
-        const bundleService = (await import("../services/bundle.js")).default;
         setTimeout(() => bundleService.executeStartupBundles(), 2000);
     }
 

@@ -1,5 +1,8 @@
+import { t } from "./i18n.js";
+import toastService from "./toast.js";
 import utils, { isShare } from "./utils.js";
 import ValidationError from "./validation_error.js";
+import { logError } from "./ws.js";
 
 type Headers = Record<string, string | null | undefined>;
 
@@ -32,6 +35,7 @@ async function getHeaders(headers?: Headers) {
         return {};
     }
 
+    // Dynamic import to avoid circular dependency (app_context imports froca which imports server).
     const appContext = (await import("../components/app_context.js")).default;
     const activeNoteContext = appContext.tabManager ? appContext.tabManager.getActiveContext() : null;
 
@@ -344,8 +348,6 @@ async function reportError(method: string, url: string, statusCode: number, resp
         } catch (e) {}
     }
 
-    const toastService = (await import("./toast.js")).default;
-
     const messageStr = (typeof message === "string" ? message : JSON.stringify(message)) || "-";
 
     if ([400, 404].includes(statusCode) && response && typeof response === "object") {
@@ -357,7 +359,6 @@ async function reportError(method: string, url: string, statusCode: number, resp
             ...response
         });
     } else {
-        const { t } = await import("./i18n.js");
         if (statusCode === 400 && (url.includes("%23") || url.includes("%2F"))) {
             toastService.showPersistent({
                 id: "trafik-blocked",
@@ -371,7 +372,6 @@ async function reportError(method: string, url: string, statusCode: number, resp
                 t("server.unknown_http_error_content", { statusCode, method, url, message: messageStr }),
                 15_000);
         }
-        const { logError } = await import("./ws.js");
         logError(`${statusCode} ${method} ${url} - ${message}`);
     }
 }

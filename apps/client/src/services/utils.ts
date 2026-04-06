@@ -455,7 +455,7 @@ export function openInAppHelpFromUrl(inAppHelpPage: string) {
 export async function openInReusableSplit(targetNoteId: string, targetViewMode: ViewMode, openOpts: {
     hoistedNoteId?: string;
 } = {}) {
-    // Dynamic import to avoid import issues in tests.
+    // Dynamic import to avoid circular dependency (app_context imports utils).
     const appContext = (await import("../components/app_context.js")).default;
     const activeContext = appContext.tabManager.getActiveContext();
     if (!activeContext) {

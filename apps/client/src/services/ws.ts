@@ -1,13 +1,16 @@
-import utils from "./utils.js";
-import toastService from "./toast.js";
-import server from "./server.js";
-import options from "./options.js";
-import frocaUpdater from "./froca_updater.js";
-import appContext from "../components/app_context.js";
-import { t } from "./i18n.js";
-import type { EntityChange } from "../server_types.js";
 import { WebSocketMessage } from "@triliumnext/commons";
+
+import appContext from "../components/app_context.js";
+import type { EntityChange } from "../server_types.js";
+import bundleService from "./bundle.js";
+import froca from "./froca.js";
+import frocaUpdater from "./froca_updater.js";
+import { t } from "./i18n.js";
+import options from "./options.js";
+import server from "./server.js";
+import toastService from "./toast.js";
 import toast from "./toast.js";
+import utils from "./utils.js";
 
 type MessageHandler = (message: WebSocketMessage) => void;
 let messageHandlers: MessageHandler[] = [];
@@ -134,12 +137,6 @@ async function handleMessage(event: MessageEvent<any>) {
     } else if (message.type === "toast") {
         toastService.showMessage(message.message);
     } else if (message.type === "execute-script") {
-        // TODO: Remove after porting the file
-        // @ts-ignore
-        const bundleService = (await import("./bundle.js")).default as any;
-        // TODO: Remove after porting the file
-        // @ts-ignore
-        const froca = (await import("./froca.js")).default as any;
         const originEntity = message.originEntityId ? await froca.getNote(message.originEntityId) : null;
 
         bundleService.getAndExecuteBundle(message.currentNoteId, originEntity, message.script, message.params);
@@ -161,7 +158,7 @@ function waitForEntityChangeId(desiredEntityChangeId: number) {
 
     return new Promise<void>((res, rej) => {
         entityChangeIdReachedListeners.push({
-            desiredEntityChangeId: desiredEntityChangeId,
+            desiredEntityChangeId,
             resolvePromise: res,
             start: Date.now()
         });
