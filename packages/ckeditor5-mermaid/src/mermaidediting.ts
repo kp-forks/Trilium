@@ -21,6 +21,7 @@ export default class MermaidEditing extends Plugin {
 
 	private _config!: EditorConfig["mermaid"];
 	private mermaid?: MermaidInstance;
+	private _renderGeneration = 0;
 
 	/**
 	 * @inheritDoc
@@ -266,13 +267,19 @@ export default class MermaidEditing extends Plugin {
 			return;
 		}
 
+		const generation = ++this._renderGeneration;
 		const id = `ck-mermaid-${ uid() }`;
 
 		try {
 			const { svg } = await this.mermaid.render( id, source );
-			domElement.innerHTML = svg;
+
+			if ( generation === this._renderGeneration ) {
+				domElement.innerHTML = svg;
+			}
 		} catch ( err: any ) {
-			domElement.innerText = err.message;
+			if ( generation === this._renderGeneration ) {
+				domElement.innerText = err.message;
+			}
 			document.getElementById( id )?.remove();
 		}
 	}
