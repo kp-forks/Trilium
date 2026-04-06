@@ -1,16 +1,14 @@
-import options from "./options.js";
+import { LOCALE_IDS, LOCALES, setDayjsLocale } from "@triliumnext/commons";
 import i18next from "i18next";
 import i18nextHttpBackend from "i18next-http-backend";
-import { LOCALE_IDS, LOCALES, setDayjsLocale } from "@triliumnext/commons";
 import { initReactI18next } from "react-i18next";
 
 /**
  * A deferred promise that resolves when translations are initialized.
  */
-export let translationsInitializedPromise = $.Deferred();
+export const translationsInitializedPromise = $.Deferred();
 
-export async function initLocale() {
-    const locale = ((options.get("locale") as string) || "en") as LOCALE_IDS;
+export async function initLocale(locale: LOCALE_IDS = "en") {
 
     i18next.use(initReactI18next);
     await i18next.use(i18nextHttpBackend).init({

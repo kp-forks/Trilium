@@ -1,3 +1,4 @@
+import { t } from "./i18n.js";
 import utils, { isShare } from "./utils.js";
 import ValidationError from "./validation_error.js";
 
@@ -343,9 +344,8 @@ async function reportError(method: string, url: string, statusCode: number, resp
         } catch (e) {}
     }
 
-    // Dynamic imports to avoid circular dependency (toast/i18n → app_context → options → server).
+    // Dynamic import to avoid circular dependency (toast → app_context → options → server).
     const toastService = (await import("./toast.js")).default;
-    const { t } = await import("./i18n.js");
 
     const messageStr = (typeof message === "string" ? message : JSON.stringify(message)) || "-";
 

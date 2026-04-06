@@ -1,6 +1,6 @@
 import type { CKTextEditor } from "@triliumnext/ckeditor5";
 import type CodeMirror from "@triliumnext/codemirror";
-import { SqlExecuteResponse } from "@triliumnext/commons";
+import { type LOCALE_IDS, SqlExecuteResponse } from "@triliumnext/commons";
 import type { NativeImage, TouchBar } from "electron";
 import { ColumnComponent } from "tabulator-tables";
 
@@ -564,7 +564,7 @@ export class AppContext extends Component {
      */
     async earlyInit() {
         await options.initializedPromise;
-        await initLocale();
+        await initLocale((options.get("locale") || "en") as LOCALE_IDS);
     }
 
     setLayout(layout: Layout) {
