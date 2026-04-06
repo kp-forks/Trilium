@@ -1505,7 +1505,8 @@
     "custom_dictionary_description": "Words added to the dictionary are synced across all your devices.",
     "custom_dictionary_edit": "Custom words",
     "custom_dictionary_edit_description": "Edit the list of words that should not be flagged by the spell checker. Changes will be visible after a restart.",
-    "custom_dictionary_open": "Edit dictionary"
+    "custom_dictionary_open": "Edit dictionary",
+    "related_description": "Configure spell check languages and custom dictionary."
   },
   "sync_2": {
     "config_title": "Sync Configuration",
