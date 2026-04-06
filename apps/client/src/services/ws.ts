@@ -8,7 +8,6 @@ import frocaUpdater from "./froca_updater.js";
 import { t } from "./i18n.js";
 import options from "./options.js";
 import server from "./server.js";
-import toastService from "./toast.js";
 import toast from "./toast.js";
 import utils from "./utils.js";
 
@@ -129,13 +128,13 @@ async function handleMessage(event: MessageEvent<any>) {
     } else if (message.type === "frontend-update") {
         await executeFrontendUpdate(message.data.entityChanges);
     } else if (message.type === "sync-hash-check-failed") {
-        toastService.showError(t("ws.sync-check-failed"), 60000);
+        toast.showError(t("ws.sync-check-failed"), 60000);
     } else if (message.type === "consistency-checks-failed") {
-        toastService.showError(t("ws.consistency-checks-failed"), 50 * 60000);
+        toast.showError(t("ws.consistency-checks-failed"), 50 * 60000);
     } else if (message.type === "api-log-messages") {
         appContext.triggerEvent("apiLogMessages", { noteId: message.noteId, messages: message.messages });
     } else if (message.type === "toast") {
-        toastService.showMessage(message.message);
+        toast.showMessage(message.message);
     } else if (message.type === "execute-script") {
         const originEntity = message.originEntityId ? await froca.getNote(message.originEntityId) : null;
 
@@ -202,7 +201,7 @@ async function consumeFrontendUpdateData() {
             } else {
                 console.log("nonProcessedEntityChanges causing the timeout", nonProcessedEntityChanges);
 
-                toastService.showError(t("ws.encountered-error", { message: e.message }));
+                toast.showError(t("ws.encountered-error", { message: e.message }));
             }
         }
 
