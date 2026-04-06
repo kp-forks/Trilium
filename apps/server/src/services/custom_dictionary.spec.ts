@@ -56,19 +56,18 @@ describe("custom_dictionary", () => {
 
             await customDictionary.loadForSession(session);
 
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(2);
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("hello");
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("world");
+            // Words are saved to the note; they're already in the local dictionary so no re-add needed.
+            expect(session.addWordToSpellCheckerDictionary).not.toHaveBeenCalled();
         });
 
-        it("clears local dictionary after one-time import", async () => {
+        it("does not remove or re-add local words after one-time import", async () => {
             const session = mockSession(["hello", "world"]);
 
             await customDictionary.loadForSession(session);
 
-            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(2);
-            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("hello");
-            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("world");
+            // Words were imported from local, so they already exist — no remove, no re-add.
+            expect(session.removeWordFromSpellCheckerDictionary).not.toHaveBeenCalled();
+            expect(session.addWordToSpellCheckerDictionary).not.toHaveBeenCalled();
         });
 
         it("loads note words into session when no local words exist", async () => {
@@ -88,7 +87,7 @@ describe("custom_dictionary", () => {
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("banana");
         });
 
-        it("only loads note words when both note and local have content", async () => {
+        it("only adds note words not already in local dictionary", async () => {
             becca.reset();
             buildNote({
                 id: "_customDictionary",
@@ -96,16 +95,16 @@ describe("custom_dictionary", () => {
                 type: "code",
                 content: "apple\nbanana"
             });
+            // "banana" is already local, so only "apple" needs adding.
             const session = mockSession(["banana", "cherry"]);
 
             await customDictionary.loadForSession(session);
 
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(2);
+            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledTimes(1);
             expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("apple");
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("banana");
         });
 
-        it("clears local dictionary when note has content", async () => {
+        it("only removes local words not in the note", async () => {
             becca.reset();
             buildNote({
                 id: "_customDictionary",
@@ -113,12 +112,12 @@ describe("custom_dictionary", () => {
                 type: "code",
                 content: "apple\nbanana"
             });
+            // "cherry" is not in the note, so it should be removed. "banana" should stay.
             const session = mockSession(["banana", "cherry"]);
 
             await customDictionary.loadForSession(session);
 
-            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(2);
-            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("banana");
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(1);
             expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("cherry");
         });
 
@@ -153,10 +152,11 @@ describe("custom_dictionary", () => {
 
             await customDictionary.loadForSession(session);
 
-            // Only note words should be loaded, not "cherry".
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("apple");
-            expect(session.addWordToSpellCheckerDictionary).toHaveBeenCalledWith("banana");
-            expect(session.addWordToSpellCheckerDictionary).not.toHaveBeenCalledWith("cherry");
+            // "apple" and "banana" are already local — no re-add needed.
+            expect(session.addWordToSpellCheckerDictionary).not.toHaveBeenCalled();
+            // "cherry" should be removed from local dictionary.
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledTimes(1);
+            expect(session.removeWordFromSpellCheckerDictionary).toHaveBeenCalledWith("cherry");
         });
 
         it("handles missing dictionary note gracefully", async () => {

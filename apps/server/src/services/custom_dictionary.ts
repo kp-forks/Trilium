@@ -86,14 +86,18 @@ async function loadForSession(session: Session) {
         saveWords(merged);
     }
 
-    // Clear local dictionary so the note remains the single source of truth.
-    if (localWords.length > 0) {
-        clearFromLocalDictionary(session, localWords);
+    // Remove local words that are not in the note (e.g. user removed them manually).
+    const staleWords = localWords.filter((w) => !merged.has(w));
+    if (staleWords.length > 0) {
+        clearFromLocalDictionary(session, staleWords);
     }
 
-    // Load all words into Electron's spellchecker.
+    // Add note words that aren't already in the local dictionary.
+    const localWordsSet = new Set(localWords);
     for (const word of merged) {
-        session.addWordToSpellCheckerDictionary(word);
+        if (!localWordsSet.has(word)) {
+            session.addWordToSpellCheckerDictionary(word);
+        }
     }
 
     if (merged.size > 0) {
