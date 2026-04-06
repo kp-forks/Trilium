@@ -6,7 +6,7 @@ import MermaidPreviewCommand from './commands/mermaidPreviewCommand.js';
 import MermaidSourceViewCommand from './commands/mermaidSourceViewCommand.js';
 import MermaidSplitViewCommand from './commands/mermaidSplitViewCommand.js';
 import InsertMermaidCommand from './commands/insertMermaidCommand.js';
-import { DowncastAttributeEvent, DowncastConversionApi, EditorConfig, ModelElement, EventInfo, ModelItem, ModelNode, Plugin, toWidget, UpcastConversionApi, UpcastConversionData, ViewElement, ViewText, ViewUIElement } from 'ckeditor5';
+import { DowncastAttributeEvent, DowncastConversionApi, EditorConfig, ModelElement, EventInfo, ModelItem, ModelNode, Plugin, toWidget, uid, UpcastConversionApi, UpcastConversionData, ViewElement, ViewText, ViewUIElement } from 'ckeditor5';
 
 import { debounce } from './utils.js';
 
@@ -179,16 +179,10 @@ export default class MermaidEditing extends Plugin {
 		}
 
 		function createMermaidPreview(this: ViewUIElement,  domDocument: Document ) {
-			// Taking the text from the wrapper container element for now
 			const mermaidSource = data.item.getAttribute( 'source' ) as string;
 			const domElement = this.toDomElement( domDocument );
 
-			domElement.textContent = mermaidSource;
-
-			window.setTimeout( () => {
-				// @todo: by the looks of it the domElement needs to be hooked to tree in order to allow for rendering.
-				that._renderMermaid( domElement );
-			}, 100 );
+			that._renderMermaid( domElement, mermaidSource );
 
 			return domElement;
 		}
@@ -219,10 +213,7 @@ export default class MermaidEditing extends Plugin {
 					const domPreviewWrapper = domConverter.viewToDom(child);
 
 					if ( domPreviewWrapper ) {
-						domPreviewWrapper.textContent = newSource;
-						domPreviewWrapper.removeAttribute( 'data-processed' );
-
-						this._renderMermaid( domPreviewWrapper );
+						this._renderMermaid( domPreviewWrapper, newSource );
 					}
 				}
 			}
@@ -263,14 +254,26 @@ export default class MermaidEditing extends Plugin {
 	}
 
 	/**
-	 * Renders Mermaid in a given `domElement`. Expect this domElement to have mermaid
-	 * source set as text content.
+	 * Renders Mermaid (a parsed `source`) in a given `domElement`.
 	 */
-	async _renderMermaid( domElement: HTMLElement ) {
-		if (!window.mermaid && typeof this._config?.lazyLoad === "function") {
+	async _renderMermaid( domElement: HTMLElement, source: string ) {
+		if ( !this.mermaid && typeof this._config?.lazyLoad === 'function' ) {
 			this.mermaid = await this._config.lazyLoad();
+			this.mermaid.initialize( this._config?.config ?? {} );
 		}
 
-		this.mermaid?.init( this._config?.config ?? {}, domElement );
+		if ( !this.mermaid ) {
+			return;
+		}
+
+		const id = `ck-mermaid-${ uid() }`;
+
+		try {
+			const { svg } = await this.mermaid.render( id, source );
+			domElement.innerHTML = svg;
+		} catch ( err: any ) {
+			domElement.innerText = err.message;
+			document.getElementById( id )?.parentElement?.remove();
+		}
 	}
 }
