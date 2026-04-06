@@ -25,21 +25,19 @@ function ElectronSpellcheckSettings() {
     const [ spellCheckEnabled, setSpellCheckEnabled ] = useTriliumOptionBool("spellCheckEnabled");
 
     return (
-        <>
-            <OptionsSection title={t("spellcheck.title")}>
-                <FormText>{t("spellcheck.restart-required")}</FormText>
+        <OptionsSection title={t("spellcheck.title")}>
+            <FormText>{t("spellcheck.restart-required")}</FormText>
 
-                <OptionsRow name="spell-check-enabled" label={t("spellcheck.enable")}>
-                    <FormToggle
-                        switchOnName="" switchOffName=""
-                        currentValue={spellCheckEnabled}
-                        onChange={setSpellCheckEnabled}
-                    />
-                </OptionsRow>
-            </OptionsSection>
+            <OptionsRow name="spell-check-enabled" label={t("spellcheck.enable")}>
+                <FormToggle
+                    switchOnName="" switchOffName=""
+                    currentValue={spellCheckEnabled}
+                    onChange={setSpellCheckEnabled}
+                />
+            </OptionsRow>
 
             {spellCheckEnabled && <SpellcheckLanguages />}
-        </>
+        </OptionsSection>
     );
 }
 
@@ -74,7 +72,7 @@ function SpellcheckLanguages() {
     }, []);
 
     return (
-        <OptionsSection title={t("spellcheck.language_code_label")}>
+        <OptionsRow name="spell-check-languages" label={t("spellcheck.language_code_label")} fullWidth>
             <CheckboxList
                 values={availableLanguages}
                 keyProperty="code" titleProperty="name"
@@ -82,7 +80,7 @@ function SpellcheckLanguages() {
                 onChange={setSelectedCodes}
                 columnWidth="200px"
             />
-        </OptionsSection>
+        </OptionsRow>
     );
 }
 
