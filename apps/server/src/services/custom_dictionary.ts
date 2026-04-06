@@ -1,6 +1,7 @@
 import type { Session } from "electron";
 
 import becca from "../becca/becca.js";
+import cls from "./cls.js";
 import log from "./log.js";
 
 const DICTIONARY_NOTE_ID = "_customDictionary";
@@ -30,14 +31,16 @@ function getWords(): Set<string> {
  * Saves the given words to the custom dictionary note, one per line.
  */
 function saveWords(words: Set<string>) {
-    const note = becca.getNote(DICTIONARY_NOTE_ID);
-    if (!note) {
-        log.error("Custom dictionary note not found.");
-        return;
-    }
+    cls.init(() => {
+        const note = becca.getNote(DICTIONARY_NOTE_ID);
+        if (!note) {
+            log.error("Custom dictionary note not found.");
+            return;
+        }
 
-    const sorted = [...words].sort((a, b) => a.localeCompare(b));
-    note.setContent(sorted.join("\n"));
+        const sorted = [...words].sort((a, b) => a.localeCompare(b));
+        note.setContent(sorted.join("\n"));
+    });
 }
 
 /**
