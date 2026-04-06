@@ -1,8 +1,5 @@
-import { t } from "./i18n.js";
-import toastService from "./toast.js";
 import utils, { isShare } from "./utils.js";
 import ValidationError from "./validation_error.js";
-import { logError } from "./ws.js";
 
 type Headers = Record<string, string | null | undefined>;
 
@@ -346,6 +343,10 @@ async function reportError(method: string, url: string, statusCode: number, resp
         } catch (e) {}
     }
 
+    // Dynamic imports to avoid circular dependency (toast/i18n → app_context → options → server).
+    const toastService = (await import("./toast.js")).default;
+    const { t } = await import("./i18n.js");
+
     const messageStr = (typeof message === "string" ? message : JSON.stringify(message)) || "-";
 
     if ([400, 404].includes(statusCode) && response && typeof response === "object") {
@@ -370,7 +371,7 @@ async function reportError(method: string, url: string, statusCode: number, resp
                 t("server.unknown_http_error_content", { statusCode, method, url, message: messageStr }),
                 15_000);
         }
-        logError(`${statusCode} ${method} ${url} - ${message}`);
+        window.logError(`${statusCode} ${method} ${url} - ${message}`);
     }
 }
 
