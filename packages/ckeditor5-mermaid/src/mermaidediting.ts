@@ -273,7 +273,7 @@ export default class MermaidEditing extends Plugin {
 			domElement.innerHTML = svg;
 		} catch ( err: any ) {
 			domElement.innerText = err.message;
-			document.getElementById( id )?.parentElement?.remove();
+			document.getElementById( id )?.remove();
 		}
 	}
 }
