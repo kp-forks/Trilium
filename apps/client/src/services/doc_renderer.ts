@@ -3,22 +3,39 @@ import { applyReferenceLinks } from "../widgets/type_widgets/text/read_only_help
 import { getCurrentLanguage } from "./i18n.js";
 import { formatCodeBlocks } from "./syntax_highlight.js";
 
+/**
+ * Validates a docName to prevent path traversal attacks.
+ * Allows forward slashes for subdirectories (e.g., "User Guide/Quick Start")
+ * but blocks traversal sequences and URL manipulation characters.
+ */
+export function isValidDocName(docName: string): boolean {
+    // Allow alphanumeric characters, spaces, underscores, hyphens, and forward slashes.
+    const validDocNameRegex = /^[a-zA-Z0-9_/\- ]+$/;
+    return validDocNameRegex.test(docName);
+}
+
 export default function renderDoc(note: FNote) {
     return new Promise<JQuery<HTMLElement>>((resolve) => {
         const docName = note.getLabelValue("docName");
         const $content = $("<div>");
 
-        if (docName) {
-            // find doc based on language
-            const url = getUrl(docName, getCurrentLanguage());
+        // find doc based on language
+        const url = getUrl(docName, getCurrentLanguage());
+
+        if (url) {
             $content.load(url, async (response, status) => {
                 // fallback to english doc if no translation available
                 if (status === "error") {
                     const fallbackUrl = getUrl(docName, "en");
-                    $content.load(fallbackUrl, async () => {
-                        await processContent(fallbackUrl, $content);
+
+                    if (fallbackUrl) {
+                        $content.load(fallbackUrl, async () => {
+                            await processContent(fallbackUrl, $content);
+                            resolve($content);
+                        });
+                    } else {
                         resolve($content);
-                    });
+                    }
                     return;
                 }
 
@@ -28,8 +45,6 @@ export default function renderDoc(note: FNote) {
         } else {
             resolve($content);
         }
-
-        return $content;
     });
 }
 
@@ -48,7 +63,14 @@ async function processContent(url: string, $content: JQuery<HTMLElement>) {
     await applyReferenceLinks($content[0]);
 }
 
-function getUrl(docNameValue: string, language: string) {
+function getUrl(docNameValue: string | null, language: string) {
+    if (!docNameValue) return;
+
+    if (!isValidDocName(docNameValue)) {
+        console.error(`Invalid docName: ${docNameValue}`);
+        return null;
+    }
+
     // Cannot have spaces in the URL due to how JQuery.load works.
     docNameValue = docNameValue.replaceAll(" ", "%20");
     // The user guide is available only in English, so make sure we are requesting correctly since 404s in standalone client are treated differently.
@@ -61,7 +83,7 @@ function getBasePath() {
         return `server-assets`;
     }
     if (window.glob.isDev) {
-        return `${window.glob.assetPath  }/..`;
+        return `${window.glob.assetPath}/..`;
     }
     return window.glob.assetPath;
 }

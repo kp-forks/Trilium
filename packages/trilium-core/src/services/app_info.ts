@@ -3,7 +3,7 @@ import packageJson from "../../package.json" with { type: "json" };
 import { AppInfo } from "@triliumnext/commons";
 
 const APP_DB_VERSION = 236;
-const SYNC_VERSION = 37;
+const SYNC_VERSION = 38;
 const CLIPPER_PROTOCOL_VERSION = "1.0";
 
 const appInfo: AppInfo = {

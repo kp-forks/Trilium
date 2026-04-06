@@ -20,10 +20,6 @@ export function ordinal(date: Dayjs) {
         .format("Do");
 }
 
-export function getLocales(): Locale[] {
-    return LOCALES;
-}
-
 function getCurrentLanguage(): LOCALE_IDS {
     let language: string | null = null;
     if (sql_init.isDbInitialized()) {

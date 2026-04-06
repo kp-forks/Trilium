@@ -48,8 +48,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
             return "empty_note_id";
         }
 
-        if (origNoteId === "root" || origNoteId.startsWith("_") || opts?.preserveIds) {
-            // these "named" noteIds don't differ between Trilium instances
+        if (origNoteId === "root" || opts?.preserveIds) {
             return origNoteId;
         }
 

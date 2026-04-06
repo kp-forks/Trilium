@@ -1,9 +1,15 @@
 name: Dev
 on:
   push:
-    branches: [ main, standalone ]
+    branches:
+      - main
+      - standalone
+      - "release/*"
   pull_request:
-    branches: [ main, standalone ]
+    branches:
+      - main
+      - standalone
+      - "release/*"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
