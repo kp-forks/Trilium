@@ -38,10 +38,9 @@ function ElectronSpellcheckSettings() {
                         onChange={setSpellCheckEnabled}
                     />
                 </OptionsRow>
-
-                {spellCheckEnabled && <SpellcheckLanguages />}
             </OptionsSection>
 
+            {spellCheckEnabled && <SpellcheckLanguages />}
             {spellCheckEnabled && <CustomDictionary />}
         </>
     );
@@ -78,7 +77,7 @@ function SpellcheckLanguages() {
     }, []);
 
     return (
-        <OptionsRow name="spell-check-languages" label={t("spellcheck.language_code_label")} fullWidth>
+        <OptionsSection title={t("spellcheck.language_code_label")}>
             <CheckboxList
                 values={availableLanguages}
                 keyProperty="code" titleProperty="name"
@@ -86,7 +85,7 @@ function SpellcheckLanguages() {
                 onChange={setSelectedCodes}
                 columnWidth="200px"
             />
-        </OptionsRow>
+        </OptionsSection>
     );
 }
 

@@ -45,12 +45,3 @@
 .option-row.centered {
     justify-content: center;
 }
-
-.option-row.full-width {
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.option-row.full-width .option-row-input {
-    flex-shrink: unset;
-}
