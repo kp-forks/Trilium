@@ -20,7 +20,7 @@ type DowncastConversionData = DowncastAttributeEvent["args"][0];
 export default class MermaidEditing extends Plugin {
 
 	private _config!: EditorConfig["mermaid"];
-	private mermaid?: MermaidInstance;
+	private _mermaidPromise?: Promise<MermaidInstance>;
 	private _renderGeneration = 0;
 
 	/**
@@ -258,12 +258,16 @@ export default class MermaidEditing extends Plugin {
 	 * Renders Mermaid (a parsed `source`) in a given `domElement`.
 	 */
 	async _renderMermaid( domElement: HTMLElement, source: string ) {
-		if ( !this.mermaid && typeof this._config?.lazyLoad === 'function' ) {
-			this.mermaid = await this._config.lazyLoad();
-			this.mermaid.initialize( this._config?.config ?? {} );
+		if ( !this._mermaidPromise && typeof this._config?.lazyLoad === 'function' ) {
+			this._mermaidPromise = Promise.resolve( this._config.lazyLoad() ).then( instance => {
+				instance.initialize( this._config?.config ?? {} );
+				return instance;
+			} );
 		}
 
-		if ( !this.mermaid ) {
+		const mermaid = await this._mermaidPromise;
+
+		if ( !mermaid ) {
 			return;
 		}
 
@@ -271,7 +275,7 @@ export default class MermaidEditing extends Plugin {
 		const id = `ck-mermaid-${ uid() }`;
 
 		try {
-			const { svg } = await this.mermaid.render( id, source );
+			const { svg } = await mermaid.render( id, source );
 
 			if ( generation === this._renderGeneration ) {
 				domElement.innerHTML = svg;
