@@ -455,7 +455,7 @@ export function openInAppHelpFromUrl(inAppHelpPage: string) {
 export async function openInReusableSplit(targetNoteId: string, targetViewMode: ViewMode, openOpts: {
     hoistedNoteId?: string;
 } = {}) {
-    const activeContext = glob.appContext?.tabManager.getActiveContext();
+    const activeContext = glob.appContext?.tabManager?.getActiveContext();
     if (!activeContext) {
         return;
     }
