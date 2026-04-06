@@ -1,57 +1,89 @@
-import { useMemo } from "preact/hooks";
+import { useCallback, useMemo } from "preact/hooks";
+
 import { t } from "../../../services/i18n";
-import FormCheckbox from "../../react/FormCheckbox";
-import FormGroup from "../../react/FormGroup";
-import FormText from "../../react/FormText";
-import FormTextBox from "../../react/FormTextBox";
-import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
-import OptionsSection from "./components/OptionsSection";
 import { dynamicRequire, isElectron } from "../../../services/utils";
+import FormText from "../../react/FormText";
+import FormToggle from "../../react/FormToggle";
+import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import CheckboxList from "./components/CheckboxList";
+import OptionsRow from "./components/OptionsRow";
+import OptionsSection from "./components/OptionsSection";
 
 export default function SpellcheckSettings() {
     if (isElectron()) {
-        return <ElectronSpellcheckSettings />
-    } else {
-        return <WebSpellcheckSettings />
+        return <ElectronSpellcheckSettings />;
     }
+    return <WebSpellcheckSettings />;
+}
+
+interface SpellcheckLanguage {
+    code: string;
+    name: string;
 }
 
 function ElectronSpellcheckSettings() {
     const [ spellCheckEnabled, setSpellCheckEnabled ] = useTriliumOptionBool("spellCheckEnabled");
+
+    return (
+        <>
+            <OptionsSection title={t("spellcheck.title")}>
+                <FormText>{t("spellcheck.restart-required")}</FormText>
+
+                <OptionsRow name="spell-check-enabled" label={t("spellcheck.enable")}>
+                    <FormToggle
+                        switchOnName="" switchOffName=""
+                        currentValue={spellCheckEnabled}
+                        onChange={setSpellCheckEnabled}
+                    />
+                </OptionsRow>
+            </OptionsSection>
+
+            {spellCheckEnabled && <SpellcheckLanguages />}
+        </>
+    );
+}
+
+function SpellcheckLanguages() {
     const [ spellCheckLanguageCode, setSpellCheckLanguageCode ] = useTriliumOption("spellCheckLanguageCode");
 
-    const availableLanguageCodes = useMemo(() => {
+    const selectedCodes = useMemo(() =>
+        (spellCheckLanguageCode ?? "")
+            .split(",")
+            .map((c) => c.trim())
+            .filter((c) => c.length > 0),
+    [spellCheckLanguageCode]
+    );
+
+    const setSelectedCodes = useCallback((codes: string[]) => {
+        setSpellCheckLanguageCode(codes.join(", "));
+    }, [setSpellCheckLanguageCode]);
+
+    const availableLanguages = useMemo<SpellcheckLanguage[]>(() => {
         if (!isElectron()) {
             return [];
         }
 
-        const { webContents } = dynamicRequire("@electron/remote").getCurrentWindow();        
-        return webContents.session.availableSpellCheckerLanguages as string[];
-    }, [])
+        const { webContents } = dynamicRequire("@electron/remote").getCurrentWindow();
+        const codes = webContents.session.availableSpellCheckerLanguages as string[];
+        const displayNames = new Intl.DisplayNames([navigator.language], { type: "language" });
+
+        return codes.map((code) => ({
+            code,
+            name: displayNames.of(code) ?? code
+        })).sort((a, b) => a.name.localeCompare(b.name));
+    }, []);
 
     return (
-        <OptionsSection title={t("spellcheck.title")}>
-            <FormText>{t("spellcheck.restart-required")}</FormText>
-
-            <FormCheckbox
-                name="spell-check-enabled"
-                label={t("spellcheck.enable")}
-                currentValue={spellCheckEnabled} onChange={setSpellCheckEnabled}
+        <OptionsSection title={t("spellcheck.language_code_label")}>
+            <CheckboxList
+                values={availableLanguages}
+                keyProperty="code" titleProperty="name"
+                currentValue={selectedCodes}
+                onChange={setSelectedCodes}
+                columnWidth="200px"
             />
-
-            <FormGroup name="spell-check-languages" label={t("spellcheck.language_code_label")} description={t("spellcheck.multiple_languages_info")}>
-                <FormTextBox                                        
-                    placeholder={t("spellcheck.language_code_placeholder")}
-                    currentValue={spellCheckLanguageCode} onChange={setSpellCheckLanguageCode}
-                />
-            </FormGroup>
-
-            <FormText>
-                <strong>{t("spellcheck.available_language_codes_label")} </strong>
-                {availableLanguageCodes.join(", ")}
-            </FormText>
         </OptionsSection>
-    )
+    );
 }
 
 function WebSpellcheckSettings() {
@@ -59,5 +91,5 @@ function WebSpellcheckSettings() {
         <OptionsSection title={t("spellcheck.title")}>
             <p>{t("spellcheck.description")}</p>
         </OptionsSection>
-    )
+    );
 }
