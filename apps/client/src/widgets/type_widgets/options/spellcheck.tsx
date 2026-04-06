@@ -1,7 +1,9 @@
 import { useCallback, useMemo } from "preact/hooks";
 
+import appContext from "../../../components/app_context";
 import { t } from "../../../services/i18n";
 import { dynamicRequire, isElectron } from "../../../services/utils";
+import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
@@ -25,19 +27,23 @@ function ElectronSpellcheckSettings() {
     const [ spellCheckEnabled, setSpellCheckEnabled ] = useTriliumOptionBool("spellCheckEnabled");
 
     return (
-        <OptionsSection title={t("spellcheck.title")}>
-            <FormText>{t("spellcheck.restart-required")}</FormText>
+        <>
+            <OptionsSection title={t("spellcheck.title")}>
+                <FormText>{t("spellcheck.restart-required")}</FormText>
 
-            <OptionsRow name="spell-check-enabled" label={t("spellcheck.enable")}>
-                <FormToggle
-                    switchOnName="" switchOffName=""
-                    currentValue={spellCheckEnabled}
-                    onChange={setSpellCheckEnabled}
-                />
-            </OptionsRow>
+                <OptionsRow name="spell-check-enabled" label={t("spellcheck.enable")}>
+                    <FormToggle
+                        switchOnName="" switchOffName=""
+                        currentValue={spellCheckEnabled}
+                        onChange={setSpellCheckEnabled}
+                    />
+                </OptionsRow>
 
-            {spellCheckEnabled && <SpellcheckLanguages />}
-        </OptionsSection>
+                {spellCheckEnabled && <SpellcheckLanguages />}
+            </OptionsSection>
+
+            {spellCheckEnabled && <CustomDictionary />}
+        </>
     );
 }
 
@@ -81,6 +87,27 @@ function SpellcheckLanguages() {
                 columnWidth="200px"
             />
         </OptionsRow>
+    );
+}
+
+function CustomDictionary() {
+    function openDictionary() {
+        appContext.triggerCommand("openInPopup", { noteIdOrPath: "_customDictionary" });
+    }
+
+    return (
+        <OptionsSection title={t("spellcheck.custom_dictionary_title")}>
+            <FormText>{t("spellcheck.custom_dictionary_description")}</FormText>
+
+            <OptionsRow name="custom-dictionary" label={t("spellcheck.custom_dictionary_edit")} description={t("spellcheck.custom_dictionary_edit_description")}>
+                <Button
+                    name="open-custom-dictionary"
+                    text={t("spellcheck.custom_dictionary_open")}
+                    icon="bx bx-edit"
+                    onClick={openDictionary}
+                />
+            </OptionsRow>
+        </OptionsSection>
     );
 }
 

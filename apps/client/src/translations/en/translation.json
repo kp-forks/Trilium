@@ -1500,7 +1500,12 @@
     "description": "These options apply only for desktop builds, browsers will use their own native spell check.",
     "enable": "Check spelling",
     "language_code_label": "Spell Check Languages",
-    "restart-required": "Changes to the spell check options will take effect after application restart."
+    "restart-required": "Changes to the spell check options will take effect after application restart.",
+    "custom_dictionary_title": "Custom Dictionary",
+    "custom_dictionary_description": "Words added to the dictionary are synced across all your devices.",
+    "custom_dictionary_edit": "Custom words",
+    "custom_dictionary_edit_description": "Edit the list of words that should not be flagged by the spell checker. Changes will be visible after a restart.",
+    "custom_dictionary_open": "Edit dictionary"
   },
   "sync_2": {
     "config_title": "Sync Configuration",
