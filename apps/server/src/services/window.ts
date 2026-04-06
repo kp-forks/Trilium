@@ -6,6 +6,7 @@ import url from "url";
 
 import app_info from "./app_info.js";
 import cls from "./cls.js";
+import customDictionary from "./custom_dictionary.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import optionService from "./options.js";
@@ -381,6 +382,7 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
             .map((code) => code.trim());
 
         webContents.session.setSpellCheckerLanguages(languageCodes);
+        customDictionary.loadForSession(webContents.session);
     }
 }
 
