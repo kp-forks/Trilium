@@ -43,8 +43,9 @@ let plugins: any = [
     sqliteWasmPlugin,  // Always include SQLite WASM files
     viteStaticCopy({
         targets: clientAssets.map((asset) => ({
-            src: `../../client/src/${asset}/*`,
-            dest: asset
+            src: `../../client/src/${asset}/**/*`,
+            dest: asset,
+            rename: { stripBase: 3 }
         })),
         // Enable watching in development
         ...(isDev && {
@@ -56,8 +57,9 @@ let plugins: any = [
     viteStaticCopy({
         targets: [
             {
-                src: "../../server/src/assets/*",
-                dest: "server-assets"
+                src: "../../server/src/assets/**/*",
+                dest: "server-assets",
+                rename: { stripBase: 3 }
             }
         ]
     }),
@@ -72,10 +74,9 @@ if (!isDev) {
     plugins = [
         ...plugins,
         viteStaticCopy({
-            structured: true,
             targets: [
                 {
-                    src: "../../../node_modules/@excalidraw/excalidraw/dist/prod/fonts/*",
+                    src: "../../../node_modules/@excalidraw/excalidraw/dist/prod/fonts/**/*",
                     dest: "",
                 }
             ]
