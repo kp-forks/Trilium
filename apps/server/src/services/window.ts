@@ -383,6 +383,11 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
 
         webContents.session.setSpellCheckerLanguages(languageCodes);
         customDictionary.loadForSession(webContents.session);
+
+        ipcMain.on("add-word-to-dictionary", (_event, word: string) => {
+            webContents.session.addWordToSpellCheckerDictionary(word);
+            customDictionary.addWord(word);
+        });
     }
 }
 
