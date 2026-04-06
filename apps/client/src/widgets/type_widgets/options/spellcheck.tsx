@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import { t } from "../../../services/i18n";
-import { dynamicRequire, isElectron } from "../../../services/utils";
+import { dynamicRequire, isElectron, restartDesktopApp } from "../../../services/utils";
 import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import FormToggle from "../../react/FormToggle";
@@ -36,6 +36,15 @@ function ElectronSpellcheckSettings() {
                         switchOnName="" switchOffName=""
                         currentValue={spellCheckEnabled}
                         onChange={setSpellCheckEnabled}
+                    />
+                </OptionsRow>
+
+                <OptionsRow name="restart" centered>
+                    <Button
+                        name="restart-app-button"
+                        text={t("electron_integration.restart-app-button")}
+                        size="micro"
+                        onClick={restartDesktopApp}
                     />
                 </OptionsRow>
             </OptionsSection>
