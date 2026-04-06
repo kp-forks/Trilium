@@ -2,13 +2,13 @@
  * @module mermaid/mermaidediting
  */
 
-import { debounce } from 'es-toolkit/compat';
-
 import MermaidPreviewCommand from './commands/mermaidPreviewCommand.js';
 import MermaidSourceViewCommand from './commands/mermaidSourceViewCommand.js';
 import MermaidSplitViewCommand from './commands/mermaidSplitViewCommand.js';
 import InsertMermaidCommand from './commands/insertMermaidCommand.js';
 import { DowncastAttributeEvent, DowncastConversionApi, EditorConfig, ModelElement, EventInfo, ModelItem, ModelNode, Plugin, toWidget, UpcastConversionApi, UpcastConversionData, ViewElement, ViewText, ViewUIElement } from 'ckeditor5';
+
+import { debounce } from './utils.js';
 
 // Time in milliseconds.
 const DEBOUNCE_TIME = 300;

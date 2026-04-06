@@ -43,8 +43,5 @@
     "stylelint": "stylelint --quiet --allow-empty-input 'theme/**/*.css'",
     "test": "vitest",
     "test:debug": "vitest --inspect-brk --no-file-parallelism --browser.headless=false"
-  },
-  "dependencies": {
-    "es-toolkit": "^1.45.1"
   }
 }
