@@ -7,6 +7,7 @@ import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import NoItems from "../../react/NoItems";
 import CheckboxList from "./components/CheckboxList";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
@@ -121,8 +122,11 @@ function CustomDictionary() {
 
 function WebSpellcheckSettings() {
     return (
-        <OptionsSection title={t("spellcheck.title")}>
-            <p>{t("spellcheck.description")}</p>
+        <OptionsSection>
+            <NoItems
+                text={t("spellcheck.description")}
+                icon="bx bx-check-double"
+            />
         </OptionsSection>
     );
 }
