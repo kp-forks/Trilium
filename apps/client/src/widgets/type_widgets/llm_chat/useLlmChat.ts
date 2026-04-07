@@ -62,6 +62,8 @@ export interface UseLlmChatReturn {
     clearMessages: () => void;
     /** Refresh the provider/models list */
     refreshModels: () => void;
+    /** Stop the current generation */
+    stopStreaming: () => void;
 }
 
 export function useLlmChat(
@@ -89,6 +91,7 @@ export function useLlmChat(
     const [isCheckingProvider, setIsCheckingProvider] = useState<boolean>(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Refs to get fresh values in getContent (avoids stale closures)
     const messagesRef = useRef(messages);
@@ -251,6 +254,9 @@ export function useLlmChat(
             streamOptions.enableExtendedThinking = enableExtendedThinking;
         }
 
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
         await streamChatCompletion(
             apiMessages,
             streamOptions,
@@ -353,9 +359,44 @@ export function useLlmChat(
                     setStreamingThinking("");
                     setPendingCitations([]);
                     setIsStreaming(false);
+                    abortControllerRef.current = null;
                 }
+            },
+            abortController.signal
+        ).catch((e) => {
+            // AbortError is expected when user stops generation
+            if (e instanceof DOMException && e.name === "AbortError") {
+                // Finalize whatever we have so far
+                const finalNewMessages: StoredMessage[] = [];
+                if (thinkingContent) {
+                    finalNewMessages.push({
+                        id: randomString(),
+                        role: "assistant",
+                        content: thinkingContent,
+                        createdAt: new Date().toISOString(),
+                        type: "thinking"
+                    });
+                }
+                if (contentBlocks.length > 0) {
+                    finalNewMessages.push({
+                        id: randomString(),
+                        role: "assistant",
+                        content: contentBlocks,
+                        createdAt: new Date().toISOString(),
+                        citations: citations.length > 0 ? citations : undefined
+                    });
+                }
+                if (finalNewMessages.length > 0) {
+                    setMessages([...newMessages, ...finalNewMessages]);
+                }
+                setStreamingContent("");
+                setStreamingBlocks([]);
+                setStreamingThinking("");
+                setPendingCitations([]);
+                setIsStreaming(false);
+                abortControllerRef.current = null;
             }
-        );
+        });
     }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, enableExtendedThinking, contextNoteId, supportsExtendedThinking, setMessages]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -364,6 +405,13 @@ export function useLlmChat(
             handleSubmit(e);
         }
     }, [handleSubmit]);
+
+    /** Stop the current generation by aborting the SSE connection. */
+    const stopStreaming = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+    }, []);
 
     return {
         // State
@@ -402,6 +450,7 @@ export function useLlmChat(
         loadFromContent,
         getContent,
         clearMessages,
-        refreshModels
+        refreshModels,
+        stopStreaming
     };
 }
