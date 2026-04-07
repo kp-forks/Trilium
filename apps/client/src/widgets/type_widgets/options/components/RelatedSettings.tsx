@@ -7,6 +7,7 @@ interface RelatedSettingsItem {
     title: string;
     description?: string;
     targetPage: OptionPages;
+    enabled?: boolean;
 }
 
 interface RelatedSettingsProps {
@@ -14,9 +15,15 @@ interface RelatedSettingsProps {
 }
 
 export default function RelatedSettings({ items }: RelatedSettingsProps) {
+    const filteredItems = items.filter(item => item.enabled !== false);
+
+    if (filteredItems.length === 0) {
+        return null;
+    }
+
     return (
         <OptionsSection title={t("settings.related_settings")}>
-            {items.map((item) => (
+            {filteredItems.map((item) => (
                 <OptionsRowLink
                     key={item.targetPage}
                     label={item.title}
