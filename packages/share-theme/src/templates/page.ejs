@@ -160,7 +160,7 @@ content = content.replaceAll(headingRe, (...match) => {
                 <%- renderSnippets("content:start") %>
                     <h1 id="title"><%= note.title %></h1>
                 <% if (isEmpty && (!note.hasVisibleChildren() && note.type !== "book")) { %>
-                    <p>This note has no content.</p>
+                    <p><%= t("share_page.no-content") %></p>
                 <% } else { %>
                     <%
                     content = content.replace(/<img /g, `<img alt="${t("share_theme.image_alt")}" loading="lazy" `);
