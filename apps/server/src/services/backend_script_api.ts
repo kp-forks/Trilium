@@ -28,7 +28,6 @@ import log from "./log.js";
 import type { NoteParams } from "./note-interface.js";
 import noteService from "./notes.js";
 import optionsService from "./options.js";
-import scriptService from "./script.js";
 import SearchContext from "./search/search_context.js";
 import searchService from "./search/services/search.js";
 import SpacedUpdate from "./spaced_update.js";
@@ -111,14 +110,6 @@ export interface Api {
     getInstanceName(): string | null;
 
     getNote(noteId: string): BNote | null;
-
-    /**
-     * Executes a backend JS note with the given noteId. The note must be of type "Code: JS backend".
-     *
-     * @returns the return value of the executed note
-     */
-    runNote(noteId: string): unknown;
-
     getBranch(branchId: string): BBranch | null;
     getAttribute(attachmentId: string): BAttribute | null;
     getAttachment(attachmentId: string): BAttachment | null;
@@ -456,10 +447,6 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     this.cheerio = cheerio;
     this.getInstanceName = () => (config.General ? config.General.instanceName : null);
     this.getNote = (noteId) => becca.getNote(noteId);
-    this.runNote = (noteId) => {
-        const note = becca.getNoteOrThrow(noteId);
-        return scriptService.executeNote(note, { originEntity: note });
-    };
     this.getBranch = (branchId) => becca.getBranch(branchId);
     this.getAttribute = (attributeId) => becca.getAttribute(attributeId);
     this.getAttachment = (attachmentId) => becca.getAttachment(attachmentId);
