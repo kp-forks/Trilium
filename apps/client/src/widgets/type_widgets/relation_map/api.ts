@@ -87,8 +87,8 @@ export default class RelationMapApi {
         );
         if (exists) return false;
 
-        await server.remove(`notes/${relation.sourceNoteId}/relations/${relation.name}/to/${relation.targetNoteId}`);
         await server.put(`notes/${relation.sourceNoteId}/relations/${newName}/to/${relation.targetNoteId}`);
+        await server.remove(`notes/${relation.sourceNoteId}/relations/${relation.name}/to/${relation.targetNoteId}`);
         this.onDataChange(true);
         return true;
     }
