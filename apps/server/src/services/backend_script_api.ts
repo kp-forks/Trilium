@@ -1,41 +1,43 @@
-import log from "./log.js";
-import noteService from "./notes.js";
-import sql from "./sql.js";
-import { randomString, escapeHtml, unescapeHtml } from "./utils.js";
-import attributeService from "./attributes.js";
-import dateNoteService from "./date_notes.js";
-import treeService from "./tree.js";
-import config from "./config.js";
-import axios from "axios";
+import type { AttributeRow } from "@triliumnext/commons";
 import { dayjs } from "@triliumnext/commons";
-import xml2js from "xml2js";
+import { formatLogMessage } from "@triliumnext/commons";
+import axios from "axios";
 import * as cheerio from "cheerio";
-import cloningService from "./cloning.js";
-import appInfo from "./app_info.js";
-import searchService from "./search/services/search.js";
-import SearchContext from "./search/search_context.js";
+import xml2js from "xml2js";
+
 import becca from "../becca/becca.js";
-import ws from "./ws.js";
+import type Becca from "../becca/becca-interface.js";
+import type AbstractBeccaEntity from "../becca/entities/abstract_becca_entity.js";
+import type BAttachment from "../becca/entities/battachment.js";
+import type BAttribute from "../becca/entities/battribute.js";
+import type BBranch from "../becca/entities/bbranch.js";
+import type BEtapiToken from "../becca/entities/betapi_token.js";
+import type BNote from "../becca/entities/bnote.js";
+import type BOption from "../becca/entities/boption.js";
+import type BRevision from "../becca/entities/brevision.js";
+import appInfo from "./app_info.js";
+import attributeService from "./attributes.js";
+import type { ApiParams } from "./backend_script_api_interface.js";
+import backupService from "./backup.js";
+import branchService from "./branches.js";
+import cloningService from "./cloning.js";
+import config from "./config.js";
+import dateNoteService from "./date_notes.js";
+import exportService from "./export/zip.js";
+import log from "./log.js";
+import type { NoteParams } from "./note-interface.js";
+import noteService from "./notes.js";
+import optionsService from "./options.js";
+import scriptService from "./script.js";
+import SearchContext from "./search/search_context.js";
+import searchService from "./search/services/search.js";
 import SpacedUpdate from "./spaced_update.js";
 import specialNotesService from "./special_notes.js";
-import branchService from "./branches.js";
-import exportService from "./export/zip.js";
+import sql from "./sql.js";
 import syncMutex from "./sync_mutex.js";
-import backupService from "./backup.js";
-import optionsService from "./options.js";
-import { formatLogMessage } from "@triliumnext/commons";
-import type BNote from "../becca/entities/bnote.js";
-import type AbstractBeccaEntity from "../becca/entities/abstract_becca_entity.js";
-import type BBranch from "../becca/entities/bbranch.js";
-import type BAttribute from "../becca/entities/battribute.js";
-import type BAttachment from "../becca/entities/battachment.js";
-import type BRevision from "../becca/entities/brevision.js";
-import type BEtapiToken from "../becca/entities/betapi_token.js";
-import type BOption from "../becca/entities/boption.js";
-import type { AttributeRow } from "@triliumnext/commons";
-import type Becca from "../becca/becca-interface.js";
-import type { NoteParams } from "./note-interface.js";
-import type { ApiParams } from "./backend_script_api_interface.js";
+import treeService from "./tree.js";
+import { escapeHtml, randomString, unescapeHtml } from "./utils.js";
+import ws from "./ws.js";
 
 /**
  * A whole number
@@ -109,6 +111,14 @@ export interface Api {
     getInstanceName(): string | null;
 
     getNote(noteId: string): BNote | null;
+
+    /**
+     * Executes a backend JS note with the given noteId. The note must be of type "Code: JS backend".
+     *
+     * @returns the return value of the executed note
+     */
+    runNote(noteId: string): unknown;
+
     getBranch(branchId: string): BBranch | null;
     getAttribute(attachmentId: string): BAttribute | null;
     getAttachment(attachmentId: string): BAttachment | null;
@@ -446,6 +456,10 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     this.cheerio = cheerio;
     this.getInstanceName = () => (config.General ? config.General.instanceName : null);
     this.getNote = (noteId) => becca.getNote(noteId);
+    this.runNote = (noteId) => {
+        const note = becca.getNoteOrThrow(noteId);
+        return scriptService.executeNote(note, { originEntity: note });
+    };
     this.getBranch = (branchId) => becca.getBranch(branchId);
     this.getAttribute = (attributeId) => becca.getAttribute(attributeId);
     this.getAttachment = (attachmentId) => becca.getAttachment(attachmentId);
@@ -506,7 +520,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
             throw new Error(`Unable to find parent note with ID ${parentNote}.`);
         }
 
-        let extraOptions: NoteParams = {
+        const extraOptions: NoteParams = {
             ..._extraOptions,
             content: "",
             type: "text",
@@ -620,13 +634,13 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
         }
 
         const parentNoteId = opts.isVisible ? "_lbVisibleLaunchers" : "_lbAvailableLaunchers";
-        const noteId = "al_" + opts.id;
+        const noteId = `al_${  opts.id}`;
 
         const launcherNote =
             becca.getNote(noteId) ||
             specialNotesService.createLauncher({
-                noteId: noteId,
-                parentNoteId: parentNoteId,
+                noteId,
+                parentNoteId,
                 launcherType: opts.type
             }).note;
 
@@ -680,7 +694,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
 
         ws.sendMessageToAllClients({
             type: "execute-script",
-            script: script,
+            script,
             params: prepareParams(params),
             startNoteId: this.startNote?.noteId,
             currentNoteId: this.currentNote.noteId,
@@ -696,9 +710,9 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
             return params.map((p) => {
                 if (typeof p === "function") {
                     return `!@#Function: ${p.toString()}`;
-                } else {
-                    return p;
-                }
+                } 
+                return p;
+                
             });
         }
     };
