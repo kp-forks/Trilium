@@ -342,8 +342,9 @@ export type BootstrapDefinition = {
     dbInitialized: boolean;
     baseApiUrl: string;
     assetPath: string;
-    themeCssUrl: string | false;
-    themeUseNextAsBase?: "next" | "next-light" | "next-dark";
+    theme: string;
+    themeBase?: "next" | "next-light" | "next-dark";
+    customThemeCssUrl?: string;
     iconPackCss: string;
     iconRegistry: IconRegistry;
     device: "mobile" | "desktop" | "print" | false;

@@ -176,7 +176,9 @@ const config: ForgeConfig = {
                 [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
                 [FuseV1Options.EnableNodeCliInspectArguments]: false,
                 [FuseV1Options.EnableCookieEncryption]: true,
-                [FuseV1Options.OnlyLoadAppFromAsar]: true
+                [FuseV1Options.OnlyLoadAppFromAsar]: true,
+                [FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
+                [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true
             }
         }
     ],

@@ -28,9 +28,10 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
     if (!dbInitialized) {
         return {
             ...commonItems,
+            theme: "next",
             themeCssUrl: false as const,
             themeUseNextAsBase: "next" as const,
-            appCssNoteIds: []
+            appCssNoteIds: [],
         };
     }
 
@@ -38,6 +39,8 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
     const options = optionService.getOptionMap();
     const theme = options.theme;
     const themeNote = attributes.getNoteWithLabel("appTheme", theme);
+    const themeUseNextAsBase = themeNote?.getAttributeValue("label", "appThemeBase") ?? undefined;
+
     return {
         ...commonItems,
         headingStyle: options.headingStyle as "plain" | "underline" | "markdown",
@@ -45,6 +48,9 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         maxEntityChangeIdAtLoad: sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
         maxEntityChangeSyncIdAtLoad: sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
         isProtectedSessionAvailable: protected_session.isProtectedSessionAvailable(),
+        theme,
+        themeBase: themeUseNextAsBase as "next" | "next-light" | "next-dark" | undefined,
+        customThemeCssUrl: getCustomThemeCssUrl(theme, themeNote),
         themeCssUrl: getThemeCssUrl(theme, commonItems.assetPath, themeNote) as string | false,
         themeUseNextAsBase: themeNote?.getAttributeValue("label", "appThemeBase") as "next" | "next-light" | "next-dark",
         appCssNoteIds: getAppCssNoteIds(),
@@ -88,4 +94,16 @@ function getThemeCssUrl(theme: string, assetPath: string, themeNote: BNote | nul
     }
     // baseline light theme
     return false;
+}
+
+function getCustomThemeCssUrl(theme: string, themeNote: BNote | null) {
+    if (["auto", "light", "dark", "next", "next-light", "next-dark"].includes(theme)) {
+        return undefined;
+    }
+
+    if (!process.env.TRILIUM_SAFE_MODE && themeNote) {
+        return `api/notes/download/${themeNote.noteId}`;
+    }
+
+    return undefined;
 }

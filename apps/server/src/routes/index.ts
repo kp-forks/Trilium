@@ -1,5 +1,5 @@
 import { BootstrapDefinition } from "@triliumnext/commons";
-import { getSharedBootstrapItems, icon_packs as iconPackService, sql_init } from "@triliumnext/core";
+import { attributes, BNote, getSharedBootstrapItems, icon_packs as iconPackService, sql_init } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import packageJson from "../../package.json" with { type: "json" };
@@ -43,7 +43,7 @@ export function bootstrap(req: Request, res: Response) {
             hasNativeTitleBar: false,
             hasBackgroundEffects: isElectron && (isWindows11 || isMac),
             isMainWindow: true,
-            appCssNoteIds: [],
+            appCssNoteIds: []
         } satisfies BootstrapDefinition);
         return;
     }

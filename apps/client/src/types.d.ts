@@ -23,6 +23,7 @@ interface CustomGlobals extends BootstrapDefinition {
     getReferenceLinkTitle: (href: string) => Promise<string>;
     getReferenceLinkTitleSync: (href: string) => string;
     getActiveContextNote: () => FNote | null;
+    getThemeStyle: () => "auto" | "light" | "dark";
     ESLINT: Library;
     appContext: AppContext;
     froca: Froca;
