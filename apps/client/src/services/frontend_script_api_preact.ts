@@ -1,4 +1,4 @@
-import { createContext,Fragment, h, VNode } from "preact";
+import { createContext, Fragment, h, VNode } from "preact";
 import * as hooks from "preact/hooks";
 
 import ActionButton from "../widgets/react/ActionButton";

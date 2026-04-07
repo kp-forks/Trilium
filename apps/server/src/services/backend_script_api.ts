@@ -621,7 +621,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
         }
 
         const parentNoteId = opts.isVisible ? "_lbVisibleLaunchers" : "_lbAvailableLaunchers";
-        const noteId = `al_${  opts.id}`;
+        const noteId = `al_${opts.id}`;
 
         const launcherNote =
             becca.getNote(noteId) ||
@@ -699,7 +699,6 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
                     return `!@#Function: ${p.toString()}`;
                 } 
                 return p;
-                
             });
         }
     };
