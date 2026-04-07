@@ -51,6 +51,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Update build info
+        run: pnpm run chore:update-build-info
+
       - name: Trigger build of app
         run: pnpm --filter=client-standalone build
 
