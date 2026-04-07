@@ -30,7 +30,7 @@ function main() {
         patchPackageJson(join(__dirname, "..", "apps", appName, "package.json"), version);
     }
 
-    for (const packageName of ["commons", "pdfjs-viewer"]) {
+    for (const packageName of ["commons", "pdfjs-viewer", "trilium-core"]) {
         patchPackageJson(join(__dirname, "..", "packages", packageName, "package.json"), version);
     }
 }
