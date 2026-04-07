@@ -1241,77 +1241,77 @@ importers:
         specifier: 10.0.1
         version: 10.0.1(eslint@10.1.0(jiti@2.6.1))
       '@fsegurai/codemirror-theme-abcdef':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-abyss':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-android-studio':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-andromeda':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-basic-dark':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-basic-light':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-cobalt2':
-        specifier: 6.0.3
-        version: 6.0.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.0.4
+        version: 6.0.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-forest':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-github-dark':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-github-light':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-gruvbox-dark':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-gruvbox-light':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-material-dark':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-material-light':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-monokai':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-nord':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-palenight':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-solarized-dark':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-solarized-light':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-tokyo-night-day':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-tokyo-night-storm':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-volcano':
-        specifier: 6.2.3
-        version: 6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.4
+        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-vscode-dark':
-        specifier: 6.2.4
-        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.5
+        version: 6.2.5(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@fsegurai/codemirror-theme-vscode-light':
-        specifier: 6.2.4
-        version: 6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
+        specifier: 6.2.5
+        version: 6.2.5(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)
       '@replit/codemirror-indentation-markers':
         specifier: 6.5.3
         version: 6.5.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)
@@ -3061,192 +3061,192 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@fsegurai/codemirror-theme-abcdef@6.2.3':
-    resolution: {integrity: sha512-uZGUe50mfGuHFiEzovScIxgxE1jARrQRNjH/6BA7O4UtBuoCGQZhPhyFv850L3gGRxK+LnWJHAAgnxHqJxW1Yw==}
+  '@fsegurai/codemirror-theme-abcdef@6.2.4':
+    resolution: {integrity: sha512-+Q5RS9ExJf16Kgh8YoASdO/22g9zE9tjsFS8/yadb2Y/UNkmgNMCUU1vlYAkhNCbY+ODreCDXLmrBxUZiyoloA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-abyss@6.2.3':
-    resolution: {integrity: sha512-yU6lXHNM9mHGexMT9cNi45ma/vaXtPAwI8pP9yQt7M6Bh8WOeycDzd3WDpOcQaBleS26fCSfeNBdixhevP3Lbg==}
+  '@fsegurai/codemirror-theme-abyss@6.2.4':
+    resolution: {integrity: sha512-1q8363+rbxRh9U/qTiIzsmGc8r96rgEaukqbuI2JNf+/NGPva/RaXgZIubvL9MtZ4hXQ1qT6fxAJR7KlnTbm8Q==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-android-studio@6.2.3':
-    resolution: {integrity: sha512-rAQH1Hz78RHdXz2p90S8efqe9zq7fR8wWFfTihaCOHDCUUPTDziuTcOSZfmLM9jOL1ed6yjg4n+HAOEf6FfMDg==}
+  '@fsegurai/codemirror-theme-android-studio@6.2.4':
+    resolution: {integrity: sha512-KqwALoBBeTacWr7anYdaXReLX28IUVW7TSOc4Vws79D5LalmSPkV43IxElH2cjgsxDu53pn6v9Eb+ggul/Ih7w==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-andromeda@6.2.3':
-    resolution: {integrity: sha512-YCFCgbY9OWOajrsIwmHjnKwbB3IDS2lxs+4CetrqZehZJ9vAkSAW98Zztig1QtZbPaO3x9pdMuD4B6i0BxtDoA==}
+  '@fsegurai/codemirror-theme-andromeda@6.2.4':
+    resolution: {integrity: sha512-zAqMZo4B7IHN8E3l0Z5/XmMK4Ex10+p27wltswiCNxjcXejQnWImtXGyc4Rw86Ahrgk8lnb/YF3OKU/tCdDmmQ==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-basic-dark@6.2.3':
-    resolution: {integrity: sha512-08d09Yn9Ic8mjCzrBQQhtws/HM+8B00bRV9FqW+GaIQwSOFmn17FsvzuLJQyervcKAkTzmKaLPjp2D3Y+2K8EQ==}
+  '@fsegurai/codemirror-theme-basic-dark@6.2.4':
+    resolution: {integrity: sha512-eRVOWo+ewGVt07fF1hTLIfrINVoPCc+gZ+QXmGHZI2bd9Rn4sTdn1YaX85hISjVmb47Wmc1LO8GvXb6XrqUhWw==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-basic-light@6.2.3':
-    resolution: {integrity: sha512-rkHCj1U3OwNAqLLi2xti47u3Fq6gDiSEKmQsAOwIADJKnnwU2LeAwCPqSEa7sUVlavFusjDvt5L/SmGjb10vWg==}
+  '@fsegurai/codemirror-theme-basic-light@6.2.4':
+    resolution: {integrity: sha512-lDF0S7ySfH31MSfkFZQif7IF2XbtyFPbouqhLNmniYe5316j9Bc5DGxb0TnH4LzM5ImtsuNXoZr5lrSAjnIjoA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-cobalt2@6.0.3':
-    resolution: {integrity: sha512-t/vnO5NRWUgvKKews0FoN9OQxKthSg+fNDfl9tMNyC22/QL55lXuScmzV9qADRcugbLv7CT6m0tgurSBSc9QKg==}
+  '@fsegurai/codemirror-theme-cobalt2@6.0.4':
+    resolution: {integrity: sha512-YiNUpXVQd2wk8qgiWAL21Hx9LpOiiBmrb8NW5n0M6lDr1zZKbPGsijGP7xVrg48e57AVxINwZ3vAMu2ne72Y1A==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-forest@6.2.3':
-    resolution: {integrity: sha512-cn+GMBkHtp70qLEHfvjXyR1nWdA1KDeC/hJOWWv/FmpUrFfq61oM2GWZL+yqDINrTO709lfcDu+gcAjnpOtfSg==}
+  '@fsegurai/codemirror-theme-forest@6.2.4':
+    resolution: {integrity: sha512-aHarQLOSaFMHvmfuyFNUJ2HrRq4bEyMKbB024nNn3eZI7O07eImvE6bCVS4TG/4DPJibipmU7J5JBWwMBmwNHA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-github-dark@6.2.3':
-    resolution: {integrity: sha512-EBBbSK0iZn4w3T5fNx9ZV5ur1X7N+RVfTdWzrPmz1LJ90UQshTFpalm9oYMJ/5/98zwP9p99bsLrKE1r2x6A6w==}
+  '@fsegurai/codemirror-theme-github-dark@6.2.4':
+    resolution: {integrity: sha512-JFMn6XKm5BHCPUVhuuQ7KUP9IQ8Gf70GqszZIhowdMJwbEzS/x4/nXJBE91HC+onmatFdju3wegSC7umb7KaJw==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-github-light@6.2.3':
-    resolution: {integrity: sha512-vbwyznBoTrLQdWvQ6/vjIpoDojd7VIMK+sQnMXkKOjXbm5cGul6A3mqM2RSt9Z5NhIRikmxKkApflvWOJrDuWA==}
+  '@fsegurai/codemirror-theme-github-light@6.2.4':
+    resolution: {integrity: sha512-NzbAMBYkgeLDoZVL9K7mX/1pn5vohyIAJh3zAkrlcVM4sFz8Co69HhZUgVyazAT67YOkjgQ8pxbsDbprb5F5Kg==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-gruvbox-dark@6.2.3':
-    resolution: {integrity: sha512-Z7fZ8aNkN/ib5nfT2CJHod1qqXlz5jpgCtiKV0jaQXq7g8axFY8iION94+A5AwrRk1VJbAyGxlAIDIXTqQA70g==}
+  '@fsegurai/codemirror-theme-gruvbox-dark@6.2.4':
+    resolution: {integrity: sha512-oWjvqNUKd6giQzgy7lHDG3stTufVVzJK4a6BdzlJgR0orwxoR5LAM3MwWnu4FsLRY+ko8KGtxJcjCcWkIMOHxg==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-gruvbox-light@6.2.3':
-    resolution: {integrity: sha512-lmyiiU1Q9WPuhxJsSAkPLcocyx+odkYvG4FcJYi3Mbn2e/wwYSrHckS8uccDU3zJmWthM9sVbtVd0LpRxU/Jmw==}
+  '@fsegurai/codemirror-theme-gruvbox-light@6.2.4':
+    resolution: {integrity: sha512-2fIxU+qPYNre2sSo9gHNxECZvPF/aBKwzQcSW/uRybMnfBWG/H3CFbs1N2CFLLQTFsiZDt+EZf+B6z3ubO5pOA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-material-dark@6.2.3':
-    resolution: {integrity: sha512-8jw5/mLF/wIGKJ8rmxVWyXnhrRgqm+F7L49UlWd5VHgvny0XFJ45I3Tl8xD3i2kWqDm3TF+C/p86Mq9J6TjWVA==}
+  '@fsegurai/codemirror-theme-material-dark@6.2.4':
+    resolution: {integrity: sha512-jQXWtRVJbmjWu2IjeBSD97fhCW91uxnKgH6IKd5wq2mSKkFXZ5JLLjdd/INfcODXjXz8CMoj4g/iuiSFztVkeA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-material-light@6.2.3':
-    resolution: {integrity: sha512-/t29bGYA8Yyd94Ecbq/gZ/CA9QKALfr5JXF+G2p31CROEYVG3iV1F4Fp8TteTHAyP3np0dachHcSRNlNB0wftw==}
+  '@fsegurai/codemirror-theme-material-light@6.2.4':
+    resolution: {integrity: sha512-7s9C/Xh/Dqk2rK85HVk+LML+SdGNa5ifegR1qBeAFhFFkuZCgSWs4618N6ZrKoDhmk8JBIVMpdGRtXq+4aTIYA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-monokai@6.2.3':
-    resolution: {integrity: sha512-kHiansKaONRuTU76zavJ9KRJnITbg6y6PXBVX0ZEUSf6WSdTAAgubYay+M6tVNMAirwAdkHnIjjZbh8GXeg01g==}
+  '@fsegurai/codemirror-theme-monokai@6.2.4':
+    resolution: {integrity: sha512-pWiMJpoO3yKMKrahlUmAO8hZPRE7FxY10U1cMLNa+TDtuoWf2JrPEFRbkYf9wfOGSlUkGhx8HAn7xuXEEck4CQ==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-nord@6.2.3':
-    resolution: {integrity: sha512-ZwMY2kKDlBUuDXDqH81TCArlIq37qBMuYIAJkpVm52dJ89AtOFk2VwWuRkVsJr3g0Fs76kOBQbyM0ifmMOSTPg==}
+  '@fsegurai/codemirror-theme-nord@6.2.4':
+    resolution: {integrity: sha512-ELw/OnHm/PReHK534xKKrssU3y6Uu6mBCXQSyYGgOEkVuSv3JU+W3qUYuJITrIKDqigEb8wrxQ61LX0JJt6DXg==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-palenight@6.2.3':
-    resolution: {integrity: sha512-SE5FmZldO2YwNsOrd8fwCV8VBekZDvt5zF7ZQa+VeGnsXf6ekhtdqBa9nPt1gbB4QOoz3lbJ2uzpUVePr33JpA==}
+  '@fsegurai/codemirror-theme-palenight@6.2.4':
+    resolution: {integrity: sha512-c+S78iLTkIgKrnk4FdUSKDOIgASr8vZhyhnm0zjzc6lF9Slqv8K3hjpwv7rRhUT6uziAD0Q/ABbCy0z4KSn+jA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-solarized-dark@6.2.3':
-    resolution: {integrity: sha512-7bM3Pe2C8Pad3ejVdecrOYrIHt2MwM1N9o7PXYImuUbO/guHCsyjpvyaN7Y5J+EwOBhxYRbR4TyWMA3AiwlU7w==}
+  '@fsegurai/codemirror-theme-solarized-dark@6.2.4':
+    resolution: {integrity: sha512-RM/U6KHGEdDc+dkXJgMrE2lGWSop2w7EAw3bVhLuMBc10Rx8aXHxDIqhHC0cXJBCsjLG+r6kzrb1bCJB4gbEBQ==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-solarized-light@6.2.3':
-    resolution: {integrity: sha512-UzXetG+rtCY3RXz1QmfPyCQaxfmCXs92UVp+bSGtbXaS+muf/GpKpXlovwMmMzIpLeLKavIHJX43uQuptZSF7g==}
+  '@fsegurai/codemirror-theme-solarized-light@6.2.4':
+    resolution: {integrity: sha512-69tILyKvll+/0fWfL+qeUSlcVbUpR4vi5ET2qAOAsm0ZvICNeQTXGp9sWKp+fJBCyI648+2ou5Qn2WkoSgNidA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-tokyo-night-day@6.2.3':
-    resolution: {integrity: sha512-IJ6gtD4T4JBowEJsiRBvRtZhCzrMGHA4K3b7nEXVUbIZbPOWFzts3kWWITR8FgfYXX0AyJz31UHu7ST/kkcF0A==}
+  '@fsegurai/codemirror-theme-tokyo-night-day@6.2.4':
+    resolution: {integrity: sha512-R8kRPwiZxgSkNQ0mzOyZONTabcK4Xp81s6TTkjJ02dybbi7wy+9nE2w+7AgO2TSZNor4z43ZleYGs6CG3jh60Q==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-tokyo-night-storm@6.2.3':
-    resolution: {integrity: sha512-1Nhke42cQ2HHH50ia5Ya8LswVlRSnYjXfl5wfXcTLMSGmA4RxiiyN6OsDPHFVYjCdGJEzTXkX20N6h5HQVgO6Q==}
+  '@fsegurai/codemirror-theme-tokyo-night-storm@6.2.4':
+    resolution: {integrity: sha512-sgDfdDVz+v/cJL0d1XetMShXYDJyleMPF7s/zGnwdx2U/vXqU+4zwJJhA/wlXieXx/QVNMY83+io/Awde2FxKg==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-volcano@6.2.3':
-    resolution: {integrity: sha512-HHspLdvKoLC12XWy/mhcfeSyGzUlpMwc9ildoDcw8/SCXB6twEpMx31Q/YHThnIVUYrHIzF3KV/xWurICMunxQ==}
+  '@fsegurai/codemirror-theme-volcano@6.2.4':
+    resolution: {integrity: sha512-rJDcxzaDwVwc9stEo4sfQrv8Sa/sVMwbcSKnSkvhjYh9yaPe8304GLGp8G9mPxL7t6mcLzvcXTr8TvB1x6qddw==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-vscode-dark@6.2.4':
-    resolution: {integrity: sha512-Vjr1658LIYgvC3ALVeqMhSMLA1ljoLmQpdAq8JuFdH8HkENfCXPmLX498Lnab3UYyn/b3qZAbHtAF+wQ64iMkg==}
+  '@fsegurai/codemirror-theme-vscode-dark@6.2.5':
+    resolution: {integrity: sha512-ejYiN38Hs8pNzEITnMt1LLuK9Z2ioJLTcMo4XyXL2xWlhMUClGBTZJ2BHgwHVa9LIivU41r1vQKP/ZdICRgOpw==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-vscode-light@6.2.4':
-    resolution: {integrity: sha512-to840rPueVX6UV4YLEymGhUzzyuunY15LfGgm4Vq6hY2NmCfwYhQ/KfTcJ3XrZXiE80MrHjOq1FDcXl17UgvIQ==}
+  '@fsegurai/codemirror-theme-vscode-light@6.2.5':
+    resolution: {integrity: sha512-pwHZX/qm/9wSt8ANSvCfB1GGkQ1AW/PEFzJPJgIw+iLiQDG8O9luZmAlpxKX54UkqLnGIzwDIxXVOXXTceMIjA==}
     peerDependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
@@ -16628,168 +16628,168 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@fsegurai/codemirror-theme-abcdef@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-abcdef@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-abyss@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-abyss@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-android-studio@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-android-studio@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-andromeda@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-andromeda@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-basic-dark@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-basic-dark@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-basic-light@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-basic-light@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-cobalt2@6.0.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-cobalt2@6.0.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-forest@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-forest@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-github-dark@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-github-dark@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-github-light@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-github-light@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-gruvbox-dark@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-gruvbox-dark@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-gruvbox-light@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-gruvbox-light@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-material-dark@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-material-dark@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-material-light@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-material-light@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-monokai@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-monokai@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-nord@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-nord@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-palenight@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-palenight@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-solarized-dark@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-solarized-dark@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-solarized-light@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-solarized-light@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-tokyo-night-day@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-tokyo-night-day@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-tokyo-night-storm@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-tokyo-night-storm@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-volcano@6.2.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-volcano@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-vscode-dark@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-vscode-dark@6.2.5(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
       '@lezer/highlight': 1.2.3
 
-  '@fsegurai/codemirror-theme-vscode-light@6.2.4(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
+  '@fsegurai/codemirror-theme-vscode-light@6.2.5(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.3
       '@codemirror/state': 6.6.0
