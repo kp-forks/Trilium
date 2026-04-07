@@ -106,7 +106,7 @@
       "@lezer/highlight": "1.2.3",
       "@lezer/common": "1.5.1",
       "mermaid": "11.14.0",
-      "preact": "10.29.0",
+      "preact": "10.29.1",
       "roughjs": "4.6.6",
       "@types/express-serve-static-core": "5.1.1",
       "node-abi": "4.28.0",
