@@ -2363,7 +2363,11 @@
       "web_search": "Web search",
       "note_in_parent": "<Note/> in <Parent/>",
       "get_attachment": "Get attachment",
-      "get_attachment_content": "Read attachment content"
+      "get_attachment_content": "Read attachment content",
+      "rename_note": "Rename note",
+      "delete_note": "Delete note",
+      "move_note": "Move note",
+      "clone_note": "Clone note"
     }
   }
 }
