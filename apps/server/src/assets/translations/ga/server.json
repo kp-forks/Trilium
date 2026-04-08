@@ -359,7 +359,8 @@
     "tab-switcher-title": "Athraitheoir Cluaisíní",
     "llm-chat-history-title": "Stair Comhrá AI",
     "llm-title": "AI / LLM",
-    "sidebar-chat-title": "Comhrá AI"
+    "sidebar-chat-title": "Comhrá AI",
+    "custom-dictionary-title": "Foclóir Saincheaptha"
   },
   "notes": {
     "new-note": "Nóta nua",
@@ -405,7 +406,10 @@
     "last-updated": "Nuashonraithe go deireanach ar {{- date}}",
     "subpages": "Fo-leathanaigh:",
     "on-this-page": "Ar an Leathanach seo",
-    "expand": "Leathnaigh"
+    "expand": "Leathnaigh",
+    "toggle-navigation": "Nascleanúint a Athrú",
+    "toggle-toc": "Clár Ábhair a Athsholáthar",
+    "logo-alt": "Lógó"
   },
   "hidden_subtree_templates": {
     "text-snippet": "Sleachta Téacs",
