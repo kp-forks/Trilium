@@ -100,11 +100,6 @@ export class OllamaProvider extends BaseProvider {
     }
 
     override getAvailableModels(): ModelInfo[] {
-        if (!this.modelsLoaded) {
-            // Synchronously return whatever we have; the route handler
-            // calls loadModels() async before returning.
-            return this.availableModels;
-        }
         return this.availableModels;
     }
 
@@ -113,6 +108,10 @@ export class OllamaProvider extends BaseProvider {
      * Called by the route handler before returning models to the client.
      */
     async loadModels(): Promise<ModelInfo[]> {
+        if (this.modelsLoaded) {
+            return this.availableModels;
+        }
+        
         try {
             const res = await fetch(`${this.baseUrl}/api/tags`, {
                 signal: AbortSignal.timeout(5000)
