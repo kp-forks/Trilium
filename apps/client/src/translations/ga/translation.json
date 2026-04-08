@@ -1071,7 +1071,8 @@
     "note_already_in_diagram": "Tabhair faoi deara go bhfuil \"{{title}}\" sa léaráid cheana féin.",
     "enter_title_of_new_note": "Cuir isteach teideal an nóta nua",
     "default_new_note_title": "nóta nua",
-    "click_on_canvas_to_place_new_note": "Cliceáil ar chanbhás chun nóta nua a chur"
+    "click_on_canvas_to_place_new_note": "Cliceáil ar chanbhás chun nóta nua a chur",
+    "rename_relation": "Athainmnigh an gaol"
   },
   "backend_log": {
     "refresh": "Athnuachan"
@@ -1468,9 +1469,15 @@
   "spellcheck": {
     "title": "Seiceáil Litrithe",
     "description": "Ní bhaineann na roghanna seo ach le leaganacha deisce, úsáidfidh brabhsálaithe a seiceáil litrithe dúchasach féin.",
-    "enable": "Cumasaigh seiceáil litrithe",
-    "language_code_label": "Cód(anna) teanga",
-    "restart-required": "Tiocfaidh athruithe ar na roghanna seiceála litrithe i bhfeidhm tar éis atosú an fheidhmchláir."
+    "enable": "Seiceáil litriú",
+    "language_code_label": "Seiceáil Litrithe Teangacha",
+    "restart-required": "Tiocfaidh athruithe ar na roghanna seiceála litrithe i bhfeidhm tar éis atosú an fheidhmchláir.",
+    "custom_dictionary_title": "Foclóir Saincheaptha",
+    "custom_dictionary_description": "Déantar focail a chuirtear leis an bhfoclóir a sioncrónú ar fud do ghléasanna go léir.",
+    "custom_dictionary_edit": "Focail saincheaptha",
+    "custom_dictionary_edit_description": "Cuir an liosta focal in eagar nach ceart don seiceálaí litrithe a mharcáil. Beidh athruithe le feiceáil tar éis atosaithe.",
+    "custom_dictionary_open": "Cuir an foclóir in eagar",
+    "related_description": "Cumraigh teangacha seiceála litrithe agus foclóir saincheaptha."
   },
   "sync_2": {
     "config_title": "Cumraíocht Sioncrónaithe",
@@ -2291,7 +2298,9 @@
     "sample_user_journey": "Turas Úsáideora",
     "sample_xy": "XY",
     "sample_venn": "Venn",
-    "sample_ishikawa": "Ishikawa"
+    "sample_ishikawa": "Ishikawa",
+    "sample_treeview": "Radharc Crann",
+    "sample_wardley": "Léarscáil Wardley"
   },
   "llm_chat": {
     "placeholder": "Clóscríobh teachtaireacht...",
@@ -2401,6 +2410,9 @@
     "processing": "Ag próiseáil...",
     "processing_started": "Tá próiseáil OCR tosaithe. Fan nóiméad agus athnuachan le do thoil.",
     "processing_failed": "Theip ar phróiseáil OCR a thosú",
-    "view_extracted_text": "Féach ar théacs eastósctha (OCR)"
+    "view_extracted_text": "Féach ar théacs eastósctha (OCR)",
+    "processing_complete": "Próiseáil OCR críochnaithe.",
+    "text_filtered_low_confidence": "Bhraith OCR téacs le muinín {{confidence}}%, ach caitheadh leis é mar is é {{threshold}}% an tairseach íosta atá agat.",
+    "open_media_settings": "Oscail Socruithe"
   }
 }
