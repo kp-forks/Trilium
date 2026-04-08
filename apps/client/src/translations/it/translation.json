@@ -593,7 +593,7 @@
     "collapseExpand": "collassa/espande il nodo",
     "notSet": "non impostato",
     "goBackForwards": "indietro/avanti nella cronologia",
-    "showJumpToNoteDialog": "mostra <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">finestra \"Vai a\"</a>",
+    "showJumpToNoteDialog": "mostra <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"Vai a\"</a>",
     "title": "Scheda riassuntiva",
     "noteNavigation": "Nota navigazione",
     "scrollToActiveNote": "scorri fino alla nota attiva",
@@ -1100,7 +1100,7 @@
     "show_help": "Mostra aiuto",
     "about": "Informazioni su Trilium Notes",
     "logout": "Esci",
-    "show-cheatsheet": "Mostra il foglietto illustrativo",
+    "show-cheatsheet": "Mostra la scheda riassuntiva",
     "toggle-zen-mode": "Modalità Zen",
     "new-version-available": "Nuovo aggiornamento disponibile",
     "download-update": "Ottieni la versione {{latestVersion}}",
@@ -1440,7 +1440,8 @@
     "note_already_in_diagram": "Nota che \"{{title}}\" è già presente nel diagramma.",
     "enter_title_of_new_note": "Inserisci il titolo della nuova nota",
     "default_new_note_title": "nuova nota",
-    "click_on_canvas_to_place_new_note": "Clicca sulla tela per inserire una nuova nota"
+    "click_on_canvas_to_place_new_note": "Clicca sulla tela per inserire una nuova nota",
+    "rename_relation": "Rinomina relazione"
   },
   "vacuum_database": {
     "title": "Pulizia del database",
@@ -1671,9 +1672,15 @@
   "spellcheck": {
     "title": "Controllo ortografico",
     "description": "Queste opzioni sono valide solo per le versioni desktop; i browser utilizzeranno il proprio controllo ortografico nativo.",
-    "enable": "Abilita il controllo ortografico",
-    "language_code_label": "Codice/i della lingua",
-    "restart-required": "Le modifiche alle opzioni di controllo ortografico avranno effetto dopo il riavvio dell'applicazione."
+    "enable": "Controlla l'ortografia",
+    "language_code_label": "Lingue del controllo ortografico",
+    "restart-required": "Le modifiche alle opzioni di controllo ortografico avranno effetto dopo il riavvio dell'applicazione.",
+    "custom_dictionary_title": "Dizionario personalizzato",
+    "custom_dictionary_description": "Le parole aggiunte al dizionario vengono sincronizzate su tutti i tuoi dispositivi.",
+    "custom_dictionary_edit": "Parole personalizzate",
+    "custom_dictionary_edit_description": "Modifica l'elenco delle parole che non devono essere segnalate dal correttore ortografico. Le modifiche saranno visibili dopo il riavvio.",
+    "custom_dictionary_open": "Modifica il dizionario",
+    "related_description": "Configura le lingue del controllo ortografico e il dizionario personalizzato."
   },
   "api_log": {
     "close": "Vicino"
