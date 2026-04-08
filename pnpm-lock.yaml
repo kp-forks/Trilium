@@ -1352,8 +1352,8 @@ importers:
         specifier: 0.5.0
         version: 0.5.0
       eslint-linter-browserify:
-        specifier: 10.1.0
-        version: 10.1.0
+        specifier: 10.2.0
+        version: 10.2.0
       globals:
         specifier: 17.4.0
         version: 17.4.0
@@ -7073,6 +7073,7 @@ packages:
   basic-ftp@5.2.0:
     resolution: {integrity: sha512-VoMINM2rqJwJgfdHq6RiUudKt2BV+FY5ZFezP/ypmwayk68+NzzAQy4XXLlqsGD4MCzq3DrmNFD/uUmBJuGoXw==}
     engines: {node: '>=10.0.0'}
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   better-ajv-errors@1.2.0:
     resolution: {integrity: sha512-UW+IsFycygIo7bclP9h5ugkNH8EjCSgqyFB/yQ4Hqqa1OEYDtb0uFIkYE0b6+CjkgJYVM5UKI/pJPxjYe9EZlA==}
@@ -8524,8 +8525,8 @@ packages:
     peerDependencies:
       eslint: '>=7.0.0'
 
-  eslint-linter-browserify@10.1.0:
-    resolution: {integrity: sha512-PEcXfZXc/Rqo+kUqq1uf4ia8jleXFertdQI8Icj8KBq1kLzjOXOmRACg1hLNsHBgQYNDZH71X3O1amv5/WqHfA==}
+  eslint-linter-browserify@10.2.0:
+    resolution: {integrity: sha512-3EI7WAce/YTRTyRmqYUKX7VRROyIoKacg3625Ler+079JvCU5YGQwVJLa/ifvBxr95bxv7gTsy4zw3is+hHpBg==}
 
   eslint-plugin-ckeditor5-rules@14.0.0:
     resolution: {integrity: sha512-TLdFs+qhiEzVO4LQgVrJmc/49ZQ62qKq0fx+M+231tzGXSqioRV6LpRLHvF7XxEuG3+3LblMUJTLM+pBm5fXMg==}
@@ -23793,7 +23794,7 @@ snapshots:
     dependencies:
       eslint: 10.2.0(jiti@2.6.1)
 
-  eslint-linter-browserify@10.1.0: {}
+  eslint-linter-browserify@10.2.0: {}
 
   eslint-plugin-ckeditor5-rules@14.0.0:
     dependencies:
