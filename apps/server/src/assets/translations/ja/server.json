@@ -347,7 +347,8 @@
     "tab-switcher-title": "タブ切り替え",
     "llm-chat-history-title": "AI チャット履歴",
     "llm-title": "AI / LLM",
-    "sidebar-chat-title": "AI チャット"
+    "sidebar-chat-title": "AI チャット",
+    "custom-dictionary-title": "カスタム辞書"
   },
   "notes": {
     "new-note": "新しいノート",
@@ -393,7 +394,10 @@
     "subpages": "サブページ:",
     "image_alt": "記事画像",
     "on-this-page": "このページの内容",
-    "expand": "展開"
+    "expand": "展開",
+    "toggle-navigation": "ナビゲーションの切り替え",
+    "toggle-toc": "目次の切り替え",
+    "logo-alt": "ロゴ"
   },
   "hidden_subtree_templates": {
     "text-snippet": "テキストスニペット",
