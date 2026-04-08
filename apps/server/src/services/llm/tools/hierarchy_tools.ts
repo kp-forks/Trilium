@@ -8,6 +8,7 @@ import becca from "../../../becca/becca.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import branchService from "../../branches.js";
 import cloningService from "../../cloning.js";
+import { PROTECTED_SYSTEM_NOTES } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
 
 //#region Subtree tool implementation
@@ -105,8 +106,8 @@ export const hierarchyTools = defineTools({
             if (!note) {
                 return { error: "Note not found" };
             }
-            if (note.noteId === "root") {
-                return { error: "Cannot move the root note" };
+            if (PROTECTED_SYSTEM_NOTES.has(noteId)) {
+                return { error: "Cannot move system notes" };
             }
             if (note.isProtected) {
                 return { error: "Note is protected and cannot be moved" };
@@ -115,6 +116,9 @@ export const hierarchyTools = defineTools({
             const targetParent = becca.getNote(newParentNoteId);
             if (!targetParent) {
                 return { error: "Target parent note not found" };
+            }
+            if (!targetParent.isContentAvailable()) {
+                return { error: "Cannot move note to a protected parent" };
             }
 
             // Use the first (primary) parent branch for the move
@@ -152,18 +156,28 @@ export const hierarchyTools = defineTools({
         }),
         mutates: true,
         execute: ({ noteId, parentNoteId, prefix }) => {
+            const note = becca.getNote(noteId);
+            if (!note) {
+                return { error: "Note not found" };
+            }
+            if (note.isProtected) {
+                return { error: "Note is protected and cannot be cloned" };
+            }
+
+            const parent = becca.getNote(parentNoteId);
+            if (parent && !parent.isContentAvailable()) {
+                return { error: "Cannot clone note to a protected parent" };
+            }
+
             const result = cloningService.cloneNoteToParentNote(noteId, parentNoteId, prefix ?? null);
             if (!result.success) {
                 return { error: result.message || "Clone failed" };
             }
 
-            const note = becca.getNote(noteId);
-            const parent = becca.getNote(parentNoteId);
-
             return {
                 success: true,
                 noteId,
-                title: note?.getTitleOrProtected() ?? noteId,
+                title: note.getTitleOrProtected(),
                 parentNoteId,
                 parentTitle: parent?.getTitleOrProtected() ?? parentNoteId,
                 branchId: result.branchId

@@ -10,11 +10,8 @@ import noteService from "../../notes.js";
 import SearchContext from "../../search/search_context.js";
 import searchService from "../../search/services/search.js";
 import TaskContext from "../../task_context.js";
-import { TOOL_LIMITS, getContentPreview, getNoteContentForLlm, getNoteMeta, setNoteContentFromLlm } from "./helpers.js";
+import { PROTECTED_SYSTEM_NOTES, TOOL_LIMITS, getContentPreview, getNoteContentForLlm, getNoteMeta, setNoteContentFromLlm } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
-
-/** Note IDs that must not be deleted or moved by the LLM. */
-const PROTECTED_SYSTEM_NOTES = new Set(["root", "_hidden", "_share", "_lbRoot", "_globalNoteMap"]);
 
 export const noteTools = defineTools({
     search_notes: {
@@ -270,7 +267,7 @@ export const noteTools = defineTools({
     },
 
     delete_note: {
-        description: "Delete a note and all its branches (parent links). This is irreversible. The note will be marked as deleted. Cannot delete system notes (root, _hidden, etc.).",
+        description: "Delete a note and all its branches (parent links). This is a soft delete (recoverable via 'Recent Changes'). Cannot delete system notes (root, _hidden, etc.).",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to delete")
         }),

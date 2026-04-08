@@ -13,6 +13,9 @@ const ATTACHMENT_PREVIEW_MAX_LENGTH = 200;
 /** Skip expensive content loading/conversion for notes larger than this. */
 const CONTENT_PREVIEW_SIZE_THRESHOLD = 10_000;
 
+/** Note IDs that must not be deleted, moved, or cloned by the LLM. */
+export const PROTECTED_SYSTEM_NOTES = new Set(["root", "_hidden", "_share", "_lbRoot", "_globalNoteMap"]);
+
 /**
  * Return `true` if the value is truthy, otherwise `undefined`.
  * Since `undefined` values are omitted from JSON serialization,
