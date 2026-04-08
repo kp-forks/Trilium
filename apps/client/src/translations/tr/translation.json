@@ -137,6 +137,23 @@
     "collapseExpand": "düğümü daralt/genişlet",
     "notSet": "ayarlanmamış",
     "goBackForwards": "tarihte geri/ileri git",
-    "showJumpToNoteDialog": "<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"Şuraya Git\" iletişim kutusunu göster</a>"
+    "showJumpToNoteDialog": "<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"Şuraya Git\" iletişim kutusunu göster</a>",
+    "scrollToActiveNote": "Aktif nota kaydır",
+    "jumpToParentNote": "Üst nota git",
+    "collapseWholeTree": "Tüm not ağacını daralt",
+    "collapseSubTree": "Alt ağacı daralt",
+    "tabShortcuts": "Sekme kısayolları",
+    "newTabNoteLink": "Not bağlantısı notu yeni sekmede açılır",
+    "newTabWithActivationNoteLink": "Not bağlantısına tıklandığında not yeni bir sekmede açılır ve etkinleştirilir",
+    "onlyInDesktop": "Yalnızca masaüstünde (Electron derlemesi)",
+    "openEmptyTab": "boş sekmeyi aç",
+    "closeActiveTab": "aktif sekmeyi kapat",
+    "activateNextTab": "sonraki sekmeyi etkinleştir",
+    "activatePreviousTab": "önceki sekmeyi etkinleştir",
+    "creatingNotes": "Not oluşturma",
+    "createNoteAfter": "etkin nottan sonra yeni not oluşturma",
+    "createNoteInto": "aktif nota yeni bir alt not oluşturun",
+    "editBranchPrefix": "<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/tree-concepts.html#prefix\">prefix</a> değerini aktif not klonunun düzenle",
+    "movingCloningNotes": "Notları taşıma / klonlama"
   }
 }
