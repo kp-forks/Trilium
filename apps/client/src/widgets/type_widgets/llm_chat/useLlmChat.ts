@@ -257,6 +257,43 @@ export function useLlmChat(
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
+        /** Shared cleanup: finalize collected content and reset streaming state. */
+        function finalizeStream() {
+            const finalNewMessages: StoredMessage[] = [];
+
+            if (thinkingContent) {
+                finalNewMessages.push({
+                    id: randomString(),
+                    role: "assistant",
+                    content: thinkingContent,
+                    createdAt: new Date().toISOString(),
+                    type: "thinking"
+                });
+            }
+
+            if (contentBlocks.length > 0) {
+                finalNewMessages.push({
+                    id: randomString(),
+                    role: "assistant",
+                    content: contentBlocks,
+                    createdAt: new Date().toISOString(),
+                    citations: citations.length > 0 ? citations : undefined,
+                    usage
+                });
+            }
+
+            if (finalNewMessages.length > 0) {
+                setMessages([...newMessages, ...finalNewMessages]);
+            }
+
+            setStreamingContent("");
+            setStreamingBlocks([]);
+            setStreamingThinking("");
+            setPendingCitations([]);
+            setIsStreaming(false);
+            abortControllerRef.current = null;
+        }
+
         await streamChatCompletion(
             apiMessages,
             streamOptions,
@@ -326,75 +363,17 @@ export function useLlmChat(
                     setIsStreaming(false);
                 },
                 onDone: () => {
-                    const finalNewMessages: StoredMessage[] = [];
-
-                    if (thinkingContent) {
-                        finalNewMessages.push({
-                            id: randomString(),
-                            role: "assistant",
-                            content: thinkingContent,
-                            createdAt: new Date().toISOString(),
-                            type: "thinking"
-                        });
-                    }
-
-                    if (contentBlocks.length > 0) {
-                        finalNewMessages.push({
-                            id: randomString(),
-                            role: "assistant",
-                            content: contentBlocks,
-                            createdAt: new Date().toISOString(),
-                            citations: citations.length > 0 ? citations : undefined,
-                            usage
-                        });
-                    }
-
-                    if (finalNewMessages.length > 0) {
-                        const allMessages = [...newMessages, ...finalNewMessages];
-                        setMessages(allMessages);
-                    }
-
-                    setStreamingContent("");
-                    setStreamingBlocks([]);
-                    setStreamingThinking("");
-                    setPendingCitations([]);
-                    setIsStreaming(false);
-                    abortControllerRef.current = null;
+                    finalizeStream();
                 }
             },
             abortController.signal
         ).catch((e) => {
             // AbortError is expected when user stops generation
             if (e instanceof DOMException && e.name === "AbortError") {
-                // Finalize whatever we have so far
-                const finalNewMessages: StoredMessage[] = [];
-                if (thinkingContent) {
-                    finalNewMessages.push({
-                        id: randomString(),
-                        role: "assistant",
-                        content: thinkingContent,
-                        createdAt: new Date().toISOString(),
-                        type: "thinking"
-                    });
-                }
-                if (contentBlocks.length > 0) {
-                    finalNewMessages.push({
-                        id: randomString(),
-                        role: "assistant",
-                        content: contentBlocks,
-                        createdAt: new Date().toISOString(),
-                        citations: citations.length > 0 ? citations : undefined
-                    });
-                }
-                if (finalNewMessages.length > 0) {
-                    setMessages([...newMessages, ...finalNewMessages]);
-                }
-                setStreamingContent("");
-                setStreamingBlocks([]);
-                setStreamingThinking("");
-                setPendingCitations([]);
-                setIsStreaming(false);
-                abortControllerRef.current = null;
+                finalizeStream();
+            } else {
+                // Re-throw other errors so they are not swallowed
+                throw e;
             }
         });
     }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, enableExtendedThinking, contextNoteId, supportsExtendedThinking, setMessages]);
