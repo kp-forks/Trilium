@@ -7,6 +7,7 @@ import { beforeAll } from "vitest";
 
 import BrowserExecutionContext from "./lightweight/cls_provider.js";
 import BrowserCryptoProvider from "./lightweight/crypto_provider.js";
+import StandalonePlatformProvider from "./lightweight/platform_provider.js";
 import BrowserSqlProvider from "./lightweight/sql_provider.js";
 import BrowserZipProvider from "./lightweight/zip_provider.js";
 
@@ -82,15 +83,7 @@ beforeAll(async () => {
         ).standaloneZipExportProviderFactory,
         // Stub translations: pure-becca tests don't need real i18n strings.
         translations: async () => undefined,
-        platform: {
-            isElectron: false,
-            isMac: false,
-            isWindows: false,
-            crash: (msg: string) => {
-                throw new Error(`Platform crash: ${msg}`);
-            },
-            getEnv: () => undefined
-        },
+        platform: new StandalonePlatformProvider(""),
         schema: schemaSql,
         dbConfig: {
             provider: sqlProvider,
