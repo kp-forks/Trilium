@@ -22,7 +22,10 @@ export default defineConfig(() => ({
       TRILIUM_ENV: "dev",
       TRILIUM_PUBLIC_SERVER: "http://localhost:4200"
     },
-    include: ['{src,spec}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [
+      '{src,spec}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      '../../packages/trilium-core/src/**/*.{test,spec}.{ts,tsx}'
+    ],
     exclude: [
       "spec/build-checks/**",
     ],
