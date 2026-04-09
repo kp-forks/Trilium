@@ -1027,9 +1027,15 @@
   "spellcheck": {
     "title": "スペルチェック",
     "description": "これらのオプションはデスクトップビルドにのみ適用され、ブラウザはそれぞれのネイティブスペルチェックを使用します。",
-    "enable": "スペルチェックを有効",
-    "language_code_label": "言語コード",
-    "restart-required": "スペルチェックオプションの変更は、アプリケーションの再起動後に有効になります。"
+    "enable": "スペルチェック",
+    "language_code_label": "スペルチェック対応言語",
+    "restart-required": "スペルチェックオプションの変更は、アプリケーションの再起動後に有効になります。",
+    "custom_dictionary_title": "カスタム辞書",
+    "custom_dictionary_description": "辞書に追加した単語は、すべてのデバイス間で同期されます。",
+    "custom_dictionary_edit": "カスタム単語",
+    "custom_dictionary_edit_description": "スペルチェッカーでエラーとして検出されないようにする単語リストを編集します。変更は再起動後に反映されます。",
+    "custom_dictionary_open": "辞書の編集",
+    "related_description": "スペルチェック対応言語とカスタム辞書を設定します。"
   },
   "sync_2": {
     "config_title": "同期設定",
@@ -1567,7 +1573,8 @@
     "click_on_canvas_to_place_new_note": "キャンバスをクリックして新しいノートを配置",
     "connection_exists": "これらのノート間の接続 '{{name}}' は既に存在します。",
     "start_dragging_relations": "ここからリレーションをドラッグして、別のノートにドロップします。",
-    "note_already_in_diagram": "ノート「{{title}}」はすでに図に含まれています。"
+    "note_already_in_diagram": "ノート「{{title}}」はすでに図に含まれています。",
+    "rename_relation": "リレーション名の変更"
   },
   "database_anonymization": {
     "title": "データベースの匿名化",
@@ -2231,7 +2238,9 @@
     "sample_user_journey": "ユーザージャーニー図",
     "sample_xy": "XY チャート",
     "sample_venn": "ベン図",
-    "sample_ishikawa": "石川図"
+    "sample_ishikawa": "石川図",
+    "sample_treeview": "ツリービュー",
+    "sample_wardley": "ウォードリーマップ"
   },
   "llm_chat": {
     "placeholder": "メッセージを入力してください…",
@@ -2341,6 +2350,9 @@
     "processing": "処理中…",
     "processing_started": "OCR 処理が開始されました。しばらくお待ちいただき、ページを更新してください。",
     "processing_failed": "OCR 処理の開始に失敗しました",
-    "view_extracted_text": "抽出されたテキスト（OCR）を表示"
+    "view_extracted_text": "抽出されたテキスト（OCR）を表示",
+    "processing_complete": "OCR 処理が完了しました。",
+    "text_filtered_low_confidence": "OCR は {{confidence}}% の信頼度でテキストを検出しましたが、最小しきい値が {{threshold}}% であるため、破棄されました。",
+    "open_media_settings": "設定を開く"
   }
 }

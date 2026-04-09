@@ -102,7 +102,7 @@
     "shortcuts-title": "Scorciatoie",
     "text-notes": "Note di testo",
     "code-notes-title": "Note di codice",
-    "images-title": "Immagini",
+    "images-title": "Media",
     "spellcheck-title": "Controllo ortografico",
     "password-title": "Password",
     "multi-factor-authentication-title": "Autenticazione a più fattori",
@@ -151,7 +151,8 @@
     "tab-switcher-title": "Selettore scheda",
     "llm-chat-history-title": "Cronologia chat IA",
     "llm-title": "AI / LLM",
-    "sidebar-chat-title": "Chat con IA"
+    "sidebar-chat-title": "Chat con IA",
+    "custom-dictionary-title": "Dizionario personalizzato"
   },
   "notes": {
     "new-note": "Nuova nota",
@@ -197,7 +198,10 @@
     "last-updated": "Ultimo aggiornamento il {{- date}}",
     "subpages": "Sottopagine:",
     "on-this-page": "In questa pagina",
-    "expand": "Espandi"
+    "expand": "Espandi",
+    "toggle-navigation": "Attiva/disattiva la navigazione",
+    "toggle-toc": "Mostra/Nascondi sommario",
+    "logo-alt": "Logo"
   },
   "keyboard_actions": {
     "back-in-note-history": "Naviga alla nota precedente della cronologia",
