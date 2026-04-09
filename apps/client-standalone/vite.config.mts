@@ -183,7 +183,27 @@ export default defineConfig(() => ({
         }
     },
     test: {
-        environment: "happy-dom"
+        environment: "happy-dom",
+        setupFiles: [join(__dirname, "src/test_setup.ts")],
+        dir: join(__dirname),
+        include: [
+            "src/**/*.{test,spec}.{ts,tsx}",
+            "../../packages/trilium-core/src/**/*.{test,spec}.{ts,tsx}"
+        ],
+        server: {
+            deps: {
+                inline: ["@sqlite.org/sqlite-wasm"]
+            }
+        },
+        alias: {
+            // The package's `node.mjs` entry references a non-existent
+            // `sqlite3-node.mjs`. Force the browser-style entry which works
+            // under Node + happy-dom too.
+            "@sqlite.org/sqlite-wasm": join(
+                __dirname,
+                "../../node_modules/@sqlite.org/sqlite-wasm/index.mjs"
+            )
+        }
     },
     define: {
         "process.env.IS_PREACT": JSON.stringify("true"),
