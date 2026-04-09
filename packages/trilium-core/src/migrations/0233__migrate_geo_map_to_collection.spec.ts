@@ -19,9 +19,16 @@ import migration from "./0233__migrate_geo_map_to_collection.js";
  * test data into the database, then verifies the migration transforms the data correctly.
  */
 describe("Migration 0233: Migrate geoMap to collection", () => {
-    const sql = getSql();
+    let sql: ReturnType<typeof getSql>;
 
     beforeEach(async () => {
+        // getSql() is resolved here (not at describe-collection time) so that
+        // initializeCore() in the test setup's beforeAll has had a chance to
+        // run first. Capturing it eagerly at the top of describe crashes with
+        // "SQL not initialized" because describe callbacks run before any
+        // beforeAll hooks fire.
+        sql = getSql();
+
         // Set up a clean in-memory database for each test
         rebuildIntegrationTestDatabase();
 

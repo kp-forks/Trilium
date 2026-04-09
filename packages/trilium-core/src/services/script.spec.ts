@@ -1,5 +1,5 @@
 import { trimIndentation } from "@triliumnext/commons";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import becca from "../becca/becca.js";
 import BBranch from "../becca/entities/bbranch.js";
@@ -61,10 +61,18 @@ describe("Script", () => {
     });
 
     describe("dayjs in backend scripts", () => {
-        const scriptNote = buildNote({
-            type: "code",
-            mime: "application/javascript;env=backend",
-            content: ""
+        // buildNote() is called inside beforeAll (not at describe-collection
+        // time) so that the test setup's initializeCore() has run first.
+        // buildNote generates random IDs via getCrypto(), which crashes with
+        // "Crypto not initialized" if invoked during describe collection.
+        let scriptNote: ReturnType<typeof buildNote>;
+
+        beforeAll(() => {
+            scriptNote = buildNote({
+                type: "code",
+                mime: "application/javascript;env=backend",
+                content: ""
+            });
         });
 
         it("dayjs is available", () => {
