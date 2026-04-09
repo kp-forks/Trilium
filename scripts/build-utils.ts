@@ -54,7 +54,15 @@ export default class BuildHelper {
                 "pdfjs-dist",
                 "./xhr-sync-worker.js",
                 "vite",
-                "tesseract.js"
+                "tesseract.js",
+                // Test fixtures referenced via require.resolve from
+                // integration-test-only code paths in apps/server. These
+                // paths are gated at runtime by TRILIUM_INTEGRATION_TEST and
+                // never reached in production, but esbuild can't see through
+                // the gate during static analysis. Marking them external
+                // suppresses the spurious "require.resolve not external"
+                // warning without affecting the bundle behavior.
+                "@triliumnext/core/src/test/*"
             ],
             metafile: true,
             splitting: false,
