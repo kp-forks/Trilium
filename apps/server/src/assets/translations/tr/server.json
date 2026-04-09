@@ -25,9 +25,9 @@
     "clone-notes-to": "Seçilen notları klonla",
     "move-notes-to": "Seçilen notları taşı",
     "note-clipboard": "Not panosu",
-    "copy-notes-to-clipboard": "Seçilöiş notları panoya kopyala",
+    "copy-notes-to-clipboard": "Seçilmiş notları panoya kopyala",
     "paste-notes-from-clipboard": "Panodan notları etkin nota yapıştırın",
-    "cut-notes-to-clipboard": "Seçilen notları panoya kopyala",
+    "cut-notes-to-clipboard": "Seçilen notları panoya kes",
     "select-all-notes-in-parent": "Geçerli nota seviyesinden tüm notaları seçin",
     "add-note-above-to-the-selection": "Seçime yukarıdaki notu ekleyin"
   }
