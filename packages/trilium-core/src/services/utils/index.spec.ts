@@ -530,8 +530,15 @@ describe("#safeExtractMessageAndStackFromError", () => {
         expect(actual[1]).not.toBeUndefined();
     });
 
-    it("should use the fallback 'Unknown Error' message, if it gets passed anything else than an instance of an Error", () => {
-        const testNonError = "this is not an instance of an Error, but JS technically allows us to throw this anyways";
+    it("should pass a thrown string through as the message, with no stack", () => {
+        const testString = "this is not an instance of an Error, but JS technically allows us to throw this anyways";
+        const actual = utils.safeExtractMessageAndStackFromError(testString);
+        expect(actual[0]).toBe(testString);
+        expect(actual[1]).toBeUndefined();
+    });
+
+    it("should use the fallback 'Unknown Error' message, if it gets passed something that is neither an Error nor a string", () => {
+        const testNonError = { not: "an error" };
         const actual = utils.safeExtractMessageAndStackFromError(testNonError);
         expect(actual[0]).toBe("Unknown Error");
         expect(actual[1]).toBeUndefined();
