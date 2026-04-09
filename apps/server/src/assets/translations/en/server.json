@@ -365,7 +365,10 @@
     "last-updated": "Last updated on {{- date}}",
     "subpages": "Subpages:",
     "on-this-page": "On This Page",
-    "expand": "Expand"
+    "expand": "Expand",
+    "toggle-navigation": "Toggle Navigation",
+    "toggle-toc": "Toggle Table of Contents",
+    "logo-alt": "Logo"
   },
   "hidden_subtree_templates": {
     "text-snippet": "Text Snippet",

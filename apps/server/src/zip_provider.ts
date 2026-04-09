@@ -56,13 +56,20 @@ export default class NodejsZipProvider implements ZipProvider {
         processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>
     ): Promise<void> {
         return new Promise<void>((res, rej) => {
-            yauzl.fromBuffer(Buffer.from(buffer), { lazyEntries: true, validateEntrySizes: false }, (err, zipfile) => {
+            yauzl.fromBuffer(Buffer.from(buffer), { lazyEntries: true, validateEntrySizes: false, decodeStrings: false }, (err, zipfile) => {
                 if (err) { rej(err); return; }
                 if (!zipfile) { rej(new Error("Unable to read zip file.")); return; }
 
                 zipfile.readEntry();
                 zipfile.on("entry", async (entry: yauzl.Entry) => {
                     try {
+                        // yauzl with decodeStrings: false returns fileName as a Buffer.
+                        // We decode as UTF-8 to handle ZIP files that use UTF-8 filenames
+                        // without setting the general purpose bit flag 11 (language encoding flag).
+                        const fileName = Buffer.isBuffer(entry.fileName)
+                            ? (entry.fileName as Buffer).toString("utf-8")
+                            : entry.fileName;
+
                         const readContent = () => new Promise<Uint8Array>((res, rej) => {
                             zipfile.openReadStream(entry, (err, readStream) => {
                                 if (err) { rej(err); return; }
@@ -71,7 +78,7 @@ export default class NodejsZipProvider implements ZipProvider {
                             });
                         });
 
-                        await processEntry({ fileName: entry.fileName }, readContent);
+                        await processEntry({ fileName }, readContent);
                     } catch (e) {
                         rej(e);
                     }
