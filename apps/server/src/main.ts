@@ -24,7 +24,18 @@ async function startApplication() {
     const { DOCUMENT_PATH } = (await import("./services/data_dir.js")).default;
 
     const dbProvider = new BetterSqlite3Provider();
-    dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
+    if (process.env.TRILIUM_INTEGRATION_TEST === "memory") {
+        // Integration test mode: load the same fixture buffer used by the
+        // unit test setup so e2e tests get a known-good starting state
+        // (schema + demo content + known password) without touching disk.
+        // The fixture path is marked external in the esbuild config, so
+        // require.resolve here doesn't trigger a build-time warning.
+        dbProvider.loadFromBuffer(fs.readFileSync(
+            require.resolve("@triliumnext/core/src/test/fixtures/document.db")
+        ));
+    } else {
+        dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
+    }
 
     await initializeCore({
         dbConfig: {
