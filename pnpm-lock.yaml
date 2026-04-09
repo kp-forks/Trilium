@@ -545,8 +545,8 @@ importers:
         specifier: 2.15.6
         version: 2.15.6
       katex:
-        specifier: 0.16.44
-        version: 0.16.44
+        specifier: 0.16.45
+        version: 0.16.45
       knockout:
         specifier: 3.5.1
         version: 3.5.1
