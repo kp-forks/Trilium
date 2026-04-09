@@ -10,16 +10,16 @@ let dbConnectionReady = false;
 sql_init.dbReady.then(() => {
     // The share module opens its own read-only connection to the on-disk
     // database for isolation from the main read/write connection. In
-    // integration test mode the database is in-memory (loaded from a
-    // fixture buffer) and no file exists on disk, so opening one would
-    // throw SQLITE_CANTOPEN. Tests that exercise share functionality
-    // would need a different approach; skipping here keeps unrelated
-    // test files from failing on an unhandled rejection.
-    if (process.env.TRILIUM_INTEGRATION_TEST) {
-        return;
-    }
+    // integration test mode `dataDir.DOCUMENT_PATH` doesn't contain a real
+    // database (the main connection is in-memory, loaded from a fixture
+    // buffer), so we open the fixture file directly from its new location
+    // in core. The share connection still gets its own independent
+    // read-only handle, matching production semantics.
+    const dbPath = process.env.TRILIUM_INTEGRATION_TEST
+        ? require.resolve("@triliumnext/core/src/test/fixtures/document.db")
+        : dataDir.DOCUMENT_PATH;
 
-    dbConnection = new Database(dataDir.DOCUMENT_PATH, {
+    dbConnection = new Database(dbPath, {
         readonly: true,
         nativeBinding: process.env.BETTERSQLITE3_NATIVE_PATH || undefined
     });
