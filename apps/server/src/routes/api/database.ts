@@ -1,6 +1,7 @@
 import { BackupDatabaseNowResponse, DatabaseCheckIntegrityResponse } from "@triliumnext/commons";
-import { becca_loader, rebuildIntegrationTestDatabase as rebuildIntegrationTestDatabaseCore,ValidationError } from "@triliumnext/core";
+import { becca_loader, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
+import { readFileSync } from "fs";
 
 import anonymizationService from "../../services/anonymization.js";
 import backupService from "../../services/backup.js";
@@ -30,7 +31,11 @@ function findAndFixConsistencyIssues() {
 }
 
 async function rebuildIntegrationTestDatabase() {
-    rebuildIntegrationTestDatabaseCore();
+    // Reload the integration test database fixture into the in-memory SQL
+    // backend, then re-init schema-dependent state and the becca cache.
+    // Test-mode only — registered in routes.ts under the same env-var guard.
+    const fixtureBytes = readFileSync(require.resolve("@triliumnext/core/src/test/fixtures/document.db"));
+    sql.rebuildFromBuffer(fixtureBytes);
     sql_init.initializeDb();
     becca_loader.load();
 }
