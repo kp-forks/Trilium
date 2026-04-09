@@ -65,7 +65,7 @@ export default class BrowserZipProvider implements ZipProvider {
                 try {
                     for (const [fileName, data] of Object.entries(files)) {
                         await processEntry(
-                            { fileName },
+                            { fileName: decodeZipFileName(fileName) },
                             () => Promise.resolve(data)
                         );
                     }
@@ -75,5 +75,27 @@ export default class BrowserZipProvider implements ZipProvider {
                 }
             });
         });
+    }
+}
+
+const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
+
+/**
+ * fflate decodes ZIP entry filenames as CP437/Latin-1 unless the language
+ * encoding flag (general purpose bit 11) is set, but many real-world archives
+ * (e.g. those produced by macOS / Linux unzip / Python's zipfile) write UTF-8
+ * filenames without setting that flag. Recover the original UTF-8 bytes from
+ * fflate's per-byte string and re-decode them; if the result isn't valid
+ * UTF-8 we fall back to the as-decoded name.
+ */
+function decodeZipFileName(name: string): string {
+    const bytes = new Uint8Array(name.length);
+    for (let i = 0; i < name.length; i++) {
+        bytes[i] = name.charCodeAt(i) & 0xff;
+    }
+    try {
+        return utf8Decoder.decode(bytes);
+    } catch {
+        return name;
     }
 }
