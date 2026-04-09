@@ -10,6 +10,7 @@ import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
+import NodejsInAppHelpProvider from "./in_app_help_provider.js";
 import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";
 import port from "./services/port.js";
@@ -61,6 +62,7 @@ async function startApplication() {
         platform: new ServerPlatformProvider(),
         translations: (await import("./services/i18n.js")).initializeTranslations,
         getDemoArchive: async () => fs.readFileSync(require.resolve("@triliumnext/server/src/assets/db/demo.zip")),
+        inAppHelp: new NodejsInAppHelpProvider(),
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)

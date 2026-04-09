@@ -1,7 +1,7 @@
 import { getLog, initializeCore, sql_init } from "@triliumnext/core";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
-import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
+import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import options from "@triliumnext/server/src/services/options.js";
 import port from "@triliumnext/server/src/services/port.js";
@@ -10,6 +10,7 @@ import tray from "@triliumnext/server/src/services/tray.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
+import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { app, BrowserWindow,globalShortcut } from "electron";
 import electronDebug from "electron-debug";
 import electronDl from "electron-dl";
@@ -143,6 +144,7 @@ async function main() {
         platform: new DesktopPlatformProvider(),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,
         getDemoArchive: async () => fs.readFileSync(require.resolve("@triliumnext/server/src/assets/db/demo.zip")),
+        inAppHelp: new NodejsInAppHelpProvider(),
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)
