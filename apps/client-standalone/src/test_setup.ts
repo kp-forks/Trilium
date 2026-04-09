@@ -1,8 +1,10 @@
+import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { initializeCore } from "@triliumnext/core";
 import schemaSql from "@triliumnext/core/src/assets/schema.sql?raw";
+import serverEnTranslations from "../../server/src/assets/translations/en/server.json";
 import { beforeAll } from "vitest";
 
 import BrowserExecutionContext from "./lightweight/cls_provider.js";
@@ -63,16 +65,20 @@ WebAssembly.instantiateStreaming = (async (source, importObject) => {
 // =============================================================================
 // Core initialization for standalone-flavored tests
 // =============================================================================
-// Mirror what apps/client-standalone/src/local-server-worker.ts does at
-// startup, but without messaging / requests / OPFS / demo archives. We just
-// need core to be initialized so that pure-becca / pure-search tests can run.
+// Mirror what apps/server/spec/setup.ts does: load the pre-seeded integration
+// fixture DB into an in-memory sqlite-wasm instance, then initialize core
+// against it with the standalone (browser) providers. Each vitest worker gets
+// a fresh copy because tests run in forks (per the default pool).
+
+const require = createRequire(import.meta.url);
+const fixtureDb = readFileSync(
+    require.resolve("@triliumnext/core/src/test/fixtures/document.db")
+);
 
 beforeAll(async () => {
     const sqlProvider = new BrowserSqlProvider();
     await sqlProvider.initWasm();
-    sqlProvider.loadFromMemory();
-    // Apply the schema so search/becca tests that touch SQL find real tables.
-    sqlProvider.exec(schemaSql);
+    sqlProvider.loadFromBuffer(fixtureDb);
 
     await initializeCore({
         executionContext: new BrowserExecutionContext(),
@@ -81,8 +87,21 @@ beforeAll(async () => {
         zipExportProviderFactory: (
             await import("./lightweight/zip_export_provider_factory.js")
         ).standaloneZipExportProviderFactory,
-        // Stub translations: pure-becca tests don't need real i18n strings.
-        translations: async () => undefined,
+        // i18next must be wired up — keyboard_actions.ts and other modules
+        // call `t()` and throw if translations are missing. Inline the
+        // en/server.json resources via vite's JSON import so we don't need a
+        // backend in tests.
+        translations: async (i18nextInstance, locale) => {
+            await i18nextInstance.init({
+                lng: locale,
+                fallbackLng: "en",
+                ns: "server",
+                defaultNS: "server",
+                resources: {
+                    en: { server: serverEnTranslations }
+                }
+            });
+        },
         platform: new StandalonePlatformProvider(""),
         schema: schemaSql,
         dbConfig: {
