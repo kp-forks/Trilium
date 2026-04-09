@@ -9,7 +9,7 @@ import { t } from "i18next";
 import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
-import { loadCoreSchema } from "./core_assets.js";
+import { getIntegrationTestDbPath, loadCoreSchema } from "./core_assets.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
 import NodejsInAppHelpProvider from "./in_app_help_provider.js";
 import ServerPlatformProvider from "./platform_provider.js";
@@ -30,11 +30,9 @@ async function startApplication() {
         // Integration test mode: load the same fixture buffer used by the
         // unit test setup so e2e tests get a known-good starting state
         // (schema + demo content + known password) without touching disk.
-        // The fixture path is marked external in the esbuild config, so
-        // require.resolve here doesn't trigger a build-time warning.
-        dbProvider.loadFromBuffer(fs.readFileSync(
-            require.resolve("@triliumnext/core/src/test/fixtures/document.db")
-        ));
+        // getIntegrationTestDbPath() handles the bundled-vs-source path
+        // resolution; see core_assets.ts.
+        dbProvider.loadFromBuffer(fs.readFileSync(getIntegrationTestDbPath()));
     } else {
         dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
     }

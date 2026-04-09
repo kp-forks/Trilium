@@ -1,6 +1,7 @@
 "use strict";
 
 import Database from "better-sqlite3";
+import { getIntegrationTestDbPath } from "../core_assets.js";
 import dataDir from "../services/data_dir.js";
 import sql_init from "../services/sql_init.js";
 
@@ -12,11 +13,10 @@ sql_init.dbReady.then(() => {
     // database for isolation from the main read/write connection. In
     // integration test mode `dataDir.DOCUMENT_PATH` doesn't contain a real
     // database (the main connection is in-memory, loaded from a fixture
-    // buffer), so we open the fixture file directly from its new location
-    // in core. The share connection still gets its own independent
-    // read-only handle, matching production semantics.
+    // buffer), so we open the fixture file directly. getIntegrationTestDbPath
+    // handles bundled-vs-source path resolution; see core_assets.ts.
     const dbPath = process.env.TRILIUM_INTEGRATION_TEST
-        ? require.resolve("@triliumnext/core/src/test/fixtures/document.db")
+        ? getIntegrationTestDbPath()
         : dataDir.DOCUMENT_PATH;
 
     dbConnection = new Database(dbPath, {

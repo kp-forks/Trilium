@@ -3,6 +3,7 @@ import { becca_loader, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import { readFileSync } from "fs";
 
+import { getIntegrationTestDbPath } from "../../core_assets.js";
 import anonymizationService from "../../services/anonymization.js";
 import backupService from "../../services/backup.js";
 import consistencyChecksService from "../../services/consistency_checks.js";
@@ -34,7 +35,9 @@ async function rebuildIntegrationTestDatabase() {
     // Reload the integration test database fixture into the in-memory SQL
     // backend, then re-init schema-dependent state and the becca cache.
     // Test-mode only — registered in routes.ts under the same env-var guard.
-    const fixtureBytes = readFileSync(require.resolve("@triliumnext/core/src/test/fixtures/document.db"));
+    // getIntegrationTestDbPath() handles the bundled-vs-source path
+    // resolution; see core_assets.ts.
+    const fixtureBytes = readFileSync(getIntegrationTestDbPath());
     sql.rebuildFromBuffer(fixtureBytes);
     sql_init.initializeDb();
     becca_loader.load();
