@@ -27,6 +27,20 @@ export class SqlService {
         this.params = restParams;
     }
 
+    /**
+     * Replace the underlying database with a fresh in-memory copy of the
+     * given buffer. Used by integration tests that need a clean DB per test.
+     *
+     * Clears the prepared-statement cache because cached statements are
+     * bound to the previous connection and become invalid after the swap.
+     *
+     * Not safe to call inside a transaction.
+     */
+    rebuildFromBuffer(buffer: Uint8Array) {
+        this.statementCache = {};
+        this.dbConnection.loadFromBuffer(buffer);
+    }
+
     insert<T extends {}>(tableName: string, rec: T, replace = false) {
         const keys = Object.keys(rec || {});
         if (keys.length === 0) {

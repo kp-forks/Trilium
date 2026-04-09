@@ -20,12 +20,13 @@ process.env.TRILIUM_PUBLIC_SERVER = "http://localhost:4200";
 
 beforeAll(async () => {
     // Load the integration test database into memory. The fixture at
-    // spec/db/document.db is pre-seeded with the schema, demo content, and
-    // a known password ("demo1234") that the ETAPI tests log in with. Each
-    // test file runs in its own vitest fork (pool: "forks"), so each gets a
-    // fresh in-memory copy and mutations don't leak across files.
+    // packages/trilium-core/src/test/fixtures/document.db is pre-seeded with
+    // the schema, demo content, and a known password ("demo1234") that the
+    // ETAPI tests log in with. Each test file runs in its own vitest fork
+    // (pool: "forks"), so each gets a fresh in-memory copy and mutations
+    // don't leak across files.
     const dbProvider = new BetterSqlite3Provider();
-    dbProvider.loadFromBuffer(readFileSync(join(__dirname, "db", "document.db")));
+    dbProvider.loadFromBuffer(readFileSync(require.resolve("@triliumnext/core/src/test/fixtures/document.db")));
 
     await initializeCore({
         dbConfig: {

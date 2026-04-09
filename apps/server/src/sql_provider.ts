@@ -31,6 +31,10 @@ export default class BetterSqlite3Provider implements DatabaseProvider {
     }
 
     loadFromBuffer(buffer: NonSharedBuffer) {
+        // Close any existing connection so its file handles are released
+        // before we replace it. Important for repeated rebuilds in tests
+        // (each call would otherwise leak the previous handle).
+        this.dbConnection?.close();
         this.dbConnection = new Database(buffer, dbOpts);
     }
 

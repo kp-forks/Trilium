@@ -8,6 +8,17 @@ let dbConnection!: Database.Database;
 let dbConnectionReady = false;
 
 sql_init.dbReady.then(() => {
+    // The share module opens its own read-only connection to the on-disk
+    // database for isolation from the main read/write connection. In
+    // integration test mode the database is in-memory (loaded from a
+    // fixture buffer) and no file exists on disk, so opening one would
+    // throw SQLITE_CANTOPEN. Tests that exercise share functionality
+    // would need a different approach; skipping here keeps unrelated
+    // test files from failing on an unhandled rejection.
+    if (process.env.TRILIUM_INTEGRATION_TEST) {
+        return;
+    }
+
     dbConnection = new Database(dataDir.DOCUMENT_PATH, {
         readonly: true,
         nativeBinding: process.env.BETTERSQLITE3_NATIVE_PATH || undefined
