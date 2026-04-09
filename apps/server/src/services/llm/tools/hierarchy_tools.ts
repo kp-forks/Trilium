@@ -120,6 +120,9 @@ export const hierarchyTools = defineTools({
             if (!targetParent.isContentAvailable()) {
                 return { error: "Cannot move note to a protected parent" };
             }
+            if (!targetParent.isContentAvailable()) {
+                return { error: "Cannot move note to a protected parent" };
+            }
 
             // Use the first (primary) parent branch for the move
             const branches = note.getParentBranches();
