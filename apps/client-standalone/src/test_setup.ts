@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { initializeCore } from "@triliumnext/core";
 import schemaSql from "@triliumnext/core/src/assets/schema.sql?raw";
+import HappyDomHtmlParser from "happy-dom/lib/html-parser/HTMLParser.js";
 import serverEnTranslations from "../../server/src/assets/translations/en/server.json";
 import { beforeAll } from "vitest";
 
@@ -61,6 +62,31 @@ WebAssembly.instantiateStreaming = (async (source, importObject) => {
     const bytes = await response.arrayBuffer();
     return WebAssembly.instantiate(bytes, importObject);
 }) as typeof WebAssembly.instantiateStreaming;
+
+// =============================================================================
+// happy-dom HTMLParser spec compliance patch
+// =============================================================================
+// Per HTML5 parsing spec, a single U+000A LINE FEED immediately after a <pre>,
+// <listing>, or <textarea> start tag must be ignored ("newlines at the start
+// of pre blocks are ignored as an authoring convenience"). Real browsers and
+// domino (which the server runtime uses via turnish) both implement this;
+// happy-dom (as of 20.8.9) does not — it keeps the LF as a text node.
+//
+// That difference makes turnish's markdown export produce different output
+// under happy-dom vs. production, breaking markdown.spec.ts > "exports jQuery
+// code in table properly". Patch HTMLParser.parse to pre-process the string.
+const LEADING_LF_IN_PRE_RE = /(<(?:pre|listing|textarea)\b[^>]*>)(\r\n|\r|\n)/gi;
+const originalHtmlParserParse = (HappyDomHtmlParser as unknown as {
+    prototype: { parse(html: string, rootNode?: unknown): unknown };
+}).prototype.parse;
+(HappyDomHtmlParser as unknown as {
+    prototype: { parse(html: string, rootNode?: unknown): unknown };
+}).prototype.parse = function (html: string, rootNode?: unknown) {
+    const patched = typeof html === "string"
+        ? html.replace(LEADING_LF_IN_PRE_RE, "$1")
+        : html;
+    return originalHtmlParserParse.call(this, patched, rootNode);
+};
 
 // =============================================================================
 // Core initialization for standalone-flavored tests
