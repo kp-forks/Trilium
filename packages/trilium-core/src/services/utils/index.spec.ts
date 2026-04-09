@@ -465,11 +465,19 @@ describe("#toMap", () => {
         expect(result).toBeInstanceOf(Map);
         expect(result.size).toBe(0);
     });
-    it.fails("should correctly handle duplicate keys? (currently it will overwrite the entry, so returned size will be 1 instead of 2)", () => {
-        const testList = [ { title: "testDupeTitle", propA: "text", propB: 123 }, { title: "testDupeTitle", propA: "prop2", propB: 456 } ];
+    it("collapses entries when keys collide (last write wins)", () => {
+        // Documents the current contract of toMap: when two entries share a
+        // key, the later entry overwrites the earlier one. See the TODO in
+        // toMap itself — if the contract ever changes to preserve duplicates
+        // (e.g. returning Map<K, T[]>), update this test along with the change.
+        const testList = [
+            { title: "testDupeTitle", propA: "text", propB: 123 },
+            { title: "testDupeTitle", propA: "prop2", propB: 456 }
+        ];
         const result = utils.toMap(testList, "title");
         expect(result).toBeInstanceOf(Map);
-        expect(result.size).toBe(2);
+        expect(result.size).toBe(1);
+        expect(result.get("testDupeTitle")?.propA).toBe("prop2");
     });
 });
 
