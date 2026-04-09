@@ -435,9 +435,18 @@ export default class BrowserSqlProvider implements DatabaseProvider {
 
     loadFromBuffer(buffer: Uint8Array): void {
         this.ensureSqlite3();
-        // SQLite WASM can deserialize a database from a byte array
-        const p = this.sqlite3!.wasm.allocFromTypedArray(buffer);
+        // SQLite WASM's allocFromTypedArray rejects Node's Buffer (and other
+        // non-Uint8Array typed arrays) with "expecting 8/16/32/64". Normalize
+        // to a plain Uint8Array view over the same memory so callers can pass
+        // anything readFileSync returns.
+        const view = buffer instanceof Uint8Array && buffer.constructor === Uint8Array
+            ? buffer
+            : new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+        const p = this.sqlite3!.wasm.allocFromTypedArray(view);
         try {
+            // Cached statements reference the previous DB and become invalid
+            // once we swap connections. Drop them so callers re-prepare.
+            this.clearStatementCache();
             this.db = new this.sqlite3!.oo1.DB({ filename: ":memory:", flags: "c" });
             this.opfsDbPath = undefined; // Not using OPFS
 
@@ -445,8 +454,8 @@ export default class BrowserSqlProvider implements DatabaseProvider {
                 this.db.pointer!,
                 "main",
                 p,
-                buffer.byteLength,
-                buffer.byteLength,
+                view.byteLength,
+                view.byteLength,
                 this.sqlite3!.capi.SQLITE_DESERIALIZE_FREEONCLOSE |
                 this.sqlite3!.capi.SQLITE_DESERIALIZE_RESIZEABLE
             );
@@ -563,8 +572,7 @@ export default class BrowserSqlProvider implements DatabaseProvider {
         this.db!.exec(query);
     }
 
-    close(): void {
-        // Clean up all cached statements first
+    private clearStatementCache(): void {
         for (const statement of this.statementCache.values()) {
             try {
                 statement.finalize();
@@ -574,6 +582,10 @@ export default class BrowserSqlProvider implements DatabaseProvider {
             }
         }
         this.statementCache.clear();
+    }
+
+    close(): void {
+        this.clearStatementCache();
 
         if (this.db) {
             this.db.close();

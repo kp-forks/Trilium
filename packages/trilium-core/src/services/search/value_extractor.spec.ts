@@ -1,10 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import ValueExtractor from "./value_extractor.js";
 import becca from "../../becca/becca.js";
 import SearchContext from "./search_context.js";
 import { note } from "../../test/becca_mocking.js";
 
-const dsc = new SearchContext();
+// SearchContext is constructed inside beforeAll (not at module load) so that
+// the test setup's initializeCore() has run first. Constructing it at module
+// top level crashes with "Context not initialized" because module evaluation
+// happens before any beforeAll hooks fire.
+let dsc: SearchContext;
+
+beforeAll(() => {
+    dsc = new SearchContext();
+});
 
 describe("Value extractor", () => {
     beforeEach(() => {

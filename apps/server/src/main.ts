@@ -9,11 +9,14 @@ import { t } from "i18next";
 import path from "path";
 
 import ClsHookedExecutionContext from "./cls_provider.js";
+import { getIntegrationTestDbPath, loadCoreSchema } from "./core_assets.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
+import NodejsInAppHelpProvider from "./in_app_help_provider.js";
 import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";
 import port from "./services/port.js";
 import NodeRequestProvider from "./services/request.js";
+import { RESOURCE_DIR } from "./services/resource_dir.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "./sql_provider.js";
 import NodejsZipProvider from "./zip_provider.js";
@@ -23,7 +26,16 @@ async function startApplication() {
     const { DOCUMENT_PATH } = (await import("./services/data_dir.js")).default;
 
     const dbProvider = new BetterSqlite3Provider();
-    dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
+    if (process.env.TRILIUM_INTEGRATION_TEST === "memory") {
+        // Integration test mode: load the same fixture buffer used by the
+        // unit test setup so e2e tests get a known-good starting state
+        // (schema + demo content + known password) without touching disk.
+        // getIntegrationTestDbPath() handles the bundled-vs-source path
+        // resolution; see core_assets.ts.
+        dbProvider.loadFromBuffer(fs.readFileSync(getIntegrationTestDbPath()));
+    } else {
+        dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
+    }
 
     await initializeCore({
         dbConfig: {
@@ -57,10 +69,14 @@ async function startApplication() {
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: new WebSocketMessagingProvider(),
-        schema: fs.readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
+        schema: loadCoreSchema(),
         platform: new ServerPlatformProvider(),
         translations: (await import("./services/i18n.js")).initializeTranslations,
-        getDemoArchive: async () => fs.readFileSync(require.resolve("@triliumnext/server/src/assets/db/demo.zip")),
+        // demo.zip is a server-owned asset; src/assets is copied to dist/assets
+        // by the build script, so the same RESOURCE_DIR-relative path works in
+        // both source and bundled-production modes.
+        getDemoArchive: async () => fs.readFileSync(path.join(RESOURCE_DIR, "db", "demo.zip")),
+        inAppHelp: new NodejsInAppHelpProvider(),
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)

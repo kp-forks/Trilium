@@ -1,9 +1,18 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, beforeEach } from "vitest";
 import * as cls from "../services/context.js";
-import { getSql, rebuildIntegrationTestDatabase } from "../services/sql/index.js";
+import { getSql } from "../services/sql/index.js";
 import becca from "../becca/becca.js";
 import becca_loader from "../becca/becca_loader.js";
 import migration from "./0233__migrate_geo_map_to_collection.js";
+
+// Resolve fixture path relative to this spec file. Spec files only ever run
+// under vitest (which uses ESM via Vite), so import.meta.url is available;
+// the CLAUDE.md restriction against import.meta.url applies to production
+// code that gets bundled to CJS, not to test files.
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Test suite for migration 0233 which converts geoMap notes to book type with viewConfig attachments.
@@ -19,11 +28,20 @@ import migration from "./0233__migrate_geo_map_to_collection.js";
  * test data into the database, then verifies the migration transforms the data correctly.
  */
 describe("Migration 0233: Migrate geoMap to collection", () => {
-    const sql = getSql();
+    let sql: ReturnType<typeof getSql>;
 
     beforeEach(async () => {
-        // Set up a clean in-memory database for each test
-        rebuildIntegrationTestDatabase();
+        // getSql() is resolved here (not at describe-collection time) so that
+        // initializeCore() in the test setup's beforeAll has had a chance to
+        // run first. Capturing it eagerly at the top of describe crashes with
+        // "SQL not initialized" because describe callbacks run before any
+        // beforeAll hooks fire.
+        sql = getSql();
+
+        // Reload the integration test database from the fixture for each test
+        // so mutations from one test don't leak into the next.
+        const dbBytes = readFileSync(join(__dirname, "../test/fixtures/document.db"));
+        sql.rebuildFromBuffer(dbBytes);
 
         await new Promise<void>((resolve) => {
             cls.getContext().init(() => {

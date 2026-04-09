@@ -465,11 +465,19 @@ describe("#toMap", () => {
         expect(result).toBeInstanceOf(Map);
         expect(result.size).toBe(0);
     });
-    it.fails("should correctly handle duplicate keys? (currently it will overwrite the entry, so returned size will be 1 instead of 2)", () => {
-        const testList = [ { title: "testDupeTitle", propA: "text", propB: 123 }, { title: "testDupeTitle", propA: "prop2", propB: 456 } ];
+    it("collapses entries when keys collide (last write wins)", () => {
+        // Documents the current contract of toMap: when two entries share a
+        // key, the later entry overwrites the earlier one. See the TODO in
+        // toMap itself — if the contract ever changes to preserve duplicates
+        // (e.g. returning Map<K, T[]>), update this test along with the change.
+        const testList = [
+            { title: "testDupeTitle", propA: "text", propB: 123 },
+            { title: "testDupeTitle", propA: "prop2", propB: 456 }
+        ];
         const result = utils.toMap(testList, "title");
         expect(result).toBeInstanceOf(Map);
-        expect(result.size).toBe(2);
+        expect(result.size).toBe(1);
+        expect(result.get("testDupeTitle")?.propA).toBe("prop2");
     });
 });
 
@@ -530,8 +538,15 @@ describe("#safeExtractMessageAndStackFromError", () => {
         expect(actual[1]).not.toBeUndefined();
     });
 
-    it("should use the fallback 'Unknown Error' message, if it gets passed anything else than an instance of an Error", () => {
-        const testNonError = "this is not an instance of an Error, but JS technically allows us to throw this anyways";
+    it("should pass a thrown string through as the message, with no stack", () => {
+        const testString = "this is not an instance of an Error, but JS technically allows us to throw this anyways";
+        const actual = utils.safeExtractMessageAndStackFromError(testString);
+        expect(actual[0]).toBe(testString);
+        expect(actual[1]).toBeUndefined();
+    });
+
+    it("should use the fallback 'Unknown Error' message, if it gets passed something that is neither an Error nor a string", () => {
+        const testNonError = { not: "an error" };
         const actual = utils.safeExtractMessageAndStackFromError(testNonError);
         expect(actual[0]).toBe("Unknown Error");
         expect(actual[1]).toBeUndefined();

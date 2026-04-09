@@ -211,7 +211,7 @@ export const escapeHtml = escape;
 export const unescapeHtml = unescape;
 
 export function randomSecureToken(bytes = 32) {
-    return encodeBase64(getCrypto().randomBytes(32));
+    return encodeBase64(getCrypto().randomBytes(bytes));
 }
 
 export function safeExtractMessageAndStackFromError(err: unknown): [errMessage: string, errStack: string | undefined] {

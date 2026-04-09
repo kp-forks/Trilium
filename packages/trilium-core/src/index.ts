@@ -11,6 +11,7 @@ import appInfo from "./services/app_info";
 import { type PlatformProvider, initPlatform } from "./services/platform";
 import { type ZipProvider, initZipProvider } from "./services/zip_provider";
 import { type ZipExportProviderFactory, initZipExportProviderFactory } from "./services/export/zip_export_provider_factory";
+import { type InAppHelpProvider, initInAppHelp } from "./services/in_app_help";
 
 export { getLog } from "./services/log";
 export type * from "./services/sql/types";
@@ -96,6 +97,7 @@ export { default as content_hash } from "./services/content_hash";
 export { default as sync_mutex } from "./services/sync_mutex";
 export { default as setup } from "./services/setup";
 export { getPlatform, type PlatformProvider } from "./services/platform";
+export type { InAppHelpProvider } from "./services/in_app_help";
 export { t } from "i18next";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 export type * from "./meta";
@@ -119,7 +121,7 @@ export { default as scriptService } from "./services/script";
 export { default as BackendScriptApi, type Api as BackendScriptApiInterface } from "./services/backend_script_api";
 export * as scheduler from "./services/scheduler";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive, inAppHelp }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
@@ -131,6 +133,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     messaging?: MessagingProvider,
     request?: RequestProvider,
     getDemoArchive?: () => Promise<Uint8Array | null>,
+    inAppHelp?: InAppHelpProvider,
     extraAppInfo?: {
         nodeVersion: string;
         dataDirectory: string;
@@ -154,5 +157,8 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     }
     if (request) {
         initRequest(request);
+    }
+    if (inAppHelp) {
+        initInAppHelp(inAppHelp);
     }
 };

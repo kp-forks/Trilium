@@ -13,7 +13,3 @@ export function getSql(): SqlService {
     if (!sql) throw new Error("SQL not initialized");
     return sql;
 }
-
-export function rebuildIntegrationTestDatabase(path?: string) {
-    throw new Error("Not implemented");
-}

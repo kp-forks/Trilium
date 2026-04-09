@@ -1,7 +1,7 @@
 import debounce from "@triliumnext/client/src/services/debounce.js";
 import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/core";
+import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provider.js";
 import cls from "@triliumnext/server/src/services/cls.js";
-import { parseNoteMetaFile } from "@triliumnext/server/src/services/in_app_help.js";
 import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
 import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
 import fs from "fs/promises";
@@ -241,7 +241,7 @@ async function cleanUpMeta(outputPath: string, minify: boolean) {
     }
 
     if (minify) {
-        const subtree = parseNoteMetaFile(meta);
+        const subtree = new NodejsInAppHelpProvider().parseNoteMetaFile(meta);
         await fs.writeFile(metaPath, JSON.stringify(subtree));
     } else {
         await fs.writeFile(metaPath, JSON.stringify(meta, null, 4));
