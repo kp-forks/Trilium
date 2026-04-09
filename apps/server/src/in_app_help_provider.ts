@@ -25,7 +25,7 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
 
     parseNoteMetaFile(noteMetaFile: NoteMetaFile): HiddenSubtreeItem[] {
         if (!noteMetaFile.files) {
-            console.log("No meta files");
+            console.warn("No meta files found to parse.");
             return [];
         }
 
