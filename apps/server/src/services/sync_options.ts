@@ -1,5 +1,3 @@
-
-
 import config from "./config.js";
 import optionService from "./options.js";
 import { normalizeUrl } from "./utils.js";
@@ -29,9 +27,16 @@ export default {
         // and we need to override it with config from config.ini
         return !!syncServerHost && syncServerHost !== "disabled";
     },
-    // Value is stored with a time scale, convert to milliseconds for use
+    // Value is stored with a time scale, convert to milliseconds for use.
+    // Config file overrides are treated as raw milliseconds for backward compatibility.
     getSyncTimeout: () => {
-        const value = parseInt(get("syncServerTimeout"), 10) || 2;
+        const configValue = config["Sync"]?.syncServerTimeout;
+        if (configValue) {
+            // Config override: treat as raw milliseconds (backward compatible)
+            return parseInt(configValue, 10) || 120000;
+        }
+        // Database option: use value × scale (with safe defaults)
+        const value = parseInt(optionService.getOption("syncServerTimeout"), 10) || 2;
         const scale = parseInt(optionService.getOption("syncServerTimeoutTimeScale"), 10) || 60;
         return value * scale * 1000;
     },
