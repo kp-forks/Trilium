@@ -1,7 +1,6 @@
 import type { AttributeRow } from "@triliumnext/commons";
 import { dayjs } from "@triliumnext/commons";
 import { formatLogMessage } from "@triliumnext/commons";
-import axios from "axios";
 import * as cheerio from "cheerio";
 import xml2js from "xml2js";
 
@@ -81,10 +80,10 @@ export interface Api {
     originEntity?: AbstractBeccaEntity<any> | null;
 
     /**
-     * Axios library for HTTP requests. See {@link https://axios-http.com} for documentation
-     * @deprecated use native (browser compatible) fetch() instead
+     * @deprecated Axios was deprecated since April 2024 and has now been removed following the March 2026 supply chain attack.
+     * Use the native fetch() API instead.
      */
-    axios: typeof axios;
+    axios: undefined;
 
     /**
      * day.js library for date manipulation. See {@link https://day.js.org} for documentation
@@ -441,7 +440,14 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
         (this as any)[key] = apiParams[key as keyof ApiParams];
     }
 
-    this.axios = axios;
+    // Throw when axios is used (removed after 2 years of deprecation + supply chain attack)
+    const axiosError = () => {
+        throw new Error("api.axios was deprecated since 2024 and has been removed following the March 2026 npm supply chain compromise. Please update your script to use the native fetch() API.");
+    };
+    this.axios = new Proxy(axiosError, {
+        get: axiosError,
+        apply: axiosError
+    }) as unknown as undefined;
     this.dayjs = dayjs;
     this.xml2js = xml2js;
     this.cheerio = cheerio;
@@ -697,7 +703,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
             return params.map((p) => {
                 if (typeof p === "function") {
                     return `!@#Function: ${p.toString()}`;
-                } 
+                }
                 return p;
             });
         }
