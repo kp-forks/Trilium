@@ -38,18 +38,6 @@ export default class AdmonitionToolbar extends Plugin {
                 return null;
             }
         });
-
-        // Hide balloon toolbar when in an admonition
-        if (editor.plugins.has("BalloonToolbar")) {
-            editor.listenTo(editor.plugins.get("BalloonToolbar"), "show", (evt) => {
-                const firstPosition = editor.model.document.selection.getFirstPosition();
-                const isInAdmonition = firstPosition?.findAncestor("aside");
-
-                if (isInAdmonition) {
-                    evt.stop(); // Prevent the balloon toolbar from showing
-                }
-            }, { priority: "high" });
-        }
     }
 
 }
