@@ -306,7 +306,8 @@ function useEditing(note: FNote, isEditable: boolean, isCalendarRoot: boolean, c
     const onEventChange = useCallback(async (e: EventChangeArg) => {
         // Only process actual date/time changes, not other property changes (e.g., title via setProp).
         const datesChanged = e.oldEvent.start?.getTime() !== e.event.start?.getTime()
-            || e.oldEvent.end?.getTime() !== e.event.end?.getTime();
+            || e.oldEvent.end?.getTime() !== e.event.end?.getTime()
+            || e.oldEvent.allDay !== e.event.allDay;
         if (!datesChanged) return;
 
         const { startDate, endDate } = parseStartEndDateFromEvent(e.event);
