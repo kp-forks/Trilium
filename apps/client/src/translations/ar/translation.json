@@ -626,7 +626,8 @@
     "date-and-time": "التاريخ والوقت",
     "no_backup_yet": "لايوجد نسخة احتياطية لحد الان",
     "enable_daily_backup": "تمكين النسخ الاحتياطي اليومي",
-    "backup_database_now": "نسخ اختياطي لقاعدة البيانات الان"
+    "backup_database_now": "نسخ اختياطي لقاعدة البيانات الان",
+    "download": "تنزيل"
   },
   "etapi": {
     "created": "تم الأنشاء",
