@@ -13,7 +13,7 @@ import { CellComponentProps, Grid } from "react-window";
 import FNote from "../entities/fnote";
 import attributes from "../services/attributes";
 import server from "../services/server";
-import { isDesktop, isMobile } from "../services/utils";
+import { isDesktop, isLaunchBarConfig, isMobile } from "../services/utils";
 import ActionButton from "./react/ActionButton";
 import Dropdown from "./react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "./react/FormList";
@@ -42,8 +42,13 @@ export default function NoteIcon() {
         setIcon(note?.getIcon());
     }, [ note, iconClass, workspaceIconClass ]);
 
+    const isDisabled = viewScope?.viewMode !== "default"
+        || (note?.noteId && isLaunchBarConfig(note.noteId))
+        || note?.noteId?.startsWith("_help_")
+        || note?.noteId?.startsWith("_options");
+
     if (isMobile()) {
-        return <MobileNoteIconSwitcher note={note} icon={icon} />;
+        return <MobileNoteIconSwitcher note={note} icon={icon} disabled={isDisabled} />;
     }
 
     return (
@@ -55,16 +60,17 @@ export default function NoteIcon() {
             dropdownOptions={{ autoClose: "outside" }}
             buttonClassName={`note-icon tn-focusable-button ${icon ?? "bx bx-empty"}`}
             hideToggleArrow
-            disabled={viewScope?.viewMode !== "default"}
+            disabled={isDisabled}
         >
             { note && <NoteIconList note={note} onHide={() => dropdownRef?.current?.hide()} columnCount={12} /> }
         </Dropdown>
     );
 }
 
-function MobileNoteIconSwitcher({ note, icon }: {
+function MobileNoteIconSwitcher({ note, icon, disabled }: {
     note: FNote | null | undefined;
     icon: string | null | undefined;
+    disabled?: boolean;
 }) {
     const [ modalShown, setModalShown ] = useState(false);
     const { windowWidth } = useWindowSize();
@@ -76,6 +82,7 @@ function MobileNoteIconSwitcher({ note, icon }: {
                 icon={icon ?? "bx bx-empty"}
                 text={t("note_icon.change_note_icon")}
                 onClick={() => setModalShown(true)}
+                disabled={disabled}
             />
 
             {createPortal((
