@@ -1,7 +1,7 @@
-"use strict";
 
-import optionService from "./options.js";
+
 import config from "./config.js";
+import optionService from "./options.js";
 import { normalizeUrl } from "./utils.js";
 
 /*
@@ -29,6 +29,11 @@ export default {
         // and we need to override it with config from config.ini
         return !!syncServerHost && syncServerHost !== "disabled";
     },
-    getSyncTimeout: () => parseInt(get("syncServerTimeout")) || 120000,
+    // Value is stored with a time scale, convert to milliseconds for use
+    getSyncTimeout: () => {
+        const value = parseInt(get("syncServerTimeout"), 10) || 2;
+        const scale = parseInt(optionService.getOption("syncServerTimeoutTimeScale"), 10) || 60;
+        return value * scale * 1000;
+    },
     getSyncProxy: () => get("syncProxy")
 };

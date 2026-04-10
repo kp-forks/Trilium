@@ -23,6 +23,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     theme: string;
     syncServerHost: string;
     syncServerTimeout: string;
+    syncServerTimeoutTimeScale: number;
     syncProxy: string;
     mainFontFamily: FontFamily;
     treeFontFamily: FontFamily;
