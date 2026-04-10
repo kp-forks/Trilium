@@ -11,6 +11,7 @@ import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumOptions } from "../../react/hooks";
 import RawHtml from "../../react/RawHtml";
+import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import TimeSelector from "./components/TimeSelector";
 
@@ -62,14 +63,16 @@ export function SyncConfiguration() {
                 </div>
             </form>
 
-            <FormGroup name="sync-server-timeout" label={t("sync_2.timeout")}>
+            <hr/>
+
+            <OptionsRow name="sync-server-timeout" label={t("sync_2.timeout")} description={t("sync_2.timeout_description")}>
                 <TimeSelector
                     name="sync-server-timeout"
                     optionValueId="syncServerTimeout"
                     optionTimeScaleId="syncServerTimeoutTimeScale"
                     minimumSeconds={1}
                 />
-            </FormGroup>
+            </OptionsRow>
         </OptionsSection>
     );
 }

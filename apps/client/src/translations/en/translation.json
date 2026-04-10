@@ -1519,6 +1519,7 @@
     "config_title": "Sync Configuration",
     "server_address": "Server instance address",
     "timeout": "Sync timeout",
+    "timeout_description": "How long to wait before giving up on a slow sync connection. Increase if you have an unstable network.",
     "proxy_label": "Sync proxy server (optional)",
     "note": "Note",
     "note_description": "If you leave the proxy setting blank, the system proxy will be used (applies to desktop/electron build only).",
