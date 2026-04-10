@@ -98,7 +98,10 @@ function getExpression(tokens: TokenData[], searchContext: SearchContext, level 
         const operand = tokens[i];
 
         if (!operand.inQuotes && (operand.token.startsWith("#") || operand.token.startsWith("~") || operand.token === "note")) {
-            searchContext.addError(`Error near token "${operand.token}" in ${context(i)}, it's possible to compare with constant only.`);
+            const hint = operand.token === "note"
+                ? `"${operand.token}" is a reserved keyword. To search for a literal value, use quotes: "${operand.token}"`
+                : `cannot compare with "${operand.token}". To search for a literal value, use quotes: "${operand.token}"`;
+            searchContext.addError(`Error in ${context(i)}: ${hint}`);
             return null;
         }
 
