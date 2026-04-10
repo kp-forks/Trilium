@@ -32,6 +32,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "codeNoteTheme",
     "syncServerHost",
     "syncServerTimeout",
+    "syncServerTimeoutTimeScale",
     "syncProxy",
     "hoistedNoteId",
     "mainFontSize",

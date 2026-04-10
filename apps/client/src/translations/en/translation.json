@@ -806,7 +806,11 @@
     "board": "Board",
     "presentation": "Presentation",
     "include_archived_notes": "Show archived notes",
-    "hide_child_notes": "Hide child notes in tree"
+    "hide_child_notes": "Hide child notes in tree",
+    "open_all_in_tabs": "Open all",
+    "open_all_in_tabs_tooltip": "Open all results in new tabs",
+    "open_all_confirm": "This will open {{count}} notes in new tabs. Continue?",
+    "open_all_too_many": "Too many results ({{count}}). Maximum is {{max}}."
   },
   "edited_notes": {
     "no_edited_notes_found": "No edited notes on this day yet...",
@@ -860,7 +864,8 @@
     "collapse": "Collapse to normal size",
     "title": "Note Map",
     "fix-nodes": "Fix nodes",
-    "link-distance": "Link distance"
+    "link-distance": "Link distance",
+    "too-many-notes": "This subtree contains {{count}} notes, which exceeds the limit of {{max}} that can be displayed in the note map."
   },
   "note_paths": {
     "title": "Note Paths",
@@ -1514,7 +1519,7 @@
     "config_title": "Sync Configuration",
     "server_address": "Server instance address",
     "timeout": "Sync timeout",
-    "timeout_unit": "milliseconds",
+    "timeout_description": "How long to wait before giving up on a slow sync connection. Increase if you have an unstable network.",
     "proxy_label": "Sync proxy server (optional)",
     "note": "Note",
     "note_description": "If you leave the proxy setting blank, the system proxy will be used (applies to desktop/electron build only).",

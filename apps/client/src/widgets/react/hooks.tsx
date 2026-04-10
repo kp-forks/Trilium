@@ -825,13 +825,43 @@ export function useWindowSize() {
     return size;
 }
 
+// Workaround for https://github.com/twbs/bootstrap/issues/37474
+// Bootstrap's dispose() sets ALL properties to null. But pending animation callbacks
+// (scheduled via setTimeout) can still fire and crash when accessing null properties.
+// We patch dispose() to set safe placeholder values instead of null.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TooltipProto = Tooltip.prototype as any;
+const originalDispose = TooltipProto.dispose;
+const disposedTooltipPlaceholder = {
+    activeTrigger: {},
+    element: document.createElement("noscript")
+};
+TooltipProto.dispose = function () {
+    originalDispose.call(this);
+    // After disposal, set safe values so pending callbacks don't crash
+    this._activeTrigger = disposedTooltipPlaceholder.activeTrigger;
+    this._element = disposedTooltipPlaceholder.element;
+};
+
 export function useTooltip(elRef: RefObject<HTMLElement>, config: Partial<Tooltip.Options>) {
     useEffect(() => {
         if (!elRef?.current) return;
 
-        const $el = $(elRef.current);
-        $el.tooltip("dispose");
+        const element = elRef.current;
+        const $el = $(element);
+
+        // Dispose any existing tooltip before creating a new one
+        Tooltip.getInstance(element)?.dispose();
         $el.tooltip(config);
+
+        // Capture the tooltip instance now, since elRef.current may be null during cleanup.
+        const tooltip = Tooltip.getInstance(element);
+
+        return () => {
+            if (element.isConnected) {
+                tooltip?.dispose();
+            }
+        };
     }, [ elRef, config ]);
 
     const showTooltip = useCallback(() => {
@@ -866,8 +896,14 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
         const hasTooltip = config?.title || elRef.current?.getAttribute("title");
         if (!elRef?.current || !hasTooltip) return;
 
-        const tooltip = Tooltip.getOrCreateInstance(elRef.current, config);
-        elRef.current.addEventListener("show.bs.tooltip", () => {
+        // Capture element now, since elRef.current may be null during cleanup.
+        const element = elRef.current;
+
+        // Dispose any existing tooltip before creating a new one
+        Tooltip.getInstance(element)?.dispose();
+
+        const tooltip = new Tooltip(element, config);
+        element.addEventListener("show.bs.tooltip", () => {
             // Hide all the other tooltips.
             for (const otherTooltip of tooltips) {
                 if (otherTooltip === tooltip) continue;
@@ -878,12 +914,11 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
 
         return () => {
             tooltips.delete(tooltip);
-            tooltip.dispose();
-            // workaround for https://github.com/twbs/bootstrap/issues/37474
-            (tooltip as any)._activeTrigger = {};
-            (tooltip as any)._element = document.createElement('noscript'); // placeholder with no behavior
+            if (element.isConnected) {
+                tooltip.dispose();
+            }
 
-            // Remove *all* tooltip elements from the DOM
+            // Remove any lingering tooltip popup elements from the DOM.
             document
                 .querySelectorAll('.tooltip')
                 .forEach(t => t.remove());

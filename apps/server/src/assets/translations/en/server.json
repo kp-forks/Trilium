@@ -445,5 +445,15 @@
   },
   "desktop": {
     "instance_already_running": "There's already an instance running, focusing that instance instead."
+  },
+  "search": {
+    "error": {
+      "in-context": "Error in {{- context}}: {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" is a reserved keyword. To search for a literal value, use quotes: \"{{- token}}\"",
+      "cannot-compare-with": "cannot compare with \"{{- token}}\". To search for a literal value, use quotes: \"{{- token}}\"",
+      "misplaced-expression": "Misplaced or incomplete expression \"{{- token}}\"",
+      "fulltext-after-expression": "\"{{- token}}\" is not a valid expression. To search for text, place it before attribute filters (e.g., \"{{- token}} #label\" instead of \"#label {{- token}}\").",
+      "unrecognized-expression": "Unrecognized expression \"{{- token}}\""
+    }
   }
 }

@@ -87,7 +87,7 @@ function TableOfContentsHeading({ heading, scrollToHeading, activeHeadingId }: {
     // Render math equations after component mounts/updates
     useEffect(() => {
         if (!contentRef.current) return;
-        const mathElements = contentRef.current.querySelectorAll(".ck-math-tex");
+        const mathElements = contentRef.current.querySelectorAll(".math-tex");
 
         for (const mathEl of mathElements ?? []) {
             try {

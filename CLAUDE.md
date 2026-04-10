@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Note**: When updating this file, also update `.github/copilot-instructions.md` to keep both AI coding assistants in sync.
+
 ## Overview
 
 Trilium Notes is a hierarchical note-taking application with advanced features like synchronization, scripting, and rich text editing. It's built as a TypeScript monorepo using pnpm, with multiple applications and shared packages.
@@ -66,6 +68,15 @@ Frontend uses a widget system (`apps/client/src/widgets/`):
 - `RightPanelWidget` - Widgets displayed in the right panel
 - Type-specific widgets in `type_widgets/` directory
 
+#### Reusable Preact Components
+Common UI components are available in `apps/client/src/widgets/react/` — prefer reusing these over creating custom implementations:
+- `NoItems` - Empty state placeholder with icon and message (use for "no results", "too many items", error states)
+- `ActionButton` - Consistent button styling with icon support
+- `FormTextBox` - Text input with validation and controlled input handling
+- `Slider` - Range slider with label
+- `Checkbox`, `RadioButton` - Form controls
+- `CollapsibleSection` - Expandable content sections
+
 #### API Architecture
 - **Internal API**: REST endpoints in `apps/server/src/routes/api/`
 - **ETAPI**: External API for third-party integrations (`apps/server/src/etapi/`)
@@ -108,6 +119,8 @@ Trilium supports multiple note types, each with specialized widgets:
 - Client tests can run in parallel
 - E2E tests use Playwright for both server and desktop apps
 - Build validation tests check artifact integrity
+- **Write concise tests**: Group related assertions together in a single test case rather than creating many one-shot tests
+- **Extract and test business logic**: When adding pure business logic (e.g., data transformations, migrations, validations), extract it as a separate function and always write unit tests for it
 
 ### Scripting System
 Trilium provides powerful user scripting capabilities:
@@ -123,6 +136,11 @@ Trilium provides powerful user scripting capabilities:
 - When a translated string contains **interpolated components** (e.g. links, note references) whose order may vary across languages, use `<Trans>` from `react-i18next` instead of `t()`. This lets translators reorder components freely (e.g. `"<Note/> in <Parent/>"` vs `"in <Parent/>, <Note/>"`)
 - When adding a new locale, follow the step-by-step guide in `docs/Developer Guide/Developer Guide/Concepts/Internationalisation  Translations/Adding a new locale.md`
 - **Server-side translations** (e.g. hidden subtree titles) go in `apps/server/src/assets/translations/en/server.json`, not in the client `translation.json`
+
+#### Client vs Server Translation Usage
+- **Client-side**: `import { t } from "../services/i18n"` with keys in `apps/client/src/translations/en/translation.json`
+- **Server-side**: `import { t } from "i18next"` with keys in `apps/server/src/assets/translations/en/server.json`
+- **Interpolation**: Use `{{variable}}` for normal interpolation; use `{{- variable}}` (with hyphen) for **unescaped** interpolation when the value contains special characters like quotes that shouldn't be HTML-escaped
 
 ### Electron Desktop App
 - Desktop entry point: `apps/desktop/src/main.ts`, window management: `apps/server/src/services/window.ts`

@@ -17,20 +17,29 @@ async function main() {
 
     await initializeTranslations();
     await initializeDatabase(true);
+
+    // Wait for becca to be loaded before importing data
+    const beccaLoader = await import("@triliumnext/server/src/becca/becca_loader.js");
+    await beccaLoader.beccaLoaded;
+
     cls.init(async () => {
         await importData(DEMO_ZIP_DIR_PATH);
         setOptions();
         initializedPromise.resolve();
     });
-
-    initializedPromise.resolve();
 }
 
 async function setOptions() {
     const optionsService = (await import("@triliumnext/server/src/services/options.js")).default;
+    const sql = (await import("@triliumnext/server/src/services/sql.js")).default;
+
     optionsService.setOption("eraseUnusedAttachmentsAfterSeconds", 10);
     optionsService.setOption("eraseUnusedAttachmentsAfterTimeScale", 60);
     optionsService.setOption("compressImages", "false");
+
+    // Set initial note to the first visible child of root (not _hidden)
+    const startNoteId = sql.getValue("SELECT noteId FROM branches WHERE parentNoteId = 'root' AND isDeleted = 0 AND noteId != '_hidden' ORDER BY notePosition") || "root";
+    optionsService.setOption("openNoteContexts", JSON.stringify([{ notePath: startNoteId, active: true }]));
 }
 
 async function registerHandlers() {

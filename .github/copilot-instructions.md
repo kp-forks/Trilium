@@ -1,5 +1,7 @@
 # Trilium Notes - AI Coding Agent Instructions
 
+> **Note**: When updating this file, also update `CLAUDE.md` in the repository root to keep both AI coding assistants in sync.
+
 ## Project Overview
 
 Trilium Notes is a hierarchical note-taking application with advanced features like synchronization, scripting, and rich text editing. Built as a TypeScript monorepo using pnpm, it implements a three-layer caching architecture (Becca/Froca/Shaca) with a widget-based UI system and supports extensive user scripting capabilities.
@@ -114,6 +116,15 @@ class MyNoteWidget extends NoteContextAwareWidget {
 ```
 
 **Important**: Widgets use jQuery (`this.$widget`) for DOM manipulation. Don't mix React patterns here.
+
+### Reusable Preact Components
+Common UI components are available in `apps/client/src/widgets/react/` — prefer reusing these over creating custom implementations:
+- `NoItems` - Empty state placeholder with icon and message (use for "no results", "too many items", error states)
+- `ActionButton` - Consistent button styling with icon support
+- `FormTextBox` - Text input with validation and controlled input handling
+- `Slider` - Range slider with label
+- `Checkbox`, `RadioButton` - Form controls
+- `CollapsibleSection` - Expandable content sections
 
 ## Development Workflow
 
@@ -322,7 +333,15 @@ Trilium provides powerful user scripting capabilities:
 - When a translated string contains **interpolated components** (e.g. links, note references) whose order may vary across languages, use `<Trans>` from `react-i18next` instead of `t()`. This lets translators reorder components freely (e.g. `"<Note/> in <Parent/>"` vs `"in <Parent/>, <Note/>"`)
 - When adding a new locale, follow the step-by-step guide in `docs/Developer Guide/Developer Guide/Concepts/Internationalisation  Translations/Adding a new locale.md`
 
+#### Client vs Server Translation Usage
+- **Client-side**: `import { t } from "../services/i18n"` with keys in `apps/client/src/translations/en/translation.json`
+- **Server-side**: `import { t } from "i18next"` with keys in `apps/server/src/assets/translations/en/server.json`
+- **Interpolation**: Use `{{variable}}` for normal interpolation; use `{{- variable}}` (with hyphen) for **unescaped** interpolation when the value contains special characters like quotes that shouldn't be HTML-escaped
+
 ## Testing Conventions
+
+- **Write concise tests**: Group related assertions together in a single test case rather than creating many one-shot tests
+- **Extract and test business logic**: When adding pure business logic (e.g., data transformations, migrations, validations), extract it as a separate function and always write unit tests for it
 
 ```typescript
 // ETAPI test pattern
