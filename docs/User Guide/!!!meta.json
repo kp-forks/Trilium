@@ -17833,6 +17833,34 @@
                                 },
                                 {
                                     "isClone": false,
+                                    "noteId": "pAJ0jWz16xFm",
+                                    "notePath": [
+                                        "pOsGYCXsbNQG",
+                                        "CdNpE2pqjmI6",
+                                        "cNpC0ITcfX0N",
+                                        "pAJ0jWz16xFm"
+                                    ],
+                                    "title": "v0.103.0: `cheerio` is now deprecated",
+                                    "notePosition": 20,
+                                    "prefix": null,
+                                    "isExpanded": false,
+                                    "type": "text",
+                                    "mime": "text/html",
+                                    "attributes": [
+                                        {
+                                            "type": "label",
+                                            "name": "shareAlias",
+                                            "value": "cheerio-deprecated",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        }
+                                    ],
+                                    "format": "markdown",
+                                    "dataFileName": "v0.103.0 `cheerio` is now depr.md",
+                                    "attachments": []
+                                },
+                                {
+                                    "isClone": false,
                                     "noteId": "72dxvnbnkDFY",
                                     "notePath": [
                                         "pOsGYCXsbNQG",
@@ -17841,7 +17869,7 @@
                                         "72dxvnbnkDFY"
                                     ],
                                     "title": "v0.102.0: Upgrade to jQuery 4.0.0",
-                                    "notePosition": 20,
+                                    "notePosition": 30,
                                     "prefix": null,
                                     "isExpanded": false,
                                     "type": "text",

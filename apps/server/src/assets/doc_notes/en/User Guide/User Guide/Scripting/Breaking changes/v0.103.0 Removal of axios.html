@@ -1,5 +1,8 @@
 <p>The <code spellcheck="false">api.axios</code> library has been removed from
   the backend scripting API.</p>
+<p>Scripts that attempt to use <code spellcheck="false">api.axios</code> will
+  now throw an error with migration instructions.</p>
+<h2>Reasoning</h2>
 <p>Axios was marked as deprecated at least since April 2024 in favor of the
   native <code spellcheck="false">fetch()</code> API, which is available in
   both browser and Node.js environments. After two years of deprecation,
@@ -7,8 +10,6 @@
   where attackers published malicious versions that deployed a remote access
   trojan. The Trilium's main developer almost got compromised, but <code spellcheck="false">pnpm</code> not
   trusting unknown post-install scripts successfully avoided that.</p>
-<p>Scripts that attempt to use <code spellcheck="false">api.axios</code> will
-  now throw an error with migration instructions.</p>
 <h2>Migration</h2>
 <p>Replace <code spellcheck="false">api.axios</code> calls with the native
   <code
