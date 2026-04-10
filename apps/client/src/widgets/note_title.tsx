@@ -9,7 +9,6 @@ import { t } from "../services/i18n";
 import protected_session_holder from "../services/protected_session_holder";
 import server from "../services/server";
 import { isIMEComposing } from "../services/shortcuts";
-import { isLaunchBarConfig } from "../services/utils";
 import FormTextBox from "./react/FormTextBox";
 import { useNoteContext, useNoteProperty, useSpacedUpdate, useTriliumEvent, useTriliumEvents } from "./react/hooks";
 
@@ -27,9 +26,7 @@ export default function NoteTitleWidget(props: {className?: string}) {
         const isReadOnly = note === null
             || note === undefined
             || (note.isProtected && !protected_session_holder.isProtectedSessionAvailable())
-            || isLaunchBarConfig(note.noteId)
-            || note.noteId.startsWith("_help_")
-            || note.noteId.startsWith("_options")
+            || note.isMetadataReadOnly
             || viewScope?.viewMode !== "default";
         setReadOnly(isReadOnly);
     }, [ note, note?.noteId, note?.isProtected, viewScope?.viewMode ]);

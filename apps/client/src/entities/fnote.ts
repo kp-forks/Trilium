@@ -236,6 +236,16 @@ export default class FNote {
         return this.hasAttribute("label", "archived");
     }
 
+    /**
+     * Returns true if the note's metadata (title, icon) should not be editable.
+     * This applies to system notes like options, help, and launch bar configuration.
+     */
+    get isMetadataReadOnly() {
+        return utils.isLaunchBarConfig(this.noteId)
+            || this.noteId.startsWith("_help_")
+            || this.noteId.startsWith("_options");
+    }
+
     getChildNoteIds() {
         return this.children;
     }

@@ -13,7 +13,7 @@ import { CellComponentProps, Grid } from "react-window";
 import FNote from "../entities/fnote";
 import attributes from "../services/attributes";
 import server from "../services/server";
-import { isDesktop, isLaunchBarConfig, isMobile } from "../services/utils";
+import { isDesktop, isMobile } from "../services/utils";
 import ActionButton from "./react/ActionButton";
 import Dropdown from "./react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "./react/FormList";
@@ -43,9 +43,7 @@ export default function NoteIcon() {
     }, [ note, iconClass, workspaceIconClass ]);
 
     const isDisabled = viewScope?.viewMode !== "default"
-        || (note?.noteId && isLaunchBarConfig(note.noteId))
-        || note?.noteId?.startsWith("_help_")
-        || note?.noteId?.startsWith("_options");
+        || note?.isMetadataReadOnly;
 
     if (isMobile()) {
         return <MobileNoteIconSwitcher note={note} icon={icon} disabled={isDisabled} />;
