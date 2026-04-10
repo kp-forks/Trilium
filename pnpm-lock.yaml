@@ -339,8 +339,8 @@ importers:
         specifier: 8.11.1
         version: 8.11.1
       marked:
-        specifier: 17.0.5
-        version: 17.0.5
+        specifier: 17.0.6
+        version: 17.0.6
       mermaid:
         specifier: 11.14.0
         version: 11.14.0
@@ -803,8 +803,8 @@ importers:
         specifier: 1.6.0
         version: 1.6.0
       marked:
-        specifier: 17.0.5
-        version: 17.0.5
+        specifier: 17.0.6
+        version: 17.0.6
       mime-types:
         specifier: 3.0.2
         version: 3.0.2
@@ -1364,8 +1364,8 @@ importers:
         specifier: 1.11.20
         version: 1.11.20
       marked:
-        specifier: 17.0.5
-        version: 17.0.5
+        specifier: 17.0.6
+        version: 17.0.6
 
   packages/express-partial-content: {}
 
@@ -10516,8 +10516,8 @@ packages:
     engines: {node: '>= 20'}
     hasBin: true
 
-  marked@17.0.5:
-    resolution: {integrity: sha512-6hLvc0/JEbRjRgzI6wnT2P1XuM1/RrrDEX0kPt0N7jGm1133g6X7DlxFasUIx+72aKAr904GTxhSLDrd5DIlZg==}
+  marked@17.0.6:
+    resolution: {integrity: sha512-gB0gkNafnonOw0obSTEGZTT86IuhILt2Wfx0mWH/1Au83kybTayroZ/V6nS25mN7u8ASy+5fMhgB3XPNrOZdmA==}
     engines: {node: '>= 20'}
     hasBin: true
 
@@ -26064,7 +26064,7 @@ snapshots:
 
   marked@16.4.2: {}
 
-  marked@17.0.5: {}
+  marked@17.0.6: {}
 
   marked@4.3.0: {}
 
