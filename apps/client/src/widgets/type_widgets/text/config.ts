@@ -182,9 +182,16 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
                     marker: "@",
                     feed: (queryText: string) => noteAutocompleteService.autocompleteSourceForCKEditor(queryText),
                     itemRenderer: (item) => {
+                        const suggestion = item as Suggestion;
                         const itemElement = document.createElement("button");
 
-                        itemElement.innerHTML = `${(item as Suggestion).highlightedNotePathTitle} `;
+                        // Choose appropriate icon based on action
+                        let iconClass = suggestion.icon ?? "bx bx-note";
+                        if (suggestion.action === "create-note") {
+                            iconClass = "bx bx-plus";
+                        }
+
+                        itemElement.innerHTML = `<span class="${iconClass}"></span> ${suggestion.highlightedNotePathTitle} `;
 
                         return itemElement;
                     },
