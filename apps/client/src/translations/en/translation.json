@@ -860,7 +860,8 @@
     "collapse": "Collapse to normal size",
     "title": "Note Map",
     "fix-nodes": "Fix nodes",
-    "link-distance": "Link distance"
+    "link-distance": "Link distance",
+    "too-many-notes": "This subtree contains {{count}} notes, which exceeds the limit of {{max}} that can be displayed in the note map."
   },
   "note_paths": {
     "title": "Note Paths",
