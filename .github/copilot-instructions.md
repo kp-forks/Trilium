@@ -340,6 +340,9 @@ Trilium provides powerful user scripting capabilities:
 
 ## Testing Conventions
 
+- **Write concise tests**: Group related assertions together in a single test case rather than creating many one-shot tests
+- **Extract and test business logic**: When adding pure business logic (e.g., data transformations, migrations, validations), extract it as a separate function and always write unit tests for it
+
 ```typescript
 // ETAPI test pattern
 describe("etapi/feature", () => {

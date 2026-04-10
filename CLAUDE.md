@@ -119,6 +119,8 @@ Trilium supports multiple note types, each with specialized widgets:
 - Client tests can run in parallel
 - E2E tests use Playwright for both server and desktop apps
 - Build validation tests check artifact integrity
+- **Write concise tests**: Group related assertions together in a single test case rather than creating many one-shot tests
+- **Extract and test business logic**: When adding pure business logic (e.g., data transformations, migrations, validations), extract it as a separate function and always write unit tests for it
 
 ### Scripting System
 Trilium provides powerful user scripting capabilities:
