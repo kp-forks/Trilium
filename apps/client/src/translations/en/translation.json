@@ -1876,7 +1876,8 @@
     "theme_none": "No syntax highlighting",
     "theme_group_light": "Light themes",
     "theme_group_dark": "Dark themes",
-    "copy_title": "Copy to clipboard"
+    "copy_title": "Copy to clipboard",
+    "click_to_copy": "Click to copy"
   },
   "classic_editor_toolbar": {
     "title": "Formatting"
