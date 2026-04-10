@@ -14,7 +14,7 @@ Note that <a class="reference-link" href="Synchronization.md">Synchronization</
 
 ## Downloading backup
 
-You can download a existing backup by going to Settings > Backup > Existing backups > Download
+You can download an existing backup by going to Settings > Backup > Existing backups > Download
 
 ## Restoring backup
 

@@ -185,13 +185,18 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
                         const suggestion = item as Suggestion;
                         const itemElement = document.createElement("button");
 
+                        const iconElement = document.createElement("span");
                         // Choose appropriate icon based on action
                         let iconClass = suggestion.icon ?? "bx bx-note";
                         if (suggestion.action === "create-note") {
                             iconClass = "bx bx-plus";
                         }
+                        iconElement.className = iconClass;
 
-                        itemElement.innerHTML = `<span class="${iconClass}"></span> ${suggestion.highlightedNotePathTitle} `;
+                        itemElement.append(iconElement, document.createTextNode(" "));
+                        const titleContainer = document.createElement("span");
+                        titleContainer.innerHTML = suggestion.highlightedNotePathTitle ?? "";
+                        itemElement.append(...titleContainer.childNodes, document.createTextNode(" "));
 
                         return itemElement;
                     },

@@ -27,7 +27,7 @@ export default {
         // and we need to override it with config from config.ini
         return !!syncServerHost && syncServerHost !== "disabled";
     },
-    // Value is stored with a time scale, convert to milliseconds for use.
+    // Value is stored in seconds (TimeSelector saves displayed value × scale).
     // Config file overrides are treated as raw milliseconds for backward compatibility.
     getSyncTimeout: () => {
         const configValue = config["Sync"]?.syncServerTimeout;
@@ -35,10 +35,9 @@ export default {
             // Config override: treat as raw milliseconds (backward compatible)
             return parseInt(configValue, 10) || 120000;
         }
-        // Database option: use value × scale (with safe defaults)
-        const value = parseInt(optionService.getOption("syncServerTimeout"), 10) || 2;
-        const scale = parseInt(optionService.getOption("syncServerTimeoutTimeScale"), 10) || 60;
-        return value * scale * 1000;
+        // Database option: stored in seconds, convert to milliseconds
+        const seconds = parseInt(optionService.getOption("syncServerTimeout"), 10) || 120;
+        return seconds * 1000;
     },
     getSyncProxy: () => get("syncProxy")
 };

@@ -66,15 +66,49 @@ async function initNotSyncedOptions(initialized: boolean, opts: NotSyncedOpts = 
     optionService.createOption("textNoteEditorType", "ckeditor-classic", true);
 
     optionService.createOption("syncServerHost", opts.syncServerHost || "", false);
-    optionService.createOption("syncServerTimeout", "2", false); // 2 minutes (with default scale of 60)
+    optionService.createOption("syncServerTimeout", "120", false); // 120 seconds (2 minutes)
     optionService.createOption("syncProxy", opts.syncProxy || "", false);
+}
+
+/**
+ * Migrates a sync timeout value from milliseconds to seconds.
+ * Values >= 1000 are assumed to be in milliseconds (since 1000+ seconds = 16+ minutes is unlikely).
+ * TimeSelector stores values in seconds; the scale is only used for display.
+ *
+ * @returns The value in seconds and preferred display scale, or null if no migration is needed.
+ */
+export function migrateSyncTimeoutFromMilliseconds(milliseconds: number): { value: number; scale: number } | null {
+    if (isNaN(milliseconds) || milliseconds < 1000) {
+        return null;
+    }
+
+    const seconds = Math.round(milliseconds / 1000);
+
+    // Value is always stored in seconds; scale determines display unit
+    if (seconds >= 60 && seconds % 60 === 0) {
+        return { value: seconds, scale: 60 }; // display as minutes
+    }
+    return { value: seconds, scale: 1 }; // display as seconds
 }
 
 /**
  * Contains all the default options that must be initialized on new and existing databases (at startup). The value can also be determined based on other options, provided they have already been initialized.
  */
 const defaultOptions: DefaultOption[] = [
-    { name: "syncServerTimeoutTimeScale", value: "60", isSynced: false }, // default to Minutes
+    {
+        name: "syncServerTimeoutTimeScale",
+        value: (optionsMap) => {
+            const timeout = parseInt(optionsMap.syncServerTimeout || "120", 10);
+            const migrated = migrateSyncTimeoutFromMilliseconds(timeout);
+            if (migrated) {
+                optionService.setOption("syncServerTimeout", String(migrated.value));
+                log.info(`Migrated syncServerTimeout from ${timeout}ms to ${migrated.value}s`);
+                return String(migrated.scale);
+            }
+            return "60"; // default to minutes
+        },
+        isSynced: false
+    },
     { name: "revisionSnapshotTimeInterval", value: "600", isSynced: true },
     { name: "revisionSnapshotTimeIntervalTimeScale", value: "60", isSynced: true }, // default to Minutes
     { name: "revisionSnapshotNumberLimit", value: "-1", isSynced: true },
@@ -256,36 +290,6 @@ function initStartupOptions() {
             ])
         );
     }
-
-    // Migrate syncServerTimeout from milliseconds to seconds/minutes (for existing installations)
-    const syncTimeout = parseInt(optionsMap.syncServerTimeout, 10);
-    const migrated = migrateSyncTimeoutFromMilliseconds(syncTimeout);
-    if (migrated) {
-        optionService.setOption("syncServerTimeout", String(migrated.value));
-        optionService.setOption("syncServerTimeoutTimeScale", String(migrated.scale));
-        const unit = migrated.scale === 60 ? "minutes" : "seconds";
-        log.info(`Migrated syncServerTimeout from ${syncTimeout}ms to ${migrated.value} ${unit}`);
-    }
-}
-
-/**
- * Migrates a sync timeout value from milliseconds to a value/scale pair.
- * Values >= 1000 are assumed to be in milliseconds (since 1000+ seconds = 16+ minutes is unlikely).
- *
- * @returns The migrated value and scale, or null if no migration is needed.
- */
-export function migrateSyncTimeoutFromMilliseconds(milliseconds: number): { value: number; scale: number } | null {
-    if (isNaN(milliseconds) || milliseconds < 1000) {
-        return null;
-    }
-
-    const seconds = Math.round(milliseconds / 1000);
-
-    // If divisible by 60, store as minutes; otherwise store as seconds
-    if (seconds >= 60 && seconds % 60 === 0) {
-        return { value: seconds / 60, scale: 60 };
-    }
-    return { value: seconds, scale: 1 };
 }
 
 function getKeyboardDefaultOptions() {
