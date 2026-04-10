@@ -1,16 +1,9 @@
 import { Plugin, type ListDropdownButtonDefinition, Collection, ViewModel, createDropdown, addListToDropdown, DropdownButtonView } from "ckeditor5";
 import { Admonition, ADMONITION_TYPES, type AdmonitionCommand, type AdmonitionType } from "@triliumnext/ckeditor5-admonition";
 
-const ADMONITION_ICONS: Record<AdmonitionType, string> = {
-    note: "📝",
-    tip: "💡",
-    important: "📌",
-    caution: "⚠️",
-    warning: "🚨"
-};
-
 /**
  * Toolbar item which displays the list of admonition types in a dropdown.
+ * Uses the same styling as the main admonition toolbar button.
  */
 export default class AdmonitionTypeDropdown extends Plugin {
 
@@ -34,13 +27,12 @@ export default class AdmonitionTypeDropdown extends Plugin {
             dropdownView.buttonView.bind("label").to(command, "value", (value) => {
                 if (!value) return "";
                 const typeDef = ADMONITION_TYPES[value as AdmonitionType];
-                const icon = ADMONITION_ICONS[value as AdmonitionType];
-                return typeDef ? `${icon} ${typeDef.title}` : value;
+                return typeDef?.title ?? value;
             });
             dropdownView.on("execute", evt => {
                 const source = evt.source as any;
                 editor.execute("admonition", {
-                    forceValue: source._admonitionType
+                    forceValue: source.commandParam
                 });
                 editor.editing.view.focus();
             });
@@ -55,12 +47,12 @@ export default class AdmonitionTypeDropdown extends Plugin {
         const itemDefinitions = new Collection<ListDropdownButtonDefinition>();
 
         for (const [type, typeDef] of Object.entries(ADMONITION_TYPES)) {
-            const icon = ADMONITION_ICONS[type as AdmonitionType];
             const definition: ListDropdownButtonDefinition = {
                 type: "button",
                 model: new ViewModel({
-                    _admonitionType: type,
-                    label: `${icon} ${typeDef.title}`,
+                    commandParam: type,
+                    label: typeDef.title,
+                    class: `ck-tn-admonition-option ck-tn-admonition-${type}`,
                     role: "menuitemradio",
                     withText: true
                 })
