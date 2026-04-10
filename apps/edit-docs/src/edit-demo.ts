@@ -17,13 +17,16 @@ async function main() {
 
     await initializeTranslations();
     await initializeDatabase(true);
+
+    // Wait for becca to be loaded before importing data
+    const beccaLoader = await import("@triliumnext/server/src/becca/becca_loader.js");
+    await beccaLoader.beccaLoaded;
+
     cls.init(async () => {
         await importData(DEMO_ZIP_DIR_PATH);
         setOptions();
         initializedPromise.resolve();
     });
-
-    initializedPromise.resolve();
 }
 
 async function setOptions() {
