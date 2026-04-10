@@ -1266,8 +1266,7 @@
     "test_button": "Probează sincronizarea",
     "test_description": "Această opțiune va testa conexiunea și comunicarea cu serverul de sincronizare. Dacă serverul de sincronizare nu este inițializat, acest lucru va rula și o sincronizare cu documentul local.",
     "test_title": "Probează sincronizarea",
-    "timeout": "Timp limită de sincronizare",
-    "timeout_unit": "milisecunde"
+    "timeout": "Timp limită de sincronizare"
   },
   "table_of_contents": {
     "description": "Cuprinsul va apărea în notițele de tip text atunci când notița are un număr de titluri mai mare decât cel definit. Acest număr se poate personaliza:",

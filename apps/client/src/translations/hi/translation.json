@@ -1467,7 +1467,6 @@
     "config_title": "सिंक कॉन्फ़िगरेशन",
     "server_address": "सर्वर एड्रेस (Address)",
     "timeout": "सिंक समय-सीमा (Timeout)",
-    "timeout_unit": "मिलीसेकंड (milliseconds)",
     "proxy_label": "सिंक प्रॉक्सी सर्वर (वैकल्पिक)",
     "note": "नोट",
     "note_description": "अगर आप प्रॉक्सी खाली छोड़ते हैं, तो सिस्टम प्रॉक्सी का इस्तेमाल होगा।",

@@ -1452,8 +1452,7 @@
     "test_title": "同步测试",
     "test_description": "测试和同步服务器之间的连接。如果同步服务器没有初始化，会将本地文档同步到同步服务器上。",
     "test_button": "测试同步",
-    "handshake_failed": "同步服务器握手失败，错误：{{message}}",
-    "timeout_unit": "毫秒"
+    "handshake_failed": "同步服务器握手失败，错误：{{message}}"
   },
   "api_log": {
     "close": "关闭"

@@ -1401,8 +1401,7 @@
     "test_title": "Synchronisierungstest",
     "test_description": "Dadurch werden die Verbindung und der Handshake zum Synchronisierungsserver getestet. Wenn der Synchronisierungsserver nicht initialisiert ist, wird er dadurch für die Synchronisierung mit dem lokalen Dokument eingerichtet.",
     "test_button": "Teste die Synchronisierung",
-    "handshake_failed": "Handshake des Synchronisierungsservers fehlgeschlagen, Fehler: {{message}}",
-    "timeout_unit": "Millisekunden"
+    "handshake_failed": "Handshake des Synchronisierungsservers fehlgeschlagen, Fehler: {{message}}"
   },
   "api_log": {
     "close": "Schließen"

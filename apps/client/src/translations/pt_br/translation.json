@@ -1950,7 +1950,6 @@
     "config_title": "Configuração da Sincronização",
     "server_address": "Endereço da instância do Servidor",
     "timeout": "Tempo limite da sincronização",
-    "timeout_unit": "milisegundos",
     "proxy_label": "Servidor proxy para sincronização (opcional)",
     "note": "Nota",
     "note_description": "Se você deixar a configuração de proxy em branco, o proxy do sistema será usado (aplica-se apenas à versão desktop/Electron).",

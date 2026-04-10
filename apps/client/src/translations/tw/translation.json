@@ -1413,8 +1413,7 @@
     "test_title": "同步測試",
     "test_description": "測試和同步伺服器之間的連接。如果同步伺服器沒有初始化，這會將本地文件同步至同步伺服器上。",
     "test_button": "測試同步",
-    "handshake_failed": "同步伺服器握手失敗，錯誤：{{message}}",
-    "timeout_unit": "毫秒"
+    "handshake_failed": "同步伺服器握手失敗，錯誤：{{message}}"
   },
   "api_log": {
     "close": "關閉"

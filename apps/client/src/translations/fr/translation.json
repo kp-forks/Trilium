@@ -1406,8 +1406,7 @@
     "test_title": "Test de synchronisation",
     "test_description": "Testera la connexion et la prise de contact avec le serveur de synchronisation. Si le serveur de synchronisation n'est pas initialisé, cela le configurera pour qu'il se synchronise avec le document local.",
     "test_button": "Tester la synchronisation",
-    "handshake_failed": "Échec de la négociation avec le serveur de synchronisation, erreur : {{message}}",
-    "timeout_unit": "millisecondes"
+    "handshake_failed": "Échec de la négociation avec le serveur de synchronisation, erreur : {{message}}"
   },
   "api_log": {
     "close": "Fermer"

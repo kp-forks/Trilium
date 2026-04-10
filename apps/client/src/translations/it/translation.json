@@ -497,7 +497,6 @@
     "proxy_label": "Server Proxy per la sincronizzazione (opzionale)",
     "test_title": "Test di sincronizzazione",
     "timeout": "Timeout per la sincronizzazione",
-    "timeout_unit": "millisecondi",
     "save": "Salva",
     "help": "Aiuto",
     "server_address": "Indirizzo dell'istanza del server",

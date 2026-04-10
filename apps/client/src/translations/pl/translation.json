@@ -1671,7 +1671,6 @@
     "config_title": "Konfiguracja synchronizacji",
     "server_address": "Adres instancji serwera",
     "timeout": "Limit czasu synchronizacji",
-    "timeout_unit": "milisekund",
     "proxy_label": "Serwer proxy synchronizacji (opcjonalnie)",
     "note": "Uwaga",
     "note_description": "Jeśli pozostawisz ustawienie proxy puste, zostanie użyte proxy systemowe (dotyczy tylko wersji desktop/electron).",

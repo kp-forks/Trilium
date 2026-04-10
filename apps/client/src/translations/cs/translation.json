@@ -1508,7 +1508,6 @@
     "config_title": "Konfigurace Synchronizace",
     "server_address": "Adresa instance serveru",
     "timeout": "Časový limit synchronizace",
-    "timeout_unit": "milisekund",
     "proxy_label": "Proxy server pro synchronizaci (volitelné)",
     "note": "Poznámka",
     "note_description": "Pokud ponecháte nastavení proxy prázdné, bude použit systémový proxy (platí pouze pro desktop/electron build).",

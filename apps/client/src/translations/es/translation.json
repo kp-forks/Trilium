@@ -1439,7 +1439,6 @@
     "config_title": "Configuración de sincronización",
     "server_address": "Dirección de la instancia del servidor",
     "timeout": "Tiempo de espera de sincronización (milisegundos)",
-    "timeout_unit": "milisegundos",
     "proxy_label": "Sincronizar servidor proxy (opcional)",
     "note": "Nota",
     "note_description": "Si deja la configuración del proxy en blanco, se utilizará el proxy del sistema (se aplica únicamente a la compilación de escritorio/electron).",
