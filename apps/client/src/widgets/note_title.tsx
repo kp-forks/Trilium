@@ -66,6 +66,7 @@ export default function NoteTitleWidget(props: {className?: string}) {
     useEffect(() => {
         if (pendingSelect.current && textBoxRef.current && document.activeElement === textBoxRef.current) {
             textBoxRef.current.select();
+            pendingSelect.current = false;
         }
     }, [title]);
 

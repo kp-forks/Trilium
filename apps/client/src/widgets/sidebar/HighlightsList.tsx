@@ -233,17 +233,18 @@ function extractHighlightsFromTextEditor(editor: CKTextEditor) {
         if (Object.values(attrs).some(Boolean)) {
             // Get HTML content from DOM (includes nested elements like math)
             let html = item.data;
-            const modelPos = editor.model.createPositionAt(item.textNode, "before");
-            const viewPos = editor.editing.mapper.toViewPosition(modelPos);
-            const domPos = editor.editing.view.domConverter.viewPositionToDom(viewPos);
-            if (domPos?.parent instanceof HTMLElement) {
-                // Get the formatting span's innerHTML (includes math elements)
-                html = domPos.parent.innerHTML;
+            try {
+                const modelPos = editor.model.createPositionAt(item.textNode, "before");
+                const viewPos = editor.editing.mapper.toViewPosition(modelPos);
+                const domPos = editor.editing.view.domConverter.viewPositionToDom(viewPos);
+                if (domPos?.parent instanceof HTMLElement) {
+                    // Get the formatting span's innerHTML (includes math elements)
+                    html = domPos.parent.innerHTML;
+                }
+            } catch {
+                // During change:data events, the view may not be fully synchronized with the model.
+                // Fall back to using the raw text data.
             }
-
-            // Skip if we already have this exact content (same parent element)
-            const prev = result[result.length - 1];
-            if (prev?.text === html) continue;
 
             result.push({
                 id: randomString(),
