@@ -1,5 +1,3 @@
-
-
 import { dayjs } from "@triliumnext/commons";
 
 import { removeDiacritic } from "../../utils.js";
@@ -441,7 +439,13 @@ function getExpression(tokens: TokenData[], searchContext: SearchContext, level 
         } else if (isOperator({ token })) {
             searchContext.addError(`Misplaced or incomplete expression "${token}"`);
         } else {
-            searchContext.addError(`Unrecognized expression "${token}"`);
+            // Check if this looks like a fulltext search term placed after attribute filters
+            const looksLikeFulltext = !token.startsWith("#") && !token.startsWith("~") && !token.startsWith("note.");
+            if (looksLikeFulltext) {
+                searchContext.addError(`"${token}" is not a valid expression. If you want to search for text, place it before attribute filters (e.g., "${token} #label" instead of "#label ${token}").`);
+            } else {
+                searchContext.addError(`Unrecognized expression "${token}"`);
+            }
         }
 
         if (!op && expressions.length > 1) {
