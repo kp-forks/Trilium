@@ -806,7 +806,11 @@
     "board": "Board",
     "presentation": "Presentation",
     "include_archived_notes": "Show archived notes",
-    "hide_child_notes": "Hide child notes in tree"
+    "hide_child_notes": "Hide child notes in tree",
+    "open_all_in_tabs": "Open all",
+    "open_all_in_tabs_tooltip": "Open all results in new tabs",
+    "open_all_confirm": "This will open {{count}} notes in new tabs. Continue?",
+    "open_all_too_many": "Too many results ({{count}}). Maximum is {{max}}."
   },
   "edited_notes": {
     "no_edited_notes_found": "No edited notes on this day yet...",
