@@ -99,7 +99,7 @@ export default function DeleteNotesDialog() {
             className="delete-notes-dialog"
             size="xl"
             scrollable
-            title={t("delete_notes.delete_notes_preview")}
+            title={t("delete_notes.title")}
             onShown={() => okButtonRef.current?.focus()}
             onHidden={() => {
                 opts.callback?.({ proceed: false });
@@ -108,7 +108,7 @@ export default function DeleteNotesDialog() {
             footer={<>
                 <Button text={t("delete_notes.cancel")}
                     onClick={() => setShown(false)} />
-                <Button text={t("delete_notes.ok")} kind="primary"
+                <Button text={t("delete_notes.delete")} kind="primary"
                     buttonRef={okButtonRef}
                     onClick={() => {
                         opts.callback?.({ proceed: true, deleteAllClones, eraseNotes });

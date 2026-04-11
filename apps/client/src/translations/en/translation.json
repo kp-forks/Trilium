@@ -88,10 +88,11 @@
     "also_delete_note": "Also delete the note"
   },
   "delete_notes": {
-    "delete_notes_preview": "Delete notes preview",
+    "title": "Delete notes",
     "close": "Close",
     "clones_label": "Clones",
-    "delete_clones_description": "Also delete {{count}} other clone(s). Can be undone in recent changes.",
+    "delete_clones_description_one": "Also delete {{count}} other clone. Can be undone in recent changes.",
+    "delete_clones_description_other": "Also delete {{count}} other clones. Can be undone in recent changes.",
     "delete_all_clones_description": "Delete also all clones (can be undone in recent changes)",
     "erase_notes_label": "Erase permanently",
     "erase_notes_description": "Erase notes immediately instead of soft deletion. This cannot be undone and will force application reload.",
@@ -103,8 +104,7 @@
     "table_relation": "Relation",
     "table_points_to": "Points to (deleted)",
     "cancel": "Cancel",
-    "ok": "OK",
-    "no_clones_message": "The selected notes have no clones."
+    "delete": "Delete"
   },
   "export": {
     "export_note_title": "Export note",
