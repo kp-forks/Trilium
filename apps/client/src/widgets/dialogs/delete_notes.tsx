@@ -1,18 +1,17 @@
 import "./delete_notes.css";
 
 import type { DeleteNotesPreview } from "@triliumnext/commons";
-import { useEffect,useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
-import FNote from "../../entities/fnote.js";
 import froca from "../../services/froca.js";
 import { t } from "../../services/i18n.js";
-import link from "../../services/link.js";
 import server from "../../services/server.js";
 import Button from "../react/Button.jsx";
 import { Card, CardSection } from "../react/Card.js";
 import FormToggle from "../react/FormToggle.js";
 import { useTriliumEvent } from "../react/hooks.jsx";
 import Modal from "../react/Modal.js";
+import NoteLink from "../react/NoteLink.js";
 import OptionsRow from "../type_widgets/options/components/OptionsRow.js";
 
 interface CloneInfo {
@@ -32,9 +31,9 @@ interface ShowDeleteNotesDialogOpts {
 }
 
 interface BrokenRelationData {
-    note: string;
-    relation: string;
-    source: string;
+    noteId: string;
+    relationName: string;
+    sourceNoteId: string;
 }
 
 export default function DeleteNotesDialog() {
@@ -183,27 +182,15 @@ function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones 
 }
 
 function DeletedNotes({ noteIdsToBeDeleted }: { noteIdsToBeDeleted: DeleteNotesPreview["noteIdsToBeDeleted"] }) {
-    const [ noteLinks, setNoteLinks ] = useState<string[]>([]);
-
-    useEffect(() => {
-        froca.getNotes(noteIdsToBeDeleted).then(async (notes: FNote[]) => {
-            const noteLinks: string[] = [];
-
-            for (const note of notes) {
-                noteLinks.push((await link.createLink(note.noteId, { showNotePath: true })).html());
-            }
-
-            setNoteLinks(noteLinks);
-        });
-    }, [noteIdsToBeDeleted]);
-
     return (
         <Card heading={t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}>
             <CardSection>
                 {noteIdsToBeDeleted.length ? (
                     <ul className="preview-list">
-                        {noteLinks.map((link, index) => (
-                            <li key={index} dangerouslySetInnerHTML={{ __html: link }} />
+                        {noteIdsToBeDeleted.map((noteId) => (
+                            <li key={noteId}>
+                                <NoteLink notePath={noteId} showNotePath showNoteIcon />
+                            </li>
                         ))}
                     </ul>
                 ) : (
@@ -215,34 +202,23 @@ function DeletedNotes({ noteIdsToBeDeleted }: { noteIdsToBeDeleted: DeleteNotesP
 }
 
 function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPreview["brokenRelations"] }) {
-    const [ notesWithBrokenRelations, setNotesWithBrokenRelations ] = useState<BrokenRelationData[]>([]);
-
-    useEffect(() => {
-        const noteIds = brokenRelations
-            .map(relation => relation.noteId)
-            .filter(noteId => noteId) as string[];
-        froca.getNotes(noteIds).then(async () => {
-            const notesWithBrokenRelations: BrokenRelationData[] = [];
-            for (const attr of brokenRelations) {
-                notesWithBrokenRelations.push({
-                    note: (await link.createLink(attr.value)).html(),
-                    relation: `<code>${attr.name}</code>`,
-                    source: (await link.createLink(attr.noteId)).html()
-                });
-            }
-            setNotesWithBrokenRelations(notesWithBrokenRelations);
-        });
-    }, [brokenRelations]);
-
     if (!brokenRelations.length) {
         return null;
     }
+
+    const relationsData: BrokenRelationData[] = brokenRelations
+        .filter((attr) => attr.value && attr.noteId)
+        .map((attr) => ({
+            noteId: attr.value!,
+            relationName: attr.name,
+            sourceNoteId: attr.noteId!
+        }));
 
     return (
         <Card heading={t("delete_notes.broken_relations_to_be_deleted", { relationCount: brokenRelations.length })}>
             <CardSection>
                 <div style={{ overflow: "auto" }}>
-                    <table className="table table-stripped">
+                    <table className="table table-striped">
                         <thead>
                             <tr>
                                 <th>{t("delete_notes.table_note")}</th>
@@ -251,11 +227,11 @@ function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPrev
                             </tr>
                         </thead>
                         <tbody>
-                            {notesWithBrokenRelations.map((relation, index) => (
+                            {relationsData.map((relation, index) => (
                                 <tr key={index}>
-                                    <td dangerouslySetInnerHTML={{ __html: relation.note }} />
-                                    <td dangerouslySetInnerHTML={{ __html: relation.relation }} />
-                                    <td dangerouslySetInnerHTML={{ __html: relation.source }} />
+                                    <td><NoteLink notePath={relation.noteId} showNoteIcon /></td>
+                                    <td><code>{relation.relationName}</code></td>
+                                    <td><NoteLink notePath={relation.sourceNoteId} showNoteIcon /></td>
                                 </tr>
                             ))}
                         </tbody>
