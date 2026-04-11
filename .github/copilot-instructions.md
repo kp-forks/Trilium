@@ -338,6 +338,16 @@ Trilium provides powerful user scripting capabilities:
 - **Server-side**: `import { t } from "i18next"` with keys in `apps/server/src/assets/translations/en/server.json`
 - **Interpolation**: Use `{{variable}}` for normal interpolation; use `{{- variable}}` (with hyphen) for **unescaped** interpolation when the value contains special characters like quotes that shouldn't be HTML-escaped
 
+### Storing User Preferences
+- **Do not use `localStorage`** for user preferences — Trilium has a synced options system that persists across devices
+- To add a new user preference:
+  1. Add the option type to `OptionDefinitions` in `packages/commons/src/lib/options_interface.ts`
+  2. Add a default value in `apps/server/src/services/options_init.ts` in the `defaultOptions` array
+  3. **Whitelist the option** in `apps/server/src/routes/api/options.ts` by adding it to `ALLOWED_OPTIONS` (required for client updates)
+  4. Use `useTriliumOption("optionName")` hook in React components to read/write the option
+- Available hooks: `useTriliumOption` (string), `useTriliumOptionBool`, `useTriliumOptionInt`, `useTriliumOptionJson`
+- See `docs/Developer Guide/Developer Guide/Concepts/Options/Creating a new option.md` for detailed documentation
+
 ## Testing Conventions
 
 - **Write concise tests**: Group related assertions together in a single test case rather than creating many one-shot tests

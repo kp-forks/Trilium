@@ -157,6 +157,16 @@ Trilium provides powerful user scripting capabilities:
 - **Do not use `crypto.randomUUID()`** or other Web Crypto APIs that require secure contexts - Trilium can run over HTTP, not just HTTPS
 - Use `randomString()` from `apps/client/src/services/utils.ts` for generating IDs instead
 
+### Storing User Preferences
+- **Do not use `localStorage`** for user preferences — Trilium has a synced options system that persists across devices
+- To add a new user preference:
+  1. Add the option type to `OptionDefinitions` in `packages/commons/src/lib/options_interface.ts`
+  2. Add a default value in `apps/server/src/services/options_init.ts` in the `defaultOptions` array
+  3. **Whitelist the option** in `apps/server/src/routes/api/options.ts` by adding it to `ALLOWED_OPTIONS` (required for client updates)
+  4. Use `useTriliumOption("optionName")` hook in React components to read/write the option
+- Available hooks: `useTriliumOption` (string), `useTriliumOptionBool`, `useTriliumOptionInt`, `useTriliumOptionJson`
+- See `docs/Developer Guide/Developer Guide/Concepts/Options/Creating a new option.md` for detailed documentation
+
 ### Shared Types Policy
 - Types shared between client and server belong in `@triliumnext/commons` (`packages/commons/src/lib/`)
 - Import shared types directly from `@triliumnext/commons` - do not re-export them from app-specific modules
