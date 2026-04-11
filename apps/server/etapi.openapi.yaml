@@ -870,7 +870,7 @@ paths:
                                 $ref: "#/components/schemas/Error"
     /calendar/months/{month}:
         get:
-            description: returns a week note for a given date. Gets created if doesn't exist.
+            description: returns a month note for a given month. Gets created if doesn't exist.
             operationId: getMonthNote
             parameters:
                 - name: month
@@ -895,7 +895,7 @@ paths:
                                 $ref: "#/components/schemas/Error"
     /calendar/years/{year}:
         get:
-            description: returns a week note for a given date. Gets created if doesn't exist.
+            description: returns a year note for a given year. Gets created if doesn't exist.
             operationId: getYearNote
             parameters:
                 - name: year
@@ -903,8 +903,8 @@ paths:
                   required: true
                   schema:
                       type: string
-                      pattern: "[0-9]{4}-[0-9]{2}"
-                  example: 2022-02
+                      pattern: "[0-9]{4}"
+                  example: "2022"
             responses:
                 "200":
                     description: year note
