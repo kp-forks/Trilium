@@ -191,7 +191,6 @@ class IncludeNoteBoxSizeCommand extends Command {
 	declare value: BoxSizeValue | null;
 
 	override execute( options: { value: BoxSizeValue } ) {
-		console.log("[IncludeNoteBoxSizeCommand] execute called with:", options);
 		const model = this.editor.model;
 		const includeNoteElement = this._getSelectedIncludeNote();
 
@@ -207,7 +206,6 @@ class IncludeNoteBoxSizeCommand extends Command {
 
 		this.isEnabled = !!includeNoteElement;
 		this.value = includeNoteElement?.getAttribute( 'boxSize' ) as BoxSizeValue | null ?? null;
-		console.log("[IncludeNoteBoxSizeCommand] refresh - isEnabled:", this.isEnabled, "value:", this.value);
 	}
 
 	private _getSelectedIncludeNote() {

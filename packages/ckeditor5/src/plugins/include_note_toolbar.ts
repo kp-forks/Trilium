@@ -12,8 +12,6 @@ export default class IncludeNoteToolbar extends Plugin {
         const editor = this.editor;
         const widgetToolbarRepository = editor.plugins.get(WidgetToolbarRepository);
 
-        console.log("[IncludeNoteToolbar] Registering toolbar");
-
         widgetToolbarRepository.register("includeNote", {
             items: [
                 "includeNoteBoxSizeDropdown"
@@ -21,20 +19,11 @@ export default class IncludeNoteToolbar extends Plugin {
             balloonClassName: "ck-toolbar-container include-note-toolbar",
             getRelatedElement(selection) {
                 const selectedElement = selection.getSelectedElement();
-                console.log("[IncludeNoteToolbar] getRelatedElement called, selectedElement:", selectedElement);
-
-                if (selectedElement) {
-                    console.log("[IncludeNoteToolbar] Element name:", selectedElement.name);
-                    console.log("[IncludeNoteToolbar] Element classes:", selectedElement.getAttribute("class"));
-                    console.log("[IncludeNoteToolbar] isWidget:", isWidget(selectedElement));
-                }
 
                 if (selectedElement && isIncludeNoteWidget(selectedElement)) {
-                    console.log("[IncludeNoteToolbar] Found include note widget, returning element");
                     return selectedElement;
                 }
 
-                console.log("[IncludeNoteToolbar] No include note widget found");
                 return null;
             }
         });

@@ -14,15 +14,10 @@ export default class IncludeNoteBoxSizeDropdown extends Plugin {
         const editor = this.editor;
         const componentFactory = editor.ui.componentFactory;
 
-        console.log("[IncludeNoteBoxSizeDropdown] Initializing");
-
         const itemDefinitions = this._getBoxSizeListItemDefinitions();
         const command = editor.commands.get(BOX_SIZE_COMMAND_NAME) as Command & { value: BoxSizeValue | null };
 
-        console.log("[IncludeNoteBoxSizeDropdown] Command:", command);
-
         componentFactory.add("includeNoteBoxSizeDropdown", _locale => {
-            console.log("[IncludeNoteBoxSizeDropdown] Creating dropdown component");
             const dropdownView = createDropdown(editor.locale, DropdownButtonView);
             dropdownView.buttonView.set({
                 withText: true,
