@@ -1614,14 +1614,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             return;
         }
 
-        // Only navigate to parent if deleting the currently active note
-        const activeNoteId = appContext.tabManager.getActiveContext()?.noteId;
-        const isDeletingActiveNote = branchIds.some((branchId) => {
-            const branch = froca.getBranch(branchId);
-            return branch?.noteId === activeNoteId;
-        });
-
-        await branchService.deleteNotes(branchIds, false, isDeletingActiveNote);
+        await branchService.deleteNotes(branchIds);
 
         this.clearSelectedNodes();
     }
