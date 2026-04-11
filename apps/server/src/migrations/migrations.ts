@@ -6,6 +6,16 @@
 
 // Migrations should be kept in descending order, so the latest migration is first.
 const MIGRATIONS: (SqlMigration | JsMigration)[] = [
+    // Clean up obsolete keyboard shortcut options from renamed actions
+    {
+        version: 237,
+        sql: /*sql*/`
+            DELETE FROM options WHERE name = 'keyboardShortcutsShowNoteRevisions';
+            DELETE FROM entity_changes WHERE entityName = 'options' AND entityId = 'keyboardShortcutsShowNoteRevisions';
+            DELETE FROM options WHERE name = 'keyboardShortcutsForceSaveNoteRevision';
+            DELETE FROM entity_changes WHERE entityName = 'options' AND entityId = 'keyboardShortcutsForceSaveNoteRevision';
+        `
+    },
     // Add text representation column to blobs table
     {
         version: 236,
