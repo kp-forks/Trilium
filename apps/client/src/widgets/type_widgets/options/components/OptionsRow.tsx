@@ -10,14 +10,18 @@ interface OptionsRowProps {
     description?: string;
     children: VNode;
     centered?: boolean;
+    /** When true, stacks label above input with full-width input */
+    stacked?: boolean;
 }
 
-export default function OptionsRow({ name, label, description, children, centered }: OptionsRowProps) {
+export default function OptionsRow({ name, label, description, children, centered, stacked }: OptionsRowProps) {
     const id = useUniqueName(name);
     const childWithId = cloneElement(children, { id });
 
+    const className = `option-row ${centered ? "centered" : ""} ${stacked ? "stacked" : ""}`;
+
     return (
-        <div className={`option-row ${centered ? "centered" : ""}`}>
+        <div className={className}>
             <div className="option-row-label">
                 {label && <label for={id}>{label}</label>}
                 {description && <small className="option-row-description">{description}</small>}
