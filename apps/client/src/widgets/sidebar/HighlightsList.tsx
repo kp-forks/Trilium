@@ -267,7 +267,7 @@ function ReadOnlyTextHighlightsList() {
     />;
 }
 
-function extractHighlightsFromStaticHtml(el: HTMLElement | null) {
+export function extractHighlightsFromStaticHtml(el: HTMLElement | null) {
     if (!el) return [];
 
     const { color: defaultColor, backgroundColor: defaultBackgroundColor } = getComputedStyle(el);
@@ -279,6 +279,7 @@ function extractHighlightsFromStaticHtml(el: HTMLElement | null) {
     );
 
     const highlights: DomHighlight[] = [];
+    const processedMathElements = new Set<Element>();
 
     let node: Node | null;
     while ((node = walker.nextNode())) {
@@ -287,23 +288,42 @@ function extractHighlightsFromStaticHtml(el: HTMLElement | null) {
 
         const style = getComputedStyle(el);
 
+        // For elements inside math-tex, get styles from the styled ancestor
+        const mathEl = el.closest(".math-tex");
+
+        // Skip if we've already processed this math element
+        if (mathEl && processedMathElements.has(mathEl)) continue;
+
+        const styledEl = mathEl?.parentElement ?? el;
+        const styledElStyle = styledEl !== el ? getComputedStyle(styledEl) : style;
+
         if (
             el.closest('strong, em, u') ||
             style.color !== defaultColor ||
-            style.backgroundColor !== defaultBackgroundColor
+            style.backgroundColor !== defaultBackgroundColor ||
+            styledElStyle.color !== defaultColor ||
+            styledElStyle.backgroundColor !== defaultBackgroundColor
         ) {
+
             const attrs: RawHighlight["attrs"] = {
                 bold: !!el.closest("strong"),
                 italic: !!el.closest("em"),
                 underline: !!el.closest("u"),
-                background: el.style.backgroundColor,
-                color: el.style.color
+                background: styledEl.style.backgroundColor,
+                color: styledEl.style.color
             };
 
             if (Object.values(attrs).some(Boolean)) {
+                const text = mathEl ? mathEl.outerHTML : node.textContent;
+
+                // Track processed math elements to avoid duplicates
+                if (mathEl) {
+                    processedMathElements.add(mathEl);
+                }
+
                 highlights.push({
                     id: randomString(),
-                    text: node.textContent,
+                    text,
                     element: el,
                     attrs
                 });
