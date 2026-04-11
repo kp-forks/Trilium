@@ -234,14 +234,14 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
 	// commenting out click events to allow link click handler to still work
 	//domElement.addEventListener( 'click', stopEventPropagationAndHackRendererFocus, { capture: true } );
 
-	// For mousedown, we need to allow the event to propagate so the widget can be selected,
-	// but we still need to prevent CKEditor from placing a cursor inside.
-	// The data-cke-ignore-events attribute on the wrapper should handle cursor prevention.
 	domElement.addEventListener( 'mousedown', ( evt: Event ) => {
-		// Don't stop propagation - let the widget selection work naturally
-		// Just prevent the renderer focus hack
+		evt.stopPropagation();
+		// This prevents rendering changed view selection thus preventing to changing DOM selection while inside a widget.
 		//@ts-expect-error: We are accessing a private field.
 		editor.editing.view._renderer.isFocused = false;
+
+		// Select the widget so the toolbar can appear
+		selectIncludeNoteWidget( domElement, editor );
 	}, { capture: true } );
 
 	domElement.addEventListener( 'focus', stopEventPropagationAndHackRendererFocus, { capture: true } );
@@ -255,4 +255,32 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
         //@ts-expect-error: We are accessing a private field.
 		editor.editing.view._renderer.isFocused = false;
 	}
+}
+
+function selectIncludeNoteWidget( domElement: HTMLElement, editor: Editor ) {
+	// Find the parent section element (the widget container)
+	const sectionElement = domElement.closest( 'section.include-note' ) as HTMLElement | null;
+	if ( !sectionElement ) {
+		return;
+	}
+
+	// Get the view element from the DOM element
+	const viewElement = editor.editing.view.domConverter.mapDomToView( sectionElement );
+	if ( !viewElement || !viewElement.is( 'element' ) ) {
+		return;
+	}
+
+	// Get the model element from the view element
+	const modelElement = editor.editing.mapper.toModelElement( viewElement );
+	if ( !modelElement ) {
+		return;
+	}
+
+	// Focus the editor view first to ensure selection sync works
+	editor.editing.view.focus();
+
+	// Select the model element using a non-undoable batch so it doesn't affect undo
+	editor.model.enqueueChange( { isUndoable: false }, writer => {
+		writer.setSelection( modelElement, 'on' );
+	} );
 }
