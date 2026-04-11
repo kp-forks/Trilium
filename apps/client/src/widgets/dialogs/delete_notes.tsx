@@ -3,7 +3,7 @@ import "./delete_notes.css";
 import { useRef, useState, useEffect } from "preact/hooks";
 import { t } from "../../services/i18n.js";
 import Modal from "../react/Modal.js";
-import Toggle from "../react/Toggle.js";
+import FormToggle from "../react/FormToggle.js";
 import type { DeleteNotesPreview } from "@triliumnext/commons";
 import server from "../../services/server.js";
 import froca from "../../services/froca.js";
@@ -147,7 +147,7 @@ export default function DeleteNotesDialog() {
                         label={t("delete_notes.erase_notes_label")}
                         description={t("delete_notes.erase_notes_description")}
                     >
-                        <Toggle
+                        <FormToggle
                             disabled={opts.forceDeleteAllClones}
                             currentValue={eraseNotes}
                             onChange={setEraseNotes}
@@ -190,7 +190,7 @@ function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones 
                 label={t("delete_notes.clones_label")}
                 description={t("delete_notes.delete_clones_description", { count: totalCloneCount })}
             >
-                <Toggle
+                <FormToggle
                     currentValue={deleteAllClones}
                     onChange={setDeleteAllClones}
                 />
