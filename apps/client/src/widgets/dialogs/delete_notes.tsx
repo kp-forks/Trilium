@@ -1,17 +1,18 @@
 import "./delete_notes.css";
 
-import { useRef, useState, useEffect } from "preact/hooks";
-import { t } from "../../services/i18n.js";
-import Modal from "../react/Modal.js";
-import FormToggle from "../react/FormToggle.js";
 import type { DeleteNotesPreview } from "@triliumnext/commons";
-import server from "../../services/server.js";
-import froca from "../../services/froca.js";
+import { useEffect,useRef, useState } from "preact/hooks";
+
 import FNote from "../../entities/fnote.js";
+import froca from "../../services/froca.js";
+import { t } from "../../services/i18n.js";
 import link from "../../services/link.js";
+import server from "../../services/server.js";
 import Button from "../react/Button.jsx";
-import { useTriliumEvent } from "../react/hooks.jsx";
 import { Card, CardSection } from "../react/Card.js";
+import FormToggle from "../react/FormToggle.js";
+import { useTriliumEvent } from "../react/hooks.jsx";
+import Modal from "../react/Modal.js";
 import OptionsRow from "../type_widgets/options/components/OptionsRow.js";
 
 interface CloneInfo {
@@ -49,7 +50,7 @@ export default function DeleteNotesDialog() {
     useTriliumEvent("showDeleteNotesDialog", (opts) => {
         setOpts(opts);
         setShown(true);
-    })
+    });
 
     // Calculate clone information when branches change
     useEffect(() => {
@@ -102,7 +103,7 @@ export default function DeleteNotesDialog() {
             title={t("delete_notes.delete_notes_preview")}
             onShown={() => okButtonRef.current?.focus()}
             onHidden={() => {
-                opts.callback?.({ proceed: false })
+                opts.callback?.({ proceed: false });
                 setShown(false);
             }}
             footer={<>
@@ -240,13 +241,26 @@ function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPrev
     return (
         <Card heading={t("delete_notes.broken_relations_to_be_deleted", { relationCount: brokenRelations.length })}>
             <CardSection>
-                <ul className="preview-list">
-                    {brokenRelations.map((_, index) => (
-                        <li key={index}>
-                            <span dangerouslySetInnerHTML={{ __html: t("delete_notes.deleted_relation_text", notesWithBrokenRelations[index] as unknown as Record<string, string>) }} />
-                        </li>
-                    ))}
-                </ul>
+                <div style={{ overflow: "auto" }}>
+                    <table className="table table-stripped">
+                        <thead>
+                            <tr>
+                                <th>{t("delete_notes.table_note")}</th>
+                                <th>{t("delete_notes.table_relation")}</th>
+                                <th>{t("delete_notes.table_source")}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {notesWithBrokenRelations.map((relation, index) => (
+                                <tr key={index}>
+                                    <td dangerouslySetInnerHTML={{ __html: relation.note }} />
+                                    <td dangerouslySetInnerHTML={{ __html: relation.relation }} />
+                                    <td dangerouslySetInnerHTML={{ __html: relation.source }} />
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </CardSection>
         </Card>
     );

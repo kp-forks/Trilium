@@ -99,9 +99,11 @@
     "notes_to_be_deleted": "Notes to be deleted ({{notesCount}})",
     "no_note_to_delete": "No note will be deleted (only clones).",
     "broken_relations_to_be_deleted": "Broken relations ({{relationCount}})",
+    "table_note": "Note",
+    "table_relation": "Relation",
+    "table_source": "Source",
     "cancel": "Cancel",
     "ok": "OK",
-    "deleted_relation_text": "Note {{- note}} (to be deleted) is referenced by relation {{- relation}} originating from {{- source}}.",
     "no_clones_message": "The selected notes have no clones."
   },
   "export": {
