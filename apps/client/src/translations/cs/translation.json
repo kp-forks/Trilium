@@ -77,16 +77,13 @@
   },
   "delete_notes": {
     "cancel": "Zrušit",
-    "ok": "OK",
     "close": "Zavřít",
-    "delete_notes_preview": "Odstranit náhled poznámek",
     "delete_all_clones_description": "Odstraňte také všechny klony (lze vrátit zpět v nedávných změnách)",
     "erase_notes_description": "Normální (měkké) smazání pouze označí poznámky jako smazané a lze je během určité doby obnovit (v dialogovém okně posledních změn). Zaškrtnutím této možnosti se poznámky okamžitě vymažou a nebude možné je obnovit.",
     "erase_notes_warning": "Trvale smažte poznámky (nelze vrátit zpět), včetně všech klonů. Tím se vynutí opětovné načtení aplikace.",
     "notes_to_be_deleted": "Následující poznámky budou smazány ({{notesCount}})",
     "no_note_to_delete": "Žádná poznámka nebude smazána (pouze klony).",
-    "broken_relations_to_be_deleted": "Následující vazby budou přerušeny a smazány ({{relationCount}})",
-    "deleted_relation_text": "Poznámka {{- note}} (bude smazána) je odkazována vazbou {{- relation}} pocházející z {{- source}}."
+    "broken_relations_to_be_deleted": "Následující vazby budou přerušeny a smazány ({{relationCount}})"
   },
   "export": {
     "close": "Zavřít",

@@ -88,7 +88,6 @@
     "also_delete_note": "同时删除笔记"
   },
   "delete_notes": {
-    "delete_notes_preview": "删除笔记预览",
     "close": "关闭",
     "delete_all_clones_description": "同时删除所有克隆（可以在最近修改中撤消）",
     "erase_notes_description": "通常（软）删除仅标记笔记为已删除，可以在一段时间内通过最近修改对话框撤消。选中此选项将立即擦除笔记，不可撤销。",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "将删除以下笔记 ({{notesCount}})",
     "no_note_to_delete": "没有笔记将被删除（仅克隆）。",
     "broken_relations_to_be_deleted": "将删除以下关系并断开连接 ({{ relationCount}})",
-    "cancel": "取消",
-    "ok": "确定",
-    "deleted_relation_text": "笔记 {{- note}} (将被删除的笔记) 被以下关系 {{- relation}} 引用, 来自 {{- source}}。"
+    "cancel": "取消"
   },
   "export": {
     "export_note_title": "导出笔记",

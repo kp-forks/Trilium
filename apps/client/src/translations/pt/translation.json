@@ -88,7 +88,6 @@
     "also_delete_note": "Também apagar a nota"
   },
   "delete_notes": {
-    "delete_notes_preview": "Apagar pré-visualização de notas",
     "close": "Fechar",
     "delete_all_clones_description": "Apagar também todos os clones (pode ser desfeito em alterações recentes)",
     "erase_notes_description": "Apagar normal (suave) apenas marca as notas como apagadas, permitindo que sejam recuperadas (no diálogo de alterações recentes) num período. Se esta opção for marcada, as notas serão apagadas imediatamente e não será possível restaurá-las.",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "As seguintes notas serão apagadas ({{notesCount}})",
     "no_note_to_delete": "Nenhuma nota será apagada (apenas os clones).",
     "broken_relations_to_be_deleted": "As seguintes relações serão quebradas e apagadas ({{ relationCount}})",
-    "cancel": "Cancelar",
-    "ok": "OK",
-    "deleted_relation_text": "A nota {{- note}} (a ser apagada) está referenciada pela relação {{- relation}} originada de {{- source}}."
+    "cancel": "Cancelar"
   },
   "export": {
     "export_note_title": "Exportar nota",

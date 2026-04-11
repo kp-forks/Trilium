@@ -88,7 +88,6 @@
     "also_delete_note": "Auch die Notiz löschen"
   },
   "delete_notes": {
-    "delete_notes_preview": "Vorschau der Notizen löschen",
     "close": "Schließen",
     "delete_all_clones_description": "auch alle Klone löschen (kann bei letzte Änderungen rückgängig gemacht werden)",
     "erase_notes_description": "Beim normalen (vorläufigen) Löschen werden die Notizen nur als gelöscht markiert und sie können innerhalb eines bestimmten Zeitraums (im Dialogfeld „Letzte Änderungen“) wiederhergestellt werden. Wenn du diese Option aktivierst, werden die Notizen sofort gelöscht und es ist nicht möglich, die Notizen wiederherzustellen.",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "Folgende Notizen werden gelöscht ({{notesCount}})",
     "no_note_to_delete": "Es werden keine Notizen gelöscht (nur Klone).",
     "broken_relations_to_be_deleted": "Folgende Beziehungen werden gelöst und gelöscht ({{ relationCount}})",
-    "cancel": "Abbrechen",
-    "ok": "OK",
-    "deleted_relation_text": "Notiz {{- note}} (soll gelöscht werden) wird von Beziehung {{- relation}} ausgehend von {{- source}} referenziert."
+    "cancel": "Abbrechen"
   },
   "export": {
     "export_note_title": "Notiz exportieren",

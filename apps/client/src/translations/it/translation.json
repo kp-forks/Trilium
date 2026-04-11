@@ -88,17 +88,14 @@
     "also_delete_note": "Rimuove anche la nota"
   },
   "delete_notes": {
-    "ok": "OK",
     "close": "Chiudi",
-    "delete_notes_preview": "Anteprima di eliminazione delle note",
     "delete_all_clones_description": "Elimina anche tutti i cloni (può essere ripristinato nella sezione cambiamenti recenti)",
     "erase_notes_description": "L'eliminazione normale (soft) marca le note come eliminate e potranno essere recuperate entro un certo lasso di tempo (dalla finestra dei cambiamenti recenti). Selezionando questa opzione le note si elimineranno immediatamente e non sarà possibile recuperarle.",
     "erase_notes_warning": "Elimina le note in modo permanente (non potrà essere disfatto), compresi tutti i cloni. Ciò forzerà un nuovo caricamento dell'applicazione.",
     "cancel": "Annulla",
     "notes_to_be_deleted": "Le seguenti note saranno eliminate ({{notesCount}})",
     "no_note_to_delete": "Nessuna nota sarà eliminata (solo i cloni).",
-    "broken_relations_to_be_deleted": "Le seguenti relazioni saranno interrotte ed eliminate ({{relationCount}})",
-    "deleted_relation_text": "La nota {{- note}} (da eliminare) è referenziata dalla relazione {{- relation}} originata da {{- source}}."
+    "broken_relations_to_be_deleted": "Le seguenti relazioni saranno interrotte ed eliminate ({{relationCount}})"
   },
   "info": {
     "okButton": "OK",

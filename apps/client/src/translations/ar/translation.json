@@ -393,9 +393,7 @@
   },
   "delete_notes": {
     "close": "غلق",
-    "cancel": "الغاء",
-    "ok": "نعم",
-    "delete_notes_preview": "حذف معاينة الملاحظات"
+    "cancel": "الغاء"
   },
   "export": {
     "close": "غلق",
