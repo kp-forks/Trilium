@@ -154,15 +154,7 @@ function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones 
     const { totalCloneCount } = cloneInfo;
 
     if (totalCloneCount === 0) {
-        return (
-            <OptionsRow
-                name="delete-all-clones"
-                label={t("delete_notes.clones_label")}
-                description={t("delete_notes.no_clones_message")}
-            >
-                <span style={{ color: "var(--muted-text-color)" }}>—</span>
-            </OptionsRow>
-        );
+        return null;
     }
 
     return (
