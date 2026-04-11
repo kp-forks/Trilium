@@ -313,7 +313,7 @@ function register(app: express.Application) {
     // backup requires execution outside of transaction
     asyncRoute(PST, "/api/database/backup-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.backupDatabase, apiResultHandler);
     apiRoute(GET, "/api/database/backups", databaseRoute.getExistingBackups);
-
+    route(GET, "/api/database/backup/download", [auth.checkApiAuthOrElectron], databaseRoute.downloadBackup);
     // VACUUM requires execution outside of transaction
     asyncRoute(PST, "/api/database/vacuum-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.vacuumDatabase, apiResultHandler);
 

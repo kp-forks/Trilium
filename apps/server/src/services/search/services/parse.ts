@@ -1,6 +1,5 @@
-
-
 import { dayjs } from "@triliumnext/commons";
+import { t } from "i18next";
 
 import { removeDiacritic } from "../../utils.js";
 import AncestorExp from "../expressions/ancestor.js";
@@ -98,7 +97,10 @@ function getExpression(tokens: TokenData[], searchContext: SearchContext, level 
         const operand = tokens[i];
 
         if (!operand.inQuotes && (operand.token.startsWith("#") || operand.token.startsWith("~") || operand.token === "note")) {
-            searchContext.addError(`Error near token "${operand.token}" in ${context(i)}, it's possible to compare with constant only.`);
+            const hint = operand.token === "note"
+                ? t("search.error.reserved-keyword", { token: operand.token })
+                : t("search.error.cannot-compare-with", { token: operand.token });
+            searchContext.addError(t("search.error.in-context", { context: context(i), message: hint }));
             return null;
         }
 
@@ -436,9 +438,15 @@ function getExpression(tokens: TokenData[], searchContext: SearchContext, level 
                 searchContext.addError("Mixed usage of AND/OR - always use parenthesis to group AND/OR expressions.");
             }
         } else if (isOperator({ token })) {
-            searchContext.addError(`Misplaced or incomplete expression "${token}"`);
+            searchContext.addError(t("search.error.misplaced-expression", { token }));
         } else {
-            searchContext.addError(`Unrecognized expression "${token}"`);
+            // Check if this looks like a fulltext search term placed after attribute filters
+            const looksLikeFulltext = !token.startsWith("#") && !token.startsWith("~") && !token.startsWith("note.");
+            if (looksLikeFulltext) {
+                searchContext.addError(t("search.error.fulltext-after-expression", { token }));
+            } else {
+                searchContext.addError(t("search.error.unrecognized-expression", { token }));
+            }
         }
 
         if (!op && expressions.length > 1) {

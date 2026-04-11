@@ -21,7 +21,7 @@
     },
     "bundle-error": {
       "title": "Custom script laden mislukt",
-      "message": "Script van notitie met ID \"{{id}}\", getiteld \"{{title}}\" kon niet worden uitgevoerd vanwege:\n\n{{message}}"
+      "message": "Script voor de notitie met ID \"{{id}}\", getiteld \"{{title}}\" kon niet worden uitgevoerd vanwege:\n\n{{message}}"
     },
     "scripting-error": "Error met script: {{title}}",
     "widget-list-error": {

@@ -88,7 +88,6 @@
     "also_delete_note": "同時刪除筆記"
   },
   "delete_notes": {
-    "delete_notes_preview": "刪除筆記預覽",
     "delete_all_clones_description": "同時刪除所有克隆（可以在最近修改中撤消）",
     "erase_notes_description": "通常（軟）刪除僅標記筆記為已刪除，可以在一段時間內透過最近修改對話方塊撤消。勾選此選項將立即擦除筆記，無法撤銷。",
     "erase_notes_warning": "永久擦除筆記（無法撤銷），包括所有克隆。這將強制應用程式重新載入。",
@@ -96,8 +95,6 @@
     "no_note_to_delete": "沒有筆記將被刪除（僅克隆）。",
     "broken_relations_to_be_deleted": "將刪除以下關聯並斷開連接 ({{ relationCount}})",
     "cancel": "取消",
-    "ok": "確定",
-    "deleted_relation_text": "筆記 {{- note}}（將被刪除的筆記）被以下關聯 {{- relation}} 引用，來自 {{- source}}。",
     "close": "關閉"
   },
   "export": {
@@ -803,7 +800,10 @@
     "expand_first_level": "展開直接子級",
     "expand_nth_level": "展開 {{depth}} 層",
     "expand_all_levels": "展開所有層級",
-    "hide_child_notes": "隱藏樹中的子筆記"
+    "hide_child_notes": "隱藏樹中的子筆記",
+    "open_all_in_tabs": "全部打開",
+    "open_all_in_tabs_tooltip": "在新分頁中開啟所有結果",
+    "open_all_confirm": "這將在新分頁中開啟 {{count}} 則筆記。要繼續嗎？"
   },
   "edited_notes": {
     "no_edited_notes_found": "今天還沒有編輯過的筆記...",
@@ -857,7 +857,8 @@
     "collapse": "收摺到正常大小",
     "title": "筆記地圖",
     "fix-nodes": "固定節點",
-    "link-distance": "連結距離"
+    "link-distance": "連結距離",
+    "too-many-notes": "此子樹包含 {{count}} 則筆記，已超過筆記地圖中可顯示的 {{max}} 則上限。"
   },
   "note_paths": {
     "title": "筆記路徑",
@@ -1062,7 +1063,8 @@
     "note_already_in_diagram": "筆記 \"{{title}}\" 已經在圖中。",
     "enter_title_of_new_note": "輸入新筆記的標題",
     "default_new_note_title": "新筆記",
-    "click_on_canvas_to_place_new_note": "點擊畫布以放置新筆記"
+    "click_on_canvas_to_place_new_note": "點擊畫布以放置新筆記",
+    "rename_relation": "重新命名關聯"
   },
   "backend_log": {
     "refresh": "重新整理"
@@ -1331,7 +1333,8 @@
     "date-and-time": "日期和時間",
     "path": "路徑",
     "database_backed_up_to": "資料庫已備份至 {{backupFilePath}}",
-    "no_backup_yet": "尚無備份"
+    "no_backup_yet": "尚無備份",
+    "download": "下載"
   },
   "etapi": {
     "title": "ETAPI",
@@ -1396,12 +1399,15 @@
   "spellcheck": {
     "title": "拼寫檢查",
     "description": "這些選項僅適用於桌面版，瀏覽器將使用其原生的拼寫檢查功能。",
-    "enable": "啟用拼寫檢查",
-    "language_code_label": "語言代碼",
-    "language_code_placeholder": "例如 \"en-US\", \"de-AT\"",
-    "multiple_languages_info": "多種語言可以用逗號分隔，例如 \"en-US, de-DE, cs\"。 ",
-    "available_language_codes_label": "可用的語言代碼：",
-    "restart-required": "拼寫檢查選項的更改將在應用重啟後生效。"
+    "enable": "拼寫檢查",
+    "language_code_label": "拼寫檢查語言",
+    "restart-required": "拼寫檢查選項的更改將在應用重啟後生效。",
+    "custom_dictionary_title": "自訂字典",
+    "custom_dictionary_description": "新增至字典的詞彙會同步至您所有的裝置。",
+    "custom_dictionary_edit": "自訂詞彙",
+    "custom_dictionary_edit_description": "編輯拼寫檢查器不應標記的詞彙清單。變更將於重新啟動後生效。",
+    "custom_dictionary_open": "編輯字典",
+    "related_description": "設定拼寫檢查語言及自訂字典。"
   },
   "sync_2": {
     "config_title": "同步設定",
@@ -1417,7 +1423,7 @@
     "test_description": "測試和同步伺服器之間的連接。如果同步伺服器沒有初始化，這會將本地文件同步至同步伺服器上。",
     "test_button": "測試同步",
     "handshake_failed": "同步伺服器握手失敗，錯誤：{{message}}",
-    "timeout_unit": "毫秒"
+    "timeout_description": "在放棄慢速同步連線前應等待多久。若網路不穩定，請延長等待時間。"
   },
   "api_log": {
     "close": "關閉"
@@ -2288,7 +2294,7 @@
   "ocr": {
     "processing_complete": "OCR 處理已完成。",
     "processing_failed": "無法啟動 OCR 處理",
-    "text_filtered_low_confidence": "OCR 偵測到的信賴度為 {{confidence}}%，但因您的最低閾值設定為 {{threshold}}%，故該結果已被捨棄。",
+    "text_filtered_low_confidence": "OCR 偵測到的文字信賴度為 {{confidence}}%，但因您的最低閾值設定為 {{threshold}}%，故該結果已被捨棄。",
     "open_media_settings": "開啟設定",
     "view_extracted_text": "檢視擷取的文字 (OCR)",
     "extracted_text": "已擷取的文字 (OCR)",

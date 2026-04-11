@@ -23,6 +23,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     theme: string;
     syncServerHost: string;
     syncServerTimeout: string;
+    syncServerTimeoutTimeScale: number;
     syncProxy: string;
     mainFontFamily: FontFamily;
     treeFontFamily: FontFamily;
@@ -140,6 +141,9 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
 
     seenCallToActions: string;
     experimentalFeatures: string;
+
+    // Include note settings
+    includeNoteDefaultBoxSize: "small" | "medium" | "full" | "expandable";
 
     // AI / LLM
     /** JSON array of configured LLM providers with their API keys */

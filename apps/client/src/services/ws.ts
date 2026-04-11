@@ -134,7 +134,7 @@ async function handleMessage(event: MessageEvent<any>) {
     } else if (message.type === "api-log-messages") {
         appContext.triggerEvent("apiLogMessages", { noteId: message.noteId, messages: message.messages });
     } else if (message.type === "toast") {
-        toast.showMessage(message.message);
+        toast.showMessage(message.message, message.timeout);
     } else if (message.type === "execute-script") {
         const originEntity = message.originEntityId ? await froca.getNote(message.originEntityId) : null;
 
