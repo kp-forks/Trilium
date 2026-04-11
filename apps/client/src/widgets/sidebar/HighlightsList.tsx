@@ -3,9 +3,8 @@ import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
-import math from "../../services/math";
 import { randomString } from "../../services/utils";
-import { useActiveNoteContext, useContentElement, useIsNoteReadOnly, useNoteProperty, useTextEditor, useTriliumOptionJson } from "../react/hooks";
+import { useActiveNoteContext, useContentElement, useIsNoteReadOnly, useMathRendering, useNoteProperty, useTextEditor, useTriliumOptionJson } from "../react/hooks";
 import Modal from "../react/Modal";
 import RawHtml from "../react/RawHtml";
 import { HighlightsListOptions } from "../type_widgets/options/text_notes";
@@ -111,19 +110,7 @@ function HighlightItem<T extends RawHighlight>({ highlight, onClick }: {
 }) {
     const contentRef = useRef<HTMLElement>(null);
 
-    // Render math equations after component mounts/updates
-    useEffect(() => {
-        if (!contentRef.current) return;
-        const mathElements = contentRef.current.querySelectorAll(".math-tex");
-
-        for (const mathEl of mathElements ?? []) {
-            try {
-                math.render(mathEl.textContent || "", mathEl as HTMLElement);
-            } catch (e) {
-                console.warn("Failed to render math in highlights:", e);
-            }
-        }
-    }, [highlight.text]);
+    useMathRendering(contentRef, [highlight.text]);
 
     return (
         <li onClick={onClick}>
