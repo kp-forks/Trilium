@@ -48,6 +48,10 @@
     opacity: 0.4;
 }
 
+.llm-chat-stop-btn {
+    color: var(--danger-color, #dc3545);
+}
+
 /* Model selector */
 .llm-chat-model-selector {
     display: flex;
