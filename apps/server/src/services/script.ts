@@ -1,3 +1,4 @@
+import { t } from "i18next";
 import { transform } from "sucrase";
 
 import becca from "../becca/becca.js";
@@ -6,6 +7,7 @@ import type { ApiParams } from "./backend_script_api_interface.js";
 import cls from "./cls.js";
 import log from "./log.js";
 import ScriptContext from "./script_context.js";
+import ws from "./ws.js";
 
 export interface Bundle {
     note?: BNote;
@@ -21,6 +23,18 @@ type ScriptParams = any[];
 function executeNote(note: BNote, apiParams: ApiParams) {
     if (!note.isJavaScript() || note.getScriptEnv() !== "backend" || !note.isContentAvailable()) {
         log.info(`Cannot execute note ${note.noteId} "${note.title}", note must be of type "Code: JS backend"`);
+
+        // Warn the user if they're trying to run a frontend script in the backend
+        const actualEnv = note.getScriptEnv();
+        if (note.isJavaScript() && actualEnv === "frontend") {
+            const message = t("script.wrong-environment", {
+                noteTitle: note.title,
+                noteId: note.noteId,
+                actualEnv: "frontend",
+                expectedEnv: "backend"
+            });
+            ws.sendMessageToAllClients({ type: "toast", message });
+        }
 
         return;
     }
@@ -119,6 +133,20 @@ function getParams(params?: ScriptParams) {
 }
 
 function getScriptBundleForFrontend(note: BNote, script?: string, params?: ScriptParams) {
+    // Warn the user if they're trying to run a backend script in the frontend
+    if (note.isJavaScript() && note.getScriptEnv() === "backend") {
+        log.info(`Cannot execute note ${note.noteId} "${note.title}" in frontend, note is of type "Code: JS backend"`);
+
+        const message = t("script.wrong-environment", {
+            noteTitle: note.title,
+            noteId: note.noteId,
+            actualEnv: "backend",
+            expectedEnv: "frontend"
+        });
+        ws.sendMessageToAllClients({ type: "toast", message });
+        return;
+    }
+
     let overrideContent: string | null = null;
 
     if (script) {
