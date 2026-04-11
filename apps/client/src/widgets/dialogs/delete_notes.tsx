@@ -216,8 +216,8 @@ function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPrev
 
     return (
         <Card heading={t("delete_notes.broken_relations_to_be_deleted", { relationCount: brokenRelations.length })}>
-            <CardSection>
-                <div style={{ overflow: "auto" }}>
+            <CardSection noPadding>
+                <div style={{ overflowX: "auto" }}>
                     <table className="table table-striped">
                         <thead>
                             <tr>
