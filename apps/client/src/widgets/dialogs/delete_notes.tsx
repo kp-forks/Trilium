@@ -132,7 +132,7 @@ export default function DeleteNotesDialog() {
             </>}
             show={shown}
         >
-            <Card heading={t("delete_notes.options_heading")}>
+            <Card>
                 <CardSection>
                     <DeleteAllClonesOption
                         cloneInfo={cloneInfo}
