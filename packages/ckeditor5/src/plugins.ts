@@ -34,6 +34,8 @@ import InlineCodeNoSpellcheck from "./plugins/inline_code_no_spellcheck.js";
 import InlineCodeToolbar from "./plugins/inline_code_toolbar.js";
 import AdmonitionTypeDropdown from "./plugins/admonition_type_dropdown.js";
 import AdmonitionToolbar from "./plugins/admonition_toolbar.js";
+import IncludeNoteBoxSizeDropdown from "./plugins/include_note_box_size_dropdown.js";
+import IncludeNoteToolbar from "./plugins/include_note_toolbar.js";
 
 /**
  * Plugins that are specific to Trilium and not part of the CKEditor 5 core, included in both text editors but not in the attribute editor.
@@ -59,6 +61,8 @@ const TRILIUM_PLUGINS: typeof Plugin[] = [
     InlineCodeToolbar,
     AdmonitionTypeDropdown,
     AdmonitionToolbar,
+    IncludeNoteBoxSizeDropdown,
+    IncludeNoteToolbar,
 ];
 
 /**
