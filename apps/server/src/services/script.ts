@@ -33,7 +33,7 @@ function executeNote(note: BNote, apiParams: ApiParams) {
                 actualEnv: "frontend",
                 expectedEnv: "backend"
             });
-            ws.sendMessageToAllClients({ type: "toast", message });
+            ws.sendMessageToAllClients({ type: "toast", message, timeout: 10000 });
         }
 
         return;
@@ -143,7 +143,7 @@ function getScriptBundleForFrontend(note: BNote, script?: string, params?: Scrip
             actualEnv: "backend",
             expectedEnv: "frontend"
         });
-        ws.sendMessageToAllClients({ type: "toast", message });
+        ws.sendMessageToAllClients({ type: "toast", message, timeout: 10000 });
         return;
     }
 
