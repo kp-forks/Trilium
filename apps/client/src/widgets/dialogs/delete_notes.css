@@ -6,19 +6,6 @@
     margin-bottom: 0;
 }
 
-.delete-notes-dialog .clone-paths-list {
-    margin: 8px 0 0 24px;
-    padding: 0;
-    font-size: 0.9em;
-    color: var(--muted-text-color);
-    max-height: 150px;
-    overflow: auto;
-}
-
-.delete-notes-dialog .clone-paths-list li {
-    margin-bottom: 4px;
-}
-
 .delete-notes-dialog .preview-list {
     margin: 0;
     padding-left: 20px;
@@ -28,11 +15,4 @@
 
 .delete-notes-dialog .preview-list li {
     margin-bottom: 4px;
-}
-
-/* Alert inside card section should be borderless */
-.delete-notes-dialog .tn-card-section:has(.alert) {
-    padding: 0;
-    border: none;
-    background: transparent;
 }

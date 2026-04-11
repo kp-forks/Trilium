@@ -16,7 +16,6 @@ import OptionsRow from "../type_widgets/options/components/OptionsRow.js";
 
 interface CloneInfo {
     totalCloneCount: number;
-    clonePaths: string[];
 }
 
 export interface ResolveOptions {
@@ -44,7 +43,7 @@ export default function DeleteNotesDialog() {
     const [ brokenRelations, setBrokenRelations ] = useState<DeleteNotesPreview["brokenRelations"]>([]);
     const [ noteIdsToBeDeleted, setNoteIdsToBeDeleted ] = useState<DeleteNotesPreview["noteIdsToBeDeleted"]>([]);
     const [ shown, setShown ] = useState(false);
-    const [ cloneInfo, setCloneInfo ] = useState<CloneInfo>({ totalCloneCount: 0, clonePaths: [] });
+    const [ cloneInfo, setCloneInfo ] = useState<CloneInfo>({ totalCloneCount: 0 });
     const okButtonRef = useRef<HTMLButtonElement>(null);
 
     useTriliumEvent("showDeleteNotesDialog", (opts) => {
@@ -56,7 +55,7 @@ export default function DeleteNotesDialog() {
     useEffect(() => {
         const { branchIdsToDelete } = opts;
         if (!branchIdsToDelete || branchIdsToDelete.length === 0) {
-            setCloneInfo({ totalCloneCount: 0, clonePaths: [] });
+            setCloneInfo({ totalCloneCount: 0 });
             return;
         }
 
@@ -66,29 +65,15 @@ export default function DeleteNotesDialog() {
             const notes = await froca.getNotes(uniqueNoteIds);
 
             let totalCloneCount = 0;
-            const clonePaths: string[] = [];
 
             for (const note of notes) {
                 const parentBranches = note.getParentBranches();
                 // Clones are additional parent branches beyond the one being deleted
                 const otherBranches = parentBranches.filter(b => !branchIdsToDelete!.includes(b.branchId));
-
-                if (otherBranches.length > 0) {
-                    totalCloneCount += otherBranches.length;
-
-                    // Get paths for preview (limit to first 5 total)
-                    for (const branch of otherBranches) {
-                        if (clonePaths.length >= 5) break;
-                        const pathHtml = (await link.createLink(note.noteId, {
-                            showNotePath: true,
-                            referenceLink: false
-                        })).html();
-                        clonePaths.push(pathHtml);
-                    }
-                }
+                totalCloneCount += otherBranches.length;
             }
 
-            setCloneInfo({ totalCloneCount, clonePaths });
+            setCloneInfo({ totalCloneCount });
         }
 
         calculateCloneInfo();
@@ -168,7 +153,7 @@ interface DeleteAllClonesOptionProps {
 }
 
 function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones }: DeleteAllClonesOptionProps) {
-    const { totalCloneCount, clonePaths } = cloneInfo;
+    const { totalCloneCount } = cloneInfo;
 
     if (totalCloneCount === 0) {
         return (
@@ -183,28 +168,16 @@ function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones 
     }
 
     return (
-        <div>
-            <OptionsRow
-                name="delete-all-clones"
-                label={t("delete_notes.clones_label")}
-                description={t("delete_notes.delete_clones_description", { count: totalCloneCount })}
-            >
-                <FormToggle
-                    currentValue={deleteAllClones}
-                    onChange={setDeleteAllClones}
-                />
-            </OptionsRow>
-            {clonePaths.length > 0 && (
-                <ul className="clone-paths-list">
-                    {clonePaths.map((path, index) => (
-                        <li key={index} dangerouslySetInnerHTML={{ __html: path }} />
-                    ))}
-                    {totalCloneCount > clonePaths.length && (
-                        <li><em>{t("delete_notes.and_more_clones", { count: totalCloneCount - clonePaths.length })}</em></li>
-                    )}
-                </ul>
-            )}
-        </div>
+        <OptionsRow
+            name="delete-all-clones"
+            label={t("delete_notes.clones_label")}
+            description={t("delete_notes.delete_clones_description", { count: totalCloneCount })}
+        >
+            <FormToggle
+                currentValue={deleteAllClones}
+                onChange={setDeleteAllClones}
+            />
+        </OptionsRow>
     );
 }
 
