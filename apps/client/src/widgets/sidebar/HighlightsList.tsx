@@ -270,64 +270,62 @@ function ReadOnlyTextHighlightsList() {
 export function extractHighlightsFromStaticHtml(el: HTMLElement | null) {
     if (!el) return [];
 
-    const { color: defaultColor, backgroundColor: defaultBackgroundColor } = getComputedStyle(el);
-
-    const walker = document.createTreeWalker(
-        el,
-        NodeFilter.SHOW_TEXT,
-        null
-    );
-
     const highlights: DomHighlight[] = [];
-    const processedMathElements = new Set<Element>();
+    const processedElements = new Set<Element>();
 
-    let node: Node | null;
-    while ((node = walker.nextNode())) {
-        const el = node.parentElement;
-        if (!el || !node.textContent?.trim()) continue;
+    // Find all elements with inline background-color or color styles
+    const styledElements = el.querySelectorAll<HTMLElement>('[style*="background-color"], [style*="color"]');
 
-        const style = getComputedStyle(el);
+    for (const styledEl of styledElements) {
+        if (processedElements.has(styledEl)) continue;
+        if (!styledEl.textContent?.trim()) continue;
 
-        // For elements inside math-tex, get styles from the styled ancestor
-        const mathEl = el.closest(".math-tex");
+        const attrs: RawHighlight["attrs"] = {
+            bold: !!styledEl.closest("strong"),
+            italic: !!styledEl.closest("em"),
+            underline: !!styledEl.closest("u"),
+            background: styledEl.style.backgroundColor,
+            color: styledEl.style.color
+        };
 
-        // Skip if we've already processed this math element
-        if (mathEl && processedMathElements.has(mathEl)) continue;
+        if (Object.values(attrs).some(Boolean)) {
+            processedElements.add(styledEl);
 
-        const styledEl = mathEl?.parentElement ?? el;
-        const styledElStyle = styledEl !== el ? getComputedStyle(styledEl) : style;
+            highlights.push({
+                id: randomString(),
+                text: styledEl.innerHTML,
+                element: styledEl,
+                attrs
+            });
+        }
+    }
 
-        if (
-            el.closest('strong, em, u') ||
-            style.color !== defaultColor ||
-            style.backgroundColor !== defaultBackgroundColor ||
-            styledElStyle.color !== defaultColor ||
-            styledElStyle.backgroundColor !== defaultBackgroundColor
-        ) {
+    // Also find bold, italic, underline elements
+    const formattingElements = el.querySelectorAll<HTMLElement>("strong, em, u, b, i");
 
-            const attrs: RawHighlight["attrs"] = {
-                bold: !!el.closest("strong"),
-                italic: !!el.closest("em"),
-                underline: !!el.closest("u"),
-                background: styledEl.style.backgroundColor,
-                color: styledEl.style.color
-            };
+    for (const formattedEl of formattingElements) {
+        // Skip if already processed or inside a processed element
+        if (processedElements.has(formattedEl)) continue;
+        if (Array.from(processedElements).some(processed => processed.contains(formattedEl))) continue;
+        if (!formattedEl.textContent?.trim()) continue;
 
-            if (Object.values(attrs).some(Boolean)) {
-                const text = mathEl ? mathEl.outerHTML : node.textContent;
+        const attrs: RawHighlight["attrs"] = {
+            bold: formattedEl.matches("strong, b"),
+            italic: formattedEl.matches("em, i"),
+            underline: formattedEl.matches("u"),
+            background: formattedEl.style.backgroundColor,
+            color: formattedEl.style.color
+        };
 
-                // Track processed math elements to avoid duplicates
-                if (mathEl) {
-                    processedMathElements.add(mathEl);
-                }
+        if (Object.values(attrs).some(Boolean)) {
+            processedElements.add(formattedEl);
 
-                highlights.push({
-                    id: randomString(),
-                    text,
-                    element: el,
-                    attrs
-                });
-            }
+            highlights.push({
+                id: randomString(),
+                text: formattedEl.innerHTML,
+                element: formattedEl,
+                attrs
+            });
         }
     }
 
