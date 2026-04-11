@@ -1,7 +1,9 @@
+import "./delete_notes.css";
+
 import { useRef, useState, useEffect } from "preact/hooks";
 import { t } from "../../services/i18n.js";
-import FormCheckbox from "../react/FormCheckbox.js";
 import Modal from "../react/Modal.js";
+import Toggle from "../react/Toggle.js";
 import type { DeleteNotesPreview } from "@triliumnext/commons";
 import server from "../../services/server.js";
 import froca from "../../services/froca.js";
@@ -10,6 +12,8 @@ import link from "../../services/link.js";
 import Button from "../react/Button.jsx";
 import Alert from "../react/Alert.jsx";
 import { useTriliumEvent } from "../react/hooks.jsx";
+import { Card, CardSection } from "../react/Card.js";
+import OptionsRow from "../type_widgets/options/components/OptionsRow.js";
 
 interface CloneInfo {
     totalCloneCount: number;
@@ -129,41 +133,78 @@ export default function DeleteNotesDialog() {
             </>}
             show={shown}
         >
-            <DeleteAllClonesOption
-                cloneInfo={cloneInfo}
-                deleteAllClones={deleteAllClones}
-                setDeleteAllClones={setDeleteAllClones}
-            />
-            <FormCheckbox
-                name="erase-notes" label={t("delete_notes.erase_notes_warning")}
-                disabled={opts.forceDeleteAllClones}
-                currentValue={eraseNotes} onChange={setEraseNotes}
-            />
+            <Card heading={t("delete_notes.options_heading")}>
+                <CardSection>
+                    <DeleteAllClonesOption
+                        cloneInfo={cloneInfo}
+                        deleteAllClones={deleteAllClones}
+                        setDeleteAllClones={setDeleteAllClones}
+                    />
+                </CardSection>
+                <CardSection>
+                    <OptionsRow
+                        name="erase-notes"
+                        label={t("delete_notes.erase_notes_label")}
+                        description={t("delete_notes.erase_notes_description")}
+                    >
+                        <Toggle
+                            disabled={opts.forceDeleteAllClones}
+                            currentValue={eraseNotes}
+                            onChange={setEraseNotes}
+                        />
+                    </OptionsRow>
+                </CardSection>
+            </Card>
 
-            <DeletedNotes noteIdsToBeDeleted={noteIdsToBeDeleted} />
             <BrokenRelations brokenRelations={brokenRelations} />
+            <DeletedNotes noteIdsToBeDeleted={noteIdsToBeDeleted} />
         </Modal>
     );
 }
 
-interface NotesListProps {
-    title: string;
-    noteLinks: string[];
-    moreCount?: number;
+interface DeleteAllClonesOptionProps {
+    cloneInfo: CloneInfo;
+    deleteAllClones: boolean;
+    setDeleteAllClones: (value: boolean) => void;
 }
 
-function NotesList({ title, noteLinks, moreCount }: NotesListProps) {
+function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones }: DeleteAllClonesOptionProps) {
+    const { totalCloneCount, clonePaths } = cloneInfo;
+
+    if (totalCloneCount === 0) {
+        return (
+            <OptionsRow
+                name="delete-all-clones"
+                label={t("delete_notes.clones_label")}
+                description={t("delete_notes.no_clones_message")}
+            >
+                <span style={{ color: "var(--muted-text-color)" }}>—</span>
+            </OptionsRow>
+        );
+    }
+
     return (
-        <div className="delete-notes-list-wrapper" style={{ paddingTop: "16px" }}>
-            <h4 dangerouslySetInnerHTML={{ __html: title }} />
-            <ul className="delete-notes-list" style={{ maxHeight: "200px", overflow: "auto" }}>
-                {noteLinks.map((link, index) => (
-                    <li key={index} dangerouslySetInnerHTML={{ __html: link }} />
-                ))}
-                {moreCount !== undefined && moreCount > 0 && (
-                    <li><em>{t("delete_notes.and_more_clones", { count: moreCount })}</em></li>
-                )}
-            </ul>
+        <div>
+            <OptionsRow
+                name="delete-all-clones"
+                label={t("delete_notes.clones_label")}
+                description={t("delete_notes.delete_clones_description", { count: totalCloneCount })}
+            >
+                <Toggle
+                    currentValue={deleteAllClones}
+                    onChange={setDeleteAllClones}
+                />
+            </OptionsRow>
+            {clonePaths.length > 0 && (
+                <ul className="clone-paths-list">
+                    {clonePaths.map((path, index) => (
+                        <li key={index} dangerouslySetInnerHTML={{ __html: path }} />
+                    ))}
+                    {totalCloneCount > clonePaths.length && (
+                        <li><em>{t("delete_notes.and_more_clones", { count: totalCloneCount - clonePaths.length })}</em></li>
+                    )}
+                </ul>
+            )}
         </div>
     );
 }
@@ -185,18 +226,27 @@ function DeletedNotes({ noteIdsToBeDeleted }: { noteIdsToBeDeleted: DeleteNotesP
 
     if (noteIdsToBeDeleted.length) {
         return (
-            <NotesList
-                title={t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}
-                noteLinks={noteLinks}
-            />
+            <Card heading={t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}>
+                <CardSection>
+                    <ul className="preview-list">
+                        {noteLinks.map((link, index) => (
+                            <li key={index} dangerouslySetInnerHTML={{ __html: link }} />
+                        ))}
+                    </ul>
+                </CardSection>
+            </Card>
         );
-    } else {
-        return (
-            <Alert type="info">
-                {t("delete_notes.no_note_to_delete")}
-            </Alert>
-        )
     }
+
+    return (
+        <Card>
+            <CardSection>
+                <Alert type="info">
+                    {t("delete_notes.no_note_to_delete")}
+                </Alert>
+            </CardSection>
+        </Card>
+    );
 }
 
 function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPreview["brokenRelations"] }) {
@@ -219,60 +269,21 @@ function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPrev
         });
     }, [brokenRelations]);
 
-    if (brokenRelations.length) {
-        return (
-            <Alert type="danger" title={t("delete_notes.broken_relations_to_be_deleted", { relationCount: brokenRelations.length })}>
-                <ul className="broken-relations-list" style={{ maxHeight: "200px", overflow: "auto" }}>
-                    {brokenRelations.map((_, index) => {
-                        return (
-                            <li key={index}>
-                                <span dangerouslySetInnerHTML={{ __html: t("delete_notes.deleted_relation_text", notesWithBrokenRelations[index] as unknown as Record<string, string>) }} />
-                            </li>
-                        );
-                    })}
-                </ul>
-            </Alert>
-        );
-    } else {
-        return <></>;
-    }
-}
-
-interface DeleteAllClonesOptionProps {
-    cloneInfo: CloneInfo;
-    deleteAllClones: boolean;
-    setDeleteAllClones: (value: boolean) => void;
-}
-
-function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones }: DeleteAllClonesOptionProps) {
-    const { totalCloneCount, clonePaths } = cloneInfo;
-
-    if (totalCloneCount === 0) {
-        return (
-            <div className="delete-notes-list-wrapper" style={{ paddingTop: "16px" }}>
-                <h4 style={{ color: "var(--muted-text-color)" }}>
-                    {t("delete_notes.no_clones_message")}
-                </h4>
-            </div>
-        );
+    if (!brokenRelations.length) {
+        return null;
     }
 
     return (
-        <div className="delete-notes-list-wrapper" style={{ paddingTop: "16px" }}>
-            <FormCheckbox
-                name="delete-all-clones"
-                label={t("delete_notes.delete_clones_with_count", { count: totalCloneCount })}
-                currentValue={deleteAllClones}
-                onChange={setDeleteAllClones}
-            />
-            <ul className="delete-notes-list" style={{ maxHeight: "200px", overflow: "auto" }}>
-                {clonePaths.map((path, index) => (
-                    <li key={index} dangerouslySetInnerHTML={{ __html: path }} />
-                ))}
-                {totalCloneCount > clonePaths.length && (
-                    <li><em>{t("delete_notes.and_more_clones", { count: totalCloneCount - clonePaths.length })}</em></li>
-                )}
-            </ul>
-        </div>
+        <Card heading={t("delete_notes.broken_relations_to_be_deleted", { relationCount: brokenRelations.length })}>
+            <CardSection>
+                <ul className="preview-list">
+                    {brokenRelations.map((_, index) => (
+                        <li key={index}>
+                            <span dangerouslySetInnerHTML={{ __html: t("delete_notes.deleted_relation_text", notesWithBrokenRelations[index] as unknown as Record<string, string>) }} />
+                        </li>
+                    ))}
+                </ul>
+            </CardSection>
+        </Card>
     );
 }
