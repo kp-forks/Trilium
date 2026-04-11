@@ -15,6 +15,7 @@ import attributes from "../../services/attributes";
 import froca from "../../services/froca";
 import keyboard_actions from "../../services/keyboard_actions";
 import { ViewScope } from "../../services/link";
+import math from "../../services/math";
 import options, { type OptionValue } from "../../services/options";
 import protected_session_holder from "../../services/protected_session_holder";
 import server from "../../services/server";
@@ -1434,4 +1435,39 @@ export function useColorScheme() {
     }, [ themeStyle ]);
 
     return prefersDark ? "dark" : "light";
+}
+
+/**
+ * Renders math equations within elements that have the `.math-tex` class.
+ * Used by sidebar widgets like Table of Contents and Highlights list to display math content.
+ *
+ * @param containerRef - Ref to the container element that may contain math elements
+ * @param deps - Dependencies that trigger re-rendering (e.g., text content)
+ */
+export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unknown[]) {
+    useEffect(() => {
+        if (!containerRef.current) return;
+        // Support both read-only (.math-tex) and CKEditor editing view (.ck-math-tex) classes
+        const mathElements = containerRef.current.querySelectorAll(".math-tex, .ck-math-tex");
+
+        for (const mathEl of mathElements) {
+            // Skip if already rendered by KaTeX
+            if (mathEl.querySelector(".katex")) continue;
+
+            try {
+                let equation = mathEl.textContent || "";
+
+                // CKEditor widgets store equation without delimiters, add them for KaTeX
+                if (mathEl.classList.contains("ck-math-tex")) {
+                    // Check if it's display mode or inline
+                    const isDisplay = mathEl.classList.contains("ck-math-tex-display");
+                    equation = isDisplay ? `\\[${equation}\\]` : `\\(${equation}\\)`;
+                }
+
+                math.render(equation, mathEl as HTMLElement);
+            } catch (e) {
+                console.warn("Failed to render math:", e);
+            }
+        }
+    }, deps); // eslint-disable-line react-hooks/exhaustive-deps
 }

@@ -46,6 +46,16 @@
     justify-content: center;
 }
 
+.option-row.stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.option-row.stacked .option-row-input {
+    width: 100%;
+}
+
 .option-row-link.use-tn-links {
     text-decoration: none;
     color: inherit;

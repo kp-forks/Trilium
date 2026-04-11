@@ -3,9 +3,8 @@ import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
-import math from "../../services/math";
 import { randomString } from "../../services/utils";
-import { useActiveNoteContext, useContentElement, useIsNoteReadOnly, useNoteProperty, useTextEditor, useTriliumOptionJson } from "../react/hooks";
+import { useActiveNoteContext, useContentElement, useIsNoteReadOnly, useMathRendering, useNoteProperty, useTextEditor, useTriliumOptionJson } from "../react/hooks";
 import Modal from "../react/Modal";
 import RawHtml from "../react/RawHtml";
 import { HighlightsListOptions } from "../type_widgets/options/text_notes";
@@ -111,19 +110,7 @@ function HighlightItem<T extends RawHighlight>({ highlight, onClick }: {
 }) {
     const contentRef = useRef<HTMLElement>(null);
 
-    // Render math equations after component mounts/updates
-    useEffect(() => {
-        if (!contentRef.current) return;
-        const mathElements = contentRef.current.querySelectorAll(".math-tex");
-
-        for (const mathEl of mathElements ?? []) {
-            try {
-                math.render(mathEl.textContent || "", mathEl as HTMLElement);
-            } catch (e) {
-                console.warn("Failed to render math in highlights:", e);
-            }
-        }
-    }, [highlight.text]);
+    useMathRendering(contentRef, [highlight.text]);
 
     return (
         <li onClick={onClick}>
@@ -280,47 +267,65 @@ function ReadOnlyTextHighlightsList() {
     />;
 }
 
-function extractHighlightsFromStaticHtml(el: HTMLElement | null) {
+export function extractHighlightsFromStaticHtml(el: HTMLElement | null) {
     if (!el) return [];
 
-    const { color: defaultColor, backgroundColor: defaultBackgroundColor } = getComputedStyle(el);
-
-    const walker = document.createTreeWalker(
-        el,
-        NodeFilter.SHOW_TEXT,
-        null
-    );
-
     const highlights: DomHighlight[] = [];
+    const processedElements = new Set<Element>();
 
-    let node: Node | null;
-    while ((node = walker.nextNode())) {
-        const el = node.parentElement;
-        if (!el || !node.textContent?.trim()) continue;
+    // Find all elements with inline background-color or color styles
+    const styledElements = el.querySelectorAll<HTMLElement>('[style*="background-color"], [style*="color"]');
 
-        const style = getComputedStyle(el);
+    for (const styledEl of styledElements) {
+        if (processedElements.has(styledEl)) continue;
+        if (!styledEl.textContent?.trim()) continue;
 
-        if (
-            el.closest('strong, em, u') ||
-            style.color !== defaultColor ||
-            style.backgroundColor !== defaultBackgroundColor
-        ) {
-            const attrs: RawHighlight["attrs"] = {
-                bold: !!el.closest("strong"),
-                italic: !!el.closest("em"),
-                underline: !!el.closest("u"),
-                background: el.style.backgroundColor,
-                color: el.style.color
-            };
+        const attrs: RawHighlight["attrs"] = {
+            bold: !!styledEl.closest("strong"),
+            italic: !!styledEl.closest("em"),
+            underline: !!styledEl.closest("u"),
+            background: styledEl.style.backgroundColor,
+            color: styledEl.style.color
+        };
 
-            if (Object.values(attrs).some(Boolean)) {
-                highlights.push({
-                    id: randomString(),
-                    text: node.textContent,
-                    element: el,
-                    attrs
-                });
-            }
+        if (Object.values(attrs).some(Boolean)) {
+            processedElements.add(styledEl);
+
+            highlights.push({
+                id: randomString(),
+                text: styledEl.innerHTML,
+                element: styledEl,
+                attrs
+            });
+        }
+    }
+
+    // Also find bold, italic, underline elements
+    const formattingElements = el.querySelectorAll<HTMLElement>("strong, em, u, b, i");
+
+    for (const formattedEl of formattingElements) {
+        // Skip if already processed or inside a processed element
+        if (processedElements.has(formattedEl)) continue;
+        if (Array.from(processedElements).some(processed => processed.contains(formattedEl))) continue;
+        if (!formattedEl.textContent?.trim()) continue;
+
+        const attrs: RawHighlight["attrs"] = {
+            bold: formattedEl.matches("strong, b"),
+            italic: formattedEl.matches("em, i"),
+            underline: formattedEl.matches("u"),
+            background: formattedEl.style.backgroundColor,
+            color: formattedEl.style.color
+        };
+
+        if (Object.values(attrs).some(Boolean)) {
+            processedElements.add(formattedEl);
+
+            highlights.push({
+                id: randomString(),
+                text: formattedEl.innerHTML,
+                element: formattedEl,
+                attrs
+            });
         }
     }
 

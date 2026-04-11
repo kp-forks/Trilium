@@ -88,17 +88,23 @@
     "also_delete_note": "Also delete the note"
   },
   "delete_notes": {
-    "delete_notes_preview": "Delete notes preview",
+    "title": "Delete notes",
     "close": "Close",
+    "clones_label": "Clones",
+    "delete_clones_description_one": "Also delete {{count}} other clone. Can be undone in recent changes.",
+    "delete_clones_description_other": "Also delete {{count}} other clones. Can be undone in recent changes.",
     "delete_all_clones_description": "Delete also all clones (can be undone in recent changes)",
-    "erase_notes_description": "Normal (soft) deletion only marks the notes as deleted and they can be undeleted (in recent changes dialog) within a period of time. Checking this option will erase the notes immediately and it won't be possible to undelete the notes.",
+    "erase_notes_label": "Erase permanently",
+    "erase_notes_description": "Erase notes immediately instead of soft deletion. This cannot be undone and will force application reload.",
     "erase_notes_warning": "Erase notes permanently (can't be undone), including all clones. This will force application reload.",
-    "notes_to_be_deleted": "Following notes will be deleted ({{notesCount}})",
+    "notes_to_be_deleted": "Notes to be deleted ({{notesCount}})",
     "no_note_to_delete": "No note will be deleted (only clones).",
-    "broken_relations_to_be_deleted": "Following relations will be broken and deleted ({{ relationCount}})",
+    "broken_relations_to_be_deleted": "Broken relations ({{relationCount}})",
+    "table_note_with_relation": "Note with relation",
+    "table_relation": "Relation",
+    "table_points_to": "Points to (deleted)",
     "cancel": "Cancel",
-    "ok": "OK",
-    "deleted_relation_text": "Note {{- note}} (to be deleted) is referenced by relation {{- relation}} originating from {{- source}}."
+    "delete": "Delete"
   },
   "export": {
     "export_note_title": "Export note",
@@ -209,6 +215,7 @@
     "box_size_small": "small (~ 10 lines)",
     "box_size_medium": "medium (~ 30 lines)",
     "box_size_full": "full (box shows complete text)",
+    "box_size_expandable": "expandable (collapsed by default)",
     "button_include": "Include note"
   },
   "info": {
@@ -1876,7 +1883,8 @@
     "theme_none": "No syntax highlighting",
     "theme_group_light": "Light themes",
     "theme_group_dark": "Dark themes",
-    "copy_title": "Copy to clipboard"
+    "copy_title": "Copy to clipboard",
+    "click_to_copy": "Click to copy"
   },
   "classic_editor_toolbar": {
     "title": "Formatting"
