@@ -1450,6 +1450,9 @@ export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unk
         const mathElements = containerRef.current.querySelectorAll(".math-tex");
 
         for (const mathEl of mathElements) {
+            // Skip if already rendered by KaTeX
+            if (mathEl.querySelector(".katex")) continue;
+
             try {
                 math.render(mathEl.textContent || "", mathEl as HTMLElement);
             } catch (e) {
