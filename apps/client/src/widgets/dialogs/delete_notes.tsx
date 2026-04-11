@@ -48,6 +48,8 @@ export default function DeleteNotesDialog() {
 
     useTriliumEvent("showDeleteNotesDialog", (opts) => {
         setOpts(opts);
+        setDeleteAllClones(false);
+        setEraseNotes(!!opts.forceDeleteAllClones);
         setShown(true);
     });
 
