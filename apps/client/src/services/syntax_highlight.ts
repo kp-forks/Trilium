@@ -63,6 +63,7 @@ export function applyInlineCodeCopy($inlineCode: JQuery<HTMLElement>) {
     $inlineCode
         .addClass("copyable-inline-code")
         .attr("title", t("code_block.click_to_copy"))
+        .off("click")
         .on("click", (e) => {
             e.stopPropagation();
 

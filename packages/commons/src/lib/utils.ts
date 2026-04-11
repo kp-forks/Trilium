@@ -26,7 +26,11 @@ function getCircularReplacer() {
 
 export function formatLogMessage(message: string | object) {
     if (typeof message === "object") {
-        return JSON.stringify(message, getCircularReplacer(), 4);
+        try {
+            return JSON.stringify(message, getCircularReplacer(), 4);
+        } catch (e) {
+            return message.toString();
+        }
     }
 
     return message;
