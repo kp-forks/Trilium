@@ -368,7 +368,7 @@
     "calendar_root": "标记应用作为每日笔记的根。只应标记一个笔记。",
     "archived": "含有此标签的笔记默认在搜索结果中不可见（也适用于跳转到、添加链接对话框等）。",
     "exclude_from_export": "笔记（及其子树）不会包含在任何笔记导出中",
-    "run": "定义脚本应运行的事件。可能的值包括：\n<ul>\n<li>frontendStartup - Trilium前端启动时（或刷新时），但不会在移动端执行。</li>\n<li>mobileStartup - Trilium前端启动时（或刷新时）， 在移动端会执行。</li>\n<li>backendStartup - Trilium后端启动时</li>\n<li>hourly - 每小时运行一次。您可以使用附加标签<code>runAtHour</code>指定小时。</li>\n<li>daily - 每天运行一次</li>\n</ul>",
+    "run": "定义脚本应运行的事件。可能的值包括：\n<ul>\n<li>frontendStartup - Trilium前端启动时（或刷新时），但不会在移动端执行。</li>\n<li>mobileStartup - Trilium前端启动时（或刷新时）， 在移动端会执行。</li>\n<li>backendStartup - Trilium后端启动时。</li>\n<li>hourly - 每小时运行一次。您可以使用附加标签<code>runAtHour</code>指定小时。</li>\n<li>daily - 每天运行一次。</li>\n</ul>",
     "run_on_instance": "定义应在哪个Trilium实例上运行。默认为所有实例。",
     "run_at_hour": "应在哪个小时运行。应与<code>#run=hourly</code>一起使用。可以多次定义，以便一天内运行多次。",
     "disable_inclusion": "含有此标签的脚本不会包含在父脚本执行中。",
@@ -804,7 +804,10 @@
     "expand_first_level": "展开直接子代",
     "expand_nth_level": "展开 {{depth}} 层",
     "expand_all_levels": "展开所有层级",
-    "hide_child_notes": "隐藏树中的子笔记"
+    "hide_child_notes": "隐藏树中的子笔记",
+    "open_all_in_tabs": "全部打开",
+    "open_all_in_tabs_tooltip": "在新标签页中打开所有结果",
+    "open_all_confirm": "这将在新标签页中打开 {{count}} 个笔记。继续吗？"
   },
   "edited_notes": {
     "no_edited_notes_found": "今天还没有编辑过的笔记...",
@@ -858,7 +861,8 @@
     "collapse": "折叠到正常大小",
     "title": "笔记地图",
     "fix-nodes": "固定节点",
-    "link-distance": "链接距离"
+    "link-distance": "链接距离",
+    "too-many-notes": "此子树包含 {{count}} 个笔记，超过了笔记地图中可显示的 {{max}} 个笔记的限制。"
   },
   "note_paths": {
     "title": "笔记路径",
@@ -1063,7 +1067,8 @@
     "note_already_in_diagram": "笔记 \"{{title}}\" 已经在图中。",
     "enter_title_of_new_note": "输入新笔记的标题",
     "default_new_note_title": "新笔记",
-    "click_on_canvas_to_place_new_note": "点击画布以放置新笔记"
+    "click_on_canvas_to_place_new_note": "点击画布以放置新笔记",
+    "rename_relation": "重命名关系"
   },
   "backend_log": {
     "refresh": "刷新"
@@ -1337,7 +1342,8 @@
     "date-and-time": "日期和时间",
     "path": "路径",
     "database_backed_up_to": "数据库已备份到 {{backupFilePath}}",
-    "no_backup_yet": "尚无备份"
+    "no_backup_yet": "尚无备份",
+    "download": "下载"
   },
   "etapi": {
     "title": "ETAPI",
@@ -1435,9 +1441,15 @@
   "spellcheck": {
     "title": "拼写检查",
     "description": "这些选项仅适用于桌面版本，浏览器将使用其原生的拼写检查功能。",
-    "enable": "启用拼写检查",
-    "language_code_label": "语言代码",
-    "restart-required": "拼写检查选项的更改将在应用重启后生效。"
+    "enable": "拼写检查",
+    "language_code_label": "拼写检查语言",
+    "restart-required": "拼写检查选项的更改将在应用重启后生效。",
+    "custom_dictionary_title": "自定义词典",
+    "custom_dictionary_description": "添加到词典中的单词会在您的所有设备上同步。",
+    "custom_dictionary_edit": "自定义词",
+    "custom_dictionary_edit_description": "编辑拼写检查器不应标记的单词列表。更改将在重启后生效。",
+    "custom_dictionary_open": "编辑词典",
+    "related_description": "配置拼写检查语言和自定义词典。"
   },
   "sync_2": {
     "config_title": "同步配置",
@@ -1453,7 +1465,7 @@
     "test_description": "测试和同步服务器之间的连接。如果同步服务器没有初始化，会将本地文档同步到同步服务器上。",
     "test_button": "测试同步",
     "handshake_failed": "同步服务器握手失败，错误：{{message}}",
-    "timeout_unit": "毫秒"
+    "timeout_description": "同步连接速度慢时，应该等待多久才放弃？如果网络不稳定，请增加等待时间。"
   },
   "api_log": {
     "close": "关闭"
@@ -1876,7 +1888,7 @@
   },
   "content_language": {
     "title": "内容语言",
-    "description": "选择一种或多种语言出现在只读或可编辑文本注释的基本属性，这将支持拼写检查或从右向左之类的功能。"
+    "description": "在只读或可编辑文本笔记的“基本属性”部分，选择一种或多种语言，这些语言将显示在语言选择列表中。这将启用拼写检查、从右到左的阅读支持和文本提取（OCR）等功能。"
   },
   "switch_layout_button": {
     "title_vertical": "将编辑面板移至底部",
@@ -2231,7 +2243,9 @@
     "sample_xy": "散点图",
     "sample_venn": "韦恩图",
     "sample_ishikawa": "鱼骨图",
-    "placeholder": "输入你的美人鱼图的内容，或者使用下面的示例图之一。"
+    "placeholder": "输入你的美人鱼图的内容，或者使用下面的示例图之一。",
+    "sample_treeview": "树形视图",
+    "sample_wardley": "沃德利地图"
   },
   "llm_chat": {
     "placeholder": "输入消息…",
@@ -2262,7 +2276,8 @@
     "note_context_disabled": "点击即可将当前注释添加到上下文中",
     "no_provider_message": "未配置人工智能提供商。添加一个即可开始对话。",
     "add_provider": "添加人工智能提供商",
-    "note_tools": "笔记访问"
+    "note_tools": "笔记访问",
+    "sources_summary": "来自 {{sites}} 个网站的 {{count}} 个来源"
   },
   "sidebar_chat": {
     "title": "AI对话",
@@ -2285,7 +2300,10 @@
     "processing": "正在处理...",
     "processing_started": "OCR识别已开始。请稍候片刻并刷新页面。",
     "processing_failed": "OCR处理启动失败",
-    "view_extracted_text": "查看提取的文本（OCR）"
+    "view_extracted_text": "查看提取的文本（OCR）",
+    "processing_complete": "OCR识别处理完成。",
+    "text_filtered_low_confidence": "OCR 检测到文本，置信度为 {{confidence}}% ，但由于您的最小阈值为 {{threshold}}% ，因此该文本已被丢弃。",
+    "open_media_settings": "打开设置"
   },
   "mind-map": {
     "addChild": "添加子节点",
@@ -2303,6 +2321,13 @@
   },
   "llm": {
     "settings_description": "配置人工智能和大语言模型集成。",
-    "add_provider": "添加提供商"
+    "add_provider": "添加提供商",
+    "settings_title": "AI / LLM",
+    "feature_not_enabled": "在“设置”→“高级”→“实验性功能”中启用 LLM 实验性功能，即可使用 AI 集成。",
+    "add_provider_title": "添加AI供应商",
+    "configured_providers": "已配置的供应商",
+    "no_providers_configured": "尚未配置任何供应商。",
+    "provider_name": "名称",
+    "provider_type": "供应商"
   }
 }

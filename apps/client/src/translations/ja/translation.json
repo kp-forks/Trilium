@@ -1041,7 +1041,6 @@
     "config_title": "同期設定",
     "server_address": "サーバーインスタンスのアドレス",
     "timeout": "同期タイムアウト",
-    "timeout_unit": "ミリ秒",
     "proxy_label": "同期プロキシサーバー（任意）",
     "note": "注",
     "note_description": "プロキシ設定を空白のままにすると、システムプロキシが使用されます（デスクトップ/electronビルドにのみ適用されます）。",

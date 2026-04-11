@@ -359,7 +359,8 @@
     "tab-switcher-title": "切換分頁",
     "llm-chat-history-title": "AI 對話歷史",
     "llm-title": "AI / LLM",
-    "sidebar-chat-title": "AI 對話"
+    "sidebar-chat-title": "AI 對話",
+    "custom-dictionary-title": "自訂字典"
   },
   "notes": {
     "new-note": "新增筆記",
@@ -405,7 +406,10 @@
     "last-updated": "最近於 {{- date}} 更新",
     "subpages": "子頁面：",
     "on-this-page": "本頁內容",
-    "expand": "展開"
+    "expand": "展開",
+    "toggle-navigation": "切換導航",
+    "toggle-toc": "切換目錄",
+    "logo-alt": "標誌"
   },
   "hidden_subtree_templates": {
     "text-snippet": "文字片段",
@@ -441,5 +445,15 @@
   },
   "desktop": {
     "instance_already_running": "已經有一個執行中的實例，正在將焦點切換到該實例。"
+  },
+  "search": {
+    "error": {
+      "in-context": "{{- context}} 發生錯誤：{{- message}}",
+      "reserved-keyword": "\"{{- token}}\" 是一個保留關鍵字。若要搜尋字面值，請使用引號：\"{{- token}}\"",
+      "cannot-compare-with": "無法與 \"{{- token}}\" 進行比較。若要搜尋字面值，請使用引號：\"{{- token}}\"",
+      "misplaced-expression": "\"{{- token}}\" 的表達式位置不當或不完整",
+      "fulltext-after-expression": "\"{{- token}}\" 不是有效的表達式。若要搜尋文字，請將其置於屬性篩選條件之前（例如：\"{{- token}} #label\"，而非 \"#label {{- token}}\"）。",
+      "unrecognized-expression": "無法辨識的表達式 \"{{- token}}\""
+    }
   }
 }

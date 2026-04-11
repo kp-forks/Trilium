@@ -1483,7 +1483,6 @@
     "config_title": "Cumraíocht Sioncrónaithe",
     "server_address": "Seoladh sampla an fhreastalaí",
     "timeout": "Am scoir sioncrónaithe",
-    "timeout_unit": "milleasoicindí",
     "proxy_label": "Sioncrónaigh freastalaí seachfhreastalaí (roghnach)",
     "note": "Nóta",
     "note_description": "Má fhágann tú an socrú seachfhreastalaí bán, úsáidfear seachfhreastalaí an chórais (baineann sé le tógáil deisce/leictreon amháin).",
