@@ -111,11 +111,8 @@
     "notes_to_be_deleted": "以下のノートが削除されます ({{notesCount}})",
     "no_note_to_delete": "ノートは削除されません（クローンのみ）。",
     "cancel": "キャンセル",
-    "ok": "OK",
     "close": "閉じる",
-    "delete_notes_preview": "ノートのプレビューを削除",
-    "broken_relations_to_be_deleted": "次のリレーション ({{relationCount}})は壊れているので消去されます",
-    "deleted_relation_text": "削除予定のノート{{- note}}は{{- source}}からリレーション{{- relation}}によって参照されています."
+    "broken_relations_to_be_deleted": "次のリレーション ({{relationCount}})は壊れているので消去されます"
   },
   "calendar": {
     "mon": "月",
@@ -576,7 +573,10 @@
     "expand_first_level": "直下の子を展開",
     "expand_nth_level": "{{depth}} 階層下まで展開",
     "expand_all_levels": "すべての階層を展開",
-    "hide_child_notes": "ツリー内の子ノートを非表示"
+    "hide_child_notes": "ツリー内の子ノートを非表示",
+    "open_all_in_tabs": "すべて開く",
+    "open_all_in_tabs_tooltip": "すべての結果を新しいタブで開く",
+    "open_all_confirm": "{{count}} 件のノートが新しいタブで開かれます。続行しますか？"
   },
   "note_types": {
     "geo-map": "ジオマップ",
@@ -1001,7 +1001,8 @@
     "date-and-time": "日時",
     "path": "パス",
     "database_backed_up_to": "データベースは{{backupFilePath}}にバックアップされました",
-    "no_backup_yet": "バックアップがありません"
+    "no_backup_yet": "バックアップがありません",
+    "download": "ダウンロード"
   },
   "password": {
     "wiki": "wiki",
@@ -1050,7 +1051,8 @@
     "test_title": "同期のテスト",
     "test_description": "これは同期サーバとの接続とハンドシェイクをテストします。同期サーバーが初期化されていない場合、ローカルドキュメントと同期するように設定します。",
     "test_button": "同期試行",
-    "handshake_failed": "同期サーバーのハンドシェイクに失敗しました。エラー: {{message}}"
+    "handshake_failed": "同期サーバーのハンドシェイクに失敗しました。エラー: {{message}}",
+    "timeout_description": "同期接続が遅い場合に、接続を諦めるまでの待機時間。ネットワークが不安定な場合は、この時間を長く設定してください。"
   },
   "api_log": {
     "close": "閉じる"
@@ -1541,7 +1543,8 @@
     "collapse": "通常サイズに折りたたむ",
     "title": "ノートマップ",
     "link-distance": "リンク距離",
-    "fix-nodes": "ノードを修正"
+    "fix-nodes": "ノードを修正",
+    "too-many-notes": "このサブツリーには {{count}} 件のノートが含まれており、ノートマップに表示できる {{max}} の上限を超えています。"
   },
   "owned_attribute_list": {
     "owned_attributes": "所有属性"

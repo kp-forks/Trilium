@@ -88,7 +88,6 @@
     "also_delete_note": "Supprimer également la note"
   },
   "delete_notes": {
-    "delete_notes_preview": "Supprimer la note",
     "close": "Fermer",
     "delete_all_clones_description": "Supprimer aussi les clones (peut être annulé dans des modifications récentes)",
     "erase_notes_description": "La suppression normale (douce) marque uniquement les notes comme supprimées et elles peuvent être restaurées (dans la boîte de dialogue des Modifications récentes) dans un délai donné. Cocher cette option effacera les notes immédiatement et il ne sera pas possible de les restaurer.",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "Les notes suivantes seront supprimées ({{notesCount}})",
     "no_note_to_delete": "Aucune note ne sera supprimée (uniquement les clones).",
     "broken_relations_to_be_deleted": "Les relations suivantes seront rompues et supprimées ({{ relationCount}})",
-    "cancel": "Annuler",
-    "ok": "OK",
-    "deleted_relation_text": "Note {{- note}} (à supprimer) est référencée dans la relation {{- relation}} provenant de {{- source}}."
+    "cancel": "Annuler"
   },
   "export": {
     "export_note_title": "Exporter la note",

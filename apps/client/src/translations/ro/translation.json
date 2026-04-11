@@ -459,13 +459,10 @@
     "broken_relations_to_be_deleted": "Următoarele relații vor fi întrerupte și șterse ({{ relationCount}})",
     "cancel": "Anulează",
     "delete_all_clones_description": "Șterge și toate clonele (se pot recupera în ecranul Schimbări recente)",
-    "delete_notes_preview": "Previzualizare ștergerea notițelor",
     "erase_notes_description": "Ștergerea obișnuită doar marchează notițele ca fiind șterse și pot fi recuperate (în ecranul Schimbări recente) pentru o perioadă de timp. Dacă se bifează această opțiune, notițele vor fi șterse imediat fără posibilitatea de a le recupera.",
     "erase_notes_warning": "Șterge notițele permanent (nu se mai pot recupera), incluzând toate clonele. Va forța reîncărcarea aplicației.",
     "no_note_to_delete": "Nicio notiță nu va fi ștearsă (doar clonele).",
     "notes_to_be_deleted": "Următoarele notițe vor fi șterse ({{notesCount}})",
-    "ok": "OK",
-    "deleted_relation_text": "Notița {{- note}} ce va fi ștearsă este referențiată de relația {{- relation}}, originând din {{- source}}.",
     "close": "Închide"
   },
   "delete_relation": {

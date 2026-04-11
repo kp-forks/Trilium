@@ -94,7 +94,6 @@
     "also_delete_note": "Também excluir a nota"
   },
   "delete_notes": {
-    "delete_notes_preview": "Excluir pré-visualização de notas",
     "close": "Fechar",
     "delete_all_clones_description": "Excluir também todos os clones (pode ser desfeito em alterações recentes)",
     "erase_notes_description": "A exclusão normal (suave) apenas marca as notas como excluídas, permitindo que sejam recuperadas (no diálogo de alterações recentes) dentro de um período de tempo. Se esta opção for marcada, as notas serão apagadas imediatamente e não será possível restaurá-las.",
@@ -102,9 +101,7 @@
     "notes_to_be_deleted": "As seguintes notas serão excluídas ({{notesCount}})",
     "no_note_to_delete": "Nenhuma nota será excluída (apenas os clones).",
     "broken_relations_to_be_deleted": "As seguintes relações serão quebradas e excluídas ({{ relationCount}})",
-    "cancel": "Cancelar",
-    "ok": "OK",
-    "deleted_relation_text": "A nota {{- note}} (a ser excluída) está referenciada pela relação {{- relation}} originada de {{- source}}."
+    "cancel": "Cancelar"
   },
   "export": {
     "export_note_title": "Exportar nota",

@@ -78,15 +78,12 @@
   "delete_notes": {
     "cancel": "Anuluj",
     "close": "Zamknij",
-    "delete_notes_preview": "Podgląd usuwania notatek",
     "delete_all_clones_description": "Usuń również wszystkie klony (można cofnąć w oknie Ostatnie zmiany)",
     "erase_notes_description": "Normalne (miękkie) usuwanie jedynie oznacza notatki jako usunięte i można je przywrócić (w oknie Ostatnie zmiany) przez pewien czas. Zaznaczenie tej opcji spowoduje natychmiastowe wymazanie notatek i nie będzie możliwe ich przywrócenie.",
     "erase_notes_warning": "Wymaż notatki trwale (nie można cofnąć), w tym wszystkie klony. Wymusi to przeładowanie aplikacji.",
     "notes_to_be_deleted": "Następujące notatki zostaną usunięte ({{notesCount}})",
     "no_note_to_delete": "Żadna notatka nie zostanie usunięta (tylko klony).",
-    "broken_relations_to_be_deleted": "Następujące relacje zostaną zerwane i usunięte ({{ relationCount}})",
-    "ok": "OK",
-    "deleted_relation_text": "Notatka {{- note}} (do usunięcia) jest powiązana relacją {{- relation}} pochodzącą z {{- source}}."
+    "broken_relations_to_be_deleted": "Następujące relacje zostaną zerwane i usunięte ({{ relationCount}})"
   },
   "export": {
     "close": "Zamknij",
