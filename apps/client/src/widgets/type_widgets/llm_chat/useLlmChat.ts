@@ -259,6 +259,16 @@ export function useLlmChat(
 
         /** Shared cleanup: finalize collected content and reset streaming state. */
         function finalizeStream() {
+            // Mark any in-progress tool calls as stopped so they don't show infinite spinners
+            for (const [i, block] of contentBlocks.entries()) {
+                if (block.type === "tool_call" && !block.toolCall.result) {
+                    contentBlocks[i] = {
+                        type: "tool_call",
+                        toolCall: { ...block.toolCall, result: "[Stopped]", isError: true }
+                    };
+                }
+            }
+
             const finalNewMessages: StoredMessage[] = [];
 
             if (thinkingContent) {
