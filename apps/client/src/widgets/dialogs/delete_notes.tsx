@@ -11,6 +11,11 @@ import Button from "../react/Button.jsx";
 import Alert from "../react/Alert.jsx";
 import { useTriliumEvent } from "../react/hooks.jsx";
 
+interface CloneInfo {
+    totalCloneCount: number;
+    clonePaths: string[];
+}
+
 export interface ResolveOptions {
     proceed: boolean;
     deleteAllClones?: boolean;
@@ -34,8 +39,9 @@ export default function DeleteNotesDialog() {
     const [ deleteAllClones, setDeleteAllClones ] = useState(false);
     const [ eraseNotes, setEraseNotes ] = useState(!!opts.forceDeleteAllClones);
     const [ brokenRelations, setBrokenRelations ] = useState<DeleteNotesPreview["brokenRelations"]>([]);
-    const [ noteIdsToBeDeleted, setNoteIdsToBeDeleted ] = useState<DeleteNotesPreview["noteIdsToBeDeleted"]>([]);    
+    const [ noteIdsToBeDeleted, setNoteIdsToBeDeleted ] = useState<DeleteNotesPreview["noteIdsToBeDeleted"]>([]);
     const [ shown, setShown ] = useState(false);
+    const [ cloneInfo, setCloneInfo ] = useState<CloneInfo>({ totalCloneCount: 0, clonePaths: [] });
     const okButtonRef = useRef<HTMLButtonElement>(null);
 
     useTriliumEvent("showDeleteNotesDialog", (opts) => {
@@ -43,11 +49,53 @@ export default function DeleteNotesDialog() {
         setShown(true);
     })
 
+    // Calculate clone information when branches change
+    useEffect(() => {
+        const { branchIdsToDelete } = opts;
+        if (!branchIdsToDelete || branchIdsToDelete.length === 0) {
+            setCloneInfo({ totalCloneCount: 0, clonePaths: [] });
+            return;
+        }
+
+        async function calculateCloneInfo() {
+            const branches = froca.getBranches(branchIdsToDelete!, true);
+            const uniqueNoteIds = [...new Set(branches.map(b => b.noteId))];
+            const notes = await froca.getNotes(uniqueNoteIds);
+
+            let totalCloneCount = 0;
+            const clonePaths: string[] = [];
+
+            for (const note of notes) {
+                const parentBranches = note.getParentBranches();
+                // Clones are additional parent branches beyond the one being deleted
+                const otherBranches = parentBranches.filter(b => !branchIdsToDelete!.includes(b.branchId));
+
+                if (otherBranches.length > 0) {
+                    totalCloneCount += otherBranches.length;
+
+                    // Get paths for preview (limit to first 5 total)
+                    for (const branch of otherBranches) {
+                        if (clonePaths.length >= 5) break;
+                        const pathHtml = (await link.createLink(note.noteId, {
+                            showNotePath: true,
+                            referenceLink: false
+                        })).html();
+                        clonePaths.push(pathHtml);
+                    }
+                }
+            }
+
+            setCloneInfo({ totalCloneCount, clonePaths });
+        }
+
+        calculateCloneInfo();
+    }, [opts.branchIdsToDelete]);
+
     useEffect(() => {
         const { branchIdsToDelete, forceDeleteAllClones } = opts;
         if (!branchIdsToDelete || branchIdsToDelete.length === 0) {
             return;
-        }        
+        }
 
         server.post<DeleteNotesPreview>("delete-notes-preview", {
             branchIdsToDelete,
@@ -81,8 +129,10 @@ export default function DeleteNotesDialog() {
             </>}
             show={shown}
         >
-            <FormCheckbox name="delete-all-clones" label={t("delete_notes.delete_all_clones_description")}
-                currentValue={deleteAllClones} onChange={setDeleteAllClones}
+            <DeleteAllClonesOption
+                cloneInfo={cloneInfo}
+                deleteAllClones={deleteAllClones}
+                setDeleteAllClones={setDeleteAllClones}
             />
             <FormCheckbox
                 name="erase-notes" label={t("delete_notes.erase_notes_warning")}
@@ -169,4 +219,43 @@ function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPrev
     } else {
         return <></>;
     }
+}
+
+interface DeleteAllClonesOptionProps {
+    cloneInfo: CloneInfo;
+    deleteAllClones: boolean;
+    setDeleteAllClones: (value: boolean) => void;
+}
+
+function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones }: DeleteAllClonesOptionProps) {
+    const { totalCloneCount, clonePaths } = cloneInfo;
+
+    if (totalCloneCount === 0) {
+        return (
+            <div className="clone-info-message" style={{ marginBottom: "10px", color: "var(--muted-text-color)" }}>
+                <em>{t("delete_notes.no_clones_message")}</em>
+            </div>
+        );
+    }
+
+    return (
+        <div className="clone-option-wrapper">
+            <FormCheckbox
+                name="delete-all-clones"
+                label={t("delete_notes.delete_clones_with_count", { count: totalCloneCount })}
+                currentValue={deleteAllClones}
+                onChange={setDeleteAllClones}
+            />
+            {clonePaths.length > 0 && (
+                <ul className="clone-paths-preview" style={{ marginLeft: "24px", marginTop: "4px", fontSize: "0.9em", color: "var(--muted-text-color)" }}>
+                    {clonePaths.map((path, index) => (
+                        <li key={index} dangerouslySetInnerHTML={{ __html: path }} />
+                    ))}
+                    {totalCloneCount > clonePaths.length && (
+                        <li><em>{t("delete_notes.and_more_clones", { count: totalCloneCount - clonePaths.length })}</em></li>
+                    )}
+                </ul>
+            )}
+        </div>
+    );
 }

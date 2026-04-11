@@ -98,7 +98,10 @@
     "broken_relations_to_be_deleted": "Following relations will be broken and deleted ({{ relationCount}})",
     "cancel": "Cancel",
     "ok": "OK",
-    "deleted_relation_text": "Note {{- note}} (to be deleted) is referenced by relation {{- relation}} originating from {{- source}}."
+    "deleted_relation_text": "Note {{- note}} (to be deleted) is referenced by relation {{- relation}} originating from {{- source}}.",
+    "no_clones_message": "The selected notes have no clones.",
+    "delete_clones_with_count": "Also delete {{count}} other clone(s) (can be undone in recent changes)",
+    "and_more_clones": "and {{count}} more..."
   },
   "export": {
     "export_note_title": "Export note",
