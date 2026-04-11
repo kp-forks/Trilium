@@ -21,7 +21,11 @@ export interface Bundle {
 type ScriptParams = any[];
 
 function executeNote(note: BNote, apiParams: ApiParams) {
-    if (!note.isJavaScript() || note.getScriptEnv() !== "backend" || !note.isContentAvailable()) {
+    if (!note.isContentAvailable()) {
+        throw new Error(`Cannot execute script note '${note.noteId}' because it is protected and protected session is not available. Enter protected session and try again.`);
+    }
+
+    if (!note.isJavaScript() || note.getScriptEnv() !== "backend") {
         log.info(`Cannot execute note ${note.noteId} "${note.title}", note must be of type "Code: JS backend"`);
 
         // Warn the user if they're trying to run a frontend script in the backend
@@ -171,7 +175,7 @@ function getScriptBundleForFrontend(note: BNote, script?: string, params?: Scrip
 
 export function getScriptBundle(note: BNote, root: boolean = true, scriptEnv: string | null = null, includedNoteIds: string[] = [], overrideContent: string | null = null): Bundle | undefined {
     if (!note.isContentAvailable()) {
-        return;
+        throw new Error(`Cannot execute script note '${note.noteId}' because it is protected and protected session is not available. Enter protected session and try again.`);
     }
 
     if (!(note.isJavaScript() || note.isHtml() || note.isJsx())) {
