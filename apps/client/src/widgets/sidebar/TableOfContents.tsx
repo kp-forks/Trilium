@@ -260,7 +260,7 @@ function extractTocFromStaticHtml(el: HTMLElement | null) {
         headings.push({
             id: randomString(),
             level: parseInt(headingEl.tagName.substring(1), 10),
-            text: headingEl.textContent,
+            text: headingEl.innerHTML,
             element: headingEl
         });
     }
