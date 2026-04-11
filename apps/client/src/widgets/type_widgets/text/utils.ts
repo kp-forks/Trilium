@@ -8,15 +8,44 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>)
     const note = await froca.getNote(noteId);
     if (!note) return;
 
+    // Get the box size from the parent section element
+    const $section = $el.closest('section.include-note');
+    const boxSize = $section.attr('data-box-size');
+    const isExpandable = boxSize === 'expandable';
+
     const $wrapper = $('<div class="include-note-wrapper">');
     const $link = await link.createLink(note.noteId, {
         showTooltip: false
     });
 
-    $wrapper.empty().append($('<h4 class="include-note-title">').append($link));
+    if (isExpandable) {
+        // Create expandable structure with toggle
+        const $titleRow = $('<div class="include-note-title-row">');
+        const $toggle = $('<button class="include-note-toggle bx bx-chevron-right" aria-expanded="false">');
+        const $title = $('<h4 class="include-note-title">').append($link);
 
-    const { $renderedContent, type } = await content_renderer.getRenderedContent(note);
-    $wrapper.append($(`<div class="include-note-content type-${type}">`).append($renderedContent));
+        $titleRow.append($toggle, $title);
+        $wrapper.append($titleRow);
+
+        const { $renderedContent, type } = await content_renderer.getRenderedContent(note);
+        const $content = $(`<div class="include-note-content type-${type}" style="display: none;">`).append($renderedContent);
+        $wrapper.append($content);
+
+        // Add toggle functionality
+        $toggle.on('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = $toggle.attr('aria-expanded') === 'true';
+            $toggle.attr('aria-expanded', String(!isExpanded));
+            $toggle.toggleClass('expanded');
+            $content.slideToggle(200);
+        });
+    } else {
+        // Standard display
+        $wrapper.append($('<h4 class="include-note-title">').append($link));
+
+        const { $renderedContent, type } = await content_renderer.getRenderedContent(note);
+        $wrapper.append($(`<div class="include-note-content type-${type}">`).append($renderedContent));
+    }
 
     $el.empty().append($wrapper);
 }

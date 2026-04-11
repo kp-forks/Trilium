@@ -7,7 +7,8 @@ export const BOX_SIZE_COMMAND_NAME = 'includeNoteBoxSize';
 export const BOX_SIZES = [
 	{ value: 'small', label: 'Small' },
 	{ value: 'medium', label: 'Medium' },
-	{ value: 'full', label: 'Full' }
+	{ value: 'full', label: 'Full' },
+	{ value: 'expandable', label: 'Expandable' }
 ] as const;
 
 export type BoxSizeValue = typeof BOX_SIZES[number]['value'];

@@ -63,6 +63,7 @@ export default function IncludeNoteDialog() {
                         { label: t("include_note.box_size_small"), value: "small" },
                         { label: t("include_note.box_size_medium"), value: "medium" },
                         { label: t("include_note.box_size_full"), value: "full" },
+                        { label: t("include_note.box_size_expandable"), value: "expandable" },
                     ]}
                 />
             </FormGroup>

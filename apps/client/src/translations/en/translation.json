@@ -215,6 +215,7 @@
     "box_size_small": "small (~ 10 lines)",
     "box_size_medium": "medium (~ 30 lines)",
     "box_size_full": "full (box shows complete text)",
+    "box_size_expandable": "expandable (collapsed by default)",
     "button_include": "Include note"
   },
   "info": {
