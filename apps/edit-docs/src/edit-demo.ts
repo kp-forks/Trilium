@@ -1,9 +1,11 @@
-import { extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
+import { createZipFromDirectory, extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
 import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
 import debounce from "@triliumnext/client/src/services/debounce.js";
 import fs from "fs/promises";
 import { join } from "path";
 import cls from "@triliumnext/server/src/services/cls.js";
+import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
+import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
 
 // Paths are relative to apps/edit-docs/dist.
 const DEMO_ZIP_PATH = join(__dirname, "../../server/src/assets/db/demo.zip");
@@ -50,8 +52,10 @@ async function registerHandlers() {
         eraseService.eraseUnusedAttachmentsNow();
         await exportData();
 
-        await fs.rmdir(DEMO_ZIP_DIR_PATH, { recursive: true }).catch(() => {});
+        await fs.rm(DEMO_ZIP_DIR_PATH, { recursive: true }).catch(() => {});
         await extractZip(DEMO_ZIP_PATH, DEMO_ZIP_DIR_PATH);
+        await cleanUpMeta(DEMO_ZIP_DIR_PATH);
+        await createZipFromDirectory(DEMO_ZIP_DIR_PATH, DEMO_ZIP_PATH);
     }, 10_000);
     events.subscribe(events.ENTITY_CHANGED, async (e) => {
         if (e.entityName === "options") {
@@ -66,6 +70,30 @@ async function registerHandlers() {
 async function exportData() {
     const { exportToZipFile } = (await import("@triliumnext/server/src/services/export/zip.js")).default;
     await exportToZipFile("root", "html", DEMO_ZIP_PATH);
+}
+
+const EXPANDED_NOTE_IDS = new Set([
+    "root",
+    "rvaX6hEaQlmk" // Trilium Demo
+]);
+
+async function cleanUpMeta(dirPath: string) {
+    const metaPath = join(dirPath, "!!!meta.json");
+    const meta = JSON.parse(await fs.readFile(metaPath, "utf-8")) as NoteMetaFile;
+
+    for (const file of meta.files) {
+        file.notePosition = 1;
+        traverse(file);
+    }
+
+    function traverse(el: NoteMeta) {
+        el.isExpanded = EXPANDED_NOTE_IDS.has(el.noteId);
+        for (const child of el.children || []) {
+            traverse(child);
+        }
+    }
+
+    await fs.writeFile(metaPath, JSON.stringify(meta, null, 4));
 }
 
 main();
