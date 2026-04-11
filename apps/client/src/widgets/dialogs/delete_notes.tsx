@@ -124,8 +124,6 @@ export default function DeleteNotesDialog() {
                         deleteAllClones={deleteAllClones}
                         setDeleteAllClones={setDeleteAllClones}
                     />
-                </CardSection>
-                <CardSection>
                     <OptionsRow
                         name="erase-notes"
                         label={t("delete_notes.erase_notes_label")}
@@ -184,7 +182,7 @@ function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones 
 function DeletedNotes({ noteIdsToBeDeleted }: { noteIdsToBeDeleted: DeleteNotesPreview["noteIdsToBeDeleted"] }) {
     return (
         <Card heading={t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}>
-            <CardSection>
+            <CardSection noPadding={noteIdsToBeDeleted.length > 0}>
                 {noteIdsToBeDeleted.length ? (
                     <ul className="preview-list">
                         {noteIdsToBeDeleted.map((noteId) => (
