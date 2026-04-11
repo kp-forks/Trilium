@@ -1447,14 +1447,24 @@ export function useColorScheme() {
 export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unknown[]) {
     useEffect(() => {
         if (!containerRef.current) return;
-        const mathElements = containerRef.current.querySelectorAll(".math-tex");
+        // Support both read-only (.math-tex) and CKEditor editing view (.ck-math-tex) classes
+        const mathElements = containerRef.current.querySelectorAll(".math-tex, .ck-math-tex");
 
         for (const mathEl of mathElements) {
             // Skip if already rendered by KaTeX
             if (mathEl.querySelector(".katex")) continue;
 
             try {
-                math.render(mathEl.textContent || "", mathEl as HTMLElement);
+                let equation = mathEl.textContent || "";
+
+                // CKEditor widgets store equation without delimiters, add them for KaTeX
+                if (mathEl.classList.contains("ck-math-tex")) {
+                    // Check if it's display mode or inline
+                    const isDisplay = mathEl.classList.contains("ck-math-tex-display");
+                    equation = isDisplay ? `\\[${equation}\\]` : `\\(${equation}\\)`;
+                }
+
+                math.render(equation, mathEl as HTMLElement);
             } catch (e) {
                 console.warn("Failed to render math:", e);
             }
