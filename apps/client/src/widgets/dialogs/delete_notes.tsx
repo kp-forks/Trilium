@@ -10,7 +10,6 @@ import froca from "../../services/froca.js";
 import FNote from "../../entities/fnote.js";
 import link from "../../services/link.js";
 import Button from "../react/Button.jsx";
-import Alert from "../react/Alert.jsx";
 import { useTriliumEvent } from "../react/hooks.jsx";
 import { Card, CardSection } from "../react/Card.js";
 import OptionsRow from "../type_widgets/options/components/OptionsRow.js";
@@ -224,26 +223,18 @@ function DeletedNotes({ noteIdsToBeDeleted }: { noteIdsToBeDeleted: DeleteNotesP
         });
     }, [noteIdsToBeDeleted]);
 
-    if (noteIdsToBeDeleted.length) {
-        return (
-            <Card heading={t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}>
-                <CardSection>
+    return (
+        <Card heading={t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}>
+            <CardSection>
+                {noteIdsToBeDeleted.length ? (
                     <ul className="preview-list">
                         {noteLinks.map((link, index) => (
                             <li key={index} dangerouslySetInnerHTML={{ __html: link }} />
                         ))}
                     </ul>
-                </CardSection>
-            </Card>
-        );
-    }
-
-    return (
-        <Card>
-            <CardSection>
-                <Alert type="info">
-                    {t("delete_notes.no_note_to_delete")}
-                </Alert>
+                ) : (
+                    <span className="muted-text">{t("delete_notes.no_note_to_delete")}</span>
+                )}
             </CardSection>
         </Card>
     );
