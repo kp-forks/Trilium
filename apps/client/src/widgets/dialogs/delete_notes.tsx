@@ -146,6 +146,28 @@ export default function DeleteNotesDialog() {
     );
 }
 
+interface NotesListProps {
+    title: string;
+    noteLinks: string[];
+    moreCount?: number;
+}
+
+function NotesList({ title, noteLinks, moreCount }: NotesListProps) {
+    return (
+        <div className="delete-notes-list-wrapper" style={{ paddingTop: "16px" }}>
+            <h4 dangerouslySetInnerHTML={{ __html: title }} />
+            <ul className="delete-notes-list" style={{ maxHeight: "200px", overflow: "auto" }}>
+                {noteLinks.map((link, index) => (
+                    <li key={index} dangerouslySetInnerHTML={{ __html: link }} />
+                ))}
+                {moreCount !== undefined && moreCount > 0 && (
+                    <li><em>{t("delete_notes.and_more_clones", { count: moreCount })}</em></li>
+                )}
+            </ul>
+        </div>
+    );
+}
+
 function DeletedNotes({ noteIdsToBeDeleted }: { noteIdsToBeDeleted: DeleteNotesPreview["noteIdsToBeDeleted"] }) {
     const [ noteLinks, setNoteLinks ] = useState<string[]>([]);
 
@@ -163,15 +185,10 @@ function DeletedNotes({ noteIdsToBeDeleted }: { noteIdsToBeDeleted: DeleteNotesP
 
     if (noteIdsToBeDeleted.length) {
         return (
-            <div className="delete-notes-list-wrapper" style={{paddingTop: "16px"}}>
-                <h4>{t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}</h4>
-    
-                <ul className="delete-notes-list" style={{ maxHeight: "200px", overflow: "auto"}}>
-                    {noteLinks.map((link, index) => (
-                        <li key={index} dangerouslySetInnerHTML={{ __html: link }} />
-                    ))}
-                </ul>
-            </div>
+            <NotesList
+                title={t("delete_notes.notes_to_be_deleted", { notesCount: noteIdsToBeDeleted.length })}
+                noteLinks={noteLinks}
+            />
         );
     } else {
         return (
@@ -232,30 +249,30 @@ function DeleteAllClonesOption({ cloneInfo, deleteAllClones, setDeleteAllClones 
 
     if (totalCloneCount === 0) {
         return (
-            <div className="clone-info-message" style={{ marginBottom: "10px", color: "var(--muted-text-color)" }}>
-                <em>{t("delete_notes.no_clones_message")}</em>
+            <div className="delete-notes-list-wrapper" style={{ paddingTop: "16px" }}>
+                <h4 style={{ color: "var(--muted-text-color)" }}>
+                    {t("delete_notes.no_clones_message")}
+                </h4>
             </div>
         );
     }
 
     return (
-        <div className="clone-option-wrapper">
+        <div className="delete-notes-list-wrapper" style={{ paddingTop: "16px" }}>
             <FormCheckbox
                 name="delete-all-clones"
                 label={t("delete_notes.delete_clones_with_count", { count: totalCloneCount })}
                 currentValue={deleteAllClones}
                 onChange={setDeleteAllClones}
             />
-            {clonePaths.length > 0 && (
-                <ul className="clone-paths-preview" style={{ marginLeft: "24px", marginTop: "4px", fontSize: "0.9em", color: "var(--muted-text-color)" }}>
-                    {clonePaths.map((path, index) => (
-                        <li key={index} dangerouslySetInnerHTML={{ __html: path }} />
-                    ))}
-                    {totalCloneCount > clonePaths.length && (
-                        <li><em>{t("delete_notes.and_more_clones", { count: totalCloneCount - clonePaths.length })}</em></li>
-                    )}
-                </ul>
-            )}
+            <ul className="delete-notes-list" style={{ maxHeight: "200px", overflow: "auto" }}>
+                {clonePaths.map((path, index) => (
+                    <li key={index} dangerouslySetInnerHTML={{ __html: path }} />
+                ))}
+                {totalCloneCount > clonePaths.length && (
+                    <li><em>{t("delete_notes.and_more_clones", { count: totalCloneCount - clonePaths.length })}</em></li>
+                )}
+            </ul>
         </div>
     );
 }
