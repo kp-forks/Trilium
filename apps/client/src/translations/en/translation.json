@@ -99,9 +99,9 @@
     "notes_to_be_deleted": "Notes to be deleted ({{notesCount}})",
     "no_note_to_delete": "No note will be deleted (only clones).",
     "broken_relations_to_be_deleted": "Broken relations ({{relationCount}})",
-    "table_note": "Note",
+    "table_note_with_relation": "Note with relation",
     "table_relation": "Relation",
-    "table_source": "Source",
+    "table_points_to": "Points to (deleted)",
     "cancel": "Cancel",
     "ok": "OK",
     "no_clones_message": "The selected notes have no clones."

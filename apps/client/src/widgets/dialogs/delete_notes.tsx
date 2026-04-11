@@ -221,17 +221,17 @@ function BrokenRelations({ brokenRelations }: { brokenRelations: DeleteNotesPrev
                     <table className="table table-striped">
                         <thead>
                             <tr>
-                                <th>{t("delete_notes.table_note")}</th>
+                                <th>{t("delete_notes.table_note_with_relation")}</th>
                                 <th>{t("delete_notes.table_relation")}</th>
-                                <th>{t("delete_notes.table_source")}</th>
+                                <th>{t("delete_notes.table_points_to")}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {relationsData.map((relation, index) => (
                                 <tr key={index}>
-                                    <td><NoteLink notePath={relation.noteId} showNoteIcon /></td>
-                                    <td><code>{relation.relationName}</code></td>
                                     <td><NoteLink notePath={relation.sourceNoteId} showNoteIcon /></td>
+                                    <td><code>{relation.relationName}</code></td>
+                                    <td><NoteLink notePath={relation.noteId} showNoteIcon /></td>
                                 </tr>
                             ))}
                         </tbody>
