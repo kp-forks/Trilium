@@ -233,15 +233,17 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
 
 	// commenting out click events to allow link click handler to still work
 	//domElement.addEventListener( 'click', stopEventPropagationAndHackRendererFocus, { capture: true } );
+
+	// For mousedown, we need to allow the event to propagate so the widget can be selected,
+	// but we still need to prevent CKEditor from placing a cursor inside.
+	// The data-cke-ignore-events attribute on the wrapper should handle cursor prevention.
 	domElement.addEventListener( 'mousedown', ( evt: Event ) => {
-		evt.stopPropagation();
-		// This prevents rendering changed view selection thus preventing to changing DOM selection while inside a widget.
+		// Don't stop propagation - let the widget selection work naturally
+		// Just prevent the renderer focus hack
 		//@ts-expect-error: We are accessing a private field.
 		editor.editing.view._renderer.isFocused = false;
-
-		// Select the widget when clicking inside it
-		selectIncludeNoteWidget( domElement, editor );
 	}, { capture: true } );
+
 	domElement.addEventListener( 'focus', stopEventPropagationAndHackRendererFocus, { capture: true } );
 
 	// Prevents TAB handling or other editor keys listeners which might be executed on editors selection.
@@ -253,29 +255,4 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
         //@ts-expect-error: We are accessing a private field.
 		editor.editing.view._renderer.isFocused = false;
 	}
-}
-
-function selectIncludeNoteWidget( domElement: HTMLElement, editor: Editor ) {
-	// Find the parent section element (the widget container)
-	const sectionElement = domElement.closest( 'section.include-note' ) as HTMLElement | null;
-	if ( !sectionElement ) {
-		return;
-	}
-
-	// Get the view element from the DOM element
-	const viewElement = editor.editing.view.domConverter.mapDomToView( sectionElement );
-	if ( !viewElement || !viewElement.is( 'element' ) ) {
-		return;
-	}
-
-	// Get the model element from the view element
-	const modelElement = editor.editing.mapper.toModelElement( viewElement );
-	if ( !modelElement ) {
-		return;
-	}
-
-	// Select the model element
-	editor.model.change( writer => {
-		writer.setSelection( modelElement, 'on' );
-	} );
 }
