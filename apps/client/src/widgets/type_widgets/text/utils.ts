@@ -48,6 +48,37 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>)
     }
 
     $el.empty().append($wrapper);
+
+    // Watch for box-size attribute changes and re-render
+    setupBoxSizeObserver($section[0], noteId, $el);
+}
+
+// Track observers to avoid duplicates
+const boxSizeObservers = new WeakMap<Element, MutationObserver>();
+
+function setupBoxSizeObserver(section: Element, noteId: string, $el: JQuery<HTMLElement>) {
+    // Clean up existing observer if any
+    const existingObserver = boxSizeObservers.get(section);
+    if (existingObserver) {
+        existingObserver.disconnect();
+    }
+
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-box-size') {
+                // Re-render the included note with the new box size
+                loadIncludedNote(noteId, $el);
+                break;
+            }
+        }
+    });
+
+    observer.observe(section, {
+        attributes: true,
+        attributeFilter: ['data-box-size']
+    });
+
+    boxSizeObservers.set(section, observer);
 }
 
 export function refreshIncludedNote(container: HTMLDivElement, noteId: string) {
