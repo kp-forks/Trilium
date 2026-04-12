@@ -28,6 +28,7 @@ import filesRoute from "./api/files";
 import importRoute from "./api/import";
 import exportRoute from "./api/export";
 import scriptRoute from "./api/script";
+import backendLogRoute from "./api/backend_log";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -198,6 +199,7 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(PST, "/api/bulk-action/affected-notes", bulkActionRoute.getAffectedNoteCount);
 
     apiRoute(GET, "/api/app-info", appInfoRoute.getAppInfo);
+    asyncApiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
 
     apiRoute(GET, "/api/other/icon-usage", otherRoute.getIconUsage);
     apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);

@@ -1,6 +1,6 @@
 "use strict";
 
-import { getLog } from "@triliumnext/core";
+import { getLog } from "../../services/log.js";
 import { t } from "i18next";
 
 function getBackendLog() {
