@@ -228,11 +228,11 @@ export default function ChatInputBar({
                     )}
                 </div>
                 <ActionButton
-                    icon={chat.isStreaming ? "bx bx-loader-alt bx-spin" : "bx bx-send"}
-                    text={chat.isStreaming ? t("llm_chat.sending") : t("llm_chat.send")}
-                    onClick={handleSubmit}
-                    disabled={chat.isStreaming || !chat.input.trim()}
-                    className="llm-chat-send-btn"
+                    icon={chat.isStreaming ? "bx bx-stop" : "bx bx-send"}
+                    text={chat.isStreaming ? t("llm_chat.stop") : t("llm_chat.send")}
+                    onClick={chat.isStreaming ? chat.stopStreaming : handleSubmit}
+                    disabled={!chat.isStreaming && !chat.input.trim()}
+                    className={`llm-chat-send-btn ${chat.isStreaming ? "llm-chat-stop-btn" : ""}`}
                 />
             </div>
         </form>

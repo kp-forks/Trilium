@@ -21,16 +21,13 @@
   },
   "delete_notes": {
     "close": "Kapat",
-    "delete_notes_preview": "Not önizlemesini sil",
     "delete_all_clones_description": "Tüm klonları da sil (son değişikliklerden geri alınabilir)",
     "erase_notes_description": "Normal (yazılımsal) silme işlemi, notları yalnızca silinmiş olarak işaretler ve belirli bir süre içinde (son değişiklikler iletişim kutusunda) geri alınabilir. Bu seçeneği işaretlemek, notları hemen siler ve notların geri alınması mümkün olmaz.",
     "erase_notes_warning": "Notları, tüm kopyaları da dahil olmak üzere kalıcı olarak silin (geri alınamaz). Bu işlem, uygulamanın yeniden yüklenmesine neden olacaktır.",
     "notes_to_be_deleted": "Aşağıdaki notlar silinecektir. ({{notesCount}})",
     "no_note_to_delete": "Hiçbir not silinmeyecek (sadece kopyaları silinecek).",
     "broken_relations_to_be_deleted": "Aşağıdaki ilişkiler koparılacak ve silinecektir ({{ relationCount}})",
-    "cancel": "İptal",
-    "ok": "Tamam",
-    "deleted_relation_text": "{{- note}} (silinecek) notu, {{- source}} kaynağından kaynaklanan {{- relation}} ilişkisi tarafından referans alınmaktadır."
+    "cancel": "İptal"
   },
   "export": {
     "close": "Kapat",

@@ -1,4 +1,5 @@
 import { ScriptParams } from "@triliumnext/commons";
+import { t } from "i18next";
 import { transform } from "sucrase";
 
 import type Becca from "../becca/becca-interface.js";
@@ -8,6 +9,7 @@ import { getLog } from "./log.js";
 import ScriptContext from "./script_context.js";
 import { getContext } from "./context.js";
 import { unwrapStringOrBuffer } from "./utils/binary.js";
+import ws from "./ws.js";
 
 export interface Bundle {
     note?: BNote;
@@ -19,8 +21,24 @@ export interface Bundle {
 }
 
 function executeNote(note: BNote, apiParams: ApiParams) {
-    if (!note.isJavaScript() || note.getScriptEnv() !== "backend" || !note.isContentAvailable()) {
+    if (!note.isContentAvailable()) {
+        throw new Error(`Cannot execute script note '${note.noteId}' because it is protected and protected session is not available. Enter protected session and try again.`);
+    }
+
+    if (!note.isJavaScript() || note.getScriptEnv() !== "backend") {
         getLog().info(`Cannot execute note ${note.noteId} "${note.getTitleOrProtected()}", note must be of type "Code: JS backend"`);
+
+        // Warn the user if they're trying to run a frontend script in the backend
+        const actualEnv = note.getScriptEnv();
+        if (note.isJavaScript() && actualEnv === "frontend") {
+            const message = t("script.wrong-environment", {
+                noteTitle: note.getTitleOrProtected(),
+                noteId: note.noteId,
+                actualEnv: "frontend",
+                expectedEnv: "backend"
+            });
+            ws.sendMessageToAllClients({ type: "toast", message, timeout: 10000 });
+        }
 
         return;
     }
@@ -119,6 +137,20 @@ function getParams(params?: ScriptParams) {
 }
 
 function getScriptBundleForFrontend(note: BNote, script?: string, params?: ScriptParams) {
+    // Warn the user if they're trying to run a backend script in the frontend
+    if (note.isJavaScript() && note.getScriptEnv() === "backend") {
+        getLog().info(`Cannot execute note ${note.noteId} "${note.getTitleOrProtected()}" in frontend, note is of type "Code: JS backend"`);
+
+        const message = t("script.wrong-environment", {
+            noteTitle: note.getTitleOrProtected(),
+            noteId: note.noteId,
+            actualEnv: "backend",
+            expectedEnv: "frontend"
+        });
+        ws.sendMessageToAllClients({ type: "toast", message, timeout: 10000 });
+        return;
+    }
+
     let overrideContent: string | null = null;
 
     if (script) {
@@ -143,7 +175,7 @@ function getScriptBundleForFrontend(note: BNote, script?: string, params?: Scrip
 
 export function getScriptBundle(note: BNote, root: boolean = true, scriptEnv: string | null = null, includedNoteIds: string[] = [], overrideContent: string | null = null): Bundle | undefined {
     if (!note.isContentAvailable()) {
-        return;
+        throw new Error(`Cannot execute script note '${note.noteId}' because it is protected and protected session is not available. Enter protected session and try again.`);
     }
 
     if (!(note.isJavaScript() || note.isHtml() || note.isJsx())) {

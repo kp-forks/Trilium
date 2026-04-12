@@ -88,7 +88,7 @@ export async function dispatchMessage(message: WebSocketMessage) {
     } else if (messageType === "api-log-messages") {
         appContext.triggerEvent("apiLogMessages", { noteId: msg.noteId, messages: msg.messages });
     } else if (messageType === "toast") {
-        toastService.showMessage(msg.message);
+        toastService.showMessage(msg.message, msg.timeout);
     } else if (messageType === "execute-script") {
         const originEntity = msg.originEntityId ? await froca.getNote(msg.originEntityId) : null;
 

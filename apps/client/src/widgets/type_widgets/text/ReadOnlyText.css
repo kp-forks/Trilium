@@ -56,3 +56,13 @@ body.mobile .note-detail-readonly-text {
 .edit-text-note-button:hover {
     border-color: var(--button-border-color);
 }
+
+/* Inline code click-to-copy */
+.note-detail-readonly-text-content code.copyable-inline-code {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.note-detail-readonly-text-content code.copyable-inline-code:hover {
+    background-color: var(--accented-background-color);
+}

@@ -119,7 +119,6 @@
     "also_delete_note": "Scrios an nóta freisin"
   },
   "delete_notes": {
-    "delete_notes_preview": "Réamhamharc ar scriosadh nótaí",
     "close": "Dún",
     "delete_all_clones_description": "Scrios gach clón freisin (is féidir é seo a chealú in athruithe le déanaí)",
     "erase_notes_description": "Ní mharcálann scriosadh gnáth (bog) ach na nótaí mar scriosta agus is féidir iad a dhíscriosadh (sa dialóg athruithe le déanaí) laistigh de thréimhse ama. Scriosfar na nótaí láithreach má sheiceálann tú an rogha seo agus ní bheidh sé indéanta na nótaí a dhíscriosadh.",
@@ -127,9 +126,7 @@
     "notes_to_be_deleted": "Scriosfar na nótaí seo a leanas ({{notesCount}})",
     "no_note_to_delete": "Ní scriosfar aon nóta (clóin amháin).",
     "broken_relations_to_be_deleted": "Brisfear agus scriosfar na caidrimh seo a leanas ({{ relationCount}})",
-    "cancel": "Cealaigh",
-    "ok": "Ceart go leor",
-    "deleted_relation_text": "Tá tagairt don nóta {{- note}} (le scriosadh) le gaol {{- relation}} a thagann ó {{- source}}."
+    "cancel": "Cealaigh"
   },
   "export": {
     "export_note_title": "Nóta easpórtála",
@@ -1483,7 +1480,6 @@
     "config_title": "Cumraíocht Sioncrónaithe",
     "server_address": "Seoladh sampla an fhreastalaí",
     "timeout": "Am scoir sioncrónaithe",
-    "timeout_unit": "milleasoicindí",
     "proxy_label": "Sioncrónaigh freastalaí seachfhreastalaí (roghnach)",
     "note": "Nóta",
     "note_description": "Má fhágann tú an socrú seachfhreastalaí bán, úsáidfear seachfhreastalaí an chórais (baineann sé le tógáil deisce/leictreon amháin).",

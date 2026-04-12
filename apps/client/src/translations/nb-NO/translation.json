@@ -39,8 +39,7 @@
   },
   "delete_notes": {
     "close": "Lukk",
-    "cancel": "Avbryt",
-    "ok": "OK"
+    "cancel": "Avbryt"
   },
   "export": {
     "close": "Lukk",

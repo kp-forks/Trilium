@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Note**: When updating this file, also update `.github/copilot-instructions.md` to keep both AI coding assistants in sync.
+
 ## Overview
 
 Trilium Notes is a hierarchical note-taking application with synchronization, scripting, and rich text editing. TypeScript monorepo using pnpm with multiple apps and shared packages.
@@ -120,6 +122,15 @@ Frontend widgets in `apps/client/src/widgets/`:
 
 **Widget lifecycle**: `doRenderBody()` for initial render, `refreshWithNote()` for note changes, `entitiesReloadedEvent({loadResults})` for entity updates. Uses jQuery — don't mix React patterns.
 
+#### Reusable Preact Components
+Common UI components are available in `apps/client/src/widgets/react/` — prefer reusing these over creating custom implementations:
+- `NoItems` - Empty state placeholder with icon and message (use for "no results", "too many items", error states)
+- `ActionButton` - Consistent button styling with icon support
+- `FormTextBox` - Text input with validation and controlled input handling
+- `Slider` - Range slider with label
+- `Checkbox`, `RadioButton` - Form controls
+- `CollapsibleSection` - Expandable content sections
+
 Fluent builder pattern: `.child()`, `.class()`, `.css()` chaining with position-based ordering.
 
 ### API Architecture
@@ -152,6 +163,14 @@ SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/servi
 - Schema: `apps/server/src/assets/db/schema.sql`
 - Migrations: `apps/server/src/migrations/YYMMDD_HHMM__description.sql`
 
+### Testing Strategy
+- Server tests run sequentially due to shared database
+- Client tests can run in parallel
+- E2E tests use Playwright for both server and desktop apps
+- Build validation tests check artifact integrity
+- **Write concise tests**: Group related assertions together in a single test case rather than creating many one-shot tests
+- **Extract and test business logic**: When adding pure business logic (e.g., data transformations, migrations, validations), extract it as a separate function and always write unit tests for it
+
 ### Internationalization
 - Translation files in `apps/client/src/translations/`
 - Supported languages: English, German, Spanish, French, Romanian, Chinese
@@ -160,6 +179,11 @@ SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/servi
 - When a translated string contains **interpolated components** (e.g. links, note references) whose order may vary across languages, use `<Trans>` from `react-i18next` instead of `t()`. This lets translators reorder components freely (e.g. `"<Note/> in <Parent/>"` vs `"in <Parent/>, <Note/>"`)
 - When adding a new locale, follow the step-by-step guide in `docs/Developer Guide/Developer Guide/Concepts/Internationalisation  Translations/Adding a new locale.md`
 - **Server-side translations** (e.g. hidden subtree titles) go in `apps/server/src/assets/translations/en/server.json`, not in the client `translation.json`
+
+#### Client vs Server Translation Usage
+- **Client-side**: `import { t } from "../services/i18n"` with keys in `apps/client/src/translations/en/translation.json`
+- **Server-side**: `import { t } from "i18next"` with keys in `apps/server/src/assets/translations/en/server.json`
+- **Interpolation**: Use `{{variable}}` for normal interpolation; use `{{- variable}}` (with hyphen) for **unescaped** interpolation when the value contains special characters like quotes that shouldn't be HTML-escaped
 
 ### Electron Desktop App
 - Desktop entry point: `apps/desktop/src/main.ts`, window management: `apps/server/src/services/window.ts`
@@ -177,6 +201,16 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 ### Client-Side API Restrictions
 - **Do not use `crypto.randomUUID()`** or other Web Crypto APIs that require secure contexts - Trilium can run over HTTP, not just HTTPS
 - Use `randomString()` from `apps/client/src/services/utils.ts` for generating IDs instead
+
+### Storing User Preferences
+- **Do not use `localStorage`** for user preferences — Trilium has a synced options system that persists across devices
+- To add a new user preference:
+  1. Add the option type to `OptionDefinitions` in `packages/commons/src/lib/options_interface.ts`
+  2. Add a default value in `apps/server/src/services/options_init.ts` in the `defaultOptions` array
+  3. **Whitelist the option** in `apps/server/src/routes/api/options.ts` by adding it to `ALLOWED_OPTIONS` (required for client updates)
+  4. Use `useTriliumOption("optionName")` hook in React components to read/write the option
+- Available hooks: `useTriliumOption` (string), `useTriliumOptionBool`, `useTriliumOptionInt`, `useTriliumOptionJson`
+- See `docs/Developer Guide/Developer Guide/Concepts/Options/Creating a new option.md` for detailed documentation
 
 ### Shared Types Policy
 - Types shared between client and server belong in `@triliumnext/commons` (`packages/commons/src/lib/`)

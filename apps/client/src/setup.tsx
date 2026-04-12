@@ -282,7 +282,7 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     async function handleFinishSetup() {
         try {
             const resp = await server.post<SetupSyncFromServerResponse>("setup/sync-from-server", {
-                syncServerHost: syncServerHost.trim(),
+                syncServerHost: syncServerHost.trim().replace(/\/+$/, ""),
                 syncProxy: syncProxy.trim(),
                 password
             });

@@ -88,7 +88,6 @@
     "also_delete_note": "También eliminar la nota"
   },
   "delete_notes": {
-    "delete_notes_preview": "Eliminar vista previa de notas",
     "close": "Cerrar",
     "delete_all_clones_description": "Eliminar también todos los clones (se puede deshacer en cambios recientes)",
     "erase_notes_description": "La eliminación normal (suave) solo marca las notas como eliminadas y se pueden recuperar (en el cuadro de diálogo de cambios recientes) dentro de un periodo de tiempo. Al marcar esta opción se borrarán las notas inmediatamente y no será posible recuperarlas.",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "Las siguientes notas serán eliminadas ({{notesCount}})",
     "no_note_to_delete": "No se eliminará ninguna nota (solo clones).",
     "broken_relations_to_be_deleted": "Las siguientes relaciones se romperán y serán eliminadas ({{ relationCount}})",
-    "cancel": "Cancelar",
-    "ok": "Aceptar",
-    "deleted_relation_text": "Nota {{- note}} (para ser eliminada) está referenciado por la relación {{- relation}} que se origina en {{- source}}."
+    "cancel": "Cancelar"
   },
   "export": {
     "export_note_title": "Exportar nota",
@@ -1332,7 +1329,8 @@
     "date-and-time": "Fecha y hora",
     "path": "Ruta",
     "database_backed_up_to": "Se ha realizado una copia de seguridad de la base de datos en {{backupFilePath}}",
-    "no_backup_yet": "no hay copia de seguridad todavía"
+    "no_backup_yet": "no hay copia de seguridad todavía",
+    "download": "Descargar"
   },
   "etapi": {
     "title": "ETAPI",
@@ -1438,7 +1436,6 @@
     "config_title": "Configuración de sincronización",
     "server_address": "Dirección de la instancia del servidor",
     "timeout": "Tiempo de espera de sincronización (milisegundos)",
-    "timeout_unit": "milisegundos",
     "proxy_label": "Sincronizar servidor proxy (opcional)",
     "note": "Nota",
     "note_description": "Si deja la configuración del proxy en blanco, se utilizará el proxy del sistema (se aplica únicamente a la compilación de escritorio/electron).",
