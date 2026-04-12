@@ -8,6 +8,7 @@ type FileRequest<P> = Omit<Request<P>, "file"> & { file?: File };
 import becca from "../../becca/becca.js";
 import blobService from "../../services/blob.js";
 import imageService from "../../services/image.js";
+import { wrapStringOrBuffer } from "../../services/utils/binary.js";
 
 function getAttachmentBlob(req: Request<{ attachmentId: string }>) {
     const preview = req.query.preview === "true";
@@ -60,8 +61,11 @@ function uploadAttachment(req: FileRequest<{ noteId: string }>) {
     const note = becca.getNoteOrThrow(noteId);
     let url;
 
+    // Convert buffer to Uint8Array (Buffer extends Uint8Array, string needs encoding)
+    const buffer = wrapStringOrBuffer(file.buffer as string | Uint8Array);
+
     if (["image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"].includes(file.mimetype)) {
-        const attachment = imageService.saveImageToAttachment(noteId, file.buffer, file.originalname, true, true);
+        const attachment = imageService.saveImageToAttachment(noteId, buffer, file.originalname, true, true);
         url = `api/attachments/${attachment.attachmentId}/image/${encodeURIComponent(attachment.title)}`;
     } else {
         const attachment = note.saveAttachment({
