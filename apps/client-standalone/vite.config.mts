@@ -115,15 +115,18 @@ let plugins: any = [
         ]
     }),
     // PDF.js viewer for PDF preview support
+    // stripBase: 4 removes packages/pdfjs-viewer/dist/web (or /build)
     viteStaticCopy({
         targets: [
             {
-                src: join(__dirname, "../../packages/pdfjs-viewer/dist/web/**/*"),
+                src: "../../../packages/pdfjs-viewer/dist/web/**/*",
                 dest: "pdfjs/web",
+                rename: { stripBase: 4 }
             },
             {
-                src: join(__dirname, "../../packages/pdfjs-viewer/dist/build/**/*"),
+                src: "../../../packages/pdfjs-viewer/dist/build/**/*",
                 dest: "pdfjs/build",
+                rename: { stripBase: 4 }
             }
         ]
     }),
