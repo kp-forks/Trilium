@@ -17,70 +17,6 @@
 import DOMPurify, { type Config as DOMPurifyConfig } from "dompurify";
 
 /**
- * Tags allowed in sanitized note content. This mirrors the server-side
- * SANITIZER_DEFAULT_ALLOWED_TAGS from @triliumnext/commons plus additional
- * tags needed for CKEditor content rendering (e.g. <section> for included
- * notes, <figure>/<figcaption> for images and tables).
- *
- * Notably absent: <script>, <style>, <iframe>, <object>, <embed>, <form>,
- * <input> (except checkbox via specific attribute allowance), <link>, <meta>.
- */
-const ALLOWED_TAGS = [
-    // Headings
-    "h1", "h2", "h3", "h4", "h5", "h6",
-    // Block elements
-    "blockquote", "p", "div", "pre", "section", "article", "aside",
-    "header", "footer", "hgroup", "main", "nav", "address", "details", "summary",
-    // Lists
-    "ul", "ol", "li", "dl", "dt", "dd", "menu",
-    // Inline formatting
-    "a", "b", "i", "strong", "em", "strike", "s", "del", "ins",
-    "abbr", "code", "kbd", "mark", "q", "time", "var", "wbr",
-    "small", "sub", "sup", "big", "tt", "samp", "dfn", "bdi", "bdo",
-    "cite", "acronym", "data", "rp",
-    // Tables
-    "table", "thead", "caption", "tbody", "tfoot", "tr", "th", "td",
-    "col", "colgroup",
-    // Media
-    "img", "figure", "figcaption", "video", "audio", "picture",
-    "area", "map", "track",
-    // Separators
-    "hr", "br",
-    // Interactive (limited)
-    "label", "input",
-    // Other
-    "span",
-    // CKEditor specific
-    "en-media"
-];
-
-/**
- * Attributes allowed on sanitized elements. DOMPurify uses a flat list
- * of allowed attribute names that apply to all elements.
- */
-const ALLOWED_ATTR = [
-    // Common
-    "class", "style", "title", "id", "dir", "lang", "tabindex",
-    "spellcheck", "translate", "hidden",
-    // Links
-    "href", "target", "rel",
-    // Images & media
-    "src", "alt", "width", "height", "loading", "srcset", "sizes",
-    "controls", "autoplay", "loop", "muted", "preload", "poster",
-    // Data attributes (CKEditor uses these extensively)
-    // DOMPurify allows data-* by default when ADD_ATTR includes them
-    // Tables
-    "colspan", "rowspan", "scope", "headers",
-    // Input (for checkboxes in task lists)
-    "type", "checked", "disabled",
-    // Misc
-    "align", "valign", "center",
-    "open", // for <details>
-    "datetime", // for <time>, <del>, <ins>
-    "cite" // for <blockquote>, <del>, <ins>
-];
-
-/**
  * URI-safe protocols allowed in href/src attributes.
  * Blocks javascript:, vbscript:, and other dangerous schemes.
  */
@@ -90,18 +26,38 @@ const ALLOWED_URI_REGEXP = /^(?:(?:https?|ftps?|mailto|evernote|file|gemini|git|
 
 /**
  * DOMPurify configuration for sanitizing note content.
+ *
+ * Uses DOMPurify's built-in security-researched profiles for HTML, SVG, and
+ * MathML rather than a hand-maintained tag allowlist. This ensures proper
+ * namespace handling (critical for SVG rendering in mermaid/canvas/mind-map
+ * notes and MathML in KaTeX equations) while staying current with DOMPurify's
+ * upstream security fixes.
+ *
+ * Defense-in-depth is provided via FORBID_TAGS / FORBID_ATTR which explicitly
+ * block known-dangerous elements and all event-handler attributes, regardless
+ * of what the profiles permit.
  */
 const PURIFY_CONFIG: DOMPurifyConfig = {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
+    // Enable DOMPurify's curated safe-element sets for HTML, SVG, and MathML.
+    // This replaces a manual ALLOWED_TAGS list and correctly handles namespace
+    // parsing (e.g. SVG elements must be in the SVG namespace to render).
+    USE_PROFILES: { html: true, svg: true, svgFilters: true, mathMl: true },
     ALLOWED_URI_REGEXP,
-    // Allow data-* attributes (used extensively by CKEditor)
+    // CKEditor data-* attributes not in the default set
     ADD_ATTR: ["data-note-id", "data-note-path", "data-href", "data-language",
                "data-value", "data-box-type", "data-link-id", "data-no-context-menu"],
-    // Do not allow <style> or <script> tags
+    // CKEditor custom elements
+    ADD_TAGS: ["en-media"],
+    // ── Explicit deny-lists (defense-in-depth) ──
+    // Script execution vectors
     FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "link", "meta",
-                  "base", "noscript", "template"],
-    // Do not allow event handler attributes
+                  "base", "noscript", "template",
+                  // SVG elements that can execute scripts or embed arbitrary HTML
+                  "foreignObject",
+                  // SVG animation elements — can trigger event handlers via
+                  // onbegin/onend/onrepeat attributes
+                  "animate", "animateMotion", "animateTransform", "set"],
+    // All DOM event-handler attributes
     FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus",
                   "onblur", "onsubmit", "onreset", "onchange", "oninput",
                   "onkeydown", "onkeyup", "onkeypress", "onmousedown",
@@ -114,16 +70,14 @@ const PURIFY_CONFIG: DOMPurifyConfig = {
                   "ontransitionend", "onpointerdown", "onpointerup",
                   "onpointermove", "onpointerover", "onpointerout",
                   "onpointerenter", "onpointerleave", "ontouchstart",
-                  "ontouchend", "ontouchmove", "ontouchcancel"],
+                  "ontouchend", "ontouchmove", "ontouchcancel",
+                  // SVG animation event handlers
+                  "onbegin", "onend", "onrepeat"],
     // Allow data: URIs only for images (needed for inline images)
     ADD_DATA_URI_TAGS: ["img"],
-    // Return a string
     RETURN_DOM: false,
     RETURN_DOM_FRAGMENT: false,
-    // Keep the document structure intact
-    WHOLE_DOCUMENT: false,
-    // Allow target attribute on links
-    ADD_TAGS: []
+    WHOLE_DOCUMENT: false
 };
 
 // Configure a DOMPurify hook to handle data-* attributes more broadly

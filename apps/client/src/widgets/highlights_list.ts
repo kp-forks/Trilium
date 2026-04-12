@@ -16,21 +16,29 @@ import RightPanelWidget from "./right_panel_widget.js";
 import DOMPurify, { type Config as DOMPurifyConfig } from "dompurify";
 
 /**
- * DOMPurify configuration for highlight list items. Only allows inline
- * formatting tags that appear in highlighted text (bold, italic, underline,
- * colored/background-colored spans, KaTeX math output).
+ * DOMPurify configuration for highlight list items. Uses built-in HTML and
+ * MathML profiles for proper namespace handling (KaTeX equations), then
+ * restricts to inline-only elements via FORBID_TAGS.
  */
 const HIGHLIGHT_PURIFY_CONFIG: DOMPurifyConfig = {
-    ALLOWED_TAGS: [
-        "b", "i", "em", "strong", "u", "s", "del", "sub", "sup",
-        "code", "mark", "span", "abbr", "small", "a",
-        // KaTeX rendering output elements
-        "math", "semantics", "mrow", "mi", "mo", "mn", "msup",
-        "msub", "mfrac", "mover", "munder", "munderover",
-        "msqrt", "mroot", "mtable", "mtr", "mtd", "mtext",
-        "mspace", "annotation"
+    USE_PROFILES: { html: true, mathMl: true },
+    FORBID_TAGS: [
+        "script", "style", "iframe", "object", "embed", "link", "meta",
+        "base", "noscript", "template", "form", "input", "textarea",
+        "button", "select", "option",
+        "div", "p", "h1", "h2", "h3", "h4", "h5", "h6",
+        "blockquote", "pre", "section", "article", "aside", "nav",
+        "header", "footer", "main", "figure", "figcaption",
+        "table", "thead", "tbody", "tfoot", "tr", "th", "td",
+        "ul", "ol", "li", "dl", "dt", "dd",
+        "hr", "img", "video", "audio", "picture", "canvas",
+        "svg", "foreignObject"
     ],
-    ALLOWED_ATTR: ["class", "style", "href", "aria-hidden", "encoding", "xmlns"],
+    FORBID_ATTR: [
+        "onerror", "onload", "onclick", "onmouseover", "onfocus",
+        "onblur", "onsubmit", "onreset", "onchange", "oninput",
+        "onkeydown", "onkeyup", "onkeypress"
+    ],
     RETURN_DOM: false,
     RETURN_DOM_FRAGMENT: false
 };
