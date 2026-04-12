@@ -1,7 +1,6 @@
 import { type AttributeRow, dayjs, formatLogMessage } from "@triliumnext/commons";
 import AbstractBeccaEntity from "../becca/entities/abstract_becca_entity";
 import Becca from "../becca/becca-interface";
-import axios from "axios";
 import * as cheerio from "cheerio";
 import * as htmlParser from "node-html-parser";
 import xml2js from "xml2js";

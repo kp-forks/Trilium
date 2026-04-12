@@ -71,7 +71,7 @@ async function startApplication() {
         messaging: new WebSocketMessagingProvider(),
         schema: loadCoreSchema(),
         platform: new ServerPlatformProvider(),
-        translations: (await import("./services/i18n.js")).initializeTranslations,
+        translations: (await import("./services/i18n.js")).initializeTranslationsWithParams,
         // demo.zip is a server-owned asset; src/assets is copied to dist/assets
         // by the build script, so the same RESOURCE_DIR-relative path works in
         // both source and bundled-production modes.
