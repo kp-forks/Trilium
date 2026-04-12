@@ -142,7 +142,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
         dataDirectory: string;
     };
     log?: LogService;
-    backup?: BackupService;
+    backup: BackupService;
 }) {
     initPlatform(platform);
     initLog(log);

@@ -8,6 +8,7 @@ import HappyDomHtmlParser from "happy-dom/lib/html-parser/HTMLParser.js";
 import serverEnTranslations from "../../server/src/assets/translations/en/server.json";
 import { beforeAll } from "vitest";
 
+import NoopBackupService from "./lightweight/backup_provider.js";
 import BrowserExecutionContext from "./lightweight/cls_provider.js";
 import BrowserCryptoProvider from "./lightweight/crypto_provider.js";
 import StandalonePlatformProvider from "./lightweight/platform_provider.js";
@@ -129,6 +130,7 @@ beforeAll(async () => {
             });
         },
         platform: new StandalonePlatformProvider(""),
+        backup: new NoopBackupService(),
         schema: schemaSql,
         dbConfig: {
             provider: sqlProvider,
