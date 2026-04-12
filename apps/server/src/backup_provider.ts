@@ -12,7 +12,7 @@ export default class ServerBackupService extends BackupService {
         super(options);
     }
 
-    override getExistingBackups(): DatabaseBackup[] {
+    override async getExistingBackups(): Promise<DatabaseBackup[]> {
         if (!fs.existsSync(dataDir.BACKUP_DIR)) {
             return [];
         }

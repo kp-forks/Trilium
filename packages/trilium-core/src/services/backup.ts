@@ -39,7 +39,7 @@ export default abstract class BackupService {
     /**
      * Get list of existing backups.
      */
-    abstract getExistingBackups(): DatabaseBackup[];
+    abstract getExistingBackups(): Promise<DatabaseBackup[]>;
 
     /**
      * Run the scheduled backup checks for daily, weekly, and monthly backups.

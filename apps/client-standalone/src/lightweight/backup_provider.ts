@@ -72,17 +72,7 @@ export default class StandaloneBackupService extends BackupService {
         }
     }
 
-    override getExistingBackups(): DatabaseBackup[] {
-        // This method is synchronous in the interface, but OPFS is async.
-        // Return empty array - the UI can use an async method if needed.
-        // A future improvement could cache the backup list.
-        return [];
-    }
-
-    /**
-     * Async version of getExistingBackups for use in standalone UI.
-     */
-    async getExistingBackupsAsync(): Promise<DatabaseBackup[]> {
+    override async getExistingBackups(): Promise<DatabaseBackup[]> {
         if (!this.isOpfsAvailable()) {
             return [];
         }
@@ -100,7 +90,6 @@ export default class StandaloneBackupService extends BackupService {
                     continue;
                 }
 
-                // OPFS doesn't provide mtime, so we parse from filename or use current time
                 const file = await (handle as FileSystemFileHandle).getFile();
                 backups.push({
                     fileName: name,

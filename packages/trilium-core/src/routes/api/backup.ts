@@ -1,7 +1,7 @@
 import type { BackupDatabaseNowResponse, DatabaseBackup } from "@triliumnext/commons";
 import { getBackup } from "../../services/backup.js";
 
-function getExistingBackups(): DatabaseBackup[] {
+async function getExistingBackups(): Promise<DatabaseBackup[]> {
     return getBackup().getExistingBackups();
 }
 

@@ -42,12 +42,36 @@ export default class StandaloneLogService extends FileBasedLogService {
         }
 
         const fileHandle = await this.logDir!.getFileHandle(fileName, { create: true });
-        this.currentFile = await fileHandle.createSyncAccessHandle();
+
+        // Try to create sync access handle with retry logic for worker restarts
+        // Previous worker may have left handle open before being terminated
+        const maxRetries = 3;
+        const retryDelay = 100;
+
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                this.currentFile = await fileHandle.createSyncAccessHandle();
+                break;
+            } catch (error) {
+                if (attempt === maxRetries - 1) {
+                    // Last attempt failed - fall back to console-only logging
+                    console.warn("[LogService] Could not open log file, using console-only logging:", error);
+                    this.currentFile = null;
+                    this.currentFileName = "";
+                    return;
+                }
+                // Wait before retrying - previous handle may be released
+                await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+            }
+        }
+
         this.currentFileName = fileName;
 
         // Seek to end for appending
-        const size = this.currentFile.getSize();
-        this.currentFile.truncate(size); // No-op, but ensures we're at the right position
+        if (this.currentFile) {
+            const size = this.currentFile.getSize();
+            this.currentFile.truncate(size); // No-op, but ensures we're at the right position
+        }
     }
 
     protected override closeLogFile(): void {
