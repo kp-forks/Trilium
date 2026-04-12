@@ -59,7 +59,7 @@ let BrowserZipProvider: typeof import('./lightweight/zip_provider').default;
 let FetchRequestProvider: typeof import('./lightweight/request_provider').default;
 let StandalonePlatformProvider: typeof import('./lightweight/platform_provider').default;
 let StandaloneLogService: typeof import('./lightweight/log_provider').default;
-let NoopBackupService: typeof import('./lightweight/backup_provider').default;
+let StandaloneBackupService: typeof import('./lightweight/backup_provider').default;
 let translationProvider: typeof import('./lightweight/translation_provider').default;
 let createConfiguredRouter: typeof import('./lightweight/browser_routes').createConfiguredRouter;
 
@@ -114,7 +114,7 @@ async function loadModules(): Promise<void> {
     FetchRequestProvider = requestModule.default;
     StandalonePlatformProvider = platformModule.default;
     StandaloneLogService = logModule.default;
-    NoopBackupService = backupModule.default;
+    StandaloneBackupService = backupModule.default;
     translationProvider = translationModule.default;
     createConfiguredRouter = routesModule.createConfiguredRouter;
 
@@ -176,7 +176,7 @@ async function initialize(): Promise<void> {
                 request: new FetchRequestProvider(),
                 platform: new StandalonePlatformProvider(queryString),
                 log: logService,
-                backup: new NoopBackupService(),
+                backup: new StandaloneBackupService(),
                 translations: translationProvider,
                 schema: schemaModule.default,
                 getDemoArchive: async () => {

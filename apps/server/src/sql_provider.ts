@@ -46,6 +46,11 @@ export default class BetterSqlite3Provider implements DatabaseProvider {
         this.dbConnection?.backup(destinationFile);
     }
 
+    serialize(): Uint8Array {
+        // Server uses backup() for file-based backups, serialize() is only needed for standalone (OPFS)
+        throw new Error("serialize() is not implemented on the server - use backup() instead");
+    }
+
     prepare(query: string): Statement {
         if (!this.dbConnection) throw new Error("DB not open.");
         // Cast is safe: better-sqlite3 only returns bigint when safeIntegers() is enabled, which we don't use.
