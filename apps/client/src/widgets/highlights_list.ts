@@ -9,17 +9,18 @@ import appContext, { type EventData } from "../components/app_context.js";
 import type FNote from "../entities/fnote.js";
 import attributeService from "../services/attributes.js";
 import { t } from "../services/i18n.js";
+import katex from "../services/math.js";
 import options from "../services/options.js";
 import OnClickButtonWidget from "./buttons/onclick_button.js";
 import RightPanelWidget from "./right_panel_widget.js";
-import DOMPurify from "dompurify";
+import DOMPurify, { type Config as DOMPurifyConfig } from "dompurify";
 
 /**
  * DOMPurify configuration for highlight list items. Only allows inline
  * formatting tags that appear in highlighted text (bold, italic, underline,
  * colored/background-colored spans, KaTeX math output).
  */
-const HIGHLIGHT_PURIFY_CONFIG: DOMPurify.Config = {
+const HIGHLIGHT_PURIFY_CONFIG: DOMPurifyConfig = {
     ALLOWED_TAGS: [
         "b", "i", "em", "strong", "u", "s", "del", "sub", "sup",
         "code", "mark", "span", "abbr", "small", "a",
@@ -145,6 +146,77 @@ export default class HighlightsListWidget extends RightPanelWidget {
         this.triggerCommand("reEvaluateRightPaneVisibility");
     }
 
+    extractOuterTag(htmlStr: string | null) {
+        if (htmlStr === null) {
+            return null;
+        }
+        // Regular expressions that match only the outermost tag
+        const regex = /^<([a-zA-Z]+)([^>]*)>/;
+        const match = htmlStr.match(regex);
+        if (match) {
+            const tagName = match[1].toLowerCase(); // Extract tag name
+            const attributes = match[2].trim(); // Extract label attributes
+            return { tagName, attributes };
+        }
+        return null;
+    }
+
+    areOuterTagsConsistent(str1: string | null, str2: string | null) {
+        const tag1 = this.extractOuterTag(str1);
+        const tag2 = this.extractOuterTag(str2);
+        // If one of them has no label, returns false
+        if (!tag1 || !tag2) {
+            return false;
+        }
+        // Compare tag names and attributes to see if they are the same
+        return tag1.tagName === tag2.tagName && tag1.attributes === tag2.attributes;
+    }
+
+    /**
+     * Rendering formulas in strings using katex
+     *
+     * @param html Note's html content
+     * @returns The HTML content with mathematical formulas rendered by KaTeX.
+     */
+    async replaceMathTextWithKatax(html: string) {
+        const mathTextRegex = /<span class="math-tex">\\\(([\s\S]*?)\\\)<\/span>/g;
+        const matches = [...html.matchAll(mathTextRegex)];
+        let modifiedText = html;
+
+        if (matches.length > 0) {
+            // Process all matches asynchronously
+            for (const match of matches) {
+                const latexCode = match[1];
+                let rendered;
+
+                try {
+                    rendered = katex.renderToString(latexCode, {
+                        throwOnError: false
+                    });
+                } catch (e) {
+                    if (e instanceof ReferenceError && e.message.includes("katex is not defined")) {
+                        // Load KaTeX if it is not already loaded
+                        try {
+                            rendered = katex.renderToString(latexCode, {
+                                throwOnError: false
+                            });
+                        } catch (renderError) {
+                            console.error("KaTeX rendering error after loading library:", renderError);
+                            rendered = match[0]; // Fall back to original if error persists
+                        }
+                    } else {
+                        console.error("KaTeX rendering error:", e);
+                        rendered = match[0]; // Fall back to original on error
+                    }
+                }
+
+                // Replace the matched formula in the modified text
+                modifiedText = modifiedText.replace(match[0], rendered);
+            }
+        }
+        return modifiedText;
+    }
+
     async getHighlightList(content: string, optionsHighlightsList: string[]) {
         // matches a span containing background-color
         const regex1 = /<span[^>]*style\s*=\s*[^>]*background-color:[^>]*?>[\s\S]*?<\/span>/gi;
@@ -188,6 +260,9 @@ export default class HighlightsListWidget extends RightPanelWidget {
         const $highlightsList = $("<ol>");
         let prevEndIndex = -1,
             hlLiCount = 0;
+        let prevSubHtml: string | null = null;
+        // Used to determine if a string is only a formula
+        const onlyMathRegex = /^<span class="math-tex">\\\([^\)]*?\)<\/span>(?:<span class="math-tex">\\\([^\)]*?\)<\/span>)*$/;
 
         for (let match: RegExpMatchArray | null = null, hltIndex = 0; (match = combinedRegex.exec(content)) !== null; hltIndex++) {
             const subHtml = match[0];
@@ -201,7 +276,7 @@ export default class HighlightsListWidget extends RightPanelWidget {
 
             if (prevEndIndex !== -1 && startIndex === prevEndIndex) {
                 // If the previous element is connected to this element in HTML, then concatenate them into one.
-                $highlightsList.children().last().append(DOMPurify.sanitize(subHtml, HIGHLIGHT_PURIFY_CONFIG));
+                $highlightsList.children().last().append(DOMPurify.sanitize(subHtml, HIGHLIGHT_PURIFY_CONFIG) as string);
             } else {
                 const hasText = $(subHtml).text().trim();
 
@@ -210,12 +285,12 @@ export default class HighlightsListWidget extends RightPanelWidget {
                     //If the two elements have the same style and there are only formulas in between, append the formulas and the current element to the end of the previous element.
                     if (this.areOuterTagsConsistent(prevSubHtml, subHtml) && onlyMathRegex.test(substring)) {
                         const $lastLi = $highlightsList.children("li").last();
-                        $lastLi.append(DOMPurify.sanitize(await this.replaceMathTextWithKatax(substring), HIGHLIGHT_PURIFY_CONFIG));
-                        $lastLi.append(DOMPurify.sanitize(subHtml, HIGHLIGHT_PURIFY_CONFIG));
+                        $lastLi.append(DOMPurify.sanitize(await this.replaceMathTextWithKatax(substring), HIGHLIGHT_PURIFY_CONFIG) as string);
+                        $lastLi.append(DOMPurify.sanitize(subHtml, HIGHLIGHT_PURIFY_CONFIG) as string);
                     } else {
                         $highlightsList.append(
                             $("<li>")
-                                .html(DOMPurify.sanitize(subHtml, HIGHLIGHT_PURIFY_CONFIG))
+                                .html(DOMPurify.sanitize(subHtml, HIGHLIGHT_PURIFY_CONFIG) as string)
                                 .on("click", () => this.jumpToHighlightsList(findSubStr, hltIndex))
                         );
                     }
@@ -227,6 +302,7 @@ export default class HighlightsListWidget extends RightPanelWidget {
                 }
             }
             prevEndIndex = endIndex;
+            prevSubHtml = subHtml;
         }
         return {
             $highlightsList,
