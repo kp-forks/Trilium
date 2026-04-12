@@ -6,6 +6,7 @@ import type BNote from "../../becca/entities/bnote.js";
 import type BRevision from "../../becca/entities/brevision.js";
 import imageService from "../../services/image.js";
 import { RESOURCE_DIR } from "../../services/resource_dir.js";
+import { setSvgHeaders } from "../../services/svg_sanitizer.js";
 import { sanitizeSvg } from "../../services/utils.js";
 
 function returnImageFromNote(req: Request<{ noteId: string }>, res: Response) {
@@ -143,6 +144,6 @@ export default {
 
 function sendSanitizedSvg(res: Response, content: string | Buffer) {
     const svgString = typeof content === "string" ? content : content.toString("utf-8");
-    res.set("Content-Security-Policy", "script-src 'none'");
+    setSvgHeaders(res);
     res.send(sanitizeSvg(svgString));
 }
