@@ -12,6 +12,7 @@ import hidden_subtree from "./hidden_subtree";
 import TaskContext from "./task_context";
 import BOption from "../becca/entities/boption";
 import migrationService from "./migration";
+import passwordService from "./encryption/password";
 
 export const dbReady = deferred<void>();
 
@@ -166,7 +167,7 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
         initDocumentOptions();
         initNotSyncedOptions(true, {});
         initStartupOptions();
-        // password.resetPassword();
+        passwordService.resetPassword();
     });
 
     // Check hidden subtree.

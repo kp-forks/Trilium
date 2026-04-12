@@ -30,6 +30,8 @@ import exportRoute from "./api/export";
 import scriptRoute from "./api/script";
 import backendLogRoute from "./api/backend_log";
 import backupRoute from "./api/backup";
+import passwordApiRoute from "./api/password";
+import loginApiRoute from "./api/login";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -236,6 +238,15 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(GET, "/api/script/widgets", scriptRoute.getWidgetBundles);
     apiRoute(PST, "/api/script/bundle/:noteId", scriptRoute.getBundle);
     apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
+    //#endregion
+
+    //#region Password and protected session
+    asyncApiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
+    apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
+
+    asyncApiRoute(PST, "/api/login/protected", loginApiRoute.loginToProtectedSession);
+    apiRoute(PST, "/api/login/protected/touch", loginApiRoute.touchProtectedSession);
+    apiRoute(PST, "/api/logout/protected", loginApiRoute.logoutFromProtectedSession);
     //#endregion
 }
 

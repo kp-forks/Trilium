@@ -28,7 +28,6 @@ import llmSpecialNotesRoute from "./api/llm_special_notes.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import ocrRoute from "./api/ocr.js";
-import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
 import senderRoute from "./api/sender.js";
 import systemInfoRoute from "./api/system_info.js";
@@ -124,9 +123,6 @@ function register(app: express.Application) {
     // TODO: Re-enable once we support route()
     // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
 
-    asyncApiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
-    apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
-
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
     apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);
 
@@ -134,12 +130,7 @@ function register(app: express.Application) {
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);
 
     route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
-    // this is for entering protected mode so user has to be already logged-in (that's the reason we don't require username)
-    asyncApiRoute(PST, "/api/login/protected", loginApiRoute.loginToProtectedSession);
-    apiRoute(PST, "/api/login/protected/touch", loginApiRoute.touchProtectedSession);
-    apiRoute(PST, "/api/logout/protected", loginApiRoute.logoutFromProtectedSession);
-
-    route(PST, "/api/login/token", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
+    asyncRoute(PST, "/api/login/token", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
 
     apiRoute(GET, "/api/etapi-tokens", etapiTokensApiRoutes.getTokens);
     apiRoute(PST, "/api/etapi-tokens", etapiTokensApiRoutes.createToken);
@@ -180,7 +171,7 @@ function register(app: express.Application) {
     apiRoute(GET, "/api/llm-chat/models", llmChatRoute.getModels);
 
     // no CSRF since this is called from android app
-    route(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
+    asyncRoute(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
     asyncRoute(PST, "/api/sender/image", [auth.checkEtapiToken, uploadMiddlewareWithErrorHandling], senderRoute.uploadImage, apiResultHandler);
     asyncRoute(PST, "/api/sender/note", [auth.checkEtapiToken], senderRoute.saveNote, apiResultHandler);
 
