@@ -1,8 +1,6 @@
 export interface Cipher {
     update(data: Uint8Array): Uint8Array;
     final(): Uint8Array;
-    /** Async finalization for browser environments where Web Crypto API is async-only */
-    finalizeAsync?(): Promise<Uint8Array>;
 }
 
 export interface ScryptOptions {

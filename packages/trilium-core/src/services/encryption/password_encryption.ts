@@ -31,7 +31,7 @@ export async function setDataKey(
     plainTextDataKey: string | Uint8Array
 ): Promise<void> {
     const passwordDerivedKey = await scryptService.getPasswordDerivedKey(password);
-    const newEncryptedDataKey = await data_encryption.encryptAsync(passwordDerivedKey, plainTextDataKey);
+    const newEncryptedDataKey = data_encryption.encrypt(passwordDerivedKey, plainTextDataKey);
     options.setOption("encryptedDataKey", newEncryptedDataKey);
 }
 
@@ -41,7 +41,7 @@ export async function setDataKey(
 export async function getDataKey(password: string): Promise<Uint8Array | false | null> {
     const passwordDerivedKey = await scryptService.getPasswordDerivedKey(password);
     const encryptedDataKey = options.getOption("encryptedDataKey");
-    return data_encryption.decryptAsync(passwordDerivedKey, encryptedDataKey);
+    return data_encryption.decrypt(passwordDerivedKey, encryptedDataKey);
 }
 
 export default {
