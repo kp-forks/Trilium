@@ -106,8 +106,6 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/notes/:noteId/save-to-tmp-dir", filesRoute.saveNoteToTmpDir);
     apiRoute(PST, "/api/notes/:noteId/upload-modified-file", filesRoute.uploadModifiedFileToNote);
 
-    // TODO: Bring back attachment uploading
-    // route(PST, "/api/notes/:noteId/attachments/upload", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], attachmentsApiRoute.uploadAttachment, apiResultHandler);
     asyncRoute(
         GET,
         "/api/attachments/:attachmentId/open-partial",
@@ -122,9 +120,6 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/attachments/:attachmentId/save-to-tmp-dir", filesRoute.saveAttachmentToTmpDir);
     apiRoute(PST, "/api/attachments/:attachmentId/upload-modified-file", filesRoute.uploadModifiedFileToAttachment);
     route(PUT, "/api/attachments/:attachmentId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateAttachment, apiResultHandler);
-
-    // TODO: Re-enable once ported to core.
-    // route(PUT, "/api/images/:noteId", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], imageRoute.updateImage, apiResultHandler);
 
     // TODO: Re-enable once we support route()
     // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);

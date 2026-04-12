@@ -55,7 +55,7 @@ async function resize(buffer: Uint8Array, quality: number): Promise<Uint8Array> 
 
     const start = Date.now();
 
-    const image = await Jimp.read(buffer);
+    const image = await Jimp.read(Buffer.from(buffer));
 
     if (image.bitmap.width > image.bitmap.height && image.bitmap.width > imageMaxWidthHeight) {
         image.resize({ w: imageMaxWidthHeight });

@@ -123,6 +123,8 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     route(GET, "/api/revisions/:revisionId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromRevision);
     route(GET, "/api/attachments/:attachmentId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnAttachedImage);
     route(GET, "/api/images/:noteId/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromNote);
+    route(PUT, "/api/images/:noteId", [checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], imageRoute.updateImage, apiResultHandler);
+    route(PST, "/api/notes/:noteId/attachments/upload", [checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], attachmentsApiRoute.uploadAttachment, apiResultHandler);
 
     // group of the services below are meant to be executed from the outside
     route(GET, "/api/setup/status", [], setupApiRoute.getStatus, apiResultHandler);
