@@ -26,7 +26,7 @@ async function exec(req: Request) {
     try {
         const body = req.body as ScriptBody;
 
-        const execute = (body: ScriptBody) => scriptService.executeScript(body.script, body.params, body.startNoteId, body.currentNoteId, body.originEntityName, body.originEntityId);
+        const execute = (body: ScriptBody) => scriptService.executeScript(body.script, body.params, body.startNoteId, body.currentNoteId, body.originEntityName, body.originEntityId, becca);
 
         const result = body.transactional ? getSql().transactional(() => execute(body)) : await execute(body);
 

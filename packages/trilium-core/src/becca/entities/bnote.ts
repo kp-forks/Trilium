@@ -20,6 +20,7 @@ import BRevision from "./brevision.js";
 import { getLog } from "../../services/log.js";
 import { getSql } from "../../services/sql/index.js";
 import { formatDownloadTitle, isStringNote, normalize, randomString, replaceAll } from "../../services/utils/index.js";
+import scriptService from "../../services/script.js";
 
 const LABEL = "label";
 const RELATION = "relation";
@@ -322,9 +323,6 @@ class BNote extends AbstractBeccaEntity<BNote> {
      * @returns the return value of the executed script
      */
     executeScript() {
-        // Lazy require to avoid circular dependency (script.ts imports BNote as a type).
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const scriptService = require("../../services/script.js").default;
         return scriptService.executeNote(this, { originEntity: this });
     }
 

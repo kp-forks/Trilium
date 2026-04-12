@@ -1,7 +1,7 @@
 import { ScriptParams } from "@triliumnext/commons";
 import { transform } from "sucrase";
 
-import becca from "../becca/becca.js";
+import type Becca from "../becca/becca-interface.js";
 import type BNote from "../becca/entities/bnote.js";
 import type { ApiParams } from "./backend_script_api_interface.js";
 import { getLog } from "./log.js";
@@ -76,7 +76,7 @@ ${bundle.script}\r
  * This method preserves frontend startNode - that's why we start execution from currentNote and override
  * bundle's startNote.
  */
-function executeScript(script: string, params: ScriptParams, startNoteId: string, currentNoteId: string, originEntityName: string, originEntityId: string) {
+function executeScript(script: string, params: ScriptParams, startNoteId: string, currentNoteId: string, originEntityName: string, originEntityId: string, becca: Becca) {
     const startNote = becca.getNote(startNoteId);
     const currentNote = becca.getNote(currentNoteId);
     const originEntity = becca.getEntity(originEntityName, originEntityId);
