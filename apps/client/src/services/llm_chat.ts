@@ -3,10 +3,10 @@ import type { LlmChatConfig, LlmCitation, LlmMessage, LlmModelInfo,LlmUsage } fr
 import server from "./server.js";
 
 /**
- * Fetch available models for a provider.
+ * Fetch available models from all configured providers.
  */
-export async function getAvailableModels(provider: string = "anthropic"): Promise<LlmModelInfo[]> {
-    const response = await server.get<{ models?: LlmModelInfo[] }>(`llm-chat/models?provider=${encodeURIComponent(provider)}`);
+export async function getAvailableModels(): Promise<LlmModelInfo[]> {
+    const response = await server.get<{ models?: LlmModelInfo[] }>("llm-chat/models");
     return response.models ?? [];
 }
 
@@ -27,7 +27,8 @@ export interface StreamCallbacks {
 export async function streamChatCompletion(
     messages: LlmMessage[],
     config: LlmChatConfig,
-    callbacks: StreamCallbacks
+    callbacks: StreamCallbacks,
+    abortSignal?: AbortSignal
 ): Promise<void> {
     const headers = await server.getHeaders();
 
@@ -37,7 +38,8 @@ export async function streamChatCompletion(
             ...headers,
             "Content-Type": "application/json"
         } as HeadersInit,
-        body: JSON.stringify({ messages, config })
+        body: JSON.stringify({ messages, config }),
+        signal: abortSignal
     });
 
     if (!response.ok) {
@@ -77,9 +79,13 @@ export async function streamChatCompletion(
                                 break;
                             case "tool_use":
                                 callbacks.onToolUse?.(data.toolName, data.toolInput);
+                                // Yield to force Preact to commit the pending tool call
+                                // state before we process the result.
+                                await new Promise((r) => setTimeout(r, 1));
                                 break;
                             case "tool_result":
                                 callbacks.onToolResult?.(data.toolName, data.result, data.isError);
+                                await new Promise((r) => setTimeout(r, 1));
                                 break;
                             case "citation":
                                 if (data.citation) {

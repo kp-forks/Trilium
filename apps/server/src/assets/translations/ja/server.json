@@ -285,7 +285,8 @@
     "december": "12月"
   },
   "special_notes": {
-    "search_prefix": "検索:"
+    "search_prefix": "検索:",
+    "llm_chat_prefix": "チャット:"
   },
   "test_sync": {
     "not-configured": "同期サーバーホストが設定されていません。最初に同期を設定してください。",
@@ -298,7 +299,7 @@
     "shortcuts-title": "ショートカット",
     "text-notes": "テキストノート",
     "code-notes-title": "コードノート",
-    "images-title": "画像",
+    "images-title": "メディア",
     "spellcheck-title": "スペルチェック",
     "password-title": "パスワード",
     "backup-title": "バックアップ",
@@ -343,7 +344,11 @@
     "base-abstract-launcher-title": "ベース アブストラクトランチャー",
     "command-palette": "コマンドパレットを開く",
     "zen-mode": "禅モード",
-    "tab-switcher-title": "タブ切り替え"
+    "tab-switcher-title": "タブ切り替え",
+    "llm-chat-history-title": "AI チャット履歴",
+    "llm-title": "AI / LLM",
+    "sidebar-chat-title": "AI チャット",
+    "custom-dictionary-title": "カスタム辞書"
   },
   "notes": {
     "new-note": "新しいノート",
@@ -389,7 +394,10 @@
     "subpages": "サブページ:",
     "image_alt": "記事画像",
     "on-this-page": "このページの内容",
-    "expand": "展開"
+    "expand": "展開",
+    "toggle-navigation": "ナビゲーションの切り替え",
+    "toggle-toc": "目次の切り替え",
+    "logo-alt": "ロゴ"
   },
   "hidden_subtree_templates": {
     "text-snippet": "テキストスニペット",
@@ -437,5 +445,15 @@
   },
   "desktop": {
     "instance_already_running": "すでにインスタンスが実行されているので、代わりにそのインスタンスにフォーカスします。"
+  },
+  "search": {
+    "error": {
+      "in-context": "{{- context}} でエラーが発生しました: {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" は予約語です。リテラル値を検索するには、引用符を使用してください: \"{{- token}}\"",
+      "cannot-compare-with": "\"{{- token}}\" と比較できません。リテラル値を検索するには、引用符を使用してください: \"{{- token}}\"",
+      "misplaced-expression": "\"{{- token}}\" という式が不適切または不完全です",
+      "fulltext-after-expression": "\"{{- token}}\" は有効な式ではありません。テキストを検索するには、属性フィルターの前に記述してください（例: \"#label {{- token}}\" ではなく \"{{- token}} #label\"）。",
+      "unrecognized-expression": "認識されない式 \"{{- token}}\""
+    }
   }
 }

@@ -39,6 +39,7 @@ import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import noteMapRoute from "./api/note_map.js";
 import notesApiRoute from "./api/notes.js";
+import ocrRoute from "./api/ocr.js";
 import optionsApiRoute from "./api/options.js";
 import otherRoute from "./api/other.js";
 import passwordApiRoute from "./api/password.js";
@@ -214,7 +215,6 @@ function register(app: express.Application) {
     apiRoute(PUT, "/api/options/:name/:value", optionsApiRoute.updateOption);
     apiRoute(PUT, "/api/options", optionsApiRoute.updateOptions);
     apiRoute(GET, "/api/options/user-themes", optionsApiRoute.getUserThemes);
-    apiRoute(GET, "/api/options/locales", optionsApiRoute.getSupportedLocales);
 
     apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
@@ -313,7 +313,7 @@ function register(app: express.Application) {
     // backup requires execution outside of transaction
     asyncRoute(PST, "/api/database/backup-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.backupDatabase, apiResultHandler);
     apiRoute(GET, "/api/database/backups", databaseRoute.getExistingBackups);
-
+    route(GET, "/api/database/backup/download", [auth.checkApiAuthOrElectron], databaseRoute.downloadBackup);
     // VACUUM requires execution outside of transaction
     asyncRoute(PST, "/api/database/vacuum-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.vacuumDatabase, apiResultHandler);
 
@@ -375,6 +375,14 @@ function register(app: express.Application) {
     etapiSpecRoute.register(router);
     etapiBackupRoute.register(router);
     etapiMetricsRoute.register(router);
+
+    // OCR API
+    asyncApiRoute(PST, "/api/ocr/process-note/:noteId", ocrRoute.processNoteOCR);
+    asyncApiRoute(PST, "/api/ocr/process-attachment/:attachmentId", ocrRoute.processAttachmentOCR);
+    asyncApiRoute(PST, "/api/ocr/batch-process", ocrRoute.batchProcessOCR);
+    asyncApiRoute(GET, "/api/ocr/batch-progress", ocrRoute.getBatchProgress);
+    asyncApiRoute(GET, "/api/ocr/notes/:noteId/text", ocrRoute.getNoteOCRText);
+    asyncApiRoute(GET, "/api/ocr/attachments/:attachmentId/text", ocrRoute.getAttachmentOCRText);
 
     app.use("", router);
 }

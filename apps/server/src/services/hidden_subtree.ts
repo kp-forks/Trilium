@@ -94,6 +94,12 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 ]
             },
             {
+                id: "_customDictionary",
+                title: t("hidden-subtree.custom-dictionary-title"),
+                type: "code",
+                icon: "bx-book"
+            },
+            {
                 // place for user scripts hidden stuff (scripts should not create notes directly under hidden root)
                 id: "_userHidden",
                 title: t("hidden-subtree.user-hidden-title"),
@@ -246,7 +252,8 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { id: "_optionsShortcuts", title: t("hidden-subtree.shortcuts-title"), type: "contentWidget", icon: "bxs-keyboard" },
                     { id: "_optionsTextNotes", title: t("hidden-subtree.text-notes"), type: "contentWidget", icon: "bx-text" },
                     { id: "_optionsCodeNotes", title: t("hidden-subtree.code-notes-title"), type: "contentWidget", icon: "bx-code" },
-                    { id: "_optionsImages", title: t("hidden-subtree.images-title"), type: "contentWidget", icon: "bx-image" },
+                    { id: "_optionsImages", title: "Images", type: "contentWidget", enforceDeleted: true },
+                    { id: "_optionsMedia", title: t("hidden-subtree.images-title"), type: "contentWidget", icon: "bx-image" },
                     { id: "_optionsSpellcheck", title: t("hidden-subtree.spellcheck-title"), type: "contentWidget", icon: "bx-check-double" },
                     { id: "_optionsPassword", title: t("hidden-subtree.password-title"), type: "contentWidget", icon: "bx-lock" },
                     { id: '_optionsMFA', title: t('hidden-subtree.multi-factor-authentication-title'), type: 'contentWidget', icon: 'bx-lock ' },

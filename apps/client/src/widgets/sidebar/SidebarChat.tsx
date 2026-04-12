@@ -10,7 +10,7 @@ import { formatDateTime } from "../../utils/formatters";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormListItem } from "../react/FormList.js";
-import { useActiveNoteContext, useEditorSpacedUpdate, useNote, useNoteProperty } from "../react/hooks.js";
+import { useActiveNoteContext, useNote, useNoteProperty, useSpacedUpdate } from "../react/hooks.js";
 import NoItems from "../react/NoItems.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessage from "../type_widgets/llm_chat/ChatMessage.js";
@@ -22,11 +22,15 @@ import RightPanelWidget from "./RightPanelWidget.js";
  * Sidebar chat widget that appears in the right panel.
  * Uses a hidden LLM chat note for persistence across all notes.
  * The same chat persists when switching between notes.
+ *
+ * Unlike the LlmChat type widget which receives a valid FNote from the
+ * framework, the sidebar creates notes lazily. We use useSpacedUpdate with
+ * a direct server.put (using the string noteId) instead of useEditorSpacedUpdate
+ * (which requires an FNote and silently no-ops when it's null).
  */
 export default function SidebarChat() {
     const [chatNoteId, setChatNoteId] = useState<string | null>(null);
     const [recentChats, setRecentChats] = useState<RecentLlmChat[]>([]);
-    const spacedUpdateRef = useRef<{ scheduleUpdate: () => void }>(null);
     const historyDropdownRef = useRef<BootstrapDropdown | null>(null);
 
     // Get the current active note context
@@ -36,42 +40,35 @@ export default function SidebarChat() {
     const chatNote = useNote(chatNoteId);
     const chatTitle = useNoteProperty(chatNote, "title") || t("sidebar_chat.title");
 
+    // Refs for stable access in the spaced update callback
+    const chatNoteIdRef = useRef(chatNoteId);
+    chatNoteIdRef.current = chatNoteId;
+
     // Use shared chat hook with sidebar-specific options
     const chat = useLlmChat(
         // onMessagesChange - trigger save
-        () => spacedUpdateRef.current?.scheduleUpdate(),
+        () => spacedUpdate.scheduleUpdate(),
         { defaultEnableNoteTools: true, supportsExtendedThinking: true }
     );
 
-    // Ref to access chat methods in callbacks without triggering re-runs
     const chatRef = useRef(chat);
     chatRef.current = chat;
 
-    // Persistence via useEditorSpacedUpdate (same mechanism as the LlmChat type widget).
-    // When chatNote is null (before lazy creation), saves are no-ops.
-    const spacedUpdate = useEditorSpacedUpdate({
-        note: chatNote,
-        noteType: "llmChat",
-        noteContext: null,
-        getData: () => {
-            const content = chatRef.current.getContent();
-            return { content: JSON.stringify(content) };
-        },
-        onContentChange: (content) => {
-            if (!content) {
-                chatRef.current.clearMessages();
-                return;
-            }
-            try {
-                const parsed: LlmChatContent = JSON.parse(content);
-                chatRef.current.loadFromContent(parsed);
-            } catch (e) {
-                console.error("Failed to parse LLM chat content:", e);
-                chatRef.current.clearMessages();
-            }
+    // Save directly via server.put using the string noteId.
+    // This avoids the FNote dependency that useEditorSpacedUpdate requires.
+    const spacedUpdate = useSpacedUpdate(async () => {
+        const noteId = chatNoteIdRef.current;
+        if (!noteId) return;
+
+        const content = chatRef.current.getContent();
+        try {
+            await server.put(`notes/${noteId}/data`, {
+                content: JSON.stringify(content)
+            });
+        } catch (err) {
+            console.error("Failed to save chat:", err);
         }
     });
-    spacedUpdateRef.current = spacedUpdate;
 
     // Update chat context when active note changes
     useEffect(() => {
@@ -95,8 +92,17 @@ export default function SidebarChat() {
 
                 if (existingChat) {
                     setChatNoteId(existingChat.noteId);
+                    // Load content
+                    try {
+                        const blob = await server.get<{ content: string }>(`notes/${existingChat.noteId}/blob`);
+                        if (!cancelled && blob?.content) {
+                            const parsed: LlmChatContent = JSON.parse(blob.content);
+                            chatRef.current.loadFromContent(parsed);
+                        }
+                    } catch (err) {
+                        console.error("Failed to load chat content:", err);
+                    }
                 } else {
-                    // No existing chat - will create on first message
                     setChatNoteId(null);
                     chatRef.current.clearMessages();
                 }
@@ -203,7 +209,17 @@ export default function SidebarChat() {
         // Save any pending changes before switching
         await spacedUpdate.updateNowIfNecessary();
 
-        setChatNoteId(noteId);
+        // Load the selected chat's content
+        try {
+            const blob = await server.get<{ content: string }>(`notes/${noteId}/blob`);
+            if (blob?.content) {
+                const parsed: LlmChatContent = JSON.parse(blob.content);
+                setChatNoteId(noteId);
+                chatRef.current.loadFromContent(parsed);
+            }
+        } catch (err) {
+            console.error("Failed to load selected chat:", err);
+        }
     }, [chatNoteId, spacedUpdate]);
 
     return (
@@ -273,12 +289,6 @@ export default function SidebarChat() {
                     {chat.messages.map(msg => (
                         <ChatMessage key={msg.id} message={msg} />
                     ))}
-                    {chat.toolActivity && !chat.streamingThinking && (
-                        <div className="llm-chat-tool-activity">
-                            <span className="llm-chat-tool-spinner" />
-                            {chat.toolActivity}
-                        </div>
-                    )}
                     {chat.isStreaming && chat.streamingThinking && (
                         <ChatMessage
                             message={{
@@ -291,12 +301,12 @@ export default function SidebarChat() {
                             isStreaming
                         />
                     )}
-                    {chat.isStreaming && chat.streamingContent && (
+                    {chat.isStreaming && chat.streamingBlocks.length > 0 && (
                         <ChatMessage
                             message={{
                                 id: "streaming",
                                 role: "assistant",
-                                content: chat.streamingContent,
+                                content: chat.streamingBlocks,
                                 createdAt: new Date().toISOString(),
                                 citations: chat.pendingCitations.length > 0 ? chat.pendingCitations : undefined
                             }}

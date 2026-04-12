@@ -76,7 +76,6 @@
     "also_delete_note": "Takođe obriši belešku"
   },
   "delete_notes": {
-    "delete_notes_preview": "Obriši pregled beleške",
     "close": "Zatvori",
     "delete_all_clones_description": "Obriši i sve klonove (može biti poništeno u skorašnjim izmenama)",
     "erase_notes_description": "Normalno (blago) brisanje samo označava beleške kao obrisane i one mogu biti vraćene (u dijalogu skorašnjih izmena) u određenom vremenskom periodu. Biranje ove opcije će momentalno obrisati beleške i ove beleške neće biti moguće vratiti.",
@@ -84,9 +83,7 @@
     "notes_to_be_deleted": "Sledeće beleške će biti obrisane ({{- noteCount}})",
     "no_note_to_delete": "Nijedna beleška neće biti obrisana (samo klonovi).",
     "broken_relations_to_be_deleted": "Sledeći odnosi će biti prekinuti i obrisani ({{- relationCount}})",
-    "cancel": "Otkaži",
-    "ok": "U redu",
-    "deleted_relation_text": "Beleška {{- note}} (za brisanje) je referencirana sa odnosom {{- relation}} koji potiče iz {{- source}}."
+    "cancel": "Otkaži"
   },
   "export": {
     "export_note_title": "Izvezi belešku",

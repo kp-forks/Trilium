@@ -2,7 +2,6 @@ import type { LlmCitation, LlmMessage, LlmModelInfo, LlmUsage } from "@triliumne
 import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-import { t } from "../../../services/i18n.js";
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import type { ContentBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
@@ -28,8 +27,8 @@ export interface UseLlmChatReturn {
     input: string;
     isStreaming: boolean;
     streamingContent: string;
+    streamingBlocks: ContentBlock[];
     streamingThinking: string;
-    toolActivity: string | null;
     pendingCitations: LlmCitation[];
     availableModels: ModelOption[];
     selectedModel: string;
@@ -63,6 +62,8 @@ export interface UseLlmChatReturn {
     clearMessages: () => void;
     /** Refresh the provider/models list */
     refreshModels: () => void;
+    /** Stop the current generation */
+    stopStreaming: () => void;
 }
 
 export function useLlmChat(
@@ -75,8 +76,8 @@ export function useLlmChat(
     const [input, setInput] = useState("");
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingContent, setStreamingContent] = useState("");
+    const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
     const [streamingThinking, setStreamingThinking] = useState("");
-    const [toolActivity, setToolActivity] = useState<string | null>(null);
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
     const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
     const [selectedModel, setSelectedModel] = useState<string>("");
@@ -90,6 +91,7 @@ export function useLlmChat(
     const [isCheckingProvider, setIsCheckingProvider] = useState<boolean>(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Refs to get fresh values in getContent (avoids stale closures)
     const messagesRef = useRef(messages);
@@ -152,7 +154,7 @@ export function useLlmChat(
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, streamingContent, streamingThinking, toolActivity, scrollToBottom]);
+    }, [messages, streamingContent, streamingThinking, scrollToBottom]);
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
@@ -198,7 +200,6 @@ export function useLlmChat(
         e.preventDefault();
         if (!input.trim() || isStreaming) return;
 
-        setToolActivity(null);
         setPendingCitations([]);
 
         const userMessage: StoredMessage = {
@@ -213,6 +214,7 @@ export function useLlmChat(
         setInput("");
         setIsStreaming(true);
         setStreamingContent("");
+        setStreamingBlocks([]);
         setStreamingThinking("");
 
         let thinkingContent = "";
@@ -239,8 +241,10 @@ export function useLlmChat(
                 .join("")
         }));
 
+        const selectedModelProvider = availableModels.find(m => m.id === selectedModel)?.provider;
         const streamOptions: Parameters<typeof streamChatCompletion>[1] = {
             model: selectedModel || undefined,
+            provider: selectedModelProvider,
             enableWebSearch,
             enableNoteTools,
             contextNoteId,
@@ -248,6 +252,56 @@ export function useLlmChat(
         };
         if (supportsExtendedThinking) {
             streamOptions.enableExtendedThinking = enableExtendedThinking;
+        }
+
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
+        /** Shared cleanup: finalize collected content and reset streaming state. */
+        function finalizeStream() {
+            // Mark any in-progress tool calls as stopped so they don't show infinite spinners
+            for (const [i, block] of contentBlocks.entries()) {
+                if (block.type === "tool_call" && !block.toolCall.result) {
+                    contentBlocks[i] = {
+                        type: "tool_call",
+                        toolCall: { ...block.toolCall, result: "[Stopped]", isError: true }
+                    };
+                }
+            }
+
+            const finalNewMessages: StoredMessage[] = [];
+
+            if (thinkingContent) {
+                finalNewMessages.push({
+                    id: randomString(),
+                    role: "assistant",
+                    content: thinkingContent,
+                    createdAt: new Date().toISOString(),
+                    type: "thinking"
+                });
+            }
+
+            if (contentBlocks.length > 0) {
+                finalNewMessages.push({
+                    id: randomString(),
+                    role: "assistant",
+                    content: contentBlocks,
+                    createdAt: new Date().toISOString(),
+                    citations: citations.length > 0 ? citations : undefined,
+                    usage
+                });
+            }
+
+            if (finalNewMessages.length > 0) {
+                setMessages([...newMessages, ...finalNewMessages]);
+            }
+
+            setStreamingContent("");
+            setStreamingBlocks([]);
+            setStreamingThinking("");
+            setPendingCitations([]);
+            setIsStreaming(false);
+            abortControllerRef.current = null;
         }
 
         await streamChatCompletion(
@@ -260,18 +314,13 @@ export function useLlmChat(
                         .filter((b): b is ContentBlock & { type: "text" } => b.type === "text")
                         .map(b => b.content)
                         .join(""));
-                    setToolActivity(null);
+                    setStreamingBlocks([...contentBlocks]);
                 },
                 onThinking: (text) => {
                     thinkingContent += text;
                     setStreamingThinking(thinkingContent);
-                    setToolActivity(t("llm_chat.thinking"));
                 },
                 onToolUse: (toolName, toolInput) => {
-                    const toolLabel = toolName === "web_search"
-                        ? t("llm_chat.searching_web")
-                        : `Using ${toolName}...`;
-                    setToolActivity(toolLabel);
                     contentBlocks.push({
                         type: "tool_call",
                         toolCall: {
@@ -280,21 +329,28 @@ export function useLlmChat(
                             input: toolInput
                         }
                     });
+                    setStreamingBlocks([...contentBlocks]);
                 },
                 onToolResult: (toolName, result, isError) => {
-                    // Find the most recent tool_call block for this tool without a result
+                    // Replace the matching block with a new object so Preact sees the change.
                     for (let i = contentBlocks.length - 1; i >= 0; i--) {
                         const block = contentBlocks[i];
                         if (block.type === "tool_call" && block.toolCall.toolName === toolName && !block.toolCall.result) {
-                            block.toolCall.result = result;
-                            block.toolCall.isError = isError;
+                            contentBlocks[i] = {
+                                type: "tool_call",
+                                toolCall: { ...block.toolCall, result, isError }
+                            };
                             break;
                         }
                     }
+                    setStreamingBlocks([...contentBlocks]);
                 },
                 onCitation: (citation) => {
-                    citations.push(citation);
-                    setPendingCitations([...citations]);
+                    // Deduplicate by URL
+                    if (!citation.url || !citations.some(c => c.url === citation.url)) {
+                        citations.push(citation);
+                        setPendingCitations([...citations]);
+                    }
                 },
                 onUsage: (u) => {
                     usage = u;
@@ -312,47 +368,24 @@ export function useLlmChat(
                     const finalMessages = [...newMessages, errorMessage];
                     setMessages(finalMessages);
                     setStreamingContent("");
+                    setStreamingBlocks([]);
                     setStreamingThinking("");
                     setIsStreaming(false);
-                    setToolActivity(null);
                 },
                 onDone: () => {
-                    const finalNewMessages: StoredMessage[] = [];
-
-                    if (thinkingContent) {
-                        finalNewMessages.push({
-                            id: randomString(),
-                            role: "assistant",
-                            content: thinkingContent,
-                            createdAt: new Date().toISOString(),
-                            type: "thinking"
-                        });
-                    }
-
-                    if (contentBlocks.length > 0) {
-                        finalNewMessages.push({
-                            id: randomString(),
-                            role: "assistant",
-                            content: contentBlocks,
-                            createdAt: new Date().toISOString(),
-                            citations: citations.length > 0 ? citations : undefined,
-                            usage
-                        });
-                    }
-
-                    if (finalNewMessages.length > 0) {
-                        const allMessages = [...newMessages, ...finalNewMessages];
-                        setMessages(allMessages);
-                    }
-
-                    setStreamingContent("");
-                    setStreamingThinking("");
-                    setPendingCitations([]);
-                    setIsStreaming(false);
-                    setToolActivity(null);
+                    finalizeStream();
                 }
+            },
+            abortController.signal
+        ).catch((e) => {
+            // AbortError is expected when user stops generation
+            if (e instanceof DOMException && e.name === "AbortError") {
+                finalizeStream();
+            } else {
+                // Re-throw other errors so they are not swallowed
+                throw e;
             }
-        );
+        });
     }, [input, isStreaming, messages, selectedModel, enableWebSearch, enableNoteTools, enableExtendedThinking, contextNoteId, supportsExtendedThinking, setMessages]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -362,14 +395,21 @@ export function useLlmChat(
         }
     }, [handleSubmit]);
 
+    /** Stop the current generation by aborting the SSE connection. */
+    const stopStreaming = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+    }, []);
+
     return {
         // State
         messages,
         input,
         isStreaming,
         streamingContent,
+        streamingBlocks,
         streamingThinking,
-        toolActivity,
         pendingCitations,
         availableModels,
         selectedModel,
@@ -399,6 +439,7 @@ export function useLlmChat(
         loadFromContent,
         getContent,
         clearMessages,
-        refreshModels
+        refreshModels,
+        stopStreaming
     };
 }

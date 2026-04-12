@@ -288,6 +288,27 @@ export interface ToMarkdownResponse {
     markdownContent: string;
 }
 
+export interface TextRepresentationResponse {
+    success: boolean;
+    text: string;
+    hasOcr: boolean;
+    message?: string;
+}
+
+export interface OCRProcessResponse {
+    success: boolean;
+    message?: string;
+    result?: {
+        text: string;
+        confidence: number;
+        extractedAt: string;
+        language?: string;
+        pageCount?: number;
+    };
+    /** The minimum confidence threshold that was applied (0-1 scale). */
+    minConfidence?: number;
+}
+
 export interface IconRegistry {
     sources: {
         prefix: string;

@@ -6,6 +6,24 @@
 
 // Migrations should be kept in descending order, so the latest migration is first.
 const MIGRATIONS: (SqlMigration | JsMigration)[] = [
+    // Clean up obsolete keyboard shortcut options from renamed actions
+    {
+        version: 237,
+        sql: /*sql*/`
+            DELETE FROM options WHERE name = 'keyboardShortcutsShowNoteRevisions';
+            DELETE FROM entity_changes WHERE entityName = 'options' AND entityId = 'keyboardShortcutsShowNoteRevisions';
+            DELETE FROM options WHERE name = 'keyboardShortcutsForceSaveNoteRevision';
+            DELETE FROM entity_changes WHERE entityName = 'options' AND entityId = 'keyboardShortcutsForceSaveNoteRevision';
+        `
+    },
+    // Add text representation column to blobs table
+    {
+        version: 236,
+        sql: /*sql*/`\
+            ALTER TABLE blobs ADD COLUMN textRepresentation TEXT DEFAULT NULL;
+        `,
+        ignoreErrors: true
+    },
     // Add missing database indices for query performance
     {
         version: 235,
@@ -328,6 +346,8 @@ export default MIGRATIONS;
 
 interface Migration {
     version: number;
+    /** If true, errors during this migration are logged but do not halt the migration process. Useful for migrations that may have already been applied (e.g. adding a column that already exists). */
+    ignoreErrors?: boolean;
 }
 
 interface SqlMigration extends Migration {

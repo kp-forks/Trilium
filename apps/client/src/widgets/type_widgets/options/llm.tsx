@@ -1,13 +1,34 @@
 import { useCallback, useMemo, useState } from "preact/hooks";
+
+import dialog from "../../../services/dialog";
+import { isExperimentalFeatureEnabled } from "../../../services/experimental_features";
 import { t } from "../../../services/i18n";
+import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
+import FormToggle from "../../react/FormToggle";
+import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
-import ActionButton from "../../react/ActionButton";
-import dialog from "../../../services/dialog";
-import { useTriliumOption } from "../../react/hooks";
 
 export default function LlmSettings() {
+    if (!isExperimentalFeatureEnabled("llm")) {
+        return (
+            <OptionsSection title={t("llm.settings_title")}>
+                <p className="form-text">{t("llm.feature_not_enabled")}</p>
+            </OptionsSection>
+        );
+    }
+
+    return (
+        <>
+            <ProviderSettings />
+            <McpSettings />
+        </>
+    );
+}
+
+function ProviderSettings() {
     const [providersJson, setProvidersJson] = useTriliumOption("llmProviders");
     const providers = useMemo<LlmProviderConfig[]>(() => {
         try {
@@ -34,7 +55,7 @@ export default function LlmSettings() {
 
     return (
         <OptionsSection title={t("llm.settings_title")}>
-            <p>{t("llm.settings_description")}</p>
+            <p className="form-text">{t("llm.settings_description")}</p>
 
             <Button
                 size="small"
@@ -56,6 +77,39 @@ export default function LlmSettings() {
                 onHidden={() => setShowAddModal(false)}
                 onSave={handleAddProvider}
             />
+        </OptionsSection>
+    );
+}
+
+function getMcpEndpointUrl() {
+    const port = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
+    return `${window.location.protocol}//localhost:${port}/mcp`;
+}
+
+function McpSettings() {
+    const [mcpEnabled, setMcpEnabled] = useTriliumOptionBool("mcpEnabled");
+    const endpointUrl = useMemo(() => getMcpEndpointUrl(), []);
+
+    return (
+        <OptionsSection title={t("llm.mcp_title")}>
+            <OptionsRow name="mcp-enabled" label={t("llm.mcp_enabled")} description={t("llm.mcp_enabled_description")}>
+                <FormToggle
+                    switchOnName="" switchOffName=""
+                    currentValue={mcpEnabled}
+                    onChange={setMcpEnabled}
+                />
+            </OptionsRow>
+
+            {mcpEnabled && (
+                <OptionsRow name="mcp-endpoint" label={t("llm.mcp_endpoint_title")} description={t("llm.mcp_endpoint_description")}>
+                    <input
+                        type="text"
+                        className="form-control"
+                        value={endpointUrl}
+                        readOnly
+                    />
+                </OptionsRow>
+            )}
         </OptionsSection>
     );
 }
