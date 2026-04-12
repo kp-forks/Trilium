@@ -14,6 +14,7 @@ import { type ZipExportProviderFactory, initZipExportProviderFactory } from "./s
 import { type InAppHelpProvider, initInAppHelp } from "./services/in_app_help";
 
 export { default as LogService, getLog } from "./services/log";
+export { default as FileBasedLogService, type LogFileInfo } from "./services/file_based_log";
 export type * from "./services/sql/types";
 export * from "./services/sql/index";
 export { default as sql_init } from "./services/sql_init";
