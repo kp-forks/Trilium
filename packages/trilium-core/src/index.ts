@@ -1,6 +1,6 @@
 import { ExecutionContext, initContext } from "./services/context";
 import { CryptoProvider, initCrypto } from "./services/encryption/crypto";
-import { getLog, initLog } from "./services/log";
+import LogService, { getLog, initLog } from "./services/log";
 import { initSql } from "./services/sql/index";
 import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
@@ -13,7 +13,7 @@ import { type ZipProvider, initZipProvider } from "./services/zip_provider";
 import { type ZipExportProviderFactory, initZipExportProviderFactory } from "./services/export/zip_export_provider_factory";
 import { type InAppHelpProvider, initInAppHelp } from "./services/in_app_help";
 
-export { getLog } from "./services/log";
+export { default as LogService, getLog } from "./services/log";
 export type * from "./services/sql/types";
 export * from "./services/sql/index";
 export { default as sql_init } from "./services/sql_init";
@@ -121,7 +121,7 @@ export { default as scriptService } from "./services/script";
 export { default as BackendScriptApi, type Api as BackendScriptApiInterface } from "./services/backend_script_api";
 export * as scheduler from "./services/scheduler";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive, inAppHelp }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive, inAppHelp, log }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
@@ -138,9 +138,10 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
         nodeVersion: string;
         dataDirectory: string;
     };
+    log?: LogService;
 }) {
     initPlatform(platform);
-    initLog();
+    initLog(log);
     await initTranslations(translations);
     initCrypto(crypto);
     initZipProvider(zip);

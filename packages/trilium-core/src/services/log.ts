@@ -38,12 +38,21 @@ export default class LogService {
         console.log(`\n${top}\n${mid}\n${bot}\n`);
     }
 
+    /**
+     * Returns the current log contents as a string.
+     * Override in platform-specific implementations to return actual log data.
+     * @returns The log contents, or null if not available
+     */
+    getLogContents(): string | null {
+        return null;
+    }
+
 }
 
 let log: LogService;
 
-export function initLog() {
-    log = new LogService();
+export function initLog(provider?: LogService) {
+    log = provider ?? new LogService();
 }
 
 export function getLog() {
