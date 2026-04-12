@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { initializeCore } from "@triliumnext/core";
+import { initializeCore, options } from "@triliumnext/core";
 import schemaSql from "@triliumnext/core/src/assets/schema.sql?raw";
 import HappyDomHtmlParser from "happy-dom/lib/html-parser/HTMLParser.js";
 import serverEnTranslations from "../../server/src/assets/translations/en/server.json";
@@ -130,7 +130,7 @@ beforeAll(async () => {
             });
         },
         platform: new StandalonePlatformProvider(""),
-        backup: new StandaloneBackupService(),
+        backup: new StandaloneBackupService(() => options),
         schema: schemaSql,
         dbConfig: {
             provider: sqlProvider,

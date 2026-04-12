@@ -4,7 +4,7 @@ import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import { loadCoreSchema } from "@triliumnext/server/src/core_assets.js";
 import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
-import options from "@triliumnext/server/src/services/options.js";
+import { options } from "@triliumnext/core";
 import port from "@triliumnext/server/src/services/port.js";
 import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
@@ -151,7 +151,7 @@ async function main() {
         // both source and bundled-production modes.
         getDemoArchive: async () => fs.readFileSync(path.join(RESOURCE_DIR, "db", "demo.zip")),
         inAppHelp: new NodejsInAppHelpProvider(),
-        backup: new ServerBackupService(),
+        backup: new ServerBackupService(() => options),
         image: (await import("@triliumnext/server/src/services/image_provider.js")).serverImageProvider,
         extraAppInfo: {
             nodeVersion: process.version,

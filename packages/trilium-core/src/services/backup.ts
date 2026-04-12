@@ -1,17 +1,13 @@
-import type { DatabaseBackup, OptionNames } from "@triliumnext/commons";
+import type { DatabaseBackup, FilterOptionsByType, OptionNames } from "@triliumnext/commons";
 import { getContext } from "./context.js";
 import dateUtils from "./utils/date.js";
 
 type BackupType = "daily" | "weekly" | "monthly";
 
-// Lazy-loaded to avoid circular dependency (options -> becca -> entities)
-let optionsModule: Awaited<typeof import("./options.js")>["default"] | null = null;
-
-async function getOptions() {
-    if (!optionsModule) {
-        optionsModule = (await import("./options.js")).default;
-    }
-    return optionsModule!;
+export interface BackupOptionsService {
+    getOption(name: OptionNames): string;
+    getOptionBool(name: FilterOptionsByType<boolean>): boolean;
+    setOption(name: OptionNames, value: string): void;
 }
 
 /**
@@ -19,6 +15,8 @@ async function getOptions() {
  * Platform-specific implementations must extend this class.
  */
 export default abstract class BackupService {
+    constructor(protected readonly getOptions: () => BackupOptionsService) {}
+
     /**
      * Create a backup with the given name.
      * Returns the backup file path/name.
@@ -32,7 +30,6 @@ export default abstract class BackupService {
      */
     regularBackup(): void {
         getContext().init(() => {
-            // Fire and forget - the async work runs in background
             this.runScheduledBackups().catch(err => {
                 console.error("[Backup] Error running scheduled backups:", err);
             });
@@ -46,7 +43,6 @@ export default abstract class BackupService {
 
     /**
      * Run the scheduled backup checks for daily, weekly, and monthly backups.
-     * Can be overridden by subclasses if they need custom behavior.
      */
     protected async runScheduledBackups(): Promise<void> {
         await this.periodBackup("lastDailyBackupDate", "daily", 24 * 3600);
@@ -57,22 +53,13 @@ export default abstract class BackupService {
     /**
      * Check if a specific backup type is enabled via options.
      */
-    protected async isBackupEnabled(backupType: BackupType): Promise<boolean> {
-        const options = await getOptions();
-        let optionName: OptionNames;
-        switch (backupType) {
-            case "daily":
-                optionName = "dailyBackupEnabled";
-                break;
-            case "weekly":
-                optionName = "weeklyBackupEnabled";
-                break;
-            case "monthly":
-                optionName = "monthlyBackupEnabled";
-                break;
-        }
+    protected isBackupEnabled(backupType: BackupType): boolean {
+        const optionName: FilterOptionsByType<boolean> =
+            backupType === "daily" ? "dailyBackupEnabled" :
+            backupType === "weekly" ? "weeklyBackupEnabled" :
+            "monthlyBackupEnabled";
 
-        return options.getOptionBool(optionName);
+        return this.getOptions().getOptionBool(optionName);
     }
 
     /**
@@ -83,12 +70,11 @@ export default abstract class BackupService {
         backupType: BackupType,
         periodInSeconds: number
     ): Promise<void> {
-        if (!(await this.isBackupEnabled(backupType))) {
+        if (!this.isBackupEnabled(backupType)) {
             return;
         }
 
-        const options = await getOptions();
-
+        const options = this.getOptions();
         const now = new Date();
         const lastBackupDate = dateUtils.parseDateTime(options.getOption(optionName));
 
@@ -103,7 +89,6 @@ let backupService: BackupService | undefined;
 
 /**
  * Get the current backup service instance.
- * Throws if no provider has been initialized.
  */
 export function getBackup(): BackupService {
     if (!backupService) {

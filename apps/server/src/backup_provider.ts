@@ -1,5 +1,5 @@
 import type { DatabaseBackup } from "@triliumnext/commons";
-import { BackupService, sync_mutex as syncMutexService } from "@triliumnext/core";
+import { BackupOptionsService, BackupService, sync_mutex as syncMutexService } from "@triliumnext/core";
 import fs from "fs";
 import path from "path";
 
@@ -8,6 +8,10 @@ import log from "./services/log.js";
 import sql from "./services/sql.js";
 
 export default class ServerBackupService extends BackupService {
+    constructor(getOptions: () => BackupOptionsService) {
+        super(getOptions);
+    }
+
     override getExistingBackups(): DatabaseBackup[] {
         if (!fs.existsSync(dataDir.BACKUP_DIR)) {
             return [];

@@ -1,7 +1,7 @@
 import { ExecutionContext, initContext } from "./services/context";
 import { CryptoProvider, initCrypto } from "./services/encryption/crypto";
 import LogService, { getLog, initLog } from "./services/log";
-import BackupService, { initBackup } from "./services/backup";
+import BackupService, { initBackup, type BackupOptionsService } from "./services/backup";
 import { initSql } from "./services/sql/index";
 import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
@@ -17,7 +17,7 @@ import { type ImageProvider, initImageProvider } from "./services/image_provider
 
 export { default as LogService, getLog } from "./services/log";
 export { default as FileBasedLogService, type LogFileInfo } from "./services/file_based_log";
-export { default as BackupService, getBackup, initBackup } from "./services/backup";
+export { default as BackupService, getBackup, initBackup, type BackupOptionsService } from "./services/backup";
 export type * from "./services/sql/types";
 export * from "./services/sql/index";
 export { default as sql_init } from "./services/sql_init";

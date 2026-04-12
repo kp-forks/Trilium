@@ -3,7 +3,7 @@
  * are loaded later and will result in an empty string.
  */
 
-import { getLog, initializeCore, sql_init } from "@triliumnext/core";
+import { getLog, initializeCore, options, sql_init } from "@triliumnext/core";
 import fs from "fs";
 import { t } from "i18next";
 import path from "path";
@@ -81,7 +81,7 @@ async function startApplication() {
         // both source and bundled-production modes.
         getDemoArchive: async () => fs.readFileSync(path.join(RESOURCE_DIR, "db", "demo.zip")),
         inAppHelp: new NodejsInAppHelpProvider(),
-        backup: new ServerBackupService(),
+        backup: new ServerBackupService(() => options),
         image: (await import("./services/image_provider.js")).serverImageProvider,
         extraAppInfo: {
             nodeVersion: process.version,

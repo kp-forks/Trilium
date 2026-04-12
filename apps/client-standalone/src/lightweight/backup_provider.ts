@@ -1,5 +1,5 @@
 import type { DatabaseBackup } from "@triliumnext/commons";
-import { BackupService, getSql } from "@triliumnext/core";
+import { BackupOptionsService, BackupService, getSql } from "@triliumnext/core";
 
 const BACKUP_DIR_NAME = "backups";
 const BACKUP_FILE_PATTERN = /^backup-.*\.db$/;
@@ -12,6 +12,10 @@ const BACKUP_FILE_PATTERN = /^backup-.*\.db$/;
 export default class StandaloneBackupService extends BackupService {
     private backupDir: FileSystemDirectoryHandle | null = null;
     private opfsAvailable: boolean | null = null;
+
+    constructor(getOptions: () => BackupOptionsService) {
+        super(getOptions);
+    }
 
     private isOpfsAvailable(): boolean {
         if (this.opfsAvailable === null) {

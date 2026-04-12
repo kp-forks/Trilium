@@ -1,7 +1,7 @@
 import { beforeAll } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { initializeCore } from "@triliumnext/core";
+import { initializeCore, options } from "@triliumnext/core";
 import { serverZipExportProviderFactory } from "../src/services/export/zip/factory.js";
 import ServerBackupService from "../src/backup_provider.js";
 import ClsHookedExecutionContext from "../src/cls_provider.js";
@@ -44,6 +44,6 @@ beforeAll(async () => {
         platform: new ServerPlatformProvider(),
         translations: initializeTranslationsWithParams,
         inAppHelp: new NodejsInAppHelpProvider(),
-        backup: new ServerBackupService()
+        backup: new ServerBackupService(() => options)
     });
 });
