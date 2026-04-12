@@ -1,8 +1,8 @@
 {
   "about": {   
     "version_label": "Version:",
-    "version": "app: {{appVersion}}, database: {{dbVersion}}, sync protocol: {{syncVersion}}",
-    "build_info": "{{buildDate}}, revision: <buildRevision />",
+    "version": "{{appVersion}} (database: {{dbVersion}}, sync protocol: {{syncVersion}})",
+    "build_info": "Build: {{buildDate}}, revision: <buildRevision />",
     "contributors_label": "Contributors:",
     "contributor_roles": {
       "lead-dev": "lead developer",
