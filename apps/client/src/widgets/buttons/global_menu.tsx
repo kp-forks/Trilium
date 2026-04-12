@@ -6,7 +6,7 @@ import { useContext, useEffect, useRef, useState } from "preact/hooks";
 
 import { CommandNames } from "../../components/app_context";
 import Component from "../../components/component";
-import { ExperimentalFeature, ExperimentalFeatureId, experimentalFeatures, isExperimentalFeatureEnabled, toggleExperimentalFeature } from "../../services/experimental_features";
+import { ExperimentalFeature, ExperimentalFeatureId, getAvailableExperimentalFeatures, isExperimentalFeatureEnabled, toggleExperimentalFeature } from "../../services/experimental_features";
 import { t } from "../../services/i18n";
 import utils, { dynamicRequire, isElectron, isMobile, isStandalone, reloadFrontendApp } from "../../services/utils";
 import Dropdown from "../react/Dropdown";
@@ -112,7 +112,7 @@ function DevelopmentOptions({ dropStart }: { dropStart: boolean }) {
     return <>
         <FormListHeader text="Development Options" />
         <FormDropdownSubmenu icon="bx bx-test-tube" title="Experimental features" dropStart={dropStart}>
-            {experimentalFeatures.map((feature) => (
+            {getAvailableExperimentalFeatures().map((feature) => (
                 <ExperimentalFeatureToggle key={feature.id} experimentalFeature={feature as ExperimentalFeature} />
             ))}
         </FormDropdownSubmenu>
