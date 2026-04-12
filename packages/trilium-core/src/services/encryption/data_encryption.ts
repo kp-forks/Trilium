@@ -33,7 +33,7 @@ function encrypt(key: Uint8Array, plainText: Uint8Array | string) {
         throw new Error("No data key!");
     }
 
-    const plainTextUint8Array = ArrayBuffer.isView(plainText) ? plainText : Uint8Array.from(plainText);
+    const plainTextUint8Array = ArrayBuffer.isView(plainText) ? plainText : encodeUtf8(plainText);
 
     const iv = getCrypto().randomBytes(16);
     const cipher = getCrypto().createCipheriv("aes-128-cbc", pad(key), pad(iv));
@@ -88,7 +88,7 @@ function decrypt(key: Uint8Array, cipherText: string | Uint8Array): Uint8Array |
         if (e.message?.includes("WRONG_FINAL_BLOCK_LENGTH") || e.message?.includes("wrong final block length")) {
             getLog().info("Caught WRONG_FINAL_BLOCK_LENGTH, returning cipherText instead");
 
-            return (ArrayBuffer.isView(cipherText) ? cipherText : Uint8Array.from(cipherText));
+            return (ArrayBuffer.isView(cipherText) ? cipherText : encodeUtf8(cipherText));
         }
         throw e;
     }
