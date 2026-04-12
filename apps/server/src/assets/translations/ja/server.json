@@ -455,5 +455,8 @@
       "fulltext-after-expression": "\"{{- token}}\" は有効な式ではありません。テキストを検索するには、属性フィルターの前に記述してください（例: \"#label {{- token}}\" ではなく \"{{- token}} #label\"）。",
       "unrecognized-expression": "認識されない式 \"{{- token}}\""
     }
+  },
+  "script": {
+    "wrong-environment": "ノート \"{{- noteTitle}}\" ({{- noteId}}) を実行できません。これは {{- actualEnv}} スクリプトですが、{{- expectedEnv}} で実行しようとしました。"
   }
 }
