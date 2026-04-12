@@ -1,5 +1,6 @@
 import type { BackupDatabaseNowResponse, DatabaseBackup } from "@triliumnext/commons";
 import { getBackup } from "../../services/backup.js";
+import { Request, Response } from "express";
 
 async function getExistingBackups(): Promise<DatabaseBackup[]> {
     return getBackup().getExistingBackups();
@@ -11,20 +12,10 @@ async function backupDatabase(): Promise<BackupDatabaseNowResponse> {
     };
 }
 
-interface DownloadRequest {
-    query: { filePath?: string };
-}
-
-interface DownloadResponse {
-    status(code: number): DownloadResponse;
-    send(body: string): void;
-    set(name: string, value: string): DownloadResponse;
-}
-
-async function downloadBackup(req: DownloadRequest, res: DownloadResponse): Promise<void> {
+async function downloadBackup(req: Request, res: Response): Promise<void> {
     const filePath = req.query.filePath;
-    if (!filePath) {
-        res.status(400).send("Missing filePath");
+    if (!filePath || typeof filePath !== "string") {
+        res.status(400).send("Missing or invalid filePath");
         return;
     }
 
@@ -37,7 +28,7 @@ async function downloadBackup(req: DownloadRequest, res: DownloadResponse): Prom
     const fileName = filePath.split("/").pop() || "backup.db";
     res.set("Content-Type", "application/x-sqlite3");
     res.set("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.send(content as unknown as string);
+    res.send(content);
 }
 
 export default {

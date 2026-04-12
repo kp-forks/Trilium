@@ -85,11 +85,6 @@ export default class BrowserCryptoProvider implements CryptoProvider {
 
     constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
         if (a.length !== b.length) {
-            // Maintain constant time by comparing a to itself
-            let dummy = 0;
-            for (let i = 0; i < a.length; i++) {
-                dummy |= a[i] ^ a[i];
-            }
             return false;
         }
 
