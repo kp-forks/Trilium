@@ -53,10 +53,10 @@ export default class StandaloneBackupService extends BackupService {
             // Serialize the database
             const data = getSql().serialize();
 
-            // Write to OPFS (convert to Blob for compatibility)
+            // Write to OPFS
             const fileHandle = await dir.getFileHandle(fileName, { create: true });
             const writable = await fileHandle.createWritable();
-            await writable.write(new Blob([data]));
+            await writable.write(data);
             await writable.close();
 
             console.log(`[Backup] Created backup: ${fileName} (${data.byteLength} bytes)`);
@@ -66,13 +66,6 @@ export default class StandaloneBackupService extends BackupService {
             // Don't throw - backup failure shouldn't block operations
             return `/${BACKUP_DIR_NAME}/${fileName}`;
         }
-    }
-
-    override regularBackup(): void {
-        // For standalone, we don't implement scheduled backups yet
-        // since we don't have easy access to the options service for
-        // checking daily/weekly/monthly settings.
-        // Manual backups via backupNow() still work.
     }
 
     override getExistingBackups(): DatabaseBackup[] {
