@@ -1,4 +1,7 @@
 import type { Request, Response } from "express";
+import type { File } from "../../services/import/common.js";
+
+type FileRequest<P> = Omit<Request<P>, "file"> & { file?: File };
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
@@ -103,9 +106,9 @@ function returnAttachedImage(req: Request<{ attachmentId: string }>, res: Respon
     }
 }
 
-function updateImage(req: Request<{ noteId: string }>) {
+function updateImage(req: FileRequest<{ noteId: string }>) {
     const { noteId } = req.params;
-    const { file } = req as any;  // TODO: Add support for file upload in type definitions and remove 'as any' cast
+    const { file } = req;
 
     const _note = becca.getNoteOrThrow(noteId);
 
