@@ -13,6 +13,7 @@ import { applyInlineMermaid, rewriteMermaidDiagramsInContainer } from "../../../
 import { getLocaleById } from "../../../services/i18n";
 import { renderMathInElement } from "../../../services/math";
 import { formatCodeBlocks } from "../../../services/syntax_highlight";
+import { sanitizeNoteContentHtml } from "../../../services/sanitize_content.js";
 import { useNoteBlob, useNoteLabel, useTriliumEvent, useTriliumOptionBool } from "../../react/hooks";
 import { RawHtmlBlock } from "../../react/RawHtml";
 import TouchBar, { TouchBarButton, TouchBarSpacer } from "../../react/TouchBar";
@@ -61,7 +62,7 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
                 className={clsx("note-detail-readonly-text-content ck-content use-tn-links selectable-text", codeBlockWordWrap && "word-wrap")}
                 tabindex={100}
                 dir={isRtl ? "rtl" : "ltr"}
-                html={blob?.content}
+                html={blob?.content ? sanitizeNoteContentHtml(blob.content as string) : undefined}
             />
 
             <TouchBar>
