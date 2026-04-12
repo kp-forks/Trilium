@@ -44,6 +44,6 @@ beforeAll(async () => {
         platform: new ServerPlatformProvider(),
         translations: initializeTranslationsWithParams,
         inAppHelp: new NodejsInAppHelpProvider(),
-        backup: new ServerBackupService(() => options)
+        backup: new ServerBackupService(options)
     });
 });

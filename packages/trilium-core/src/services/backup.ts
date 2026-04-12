@@ -15,7 +15,7 @@ export interface BackupOptionsService {
  * Platform-specific implementations must extend this class.
  */
 export default abstract class BackupService {
-    constructor(protected readonly getOptions: () => BackupOptionsService) {}
+    constructor(protected readonly options: BackupOptionsService) {}
 
     /**
      * Create a backup with the given name.
@@ -59,7 +59,7 @@ export default abstract class BackupService {
             backupType === "weekly" ? "weeklyBackupEnabled" :
             "monthlyBackupEnabled";
 
-        return this.getOptions().getOptionBool(optionName);
+        return this.options.getOptionBool(optionName);
     }
 
     /**
@@ -74,13 +74,12 @@ export default abstract class BackupService {
             return;
         }
 
-        const options = this.getOptions();
         const now = new Date();
-        const lastBackupDate = dateUtils.parseDateTime(options.getOption(optionName));
+        const lastBackupDate = dateUtils.parseDateTime(this.options.getOption(optionName));
 
         if (now.getTime() - lastBackupDate.getTime() > periodInSeconds * 1000) {
             await this.backupNow(backupType);
-            options.setOption(optionName, dateUtils.utcNowDateTime());
+            this.options.setOption(optionName, dateUtils.utcNowDateTime());
         }
     }
 }

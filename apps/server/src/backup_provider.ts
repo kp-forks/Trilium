@@ -8,8 +8,8 @@ import log from "./services/log.js";
 import sql from "./services/sql.js";
 
 export default class ServerBackupService extends BackupService {
-    constructor(getOptions: () => BackupOptionsService) {
-        super(getOptions);
+    constructor(options: BackupOptionsService) {
+        super(options);
     }
 
     override getExistingBackups(): DatabaseBackup[] {

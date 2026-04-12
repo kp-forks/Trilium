@@ -130,7 +130,7 @@ beforeAll(async () => {
             });
         },
         platform: new StandalonePlatformProvider(""),
-        backup: new StandaloneBackupService(() => options),
+        backup: new StandaloneBackupService(options),
         schema: schemaSql,
         dbConfig: {
             provider: sqlProvider,

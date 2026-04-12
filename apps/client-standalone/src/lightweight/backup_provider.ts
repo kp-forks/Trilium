@@ -13,8 +13,8 @@ export default class StandaloneBackupService extends BackupService {
     private backupDir: FileSystemDirectoryHandle | null = null;
     private opfsAvailable: boolean | null = null;
 
-    constructor(getOptions: () => BackupOptionsService) {
-        super(getOptions);
+    constructor(options: BackupOptionsService) {
+        super(options);
     }
 
     private isOpfsAvailable(): boolean {

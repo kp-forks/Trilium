@@ -176,7 +176,7 @@ async function initialize(): Promise<void> {
                 request: new FetchRequestProvider(),
                 platform: new StandalonePlatformProvider(queryString),
                 log: logService,
-                backup: new StandaloneBackupService(() => coreModule!.options),
+                backup: new StandaloneBackupService(coreModule!.options),
                 translations: translationProvider,
                 schema: schemaModule.default,
                 getDemoArchive: async () => {
