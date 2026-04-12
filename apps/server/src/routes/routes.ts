@@ -215,7 +215,6 @@ function register(app: express.Application) {
     apiRoute(PUT, "/api/options/:name/:value", optionsApiRoute.updateOption);
     apiRoute(PUT, "/api/options", optionsApiRoute.updateOptions);
     apiRoute(GET, "/api/options/user-themes", optionsApiRoute.getUserThemes);
-    apiRoute(GET, "/api/options/locales", optionsApiRoute.getSupportedLocales);
 
     apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
@@ -316,7 +315,7 @@ function register(app: express.Application) {
     // backup requires execution outside of transaction
     asyncRoute(PST, "/api/database/backup-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.backupDatabase, apiResultHandler);
     apiRoute(GET, "/api/database/backups", databaseRoute.getExistingBackups);
-
+    route(GET, "/api/database/backup/download", [auth.checkApiAuthOrElectron], databaseRoute.downloadBackup);
     // VACUUM requires execution outside of transaction
     asyncRoute(PST, "/api/database/vacuum-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.vacuumDatabase, apiResultHandler);
 

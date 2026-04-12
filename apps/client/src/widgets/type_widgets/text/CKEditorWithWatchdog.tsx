@@ -7,7 +7,7 @@ import link from "../../../services/link";
 import { useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteContext, useSyncedRef, useTriliumOption } from "../../react/hooks";
 import { buildConfig, BuildEditorOptions } from "./config";
 
-export type BoxSize = "small" | "medium" | "full";
+export type BoxSize = "small" | "medium" | "full" | "expandable";
 
 export interface CKEditorApi {
     /** returns true if user selected some text, false if there's no selection */

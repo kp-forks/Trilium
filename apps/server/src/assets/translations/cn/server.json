@@ -243,7 +243,7 @@
     "shortcuts-title": "快捷键",
     "text-notes": "文本笔记",
     "code-notes-title": "代码笔记",
-    "images-title": "图片",
+    "images-title": "媒体",
     "spellcheck-title": "拼写检查",
     "password-title": "密码",
     "multi-factor-authentication-title": "多因素认证",
@@ -261,7 +261,9 @@
     "zen-mode": "禅模式",
     "tab-switcher-title": "标签切换器",
     "llm-chat-history-title": "AI对话历史",
-    "sidebar-chat-title": "AI对话"
+    "sidebar-chat-title": "AI对话",
+    "custom-dictionary-title": "自定义词典",
+    "llm-title": "AI / LLM"
   },
   "notes": {
     "new-note": "新建笔记",
@@ -404,7 +406,10 @@
     "last-updated": "最后更新于 {{- date}}",
     "subpages": "子页面：",
     "on-this-page": "本页内容",
-    "expand": "展开"
+    "expand": "展开",
+    "toggle-navigation": "切换导航",
+    "toggle-toc": "切换目录",
+    "logo-alt": "Logo"
   },
   "hidden_subtree_templates": {
     "text-snippet": "文本片段",
@@ -440,5 +445,15 @@
   },
   "desktop": {
     "instance_already_running": "已经有一个运行中的实例，正在将焦点切换到该实例。"
+  },
+  "search": {
+    "error": {
+      "in-context": "{{-context}} 中出错：{{-message}}",
+      "reserved-keyword": "\"{{- token}}\" 是一个保留关键字。要搜索字面值，请使用引号：\"{{- token}}\"",
+      "cannot-compare-with": "无法与“{{- token}}”进行比较。要搜索字面值，请使用引号：“{{- token}}”",
+      "misplaced-expression": "位置错误或不完整的表达式“{{- token}}”",
+      "fulltext-after-expression": "“{{- token}}”不是有效表达式。要搜索文本，请将其放在属性筛选器之前（例如，“{{- token}} #label”而不是“#label {{- token}}”）。",
+      "unrecognized-expression": "无法识别的表达式“{{- token}}”"
+    }
   }
 }

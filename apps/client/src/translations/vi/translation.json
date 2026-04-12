@@ -27,7 +27,6 @@
   },
   "delete_notes": {
     "close": "Đóng",
-    "ok": "OK",
     "cancel": "Huỷ"
   },
   "export": {

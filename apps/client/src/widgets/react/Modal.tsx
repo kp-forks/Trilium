@@ -1,7 +1,6 @@
 import { Modal as BootstrapModal } from "bootstrap";
 import clsx from "clsx";
 import { ComponentChildren, CSSProperties, RefObject } from "preact";
-import { memo } from "preact/compat";
 import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import { openDialog } from "../../services/dialog";
@@ -186,7 +185,7 @@ export default function Modal({ children, className, size, title, customTitleBar
     );
 }
 
-const ModalInner = memo(({ children, footer, footerAlignment, bodyStyle, footerStyle: _footerStyle }: Pick<ModalProps, "children" | "footer" | "footerAlignment" | "bodyStyle" | "footerStyle">) => {
+function ModalInner({ children, footer, footerAlignment, bodyStyle, footerStyle: _footerStyle }: Pick<ModalProps, "children" | "footer" | "footerAlignment" | "bodyStyle" | "footerStyle">) {
     // Memoize footer style
     const footerStyle = useMemo<CSSProperties>(() => {
         const style: CSSProperties = _footerStyle ?? {};
@@ -209,4 +208,4 @@ const ModalInner = memo(({ children, footer, footerAlignment, bodyStyle, footerS
             )}
         </>
     );
-});
+}

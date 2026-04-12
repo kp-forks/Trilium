@@ -1,5 +1,4 @@
 import type { ComponentChildren, CSSProperties, RefObject } from "preact";
-import { memo } from "preact/compat";
 import { useMemo } from "preact/hooks";
 
 import { CommandNames } from "../../components/app_context";
@@ -27,7 +26,7 @@ export interface ButtonProps {
     title?: string;
 }
 
-const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortcut, icon, kind, disabled, size, style, triggerCommand, ...restProps }: ButtonProps) => {
+function Button({ name, buttonRef, className, text, onClick, keyboardShortcut, icon, kind, disabled, size, style, triggerCommand, ...restProps }: ButtonProps) {
     // Memoize classes array to prevent recreation
     const classes = useMemo(() => {
         const classList: string[] = ["btn"];
@@ -83,7 +82,7 @@ const Button = memo(({ name, buttonRef, className, text, onClick, keyboardShortc
             {text} {shortcutElements}
         </button>
     );
-});
+}
 
 export function ButtonGroup({ children }: { children: ComponentChildren }) {
     return (

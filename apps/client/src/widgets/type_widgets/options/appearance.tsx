@@ -3,6 +3,7 @@ import "./appearance.css";
 import { FontFamily, OptionNames } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
+import zoomService from "../../../components/zoom";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import { isElectron, isMobile, reloadFrontendApp, restartDesktopApp } from "../../../services/utils";
@@ -14,9 +15,10 @@ import FormGroup from "../../react/FormGroup";
 import FormRadioGroup from "../../react/FormRadioGroup";
 import FormSelect, { FormSelectWithGroups } from "../../react/FormSelect";
 import FormText from "../../react/FormText";
-import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
+import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
+import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import PlatformIndicator from "./components/PlatformIndicator";
 import RadioWithIllustration from "./components/RadioWithIllustration";
@@ -333,20 +335,23 @@ function Font({ title, fontFamilyOption, fontSizeOption }: { title: string, font
 }
 
 function ElectronIntegration() {
-    const [ zoomFactor, setZoomFactor ] = useTriliumOption("zoomFactor");
+    const [ zoomFactor ] = useTriliumOption("zoomFactor");
     const [ nativeTitleBarVisible, setNativeTitleBarVisible ] = useTriliumOptionBool("nativeTitleBarVisible");
     const [ backgroundEffects, setBackgroundEffects ] = useTriliumOptionBool("backgroundEffects");
 
+    const zoomPercentage = Math.round(parseFloat(zoomFactor || "1") * 100);
+
     return (
         <OptionsSection title={t("electron_integration.desktop-application")}>
-            <FormGroup name="zoom-factor" label={t("electron_integration.zoom-factor")} description={t("zoom_factor.description")}>
-                <FormTextBox
+            <OptionsRow name="zoom-factor" label={t("electron_integration.zoom-factor")} description={t("zoom_factor.description")}>
+                <FormTextBoxWithUnit
                     type="number"
-                    min="0.3" max="2.0" step="0.1"
-                    currentValue={zoomFactor} onChange={setZoomFactor}
+                    min={50} max={200} step={10}
+                    currentValue={String(zoomPercentage)}
+                    onChange={(v) => zoomService.setZoomFactorAndSave(parseInt(v, 10) / 100)}
+                    unit={t("units.percentage")}
                 />
-            </FormGroup>
-            <hr/>
+            </OptionsRow>
 
             <FormGroup name="native-title-bar" description={t("electron_integration.native-title-bar-description")}>
                 <FormCheckbox

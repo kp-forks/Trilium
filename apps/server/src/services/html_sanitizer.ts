@@ -49,7 +49,10 @@ function sanitize(dirtyHtml: string) {
         allowedStyles: {
             "*": {
                 color: colorRegex,
-                "background-color": colorRegex
+                "background-color": colorRegex,
+                "margin-left": sizeRegex,
+                "padding-left": sizeRegex,
+                "text-align": [/^\s*(left|center|right|justify)\s*$/]
             },
             figure: {
                 float: [/^\s*(left|right|none)\s*$/],

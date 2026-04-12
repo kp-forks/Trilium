@@ -43,10 +43,19 @@ Backend scripts run in Node.js on the server. They have direct access to notes i
 - `api.getAppInfo()` - get application info
 
 ### Libraries
-- `api.axios` - HTTP client
 - `api.dayjs` - date manipulation
 - `api.xml2js` - XML parser
-- `api.cheerio` - HTML/XML parser
+- `api.htmlParser` - HTML parser (node-html-parser), use `api.htmlParser.parse(html)` to parse
+- `api.cheerio` - **DEPRECATED**, use `api.htmlParser` instead
+
+### HTTP Requests
+Use the native `fetch()` API for HTTP requests:
+```javascript
+const response = await fetch('https://api.example.com/data');
+const data = await response.json();
+```
+
+Note: `api.axios` was removed in 2026 due to a supply chain security incident. Use `fetch()` instead.
 
 ### Advanced
 - `api.transactional(func)` - wrap code in a database transaction

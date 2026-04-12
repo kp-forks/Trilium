@@ -27,7 +27,8 @@ export interface StreamCallbacks {
 export async function streamChatCompletion(
     messages: LlmMessage[],
     config: LlmChatConfig,
-    callbacks: StreamCallbacks
+    callbacks: StreamCallbacks,
+    abortSignal?: AbortSignal
 ): Promise<void> {
     const headers = await server.getHeaders();
 
@@ -37,7 +38,8 @@ export async function streamChatCompletion(
             ...headers,
             "Content-Type": "application/json"
         } as HeadersInit,
-        body: JSON.stringify({ messages, config })
+        body: JSON.stringify({ messages, config }),
+        signal: abortSignal
     });
 
     if (!response.ok) {

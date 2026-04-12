@@ -1230,6 +1230,43 @@ a.external:not(.no-arrow):after, a[href^="http://"]:not(.no-arrow):after, a[href
     width: 100%;
 }
 
+/* Expandable include note styles */
+.include-note-title-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.include-note-title-row .include-note-title {
+    margin: 0;
+}
+
+.include-note-toggle {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: var(--main-text-color);
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.include-note-toggle:hover {
+    color: var(--main-link-color);
+}
+
+.include-note-toggle.expanded {
+    transform: rotate(90deg);
+}
+
+.include-note[data-box-size="expandable"] .include-note-content {
+    margin-top: 10px;
+}
+
 .alert {
     padding: 8px 14px;
     width: auto;

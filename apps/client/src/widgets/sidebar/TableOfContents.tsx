@@ -5,9 +5,8 @@ import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
-import math from "../../services/math";
 import { randomString } from "../../services/utils";
-import { useActiveNoteContext, useContentElement, useGetContextData, useIsNoteReadOnly, useNoteProperty, useTextEditor } from "../react/hooks";
+import { useActiveNoteContext, useContentElement, useGetContextData, useIsNoteReadOnly, useMathRendering, useNoteProperty, useTextEditor } from "../react/hooks";
 import Icon from "../react/Icon";
 import RawHtml from "../react/RawHtml";
 import RightPanelWidget from "./RightPanelWidget";
@@ -84,19 +83,7 @@ function TableOfContentsHeading({ heading, scrollToHeading, activeHeadingId }: {
     const isActive = heading.id === activeHeadingId;
     const contentRef = useRef<HTMLElement>(null);
 
-    // Render math equations after component mounts/updates
-    useEffect(() => {
-        if (!contentRef.current) return;
-        const mathElements = contentRef.current.querySelectorAll(".ck-math-tex");
-
-        for (const mathEl of mathElements ?? []) {
-            try {
-                math.render(mathEl.textContent || "", mathEl as HTMLElement);
-            } catch (e) {
-                console.warn("Failed to render math in TOC:", e);
-            }
-        }
-    }, [heading.text]);
+    useMathRendering(contentRef, [heading.text]);
 
     return (
         <>
@@ -273,7 +260,7 @@ function extractTocFromStaticHtml(el: HTMLElement | null) {
         headings.push({
             id: randomString(),
             level: parseInt(headingEl.tagName.substring(1), 10),
-            text: headingEl.textContent,
+            text: headingEl.innerHTML,
             element: headingEl
         });
     }

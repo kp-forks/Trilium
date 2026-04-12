@@ -1,16 +1,19 @@
+import { SyncTestResponse } from "@triliumnext/commons";
 import { useRef } from "preact/hooks";
+
 import { t } from "../../../services/i18n";
+import server from "../../../services/server";
+import toast from "../../../services/toast";
 import { openInAppHelpFromUrl } from "../../../services/utils";
 import Button from "../../react/Button";
 import FormGroup from "../../react/FormGroup";
-import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
-import RawHtml from "../../react/RawHtml";
-import OptionsSection from "./components/OptionsSection";
-import { useTriliumOptions } from "../../react/hooks";
 import FormText from "../../react/FormText";
-import server from "../../../services/server";
-import toast from "../../../services/toast";
-import { SyncTestResponse } from "@triliumnext/commons";
+import FormTextBox from "../../react/FormTextBox";
+import { useTriliumOptions } from "../../react/hooks";
+import RawHtml from "../../react/RawHtml";
+import OptionsRow from "./components/OptionsRow";
+import OptionsSection from "./components/OptionsSection";
+import TimeSelector from "./components/TimeSelector";
 
 export default function SyncOptions() {
     return (
@@ -18,13 +21,12 @@ export default function SyncOptions() {
             <SyncConfiguration />
             <SyncTest />
         </>
-    )
+    );
 }
 
 export function SyncConfiguration() {
-    const [ options, setOptions ] = useTriliumOptions("syncServerHost", "syncServerTimeout", "syncProxy");
+    const [ options, setOptions ] = useTriliumOptions("syncServerHost", "syncProxy");
     const syncServerHost = useRef(options.syncServerHost);
-    const syncServerTimeout = useRef(options.syncServerTimeout);
     const syncProxy = useRef(options.syncProxy);
 
     return (
@@ -32,13 +34,12 @@ export function SyncConfiguration() {
             <form onSubmit={(e) => {
                 setOptions({
                     syncServerHost: syncServerHost.current,
-                    syncServerTimeout: syncServerTimeout.current,
                     syncProxy: syncProxy.current
                 });
                 e.preventDefault();
             }}>
                 <FormGroup name="sync-server-host" label={t("sync_2.server_address")}>
-                    <FormTextBox                        
+                    <FormTextBox
                         placeholder="https://<host>:<port>"
                         currentValue={syncServerHost.current} onChange={(newValue) => syncServerHost.current = newValue}
                     />
@@ -50,17 +51,9 @@ export function SyncConfiguration() {
                         <RawHtml html={t("sync_2.special_value_description")} />
                     </>}
                 >
-                    <FormTextBox                        
+                    <FormTextBox
                         placeholder="https://<host>:<port>"
                         currentValue={syncProxy.current} onChange={(newValue) => syncProxy.current = newValue}
-                    />
-                </FormGroup>
-
-                <FormGroup name="sync-server-timeout" label={t("sync_2.timeout")}>
-                    <FormTextBoxWithUnit                        
-                        min={1} max={10000000} type="number"
-                        unit={t("sync_2.timeout_unit")}
-                        currentValue={syncServerTimeout.current} onChange={(newValue) => syncServerTimeout.current = newValue}
                     />
                 </FormGroup>
 
@@ -69,8 +62,19 @@ export function SyncConfiguration() {
                     <Button text={t("sync_2.help")} onClick={() => openInAppHelpFromUrl("cbkrhQjrkKrh")} />
                 </div>
             </form>
+
+            <hr/>
+
+            <OptionsRow name="sync-server-timeout" label={t("sync_2.timeout")} description={t("sync_2.timeout_description")}>
+                <TimeSelector
+                    name="sync-server-timeout"
+                    optionValueId="syncServerTimeout"
+                    optionTimeScaleId="syncServerTimeoutTimeScale"
+                    minimumSeconds={1}
+                />
+            </OptionsRow>
         </OptionsSection>
-    )
+    );
 }
 
 export function SyncTest() {
@@ -90,5 +94,5 @@ export function SyncTest() {
                 }}
             />
         </OptionsSection>
-    )
+    );
 }
