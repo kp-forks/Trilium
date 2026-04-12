@@ -184,6 +184,7 @@ async function initialize(): Promise<void> {
                     if (!response.ok) return null;
                     return new Uint8Array(await response.arrayBuffer());
                 },
+                image: (await import("./services/image_provider.js")).standaloneImageProvider,
                 dbConfig: {
                     provider: sqlProvider!,
                     isReadOnly: false,
