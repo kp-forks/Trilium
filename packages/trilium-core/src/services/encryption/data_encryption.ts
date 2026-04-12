@@ -125,12 +125,16 @@ async function encryptAsync(key: Uint8Array, plainText: Uint8Array | string): Pr
     const digest = shaArray(plainTextUint8Array).slice(0, 4);
     const digestWithPayload = concat2(digest, plainTextUint8Array);
 
-    cipher.update(digestWithPayload);
-
     // Use async finalization if available (browser), otherwise sync (Node.js)
-    const encryptedData = cipher.finalizeAsync
-        ? await cipher.finalizeAsync()
-        : concat2(cipher.update(digestWithPayload), cipher.final());
+    let encryptedData: Uint8Array;
+    if (cipher.finalizeAsync) {
+        // Browser: update() buffers data, finalizeAsync() encrypts and returns all
+        cipher.update(digestWithPayload);
+        encryptedData = await cipher.finalizeAsync();
+    } else {
+        // Node.js: update() and final() both return encrypted chunks
+        encryptedData = concat2(cipher.update(digestWithPayload), cipher.final());
+    }
 
     const encryptedDataWithIv = concat2(iv, encryptedData);
 
@@ -162,12 +166,16 @@ async function decryptAsync(key: Uint8Array, cipherText: string | Uint8Array): P
 
         const decipher = getCrypto().createDecipheriv("aes-128-cbc", pad(key), pad(iv));
 
-        decipher.update(cipherTextUint8Array);
-
         // Use async finalization if available (browser), otherwise sync (Node.js)
-        const decryptedBytes = decipher.finalizeAsync
-            ? await decipher.finalizeAsync()
-            : concat2(decipher.update(cipherTextUint8Array), decipher.final());
+        let decryptedBytes: Uint8Array;
+        if (decipher.finalizeAsync) {
+            // Browser: update() buffers data, finalizeAsync() decrypts and returns all
+            decipher.update(cipherTextUint8Array);
+            decryptedBytes = await decipher.finalizeAsync();
+        } else {
+            // Node.js: update() and final() both return decrypted chunks
+            decryptedBytes = concat2(decipher.update(cipherTextUint8Array), decipher.final());
+        }
 
         const digest = decryptedBytes.slice(0, 4);
         const payload = decryptedBytes.slice(4);
