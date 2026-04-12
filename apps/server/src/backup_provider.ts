@@ -46,4 +46,20 @@ export default class ServerBackupService extends BackupService {
             return backupFile;
         });
     }
+
+    override async getBackupContent(filePath: string): Promise<Uint8Array | null> {
+        const resolvedPath = path.resolve(filePath);
+        const backupDir = path.resolve(dataDir.BACKUP_DIR);
+
+        // Security check: ensure the path is within the backup directory
+        if (!resolvedPath.startsWith(backupDir + path.sep)) {
+            return null;
+        }
+
+        if (!fs.existsSync(resolvedPath)) {
+            return null;
+        }
+
+        return fs.readFileSync(resolvedPath);
+    }
 }

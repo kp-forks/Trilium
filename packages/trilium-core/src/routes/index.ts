@@ -207,6 +207,7 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     // Backup routes
     asyncApiRoute(GET, "/api/database/backups", backupRoute.getExistingBackups);
     asyncApiRoute(PST, "/api/database/backup-database", backupRoute.backupDatabase);
+    asyncRoute(GET, "/api/database/backup/download", [checkApiAuthOrElectron], backupRoute.downloadBackup);
 
     apiRoute(GET, "/api/other/icon-usage", otherRoute.getIconUsage);
     apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);

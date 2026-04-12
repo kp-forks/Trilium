@@ -42,6 +42,12 @@ export default abstract class BackupService {
     abstract getExistingBackups(): Promise<DatabaseBackup[]>;
 
     /**
+     * Get the content of a backup file.
+     * Returns null if the backup doesn't exist or access is denied.
+     */
+    abstract getBackupContent(filePath: string): Promise<Uint8Array | null>;
+
+    /**
      * Run the scheduled backup checks for daily, weekly, and monthly backups.
      */
     protected async runScheduledBackups(): Promise<void> {

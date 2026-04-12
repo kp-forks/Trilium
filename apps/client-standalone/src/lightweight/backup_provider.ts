@@ -127,35 +127,30 @@ export default class StandaloneBackupService extends BackupService {
         }
     }
 
-    /**
-     * Download a backup to the user's device.
-     */
-    async downloadBackup(fileName: string): Promise<void> {
+    override async getBackupContent(filePath: string): Promise<Uint8Array | null> {
         if (!this.isOpfsAvailable()) {
-            throw new Error("OPFS not available - cannot download backup");
+            return null;
         }
 
         try {
             const dir = await this.ensureBackupDirectory();
             if (!dir) {
-                throw new Error("Backup directory not available");
+                return null;
+            }
+
+            // Extract fileName from filePath (e.g., "/backups/backup-now.db" -> "backup-now.db")
+            const fileName = filePath.split("/").pop();
+            if (!fileName || !BACKUP_FILE_PATTERN.test(fileName)) {
+                return null;
             }
 
             const fileHandle = await dir.getFileHandle(fileName);
             const file = await fileHandle.getFile();
             const data = await file.arrayBuffer();
-
-            // Create download link
-            const blob = new Blob([data], { type: "application/x-sqlite3" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
-            a.click();
-            URL.revokeObjectURL(url);
+            return new Uint8Array(data);
         } catch (error) {
-            console.error(`[Backup] Failed to download backup ${fileName}:`, error);
-            throw error;
+            console.error(`[Backup] Failed to get backup content ${filePath}:`, error);
+            return null;
         }
     }
 }

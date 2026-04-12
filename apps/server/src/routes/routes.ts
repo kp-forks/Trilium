@@ -167,8 +167,7 @@ function register(app: express.Application) {
         asyncRoute(PST, "/api/database/rebuild/", [auth.checkApiAuthOrElectron], databaseRoute.rebuildIntegrationTestDatabase, apiResultHandler);
     }
 
-    // backup/download is server-specific (uses Express res.download), backup-database and backups are in core
-    route(GET, "/api/database/backup/download", [auth.checkApiAuthOrElectron], databaseRoute.downloadBackup);
+    // backup routes (backups, backup-database, backup/download) are in core
     // VACUUM requires execution outside of transaction
     asyncRoute(PST, "/api/database/vacuum-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.vacuumDatabase, apiResultHandler);
 
