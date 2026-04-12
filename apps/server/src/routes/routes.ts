@@ -58,9 +58,9 @@ function register(app: express.Application) {
     });
 
     route(GET, "/bootstrap", [ auth.checkAuth ], indexRoute.bootstrap);
-    route(PST, "/login", [loginRateLimiter], loginRoute.login);
+    asyncRoute(PST, "/login", [loginRateLimiter], loginRoute.login, null);
     route(PST, "/logout", [csrfMiddleware, auth.checkAuth], loginRoute.logout);
-    route(PST, "/set-password", [auth.checkAppInitialized, auth.checkPasswordNotSet], loginRoute.setPassword);
+    asyncRoute(PST, "/set-password", [auth.checkAppInitialized, auth.checkPasswordNotSet], loginRoute.setPassword, null);
     route(GET, "/setup", [], setupRoute.setupPage);
 
 
@@ -124,7 +124,7 @@ function register(app: express.Application) {
     // TODO: Re-enable once we support route()
     // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
 
-    apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
+    asyncApiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
 
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
@@ -135,7 +135,7 @@ function register(app: express.Application) {
 
     route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
     // this is for entering protected mode so user has to be already logged-in (that's the reason we don't require username)
-    apiRoute(PST, "/api/login/protected", loginApiRoute.loginToProtectedSession);
+    asyncApiRoute(PST, "/api/login/protected", loginApiRoute.loginToProtectedSession);
     apiRoute(PST, "/api/login/protected/touch", loginApiRoute.touchProtectedSession);
     apiRoute(PST, "/api/logout/protected", loginApiRoute.logoutFromProtectedSession);
 

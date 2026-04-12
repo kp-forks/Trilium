@@ -156,6 +156,17 @@ Fluent builder pattern: `.child()`, `.class()`, `.css()` chaining with position-
 - **Barrel import caution** — `import { x } from "@triliumnext/core"` loads ALL core exports. Early-loading modules like `config.ts` should import specific subpaths (e.g. `@triliumnext/core/src/services/utils/index`) to avoid circular dependencies or initialization ordering issues
 - **Electron IPC** — In desktop mode, client API calls use Electron IPC (not HTTP). The IPC handler in `apps/server/src/routes/electron.ts` must be registered via `utils.isElectron` from the **server's** utils (which correctly checks `process.versions["electron"]`), not from core's utils
 
+### Binary Utilities
+
+Use utilities from `packages/trilium-core/src/services/utils/binary.ts` for string/buffer conversions instead of manual `TextEncoder`/`TextDecoder` or `Buffer.from()` calls:
+
+- **`wrapStringOrBuffer(input)`** — Converts `string` to `Uint8Array`, returns `Uint8Array` unchanged. Use when a function expects `Uint8Array` but receives `string | Uint8Array`.
+- **`unwrapStringOrBuffer(input)`** — Converts `Uint8Array` to `string`, returns `string` unchanged. Use when a function expects `string` but receives `string | Uint8Array`.
+- **`encodeBase64(input)`** / **`decodeBase64(input)`** — Base64 encoding/decoding that works in both Node.js and browser.
+- **`encodeUtf8(string)`** / **`decodeUtf8(buffer)`** — UTF-8 encoding/decoding.
+
+Import via `import { binary_utils } from "@triliumnext/core"` or directly from the module.
+
 ### Database
 
 SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/services/sql/` with `DatabaseProvider` interface, prepared statement caching, and transaction support.

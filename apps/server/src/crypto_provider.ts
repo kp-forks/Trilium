@@ -1,4 +1,5 @@
-import { CryptoProvider } from "@triliumnext/core";
+import type { CryptoProvider, ScryptOptions } from "@triliumnext/core";
+import { binary_utils } from "@triliumnext/core";
 import crypto from "crypto";
 import { generator } from "rand-token";
 
@@ -32,4 +33,28 @@ export default class NodejsCryptoProvider implements CryptoProvider {
         return hmac.digest("base64");
     }
 
+    async scrypt(
+        password: Uint8Array | string,
+        salt: Uint8Array | string,
+        keyLength: number,
+        options: ScryptOptions = {}
+    ): Promise<Uint8Array> {
+        const { N = 16384, r = 8, p = 1 } = options;
+        const passwordBytes = binary_utils.wrapStringOrBuffer(password);
+        const saltBytes = binary_utils.wrapStringOrBuffer(salt);
+        return crypto.scryptSync(passwordBytes, saltBytes, keyLength, { N, r, p });
+    }
+
+    constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
+        const bufA = Buffer.from(a);
+        const bufB = Buffer.from(b);
+
+        if (bufA.length !== bufB.length) {
+            // Compare bufA against itself to maintain constant time behavior
+            crypto.timingSafeEqual(bufA, bufA);
+            return false;
+        }
+
+        return crypto.timingSafeEqual(bufA, bufB);
+    }
 }

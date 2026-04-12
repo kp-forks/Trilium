@@ -118,17 +118,17 @@ function loginSync(req: Request) {
     };
 }
 
-function loginToProtectedSession(req: Request) {
+async function loginToProtectedSession(req: Request) {
     const password = req.body.password;
 
-    if (!passwordEncryptionService.verifyPassword(password)) {
+    if (!(await passwordEncryptionService.verifyPassword(password))) {
         return {
             success: false,
             message: "Given current password doesn't match hash"
         };
     }
 
-    const decryptedDataKey = passwordEncryptionService.getDataKey(password);
+    const decryptedDataKey = await passwordEncryptionService.getDataKey(password);
     if (!decryptedDataKey) {
         return {
             success: false,

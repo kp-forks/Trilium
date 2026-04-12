@@ -108,8 +108,110 @@ function decryptString(dataKey: Uint8Array, cipherText: string) {
     return decodeUtf8(buffer);
 }
 
+/**
+ * Async version of encrypt that works in both Node.js and browser environments.
+ * Uses finalizeAsync() for browser compatibility when available.
+ */
+async function encryptAsync(key: Uint8Array, plainText: Uint8Array | string): Promise<string> {
+    if (!key) {
+        throw new Error("No data key!");
+    }
+
+    const plainTextUint8Array = ArrayBuffer.isView(plainText) ? plainText : encodeUtf8(plainText);
+
+    const iv = getCrypto().randomBytes(16);
+    const cipher = getCrypto().createCipheriv("aes-128-cbc", pad(key), pad(iv));
+
+    const digest = shaArray(plainTextUint8Array).slice(0, 4);
+    const digestWithPayload = concat2(digest, plainTextUint8Array);
+
+    cipher.update(digestWithPayload);
+
+    // Use async finalization if available (browser), otherwise sync (Node.js)
+    const encryptedData = cipher.finalizeAsync
+        ? await cipher.finalizeAsync()
+        : concat2(cipher.update(digestWithPayload), cipher.final());
+
+    const encryptedDataWithIv = concat2(iv, encryptedData);
+
+    return encodeBase64(encryptedDataWithIv);
+}
+
+/**
+ * Async version of decrypt that works in both Node.js and browser environments.
+ * Uses finalizeAsync() for browser compatibility when available.
+ */
+async function decryptAsync(key: Uint8Array, cipherText: string | Uint8Array): Promise<Uint8Array | false | null> {
+    if (cipherText === null) {
+        return null;
+    }
+
+    if (!key) {
+        return encodeUtf8("[protected]");
+    }
+
+    try {
+        const cipherTextStr = typeof cipherText === "string" ? cipherText : decodeUtf8(cipherText);
+        const cipherTextUint8ArrayWithIv = decodeBase64(cipherTextStr);
+
+        // old encrypted data can have IV of length 13, see some details here: https://github.com/zadam/trilium/issues/3017
+        const ivLength = cipherTextUint8ArrayWithIv.length % 16 === 0 ? 16 : 13;
+
+        const iv = cipherTextUint8ArrayWithIv.slice(0, ivLength);
+        const cipherTextUint8Array = cipherTextUint8ArrayWithIv.slice(ivLength);
+
+        const decipher = getCrypto().createDecipheriv("aes-128-cbc", pad(key), pad(iv));
+
+        decipher.update(cipherTextUint8Array);
+
+        // Use async finalization if available (browser), otherwise sync (Node.js)
+        const decryptedBytes = decipher.finalizeAsync
+            ? await decipher.finalizeAsync()
+            : concat2(decipher.update(cipherTextUint8Array), decipher.final());
+
+        const digest = decryptedBytes.slice(0, 4);
+        const payload = decryptedBytes.slice(4);
+
+        const computedDigest = shaArray(payload).slice(0, 4);
+
+        if (!arraysIdentical(digest, computedDigest)) {
+            return false;
+        }
+
+        return payload;
+    } catch (e: any) {
+        // recovery from https://github.com/zadam/trilium/issues/510
+        if (e.message?.includes("WRONG_FINAL_BLOCK_LENGTH") || e.message?.includes("wrong final block length")) {
+            getLog().info("Caught WRONG_FINAL_BLOCK_LENGTH, returning cipherText instead");
+
+            return (ArrayBuffer.isView(cipherText) ? cipherText : Uint8Array.from(cipherText));
+        }
+        throw e;
+    }
+}
+
+/**
+ * Async version of decryptString that works in both Node.js and browser environments.
+ */
+async function decryptStringAsync(dataKey: Uint8Array, cipherText: string): Promise<string | null> {
+    const buffer = await decryptAsync(dataKey, cipherText);
+
+    if (buffer === null) {
+        return null;
+    } else if (buffer === false) {
+        getLog().error(`Could not decrypt string. Uint8Array: ${buffer}`);
+
+        throw new Error("Could not decrypt string.");
+    }
+
+    return decodeUtf8(buffer);
+}
+
 export default {
     encrypt,
     decrypt,
-    decryptString
+    decryptString,
+    encryptAsync,
+    decryptAsync,
+    decryptStringAsync
 };

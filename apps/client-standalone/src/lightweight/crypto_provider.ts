@@ -1,13 +1,10 @@
-import type { CryptoProvider } from "@triliumnext/core";
+import type { Cipher, CryptoProvider, ScryptOptions } from "@triliumnext/core";
+import { binary_utils } from "@triliumnext/core";
 import { sha1 } from "js-sha1";
 import { sha256 } from "js-sha256";
 import { sha512 } from "js-sha512";
 import { md5 } from "js-md5";
-
-interface Cipher {
-    update(data: Uint8Array): Uint8Array;
-    final(): Uint8Array;
-}
+import { scrypt } from "scrypt-js";
 
 const CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -17,8 +14,7 @@ const CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 export default class BrowserCryptoProvider implements CryptoProvider {
 
     createHash(algorithm: "md5" | "sha1" | "sha512", content: string | Uint8Array): Uint8Array {
-        const data = typeof content === "string" ? content :
-                new TextDecoder().decode(content);
+        const data = binary_utils.unwrapStringOrBuffer(content);
 
         let hexHash: string;
         if (algorithm === "md5") {
@@ -63,8 +59,8 @@ export default class BrowserCryptoProvider implements CryptoProvider {
     }
 
     hmac(secret: string | Uint8Array, value: string | Uint8Array): string {
-        const secretStr = typeof secret === "string" ? secret : new TextDecoder().decode(secret);
-        const valueStr = typeof value === "string" ? value : new TextDecoder().decode(value);
+        const secretStr = binary_utils.unwrapStringOrBuffer(secret);
+        const valueStr = binary_utils.unwrapStringOrBuffer(value);
         // sha256.hmac returns hex, convert to base64 to match Node's behavior
         const hexHash = sha256.hmac(secretStr, valueStr);
         const bytes = new Uint8Array(hexHash.length / 2);
@@ -72,6 +68,36 @@ export default class BrowserCryptoProvider implements CryptoProvider {
             bytes[i / 2] = parseInt(hexHash.substr(i, 2), 16);
         }
         return btoa(String.fromCharCode(...bytes));
+    }
+
+    async scrypt(
+        password: Uint8Array | string,
+        salt: Uint8Array | string,
+        keyLength: number,
+        options: ScryptOptions = {}
+    ): Promise<Uint8Array> {
+        const { N = 16384, r = 8, p = 1 } = options;
+        const passwordBytes = binary_utils.wrapStringOrBuffer(password);
+        const saltBytes = binary_utils.wrapStringOrBuffer(salt);
+
+        return scrypt(passwordBytes, saltBytes, N, r, p, keyLength);
+    }
+
+    constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
+        if (a.length !== b.length) {
+            // Maintain constant time by comparing a to itself
+            let dummy = 0;
+            for (let i = 0; i < a.length; i++) {
+                dummy |= a[i] ^ a[i];
+            }
+            return false;
+        }
+
+        let result = 0;
+        for (let i = 0; i < a.length; i++) {
+            result |= a[i] ^ b[i];
+        }
+        return result === 0;
     }
 }
 
