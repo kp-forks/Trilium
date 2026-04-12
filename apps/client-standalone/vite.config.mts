@@ -1,5 +1,5 @@
 import fs from "fs";
-import { join } from "path";
+import { join, resolve, sep } from "path";
 
 import prefresh from "@prefresh/vite";
 import { defineConfig, type Plugin } from "vite";
@@ -45,8 +45,11 @@ const pdfjsServePlugin = (): Plugin => ({
             const relativePath = urlWithoutQuery.replace(/^\/pdfjs\//, "");
             const filePath = join(pdfjsRoot, relativePath);
 
-            // Security: ensure we're still within pdfjsRoot
-            if (!filePath.startsWith(pdfjsRoot)) {
+            // Security: resolve both paths to prevent prefix-collision attacks
+            // (e.g. pdfjsRoot="/foo/bar" matching "/foo/bar2/evil.js")
+            const resolvedRoot = resolve(pdfjsRoot);
+            const resolvedFilePath = resolve(filePath);
+            if (!resolvedFilePath.startsWith(resolvedRoot + sep)) {
                 return next();
             }
 

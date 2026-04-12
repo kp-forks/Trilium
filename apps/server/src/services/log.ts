@@ -1,21 +1,22 @@
 import { getLog } from "@triliumnext/core";
 import type { Request, Response } from "express";
-import type ServerLogService from "../log_provider.js";
+import ServerLogService from "../log_provider.js";
 
-function getServerLog(): ServerLogService {
-    return getLog() as ServerLogService;
+function getServerLog(): ServerLogService | undefined {
+    const log = getLog();
+    return log instanceof ServerLogService ? log : undefined;
 }
 
 function info(message: string | Error) {
-    getServerLog().info(message);
+    getLog().info(message);
 }
 
 function error(message: string | Error | unknown) {
-    getServerLog().error(message);
+    getLog().error(message);
 }
 
 function request(req: Request, res: Response, timeMs: number, responseLength: number | string = "?") {
-    getServerLog().request(req, res, timeMs, responseLength);
+    getServerLog()?.request(req, res, timeMs, responseLength);
 }
 
 export default {

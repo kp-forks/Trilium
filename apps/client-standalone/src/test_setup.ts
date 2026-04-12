@@ -14,6 +14,7 @@ import BrowserCryptoProvider from "./lightweight/crypto_provider.js";
 import StandalonePlatformProvider from "./lightweight/platform_provider.js";
 import BrowserSqlProvider from "./lightweight/sql_provider.js";
 import BrowserZipProvider from "./lightweight/zip_provider.js";
+import { standaloneImageProvider } from "./services/image_provider.js";
 
 // =============================================================================
 // SQLite WASM compatibility shims
@@ -131,6 +132,7 @@ beforeAll(async () => {
         },
         platform: new StandalonePlatformProvider(""),
         backup: new StandaloneBackupService(options),
+        image: standaloneImageProvider,
         schema: schemaSql,
         dbConfig: {
             provider: sqlProvider,

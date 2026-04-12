@@ -12,6 +12,7 @@ import tray from "@triliumnext/server/src/services/tray.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
 import ServerBackupService from "@triliumnext/server/src/backup_provider.js";
+import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { app, BrowserWindow,globalShortcut } from "electron";
@@ -151,6 +152,7 @@ async function main() {
         // both source and bundled-production modes.
         getDemoArchive: async () => fs.readFileSync(path.join(RESOURCE_DIR, "db", "demo.zip")),
         inAppHelp: new NodejsInAppHelpProvider(),
+        log: new ServerLogService(),
         backup: new ServerBackupService(options),
         image: (await import("@triliumnext/server/src/services/image_provider.js")).serverImageProvider,
         extraAppInfo: {
