@@ -8,6 +8,7 @@ import fs from "fs";
 import { t } from "i18next";
 import path from "path";
 
+import ServerBackupService from "./backup_provider.js";
 import ClsHookedExecutionContext from "./cls_provider.js";
 import { getIntegrationTestDbPath, loadCoreSchema } from "./core_assets.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
@@ -80,6 +81,7 @@ async function startApplication() {
         // both source and bundled-production modes.
         getDemoArchive: async () => fs.readFileSync(path.join(RESOURCE_DIR, "db", "demo.zip")),
         inAppHelp: new NodejsInAppHelpProvider(),
+        backup: new ServerBackupService(),
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)

@@ -122,8 +122,6 @@ export default async function buildApp() {
     const { sync, consistency_checks, scheduler } = await import("@triliumnext/core");
     sync.startSyncTimer();
 
-    await import("./services/backup.js");
-
     consistency_checks.startConsistencyChecks();
     scheduler.startScheduler();
 

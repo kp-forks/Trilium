@@ -1,12 +1,11 @@
 import { BackupDatabaseNowResponse, DatabaseCheckIntegrityResponse } from "@triliumnext/commons";
-import { becca_loader, ValidationError } from "@triliumnext/core";
+import { becca_loader, getBackup, ValidationError } from "@triliumnext/core";
 import type { Request, Response } from "express";
 import fs, { readFileSync } from "fs";
 import path from "path";
 
 import { getIntegrationTestDbPath } from "../../core_assets.js";
 import anonymizationService from "../../services/anonymization.js";
-import backupService from "../../services/backup.js";
 import consistencyChecksService from "../../services/consistency_checks.js";
 import dataDir from "../../services/data_dir.js";
 import log from "../../services/log.js";
@@ -14,12 +13,12 @@ import sql from "../../services/sql.js";
 import sql_init from "../../services/sql_init.js";
 
 function getExistingBackups() {
-    return backupService.getExistingBackups();
+    return getBackup().getExistingBackups();
 }
 
 async function backupDatabase() {
     return {
-        backupFile: await backupService.backupNow("now")
+        backupFile: await getBackup().backupNow("now")
     } satisfies BackupDatabaseNowResponse;
 }
 

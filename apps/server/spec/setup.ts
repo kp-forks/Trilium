@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { initializeCore } from "@triliumnext/core";
 import { serverZipExportProviderFactory } from "../src/services/export/zip/factory.js";
+import ServerBackupService from "../src/backup_provider.js";
 import ClsHookedExecutionContext from "../src/cls_provider.js";
 import NodejsCryptoProvider from "../src/crypto_provider.js";
 import NodejsZipProvider from "../src/zip_provider.js";
@@ -42,6 +43,7 @@ beforeAll(async () => {
         schema: readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
         platform: new ServerPlatformProvider(),
         translations: initializeTranslationsWithParams,
-        inAppHelp: new NodejsInAppHelpProvider()
+        inAppHelp: new NodejsInAppHelpProvider(),
+        backup: new ServerBackupService()
     });
 });

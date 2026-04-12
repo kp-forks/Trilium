@@ -1,6 +1,7 @@
 import { ExecutionContext, initContext } from "./services/context";
 import { CryptoProvider, initCrypto } from "./services/encryption/crypto";
 import LogService, { getLog, initLog } from "./services/log";
+import BackupService, { initBackup } from "./services/backup";
 import { initSql } from "./services/sql/index";
 import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
@@ -15,6 +16,7 @@ import { type InAppHelpProvider, initInAppHelp } from "./services/in_app_help";
 
 export { default as LogService, getLog } from "./services/log";
 export { default as FileBasedLogService, type LogFileInfo } from "./services/file_based_log";
+export { default as BackupService, getBackup, initBackup } from "./services/backup";
 export type * from "./services/sql/types";
 export * from "./services/sql/index";
 export { default as sql_init } from "./services/sql_init";
@@ -122,7 +124,7 @@ export { default as scriptService } from "./services/script";
 export { default as BackendScriptApi, type Api as BackendScriptApiInterface } from "./services/backend_script_api";
 export * as scheduler from "./services/scheduler";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive, inAppHelp, log }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive, inAppHelp, log, backup }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
@@ -140,9 +142,11 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
         dataDirectory: string;
     };
     log?: LogService;
+    backup?: BackupService;
 }) {
     initPlatform(platform);
     initLog(log);
+    initBackup(backup);
     await initTranslations(translations);
     initCrypto(crypto);
     initZipProvider(zip);

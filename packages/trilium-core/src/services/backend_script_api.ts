@@ -20,7 +20,7 @@ import type BRevision from "../becca/entities/brevision.js";
 import appInfo from "./app_info.js";
 import attributeService from "./attributes.js";
 import type { ApiParams } from "./backend_script_api_interface.js";
-import backupService from "./backup.js";
+import { getBackup } from "./backup.js";
 import cloningService from "./cloning.js";
 import config from "./config.js";
 import dateNoteService from "./date_notes.js";
@@ -717,7 +717,7 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     };
 
     this.runOutsideOfSync = syncMutex.doExclusively;
-    this.backupNow = backupService.backupNow;
+    this.backupNow = (name: string) => getBackup().backupNow(name);
     this.duplicateSubtree = noteService.duplicateSubtree;
 
     this.__private = {
