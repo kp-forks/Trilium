@@ -213,12 +213,11 @@ function ContributorListItem({data, onHover}: {data: Contributor, onHover?: Hove
         </a>
 
         {roleString && <span
-            className="contributor-role" 
             ref={roleRef}
             onMouseEnter={(e) => onHover?.(data, true, "role")}
             onMouseLeave={(e) => onHover?.(data, false, "role")}>
             
-            ({roleString})
+            (<span className="contributor-role">{roleString}</span>)
         </span>} 
     </>
 }
