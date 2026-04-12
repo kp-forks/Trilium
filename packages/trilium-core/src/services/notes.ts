@@ -636,41 +636,43 @@ function downloadImages(noteId: string, content: string) {
             // are downloaded and the IMG references are not updated. For this occasion we have this code
             // which upon the download of all the images will update the note if the links have not been fixed before
 
-            getSql().transactional(() => {
-                const imageNotes = becca.getNotes(Object.values(imageUrlToAttachmentIdMapping), true);
-                const log = getLog();
+            cls.getContext().init(() => {
+                getSql().transactional(() => {
+                    const imageNotes = becca.getNotes(Object.values(imageUrlToAttachmentIdMapping), true);
+                    const log = getLog();
 
-                const origNote = becca.getNote(noteId);
+                    const origNote = becca.getNote(noteId);
 
-                if (!origNote) {
-                    log.error(`Cannot find note '${noteId}' to replace image link.`);
-                    return;
-                }
-
-                const origContent = origNote.getContent();
-                let updatedContent = origContent;
-
-                if (typeof updatedContent !== "string") {
-                    log.error(`Note '${noteId}' has a non-string content, cannot replace image link.`);
-                    return;
-                }
-
-                for (const url in imageUrlToAttachmentIdMapping) {
-                    const imageNote = imageNotes.find((note) => note.noteId === imageUrlToAttachmentIdMapping[url]);
-
-                    if (imageNote) {
-                        updatedContent = replaceUrl(updatedContent, url, imageNote);
+                    if (!origNote) {
+                        log.error(`Cannot find note '${noteId}' to replace image link.`);
+                        return;
                     }
-                }
 
-                // update only if the links have not been already fixed.
-                if (updatedContent !== origContent) {
-                    origNote.setContent(updatedContent);
+                    const origContent = origNote.getContent();
+                    let updatedContent = origContent;
 
-                    asyncPostProcessContent(origNote, updatedContent);
+                    if (typeof updatedContent !== "string") {
+                        log.error(`Note '${noteId}' has a non-string content, cannot replace image link.`);
+                        return;
+                    }
 
-                    console.log(`Fixed the image links for note '${noteId}' to the offline saved.`);
-                }
+                    for (const url in imageUrlToAttachmentIdMapping) {
+                        const imageNote = imageNotes.find((note) => note.noteId === imageUrlToAttachmentIdMapping[url]);
+
+                        if (imageNote) {
+                            updatedContent = replaceUrl(updatedContent, url, imageNote);
+                        }
+                    }
+
+                    // update only if the links have not been already fixed.
+                    if (updatedContent !== origContent) {
+                        origNote.setContent(updatedContent);
+
+                        asyncPostProcessContent(origNote, updatedContent);
+
+                        console.log(`Fixed the image links for note '${noteId}' to the offline saved.`);
+                    }
+                });
             });
         }, 5000);
     });

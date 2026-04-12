@@ -6,6 +6,7 @@
 import sanitizeFilename from "sanitize-filename";
 
 import becca from "../becca/becca.js";
+import { getContext } from "./context.js";
 import { getLog } from "./log.js";
 import { getImageProvider } from "./image_provider.js";
 import noteService from "./notes.js";
@@ -33,10 +34,12 @@ function updateImage(noteId: string, uploadBuffer: Uint8Array, originalName: str
 
     // Process image asynchronously
     getImageProvider().processImage(uploadBuffer, originalName, true).then(({ buffer, format }) => {
-        getSql().transactional(() => {
-            note.mime = getImageMimeFromExtension(format.ext);
-            note.save();
-            note.setContent(buffer);
+        getContext().init(() => {
+            getSql().transactional(() => {
+                note.mime = getImageMimeFromExtension(format.ext);
+                note.save();
+                note.setContent(buffer);
+            });
         });
     });
 }
@@ -73,16 +76,18 @@ function saveImage(
 
     // Process image asynchronously
     getImageProvider().processImage(uploadBuffer, originalName, shrinkImageSwitch).then(({ buffer, format }) => {
-        getSql().transactional(() => {
-            note.mime = getImageMimeFromExtension(format.ext);
+        getContext().init(() => {
+            getSql().transactional(() => {
+                note.mime = getImageMimeFromExtension(format.ext);
 
-            if (!originalName.includes(".")) {
-                originalName += `.${format.ext}`;
-                note.setLabel("originalFileName", originalName);
-                note.title = sanitizeFilename(originalName);
-            }
+                if (!originalName.includes(".")) {
+                    originalName += `.${format.ext}`;
+                    note.setLabel("originalFileName", originalName);
+                    note.title = sanitizeFilename(originalName);
+                }
 
-            note.setContent(buffer, { forceSave: true });
+                note.setContent(buffer, { forceSave: true });
+            });
         });
     });
 
@@ -118,29 +123,33 @@ function saveImageToAttachment(
 
     // Schedule post-processing to mark unused attachments
     setTimeout(() => {
-        getSql().transactional(() => {
-            const note = becca.getNoteOrThrow(noteId);
-            noteService.asyncPostProcessContent(note, note.getContent());
+        getContext().init(() => {
+            getSql().transactional(() => {
+                const note = becca.getNoteOrThrow(noteId);
+                noteService.asyncPostProcessContent(note, note.getContent());
+            });
         });
     }, 5000);
 
     // Process image asynchronously
     const attachmentId = attachment.attachmentId;
     getImageProvider().processImage(uploadBuffer, originalName, !!shrinkImageSwitch).then(({ buffer, format }) => {
-        getSql().transactional(() => {
-            if (!attachmentId) {
-                throw new Error("Missing attachment ID.");
-            }
-            attachment = becca.getAttachmentOrThrow(attachmentId);
+        getContext().init(() => {
+            getSql().transactional(() => {
+                if (!attachmentId) {
+                    throw new Error("Missing attachment ID.");
+                }
+                attachment = becca.getAttachmentOrThrow(attachmentId);
 
-            attachment.mime = getImageMimeFromExtension(format.ext);
+                attachment.mime = getImageMimeFromExtension(format.ext);
 
-            if (!originalName.includes(".")) {
-                originalName += `.${format.ext}`;
-                attachment.title = sanitizeFilename(originalName);
-            }
+                if (!originalName.includes(".")) {
+                    originalName += `.${format.ext}`;
+                    attachment.title = sanitizeFilename(originalName);
+                }
 
-            attachment.setContent(buffer, { forceSave: true });
+                attachment.setContent(buffer, { forceSave: true });
+            });
         });
     });
 
