@@ -14,7 +14,7 @@
  * script execution vectors (script tags, event handlers, javascript: URIs,
  * data: URIs on non-image elements, etc.).
  */
-import DOMPurify from "dompurify";
+import DOMPurify, { type Config as DOMPurifyConfig } from "dompurify";
 
 /**
  * Tags allowed in sanitized note content. This mirrors the server-side
@@ -91,7 +91,7 @@ const ALLOWED_URI_REGEXP = /^(?:(?:https?|ftps?|mailto|evernote|file|gemini|git|
 /**
  * DOMPurify configuration for sanitizing note content.
  */
-const PURIFY_CONFIG: DOMPurify.Config = {
+const PURIFY_CONFIG: DOMPurifyConfig = {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ALLOWED_URI_REGEXP,
