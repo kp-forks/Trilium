@@ -1447,24 +1447,29 @@ export function useColorScheme() {
 export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unknown[]) {
     useEffect(() => {
         if (!containerRef.current) return;
-        // Support both read-only (.math-tex) and CKEditor editing view (.ck-math-tex) classes
-        const mathElements = containerRef.current.querySelectorAll(".math-tex, .ck-math-tex");
+        const mathElements = containerRef.current.querySelectorAll(".math-tex");
 
         for (const mathEl of mathElements) {
             // Skip if already rendered by KaTeX
             if (mathEl.querySelector(".katex")) continue;
 
             try {
-                let equation = mathEl.textContent || "";
+                // CKEditor's data format wraps the equation with \(...\) or \[...\]
+                // delimiters. katex.render() expects raw LaTeX without them.
+                const raw = mathEl.textContent?.trim() ?? "";
+                let equation: string;
+                let displayMode = false;
 
-                // CKEditor widgets store equation without delimiters, add them for KaTeX
-                if (mathEl.classList.contains("ck-math-tex")) {
-                    // Check if it's display mode or inline
-                    const isDisplay = mathEl.classList.contains("ck-math-tex-display");
-                    equation = isDisplay ? `\\[${equation}\\]` : `\\(${equation}\\)`;
+                if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
+                    equation = raw.slice(2, -2);
+                } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
+                    equation = raw.slice(2, -2);
+                    displayMode = true;
+                } else {
+                    equation = raw;
                 }
 
-                math.render(equation, mathEl as HTMLElement);
+                math.render(equation, mathEl as HTMLElement, { displayMode });
             } catch (e) {
                 console.warn("Failed to render math:", e);
             }

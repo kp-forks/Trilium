@@ -200,17 +200,34 @@ function extractTocFromTextEditor(editor: CKTextEditor) {
 
             const level = Number(item.name.replace( 'heading', '' ));
 
-            // Convert model element to view, then to DOM to get HTML
+            // Convert model element to view, then to DOM to get HTML.
+            // Math UIElements render their KaTeX content asynchronously, so
+            // ck-math-tex spans may be empty at read time. Replace them with
+            // math-tex spans (the data format) using the equation from the model,
+            // so useMathRendering can render them synchronously in the sidebar.
             const viewEl = editor.editing.mapper.toViewElement(item);
             let text = '';
             if (viewEl) {
                 const domEl = editor.editing.view.domConverter.mapViewToDom(viewEl);
                 if (domEl instanceof HTMLElement) {
-                    text = domEl.innerHTML;
+                    const clone = domEl.cloneNode(true) as HTMLElement;
+                    const ckMathSpans = clone.querySelectorAll('.ck-math-tex');
+                    let mathIdx = 0;
+                    for (const child of item.getChildren()) {
+                        if (!child.is('element', 'mathtex-inline')) continue;
+                        if (mathIdx >= ckMathSpans.length) break;
+                        const equation = String(child.getAttribute('equation') ?? '');
+                        const span = document.createElement('span');
+                        span.className = 'math-tex';
+                        span.textContent = `\\(${equation}\\)`;
+                        ckMathSpans[mathIdx].replaceWith(span);
+                        mathIdx++;
+                    }
+                    text = clone.innerHTML;
                 }
             }
 
-            // Fallback to plain text if conversion fails
+            // Fallback to plain text if DOM conversion fails
             if (!text) {
                 text = Array.from( item.getChildren() )
                     .map( c => c.is( '$text' ) ? c.data : '' )
