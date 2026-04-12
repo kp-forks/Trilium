@@ -18,7 +18,6 @@ import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
 import { isElectron } from "../services/utils.js";
 import shareRoutes from "../share/routes.js";
-import backendLogRoute from "./api/backend_log.js";
 import clipperRoute from "./api/clipper.js";
 import databaseRoute from "./api/database.js";
 import etapiTokensApiRoutes from "./api/etapi_tokens.js";
@@ -29,7 +28,6 @@ import llmSpecialNotesRoute from "./api/llm_special_notes.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import ocrRoute from "./api/ocr.js";
-import passwordApiRoute from "./api/password.js";
 import recoveryCodes from './api/recovery_codes.js';
 import senderRoute from "./api/sender.js";
 import systemInfoRoute from "./api/system_info.js";
@@ -59,9 +57,9 @@ function register(app: express.Application) {
     });
 
     route(GET, "/bootstrap", [ auth.checkAuth ], indexRoute.bootstrap);
-    route(PST, "/login", [loginRateLimiter], loginRoute.login);
+    asyncRoute(PST, "/login", [loginRateLimiter], loginRoute.login, null);
     route(PST, "/logout", [csrfMiddleware, auth.checkAuth], loginRoute.logout);
-    route(PST, "/set-password", [auth.checkAppInitialized, auth.checkPasswordNotSet], loginRoute.setPassword);
+    asyncRoute(PST, "/set-password", [auth.checkAppInitialized, auth.checkPasswordNotSet], loginRoute.setPassword, null);
     route(GET, "/setup", [], setupRoute.setupPage);
 
 
@@ -107,8 +105,6 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/notes/:noteId/save-to-tmp-dir", filesRoute.saveNoteToTmpDir);
     apiRoute(PST, "/api/notes/:noteId/upload-modified-file", filesRoute.uploadModifiedFileToNote);
 
-    // TODO: Bring back attachment uploading
-    // route(PST, "/api/notes/:noteId/attachments/upload", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], attachmentsApiRoute.uploadAttachment, apiResultHandler);
     asyncRoute(
         GET,
         "/api/attachments/:attachmentId/open-partial",
@@ -124,14 +120,8 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/attachments/:attachmentId/upload-modified-file", filesRoute.uploadModifiedFileToAttachment);
     route(PUT, "/api/attachments/:attachmentId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateAttachment, apiResultHandler);
 
-    // TODO: Re-enable once ported to core.
-    // route(PUT, "/api/images/:noteId", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], imageRoute.updateImage, apiResultHandler);
-
     // TODO: Re-enable once we support route()
     // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
-
-    apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
-    apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
 
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
     apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);
@@ -140,12 +130,7 @@ function register(app: express.Application) {
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);
 
     route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
-    // this is for entering protected mode so user has to be already logged-in (that's the reason we don't require username)
-    apiRoute(PST, "/api/login/protected", loginApiRoute.loginToProtectedSession);
-    apiRoute(PST, "/api/login/protected/touch", loginApiRoute.touchProtectedSession);
-    apiRoute(PST, "/api/logout/protected", loginApiRoute.logoutFromProtectedSession);
-
-    route(PST, "/api/login/token", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
+    asyncRoute(PST, "/api/login/token", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
 
     apiRoute(GET, "/api/etapi-tokens", etapiTokensApiRoutes.getTokens);
     apiRoute(PST, "/api/etapi-tokens", etapiTokensApiRoutes.createToken);
@@ -173,10 +158,7 @@ function register(app: express.Application) {
         asyncRoute(PST, "/api/database/rebuild/", [auth.checkApiAuthOrElectron], databaseRoute.rebuildIntegrationTestDatabase, apiResultHandler);
     }
 
-    // backup requires execution outside of transaction
-    asyncRoute(PST, "/api/database/backup-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.backupDatabase, apiResultHandler);
-    apiRoute(GET, "/api/database/backups", databaseRoute.getExistingBackups);
-    route(GET, "/api/database/backup/download", [auth.checkApiAuthOrElectron], databaseRoute.downloadBackup);
+    // backup routes (backups, backup-database, backup/download) are in core
     // VACUUM requires execution outside of transaction
     asyncRoute(PST, "/api/database/vacuum-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.vacuumDatabase, apiResultHandler);
 
@@ -189,11 +171,10 @@ function register(app: express.Application) {
     apiRoute(GET, "/api/llm-chat/models", llmChatRoute.getModels);
 
     // no CSRF since this is called from android app
-    route(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
+    asyncRoute(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
     asyncRoute(PST, "/api/sender/image", [auth.checkEtapiToken, uploadMiddlewareWithErrorHandling], senderRoute.uploadImage, apiResultHandler);
     asyncRoute(PST, "/api/sender/note", [auth.checkEtapiToken], senderRoute.saveNote, apiResultHandler);
 
-    asyncApiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
 
     shareRoutes.register(router);

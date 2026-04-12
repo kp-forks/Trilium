@@ -85,12 +85,22 @@ async function networkFirst(request) {
     }
 }
 
-async function forwardToClientLocalServer(request, clientId) {
-    // Find a client to handle the request (prefer the initiating client if available)
-    let client = clientId ? await self.clients.get(clientId) : null;
+async function forwardToClientLocalServer(request, _clientId) {
+    // Find the main app window to handle the request
+    // We must route to the main app (which has the local bridge), not iframes like PDF.js viewer
+    // @ts-expect-error - self.clients is valid in service worker context
+    const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
 
+    // Find the main app window - it's the one NOT serving pdfjs or other embedded content
+    // The main app has the local bridge handler for LOCAL_FETCH messages
+    let client = all.find((c: { url: string }) => {
+        const url = new URL(c.url);
+        // Main app is at root or index.html, not in /pdfjs/ or other iframe paths
+        return !url.pathname.startsWith("/pdfjs/");
+    }) || null;
+
+    // If no main app window found, fall back to any available client
     if (!client) {
-        const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
         client = all[0] || null;
     }
 

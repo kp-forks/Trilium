@@ -1,6 +1,7 @@
 import { ExecutionContext, initContext } from "./services/context";
 import { CryptoProvider, initCrypto } from "./services/encryption/crypto";
-import { getLog, initLog } from "./services/log";
+import LogService, { getLog, initLog } from "./services/log";
+import BackupService, { initBackup, type BackupOptionsService } from "./services/backup";
 import { initSql } from "./services/sql/index";
 import { SqlService, SqlServiceParams } from "./services/sql/sql";
 import { initMessaging, MessagingProvider } from "./services/messaging/index";
@@ -12,13 +13,19 @@ import { type PlatformProvider, initPlatform } from "./services/platform";
 import { type ZipProvider, initZipProvider } from "./services/zip_provider";
 import { type ZipExportProviderFactory, initZipExportProviderFactory } from "./services/export/zip_export_provider_factory";
 import { type InAppHelpProvider, initInAppHelp } from "./services/in_app_help";
+import { type ImageProvider, initImageProvider } from "./services/image_provider";
 
-export { getLog } from "./services/log";
+export { default as LogService, getLog } from "./services/log";
+export { default as FileBasedLogService, type LogFileInfo } from "./services/file_based_log";
+export { default as BackupService, getBackup, initBackup, type BackupOptionsService } from "./services/backup";
 export type * from "./services/sql/types";
 export * from "./services/sql/index";
 export { default as sql_init } from "./services/sql_init";
 export * as protected_session from "./services/protected_session";
-export { default as data_encryption } from "./services/encryption/data_encryption"
+export { default as data_encryption } from "./services/encryption/data_encryption";
+export { default as scrypt } from "./services/encryption/scrypt";
+export { default as password_encryption } from "./services/encryption/password_encryption";
+export { default as password } from "./services/encryption/password";
 export * as binary_utils from "./services/utils/binary";
 export * as utils from "./services/utils/index";
 export * from "./services/build";
@@ -37,7 +44,7 @@ export * as cls from "./services/context";
 export * as i18n from "./services/i18n";
 export * from "./errors";
 export { default as getInstanceId } from "./services/instance_id";
-export type { CryptoProvider } from "./services/encryption/crypto";
+export type { CryptoProvider, ScryptOptions, Cipher } from "./services/encryption/crypto";
 export { default as note_types } from "./services/note_types";
 export { default as tree } from "./services/tree";
 export { default as cloning } from "./services/cloning";
@@ -98,6 +105,8 @@ export { default as sync_mutex } from "./services/sync_mutex";
 export { default as setup } from "./services/setup";
 export { getPlatform, type PlatformProvider } from "./services/platform";
 export type { InAppHelpProvider } from "./services/in_app_help";
+export { type ImageProvider, type ImageFormat, type ProcessedImage, getImageProvider } from "./services/image_provider";
+export { default as imageService } from "./services/image";
 export { t } from "i18next";
 export type { RequestProvider, ExecOpts, CookieJar } from "./services/request";
 export type * from "./meta";
@@ -121,7 +130,7 @@ export { default as scriptService } from "./services/script";
 export { default as BackendScriptApi, type Api as BackendScriptApiInterface } from "./services/backend_script_api";
 export * as scheduler from "./services/scheduler";
 
-export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive, inAppHelp }: {
+export async function initializeCore({ dbConfig, executionContext, crypto, zip, zipExportProviderFactory, translations, messaging, request, schema, extraAppInfo, platform, getDemoArchive, inAppHelp, log, backup, image }: {
     dbConfig: SqlServiceParams,
     executionContext: ExecutionContext,
     crypto: CryptoProvider,
@@ -138,9 +147,13 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
         nodeVersion: string;
         dataDirectory: string;
     };
+    log?: LogService;
+    backup: BackupService;
+    image: ImageProvider;
 }) {
     initPlatform(platform);
-    initLog();
+    initLog(log);
+    initBackup(backup);
     await initTranslations(translations);
     initCrypto(crypto);
     initZipProvider(zip);
@@ -148,6 +161,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     initContext(executionContext);
     initSql(new SqlService(dbConfig, getLog()));
     initSchema(schema);
+    initImageProvider(image);
     if (getDemoArchive) {
         initDemoArchive(getDemoArchive);
     }

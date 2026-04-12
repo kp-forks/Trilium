@@ -1,24 +1,22 @@
-import type { CryptoProvider } from "@triliumnext/core";
+import type { Cipher, CryptoProvider, ScryptOptions } from "@triliumnext/core";
+import { binary_utils } from "@triliumnext/core";
 import { sha1 } from "js-sha1";
 import { sha256 } from "js-sha256";
 import { sha512 } from "js-sha512";
 import { md5 } from "js-md5";
-
-interface Cipher {
-    update(data: Uint8Array): Uint8Array;
-    final(): Uint8Array;
-}
+import { scrypt } from "scrypt-js";
+import aesjs from "aes-js";
 
 const CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 /**
- * Crypto provider for browser environments using the Web Crypto API.
+ * Crypto provider for browser environments using pure JavaScript crypto libraries.
+ * Uses aes-js for synchronous AES encryption (matching Node.js behavior).
  */
 export default class BrowserCryptoProvider implements CryptoProvider {
 
     createHash(algorithm: "md5" | "sha1" | "sha512", content: string | Uint8Array): Uint8Array {
-        const data = typeof content === "string" ? content :
-                new TextDecoder().decode(content);
+        const data = binary_utils.unwrapStringOrBuffer(content);
 
         let hexHash: string;
         if (algorithm === "md5") {
@@ -38,13 +36,11 @@ export default class BrowserCryptoProvider implements CryptoProvider {
     }
 
     createCipheriv(algorithm: "aes-128-cbc", key: Uint8Array, iv: Uint8Array): Cipher {
-        // Web Crypto API doesn't support streaming cipher like Node.js
-        // We need to implement a wrapper that collects data and encrypts on final()
-        return new WebCryptoCipher(algorithm, key, iv, "encrypt");
+        return new AesJsCipher(algorithm, key, iv, "encrypt");
     }
 
     createDecipheriv(algorithm: "aes-128-cbc", key: Uint8Array, iv: Uint8Array): Cipher {
-        return new WebCryptoCipher(algorithm, key, iv, "decrypt");
+        return new AesJsCipher(algorithm, key, iv, "decrypt");
     }
 
     randomBytes(size: number): Uint8Array {
@@ -63,8 +59,8 @@ export default class BrowserCryptoProvider implements CryptoProvider {
     }
 
     hmac(secret: string | Uint8Array, value: string | Uint8Array): string {
-        const secretStr = typeof secret === "string" ? secret : new TextDecoder().decode(secret);
-        const valueStr = typeof value === "string" ? value : new TextDecoder().decode(value);
+        const secretStr = binary_utils.unwrapStringOrBuffer(secret);
+        const valueStr = binary_utils.unwrapStringOrBuffer(value);
         // sha256.hmac returns hex, convert to base64 to match Node's behavior
         const hexHash = sha256.hmac(secretStr, valueStr);
         const bytes = new Uint8Array(hexHash.length / 2);
@@ -73,28 +69,50 @@ export default class BrowserCryptoProvider implements CryptoProvider {
         }
         return btoa(String.fromCharCode(...bytes));
     }
+
+    async scrypt(
+        password: Uint8Array | string,
+        salt: Uint8Array | string,
+        keyLength: number,
+        options: ScryptOptions = {}
+    ): Promise<Uint8Array> {
+        const { N = 16384, r = 8, p = 1 } = options;
+        const passwordBytes = binary_utils.wrapStringOrBuffer(password);
+        const saltBytes = binary_utils.wrapStringOrBuffer(salt);
+
+        return scrypt(passwordBytes, saltBytes, N, r, p, keyLength);
+    }
+
+    constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        let result = 0;
+        for (let i = 0; i < a.length; i++) {
+            result |= a[i] ^ b[i];
+        }
+        return result === 0;
+    }
 }
 
 /**
- * A cipher implementation that wraps Web Crypto API.
- * Note: This buffers all data until final() is called, which differs from
- * Node.js's streaming cipher behavior.
+ * A synchronous cipher implementation using aes-js.
+ * Matches Node.js crypto behavior with update() and final() methods.
  */
-class WebCryptoCipher implements Cipher {
+class AesJsCipher implements Cipher {
     private chunks: Uint8Array[] = [];
-    private algorithm: string;
     private key: Uint8Array;
     private iv: Uint8Array;
     private mode: "encrypt" | "decrypt";
     private finalized = false;
 
     constructor(
-        algorithm: "aes-128-cbc",
+        _algorithm: "aes-128-cbc",
         key: Uint8Array,
         iv: Uint8Array,
         mode: "encrypt" | "decrypt"
     ) {
-        this.algorithm = algorithm;
         this.key = key;
         this.iv = iv;
         this.mode = mode;
@@ -104,31 +122,13 @@ class WebCryptoCipher implements Cipher {
         if (this.finalized) {
             throw new Error("Cipher has already been finalized");
         }
-        // Buffer the data - Web Crypto doesn't support streaming
+        // Buffer the data - we process everything in final() to match streaming behavior
         this.chunks.push(data);
-        // Return empty array since we process everything in final()
+        // Return empty array since aes-js CBC doesn't support true streaming
         return new Uint8Array(0);
     }
 
     final(): Uint8Array {
-        if (this.finalized) {
-            throw new Error("Cipher has already been finalized");
-        }
-        this.finalized = true;
-
-        // Web Crypto API is async, but we need sync behavior
-        // This is a fundamental limitation that requires architectural changes
-        // For now, throw an error directing users to use async methods
-        throw new Error(
-            "Synchronous cipher finalization not available in browser. " +
-            "The Web Crypto API is async-only. Use finalizeAsync() instead."
-        );
-    }
-
-    /**
-     * Async version that actually performs the encryption/decryption.
-     */
-    async finalizeAsync(): Promise<Uint8Array> {
         if (this.finalized) {
             throw new Error("Cipher has already been finalized");
         }
@@ -143,24 +143,33 @@ class WebCryptoCipher implements Cipher {
             offset += chunk.length;
         }
 
-        // Copy key and iv to ensure they're plain ArrayBuffer-backed
-        const keyBuffer = new Uint8Array(this.key);
-        const ivBuffer = new Uint8Array(this.iv);
+        if (this.mode === "encrypt") {
+            // PKCS7 padding for encryption
+            const blockSize = 16;
+            const paddingLength = blockSize - (data.length % blockSize);
+            const paddedData = new Uint8Array(data.length + paddingLength);
+            paddedData.set(data);
+            paddedData.fill(paddingLength, data.length);
 
-        // Import the key
-        const cryptoKey = await crypto.subtle.importKey(
-            "raw",
-            keyBuffer,
-            { name: "AES-CBC" },
-            false,
-            [this.mode]
-        );
+            const aesCbc = new aesjs.ModeOfOperation.cbc(
+                Array.from(this.key),
+                Array.from(this.iv)
+            );
+            return new Uint8Array(aesCbc.encrypt(paddedData));
+        } else {
+            // Decryption
+            const aesCbc = new aesjs.ModeOfOperation.cbc(
+                Array.from(this.key),
+                Array.from(this.iv)
+            );
+            const decrypted = new Uint8Array(aesCbc.decrypt(data));
 
-        // Perform encryption/decryption
-        const result = this.mode === "encrypt"
-            ? await crypto.subtle.encrypt({ name: "AES-CBC", iv: ivBuffer }, cryptoKey, data)
-            : await crypto.subtle.decrypt({ name: "AES-CBC", iv: ivBuffer }, cryptoKey, data);
-
-        return new Uint8Array(result);
+            // Remove PKCS7 padding
+            const paddingLength = decrypted[decrypted.length - 1];
+            if (paddingLength > 0 && paddingLength <= 16) {
+                return decrypted.slice(0, decrypted.length - paddingLength);
+            }
+            return decrypted;
+        }
     }
 }

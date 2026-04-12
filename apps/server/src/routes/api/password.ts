@@ -4,12 +4,11 @@ import type { Request } from "express";
 
 import passwordService from "../../services/encryption/password.js";
 
-function changePassword(req: Request): ChangePasswordResponse {
+async function changePassword(req: Request): Promise<ChangePasswordResponse> {
     if (passwordService.isPasswordSet()) {
-        return passwordService.changePassword(req.body.current_password, req.body.new_password);
+        return await passwordService.changePassword(req.body.current_password, req.body.new_password);
     }
-    return passwordService.setPassword(req.body.new_password);
-
+    return await passwordService.setPassword(req.body.new_password);
 }
 
 function resetPassword(req: Request) {

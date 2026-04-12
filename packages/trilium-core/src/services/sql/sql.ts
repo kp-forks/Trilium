@@ -373,6 +373,18 @@ export class SqlService {
         await this.dbConnection.backup(targetFilePath);
     }
 
+    /**
+     * Serialize the database to a byte array.
+     * Only available with browser-based providers.
+     * @throws Error if the provider doesn't support serialization
+     */
+    serialize(): Uint8Array {
+        if (!this.dbConnection.serialize) {
+            throw new Error("Database provider does not support serialization");
+        }
+        return this.dbConnection.serialize();
+    }
+
     disableSlowQueryLogging<T>(cb: () => T) {
         const orig = isSlowQueryLoggingDisabled();
 

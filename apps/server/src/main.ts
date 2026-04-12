@@ -3,15 +3,17 @@
  * are loaded later and will result in an empty string.
  */
 
-import { getLog, initializeCore, sql_init } from "@triliumnext/core";
+import { getLog, initializeCore, options, sql_init } from "@triliumnext/core";
 import fs from "fs";
 import { t } from "i18next";
 import path from "path";
 
+import ServerBackupService from "./backup_provider.js";
 import ClsHookedExecutionContext from "./cls_provider.js";
 import { getIntegrationTestDbPath, loadCoreSchema } from "./core_assets.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
 import NodejsInAppHelpProvider from "./in_app_help_provider.js";
+import ServerLogService from "./log_provider.js";
 import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";
 import port from "./services/port.js";
@@ -37,6 +39,8 @@ async function startApplication() {
         dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
     }
 
+    const logService = new ServerLogService();
+
     await initializeCore({
         dbConfig: {
             provider: dbProvider,
@@ -49,12 +53,11 @@ async function startApplication() {
                 const cls = (await import("./services/cls.js")).default;
                 const becca_loader = (await import("@triliumnext/core")).becca_loader;
                 const entity_changes = (await import("./services/entity_changes.js")).default;
-                const log = (await import("./services/log")).default;
 
                 const entityChangeIds = cls.getAndClearEntityChangeIds();
 
                 if (entityChangeIds.length > 0) {
-                    log.info("Transaction rollback dirtied the becca, forcing reload.");
+                    logService.info("Transaction rollback dirtied the becca, forcing reload.");
 
                     becca_loader.load();
                 }
@@ -71,12 +74,15 @@ async function startApplication() {
         messaging: new WebSocketMessagingProvider(),
         schema: loadCoreSchema(),
         platform: new ServerPlatformProvider(),
+        log: logService,
         translations: (await import("./services/i18n.js")).initializeTranslationsWithParams,
         // demo.zip is a server-owned asset; src/assets is copied to dist/assets
         // by the build script, so the same RESOURCE_DIR-relative path works in
         // both source and bundled-production modes.
         getDemoArchive: async () => fs.readFileSync(path.join(RESOURCE_DIR, "db", "demo.zip")),
         inAppHelp: new NodejsInAppHelpProvider(),
+        backup: new ServerBackupService(options),
+        image: (await import("./services/image_provider.js")).serverImageProvider,
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)

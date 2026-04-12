@@ -28,6 +28,10 @@ import filesRoute from "./api/files";
 import importRoute from "./api/import";
 import exportRoute from "./api/export";
 import scriptRoute from "./api/script";
+import backendLogRoute from "./api/backend_log";
+import backupRoute from "./api/backup";
+import passwordApiRoute from "./api/password";
+import loginApiRoute from "./api/login";
 
 // TODO: Deduplicate with routes.ts
 const GET = "get",
@@ -121,6 +125,8 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     route(GET, "/api/revisions/:revisionId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromRevision);
     route(GET, "/api/attachments/:attachmentId/image/:filename", [checkApiAuthOrElectron], imageRoute.returnAttachedImage);
     route(GET, "/api/images/:noteId/:filename", [checkApiAuthOrElectron], imageRoute.returnImageFromNote);
+    route(PUT, "/api/images/:noteId", [checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], imageRoute.updateImage, apiResultHandler);
+    route(PST, "/api/notes/:noteId/attachments/upload", [checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], attachmentsApiRoute.uploadAttachment, apiResultHandler);
 
     // group of the services below are meant to be executed from the outside
     route(GET, "/api/setup/status", [], setupApiRoute.getStatus, apiResultHandler);
@@ -198,6 +204,12 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(PST, "/api/bulk-action/affected-notes", bulkActionRoute.getAffectedNoteCount);
 
     apiRoute(GET, "/api/app-info", appInfoRoute.getAppInfo);
+    asyncApiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
+
+    // Backup routes
+    asyncApiRoute(GET, "/api/database/backups", backupRoute.getExistingBackups);
+    asyncApiRoute(PST, "/api/database/backup-database", backupRoute.backupDatabase);
+    asyncRoute(GET, "/api/database/backup/download", [checkApiAuthOrElectron], backupRoute.downloadBackup);
 
     apiRoute(GET, "/api/other/icon-usage", otherRoute.getIconUsage);
     apiRoute(PST, "/api/other/render-markdown", otherRoute.renderMarkdown);
@@ -226,6 +238,15 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(GET, "/api/script/widgets", scriptRoute.getWidgetBundles);
     apiRoute(PST, "/api/script/bundle/:noteId", scriptRoute.getBundle);
     apiRoute(GET, "/api/script/relation/:noteId/:relationName", scriptRoute.getRelationBundles);
+    //#endregion
+
+    //#region Password and protected session
+    asyncApiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
+    apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
+
+    asyncApiRoute(PST, "/api/login/protected", loginApiRoute.loginToProtectedSession);
+    apiRoute(PST, "/api/login/protected/touch", loginApiRoute.touchProtectedSession);
+    apiRoute(PST, "/api/logout/protected", loginApiRoute.logoutFromProtectedSession);
     //#endregion
 }
 

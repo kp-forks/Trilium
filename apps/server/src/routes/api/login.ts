@@ -1,4 +1,10 @@
-import { events as eventService, getInstanceId } from "@triliumnext/core";
+/**
+ * Server-only login routes.
+ *
+ * Protected session routes (loginToProtectedSession, logoutFromProtectedSession,
+ * touchProtectedSession) are now in core and registered via buildSharedApiRoutes.
+ */
+import { getInstanceId } from "@triliumnext/core";
 import type { Request } from "express";
 
 import appInfo from "../../services/app_info.js";
@@ -7,12 +13,10 @@ import passwordEncryptionService from "../../services/encryption/password_encryp
 import recoveryCodeService from "../../services/encryption/recovery_codes";
 import etapiTokenService from "../../services/etapi_tokens.js";
 import options from "../../services/options.js";
-import protectedSessionService from "../../services/protected_session.js";
 import sql from "../../services/sql.js";
 import sqlInit from "../../services/sql_init.js";
 import totp from "../../services/totp";
 import utils from "../../services/utils.js";
-import ws from "../../services/ws.js";
 
 /**
  * @swagger
@@ -118,48 +122,7 @@ function loginSync(req: Request) {
     };
 }
 
-function loginToProtectedSession(req: Request) {
-    const password = req.body.password;
-
-    if (!passwordEncryptionService.verifyPassword(password)) {
-        return {
-            success: false,
-            message: "Given current password doesn't match hash"
-        };
-    }
-
-    const decryptedDataKey = passwordEncryptionService.getDataKey(password);
-    if (!decryptedDataKey) {
-        return {
-            success: false,
-            message: "Unable to obtain data key."
-        };
-    }
-
-    protectedSessionService.setDataKey(decryptedDataKey);
-
-    eventService.emit(eventService.ENTER_PROTECTED_SESSION);
-
-    ws.sendMessageToAllClients({ type: "protectedSessionLogin" });
-
-    return {
-        success: true
-    };
-}
-
-function logoutFromProtectedSession() {
-    protectedSessionService.resetDataKey();
-
-    eventService.emit(eventService.LEAVE_PROTECTED_SESSION);
-
-    ws.sendMessageToAllClients({ type: "protectedSessionLogout" });
-}
-
-function touchProtectedSession() {
-    protectedSessionService.touchProtectedSession();
-}
-
-function token(req: Request) {
+async function token(req: Request) {
     const password = req.body.password;
     const submittedTotpToken = req.body.totpToken;
 
@@ -169,7 +132,7 @@ function token(req: Request) {
         }
     }
 
-    if (!passwordEncryptionService.verifyPassword(password)) {
+    if (!(await passwordEncryptionService.verifyPassword(password))) {
         return [401, "Incorrect credential"];
     }
 
@@ -191,8 +154,5 @@ function verifyTOTP(submittedTotpToken: string) {
 
 export default {
     loginSync,
-    loginToProtectedSession,
-    logoutFromProtectedSession,
-    touchProtectedSession,
     token
 };

@@ -58,6 +58,8 @@ let BrowserCryptoProvider: typeof import('./lightweight/crypto_provider').defaul
 let BrowserZipProvider: typeof import('./lightweight/zip_provider').default;
 let FetchRequestProvider: typeof import('./lightweight/request_provider').default;
 let StandalonePlatformProvider: typeof import('./lightweight/platform_provider').default;
+let StandaloneLogService: typeof import('./lightweight/log_provider').default;
+let StandaloneBackupService: typeof import('./lightweight/backup_provider').default;
 let translationProvider: typeof import('./lightweight/translation_provider').default;
 let createConfiguredRouter: typeof import('./lightweight/browser_routes').createConfiguredRouter;
 
@@ -86,6 +88,8 @@ async function loadModules(): Promise<void> {
         zipModule,
         requestModule,
         platformModule,
+        logModule,
+        backupModule,
         translationModule,
         routesModule
     ] = await Promise.all([
@@ -96,6 +100,8 @@ async function loadModules(): Promise<void> {
         import('./lightweight/zip_provider.js'),
         import('./lightweight/request_provider.js'),
         import('./lightweight/platform_provider.js'),
+        import('./lightweight/log_provider.js'),
+        import('./lightweight/backup_provider.js'),
         import('./lightweight/translation_provider.js'),
         import('./lightweight/browser_routes.js')
     ]);
@@ -107,6 +113,8 @@ async function loadModules(): Promise<void> {
     BrowserZipProvider = zipModule.default;
     FetchRequestProvider = requestModule.default;
     StandalonePlatformProvider = platformModule.default;
+    StandaloneLogService = logModule.default;
+    StandaloneBackupService = backupModule.default;
     translationProvider = translationModule.default;
     createConfiguredRouter = routesModule.createConfiguredRouter;
 
@@ -153,6 +161,12 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Loading @triliumnext/core...");
             const schemaModule = await import("@triliumnext/core/src/assets/schema.sql?raw");
             coreModule = await import("@triliumnext/core");
+
+            // Initialize log service with OPFS persistence
+            const logService = new StandaloneLogService();
+            await logService.initialize();
+            console.log("[Worker] Log service initialized with OPFS");
+
             await coreModule.initializeCore({
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
@@ -161,6 +175,8 @@ async function initialize(): Promise<void> {
                 messaging: messagingProvider!,
                 request: new FetchRequestProvider(),
                 platform: new StandalonePlatformProvider(queryString),
+                log: logService,
+                backup: new StandaloneBackupService(coreModule!.options),
                 translations: translationProvider,
                 schema: schemaModule.default,
                 getDemoArchive: async () => {
@@ -168,6 +184,7 @@ async function initialize(): Promise<void> {
                     if (!response.ok) return null;
                     return new Uint8Array(await response.arrayBuffer());
                 },
+                image: (await import("./services/image_provider.js")).standaloneImageProvider,
                 dbConfig: {
                     provider: sqlProvider!,
                     isReadOnly: false,

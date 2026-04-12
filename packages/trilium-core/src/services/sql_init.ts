@@ -1,6 +1,7 @@
 import { deferred, OptionRow } from "@triliumnext/commons";
 import { getSql } from "./sql";
 import { getLog } from "./log";
+import { getBackup } from "./backup";
 import optionService from "./options";
 import eventService from "./events";
 import { getContext } from "./context";
@@ -11,6 +12,7 @@ import hidden_subtree from "./hidden_subtree";
 import TaskContext from "./task_context";
 import BOption from "../becca/entities/boption";
 import migrationService from "./migration";
+import passwordService from "./encryption/password";
 
 export const dbReady = deferred<void>();
 
@@ -105,22 +107,16 @@ function initializeDb() {
     getContext().init(initDbConnection);
 
     dbReady.then(() => {
-        // TODO: Re-enable backup.
-        // if (config.General && config.General.noBackup === true) {
-        //     log.info("Disabling scheduled backups.");
+        // Run regular backups every 4 hours
+        setInterval(() => getBackup().regularBackup(), 4 * 60 * 60 * 1000);
 
-        //     return;
-        // }
+        // Kickoff first backup soon after start up
+        setTimeout(() => getBackup().regularBackup(), 5 * 60 * 1000);
 
-        // setInterval(() => backup.regularBackup(), 4 * 60 * 60 * 1000);
+        // Optimize is usually inexpensive no-op, so running it semi-frequently is not a big deal
+        setTimeout(() => optimize(), 60 * 60 * 1000);
 
-        // // kickoff first backup soon after start up
-        // setTimeout(() => backup.regularBackup(), 5 * 60 * 1000);
-
-        // // optimize is usually inexpensive no-op, so running it semi-frequently is not a big deal
-        // setTimeout(() => optimize(), 60 * 60 * 1000);
-
-        // setInterval(() => optimize(), 10 * 60 * 60 * 1000);
+        setInterval(() => optimize(), 10 * 60 * 60 * 1000);
     });
 }
 
@@ -171,7 +167,7 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
         initDocumentOptions();
         initNotSyncedOptions(true, {});
         initStartupOptions();
-        // password.resetPassword();
+        passwordService.resetPassword();
     });
 
     // Check hidden subtree.

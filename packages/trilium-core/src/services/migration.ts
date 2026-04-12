@@ -1,4 +1,4 @@
-import backupService from "./backup.js";
+import { getBackup } from "./backup.js";
 import { getSql } from "./sql/index.js";
 import { getLog } from "./log.js";
 import { getPlatform } from "./platform.js";
@@ -26,7 +26,7 @@ async function migrate() {
 
     // backup before attempting migration
     if (!getPlatform().getEnv("TRILIUM_INTEGRATION_TEST")) {
-        await backupService.backupNow(
+        await getBackup().backupNow(
             // creating a special backup for version 0.60.4, the changes in 0.61 are major.
             currentDbVersion === 214 ? `before-migration-v060` : "before-migration"
         );

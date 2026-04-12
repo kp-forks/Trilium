@@ -2,17 +2,19 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { initializeCore } from "@triliumnext/core";
+import { initializeCore, options } from "@triliumnext/core";
 import schemaSql from "@triliumnext/core/src/assets/schema.sql?raw";
 import HappyDomHtmlParser from "happy-dom/lib/html-parser/HTMLParser.js";
 import serverEnTranslations from "../../server/src/assets/translations/en/server.json";
 import { beforeAll } from "vitest";
 
+import StandaloneBackupService from "./lightweight/backup_provider.js";
 import BrowserExecutionContext from "./lightweight/cls_provider.js";
 import BrowserCryptoProvider from "./lightweight/crypto_provider.js";
 import StandalonePlatformProvider from "./lightweight/platform_provider.js";
 import BrowserSqlProvider from "./lightweight/sql_provider.js";
 import BrowserZipProvider from "./lightweight/zip_provider.js";
+import { standaloneImageProvider } from "./services/image_provider.js";
 
 // =============================================================================
 // SQLite WASM compatibility shims
@@ -129,6 +131,8 @@ beforeAll(async () => {
             });
         },
         platform: new StandalonePlatformProvider(""),
+        backup: new StandaloneBackupService(options),
+        image: standaloneImageProvider,
         schema: schemaSql,
         dbConfig: {
             provider: sqlProvider,

@@ -29,6 +29,14 @@ export default {
         // and we need to override it with config from config.ini
         return !!syncServerHost && syncServerHost !== "disabled";
     },
-    getSyncTimeout: () => parseInt(get("syncServerTimeout")) || 120000,
+    getSyncTimeout: () => {
+        // Config.ini values are in raw milliseconds (backward compat with old configs)
+        if (config["Sync"] && config["Sync"]["syncServerTimeout"]) {
+            return parseInt(config["Sync"]["syncServerTimeout"]) || 120000;
+        }
+        // Database values are stored in seconds — convert to milliseconds
+        const seconds = parseInt(optionService.getOption("syncServerTimeout"));
+        return (isNaN(seconds) || seconds <= 0) ? 120000 : seconds * 1000;
+    },
     getSyncProxy: () => get("syncProxy")
 };

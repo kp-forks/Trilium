@@ -16,6 +16,11 @@ describe("data_dir.ts unit tests", async () => {
         pathJoinMock: vi.fn()
     };
 
+    // Reset the module cache so the dynamic imports below get a fresh instance
+    // of data_dir.ts with the mocked dependencies rather than the cached copy
+    // loaded by spec/setup.ts.
+    vi.resetModules();
+
     // using doMock, to avoid hoisting, so that we can use the mockFn object
     // to collect all mocked Fns
     vi.doMock("node:fs", () => {
@@ -37,7 +42,7 @@ describe("data_dir.ts unit tests", async () => {
         };
     });
 
-    vi.doMock("path", () => {
+    vi.doMock("node:path", () => {
         return {
             join: mockFn.pathJoinMock
         };

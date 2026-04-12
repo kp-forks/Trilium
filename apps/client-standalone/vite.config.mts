@@ -1,7 +1,9 @@
-import prefresh from '@prefresh/vite';
-import { join } from 'path';
-import { defineConfig } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
+import fs from "fs";
+import { join, resolve, sep } from "path";
+
+import prefresh from "@prefresh/vite";
+import { defineConfig, type Plugin } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const clientAssets = ["assets", "stylesheets", "fonts", "translations"];
 
@@ -9,19 +11,69 @@ const isDev = process.env.NODE_ENV === "development";
 
 // Watch client files and trigger reload in development
 const clientWatchPlugin = () => ({
-    name: 'client-watch',
+    name: "client-watch",
     configureServer(server: any) {
         if (isDev) {
             // Watch client source files (adjusted for new root)
-            server.watcher.add('../../client/src/**/*');
-            server.watcher.on('change', (file: string) => {
-                if (file.includes('../../client/src/')) {
+            server.watcher.add("../../client/src/**/*");
+            server.watcher.on("change", (file: string) => {
+                if (file.includes("../../client/src/")) {
                     server.ws.send({
-                        type: 'full-reload'
+                        type: "full-reload"
                     });
                 }
             });
         }
+    }
+});
+
+// Serve PDF.js files directly in dev mode to bypass SPA fallback
+const pdfjsServePlugin = (): Plugin => ({
+    name: "pdfjs-serve",
+    configureServer(server) {
+        const pdfjsRoot = join(__dirname, "../../packages/pdfjs-viewer/dist");
+
+        server.middlewares.use((req, res, next) => {
+            if (!req.url?.startsWith("/pdfjs/")) {
+                return next();
+            }
+
+            // Map /pdfjs/web/... to dist/web/...
+            // Map /pdfjs/build/... to dist/build/...
+            // Strip query string (e.g., ?v=0.102.2) before resolving path
+            const urlWithoutQuery = req.url.split("?")[0];
+            const relativePath = urlWithoutQuery.replace(/^\/pdfjs\//, "");
+            const filePath = join(pdfjsRoot, relativePath);
+
+            // Security: resolve both paths to prevent prefix-collision attacks
+            // (e.g. pdfjsRoot="/foo/bar" matching "/foo/bar2/evil.js")
+            const resolvedRoot = resolve(pdfjsRoot);
+            const resolvedFilePath = resolve(filePath);
+            if (!resolvedFilePath.startsWith(resolvedRoot + sep)) {
+                return next();
+            }
+
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                const ext = filePath.split(".").pop() || "";
+                const mimeTypes: Record<string, string> = {
+                    html: "text/html",
+                    css: "text/css",
+                    js: "application/javascript",
+                    mjs: "application/javascript",
+                    wasm: "application/wasm",
+                    png: "image/png",
+                    svg: "image/svg+xml",
+                    json: "application/json"
+                };
+                res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
+                // Match isolation headers from main page for iframe compatibility
+                res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+                res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+                fs.createReadStream(filePath).pipe(res);
+            } else {
+                next();
+            }
+        });
     }
 });
 
@@ -65,10 +117,27 @@ let plugins: any = [
             }
         ]
     }),
+    // PDF.js viewer for PDF preview support
+    // stripBase: 4 removes packages/pdfjs-viewer/dist/web (or /build)
+    viteStaticCopy({
+        targets: [
+            {
+                src: "../../../packages/pdfjs-viewer/dist/web/**/*",
+                dest: "pdfjs/web",
+                rename: { stripBase: 4 }
+            },
+            {
+                src: "../../../packages/pdfjs-viewer/dist/build/**/*",
+                dest: "pdfjs/build",
+                rename: { stripBase: 4 }
+            }
+        ]
+    }),
     // Watch client files for changes in development
     ...(isDev ? [
         prefresh(),
-        clientWatchPlugin()
+        clientWatchPlugin(),
+        pdfjsServePlugin()
     ] : [])
 ];
 

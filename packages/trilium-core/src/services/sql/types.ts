@@ -23,6 +23,11 @@ export interface DatabaseProvider {
     loadFromMemory(): void;
     loadFromBuffer(buffer: Uint8Array): void;
     backup(destinationFile: string): void;
+    /**
+     * Serialize the database to a byte array.
+     * Optional - only implemented by browser-based providers.
+     */
+    serialize?(): Uint8Array;
     prepare(query: string): Statement;
     transaction<T>(func: (statement: Statement) => T): Transaction;
     get inTransaction(): boolean;
