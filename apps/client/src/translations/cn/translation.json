@@ -95,7 +95,8 @@
     "notes_to_be_deleted": "将删除以下笔记 ({{notesCount}})",
     "no_note_to_delete": "没有笔记将被删除（仅克隆）。",
     "broken_relations_to_be_deleted": "将删除以下关系并断开连接 ({{ relationCount}})",
-    "cancel": "取消"
+    "cancel": "取消",
+    "title": "删除笔记"
   },
   "export": {
     "export_note_title": "导出笔记",

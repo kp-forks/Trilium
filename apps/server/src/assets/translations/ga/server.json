@@ -445,5 +445,18 @@
   },
   "desktop": {
     "instance_already_running": "Tá sampla ag rith cheana féin, agus tá fócas á chur ar an sampla sin ina ionad."
+  },
+  "script": {
+    "wrong-environment": "Ní féidir an nóta \"{{- noteTitle}}\" ({{- noteId}}) a fhorghníomhú. Is script {{- actualEnv}} é seo, ach rinneadh iarracht é a fhorghníomhú sa {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Earráid i {{- context}}: {{- message}}",
+      "reserved-keyword": "Is eochairfhocal curtha in áirithe é \"{{- token}}\". Chun luach liteartha a chuardach, bain úsáid as comharthaí athfhriotail: \"{{- token}}\"",
+      "cannot-compare-with": "ní féidir comparáid a dhéanamh le \"{{- token}}\". Chun luach liteartha a chuardach, bain úsáid as comharthaí athfhriotail: \"{{- token}}\"",
+      "misplaced-expression": "Slonn mí-áitithe nó neamhiomlán \"{{- token}}\"",
+      "fulltext-after-expression": "Ní abairt bhailí í \"{{- token}}\". Chun téacs a chuardach, cuir é roimh scagairí tréithe (m.sh., \"{{- token}} #label\" in ionad \"#label {{- token}}\").",
+      "unrecognized-expression": "Sloinneadh neamhaitheanta \"{{- token}}\""
+    }
   }
 }

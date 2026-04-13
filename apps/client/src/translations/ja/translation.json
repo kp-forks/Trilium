@@ -106,13 +106,21 @@
   },
   "delete_notes": {
     "delete_all_clones_description": "すべてのクローンも削除（最近の変更では元に戻すことができる）",
-    "erase_notes_description": "通常の（ソフト）削除では、ノートは削除されたものとしてマークされ、一定期間内に（最近の変更で）削除を取り消すことができます。このオプションをオンにすると、ノートは即座に削除され、削除を取り消すことはできません。",
+    "erase_notes_description": "ノートを一時保存せずに完全に削除します。この操作は元に戻すことができず、アプリケーションが再読み込みされます。",
     "erase_notes_warning": "すべてのクローンを含め、ノートを完全に消去します（元に戻せません）。これにより、アプリケーションは強制的にリロードされます。",
-    "notes_to_be_deleted": "以下のノートが削除されます ({{notesCount}})",
+    "notes_to_be_deleted": "削除対象のノート ({{notesCount}})",
     "no_note_to_delete": "ノートは削除されません（クローンのみ）。",
     "cancel": "キャンセル",
     "close": "閉じる",
-    "broken_relations_to_be_deleted": "次のリレーション ({{relationCount}})は壊れているので消去されます"
+    "broken_relations_to_be_deleted": "壊れたリレーション ({{relationCount}})",
+    "title": "ノートを削除",
+    "clones_label": "クローン",
+    "delete_clones_description_other": "他の {{count}} 件のクローンも削除します。最近の変更履歴から元に戻すことができます。",
+    "erase_notes_label": "完全に消去",
+    "table_note_with_relation": "リレーションがあるノート",
+    "table_relation": "リレーション",
+    "table_points_to": "参照先 (削除済み)",
+    "delete": "削除"
   },
   "calendar": {
     "mon": "月",
@@ -809,7 +817,8 @@
     "label_note": "ノート",
     "box_size_small": "スモール (~ 10 行)",
     "box_size_medium": "ミディアム (~ 30 行)",
-    "box_size_full": "フル (ボックスに全文が表示されます)"
+    "box_size_full": "フル (ボックスに全文が表示されます)",
+    "box_size_expandable": "展開可能 (デフォルトでは折りたたまれています)"
   },
   "ancestor": {
     "placeholder": "ノート名で検索",
@@ -1354,7 +1363,8 @@
     "theme_none": "シンタックスハイライトなし",
     "theme_group_light": "ライトテーマ",
     "theme_group_dark": "ダークテーマ",
-    "copy_title": "クリップボードにコピー"
+    "copy_title": "クリップボードにコピー",
+    "click_to_copy": "クリックしてコピー"
   },
   "editor": {
     "title": "エディター"
@@ -2274,7 +2284,8 @@
     "note_context_disabled": "クリックして現在のノートをコンテキストに含める",
     "no_provider_message": "AI プロバイダーが設定されていません。チャットを開始するには、プロバイダーを追加してください。",
     "add_provider": "AI プロバイダーを追加",
-    "sources_summary": "{{count}} 件のソースを {{sites}} サイトから取得"
+    "sources_summary": "{{count}} 件のソースを {{sites}} サイトから取得",
+    "stop": "停止"
   },
   "sidebar_chat": {
     "title": "AI チャット",
@@ -2338,7 +2349,11 @@
       "web_search": "Web 検索",
       "note_in_parent": "<Note/> を <Parent/>",
       "get_attachment": "添付ファイルを取得",
-      "get_attachment_content": "添付ファイルの内容を読み取る"
+      "get_attachment_content": "添付ファイルの内容を読み取る",
+      "rename_note": "ノート名を変更",
+      "delete_note": "ノートを削除",
+      "move_note": "ノートを移動",
+      "clone_note": "ノートをクローン"
     }
   },
   "ocr": {

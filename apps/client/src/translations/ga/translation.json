@@ -121,12 +121,24 @@
   "delete_notes": {
     "close": "Dún",
     "delete_all_clones_description": "Scrios gach clón freisin (is féidir é seo a chealú in athruithe le déanaí)",
-    "erase_notes_description": "Ní mharcálann scriosadh gnáth (bog) ach na nótaí mar scriosta agus is féidir iad a dhíscriosadh (sa dialóg athruithe le déanaí) laistigh de thréimhse ama. Scriosfar na nótaí láithreach má sheiceálann tú an rogha seo agus ní bheidh sé indéanta na nótaí a dhíscriosadh.",
+    "erase_notes_description": "Scrios nótaí láithreach in ionad scriosadh bog. Ní féidir é seo a chealú agus cuirfidh sé iallach ort an feidhmchlár a athlódáil.",
     "erase_notes_warning": "Scrios nótaí go buan (ní féidir é seo a chealú), lena n-áirítear na clónanna go léir. Cuirfidh sé seo iallach ar an bhfeidhmchlár athlódáil.",
-    "notes_to_be_deleted": "Scriosfar na nótaí seo a leanas ({{notesCount}})",
+    "notes_to_be_deleted": "Nótaí le scriosadh ({{notesCount}})",
     "no_note_to_delete": "Ní scriosfar aon nóta (clóin amháin).",
-    "broken_relations_to_be_deleted": "Brisfear agus scriosfar na caidrimh seo a leanas ({{ relationCount}})",
-    "cancel": "Cealaigh"
+    "broken_relations_to_be_deleted": "Caidrimh bhriste ({{relationCount}})",
+    "cancel": "Cealaigh",
+    "title": "Scrios nótaí",
+    "clones_label": "Clóin",
+    "delete_clones_description_one": "Scrios {{count}} clón eile freisin. Is féidir é seo a chealú sna hathruithe is déanaí.",
+    "delete_clones_description_two": "Scrios {{count}} clóin eile freisin. Is féidir é seo a chealú sna hathruithe is déanaí.",
+    "delete_clones_description_few": "Scrios {{count}} clóin eile freisin. Is féidir é seo a chealú sna hathruithe is déanaí.",
+    "delete_clones_description_many": "Scrios {{count}} clóin eile freisin. Is féidir é seo a chealú sna hathruithe is déanaí.",
+    "delete_clones_description_other": "Scrios {{count}} clóin eile freisin. Is féidir é seo a chealú sna hathruithe is déanaí.",
+    "erase_notes_label": "Scrios go buan",
+    "table_note_with_relation": "Nóta le gaol",
+    "table_relation": "Gaol",
+    "table_points_to": "Pointí chuig (scriosta)",
+    "delete": "Scrios"
   },
   "export": {
     "export_note_title": "Nóta easpórtála",
@@ -237,7 +249,8 @@
     "box_size_small": "beag (~ 10 líne)",
     "box_size_medium": "meánach (~ 30 líne)",
     "box_size_full": "lán (taispeánann an bosca an téacs iomlán)",
-    "button_include": "Cuir nóta san áireamh"
+    "button_include": "Cuir nóta san áireamh",
+    "box_size_expandable": "inleathnaithe (fillte de réir réamhshocraithe)"
   },
   "info": {
     "modalTitle": "Teachtaireacht eolais",
@@ -809,7 +822,10 @@
     "board": "Bord",
     "presentation": "Cur i Láthair",
     "include_archived_notes": "Taispeáin nótaí cartlannaithe",
-    "hide_child_notes": "Folaigh nótaí leanaí sa chrann"
+    "hide_child_notes": "Folaigh nótaí leanaí sa chrann",
+    "open_all_in_tabs": "Oscail gach rud",
+    "open_all_in_tabs_tooltip": "Oscail na torthaí go léir i gcluaisíní nua",
+    "open_all_confirm": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?"
   },
   "edited_notes": {
     "no_edited_notes_found": "Gan aon nótaí eagarthóireachta ar an lá seo go fóill...",
@@ -863,7 +879,8 @@
     "collapse": "Laghdaigh go dtí an gnáthmhéid",
     "title": "Léarscáil Nótaí",
     "fix-nodes": "Deisigh nóid",
-    "link-distance": "Fad naisc"
+    "link-distance": "Fad naisc",
+    "too-many-notes": "Tá {{count}} nótaí sa fho-chrann seo, rud a sháraíonn an teorainn {{max}} is féidir a thaispeáint sa léarscáil nótaí."
   },
   "note_paths": {
     "title": "Cosáin Nótaí",
@@ -1368,7 +1385,8 @@
     "date-and-time": "Dáta & am",
     "path": "Cosán",
     "database_backed_up_to": "Tá cúltaca déanta den bhunachar sonraí chuig {{backupFilePath}}",
-    "no_backup_yet": "gan aon chúltaca fós"
+    "no_backup_yet": "gan aon chúltaca fós",
+    "download": "Íoslódáil"
   },
   "etapi": {
     "title": "ETAPI",
@@ -1489,7 +1507,8 @@
     "test_title": "Tástáil Sioncrónaithe",
     "test_description": "Déanfaidh sé seo tástáil ar an nasc agus ar an gcroitheadh láimhe leis an bhfreastalaí sioncrónaithe. Mura bhfuil an freastalaí sioncrónaithe tosaithe, socróidh sé seo é chun sioncrónú leis an doiciméad áitiúil.",
     "test_button": "Tástáil sioncrónaithe",
-    "handshake_failed": "Theip ar chroitheadh láimhe an fhreastalaí sioncrónaithe, earráid: {{message}}"
+    "handshake_failed": "Theip ar chroitheadh láimhe an fhreastalaí sioncrónaithe, earráid: {{message}}",
+    "timeout_description": "Cé chomh fada is ceart fanacht sula dtugann tú suas ar nasc sioncrónaithe mall. Méadaigh an méid ama má tá líonra éagobhsaí agat."
   },
   "api_log": {
     "close": "Dún"
@@ -1803,7 +1822,8 @@
     "theme_none": "Gan aon aibhsiú comhréire",
     "theme_group_light": "Téamaí éadroma",
     "theme_group_dark": "Téamaí dorcha",
-    "copy_title": "Cóipeáil chuig an ghearrthaisce"
+    "copy_title": "Cóipeáil chuig an ghearrthaisce",
+    "click_to_copy": "Cliceáil chun cóipeáil"
   },
   "classic_editor_toolbar": {
     "title": "Formáidiú"
@@ -2328,7 +2348,8 @@
     "note_context_disabled": "Cliceáil chun an nóta reatha a chur san áireamh i gcomhthéacs",
     "no_provider_message": "Níl aon soláthraí AI cumraithe. Cuir ceann leis chun comhrá a thosú.",
     "add_provider": "Cuir Soláthraí AI leis",
-    "sources_summary": "{{count}} foinsí ó {{sites}} suíomhanna"
+    "sources_summary": "{{count}} foinsí ó {{sites}} suíomhanna",
+    "stop": "Stop"
   },
   "sidebar_chat": {
     "title": "Comhrá AI",
@@ -2392,7 +2413,11 @@
       "web_search": "Cuardach gréasáin",
       "note_in_parent": "<Note/> i <Parent/>",
       "get_attachment": "Faigh ceangaltán",
-      "get_attachment_content": "Léigh ábhar an cheangail"
+      "get_attachment_content": "Léigh ábhar an cheangail",
+      "rename_note": "Athainmnigh an nóta",
+      "delete_note": "Scrios nóta",
+      "move_note": "Bog nóta",
+      "clone_note": "Clónáil nóta"
     }
   },
   "ocr": {
