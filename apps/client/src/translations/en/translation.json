@@ -1371,8 +1371,12 @@
     "title": "System Tray",
     "enable_tray": "Enable tray (Trilium needs to be restarted for this change to take effect)"
   },
+  "text_editor": {
+    "title": "Editor"
+  },
   "heading_style": {
-    "title": "Heading Style",
+    "title": "Heading style",
+    "description": "Visual style for headings in text notes.",
     "plain": "Plain",
     "underline": "Underline",
     "markdown": "Markdown-style"
@@ -1399,14 +1403,16 @@
   "text_auto_read_only_size": {
     "title": "Automatic Read-Only Size",
     "description": "Automatic read-only note size is the size after which notes will be displayed in a read-only mode (for performance reasons).",
-    "label": "Automatic read-only size (text notes)",
+    "label": "Automatic read-only size",
     "unit": "characters"
   },
   "custom_date_time_format": {
-    "title": "Custom Date/Time Format",
+    "title": "Date/time format",
     "description": "Customize the format of the date and time inserted via <shortcut /> or the toolbar. See <doc>Day.js docs</doc> for available format tokens.",
-    "format_string": "Format string:",
-    "formatted_time": "Formatted date/time:"
+    "description_short": "Customize the format of the date and time inserted via the toolbar.",
+    "preview": "Preview: {{preview}}",
+    "format_string": "Format string",
+    "formatted_time": "Formatted date/time"
   },
   "i18n": {
     "title": "Localization",

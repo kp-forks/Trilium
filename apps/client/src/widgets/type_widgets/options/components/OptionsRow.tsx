@@ -1,6 +1,6 @@
 import "./OptionsRow.css";
 
-import { cloneElement, VNode } from "preact";
+import { cloneElement, ComponentChildren, VNode } from "preact";
 
 import FormToggle from "../../../react/FormToggle";
 import { useUniqueName } from "../../../react/hooks";
@@ -8,7 +8,7 @@ import { useUniqueName } from "../../../react/hooks";
 interface OptionsRowProps {
     name: string;
     label?: string;
-    description?: string;
+    description?: ComponentChildren;
     children: VNode;
     centered?: boolean;
     /** When true, stacks label above input with full-width input */

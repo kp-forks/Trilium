@@ -2,8 +2,6 @@ import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 import { Themes } from "@triliumnext/highlightjs";
 import type { CSSProperties } from "preact/compat";
 import { useEffect, useMemo, useState } from "preact/hooks";
-import type React from "react";
-import { Trans } from "react-i18next";
 
 import { isExperimentalFeatureEnabled } from "../../../services/experimental_features";
 import { t } from "../../../services/i18n";
@@ -12,13 +10,11 @@ import { formatDateTime, toggleBodyClass } from "../../../services/utils";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import FormRadioGroup from "../../react/FormRadioGroup";
-import { FormSelectGroup, FormSelectWithGroups } from "../../react/FormSelect";
+import FormSelect, { FormSelectGroup, FormSelectWithGroups } from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
-import KeyboardShortcut from "../../react/KeyboardShortcut";
 import { getHtml } from "../../react/RawHtml";
-import AutoReadOnlySize from "./components/AutoReadOnlySize";
 import CheckboxList from "./components/CheckboxList";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
@@ -30,12 +26,10 @@ export default function TextNoteSettings() {
         <>
             <FormattingToolbar />
             <EditorFeatures />
-            <HeadingStyle />
+            <Editor />
             <CodeBlockStyle />
             <TableOfContent />
             <HighlightsList />
-            <AutoReadOnlySize option="autoReadonlySizeText" label={t("text_auto_read_only_size.label")} />
-            <DateTimeFormatOptions />
         </>
     );
 }
@@ -107,24 +101,48 @@ function EditorFeatures() {
     );
 }
 
-function HeadingStyle() {
-    const [ headingStyle, setHeadingStyle ] = useTriliumOption("headingStyle");
+function Editor() {
+    const [headingStyle, setHeadingStyle] = useTriliumOption("headingStyle");
+    const [autoReadonlySize, setAutoReadonlySize] = useTriliumOption("autoReadonlySizeText");
+    const [customDateTimeFormat, setCustomDateTimeFormat] = useTriliumOption("customDateTimeFormat");
 
     useEffect(() => {
         toggleBodyClass("heading-style-", headingStyle);
-    }, [ headingStyle ]);
+    }, [headingStyle]);
 
     return (
-        <OptionsSection title={t("heading_style.title")}>
-            <FormRadioGroup
-                name="heading-style"
-                currentValue={headingStyle} onChange={setHeadingStyle}
-                values={[
-                    { value: "plain", label: t("heading_style.plain") },
-                    { value: "underline", label: t("heading_style.underline") },
-                    { value: "markdown", label: t("heading_style.markdown") }
-                ]}
-            />
+        <OptionsSection title={t("text_editor.title")}>
+            <OptionsRow name="heading-style" label={t("heading_style.title")} description={t("heading_style.description")}>
+                <FormSelect
+                    currentValue={headingStyle} onChange={setHeadingStyle}
+                    values={[
+                        { value: "plain", title: t("heading_style.plain") },
+                        { value: "underline", title: t("heading_style.underline") },
+                        { value: "markdown", title: t("heading_style.markdown") }
+                    ]}
+                    keyProperty="value" titleProperty="title"
+                />
+            </OptionsRow>
+
+            <OptionsRow name="auto-readonly-size-text" label={t("text_auto_read_only_size.label")} description={t("text_auto_read_only_size.description")}>
+                <FormTextBoxWithUnit
+                    type="number" min={0}
+                    unit={t("text_auto_read_only_size.unit")}
+                    currentValue={autoReadonlySize}
+                    onChange={setAutoReadonlySize}
+                />
+            </OptionsRow>
+
+            <OptionsRow
+                name="custom-date-time-format"
+                label={t("custom_date_time_format.title")}
+                description={<>{t("custom_date_time_format.description_short")} {t("custom_date_time_format.preview", { preview: formatDateTime(new Date(), customDateTimeFormat) })}</>}
+            >
+                <FormTextBox
+                    placeholder="YYYY-MM-DD HH:mm"
+                    currentValue={customDateTimeFormat || "YYYY-MM-DD HH:mm"} onChange={setCustomDateTimeFormat}
+                />
+            </OptionsRow>
         </OptionsSection>
     );
 }
@@ -312,35 +330,3 @@ export function HighlightsListOptions() {
     );
 }
 
-function DateTimeFormatOptions() {
-    const [ customDateTimeFormat, setCustomDateTimeFormat ] = useTriliumOption("customDateTimeFormat");
-
-    return (
-        <OptionsSection title={t("custom_date_time_format.title")}>
-            <FormText>
-                <Trans
-                    i18nKey="custom_date_time_format.description"
-                    components={{
-                        shortcut: <KeyboardShortcut actionName="insertDateTimeToText" /> as React.ReactElement,
-                        doc: <a href="https://day.js.org/docs/en/display/format" target="_blank" rel="noopener noreferrer" /> as React.ReactElement
-                    }}
-                />
-            </FormText>
-
-            <div className="row align-items-center">
-                <FormGroup name="custom-date-time-format" className="col-md-6" label={t("custom_date_time_format.format_string")}>
-                    <FormTextBox
-                        placeholder="YYYY-MM-DD HH:mm"
-                        currentValue={customDateTimeFormat || "YYYY-MM-DD HH:mm"} onChange={setCustomDateTimeFormat}
-                    />
-                </FormGroup>
-
-                <FormGroup name="formatted-date" className="col-md-6" label={t("custom_date_time_format.formatted_time")}>
-                    <div>
-                        {formatDateTime(new Date(), customDateTimeFormat)}
-                    </div>
-                </FormGroup>
-            </div>
-        </OptionsSection>
-    );
-}
