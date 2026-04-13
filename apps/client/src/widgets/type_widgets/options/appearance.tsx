@@ -11,10 +11,10 @@ import server from "../../../services/server";
 import { isElectron, isMobile, reloadFrontendApp, restartDesktopApp } from "../../../services/utils";
 import { VerticalLayoutIcon } from "../../buttons/global_menu";
 import Button from "../../react/Button";
+import Dropdown from "../../react/Dropdown";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import FormList, { FormListHeader, FormListItem } from "../../react/FormList";
-import FormSelect from "../../react/FormSelect";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
@@ -31,16 +31,20 @@ const MIN_CONTENT_WIDTH = 640;
 interface Theme {
     val: string;
     title: string;
+    icon?: string;
     noteId?: string;
 }
 
-const BUILTIN_THEMES: Theme[] = [
-    { val: "next", title: t("theme.triliumnext") },
-    { val: "next-light", title: t("theme.triliumnext-light") },
-    { val: "next-dark", title: t("theme.triliumnext-dark") },
-    { val: "auto", title: t("theme.auto_theme") },
-    { val: "light", title: t("theme.light_theme") },
-    { val: "dark", title: t("theme.dark_theme") }
+const MODERN_THEMES: Theme[] = [
+    { val: "next", title: t("theme.triliumnext"), icon: "bx bx-sun bx-flip-horizontal" },
+    { val: "next-light", title: t("theme.triliumnext-light"), icon: "bx bx-sun" },
+    { val: "next-dark", title: t("theme.triliumnext-dark"), icon: "bx bx-moon" }
+];
+
+const LEGACY_THEMES: Theme[] = [
+    { val: "auto", title: t("theme.auto_theme"), icon: "bx bx-sun bx-flip-horizontal" },
+    { val: "light", title: t("theme.light_theme"), icon: "bx bx-sun" },
+    { val: "dark", title: t("theme.dark_theme"), icon: "bx bx-moon" }
 ];
 
 interface FontFamilyEntry {
@@ -115,26 +119,70 @@ export default function AppearanceSettings() {
 
 function UserInterface() {
     const [ theme, setTheme ] = useTriliumOption("theme", true);
-    const [ themes, setThemes ] = useState<Theme[]>([]);
+    const [ customThemes, setCustomThemes ] = useState<Theme[]>([]);
     const [ newLayout, setNewLayout ] = useTriliumOptionBool("newLayout");
     const [ layoutOrientation, setLayoutOrientation ] = useTriliumOption("layoutOrientation", true);
 
     useEffect(() => {
         server.get<Theme[]>("options/user-themes").then((userThemes) => {
-            setThemes([
-                ...BUILTIN_THEMES,
-                ...userThemes
-            ]);
+            // Add placeholder icon for custom themes
+            setCustomThemes(userThemes.map(t => ({ ...t, icon: "bx bx-palette" })));
         });
     }, []);
+
+    // Find current theme for display
+    const allThemes = [...MODERN_THEMES, ...LEGACY_THEMES, ...customThemes];
+    const currentTheme = allThemes.find(t => t.val === theme);
+    const currentThemeLabel = currentTheme?.title ?? theme ?? "";
+    const currentThemeIcon = currentTheme?.icon ?? "bx bx-palette";
 
     return (
         <OptionsSection title={t("theme.title")}>
             <OptionsRow name="theme" label={t("theme.theme_label")}>
-                <FormSelect
-                    values={themes} currentValue={theme} onChange={setTheme}
-                    keyProperty="val" titleProperty="title"
-                />
+                <Dropdown
+                    text={<>
+                        <span className={currentThemeIcon} style={{ marginRight: "8px" }} />
+                        {currentThemeLabel}
+                    </>}
+                >
+                    <FormListHeader text={t("theme.modern_themes")} />
+                    {MODERN_THEMES.map(t => (
+                        <FormListItem
+                            key={t.val}
+                            icon={t.icon}
+                            selected={theme === t.val}
+                            onClick={() => setTheme(t.val)}
+                        >
+                            {t.title}
+                        </FormListItem>
+                    ))}
+                    <FormListHeader text={t("theme.legacy_themes")} />
+                    {LEGACY_THEMES.map(t => (
+                        <FormListItem
+                            key={t.val}
+                            icon={t.icon}
+                            selected={theme === t.val}
+                            onClick={() => setTheme(t.val)}
+                        >
+                            {t.title}
+                        </FormListItem>
+                    ))}
+                    {customThemes.length > 0 && (
+                        <>
+                            <FormListHeader text={t("theme.custom_themes")} />
+                            {customThemes.map(t => (
+                                <FormListItem
+                                    key={t.val}
+                                    icon={t.icon}
+                                    selected={theme === t.val}
+                                    onClick={() => setTheme(t.val)}
+                                >
+                                    {t.title}
+                                </FormListItem>
+                            ))}
+                        </>
+                    )}
+                </Dropdown>
             </OptionsRow>
             {!isMobile() && <>
                 <OptionsRow name="layout-style" label={t("settings_appearance.ui_layout_style")}>
