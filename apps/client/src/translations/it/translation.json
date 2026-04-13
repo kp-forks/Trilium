@@ -90,12 +90,22 @@
   "delete_notes": {
     "close": "Chiudi",
     "delete_all_clones_description": "Elimina anche tutti i cloni (può essere ripristinato nella sezione cambiamenti recenti)",
-    "erase_notes_description": "L'eliminazione normale (soft) marca le note come eliminate e potranno essere recuperate entro un certo lasso di tempo (dalla finestra dei cambiamenti recenti). Selezionando questa opzione le note si elimineranno immediatamente e non sarà possibile recuperarle.",
+    "erase_notes_description": "Cancella immediatamente le note invece di effettuare una cancellazione temporanea. Questa operazione non può essere annullata e comporterà il riavvio dell'applicazione.",
     "erase_notes_warning": "Elimina le note in modo permanente (non potrà essere disfatto), compresi tutti i cloni. Ciò forzerà un nuovo caricamento dell'applicazione.",
     "cancel": "Annulla",
-    "notes_to_be_deleted": "Le seguenti note saranno eliminate ({{notesCount}})",
+    "notes_to_be_deleted": "Note da eliminare ({{notesCount}})",
     "no_note_to_delete": "Nessuna nota sarà eliminata (solo i cloni).",
-    "broken_relations_to_be_deleted": "Le seguenti relazioni saranno interrotte ed eliminate ({{relationCount}})"
+    "broken_relations_to_be_deleted": "Relazioni interrotte ({{relationCount}})",
+    "title": "Eliminazione note",
+    "clones_label": "Cloni",
+    "delete_clones_description_one": "Elimina anche {{count}} altro clone. L'operazione può essere annullata nella pagina delle modifiche recenti.",
+    "delete_clones_description_many": "Elimina anche {{count}} altri cloni. L'operazione può essere annullata nella pagina delle modifiche recenti.",
+    "delete_clones_description_other": "Elimina anche {{count}} altri cloni. L'operazione può essere annullata nella pagina delle modifiche recenti.",
+    "erase_notes_label": "Elimina definitivamente",
+    "table_note_with_relation": "Nota relativa a",
+    "table_relation": "Relazione",
+    "table_points_to": "Punti verso (eliminato)",
+    "delete": "Eliminazione"
   },
   "info": {
     "okButton": "OK",
@@ -460,7 +470,8 @@
     "enable_daily_backup": "Abilita i backup giornalieri",
     "no_backup_yet": "Ancora nessuna archiviazione",
     "automatic_backup": "Backup Automatico",
-    "automatic_backup_description": "Trilium può eseguire automaticamente il backup del database:"
+    "automatic_backup_description": "Trilium può eseguire automaticamente il backup del database:",
+    "download": "Scarica"
   },
   "backend_log": {
     "refresh": "Aggiorna"
@@ -502,7 +513,8 @@
     "special_value_description": "Un altro valore speciale è <code>noproxy</code> che forza l'ignoramento anche del proxy di sistema e rispetta <code>NODE_TLS_REJECT_UNAUTHORIZED</code>.",
     "test_description": "Questo testerà la connessione e l'handshake con il server di sincronizzazione. Se il server di sincronizzazione non è inizializzato, questo lo imposterà per la sincronizzazione con il documento locale.",
     "test_button": "Test di sincronizzazione",
-    "handshake_failed": "Handshake del server di sincronizzazione non riuscito, errore: {{message}}"
+    "handshake_failed": "Handshake del server di sincronizzazione non riuscito, errore: {{message}}",
+    "timeout_description": "Quanto tempo aspettare prima di rinunciare con una connessione lenta. Aumenta questo intervallo se hai una rete instabile."
   },
   "search_engine": {
     "save_button": "Salva",
@@ -695,7 +707,8 @@
     "box_size_small": "piccola (~ 10 righe)",
     "box_size_medium": "media (~ 30 righe)",
     "box_size_full": "completa (la casella mostra il testo completo)",
-    "button_include": "Includi nota"
+    "button_include": "Includi nota",
+    "box_size_expandable": "espandibile (nascosto per impostazione predefinita)"
   },
   "jump_to_note": {
     "search_placeholder": "Cerca una nota per nome oppure digita > per i comandi...",
@@ -1244,7 +1257,10 @@
     "expand_first_level": "Espandi figli diretti",
     "expand_nth_level": "Espandi {{depth}} livelli",
     "expand_all_levels": "Espandi tutti i livelli",
-    "hide_child_notes": "Nascondi note secondarie nell'albero"
+    "hide_child_notes": "Nascondi note secondarie nell'albero",
+    "open_all_in_tabs": "Apri tutto",
+    "open_all_in_tabs_tooltip": "Apri tutti i risultati in nuove schede",
+    "open_all_confirm": "Verranno aperte {{count}} note in nuove schede. Vuoi continuare?"
   },
   "edited_notes": {
     "no_edited_notes_found": "Nessuna nota modificata per questo giorno...",
@@ -1298,7 +1314,8 @@
     "collapse": "Ritorna alle dimensioni normali",
     "title": "Nota Mappa",
     "fix-nodes": "Fissare i nodi",
-    "link-distance": "Distanza del collegamento"
+    "link-distance": "Distanza del collegamento",
+    "too-many-notes": "Questo sottoalbero contiene {{count}} note, un numero superiore al limite di {{max}} che può essere visualizzato nella mappa delle note."
   },
   "note_paths": {
     "title": "Percorsi delle note",
@@ -1897,7 +1914,8 @@
     "theme_none": "Nessuna evidenziazione della sintassi",
     "theme_group_light": "Temi chiari",
     "theme_group_dark": "Temi scuri",
-    "copy_title": "Copia negli appunti"
+    "copy_title": "Copia negli appunti",
+    "click_to_copy": "Clicca per copiare"
   },
   "classic_editor_toolbar": {
     "title": "Formattazione"
@@ -2298,7 +2316,8 @@
     "note_context_disabled": "Clicca per includere la nota corrente nel contesto",
     "no_provider_message": "Non è stato configurato alcun fornitore di IA. Aggiungine uno per iniziare a chattare.",
     "add_provider": "Aggiungi un fornitore di IA",
-    "sources_summary": "{{count}} fonti provenienti da {{sites}} siti"
+    "sources_summary": "{{count}} fonti provenienti da {{sites}} siti",
+    "stop": "Stop"
   },
   "sidebar_chat": {
     "title": "Chat AI",
@@ -2348,7 +2367,11 @@
       "web_search": "Ricerca sul web",
       "note_in_parent": "<Note/> in <Parent/>",
       "get_attachment": "Scarica l'allegato",
-      "get_attachment_content": "Leggi il contenuto dell'allegato"
+      "get_attachment_content": "Leggi il contenuto dell'allegato",
+      "rename_note": "Rinomina nota",
+      "delete_note": "Elimina nota",
+      "move_note": "Sposta nota",
+      "clone_note": "Clona nota"
     }
   },
   "ocr": {
@@ -2380,5 +2403,12 @@
     "linkBidirectional": "Collegamento bidirezionale",
     "clickTips": "Clicca sul nodo di destinazione",
     "summary": "Sommario"
+  },
+  "search": {
+    "title": "Cerca",
+    "fuzzy_matching_label": "Tolleranza agli errori di battitura nella ricerca",
+    "fuzzy_matching_description": "Si applica alla ricerca rapida e alla ricerca completa. Trova parole simili quando non ci sono corrispondenze esatte.",
+    "autocomplete_fuzzy_label": "Tolleranza agli errori di battitura nel completamento automatico",
+    "autocomplete_fuzzy_description": "Influisce sui comandi \"Vai alla nota\" e sui selettori di note. È più lento, ma tollera gli errori di digitazione."
   }
 }
