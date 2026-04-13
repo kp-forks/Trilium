@@ -445,5 +445,18 @@
   "sql_init": {
     "db_not_initialized_desktop": "Database non inizializzato, seguire le istruzioni a schermo.",
     "db_not_initialized_server": "Database non inizializzato, visitare la pagina di configurazione - http://[host-del-tuo-server]:{{port}} per ricevere istruzioni su come inizializzare Trilium."
+  },
+  "script": {
+    "wrong-environment": "Impossibile eseguire la nota \"{{- noteTitle}}\" ({{- noteId}}). Si tratta di uno script {{- actualEnv}}, ma si è tentato di eseguirlo nell'ambiente {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Errore in {{- context}}: {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" è una parola chiave riservata. Per cercare un valore letterale, usa le virgolette: \"{{- token}}\"",
+      "cannot-compare-with": "non è paragonabile a \"{{- token}}\". Per cercare un valore letterale, usa le virgolette: \"{{- token}}\"",
+      "misplaced-expression": "Espressione \"{{- token}}\" errata o incompleta",
+      "fulltext-after-expression": "\"{{- token}}\" non è un'espressione valida. Per cercare del testo, inseriscilo prima dei filtri degli attributi (ad esempio, \"{{- token}} #label\" invece di \"#label {{- token}}\").",
+      "unrecognized-expression": "Espressione non riconosciuta \"{{- token}}\""
+    }
   }
 }
