@@ -4,7 +4,6 @@ import { useRef } from "preact/hooks";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import { openInAppHelpFromUrl } from "../../../services/utils";
 import Button from "../../react/Button";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumOptions } from "../../react/hooks";
@@ -22,7 +21,7 @@ export function SyncConfiguration() {
     const syncProxy = useRef(options.syncProxy);
 
     return (
-        <OptionsSection>
+        <OptionsSection helpUrl="cbkrhQjrkKrh">
             <form onSubmit={(e) => {
                 setOptions({
                     syncServerHost: syncServerHost.current,
@@ -45,10 +44,7 @@ export function SyncConfiguration() {
                 </OptionsRow>
 
                 <OptionsRow name="save-sync-config" centered>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                        <Button text={t("sync_2.save")} kind="primary" />
-                        <Button text={t("sync_2.help")} onClick={() => openInAppHelpFromUrl("cbkrhQjrkKrh")} />
-                    </div>
+                    <Button text={t("sync_2.save")} kind="primary" />
                 </OptionsRow>
             </form>
 

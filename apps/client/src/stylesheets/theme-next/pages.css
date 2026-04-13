@@ -221,6 +221,23 @@ body.desktop .options-section:not(.tn-no-card) {
     margin-inline-start: calc(-1 * var(--options-card-padding));
 }
 
+.options-section:not(.tn-no-card) .options-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: calc(-1 * var(--options-card-padding) - var(--options-title-font-size) - var(--options-title-offset));
+    margin-inline: calc(-1 * var(--options-card-padding));
+    margin-bottom: calc(var(--options-title-offset) + var(--options-card-padding));
+}
+
+.options-section:not(.tn-no-card) .options-section-header h4 {
+    margin: 0 !important;
+}
+
+.options-section:not(.tn-no-card) .options-section-header .icon-action {
+    margin-inline-start: auto;
+}
+
 .options-section:not(.tn-no-card) h5 {
     font-size: var(--options-title-font-size);
     font-weight: bold;
