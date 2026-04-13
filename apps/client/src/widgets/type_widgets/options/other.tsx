@@ -27,8 +27,7 @@ export default function OtherSettings() {
             </>}
             <NoteErasureTimeout />
             <AttachmentErasureTimeout />
-            <RevisionSnapshotInterval />
-            <RevisionSnapshotLimit />
+            <RevisionSettings />
             <HtmlImportTags />
             <ShareSettings />
             <NetworkSettings />
@@ -173,9 +172,11 @@ function AttachmentErasureTimeout() {
     );
 }
 
-function RevisionSnapshotInterval() {
+function RevisionSettings() {
+    const [ revisionSnapshotNumberLimit, setRevisionSnapshotNumberLimit ] = useTriliumOption("revisionSnapshotNumberLimit");
+
     return (
-        <OptionsSection title={t("revisions_snapshot_interval.note_revisions_snapshot_interval_title")}>
+        <OptionsSection title={t("revisions.title")}>
             <OptionsRow name="revision-snapshot-time-interval" label={t("revisions_snapshot_interval.snapshot_time_interval_label")} description={t("revisions_snapshot_interval.note_revisions_snapshot_description_short")}>
                 <TimeSelector
                     name="revision-snapshot-time-interval"
@@ -183,15 +184,7 @@ function RevisionSnapshotInterval() {
                     minimumSeconds={10}
                 />
             </OptionsRow>
-        </OptionsSection>
-    );
-}
 
-function RevisionSnapshotLimit() {
-    const [ revisionSnapshotNumberLimit, setRevisionSnapshotNumberLimit ] = useTriliumOption("revisionSnapshotNumberLimit");
-
-    return (
-        <OptionsSection title={t("revisions_snapshot_limit.note_revisions_snapshot_limit_title")}>
             <OptionsRow name="revision-snapshot-number-limit" label={t("revisions_snapshot_limit.snapshot_number_limit_label")} description={t("revisions_snapshot_limit.note_revisions_snapshot_limit_description_short")}>
                 <FormTextBoxWithUnit
                     type="number" min={-1}
