@@ -373,7 +373,6 @@
     "theme_defined": "النسق المحدد",
     "main_font": "الخط الرئيسي",
     "font_family": "عائلة الخطوط",
-    "reload_frontend": "اعادة تحميل الواجهة",
     "generic-fonts": "الخطوط العامة",
     "sans-serif": "خطوط بدون زوائد",
     "system-default": "الاعداد الافتراضي للنظام",
@@ -484,26 +483,6 @@
     "modal_title": "جلسة محمية",
     "start_button": "بدء جلسة محمية",
     "help_title": "مساعدة حول الملاحظات المحمية"
-  },
-  "revisions": {
-    "delete_button": "حذف",
-    "download_button": "تنزيل",
-    "restore_button": "أستعادة",
-    "note_revisions": "مراجعات الملاحظة",
-    "diff_on": "عرض الفروقات",
-    "diff_off": "عرض المحتوى",
-    "file_size": "حجم الملف:",
-    "mime": "MIME: ",
-    "delete_all_button": "حذف كل المراجعات",
-    "settings": "اعدادات مراجعة الملاحظة",
-    "diff_not_available": "المقارنة غير متوفرة.",
-    "help_title": "مساعدة حول مراجعات الملاحظة",
-    "diff_off_hint": "انقر لعرض محتويات الملاحظة",
-    "revisions_deleted": "تم حذف جميع نسخ المراجعات للملاحظة.",
-    "revision_restored": "تم استعادة نسخ المراجعة للملاحظة.",
-    "revision_deleted": "تم حذف مراجعة الملاحظة.",
-    "snapshot_interval": "فاصل زمني لحفظ لقطات اصدارات المراجعة: {{seconds}}",
-    "maximum_revisions": "حد عدد لقطات اصدارات الملاحظة: {{number}}"
   },
   "sort_child_notes": {
     "title": "عنوان",
@@ -662,7 +641,6 @@
     "default_shortcuts": "اختصارات افتراضية"
   },
   "sync_2": {
-    "note": "ملاحظة",
     "save": "حفظ",
     "help": "المساعدة",
     "config_title": "تهيئة المزامنة",
