@@ -1248,11 +1248,11 @@
   },
   "ui-performance": {
     "title": "Performance",
-    "enable-motion": "Enable transitions and animations",
-    "enable-shadows": "Enable shadows",
-    "enable-backdrop-effects": "Enable background effects for menus, popups and panels",
-    "enable-smooth-scroll": "Enable smooth scrolling",
-    "app-restart-required": "(a restart of the application is required for the change to take effect)"
+    "enable-motion": "Transitions and animations",
+    "enable-shadows": "Shadows",
+    "enable-backdrop-effects": "Background effects for menus, popups and panels",
+    "enable-smooth-scroll": "Smooth scrolling",
+    "app-restart-required": "Requires app restart"
   },
   "zoom_factor": {
     "title": "Zoom Factor (desktop build only)",

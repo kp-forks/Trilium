@@ -546,19 +546,25 @@ function Performance() {
     const [ backdropEffectsEnabled, setBackdropEffectsEnabled ] = useTriliumOptionBool("backdropEffectsEnabled");
 
     return <OptionsSection title={t("ui-performance.title")}>
-        <FormCheckbox
+        <OptionsRowWithToggle
+            name="motion-enabled"
             label={t("ui-performance.enable-motion")}
-            currentValue={motionEnabled} onChange={setMotionEnabled}
+            currentValue={motionEnabled}
+            onChange={setMotionEnabled}
         />
 
-        <FormCheckbox
+        <OptionsRowWithToggle
+            name="shadows-enabled"
             label={t("ui-performance.enable-shadows")}
-            currentValue={shadowsEnabled} onChange={setShadowsEnabled}
+            currentValue={shadowsEnabled}
+            onChange={setShadowsEnabled}
         />
 
-        {!isMobile() && <FormCheckbox
+        {!isMobile() && <OptionsRowWithToggle
+            name="backdrop-effects-enabled"
             label={t("ui-performance.enable-backdrop-effects")}
-            currentValue={backdropEffectsEnabled} onChange={setBackdropEffectsEnabled}
+            currentValue={backdropEffectsEnabled}
+            onChange={setBackdropEffectsEnabled}
         />}
 
         {isElectron() && <SmoothScrollEnabledOption />}
@@ -569,9 +575,12 @@ function Performance() {
 function SmoothScrollEnabledOption() {
     const [ smoothScrollEnabled, setSmoothScrollEnabled ] = useTriliumOptionBool("smoothScrollEnabled");
 
-    return <FormCheckbox
-        label={`${t("ui-performance.enable-smooth-scroll")} ${t("ui-performance.app-restart-required")}`}
-        currentValue={smoothScrollEnabled} onChange={setSmoothScrollEnabled}
+    return <OptionsRowWithToggle
+        name="smooth-scroll-enabled"
+        label={t("ui-performance.enable-smooth-scroll")}
+        description={t("ui-performance.app-restart-required")}
+        currentValue={smoothScrollEnabled}
+        onChange={setSmoothScrollEnabled}
     />;
 }
 
@@ -605,9 +614,11 @@ function RibbonOptions() {
 
     return (
         <OptionsSection title={t('ribbon.widgets')}>
-            <FormCheckbox
+            <OptionsRowWithToggle
+                name="edited-notes-open-in-ribbon"
                 label={t('ribbon.edited_notes_message')}
-                currentValue={editedNotesOpenInRibbon} onChange={setEditedNotesOpenInRibbon}
+                currentValue={editedNotesOpenInRibbon}
+                onChange={setEditedNotesOpenInRibbon}
             />
         </OptionsSection>
     );
