@@ -330,7 +330,7 @@ function Fonts() {
             <Font label={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" disabled={!isEnabled} />
             <Font label={t("fonts.note_tree_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
             <Font label={t("fonts.note_detail_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
-            <Font label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} isMonospace />
+            <Font label={t("fonts.monospace_font")} description={t("fonts.monospace_font_description")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} isMonospace />
 
             <OptionsRowWithButton
                 label={t("fonts.apply_changes")}
@@ -343,6 +343,7 @@ function Fonts() {
 
 interface FontProps {
     label: string;
+    description?: string;
     sizeDescription?: string;
     fontFamilyOption: OptionNames;
     fontSizeOption: OptionNames;
@@ -350,7 +351,7 @@ interface FontProps {
     isMonospace?: boolean;
 }
 
-function Font({ label, sizeDescription, fontFamilyOption, fontSizeOption, disabled, isMonospace }: FontProps) {
+function Font({ label, description, sizeDescription, fontFamilyOption, fontSizeOption, disabled, isMonospace }: FontProps) {
     const [ fontFamily, setFontFamily ] = useTriliumOption(fontFamilyOption);
     const [ fontSize, setFontSize ] = useTriliumOption(fontSizeOption);
     const [ showModal, setShowModal ] = useState(false);
@@ -392,6 +393,7 @@ function Font({ label, sizeDescription, fontFamilyOption, fontSizeOption, disabl
             >
                 <div className="option-row-label">
                     <label style={{ cursor: "pointer" }}>{label}</label>
+                    {description && <small>{description}</small>}
                 </div>
                 <div className="option-row-input font-option-preview">
                     <span style={{ fontFamily: getFontFamily(fontFamily ?? ""), fontSize: `${fontSize}%` }}>{displayLabel}</span>
