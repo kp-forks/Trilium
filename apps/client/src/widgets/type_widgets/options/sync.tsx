@@ -1,69 +1,47 @@
 import { SyncTestResponse } from "@triliumnext/commons";
-import { useRef } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import { openInAppHelpFromUrl } from "../../../services/utils";
-import Button from "../../react/Button";
-import FormGroup from "../../react/FormGroup";
-import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
-import { useTriliumOptions } from "../../react/hooks";
-import RawHtml from "../../react/RawHtml";
-import OptionsRow from "./components/OptionsRow";
+import { useTriliumOption } from "../../react/hooks";
+import OptionsRow, { OptionsRowWithButton } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import TimeSelector from "./components/TimeSelector";
 
 export default function SyncOptions() {
-    return (
-        <>
-            <SyncConfiguration />
-            <SyncTest />
-        </>
-    );
+    return <SyncConfiguration />;
 }
 
 export function SyncConfiguration() {
-    const [ options, setOptions ] = useTriliumOptions("syncServerHost", "syncProxy");
-    const syncServerHost = useRef(options.syncServerHost);
-    const syncProxy = useRef(options.syncProxy);
+    const [syncServerHost, setSyncServerHost] = useTriliumOption("syncServerHost");
+    const [syncProxy, setSyncProxy] = useTriliumOption("syncProxy");
+    const [localHost, setLocalHost] = useState(syncServerHost);
+    const [localProxy, setLocalProxy] = useState(syncProxy);
+
+    useEffect(() => setLocalHost(syncServerHost), [syncServerHost]);
+    useEffect(() => setLocalProxy(syncProxy), [syncProxy]);
 
     return (
-        <OptionsSection title={t("sync_2.config_title")}>
-            <form onSubmit={(e) => {
-                setOptions({
-                    syncServerHost: syncServerHost.current,
-                    syncProxy: syncProxy.current
-                });
-                e.preventDefault();
-            }}>
-                <FormGroup name="sync-server-host" label={t("sync_2.server_address")}>
-                    <FormTextBox
-                        placeholder="https://<host>:<port>"
-                        currentValue={syncServerHost.current} onChange={(newValue) => syncServerHost.current = newValue}
-                    />
-                </FormGroup>
+        <OptionsSection helpUrl="cbkrhQjrkKrh">
+            <OptionsRow name="sync-server-host" label={t("sync_2.server_address")} description={t("sync_2.server_address_description")} stacked>
+                <FormTextBox
+                    placeholder="https://<host>:<port>"
+                    currentValue={localHost}
+                    onChange={setLocalHost}
+                    onBlur={setSyncServerHost}
+                />
+            </OptionsRow>
 
-                <FormGroup name="sync-proxy" label={t("sync_2.proxy_label")}
-                    description={<>
-                        <strong>{t("sync_2.note")}:</strong> {t("sync_2.note_description")}<br/>
-                        <RawHtml html={t("sync_2.special_value_description")} />
-                    </>}
-                >
-                    <FormTextBox
-                        placeholder="https://<host>:<port>"
-                        currentValue={syncProxy.current} onChange={(newValue) => syncProxy.current = newValue}
-                    />
-                </FormGroup>
-
-                <div style={{ display: "flex", justifyContent: "spaceBetween"}}>
-                    <Button text={t("sync_2.save")} kind="primary" />
-                    <Button text={t("sync_2.help")} onClick={() => openInAppHelpFromUrl("cbkrhQjrkKrh")} />
-                </div>
-            </form>
-
-            <hr/>
+            <OptionsRow name="sync-proxy" label={t("sync_2.proxy_label")} description={t("sync_2.proxy_description")} stacked>
+                <FormTextBox
+                    placeholder="https://<host>:<port>"
+                    currentValue={localProxy}
+                    onChange={setLocalProxy}
+                    onBlur={setSyncProxy}
+                />
+            </OptionsRow>
 
             <OptionsRow name="sync-server-timeout" label={t("sync_2.timeout")} description={t("sync_2.timeout_description")}>
                 <TimeSelector
@@ -73,17 +51,15 @@ export function SyncConfiguration() {
                     minimumSeconds={1}
                 />
             </OptionsRow>
-        </OptionsSection>
-    );
-}
 
-export function SyncTest() {
-    return (
-        <OptionsSection title={t("sync_2.test_title")}>
-            <FormText>{t("sync_2.test_description")}</FormText>
-            <Button
-                text={t("sync_2.test_button")}
+            <OptionsRowWithButton
+                label={t("sync_2.test_button")}
+                description={t("sync_2.test_description")}
                 onClick={async () => {
+                    await Promise.all([
+                        setSyncServerHost(localHost),
+                        setSyncProxy(localProxy)
+                    ]);
                     const result = await server.post<SyncTestResponse>("sync/test");
 
                     if (result.success && result.message) {

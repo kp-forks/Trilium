@@ -5,14 +5,14 @@ import App from "./support/app";
 test("Native Title Bar not displayed on web", async ({ page, context }) => {
     const app = new App(page, context);
     await app.goto({ url: "http://localhost:8082/#root/_hidden/_options/_optionsAppearance" });
-    await expect(app.currentNoteSplitContent.getByRole("heading", { name: "Theme" })).toBeVisible();
+    await expect(app.currentNoteSplitContent.getByRole("heading", { name: "User Interface" })).toBeVisible();
     await expect(app.currentNoteSplitContent.getByRole("heading", { name: "Native Title Bar (requires" })).toBeHidden();
 });
 
 test("Tray settings not displayed on web", async ({ page, context }) => {
     const app = new App(page, context);
     await app.goto({ url: "http://localhost:8082/#root/_hidden/_options/_optionsOther" });
-    await expect(app.currentNoteSplitContent.getByRole("heading", { name: "Note Erasure Timeout" })).toBeVisible();
+    await expect(app.currentNoteSplitContent.getByRole("heading", { name: "Deleted Notes" })).toBeVisible();
     await expect(app.currentNoteSplitContent.getByRole("heading", { name: "Tray" })).toBeHidden();
 });
 
