@@ -2,6 +2,7 @@ import "./OptionsRow.css";
 
 import { cloneElement, VNode } from "preact";
 
+import FormToggle from "../../../react/FormToggle";
 import { useUniqueName } from "../../../react/hooks";
 
 interface OptionsRowProps {
@@ -50,5 +51,30 @@ export function OptionsRowLink({ label, description, href }: OptionsRowLinkProps
                 <span className="bx bx-chevron-right" />
             </div>
         </a>
+    );
+}
+
+interface OptionsRowWithToggleProps {
+    name: string;
+    label: string;
+    description?: string;
+    currentValue: boolean | null;
+    onChange: (newValue: boolean) => void;
+    disabled?: boolean;
+    helpPage?: string;
+}
+
+export function OptionsRowWithToggle({ name, label, description, currentValue, onChange, disabled, helpPage }: OptionsRowWithToggleProps) {
+    return (
+        <OptionsRow name={name} label={label} description={description}>
+            <FormToggle
+                switchOnName=""
+                switchOffName=""
+                currentValue={currentValue}
+                onChange={onChange}
+                disabled={disabled}
+                helpPage={helpPage}
+            />
+        </OptionsRow>
     );
 }

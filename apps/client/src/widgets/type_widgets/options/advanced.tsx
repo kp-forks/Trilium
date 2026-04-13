@@ -8,9 +8,8 @@ import toast from "../../../services/toast";
 import Button from "../../react/Button";
 import Column from "../../react/Column";
 import FormText from "../../react/FormText";
-import FormToggle from "../../react/FormToggle";
 import { useTriliumOptionJson } from "../../react/hooks";
-import OptionsRow from "./components/OptionsRow";
+import { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function AdvancedSettings() {
@@ -201,18 +200,14 @@ function ExperimentalOptions() {
             <FormText>{t("experimental_features.disclaimer")}</FormText>
 
             {filteredFeatures.map((feature) => (
-                <OptionsRow
+                <OptionsRowWithToggle
                     key={feature.id}
                     name={`experimental-${feature.id}`}
                     label={feature.name}
                     description={feature.description}
-                >
-                    <FormToggle
-                        switchOnName="" switchOffName=""
-                        currentValue={enabledFeatures.includes(feature.id)}
-                        onChange={(enabled) => toggleFeature(feature.id, enabled)}
-                    />
-                </OptionsRow>
+                    currentValue={enabledFeatures.includes(feature.id)}
+                    onChange={(enabled) => toggleFeature(feature.id, enabled)}
+                />
             ))}
         </OptionsSection>
     );
