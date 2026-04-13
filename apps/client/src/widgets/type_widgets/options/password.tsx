@@ -8,11 +8,11 @@ import FormGroup from "../../react/FormGroup"
 import FormTextBox from "../../react/FormTextBox"
 import LinkButton from "../../react/LinkButton"
 import OptionsSection from "./components/OptionsSection"
+import OptionsRow from "./components/OptionsRow"
 import protected_session_holder from "../../../services/protected_session_holder"
 import { ChangePasswordResponse } from "@triliumnext/commons"
 import dialog from "../../../services/dialog"
 import TimeSelector from "./components/TimeSelector"
-import FormText from "../../react/FormText"
 
 export default function PasswordSettings() {
     return (
@@ -105,19 +105,17 @@ function ChangePassword() {
 function ProtectedSessionTimeout() {
     return (
         <OptionsSection title={t("password.protected_session_timeout")}>
-            <FormText>
-                {t("password.protected_session_timeout_description")}
-                &nbsp;
-                <a class="tn-link" href="https://triliumnext.github.io/Docs/Wiki/protected-notes.html" className="external">{t("password.wiki")}</a> {t("password.for_more_info")}
-            </FormText>
-            
-            <FormGroup name="protected-session-timeout" label={t("password.protected_session_timeout_label")}>
-                <TimeSelector                    
+            <OptionsRow
+                name="protected-session-timeout"
+                label={t("password.protected_session_timeout_label")}
+                description={<>{t("password.protected_session_timeout_description")} <a class="tn-link" href="https://triliumnext.github.io/Docs/Wiki/protected-notes.html">{t("password.wiki")}</a> {t("password.for_more_info")}</>}
+            >
+                <TimeSelector
                     name="protected-session-timeout"
                     optionValueId="protectedSessionTimeout" optionTimeScaleId="protectedSessionTimeoutTimeScale"
                     minimumSeconds={60}
                 />
-            </FormGroup>
+            </OptionsRow>
         </OptionsSection>
     )
 }
