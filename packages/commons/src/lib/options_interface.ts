@@ -14,6 +14,41 @@ type KeyboardShortcutsOptions<T extends KeyboardActionNames> = {
 
 export type FontFamily = "theme" | "serif" | "sans-serif" | "monospace" | string;
 
+/**
+ * System sans-serif font stack for cross-platform compatibility.
+ * Used when the user selects "System default" for non-monospace fonts.
+ */
+export const SYSTEM_SANS_SERIF_FONT_STACK = [
+    "system-ui",
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "Cantarell",
+    "Ubuntu",
+    "Noto Sans",
+    "Helvetica",
+    "Arial",
+    "sans-serif",
+    "Apple Color Emoji",
+    "Segoe UI Emoji"
+].join(",");
+
+/**
+ * System monospace font stack for cross-platform compatibility.
+ * Used when the user selects "System default" for monospace fonts.
+ */
+export const SYSTEM_MONOSPACE_FONT_STACK = [
+    "ui-monospace",
+    "SFMono-Regular",
+    "SF Mono",
+    "Consolas",
+    "Source Code Pro",
+    "Ubuntu Mono",
+    "Menlo",
+    "Liberation Mono",
+    "monospace"
+].join(",");
+
 export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActionNames> {
     openNoteContexts: string;
     lastDailyBackupDate: string;

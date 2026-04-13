@@ -1,6 +1,6 @@
 import "./appearance.css";
 
-import { FontFamily, OptionNames } from "@triliumnext/commons";
+import { FontFamily, OptionNames, SYSTEM_MONOSPACE_FONT_STACK, SYSTEM_SANS_SERIF_FONT_STACK } from "@triliumnext/commons";
 import { Fragment } from "preact";
 import { createPortal } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
@@ -330,7 +330,7 @@ function Fonts() {
             <Font label={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" disabled={!isEnabled} />
             <Font label={t("fonts.note_tree_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
             <Font label={t("fonts.note_detail_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
-            <Font label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} />
+            <Font label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} isMonospace />
 
             <OptionsRowWithButton
                 label={t("fonts.apply_changes")}
@@ -347,9 +347,10 @@ interface FontProps {
     fontFamilyOption: OptionNames;
     fontSizeOption: OptionNames;
     disabled?: boolean;
+    isMonospace?: boolean;
 }
 
-function Font({ label, sizeDescription, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
+function Font({ label, sizeDescription, fontFamilyOption, fontSizeOption, disabled, isMonospace }: FontProps) {
     const [ fontFamily, setFontFamily ] = useTriliumOption(fontFamilyOption);
     const [ fontSize, setFontSize ] = useTriliumOption(fontSizeOption);
     const [ showModal, setShowModal ] = useState(false);
@@ -362,8 +363,13 @@ function Font({ label, sizeDescription, fontFamilyOption, fontSizeOption, disabl
 
     // Get the CSS font-family value for preview
     const getFontFamily = (value: string) => {
-        if (["theme", "system"].includes(value)) {
-            return undefined;
+        if (value === "theme") {
+            // Use inherited font from the current theme
+            return "inherit";
+        }
+        if (value === "system") {
+            // Use the appropriate system font stack
+            return isMonospace ? SYSTEM_MONOSPACE_FONT_STACK : SYSTEM_SANS_SERIF_FONT_STACK;
         }
         return value;
     };
