@@ -115,6 +115,7 @@ function TrayOptionsSettings() {
             <OptionsRowWithToggle
                 name="tray-enabled"
                 label={t("tray.enable_tray")}
+                description={t("tray.enable_tray_description")}
                 currentValue={!disableTray}
                 onChange={trayEnabled => setDisableTray(!trayEnabled)}
             />
