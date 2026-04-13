@@ -1,4 +1,6 @@
 import sql from "../services/sql.js";
+import log from "../services/log.js";
+import { formatSize } from "../services/utils.js";
 import NoteSet from "../services/search/note_set.js";
 import NotFoundError from "../errors/not_found_error.js";
 import type BOption from "./entities/boption.js";
@@ -277,6 +279,9 @@ export default class Becca {
      */
     getFlatTextIndex(): { notes: BNote[], flatTexts: string[], noteIdToIdx: Map<string, number> } {
         if (!this.flatTextIndex) {
+            // Measure heap before building
+            const heapBefore = process.memoryUsage().heapUsed;
+
             const allNoteSet = this.getAllNoteSet();
             const notes: BNote[] = [];
             const flatTexts: string[] = [];
@@ -290,6 +295,11 @@ export default class Becca {
 
             this.flatTextIndex = { notes, flatTexts, noteIdToIdx };
             this.dirtyFlatTextNoteIds.clear();
+
+            // Measure heap after building and log
+            const heapAfter = process.memoryUsage().heapUsed;
+            const heapDelta = heapAfter - heapBefore;
+            log.info(`Flat text search index built: ${notes.length} notes, ${formatSize(heapDelta)}`);
         } else if (this.dirtyFlatTextNoteIds.size > 0) {
             // Incremental update: only recompute flat texts for dirtied notes
             const { flatTexts, noteIdToIdx } = this.flatTextIndex;
