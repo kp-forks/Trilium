@@ -236,6 +236,12 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
         loadNeededInfoFromDatabase();
     }
 
+    // For autocomplete searches, use the dedicated autocomplete fuzzy option
+    // instead of the global fuzzy setting.
+    if (searchContext.autocomplete) {
+        searchContext.enableFuzzyMatching = optionService.getOptionBool("searchAutocompleteFuzzy");
+    }
+
     // If there's an explicit orderBy clause, skip progressive search
     // as it would interfere with the ordering
     if (searchContext.orderBy) {
@@ -247,13 +253,6 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
     // If fuzzy matching is explicitly disabled, skip progressive search
     if (!searchContext.enableFuzzyMatching) {
         return performSearch(expression, searchContext, false);
-    }
-
-    // For autocomplete searches, use the dedicated autocomplete fuzzy option.
-    // Default is off for faster response; users can enable if they want typo tolerance.
-    if (searchContext.autocomplete) {
-        const autocompleteFuzzy = optionService.getOptionBool("searchAutocompleteFuzzy");
-        return performSearch(expression, searchContext, autocompleteFuzzy);
     }
 
     // Phase 1: Try exact matches first (without fuzzy matching)
