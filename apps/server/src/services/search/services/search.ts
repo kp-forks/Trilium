@@ -8,6 +8,7 @@ import SearchContext from "../search_context.js";
 import becca from "../../../becca/becca.js";
 import beccaService from "../../../becca/becca_service.js";
 import { normalize, removeDiacritic, escapeHtml, escapeRegExp } from "../../utils.js";
+import { stripHtmlTags } from "../utils/text_utils.js";
 import log from "../../log.js";
 import hoistedNoteService from "../../hoisted_note.js";
 import type BNote from "../../../becca/entities/bnote.js";
@@ -494,10 +495,9 @@ function extractContentSnippet(noteId: string, searchTokens: string[], maxLength
             return ""; // Protected but no session available
         }
 
-        // Strip HTML tags for text notes — use fast regex for snippet extraction
-        // (striptags library is ~18x slower and not needed for search snippets)
+        // Strip HTML tags for text notes
         if (note.type === "text") {
-            content = content.replace(/<[^>]*>/g, "");
+            content = stripHtmlTags(content);
         }
 
         if (!content) {
