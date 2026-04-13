@@ -1152,7 +1152,11 @@
   },
   "sync": {
     "title": "Sync",
+    "force_full_sync_label": "Force full sync",
+    "force_full_sync_description": "Trigger a complete synchronization with the sync server, re-uploading all changes.",
     "force_full_sync_button": "Force full sync",
+    "fill_entity_changes_label": "Fill entity changes",
+    "fill_entity_changes_description": "Rebuild entity change records. Use this if sync is missing some changes.",
     "fill_entity_changes_button": "Fill entity changes records",
     "full_sync_triggered": "Full sync triggered",
     "filling_entity_changes": "Filling entity changes rows...",

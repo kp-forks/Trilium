@@ -56,7 +56,7 @@
     width: 100%;
 }
 
-.option-row-link.use-tn-links {
+.option-row-link {
     text-decoration: none;
     color: inherit;
     margin-inline: calc(-1 * var(--options-card-padding, 15px));
@@ -66,4 +66,18 @@
 
 .option-row-link:hover {
     background: var(--hover-item-background-color);
+}
+
+button.option-row-link {
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--main-border-color);
+    width: calc(100% + 2 * var(--options-card-padding, 15px));
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+button.option-row-link:last-of-type {
+    border-bottom: none;
 }

@@ -9,7 +9,7 @@ import Button from "../../react/Button";
 import Column from "../../react/Column";
 import FormText from "../../react/FormText";
 import { useTriliumOptionJson } from "../../react/hooks";
-import { OptionsRowWithToggle } from "./components/OptionsRow";
+import { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function AdvancedSettings() {
@@ -25,16 +25,18 @@ export default function AdvancedSettings() {
 function AdvancedSyncOptions() {
     return (
         <OptionsSection title={t("sync.title")}>
-            <Button
-                text={t("sync.force_full_sync_button")}
+            <OptionsRowWithButton
+                label={t("sync.force_full_sync_label")}
+                description={t("sync.force_full_sync_description")}
                 onClick={async () => {
                     await server.post("sync/force-full-sync");
                     toast.showMessage(t("sync.full_sync_triggered"));
                 }}
             />
 
-            <Button
-                text={t("sync.fill_entity_changes_button")}
+            <OptionsRowWithButton
+                label={t("sync.fill_entity_changes_label")}
+                description={t("sync.fill_entity_changes_description")}
                 onClick={async () => {
                     toast.showMessage(t("sync.filling_entity_changes"));
                     await server.post("sync/fill-entity-changes");

@@ -42,7 +42,7 @@ interface OptionsRowLinkProps {
 
 export function OptionsRowLink({ label, description, href }: OptionsRowLinkProps) {
     return (
-        <a href={href} className="option-row option-row-link use-tn-links no-tooltip-preview">
+        <a href={href} className="option-row option-row-link no-tooltip-preview">
             <div className="option-row-label">
                 <label style={{ cursor: "pointer" }}>{label}</label>
                 {description && <small className="option-row-description">{description}</small>}
@@ -76,5 +76,32 @@ export function OptionsRowWithToggle({ name, label, description, currentValue, o
                 helpPage={helpPage}
             />
         </OptionsRow>
+    );
+}
+
+interface OptionsRowWithButtonProps {
+    label: string;
+    description?: string;
+    icon?: string;
+    onClick: () => void;
+}
+
+export function OptionsRowWithButton({ label, description, icon, onClick }: OptionsRowWithButtonProps) {
+    return (
+        <button
+            type="button"
+            className="option-row option-row-link"
+            onClick={onClick}
+        >
+            <div className="option-row-label">
+                <label style={{ cursor: "pointer" }}>{label}</label>
+                {description && <small className="option-row-description">{description}</small>}
+            </div>
+            {icon && (
+                <div className="option-row-input">
+                    <span className={icon} />
+                </div>
+            )}
+        </button>
     );
 }
