@@ -9,7 +9,6 @@ import { isExperimentalFeatureEnabled } from "../../../services/experimental_fea
 import { t } from "../../../services/i18n";
 import { ensureMimeTypesForHighlighting, loadHighlightingTheme } from "../../../services/syntax_highlight";
 import { formatDateTime, toggleBodyClass } from "../../../services/utils";
-import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import Dropdown from "../../react/Dropdown";
 import { FormListItem } from "../../react/FormList";
@@ -44,28 +43,31 @@ function FormattingToolbar() {
 
     return (
         <OptionsSection title={t("editing.editor_type.label")}>
-            <RadioWithIllustration
-                currentValue={textNoteEditorType}
-                onChange={setTextNoteEditorType}
-                values={[
-                    {
-                        key: "ckeditor-balloon",
-                        text: t("editing.editor_type.floating.title"),
-                        illustration: <ToolbarIllustration type="floating" />
-                    },
-                    {
-                        key: "ckeditor-classic",
-                        text: t("editing.editor_type.fixed.title"),
-                        illustration: <ToolbarIllustration type="fixed" />
-                    }
-                ]}
-            />
+            <OptionsRow name="editor-type" label={t("editing.editor_type.toolbar_style")}>
+                <RadioWithIllustration
+                    currentValue={textNoteEditorType}
+                    onChange={setTextNoteEditorType}
+                    values={[
+                        {
+                            key: "ckeditor-balloon",
+                            text: t("editing.editor_type.floating.title"),
+                            illustration: <ToolbarIllustration type="floating" />
+                        },
+                        {
+                            key: "ckeditor-classic",
+                            text: t("editing.editor_type.fixed.title"),
+                            illustration: <ToolbarIllustration type="fixed" />
+                        }
+                    ]}
+                />
+            </OptionsRow>
 
-            <FormCheckbox
+            <OptionsRowWithToggle
                 name="multiline-toolbar"
                 label={t("editing.editor_type.multiline-toolbar")}
-                currentValue={textNoteEditorMultilineToolbar} onChange={setTextNoteEditorMultilineToolbar}
-                containerStyle={{ marginTop: "1em" }}
+                currentValue={textNoteEditorMultilineToolbar}
+                onChange={setTextNoteEditorMultilineToolbar}
+                disabled={textNoteEditorType === "ckeditor-balloon"}
             />
         </OptionsSection>
     );

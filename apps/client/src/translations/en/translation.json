@@ -1930,6 +1930,7 @@
   "editing": {
     "editor_type": {
       "label": "Formatting toolbar",
+      "toolbar_style": "Toolbar style",
       "floating": {
         "title": "Floating",
         "description": "editing tools appear near the cursor;"
@@ -1938,7 +1939,7 @@
         "title": "Fixed",
         "description": "editing tools appear in the \"Formatting\" ribbon tab."
       },
-      "multiline-toolbar": "Display the toolbar on multiple lines if it doesn't fit."
+      "multiline-toolbar": "Display the toolbar on multiple lines if it doesn't fit"
     }
   },
   "electron_context_menu": {
@@ -2193,6 +2194,8 @@
     "related_code_blocks": "Color scheme for code blocks in text notes",
     "related_code_notes": "Color scheme for code notes",
     "ui": "User interface",
+    "ui_layout_style": "Layout style",
+    "ui_layout_orientation": "Launcher bar orientation",
     "ui_old_layout": "Old layout",
     "ui_new_layout": "New layout"
   },
