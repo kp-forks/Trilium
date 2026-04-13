@@ -119,7 +119,7 @@ function LayoutOptions() {
 
     return (
         <OptionsSection title={t("settings_appearance.ui")}>
-            <OptionsRow name="layout-style" label={t("settings_appearance.ui_layout_style")} stacked>
+            <OptionsRow name="layout-style" label={t("settings_appearance.ui_layout_style")}>
                 <RadioWithIllustration
                     currentValue={newLayout ? "new-layout" : "old-layout"}
                     onChange={async newValue => {
@@ -132,7 +132,7 @@ function LayoutOptions() {
                     ]}
                 />
             </OptionsRow>
-            <OptionsRow name="layout-orientation" label={t("settings_appearance.ui_layout_orientation")} stacked>
+            <OptionsRow name="layout-orientation" label={t("settings_appearance.ui_layout_orientation")}>
                 <RadioWithIllustration
                     currentValue={layoutOrientation ?? "vertical"}
                     onChange={setLayoutOrientation}
@@ -235,23 +235,6 @@ function LayoutIllustration({ isNewLayout }: { isNewLayout?: boolean }) {
                 </div>
             </div>
         </div>
-    );
-}
-
-function LayoutOrientation() {
-    const [ layoutOrientation, setLayoutOrientation ] = useTriliumOption("layoutOrientation", true);
-
-    return (
-        <OptionsSection title={t("theme.layout")}>
-            <RadioWithIllustration
-                currentValue={layoutOrientation ?? "vertical"}
-                onChange={setLayoutOrientation}
-                values={[
-                    { key: "vertical", text: t("theme.layout-vertical-title"), illustration: <OrientationIllustration orientation="vertical" /> },
-                    { key: "horizontal", text: t("theme.layout-horizontal-title"), illustration: <OrientationIllustration orientation="horizontal" /> }
-                ]}
-            />
-        </OptionsSection>
     );
 }
 
