@@ -74,7 +74,6 @@
     "will_be_deleted_soon": "Acest atașament va fi șters automat în curând"
   },
   "attachment_erasure_timeout": {
-    "attachment_auto_deletion_description": "Atașamentele se șterg automat (permanent) dacă nu sunt referențiate de către notița lor părinte după un timp prestabilit de timp.",
     "attachment_erasure_timeout": "Perioadă de ștergere a atașamentelor",
     "erase_attachments_after": "Șterge atașamentele neutilizate după:",
     "erase_unused_attachments_now": "Elimină atașamentele șterse acum",
@@ -433,7 +432,6 @@
   "database_integrity_check": {
     "check_button": "Verifică integritatea bazei de date",
     "checking_integrity": "Se verifică integritatea bazei de date...",
-    "description": "Se va verifica să nu existe coruperi ale bazei de date la nivelul SQLite. Poate dura ceva timp, în funcție de dimensiunea bazei de date.",
     "integrity_check_failed": "Probleme la verificarea integrității: {{results}}",
     "integrity_check_succeeded": "Verificarea integrității a fost făcută cu succes și nu a fost identificată nicio problemă.",
     "title": "Verificarea integrității bazei de date"
@@ -575,16 +573,13 @@
     "upload_success": "Noua revizie a fișierului a fost încărcată cu succes."
   },
   "fonts": {
-    "apply_font_changes": "Pentru a aplica schimbările de font, click pe",
     "font_family": "Familia de fonturi",
     "fonts": "Fonturi",
     "main_font": "Fontul principal",
     "monospace_font": "Fontul monospace (pentru cod)",
     "not_all_fonts_available": "Nu toate fonturile listate aici pot fi disponibile pe acest sistem.",
     "note_detail_font": "Fontul pentru detaliile notițelor",
-    "note_tree_and_detail_font_sizing": "Dimensiunea arborelui și a fontului pentru detalii este relativă la dimensiunea fontului principal.",
     "note_tree_font": "Fontul arborelui de notițe",
-    "reload_frontend": "reîncarcă interfața",
     "size": "Mărime",
     "theme_defined": "Definit de temă",
     "generic-fonts": "Fonturi generice",
@@ -715,7 +710,6 @@
     "first-week-contains-first-thursday": "Prima săptămână conține prima zi de joi din an",
     "first-week-has-minimum-days": "Prima săptămână are numărul minim de zile",
     "min-days-in-first-week": "Numărul minim de zile pentru prima săptămână",
-    "first-week-info": "Opțiunea de prima săptămână conține prima zi de joi din an este bazată pe standardul <a href=\"https://en.wikipedia.org/wiki/ISO_week_date#First_week\">ISO 8601</a>.",
     "first-week-warning": "Schimbarea opțiunii primei săptămâni poate cauza duplicate cu notițele săptămânale existente deoarece acestea nu vor fi actualizate retroactiv.",
     "tuesday": "Marți",
     "wednesday": "Miercuri",
@@ -890,7 +884,6 @@
     "erase_deleted_notes_now": "Elimină notițele șterse acum",
     "erase_notes_after": "Elimină notițele șterse după:",
     "manual_erasing_description": "Se poate rula o eliminare manuală (fără a lua în considerare timpul definit mai sus):",
-    "note_erasure_description": "Notițele șterse (precum și atributele, reviziile) sunt prima oară doar marcate drept șterse și este posibil să fie recuperate din ecranul Notițe recente. După o perioadă de timp, notițele șterse vor fi „eliminate”, caz în care conținutul lor nu se poate recupera. Această setare permite configurarea duratei de timp dintre ștergerea și eliminarea notițelor.",
     "note_erasure_timeout_title": "Timpul de eliminare automată a notițelor șterse"
   },
   "note_info_widget": {
@@ -1090,33 +1083,6 @@
     "rename_relation_from": "Redenumește relația din",
     "to": "În"
   },
-  "revisions": {
-    "confirm_delete": "Doriți ștergerea acestei revizii?",
-    "confirm_delete_all": "Doriți ștergerea tuturor reviziilor acestei notițe?",
-    "confirm_restore": "Doriți restaurarea acestei revizii? Acest lucru va suprascrie titlul și conținutul curent cu cele ale acestei revizii.",
-    "delete_all_button": "Șterge toate reviziile",
-    "delete_all_revisions": "Șterge toate reviziile acestei notițe",
-    "delete_button": "Şterge",
-    "download_button": "Descarcă",
-    "file_size": "Dimensiune fișier:",
-    "help_title": "Informații despre reviziile notițelor",
-    "mime": "MIME: ",
-    "no_revisions": "Nu există încă nicio revizie pentru această notiță...",
-    "note_revisions": "Revizii ale notiței",
-    "preview_not_available": "Nu este disponibilă o previzualizare pentru acest tip de notiță.",
-    "restore_button": "Restaurează",
-    "revision_deleted": "Revizia notiței a fost ștearsă.",
-    "revision_restored": "Revizia notiței a fost restaurată.",
-    "revisions_deleted": "Notița reviziei a fost ștearsă.",
-    "maximum_revisions": "Numărul maxim de revizii pentru notița curentă: {{number}}.",
-    "settings": "Setări revizii ale notițelor",
-    "snapshot_interval": "Intervalul de creare a reviziilor pentru notițe: {{seconds}}s.",
-    "diff_on": "Evidențiază diferențele",
-    "diff_off": "Afișează conținutul",
-    "diff_on_hint": "Clic pentru a afișa diferențele față de revizia anterioară, la nivel de cod sursă",
-    "diff_off_hint": "Clic pentru a afișa întregul conținut al reviziei",
-    "diff_not_available": "Diferențele nu pot fi evidențiate."
-  },
   "revisions_button": {
     "note_revisions": "Revizii ale notiței"
   },
@@ -1254,12 +1220,9 @@
     "config_title": "Configurația sincronizării",
     "handshake_failed": "Comunicarea cu serverul de sincronizare a eșuat, eroare: {{message}}",
     "help": "Informații",
-    "note": "Notiță",
-    "note_description": "Dacă lăsați câmpul de proxy necompletat, proxy-ul de sistem va fi utilizat (se aplică doar pentru aplicația desktop).",
     "proxy_label": "Server-ul proxy utilizat pentru sincronizare (opțional)",
     "save": "Salvează",
     "server_address": "Adresa instanței de server",
-    "special_value_description": "O altă valoare specială este <code>noproxy</code> ce ignoră proxy-ul de sistem și respectă <code>NODE_TLS_REJECT_UNAUTHORIZED</code>.",
     "test_button": "Probează sincronizarea",
     "test_description": "Această opțiune va testa conexiunea și comunicarea cu serverul de sincronizare. Dacă serverul de sincronizare nu este inițializat, acest lucru va rula și o sincronizare cu documentul local.",
     "test_title": "Probează sincronizarea",
