@@ -9,7 +9,6 @@ import { isExperimentalFeatureEnabled } from "../../../services/experimental_fea
 import { t } from "../../../services/i18n";
 import { ensureMimeTypesForHighlighting, loadHighlightingTheme } from "../../../services/syntax_highlight";
 import { formatDateTime, toggleBodyClass } from "../../../services/utils";
-import Column from "../../react/Column";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import FormRadioGroup from "../../react/FormRadioGroup";
@@ -21,7 +20,7 @@ import KeyboardShortcut from "../../react/KeyboardShortcut";
 import { getHtml } from "../../react/RawHtml";
 import AutoReadOnlySize from "./components/AutoReadOnlySize";
 import CheckboxList from "./components/CheckboxList";
-import { OptionsRowWithToggle } from "./components/OptionsRow";
+import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
@@ -172,26 +171,23 @@ function CodeBlockStyle() {
 
     return (
         <OptionsSection title={t("highlighting.title")}>
-            <div className="row" style={{ marginBottom: "15px" }}>
-                <FormGroup name="theme" className="col-md-6" label={t("highlighting.color-scheme")} style={{ marginBottom: 0 }}>
-                    <FormSelectWithGroups
-                        values={themes}
-                        keyProperty="val" titleProperty="title"
-                        currentValue={codeBlockTheme} onChange={(newTheme) => {
-                            loadHighlightingTheme(newTheme);
-                            setCodeBlockTheme(newTheme);
-                        }}
-                    />
-                </FormGroup>
+            <OptionsRow name="code-block-theme" label={t("highlighting.color-scheme")}>
+                <FormSelectWithGroups
+                    values={themes}
+                    keyProperty="val" titleProperty="title"
+                    currentValue={codeBlockTheme} onChange={(newTheme) => {
+                        loadHighlightingTheme(newTheme);
+                        setCodeBlockTheme(newTheme);
+                    }}
+                />
+            </OptionsRow>
 
-                <Column md={6} className="side-checkbox">
-                    <FormCheckbox
-                        name="word-wrap"
-                        label={t("code_block.word_wrapping")}
-                        currentValue={codeBlockWordWrap} onChange={setCodeBlockWordWrap}
-                    />
-                </Column>
-            </div>
+            <OptionsRowWithToggle
+                name="code-block-word-wrap"
+                label={t("code_block.word_wrapping")}
+                currentValue={codeBlockWordWrap}
+                onChange={setCodeBlockWordWrap}
+            />
 
             <CodeBlockPreview theme={codeBlockTheme} wordWrap={codeBlockWordWrap} />
         </OptionsSection>
