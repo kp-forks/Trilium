@@ -12,10 +12,10 @@ import OptionsSection from "./components/OptionsSection";
 
 export default function AdvancedSettings() {
     return <>
-        <AdvancedSyncOptions />
         <DatabaseOptions />
         <DatabaseAnonymizationOptions />
         <ExperimentalOptions />
+        <AdvancedSyncOptions />
     </>;
 }
 
