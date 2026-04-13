@@ -5,7 +5,7 @@ import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { formatDateTime } from "../../../utils/formatters";
-import Button from "../../react/Button";
+import ActionButton from "../../react/ActionButton";
 import FormText from "../../react/FormText";
 import { useTriliumOptionBool } from "../../react/hooks";
 import { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
@@ -107,7 +107,7 @@ export function BackupList({ backups }: { backups: DatabaseBackup[] }) {
                                 <td className="selectable-text">{filePath}</td>
                                 <td>
                                     <a href={`api/database/backup/download?filePath=${encodeURIComponent(filePath)}`} download>
-                                        <Button text={t("backup.download")} />
+                                        <ActionButton icon="bx bx-download" text={t("backup.download")} />
                                     </a>
                                 </td>
                             </tr>

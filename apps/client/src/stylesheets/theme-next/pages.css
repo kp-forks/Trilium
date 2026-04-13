@@ -346,3 +346,9 @@ nav.options-section-tabs + .options-section {
 .etapi-options-section div {
     height: auto !important;
 }
+
+/* BACKUP */
+
+.options-section table a {
+    color: inherit;
+}
