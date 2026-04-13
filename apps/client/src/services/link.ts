@@ -4,6 +4,8 @@ import appContext, { type NoteCommandData } from "../components/app_context.js";
 import { openInCurrentNoteContext } from "../components/note_context.js";
 import linkContextMenuService from "../menus/link_context_menu.js";
 import froca from "./froca.js";
+import { t } from "./i18n.js";
+import { showError } from "./toast.js";
 import treeService from "./tree.js";
 import utils from "./utils.js";
 
@@ -333,15 +335,17 @@ export function goToLinkExt(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDo
         if (openInNewTab || openInNewWindow || (isLeftClick && (withinEditLink || outsideOfCKEditor))) {
             if (hrefLink.toLowerCase().startsWith("http") || hrefLink.startsWith("api/")) {
                 window.open(hrefLink, "_blank");
-            } else {
+            } else if (ALLOWED_PROTOCOLS.some((protocol) => hrefLink.toLowerCase().startsWith(`${protocol}:`))) {
                 // Enable protocols supported by CKEditor 5 to be clickable.
-                if (ALLOWED_PROTOCOLS.some((protocol) => hrefLink.toLowerCase().startsWith(`${protocol}:`))) {
-                    if ( utils.isElectron()) {
-                        const electron = utils.dynamicRequire("electron");
-                        electron.shell.openExternal(hrefLink);
-                    } else {
-                        window.open(hrefLink, "_blank");
-                    }
+                if (utils.isElectron()) {
+                    const electron = utils.dynamicRequire("electron");
+                    electron.shell.openExternal(hrefLink).catch((e: unknown) => {
+                        const message = e instanceof Error ? e.message : String(e);
+                        logError(`Failed to open link '${hrefLink}': ${message}`);
+                        showError(t("link.failed_to_open", { href: hrefLink, message }));
+                    });
+                } else {
+                    window.open(hrefLink, "_blank");
                 }
             }
         }

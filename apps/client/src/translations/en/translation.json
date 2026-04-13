@@ -1968,6 +1968,9 @@
     "copy_reference_to_clipboard": "Copy reference to clipboard",
     "copy_image_to_clipboard": "Copy image to clipboard"
   },
+  "link": {
+    "failed_to_open": "Failed to open link '{{- href}}': {{- message}}"
+  },
   "link_context_menu": {
     "open_note_in_new_tab": "Open note in a new tab",
     "open_note_in_new_split": "Open note in a new split",
