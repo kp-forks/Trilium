@@ -5,12 +5,40 @@ if (!process.env.TRILIUM_RESOURCE_DIR) {
 }
 process.env.NODE_ENV = "development";
 
-import { getContext, initializeCore } from "@triliumnext/core";
+import { BackupService, getContext, initializeCore, type ImageProvider } from "@triliumnext/core";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import ServerPlatformProvider from "@triliumnext/server/src/platform_provider.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
+
+// Stub backup service for build-docs (not used, but required by initializeCore)
+class StubBackupService extends BackupService {
+    constructor() {
+        super({
+            getOption: () => "",
+            getOptionBool: () => false,
+            setOption: () => {}
+        });
+    }
+    async backupNow(_name: string): Promise<string> {
+        throw new Error("Backup not supported in build-docs");
+    }
+    async getExistingBackups() {
+        return [];
+    }
+    async getBackupContent(_filePath: string): Promise<Uint8Array | null> {
+        return null;
+    }
+}
+
+// Stub image provider for build-docs (not used, but required by initializeCore)
+const stubImageProvider: ImageProvider = {
+    getImageType: () => null,
+    processImage: async () => {
+        throw new Error("Image processing not supported in build-docs");
+    }
+};
 import archiver from "archiver";
 import { execSync } from "child_process";
 import { readFileSync } from "fs";
@@ -46,7 +74,9 @@ async function initializeBuildEnvironment() {
         platform: new ServerPlatformProvider(),
         schema: readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,
-        getDemoArchive: async () => null
+        getDemoArchive: async () => null,
+        backup: new StubBackupService(),
+        image: stubImageProvider
     });
 }
 

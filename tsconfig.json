@@ -19,6 +19,9 @@
       "path": "./apps/client"
     },
     {
+      "path": "./apps/build-docs"
+    },
+    {
       "path": "./apps/desktop"
     },
     {
