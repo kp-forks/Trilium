@@ -7,9 +7,10 @@ import Component from "../../components/component";
 import NoteContext from "../../components/note_context";
 import FNote from "../../entities/fnote";
 import { t } from "../../services/i18n";
+import { copyImageReferenceToClipboard } from "../../services/image";
 import { getHelpUrlForNote } from "../../services/in_app_help";
 import { downloadFileNote, openNoteExternally } from "../../services/open";
-import { isMobile, openInAppHelpFromUrl } from "../../services/utils";
+import { createImageSrcUrl, isMobile, openInAppHelpFromUrl } from "../../services/utils";
 import { ViewTypeOptions } from "../collections/interface";
 import { buildSaveSqlToNoteHandler } from "../FloatingButtonsDefinitions";
 import ActionButton, { ActionButtonProps } from "../react/ActionButton";
@@ -151,13 +152,26 @@ function DownloadFileButton({ note, parentComponent, ntxId }: NoteActionsCustomI
 }
 
 //#region Floating buttons
-function CopyReferenceToClipboardButton({ ntxId, noteType, parentComponent }: NoteActionsCustomInnerProps) {
-    return (["mermaid", "canvas", "mindMap", "image"].includes(noteType) &&
-        <NoteAction
-            text={t("image_properties.copy_reference_to_clipboard")}
-            icon="bx bx-copy"
-            onClick={() => parentComponent?.triggerEvent("copyImageReferenceToClipboard", { ntxId })}
-        />
+function CopyReferenceToClipboardButton({ note, noteType }: NoteActionsCustomInnerProps) {
+    const hiddenImageCopyRef = useRef<HTMLDivElement>(null);
+    const isEnabled = ["mermaid", "canvas", "mindMap", "image"].includes(noteType);
+
+    return isEnabled && (
+        <>
+            <NoteAction
+                text={t("image_properties.copy_reference_to_clipboard")}
+                icon="bx bx-copy"
+                onClick={() => {
+                    if (!hiddenImageCopyRef.current) return;
+                    const imageEl = document.createElement("img");
+                    imageEl.src = createImageSrcUrl(note);
+                    hiddenImageCopyRef.current.replaceChildren(imageEl);
+                    copyImageReferenceToClipboard($(hiddenImageCopyRef.current));
+                    hiddenImageCopyRef.current.removeChild(imageEl);
+                }}
+            />
+            <div ref={hiddenImageCopyRef} style={{ position: "absolute" }} />
+        </>
     );
 }
 
