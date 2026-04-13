@@ -1305,21 +1305,23 @@
     "batch_ocr_error": "Error during batch processing: {{error}}"
   },
   "attachment_erasure_timeout": {
-    "attachment_erasure_timeout": "Attachment Erasure Timeout",
-    "attachment_auto_deletion_description": "Attachments get automatically deleted (and erased) if they are not referenced by their note anymore after a defined time out.",
+    "attachment_erasure_timeout": "Unused Attachments",
+    "description": "Attachments that are no longer referenced by any note are considered unused and can be automatically erased after a period of time.",
     "erase_attachments_after": "Erase unused attachments after",
+    "erase_attachments_after_description": "Time before unused attachments are permanently erased.",
     "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
-    "erase_unused_attachments_now": "Erase unused attachment notes now",
+    "erase_unused_attachments_now": "Erase unused attachments now",
     "unused_attachments_erased": "Unused attachments have been erased."
   },
   "network_connections": {
-    "network_connections_title": "Network Connections",
+    "network_connections_title": "Network",
     "check_for_updates": "Check for updates automatically"
   },
   "note_erasure_timeout": {
-    "note_erasure_timeout_title": "Note Erasure Timeout",
-    "note_erasure_description": "Deleted notes (and attributes, revisions...) are at first only marked as deleted and it is possible to recover them from Recent Notes dialog. After a period of time, deleted notes are \"erased\" which means their content is not recoverable anymore. This setting allows you to configure the length of the period between deleting and erasing the note.",
+    "note_erasure_timeout_title": "Deleted Notes",
+    "description": "Deleted notes are first only marked as deleted and can be recovered from Recent Notes. After a period of time, they are permanently erased.",
     "erase_notes_after": "Erase notes after",
+    "erase_notes_after_description": "Time before deleted notes are permanently erased.",
     "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
     "erase_deleted_notes_now": "Erase deleted notes now",
     "deleted_notes_erased": "Deleted notes have been erased."

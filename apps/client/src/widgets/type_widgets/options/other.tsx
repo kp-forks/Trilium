@@ -129,7 +129,9 @@ function TrayOptionsSettings() {
 function NoteErasureTimeout() {
     return (
         <OptionsSection title={t("note_erasure_timeout.note_erasure_timeout_title")}>
-            <OptionsRow name="erase-entities-after" label={t("note_erasure_timeout.erase_notes_after")} description={t("note_erasure_timeout.note_erasure_description")}>
+            <FormText>{t("note_erasure_timeout.description")}</FormText>
+
+            <OptionsRow name="erase-entities-after" label={t("note_erasure_timeout.erase_notes_after")} description={t("note_erasure_timeout.erase_notes_after_description")}>
                 <TimeSelector
                     name="erase-entities-after"
                     optionValueId="eraseEntitiesAfterTimeInSeconds" optionTimeScaleId="eraseEntitiesAfterTimeScale"
@@ -152,7 +154,9 @@ function NoteErasureTimeout() {
 function AttachmentErasureTimeout() {
     return (
         <OptionsSection title={t("attachment_erasure_timeout.attachment_erasure_timeout")}>
-            <OptionsRow name="erase-unused-attachments-after" label={t("attachment_erasure_timeout.erase_attachments_after")} description={t("attachment_erasure_timeout.attachment_auto_deletion_description")}>
+            <FormText>{t("attachment_erasure_timeout.description")}</FormText>
+
+            <OptionsRow name="erase-unused-attachments-after" label={t("attachment_erasure_timeout.erase_attachments_after")} description={t("attachment_erasure_timeout.erase_attachments_after_description")}>
                 <TimeSelector
                     name="erase-unused-attachments-after"
                     optionValueId="eraseUnusedAttachmentsAfterSeconds" optionTimeScaleId="eraseUnusedAttachmentsAfterTimeScale"
