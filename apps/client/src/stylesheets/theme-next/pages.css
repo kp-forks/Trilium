@@ -238,6 +238,13 @@ body.desktop .options-section:not(.tn-no-card) {
     margin-inline-start: auto;
 }
 
+.options-section-description {
+    color: var(--muted-text-color);
+    font-size: 13px;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
 .options-section:not(.tn-no-card) h5 {
     font-size: var(--options-title-font-size);
     font-weight: bold;

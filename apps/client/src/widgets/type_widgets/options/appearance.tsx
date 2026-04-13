@@ -11,12 +11,10 @@ import server from "../../../services/server";
 import { isElectron, isMobile, reloadFrontendApp, restartDesktopApp } from "../../../services/utils";
 import { VerticalLayoutIcon } from "../../buttons/global_menu";
 import Button from "../../react/Button";
-import Column from "../../react/Column";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import FormList, { FormListHeader, FormListItem } from "../../react/FormList";
 import FormSelect from "../../react/FormSelect";
-import FormText from "../../react/FormText";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
@@ -589,22 +587,21 @@ function MaxContentWidth() {
     const [centerContent, setCenterContent] = useTriliumOptionBool("centerContent");
 
     return (
-        <OptionsSection title={t("max_content_width.title")}>
-            <FormText>{t("max_content_width.default_description")}</FormText>
+        <OptionsSection title={t("max_content_width.title")} description={t("max_content_width.default_description")}>
+            <OptionsRow name="max-content-width" label={t("max_content_width.max_width_label")}>
+                <FormTextBoxWithUnit
+                    type="number" min={MIN_CONTENT_WIDTH} step="10"
+                    currentValue={maxContentWidth} onBlur={setMaxContentWidth}
+                    unit={t("max_content_width.max_width_unit")}
+                />
+            </OptionsRow>
 
-            <Column md={6}>
-                <FormGroup name="max-content-width" label={t("max_content_width.max_width_label")}>
-                    <FormTextBoxWithUnit
-                        type="number" min={MIN_CONTENT_WIDTH} step="10"
-                        currentValue={maxContentWidth} onBlur={setMaxContentWidth}
-                        unit={t("max_content_width.max_width_unit")}
-                    />
-                </FormGroup>
-            </Column>
-
-            <FormCheckbox label={t("max_content_width.centerContent")}
+            <OptionsRowWithToggle
+                name="center-content"
+                label={t("max_content_width.centerContent")}
                 currentValue={centerContent}
-                onChange={setCenterContent} />
+                onChange={setCenterContent}
+            />
         </OptionsSection>
     );
 }

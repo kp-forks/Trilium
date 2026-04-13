@@ -5,6 +5,7 @@ import ActionButton from "../../../react/ActionButton";
 
 interface OptionsSectionProps {
     title?: ComponentChildren;
+    description?: string;
     children: ComponentChildren;
     noCard?: boolean;
     style?: CSSProperties;
@@ -12,7 +13,7 @@ interface OptionsSectionProps {
     helpUrl?: string;
 }
 
-export default function OptionsSection({ title, children, noCard, className, helpUrl, ...rest }: OptionsSectionProps) {
+export default function OptionsSection({ title, description, children, noCard, className, helpUrl, ...rest }: OptionsSectionProps) {
     return (
         <div className={`options-section ${noCard ? "tn-no-card" : ""} ${className ?? ""}`} {...rest}>
             {(title || helpUrl) && (
@@ -27,6 +28,7 @@ export default function OptionsSection({ title, children, noCard, className, hel
                     )}
                 </div>
             )}
+            {description && <p className="options-section-description">{description}</p>}
             {children}
         </div>
     );
