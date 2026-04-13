@@ -1,3 +1,5 @@
+import "./text_notes.css";
+
 import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 import { Themes } from "@triliumnext/highlightjs";
 import type { CSSProperties } from "preact/compat";
@@ -9,8 +11,9 @@ import { ensureMimeTypesForHighlighting, loadHighlightingTheme } from "../../../
 import { formatDateTime, toggleBodyClass } from "../../../services/utils";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
-import FormRadioGroup from "../../react/FormRadioGroup";
-import FormSelect, { FormSelectGroup, FormSelectWithGroups } from "../../react/FormSelect";
+import Dropdown from "../../react/Dropdown";
+import { FormListItem } from "../../react/FormList";
+import { FormSelectGroup, FormSelectWithGroups } from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
@@ -18,6 +21,7 @@ import { getHtml } from "../../react/RawHtml";
 import CheckboxList from "./components/CheckboxList";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
+import RadioWithIllustration from "./components/RadioWithIllustration";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
 
@@ -40,19 +44,19 @@ function FormattingToolbar() {
 
     return (
         <OptionsSection title={t("editing.editor_type.label")}>
-            <FormRadioGroup
-                name="editor-type"
-                currentValue={textNoteEditorType} onChange={setTextNoteEditorType}
+            <RadioWithIllustration
+                currentValue={textNoteEditorType}
+                onChange={setTextNoteEditorType}
                 values={[
                     {
-                        value: "ckeditor-balloon",
-                        label: t("editing.editor_type.floating.title"),
-                        inlineDescription: t("editing.editor_type.floating.description")
+                        key: "ckeditor-balloon",
+                        text: t("editing.editor_type.floating.title"),
+                        illustration: <ToolbarIllustration type="floating" />
                     },
                     {
-                        value: "ckeditor-classic",
-                        label: t("editing.editor_type.fixed.title"),
-                        inlineDescription: t("editing.editor_type.fixed.description")
+                        key: "ckeditor-classic",
+                        text: t("editing.editor_type.fixed.title"),
+                        illustration: <ToolbarIllustration type="fixed" />
                     }
                 ]}
             />
@@ -61,10 +65,52 @@ function FormattingToolbar() {
                 name="multiline-toolbar"
                 label={t("editing.editor_type.multiline-toolbar")}
                 currentValue={textNoteEditorMultilineToolbar} onChange={setTextNoteEditorMultilineToolbar}
-                containerStyle={{ marginInlineStart: "1em" }}
+                containerStyle={{ marginTop: "1em" }}
             />
         </OptionsSection>
     );
+}
+
+function ToolbarIllustration({ type }: { type: "floating" | "fixed" }) {
+    return (
+        <div className="toolbar-illustration">
+            {type === "fixed" && (
+                <div className="toolbar-bar">
+                    <ToolbarIcon />
+                    <ToolbarIcon />
+                    <ToolbarIcon />
+                    <ToolbarIcon wide />
+                    <ToolbarIcon />
+                    <ToolbarIcon />
+                </div>
+            )}
+
+            <div className="document-area">
+                <div className="text-line" style={{ width: "90%" }} />
+                <div className="text-line" style={{ width: "75%" }} />
+                <div className="text-line-with-selection">
+                    <span className="text-segment" style={{ width: "20%" }} />
+                    <span className="text-selection" />
+                    <span className="text-segment" style={{ width: "35%" }} />
+                </div>
+                <div className="text-line" style={{ width: "85%" }} />
+                <div className="text-line" style={{ width: "60%" }} />
+            </div>
+
+            {type === "floating" && (
+                <div className="floating-toolbar">
+                    <ToolbarIcon />
+                    <ToolbarIcon />
+                    <ToolbarIcon />
+                    <ToolbarIcon />
+                </div>
+            )}
+        </div>
+    );
+}
+
+function ToolbarIcon({ wide }: { wide?: boolean }) {
+    return <div className={`toolbar-icon${wide ? " wide" : ""}`} />;
 }
 
 function EditorFeatures() {
@@ -113,15 +159,7 @@ function Editor() {
     return (
         <OptionsSection title={t("text_editor.title")}>
             <OptionsRow name="heading-style" label={t("heading_style.title")} description={t("heading_style.description")}>
-                <FormSelect
-                    currentValue={headingStyle} onChange={setHeadingStyle}
-                    values={[
-                        { value: "plain", title: t("heading_style.plain") },
-                        { value: "underline", title: t("heading_style.underline") },
-                        { value: "markdown", title: t("heading_style.markdown") }
-                    ]}
-                    keyProperty="value" titleProperty="title"
-                />
+                <HeadingStyleSelector currentValue={headingStyle} onChange={setHeadingStyle} />
             </OptionsRow>
 
             <OptionsRow name="auto-readonly-size-text" label={t("text_auto_read_only_size.label")} description={t("text_auto_read_only_size.description")}>
@@ -144,6 +182,44 @@ function Editor() {
                 />
             </OptionsRow>
         </OptionsSection>
+    );
+}
+
+const HEADING_STYLES = [
+    { value: "plain", labelKey: "heading_style.plain" },
+    { value: "underline", labelKey: "heading_style.underline" },
+    { value: "markdown", labelKey: "heading_style.markdown" }
+] as const;
+
+function HeadingStyleSelector({ currentValue, onChange }: { currentValue: string, onChange: (value: string) => void }) {
+    const currentStyle = HEADING_STYLES.find(s => s.value === currentValue) ?? HEADING_STYLES[0];
+
+    return (
+        <Dropdown text={t(currentStyle.labelKey)}>
+            {HEADING_STYLES.map(({ value, labelKey }) => (
+                <FormListItem
+                    key={value}
+                    onClick={() => onChange(value)}
+                    selected={currentValue === value}
+                >
+                    <div className="heading-style-preview">
+                        <HeadingPreview style={value} />
+                        <span className="heading-style-label">{t(labelKey)}</span>
+                    </div>
+                </FormListItem>
+            ))}
+        </Dropdown>
+    );
+}
+
+function HeadingPreview({ style }: { style: string }) {
+    const previewClass = `heading-preview heading-preview-${style}`;
+    return (
+        <span className={previewClass}>
+            {style === "markdown" && <span className="heading-prefix">## </span>}
+            Aa
+            {style === "underline" && <span className="heading-underline" />}
+        </span>
     );
 }
 
