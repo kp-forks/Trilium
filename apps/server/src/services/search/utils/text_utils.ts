@@ -282,7 +282,9 @@ export function fuzzyMatchWordWithResult(token: string, text: string, maxDistanc
 
         // Exact match check first (most common case)
         if (normalizedText.includes(normalizedToken)) {
-            return token;
+            // Find the exact match position and return the original substring with case preserved
+            const matchIndex = normalizedText.indexOf(normalizedToken);
+            return text.substring(matchIndex, matchIndex + normalizedToken.length);
         }
 
         // For fuzzy matching, split into words and check each against the token

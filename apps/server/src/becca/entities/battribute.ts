@@ -202,6 +202,11 @@ class BAttribute extends AbstractBeccaEntity<BAttribute> {
 
         this.utcDateModified = dateUtils.utcNowDateTime();
 
+        // Recompute normalized fields in case name/value were modified directly
+        // (e.g., attr.value = "..." followed by attr.save())
+        this.normalizedName = normalize(this.name);
+        this.normalizedValue = normalize(this.value);
+
         super.beforeSaving();
 
         this.becca.attributes[this.attributeId] = this;

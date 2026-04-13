@@ -595,10 +595,11 @@ function extractAttributeSnippet(noteId: string, searchTokens: string[], maxLeng
         
         // Look for attributes that match the search tokens
         for (const attr of attributes) {
-            const attrName = attr.name?.toLowerCase() || "";
-            const attrValue = attr.value?.toLowerCase() || "";
+            // Use pre-normalized fields from BAttribute for diacritic-insensitive matching
+            const attrName = attr.normalizedName || normalize(attr.name || "");
+            const attrValue = attr.normalizedValue || normalize(attr.value || "");
             const attrType = attr.type || "";
-            
+
             // Check if any search token matches the attribute name or value
             const hasMatch = searchTokens.some(token => {
                 const normalizedToken = normalize(token);
