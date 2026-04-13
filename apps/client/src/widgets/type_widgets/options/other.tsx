@@ -260,34 +260,35 @@ function ShareSettings() {
 
     return (
         <OptionsSection title={t("share.title")}>
-            <FormGroup name="redirectBareDomain" description={t("share.redirect_bare_domain_description")}>
-                <FormCheckbox
-                    label={t(t("share.redirect_bare_domain"))}
-                    currentValue={redirectBareDomain}
-                    onChange={async value => {
-                        if (value) {
-                            const shareRootNotes = await search.searchForNotes("#shareRoot");
-                            const sharedShareRootNote = shareRootNotes.find((note) => note.isShared());
+            <OptionsRowWithToggle
+                name="redirect-bare-domain"
+                label={t("share.redirect_bare_domain")}
+                description={t("share.redirect_bare_domain_description")}
+                currentValue={redirectBareDomain}
+                onChange={async value => {
+                    if (value) {
+                        const shareRootNotes = await search.searchForNotes("#shareRoot");
+                        const sharedShareRootNote = shareRootNotes.find((note) => note.isShared());
 
-                            if (sharedShareRootNote) {
-                                toast.showMessage(t("share.share_root_found", { noteTitle: sharedShareRootNote.title }));
-                            } else if (shareRootNotes.length > 0) {
-                                toast.showError(t("share.share_root_not_shared", { noteTitle: shareRootNotes[0].title }));
-                            } else {
-                                toast.showError(t("share.share_root_not_found"));
-                            }
+                        if (sharedShareRootNote) {
+                            toast.showMessage(t("share.share_root_found", { noteTitle: sharedShareRootNote.title }));
+                        } else if (shareRootNotes.length > 0) {
+                            toast.showError(t("share.share_root_not_shared", { noteTitle: shareRootNotes[0].title }));
+                        } else {
+                            toast.showError(t("share.share_root_not_found"));
                         }
-                        setRedirectBareDomain(value);
-                    }}
-                />
-            </FormGroup>
+                    }
+                    setRedirectBareDomain(value);
+                }}
+            />
 
-            <FormGroup name="showLoginInShareTheme" description={t("share.show_login_link_description")}>
-                <FormCheckbox
-                    label={t("share.show_login_link")}
-                    currentValue={showLogInShareTheme} onChange={setShowLogInShareTheme}
-                />
-            </FormGroup>
+            <OptionsRowWithToggle
+                name="show-login-in-share-theme"
+                label={t("share.show_login_link")}
+                description={t("share.show_login_link_description")}
+                currentValue={showLogInShareTheme}
+                onChange={setShowLogInShareTheme}
+            />
         </OptionsSection>
     );
 }
@@ -297,10 +298,12 @@ function NetworkSettings() {
 
     return (
         <OptionsSection title={t("network_connections.network_connections_title")}>
-            <FormCheckbox
+            <OptionsRowWithToggle
                 name="check-for-updates"
                 label={t("network_connections.check_for_updates")}
-                currentValue={checkForUpdates} onChange={setCheckForUpdates}
+                description={t("network_connections.check_for_updates_description")}
+                currentValue={checkForUpdates}
+                onChange={setCheckForUpdates}
             />
         </OptionsSection>
     );

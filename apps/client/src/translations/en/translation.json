@@ -1315,7 +1315,8 @@
   },
   "network_connections": {
     "network_connections_title": "Network",
-    "check_for_updates": "Check for updates automatically"
+    "check_for_updates": "Check for updates automatically",
+    "check_for_updates_description": "Checks for new versions on GitHub and shows a notification in the global menu when available."
   },
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Deleted Notes",
@@ -1998,7 +1999,7 @@
     "days": "Days"
   },
   "share": {
-    "title": "Share Settings",
+    "title": "Share",
     "redirect_bare_domain": "Redirect bare domain to Share page",
     "redirect_bare_domain_description": "Redirect anonymous users to the Share page instead of showing Login",
     "show_login_link": "Show Login link in Share theme",
