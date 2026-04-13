@@ -7,7 +7,7 @@ import { useUniqueName } from "../../../react/hooks";
 
 interface OptionsRowProps {
     name: string;
-    label?: string;
+    label?: ComponentChildren;
     description?: ComponentChildren;
     children: VNode;
     centered?: boolean;
@@ -56,8 +56,8 @@ export function OptionsRowLink({ label, description, href }: OptionsRowLinkProps
 
 interface OptionsRowWithToggleProps {
     name: string;
-    label: string;
-    description?: string;
+    label: ComponentChildren;
+    description?: ComponentChildren;
     currentValue: boolean | null;
     onChange: (newValue: boolean) => void;
     disabled?: boolean;

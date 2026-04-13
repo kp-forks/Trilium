@@ -10,10 +10,7 @@ import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import { isElectron, isMobile, reloadFrontendApp, restartDesktopApp } from "../../../services/utils";
 import { VerticalLayoutIcon } from "../../buttons/global_menu";
-import Button from "../../react/Button";
 import Dropdown from "../../react/Dropdown";
-import FormCheckbox from "../../react/FormCheckbox";
-import FormGroup from "../../react/FormGroup";
 import FormList, { FormListHeader, FormListItem } from "../../react/FormList";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
@@ -554,26 +551,28 @@ function ElectronIntegration() {
                 />
             </OptionsRow>
 
-            <FormGroup name="native-title-bar" description={t("electron_integration.native-title-bar-description")}>
-                <FormCheckbox
-                    label={t("electron_integration.native-title-bar")}
-                    currentValue={nativeTitleBarVisible} onChange={setNativeTitleBarVisible}
-                />
-            </FormGroup>
+            <OptionsRowWithToggle
+                name="native-title-bar"
+                label={t("electron_integration.native-title-bar")}
+                description={t("electron_integration.native-title-bar-description")}
+                currentValue={nativeTitleBarVisible}
+                onChange={setNativeTitleBarVisible}
+            />
 
-            <FormGroup name="background-effects" description={t("electron_integration.background-effects-description")}>
-                <FormCheckbox
-                    label={<>
-                        {t("electron_integration.background-effects")}
-                        {" "}
-                        <PlatformIndicator windows="11" mac />
-                    </>}
-                    currentValue={backgroundEffects} onChange={setBackgroundEffects}
-                    disabled={nativeTitleBarVisible}
-                />
-            </FormGroup>
+            <OptionsRowWithToggle
+                name="background-effects"
+                label={<>{t("electron_integration.background-effects")} <PlatformIndicator windows="11" mac /></>}
+                description={t("electron_integration.background-effects-description")}
+                currentValue={backgroundEffects}
+                onChange={setBackgroundEffects}
+                disabled={nativeTitleBarVisible}
+            />
 
-            <Button text={t("electron_integration.restart-app-button")} onClick={restartDesktopApp} />
+            <OptionsRowWithButton
+                label={t("electron_integration.restart-app-button")}
+                icon="bx bx-refresh"
+                onClick={restartDesktopApp}
+            />
         </OptionsSection>
     );
 }
