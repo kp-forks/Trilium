@@ -16,7 +16,7 @@ import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import FormList, { FormListHeader, FormListItem } from "../../react/FormList";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
-import { useNote, useNoteIcon, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import Modal from "../../react/Modal";
 import Slider from "../../react/Slider";
@@ -46,51 +46,6 @@ const LEGACY_THEMES: Theme[] = [
     { val: "light", title: t("theme.light_theme"), icon: "bx bx-sun" },
     { val: "dark", title: t("theme.dark_theme"), icon: "bx bx-moon" }
 ];
-
-interface CustomThemeItemProps {
-    theme: Theme;
-    selected: boolean;
-    onClick: () => void;
-}
-
-function CustomThemeItem({ theme, selected, onClick }: CustomThemeItemProps) {
-    const note = useNote(theme.noteId);
-    const noteIcon = useNoteIcon(note);
-    const icon = noteIcon ?? "bx bx-palette";
-
-    return (
-        <FormListItem
-            key={theme.val}
-            icon={icon}
-            selected={selected}
-            onClick={onClick}
-        >
-            {theme.title}
-        </FormListItem>
-    );
-}
-
-interface CurrentThemeDisplayProps {
-    theme: Theme | undefined;
-    fallbackLabel: string;
-}
-
-function CurrentThemeDisplay({ theme, fallbackLabel }: CurrentThemeDisplayProps) {
-    const note = useNote(theme?.noteId);
-    const noteIcon = useNoteIcon(note);
-
-    // For built-in themes, use the icon from the theme object
-    // For custom themes, use the note icon or fallback to palette
-    const icon = theme?.icon ?? noteIcon ?? "bx bx-palette";
-    const label = theme?.title ?? fallbackLabel;
-
-    return (
-        <>
-            <span className={icon} style={{ marginRight: "8px" }} />
-            {label}
-        </>
-    );
-}
 
 interface FontFamilyEntry {
     value: FontFamily;
@@ -177,45 +132,52 @@ function UserInterface() {
     // Find current theme for display
     const allThemes = [...MODERN_THEMES, ...LEGACY_THEMES, ...customThemes];
     const currentTheme = allThemes.find(t => t.val === theme);
+    const currentThemeIcon = currentTheme?.icon ?? "bx bx-palette";
+    const currentThemeLabel = currentTheme?.title ?? theme ?? "";
 
     return (
         <OptionsSection title={t("theme.title")}>
             <OptionsRow name="theme" label={t("theme.theme_label")}>
                 <Dropdown
-                    text={<CurrentThemeDisplay theme={currentTheme} fallbackLabel={theme ?? ""} />}
+                    text={<>
+                        <span className={currentThemeIcon} style={{ marginRight: "8px" }} />
+                        {currentThemeLabel}
+                    </>}
                 >
                     <FormListHeader text={t("theme.modern_themes")} />
-                    {MODERN_THEMES.map(t => (
+                    {MODERN_THEMES.map(th => (
                         <FormListItem
-                            key={t.val}
-                            icon={t.icon}
-                            selected={theme === t.val}
-                            onClick={() => setTheme(t.val)}
+                            key={th.val}
+                            icon={th.icon}
+                            selected={theme === th.val}
+                            onClick={() => setTheme(th.val)}
                         >
-                            {t.title}
+                            {th.title}
                         </FormListItem>
                     ))}
                     <FormListHeader text={t("theme.legacy_themes")} />
-                    {LEGACY_THEMES.map(t => (
+                    {LEGACY_THEMES.map(th => (
                         <FormListItem
-                            key={t.val}
-                            icon={t.icon}
-                            selected={theme === t.val}
-                            onClick={() => setTheme(t.val)}
+                            key={th.val}
+                            icon={th.icon}
+                            selected={theme === th.val}
+                            onClick={() => setTheme(th.val)}
                         >
-                            {t.title}
+                            {th.title}
                         </FormListItem>
                     ))}
                     {customThemes.length > 0 && (
                         <>
                             <FormListHeader text={t("theme.custom_themes")} />
                             {customThemes.map(ct => (
-                                <CustomThemeItem
+                                <FormListItem
                                     key={ct.val}
-                                    theme={ct}
+                                    icon={ct.icon}
                                     selected={theme === ct.val}
                                     onClick={() => setTheme(ct.val)}
-                                />
+                                >
+                                    {ct.title}
+                                </FormListItem>
                             ))}
                         </>
                     )}

@@ -14,6 +14,7 @@ interface UserTheme {
     val: string; // value of the theme, used in the URL
     title: string; // title of the theme, displayed in the UI
     noteId: string; // ID of the note containing the theme
+    icon: string; // icon class of the note
 }
 
 // options allowed to be updated directly in the Options dialog
@@ -189,7 +190,8 @@ function getUserThemes() {
         ret.push({
             val: value,
             title: note.title,
-            noteId: note.noteId
+            noteId: note.noteId,
+            icon: note.getIcon()
         });
     }
 
