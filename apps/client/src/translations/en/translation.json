@@ -1195,6 +1195,7 @@
     "main_font": "General",
     "font_family": "Font family",
     "size": "Size",
+    "preview": "Preview",
     "note_tree_font": "Note tree",
     "note_detail_font": "Note content",
     "monospace_font": "Code notes & blocks",

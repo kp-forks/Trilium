@@ -1,35 +1,102 @@
-.font-options {
+/* Font Picker Button */
+.font-picker-button {
     display: flex;
-    gap: 8px;
+    justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+}
 
-    .form-select {
-        flex: 1;
-        min-width: 120px;
+/* Font Picker Modal */
+.font-picker-modal .modal-body {
+    padding: 0;
+}
+
+.font-picker-content {
+    display: flex;
+    height: 400px;
+}
+
+.font-picker-list {
+    width: 280px;
+    border-right: 1px solid var(--main-border-color);
+    overflow: hidden;
+
+    .dropdownWrapper {
+        height: 100%;
     }
 
-    .input-with-unit {
-        width: 100px;
+    .dropdown-menu {
+        border: none;
+        border-radius: 0;
     }
 
-    .tn-number-unit-pair {
-        margin-bottom: 0 !important;
-    }
-
-    > .dropdown {
-        flex: 1;
-        min-width: 120px;
-
-        > .select-button {
-            width: 100%;
-            text-align: left;
-        }
+    .dropdown-item {
+        font-size: 14px;
     }
 }
 
-.font-picker-dropdown {
-    max-height: 300px;
-    overflow-y: auto;
+.font-picker-settings {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+}
+
+.font-size-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+        font-weight: 500;
+        color: var(--muted-text-color);
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+}
+
+.font-size-slider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .slider {
+        flex: 1;
+    }
+
+    .font-size-value {
+        min-width: 50px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+.font-preview {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+
+    label {
+        font-weight: 500;
+        color: var(--muted-text-color);
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+}
+
+.font-preview-text {
+    flex: 1;
+    padding: 16px;
+    border: 1px solid var(--main-border-color);
+    border-radius: 6px;
+    background: var(--main-background-color);
+    overflow: auto;
+    line-height: 1.6;
 }
 
 .orientation-illustration {

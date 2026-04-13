@@ -13,13 +13,14 @@ import Button from "../../react/Button";
 import Column from "../../react/Column";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
-import Dropdown from "../../react/Dropdown";
-import { FormListHeader, FormListItem } from "../../react/FormList";
+import FormList, { FormListHeader, FormListItem } from "../../react/FormList";
 import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
+import Modal from "../../react/Modal";
+import Slider from "../../react/Slider";
 import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import PlatformIndicator from "./components/PlatformIndicator";
@@ -351,43 +352,16 @@ interface FontProps {
 function Font({ name, label, description, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
     const [ fontFamily, setFontFamily ] = useTriliumOption(fontFamilyOption);
     const [ fontSize, setFontSize ] = useTriliumOption(fontSizeOption);
+    const [ showModal, setShowModal ] = useState(false);
 
-    return (
-        <OptionsRow name={name} label={label} description={description}>
-            <div className="font-options">
-                <FontPicker
-                    currentValue={fontFamily}
-                    onChange={setFontFamily}
-                    disabled={disabled}
-                />
-                <FormTextBoxWithUnit
-                    name={`${name}-size`}
-                    type="number" min={50} max={200} step={10}
-                    currentValue={fontSize} onBlur={setFontSize}
-                    unit={t("units.percentage")}
-                    disabled={disabled}
-                />
-            </div>
-        </OptionsRow>
-    );
-}
-
-interface FontPickerProps {
-    currentValue: string | undefined;
-    onChange: (value: string) => void;
-    disabled?: boolean;
-}
-
-function FontPicker({ currentValue, onChange, disabled }: FontPickerProps) {
-    // Find the current font entry to display in the button
+    // Find the current font entry to display
     const currentFont = FONT_FAMILIES
         .flatMap(group => group.items)
-        .find(item => item.value === currentValue);
-    const displayLabel = currentFont?.label ?? currentFont?.value ?? currentValue ?? "";
+        .find(item => item.value === fontFamily);
+    const displayLabel = currentFont?.label ?? currentFont?.value ?? fontFamily ?? "";
 
     // Get the CSS font-family value for preview
     const getFontFamily = (value: string) => {
-        // Generic fonts don't need preview styling
         if (["theme", "system"].includes(value)) {
             return undefined;
         }
@@ -395,29 +369,108 @@ function FontPicker({ currentValue, onChange, disabled }: FontPickerProps) {
     };
 
     return (
-        <Dropdown
-            text={<span style={{ fontFamily: getFontFamily(currentValue ?? "") }}>{displayLabel}</span>}
-            disabled={disabled}
-            dropdownContainerClassName="font-picker-dropdown"
+        <OptionsRow name={name} label={label} description={description}>
+            <>
+                <button
+                    type="button"
+                    className="btn select-button font-picker-button"
+                    onClick={() => setShowModal(true)}
+                    disabled={disabled}
+                >
+                    <span style={{ fontFamily: getFontFamily(fontFamily ?? "") }}>{displayLabel}</span>
+                    <span style={{ opacity: 0.6 }}>{fontSize}%</span>
+                </button>
+
+                <FontPickerModal
+                    show={showModal}
+                    onHidden={() => setShowModal(false)}
+                    title={label}
+                    fontFamily={fontFamily ?? ""}
+                    fontSize={parseInt(fontSize ?? "100", 10)}
+                    onFontFamilyChange={setFontFamily}
+                    onFontSizeChange={(size) => setFontSize(String(size))}
+                    getFontFamily={getFontFamily}
+                />
+            </>
+        </OptionsRow>
+    );
+}
+
+const PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog. 0123456789";
+
+interface FontPickerModalProps {
+    show: boolean;
+    onHidden: () => void;
+    title: string;
+    fontFamily: string;
+    fontSize: number;
+    onFontFamilyChange: (value: string) => void;
+    onFontSizeChange: (value: number) => void;
+    getFontFamily: (value: string) => string | undefined;
+}
+
+function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFamilyChange, onFontSizeChange, getFontFamily }: FontPickerModalProps) {
+    return (
+        <Modal
+            className="font-picker-modal"
+            title={title}
+            size="lg"
+            show={show}
+            onHidden={onHidden}
         >
-            {FONT_FAMILIES.map(group => (
-                <Fragment key={group.title}>
-                    <FormListHeader text={group.title} />
-                    {group.items.map(item => (
-                        <FormListItem
-                            key={item.value}
-                            onClick={() => onChange(item.value)}
-                            checked={currentValue === item.value}
-                            selected={currentValue === item.value}
+            <div className="font-picker-content">
+                <div className="font-picker-list">
+                    <FormList fullHeight>
+                        {FONT_FAMILIES.map(group => (
+                            <Fragment key={group.title}>
+                                <FormListHeader text={group.title} />
+                                {group.items.map(item => (
+                                    <FormListItem
+                                        key={item.value}
+                                        onClick={() => onFontFamilyChange(item.value)}
+                                        checked={fontFamily === item.value}
+                                        selected={fontFamily === item.value}
+                                    >
+                                        <span style={{ fontFamily: getFontFamily(item.value) }}>
+                                            {item.label ?? item.value}
+                                        </span>
+                                    </FormListItem>
+                                ))}
+                            </Fragment>
+                        ))}
+                    </FormList>
+                </div>
+
+                <div className="font-picker-settings">
+                    <div className="font-size-control">
+                        <label>{t("fonts.size")}</label>
+                        <div className="font-size-slider">
+                            <Slider
+                                value={fontSize}
+                                onChange={onFontSizeChange}
+                                min={50}
+                                max={200}
+                                step={5}
+                            />
+                            <span className="font-size-value">{fontSize}%</span>
+                        </div>
+                    </div>
+
+                    <div className="font-preview">
+                        <label>{t("fonts.preview")}</label>
+                        <div
+                            className="font-preview-text"
+                            style={{
+                                fontFamily: getFontFamily(fontFamily),
+                                fontSize: `${fontSize}%`
+                            }}
                         >
-                            <span style={{ fontFamily: getFontFamily(item.value) }}>
-                                {item.label ?? item.value}
-                            </span>
-                        </FormListItem>
-                    ))}
-                </Fragment>
-            ))}
-        </Dropdown>
+                            {PREVIEW_TEXT}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Modal>
     );
 }
 
