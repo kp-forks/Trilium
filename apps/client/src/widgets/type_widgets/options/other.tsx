@@ -7,8 +7,6 @@ import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { isElectron } from "../../../services/utils";
 import Button from "../../react/Button";
-import FormCheckbox from "../../react/FormCheckbox";
-import FormGroup from "../../react/FormGroup";
 import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
@@ -74,10 +72,8 @@ function SearchEngineSettings() {
     }, []);
 
     return (
-        <OptionsSection title={t("search_engine.title")}>
-            <FormText>{t("search_engine.custom_search_engine_info")}</FormText>
-
-            <FormGroup name="predefined-search-engine" label={t("search_engine.predefined_templates_label")}>
+        <OptionsSection title={t("search_engine.title")} description={t("search_engine.custom_search_engine_info")}>
+            <OptionsRow name="predefined-search-engine" label={t("search_engine.predefined_templates_label")}>
                 <FormSelect
                     values={searchEngines}
                     currentValue={customSearchEngineUrl}
@@ -92,21 +88,21 @@ function SearchEngineSettings() {
                         setCustomSearchEngineUrl(searchEngine.url);
                     }}
                 />
-            </FormGroup>
+            </OptionsRow>
 
-            <FormGroup name="custom-name" label={t("search_engine.custom_name_label")}>
+            <OptionsRow name="custom-name" label={t("search_engine.custom_name_label")}>
                 <FormTextBox
-                    currentValue={customSearchEngineName} onChange={setCustomSearchEngineName}
+                    currentValue={customSearchEngineName} onBlur={setCustomSearchEngineName}
                     placeholder={t("search_engine.custom_name_placeholder")}
                 />
-            </FormGroup>
+            </OptionsRow>
 
-            <FormGroup name="custom-url" label={t("search_engine.custom_url_label")}>
+            <OptionsRow name="custom-url" label={t("search_engine.custom_url_label")} description={t("search_engine.custom_url_description")} stacked>
                 <FormTextBox
-                    currentValue={customSearchEngineUrl} onChange={setCustomSearchEngineUrl}
+                    currentValue={customSearchEngineUrl} onBlur={setCustomSearchEngineUrl}
                     placeholder={t("search_engine.custom_url_placeholder")}
                 />
-            </FormGroup>
+            </OptionsRow>
         </OptionsSection>
     );
 }
@@ -116,7 +112,7 @@ function TrayOptionsSettings() {
 
     return (
         <OptionsSection title={t("tray.title")}>
-            <FormCheckbox
+            <OptionsRowWithToggle
                 name="tray-enabled"
                 label={t("tray.enable_tray")}
                 currentValue={!disableTray}

@@ -1360,16 +1360,17 @@
   },
   "search_engine": {
     "title": "Search Engine",
-    "custom_search_engine_info": "Custom search engine requires both a name and a URL to be set. If either of these is not set, DuckDuckGo will be used as the default search engine.",
-    "predefined_templates_label": "Predefined search engine templates",
+    "custom_search_engine_info": "If either the name or URL is not set, DuckDuckGo will be used as the default.",
+    "predefined_templates_label": "Predefined templates",
     "bing": "Bing",
     "baidu": "Baidu",
     "duckduckgo": "DuckDuckGo",
     "google": "Google",
-    "custom_name_label": "Custom search engine name",
-    "custom_name_placeholder": "Customize search engine name",
-    "custom_url_label": "Custom search engine URL should include {keyword} as a placeholder for the search term.",
-    "custom_url_placeholder": "Customize search engine URL",
+    "custom_name_label": "Name",
+    "custom_name_placeholder": "Search engine name",
+    "custom_url_label": "URL",
+    "custom_url_description": "Use {keyword} as a placeholder for the search term.",
+    "custom_url_placeholder": "Search engine URL",
     "save_button": "Save"
   },
   "tray": {
