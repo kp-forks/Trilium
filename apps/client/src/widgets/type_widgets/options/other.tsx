@@ -14,7 +14,9 @@ import FormGroup from "../../react/FormGroup";
 import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
+import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
+import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import TimeSelector from "./components/TimeSelector";
 
@@ -43,18 +45,29 @@ function SearchSettings() {
 
     return (
         <OptionsSection title={t("search.title")}>
-            <FormCheckbox
+            <OptionsRow
                 name="search-fuzzy-matching"
-                label={t("search.enable_fuzzy_matching")}
-                currentValue={fuzzyEnabled}
-                onChange={setFuzzyEnabled}
-            />
-            <FormCheckbox
+                label={t("search.fuzzy_matching_label")}
+                description={t("search.fuzzy_matching_description")}
+            >
+                <FormToggle
+                    switchOnName="" switchOffName=""
+                    currentValue={fuzzyEnabled}
+                    onChange={setFuzzyEnabled}
+                />
+            </OptionsRow>
+
+            <OptionsRow
                 name="search-autocomplete-fuzzy"
-                label={t("search.enable_autocomplete_fuzzy")}
-                currentValue={autocompleteFuzzy}
-                onChange={setAutocompleteFuzzy}
-            />
+                label={t("search.autocomplete_fuzzy_label")}
+                description={t("search.autocomplete_fuzzy_description")}
+            >
+                <FormToggle
+                    switchOnName="" switchOffName=""
+                    currentValue={autocompleteFuzzy}
+                    onChange={setAutocompleteFuzzy}
+                />
+            </OptionsRow>
         </OptionsSection>
     );
 }

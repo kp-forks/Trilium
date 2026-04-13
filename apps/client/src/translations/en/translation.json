@@ -1326,8 +1326,10 @@
   },
   "search": {
     "title": "Search",
-    "enable_fuzzy_matching": "Enable fuzzy matching in search (matches similar words when exact matches are insufficient)",
-    "enable_autocomplete_fuzzy": "Enable fuzzy matching for autocomplete (slower, but tolerates typos while typing)"
+    "fuzzy_matching_label": "Typo tolerance in search",
+    "fuzzy_matching_description": "Affects quick search and full search. Finds similar words when exact matches are insufficient.",
+    "autocomplete_fuzzy_label": "Typo tolerance in autocomplete",
+    "autocomplete_fuzzy_description": "Affects jump-to-note and note selectors. Slower but tolerates typos."
   },
   "search_engine": {
     "title": "Search Engine",
