@@ -14,22 +14,41 @@ interface OptionsSectionProps {
 }
 
 export default function OptionsSection({ title, description, children, noCard, className, helpUrl, ...rest }: OptionsSectionProps) {
-    return (
-        <div className={`options-section ${noCard ? "tn-no-card" : ""} ${className ?? ""}`} {...rest}>
-            {(title || helpUrl) && (
-                <div className="options-section-header">
-                    {title && <h4>{title}</h4>}
-                    {helpUrl && (
-                        <ActionButton
-                            icon="bx bx-help-circle"
-                            text="Help"
-                            onClick={() => openInAppHelpFromUrl(helpUrl)}
-                        />
-                    )}
-                </div>
+    const header = (title || helpUrl) && (
+        <div className="options-section-header">
+            {title && <h4>{title}</h4>}
+            {helpUrl && (
+                <ActionButton
+                    icon="bx bx-help-circle"
+                    text="Help"
+                    onClick={() => openInAppHelpFromUrl(helpUrl)}
+                />
             )}
+        </div>
+    );
+
+    const content = (
+        <>
             {description && <p className="options-section-description">{description}</p>}
             {children}
+        </>
+    );
+
+    if (noCard) {
+        return (
+            <div className={`options-section tn-no-card ${className ?? ""}`} {...rest}>
+                {header}
+                {content}
+            </div>
+        );
+    }
+
+    return (
+        <div className={`options-section ${className ?? ""}`} {...rest}>
+            {header}
+            <div className="options-section-card">
+                {content}
+            </div>
         </div>
     );
 }
