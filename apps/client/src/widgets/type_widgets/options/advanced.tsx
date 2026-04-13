@@ -50,10 +50,9 @@ function AdvancedSyncOptions() {
 function DatabaseIntegrityOptions() {
     return (
         <OptionsSection title={t("database_integrity_check.title")}>
-            <FormText>{t("database_integrity_check.description")}</FormText>
-
-            <Button
-                text={t("database_integrity_check.check_button")}
+            <OptionsRowWithButton
+                label={t("database_integrity_check.check_integrity_label")}
+                description={t("database_integrity_check.check_integrity_description")}
                 onClick={async () => {
                     toast.showMessage(t("database_integrity_check.checking_integrity"));
 
@@ -67,8 +66,9 @@ function DatabaseIntegrityOptions() {
                 }}
             />
 
-            <Button
-                text={t("consistency_checks.find_and_fix_button")}
+            <OptionsRowWithButton
+                label={t("consistency_checks.find_and_fix_label")}
+                description={t("consistency_checks.find_and_fix_description")}
                 onClick={async () => {
                     toast.showMessage(t("consistency_checks.finding_and_fixing_message"));
                     await server.post("database/find-and-fix-consistency-issues");

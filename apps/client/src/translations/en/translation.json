@@ -1121,6 +1121,8 @@
   },
   "consistency_checks": {
     "title": "Consistency Checks",
+    "find_and_fix_label": "Find and fix consistency issues",
+    "find_and_fix_description": "Scan for and automatically repair any data consistency issues in the database.",
     "find_and_fix_button": "Find and fix consistency issues",
     "finding_and_fixing_message": "Finding and fixing consistency issues...",
     "issues_fixed_message": "Any consistency issue which may have been found is now fixed."
@@ -1144,7 +1146,8 @@
   },
   "database_integrity_check": {
     "title": "Database Integrity Check",
-    "description": "This will check that the database is not corrupted on the SQLite level. It might take some time, depending on the DB size.",
+    "check_integrity_label": "Check database integrity",
+    "check_integrity_description": "Verify that the database is not corrupted on the SQLite level.",
     "check_button": "Check database integrity",
     "checking_integrity": "Checking database integrity...",
     "integrity_check_succeeded": "Integrity check succeeded - no problems found.",
