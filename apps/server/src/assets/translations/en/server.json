@@ -212,6 +212,9 @@
     "button": "Login",
     "sign_in_with_sso": "Sign in with {{ ssoIssuerName }}"
   },
+  "password": {
+    "incorrect": "The password you entered is incorrect."
+  },
   "set_password": {
     "title": "Set Password",
     "heading": "Set password",
