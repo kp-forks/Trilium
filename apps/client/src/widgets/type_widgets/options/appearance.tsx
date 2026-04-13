@@ -361,11 +361,19 @@ function Font({ label, sizeDescription, fontFamilyOption, fontSizeOption, disabl
         .find(item => item.value === fontFamily);
     const displayLabel = currentFont?.label ?? currentFont?.value ?? fontFamily ?? "";
 
+    // Map option name to CSS variable
+    const themeCssVariable = {
+        mainFontFamily: "var(--main-font-family)",
+        treeFontFamily: "var(--tree-font-family)",
+        detailFontFamily: "var(--detail-font-family)",
+        monospaceFontFamily: "var(--monospace-font-family)"
+    }[fontFamilyOption] ?? "inherit";
+
     // Get the CSS font-family value for preview
     const getFontFamily = (value: string) => {
         if (value === "theme") {
-            // Use inherited font from the current theme
-            return "inherit";
+            // Use the theme's CSS variable for this font option
+            return themeCssVariable;
         }
         if (value === "system") {
             // Use the appropriate system font stack
