@@ -1259,7 +1259,7 @@
   "code_auto_read_only_size": {
     "title": "Automatic Read-Only Size",
     "description": "Automatic read-only note size is the size after which notes will be displayed in a read-only mode (for performance reasons).",
-    "label": "Automatic read-only size (code notes)",
+    "label": "Automatic read-only size",
     "unit": "characters"
   },
   "code-editor-options": {

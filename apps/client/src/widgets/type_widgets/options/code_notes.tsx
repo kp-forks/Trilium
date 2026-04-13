@@ -12,10 +12,11 @@ import Column from "../../react/Column";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import FormSelect from "../../react/FormSelect";
+import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useStaticTooltip, useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
 import { CODE_THEME_DEFAULT_PREFIX as DEFAULT_PREFIX } from "../constants";
-import AutoReadOnlySize from "./components/AutoReadOnlySize";
 import CheckboxList from "./components/CheckboxList";
+import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import codeNoteSample from "./samples/code_note.txt?raw";
 
@@ -27,22 +28,32 @@ export default function CodeNoteSettings() {
             <Editor />
             <Appearance />
             <CodeMimeTypes />
-            <AutoReadOnlySize option="autoReadonlySizeCode" label={t("code_auto_read_only_size.label")} />
         </>
     );
 }
 
 function Editor() {
-    const [ vimKeymapEnabled, setVimKeymapEnabled ] = useTriliumOptionBool("vimKeymapEnabled");
+    const [vimKeymapEnabled, setVimKeymapEnabled] = useTriliumOptionBool("vimKeymapEnabled");
+    const [autoReadonlySize, setAutoReadonlySize] = useTriliumOption("autoReadonlySizeCode");
 
     return (
         <OptionsSection title={t("code-editor-options.title")}>
-            <FormGroup name="vim-keymap-enabled" description={t("vim_key_bindings.enable_vim_keybindings")}>
-                <FormCheckbox
-                    label={t("vim_key_bindings.use_vim_keybindings_in_code_notes")}
-                    currentValue={vimKeymapEnabled} onChange={setVimKeymapEnabled}
+            <OptionsRowWithToggle
+                name="vim-keymap-enabled"
+                label={t("vim_key_bindings.use_vim_keybindings_in_code_notes")}
+                description={t("vim_key_bindings.enable_vim_keybindings")}
+                currentValue={vimKeymapEnabled}
+                onChange={setVimKeymapEnabled}
+            />
+
+            <OptionsRow name="auto-readonly-size-code" label={t("code_auto_read_only_size.label")} description={t("text_auto_read_only_size.description")}>
+                <FormTextBoxWithUnit
+                    type="number" min={0}
+                    unit={t("text_auto_read_only_size.unit")}
+                    currentValue={autoReadonlySize}
+                    onChange={setAutoReadonlySize}
                 />
-            </FormGroup>
+            </OptionsRow>
         </OptionsSection>
     );
 }
