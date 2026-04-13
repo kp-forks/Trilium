@@ -1324,6 +1324,13 @@
     "erase_excess_revision_snapshots": "Erase excess revision snapshots now",
     "erase_excess_revision_snapshots_prompt": "Excess revision snapshots have been erased."
   },
+  "search": {
+    "title": "Search",
+    "fuzzy_matching_label": "Typo tolerance in search",
+    "fuzzy_matching_description": "Affects quick search and full search. Finds similar words when exact matches are insufficient.",
+    "autocomplete_fuzzy_label": "Typo tolerance in autocomplete",
+    "autocomplete_fuzzy_description": "Affects jump-to-note and note selectors. Slower but tolerates typos."
+  },
   "search_engine": {
     "title": "Search Engine",
     "custom_search_engine_info": "Custom search engine requires both a name and a URL to be set. If either of these is not set, DuckDuckGo will be used as the default search engine.",
