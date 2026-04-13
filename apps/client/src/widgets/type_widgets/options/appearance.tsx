@@ -88,13 +88,11 @@ const FONT_FAMILIES: FontGroup[] = [
 ];
 
 export default function AppearanceSettings() {
-    const [ overrideThemeFonts ] = useTriliumOption("overrideThemeFonts");
-
     return (
         <div>
             {!isMobile() && <LayoutOptions />}
             <ApplicationTheme />
-            {overrideThemeFonts === "true" && <Fonts />}
+            <Fonts />
             {isElectron() && <ElectronIntegration /> }
             <Performance />
             <MaxContentWidth />
@@ -287,8 +285,6 @@ function OrientationIllustration({ orientation }: { orientation: "vertical" | "h
 
 function ApplicationTheme() {
     const [ theme, setTheme ] = useTriliumOption("theme", true);
-    const [ overrideThemeFonts, setOverrideThemeFonts ] = useTriliumOptionBool("overrideThemeFonts");
-
     const [ themes, setThemes ] = useState<Theme[]>([]);
 
     useEffect(() => {
@@ -302,31 +298,32 @@ function ApplicationTheme() {
 
     return (
         <OptionsSection title={t("theme.title")}>
-            <div className="row">
-                <FormGroup name="theme" label={t("theme.theme_label")} className="col-md-6" style={{ marginBottom: 0 }}>
-                    <FormSelect
-                        values={themes} currentValue={theme} onChange={setTheme}
-                        keyProperty="val" titleProperty="title"
-                    />
-                </FormGroup>
-
-                <FormGroup className="side-checkbox col-md-6" name="override-theme-fonts">
-                    <FormCheckbox
-                        label={t("theme.override_theme_fonts_label")}
-                        currentValue={overrideThemeFonts} onChange={setOverrideThemeFonts} />
-                </FormGroup>
-            </div>
+            <FormGroup name="theme" label={t("theme.theme_label")} className="col-md-6">
+                <FormSelect
+                    values={themes} currentValue={theme} onChange={setTheme}
+                    keyProperty="val" titleProperty="title"
+                />
+            </FormGroup>
         </OptionsSection>
     );
 }
 
 function Fonts() {
+    const [ overrideThemeFonts, setOverrideThemeFonts ] = useTriliumOptionBool("overrideThemeFonts");
+    const isEnabled = overrideThemeFonts === true;
+
     return (
         <OptionsSection title={t("fonts.fonts")}>
-            <Font title={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" />
-            <Font title={t("fonts.note_tree_font")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" />
-            <Font title={t("fonts.note_detail_font")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" />
-            <Font title={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" />
+            <FormCheckbox
+                label={t("theme.override_theme_fonts_label")}
+                currentValue={overrideThemeFonts}
+                onChange={setOverrideThemeFonts}
+            />
+
+            <Font name="main-font" label={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" disabled={!isEnabled} />
+            <Font name="tree-font" label={t("fonts.note_tree_font")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
+            <Font name="detail-font" label={t("fonts.note_detail_font")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
+            <Font name="monospace-font" label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} />
 
             <FormText>{t("fonts.note_tree_and_detail_font_sizing")}</FormText>
             <FormText>{t("fonts.not_all_fonts_available")}</FormText>
@@ -338,32 +335,36 @@ function Fonts() {
     );
 }
 
-function Font({ title, fontFamilyOption, fontSizeOption }: { title: string, fontFamilyOption: OptionNames, fontSizeOption: OptionNames }) {
+interface FontProps {
+    name: string;
+    label: string;
+    fontFamilyOption: OptionNames;
+    fontSizeOption: OptionNames;
+    disabled?: boolean;
+}
+
+function Font({ name, label, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
     const [ fontFamily, setFontFamily ] = useTriliumOption(fontFamilyOption);
     const [ fontSize, setFontSize ] = useTriliumOption(fontSizeOption);
 
     return (
-        <>
-            <h5>{title}</h5>
-            <div className="row">
-                <FormGroup name="font-family" className="col-md-4" label={t("fonts.font_family")}>
-                    <FormSelectWithGroups
-                        values={FONT_FAMILIES}
-                        currentValue={fontFamily} onChange={setFontFamily}
-                        keyProperty="value" titleProperty="label"
-                    />
-                </FormGroup>
-
-                <FormGroup name="font-size" className="col-md-6" label={t("fonts.size")}>
-                    <FormTextBoxWithUnit
-                        name="tree-font-size"
-                        type="number" min={50} max={200} step={10}
-                        currentValue={fontSize} onBlur={setFontSize}
-                        unit={t("units.percentage")}
-                    />
-                </FormGroup>
+        <OptionsRow name={name} label={label}>
+            <div className="font-options">
+                <FormSelectWithGroups
+                    values={FONT_FAMILIES}
+                    currentValue={fontFamily} onChange={setFontFamily}
+                    keyProperty="value" titleProperty="label"
+                    disabled={disabled}
+                />
+                <FormTextBoxWithUnit
+                    name={`${name}-size`}
+                    type="number" min={50} max={200} step={10}
+                    currentValue={fontSize} onBlur={setFontSize}
+                    unit={t("units.percentage")}
+                    disabled={disabled}
+                />
             </div>
-        </>
+        </OptionsRow>
     );
 }
 

@@ -1,3 +1,18 @@
+.font-options {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .form-select {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .input-with-unit {
+        width: 100px;
+    }
+}
+
 .orientation-illustration {
     width: 170px;
     height: 130px;

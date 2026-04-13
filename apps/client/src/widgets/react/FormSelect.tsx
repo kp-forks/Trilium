@@ -24,6 +24,7 @@ interface FormSelectProps<T, Q> extends ValueConfig<T, Q> {
     onChange: OnChangeListener;
     style?: CSSProperties;
     className?: string;
+    disabled?: boolean;
 }
 
 /**
@@ -40,9 +41,9 @@ export default function FormSelect<T>({ name, id, onChange, style, className, ..
 /**
  * Similar to {@link FormSelect}, but the top-level elements are actually groups.
  */
-export function FormSelectWithGroups<T>({ name, id, values, keyProperty, titleProperty, currentValue, onChange, ...restProps }: FormSelectProps<T, FormSelectGroup<T> | T>) {
+export function FormSelectWithGroups<T>({ name, id, values, keyProperty, titleProperty, currentValue, onChange, disabled, ...restProps }: FormSelectProps<T, FormSelectGroup<T> | T>) {
     return (
-        <FormSelectBody name={name} id={id} onChange={onChange} {...restProps}>
+        <FormSelectBody name={name} id={id} onChange={onChange} disabled={disabled} {...restProps}>
             {values.map((item) => {
                 if (!item) return <></>;
                 if (typeof item === "object" && "items" in item) {
@@ -61,7 +62,7 @@ export function FormSelectWithGroups<T>({ name, id, values, keyProperty, titlePr
     )
 }
 
-function FormSelectBody({ id, name, children, onChange, style, className }: { id?: string, name?: string, children: ComponentChildren, onChange: OnChangeListener, style?: CSSProperties, className?: string }) {
+function FormSelectBody({ id, name, children, onChange, style, className, disabled }: { id?: string, name?: string, children: ComponentChildren, onChange: OnChangeListener, style?: CSSProperties, className?: string, disabled?: boolean }) {
     return (
         <select
             id={id}
@@ -69,6 +70,7 @@ function FormSelectBody({ id, name, children, onChange, style, className }: { id
             onChange={e => onChange((e.target as HTMLInputElement).value)}
             style={style}
             className={`form-select ${className ?? ""}`}
+            disabled={disabled}
         >
             {children}
         </select>
