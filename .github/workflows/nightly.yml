@@ -61,7 +61,7 @@ jobs:
     runs-on: ${{ matrix.os.image }}
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
       - name: Set up node & dependencies
         uses: actions/setup-node@v6
         with:
@@ -69,6 +69,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          npm_config_package_import_method: copy
       - name: Update nightly version
         run: pnpm run chore:ci-update-nightly-version
       - name: Run the build
@@ -91,7 +93,7 @@ jobs:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGN_KEY }}
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2.5.0
+        uses: softprops/action-gh-release@v2.6.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           make_latest: false
@@ -132,7 +134,7 @@ jobs:
           arch: ${{ matrix.arch }}
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2.5.0
+        uses: softprops/action-gh-release@v2.6.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           make_latest: false

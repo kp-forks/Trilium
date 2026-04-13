@@ -1,3 +1,4 @@
+import { t } from "./i18n.js";
 import utils, { isShare } from "./utils.js";
 import ValidationError from "./validation_error.js";
 
@@ -32,8 +33,7 @@ async function getHeaders(headers?: Headers) {
         return {};
     }
 
-    const appContext = (await import("../components/app_context.js")).default;
-    const activeNoteContext = appContext.tabManager ? appContext.tabManager.getActiveContext() : null;
+    const activeNoteContext = glob.appContext?.tabManager ? glob.appContext.tabManager.getActiveContext() : null;
 
     // headers need to be lowercase because node.js automatically converts them to lower case
     // also avoiding using underscores instead of dashes since nginx filters them out by default
@@ -93,7 +93,7 @@ async function upload(url: string, fileToUpload: File, componentId?: string, met
     const formData = new FormData();
     formData.append("upload", fileToUpload);
 
-    return await $.ajax({
+    const doUpload = async () => $.ajax({
         url: window.glob.baseApiUrl + url,
         headers: await getHeaders(componentId ? {
             "trilium-component-id": componentId
@@ -104,6 +104,18 @@ async function upload(url: string, fileToUpload: File, componentId?: string, met
         contentType: false, // NEEDED, DON'T REMOVE THIS
         processData: false // NEEDED, DON'T REMOVE THIS
     });
+
+    try {
+        return await doUpload();
+    } catch (e: unknown) {
+        // jQuery rejects with the jqXHR object
+        const jqXhr = e as JQuery.jqXHR;
+        if (jqXhr?.status && isCsrfError(jqXhr.status, jqXhr.responseText)) {
+            await refreshCsrfToken();
+            return await doUpload();
+        }
+        throw e;
+    }
 }
 
 let idCounter = 1;
@@ -112,12 +124,55 @@ const idToRequestMap: Record<string, RequestData> = {};
 
 let maxKnownEntityChangeId = 0;
 
+let csrfRefreshInProgress: Promise<void> | null = null;
+
+/**
+ * Re-fetches /bootstrap to obtain a fresh CSRF token. This is needed when the
+ * server session expires (e.g. mobile tab backgrounded for a long time) and the
+ * existing CSRF token is no longer valid.
+ *
+ * Coalesces concurrent calls so only one bootstrap request is in-flight at a time.
+ */
+async function refreshCsrfToken(): Promise<void> {
+    if (csrfRefreshInProgress) {
+        return csrfRefreshInProgress;
+    }
+
+    csrfRefreshInProgress = (async () => {
+        try {
+            const response = await fetch(`./bootstrap${window.location.search}`, { cache: "no-store" });
+            if (response.ok) {
+                const json = await response.json();
+                glob.csrfToken = json.csrfToken;
+            }
+        } finally {
+            csrfRefreshInProgress = null;
+        }
+    })();
+
+    return csrfRefreshInProgress;
+}
+
+function isCsrfError(status: number, responseText: string): boolean {
+    if (status !== 403) {
+        return false;
+    }
+    try {
+        const body = JSON.parse(responseText);
+        return body.message === "Invalid CSRF token";
+    } catch {
+        return false;
+    }
+}
+
 interface CallOptions {
     data?: unknown;
     silentNotFound?: boolean;
     silentInternalServerError?: boolean;
     // If `true`, the value will be returned as a string instead of a JavaScript object if JSON, XMLDocument if XML, etc.
     raw?: boolean;
+    /** Used internally to prevent infinite retry loops on CSRF refresh. */
+    csrfRetried?: boolean;
 }
 
 async function call<T>(method: string, url: string, componentId?: string, options: CallOptions = {}) {
@@ -167,7 +222,7 @@ function ajax(url: string, method: string, data: unknown, headers: Headers, opts
             type: method,
             headers,
             timeout: 60000,
-            success: (body, textStatus, jqXhr) => {
+            success: (body, _textStatus, jqXhr) => {
                 const respHeaders: Headers = {};
 
                 jqXhr
@@ -192,12 +247,34 @@ function ajax(url: string, method: string, data: unknown, headers: Headers, opts
                     // don't report requests that are rejected by the browser, usually when the user is refreshing or going to a different page.
                     rej("rejected by browser");
                     return;
-                } else if (opts.silentNotFound && jqXhr.status === 404) {
+                }
+
+                // If the CSRF token is stale (e.g. session expired while tab was backgrounded),
+                // refresh it and retry the request once.
+                if (!opts.csrfRetried && isCsrfError(jqXhr.status, jqXhr.responseText)) {
+                    try {
+                        await refreshCsrfToken();
+                        // Rebuild headers so the fresh glob.csrfToken is picked up
+                        const retryHeaders = await getHeaders({ "trilium-component-id": headers["trilium-component-id"] });
+                        const retryResult = await ajax(url, method, data, retryHeaders, { ...opts, csrfRetried: true });
+                        res(retryResult);
+                        return;
+                    } catch (retryErr) {
+                        rej(retryErr);
+                        return;
+                    }
+                }
+
+                if (opts.silentNotFound && jqXhr.status === 404) {
                     // report nothing
                 } else if (opts.silentInternalServerError && jqXhr.status === 500) {
                     // report nothing
                 } else {
-                    await reportError(method, url, jqXhr.status, jqXhr.responseText);
+                    try {
+                        await reportError(method, url, jqXhr.status, jqXhr.responseText);
+                    } catch {
+                        // reportError may throw (e.g. ValidationError); ensure rej() is still called below.
+                    }
                 }
 
                 rej(jqXhr.responseText);
@@ -267,6 +344,7 @@ async function reportError(method: string, url: string, statusCode: number, resp
         } catch (e) {}
     }
 
+    // Dynamic import to avoid circular dependency (toast → app_context → options → server).
     const toastService = (await import("./toast.js")).default;
 
     const messageStr = (typeof message === "string" ? message : JSON.stringify(message)) || "-";
@@ -280,7 +358,6 @@ async function reportError(method: string, url: string, statusCode: number, resp
             ...response
         });
     } else {
-        const { t } = await import("./i18n.js");
         if (statusCode === 400 && (url.includes("%23") || url.includes("%2F"))) {
             toastService.showPersistent({
                 id: "trafik-blocked",
@@ -294,8 +371,7 @@ async function reportError(method: string, url: string, statusCode: number, resp
                 t("server.unknown_http_error_content", { statusCode, method, url, message: messageStr }),
                 15_000);
         }
-        const { logError } = await import("./ws.js");
-        logError(`${statusCode} ${method} ${url} - ${message}`);
+        window.logError(`${statusCode} ${method} ${url} - ${message}`);
     }
 }
 

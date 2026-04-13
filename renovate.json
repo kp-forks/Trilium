@@ -13,6 +13,7 @@
     "prHourlyLimit": 0,
     "prConcurrentLimit": 0,
     "branchConcurrentLimit": 0,
+    "minimumReleaseAge": "3 days",
     "ignorePaths": [
         "**/node_modules/**",
         "apps/edit-docs/demo/**",
@@ -31,7 +32,7 @@
     },
     "packageRules": [
         {
-            "matchPackageNames": "@fsegurai/codemirror-theme-**",
+            "matchPackageNames": ["@fsegurai/codemirror-theme-**", "@catppuccin/codemirror"],
             "groupName": "codemirror themes"
         },
         {
@@ -47,13 +48,15 @@
             "groupName": "ckeditor monorepo"
         },
         {
+            "matchPackageNames": "@univerjs/**",
+            "groupName": "univer monorepo"
+        },
+        {
             "matchPackageNames": [
-                "@sveltejs/**",
-                "svelte",
-                "svelte-check",
-                "eslint-plugin-svelte"
+                "ai",
+                "@ai-sdk/**"
             ],
-            "groupName": "svelte monorepo"
+            "groupName": "ai sdk"
         }
     ]
 }

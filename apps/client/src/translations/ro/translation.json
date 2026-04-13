@@ -459,13 +459,10 @@
     "broken_relations_to_be_deleted": "Următoarele relații vor fi întrerupte și șterse ({{ relationCount}})",
     "cancel": "Anulează",
     "delete_all_clones_description": "Șterge și toate clonele (se pot recupera în ecranul Schimbări recente)",
-    "delete_notes_preview": "Previzualizare ștergerea notițelor",
     "erase_notes_description": "Ștergerea obișnuită doar marchează notițele ca fiind șterse și pot fi recuperate (în ecranul Schimbări recente) pentru o perioadă de timp. Dacă se bifează această opțiune, notițele vor fi șterse imediat fără posibilitatea de a le recupera.",
     "erase_notes_warning": "Șterge notițele permanent (nu se mai pot recupera), incluzând toate clonele. Va forța reîncărcarea aplicației.",
     "no_note_to_delete": "Nicio notiță nu va fi ștearsă (doar clonele).",
     "notes_to_be_deleted": "Următoarele notițe vor fi șterse ({{notesCount}})",
-    "ok": "OK",
-    "deleted_relation_text": "Notița {{- note}} ce va fi ștearsă este referențiată de relația {{- relation}}, originând din {{- source}}.",
     "close": "Închide"
   },
   "delete_relation": {
@@ -875,7 +872,7 @@
     "print_note": "Imprimare notiță",
     "re_render_note": "Reinterpretare notiță",
     "save_revision": "Salvează o nouă revizie",
-    "advanced": "Advansat",
+    "advanced": "Avansat",
     "search_in_note": "Caută în notiță",
     "convert_into_attachment_failed": "Nu s-a putut converti notița „{{title}}”.",
     "convert_into_attachment_successful": "Notița „{{title}}” a fost convertită în atașament.",
@@ -1054,7 +1051,6 @@
     "enter_title_of_new_note": "Introduceți titlul noii notițe",
     "note_already_in_diagram": "Notița „{{title}}” deja se află pe diagramă.",
     "note_not_found": "Notița „{{noteId}}” nu a putut fi găsită!",
-    "open_in_new_tab": "Deschide într-un tab nou",
     "remove_note": "Șterge notița",
     "remove_relation": "Șterge relația",
     "rename_note": "Redenumește notița",
@@ -1238,12 +1234,9 @@
     "title": "titlu"
   },
   "spellcheck": {
-    "available_language_codes_label": "Coduri de limbă disponibile:",
     "description": "Aceste opțiuni se aplică doar pentru aplicația de desktop, navigatoarele web folosesc propriile corectoare ortografice.",
     "enable": "Activează corectorul ortografic",
     "language_code_label": "Codurile de limbă",
-    "language_code_placeholder": "de exemplu „en-US”, „de-AT”",
-    "multiple_languages_info": "Mai multe limbi pot fi separate prin virgulă, e.g. \"en-US, de-DE, cs\". ",
     "title": "Corector ortografic",
     "restart-required": "Schimbările asupra setărilor corectorului ortografic vor fi aplicate după restartarea aplicației."
   },
@@ -1270,8 +1263,7 @@
     "test_button": "Probează sincronizarea",
     "test_description": "Această opțiune va testa conexiunea și comunicarea cu serverul de sincronizare. Dacă serverul de sincronizare nu este inițializat, acest lucru va rula și o sincronizare cu documentul local.",
     "test_title": "Probează sincronizarea",
-    "timeout": "Timp limită de sincronizare",
-    "timeout_unit": "milisecunde"
+    "timeout": "Timp limită de sincronizare"
   },
   "table_of_contents": {
     "description": "Cuprinsul va apărea în notițele de tip text atunci când notița are un număr de titluri mai mare decât cel definit. Acest număr se poate personaliza:",

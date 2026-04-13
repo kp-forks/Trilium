@@ -88,7 +88,6 @@
     "also_delete_note": "También eliminar la nota"
   },
   "delete_notes": {
-    "delete_notes_preview": "Eliminar vista previa de notas",
     "close": "Cerrar",
     "delete_all_clones_description": "Eliminar también todos los clones (se puede deshacer en cambios recientes)",
     "erase_notes_description": "La eliminación normal (suave) solo marca las notas como eliminadas y se pueden recuperar (en el cuadro de diálogo de cambios recientes) dentro de un periodo de tiempo. Al marcar esta opción se borrarán las notas inmediatamente y no será posible recuperarlas.",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "Las siguientes notas serán eliminadas ({{notesCount}})",
     "no_note_to_delete": "No se eliminará ninguna nota (solo clones).",
     "broken_relations_to_be_deleted": "Las siguientes relaciones se romperán y serán eliminadas ({{ relationCount}})",
-    "cancel": "Cancelar",
-    "ok": "Aceptar",
-    "deleted_relation_text": "Nota {{- note}} (para ser eliminada) está referenciado por la relación {{- relation}} que se origina en {{- source}}."
+    "cancel": "Cancelar"
   },
   "export": {
     "export_note_title": "Exportar nota",
@@ -1051,7 +1048,6 @@
     "unprotecting-title": "Estado de desprotección"
   },
   "relation_map": {
-    "open_in_new_tab": "Abrir en nueva pestaña",
     "remove_note": "Quitar nota",
     "edit_title": "Editar título",
     "rename_note": "Cambiar nombre de nota",
@@ -1333,7 +1329,8 @@
     "date-and-time": "Fecha y hora",
     "path": "Ruta",
     "database_backed_up_to": "Se ha realizado una copia de seguridad de la base de datos en {{backupFilePath}}",
-    "no_backup_yet": "no hay copia de seguridad todavía"
+    "no_backup_yet": "no hay copia de seguridad todavía",
+    "download": "Descargar"
   },
   "etapi": {
     "title": "ETAPI",
@@ -1433,16 +1430,12 @@
     "description": "Estas opciones se aplican sólo para compilaciones de escritorio; los navegadores utilizarán su corrector ortográfico nativo.",
     "enable": "Habilitar corrector ortográfico",
     "language_code_label": "Código(s) de idioma",
-    "language_code_placeholder": "por ejemplo \"en-US\", \"de-AT\"",
-    "multiple_languages_info": "Múltiples idiomas se pueden separar por coma, por ejemplo \"en-US, de-DE, cs\". ",
-    "available_language_codes_label": "Códigos de idioma disponibles:",
     "restart-required": "Los cambios en las opciones de corrección ortográfica entrarán en vigor después del reinicio de la aplicación."
   },
   "sync_2": {
     "config_title": "Configuración de sincronización",
     "server_address": "Dirección de la instancia del servidor",
     "timeout": "Tiempo de espera de sincronización (milisegundos)",
-    "timeout_unit": "milisegundos",
     "proxy_label": "Sincronizar servidor proxy (opcional)",
     "note": "Nota",
     "note_description": "Si deja la configuración del proxy en blanco, se utilizará el proxy del sistema (se aplica únicamente a la compilación de escritorio/electron).",
@@ -2198,5 +2191,52 @@
   },
   "setup_form": {
     "more_info": "Para saber más"
+  },
+  "media": {
+    "play": "Reproducir (Espacio)",
+    "pause": "Pausa (Espacio)",
+    "back-10s": "Retroceder 10s (tecla de flecha izquierda)",
+    "forward-30s": "Adelantar 30s",
+    "mute": "Silenciar (M)",
+    "unmute": "Activar sonido (M)",
+    "playback-speed": "Velocidad de reproducción",
+    "loop": "Bucle",
+    "disable-loop": "Deshabilitar bucle",
+    "rotate": "Rotar",
+    "picture-in-picture": "Imagen en imagen",
+    "exit-picture-in-picture": "Salir del modo imagen en imagen",
+    "fullscreen": "Pantalla completa (F)",
+    "exit-fullscreen": "Salir de la pantalla completa",
+    "unsupported-format": "La vista previa del medio no está disponible para este formato de archivo:\n{{mime}}",
+    "zoom-to-fit": "Acercamiento para llenar",
+    "zoom-reset": "Reiniciar acercamiento para llenar"
+  },
+  "mermaid": {
+    "placeholder": "Ingrese el contenido de su diagrama Mermaid o utilice uno de los diagramas de muestra a continuación.",
+    "sample_diagrams": "Diagramas de muestra:",
+    "sample_flowchart": "Diagrama de flujo",
+    "sample_class": "Clase",
+    "sample_sequence": "Secuencia",
+    "sample_entity_relationship": "Relación entre entidades",
+    "sample_state": "Estado",
+    "sample_mindmap": "Mapa mental",
+    "sample_architecture": "Arquitectura",
+    "sample_block": "Bloque",
+    "sample_c4": "C4",
+    "sample_gantt": "Gantt",
+    "sample_git": "Git",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Paquete",
+    "sample_pie": "Pastel",
+    "sample_quadrant": "Cuadrante",
+    "sample_radar": "Radar",
+    "sample_requirement": "Requerimiento",
+    "sample_sankey": "Sankey",
+    "sample_timeline": "Línea de tiempo",
+    "sample_user_journey": "Jornada de usuario",
+    "sample_xy": "XY",
+    "sample_venn": "Venn",
+    "sample_ishikawa": "Ishikawa",
+    "sample_treemap": "Mapa de árbol"
   }
 }

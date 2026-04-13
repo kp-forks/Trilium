@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     pnpm2nix = {
-      url = "github:FliegendeWurst/pnpm2nix-nzbr";
+      url = "github:TriliumNext/pnpm2nix-nzbr/fix/optional_dependencies_filtering";
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
@@ -151,9 +151,10 @@
               runHook postInstall
             '';
 
-            # This file is a symlink into /build which is not allowed.
+            # Symlinks pointing to /build directory are not allowed in the Nix store.
+            # This removes all dangling symlinks that point to the temporary build directory.
             postFixup = ''
-              find $out/opt -name prebuild-install -path "*/better-sqlite3/node_modules/.bin/*" -delete || true
+              find $out/opt -type l -lname '/build/*' -delete || true
             '';
 
             components = [
@@ -325,6 +326,8 @@
           buildInputs = [
             nodejs
             pnpm
+            electron
+            nodejs.python
           ];
         };
       }

@@ -88,7 +88,6 @@
     "also_delete_note": "Auch die Notiz löschen"
   },
   "delete_notes": {
-    "delete_notes_preview": "Vorschau der Notizen löschen",
     "close": "Schließen",
     "delete_all_clones_description": "auch alle Klone löschen (kann bei letzte Änderungen rückgängig gemacht werden)",
     "erase_notes_description": "Beim normalen (vorläufigen) Löschen werden die Notizen nur als gelöscht markiert und sie können innerhalb eines bestimmten Zeitraums (im Dialogfeld „Letzte Änderungen“) wiederhergestellt werden. Wenn du diese Option aktivierst, werden die Notizen sofort gelöscht und es ist nicht möglich, die Notizen wiederherzustellen.",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "Folgende Notizen werden gelöscht ({{notesCount}})",
     "no_note_to_delete": "Es werden keine Notizen gelöscht (nur Klone).",
     "broken_relations_to_be_deleted": "Folgende Beziehungen werden gelöst und gelöscht ({{ relationCount}})",
-    "cancel": "Abbrechen",
-    "ok": "OK",
-    "deleted_relation_text": "Notiz {{- note}} (soll gelöscht werden) wird von Beziehung {{- relation}} ausgehend von {{- source}} referenziert."
+    "cancel": "Abbrechen"
   },
   "export": {
     "export_note_title": "Notiz exportieren",
@@ -446,7 +443,8 @@
     "and_more": "... und {{count}} mehr.",
     "print_landscape": "Beim Export als PDF, wird die Seitenausrichtung Querformat anstatt Hochformat verwendet.",
     "print_page_size": "Beim Export als PDF, wird die Größe der Seite angepasst. Unterstützte Größen: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
-    "color_type": "Farbe"
+    "color_type": "Farbe",
+    "textarea": "Mehrzeilen-Text"
   },
   "attribute_editor": {
     "help_text_body1": "Um ein Label hinzuzufügen, gebe einfach z.B. ein. <code>#rock</code> oder wenn du auch einen Wert hinzufügen möchten, dann z.B. <code>#year = 2024</code>",
@@ -1046,7 +1044,6 @@
     "unprotecting-title": "Ungeschützt-Status"
   },
   "relation_map": {
-    "open_in_new_tab": "In neuem Tab öffnen",
     "remove_note": "Notiz entfernen",
     "edit_title": "Titel bearbeiten",
     "rename_note": "Notiz umbenennen",
@@ -1386,9 +1383,6 @@
     "description": "Diese Optionen gelten nur für Desktop-Builds. Browser verwenden ihre eigene native Rechtschreibprüfung.",
     "enable": "Aktiviere die Rechtschreibprüfung",
     "language_code_label": "Sprachcode(s)",
-    "language_code_placeholder": "zum Beispiel \"en-US\", \"de-AT\"",
-    "multiple_languages_info": "Mehrere Sprachen können mit einem Komma getrennt werden z.B. \"en-US, de-DE, cs\". ",
-    "available_language_codes_label": "Verfügbare Sprachcodes:",
     "restart-required": "Änderungen an den Rechtschreibprüfungsoptionen werden nach dem Neustart der Anwendung wirksam."
   },
   "sync_2": {
@@ -1404,8 +1398,7 @@
     "test_title": "Synchronisierungstest",
     "test_description": "Dadurch werden die Verbindung und der Handshake zum Synchronisierungsserver getestet. Wenn der Synchronisierungsserver nicht initialisiert ist, wird er dadurch für die Synchronisierung mit dem lokalen Dokument eingerichtet.",
     "test_button": "Teste die Synchronisierung",
-    "handshake_failed": "Handshake des Synchronisierungsservers fehlgeschlagen, Fehler: {{message}}",
-    "timeout_unit": "Millisekunden"
+    "handshake_failed": "Handshake des Synchronisierungsservers fehlgeschlagen, Fehler: {{message}}"
   },
   "api_log": {
     "close": "Schließen"
@@ -2183,5 +2176,52 @@
   },
   "setup_form": {
     "more_info": "Mehr erfahren"
+  },
+  "media": {
+    "play": "Abspielen (Arbeitsbereich)",
+    "pause": "Pausieren (Arbeitsbereich)",
+    "back-10s": "10 s zurück (Linke Pfeiltaste)",
+    "forward-30s": "30 s vorwärts",
+    "mute": "Stumm (M)",
+    "unmute": "Stummschaltung aufheben (M)",
+    "playback-speed": "Wiedergabegeschwindigkeit",
+    "loop": "Schleife",
+    "disable-loop": "Schleife deaktivieren",
+    "rotate": "Rotieren",
+    "picture-in-picture": "Bild-in-Bild",
+    "exit-picture-in-picture": "Bild-in-Bild verlassen",
+    "fullscreen": "Vollbild (F)",
+    "exit-fullscreen": "Vollbild verlassen",
+    "unsupported-format": "Medienvorschau ist für dieses Format nicht verfügbar:\n{{mime}}",
+    "zoom-to-fit": "Zoomen um auszufüllen",
+    "zoom-reset": "Zoomen um auszufüllen zurücksetzen"
+  },
+  "mermaid": {
+    "placeholder": "Geben den Inhalt des Mermaid-Diagramms ein oder verwenden eine der folgenden Beispieldiagramme.",
+    "sample_diagrams": "Beispieldiagramme:",
+    "sample_flowchart": "Flussdiagramm",
+    "sample_class": "Klasse",
+    "sample_sequence": "Abfolge",
+    "sample_entity_relationship": "Entität Beziehung",
+    "sample_state": "Zustandsübergangsdiagramm",
+    "sample_mindmap": "Mindmap",
+    "sample_architecture": "Architektur",
+    "sample_block": "Block",
+    "sample_c4": "C4",
+    "sample_gantt": "Gantt",
+    "sample_git": "GitGraph",
+    "sample_kanban": "Kanban",
+    "sample_packet": "Paket",
+    "sample_pie": "Kuchen",
+    "sample_quadrant": "Quadrant",
+    "sample_radar": "Radar",
+    "sample_requirement": "Anforderung",
+    "sample_sankey": "Sankey",
+    "sample_timeline": "Zeitstrahl",
+    "sample_treemap": "Kachel",
+    "sample_user_journey": "Benutzererfahrung",
+    "sample_xy": "XY",
+    "sample_venn": "Mengen",
+    "sample_ishikawa": "Ursache-Wirkung"
   }
 }

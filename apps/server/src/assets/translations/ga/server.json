@@ -297,7 +297,8 @@
   },
   "quarterNumber": "Ráithe {quarterNumber}",
   "special_notes": {
-    "search_prefix": "Cuardaigh:"
+    "search_prefix": "Cuardaigh:",
+    "llm_chat_prefix": "Comhrá:"
   },
   "test_sync": {
     "not-configured": "Níl an freastalaí sioncrónaithe cumraithe. Cumraigh an sioncrónú ar dtús.",
@@ -342,7 +343,7 @@
     "shortcuts-title": "Aicearraí",
     "text-notes": "Nótaí Téacs",
     "code-notes-title": "Nótaí Cód",
-    "images-title": "Íomhánna",
+    "images-title": "Meáin",
     "spellcheck-title": "Seiceáil litrithe",
     "password-title": "Pasfhocal",
     "multi-factor-authentication-title": "MFA",
@@ -355,7 +356,11 @@
     "user-guide": "Treoir Úsáideora",
     "localization": "Teanga & Réigiún",
     "inbox-title": "Bosca isteach",
-    "tab-switcher-title": "Athraitheoir Cluaisíní"
+    "tab-switcher-title": "Athraitheoir Cluaisíní",
+    "llm-chat-history-title": "Stair Comhrá AI",
+    "llm-title": "AI / LLM",
+    "sidebar-chat-title": "Comhrá AI",
+    "custom-dictionary-title": "Foclóir Saincheaptha"
   },
   "notes": {
     "new-note": "Nóta nua",
@@ -401,7 +406,10 @@
     "last-updated": "Nuashonraithe go deireanach ar {{- date}}",
     "subpages": "Fo-leathanaigh:",
     "on-this-page": "Ar an Leathanach seo",
-    "expand": "Leathnaigh"
+    "expand": "Leathnaigh",
+    "toggle-navigation": "Nascleanúint a Athrú",
+    "toggle-toc": "Clár Ábhair a Athsholáthar",
+    "logo-alt": "Lógó"
   },
   "hidden_subtree_templates": {
     "text-snippet": "Sleachta Téacs",
@@ -437,5 +445,18 @@
   },
   "desktop": {
     "instance_already_running": "Tá sampla ag rith cheana féin, agus tá fócas á chur ar an sampla sin ina ionad."
+  },
+  "script": {
+    "wrong-environment": "Ní féidir an nóta \"{{- noteTitle}}\" ({{- noteId}}) a fhorghníomhú. Is script {{- actualEnv}} é seo, ach rinneadh iarracht é a fhorghníomhú sa {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Earráid i {{- context}}: {{- message}}",
+      "reserved-keyword": "Is eochairfhocal curtha in áirithe é \"{{- token}}\". Chun luach liteartha a chuardach, bain úsáid as comharthaí athfhriotail: \"{{- token}}\"",
+      "cannot-compare-with": "ní féidir comparáid a dhéanamh le \"{{- token}}\". Chun luach liteartha a chuardach, bain úsáid as comharthaí athfhriotail: \"{{- token}}\"",
+      "misplaced-expression": "Slonn mí-áitithe nó neamhiomlán \"{{- token}}\"",
+      "fulltext-after-expression": "Ní abairt bhailí í \"{{- token}}\". Chun téacs a chuardach, cuir é roimh scagairí tréithe (m.sh., \"{{- token}} #label\" in ionad \"#label {{- token}}\").",
+      "unrecognized-expression": "Sloinneadh neamhaitheanta \"{{- token}}\""
+    }
   }
 }

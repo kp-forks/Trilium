@@ -393,9 +393,7 @@
   },
   "delete_notes": {
     "close": "غلق",
-    "cancel": "الغاء",
-    "ok": "نعم",
-    "delete_notes_preview": "حذف معاينة الملاحظات"
+    "cancel": "الغاء"
   },
   "export": {
     "close": "غلق",
@@ -626,7 +624,8 @@
     "date-and-time": "التاريخ والوقت",
     "no_backup_yet": "لايوجد نسخة احتياطية لحد الان",
     "enable_daily_backup": "تمكين النسخ الاحتياطي اليومي",
-    "backup_database_now": "نسخ اختياطي لقاعدة البيانات الان"
+    "backup_database_now": "نسخ اختياطي لقاعدة البيانات الان",
+    "download": "تنزيل"
   },
   "etapi": {
     "created": "تم الأنشاء",
@@ -663,7 +662,6 @@
     "default_shortcuts": "اختصارات افتراضية"
   },
   "sync_2": {
-    "timeout_unit": "ميلي ثانية",
     "note": "ملاحظة",
     "save": "حفظ",
     "help": "المساعدة",
@@ -1069,7 +1067,6 @@
     "rename_note": "اعادة تسمية الملاحظة",
     "remove_relation": "حذف العلاقة",
     "default_new_note_title": "ملاحظة جديدة",
-    "open_in_new_tab": "فتح في تبويب جديد",
     "enter_new_title": "ادخل عنوان ملاحظة جديدة:",
     "note_not_found": "الملاحظة {{noteId}} غير موجودة!",
     "cannot_match_transform": "تعذر مطابقة التحويل: {{transform}}"
@@ -1130,9 +1127,7 @@
   "spellcheck": {
     "title": "التدقيق الاملائي",
     "enable": "تفعيل التدقيق الاملائي",
-    "language_code_label": "رمز اللغة او رموز اللغات",
-    "available_language_codes_label": "رموز اللغات المتاحة:",
-    "language_code_placeholder": "على سبيل المثال \"en-US\", \"de-AI\""
+    "language_code_label": "رمز اللغة او رموز اللغات"
   },
   "note-map": {
     "button-link-map": "خريطة الروابط",

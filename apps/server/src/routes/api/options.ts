@@ -5,7 +5,7 @@ import type { Request } from "express";
 
 import ValidationError from "../../errors/validation_error.js";
 import config from "../../services/config.js";
-import { changeLanguage, getLocales } from "../../services/i18n.js";
+import { changeLanguage } from "../../services/i18n.js";
 import log from "../../services/log.js";
 import optionService from "../../services/options.js";
 import searchService from "../../services/search/services/search.js";
@@ -32,6 +32,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "codeNoteTheme",
     "syncServerHost",
     "syncServerTimeout",
+    "syncServerTimeoutTimeScale",
     "syncProxy",
     "hoistedNoteId",
     "mainFontSize",
@@ -94,6 +95,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "textNoteEmojiCompletionEnabled",
     "textNoteCompletionEnabled",
     "textNoteSlashCommandsEnabled",
+    "includeNoteDefaultBoxSize",
     "layoutOrientation",
     "backgroundEffects",
     "allowedHtmlTags",
@@ -105,7 +107,13 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "experimentalFeatures",
     "newLayout",
     "mfaEnabled",
-    "mfaMethod"
+    "mfaMethod",
+    // LLM options
+    "llmProviders",
+    "mcpEnabled",
+    // OCR options
+    "ocrAutoProcessImages",
+    "ocrMinConfidence"
 ]);
 
 function getOptions() {
@@ -187,10 +195,6 @@ function getUserThemes() {
     return ret;
 }
 
-function getSupportedLocales() {
-    return getLocales();
-}
-
 function isAllowed(name: string) {
     return (ALLOWED_OPTIONS as Set<string>).has(name)
         || name.startsWith("keyboardShortcuts")
@@ -202,6 +206,5 @@ export default {
     getOptions,
     updateOption,
     updateOptions,
-    getUserThemes,
-    getSupportedLocales
+    getUserThemes
 };

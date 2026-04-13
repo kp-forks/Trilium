@@ -88,7 +88,6 @@
     "also_delete_note": "Também apagar a nota"
   },
   "delete_notes": {
-    "delete_notes_preview": "Apagar pré-visualização de notas",
     "close": "Fechar",
     "delete_all_clones_description": "Apagar também todos os clones (pode ser desfeito em alterações recentes)",
     "erase_notes_description": "Apagar normal (suave) apenas marca as notas como apagadas, permitindo que sejam recuperadas (no diálogo de alterações recentes) num período. Se esta opção for marcada, as notas serão apagadas imediatamente e não será possível restaurá-las.",
@@ -96,9 +95,7 @@
     "notes_to_be_deleted": "As seguintes notas serão apagadas ({{notesCount}})",
     "no_note_to_delete": "Nenhuma nota será apagada (apenas os clones).",
     "broken_relations_to_be_deleted": "As seguintes relações serão quebradas e apagadas ({{ relationCount}})",
-    "cancel": "Cancelar",
-    "ok": "OK",
-    "deleted_relation_text": "A nota {{- note}} (a ser apagada) está referenciada pela relação {{- relation}} originada de {{- source}}."
+    "cancel": "Cancelar"
   },
   "export": {
     "export_note_title": "Exportar nota",
@@ -1047,7 +1044,6 @@
     "unprotecting-title": "Estado da remoção de proteção"
   },
   "relation_map": {
-    "open_in_new_tab": "Abrir em nova guia",
     "remove_note": "Remover nota",
     "edit_title": "Editar título",
     "rename_note": "Renomear nota",
@@ -1436,16 +1432,12 @@
     "description": "Estas opções aplicam-se apenas às versões desktop; os navegadores usarão a sua própria verificação ortográfica nativa.",
     "enable": "Ativar verificação ortográfica",
     "language_code_label": "Código(s) de idioma",
-    "language_code_placeholder": "por exemplo \"en-US\", \"de-AT\", \"pt-BR\"",
-    "multiple_languages_info": "Múltiplos idiomas podem ser separados por vírgula, por exemplo: \"en-US, de-DE, pt-BR, cs\". ",
-    "available_language_codes_label": "Códigos de idioma disponíveis:",
     "restart-required": "As alterações nas opções de verificação ortográfica terão efeito após reiniciar a aplicação."
   },
   "sync_2": {
     "config_title": "Configuração da Sincronização",
     "server_address": "Endereço da instância do Servidor",
     "timeout": "Tempo limite da sincronização",
-    "timeout_unit": "milisegundos",
     "proxy_label": "Servidor proxy para sincronização (opcional)",
     "note": "Nota",
     "note_description": "Se deixar a configuração de proxy em branco, o proxy do sistema será usado (aplica-se apenas à versão desktop/Electron).",

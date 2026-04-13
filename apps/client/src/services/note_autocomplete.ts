@@ -68,7 +68,8 @@ async function autocompleteSourceForCKEditor(queryText: string) {
                             name: row.notePathTitle || "",
                             link: `#${row.notePath}`,
                             notePath: row.notePath,
-                            highlightedNotePathTitle: row.highlightedNotePathTitle
+                            highlightedNotePathTitle: row.highlightedNotePathTitle,
+                            icon: row.icon
                         };
                     })
                 );

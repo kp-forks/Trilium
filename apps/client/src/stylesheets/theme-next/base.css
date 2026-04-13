@@ -544,12 +544,9 @@ li.dropdown-item a.dropdown-item-button:focus-visible {
     vertical-align: middle;
 }
 
-#toast-container .toast .toast-header .btn-close {
+#toast-container .toast .toast-header .btn-close,
+#toast-container .toast .toast-close .btn-close {
     margin: 0 0 0 12px;
-}
-
-#toast-container .toast.no-title {
-    flex-direction: row;
 }
 
 #toast-container .toast .toast-body {
@@ -675,6 +672,7 @@ li.dropdown-item a.dropdown-item-button:focus-visible {
 div.alert {
     margin-bottom: 8px;
     background: var(--alert-bar-background) !important;
+    color: var(--main-text-color);
     border-radius: 8px;
     font-size: .85em;
 }

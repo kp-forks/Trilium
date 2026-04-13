@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
       - name: Set up node & dependencies
         uses: actions/setup-node@v6
         with:
@@ -58,7 +58,7 @@ jobs:
           compression-level: 0
 
       - name: Release web clipper extension
-        uses: softprops/action-gh-release@v2.5.0
+        uses: softprops/action-gh-release@v2.6.1
         if: ${{ startsWith(github.ref, 'refs/tags/web-clipper-v') }}
         with:
           draft: false

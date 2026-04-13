@@ -25,8 +25,7 @@
   },
   "delete_notes": {
     "close": "Tanca",
-    "cancel": "Cancel·la",
-    "ok": "OK"
+    "cancel": "Cancel·la"
   },
   "export": {
     "close": "Tanca",
@@ -93,7 +92,10 @@
     "digits": "dígits",
     "inheritable": "Heretable",
     "delete": "Suprimeix",
-    "color_type": "Color"
+    "color_type": "Color",
+    "textarea": "Text multi linia",
+    "date_time": "Data i hora",
+    "precision_title": "Quants dígits han d'estar disponibles per a coma flotant a la interfície de configuració."
   },
   "rename_label": {
     "to": "Per"

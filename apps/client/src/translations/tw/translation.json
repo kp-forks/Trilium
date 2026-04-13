@@ -88,7 +88,6 @@
     "also_delete_note": "同時刪除筆記"
   },
   "delete_notes": {
-    "delete_notes_preview": "刪除筆記預覽",
     "delete_all_clones_description": "同時刪除所有克隆（可以在最近修改中撤消）",
     "erase_notes_description": "通常（軟）刪除僅標記筆記為已刪除，可以在一段時間內透過最近修改對話方塊撤消。勾選此選項將立即擦除筆記，無法撤銷。",
     "erase_notes_warning": "永久擦除筆記（無法撤銷），包括所有克隆。這將強制應用程式重新載入。",
@@ -96,8 +95,6 @@
     "no_note_to_delete": "沒有筆記將被刪除（僅克隆）。",
     "broken_relations_to_be_deleted": "將刪除以下關聯並斷開連接 ({{ relationCount}})",
     "cancel": "取消",
-    "ok": "確定",
-    "deleted_relation_text": "筆記 {{- note}}（將被刪除的筆記）被以下關聯 {{- relation}} 引用，來自 {{- source}}。",
     "close": "關閉"
   },
   "export": {
@@ -368,7 +365,7 @@
     "calendar_root": "標記應用作為每日筆記的根。只應標記一個筆記。",
     "archived": "含有此標籤的筆記預設在搜尋結果中不可見（也適用於跳轉至、新增連結對話方塊等）。",
     "exclude_from_export": "筆記（及其子階層）不會包含在任何匯出的筆記中",
-    "run": "定義腳本應運行的事件。可能的值包括：\n<ul>\n<li>frontendStartup - Trilium前端啟動時（或重新整理時），但不會在移動端執行。</li>\n<li>mobileStartup - Trilium前端啟動時（或重新整理時）， 在行動端會執行。</li>\n<li>backendStartup - Trilium後端啟動時</li>\n<li>hourly - 每小時運行一次。您可以使用附加標籤<code>runAtHour</code>指定小時。</li>\n<li>daily - 每天運行一次</li>\n</ul>",
+    "run": "定義腳本應運行的事件。可能的值包括：\n<ul>\n<li>frontendStartup - Trilium前端啟動時（或重新整理時），但不會在移動端執行。</li>\n<li>mobileStartup - Trilium前端啟動時（或重新整理時）， 在行動端會執行。</li>\n<li>backendStartup - Trilium後端啟動時。</li>\n<li>hourly - 每小時運行一次。您可以使用附加標籤<code>runAtHour</code>指定小時。</li>\n<li>daily - 每天運行一次。</li>\n</ul>",
     "run_on_instance": "定義應在哪個 Trilium 實例上運行。預設為所有實例。",
     "run_at_hour": "應在哪個小時運行。應與<code>#run=hourly</code>一起使用。可以多次定義，以便一天內運行多次。",
     "disable_inclusion": "含有此標籤的腳本不會包含在父腳本執行中。",
@@ -446,7 +443,8 @@
     "app_theme_base": "設定為 \"next\"、\"next-light \" 或 \"next-dark\"，以使用相應的 TriliumNext 主題（自動、淺色或深色）作為自訂主題的基礎，而非傳統主題。",
     "print_landscape": "匯出為 PDF 時，將頁面方向更改為橫向而非縱向。",
     "print_page_size": "在匯出 PDF 時更改頁面大小。支援的值：<code>A0</code>、<code>A1</code>、<code>A2</code>、<code>A3</code>、<code>A4</code>、<code>A5</code>、<code>A6</code>、<code>Legal</code>、<code>Letter</code>、<code>Tabloid</code>、<code>Ledger</code>。",
-    "color_type": "顏色"
+    "color_type": "顏色",
+    "textarea": "多行文字"
   },
   "attribute_editor": {
     "help_text_body1": "要新增標籤，只需輸入例如 <code>#rock</code> 或者如果您還想新增值，則例如 <code>#year = 2020</code>",
@@ -705,7 +703,8 @@
     "export_as_image": "匯出為圖片",
     "export_as_image_png": "PNG (點陣)",
     "export_as_image_svg": "SVG (向量)",
-    "note_map": "筆記地圖"
+    "note_map": "筆記地圖",
+    "view_ocr_text": "顯示 OCR 文字"
   },
   "onclick_button": {
     "no_click_handler": "按鈕元件'{{componentId}}'沒有定義點擊時的處理方式"
@@ -801,7 +800,10 @@
     "expand_first_level": "展開直接子級",
     "expand_nth_level": "展開 {{depth}} 層",
     "expand_all_levels": "展開所有層級",
-    "hide_child_notes": "隱藏樹中的子筆記"
+    "hide_child_notes": "隱藏樹中的子筆記",
+    "open_all_in_tabs": "全部打開",
+    "open_all_in_tabs_tooltip": "在新分頁中開啟所有結果",
+    "open_all_confirm": "這將在新分頁中開啟 {{count}} 則筆記。要繼續嗎？"
   },
   "edited_notes": {
     "no_edited_notes_found": "今天還沒有編輯過的筆記...",
@@ -855,7 +857,8 @@
     "collapse": "收摺到正常大小",
     "title": "筆記地圖",
     "fix-nodes": "固定節點",
-    "link-distance": "連結距離"
+    "link-distance": "連結距離",
+    "too-many-notes": "此子樹包含 {{count}} 則筆記，已超過筆記地圖中可顯示的 {{max}} 則上限。"
   },
   "note_paths": {
     "title": "筆記路徑",
@@ -1046,7 +1049,6 @@
     "unprotecting-title": "解除保護狀態"
   },
   "relation_map": {
-    "open_in_new_tab": "在新分頁中打開",
     "remove_note": "刪除筆記",
     "edit_title": "編輯標題",
     "rename_note": "重新命名筆記",
@@ -1061,7 +1063,8 @@
     "note_already_in_diagram": "筆記 \"{{title}}\" 已經在圖中。",
     "enter_title_of_new_note": "輸入新筆記的標題",
     "default_new_note_title": "新筆記",
-    "click_on_canvas_to_place_new_note": "點擊畫布以放置新筆記"
+    "click_on_canvas_to_place_new_note": "點擊畫布以放置新筆記",
+    "rename_relation": "重新命名關聯"
   },
   "backend_log": {
     "refresh": "重新整理"
@@ -1196,12 +1199,28 @@
   },
   "images": {
     "images_section_title": "圖片",
-    "download_images_automatically": "自動下載圖片以供離線使用。",
-    "download_images_description": "貼上的 HTML 可能包含線上圖片的引用，Trilium 會找到這些引用並下載圖片，以便它們可以離線使用。",
-    "enable_image_compression": "啟用圖片壓縮",
-    "max_image_dimensions": "圖片的最大寬度 / 高度（超過此限制的圖片將會被縮放）。",
-    "jpeg_quality_description": "JPEG 質量（10 - 最差質量，100 最佳質量，建議為 50 - 85）",
-    "max_image_dimensions_unit": "像素"
+    "download_images_automatically": "自動下載圖片",
+    "download_images_description": "從貼上的 HTML 下載引用的線上圖片以便離線使用。",
+    "enable_image_compression": "圖片壓縮",
+    "max_image_dimensions": "最大圖片尺寸",
+    "jpeg_quality_description": "建議範圍為 50–85。較低的數值可縮小檔案大小，較高的數值則能保留更多細節。",
+    "max_image_dimensions_unit": "像素",
+    "enable_image_compression_description": "在上傳或貼上圖片時壓縮並調整圖片大小。",
+    "max_image_dimensions_description": "超過此尺寸的圖片將會自動調整大小。",
+    "jpeg_quality": "JPEG 品質",
+    "ocr_section_title": "文字擷取（OCR）",
+    "ocr_related_content_languages": "內容語言（用於文字擷取）",
+    "ocr_auto_process": "自動處理新檔案",
+    "ocr_auto_process_description": "自動從新上傳或貼上的檔案中擷取文字。",
+    "ocr_min_confidence": "最低信賴度",
+    "ocr_confidence_description": "僅提取高於此信賴度閾值的文字。較低的閾值雖能包含更多文字，但準確度可能較低。",
+    "batch_ocr_title": "處理現有檔案",
+    "batch_ocr_description": "從筆記中的所有現有圖片、PDF 檔案及 Office 文件中擷取文字。根據檔案數量多寡，此過程可能需要一些時間。",
+    "batch_ocr_start": "開始批次處理",
+    "batch_ocr_starting": "開始批次處理…",
+    "batch_ocr_progress": "正在處理 {{processed}} 個檔案，共 {{total}} 個檔案…",
+    "batch_ocr_completed": "批次處理完成！已處理 {{processed}} 個檔案。",
+    "batch_ocr_error": "批次處理期間發生錯誤：{{error}}"
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "附件清理超時",
@@ -1314,7 +1333,8 @@
     "date-and-time": "日期和時間",
     "path": "路徑",
     "database_backed_up_to": "資料庫已備份至 {{backupFilePath}}",
-    "no_backup_yet": "尚無備份"
+    "no_backup_yet": "尚無備份",
+    "download": "下載"
   },
   "etapi": {
     "title": "ETAPI",
@@ -1379,12 +1399,15 @@
   "spellcheck": {
     "title": "拼寫檢查",
     "description": "這些選項僅適用於桌面版，瀏覽器將使用其原生的拼寫檢查功能。",
-    "enable": "啟用拼寫檢查",
-    "language_code_label": "語言代碼",
-    "language_code_placeholder": "例如 \"en-US\", \"de-AT\"",
-    "multiple_languages_info": "多種語言可以用逗號分隔，例如 \"en-US, de-DE, cs\"。 ",
-    "available_language_codes_label": "可用的語言代碼：",
-    "restart-required": "拼寫檢查選項的更改將在應用重啟後生效。"
+    "enable": "拼寫檢查",
+    "language_code_label": "拼寫檢查語言",
+    "restart-required": "拼寫檢查選項的更改將在應用重啟後生效。",
+    "custom_dictionary_title": "自訂字典",
+    "custom_dictionary_description": "新增至字典的詞彙會同步至您所有的裝置。",
+    "custom_dictionary_edit": "自訂詞彙",
+    "custom_dictionary_edit_description": "編輯拼寫檢查器不應標記的詞彙清單。變更將於重新啟動後生效。",
+    "custom_dictionary_open": "編輯字典",
+    "related_description": "設定拼寫檢查語言及自訂字典。"
   },
   "sync_2": {
     "config_title": "同步設定",
@@ -1400,7 +1423,7 @@
     "test_description": "測試和同步伺服器之間的連接。如果同步伺服器沒有初始化，這會將本地文件同步至同步伺服器上。",
     "test_button": "測試同步",
     "handshake_failed": "同步伺服器握手失敗，錯誤：{{message}}",
-    "timeout_unit": "毫秒"
+    "timeout_description": "在放棄慢速同步連線前應等待多久。若網路不穩定，請延長等待時間。"
   },
   "api_log": {
     "close": "關閉"
@@ -1497,7 +1520,8 @@
     "new-feature": "新增",
     "collections": "集合",
     "ai-chat": "AI 聊天",
-    "spreadsheet": "試算表"
+    "spreadsheet": "試算表",
+    "llm-chat": "AI 對話"
   },
   "protect_note": {
     "toggle-on": "保護筆記",
@@ -1866,7 +1890,7 @@
   },
   "content_language": {
     "title": "內文語言",
-    "description": "選擇一種或多種語言作為唯讀或可編輯文字筆記的可選基本屬性，這將支援拼寫檢查或從右向左之類的功能。"
+    "description": "選擇一種或多種語言作為唯讀或可編輯文字筆記的可選基本屬性，這將支援拼寫檢查、從右向左及文字擷取 (OCR) 等功能。"
   },
   "switch_layout_button": {
     "title_vertical": "將編輯面板移至底部",
@@ -2046,7 +2070,9 @@
     "title": "實驗性選項",
     "disclaimer": "這些選項屬實驗性質，可能導致系統不穩定。請謹慎使用。",
     "new_layout_name": "新版面配置",
-    "new_layout_description": "體驗全新版面配置，呈現更現代的外觀與更佳的使用體驗。在未來版本將進行大幅調整。"
+    "new_layout_description": "體驗全新版面配置，呈現更現代的外觀與更佳的使用體驗。在未來版本將進行大幅調整。",
+    "llm_name": "AI / LLM 對話",
+    "llm_description": "啟用由大語言模型驅動的 AI 聊天側邊欄及 LLM 聊天筆記。"
   },
   "server": {
     "unknown_http_error_title": "與伺服器通訊錯誤",
@@ -2183,5 +2209,167 @@
   },
   "setup_form": {
     "more_info": "了解更多"
+  },
+  "media": {
+    "play": "播放 (空白鍵)",
+    "pause": "暫停 (空白鍵)",
+    "back-10s": "往前 10 秒 (左方向鍵)",
+    "forward-30s": "往後 30 秒",
+    "mute": "靜音 (M)",
+    "unmute": "解除靜音 (M)",
+    "playback-speed": "播放速度",
+    "loop": "循環",
+    "disable-loop": "解除循環",
+    "rotate": "旋轉",
+    "picture-in-picture": "畫中畫",
+    "exit-picture-in-picture": "退出畫中畫",
+    "fullscreen": "全螢幕 (F)",
+    "exit-fullscreen": "退出全螢幕",
+    "unsupported-format": "此檔案格式不支援媒體預覽：\n{{mime}}",
+    "zoom-to-fit": "放大至填滿畫面",
+    "zoom-reset": "重設放大至填滿畫面"
+  },
+  "mermaid": {
+    "placeholder": "請輸入您的美人魚圖表內容，或選用下方其中一個範例圖表。",
+    "sample_diagrams": "範例圖表：",
+    "sample_flowchart": "流程圖",
+    "sample_class": "階層圖",
+    "sample_sequence": "時序圖",
+    "sample_entity_relationship": "實體關係圖",
+    "sample_state": "狀態圖",
+    "sample_mindmap": "心智圖",
+    "sample_architecture": "架構圖",
+    "sample_block": "區塊圖",
+    "sample_c4": "C4 圖",
+    "sample_gantt": "甘特圖",
+    "sample_git": "Git 分支圖",
+    "sample_kanban": "看板圖",
+    "sample_packet": "數據包圖",
+    "sample_pie": "圓餅圖",
+    "sample_quadrant": "象限圖",
+    "sample_radar": "雷達圖",
+    "sample_requirement": "需求圖",
+    "sample_sankey": "桑基圖",
+    "sample_timeline": "時間軸",
+    "sample_treemap": "樹狀圖",
+    "sample_user_journey": "使用者旅程",
+    "sample_xy": "XY 圖表",
+    "sample_venn": "韋恩圖",
+    "sample_ishikawa": "魚骨圖",
+    "sample_treeview": "樹狀視圖",
+    "sample_wardley": "沃德利地圖"
+  },
+  "llm_chat": {
+    "placeholder": "輸入訊息…",
+    "send": "送出",
+    "sending": "正在送出…",
+    "empty_state": "請在下方輸入訊息，開啟對話。",
+    "searching_web": "正在搜尋網頁…",
+    "web_search": "網頁搜尋",
+    "note_tools": "筆記存取",
+    "sources": "來源",
+    "sources_summary": "來自 {{sites}} 個網站的 {{count}} 個來源",
+    "extended_thinking": "延伸思考",
+    "legacy_models": "傳統模型",
+    "thinking": "正在思考…",
+    "thought_process": "思考過程",
+    "tool_calls": "{{count}} 次工具調用",
+    "input": "輸入",
+    "result": "結果",
+    "error": "錯誤",
+    "tool_error": "失敗",
+    "total_tokens": "{{total}} 個詞元",
+    "tokens_detail": "{{prompt}} 提示詞 + {{completion}} 補全",
+    "tokens_used": "{{prompt}} 提示詞 + {{completion}} 補全 = {{total}} 個詞元",
+    "tokens_used_with_cost": "{{prompt}} 提示詞 + {{completion}} 補全 = {{total}} 個詞元（約 ${{cost}}）",
+    "tokens_used_with_model": "{{model}}：{{prompt}} 提示詞 + {{completion}} 補全 = {{total}} 個詞元",
+    "tokens_used_with_model_and_cost": "{{model}}：{{prompt}} 提示詞 + {{completion}} 補全 = {{total}} 個詞元（約 ${{cost}}）",
+    "tokens": "詞元",
+    "context_used": "已使用 {{percentage}}%",
+    "note_context_enabled": "點擊以禁用筆記上下文：{{title}}",
+    "note_context_disabled": "點擊將當前筆記納入上下文",
+    "no_provider_message": "尚未設定任何 AI 服務提供者。請新增一個以開始聊天。",
+    "add_provider": "新增 AI 提供者"
+  },
+  "ocr": {
+    "processing_complete": "OCR 處理已完成。",
+    "processing_failed": "無法啟動 OCR 處理",
+    "text_filtered_low_confidence": "OCR 偵測到的文字信賴度為 {{confidence}}%，但因您的最低閾值設定為 {{threshold}}%，故該結果已被捨棄。",
+    "open_media_settings": "開啟設定",
+    "view_extracted_text": "檢視擷取的文字 (OCR)",
+    "extracted_text": "已擷取的文字 (OCR)",
+    "extracted_text_title": "已擷取的文字 (OCR)",
+    "loading_text": "正在載入 OCR 文字…",
+    "no_text_available": "無 OCR 文字可用",
+    "no_text_explanation": "此筆記尚未經過 OCR 文字擷取處理，或未找到任何文字。",
+    "failed_to_load": "載入 OCR 文字失敗",
+    "process_now": "處理 OCR",
+    "processing": "正在處理…",
+    "processing_started": "OCR 處理已開始。請稍候片刻並重新整理頁面。"
+  },
+  "mind-map": {
+    "addChild": "新增子節點",
+    "addParent": "新增父節點",
+    "addSibling": "新增同級節點",
+    "removeNode": "刪除節點",
+    "focus": "專注模式",
+    "cancelFocus": "退出專注模式",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "link": "連結",
+    "linkBidirectional": "雙向連結",
+    "clickTips": "請點擊目標節點",
+    "summary": "摘要"
+  },
+  "llm": {
+    "settings_title": "AI / LLM",
+    "settings_description": "設定 AI 及大型語言模型整合。",
+    "feature_not_enabled": "請前往「設定」→「進階」→「實驗性功能」啟用 LLM 實驗性功能，即可使用 AI 整合。",
+    "add_provider": "新增提供者",
+    "add_provider_title": "新增 AI 提供者",
+    "configured_providers": "已設定的提供者",
+    "no_providers_configured": "尚未設定任何提供者。",
+    "provider_name": "名稱",
+    "provider_type": "提供者",
+    "actions": "動作",
+    "delete_provider": "刪除",
+    "delete_provider_confirmation": "您確定要刪除提供者 \"{{name}}\" 嗎？",
+    "api_key": "API 金鑰",
+    "api_key_placeholder": "請輸入您的 API 金鑰",
+    "cancel": "取消",
+    "mcp_title": "MCP（模型上下文協定）",
+    "mcp_enabled": "MCP 伺服器",
+    "mcp_enabled_description": "公開一個模型上下文協定 (MCP) 端點，以便人工智慧編程助手（例如 Claude Code、GitHub Copilot）能夠讀取並修改您的筆記。此端點僅限從 localhost 存取。",
+    "mcp_endpoint_title": "端點網址",
+    "mcp_endpoint_description": "將此網址新增至您的 AI 助理的 MCP 設定中",
+    "tools": {
+      "search_notes": "搜尋筆記",
+      "get_note": "取得筆記",
+      "get_note_content": "取得筆記內容",
+      "update_note_content": "更新筆記內容",
+      "append_to_note": "追加至筆記",
+      "create_note": "建立筆記",
+      "get_attributes": "取得屬性",
+      "get_attribute": "取得屬性",
+      "set_attribute": "設定屬性",
+      "delete_attribute": "移除屬性",
+      "get_child_notes": "取得子筆記",
+      "get_subtree": "取得子階層",
+      "load_skill": "載入技能",
+      "web_search": "網頁搜尋",
+      "note_in_parent": "<Note/> 於 <Parent/>",
+      "get_attachment": "取得附件",
+      "get_attachment_content": "讀取附件內容"
+    }
+  },
+  "sidebar_chat": {
+    "title": "AI 對話",
+    "launcher_title": "打開 AI 對話",
+    "new_chat": "開始新對話",
+    "save_chat": "將對話保存至筆記",
+    "empty_state": "開始會話",
+    "history": "對話歷史",
+    "recent_chats": "最近的對話",
+    "no_chats": "無先前的對話記錄"
   }
 }

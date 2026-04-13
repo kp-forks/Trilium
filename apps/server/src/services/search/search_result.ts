@@ -1,12 +1,9 @@
-"use strict";
-
-import beccaService from "../../becca/becca_service.js";
 import becca from "../../becca/becca.js";
-import { 
-    normalizeSearchText, 
-    calculateOptimizedEditDistance, 
-    FUZZY_SEARCH_CONFIG 
-} from "./utils/text_utils.js";
+import beccaService from "../../becca/becca_service.js";
+import {
+    calculateOptimizedEditDistance,
+    FUZZY_SEARCH_CONFIG,
+    normalizeSearchText} from "./utils/text_utils.js";
 
 // Scoring constants for better maintainability
 const SCORE_WEIGHTS = {
@@ -132,13 +129,12 @@ class SearchResult {
         this.score += tokenScore;
     }
 
-
     /**
      * Checks if the query matches as a complete word in the text
      */
     private isWordMatch(text: string, query: string): boolean {
-        return text.includes(` ${query} `) || 
-               text.startsWith(`${query} `) || 
+        return text.includes(` ${query} `) ||
+               text.startsWith(`${query} `) ||
                text.endsWith(` ${query}`);
     }
 
@@ -150,21 +146,21 @@ class SearchResult {
         if (this.fuzzyScore >= SCORE_WEIGHTS.MAX_TOTAL_FUZZY_SCORE) {
             return 0;
         }
-        
+
         const editDistance = calculateOptimizedEditDistance(title, query, FUZZY_SEARCH_CONFIG.MAX_EDIT_DISTANCE);
         const maxLen = Math.max(title.length, query.length);
-        
+
         // Only apply fuzzy matching if the query is reasonably long and edit distance is small
-        if (query.length >= FUZZY_SEARCH_CONFIG.MIN_FUZZY_TOKEN_LENGTH && 
-            editDistance <= FUZZY_SEARCH_CONFIG.MAX_EDIT_DISTANCE && 
+        if (query.length >= FUZZY_SEARCH_CONFIG.MIN_FUZZY_TOKEN_LENGTH &&
+            editDistance <= FUZZY_SEARCH_CONFIG.MAX_EDIT_DISTANCE &&
             editDistance / maxLen <= 0.3) {
             const similarity = 1 - (editDistance / maxLen);
             const baseFuzzyScore = SCORE_WEIGHTS.TITLE_WORD_MATCH * similarity * 0.7; // Reduced weight for fuzzy matches
-            
+
             // Apply cap to ensure fuzzy title matches don't exceed reasonable bounds
             return Math.min(baseFuzzyScore, SCORE_WEIGHTS.MAX_TOTAL_FUZZY_SCORE * 0.3);
         }
-        
+
         return 0;
     }
 

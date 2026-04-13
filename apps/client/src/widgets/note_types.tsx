@@ -12,7 +12,7 @@ import { TypeWidgetProps } from "./type_widgets/type_widget";
  * A `NoteType` altered by the note detail widget, taking into consideration whether the note is editable or not and adding special note types such as an empty one,
  * for protected session or attachment information.
  */
-export type ExtendedNoteType = Exclude<NoteType, "launcher" | "text" | "code"> | "empty" | "readOnlyCode" | "readOnlyText" | "editableText" | "editableCode" | "attachmentDetail" | "attachmentList" |  "protectedSession" | "sqlConsole";
+export type ExtendedNoteType = Exclude<NoteType, "launcher" | "text" | "code" | "llmChat"> | "empty" | "readOnlyCode" | "readOnlyText" | "readOnlyOCRText" | "editableText" | "editableCode" | "attachmentDetail" | "attachmentList" |  "protectedSession" | "sqlConsole" | "llmChat";
 
 export type TypeWidget = ((props: TypeWidgetProps) => VNode | JSX.Element | undefined);
 type NoteTypeView = () => (Promise<{ default: TypeWidget } | TypeWidget> | TypeWidget);
@@ -78,13 +78,18 @@ export const TYPE_MAPPINGS: Record<ExtendedNoteType, NoteTypeMapping> = {
         className: "note-detail-readonly-code",
         printable: true
     },
+    readOnlyOCRText: {
+        view: () => import("./type_widgets/ReadOnlyTextRepresentation"),
+        className: "note-detail-ocr-text",
+        printable: true
+    },
     editableCode: {
         view: async () => (await import("./type_widgets/code/Code")).EditableCode,
         className: "note-detail-code",
         printable: true
     },
     mermaid: {
-        view: () => import("./type_widgets/Mermaid"),
+        view: () => import("./type_widgets/mermaid/Mermaid"),
         className: "note-detail-mermaid",
         printable: true,
         isFullHeight: true
@@ -145,6 +150,12 @@ export const TYPE_MAPPINGS: Record<ExtendedNoteType, NoteTypeMapping> = {
     spreadsheet: {
         view: () => import("./type_widgets/spreadsheet/Spreadsheet"),
         className: "note-detail-spreadsheet",
+        printable: true,
+        isFullHeight: true
+    },
+    llmChat: {
+        view: () => import("./type_widgets/llm_chat/LlmChat"),
+        className: "note-detail-llm-chat",
         printable: true,
         isFullHeight: true
     }

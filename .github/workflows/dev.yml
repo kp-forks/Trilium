@@ -1,9 +1,13 @@
 name: Dev
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - "release/*"
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - "release/*"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,7 +30,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
       - name: Set up node & dependencies
         uses: actions/setup-node@v6
         with:
@@ -74,7 +78,7 @@ jobs:
       - test_dev
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Update build info
@@ -89,7 +93,7 @@ jobs:
           key: ${{ secrets.RELATIVE_CI_CLIENT_KEY }}
       - name: Trigger server build
         run: pnpm run server:build
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - uses: docker/build-push-action@v7
         with:
           context: apps/server
@@ -109,7 +113,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -124,7 +128,7 @@ jobs:
         run: echo "TEST_TAG=${TEST_TAG,,}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and export to Docker
         uses: docker/build-push-action@v7

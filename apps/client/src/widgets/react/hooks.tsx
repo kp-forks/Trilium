@@ -15,6 +15,7 @@ import attributes from "../../services/attributes";
 import froca from "../../services/froca";
 import keyboard_actions from "../../services/keyboard_actions";
 import { ViewScope } from "../../services/link";
+import math from "../../services/math";
 import options, { type OptionValue } from "../../services/options";
 import protected_session_holder from "../../services/protected_session_holder";
 import server from "../../services/server";
@@ -104,7 +105,7 @@ export interface SavedData {
 
 export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, onContentChange, dataSaved, updateInterval }: {
     noteType: NoteType;
-    note: FNote,
+    note: FNote | null | undefined,
     noteContext: NoteContext | null | undefined,
     getData: () => Promise<SavedData | undefined> | SavedData | undefined,
     onContentChange: (newContent: string) => void,
@@ -118,8 +119,8 @@ export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, on
         return async () => {
             const data = await getData();
 
-            // for read only notes
-            if (data === undefined || note.type !== noteType) return;
+            // for read only notes, or if note is not yet available (e.g. lazy creation)
+            if (data === undefined || !note || note.type !== noteType) return;
 
             protected_session_holder.touchProtectedSessionIfNecessary(note);
 
@@ -138,7 +139,7 @@ export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, on
 
     // React to note/blob changes.
     useEffect(() => {
-        if (!blob) return;
+        if (!blob || !note) return;
         noteSavedDataStore.set(note.noteId, blob.content);
         spacedUpdate.allowUpdateWithoutChange(() => onContentChange(blob.content));
     }, [ blob ]);
@@ -825,13 +826,43 @@ export function useWindowSize() {
     return size;
 }
 
+// Workaround for https://github.com/twbs/bootstrap/issues/37474
+// Bootstrap's dispose() sets ALL properties to null. But pending animation callbacks
+// (scheduled via setTimeout) can still fire and crash when accessing null properties.
+// We patch dispose() to set safe placeholder values instead of null.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TooltipProto = Tooltip.prototype as any;
+const originalDispose = TooltipProto.dispose;
+const disposedTooltipPlaceholder = {
+    activeTrigger: {},
+    element: document.createElement("noscript")
+};
+TooltipProto.dispose = function () {
+    originalDispose.call(this);
+    // After disposal, set safe values so pending callbacks don't crash
+    this._activeTrigger = disposedTooltipPlaceholder.activeTrigger;
+    this._element = disposedTooltipPlaceholder.element;
+};
+
 export function useTooltip(elRef: RefObject<HTMLElement>, config: Partial<Tooltip.Options>) {
     useEffect(() => {
         if (!elRef?.current) return;
 
-        const $el = $(elRef.current);
-        $el.tooltip("dispose");
+        const element = elRef.current;
+        const $el = $(element);
+
+        // Dispose any existing tooltip before creating a new one
+        Tooltip.getInstance(element)?.dispose();
         $el.tooltip(config);
+
+        // Capture the tooltip instance now, since elRef.current may be null during cleanup.
+        const tooltip = Tooltip.getInstance(element);
+
+        return () => {
+            if (element.isConnected) {
+                tooltip?.dispose();
+            }
+        };
     }, [ elRef, config ]);
 
     const showTooltip = useCallback(() => {
@@ -866,8 +897,14 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
         const hasTooltip = config?.title || elRef.current?.getAttribute("title");
         if (!elRef?.current || !hasTooltip) return;
 
-        const tooltip = Tooltip.getOrCreateInstance(elRef.current, config);
-        elRef.current.addEventListener("show.bs.tooltip", () => {
+        // Capture element now, since elRef.current may be null during cleanup.
+        const element = elRef.current;
+
+        // Dispose any existing tooltip before creating a new one
+        Tooltip.getInstance(element)?.dispose();
+
+        const tooltip = new Tooltip(element, config);
+        element.addEventListener("show.bs.tooltip", () => {
             // Hide all the other tooltips.
             for (const otherTooltip of tooltips) {
                 if (otherTooltip === tooltip) continue;
@@ -878,12 +915,11 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
 
         return () => {
             tooltips.delete(tooltip);
-            tooltip.dispose();
-            // workaround for https://github.com/twbs/bootstrap/issues/37474
-            (tooltip as any)._activeTrigger = {};
-            (tooltip as any)._element = document.createElement('noscript'); // placeholder with no behavior
+            if (element.isConnected) {
+                tooltip.dispose();
+            }
 
-            // Remove *all* tooltip elements from the DOM
+            // Remove any lingering tooltip popup elements from the DOM.
             document
                 .querySelectorAll('.tooltip')
                 .forEach(t => t.remove());
@@ -1385,7 +1421,7 @@ export function useGetContextDataFrom<K extends keyof NoteContextDataMap>(
 }
 
 export function useColorScheme() {
-    const themeStyle = getThemeStyle();
+    const themeStyle = window.glob.getThemeStyle();
     const defaultValue = themeStyle === "auto" ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) : themeStyle === "dark";
     const [ prefersDark, setPrefersDark ] = useState(defaultValue);
 
@@ -1401,11 +1437,42 @@ export function useColorScheme() {
     return prefersDark ? "dark" : "light";
 }
 
-function getThemeStyle() {
-    const style = window.getComputedStyle(document.body);
-    const themeStyle = style.getPropertyValue("--theme-style");
-    if (style.getPropertyValue("--theme-style-auto") !== "true" && (themeStyle === "light" || themeStyle === "dark")) {
-        return themeStyle as "light" | "dark";
-    }
-    return "auto";
+/**
+ * Renders math equations within elements that have the `.math-tex` class.
+ * Used by sidebar widgets like Table of Contents and Highlights list to display math content.
+ *
+ * @param containerRef - Ref to the container element that may contain math elements
+ * @param deps - Dependencies that trigger re-rendering (e.g., text content)
+ */
+export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unknown[]) {
+    useEffect(() => {
+        if (!containerRef.current) return;
+        const mathElements = containerRef.current.querySelectorAll(".math-tex");
+
+        for (const mathEl of mathElements) {
+            // Skip if already rendered by KaTeX
+            if (mathEl.querySelector(".katex")) continue;
+
+            try {
+                // CKEditor's data format wraps the equation with \(...\) or \[...\]
+                // delimiters. katex.render() expects raw LaTeX without them.
+                const raw = mathEl.textContent?.trim() ?? "";
+                let equation: string;
+                let displayMode = false;
+
+                if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
+                    equation = raw.slice(2, -2);
+                } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
+                    equation = raw.slice(2, -2);
+                    displayMode = true;
+                } else {
+                    equation = raw;
+                }
+
+                math.render(equation, mathEl as HTMLElement, { displayMode });
+            } catch (e) {
+                console.warn("Failed to render math:", e);
+            }
+        }
+    }, deps); // eslint-disable-line react-hooks/exhaustive-deps
 }
