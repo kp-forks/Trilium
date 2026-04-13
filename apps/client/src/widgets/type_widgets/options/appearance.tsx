@@ -92,8 +92,7 @@ export default function AppearanceSettings() {
 
     return (
         <div>
-            {!isMobile() && <LayoutSwitcher />}
-            {!isMobile() && <LayoutOrientation />}
+            {!isMobile() && <LayoutOptions />}
             <ApplicationTheme />
             {overrideThemeFonts === "true" && <Fonts />}
             {isElectron() && <ElectronIntegration /> }
@@ -114,22 +113,35 @@ export default function AppearanceSettings() {
     );
 }
 
-function LayoutSwitcher() {
+function LayoutOptions() {
     const [ newLayout, setNewLayout ] = useTriliumOptionBool("newLayout");
+    const [ layoutOrientation, setLayoutOrientation ] = useTriliumOption("layoutOrientation", true);
 
     return (
         <OptionsSection title={t("settings_appearance.ui")}>
-            <RadioWithIllustration
-                currentValue={newLayout ? "new-layout" : "old-layout"}
-                onChange={async newValue => {
-                    await setNewLayout(newValue === "new-layout");
-                    reloadFrontendApp();
-                }}
-                values={[
-                    { key: "old-layout", text: t("settings_appearance.ui_old_layout"), illustration: <LayoutIllustration /> },
-                    { key: "new-layout", text: t("settings_appearance.ui_new_layout"), illustration: <LayoutIllustration isNewLayout /> }
-                ]}
-            />
+            <OptionsRow name="layout-style" label={t("settings_appearance.ui_layout_style")} stacked>
+                <RadioWithIllustration
+                    currentValue={newLayout ? "new-layout" : "old-layout"}
+                    onChange={async newValue => {
+                        await setNewLayout(newValue === "new-layout");
+                        reloadFrontendApp();
+                    }}
+                    values={[
+                        { key: "old-layout", text: t("settings_appearance.ui_old_layout"), illustration: <LayoutIllustration /> },
+                        { key: "new-layout", text: t("settings_appearance.ui_new_layout"), illustration: <LayoutIllustration isNewLayout /> }
+                    ]}
+                />
+            </OptionsRow>
+            <OptionsRow name="layout-orientation" label={t("settings_appearance.ui_layout_orientation")} stacked>
+                <RadioWithIllustration
+                    currentValue={layoutOrientation ?? "vertical"}
+                    onChange={setLayoutOrientation}
+                    values={[
+                        { key: "vertical", text: t("theme.layout-vertical-title"), illustration: <OrientationIllustration orientation="vertical" /> },
+                        { key: "horizontal", text: t("theme.layout-horizontal-title"), illustration: <OrientationIllustration orientation="horizontal" /> }
+                    ]}
+                />
+            </OptionsRow>
         </OptionsSection>
     );
 }
@@ -249,6 +261,13 @@ function OrientationIllustration({ orientation }: { orientation: "vertical" | "h
     return (
         <div className={`orientation-illustration ${orientation}`}>
             {isHorizontal && (
+                <div className="tab-bar full-width">
+                    <div className="tab active" />
+                    <div className="tab" />
+                    <div className="tab" />
+                </div>
+            )}
+            {isHorizontal && (
                 <div className="launcher-bar horizontal">
                     <Icon icon="bx bx-menu" />
                     <Icon icon="bx bx-send" />
@@ -269,7 +288,13 @@ function OrientationIllustration({ orientation }: { orientation: "vertical" | "h
                     <div className="tree-content" />
                 </div>
                 <div className="content-pane">
-                    <div className="tab-bar" />
+                    {!isHorizontal && (
+                        <div className="tab-bar">
+                            <div className="tab active" />
+                            <div className="tab" />
+                            <div className="tab" />
+                        </div>
+                    )}
                     <div className="note-content" />
                 </div>
             </div>

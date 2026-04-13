@@ -8,6 +8,29 @@
     background: var(--root-background);
     overflow: hidden;
 
+    > .tab-bar.full-width {
+        height: 12px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        padding: 0 4px;
+        background: var(--launcher-pane-background-color);
+
+        .tab {
+            width: 24px;
+            height: 8px;
+            background: var(--main-background-color);
+            border-radius: 4px 4px 0 0;
+            opacity: 0.4;
+
+            &.active {
+                height: 10px;
+                opacity: 1;
+            }
+        }
+    }
+
     .launcher-bar {
         background: var(--launcher-pane-vert-background-color);
         display: flex;
@@ -65,8 +88,25 @@
         flex-direction: column;
 
         .tab-bar {
-            height: 10px;
+            height: 12px;
             flex-shrink: 0;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            padding: 0 4px;
+
+            .tab {
+                width: 24px;
+                height: 8px;
+                background: var(--main-background-color);
+                border-radius: 4px 4px 0 0;
+                opacity: 0.4;
+
+                &.active {
+                    height: 10px;
+                    opacity: 1;
+                }
+            }
         }
 
         .note-content {
