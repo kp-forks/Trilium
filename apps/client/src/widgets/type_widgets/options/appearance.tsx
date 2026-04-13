@@ -12,7 +12,6 @@ import Button from "../../react/Button";
 import Column from "../../react/Column";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
-import FormRadioGroup from "../../react/FormRadioGroup";
 import FormSelect, { FormSelectWithGroups } from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
@@ -232,23 +231,49 @@ function LayoutOrientation() {
 
     return (
         <OptionsSection title={t("theme.layout")}>
-            <FormRadioGroup
-                name="layout-orientation"
+            <RadioWithIllustration
+                currentValue={layoutOrientation ?? "vertical"}
+                onChange={setLayoutOrientation}
                 values={[
-                    {
-                        label: t("theme.layout-vertical-title"),
-                        inlineDescription: t("theme.layout-vertical-description"),
-                        value: "vertical"
-                    },
-                    {
-                        label: t("theme.layout-horizontal-title"),
-                        inlineDescription: t("theme.layout-horizontal-description"),
-                        value: "horizontal"
-                    }
+                    { key: "vertical", text: t("theme.layout-vertical-title"), illustration: <OrientationIllustration orientation="vertical" /> },
+                    { key: "horizontal", text: t("theme.layout-horizontal-title"), illustration: <OrientationIllustration orientation="horizontal" /> }
                 ]}
-                currentValue={layoutOrientation} onChange={setLayoutOrientation}
             />
         </OptionsSection>
+    );
+}
+
+function OrientationIllustration({ orientation }: { orientation: "vertical" | "horizontal" }) {
+    const isHorizontal = orientation === "horizontal";
+
+    return (
+        <div className={`orientation-illustration ${orientation}`}>
+            {isHorizontal && (
+                <div className="launcher-bar horizontal">
+                    <Icon icon="bx bx-menu" />
+                    <Icon icon="bx bx-send" />
+                    <Icon icon="bx bx-file-blank" />
+                    <Icon icon="bx bx-search" />
+                </div>
+            )}
+            <div className="main-area">
+                {!isHorizontal && (
+                    <div className="launcher-bar vertical">
+                        <Icon icon="bx bx-menu" />
+                        <Icon icon="bx bx-send" />
+                        <Icon icon="bx bx-file-blank" />
+                        <Icon icon="bx bx-search" />
+                    </div>
+                )}
+                <div className="tree-pane">
+                    <div className="tree-content" />
+                </div>
+                <div className="content-pane">
+                    <div className="tab-bar" />
+                    <div className="note-content" />
+                </div>
+            </div>
+        </div>
     );
 }
 
