@@ -1429,11 +1429,12 @@
     "formatting-locale-auto": "Based on the application's language"
   },
   "backup": {
+    "title": "Backup",
     "automatic_backup": "Automatic backup",
     "automatic_backup_description": "Trilium can back up the database automatically:",
-    "enable_daily_backup": "Enable daily backup",
-    "enable_weekly_backup": "Enable weekly backup",
-    "enable_monthly_backup": "Enable monthly backup",
+    "enable_daily_backup": "Backup daily",
+    "enable_weekly_backup": "Backup weekly",
+    "enable_monthly_backup": "Backup monthly",
     "backup_recommendation": "It's recommended to keep the backup turned on, but this can make application startup slow with large databases and/or slow storage devices.",
     "backup_now": "Backup now",
     "backup_database_now": "Backup database now",
