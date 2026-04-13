@@ -1,11 +1,10 @@
 import type { ComponentChildren } from "preact";
 import { CSSProperties } from "preact/compat";
-import { openInAppHelpFromUrl } from "../../../../services/utils";
-import ActionButton from "../../../react/ActionButton";
+import HelpButton from "../../../react/HelpButton";
 
 interface OptionsSectionProps {
     title?: ComponentChildren;
-    description?: string;
+    description?: ComponentChildren;
     children: ComponentChildren;
     noCard?: boolean;
     style?: CSSProperties;
@@ -17,13 +16,7 @@ export default function OptionsSection({ title, description, children, noCard, c
     const header = (title || helpUrl) && (
         <div className="options-section-header">
             {title && <h4>{title}</h4>}
-            {helpUrl && (
-                <ActionButton
-                    icon="bx bx-help-circle"
-                    text="Help"
-                    onClick={() => openInAppHelpFromUrl(helpUrl)}
-                />
-            )}
+            {helpUrl && <HelpButton helpPage={helpUrl} />}
         </div>
     );
 

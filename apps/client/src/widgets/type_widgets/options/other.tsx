@@ -191,7 +191,7 @@ function RevisionSettings() {
                     type="number" min={-1}
                     currentValue={revisionSnapshotNumberLimit}
                     unit={t("revisions_snapshot_limit.snapshot_number_limit_unit")}
-                    onChange={value => {
+                    onBlur={value => {
                         const newValue = parseInt(value, 10);
                         if (!isNaN(newValue) && newValue >= -1) {
                             setRevisionSnapshotNumberLimit(newValue);

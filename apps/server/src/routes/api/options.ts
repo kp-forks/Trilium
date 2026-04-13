@@ -181,15 +181,16 @@ function getUserThemes() {
     const ret: UserTheme[] = [];
 
     for (const note of notes) {
+        const title = note.getTitleOrProtected();
         let value = note.getOwnedLabelValue("appTheme");
 
         if (!value) {
-            value = note.title.toLowerCase().replace(/[^a-z0-9]/gi, "-");
+            value = title.toLowerCase().replace(/[^a-z0-9]/gi, "-");
         }
 
         ret.push({
             val: value,
-            title: note.title,
+            title,
             noteId: note.noteId,
             icon: note.getIcon()
         });

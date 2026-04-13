@@ -54,7 +54,7 @@ function Editor({ wordWrapping, setWordWrapping }: EditorProps) {
                     type="number" min={0}
                     unit={t("text_auto_read_only_size.unit")}
                     currentValue={autoReadonlySize}
-                    onChange={setAutoReadonlySize}
+                    onBlur={setAutoReadonlySize}
                 />
             </OptionsRow>
 

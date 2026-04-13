@@ -30,9 +30,9 @@ interface FormSelectProps<T, Q> extends ValueConfig<T, Q> {
 /**
  * Combobox component that takes in any object array as data. Each item of the array is rendered as an item, and the key and values are obtained by looking into the object by a specified key.
  */
-export default function FormSelect<T>({ name, id, onChange, style, className, ...restProps }: FormSelectProps<T, T>) {
+export default function FormSelect<T>({ name, id, onChange, style, className, disabled, ...restProps }: FormSelectProps<T, T>) {
     return (
-        <FormSelectBody name={name} id={id} onChange={onChange} style={style} className={className}>
+        <FormSelectBody name={name} id={id} onChange={onChange} style={style} className={className} disabled={disabled}>
             <FormSelectGroup {...restProps} />
         </FormSelectBody>
     );

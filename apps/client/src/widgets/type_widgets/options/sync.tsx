@@ -1,5 +1,5 @@
 import { SyncTestResponse } from "@triliumnext/commons";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
@@ -19,6 +19,9 @@ export function SyncConfiguration() {
     const [syncProxy, setSyncProxy] = useTriliumOption("syncProxy");
     const [localHost, setLocalHost] = useState(syncServerHost);
     const [localProxy, setLocalProxy] = useState(syncProxy);
+
+    useEffect(() => setLocalHost(syncServerHost), [syncServerHost]);
+    useEffect(() => setLocalProxy(syncProxy), [syncProxy]);
 
     return (
         <OptionsSection helpUrl="cbkrhQjrkKrh">
@@ -53,6 +56,10 @@ export function SyncConfiguration() {
                 label={t("sync_2.test_button")}
                 description={t("sync_2.test_description")}
                 onClick={async () => {
+                    await Promise.all([
+                        setSyncServerHost(localHost),
+                        setSyncProxy(localProxy)
+                    ]);
                     const result = await server.post<SyncTestResponse>("sync/test");
 
                     if (result.success && result.message) {

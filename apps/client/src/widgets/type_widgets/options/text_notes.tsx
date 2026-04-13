@@ -169,7 +169,7 @@ function Editor() {
                     type="number" min={0}
                     unit={t("text_auto_read_only_size.unit")}
                     currentValue={autoReadonlySize}
-                    onChange={setAutoReadonlySize}
+                    onBlur={setAutoReadonlySize}
                 />
             </OptionsRow>
 
@@ -180,7 +180,7 @@ function Editor() {
             >
                 <FormTextBox
                     placeholder="YYYY-MM-DD HH:mm"
-                    currentValue={customDateTimeFormat || "YYYY-MM-DD HH:mm"} onChange={setCustomDateTimeFormat}
+                    currentValue={customDateTimeFormat || "YYYY-MM-DD HH:mm"} onBlur={setCustomDateTimeFormat}
                 />
             </OptionsRow>
         </OptionsSection>
