@@ -327,10 +327,10 @@ function Fonts() {
                 onChange={setOverrideThemeFonts}
             />
 
-            <Font name="main-font" label={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" disabled={!isEnabled} />
-            <Font name="tree-font" label={t("fonts.note_tree_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
-            <Font name="detail-font" label={t("fonts.note_detail_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
-            <Font name="monospace-font" label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} />
+            <Font label={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" disabled={!isEnabled} />
+            <Font label={t("fonts.note_tree_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
+            <Font label={t("fonts.note_detail_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
+            <Font label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} />
 
             <OptionsRowWithButton
                 label={t("fonts.apply_changes")}
@@ -342,7 +342,6 @@ function Fonts() {
 }
 
 interface FontProps {
-    name: string;
     label: string;
     sizeDescription?: string;
     fontFamilyOption: OptionNames;
@@ -350,7 +349,7 @@ interface FontProps {
     disabled?: boolean;
 }
 
-function Font({ name, label, sizeDescription, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
+function Font({ label, sizeDescription, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
     const [ fontFamily, setFontFamily ] = useTriliumOption(fontFamilyOption);
     const [ fontSize, setFontSize ] = useTriliumOption(fontSizeOption);
     const [ showModal, setShowModal ] = useState(false);
@@ -370,31 +369,34 @@ function Font({ name, label, sizeDescription, fontFamilyOption, fontSizeOption, 
     };
 
     return (
-        <OptionsRow name={name} label={label}>
-            <>
-                <button
-                    type="button"
-                    className="btn select-button font-picker-button"
-                    onClick={() => setShowModal(true)}
-                    disabled={disabled}
-                >
-                    <span style={{ fontFamily: getFontFamily(fontFamily ?? "") }}>{displayLabel}</span>
-                    <span style={{ opacity: 0.6 }}>{fontSize}%</span>
-                </button>
+        <>
+            <button
+                type="button"
+                className="option-row option-row-link font-option-row"
+                onClick={() => setShowModal(true)}
+                disabled={disabled}
+            >
+                <div className="option-row-label">
+                    <label style={{ cursor: "pointer" }}>{label}</label>
+                </div>
+                <div className="option-row-input font-option-preview">
+                    <span style={{ fontFamily: getFontFamily(fontFamily ?? ""), fontSize: `${fontSize}%` }}>{displayLabel}</span>
+                    <span className="bx bx-chevron-right" />
+                </div>
+            </button>
 
-                <FontPickerModal
-                    show={showModal}
-                    onHidden={() => setShowModal(false)}
-                    title={label}
-                    fontFamily={fontFamily ?? ""}
-                    fontSize={parseInt(fontSize ?? "100", 10)}
-                    onFontFamilyChange={setFontFamily}
-                    onFontSizeChange={(size) => setFontSize(String(size))}
-                    getFontFamily={getFontFamily}
-                    sizeDescription={sizeDescription}
-                />
-            </>
-        </OptionsRow>
+            <FontPickerModal
+                show={showModal}
+                onHidden={() => setShowModal(false)}
+                title={label}
+                fontFamily={fontFamily ?? ""}
+                fontSize={parseInt(fontSize ?? "100", 10)}
+                onFontFamilyChange={setFontFamily}
+                onFontSizeChange={(size) => setFontSize(String(size))}
+                getFontFamily={getFontFamily}
+                sizeDescription={sizeDescription}
+            />
+        </>
     );
 }
 

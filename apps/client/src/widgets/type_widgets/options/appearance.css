@@ -1,11 +1,16 @@
-/* Font Picker Button */
-.font-picker-button {
+/* Font Option Row */
+.font-option-row {
+    &:disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+}
+
+.font-option-preview {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    width: 100%;
-    text-align: left;
+    gap: 8px;
+    color: var(--muted-text-color);
 }
 
 /* Font Picker Modal */
