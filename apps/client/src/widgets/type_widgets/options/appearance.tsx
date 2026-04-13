@@ -1,6 +1,7 @@
 import "./appearance.css";
 
 import { FontFamily, OptionNames } from "@triliumnext/commons";
+import { Fragment } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
 import zoomService from "../../../components/zoom";
@@ -12,7 +13,9 @@ import Button from "../../react/Button";
 import Column from "../../react/Column";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
-import FormSelect, { FormSelectWithGroups } from "../../react/FormSelect";
+import Dropdown from "../../react/Dropdown";
+import { FormListHeader, FormListItem } from "../../react/FormList";
+import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
@@ -352,10 +355,9 @@ function Font({ name, label, description, fontFamilyOption, fontSizeOption, disa
     return (
         <OptionsRow name={name} label={label} description={description}>
             <div className="font-options">
-                <FormSelectWithGroups
-                    values={FONT_FAMILIES}
-                    currentValue={fontFamily} onChange={setFontFamily}
-                    keyProperty="value" titleProperty="label"
+                <FontPicker
+                    currentValue={fontFamily}
+                    onChange={setFontFamily}
                     disabled={disabled}
                 />
                 <FormTextBoxWithUnit
@@ -367,6 +369,55 @@ function Font({ name, label, description, fontFamilyOption, fontSizeOption, disa
                 />
             </div>
         </OptionsRow>
+    );
+}
+
+interface FontPickerProps {
+    currentValue: string | undefined;
+    onChange: (value: string) => void;
+    disabled?: boolean;
+}
+
+function FontPicker({ currentValue, onChange, disabled }: FontPickerProps) {
+    // Find the current font entry to display in the button
+    const currentFont = FONT_FAMILIES
+        .flatMap(group => group.items)
+        .find(item => item.value === currentValue);
+    const displayLabel = currentFont?.label ?? currentFont?.value ?? currentValue ?? "";
+
+    // Get the CSS font-family value for preview
+    const getFontFamily = (value: string) => {
+        // Generic fonts don't need preview styling
+        if (["theme", "system"].includes(value)) {
+            return undefined;
+        }
+        return value;
+    };
+
+    return (
+        <Dropdown
+            text={<span style={{ fontFamily: getFontFamily(currentValue ?? "") }}>{displayLabel}</span>}
+            disabled={disabled}
+            dropdownContainerClassName="font-picker-dropdown"
+        >
+            {FONT_FAMILIES.map(group => (
+                <Fragment key={group.title}>
+                    <FormListHeader text={group.title} />
+                    {group.items.map(item => (
+                        <FormListItem
+                            key={item.value}
+                            onClick={() => onChange(item.value)}
+                            checked={currentValue === item.value}
+                            selected={currentValue === item.value}
+                        >
+                            <span style={{ fontFamily: getFontFamily(item.value) }}>
+                                {item.label ?? item.value}
+                            </span>
+                        </FormListItem>
+                    ))}
+                </Fragment>
+            ))}
+        </Dropdown>
     );
 }
 

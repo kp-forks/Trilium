@@ -15,6 +15,21 @@
     .tn-number-unit-pair {
         margin-bottom: 0 !important;
     }
+
+    > .dropdown {
+        flex: 1;
+        min-width: 120px;
+
+        > .select-button {
+            width: 100%;
+            text-align: left;
+        }
+    }
+}
+
+.font-picker-dropdown {
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .orientation-illustration {
