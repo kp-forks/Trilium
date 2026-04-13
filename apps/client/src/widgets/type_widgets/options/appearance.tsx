@@ -93,8 +93,7 @@ const FONT_FAMILIES: FontGroup[] = [
 export default function AppearanceSettings() {
     return (
         <div>
-            {!isMobile() && <LayoutOptions />}
-            <ApplicationTheme />
+            <UserInterface />
             <Fonts />
             {isElectron() && <ElectronIntegration /> }
             <Performance />
@@ -114,35 +113,54 @@ export default function AppearanceSettings() {
     );
 }
 
-function LayoutOptions() {
+function UserInterface() {
+    const [ theme, setTheme ] = useTriliumOption("theme", true);
+    const [ themes, setThemes ] = useState<Theme[]>([]);
     const [ newLayout, setNewLayout ] = useTriliumOptionBool("newLayout");
     const [ layoutOrientation, setLayoutOrientation ] = useTriliumOption("layoutOrientation", true);
 
+    useEffect(() => {
+        server.get<Theme[]>("options/user-themes").then((userThemes) => {
+            setThemes([
+                ...BUILTIN_THEMES,
+                ...userThemes
+            ]);
+        });
+    }, []);
+
     return (
-        <OptionsSection title={t("settings_appearance.ui")}>
-            <OptionsRow name="layout-style" label={t("settings_appearance.ui_layout_style")}>
-                <RadioWithIllustration
-                    currentValue={newLayout ? "new-layout" : "old-layout"}
-                    onChange={async newValue => {
-                        await setNewLayout(newValue === "new-layout");
-                        reloadFrontendApp();
-                    }}
-                    values={[
-                        { key: "old-layout", text: t("settings_appearance.ui_old_layout"), illustration: <LayoutIllustration /> },
-                        { key: "new-layout", text: t("settings_appearance.ui_new_layout"), illustration: <LayoutIllustration isNewLayout /> }
-                    ]}
+        <OptionsSection title={t("theme.title")}>
+            <OptionsRow name="theme" label={t("theme.theme_label")}>
+                <FormSelect
+                    values={themes} currentValue={theme} onChange={setTheme}
+                    keyProperty="val" titleProperty="title"
                 />
             </OptionsRow>
-            <OptionsRow name="layout-orientation" label={t("settings_appearance.ui_layout_orientation")}>
-                <RadioWithIllustration
-                    currentValue={layoutOrientation ?? "vertical"}
-                    onChange={setLayoutOrientation}
-                    values={[
-                        { key: "vertical", text: t("theme.layout-vertical-title"), illustration: <OrientationIllustration orientation="vertical" /> },
-                        { key: "horizontal", text: t("theme.layout-horizontal-title"), illustration: <OrientationIllustration orientation="horizontal" /> }
-                    ]}
-                />
-            </OptionsRow>
+            {!isMobile() && <>
+                <OptionsRow name="layout-style" label={t("settings_appearance.ui_layout_style")}>
+                    <RadioWithIllustration
+                        currentValue={newLayout ? "new-layout" : "old-layout"}
+                        onChange={async newValue => {
+                            await setNewLayout(newValue === "new-layout");
+                            reloadFrontendApp();
+                        }}
+                        values={[
+                            { key: "old-layout", text: t("settings_appearance.ui_old_layout"), illustration: <LayoutIllustration /> },
+                            { key: "new-layout", text: t("settings_appearance.ui_new_layout"), illustration: <LayoutIllustration isNewLayout /> }
+                        ]}
+                    />
+                </OptionsRow>
+                <OptionsRow name="layout-orientation" label={t("settings_appearance.ui_layout_orientation")}>
+                    <RadioWithIllustration
+                        currentValue={layoutOrientation ?? "vertical"}
+                        onChange={setLayoutOrientation}
+                        values={[
+                            { key: "vertical", text: t("theme.layout-vertical-title"), illustration: <OrientationIllustration orientation="vertical" /> },
+                            { key: "horizontal", text: t("theme.layout-horizontal-title"), illustration: <OrientationIllustration orientation="horizontal" /> }
+                        ]}
+                    />
+                </OptionsRow>
+            </>}
         </OptionsSection>
     );
 }
@@ -283,31 +301,6 @@ function OrientationIllustration({ orientation }: { orientation: "vertical" | "h
                 </div>
             </div>
         </div>
-    );
-}
-
-function ApplicationTheme() {
-    const [ theme, setTheme ] = useTriliumOption("theme", true);
-    const [ themes, setThemes ] = useState<Theme[]>([]);
-
-    useEffect(() => {
-        server.get<Theme[]>("options/user-themes").then((userThemes) => {
-            setThemes([
-                ...BUILTIN_THEMES,
-                ...userThemes
-            ]);
-        });
-    }, []);
-
-    return (
-        <OptionsSection title={t("theme.title")}>
-            <FormGroup name="theme" label={t("theme.theme_label")} className="col-md-6">
-                <FormSelect
-                    values={themes} currentValue={theme} onChange={setTheme}
-                    keyProperty="val" titleProperty="title"
-                />
-            </FormGroup>
-        </OptionsSection>
     );
 }
 
