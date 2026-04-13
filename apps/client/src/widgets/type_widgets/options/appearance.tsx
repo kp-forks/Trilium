@@ -328,8 +328,8 @@ function Fonts() {
             />
 
             <Font name="main-font" label={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" disabled={!isEnabled} />
-            <Font name="tree-font" label={t("fonts.note_tree_font")} description={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
-            <Font name="detail-font" label={t("fonts.note_detail_font")} description={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
+            <Font name="tree-font" label={t("fonts.note_tree_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
+            <Font name="detail-font" label={t("fonts.note_detail_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
             <Font name="monospace-font" label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} />
 
             <OptionsRowWithButton
@@ -344,13 +344,13 @@ function Fonts() {
 interface FontProps {
     name: string;
     label: string;
-    description?: string;
+    sizeDescription?: string;
     fontFamilyOption: OptionNames;
     fontSizeOption: OptionNames;
     disabled?: boolean;
 }
 
-function Font({ name, label, description, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
+function Font({ name, label, sizeDescription, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
     const [ fontFamily, setFontFamily ] = useTriliumOption(fontFamilyOption);
     const [ fontSize, setFontSize ] = useTriliumOption(fontSizeOption);
     const [ showModal, setShowModal ] = useState(false);
@@ -370,7 +370,7 @@ function Font({ name, label, description, fontFamilyOption, fontSizeOption, disa
     };
 
     return (
-        <OptionsRow name={name} label={label} description={description}>
+        <OptionsRow name={name} label={label}>
             <>
                 <button
                     type="button"
@@ -391,6 +391,7 @@ function Font({ name, label, description, fontFamilyOption, fontSizeOption, disa
                     onFontFamilyChange={setFontFamily}
                     onFontSizeChange={(size) => setFontSize(String(size))}
                     getFontFamily={getFontFamily}
+                    sizeDescription={sizeDescription}
                 />
             </>
         </OptionsRow>
@@ -408,9 +409,10 @@ interface FontPickerModalProps {
     onFontFamilyChange: (value: string) => void;
     onFontSizeChange: (value: number) => void;
     getFontFamily: (value: string) => string | undefined;
+    sizeDescription?: string;
 }
 
-function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFamilyChange, onFontSizeChange, getFontFamily }: FontPickerModalProps) {
+function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFamilyChange, onFontSizeChange, getFontFamily, sizeDescription }: FontPickerModalProps) {
     return createPortal(
         <Modal
             className="font-picker-modal"
@@ -455,6 +457,7 @@ function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFa
                             />
                             <span className="font-size-value">{fontSize}%</span>
                         </div>
+                        {sizeDescription && <small className="font-size-description">{sizeDescription}</small>}
                     </div>
 
                     <div className="font-preview">
