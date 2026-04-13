@@ -2,6 +2,7 @@ import "./appearance.css";
 
 import { FontFamily, OptionNames } from "@triliumnext/commons";
 import { Fragment } from "preact";
+import { createPortal } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 
 import zoomService from "../../../components/zoom";
@@ -410,7 +411,7 @@ interface FontPickerModalProps {
 }
 
 function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFamilyChange, onFontSizeChange, getFontFamily }: FontPickerModalProps) {
-    return (
+    return createPortal(
         <Modal
             className="font-picker-modal"
             title={title}
@@ -470,7 +471,8 @@ function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFa
                     </div>
                 </div>
             </div>
-        </Modal>
+        </Modal>,
+        document.body
     );
 }
 
