@@ -6,8 +6,8 @@ import search from "../../../services/search";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { isElectron } from "../../../services/utils";
+import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
-import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
@@ -64,30 +64,30 @@ function SearchEngineSettings() {
 
     const searchEngines = useMemo(() => {
         return [
-            { url: "https://www.bing.com/search?q={keyword}", name: t("search_engine.bing") },
-            { url: "https://www.baidu.com/s?wd={keyword}", name: t("search_engine.baidu") },
             { url: "https://duckduckgo.com/?q={keyword}", name: t("search_engine.duckduckgo") },
-            { url: "https://www.google.com/search?q={keyword}", name: t("search_engine.google") }
+            { url: "https://www.bing.com/search?q={keyword}", name: t("search_engine.bing"), icon: "bx bxl-bing" },
+            { url: "https://www.baidu.com/s?wd={keyword}", name: t("search_engine.baidu"), icon: "bx bxl-baidu" },
+            { url: "https://www.google.com/search?q={keyword}", name: t("search_engine.google"), icon: "bx bxl-google" }
         ];
     }, []);
 
     return (
         <OptionsSection title={t("search_engine.title")} description={t("search_engine.custom_search_engine_info")}>
-            <OptionsRow name="predefined-search-engine" label={t("search_engine.predefined_templates_label")}>
-                <FormSelect
-                    values={searchEngines}
-                    currentValue={customSearchEngineUrl}
-                    keyProperty="url" titleProperty="name"
-                    onChange={newValue => {
-                        const searchEngine = searchEngines.find(e => e.url === newValue);
-                        if (!searchEngine) {
-                            return;
-                        }
-
-                        setCustomSearchEngineName(searchEngine.name);
-                        setCustomSearchEngineUrl(searchEngine.url);
-                    }}
-                />
+            <OptionsRow name="predefined-templates" label={t("search_engine.predefined_templates_label")}>
+                <div className="search-engine-templates">
+                    {searchEngines.map(engine => (
+                        <Badge
+                            key={engine.url}
+                            icon={engine.icon}
+                            text={engine.name}
+                            className={customSearchEngineUrl === engine.url ? "selected" : ""}
+                            onClick={() => {
+                                setCustomSearchEngineName(engine.name);
+                                setCustomSearchEngineUrl(engine.url);
+                            }}
+                        />
+                    ))}
+                </div>
             </OptionsRow>
 
             <OptionsRow name="custom-name" label={t("search_engine.custom_name_label")}>

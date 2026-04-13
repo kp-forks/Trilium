@@ -1361,7 +1361,7 @@
   "search_engine": {
     "title": "Search Engine",
     "custom_search_engine_info": "Used when searching the web for selected text. If not configured, DuckDuckGo will be used.",
-    "predefined_templates_label": "Predefined templates",
+    "predefined_templates_label": "Presets",
     "bing": "Bing",
     "baidu": "Baidu",
     "duckduckgo": "DuckDuckGo",
