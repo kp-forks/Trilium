@@ -281,7 +281,9 @@ function printTable(title: string, results: BenchmarkResult[]) {
 
 // ── tests ────────────────────────────────────────────────────────────
 
-describe("Comprehensive Search Benchmark", () => {
+// Skipped by default - this is a benchmark, not a test.
+// Remove .skip to run manually for performance analysis.
+describe.skip("Comprehensive Search Benchmark", () => {
 
     afterEach(() => {
         becca.reset();
