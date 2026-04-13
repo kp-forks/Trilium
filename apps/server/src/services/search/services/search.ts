@@ -236,12 +236,6 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
         loadNeededInfoFromDatabase();
     }
 
-    // For autocomplete searches, use the dedicated autocomplete fuzzy option
-    // instead of the global fuzzy setting.
-    if (searchContext.autocomplete) {
-        searchContext.enableFuzzyMatching = optionService.getOptionBool("searchAutocompleteFuzzy");
-    }
-
     // If there's an explicit orderBy clause, skip progressive search
     // as it would interfere with the ordering
     if (searchContext.orderBy) {
@@ -414,6 +408,12 @@ function searchNotes(query: string, params: SearchParams = {}): BNote[] {
 function findResultsWithQuery(query: string, searchContext: SearchContext): SearchResult[] {
     query = query || "";
     searchContext.originalQuery = query;
+
+    // For autocomplete searches, use the dedicated autocomplete fuzzy option
+    // instead of the global fuzzy setting. Do this early so it applies to all code paths.
+    if (searchContext.autocomplete) {
+        searchContext.enableFuzzyMatching = optionService.getOptionBool("searchAutocompleteFuzzy");
+    }
 
     const expression = parseQueryToExpression(query, searchContext);
 
