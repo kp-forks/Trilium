@@ -1,12 +1,10 @@
 import { AnonymizedDbResponse, DatabaseAnonymizeResponse, DatabaseCheckIntegrityResponse } from "@triliumnext/commons";
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 
-import { experimentalFeatures, type ExperimentalFeatureId } from "../../../services/experimental_features";
+import { type ExperimentalFeatureId,experimentalFeatures } from "../../../services/experimental_features";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import Button from "../../react/Button";
-import Column from "../../react/Column";
 import FormText from "../../react/FormText";
 import { useTriliumOptionJson } from "../../react/hooks";
 import { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
@@ -89,7 +87,7 @@ function DatabaseOptions() {
 }
 
 function DatabaseAnonymizationOptions() {
-    const [ existingAnonymizedDatabases, setExistingAnonymizedDatabases ] = useState<AnonymizedDbResponse[]>([]);
+    const [existingAnonymizedDatabases, setExistingAnonymizedDatabases] = useState<AnonymizedDbResponse[]>([]);
 
     function refreshAnonymizedDatabase() {
         server.get<AnonymizedDbResponse[]>("database/anonymized-databases").then(setExistingAnonymizedDatabases);
@@ -99,56 +97,44 @@ function DatabaseAnonymizationOptions() {
 
     return (
         <OptionsSection title={t("database_anonymization.title")}>
-            <FormText>{t("database_anonymization.choose_anonymization")}</FormText>
+            <FormText>{t("database_anonymization.description")}</FormText>
 
-            <div className="row">
-                <DatabaseAnonymizationOption
-                    title={t("database_anonymization.full_anonymization")}
-                    description={t("database_anonymization.full_anonymization_description")}
-                    buttonText={t("database_anonymization.save_fully_anonymized_database")}
-                    buttonClick={async () => {
-                        toast.showMessage(t("database_anonymization.creating_fully_anonymized_database"));
-                        const resp = await server.post<DatabaseAnonymizeResponse>("database/anonymize/full");
+            <OptionsRowWithButton
+                label={t("database_anonymization.full_anonymization")}
+                description={t("database_anonymization.full_anonymization_description")}
+                onClick={async () => {
+                    toast.showMessage(t("database_anonymization.creating_fully_anonymized_database"));
+                    const resp = await server.post<DatabaseAnonymizeResponse>("database/anonymize/full");
 
-                        if (!resp.success) {
-                            toast.showError(t("database_anonymization.error_creating_anonymized_database"));
-                        } else {
-                            toast.showMessage(t("database_anonymization.successfully_created_fully_anonymized_database", { anonymizedFilePath: resp.anonymizedFilePath }), 10000);
-                            refreshAnonymizedDatabase();
-                        }
-                    }}
-                />
-                <DatabaseAnonymizationOption
-                    title={t("database_anonymization.light_anonymization")}
-                    description={t("database_anonymization.light_anonymization_description")}
-                    buttonText={t("database_anonymization.save_lightly_anonymized_database")}
-                    buttonClick={async () => {
-                        toast.showMessage(t("database_anonymization.creating_lightly_anonymized_database"));
-                        const resp = await server.post<DatabaseAnonymizeResponse>("database/anonymize/light");
+                    if (!resp.success) {
+                        toast.showError(t("database_anonymization.error_creating_anonymized_database"));
+                    } else {
+                        toast.showMessage(t("database_anonymization.successfully_created_fully_anonymized_database", { anonymizedFilePath: resp.anonymizedFilePath }), 10000);
+                        refreshAnonymizedDatabase();
+                    }
+                }}
+            />
 
-                        if (!resp.success) {
-                            toast.showError(t("database_anonymization.error_creating_anonymized_database"));
-                        } else {
-                            toast.showMessage(t("database_anonymization.successfully_created_lightly_anonymized_database", { anonymizedFilePath: resp.anonymizedFilePath }), 10000);
-                            refreshAnonymizedDatabase();
-                        }
-                    }}
-                />
-            </div>
+            <OptionsRowWithButton
+                label={t("database_anonymization.light_anonymization")}
+                description={t("database_anonymization.light_anonymization_description")}
+                onClick={async () => {
+                    toast.showMessage(t("database_anonymization.creating_lightly_anonymized_database"));
+                    const resp = await server.post<DatabaseAnonymizeResponse>("database/anonymize/light");
+
+                    if (!resp.success) {
+                        toast.showError(t("database_anonymization.error_creating_anonymized_database"));
+                    } else {
+                        toast.showMessage(t("database_anonymization.successfully_created_lightly_anonymized_database", { anonymizedFilePath: resp.anonymizedFilePath }), 10000);
+                        refreshAnonymizedDatabase();
+                    }
+                }}
+            />
 
             <hr />
+
             <ExistingAnonymizedDatabases databases={existingAnonymizedDatabases} />
         </OptionsSection>
-    );
-}
-
-function DatabaseAnonymizationOption({ title, description, buttonText, buttonClick }: { title: string, description: string, buttonText: string, buttonClick: () => void }) {
-    return (
-        <Column md={6} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginTop: "1em" }}>
-            <h5>{title}</h5>
-            <FormText>{description}</FormText>
-            <Button text={buttonText} onClick={buttonClick} />
-        </Column>
     );
 }
 
