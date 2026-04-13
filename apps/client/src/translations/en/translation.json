@@ -1307,8 +1307,8 @@
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Attachment Erasure Timeout",
     "attachment_auto_deletion_description": "Attachments get automatically deleted (and erased) if they are not referenced by their note anymore after a defined time out.",
-    "erase_attachments_after": "Erase unused attachments after:",
-    "manual_erasing_description": "You can also trigger erasing manually (without considering the timeout defined above):",
+    "erase_attachments_after": "Erase unused attachments after",
+    "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
     "erase_unused_attachments_now": "Erase unused attachment notes now",
     "unused_attachments_erased": "Unused attachments have been erased."
   },
@@ -1319,22 +1319,25 @@
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Note Erasure Timeout",
     "note_erasure_description": "Deleted notes (and attributes, revisions...) are at first only marked as deleted and it is possible to recover them from Recent Notes dialog. After a period of time, deleted notes are \"erased\" which means their content is not recoverable anymore. This setting allows you to configure the length of the period between deleting and erasing the note.",
-    "erase_notes_after": "Erase notes after:",
-    "manual_erasing_description": "You can also trigger erasing manually (without considering the timeout defined above):",
+    "erase_notes_after": "Erase notes after",
+    "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
     "erase_deleted_notes_now": "Erase deleted notes now",
     "deleted_notes_erased": "Deleted notes have been erased."
   },
   "revisions_snapshot_interval": {
     "note_revisions_snapshot_interval_title": "Note Revision Snapshot Interval",
     "note_revisions_snapshot_description": "The Note revision snapshot interval is the time after which a new note revision will be created for the note. See <doc>wiki</doc> for more info.",
-    "snapshot_time_interval_label": "Note revision snapshot time interval:"
+    "note_revisions_snapshot_description_short": "Time after which a new note revision will be created.",
+    "snapshot_time_interval_label": "Snapshot interval"
   },
   "revisions_snapshot_limit": {
     "note_revisions_snapshot_limit_title": "Note Revision Snapshot Limit",
     "note_revisions_snapshot_limit_description": "The note revision snapshot number limit refers to the maximum number of revisions that can be saved for each note. Where -1 means no limit, 0 means delete all revisions. You can set the maximum revisions for a single note through the #versioningLimit label.",
-    "snapshot_number_limit_label": "Note revision snapshot number limit:",
+    "note_revisions_snapshot_limit_description_short": "Max revisions per note. Use -1 for unlimited, 0 to disable.",
+    "snapshot_number_limit_label": "Maximum revisions",
     "snapshot_number_limit_unit": "snapshots",
     "erase_excess_revision_snapshots": "Erase excess revision snapshots now",
+    "erase_excess_revision_snapshots_description": "Delete revisions exceeding the limit for all notes.",
     "erase_excess_revision_snapshots_prompt": "Excess revision snapshots have been erased."
   },
   "search": {

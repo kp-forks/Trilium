@@ -1,7 +1,5 @@
 import { SANITIZER_DEFAULT_ALLOWED_TAGS } from "@triliumnext/commons";
 import { useMemo } from "preact/hooks";
-import type React from "react";
-import { Trans } from "react-i18next";
 
 import { t } from "../../../services/i18n";
 import search from "../../../services/search";
@@ -15,7 +13,7 @@ import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
-import { OptionsRowWithToggle } from "./components/OptionsRow";
+import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import TimeSelector from "./components/TimeSelector";
 
@@ -132,17 +130,16 @@ function TrayOptionsSettings() {
 function NoteErasureTimeout() {
     return (
         <OptionsSection title={t("note_erasure_timeout.note_erasure_timeout_title")}>
-            <FormText>{t("note_erasure_timeout.note_erasure_description")}</FormText>
-            <FormGroup name="erase-entities-after" label={t("note_erasure_timeout.erase_notes_after")}>
+            <OptionsRow name="erase-entities-after" label={t("note_erasure_timeout.erase_notes_after")} description={t("note_erasure_timeout.note_erasure_description")}>
                 <TimeSelector
                     name="erase-entities-after"
                     optionValueId="eraseEntitiesAfterTimeInSeconds" optionTimeScaleId="eraseEntitiesAfterTimeScale"
                 />
-            </FormGroup>
-            <FormText>{t("note_erasure_timeout.manual_erasing_description")}</FormText>
+            </OptionsRow>
 
-            <Button
-                text={t("note_erasure_timeout.erase_deleted_notes_now")}
+            <OptionsRowWithButton
+                label={t("note_erasure_timeout.erase_deleted_notes_now")}
+                description={t("note_erasure_timeout.manual_erasing_description")}
                 onClick={() => {
                     server.post("notes/erase-deleted-notes-now").then(() => {
                         toast.showMessage(t("note_erasure_timeout.deleted_notes_erased"));
@@ -156,17 +153,16 @@ function NoteErasureTimeout() {
 function AttachmentErasureTimeout() {
     return (
         <OptionsSection title={t("attachment_erasure_timeout.attachment_erasure_timeout")}>
-            <FormText>{t("attachment_erasure_timeout.attachment_auto_deletion_description")}</FormText>
-            <FormGroup name="erase-unused-attachments-after" label={t("attachment_erasure_timeout.erase_attachments_after")}>
+            <OptionsRow name="erase-unused-attachments-after" label={t("attachment_erasure_timeout.erase_attachments_after")} description={t("attachment_erasure_timeout.attachment_auto_deletion_description")}>
                 <TimeSelector
                     name="erase-unused-attachments-after"
                     optionValueId="eraseUnusedAttachmentsAfterSeconds" optionTimeScaleId="eraseUnusedAttachmentsAfterTimeScale"
                 />
-            </FormGroup>
-            <FormText>{t("attachment_erasure_timeout.manual_erasing_description")}</FormText>
+            </OptionsRow>
 
-            <Button
-                text={t("attachment_erasure_timeout.erase_unused_attachments_now")}
+            <OptionsRowWithButton
+                label={t("attachment_erasure_timeout.erase_unused_attachments_now")}
+                description={t("attachment_erasure_timeout.manual_erasing_description")}
                 onClick={() => {
                     server.post("notes/erase-unused-attachments-now").then(() => {
                         toast.showMessage(t("attachment_erasure_timeout.unused_attachments_erased"));
@@ -180,19 +176,13 @@ function AttachmentErasureTimeout() {
 function RevisionSnapshotInterval() {
     return (
         <OptionsSection title={t("revisions_snapshot_interval.note_revisions_snapshot_interval_title")}>
-            <FormText>
-                <Trans
-                    i18nKey="revisions_snapshot_interval.note_revisions_snapshot_description"
-                    components={{ doc: <a href="https://triliumnext.github.io/Docs/Wiki/note-revisions.html" class="external" /> as React.ReactElement }}
-                />
-            </FormText>
-            <FormGroup name="revision-snapshot-time-interval" label={t("revisions_snapshot_interval.snapshot_time_interval_label")}>
+            <OptionsRow name="revision-snapshot-time-interval" label={t("revisions_snapshot_interval.snapshot_time_interval_label")} description={t("revisions_snapshot_interval.note_revisions_snapshot_description_short")}>
                 <TimeSelector
                     name="revision-snapshot-time-interval"
                     optionValueId="revisionSnapshotTimeInterval" optionTimeScaleId="revisionSnapshotTimeIntervalTimeScale"
                     minimumSeconds={10}
                 />
-            </FormGroup>
+            </OptionsRow>
         </OptionsSection>
     );
 }
@@ -202,9 +192,7 @@ function RevisionSnapshotLimit() {
 
     return (
         <OptionsSection title={t("revisions_snapshot_limit.note_revisions_snapshot_limit_title")}>
-            <FormText>{t("revisions_snapshot_limit.note_revisions_snapshot_limit_description")}</FormText>
-
-            <FormGroup name="revision-snapshot-number-limit">
+            <OptionsRow name="revision-snapshot-number-limit" label={t("revisions_snapshot_limit.snapshot_number_limit_label")} description={t("revisions_snapshot_limit.note_revisions_snapshot_limit_description_short")}>
                 <FormTextBoxWithUnit
                     type="number" min={-1}
                     currentValue={revisionSnapshotNumberLimit}
@@ -216,10 +204,11 @@ function RevisionSnapshotLimit() {
                         }
                     }}
                 />
-            </FormGroup>
+            </OptionsRow>
 
-            <Button
-                text={t("revisions_snapshot_limit.erase_excess_revision_snapshots")}
+            <OptionsRowWithButton
+                label={t("revisions_snapshot_limit.erase_excess_revision_snapshots")}
+                description={t("revisions_snapshot_limit.erase_excess_revision_snapshots_description")}
                 onClick={async () => {
                     await server.post("revisions/erase-all-excess-revisions");
                     toast.showMessage(t("revisions_snapshot_limit.erase_excess_revision_snapshots_prompt"));

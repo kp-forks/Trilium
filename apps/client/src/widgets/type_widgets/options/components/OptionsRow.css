@@ -38,7 +38,7 @@
     color: var(--muted-text-color);
 }
 
-.option-row:last-of-type {
+.option-row:last-child {
     border-bottom: unset;
 }
 
@@ -78,6 +78,6 @@ button.option-row-link {
     cursor: pointer;
 }
 
-button.option-row-link:last-of-type {
+button.option-row-link:last-child {
     border-bottom: none;
 }
