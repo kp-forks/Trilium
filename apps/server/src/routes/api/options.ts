@@ -100,6 +100,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "backgroundEffects",
     "allowedHtmlTags",
     "searchEnableFuzzyMatching",
+    "searchAutocompleteFuzzy",
     "redirectBareDomain",
     "showLoginInShareTheme",
     "splitEditorOrientation",

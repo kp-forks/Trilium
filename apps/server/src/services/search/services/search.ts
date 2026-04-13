@@ -17,6 +17,7 @@ import type Expression from "../expressions/expression.js";
 import sql from "../../sql.js";
 import scriptService from "../../script.js";
 import protectedSessionService from "../../protected_session.js";
+import optionService from "../../options.js";
 
 export interface SearchNoteResult {
     searchResultNoteIds: string[];
@@ -248,11 +249,11 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
         return performSearch(expression, searchContext, false);
     }
 
-    // For autocomplete searches, skip the expensive two-phase fuzzy fallback.
-    // The user is typing and will refine their query — exact matching is
-    // sufficient and avoids a second full scan of all notes.
+    // For autocomplete searches, use the dedicated autocomplete fuzzy option.
+    // Default is off for faster response; users can enable if they want typo tolerance.
     if (searchContext.autocomplete) {
-        return performSearch(expression, searchContext, false);
+        const autocompleteFuzzy = optionService.getOptionBool("searchAutocompleteFuzzy");
+        return performSearch(expression, searchContext, autocompleteFuzzy);
     }
 
     // Phase 1: Try exact matches first (without fuzzy matching)

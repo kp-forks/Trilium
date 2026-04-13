@@ -39,6 +39,7 @@ export default function OtherSettings() {
 
 function SearchSettings() {
     const [ fuzzyEnabled, setFuzzyEnabled ] = useTriliumOptionBool("searchEnableFuzzyMatching");
+    const [ autocompleteFuzzy, setAutocompleteFuzzy ] = useTriliumOptionBool("searchAutocompleteFuzzy");
 
     return (
         <OptionsSection title={t("search.title")}>
@@ -47,6 +48,12 @@ function SearchSettings() {
                 label={t("search.enable_fuzzy_matching")}
                 currentValue={fuzzyEnabled}
                 onChange={setFuzzyEnabled}
+            />
+            <FormCheckbox
+                name="search-autocomplete-fuzzy"
+                label={t("search.enable_autocomplete_fuzzy")}
+                currentValue={autocompleteFuzzy}
+                onChange={setAutocompleteFuzzy}
             />
         </OptionsSection>
     );

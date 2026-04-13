@@ -236,6 +236,7 @@ const defaultOptions: DefaultOption[] = [
 
     // Search settings
     { name: "searchEnableFuzzyMatching", value: "true", isSynced: true },
+    { name: "searchAutocompleteFuzzy", value: "false", isSynced: true },
 
     // Share settings
     { name: "redirectBareDomain", value: "false", isSynced: true },
