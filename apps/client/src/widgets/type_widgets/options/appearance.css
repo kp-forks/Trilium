@@ -11,6 +11,10 @@
     .input-with-unit {
         width: 100px;
     }
+
+    .tn-number-unit-pair {
+        margin-bottom: 0 !important;
+    }
 }
 
 .orientation-illustration {

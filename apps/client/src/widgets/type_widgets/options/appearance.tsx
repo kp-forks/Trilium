@@ -17,7 +17,7 @@ import FormText from "../../react/FormText";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
-import OptionsRow from "./components/OptionsRow";
+import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import PlatformIndicator from "./components/PlatformIndicator";
 import RadioWithIllustration from "./components/RadioWithIllustration";
@@ -314,23 +314,24 @@ function Fonts() {
 
     return (
         <OptionsSection title={t("fonts.fonts")}>
-            <FormCheckbox
-                label={t("theme.override_theme_fonts_label")}
+            <OptionsRowWithToggle
+                name="override-theme-fonts"
+                label={t("fonts.custom_fonts")}
+                description={t("fonts.not_all_fonts_available")}
                 currentValue={overrideThemeFonts}
                 onChange={setOverrideThemeFonts}
             />
 
             <Font name="main-font" label={t("fonts.main_font")} fontFamilyOption="mainFontFamily" fontSizeOption="mainFontSize" disabled={!isEnabled} />
-            <Font name="tree-font" label={t("fonts.note_tree_font")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
-            <Font name="detail-font" label={t("fonts.note_detail_font")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
+            <Font name="tree-font" label={t("fonts.note_tree_font")} description={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
+            <Font name="detail-font" label={t("fonts.note_detail_font")} description={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
             <Font name="monospace-font" label={t("fonts.monospace_font")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} />
 
-            <FormText>{t("fonts.note_tree_and_detail_font_sizing")}</FormText>
-            <FormText>{t("fonts.not_all_fonts_available")}</FormText>
-
-            <p>
-                {t("fonts.apply_font_changes")} <Button text={t("fonts.reload_frontend")} size="micro" onClick={reloadFrontendApp} />
-            </p>
+            <OptionsRowWithButton
+                label={t("fonts.apply_changes")}
+                icon="bx bx-refresh"
+                onClick={reloadFrontendApp}
+            />
         </OptionsSection>
     );
 }
@@ -338,17 +339,18 @@ function Fonts() {
 interface FontProps {
     name: string;
     label: string;
+    description?: string;
     fontFamilyOption: OptionNames;
     fontSizeOption: OptionNames;
     disabled?: boolean;
 }
 
-function Font({ name, label, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
+function Font({ name, label, description, fontFamilyOption, fontSizeOption, disabled }: FontProps) {
     const [ fontFamily, setFontFamily ] = useTriliumOption(fontFamilyOption);
     const [ fontSize, setFontSize ] = useTriliumOption(fontSizeOption);
 
     return (
-        <OptionsRow name={name} label={label}>
+        <OptionsRow name={name} label={label} description={description}>
             <div className="font-options">
                 <FormSelectWithGroups
                     values={FONT_FAMILIES}
