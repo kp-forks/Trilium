@@ -17,7 +17,7 @@ interface OptionsRowProps {
 
 export default function OptionsRow({ name, label, description, children, centered, stacked }: OptionsRowProps) {
     const id = useUniqueName(name);
-    const childWithId = cloneElement(children, { id });
+    const childWithId = cloneElement(children, { id, name });
 
     const className = `option-row ${centered ? "centered" : ""} ${stacked ? "stacked" : ""}`;
 

@@ -49,7 +49,7 @@ function Editor({ wordWrapping, setWordWrapping }: EditorProps) {
                 onChange={setWordWrapping}
             />
 
-            <OptionsRow name="auto-readonly-size-code" label={t("code_auto_read_only_size.label")} description={t("text_auto_read_only_size.description")}>
+            <OptionsRow name="source-readonly-threshold" label={t("code_auto_read_only_size.label")} description={t("text_auto_read_only_size.description")}>
                 <FormTextBoxWithUnit
                     type="number" min={0}
                     unit={t("text_auto_read_only_size.unit")}
