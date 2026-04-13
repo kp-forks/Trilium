@@ -8,9 +8,6 @@ import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import mime_types from "../../../services/mime_types";
-import Column from "../../react/Column";
-import FormCheckbox from "../../react/FormCheckbox";
-import FormGroup from "../../react/FormGroup";
 import FormSelect from "../../react/FormSelect";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useStaticTooltip, useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
@@ -23,27 +20,33 @@ import codeNoteSample from "./samples/code_note.txt?raw";
 const SAMPLE_MIME = "application/typescript";
 
 export default function CodeNoteSettings() {
+    const [codeLineWrapEnabled, setCodeLineWrapEnabled] = useTriliumOptionBool("codeLineWrapEnabled");
+
     return (
         <>
-            <Editor />
-            <Appearance />
+            <Editor wordWrapping={codeLineWrapEnabled} setWordWrapping={setCodeLineWrapEnabled} />
+            <Appearance wordWrapping={codeLineWrapEnabled} />
             <CodeMimeTypes />
         </>
     );
 }
 
-function Editor() {
+interface EditorProps {
+    wordWrapping: boolean;
+    setWordWrapping: (newValue: boolean) => void;
+}
+
+function Editor({ wordWrapping, setWordWrapping }: EditorProps) {
     const [vimKeymapEnabled, setVimKeymapEnabled] = useTriliumOptionBool("vimKeymapEnabled");
     const [autoReadonlySize, setAutoReadonlySize] = useTriliumOption("autoReadonlySizeCode");
 
     return (
         <OptionsSection title={t("code-editor-options.title")}>
             <OptionsRowWithToggle
-                name="vim-keymap-enabled"
-                label={t("vim_key_bindings.use_vim_keybindings_in_code_notes")}
-                description={t("vim_key_bindings.enable_vim_keybindings")}
-                currentValue={vimKeymapEnabled}
-                onChange={setVimKeymapEnabled}
+                name="word-wrap"
+                label={t("code_theme.word_wrapping")}
+                currentValue={wordWrapping}
+                onChange={setWordWrapping}
             />
 
             <OptionsRow name="auto-readonly-size-code" label={t("code_auto_read_only_size.label")} description={t("text_auto_read_only_size.description")}>
@@ -54,13 +57,24 @@ function Editor() {
                     onChange={setAutoReadonlySize}
                 />
             </OptionsRow>
+
+            <OptionsRowWithToggle
+                name="vim-keymap-enabled"
+                label={t("vim_key_bindings.use_vim_keybindings_in_code_notes")}
+                description={t("vim_key_bindings.enable_vim_keybindings")}
+                currentValue={vimKeymapEnabled}
+                onChange={setVimKeymapEnabled}
+            />
         </OptionsSection>
     );
 }
 
-function Appearance() {
-    const [ codeNoteTheme, setCodeNoteTheme ] = useTriliumOption("codeNoteTheme");
-    const [ codeLineWrapEnabled, setCodeLineWrapEnabled ] = useTriliumOptionBool("codeLineWrapEnabled");
+interface AppearanceProps {
+    wordWrapping: boolean;
+}
+
+function Appearance({ wordWrapping }: AppearanceProps) {
+    const [codeNoteTheme, setCodeNoteTheme] = useTriliumOption("codeNoteTheme");
 
     const themes = useMemo(() => {
         return ColorThemes.map(({ id, name }) => ({
@@ -71,25 +85,15 @@ function Appearance() {
 
     return (
         <OptionsSection title={t("code_theme.title")}>
-            <div className="row" style={{ marginBottom: "15px" }}>
-                <FormGroup name="color-scheme" label={t("code_theme.color-scheme")} className="col-md-6" style={{ marginBottom: 0 }}>
-                    <FormSelect
-                        values={themes}
-                        keyProperty="id" titleProperty="name"
-                        currentValue={codeNoteTheme} onChange={setCodeNoteTheme}
-                    />
-                </FormGroup>
+            <OptionsRow name="color-scheme" label={t("code_theme.color-scheme")}>
+                <FormSelect
+                    values={themes}
+                    keyProperty="id" titleProperty="name"
+                    currentValue={codeNoteTheme} onChange={setCodeNoteTheme}
+                />
+            </OptionsRow>
 
-                <Column className="side-checkbox">
-                    <FormCheckbox
-                        name="word-wrap"
-                        label={t("code_theme.word_wrapping")}
-                        currentValue={codeLineWrapEnabled} onChange={setCodeLineWrapEnabled}
-                    />
-                </Column>
-            </div>
-
-            <CodeNotePreview wordWrapping={codeLineWrapEnabled} themeName={codeNoteTheme} />
+            <CodeNotePreview wordWrapping={wordWrapping} themeName={codeNoteTheme} />
         </OptionsSection>
     );
 }
