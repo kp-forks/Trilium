@@ -1167,8 +1167,13 @@
     "finished-successfully": "Sync finished successfully.",
     "failed": "Sync failed: {{message}}"
   },
+  "database": {
+    "title": "Database"
+  },
   "vacuum_database": {
     "title": "Vacuum Database",
+    "vacuum_label": "Vacuum database",
+    "vacuum_description": "Rebuild the database to reduce file size. No data will be changed.",
     "description": "This will rebuild the database which will typically result in a smaller database file. No data will be actually changed.",
     "button_text": "Vacuum database",
     "vacuuming_database": "Vacuuming database...",

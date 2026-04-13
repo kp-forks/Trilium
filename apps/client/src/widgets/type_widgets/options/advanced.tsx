@@ -15,9 +15,8 @@ import OptionsSection from "./components/OptionsSection";
 export default function AdvancedSettings() {
     return <>
         <AdvancedSyncOptions />
-        <DatabaseIntegrityOptions />
+        <DatabaseOptions />
         <DatabaseAnonymizationOptions />
-        <VacuumDatabaseOptions />
         <ExperimentalOptions />
     </>;
 }
@@ -47,9 +46,9 @@ function AdvancedSyncOptions() {
     );
 }
 
-function DatabaseIntegrityOptions() {
+function DatabaseOptions() {
     return (
-        <OptionsSection title={t("database_integrity_check.title")}>
+        <OptionsSection title={t("database.title")}>
             <OptionsRowWithButton
                 label={t("database_integrity_check.check_integrity_label")}
                 description={t("database_integrity_check.check_integrity_description")}
@@ -73,6 +72,16 @@ function DatabaseIntegrityOptions() {
                     toast.showMessage(t("consistency_checks.finding_and_fixing_message"));
                     await server.post("database/find-and-fix-consistency-issues");
                     toast.showMessage(t("consistency_checks.issues_fixed_message"));
+                }}
+            />
+
+            <OptionsRowWithButton
+                label={t("vacuum_database.vacuum_label")}
+                description={t("vacuum_database.vacuum_description")}
+                onClick={async () => {
+                    toast.showMessage(t("vacuum_database.vacuuming_database"));
+                    await server.post("database/vacuum-database");
+                    toast.showMessage(t("vacuum_database.database_vacuumed"));
                 }}
             />
         </OptionsSection>
@@ -164,22 +173,6 @@ function ExistingAnonymizedDatabases({ databases }: { databases: AnonymizedDbRes
     );
 }
 
-function VacuumDatabaseOptions() {
-    return (
-        <OptionsSection title={t("vacuum_database.title")}>
-            <FormText>{t("vacuum_database.description")}</FormText>
-
-            <Button
-                text={t("vacuum_database.button_text")}
-                onClick={async () => {
-                    toast.showMessage(t("vacuum_database.vacuuming_database"));
-                    await server.post("database/vacuum-database");
-                    toast.showMessage(t("vacuum_database.database_vacuumed"));
-                }}
-            />
-        </OptionsSection>
-    );
-}
 
 function ExperimentalOptions() {
     const [enabledFeatures, setEnabledFeatures] = useTriliumOptionJson<ExperimentalFeatureId[]>("experimentalFeatures", true);
