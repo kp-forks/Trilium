@@ -17,7 +17,7 @@ interface OptionsRowProps {
 
 export default function OptionsRow({ name, label, description, children, centered, stacked }: OptionsRowProps) {
     const id = useUniqueName(name);
-    const childWithId = cloneElement(children, { id, name });
+    const childWithId = cloneElement(children, { id, name: (children.props as { name?: string }).name ?? name });
 
     const className = `option-row ${centered ? "centered" : ""} ${stacked ? "stacked" : ""}`;
 
@@ -92,9 +92,10 @@ export function OptionsRowWithButton({ label, description, icon, onClick }: Opti
             type="button"
             className="option-row option-row-link"
             onClick={onClick}
+            aria-label={label}
         >
             <div className="option-row-label">
-                <label style={{ cursor: "pointer" }}>{label}</label>
+                <span style={{ cursor: "pointer" }}>{label}</span>
                 {description && <small className="option-row-description">{description}</small>}
             </div>
             {icon && (
