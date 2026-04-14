@@ -667,10 +667,6 @@ html .note-detail-editable-text :not(figure, .include-note, hr):first-child {
     white-space: pre;
 }
 
-.ck-content pre code {
-    tab-size: var(--code-block-tab-width, 4);
-}
-
 .code-sample-wrapper .hljs {
     transition: background-color linear 100ms;
 }

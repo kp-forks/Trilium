@@ -2701,3 +2701,7 @@ iframe.print-iframe {
     line-height: 1.4;
     white-space: pre-wrap;
 }
+
+.ck-content pre code {
+    tab-size: var(--code-block-tab-width, 4);
+}
