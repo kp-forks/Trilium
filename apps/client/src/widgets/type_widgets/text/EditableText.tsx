@@ -36,6 +36,7 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
     const [ language ] = useNoteLabel(note, "language");
     const [ textNoteEditorType ] = useTriliumOption("textNoteEditorType");
     const [ codeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
+    const [ codeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
     const isClassicEditor = isMobile() || textNoteEditorType === "ckeditor-classic";
     const initialized = useRef(deferred<void>());
     const spacedUpdate = useEditorSpacedUpdate({
@@ -224,6 +225,7 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
             {note && !!templates && <CKEditorWithWatchdog
                 containerRef={containerRef}
                 className={`note-detail-editable-text-editor use-tn-links ${codeBlockWordWrap ? "word-wrap" : ""}`}
+                style={{ "--code-block-tab-width": codeBlockTabWidth ?? "4" }}
                 tabIndex={300}
                 contentLanguage={language}
                 isClassicEditor={isClassicEditor}

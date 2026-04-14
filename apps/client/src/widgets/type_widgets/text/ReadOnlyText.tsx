@@ -13,7 +13,7 @@ import { applyInlineMermaid, rewriteMermaidDiagramsInContainer } from "../../../
 import { getLocaleById } from "../../../services/i18n";
 import { renderMathInElement } from "../../../services/math";
 import { formatCodeBlocks } from "../../../services/syntax_highlight";
-import { useNoteBlob, useNoteLabel, useTriliumEvent, useTriliumOptionBool } from "../../react/hooks";
+import { useNoteBlob, useNoteLabel, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { RawHtmlBlock } from "../../react/RawHtml";
 import TouchBar, { TouchBarButton, TouchBarSpacer } from "../../react/TouchBar";
 import { TypeWidgetProps } from "../type_widget";
@@ -24,6 +24,7 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
     const blob = useNoteBlob(note);
     const contentRef = useRef<HTMLDivElement>(null);
     const [ codeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
+    const [ codeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
     const { isRtl } = useNoteLanguage(note);
 
     // Apply necessary transforms.
@@ -59,6 +60,7 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
             <RawHtmlBlock
                 containerRef={contentRef}
                 className={clsx("note-detail-readonly-text-content ck-content use-tn-links selectable-text", codeBlockWordWrap && "word-wrap")}
+                style={{ "--code-block-tab-width": codeBlockTabWidth ?? "4" }}
                 tabindex={100}
                 dir={isRtl ? "rtl" : "ltr"}
                 html={blob?.content}

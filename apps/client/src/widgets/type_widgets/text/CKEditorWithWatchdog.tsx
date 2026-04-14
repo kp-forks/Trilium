@@ -20,7 +20,7 @@ export interface CKEditorApi {
     addImage(noteId: string): Promise<void>;
 }
 
-interface CKEditorWithWatchdogProps extends Pick<HTMLProps<HTMLDivElement>, "className" | "tabIndex"> {
+interface CKEditorWithWatchdogProps extends Pick<HTMLProps<HTMLDivElement>, "className" | "tabIndex" | "style"> {
     contentLanguage: string | null | undefined;
     isClassicEditor?: boolean;
     watchdogRef: RefObject<EditorWatchdog>;
@@ -35,7 +35,7 @@ interface CKEditorWithWatchdogProps extends Pick<HTMLProps<HTMLDivElement>, "cla
     containerRef?: RefObject<HTMLDivElement>;
 }
 
-export default function CKEditorWithWatchdog({ containerRef: externalContainerRef, contentLanguage, className, tabIndex, isClassicEditor, watchdogRef: externalWatchdogRef, watchdogConfig, onNotificationWarning, onWatchdogStateChange, onChange, onEditorInitialized, editorApi, templates }: CKEditorWithWatchdogProps) {
+export default function CKEditorWithWatchdog({ containerRef: externalContainerRef, contentLanguage, className, style, tabIndex, isClassicEditor, watchdogRef: externalWatchdogRef, watchdogConfig, onNotificationWarning, onWatchdogStateChange, onChange, onEditorInitialized, editorApi, templates }: CKEditorWithWatchdogProps) {
     const containerRef = useSyncedRef<HTMLDivElement>(externalContainerRef, null);
     const watchdogRef = useRef<EditorWatchdog>(null);
     const [ uiLanguage ] = useTriliumOption("locale");
@@ -232,7 +232,7 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
     }, [ editor, onChange ]);
 
     return (
-        <div ref={containerRef} className={className} tabIndex={tabIndex} />
+        <div ref={containerRef} className={className} style={style} tabIndex={tabIndex} />
     );
 }
 

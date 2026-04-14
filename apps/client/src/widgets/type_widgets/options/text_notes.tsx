@@ -295,7 +295,7 @@ function CodeBlockStyle() {
                 />
             </OptionsRow>
 
-            <CodeBlockPreview theme={codeBlockTheme} wordWrap={codeBlockWordWrap} />
+            <CodeBlockPreview theme={codeBlockTheme} wordWrap={codeBlockWordWrap} tabWidth={codeBlockTabWidth} />
         </OptionsSection>
     );
 }
@@ -317,7 +317,7 @@ function greet(times) {
 }
 `;
 
-function CodeBlockPreview({ theme, wordWrap }: { theme: string, wordWrap: boolean }) {
+function CodeBlockPreview({ theme, wordWrap, tabWidth }: { theme: string, wordWrap: boolean, tabWidth: string }) {
     const [ code, setCode ] = useState<string>(SAMPLE_CODE);
 
     useEffect(() => {
@@ -337,12 +337,11 @@ function CodeBlockPreview({ theme, wordWrap }: { theme: string, wordWrap: boolea
     }, [theme]);
 
     const codeStyle = useMemo<CSSProperties>(() => {
-        if (wordWrap) {
-            return { whiteSpace: "pre-wrap" };
-        }
-        return { whiteSpace: "pre"};
-
-    }, [ wordWrap ]);
+        return {
+            whiteSpace: wordWrap ? "pre-wrap" : "pre",
+            tabSize: tabWidth ?? "4"
+        };
+    }, [ wordWrap, tabWidth ]);
 
     return (
         <div className="note-detail-readonly-text-content ck-content code-sample-wrapper">
