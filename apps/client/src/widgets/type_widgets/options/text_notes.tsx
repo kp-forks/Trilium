@@ -291,7 +291,7 @@ function CodeBlockStyle() {
                     type="number" min={1} max={16} step={1}
                     unit={t("code_block.tab_width_unit")}
                     currentValue={codeBlockTabWidth}
-                    onBlur={setCodeBlockTabWidth}
+                    onChange={setCodeBlockTabWidth}
                 />
             </OptionsRow>
 
