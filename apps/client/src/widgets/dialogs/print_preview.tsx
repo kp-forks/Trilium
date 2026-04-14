@@ -1,10 +1,11 @@
 import { useCallback, useRef, useState } from "preact/hooks";
 
+import FNote from "../../entities/fnote";
 import { t } from "../../services/i18n";
 import toast from "../../services/toast";
 import { dynamicRequire, isElectron } from "../../services/utils";
 import Button, { ButtonGroup } from "../react/Button";
-import { useTriliumEvent } from "../react/hooks";
+import { useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import PdfViewer from "../type_widgets/file/PdfViewer";
 import OptionsRow from "../type_widgets/options/components/OptionsRow";
@@ -12,21 +13,21 @@ import OptionsSection from "../type_widgets/options/components/OptionsSection";
 
 export interface PrintPreviewData {
     pdfBuffer: Uint8Array;
-    title: string;
+    note: FNote;
     notePath: string;
     pageSize: string;
-    landscape: boolean;
 }
 
 export default function PrintPreviewDialog() {
     const [shown, setShown] = useState(false);
     const [pdfUrl, setPdfUrl] = useState<string>();
-    const [landscape, setLandscape] = useState(false);
+    const [note, setNote] = useState<FNote>();
     const [loading, setLoading] = useState(false);
     const bufferRef = useRef<Uint8Array>();
-    const titleRef = useRef("");
     const notePathRef = useRef("");
     const pageSizeRef = useRef("");
+
+    const [landscape, setLandscape] = useNoteLabelBoolean(note, "printLandscape");
 
     const updatePreview = useCallback((buffer: Uint8Array) => {
         bufferRef.current = buffer;
@@ -42,10 +43,9 @@ export default function PrintPreviewDialog() {
     }, [pdfUrl]);
 
     useTriliumEvent("showPrintPreview", (data: PrintPreviewData) => {
-        titleRef.current = data.title;
+        setNote(data.note);
         notePathRef.current = data.notePath;
         pageSizeRef.current = data.pageSize;
-        setLandscape(data.landscape);
         updatePreview(data.pdfBuffer);
         setShown(true);
     });
@@ -65,7 +65,7 @@ export default function PrintPreviewDialog() {
 
         const { ipcRenderer } = dynamicRequire("electron");
         ipcRenderer.send("save-pdf", {
-            title: titleRef.current,
+            title: note?.title ?? "",
             buffer: bufferRef.current
         });
         handleClose();
@@ -91,7 +91,7 @@ export default function PrintPreviewDialog() {
         ipcRenderer.once("export-as-pdf-preview-result", onResult);
 
         ipcRenderer.send("export-as-pdf-preview", {
-            title: titleRef.current,
+            title: note?.title ?? "",
             notePath: notePathRef.current,
             pageSize: pageSizeRef.current,
             landscape: newLandscape

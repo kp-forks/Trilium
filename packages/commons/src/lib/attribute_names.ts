@@ -60,6 +60,9 @@ type Labels = {
     "presentation:theme": string;
     "slide:background": string;
 
+    // Print/export
+    printLandscape: boolean;
+
     // Note-type specific
     webViewSrc: string;
     "disabled:webViewSrc": string;

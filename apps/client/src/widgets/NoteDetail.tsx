@@ -147,9 +147,11 @@ export default function NoteDetail() {
             toast.closePersistent("printing");
             handlePrintReport(printReport);
         };
-        const onPreviewResult = (_e: any, { buffer, title, notePath, pageSize, landscape }: { buffer: Uint8Array; title: string; notePath: string; pageSize: string; landscape: boolean }) => {
+        const onPreviewResult = (_e: any, { buffer, notePath, pageSize }: { buffer: Uint8Array; notePath: string; pageSize: string }) => {
             toast.closePersistent("printing");
-            appContext.triggerCommand("showPrintPreview", { pdfBuffer: buffer, title, notePath, pageSize, landscape });
+            if (note) {
+                appContext.triggerCommand("showPrintPreview", { pdfBuffer: buffer, note, notePath, pageSize });
+            }
         };
         ipcRenderer.on("print-progress", onPrintProgress);
         ipcRenderer.on("print-done", onPrintDone);
@@ -159,7 +161,7 @@ export default function NoteDetail() {
             ipcRenderer.off("print-done", onPrintDone);
             ipcRenderer.off("export-as-pdf-preview-result", onPreviewResult);
         };
-    }, []);
+    }, [note]);
 
     useTriliumEvent("executeInActiveNoteDetailWidget", ({ callback }) => {
         if (!noteContext?.isActive()) return;
