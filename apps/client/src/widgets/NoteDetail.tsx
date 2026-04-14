@@ -228,7 +228,8 @@ export default function NoteDetail() {
             title: note.title,
             notePath: noteContext.notePath,
             pageSize: note.getAttributeValue("label", "printPageSize") ?? "Letter",
-            landscape: note.hasAttribute("label", "printLandscape")
+            landscape: note.hasAttribute("label", "printLandscape"),
+            scale: parseFloat(note.getAttributeValue("label", "printScale") ?? "1") || 1
         });
     });
 

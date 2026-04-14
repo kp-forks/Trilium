@@ -86,6 +86,7 @@ interface ExportAsPdfOpts {
     title: string;
     landscape: boolean;
     pageSize: "A0" | "A1" | "A2" | "A3" | "A4" | "A5" | "A6" | "Legal" | "Letter" | "Tabloid" | "Ledger";
+    scale: number;
 }
 
 electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
@@ -107,7 +108,7 @@ electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
     }
 });
 
-electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize }: ExportAsPdfOpts) => {
+electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize, scale }: ExportAsPdfOpts) => {
     try {
         const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
 
@@ -128,6 +129,7 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
                 buffer = await browserWindow.webContents.printToPDF({
                     landscape,
                     pageSize,
+                    scale,
                     generateDocumentOutline: true,
                     generateTaggedPDF: true,
                     printBackground: true,
@@ -168,7 +170,7 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
     }
 });
 
-electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pageSize }: ExportAsPdfOpts) => {
+electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pageSize, scale }: ExportAsPdfOpts) => {
     try {
         const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
 
@@ -176,6 +178,7 @@ electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pa
             const buffer = await browserWindow.webContents.printToPDF({
                 landscape,
                 pageSize,
+                scale,
                 generateDocumentOutline: true,
                 generateTaggedPDF: true,
                 printBackground: true,

@@ -85,6 +85,7 @@ export default [
 
     { type: "label", name: "printLandscape" },
     { type: "label", name: "printPageSize" },
+    { type: "label", name: "printScale" },
 
     // relation names
     { type: "relation", name: "internalLink" },

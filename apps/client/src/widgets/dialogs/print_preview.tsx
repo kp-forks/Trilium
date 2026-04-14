@@ -7,6 +7,7 @@ import { dynamicRequire, isElectron } from "../../services/utils";
 import Button, { ButtonGroup } from "../react/Button";
 import { useNoteLabelBoolean, useNoteLabelWithDefault, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
+import Slider from "../react/Slider";
 import PdfViewer from "../type_widgets/file/PdfViewer";
 import OptionsRow from "../type_widgets/options/components/OptionsRow";
 import OptionsSection from "../type_widgets/options/components/OptionsSection";
@@ -29,6 +30,8 @@ export default function PrintPreviewDialog() {
 
     const [landscape, setLandscape] = useNoteLabelBoolean(note, "printLandscape");
     const [pageSize, setPageSize] = useNoteLabelWithDefault(note, "printPageSize", "Letter");
+    const [scaleStr, setScaleStr] = useNoteLabelWithDefault(note, "printScale", "1");
+    const scale = parseFloat(scaleStr) || 1;
 
     const updatePreview = useCallback((buffer: Uint8Array) => {
         bufferRef.current = buffer;
@@ -74,16 +77,22 @@ export default function PrintPreviewDialog() {
     function handleOrientationChange(newLandscape: boolean) {
         if (newLandscape === landscape) return;
         setLandscape(newLandscape);
-        regeneratePreview({ landscape: newLandscape, pageSize });
+        regeneratePreview({ landscape: newLandscape, pageSize, scale });
     }
 
     function handlePageSizeChange(newPageSize: string) {
         if (newPageSize === pageSize) return;
         setPageSize(newPageSize);
-        regeneratePreview({ landscape, pageSize: newPageSize });
+        regeneratePreview({ landscape, pageSize: newPageSize, scale });
     }
 
-    function regeneratePreview(opts: { landscape: boolean; pageSize: string }) {
+    function handleScaleChange(newScale: number) {
+        const clamped = Math.min(2, Math.max(0.1, Math.round(newScale * 10) / 10));
+        setScaleStr(String(clamped));
+        regeneratePreview({ landscape, pageSize, scale: clamped });
+    }
+
+    function regeneratePreview(opts: { landscape: boolean; pageSize: string; scale: number }) {
         if (!isElectron()) return;
 
         setLoading(true);
@@ -98,7 +107,8 @@ export default function PrintPreviewDialog() {
         ipcRenderer.send("export-as-pdf-preview", {
             notePath: notePathRef.current,
             pageSize: opts.pageSize,
-            landscape: opts.landscape
+            landscape: opts.landscape,
+            scale: opts.scale
         });
     }
 
@@ -151,6 +161,16 @@ export default function PrintPreviewDialog() {
                                 <option key={size} value={size}>{size}</option>
                             ))}
                         </select>
+                    </OptionsRow>
+
+                    <OptionsRow name="scale" label={t("print_preview.scale")} description={`${Math.round(scale * 100)}%`}>
+                        <Slider
+                            value={scale}
+                            min={0.1}
+                            max={2}
+                            step={0.1}
+                            onChange={handleScaleChange}
+                        />
                     </OptionsRow>
                 </OptionsSection>
             </div>

@@ -454,6 +454,7 @@
     "and_more": "... and {{count}} more.",
     "print_landscape": "When exporting to PDF, changes the orientation of the page to landscape instead of portrait.",
     "print_page_size": "When exporting to PDF, changes the size of the page. Supported values: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
+    "print_scale": "When exporting to PDF, changes the scale of the rendered content. Values range from 0.1 (10%) to 2 (200%), default is 1 (100%).",
     "color_type": "Color"
   },
   "attribute_editor": {
@@ -2314,7 +2315,8 @@
     "orientation": "Orientation",
     "portrait": "Portrait",
     "landscape": "Landscape",
-    "page_size": "Page size"
+    "page_size": "Page size",
+    "scale": "Scale"
   },
   "pdf": {
     "attachments_one": "{{count}} attachment",
