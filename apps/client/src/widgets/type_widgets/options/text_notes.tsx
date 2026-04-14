@@ -313,9 +313,9 @@ greet(n); // Print "Hello World" for n times
  * @param {number} times    The number of times to print the \`Hello World!\` message.
  */
 function greet(times) {
-  for (let i = 0; i++; i < times) {
-    console.log("Hello World!");
-  }
+\tfor (let i = 0; i++; i < times) {
+\t\tconsole.log("Hello World!");
+\t}
 }
 `;
 

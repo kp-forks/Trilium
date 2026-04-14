@@ -139,7 +139,10 @@ function CodeNotePreview({ themeName, wordWrapping, indentSize }: { themeName: s
     }, [ wordWrapping ]);
 
     useEffect(() => {
-        editorRef.current?.setIndentSize(indentSize);
+        const editor = editorRef.current;
+        if (!editor) return;
+        editor.setIndentSize(indentSize);
+        editor.setText(reindentSample(codeNoteSample, indentSize));
     }, [ indentSize ]);
 
     useEffect(() => {
@@ -158,6 +161,15 @@ function CodeNotePreview({ themeName, wordWrapping, indentSize }: { themeName: s
             style={{ margin: 0, height: "200px" }}
         />
     );
+}
+
+const SAMPLE_BASE_INDENT = 4;
+
+function reindentSample(sample: string, indentSize: number): string {
+    return sample.replace(/^( +)/gm, (match) => {
+        const level = match.length / SAMPLE_BASE_INDENT;
+        return " ".repeat(Math.round(level) * indentSize);
+    });
 }
 
 function CodeMimeTypes() {
