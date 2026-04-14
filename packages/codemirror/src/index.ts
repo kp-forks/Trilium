@@ -34,6 +34,8 @@ export interface EditorConfig {
     /** Disables some of the nice-to-have features (bracket matching, syntax highlighting, indentation markers) in order to improve performance. */
     preferPerformance?: boolean;
     tabIndex?: number;
+    /** The number of spaces used for indentation. Defaults to 4. */
+    indentSize?: number;
     onContentChanged?: ContentChangedListener;
 }
 
@@ -44,6 +46,7 @@ export default class CodeMirror extends EditorView {
     private historyCompartment: Compartment;
     private themeCompartment: Compartment;
     private lineWrappingCompartment: Compartment;
+    private indentUnitCompartment: Compartment;
     private searchHighlightCompartment: Compartment;
     private searchPlugin?: SearchHighlighter | null;
 
@@ -52,6 +55,7 @@ export default class CodeMirror extends EditorView {
         const historyCompartment = new Compartment();
         const themeCompartment = new Compartment();
         const lineWrappingCompartment = new Compartment();
+        const indentUnitCompartment = new Compartment();
         const searchHighlightCompartment = new Compartment();
 
         let extensions: Extension[] = [];
@@ -68,7 +72,7 @@ export default class CodeMirror extends EditorView {
             searchHighlightCompartment.of([]),
             highlightActiveLine(),
             lineNumbers(),
-            indentUnit.of(" ".repeat(4)),
+            indentUnitCompartment.of(indentUnit.of(" ".repeat(config.indentSize ?? 4))),
             keymap.of([
                 ...preventCtrlEnterKeymap,
                 ...defaultKeymap,
@@ -121,6 +125,7 @@ export default class CodeMirror extends EditorView {
         this.historyCompartment = historyCompartment;
         this.themeCompartment = themeCompartment;
         this.lineWrappingCompartment = lineWrappingCompartment;
+        this.indentUnitCompartment = indentUnitCompartment;
         this.searchHighlightCompartment = searchHighlightCompartment;
     }
 
@@ -165,6 +170,12 @@ export default class CodeMirror extends EditorView {
     setLineWrapping(wrapping: boolean) {
         this.dispatch({
             effects: [ this.lineWrappingCompartment.reconfigure(wrapping ? EditorView.lineWrapping : []) ]
+        });
+    }
+
+    setIndentSize(size: number) {
+        this.dispatch({
+            effects: [ this.indentUnitCompartment.reconfigure(indentUnit.of(" ".repeat(size))) ]
         });
     }
 

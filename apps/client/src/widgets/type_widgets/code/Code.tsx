@@ -146,6 +146,7 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
     const initialized = useRef($.Deferred());
     const [ codeLineWrapEnabled ] = useTriliumOptionBool("codeLineWrapEnabled");
     const [ codeNoteTheme ] = useTriliumOption("codeNoteTheme");
+    const [ codeNoteTabWidth ] = useTriliumOption("codeNoteTabWidth");
 
     // React to background color.
     const [ backgroundColor, setBackgroundColor ] = useState<string>();
@@ -200,6 +201,7 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
         editorRef={codeEditorRef}
         containerRef={containerRef}
         lineWrapping={lineWrapping ?? codeLineWrapEnabled}
+        indentSize={parseInt(codeNoteTabWidth) || 4}
         onInitialized={() => {
             if (externalContainerRef && containerRef.current) {
                 externalContainerRef.current = containerRef.current;

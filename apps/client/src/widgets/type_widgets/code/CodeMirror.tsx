@@ -49,6 +49,13 @@ export default function CodeMirror({ className, content, mime, editorRef: extern
     // React to line wrapping.
     useEffect(() => codeEditorRef.current?.setLineWrapping(!!lineWrapping), [ lineWrapping ]);
 
+    // React to indent size changes.
+    useEffect(() => {
+        if (extraOpts.indentSize != null) {
+            codeEditorRef.current?.setIndentSize(extraOpts.indentSize);
+        }
+    }, [ extraOpts.indentSize ]);
+
     return (
         <pre ref={parentRef} className={className} />
     )

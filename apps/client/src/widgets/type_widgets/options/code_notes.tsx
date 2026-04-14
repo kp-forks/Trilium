@@ -21,11 +21,12 @@ const SAMPLE_MIME = "application/typescript";
 
 export default function CodeNoteSettings() {
     const [codeLineWrapEnabled, setCodeLineWrapEnabled] = useTriliumOptionBool("codeLineWrapEnabled");
+    const [codeNoteTabWidth] = useTriliumOption("codeNoteTabWidth");
 
     return (
         <>
             <Editor wordWrapping={codeLineWrapEnabled} setWordWrapping={setCodeLineWrapEnabled} />
-            <Appearance wordWrapping={codeLineWrapEnabled} />
+            <Appearance wordWrapping={codeLineWrapEnabled} indentSize={parseInt(codeNoteTabWidth) || 4} />
             <CodeMimeTypes />
         </>
     );
@@ -39,6 +40,7 @@ interface EditorProps {
 function Editor({ wordWrapping, setWordWrapping }: EditorProps) {
     const [vimKeymapEnabled, setVimKeymapEnabled] = useTriliumOptionBool("vimKeymapEnabled");
     const [autoReadonlySize, setAutoReadonlySize] = useTriliumOption("autoReadonlySizeCode");
+    const [codeNoteTabWidth, setCodeNoteTabWidth] = useTriliumOption("codeNoteTabWidth");
 
     return (
         <OptionsSection title={t("code-editor-options.title")}>
@@ -48,6 +50,17 @@ function Editor({ wordWrapping, setWordWrapping }: EditorProps) {
                 currentValue={wordWrapping}
                 onChange={setWordWrapping}
             />
+
+            {/* Avoid using "code" in the name of numeric inputs to prevent KeepassXC from triggering. */}
+            <OptionsRow name="editor-tab-width" label={t("code-editor-options.tab_width")}>
+                <FormTextBoxWithUnit
+                    type="number" min={1} max={16} step={1}
+                    unit={t("code-editor-options.tab_width_unit")}
+                    currentValue={codeNoteTabWidth}
+                    onChange={setCodeNoteTabWidth}
+                    onBlur={setCodeNoteTabWidth}
+                />
+            </OptionsRow>
 
             <OptionsRow name="source-readonly-threshold" label={t("code_auto_read_only_size.label")} description={t("text_auto_read_only_size.description")}>
                 <FormTextBoxWithUnit
@@ -71,9 +84,10 @@ function Editor({ wordWrapping, setWordWrapping }: EditorProps) {
 
 interface AppearanceProps {
     wordWrapping: boolean;
+    indentSize: number;
 }
 
-function Appearance({ wordWrapping }: AppearanceProps) {
+function Appearance({ wordWrapping, indentSize }: AppearanceProps) {
     const [codeNoteTheme, setCodeNoteTheme] = useTriliumOption("codeNoteTheme");
 
     const themes = useMemo(() => {
@@ -93,12 +107,12 @@ function Appearance({ wordWrapping }: AppearanceProps) {
                 />
             </OptionsRow>
 
-            <CodeNotePreview wordWrapping={wordWrapping} themeName={codeNoteTheme} />
+            <CodeNotePreview wordWrapping={wordWrapping} themeName={codeNoteTheme} indentSize={indentSize} />
         </OptionsSection>
     );
 }
 
-function CodeNotePreview({ themeName, wordWrapping }: { themeName: string, wordWrapping: boolean }) {
+function CodeNotePreview({ themeName, wordWrapping, indentSize }: { themeName: string, wordWrapping: boolean, indentSize: number }) {
     const editorRef = useRef<CodeMirror>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -123,6 +137,10 @@ function CodeNotePreview({ themeName, wordWrapping }: { themeName: string, wordW
     useEffect(() => {
         editorRef.current?.setLineWrapping(wordWrapping);
     }, [ wordWrapping ]);
+
+    useEffect(() => {
+        editorRef.current?.setIndentSize(indentSize);
+    }, [ indentSize ]);
 
     useEffect(() => {
         if (themeName?.startsWith(DEFAULT_PREFIX)) {

@@ -286,12 +286,14 @@ function CodeBlockStyle() {
                 onChange={setCodeBlockWordWrap}
             />
 
-            <OptionsRow name="code-block-tab-width" label={t("code_block.tab_width")}>
+            {/* Avoid using "code" in the name of numeric inputs to prevent KeepassXC from triggering. */}
+            <OptionsRow name="block-tab-width" label={t("code_block.tab_width")}>
                 <FormTextBoxWithUnit
                     type="number" min={1} max={16} step={1}
                     unit={t("code_block.tab_width_unit")}
                     currentValue={codeBlockTabWidth}
                     onChange={setCodeBlockTabWidth}
+                    onBlur={setCodeBlockTabWidth}
                 />
             </OptionsRow>
 
@@ -336,7 +338,7 @@ function CodeBlockPreview({ theme, wordWrap, tabWidth }: { theme: string, wordWr
         }
     }, [theme]);
 
-    const codeStyle = useMemo<CSSProperties>(() => {
+    const codeStyle: CSSProperties = useMemo(() => {
         return {
             whiteSpace: wordWrap ? "pre-wrap" : "pre",
             tabSize: tabWidth ?? "4"
@@ -416,4 +418,3 @@ export function HighlightsListOptions() {
         </>
     );
 }
-

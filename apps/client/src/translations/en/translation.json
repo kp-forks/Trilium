@@ -1268,7 +1268,9 @@
     "unit": "characters"
   },
   "code-editor-options": {
-    "title": "Editor"
+    "title": "Editor",
+    "tab_width": "Tab width",
+    "tab_width_unit": "spaces"
   },
   "code_mime_types": {
     "title": "Available MIME types in the dropdown",
