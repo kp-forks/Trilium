@@ -2309,6 +2309,8 @@
     "title": "Print preview",
     "close": "Close",
     "save": "Save as PDF",
+    "orientation": "Orientation",
+    "portrait": "Portrait",
     "landscape": "Landscape"
   },
   "pdf": {

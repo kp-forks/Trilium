@@ -3,11 +3,11 @@ import { useCallback, useRef, useState } from "preact/hooks";
 import { t } from "../../services/i18n";
 import toast from "../../services/toast";
 import { dynamicRequire, isElectron } from "../../services/utils";
-import Button from "../react/Button";
+import Button, { ButtonGroup } from "../react/Button";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import PdfViewer from "../type_widgets/file/PdfViewer";
-import { OptionsRowWithToggle } from "../type_widgets/options/components/OptionsRow";
+import OptionsRow from "../type_widgets/options/components/OptionsRow";
 import OptionsSection from "../type_widgets/options/components/OptionsSection";
 
 export interface PrintPreviewData {
@@ -71,9 +71,10 @@ export default function PrintPreviewDialog() {
         handleClose();
     }
 
-    function handleLandscapeToggle(newValue: boolean) {
-        setLandscape(newValue);
-        regeneratePreview(newValue);
+    function handleOrientationChange(newLandscape: boolean) {
+        if (newLandscape === landscape) return;
+        setLandscape(newLandscape);
+        regeneratePreview(newLandscape);
     }
 
     function regeneratePreview(newLandscape: boolean) {
@@ -114,13 +115,26 @@ export default function PrintPreviewDialog() {
         >
             <div style={{ padding: "16px", minWidth: "250px", overflowY: "auto" }}>
                 <OptionsSection>
-                    <OptionsRowWithToggle
-                        name="printLandscape"
-                        label={t("print_preview.landscape")}
-                        currentValue={landscape}
-                        onChange={handleLandscapeToggle}
-                        disabled={loading}
-                    />
+                    <OptionsRow name="orientation" label={t("print_preview.orientation")}>
+                        <ButtonGroup>
+                            <Button
+                                text={t("print_preview.portrait")}
+                                icon="bx-rectangle bx-rotate-90"
+                                className={!landscape ? "active" : ""}
+                                onClick={() => handleOrientationChange(false)}
+                                disabled={loading}
+                                size="small"
+                            />
+                            <Button
+                                text={t("print_preview.landscape")}
+                                icon="bx-rectangle"
+                                className={landscape ? "active" : ""}
+                                onClick={() => handleOrientationChange(true)}
+                                disabled={loading}
+                                size="small"
+                            />
+                        </ButtonGroup>
+                    </OptionsRow>
                 </OptionsSection>
             </div>
 
