@@ -69,6 +69,7 @@ type Labels = {
     webViewSrc: string;
     "disabled:webViewSrc": string;
     readOnly: boolean;
+    tabWidth: number;
     mapType: string;
     mapRootNoteId: string;
 
