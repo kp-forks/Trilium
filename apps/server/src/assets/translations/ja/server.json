@@ -458,5 +458,8 @@
   },
   "script": {
     "wrong-environment": "ノート \"{{- noteTitle}}\" ({{- noteId}}) を実行できません。これは {{- actualEnv}} スクリプトですが、{{- expectedEnv}} で実行しようとしました。"
+  },
+  "password": {
+    "incorrect": "入力されたパスワードが間違っています。"
   }
 }
