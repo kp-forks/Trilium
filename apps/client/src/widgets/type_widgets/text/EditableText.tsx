@@ -220,12 +220,15 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
 
     const onWatchdogStateChange = useWatchdogCrashHandling();
 
+    useEffect(() => {
+        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth ?? "4");
+    }, [codeBlockTabWidth]);
+
     return (
         <>
             {note && !!templates && <CKEditorWithWatchdog
                 containerRef={containerRef}
                 className={`note-detail-editable-text-editor use-tn-links ${codeBlockWordWrap ? "word-wrap" : ""}`}
-                style={{ "--code-block-tab-width": codeBlockTabWidth ?? "4" }}
                 tabIndex={300}
                 contentLanguage={language}
                 isClassicEditor={isClassicEditor}

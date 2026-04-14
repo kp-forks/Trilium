@@ -27,6 +27,10 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
     const [ codeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
     const { isRtl } = useNoteLanguage(note);
 
+    useEffect(() => {
+        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth ?? "4");
+    }, [codeBlockTabWidth]);
+
     // Apply necessary transforms.
     useEffect(() => {
         const container = contentRef.current;
@@ -60,7 +64,6 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
             <RawHtmlBlock
                 containerRef={contentRef}
                 className={clsx("note-detail-readonly-text-content ck-content use-tn-links selectable-text", codeBlockWordWrap && "word-wrap")}
-                style={{ "--code-block-tab-width": codeBlockTabWidth ?? "4" }}
                 tabindex={100}
                 dir={isRtl ? "rtl" : "ltr"}
                 html={blob?.content}
