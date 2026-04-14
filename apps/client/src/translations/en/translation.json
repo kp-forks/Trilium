@@ -2305,6 +2305,11 @@
     "toggle": "Toggle right panel",
     "custom_widget_go_to_source": "Go to source code"
   },
+  "print_preview": {
+    "title": "Print preview",
+    "close": "Close",
+    "save": "Save as PDF"
+  },
   "pdf": {
     "attachments_one": "{{count}} attachment",
     "attachments_other": "{{count}} attachments",

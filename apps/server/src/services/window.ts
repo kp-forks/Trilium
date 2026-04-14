@@ -168,6 +168,66 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
     }
 });
 
+electron.ipcMain.on("export-as-pdf-preview", async (e, { title, notePath, landscape, pageSize }: ExportAsPdfOpts) => {
+    try {
+        const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
+
+        try {
+            const buffer = await browserWindow.webContents.printToPDF({
+                landscape,
+                pageSize,
+                generateDocumentOutline: true,
+                generateTaggedPDF: true,
+                printBackground: true,
+                displayHeaderFooter: true,
+                headerTemplate: `<div></div>`,
+                footerTemplate: `
+                    <div class="pageNumber" style="width: 100%; text-align: center; font-size: 10pt;">
+                    </div>
+                `
+            });
+
+            e.sender.send("export-as-pdf-preview-result", { buffer, title });
+        } catch (_e) {
+            electron.dialog.showErrorBox(t("pdf.unable-to-export-title"), t("pdf.unable-to-export-message"));
+        } finally {
+            e.sender.send("print-done", printReport);
+            browserWindow.destroy();
+        }
+    } catch (err) {
+        e.sender.send("print-done", {
+            type: "error",
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined
+        });
+    }
+});
+
+electron.ipcMain.on("save-pdf", async (_e, { title, buffer }: { title: string; buffer: Buffer }) => {
+    const focusedWindow = electron.BrowserWindow.getFocusedWindow();
+    if (!focusedWindow) return;
+
+    const filePath = electron.dialog.showSaveDialogSync(focusedWindow, {
+        defaultPath: formatDownloadTitle(title, "file", "application/pdf"),
+        filters: [
+            {
+                name: t("pdf.export_filter"),
+                extensions: ["pdf"]
+            }
+        ]
+    });
+    if (!filePath) return;
+
+    try {
+        await fs.writeFile(filePath, Buffer.from(buffer));
+    } catch (_e) {
+        electron.dialog.showErrorBox(t("pdf.unable-to-export-title"), t("pdf.unable-to-save-message"));
+        return;
+    }
+
+    electron.shell.openPath(filePath);
+});
+
 async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, action: "printing" | "exporting_pdf") {
     // Offscreen rendering crashes on Wayland due to a Chromium bug where the OSR surface
     // lacks a valid xdg_toplevel role, causing a fatal zxdg_exporter_v2 protocol error.

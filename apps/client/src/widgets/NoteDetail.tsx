@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { isValidElement, VNode } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
+import appContext from "../components/app_context";
 import NoteContext from "../components/note_context";
 import FNote from "../entities/fnote";
 import type { PrintReport } from "../print";
@@ -146,11 +147,17 @@ export default function NoteDetail() {
             toast.closePersistent("printing");
             handlePrintReport(printReport);
         };
+        const onPreviewResult = (_e: any, { buffer, title }: { buffer: Uint8Array; title: string }) => {
+            toast.closePersistent("printing");
+            appContext.triggerCommand("showPrintPreview", { pdfBuffer: buffer, title });
+        };
         ipcRenderer.on("print-progress", onPrintProgress);
         ipcRenderer.on("print-done", onPrintDone);
+        ipcRenderer.on("export-as-pdf-preview-result", onPreviewResult);
         return () => {
             ipcRenderer.off("print-progress", onPrintProgress);
             ipcRenderer.off("print-done", onPrintDone);
+            ipcRenderer.off("export-as-pdf-preview-result", onPreviewResult);
         };
     }, []);
 
@@ -215,7 +222,7 @@ export default function NoteDetail() {
         showToast("exporting_pdf");
 
         const { ipcRenderer } = dynamicRequire("electron");
-        ipcRenderer.send("export-as-pdf", {
+        ipcRenderer.send("export-as-pdf-preview", {
             title: note.title,
             notePath: noteContext.notePath,
             pageSize: note.getAttributeValue("label", "printPageSize") ?? "Letter",
