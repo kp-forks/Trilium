@@ -2308,7 +2308,8 @@
   "print_preview": {
     "title": "Print preview",
     "close": "Close",
-    "save": "Save as PDF"
+    "save": "Save as PDF",
+    "landscape": "Landscape"
   },
   "pdf": {
     "attachments_one": "{{count}} attachment",
