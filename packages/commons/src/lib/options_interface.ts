@@ -160,6 +160,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     disableTray: boolean;
     editedNotesOpenInRibbon: boolean;
     codeBlockWordWrap: boolean;
+    codeBlockTabWidth: number;
     textNoteEditorMultilineToolbar: boolean;
     /** Whether keyboard auto-completion for emojis is triggered when typing `:`. */
     textNoteEmojiCompletionEnabled: boolean;

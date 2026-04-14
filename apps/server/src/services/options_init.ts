@@ -216,6 +216,7 @@ const defaultOptions: DefaultOption[] = [
         isSynced: false
     },
     { name: "codeBlockWordWrap", value: "false", isSynced: true },
+    { name: "codeBlockTabWidth", value: "4", isSynced: true },
 
     // Text note configuration
     { name: "textNoteEditorType", value: "ckeditor-balloon", isSynced: true },

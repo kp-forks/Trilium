@@ -1930,7 +1930,9 @@
     "theme_group_light": "Light themes",
     "theme_group_dark": "Dark themes",
     "copy_title": "Copy to clipboard",
-    "click_to_copy": "Click to copy"
+    "click_to_copy": "Click to copy",
+    "tab_width": "Tab width",
+    "tab_width_unit": "spaces"
   },
   "classic_editor_toolbar": {
     "title": "Formatting"

@@ -264,6 +264,7 @@ function CodeBlockStyle() {
     }, []);
     const [ codeBlockTheme, setCodeBlockTheme ] = useTriliumOption("codeBlockTheme");
     const [ codeBlockWordWrap, setCodeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
+    const [ codeBlockTabWidth, setCodeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
 
     return (
         <OptionsSection title={t("highlighting.title")}>
@@ -284,6 +285,15 @@ function CodeBlockStyle() {
                 currentValue={codeBlockWordWrap}
                 onChange={setCodeBlockWordWrap}
             />
+
+            <OptionsRow name="code-block-tab-width" label={t("code_block.tab_width")}>
+                <FormTextBoxWithUnit
+                    type="number" min={1} max={16} step={1}
+                    unit={t("code_block.tab_width_unit")}
+                    currentValue={codeBlockTabWidth}
+                    onBlur={setCodeBlockTabWidth}
+                />
+            </OptionsRow>
 
             <CodeBlockPreview theme={codeBlockTheme} wordWrap={codeBlockWordWrap} />
         </OptionsSection>
