@@ -10,7 +10,7 @@ export interface Locale {
     /** The value to pass to `--lang` for the Electron instance in order to set it as a locale. Not setting it will hide it from the list of supported locales. */
     electronLocale?: "en" | "de" | "es" | "fr" | "zh_CN" | "zh_TW" | "ro" | "af" | "am" | "ar" | "bg" | "bn" | "ca" | "cs" | "da" | "el" | "en_GB" | "es_419" | "et" | "fa" | "fi" | "fil" | "gu" | "he" | "hi" | "hr" | "hu" | "id" | "it" | "ja" | "kn" | "ko" | "lt" | "lv" | "ml" | "mr" | "ms" | "nb" | "nl" | "pl" | "pt_BR" | "pt_PT" | "ru" | "sk" | "sl" | "sr" | "sv" | "sw" | "ta" | "te" | "th" | "tr" | "uk" | "ur" | "vi";
     /** The Tesseract OCR language code for this locale (e.g. "eng", "fra", "deu"). See https://tesseract-ocr.github.io/tessdoc/Data-Files-in-different-versions.html */
-    tesseractCode?: "eng" | "deu" | "spa" | "fra" | "gle" | "ita" | "hin" | "jpn" | "por" | "pol" | "ron" | "rus" | "chi_sim" | "chi_tra" | "ukr" | "ara" | "heb" | "kur" | "fas" | "kor" | "ces";
+    tesseractCode?: "eng" | "deu" | "spa" | "fra" | "gle" | "ita" | "hin" | "jpn" | "por" | "pol" | "ron" | "rus" | "chi_sim" | "chi_tra" | "ukr" | "ara" | "heb" | "kur" | "fas" | "kor" | "ces" | "uig";
 }
 
 // When adding a new locale, prefer the version with hyphen instead of underscore.
@@ -79,6 +79,13 @@ const UNSORTED_LOCALES = [
         rtl: true,
         contentOnly: true,
         tesseractCode: "fas"
+    },
+    { // Uyghur
+        id: "ug",
+        name: "ئۇيغۇرچە",
+        rtl: true,
+        contentOnly: true,
+        tesseractCode: "uig"
     }
 ] as const;
 
