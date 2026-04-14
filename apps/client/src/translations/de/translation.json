@@ -92,10 +92,18 @@
     "delete_all_clones_description": "auch alle Klone löschen (kann bei letzte Änderungen rückgängig gemacht werden)",
     "erase_notes_description": "Beim normalen (vorläufigen) Löschen werden die Notizen nur als gelöscht markiert und sie können innerhalb eines bestimmten Zeitraums (im Dialogfeld „Letzte Änderungen“) wiederhergestellt werden. Wenn du diese Option aktivierst, werden die Notizen sofort gelöscht und es ist nicht möglich, die Notizen wiederherzustellen.",
     "erase_notes_warning": "Notizen dauerhaft löschen (kann nicht rückgängig gemacht werden), einschließlich aller Klone. Dadurch wird ein Neuladen der Anwendung erzwungen.",
-    "notes_to_be_deleted": "Folgende Notizen werden gelöscht ({{notesCount}})",
+    "notes_to_be_deleted": "({{notesCount}}) Notizen werden gelöscht",
     "no_note_to_delete": "Es werden keine Notizen gelöscht (nur Klone).",
-    "broken_relations_to_be_deleted": "Folgende Beziehungen werden gelöst und gelöscht ({{ relationCount}})",
-    "cancel": "Abbrechen"
+    "broken_relations_to_be_deleted": "Unterbrochene Beziehungen ({{relationCount}})",
+    "cancel": "Abbrechen",
+    "title": "Notizen löschen",
+    "clones_label": "Duplikate",
+    "delete_clones_description_one": "Löscht {{count}} weiteres Duplikat. Kann unter „Letzte Änderungen“ rückgängig gemacht werden.",
+    "delete_clones_description_other": "Löscht {{count}} weitere Duplikate. Kann unter „Letzte Änderungen“ rückgängig gemacht werden.",
+    "erase_notes_label": "Permanent löschen",
+    "table_note_with_relation": "Notiz mit Beziehung",
+    "table_relation": "Beziehung",
+    "delete": "Löschen"
   },
   "export": {
     "export_note_title": "Notiz exportieren",
@@ -338,7 +346,7 @@
     "calendar_root": "Markiert eine Notiz, die als Basis für Tagesnotizen verwendet werden soll. Nur einer sollte als solcher gekennzeichnet sein.",
     "archived": "Notizen mit dieser Bezeichnung werden standardmäßig nicht in den Suchergebnissen angezeigt (auch nicht in den Dialogen „Springen zu“, „Link hinzufügen“ usw.).",
     "exclude_from_export": "Notizen (mit ihrem Unterbaum) werden nicht im Notizexport inkludiert",
-    "run": "Definiert, bei welchen Ereignissen das Skript ausgeführt werden soll. Mögliche Werte sind:\n<ul>\n<li>frontendStartup - wenn das Trilium-Frontend startet (oder aktualisiert wird), außer auf mobilen Geräten.</li>\n<li>mobileStartup - wenn das Trilium-Frontend auf einem mobilen Gerät startet (oder aktualisiert wird).</li>\n<li>backendStartup - wenn das Trilium-Backend startet</li>\n<li>hourly - einmal pro Stunde ausführen. Du kannst das zusätzliche Label <code>runAtHour</code> verwenden, um die genaue Stunde festzulegen.</li>\n<li>daily - einmal pro Tag ausführen</li>\n</ul>",
+    "run": "Definiert bei welchen Ereignissen das Skript ausgeführt werden soll. Mögliche Werte sind:\n<ul>\n<li>frontendStartup - wenn das Trilium-Frontend startet (oder aktualisiert wird), außer auf mobilen Geräten.</li>\n<li>mobileStartup - wenn das Trilium-Frontend auf einem mobilen Gerät startet (oder aktualisiert wird).</li>\n<li>backendStartup - wenn das Trilium-Backend startet.</li>\n<li>hourly - einmal pro Stunde ausführen. Du kannst das zusätzliche Label <code>runAtHour</code> verwenden, um die genaue Stunde festzulegen.</li>\n<li>daily - einmal pro Tag ausführen</li>\n</ul>",
     "run_on_instance": "Definiere, auf welcher Trilium-Instanz dies ausgeführt werden soll. Standardmäßig alle Instanzen.",
     "run_at_hour": "Zu welcher Stunde soll das laufen? Sollte zusammen mit <code>#runu003dhourly</code> verwendet werden. Kann für mehr Läufe im Laufe des Tages mehrfach definiert werden.",
     "disable_inclusion": "Skripte mit dieser Bezeichnung werden nicht in die Ausführung des übergeordneten Skripts einbezogen.",
@@ -676,7 +684,8 @@
     "export_as_image_svg": "SVG (Vektor)",
     "note_map": "Notizen Karte",
     "view_revisions": "Notizrevisionen...",
-    "advanced": "Erweitert"
+    "advanced": "Erweitert",
+    "view_ocr_text": "OCR text anzeigen"
   },
   "onclick_button": {
     "no_click_handler": "Das Schaltflächen-Widget „{{componentId}}“ hat keinen definierten Klick-Handler"
@@ -772,7 +781,10 @@
     "expand_tooltip": "Erweitert die direkten Unterelemente dieser Sammlung (eine Ebene tiefer). Für weitere Optionen auf den Pfeil rechts klicken.",
     "expand_first_level": "Direkte Unterelemente erweitern",
     "expand_nth_level": "{{depth}} Ebenen erweitern",
-    "hide_child_notes": "Untergeordnete Notizen im Baum ausblenden"
+    "hide_child_notes": "Untergeordnete Notizen im Baum ausblenden",
+    "open_all_in_tabs": "Alle öffnen",
+    "open_all_in_tabs_tooltip": "Alle Resultate in neuen Tabs öffnen",
+    "open_all_confirm": "Dies öffnet {{count}} Notizen in neuen Tabs. Fortfahren?"
   },
   "edited_notes": {
     "no_edited_notes_found": "An diesem Tag wurden noch keine Notizen bearbeitet...",
@@ -826,7 +838,8 @@
     "collapse": "Auf normale Größe reduzieren",
     "title": "Notizkarte",
     "fix-nodes": "Knoten fixieren",
-    "link-distance": "Verbindungslänge"
+    "link-distance": "Verbindungslänge",
+    "too-many-notes": "Dieser Unterbaum enthält {{count}} Notizen, welche die Limitierung von {{max}} überschreitet die in der Notizkarte dargestellt werden können."
   },
   "note_paths": {
     "title": "Notizpfade",
@@ -874,7 +887,7 @@
     "limit": "Limit",
     "limit_description": "Begrenze die Anzahl der Ergebnisse",
     "debug": "debuggen",
-    "debug_description": "Debug gibt zusätzliche Debuginformationen in die Konsole aus, um das Debuggen komplexer Abfragen zu erleichtern",
+    "debug_description": "Debug gibt zusätzliche Protokolleinträge in der Konsole aus, um die Fehlerdiagnose komplexer Abfragen zu erleichtern",
     "action": "Aktion",
     "search_button": "Suchen",
     "search_execute": "Aktionen suchen und ausführen",
@@ -906,7 +919,7 @@
   },
   "debug": {
     "debug": "Debuggen",
-    "debug_info": "Debug gibt zusätzliche Debuginformationen in die Konsole aus, um das Debuggen komplexer Abfragen zu erleichtern.",
+    "debug_info": "Debug gibt zusätzliche Protokolleinträge in der Konsole aus, um die Fehlerdiagnose komplexer Abfragen zu erleichtern.",
     "access_info": "Um auf die Debug-Informationen zuzugreifen, führe die Abfrage aus und klicke oben links auf \"Backend-Log anzeigen\"."
   },
   "fast_search": {
@@ -1031,7 +1044,8 @@
     "note_already_in_diagram": "Die Notiz \"{{title}}\" ist schon im Diagram.",
     "enter_title_of_new_note": "Gebe den Titel der neuen Notiz ein",
     "default_new_note_title": "neue Notiz",
-    "click_on_canvas_to_place_new_note": "Klicke auf den Canvas, um eine neue Notiz zu platzieren"
+    "click_on_canvas_to_place_new_note": "Klicke auf den Canvas, um eine neue Notiz zu platzieren",
+    "rename_relation": "Beziehung umbenennen"
   },
   "backend_log": {
     "refresh": "Aktualisieren"
@@ -1040,15 +1054,17 @@
     "title": "Konsistenzprüfungen",
     "find_and_fix_button": "Finde und behebe die Konsistenzprobleme",
     "finding_and_fixing_message": "Konsistenzprobleme finden und beheben...",
-    "issues_fixed_message": "Konsistenzprobleme sollten behoben werden."
+    "issues_fixed_message": "Konsistenzprobleme sollten behoben werden.",
+    "find_and_fix_label": "Finde und behebe Konsistenzprobleme",
+    "find_and_fix_description": "Suche nach Probleme mit der Datenkonsistenz in der Datenbank und repariere diese automatisch."
   },
   "database_anonymization": {
     "title": "Datenbankanonymisierung",
     "full_anonymization": "Vollständige Anonymisierung",
-    "full_anonymization_description": "Durch diese Aktion wird eine neue Kopie der Datenbank erstellt und anonymisiert (der gesamte Notizinhalt wird entfernt und nur die Struktur und einige nicht vertrauliche Metadaten bleiben übrig), sodass sie zu Debugging-Zwecken online geteilt werden kann, ohne befürchten zu müssen, dass Ihre persönlichen Daten verloren gehen.",
+    "full_anonymization_description": "Erstellt eine Kopie der Datenbank, wo der Inhalt der Notizen entfernt wurde. Es vergleicht lediglich die Struktur sowie nicht-kritische Metadaten. Sicher zum teilen für die Fehlerdiagnose.",
     "save_fully_anonymized_database": "Speichere eine vollständig anonymisierte Datenbank",
     "light_anonymization": "Leichte Anonymisierung",
-    "light_anonymization_description": "Durch diese Aktion wird eine neue Kopie der Datenbank erstellt und eine leichte Anonymisierung vorgenommen – insbesondere wird nur der Inhalt aller Notizen entfernt, Titel und Attribute bleiben jedoch erhalten. Darüber hinaus bleiben benutzerdefinierte JS-Frontend-/Backend-Skriptnotizen und benutzerdefinierte Widgets erhalten. Dies bietet mehr Kontext zum Debuggen der Probleme.",
+    "light_anonymization_description": "Erstellt eine Kopie wo der Inhalt der Notiz entfernt ist, jedoch Title, Attribute und benutzerdefinierte Skripte erhalten bleiben. Hilfreich zur Fehlerdiagnose.",
     "choose_anonymization": "Du kannst selbst entscheiden, ob du eine vollständig oder leicht anonymisierte Datenbank bereitstellen möchten. Selbst eine vollständig anonymisierte Datenbank ist sehr nützlich. In einigen Fällen kann jedoch eine leicht anonymisierte Datenbank den Prozess der Fehlererkennung und -behebung beschleunigen.",
     "save_lightly_anonymized_database": "Speichere eine leicht anonymisierte Datenbank",
     "existing_anonymized_databases": "Vorhandene anonymisierte Datenbanken",
@@ -1057,14 +1073,17 @@
     "error_creating_anonymized_database": "Die anonymisierte Datenbank konnte nicht erstellt werden. Überprüfe die Backend-Protokolle auf Details",
     "successfully_created_fully_anonymized_database": "Vollständig anonymisierte Datenbank in {{anonymizedFilePath}} erstellt",
     "successfully_created_lightly_anonymized_database": "Leicht anonymisierte Datenbank in {{anonymizedFilePath}} erstellt",
-    "no_anonymized_database_yet": "Noch keine anonymisierte Datenbank."
+    "no_anonymized_database_yet": "Noch keine anonymisierte Datenbank.",
+    "description": "Erstellt eine anonymisierte Kopie deiner Datenbank für den Austausch mit Entwicklern zur Fehlerdiagnose, ohne persönliche Daten preiszugeben."
   },
   "database_integrity_check": {
     "title": "Datenbankintegritätsprüfung",
     "check_button": "Überprüfe die Datenbankintegrität",
     "checking_integrity": "Datenbankintegrität prüfen...",
     "integrity_check_succeeded": "Integritätsprüfung erfolgreich – keine Probleme gefunden.",
-    "integrity_check_failed": "Integritätsprüfung fehlgeschlagen: {{results}}"
+    "integrity_check_failed": "Integritätsprüfung fehlgeschlagen: {{results}}",
+    "check_integrity_label": "Überprüfe die Datenbankintegrität",
+    "check_integrity_description": "Überprüfe die Datenbank auf SQLite Ebene auf Fehler."
   },
   "sync": {
     "title": "Synchronisieren",
@@ -1074,14 +1093,18 @@
     "filling_entity_changes": "Entitätsänderungszeilen werden gefüllt...",
     "sync_rows_filled_successfully": "Synchronisierungszeilen erfolgreich gefüllt",
     "finished-successfully": "Synchronisierung erfolgreich beendet.",
-    "failed": "Synchronisierung fehlgeschlagen: {{message}}"
+    "failed": "Synchronisierung fehlgeschlagen: {{message}}",
+    "force_full_sync_label": "Vollständige Synchronisierung erzwingen",
+    "force_full_sync_description": "Vollständige Synchronisation mit dem Sync-Server auslösen, lädt alle Änderungen erneut hoch."
   },
   "vacuum_database": {
     "title": "Datenbank aufräumen",
     "description": "Dadurch wird die Datenbank neu erstellt, was normalerweise zu einer kleineren Datenbankdatei führt. Es werden keine Daten tatsächlich geändert.",
     "button_text": "Datenbank aufräumen",
     "vacuuming_database": "Datenbank wird geleert...",
-    "database_vacuumed": "Die Datenbank wurde geleert"
+    "database_vacuumed": "Die Datenbank wurde geleert",
+    "vacuum_label": "Datenbank bereinigen",
+    "vacuum_description": "Datenbank neu aufbauen um die Dateigröße zu reduzieren. Keine Daten werden verändert."
   },
   "fonts": {
     "theme_defined": "Thema definiert",
@@ -1092,7 +1115,7 @@
     "note_tree_font": "Notizbaum-Schriftart",
     "note_detail_font": "Notiz-Detail-Schriftart",
     "monospace_font": "Minivan (Code) Schriftart",
-    "not_all_fonts_available": "Möglicherweise sind nicht alle aufgelisteten Schriftarten auf Ihrem System verfügbar.",
+    "not_all_fonts_available": "Möglicherweise sind nicht alle aufgelisteten Schriftarten auf Ihrem System verfügbar",
     "generic-fonts": "Generische Schriftarten",
     "sans-serif-system-fonts": "Sans-serif Systemschriftarten",
     "serif-system-fonts": "Serif Systemschriftarten",
@@ -1101,7 +1124,9 @@
     "serif": "Serif",
     "sans-serif": "Sans Serif",
     "monospace": "Monospace",
-    "system-default": "System Standard"
+    "system-default": "System Standard",
+    "custom_fonts": "Benutzerdefinierte Schriftarten verwenden",
+    "preview": "Vorschau"
   },
   "max_content_width": {
     "title": "Inhaltsbreite",
@@ -1134,7 +1159,10 @@
     "layout-horizontal-description": "Startleiste ist unter der Tableiste. Die Tableiste wird dadurch auf die ganze Breite erweitert.",
     "auto_theme": "Alt (Folge dem Farbschema des Systems)",
     "light_theme": "Alt (Hell)",
-    "dark_theme": "Alt (Dunkel)"
+    "dark_theme": "Alt (Dunkel)",
+    "modern_themes": "Modern",
+    "legacy_themes": "Veraltet",
+    "custom_themes": "Benutzerdefiniert"
   },
   "zoom_factor": {
     "title": "Zoomfaktor (nur Desktop-Build)",
@@ -1162,17 +1190,25 @@
   },
   "images": {
     "images_section_title": "Bilder",
-    "download_images_automatically": "Lade Bilder automatisch herunter, um sie offline zu verwenden.",
-    "download_images_description": "Eingefügter HTML-Code kann Verweise auf Online-Bilder enthalten. Trilium findet diese Verweise und lädt die Bilder herunter, sodass sie offline verfügbar sind.",
-    "enable_image_compression": "Bildkomprimierung aktivieren",
-    "max_image_dimensions": "Maximale Breite/Höhe eines Bildes in Pixel (die Größe des Bildes wird geändert, wenn es diese Einstellung überschreitet).",
-    "jpeg_quality_description": "JPEG-Qualität (10 – schlechteste Qualität, 100 – beste Qualität, 50 – 85 wird empfohlen)",
-    "max_image_dimensions_unit": "Pixel"
+    "download_images_automatically": "Bilder automatisch herunterladen",
+    "download_images_description": "Referenzierte online Bilder vom eingefügten HTML-Code herunterladen, damit diese offline zur Verfügung stehen.",
+    "enable_image_compression": "Bildkomprimierung",
+    "max_image_dimensions": "Maximale Maße eines Bildes",
+    "jpeg_quality_description": "Empfohlener Bereich liegt zwischen 50-85. Niedrige Werte reduzieren die Dateigröße, höhere Werte bewahren Details.",
+    "max_image_dimensions_unit": "Pixel",
+    "enable_image_compression_description": "Komprimieren und skalieren Bilder, wenn diese hochgeladen oder eingefügt werden.",
+    "max_image_dimensions_description": "Bilder, die diese Größe überschreiten, werden automatisch verkleinert.",
+    "jpeg_quality": "JPEG Qualität",
+    "ocr_section_title": "Text Extrahierung (OCR)",
+    "ocr_related_content_languages": "Inhaltssprachen (für Textextrahierung verwendet)",
+    "ocr_auto_process": "Neue Dateien automatisch verarbeiten",
+    "ocr_auto_process_description": "Text automatisch extrahieren von neu hochgeladenen oder eingefügten Dateien.",
+    "ocr_min_confidence": "Minimale Sicherheit"
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Zeitüberschreitung beim Löschen von Anhängen",
-    "erase_attachments_after": "Nicht verwendete Anhänge löschen nach:",
-    "manual_erasing_description": "Du kannst das Löschen auch manuell auslösen (ohne Berücksichtigung des oben definierten Timeouts):",
+    "erase_attachments_after": "Nicht verwendete Anhänge löschen nach",
+    "manual_erasing_description": "Manuelle Löschung aktivieren, ignoriert den obigen Zeitpunkt.",
     "erase_unused_attachments_now": "Lösche jetzt nicht verwendete Anhangnotizen",
     "unused_attachments_erased": "Nicht verwendete Anhänge wurden gelöscht."
   },
@@ -1182,27 +1218,29 @@
   },
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Beachte das Zeitlimit für die Löschung",
-    "erase_notes_after": "Notizen löschen nach:",
-    "manual_erasing_description": "Du kannst das Löschen auch manuell auslösen (ohne Berücksichtigung des oben definierten Timeouts):",
+    "erase_notes_after": "Notizen löschen nach",
+    "manual_erasing_description": "Manuelle Löschung aktivieren, ignoriert den obigen Zeitpunkt.",
     "erase_deleted_notes_now": "Jetzt gelöschte Notizen löschen",
     "deleted_notes_erased": "Gelöschte Notizen wurden gelöscht."
   },
   "revisions_snapshot_interval": {
     "note_revisions_snapshot_interval_title": "Snapshot-Intervall für Notizrevisionen",
     "note_revisions_snapshot_description": "Das Snapshot-Zeitintervall für Notizrevisionen ist die Zeit, nach der eine neue Notizrevision erstellt wird. Weitere Informationen findest du im <doc>Wiki</doc>.",
-    "snapshot_time_interval_label": "Zeitintervall für Notiz-Revisions-Snapshot:"
+    "snapshot_time_interval_label": "Snapshot Intervall"
   },
   "revisions_snapshot_limit": {
     "note_revisions_snapshot_limit_title": "Limit für Notizrevision-Snapshots",
     "note_revisions_snapshot_limit_description": "Das Limit für Notizrevision-Snapshots bezieht sich auf die maximale Anzahl von Revisionen, die für jede Notiz gespeichert werden können. Dabei bedeutet -1, dass es kein Limit gibt, und 0 bedeutet, dass alle Revisionen gelöscht werden. Du kannst das maximale Limit für Revisionen einer einzelnen Notiz über das Label #versioningLimit festlegen.",
-    "snapshot_number_limit_label": "Limit der Notizrevision-Snapshots:",
+    "snapshot_number_limit_label": "Maximale Revisionen",
     "erase_excess_revision_snapshots": "Überschüssige Revision-Snapshots jetzt löschen",
     "erase_excess_revision_snapshots_prompt": "Überschüssige Revision-Snapshots wurden gelöscht.",
-    "snapshot_number_limit_unit": "Momentaufnahmen"
+    "snapshot_number_limit_unit": "Momentaufnahmen",
+    "note_revisions_snapshot_limit_description_short": "Maximale Anzahl an Revisionen pro Notiz. Nutze -1 für unlimitiert oder 0 zum deaktivieren.",
+    "erase_excess_revision_snapshots_description": "Lösche Revisionen aller Notizen die das Limit überschreiten."
   },
   "search_engine": {
     "title": "Suchmaschine",
-    "custom_search_engine_info": "Für eine benutzerdefinierte Suchmaschine müssen sowohl ein Name als auch eine URL festgelegt werden. Wenn keine dieser Optionen festgelegt ist, wird DuckDuckGo als Standardsuchmaschine verwendet.",
+    "custom_search_engine_info": "Wird verwendet bei der Suche im Web für den ausgewählten Text. Wenn nicht konfiguriert, wird DuckDuckGo verwendet.",
     "predefined_templates_label": "Vordefinierte Suchmaschinenvorlagen",
     "bing": "Bing",
     "baidu": "Baidu",
@@ -1282,7 +1320,9 @@
     "date-and-time": "Datum & Uhrzeit",
     "path": "Pfad",
     "database_backed_up_to": "Die Datenbank wurde gesichert unter {{backupFilePath}}",
-    "no_backup_yet": "noch kein Backup"
+    "no_backup_yet": "noch kein Backup",
+    "title": "Sicherung",
+    "download": "Download"
   },
   "etapi": {
     "title": "ETAPI",
@@ -1321,14 +1361,17 @@
     "protected_session_timeout_description": "Das Zeitlimit für geschützte Sitzungen ist ein Zeitraum, nach dem die geschützte Sitzung aus dem Speicher des Browsers gelöscht wird. Dies wird ab der letzten Interaktion mit geschützten Notizen gemessen. Sehen",
     "wiki": "Wiki",
     "for_more_info": "für weitere Informationen.",
-    "protected_session_timeout_label": "Zeitüberschreitung der geschützten Sitzung:",
+    "protected_session_timeout_label": "Automatisches beenden der Sitzung nach",
     "reset_confirmation": "Durch das Zurücksetzen des Passworts verlierst du für immer den Zugriff auf alle Ihre bestehenden geschützten Notizen. Möchtest du das Passwort wirklich zurücksetzen?",
     "reset_success_message": "Das Passwort wurde zurückgesetzt. Bitte lege ein neues Passwort fest",
     "change_password_heading": "Kennwort ändern",
     "set_password_heading": "Passwort festlegen",
     "set_password": "Passwort festlegen",
     "password_mismatch": "Neue Passwörter sind nicht dasselbe.",
-    "password_changed_success": "Das Passwort wurde geändert. Trilium wird neu geladen, nachdem du auf OK geklickt hast."
+    "password_changed_success": "Das Passwort wurde geändert. Trilium wird neu geladen, nachdem du auf OK geklickt hast.",
+    "change_password_description": "Aktualisiere dein aktuelles Passwort",
+    "reset_password": "Passwort zurücksetzen",
+    "cancel": "Abbrechen"
   },
   "shortcuts": {
     "keyboard_shortcuts": "Tastaturkürzel",
@@ -1349,7 +1392,10 @@
     "description": "Diese Optionen gelten nur für Desktop-Builds. Browser verwenden ihre eigene native Rechtschreibprüfung.",
     "enable": "Aktiviere die Rechtschreibprüfung",
     "language_code_label": "Sprachcode(s)",
-    "restart-required": "Änderungen an den Rechtschreibprüfungsoptionen werden nach dem Neustart der Anwendung wirksam."
+    "restart-required": "Änderungen an den Rechtschreibprüfungsoptionen werden nach dem Neustart der Anwendung wirksam.",
+    "custom_dictionary_title": "Benutzerdefiniertes Wörterbuch",
+    "custom_dictionary_edit": "Benutzerdefiniert Wörter",
+    "custom_dictionary_open": "Wörterbuch bearbeiten"
   },
   "sync_2": {
     "config_title": "Synchronisierungskonfiguration",
@@ -1458,7 +1504,8 @@
     "task-list": "Aufgabenliste",
     "new-feature": "Neu",
     "collections": "Sammlungen",
-    "spreadsheet": "Tabelle"
+    "spreadsheet": "Tabelle",
+    "llm-chat": "KI-Chat"
   },
   "protect_note": {
     "toggle-on": "Notiz schützen",
@@ -1660,7 +1707,8 @@
     "theme_none": "Keine Syntaxhervorhebung",
     "theme_group_light": "Helle Themen",
     "theme_group_dark": "Dunkle Themen",
-    "copy_title": "Kopiere in Zwischenablage"
+    "copy_title": "Kopiere in Zwischenablage",
+    "click_to_copy": "Klicke zum kopieren"
   },
   "classic_editor_toolbar": {
     "title": "Format"
@@ -1679,7 +1727,7 @@
         "title": "Fixiert",
         "description": "Werkzeuge erscheinen im \"Format\" Tab."
       },
-      "multiline-toolbar": "Toolbar wenn nötig in mehreren Zeilen darstellen."
+      "multiline-toolbar": "Toolbar wenn nötig in mehreren Zeilen darstellen"
     }
   },
   "electron_context_menu": {
@@ -1770,8 +1818,9 @@
   "custom_date_time_format": {
     "title": "Benutzerdefiniertes Datums-/Zeitformat",
     "description": "Passe das Format des Datums und der Uhrzeit an, die über <shortcut /> oder die Symbolleiste eingefügt werden. Die verfügbaren Format-Tokens sind unter <doc>Day.js docs</doc> zu finden.",
-    "format_string": "Format Zeichenfolge:",
-    "formatted_time": "Formatiertes Datum/Uhrzeit:"
+    "format_string": "Format Zeichenfolge",
+    "formatted_time": "Formatiertes Datum/Uhrzeit",
+    "preview": "Vorschau: {{preview}}"
   },
   "multi_factor_authentication": {
     "title": "Multi-Faktor-Authentifizierung",
@@ -2002,7 +2051,9 @@
     "title": "Experimentelle Optionen",
     "disclaimer": "Diese Optionen sind experimentell und können Instabilitäten verursachen. Achtsam zu verwenden.",
     "new_layout_name": "Neues Layout",
-    "new_layout_description": "Probiere das neue Layout für eine modernere Darstellung und verbesserte Benutzbarkeit aus. Kann sich in Zukunft stark ändern."
+    "new_layout_description": "Probiere das neue Layout für eine modernere Darstellung und verbesserte Benutzbarkeit aus. Kann sich in Zukunft stark ändern.",
+    "llm_name": "KI- / LLM-Chat",
+    "llm_description": "Aktiviert die KI-Chat Seitenleiste sowie LLM-Chat Notizen die von einem Sprachmodell betrieben werden."
   },
   "server": {
     "unknown_http_error_title": "Kommunikationsfehler mit dem Server",
@@ -2186,5 +2237,82 @@
     "sample_xy": "XY",
     "sample_venn": "Mengen",
     "sample_ishikawa": "Ursache-Wirkung"
+  },
+  "revisions": {
+    "title": "Notizrevisionen"
+  },
+  "database": {
+    "title": "Datenbank"
+  },
+  "search": {
+    "title": "Suche",
+    "fuzzy_matching_label": "Fehlertoleranz bei Suche"
+  },
+  "text_editor": {
+    "title": "Editor"
+  },
+  "llm_chat": {
+    "placeholder": "Schreibe eine Nachricht...",
+    "send": "Senden",
+    "sending": "Sende...",
+    "empty_state": "Starte eine Unterhaltung indem du unten eine Nachricht schreibst.",
+    "searching_web": "Suche im Web...",
+    "web_search": "Websuche",
+    "note_tools": "Notizzugriff",
+    "sources": "Quellen",
+    "legacy_models": "Veraltete Modelle",
+    "thinking": "Denke...",
+    "thought_process": "Denkprozess",
+    "result": "Ergebnis",
+    "error": "Fehler",
+    "tool_error": "Fehlgeschlagen",
+    "total_tokens": "{{total}} Token",
+    "tokens": "Token",
+    "context_used": "{{percentage}}% verwendet",
+    "no_provider_message": "Kein KI-Anbieter konfiguriert. Fügen einen hinzu, um zu chatten.",
+    "add_provider": "KI-Anbieter hinzufügen",
+    "stop": "Stopp"
+  },
+  "sidebar_chat": {
+    "title": "KI-Chat",
+    "launcher_title": "KI-Chat öffnen",
+    "new_chat": "Neuen Chat starten",
+    "save_chat": "Chat in Notiz sichern",
+    "empty_state": "Starte Unterhaltung",
+    "history": "Chathistorie",
+    "recent_chats": "Kürzliche Chats",
+    "no_chats": "Keine vorherigen Chats"
+  },
+  "llm": {
+    "tools": {
+      "clone_note": "Notiz duplizieren",
+      "move_note": "Notiz verschieben",
+      "delete_note": "Notiz löschen",
+      "rename_note": "Notiz umbenennen",
+      "web_search": "Websuche",
+      "create_note": "Notiz erstellen",
+      "append_to_note": "An Notiz anhängen",
+      "get_note": "Notiz beziehen",
+      "search_notes": "Notizen durchsuchen"
+    },
+    "cancel": "Abbrechen",
+    "api_key": "API Schlüssel",
+    "delete_provider": "Löschen",
+    "actions": "Aktionen",
+    "provider_type": "Anbieter",
+    "provider_name": "Name",
+    "settings_title": "KI / LLM"
+  },
+  "mind-map": {
+    "summary": "Zusammenfassung",
+    "link": "Link"
+  },
+  "ocr": {
+    "view_extracted_text": "Extrahierten Text anzeigen (OCR)",
+    "open_media_settings": "Öffne Einstellungen",
+    "processing": "Verarbeite...",
+    "loading_text": "Lädt OCR Text...",
+    "extracted_text_title": "Extrahierter Text (OCR)",
+    "extracted_text": "Extrahierter Text (OCR)"
   }
 }
