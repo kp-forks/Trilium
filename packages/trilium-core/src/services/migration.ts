@@ -141,6 +141,9 @@ async function migrateIfNecessary() {
     }
 
     if (!isDbUpToDate()) {
+        if (process.env.TRILIUM_MANUAL_DB_MIGRATION === "true") {
+            await crash(`Automatic DB migrations are disabled via env var TRILIUM_MANUAL_DB_MIGRATION = ${process.env.TRILIUM_MANUAL_DB_MIGRATION}`);
+        }
         await migrate();
     }
 }
