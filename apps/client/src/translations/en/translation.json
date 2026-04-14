@@ -2311,7 +2311,8 @@
     "save": "Save as PDF",
     "orientation": "Orientation",
     "portrait": "Portrait",
-    "landscape": "Landscape"
+    "landscape": "Landscape",
+    "page_size": "Page size"
   },
   "pdf": {
     "attachments_one": "{{count}} attachment",

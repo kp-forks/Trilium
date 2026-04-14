@@ -187,7 +187,7 @@ electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pa
                 `
             });
 
-            e.sender.send("export-as-pdf-preview-result", { buffer, notePath, pageSize });
+            e.sender.send("export-as-pdf-preview-result", { buffer, notePath });
         } catch (_e) {
             electron.dialog.showErrorBox(t("pdf.unable-to-export-title"), t("pdf.unable-to-export-message"));
         } finally {

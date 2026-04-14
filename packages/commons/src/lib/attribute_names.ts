@@ -62,6 +62,7 @@ type Labels = {
 
     // Print/export
     printLandscape: boolean;
+    printPageSize: string;
 
     // Note-type specific
     webViewSrc: string;

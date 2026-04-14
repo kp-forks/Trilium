@@ -147,10 +147,10 @@ export default function NoteDetail() {
             toast.closePersistent("printing");
             handlePrintReport(printReport);
         };
-        const onPreviewResult = (_e: any, { buffer, notePath, pageSize }: { buffer: Uint8Array; notePath: string; pageSize: string }) => {
+        const onPreviewResult = (_e: any, { buffer, notePath }: { buffer: Uint8Array; notePath: string }) => {
             toast.closePersistent("printing");
             if (note) {
-                appContext.triggerCommand("showPrintPreview", { pdfBuffer: buffer, note, notePath, pageSize });
+                appContext.triggerCommand("showPrintPreview", { pdfBuffer: buffer, note, notePath });
             }
         };
         ipcRenderer.on("print-progress", onPrintProgress);

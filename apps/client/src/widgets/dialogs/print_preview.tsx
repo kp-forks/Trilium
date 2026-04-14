@@ -5,17 +5,18 @@ import { t } from "../../services/i18n";
 import toast from "../../services/toast";
 import { dynamicRequire, isElectron } from "../../services/utils";
 import Button, { ButtonGroup } from "../react/Button";
-import { useNoteLabelBoolean, useTriliumEvent } from "../react/hooks";
+import { useNoteLabelBoolean, useNoteLabelWithDefault, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import PdfViewer from "../type_widgets/file/PdfViewer";
 import OptionsRow from "../type_widgets/options/components/OptionsRow";
 import OptionsSection from "../type_widgets/options/components/OptionsSection";
 
+const PAGE_SIZES = ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "Legal", "Letter", "Tabloid", "Ledger"] as const;
+
 export interface PrintPreviewData {
     pdfBuffer: Uint8Array;
     note: FNote;
     notePath: string;
-    pageSize: string;
 }
 
 export default function PrintPreviewDialog() {
@@ -25,9 +26,9 @@ export default function PrintPreviewDialog() {
     const [loading, setLoading] = useState(false);
     const bufferRef = useRef<Uint8Array>();
     const notePathRef = useRef("");
-    const pageSizeRef = useRef("");
 
     const [landscape, setLandscape] = useNoteLabelBoolean(note, "printLandscape");
+    const [pageSize, setPageSize] = useNoteLabelWithDefault(note, "printPageSize", "Letter");
 
     const updatePreview = useCallback((buffer: Uint8Array) => {
         bufferRef.current = buffer;
@@ -45,7 +46,6 @@ export default function PrintPreviewDialog() {
     useTriliumEvent("showPrintPreview", (data: PrintPreviewData) => {
         setNote(data.note);
         notePathRef.current = data.notePath;
-        pageSizeRef.current = data.pageSize;
         updatePreview(data.pdfBuffer);
         setShown(true);
     });
@@ -74,16 +74,21 @@ export default function PrintPreviewDialog() {
     function handleOrientationChange(newLandscape: boolean) {
         if (newLandscape === landscape) return;
         setLandscape(newLandscape);
-        regeneratePreview(newLandscape);
+        regeneratePreview({ landscape: newLandscape, pageSize });
     }
 
-    function regeneratePreview(newLandscape: boolean) {
+    function handlePageSizeChange(newPageSize: string) {
+        if (newPageSize === pageSize) return;
+        setPageSize(newPageSize);
+        regeneratePreview({ landscape, pageSize: newPageSize });
+    }
+
+    function regeneratePreview(opts: { landscape: boolean; pageSize: string }) {
         if (!isElectron()) return;
 
         setLoading(true);
         const { ipcRenderer } = dynamicRequire("electron");
 
-        // Listen for the result once.
         const onResult = (_e: any, { buffer }: { buffer: Uint8Array }) => {
             toast.closePersistent("printing");
             updatePreview(buffer);
@@ -91,10 +96,9 @@ export default function PrintPreviewDialog() {
         ipcRenderer.once("export-as-pdf-preview-result", onResult);
 
         ipcRenderer.send("export-as-pdf-preview", {
-            title: note?.title ?? "",
             notePath: notePathRef.current,
-            pageSize: pageSizeRef.current,
-            landscape: newLandscape
+            pageSize: opts.pageSize,
+            landscape: opts.landscape
         });
     }
 
@@ -134,6 +138,19 @@ export default function PrintPreviewDialog() {
                                 size="small"
                             />
                         </ButtonGroup>
+                    </OptionsRow>
+
+                    <OptionsRow name="pageSize" label={t("print_preview.page_size")}>
+                        <select
+                            class="form-select form-select-sm"
+                            value={pageSize}
+                            onChange={(e) => handlePageSizeChange((e.target as HTMLSelectElement).value)}
+                            disabled={loading}
+                        >
+                            {PAGE_SIZES.map((size) => (
+                                <option key={size} value={size}>{size}</option>
+                            ))}
+                        </select>
                     </OptionsRow>
                 </OptionsSection>
             </div>
