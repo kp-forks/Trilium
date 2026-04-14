@@ -86,10 +86,16 @@ export default function PrintPreviewDialog() {
         regeneratePreview({ landscape, pageSize: newPageSize, scale });
     }
 
+    const scaleDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+
     function handleScaleChange(newScale: number) {
         const clamped = Math.min(2, Math.max(0.1, Math.round(newScale * 10) / 10));
         setScaleStr(String(clamped));
-        regeneratePreview({ landscape, pageSize, scale: clamped });
+
+        clearTimeout(scaleDebounceRef.current);
+        scaleDebounceRef.current = setTimeout(() => {
+            regeneratePreview({ landscape, pageSize, scale: clamped });
+        }, 500);
     }
 
     function regeneratePreview(opts: { landscape: boolean; pageSize: string; scale: number }) {
