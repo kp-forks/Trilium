@@ -344,6 +344,8 @@ const MIGRATIONS: (SqlMigration | JsMigration)[] = [
 
 export default MIGRATIONS;
 
+export const MAX_MIGRATION_VERSION = MIGRATIONS[0].version;
+
 interface Migration {
     version: number;
     /** If true, errors during this migration are logged but do not halt the migration process. Useful for migrations that may have already been applied (e.g. adding a column that already exists). */
