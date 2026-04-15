@@ -38,6 +38,7 @@ export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWi
     const blob = useNoteBlob(note);
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
+    const [ noteWrapLines ] = useNoteLabelOptionalBool(note, "wrapLines");
 
     useEffect(() => {
         if (!blob) return;
@@ -59,6 +60,7 @@ export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWi
             readOnly
             {...(noteTabWidth != null && { indentSize: noteTabWidth })}
             {...(noteUseTabs != null && { useTabs: noteUseTabs })}
+            {...(noteWrapLines != null && { lineWrapping: noteWrapLines })}
         />
     );
 }
@@ -85,6 +87,7 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     const [ vimKeymapEnabled ] = useTriliumOptionBool("vimKeymapEnabled");
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
+    const [ noteWrapLines ] = useNoteLabelOptionalBool(note, "wrapLines");
     const mime = useNoteProperty(note, "mime");
     const spacedUpdate = useEditorSpacedUpdate({
         note,
@@ -137,6 +140,7 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
                 {...editorProps}
                 {...(noteTabWidth != null && { indentSize: noteTabWidth })}
                 {...(noteUseTabs != null && { useTabs: noteUseTabs })}
+                {...(noteWrapLines != null && { lineWrapping: noteWrapLines })}
             />
 
             <TouchBar>

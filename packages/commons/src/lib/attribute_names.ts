@@ -72,6 +72,7 @@ type Labels = {
     readOnly: boolean;
     tabWidth: number;
     indentWithTabs: boolean;
+    wrapLines: boolean;
     mapType: string;
     mapRootNoteId: string;
 
