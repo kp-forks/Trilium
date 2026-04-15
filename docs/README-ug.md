@@ -29,19 +29,20 @@ script)](./README-ZH_TW.md) | [English](../README.md) | [French](./README-fr.md)
 [Spanish](./README-es.md)
 <!-- translate:on -->
 
-Trilium Notes is a free and open-source, cross-platform hierarchical note taking
-application with focus on building large personal knowledge bases.
+Trilium Notes بولسا ھەقسىز، ئوچۇق كودلۇق، سىستېما ھالقىغان، قاتلاملىق خاتىرە
+قالدۇرۇش ئەپى بولۇپ، ئۇ ئاساسلىقى چوڭ تىپتىكى شەخسىي بىلىم ئامبىرى قۇرۇشقا
+ئەھمىيەت بېرىدۇ.
 
 <img src="./app.png" alt="Trilium Screenshot" width="1000">
 
-## ⏬ Download
+## چۈشۈرۈش⏬
 - [Latest release](https://github.com/TriliumNext/Trilium/releases/latest) –
   stable version, recommended for most users.
 - [Nightly build](https://github.com/TriliumNext/Trilium/releases/tag/nightly) –
   unstable development version, updated daily with the latest features and
   fixes.
 
-## 📚 Documentation
+## ھۆججەتلەر📚
 
 **Visit our comprehensive documentation at
 [docs.triliumnotes.org](https://docs.triliumnotes.org/)**
