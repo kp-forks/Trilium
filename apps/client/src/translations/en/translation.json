@@ -2303,7 +2303,7 @@
     "tab_width_title": "Change tab width",
     "tab_width_spaces": "{{count}} spaces",
     "tab_width_spaces_short": "Spaces: {{width}}",
-    "tab_width_tabs": "Tabs ({{width}})",
+    "tab_width_tabs": "Tabs: {{width}}",
     "tab_width_use_default": "Use default ({{width}})",
     "tab_width_use_default_style": "Use default ({{style}})",
     "tab_width_display_header": "Display width",
