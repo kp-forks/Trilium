@@ -104,7 +104,7 @@ function parseMargins(margins: string): Electron.Margins {
         left: mmToInches(mm)
     });
 
-    if (!margins || margins === "default") return uniform(10);  // ~0.4 in
+    if (!margins || margins === "default") return uniform(20);  // 2cm
     if (margins === "none") return uniform(0);
     if (margins === "minimum") return uniform(5);
 
