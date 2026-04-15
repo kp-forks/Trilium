@@ -264,6 +264,7 @@ function CodeBlockStyle() {
     }, []);
     const [ codeBlockTheme, setCodeBlockTheme ] = useTriliumOption("codeBlockTheme");
     const [ codeBlockWordWrap, setCodeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
+    const [ codeBlockTabWidth, setCodeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
 
     return (
         <OptionsSection title={t("highlighting.title")}>
@@ -285,7 +286,18 @@ function CodeBlockStyle() {
                 onChange={setCodeBlockWordWrap}
             />
 
-            <CodeBlockPreview theme={codeBlockTheme} wordWrap={codeBlockWordWrap} />
+            {/* Avoid using "code" in the name of numeric inputs to prevent KeepassXC from triggering. */}
+            <OptionsRow name="block-tab-width" label={t("code_block.tab_width")}>
+                <FormTextBoxWithUnit
+                    type="number" min={1} max={16} step={1}
+                    unit={t("code_block.tab_width_unit")}
+                    currentValue={codeBlockTabWidth}
+                    onChange={setCodeBlockTabWidth}
+                    onBlur={setCodeBlockTabWidth}
+                />
+            </OptionsRow>
+
+            <CodeBlockPreview theme={codeBlockTheme} wordWrap={codeBlockWordWrap} tabWidth={codeBlockTabWidth} />
         </OptionsSection>
     );
 }
@@ -301,13 +313,13 @@ greet(n); // Print "Hello World" for n times
  * @param {number} times    The number of times to print the \`Hello World!\` message.
  */
 function greet(times) {
-  for (let i = 0; i++; i < times) {
-    console.log("Hello World!");
-  }
+\tfor (let i = 0; i++; i < times) {
+\t\tconsole.log("Hello World!");
+\t}
 }
 `;
 
-function CodeBlockPreview({ theme, wordWrap }: { theme: string, wordWrap: boolean }) {
+function CodeBlockPreview({ theme, wordWrap, tabWidth }: { theme: string, wordWrap: boolean, tabWidth: string }) {
     const [ code, setCode ] = useState<string>(SAMPLE_CODE);
 
     useEffect(() => {
@@ -326,13 +338,12 @@ function CodeBlockPreview({ theme, wordWrap }: { theme: string, wordWrap: boolea
         }
     }, [theme]);
 
-    const codeStyle = useMemo<CSSProperties>(() => {
-        if (wordWrap) {
-            return { whiteSpace: "pre-wrap" };
-        }
-        return { whiteSpace: "pre"};
-
-    }, [ wordWrap ]);
+    const codeStyle: CSSProperties = useMemo(() => {
+        return {
+            whiteSpace: wordWrap ? "pre-wrap" : "pre",
+            tabSize: tabWidth || "4"
+        };
+    }, [ wordWrap, tabWidth ]);
 
     return (
         <div className="note-detail-readonly-text-content ck-content code-sample-wrapper">
@@ -407,4 +418,3 @@ export function HighlightsListOptions() {
         </>
     );
 }
-

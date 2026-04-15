@@ -60,10 +60,19 @@ type Labels = {
     "presentation:theme": string;
     "slide:background": string;
 
+    // Print/export
+    printLandscape: boolean;
+    printPageSize: string;
+    printScale: string;
+    printMargins: string;
+
     // Note-type specific
     webViewSrc: string;
     "disabled:webViewSrc": string;
     readOnly: boolean;
+    tabWidth: number;
+    indentWithTabs: boolean;
+    wrapLines: boolean;
     mapType: string;
     mapRootNoteId: string;
 

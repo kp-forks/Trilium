@@ -13,7 +13,7 @@ import { applyInlineMermaid, rewriteMermaidDiagramsInContainer } from "../../../
 import { getLocaleById } from "../../../services/i18n";
 import { renderMathInElement } from "../../../services/math";
 import { formatCodeBlocks } from "../../../services/syntax_highlight";
-import { useNoteBlob, useNoteLabel, useTriliumEvent, useTriliumOptionBool } from "../../react/hooks";
+import { useNoteBlob, useNoteLabel, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { RawHtmlBlock } from "../../react/RawHtml";
 import TouchBar, { TouchBarButton, TouchBarSpacer } from "../../react/TouchBar";
 import { TypeWidgetProps } from "../type_widget";
@@ -24,7 +24,12 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
     const blob = useNoteBlob(note);
     const contentRef = useRef<HTMLDivElement>(null);
     const [ codeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
+    const [ codeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
     const { isRtl } = useNoteLanguage(note);
+
+    useEffect(() => {
+        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth || "4");
+    }, [codeBlockTabWidth]);
 
     // Apply necessary transforms.
     useEffect(() => {

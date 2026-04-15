@@ -24,6 +24,7 @@ import { IncludeNoteOpts } from "../widgets/dialogs/include_note.jsx";
 import type { InfoProps } from "../widgets/dialogs/info.jsx";
 import type { MarkdownImportOpts } from "../widgets/dialogs/markdown_import.jsx";
 import { ChooseNoteTypeCallback } from "../widgets/dialogs/note_type_chooser.jsx";
+import type { PrintPreviewData } from "../widgets/dialogs/print_preview.jsx";
 import type { PromptDialogOptions } from "../widgets/dialogs/prompt.js";
 import type NoteTreeWidget from "../widgets/note_tree.js";
 import Component from "./component.js";
@@ -330,6 +331,7 @@ export type CommandMappings = {
     toggleRightPane: CommandData;
     printActiveNote: CommandData;
     exportAsPdf: CommandData;
+    showPrintPreview: PrintPreviewData;
     openNoteExternally: CommandData;
     openNoteCustom: CommandData;
     openNoteOnServer: CommandData;

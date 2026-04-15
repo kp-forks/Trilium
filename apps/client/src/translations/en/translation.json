@@ -454,6 +454,8 @@
     "and_more": "... and {{count}} more.",
     "print_landscape": "When exporting to PDF, changes the orientation of the page to landscape instead of portrait.",
     "print_page_size": "When exporting to PDF, changes the size of the page. Supported values: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
+    "print_scale": "When exporting to PDF, changes the scale of the rendered content. Values range from 0.1 (10%) to 2 (200%), default is 1 (100%).",
+    "print_margins": "When exporting to PDF, sets page margins. Use <code>default</code>, <code>none</code>, <code>minimum</code>, or custom values as <code>top,right,bottom,left</code> in millimeters.",
     "color_type": "Color"
   },
   "attribute_editor": {
@@ -693,6 +695,11 @@
     "move_right": "Move right"
   },
   "note_actions": {
+    "word_wrap": "Word wrap",
+    "word_wrap_auto": "Auto",
+    "word_wrap_auto_description": "Follow the global setting",
+    "word_wrap_on": "On",
+    "word_wrap_off": "Off",
     "convert_into_attachment": "Convert into attachment",
     "re_render_note": "Re-render note",
     "search_in_note": "Search in note",
@@ -1268,7 +1275,9 @@
     "unit": "characters"
   },
   "code-editor-options": {
-    "title": "Editor"
+    "title": "Editor",
+    "tab_width": "Tab width",
+    "tab_width_unit": "spaces"
   },
   "code_mime_types": {
     "title": "Available MIME types in the dropdown",
@@ -1804,7 +1813,7 @@
   "note_detail": {
     "could_not_find_typewidget": "Could not find typeWidget for type '{{type}}'",
     "printing": "Printing in progress...",
-    "printing_pdf": "Exporting to PDF in progress...",
+    "printing_pdf": "Preparing print preview...",
     "print_report_title": "Print report",
     "print_report_error_title": "Failed to print",
     "print_report_stack_trace": "Stack trace",
@@ -1930,7 +1939,9 @@
     "theme_group_light": "Light themes",
     "theme_group_dark": "Dark themes",
     "copy_title": "Copy to clipboard",
-    "click_to_copy": "Click to copy"
+    "click_to_copy": "Click to copy",
+    "tab_width": "Tab width",
+    "tab_width_unit": "spaces"
   },
   "classic_editor_toolbar": {
     "title": "Formatting"
@@ -2292,7 +2303,19 @@
     "note_paths_one": "{{count}} path",
     "note_paths_other": "{{count}} paths",
     "note_paths_title": "Note paths",
-    "code_note_switcher": "Change language mode"
+    "code_note_switcher": "Change language mode",
+    "tab_width": "Tab Width: {{width}}",
+    "tab_width_title": "Change tab width",
+    "tab_width_spaces": "{{count}} spaces",
+    "tab_width_spaces_short": "Spaces: {{width}}",
+    "tab_width_tabs": "Tabs: {{width}}",
+    "tab_width_use_default": "Use default ({{width}})",
+    "tab_width_use_default_style": "Use default ({{style}})",
+    "tab_width_display_header": "Display width",
+    "tab_width_reindent_header": "Re-indent content to",
+    "tab_width_style_header": "Indent using",
+    "tab_width_style_spaces": "Spaces",
+    "tab_width_style_tabs": "Tabs"
   },
   "attributes_panel": {
     "title": "Note Attributes"
@@ -2302,6 +2325,37 @@
     "empty_button": "Hide the panel",
     "toggle": "Toggle right panel",
     "custom_widget_go_to_source": "Go to source code"
+  },
+  "print_preview": {
+    "title": "Print preview",
+    "close": "Close",
+    "save": "Save as PDF",
+    "print": "Print",
+    "export_pdf": "Export as PDF",
+    "system_print": "Print using system dialog",
+    "destination": "Destination",
+    "destination_pdf": "Save as PDF",
+    "destination_printers": "Printers",
+    "destination_default": "Default",
+    "orientation": "Orientation",
+    "portrait": "Portrait",
+    "landscape": "Landscape",
+    "page_size": "Page size",
+    "scale": "Scale",
+    "margins": "Margins",
+    "render_error": "Unable to render PDF with the current settings. Please check the margins and scale.",
+    "margins_default": "Default",
+    "margins_none": "None",
+    "margins_minimum": "Minimum",
+    "margins_custom": "Custom",
+    "margin_top": "Top",
+    "margin_right": "Right",
+    "margin_bottom": "Bottom",
+    "margin_left": "Left",
+    "page_ranges": "Pages",
+    "page_ranges_hint": "Leave empty to print all pages.",
+    "page_ranges_invalid": "Invalid format. Use e.g. 1-5, 8, 11-13.",
+    "page_ranges_placeholder": "e.g. 1-5, 8, 11-13"
   },
   "pdf": {
     "attachments_one": "{{count}} attachment",
