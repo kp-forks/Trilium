@@ -33,6 +33,7 @@ import SimilarNotesTab from "../ribbon/SimilarNotesTab";
 import { useAttachments } from "../type_widgets/Attachment";
 import { useProcessedLocales } from "../type_widgets/options/components/LocaleSelector";
 import Breadcrumb from "./Breadcrumb";
+import { convertIndentation } from "./reindentation";
 
 interface StatusBarContext {
     note: FNote;
@@ -439,37 +440,6 @@ function NotePaths({ note, hoistedNoteId, notePath }: StatusBarContext) {
 
 //#region Tab width switcher
 const TAB_WIDTH_OPTIONS = [1, 2, 3, 4, 6, 8] as const;
-
-/**
- * Converts the leading indentation on each line to a new style. Non-leading whitespace is preserved.
- *
- * - "spaces" source means leading runs of spaces are grouped by `fromWidth` to compute the indent level.
- * - "tabs" source means each leading tab counts as one indent level (leading spaces are preserved as alignment).
- */
-function convertIndentation(
-    content: string,
-    from: { useTabs: boolean; width: number },
-    to: { useTabs: boolean; width: number }
-): string {
-    if (from.useTabs === to.useTabs && from.width === to.width) return content;
-    const toUnit = to.useTabs ? "\t" : " ".repeat(to.width);
-
-    return content.replace(/^[ \t]+/gm, (leading) => {
-        let levels: number;
-        let remainder = "";
-        if (from.useTabs) {
-            const match = leading.match(/^(\t*)(.*)$/s)!;
-            levels = match[1].length;
-            remainder = match[2];
-        } else {
-            const spaces = leading.length;
-            levels = from.width > 0 ? Math.round(spaces / from.width) : 0;
-            const aligned = levels * from.width;
-            remainder = spaces > aligned ? " ".repeat(spaces - aligned) : "";
-        }
-        return toUnit.repeat(levels) + remainder;
-    });
-}
 
 function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
     const [ globalTabWidth ] = useTriliumOptionInt("codeNoteTabWidth");
