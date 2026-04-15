@@ -170,7 +170,7 @@ export default function PrintPreviewDialog() {
                 toast.showPersistent({
                     id: "print-preview-error",
                     icon: "bx bx-error-circle",
-                    message: t("print_preview.render_error")
+                    message: `${t("print_preview.render_error")}\n\n${error}`
                 });
                 return;
             }
