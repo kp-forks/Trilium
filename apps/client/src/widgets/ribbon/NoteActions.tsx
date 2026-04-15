@@ -143,7 +143,6 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                     notePath: noteContext.notePath,
                     defaultType: "single"
                 })} />
-            {isElectron && <CommandItem command="exportAsPdf" icon="bx bxs-file-pdf" disabled={!isPrintable} text={t("note_actions.print_pdf")} />}
             {isExportableToImage && isNormalViewMode && isContentAvailable && <ExportAsImage ntxId={noteContext.ntxId} parentComponent={parentComponent} />}
             <CommandItem command="printActiveNote" icon="bx bx-printer" disabled={!isPrintable} text={t("note_actions.print_note")} />
 

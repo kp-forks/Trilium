@@ -270,6 +270,59 @@ electron.ipcMain.on("save-pdf", async (_e, { title, buffer }: { title: string; b
     electron.shell.openPath(filePath);
 });
 
+interface PrintFromPreviewOpts extends ExportAsPdfOpts {
+    silent: boolean;
+}
+
+electron.ipcMain.on("print-from-preview", async (e, { notePath, landscape, pageSize, scale, margins, pageRanges, silent }: PrintFromPreviewOpts) => {
+    try {
+        const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "printing");
+
+        // print() accepts most of the same options as printToPDF, but typing differs
+        // slightly (e.g. no "Ledger" pageSize). Cast to keep this concise.
+        const printOpts: Electron.WebContentsPrintOptions = {
+            silent,
+            landscape,
+            pageSize: pageSize === "Ledger" ? "Tabloid" : pageSize,
+            scaleFactor: Math.round(scale * 100),
+            margins: parseMargins(margins),
+            pageRanges: parsePageRangesForPrint(pageRanges),
+            printBackground: true
+        };
+
+        browserWindow.webContents.print(printOpts, (success, failureReason) => {
+            if (!success && failureReason !== "Print job canceled") {
+                electron.dialog.showErrorBox(t("pdf.unable-to-print"), failureReason);
+            }
+            e.sender.send("print-from-preview-done");
+            e.sender.send("print-done", printReport);
+            browserWindow.destroy();
+        });
+    } catch (err) {
+        e.sender.send("print-from-preview-done");
+        e.sender.send("print-done", {
+            type: "error",
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined
+        });
+    }
+});
+
+/** Convert "1-5, 8, 11-13" into PageRanges array form expected by webContents.print. */
+function parsePageRangesForPrint(pageRanges: string): { from: number; to: number }[] | undefined {
+    if (!pageRanges?.trim()) return undefined;
+    const ranges: { from: number; to: number }[] = [];
+    for (const part of pageRanges.split(",")) {
+        const trimmed = part.trim();
+        if (!trimmed) continue;
+        const [fromStr, toStr] = trimmed.split("-").map(s => s.trim());
+        const from = parseInt(fromStr, 10);
+        const to = toStr ? parseInt(toStr, 10) : from;
+        if (!isNaN(from) && !isNaN(to)) ranges.push({ from, to });
+    }
+    return ranges.length ? ranges : undefined;
+}
+
 async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, action: "printing" | "exporting_pdf") {
     // Offscreen rendering crashes on Wayland due to a Chromium bug where the OSR surface
     // lacks a valid xdg_toplevel role, causing a fatal zxdg_exporter_v2 protocol error.

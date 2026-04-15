@@ -182,57 +182,51 @@ export default function NoteDetail() {
     useTriliumEvent("printActiveNote", () => {
         if (!noteContext?.isActive() || !note) return;
 
-        showToast("printing");
-
         if (isElectron()) {
+            // On Electron, open the print preview dialog. Actual print/PDF actions
+            // are triggered from the dialog's footer buttons.
+            showToast("exporting_pdf");
             const { ipcRenderer } = dynamicRequire("electron");
-            ipcRenderer.send("print-note", {
-                notePath: noteContext.notePath
+            ipcRenderer.send("export-as-pdf-preview", {
+                title: note.title,
+                notePath: noteContext.notePath,
+                pageSize: note.getAttributeValue("label", "printPageSize") ?? "Letter",
+                landscape: note.hasAttribute("label", "printLandscape"),
+                scale: parseFloat(note.getAttributeValue("label", "printScale") ?? "1") || 1,
+                margins: note.getAttributeValue("label", "printMargins") ?? "default",
+                pageRanges: ""
             });
-        } else {
-            const iframe = document.createElement('iframe');
-            iframe.src = `?print#${noteContext.notePath}`;
-            iframe.className = "print-iframe";
-            document.body.appendChild(iframe);
-            iframe.onload = () => {
-                if (!iframe.contentWindow) {
-                    toast.closePersistent("printing");
-                    document.body.removeChild(iframe);
-                    return;
+            return;
+        }
+
+        // Browser fallback: render the print page in a hidden iframe and use window.print().
+        showToast("printing");
+        const iframe = document.createElement('iframe');
+        iframe.src = `?print#${noteContext.notePath}`;
+        iframe.className = "print-iframe";
+        document.body.appendChild(iframe);
+        iframe.onload = () => {
+            if (!iframe.contentWindow) {
+                toast.closePersistent("printing");
+                document.body.removeChild(iframe);
+                return;
+            }
+
+            iframe.contentWindow.addEventListener("note-load-progress", (e) => {
+                showToast("printing", e.detail.progress);
+            });
+
+            iframe.contentWindow.addEventListener("note-ready", (e) => {
+                toast.closePersistent("printing");
+
+                if ("detail" in e) {
+                    handlePrintReport(e.detail as PrintReport);
                 }
 
-                iframe.contentWindow.addEventListener("note-load-progress", (e) => {
-                    showToast("printing", e.detail.progress);
-                });
-
-                iframe.contentWindow.addEventListener("note-ready", (e) => {
-                    toast.closePersistent("printing");
-
-                    if ("detail" in e) {
-                        handlePrintReport(e.detail as PrintReport);
-                    }
-
-                    iframe.contentWindow?.print();
-                    document.body.removeChild(iframe);
-                });
-            };
-        }
-    });
-
-    useTriliumEvent("exportAsPdf", () => {
-        if (!noteContext?.isActive() || !note) return;
-        showToast("exporting_pdf");
-
-        const { ipcRenderer } = dynamicRequire("electron");
-        ipcRenderer.send("export-as-pdf-preview", {
-            title: note.title,
-            notePath: noteContext.notePath,
-            pageSize: note.getAttributeValue("label", "printPageSize") ?? "Letter",
-            landscape: note.hasAttribute("label", "printLandscape"),
-            scale: parseFloat(note.getAttributeValue("label", "printScale") ?? "1") || 1,
-            margins: note.getAttributeValue("label", "printMargins") ?? "default",
-            pageRanges: ""
-        });
+                iframe.contentWindow?.print();
+                document.body.removeChild(iframe);
+            });
+        };
     });
 
     return (

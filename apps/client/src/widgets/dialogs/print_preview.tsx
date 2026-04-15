@@ -110,13 +110,28 @@ export default function PrintPreviewDialog() {
         setLoading(false);
     }
 
-    function handleSave() {
+    function handleExportPdf() {
         if (!bufferRef.current) return;
 
         const { ipcRenderer } = dynamicRequire("electron");
         ipcRenderer.send("save-pdf", {
             title: note?.title ?? "",
             buffer: bufferRef.current
+        });
+        handleClose();
+    }
+
+    function handlePrint(silent: boolean) {
+        if (!isElectron()) return;
+        const { ipcRenderer } = dynamicRequire("electron");
+        ipcRenderer.send("print-from-preview", {
+            notePath: notePathRef.current,
+            pageSize,
+            landscape,
+            scale,
+            margins: marginsStr,
+            pageRanges,
+            silent
         });
         handleClose();
     }
@@ -215,10 +230,23 @@ export default function PrintPreviewDialog() {
             show={shown}
             onHidden={handleClose}
             bodyStyle={{ height: "78vh", padding: 0, display: "flex" }}
+            footerAlignment="between"
             footer={
                 <>
-                    <Button text={t("print_preview.close")} onClick={handleClose} />
-                    <Button text={t("print_preview.save")} className="btn-primary" onClick={handleSave} disabled={loading} />
+                    <a
+                        href="#"
+                        class={loading ? "disabled" : ""}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            if (!loading) handlePrint(false);
+                        }}
+                    >
+                        {t("print_preview.system_print")}
+                    </a>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                        <Button text={t("print_preview.export_pdf")} icon="bx-file" onClick={handleExportPdf} disabled={loading} />
+                        <Button text={t("print_preview.print")} icon="bx-printer" className="btn-primary" onClick={() => handlePrint(true)} disabled={loading} />
+                    </div>
                 </>
             }
         >
