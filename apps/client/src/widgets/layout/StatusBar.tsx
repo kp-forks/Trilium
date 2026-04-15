@@ -20,7 +20,7 @@ import { formatDateTime } from "../../utils/formatters";
 import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
 import Dropdown, { DropdownProps } from "../react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
-import { useActiveNoteContext, useLegacyImperativeHandlers, useNoteLabel, useNoteProperty, useStaticTooltip, useTriliumEvent, useTriliumEvents } from "../react/hooks";
+import { useActiveNoteContext, useLegacyImperativeHandlers, useNoteLabel, useNoteLabelInt, useNoteProperty, useStaticTooltip, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
 import Icon from "../react/Icon";
 import LinkButton from "../react/LinkButton";
 import { ParentComponent } from "../react/react_utils";
@@ -69,6 +69,7 @@ export default function StatusBar() {
 
                     <div className="actions-row">
                         <CodeNoteSwitcher {...context} />
+                        <TabWidthSwitcher {...context} />
                         <LanguageSwitcher {...context} />
                         {!isHiddenNote && <NotePaths {...context} />}
                         <AttributesButton {...attributesContext} />
@@ -431,6 +432,54 @@ function NotePaths({ note, hoistedNoteId, notePath }: StatusBarContext) {
                 sortedNotePaths={sortedNotePaths}
                 currentNotePath={notePath}
             />
+        </StatusBarDropdown>
+    );
+}
+//#endregion
+
+//#region Tab width switcher
+const TAB_WIDTH_OPTIONS = [1, 2, 3, 4, 6, 8] as const;
+
+function TabWidthSwitcher({ note }: StatusBarContext) {
+    const [ codeNoteTabWidth ] = useTriliumOption("codeNoteTabWidth");
+    const [ noteTabWidth, setNoteTabWidth ] = useNoteLabelInt(note, "tabWidth");
+    const globalTabWidth = parseInt(codeNoteTabWidth) || 4;
+    const effectiveTabWidth = noteTabWidth ?? globalTabWidth;
+    const hasPerNoteOverride = noteTabWidth != null;
+
+    return (note.type === "code" &&
+        <StatusBarDropdown
+            icon="bx bx-right-indent"
+            text={t("status_bar.tab_width", { width: effectiveTabWidth })}
+            title={t("status_bar.tab_width_title")}
+        >
+            {TAB_WIDTH_OPTIONS.map(size => (
+                <FormListItem
+                    key={size}
+                    checked={effectiveTabWidth === size}
+                    onClick={() => {
+                        if (hasPerNoteOverride) {
+                            setNoteTabWidth(size);
+                        } else {
+                            attributes.setLabel(note.noteId, "tabWidth", String(size));
+                        }
+                    }}
+                >
+                    {t("status_bar.tab_width_spaces", { count: size })}
+                </FormListItem>
+            ))}
+            <FormDropdownDivider />
+            {hasPerNoteOverride
+                ? <FormListItem
+                    icon="bx bx-x"
+                    onClick={() => attributes.removeOwnedLabelByName(note, "tabWidth")}
+                >
+                    {t("status_bar.tab_width_use_default", { width: globalTabWidth })}
+                </FormListItem>
+                : <FormListItem icon="bx bx-pin" onClick={() => attributes.setLabel(note.noteId, "tabWidth", String(effectiveTabWidth))}>
+                    {t("status_bar.tab_width_per_note")}
+                </FormListItem>
+            }
         </StatusBarDropdown>
     );
 }

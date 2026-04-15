@@ -2297,7 +2297,12 @@
     "note_paths_one": "{{count}} path",
     "note_paths_other": "{{count}} paths",
     "note_paths_title": "Note paths",
-    "code_note_switcher": "Change language mode"
+    "code_note_switcher": "Change language mode",
+    "tab_width": "Tab Width: {{width}}",
+    "tab_width_title": "Change tab width",
+    "tab_width_spaces": "{{count}} spaces",
+    "tab_width_per_note": "Set for this note",
+    "tab_width_use_default": "Use default ({{width}})"
   },
   "attributes_panel": {
     "title": "Note Attributes"
