@@ -95,7 +95,10 @@
     "notes_to_be_deleted": "Les notes suivantes seront supprimées ({{notesCount}})",
     "no_note_to_delete": "Aucune note ne sera supprimée (uniquement les clones).",
     "broken_relations_to_be_deleted": "Les relations suivantes seront rompues et supprimées ({{ relationCount}})",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "title": "Notes supprimées",
+    "clones_label": "Clone",
+    "erase_notes_label": "Supprimer définitivement"
   },
   "export": {
     "export_note_title": "Exporter la note",
@@ -1176,7 +1179,7 @@
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Délai d'effacement des pièces jointes",
-    "erase_attachments_after": "Effacer les pièces jointes inutilisées après :",
+    "erase_attachments_after": "Effacer les pièces jointes inutilisées après :",
     "manual_erasing_description": "Vous pouvez également déclencher l'effacement manuellement (sans tenir compte du délai défini ci-dessus) :",
     "erase_unused_attachments_now": "Effacez maintenant les pièces jointes inutilisées",
     "unused_attachments_erased": "Les pièces jointes inutilisées ont été effacées."
