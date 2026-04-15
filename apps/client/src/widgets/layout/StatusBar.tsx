@@ -440,11 +440,38 @@ function NotePaths({ note, hoistedNoteId, notePath }: StatusBarContext) {
 //#region Tab width switcher
 const TAB_WIDTH_OPTIONS = [1, 2, 3, 4, 6, 8] as const;
 
-function TabWidthSwitcher({ note }: StatusBarContext) {
+/**
+ * Re-indents leading spaces on each line, converting from `fromWidth` indent units
+ * to `toWidth` indent units. Tabs and non-leading whitespace are preserved as-is.
+ */
+function reindentSpaces(content: string, fromWidth: number, toWidth: number): string {
+    if (fromWidth === toWidth || fromWidth <= 0) return content;
+    return content.replace(/^( +)/gm, (leading) => {
+        const levels = Math.round(leading.length / fromWidth);
+        const remainder = leading.length - levels * fromWidth;
+        return " ".repeat(levels * toWidth + Math.max(remainder, 0));
+    });
+}
+
+function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
     const [ globalTabWidth ] = useTriliumOptionInt("codeNoteTabWidth");
     const [ noteTabWidth, setNoteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const effectiveTabWidth = noteTabWidth ?? globalTabWidth;
     const hasPerNoteOverride = noteTabWidth != null;
+
+    const changeTabWidth = async (newWidth: number | null) => {
+        const oldWidth = effectiveTabWidth;
+        const resolvedNewWidth = newWidth ?? globalTabWidth;
+        setNoteTabWidth(newWidth);
+        if (oldWidth === resolvedNewWidth) return;
+
+        const editor = await noteContext.getCodeEditor();
+        if (!editor) return;
+        const reindented = reindentSpaces(editor.getText(), oldWidth, resolvedNewWidth);
+        if (reindented !== editor.getText()) {
+            editor.setText(reindented);
+        }
+    };
 
     return (note.type === "code" &&
         <StatusBarDropdown
@@ -456,14 +483,14 @@ function TabWidthSwitcher({ note }: StatusBarContext) {
                 <FormListItem
                     key={size}
                     checked={effectiveTabWidth === size}
-                    onClick={() => setNoteTabWidth(size)}
+                    onClick={() => changeTabWidth(size)}
                 >
                     {t("status_bar.tab_width_spaces", { count: size })}
                 </FormListItem>
             ))}
             {hasPerNoteOverride && <>
                 <FormDropdownDivider />
-                <FormListItem icon="bx bx-x" onClick={() => setNoteTabWidth(null)}>
+                <FormListItem icon="bx bx-x" onClick={() => changeTabWidth(null)}>
                     {t("status_bar.tab_width_use_default", { width: globalTabWidth })}
                 </FormListItem>
             </>}
