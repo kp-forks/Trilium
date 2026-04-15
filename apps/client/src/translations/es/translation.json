@@ -428,7 +428,9 @@
     "print_landscape": "Al exportar a PDF, cambia la orientación de la página a paisaje en lugar de retrato.",
     "print_page_size": "Al exportar a PDF, cambia el tamaño de la página. Valores soportados: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
     "color_type": "Color",
-    "textarea": "Texto multilínea"
+    "textarea": "Texto multilínea",
+    "print_scale": "Al exportar a PDF, cambia la escala del contenido renderizado. Los valores varían de 0.1 (10%) a 2 (200%), por defecto es 1 (100%).",
+    "print_margins": "Al exportar a PDF, establece márgenes de página. Use <code>default</code>, <code>none</code>, <code>minimum</code>, o valores personalizados como <code>top,right,bottom,left</code> en milímetros."
   },
   "attribute_editor": {
     "help_text_body1": "Para agregar una etiqueta, simplemente escriba, por ejemplo. <code>#rock</code> o si desea agregar también valor, p.e. <code>#año = 2020</code>",
@@ -691,7 +693,11 @@
     "export_as_image_png": "PNG (ráster)",
     "export_as_image_svg": "SVG (vectorial)",
     "note_map": "Mapa de la nota",
-    "view_ocr_text": "Ver texto OCR"
+    "view_ocr_text": "Ver texto OCR",
+    "word_wrap_auto": "Automático",
+    "word_wrap_auto_description": "Seguir el ajuste global",
+    "word_wrap_on": "Encendido",
+    "word_wrap_off": "Apagado"
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
@@ -792,7 +798,10 @@
     "hide_child_notes": "Ocultar subnotas en el árbol",
     "open_all_in_tabs": "Abrir todo",
     "open_all_in_tabs_tooltip": "Abrir todos los resultados en nuevas pestañas",
-    "open_all_confirm": "Esto abrirá {{count}} notas en nuevas pestañas. ¿Continuar?"
+    "open_all_confirm": "Esto abrirá {{count}} notas en nuevas pestañas. ¿Continuar?",
+    "open_all_too_one": " ",
+    "open_all_too_many": " ",
+    "open_all_too_other": " "
   },
   "edited_notes": {
     "no_edited_notes_found": "Aún no hay notas editadas en este día...",
@@ -1122,7 +1131,7 @@
     "note_tree_font": "Fuente del árbol de notas",
     "note_detail_font": "Fuente de detalle de nota",
     "monospace_font": "Fuente Monospace (código)",
-    "not_all_fonts_available": "Es posible que no todas las fuentes enumeradas estén disponibles en su sistema.",
+    "not_all_fonts_available": "Es posible que no todas las fuentes enumeradas estén disponibles en su sistema",
     "generic-fonts": "Fuentes genéricas",
     "sans-serif-system-fonts": "Fuentes Sans-serif del sistema",
     "serif-system-fonts": "Fuentes Serif del sistema",
@@ -1208,7 +1217,7 @@
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Tiempo de espera para borrar archivos adjuntos",
     "erase_attachments_after": "Borrar archivos adjuntos después de:",
-    "manual_erasing_description": "También puede activar el borrado manualmente (sin considerar el tiempo de espera definido anteriormente):",
+    "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
     "erase_unused_attachments_now": "Borrar ahora los archivos adjuntos no utilizados en la nota",
     "unused_attachments_erased": "Los archivos adjuntos no utilizados se han eliminado."
   },
@@ -1219,7 +1228,7 @@
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Tiempo de espera de borrado de notas",
     "erase_notes_after": "Borrar notas después de:",
-    "manual_erasing_description": "También puede activar el borrado manualmente (sin considerar el tiempo de espera definido anteriormente):",
+    "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
     "erase_deleted_notes_now": "Borrar notas eliminadas ahora",
     "deleted_notes_erased": "Las notas eliminadas han sido borradas."
   },
@@ -1238,7 +1247,7 @@
   },
   "search_engine": {
     "title": "Motor de búsqueda",
-    "custom_search_engine_info": "El motor de búsqueda personalizado requiere que se establezcan un nombre y una URL. Si alguno de estos no está configurado, DuckDuckGo se utilizará como motor de búsqueda predeterminado.",
+    "custom_search_engine_info": "Utilizado al buscar la web para el texto seleccionado. Si no está configurado, DuckDuckGo será utilizado.",
     "predefined_templates_label": "Plantillas de motor de búsqueda predefinidas",
     "bing": "Bing",
     "baidu": "Baidu",
@@ -1613,7 +1622,7 @@
   "note_detail": {
     "could_not_find_typewidget": "No se pudo encontrar typeWidget para el tipo '{{type}}'",
     "printing": "Impresión en curso...",
-    "printing_pdf": "Exportando a PDF en curso..",
+    "printing_pdf": "Preparando vista preliminar de impresión...",
     "print_report_collection_content_one": "{{count}} nota en la colección no se puede imprimir porque no son compatibles o está protegida.",
     "print_report_collection_content_many": "{{count}} notas en la colección no se pueden imprimir porque no son compatibles o están protegidas.",
     "print_report_collection_content_other": "{{count}} notas en la colección no se pueden imprimir porque no son compatibles o están protegidas.",
@@ -1758,7 +1767,7 @@
         "title": "Fijo",
         "description": "las herramientas de edición aparecen en la pestaña de la cinta \"Formato\")."
       },
-      "multiline-toolbar": "Mostrar la barra de herramientas en múltiples líneas si no cabe."
+      "multiline-toolbar": "Mostrar la barra de herramientas en múltiples líneas si no cabe"
     }
   },
   "electron_context_menu": {
