@@ -159,9 +159,16 @@ export default function PrintPreviewDialog() {
         setLoading(true);
         const { ipcRenderer } = dynamicRequire("electron");
 
-        const onResult = (_e: any, { buffer }: { buffer: Uint8Array }) => {
+        const onResult = (_e: any, { buffer, error }: { buffer?: Uint8Array; error?: string }) => {
             toast.closePersistent("printing");
-            updatePreview(buffer);
+            if (error) {
+                setLoading(false);
+                toast.showError(t("print_preview.render_error"));
+                return;
+            }
+            if (buffer) {
+                updatePreview(buffer);
+            }
         };
         ipcRenderer.once("export-as-pdf-preview-result", onResult);
 
@@ -302,8 +309,9 @@ function MarginSpinner({ label, value, onChange, disabled, style }: {
                 aria-label={label}
                 value={value}
                 min={0}
+                max={100}
                 step={1}
-                onChange={(e) => onChange((e.target as HTMLInputElement).valueAsNumber || 0)}
+                onChange={(e) => onChange(Math.min(100, (e.target as HTMLInputElement).valueAsNumber || 0))}
                 disabled={disabled}
             />
             <span class="input-group-text">mm</span>

@@ -2331,6 +2331,7 @@
     "page_size": "Page size",
     "scale": "Scale",
     "margins": "Margins",
+    "render_error": "Unable to render PDF with the current settings. Please check the margins and scale.",
     "margins_default": "Default",
     "margins_none": "None",
     "margins_minimum": "Minimum",
