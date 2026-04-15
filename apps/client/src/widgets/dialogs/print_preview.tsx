@@ -91,6 +91,7 @@ export default function PrintPreviewDialog() {
     const [loading, setLoading] = useState(false);
     const bufferRef = useRef<Uint8Array>();
     const notePathRef = useRef("");
+    const pdfUrlRef = useRef<string>();
 
     const [landscape, setLandscape] = useNoteLabelBoolean(note, "printLandscape");
     const [pageSize, setPageSize] = useNoteLabelWithDefault(note, "printPageSize", "Letter");
@@ -123,16 +124,23 @@ export default function PrintPreviewDialog() {
     const updatePreview = useCallback((buffer: Uint8Array) => {
         bufferRef.current = buffer;
 
-        if (pdfUrl) {
-            URL.revokeObjectURL(pdfUrl);
+        if (pdfUrlRef.current) {
+            URL.revokeObjectURL(pdfUrlRef.current);
         }
 
         const blob = new Blob([buffer as BlobPart], { type: "application/pdf" });
-        setPdfUrl(URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        pdfUrlRef.current = url;
+        setPdfUrl(url);
         setLoading(false);
-    }, [pdfUrl]);
+    }, []);
 
     useTriliumEvent("showPrintPreview", (data: PrintPreviewData) => {
+        // When the dialog is already open, it manages its own regeneration via
+        // one-shot IPC listeners. Ignore duplicate events from NoteDetail's
+        // persistent listener to avoid overwriting the preview with stale data.
+        if (shown) return;
+
         skipNextRegenRef.current = true;
         setNote(data.note);
         notePathRef.current = data.notePath;
@@ -183,8 +191,9 @@ export default function PrintPreviewDialog() {
 
     function handleClose() {
         setShown(false);
-        if (pdfUrl) {
-            URL.revokeObjectURL(pdfUrl);
+        if (pdfUrlRef.current) {
+            URL.revokeObjectURL(pdfUrlRef.current);
+            pdfUrlRef.current = undefined;
             setPdfUrl(undefined);
         }
         bufferRef.current = undefined;
