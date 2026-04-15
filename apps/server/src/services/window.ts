@@ -277,7 +277,18 @@ interface PrintFromPreviewOpts extends ExportAsPdfOpts {
 
 electron.ipcMain.handle("get-printers", async (e) => {
     try {
-        return await e.sender.getPrintersAsync();
+        const printers = await e.sender.getPrintersAsync();
+        return printers.map((p) => {
+            // Platform-specific: CUPS uses "printer-location", Windows/mac often expose "location".
+            const opts = (p.options ?? {}) as Record<string, string>;
+            return {
+                name: p.name,
+                displayName: p.displayName,
+                description: p.description,
+                location: opts["printer-location"] || opts.location || "",
+                isDefault: (p as unknown as { isDefault?: boolean }).isDefault ?? false
+            };
+        });
     } catch {
         return [];
     }

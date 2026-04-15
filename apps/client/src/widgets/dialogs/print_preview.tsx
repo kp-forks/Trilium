@@ -22,7 +22,18 @@ const DESTINATION_PDF = "__pdf__";
 interface PrinterInfo {
     name: string;
     displayName: string;
+    description: string;
+    location: string;
     isDefault: boolean;
+}
+
+/** Builds the description line shown under a printer in the dropdown. */
+function buildPrinterDescription(printer: PrinterInfo): string | undefined {
+    const parts: string[] = [];
+    if (printer.isDefault) parts.push(t("print_preview.destination_default"));
+    if (printer.location) parts.push(printer.location);
+    else if (printer.description) parts.push(printer.description);
+    return parts.length ? parts.join(" · ") : undefined;
 }
 const MARGIN_PRESETS = ["default", "none", "minimum"] as const;
 type MarginPreset = typeof MARGIN_PRESETS[number];
@@ -313,7 +324,7 @@ export default function PrintPreviewDialog() {
                                     icon="bx bx-printer"
                                     selected={destination === printer.name}
                                     onClick={() => setDestination(printer.name)}
-                                    description={printer.isDefault ? t("print_preview.destination_default") : undefined}
+                                    description={buildPrinterDescription(printer)}
                                 >
                                     {printer.displayName || printer.name}
                                 </FormListItem>
