@@ -310,7 +310,7 @@ export default function PrintPreviewDialog() {
                         <span class="bx bx-loader-circle bx-spin" style={{ fontSize: "2rem" }} />
                     </div>
                 )}
-                {pdfUrl && <PdfViewer pdfUrl={pdfUrl} />}
+                {pdfUrl && <PdfViewer pdfUrl={pdfUrl} disableSelection />}
             </div>
         </Modal>
     );
