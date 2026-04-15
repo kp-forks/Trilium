@@ -183,10 +183,10 @@
     "monday": "月曜日",
     "first-week-of-the-year": "年の最初の週",
     "first-week-contains-first-day": "最初の週には、元日が含まれる",
-    "first-week-contains-first-thursday": "最初の週には、その年の最初の木曜日が含まれる",
+    "first-week-contains-first-thursday": "最初の週には、最初の木曜日が含まれる（ISO 8601）",
     "first-week-has-minimum-days": "最初の週は最低日数",
     "min-days-in-first-week": "最初の週の最低日数",
-    "first-week-warning": "最初の週のオプションを変更すると、既存のウィークノートと重複する可能性があり、既存のウィークノートはそれに応じて更新されません。",
+    "first-week-warning": "この設定を変更すると、既存のウィークノートと重複が発生する可能性があります。",
     "formatting-locale": "日付と数値のフォーマット",
     "formatting-locale-auto": "アプリケーションの言語に基づいて",
     "tuesday": "火曜日",
@@ -822,17 +822,21 @@
     "filling_entity_changes": "エンティティ変更行を入力中...",
     "sync_rows_filled_successfully": "同期行が正常に入力されました",
     "finished-successfully": "同期が正常に完了しました。",
-    "failed": "同期に失敗しました: {{message}}"
+    "failed": "同期に失敗しました: {{message}}",
+    "force_full_sync_label": "強制的な完全同期",
+    "force_full_sync_description": "同期サーバーとの完全同期を実行し、すべての変更を再アップロードします。",
+    "fill_entity_changes_label": "エンティティの変更を反映",
+    "fill_entity_changes_description": "エンティティの変更履歴を再構築します。同期処理で一部の変更が反映されていない場合に使用してください。"
   },
   "fonts": {
     "fonts": "フォント",
-    "main_font": "メインフォント",
+    "main_font": "インターフェース テキスト",
     "font_family": "フォントファミリー",
     "size": "サイズ",
-    "note_tree_font": "ノートツリーフォント",
-    "note_detail_font": "ノート詳細フォント",
-    "monospace_font": "等幅（コード）フォント",
-    "not_all_fonts_available": "リストされているすべてのフォントが、お使いのシステムで利用できるとは限りません。",
+    "note_tree_font": "ノートツリー テキスト",
+    "note_detail_font": "ドキュメント テキスト",
+    "monospace_font": "等幅フォント",
+    "not_all_fonts_available": "リストにあるすべてのフォントが、お使いのシステムで利用できるとは限りません",
     "generic-fonts": "一般的なフォント",
     "sans-serif-system-fonts": "サンセリフのシステムフォント",
     "serif-system-fonts": "セリフのシステムフォント",
@@ -842,7 +846,12 @@
     "sans-serif": "サンセリフ",
     "monospace": "等幅",
     "system-default": "システムのデフォルト",
-    "theme_defined": "テーマが定義されました"
+    "theme_defined": "テーマが定義されました",
+    "custom_fonts": "カスタムフォントを使用",
+    "preview": "プレビュー",
+    "monospace_font_description": "コードノートとコードブロックに使用されます",
+    "size_relative_to_general": "サイズは一般的なフォントサイズを基準としています",
+    "apply_changes": "変更を適用するには再読み込みしてください"
   },
   "max_content_width": {
     "title": "コンテンツ幅",
@@ -852,20 +861,23 @@
     "centerContent": "コンテンツを中央に配置"
   },
   "theme": {
-    "title": "アプリのテーマ",
-    "theme_label": "テーマ",
+    "title": "ユーザーインターフェース",
+    "theme_label": "アプリケーションのテーマ",
     "override_theme_fonts_label": "テーマのフォントを上書き",
-    "auto_theme": "レガシー（システムの配色に従う）",
-    "light_theme": "レガシー（ライト）",
-    "dark_theme": "レガシー（ダーク）",
-    "triliumnext": "Trilium（システムの配色に従う）",
-    "triliumnext-light": "Trilium（ライト）",
-    "triliumnext-dark": "Trilium（ダーク）",
+    "auto_theme": "システムの配色に従う",
+    "light_theme": "ライト",
+    "dark_theme": "ダーク",
+    "triliumnext": "システムの配色に従う",
+    "triliumnext-light": "ライト",
+    "triliumnext-dark": "ダーク",
     "layout": "レイアウト",
     "layout-vertical-title": "垂直",
     "layout-horizontal-title": "水平",
     "layout-vertical-description": "ランチャーバーは左側（デフォルト）",
-    "layout-horizontal-description": "ランチャーバーはタブバーの下にあり、タブバーは全幅に。"
+    "layout-horizontal-description": "ランチャーバーはタブバーの下にあり、タブバーは全幅に。",
+    "modern_themes": "モダン",
+    "legacy_themes": "レガシー",
+    "custom_themes": "カスタム"
   },
   "vim_key_bindings": {
     "use_vim_keybindings_in_code_notes": "Vimキーバインド",
@@ -902,27 +914,30 @@
   },
   "search_engine": {
     "title": "検索エンジン",
-    "custom_search_engine_info": "カスタム検索エンジンは、名前とURLの両方を設定する必要があります。どちらも設定されていない場合、DuckDuckGoがデフォルトの検索エンジンとして使用されます。",
-    "predefined_templates_label": "定義済みの検索エンジンのテンプレート",
+    "custom_search_engine_info": "選択したテキストをウェブ上で検索する際に使用します。設定されていない場合は、DuckDuckGo が使用されます。",
+    "predefined_templates_label": "プリセット",
     "bing": "Bing",
     "baidu": "Baidu",
     "duckduckgo": "DuckDuckGo",
     "google": "Google",
-    "custom_name_label": "カスタム検索エンジンの名前",
-    "custom_name_placeholder": "カスタム検索エンジンの名前",
-    "custom_url_label": "カスタム検索エンジンのURLには、検索語句のプレースホルダーとして {keyword} を含める必要があります。",
-    "custom_url_placeholder": "検索エンジンの URL をカスタマイズ",
-    "save_button": "保存"
+    "custom_name_label": "名前",
+    "custom_name_placeholder": "検索エンジン名",
+    "custom_url_label": "URL",
+    "custom_url_placeholder": "検索エンジンの URL",
+    "save_button": "保存",
+    "custom_url_description": "検索語句の代わりに {keyword} を使用してください。"
   },
   "tray": {
     "title": "システムトレイ",
-    "enable_tray": "トレイを有効にする (この変更を適用にするには、Triliumを再起動する必要があります)"
+    "enable_tray": "トレイアイコン",
+    "enable_tray_description": "この変更を有効にするには、Trilium を再起動する必要があります。"
   },
   "heading_style": {
     "title": "見出しのスタイル",
     "plain": "プレーン",
     "underline": "下線",
-    "markdown": "Markdownスタイル"
+    "markdown": "Markdownスタイル",
+    "description": "テキストノート内の見出しの表示スタイル。"
   },
   "highlights_list": {
     "title": "ハイライトリスト",
@@ -951,20 +966,22 @@
   "text_auto_read_only_size": {
     "title": "自動読み取り専用のサイズ",
     "description": "自動読み取り専用のノートサイズは、ノートが読み取り専用モード（パフォーマンス上の理由）で表示されるようになるサイズです。",
-    "label": "自動読み取り専用のサイズ（テキストノート）",
+    "label": "自動で読み取り専用になるサイズ",
     "unit": "文字"
   },
   "code_auto_read_only_size": {
     "title": "自動読み取り専用のサイズ",
     "description": "自動読み取り専用のノートサイズは、ノートが読み取り専用モード（パフォーマンス上の理由）で表示されるようになるサイズです。",
     "unit": "文字",
-    "label": "自動読み取り専用のサイズ（コードノート）"
+    "label": "自動で読み取り専用になるサイズ"
   },
   "custom_date_time_format": {
-    "title": "日付/時刻フォーマットのカスタム",
+    "title": "日付/時刻の形式",
     "description": "<shortcut />またはツールバーから挿入される日付と時刻のフォーマットをカスタマイズする。 利用可能なトークンについては <doc>Day.js ドキュメント</doc> を参照してください。",
-    "format_string": "文字列形式:",
-    "formatted_time": "日付/時刻形式:"
+    "format_string": "書式文字列",
+    "formatted_time": "日付/時刻の形式",
+    "description_short": "ツールバーから挿入する日付と時刻の形式をカスタマイズできます。",
+    "preview": "プレビュー: {{preview}}"
   },
   "backup": {
     "automatic_backup": "自動バックアップ",
@@ -980,7 +997,8 @@
     "path": "パス",
     "database_backed_up_to": "データベースは{{backupFilePath}}にバックアップされました",
     "no_backup_yet": "バックアップがありません",
-    "download": "ダウンロード"
+    "download": "ダウンロード",
+    "title": "バックアップ"
   },
   "password": {
     "wiki": "wiki",
@@ -992,16 +1010,20 @@
     "new_password_confirmation": "新パスワードの確認",
     "change_password": "パスワードの変更",
     "change_password_heading": "パスワードの変更",
-    "protected_session_timeout": "保護されたセッションのタイムアウト",
-    "protected_session_timeout_description": "保護されたセッションのタイムアウトは、保護されたセッションがブラウザのメモリから消去される時間です。これは、保護されたノートとの最後のやり取りから測定されます。参照",
+    "protected_session_timeout": "保護されたセッション",
+    "protected_session_timeout_description": "ブラウザのメモリからセッションが削除されるまでの非アクティブ時間。詳細はこちら",
     "for_more_info": "詳細はこちら。",
-    "protected_session_timeout_label": "保護されたセッションのタイムアウト:",
+    "protected_session_timeout_label": "セッションが自動で終了するまでの時間",
     "reset_confirmation": "パスワードをリセットすると、保護されているすべてのノートにアクセスできなくなります。本当にパスワードをリセットしますか？",
     "reset_success_message": "パスワードがリセットされました。新しいパスワードを設定してください",
     "set_password_heading": "パスワードの設定",
     "set_password": "パスワードの設定",
     "password_mismatch": "新しいパスワードが同じではありません。",
-    "password_changed_success": "パスワードが変更されました。OKを押すとTriliumがリロードされます。"
+    "password_changed_success": "パスワードが変更されました。OKを押すとTriliumがリロードされます。",
+    "change_password_description": "現在のパスワードを更新",
+    "reset_password": "パスワードをリセット",
+    "reset_password_description": "保護されたノートへのアクセス権を完全に失います",
+    "cancel": "キャンセル"
   },
   "spellcheck": {
     "title": "スペルチェック",
@@ -1017,17 +1039,19 @@
     "related_description": "スペルチェック対応言語とカスタム辞書を設定します。"
   },
   "sync_2": {
-    "config_title": "同期設定",
-    "server_address": "サーバーインスタンスのアドレス",
-    "timeout": "同期タイムアウト",
-    "proxy_label": "同期プロキシサーバー（任意）",
+    "config_title": "同期サーバー",
+    "server_address": "サーバーアドレス",
+    "timeout": "接続タイムアウト",
+    "proxy_label": "プロキシサーバー",
     "save": "保存",
     "help": "ヘルプ",
-    "test_title": "同期のテスト",
-    "test_description": "これは同期サーバとの接続とハンドシェイクをテストします。同期サーバーが初期化されていない場合、ローカルドキュメントと同期するように設定します。",
+    "test_title": "接続テスト",
+    "test_description": "同期サーバーへの接続をテストします。初期化されていない場合は、同期の設定を行います。",
     "test_button": "同期試行",
     "handshake_failed": "同期サーバーのハンドシェイクに失敗しました。エラー: {{message}}",
-    "timeout_description": "同期接続が遅い場合に、接続を諦めるまでの待機時間。ネットワークが不安定な場合は、この時間を長く設定してください。"
+    "timeout_description": "接続が遅い場合に接続を断念するまでの待機時間。",
+    "server_address_description": "同期先の Trilium サーバーの URL。",
+    "proxy_description": "システムのプロキシを使用する場合は空欄のままにしてください（デスクトップ版のみ）。すべてのプロキシをバイパスするには \"noproxy\" を使用してください。"
   },
   "api_log": {
     "close": "閉じる"
@@ -1178,7 +1202,9 @@
     "and_more": "...その他 {{count}} 件。",
     "print_landscape": "PDF にエクスポートするときに、ページの向きを縦向きではなく横向きに変更します。",
     "print_page_size": "PDF にエクスポートするときに、ページのサイズを変更します。サポートされる値: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>。",
-    "textarea": "複数行テキスト"
+    "textarea": "複数行テキスト",
+    "print_scale": "PDF にエクスポートする際に、レンダリングされるコンテンツの縮尺を変更します。値の範囲は 0.1（10%）から 2（200%）までで、デフォルト値は 1（100%）です。",
+    "print_margins": "PDF に書き出す際に、ページ余白を設定します。<code>デフォルト</code>, <code>なし</code>, <code>最小</code>, または <code>上、右、下、左</code> のようなカスタム値をミリメートル単位で指定できます。"
   },
   "link_context_menu": {
     "open_note_in_popup": "クイック編集",
@@ -1330,7 +1356,9 @@
     "theme_group_light": "ライトテーマ",
     "theme_group_dark": "ダークテーマ",
     "copy_title": "クリップボードにコピー",
-    "click_to_copy": "クリックしてコピー"
+    "click_to_copy": "クリックしてコピー",
+    "tab_width": "タブ幅",
+    "tab_width_unit": "スペース"
   },
   "editor": {
     "title": "エディター"
@@ -1346,7 +1374,8 @@
         "title": "固定",
         "description": "編集ツールは「書式設定」のリボンタブに表示されます。"
       },
-      "multiline-toolbar": "ツールバーが収まりきらない場合は、複数行で表示する。"
+      "multiline-toolbar": "ツールバーが収まりきらない場合は複数行で表示",
+      "toolbar_style": "ツールバーのスタイル"
     }
   },
   "electron_context_menu": {
@@ -1367,7 +1396,7 @@
     "days": "日"
   },
   "share": {
-    "title": "共有設定",
+    "title": "共有",
     "redirect_bare_domain": "ネイキッドドメインを共有ページにリダイレクト",
     "redirect_bare_domain_description": "匿名のユーザーをログイン画面ではなく共有ページにリダイレクトします",
     "show_login_link_description": "共有ページの下部にログインリンクを追加",
@@ -1412,12 +1441,12 @@
     "message_macos": "TriliumNext は現在、Rosetta 2による翻訳環境で実行されています。つまり、Apple Silicon MacではIntel (x64)バージョンを使用していることになります。これはパフォーマンスとバッテリー寿命に重大な影響を及ぼします。"
   },
   "editorfeatures": {
-    "emoji_completion_enabled": "絵文字のオートコンプリートを有効",
-    "note_completion_enabled": "ノートのオートコンプリートを有効",
-    "emoji_completion_description": "有効にすると、「:」に続けて絵文字の名前を入力することで、テキストに絵文字を簡単に挿入できます。",
-    "note_completion_description": "有効にすると、「@」 に続けてノートのタイトルを入力することで、ノートへのリンクを作成できます。",
-    "slash_commands_enabled": "スラッシュコマンドを有効",
-    "slash_commands_description": "有効にすると、改行や見出しの挿入などの編集コマンドは、「/」 と入力して切り替えることができます。",
+    "emoji_completion_enabled": "絵文字のオートコンプリート",
+    "note_completion_enabled": "ノートのオートコンプリート",
+    "emoji_completion_description": "絵文字は \":\" の後に絵文字の名前を入力することで、テキストに絵文字を簡単に挿入できます。",
+    "note_completion_description": "ノートへのリンクは \"@\" の後にノートのタイトルを入力することで作成できます。",
+    "slash_commands_enabled": "スラッシュコマンド",
+    "slash_commands_description": "改行や見出しの挿入などの編集コマンドは \"/\" を入力して切り替えることができます。",
     "title": "機能"
   },
   "table_context_menu": {
@@ -1556,11 +1585,11 @@
   },
   "database_anonymization": {
     "title": "データベースの匿名化",
-    "full_anonymization": "完全匿名化",
-    "full_anonymization_description": "この操作により、データベースの新しいコピーが作成され、匿名化されます（すべてのノートの内容を削除し、構造と一部の非機密メタデータのみを残します）。これにより、個人データが漏洩する心配なく、デバッグ目的でオンライン共有できます。",
+    "full_anonymization": "完全な匿名化",
+    "full_anonymization_description": "ノートの内容をすべて削除し、構造と機密性の低いメタデータのみを残したデータベースのコピーを作成します。問題のデバッグ時にオンラインで共有しても安全です。",
     "save_fully_anonymized_database": "完全に匿名化されたデータベースを保存",
     "light_anonymization": "軽い匿名化",
-    "light_anonymization_description": "この操作により、データベースの新しいコピーが作成され、軽い匿名化が適用されます。具体的には、すべてのノートの内容のみが削除され、タイトルと属性はそのまま残ります。さらに、カスタムJSフロントエンド/バックエンドスクリプトノートとカスタムウィジェットもそのまま残ります。これにより、問題のデバッグのためのコンテキストがより多く提供されます。",
+    "light_anonymization_description": "ノートの内容は削除しますが、タイトル、属性、カスタムスクリプト/ウィジェットは残します。デバッグのためのコンテキストがより多く提供されます。",
     "choose_anonymization": "完全に匿名化したデータベースを提供するか、軽く匿名化したデータベースを提供するかは、あなた自身が決めることができます。完全に匿名化されたDBであっても非常に有用ですが、場合によっては軽く匿名化されたDBの方がバグの特定と修正のプロセスを速めることができます。",
     "save_lightly_anonymized_database": "軽く匿名化されたデータベースを保存",
     "existing_anonymized_databases": "既存の匿名化データベース",
@@ -1569,17 +1598,22 @@
     "error_creating_anonymized_database": "匿名化データベースの作成に失敗しました。詳細はバックエンドログを確認してください",
     "successfully_created_fully_anonymized_database": "完全に匿名化されたデータベースを {{anonymizedFilePath}} に作成",
     "successfully_created_lightly_anonymized_database": "軽く匿名化されたデータベースを {{anonymizedFilePath}} に作成",
-    "no_anonymized_database_yet": "匿名化されたデータベースはまだありません。"
+    "no_anonymized_database_yet": "匿名化されたデータベースはまだありません。",
+    "description": "問題のデバッグ時に開発者と共有するために、個人データを公開することなく、データベースの匿名化されたコピーを作成します。"
   },
   "database_integrity_check": {
     "title": "データベースの整合性チェック",
     "check_button": "データベースの整合性をチェック",
     "checking_integrity": "データベースの整合性をチェックしています...",
     "integrity_check_succeeded": "整合性チェックに成功 - 問題は見つかりませんでした。",
-    "integrity_check_failed": "整合性チェックに失敗: {{results}}"
+    "integrity_check_failed": "整合性チェックに失敗: {{results}}",
+    "check_integrity_label": "データベースの整合性チェック",
+    "check_integrity_description": "SQLite レベルでデータベースが破損していないことを確認します。"
   },
   "code-editor-options": {
-    "title": "エディター"
+    "title": "エディター",
+    "tab_width": "タブ幅",
+    "tab_width_unit": "スペース"
   },
   "search_string": {
     "title_column": "文字列検索:",
@@ -1723,14 +1757,18 @@
     "find_and_fix_button": "一貫性の問題を見つけて修正する",
     "finding_and_fixing_message": "一貫性の問題を見つけて修正中…",
     "title": "一貫性をチェック",
-    "issues_fixed_message": "発見された可能性のある一貫性の問題はすべて修正されました。"
+    "issues_fixed_message": "発見された可能性のある一貫性の問題はすべて修正されました。",
+    "find_and_fix_label": "整合性の問題を検出して修正",
+    "find_and_fix_description": "データベース内のデータ整合性の問題をスキャンし、自動的に修復します。"
   },
   "vacuum_database": {
     "title": "データベースのバキューム",
     "description": "これによりデータベースが再構築され、通常はデータベースファイルのサイズが小さくなります。実際のデータは変更されません。",
     "button_text": "データベースをバキューム",
     "vacuuming_database": "データベースのバキュームを実行中...",
-    "database_vacuumed": "データベースのバキューム処理が完了しました"
+    "database_vacuumed": "データベースのバキューム処理が完了しました",
+    "vacuum_label": "データベースのバキューム",
+    "vacuum_description": "データベースを再構築してファイルサイズを削減します。データは変更されません。"
   },
   "ribbon": {
     "promoted_attributes_message": "プロモート属性がノートに存在する場合、プロモート属性のリボンタブが自動的に開きます",
@@ -1738,12 +1776,12 @@
     "widgets": "リボンウィジェット"
   },
   "ui-performance": {
-    "enable-motion": "トランジションとアニメーションを有効にする",
-    "enable-shadows": "影を有効にする",
-    "enable-backdrop-effects": "メニュー、ポップアップ、パネルの背景効果を有効にする",
+    "enable-motion": "画面遷移とアニメーション",
+    "enable-shadows": "影",
+    "enable-backdrop-effects": "メニュー、ポップアップ、パネルの背景効果",
     "title": "パフォーマンス",
-    "enable-smooth-scroll": "スムーズスクロールを有効にする",
-    "app-restart-required": "（変更を有効にするにはアプリケーションの再起動が必要です）"
+    "enable-smooth-scroll": "スムーズスクロール",
+    "app-restart-required": "アプリの再起動が必要です"
   },
   "code_mime_types": {
     "title": "ドロップダウンで利用可能なMIMEタイプ",
@@ -1752,35 +1790,43 @@
     "tooltip_code_note_syntax": "コードノート"
   },
   "attachment_erasure_timeout": {
-    "attachment_erasure_timeout": "添付ファイル消去のタイムアウト",
-    "erase_attachments_after": "使用されていない添付ファイルを消去する期間:",
-    "manual_erasing_description": "手動で消去をトリガーすることもできます (上記で定義したタイムアウトを考慮せずに):",
-    "erase_unused_attachments_now": "使用されていない添付ノートを今すぐ消去",
-    "unused_attachments_erased": "使用されていない添付ファイルは削除されました。"
+    "attachment_erasure_timeout": "未使用の添付ファイル",
+    "erase_attachments_after": "未使用の添付ファイルを削除するまでの期間",
+    "manual_erasing_description": "上記のタイムアウト設定を無視して、手動で削除を実行する。",
+    "erase_unused_attachments_now": "未使用の添付ノートを今すぐ削除",
+    "unused_attachments_erased": "使用されていない添付ファイルは削除されました。",
+    "description": "どのノートからも参照されていない添付ファイルは未使用とみなされ、一定期間経過後に自動的に削除されます。",
+    "erase_attachments_after_description": "未使用の添付ファイルが完全に削除されるまでの時間。"
   },
   "network_connections": {
-    "network_connections_title": "ネットワーク接続",
-    "check_for_updates": "アップデートを自動的に確認する"
+    "network_connections_title": "ネットワーク",
+    "check_for_updates": "アップデートを自動的に確認する",
+    "check_for_updates_description": "GitHub で新しいバージョンをチェックし、利用可能な場合はグローバルメニューに通知を表示します。"
   },
   "note_erasure_timeout": {
-    "note_erasure_timeout_title": "ノート消去のタイムアウト",
-    "erase_notes_after": "ノートを消去する間隔:",
-    "manual_erasing_description": "手動で消去をトリガーすることもできます (上記で定義したタイムアウトを考慮せずに):",
+    "note_erasure_timeout_title": "削除されたノート",
+    "erase_notes_after": "ノートを削除するまでの期間",
+    "manual_erasing_description": "上記のタイムアウト設定を無視して、手動で削除を実行する。",
     "erase_deleted_notes_now": "削除したノートを今すぐ消去",
-    "deleted_notes_erased": "削除されたノートは消去されました。"
+    "deleted_notes_erased": "削除されたノートは消去されました。",
+    "description": "削除されたノートは、最初は削除済みとしてマークされるだけで最近の変更から復元できます。一定期間が経過すると、完全に削除されます。",
+    "erase_notes_after_description": "削除されたノートが完全に削除されるまでの時間。"
   },
   "revisions_snapshot_interval": {
     "note_revisions_snapshot_interval_title": "ノートの変更履歴の記録間隔",
     "note_revisions_snapshot_description": "ノートの変更履歴の記録間隔は、そのノートに対して新しい変更が作成されるまでの時間です。詳細については、<doc>wiki</doc> をご覧ください。",
-    "snapshot_time_interval_label": "ノートの変更履歴が記憶される時間:"
+    "snapshot_time_interval_label": "スナップショットの間隔",
+    "note_revisions_snapshot_description_short": "新しいノートの変更履歴が作成されるまでの時間。"
   },
   "revisions_snapshot_limit": {
     "note_revisions_snapshot_limit_title": "ノートの変更履歴の記録制限",
     "note_revisions_snapshot_limit_description": "ノートの変更履歴の記録制限とは、各ノートに保存できる変更履歴の最大数を指します。-1 は制限なし、0 はすべての変更履歴を削除することを意味します。#versioningLimit ラベルを使用して、1 つのノートの最大変更数を設定できます。",
-    "snapshot_number_limit_label": "ノートの変更履歴の記録数の制限:",
+    "snapshot_number_limit_label": "最大変更履歴数",
     "snapshot_number_limit_unit": "スナップショット",
     "erase_excess_revision_snapshots": "余分な変更履歴を今すぐ消去",
-    "erase_excess_revision_snapshots_prompt": "余分な変更履歴が消去されました。"
+    "erase_excess_revision_snapshots_prompt": "余分な変更履歴が消去されました。",
+    "note_revisions_snapshot_limit_description_short": "ノートごとの最大変更履歴数。無制限の場合は -1、無効にする場合は 0 を指定してください。",
+    "erase_excess_revision_snapshots_description": "すべてのノートで、制限を超えた変更履歴を削除します。"
   },
   "editability_select": {
     "note_is_read_only": "ノートは読み取り専用ですが、ボタンをクリックすると編集できます。",
@@ -1916,7 +1962,9 @@
     "related_code_notes": "コードノートの配色",
     "ui": "ユーザーインターフェース",
     "ui_old_layout": "旧レイアウト",
-    "ui_new_layout": "新しいレイアウト"
+    "ui_new_layout": "新しいレイアウト",
+    "ui_layout_style": "レイアウトスタイル",
+    "ui_layout_orientation": "ランチャーバーの方向"
   },
   "units": {
     "percentage": "%"
@@ -2088,7 +2136,19 @@
     "code_note_switcher": "言語モードを変更",
     "backlinks_other": "{{count}} バックリンク",
     "attachments_other": "{{count}} 件の添付ファイル",
-    "note_paths_other": "{{count}} 個のパス"
+    "note_paths_other": "{{count}} 個のパス",
+    "tab_width": "タブ幅: {{width}}",
+    "tab_width_title": "タブ幅を変更",
+    "tab_width_spaces": "{{count}} スペース",
+    "tab_width_spaces_short": "スペース: {{width}}",
+    "tab_width_tabs": "タブ （{{width}}）",
+    "tab_width_use_default": "デフォルトを使用 ({{width}})",
+    "tab_width_use_default_style": "デフォルトを使用 ({{style}})",
+    "tab_width_display_header": "表示幅",
+    "tab_width_reindent_header": "コンテンツのインデントを再設定",
+    "tab_width_style_header": "インデントを使用",
+    "tab_width_style_spaces": "スペース",
+    "tab_width_style_tabs": "タブ"
   },
   "breadcrumb": {
     "hoisted_badge": "ホイスト",
@@ -2334,5 +2394,48 @@
     "processing_complete": "OCR 処理が完了しました。",
     "text_filtered_low_confidence": "OCR は {{confidence}}% の信頼度でテキストを検出しましたが、最小しきい値が {{threshold}}% であるため、破棄されました。",
     "open_media_settings": "設定を開く"
+  },
+  "revisions": {
+    "title": "ノートの変更履歴"
+  },
+  "database": {
+    "title": "データベース"
+  },
+  "search": {
+    "title": "検索",
+    "fuzzy_matching_label": "検索時の入力ミス許容度",
+    "fuzzy_matching_description": "クイック検索とフル検索に影響します。完全一致しない場合でも類似語を検索します。",
+    "autocomplete_fuzzy_label": "オートコンプリート時の入力ミス許容度",
+    "autocomplete_fuzzy_description": "ノートへのジャンプとノートの選択に影響します。処理速度は低下しますが、入力ミスを許容します。"
+  },
+  "text_editor": {
+    "title": "エディター"
+  },
+  "link": {
+    "failed_to_open": "'{{- href}}' のリンクを開けなせんでした: {{- message}}"
+  },
+  "print_preview": {
+    "title": "印刷プレビュー",
+    "close": "閉じる",
+    "save": "PDF として保存",
+    "orientation": "向き",
+    "portrait": "縦向き",
+    "landscape": "横向き",
+    "page_size": "ページサイズ",
+    "scale": "縮尺",
+    "margins": "余白",
+    "render_error": "現在の設定では PDF を生成できません。余白と縮尺を確認してください。",
+    "margins_default": "デフォルト",
+    "margins_none": "なし",
+    "margins_minimum": "最小",
+    "margins_custom": "カスタム",
+    "margin_top": "上",
+    "margin_right": "右",
+    "margin_bottom": "下",
+    "margin_left": "左",
+    "page_ranges": "ページ",
+    "page_ranges_hint": "全ページを印刷する場合は空欄のままにしてください。",
+    "page_ranges_invalid": "無効な形式です。例: 1-5, 8, 11-13 のように指定してください。",
+    "page_ranges_placeholder": "例: 1-5, 8, 11-13"
   }
 }
