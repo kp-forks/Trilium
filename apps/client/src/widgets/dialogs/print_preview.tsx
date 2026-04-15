@@ -92,6 +92,7 @@ export default function PrintPreviewDialog() {
     const bufferRef = useRef<Uint8Array>();
     const notePathRef = useRef("");
     const pdfUrlRef = useRef<string>();
+    const generationRef = useRef(0);
 
     const [landscape, setLandscape] = useNoteLabelBoolean(note, "printLandscape");
     const [pageSize, setPageSize] = useNoteLabelWithDefault(note, "printPageSize", "Letter");
@@ -137,8 +138,8 @@ export default function PrintPreviewDialog() {
 
     useTriliumEvent("showPrintPreview", (data: PrintPreviewData) => {
         // When the dialog is already open, it manages its own regeneration via
-        // one-shot IPC listeners. Ignore duplicate events from NoteDetail's
-        // persistent listener to avoid overwriting the preview with stale data.
+        // a persistent IPC listener. Ignore duplicate events from NoteDetail's
+        // listener to avoid overwriting the preview with stale data.
         if (shown) return;
 
         skipNextRegenRef.current = true;
@@ -148,25 +149,48 @@ export default function PrintPreviewDialog() {
         setShown(true);
     });
 
-    const regeneratePreview = useCallback((opts: PreviewOpts) => {
-        if (!isElectron()) return;
-
-        setLoading(true);
+    // Handle regeneration results via a persistent listener scoped to the
+    // dialog's lifecycle. A generation counter discards stale results when
+    // multiple requests overlap.
+    useEffect(() => {
+        if (!shown || !isElectron()) return;
         const { ipcRenderer } = dynamicRequire("electron");
 
         const onResult = (_e: any, { buffer, error }: { buffer?: Uint8Array; error?: string }) => {
+            if (generationRef.current <= 0) return;
+
             toast.closePersistent("printing");
             if (error) {
                 setLoading(false);
-                toast.showError(t("print_preview.render_error"));
+                if (pdfUrlRef.current) {
+                    URL.revokeObjectURL(pdfUrlRef.current);
+                    pdfUrlRef.current = undefined;
+                    setPdfUrl(undefined);
+                }
+                toast.showPersistent({
+                    id: "print-preview-error",
+                    icon: "bx bx-error-circle",
+                    message: t("print_preview.render_error")
+                });
                 return;
             }
+            toast.closePersistent("print-preview-error");
             if (buffer) {
                 updatePreview(buffer);
             }
         };
-        ipcRenderer.once("export-as-pdf-preview-result", onResult);
+        ipcRenderer.on("export-as-pdf-preview-result", onResult);
+        return () => {
+            ipcRenderer.off("export-as-pdf-preview-result", onResult);
+        };
+    }, [shown, updatePreview]);
 
+    const regeneratePreview = useCallback((opts: PreviewOpts) => {
+        if (!isElectron()) return;
+
+        ++generationRef.current;
+        setLoading(true);
+        const { ipcRenderer } = dynamicRequire("electron");
         ipcRenderer.send("export-as-pdf-preview", {
             notePath: notePathRef.current,
             pageSize: opts.pageSize,
@@ -175,7 +199,7 @@ export default function PrintPreviewDialog() {
             margins: opts.margins,
             pageRanges: opts.pageRanges
         });
-    }, [updatePreview]);
+    }, []);
 
     useEffect(() => {
         if (!shown || !pageRangesValid) return;
@@ -191,6 +215,7 @@ export default function PrintPreviewDialog() {
 
     function handleClose() {
         setShown(false);
+        toast.closePersistent("print-preview-error");
         if (pdfUrlRef.current) {
             URL.revokeObjectURL(pdfUrlRef.current);
             pdfUrlRef.current = undefined;
