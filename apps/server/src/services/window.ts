@@ -90,16 +90,26 @@ interface ExportAsPdfOpts {
     margins: string;
 }
 
-/** Parses the printMargins attribute. Preset values map to Electron margin types.
- *  Custom values are stored as "top,right,bottom,left" in mm and converted to inches for Electron. */
-function parseMargins(margins: string): Electron.Margins | undefined {
-    if (!margins || margins === "default") return { marginType: "default" };
-    if (margins === "none") return { marginType: "none" };
-    if (margins === "minimum") return { marginType: "printableArea" };
+/** Parses the printMargins attribute into Electron margins.
+ *  Values are stored in mm and converted to inches for Electron.
+ *  Presets expand to explicit numeric margins since Electron's `marginType` aliases
+ *  (especially `none` and `printableArea`) behave inconsistently for PDF output. */
+function parseMargins(margins: string): Electron.Margins {
+    const mmToInches = (mm: number) => mm / 25.4;
+    const uniform = (mm: number): Electron.Margins => ({
+        marginType: "custom",
+        top: mmToInches(mm),
+        right: mmToInches(mm),
+        bottom: mmToInches(mm),
+        left: mmToInches(mm)
+    });
+
+    if (!margins || margins === "default") return uniform(10);  // ~0.4 in
+    if (margins === "none") return uniform(0);
+    if (margins === "minimum") return uniform(5);
 
     const parts = margins.split(",").map(Number);
     if (parts.length === 4 && parts.every((n) => !isNaN(n))) {
-        const mmToInches = (mm: number) => mm / 25.4;
         return {
             marginType: "custom",
             top: mmToInches(parts[0]),
@@ -109,7 +119,7 @@ function parseMargins(margins: string): Electron.Margins | undefined {
         };
     }
 
-    return { marginType: "default" };
+    return uniform(10);
 }
 
 electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
