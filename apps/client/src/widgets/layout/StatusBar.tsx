@@ -19,7 +19,7 @@ import { openInAppHelpFromUrl } from "../../services/utils";
 import { formatDateTime } from "../../utils/formatters";
 import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
 import Dropdown, { DropdownProps } from "../react/Dropdown";
-import { FormDropdownDivider, FormListItem } from "../react/FormList";
+import { FormDropdownDivider, FormListHeader, FormListItem } from "../react/FormList";
 import { useActiveNoteContext, useLegacyImperativeHandlers, useNoteLabel, useNoteLabelInt, useNoteProperty, useStaticTooltip, useTriliumEvent, useTriliumEvents, useTriliumOptionInt } from "../react/hooks";
 import Icon from "../react/Icon";
 import LinkButton from "../react/LinkButton";
@@ -459,18 +459,15 @@ function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
     const effectiveTabWidth = noteTabWidth ?? globalTabWidth;
     const hasPerNoteOverride = noteTabWidth != null;
 
-    const changeTabWidth = async (newWidth: number | null) => {
-        const oldWidth = effectiveTabWidth;
-        const resolvedNewWidth = newWidth ?? globalTabWidth;
-        setNoteTabWidth(newWidth);
-        if (oldWidth === resolvedNewWidth) return;
-
+    const reindentTo = async (newWidth: number) => {
+        if (newWidth === effectiveTabWidth) return;
         const editor = await noteContext.getCodeEditor();
         if (!editor) return;
-        const reindented = reindentSpaces(editor.getText(), oldWidth, resolvedNewWidth);
+        const reindented = reindentSpaces(editor.getText(), effectiveTabWidth, newWidth);
         if (reindented !== editor.getText()) {
             editor.setText(reindented);
         }
+        setNoteTabWidth(newWidth);
     };
 
     return (note.type === "code" &&
@@ -479,21 +476,32 @@ function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
             text={t("status_bar.tab_width", { width: effectiveTabWidth })}
             title={t("status_bar.tab_width_title")}
         >
+            <FormListHeader text={t("status_bar.tab_width_display_header")} />
             {TAB_WIDTH_OPTIONS.map(size => (
                 <FormListItem
-                    key={size}
+                    key={`display-${size}`}
                     checked={effectiveTabWidth === size}
-                    onClick={() => changeTabWidth(size)}
+                    onClick={() => setNoteTabWidth(size)}
                 >
                     {t("status_bar.tab_width_spaces", { count: size })}
                 </FormListItem>
             ))}
-            {hasPerNoteOverride && <>
-                <FormDropdownDivider />
-                <FormListItem icon="bx bx-x" onClick={() => changeTabWidth(null)}>
+            {hasPerNoteOverride &&
+                <FormListItem icon="bx bx-x" onClick={() => setNoteTabWidth(null)}>
                     {t("status_bar.tab_width_use_default", { width: globalTabWidth })}
                 </FormListItem>
-            </>}
+            }
+
+            <FormListHeader text={t("status_bar.tab_width_reindent_header")} />
+            {TAB_WIDTH_OPTIONS.map(size => (
+                <FormListItem
+                    key={`reindent-${size}`}
+                    disabled={effectiveTabWidth === size}
+                    onClick={() => reindentTo(size)}
+                >
+                    {t("status_bar.tab_width_spaces", { count: size })}
+                </FormListItem>
+            ))}
         </StatusBarDropdown>
     );
 }
