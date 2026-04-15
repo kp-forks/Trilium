@@ -20,7 +20,7 @@ import { formatDateTime } from "../../utils/formatters";
 import { BacklinksList, useBacklinkCount } from "../FloatingButtonsDefinitions";
 import Dropdown, { DropdownProps } from "../react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
-import { useActiveNoteContext, useLegacyImperativeHandlers, useNoteLabel, useNoteLabelInt, useNoteProperty, useStaticTooltip, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
+import { useActiveNoteContext, useLegacyImperativeHandlers, useNoteLabel, useNoteLabelInt, useNoteProperty, useStaticTooltip, useTriliumEvent, useTriliumEvents, useTriliumOptionInt } from "../react/hooks";
 import Icon from "../react/Icon";
 import LinkButton from "../react/LinkButton";
 import { ParentComponent } from "../react/react_utils";
@@ -441,9 +441,8 @@ function NotePaths({ note, hoistedNoteId, notePath }: StatusBarContext) {
 const TAB_WIDTH_OPTIONS = [1, 2, 3, 4, 6, 8] as const;
 
 function TabWidthSwitcher({ note }: StatusBarContext) {
-    const [ codeNoteTabWidth ] = useTriliumOption("codeNoteTabWidth");
+    const [ globalTabWidth ] = useTriliumOptionInt("codeNoteTabWidth");
     const [ noteTabWidth, setNoteTabWidth ] = useNoteLabelInt(note, "tabWidth");
-    const globalTabWidth = parseInt(codeNoteTabWidth) || 4;
     const effectiveTabWidth = noteTabWidth ?? globalTabWidth;
     const hasPerNoteOverride = noteTabWidth != null;
 
@@ -457,29 +456,17 @@ function TabWidthSwitcher({ note }: StatusBarContext) {
                 <FormListItem
                     key={size}
                     checked={effectiveTabWidth === size}
-                    onClick={() => {
-                        if (hasPerNoteOverride) {
-                            setNoteTabWidth(size);
-                        } else {
-                            attributes.setLabel(note.noteId, "tabWidth", String(size));
-                        }
-                    }}
+                    onClick={() => setNoteTabWidth(size)}
                 >
                     {t("status_bar.tab_width_spaces", { count: size })}
                 </FormListItem>
             ))}
-            <FormDropdownDivider />
-            {hasPerNoteOverride
-                ? <FormListItem
-                    icon="bx bx-x"
-                    onClick={() => attributes.removeOwnedLabelByName(note, "tabWidth")}
-                >
+            {hasPerNoteOverride && <>
+                <FormDropdownDivider />
+                <FormListItem icon="bx bx-x" onClick={() => setNoteTabWidth(null)}>
                     {t("status_bar.tab_width_use_default", { width: globalTabWidth })}
                 </FormListItem>
-                : <FormListItem icon="bx bx-pin" onClick={() => attributes.setLabel(note.noteId, "tabWidth", String(effectiveTabWidth))}>
-                    {t("status_bar.tab_width_per_note")}
-                </FormListItem>
-            }
+            </>}
         </StatusBarDropdown>
     );
 }
