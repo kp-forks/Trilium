@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "preact/hooks";
+import { useCallback, useMemo, useRef, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
 import { t } from "../../services/i18n";
@@ -13,11 +13,45 @@ import OptionsRow from "../type_widgets/options/components/OptionsRow";
 import OptionsSection from "../type_widgets/options/components/OptionsSection";
 
 const PAGE_SIZES = ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "Legal", "Letter", "Tabloid", "Ledger"] as const;
+const MARGIN_PRESETS = ["default", "none", "minimum"] as const;
+type MarginPreset = typeof MARGIN_PRESETS[number];
+
+interface CustomMargins {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
+function parseMarginValue(value: string): { preset: MarginPreset | "custom"; custom: CustomMargins } {
+    if (MARGIN_PRESETS.includes(value as MarginPreset)) {
+        return { preset: value as MarginPreset, custom: { top: 10, right: 10, bottom: 10, left: 10 } };
+    }
+
+    const parts = value.split(",").map(Number);
+    if (parts.length === 4 && parts.every((n) => !isNaN(n))) {
+        return { preset: "custom", custom: { top: parts[0], right: parts[1], bottom: parts[2], left: parts[3] } };
+    }
+
+    return { preset: "default", custom: { top: 10, right: 10, bottom: 10, left: 10 } };
+}
+
+function serializeMargins(preset: MarginPreset | "custom", custom: CustomMargins): string {
+    if (preset !== "custom") return preset;
+    return `${custom.top},${custom.right},${custom.bottom},${custom.left}`;
+}
 
 export interface PrintPreviewData {
     pdfBuffer: Uint8Array;
     note: FNote;
     notePath: string;
+}
+
+interface PreviewOpts {
+    landscape: boolean;
+    pageSize: string;
+    scale: number;
+    margins: string;
 }
 
 export default function PrintPreviewDialog() {
@@ -32,11 +66,12 @@ export default function PrintPreviewDialog() {
     const [pageSize, setPageSize] = useNoteLabelWithDefault(note, "printPageSize", "Letter");
     const [scaleStr, setScaleStr] = useNoteLabelWithDefault(note, "printScale", "1");
     const scale = parseFloat(scaleStr) || 1;
+    const [marginsStr, setMarginsStr] = useNoteLabelWithDefault(note, "printMargins", "default");
+    const { preset: marginPreset, custom: customMargins } = useMemo(() => parseMarginValue(marginsStr), [marginsStr]);
 
     const updatePreview = useCallback((buffer: Uint8Array) => {
         bufferRef.current = buffer;
 
-        // Revoke old URL before creating new one.
         if (pdfUrl) {
             URL.revokeObjectURL(pdfUrl);
         }
@@ -77,13 +112,13 @@ export default function PrintPreviewDialog() {
     function handleOrientationChange(newLandscape: boolean) {
         if (newLandscape === landscape) return;
         setLandscape(newLandscape);
-        regeneratePreview({ landscape: newLandscape, pageSize, scale });
+        regeneratePreview({ landscape: newLandscape, pageSize, scale, margins: marginsStr });
     }
 
     function handlePageSizeChange(newPageSize: string) {
         if (newPageSize === pageSize) return;
         setPageSize(newPageSize);
-        regeneratePreview({ landscape, pageSize: newPageSize, scale });
+        regeneratePreview({ landscape, pageSize: newPageSize, scale, margins: marginsStr });
     }
 
     const scaleDebounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -94,11 +129,31 @@ export default function PrintPreviewDialog() {
 
         clearTimeout(scaleDebounceRef.current);
         scaleDebounceRef.current = setTimeout(() => {
-            regeneratePreview({ landscape, pageSize, scale: clamped });
+            regeneratePreview({ landscape, pageSize, scale: clamped, margins: marginsStr });
         }, 500);
     }
 
-    function regeneratePreview(opts: { landscape: boolean; pageSize: string; scale: number }) {
+    function handleMarginPresetChange(newPreset: string) {
+        if (newPreset === marginPreset) return;
+        const newValue = serializeMargins(newPreset as MarginPreset | "custom", customMargins);
+        setMarginsStr(newValue);
+        regeneratePreview({ landscape, pageSize, scale, margins: newValue });
+    }
+
+    const marginDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+    function handleCustomMarginChange(side: keyof CustomMargins, value: number) {
+        const newCustom = { ...customMargins, [side]: Math.max(0, value) };
+        const newValue = serializeMargins("custom", newCustom);
+        setMarginsStr(newValue);
+
+        clearTimeout(marginDebounceRef.current);
+        marginDebounceRef.current = setTimeout(() => {
+            regeneratePreview({ landscape, pageSize, scale, margins: newValue });
+        }, 500);
+    }
+
+    function regeneratePreview(opts: PreviewOpts) {
         if (!isElectron()) return;
 
         setLoading(true);
@@ -114,7 +169,8 @@ export default function PrintPreviewDialog() {
             notePath: notePathRef.current,
             pageSize: opts.pageSize,
             landscape: opts.landscape,
-            scale: opts.scale
+            scale: opts.scale,
+            margins: opts.margins
         });
     }
 
@@ -178,6 +234,24 @@ export default function PrintPreviewDialog() {
                             onChange={handleScaleChange}
                         />
                     </OptionsRow>
+
+                    <OptionsRow name="margins" label={t("print_preview.margins")} stacked>
+                        <select
+                            class="form-select form-select-sm"
+                            value={marginPreset}
+                            onChange={(e) => handleMarginPresetChange((e.target as HTMLSelectElement).value)}
+                            disabled={loading}
+                        >
+                            <option value="default">{t("print_preview.margins_default")}</option>
+                            <option value="none">{t("print_preview.margins_none")}</option>
+                            <option value="minimum">{t("print_preview.margins_minimum")}</option>
+                            <option value="custom">{t("print_preview.margins_custom")}</option>
+                        </select>
+                    </OptionsRow>
+
+                    {marginPreset === "custom" && (
+                        <MarginEditor margins={customMargins} onChange={handleCustomMarginChange} disabled={loading} />
+                    )}
                 </OptionsSection>
             </div>
 
@@ -190,5 +264,49 @@ export default function PrintPreviewDialog() {
                 {pdfUrl && <PdfViewer pdfUrl={pdfUrl} />}
             </div>
         </Modal>
+    );
+}
+
+function MarginEditor({ margins, onChange, disabled }: {
+    margins: CustomMargins;
+    onChange: (side: keyof CustomMargins, value: number) => void;
+    disabled: boolean;
+}) {
+    const spinnerStyle = { width: "130px" };
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "8px 0" }}>
+            <MarginSpinner label={t("print_preview.margin_top")} value={margins.top} onChange={(v) => onChange("top", v)} disabled={disabled} style={spinnerStyle} />
+            <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
+                <MarginSpinner label={t("print_preview.margin_left")} value={margins.left} onChange={(v) => onChange("left", v)} disabled={disabled} style={spinnerStyle} />
+                <MarginSpinner label={t("print_preview.margin_right")} value={margins.right} onChange={(v) => onChange("right", v)} disabled={disabled} style={spinnerStyle} />
+            </div>
+            <MarginSpinner label={t("print_preview.margin_bottom")} value={margins.bottom} onChange={(v) => onChange("bottom", v)} disabled={disabled} style={spinnerStyle} />
+        </div>
+    );
+}
+
+function MarginSpinner({ label, value, onChange, disabled, style }: {
+    label: string;
+    value: number;
+    onChange: (value: number) => void;
+    disabled: boolean;
+    style?: Record<string, string>;
+}) {
+    return (
+        <div class="input-group input-group-sm" style={style}>
+            <input
+                type="number"
+                class="form-control form-control-sm"
+                title={label}
+                aria-label={label}
+                value={value}
+                min={0}
+                step={1}
+                onChange={(e) => onChange((e.target as HTMLInputElement).valueAsNumber || 0)}
+                disabled={disabled}
+            />
+            <span class="input-group-text">mm</span>
+        </div>
     );
 }

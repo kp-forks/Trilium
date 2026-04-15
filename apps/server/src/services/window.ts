@@ -87,6 +87,29 @@ interface ExportAsPdfOpts {
     landscape: boolean;
     pageSize: "A0" | "A1" | "A2" | "A3" | "A4" | "A5" | "A6" | "Legal" | "Letter" | "Tabloid" | "Ledger";
     scale: number;
+    margins: string;
+}
+
+/** Parses the printMargins attribute. Preset values map to Electron margin types.
+ *  Custom values are stored as "top,right,bottom,left" in mm and converted to inches for Electron. */
+function parseMargins(margins: string): Electron.Margins | undefined {
+    if (!margins || margins === "default") return { marginType: "default" };
+    if (margins === "none") return { marginType: "none" };
+    if (margins === "minimum") return { marginType: "printableArea" };
+
+    const parts = margins.split(",").map(Number);
+    if (parts.length === 4 && parts.every((n) => !isNaN(n))) {
+        const mmToInches = (mm: number) => mm / 25.4;
+        return {
+            marginType: "custom",
+            top: mmToInches(parts[0]),
+            right: mmToInches(parts[1]),
+            bottom: mmToInches(parts[2]),
+            left: mmToInches(parts[3])
+        };
+    }
+
+    return { marginType: "default" };
 }
 
 electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
@@ -108,7 +131,7 @@ electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
     }
 });
 
-electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize, scale }: ExportAsPdfOpts) => {
+electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize, scale, margins }: ExportAsPdfOpts) => {
     try {
         const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
 
@@ -130,10 +153,14 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
                     landscape,
                     pageSize,
                     scale,
+                    margins: parseMargins(margins),
                     generateDocumentOutline: true,
                     generateTaggedPDF: true,
                     printBackground: true,
-                    displayHeaderFooter: true,
+                    // displayHeaderFooter forces Chromium to use fixed default margins
+                    // (to make room for the header/footer), overriding our `margins` setting.
+                    // Only enable it when the user hasn't customized margins.
+                    displayHeaderFooter: !margins || margins === "default",
                     headerTemplate: `<div></div>`,
                     footerTemplate: `
                         <div class="pageNumber" style="width: 100%; text-align: center; font-size: 10pt;">
@@ -170,7 +197,7 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
     }
 });
 
-electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pageSize, scale }: ExportAsPdfOpts) => {
+electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pageSize, scale, margins }: ExportAsPdfOpts) => {
     try {
         const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
 
@@ -179,10 +206,11 @@ electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pa
                 landscape,
                 pageSize,
                 scale,
+                margins: parseMargins(margins),
                 generateDocumentOutline: true,
                 generateTaggedPDF: true,
                 printBackground: true,
-                displayHeaderFooter: true,
+                displayHeaderFooter: !margins || margins === "default",
                 headerTemplate: `<div></div>`,
                 footerTemplate: `
                     <div class="pageNumber" style="width: 100%; text-align: center; font-size: 10pt;">

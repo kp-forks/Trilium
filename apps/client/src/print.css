@@ -12,10 +12,6 @@ body {
     color: black;
 }
 
-@page {
-    margin: 2cm;
-}
-
 .note-list-widget.full-height,
 .note-list-widget.full-height .note-list-widget-content {
     height: unset !important;

@@ -268,7 +268,8 @@ const ATTR_HELP: Record<string, Record<string, string>> = {
         hideHighlightWidget: t("attribute_detail.hide_highlight_widget"),
         printLandscape: t("attribute_detail.print_landscape"),
         printPageSize: t("attribute_detail.print_page_size"),
-        printScale: t("attribute_detail.print_scale")
+        printScale: t("attribute_detail.print_scale"),
+        printMargins: t("attribute_detail.print_margins")
     },
     relation: {
         runOnNoteCreation: t("attribute_detail.run_on_note_creation"),
