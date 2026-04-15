@@ -83,6 +83,10 @@ export default [
     { type: "label", name: "iconPack", isDangerous: true },
     { type: "label", name: "docName", isDangerous: true },
 
+    { type: "label", name: "tabWidth" },
+    { type: "label", name: "indentWithTabs" },
+    { type: "label", name: "wrapLines" },
+
     { type: "label", name: "printLandscape" },
     { type: "label", name: "printPageSize" },
     { type: "label", name: "printScale" },

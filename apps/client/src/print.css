@@ -5,6 +5,10 @@
     --ck-content-color-image-caption-background: transparent !important;
 }
 
+@page {
+    margin: 2cm;
+}
+
 html,
 body {
     width: 100%;

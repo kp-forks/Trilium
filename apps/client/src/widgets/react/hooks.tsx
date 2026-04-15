@@ -682,8 +682,9 @@ export function useNoteLabelInt(note: FNote | undefined | null, labelName: Filte
     //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
     const [ value, setValue ] = useNoteLabel(note, labelName);
     useDebugValue(labelName);
+    const parsed = value ? parseInt(value, 10) : undefined;
     return [
-        (value ? parseInt(value, 10) : undefined),
+        (Number.isFinite(parsed) ? parsed : undefined),
         (newValue) => setValue(newValue === null ? null : String(newValue))
     ];
 }

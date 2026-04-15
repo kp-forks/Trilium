@@ -183,6 +183,8 @@ export default class CodeMirror extends EditorView {
     }
 
     setIndent(size: number, useTabs: boolean) {
+        if (!Number.isFinite(size) || size < 1) size = 4;
+        if (size > 16) size = 16;
         this.config.indentSize = size;
         this.config.useTabs = useTabs;
         this.dispatch({

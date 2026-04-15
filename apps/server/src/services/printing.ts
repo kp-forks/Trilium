@@ -221,6 +221,7 @@ export function initPrintingHandlers() {
                         scale,
                         margins: parseMargins(margins),
                         pageRanges: pageRanges || undefined,
+                        preferCSSPageSize: false,
                         generateDocumentOutline: true,
                         generateTaggedPDF: true,
                         printBackground: true,
@@ -272,6 +273,7 @@ export function initPrintingHandlers() {
                     scale,
                     margins: parseMargins(margins),
                     pageRanges: pageRanges || undefined,
+                    preferCSSPageSize: false,
                     generateDocumentOutline: true,
                     generateTaggedPDF: true,
                     printBackground: true,
@@ -350,6 +352,8 @@ export function initPrintingHandlers() {
 
             // print() accepts most of the same options as printToPDF, but typing differs
             // slightly (e.g. no "Ledger" pageSize). Cast to keep this concise.
+            // "Ledger" and "Tabloid" are the same physical size (11×17 in); Electron's
+            // print() API only recognises "Tabloid", so we map "Ledger" to "Tabloid".
             const printOpts: Electron.WebContentsPrintOptions = {
                 silent,
                 deviceName,

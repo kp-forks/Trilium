@@ -341,7 +341,7 @@ function CodeBlockPreview({ theme, wordWrap, tabWidth }: { theme: string, wordWr
     const codeStyle: CSSProperties = useMemo(() => {
         return {
             whiteSpace: wordWrap ? "pre-wrap" : "pre",
-            tabSize: tabWidth ?? "4"
+            tabSize: tabWidth || "4"
         };
     }, [ wordWrap, tabWidth ]);
 

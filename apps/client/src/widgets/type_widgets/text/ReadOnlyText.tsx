@@ -28,7 +28,7 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
     const { isRtl } = useNoteLanguage(note);
 
     useEffect(() => {
-        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth ?? "4");
+        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth || "4");
     }, [codeBlockTabWidth]);
 
     // Apply necessary transforms.

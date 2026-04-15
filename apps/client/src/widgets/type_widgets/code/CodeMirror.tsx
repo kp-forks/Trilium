@@ -51,10 +51,8 @@ export default function CodeMirror({ className, content, mime, editorRef: extern
 
     // React to indent size / style changes.
     useEffect(() => {
-        if (extraOpts.indentSize != null) {
-            codeEditorRef.current?.setIndent(extraOpts.indentSize, !!extraOpts.useTabs);
-        } else if (extraOpts.useTabs != null) {
-            codeEditorRef.current?.setUseTabs(extraOpts.useTabs);
+        if (extraOpts.indentSize != null || extraOpts.useTabs != null) {
+            codeEditorRef.current?.setIndent(extraOpts.indentSize ?? 4, !!extraOpts.useTabs);
         }
     }, [ extraOpts.indentSize, extraOpts.useTabs ]);
 

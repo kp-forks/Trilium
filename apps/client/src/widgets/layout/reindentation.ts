@@ -29,7 +29,7 @@ function measureLeadingColumns(leading: string, tabWidth: number): number {
  */
 export function convertIndentation(content: string, from: IndentStyle, to: IndentStyle): string {
     if (from.useTabs === to.useTabs && from.width === to.width) return content;
-    if (from.width <= 0 || to.width <= 0) return content;
+    if (!Number.isFinite(from.width) || !Number.isFinite(to.width) || from.width <= 0 || to.width <= 0) return content;
     const toUnit = to.useTabs ? "\t" : " ".repeat(to.width);
 
     return content.replace(/^[ \t]+/gm, (leading) => {

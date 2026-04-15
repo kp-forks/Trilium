@@ -446,7 +446,7 @@ function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
     const [ globalUseTabs ] = useTriliumOptionBool("codeNoteIndentWithTabs");
     const [ noteTabWidth, setNoteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const [ noteUseTabs, setNoteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
-    const effectiveTabWidth = noteTabWidth ?? globalTabWidth;
+    const effectiveTabWidth = noteTabWidth ?? globalTabWidth ?? 4;
     const effectiveUseTabs = noteUseTabs ?? globalUseTabs;
     const hasWidthOverride = noteTabWidth != null;
     const hasStyleOverride = noteUseTabs != null;

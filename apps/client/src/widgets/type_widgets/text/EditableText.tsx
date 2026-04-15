@@ -221,7 +221,7 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
     const onWatchdogStateChange = useWatchdogCrashHandling();
 
     useEffect(() => {
-        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth ?? "4");
+        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth || "4");
     }, [codeBlockTabWidth]);
 
     return (
