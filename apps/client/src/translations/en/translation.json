@@ -2339,7 +2339,11 @@
     "margin_top": "Top",
     "margin_right": "Right",
     "margin_bottom": "Bottom",
-    "margin_left": "Left"
+    "margin_left": "Left",
+    "page_ranges": "Pages",
+    "page_ranges_hint": "Leave empty to print all pages.",
+    "page_ranges_invalid": "Invalid format. Use e.g. 1-5, 8, 11-13.",
+    "page_ranges_placeholder": "e.g. 1-5, 8, 11-13"
   },
   "pdf": {
     "attachments_one": "{{count}} attachment",

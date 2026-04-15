@@ -88,6 +88,7 @@ interface ExportAsPdfOpts {
     pageSize: "A0" | "A1" | "A2" | "A3" | "A4" | "A5" | "A6" | "Legal" | "Letter" | "Tabloid" | "Ledger";
     scale: number;
     margins: string;
+    pageRanges: string;
 }
 
 /** Parses the printMargins attribute into Electron margins.
@@ -141,7 +142,7 @@ electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
     }
 });
 
-electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize, scale, margins }: ExportAsPdfOpts) => {
+electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize, scale, margins, pageRanges }: ExportAsPdfOpts) => {
     try {
         const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
 
@@ -164,6 +165,7 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
                     pageSize,
                     scale,
                     margins: parseMargins(margins),
+                    pageRanges: pageRanges || undefined,
                     generateDocumentOutline: true,
                     generateTaggedPDF: true,
                     printBackground: true,
@@ -204,7 +206,7 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
     }
 });
 
-electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pageSize, scale, margins }: ExportAsPdfOpts) => {
+electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pageSize, scale, margins, pageRanges }: ExportAsPdfOpts) => {
     try {
         const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
 
@@ -214,6 +216,7 @@ electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pa
                 pageSize,
                 scale,
                 margins: parseMargins(margins),
+                pageRanges: pageRanges || undefined,
                 generateDocumentOutline: true,
                 generateTaggedPDF: true,
                 printBackground: true,

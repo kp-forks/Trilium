@@ -41,6 +41,13 @@ function serializeMargins(preset: MarginPreset | "custom", custom: CustomMargins
     return `${custom.top},${custom.right},${custom.bottom},${custom.left}`;
 }
 
+/** Validates a page-range string such as "1-5, 8, 11-13". Empty string is valid (= all pages). */
+function isValidPageRanges(value: string): boolean {
+    const trimmed = value.trim();
+    if (!trimmed) return true;
+    return /^\s*\d+(\s*-\s*\d+)?(\s*,\s*\d+(\s*-\s*\d+)?)*\s*$/.test(trimmed);
+}
+
 export interface PrintPreviewData {
     pdfBuffer: Uint8Array;
     note: FNote;
@@ -52,6 +59,7 @@ interface PreviewOpts {
     pageSize: string;
     scale: number;
     margins: string;
+    pageRanges: string;
 }
 
 export default function PrintPreviewDialog() {
@@ -68,6 +76,10 @@ export default function PrintPreviewDialog() {
     const scale = parseFloat(scaleStr) || 1;
     const [marginsStr, setMarginsStr] = useNoteLabelWithDefault(note, "printMargins", "default");
     const { preset: marginPreset, custom: customMargins } = useMemo(() => parseMarginValue(marginsStr), [marginsStr]);
+
+    // Page ranges are kept local — they're one-off per export, not a persistent preference.
+    const [pageRanges, setPageRanges] = useState("");
+    const pageRangesValid = isValidPageRanges(pageRanges);
 
     const updatePreview = useCallback((buffer: Uint8Array) => {
         bufferRef.current = buffer;
@@ -112,13 +124,13 @@ export default function PrintPreviewDialog() {
     function handleOrientationChange(newLandscape: boolean) {
         if (newLandscape === landscape) return;
         setLandscape(newLandscape);
-        regeneratePreview({ landscape: newLandscape, pageSize, scale, margins: marginsStr });
+        regeneratePreview({ landscape: newLandscape, pageSize, scale, margins: marginsStr, pageRanges });
     }
 
     function handlePageSizeChange(newPageSize: string) {
         if (newPageSize === pageSize) return;
         setPageSize(newPageSize);
-        regeneratePreview({ landscape, pageSize: newPageSize, scale, margins: marginsStr });
+        regeneratePreview({ landscape, pageSize: newPageSize, scale, margins: marginsStr, pageRanges });
     }
 
     const scaleDebounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -129,7 +141,7 @@ export default function PrintPreviewDialog() {
 
         clearTimeout(scaleDebounceRef.current);
         scaleDebounceRef.current = setTimeout(() => {
-            regeneratePreview({ landscape, pageSize, scale: clamped, margins: marginsStr });
+            regeneratePreview({ landscape, pageSize, scale: clamped, margins: marginsStr, pageRanges });
         }, 500);
     }
 
@@ -137,7 +149,7 @@ export default function PrintPreviewDialog() {
         if (newPreset === marginPreset) return;
         const newValue = serializeMargins(newPreset as MarginPreset | "custom", customMargins);
         setMarginsStr(newValue);
-        regeneratePreview({ landscape, pageSize, scale, margins: newValue });
+        regeneratePreview({ landscape, pageSize, scale, margins: newValue, pageRanges });
     }
 
     const marginDebounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -149,8 +161,21 @@ export default function PrintPreviewDialog() {
 
         clearTimeout(marginDebounceRef.current);
         marginDebounceRef.current = setTimeout(() => {
-            regeneratePreview({ landscape, pageSize, scale, margins: newValue });
+            regeneratePreview({ landscape, pageSize, scale, margins: newValue, pageRanges });
         }, 500);
+    }
+
+    const pageRangesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+    function handlePageRangesChange(newValue: string) {
+        setPageRanges(newValue);
+
+        clearTimeout(pageRangesDebounceRef.current);
+        if (!isValidPageRanges(newValue)) return;
+
+        pageRangesDebounceRef.current = setTimeout(() => {
+            regeneratePreview({ landscape, pageSize, scale, margins: marginsStr, pageRanges: newValue.trim() });
+        }, 600);
     }
 
     function regeneratePreview(opts: PreviewOpts) {
@@ -177,7 +202,8 @@ export default function PrintPreviewDialog() {
             pageSize: opts.pageSize,
             landscape: opts.landscape,
             scale: opts.scale,
-            margins: opts.margins
+            margins: opts.margins,
+            pageRanges: opts.pageRanges
         });
     }
 
@@ -259,6 +285,22 @@ export default function PrintPreviewDialog() {
                     {marginPreset === "custom" && (
                         <MarginEditor margins={customMargins} onChange={handleCustomMarginChange} disabled={loading} />
                     )}
+
+                    <OptionsRow
+                        name="pageRanges"
+                        label={t("print_preview.page_ranges")}
+                        description={!pageRangesValid ? t("print_preview.page_ranges_invalid") : t("print_preview.page_ranges_hint")}
+                    >
+                        <input
+                            type="text"
+                            class={`form-control form-control-sm ${!pageRangesValid ? "is-invalid" : ""}`}
+                            value={pageRanges}
+                            placeholder={t("print_preview.page_ranges_placeholder")}
+                            onInput={(e) => handlePageRangesChange((e.target as HTMLInputElement).value)}
+                            disabled={loading}
+                            style={{ width: "140px" }}
+                        />
+                    </OptionsRow>
                 </OptionsSection>
             </div>
 
