@@ -167,10 +167,7 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
                     generateDocumentOutline: true,
                     generateTaggedPDF: true,
                     printBackground: true,
-                    // displayHeaderFooter forces Chromium to use fixed default margins
-                    // (to make room for the header/footer), overriding our `margins` setting.
-                    // Only enable it when the user hasn't customized margins.
-                    displayHeaderFooter: !margins || margins === "default",
+                    displayHeaderFooter: true,
                     headerTemplate: `<div></div>`,
                     footerTemplate: `
                         <div class="pageNumber" style="width: 100%; text-align: center; font-size: 10pt;">
@@ -220,7 +217,7 @@ electron.ipcMain.on("export-as-pdf-preview", async (e, { notePath, landscape, pa
                 generateDocumentOutline: true,
                 generateTaggedPDF: true,
                 printBackground: true,
-                displayHeaderFooter: !margins || margins === "default",
+                displayHeaderFooter: true,
                 headerTemplate: `<div></div>`,
                 footerTemplate: `
                     <div class="pageNumber" style="width: 100%; text-align: center; font-size: 10pt;">
