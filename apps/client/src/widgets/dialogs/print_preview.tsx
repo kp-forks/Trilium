@@ -235,7 +235,7 @@ export default function PrintPreviewDialog() {
                         />
                     </OptionsRow>
 
-                    <OptionsRow name="margins" label={t("print_preview.margins")} stacked>
+                    <OptionsRow name="margins" label={t("print_preview.margins")}>
                         <select
                             class="form-select form-select-sm"
                             value={marginPreset}
