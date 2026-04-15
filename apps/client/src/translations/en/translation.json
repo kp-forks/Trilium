@@ -695,6 +695,11 @@
     "move_right": "Move right"
   },
   "note_actions": {
+    "word_wrap": "Word wrap",
+    "word_wrap_auto": "Auto",
+    "word_wrap_auto_description": "Follow the global setting",
+    "word_wrap_on": "On",
+    "word_wrap_off": "Off",
     "convert_into_attachment": "Convert into attachment",
     "re_render_note": "Re-render note",
     "search_in_note": "Search in note",
@@ -2328,6 +2333,10 @@
     "print": "Print",
     "export_pdf": "Export as PDF",
     "system_print": "Print using system dialog",
+    "destination": "Destination",
+    "destination_pdf": "Save as PDF",
+    "destination_printers": "Printers",
+    "destination_default": "Default",
     "orientation": "Orientation",
     "portrait": "Portrait",
     "landscape": "Landscape",
