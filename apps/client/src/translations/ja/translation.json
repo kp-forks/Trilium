@@ -1202,7 +1202,9 @@
     "and_more": "...その他 {{count}} 件。",
     "print_landscape": "PDF にエクスポートするときに、ページの向きを縦向きではなく横向きに変更します。",
     "print_page_size": "PDF にエクスポートするときに、ページのサイズを変更します。サポートされる値: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>。",
-    "textarea": "複数行テキスト"
+    "textarea": "複数行テキスト",
+    "print_scale": "PDF にエクスポートする際に、レンダリングされるコンテンツの縮尺を変更します。値の範囲は 0.1（10%）から 2（200%）までで、デフォルト値は 1（100%）です。",
+    "print_margins": "PDF に書き出す際に、ページ余白を設定します。<code>デフォルト</code>, <code>なし</code>, <code>最小</code>, または <code>上、右、下、左</code> のようなカスタム値をミリメートル単位で指定できます。"
   },
   "link_context_menu": {
     "open_note_in_popup": "クイック編集",
@@ -1354,7 +1356,9 @@
     "theme_group_light": "ライトテーマ",
     "theme_group_dark": "ダークテーマ",
     "copy_title": "クリップボードにコピー",
-    "click_to_copy": "クリックしてコピー"
+    "click_to_copy": "クリックしてコピー",
+    "tab_width": "タブ幅",
+    "tab_width_unit": "スペース"
   },
   "editor": {
     "title": "エディター"
@@ -1607,7 +1611,9 @@
     "check_integrity_description": "SQLite レベルでデータベースが破損していないことを確認します。"
   },
   "code-editor-options": {
-    "title": "エディター"
+    "title": "エディター",
+    "tab_width": "タブ幅",
+    "tab_width_unit": "スペース"
   },
   "search_string": {
     "title_column": "文字列検索:",
@@ -2130,7 +2136,19 @@
     "code_note_switcher": "言語モードを変更",
     "backlinks_other": "{{count}} バックリンク",
     "attachments_other": "{{count}} 件の添付ファイル",
-    "note_paths_other": "{{count}} 個のパス"
+    "note_paths_other": "{{count}} 個のパス",
+    "tab_width": "タブ幅: {{width}}",
+    "tab_width_title": "タブ幅を変更",
+    "tab_width_spaces": "{{count}} スペース",
+    "tab_width_spaces_short": "スペース: {{width}}",
+    "tab_width_tabs": "タブ （{{width}}）",
+    "tab_width_use_default": "デフォルトを使用 ({{width}})",
+    "tab_width_use_default_style": "デフォルトを使用 ({{style}})",
+    "tab_width_display_header": "表示幅",
+    "tab_width_reindent_header": "コンテンツのインデントを再設定",
+    "tab_width_style_header": "インデントを使用",
+    "tab_width_style_spaces": "スペース",
+    "tab_width_style_tabs": "タブ"
   },
   "breadcrumb": {
     "hoisted_badge": "ホイスト",
@@ -2395,5 +2413,29 @@
   },
   "link": {
     "failed_to_open": "'{{- href}}' のリンクを開けなせんでした: {{- message}}"
+  },
+  "print_preview": {
+    "title": "印刷プレビュー",
+    "close": "閉じる",
+    "save": "PDF として保存",
+    "orientation": "向き",
+    "portrait": "縦向き",
+    "landscape": "横向き",
+    "page_size": "ページサイズ",
+    "scale": "縮尺",
+    "margins": "余白",
+    "render_error": "現在の設定では PDF を生成できません。余白と縮尺を確認してください。",
+    "margins_default": "デフォルト",
+    "margins_none": "なし",
+    "margins_minimum": "最小",
+    "margins_custom": "カスタム",
+    "margin_top": "上",
+    "margin_right": "右",
+    "margin_bottom": "下",
+    "margin_left": "左",
+    "page_ranges": "ページ",
+    "page_ranges_hint": "全ページを印刷する場合は空欄のままにしてください。",
+    "page_ranges_invalid": "無効な形式です。例: 1-5, 8, 11-13 のように指定してください。",
+    "page_ranges_placeholder": "例: 1-5, 8, 11-13"
   }
 }
