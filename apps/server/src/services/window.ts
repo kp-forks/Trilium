@@ -272,9 +272,18 @@ electron.ipcMain.on("save-pdf", async (_e, { title, buffer }: { title: string; b
 
 interface PrintFromPreviewOpts extends ExportAsPdfOpts {
     silent: boolean;
+    deviceName?: string;
 }
 
-electron.ipcMain.on("print-from-preview", async (e, { notePath, landscape, pageSize, scale, margins, pageRanges, silent }: PrintFromPreviewOpts) => {
+electron.ipcMain.handle("get-printers", async (e) => {
+    try {
+        return await e.sender.getPrintersAsync();
+    } catch {
+        return [];
+    }
+});
+
+electron.ipcMain.on("print-from-preview", async (e, { notePath, landscape, pageSize, scale, margins, pageRanges, silent, deviceName }: PrintFromPreviewOpts) => {
     try {
         const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "printing");
 
@@ -282,6 +291,7 @@ electron.ipcMain.on("print-from-preview", async (e, { notePath, landscape, pageS
         // slightly (e.g. no "Ledger" pageSize). Cast to keep this concise.
         const printOpts: Electron.WebContentsPrintOptions = {
             silent,
+            deviceName,
             landscape,
             pageSize: pageSize === "Ledger" ? "Tabloid" : pageSize,
             scaleFactor: Math.round(scale * 100),

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
 import { t } from "../../services/i18n";
@@ -13,6 +13,15 @@ import OptionsRow from "../type_widgets/options/components/OptionsRow";
 import OptionsSection from "../type_widgets/options/components/OptionsSection";
 
 const PAGE_SIZES = ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "Legal", "Letter", "Tabloid", "Ledger"] as const;
+
+/** Pseudo-printer name used to route the Print button to the PDF export flow. */
+const DESTINATION_PDF = "__pdf__";
+
+interface PrinterInfo {
+    name: string;
+    displayName: string;
+    isDefault: boolean;
+}
 const MARGIN_PRESETS = ["default", "none", "minimum"] as const;
 type MarginPreset = typeof MARGIN_PRESETS[number];
 
@@ -81,6 +90,21 @@ export default function PrintPreviewDialog() {
     const [pageRanges, setPageRanges] = useState("");
     const pageRangesValid = isValidPageRanges(pageRanges);
 
+    // Printer list and current destination. DESTINATION_PDF means "Save as PDF";
+    // any other value is the system printer name to use for silent printing.
+    const [printers, setPrinters] = useState<PrinterInfo[]>([]);
+    const [destination, setDestination] = useState<string>(DESTINATION_PDF);
+
+    useEffect(() => {
+        if (!shown || !isElectron()) return;
+        const { ipcRenderer } = dynamicRequire("electron");
+        ipcRenderer.invoke("get-printers").then((list: PrinterInfo[]) => {
+            setPrinters(list ?? []);
+            const defaultPrinter = list?.find((p) => p.isDefault);
+            if (defaultPrinter) setDestination(defaultPrinter.name);
+        });
+    }, [shown]);
+
     const updatePreview = useCallback((buffer: Uint8Array) => {
         bufferRef.current = buffer;
 
@@ -121,7 +145,7 @@ export default function PrintPreviewDialog() {
         handleClose();
     }
 
-    function handlePrint(silent: boolean) {
+    function handlePrint(silent: boolean, deviceName?: string) {
         if (!isElectron()) return;
         const { ipcRenderer } = dynamicRequire("electron");
         ipcRenderer.send("print-from-preview", {
@@ -131,9 +155,19 @@ export default function PrintPreviewDialog() {
             scale,
             margins: marginsStr,
             pageRanges,
-            silent
+            silent,
+            deviceName
         });
         handleClose();
+    }
+
+    /** Primary action: route to PDF export or silent print based on the selected destination. */
+    function handlePrimaryAction() {
+        if (destination === DESTINATION_PDF) {
+            handleExportPdf();
+        } else {
+            handlePrint(true, destination);
+        }
     }
 
     function handleOrientationChange(newLandscape: boolean) {
@@ -238,20 +272,46 @@ export default function PrintPreviewDialog() {
                         class={loading ? "disabled" : ""}
                         onClick={(e) => {
                             e.preventDefault();
-                            if (!loading) handlePrint(false);
+                            if (loading) return;
+                            // When a specific printer is selected, pre-select it in the system dialog.
+                            const deviceName = destination === DESTINATION_PDF ? undefined : destination;
+                            handlePrint(false, deviceName);
                         }}
                     >
                         {t("print_preview.system_print")}
                     </a>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                        <Button text={t("print_preview.export_pdf")} icon="bx-file" onClick={handleExportPdf} disabled={loading} />
-                        <Button text={t("print_preview.print")} icon="bx-printer" className="btn-primary" onClick={() => handlePrint(true)} disabled={loading} />
-                    </div>
+                    <Button
+                        text={destination === DESTINATION_PDF ? t("print_preview.export_pdf") : t("print_preview.print")}
+                        icon={destination === DESTINATION_PDF ? "bx-file" : "bx-printer"}
+                        className="btn-primary"
+                        onClick={handlePrimaryAction}
+                        disabled={loading}
+                    />
                 </>
             }
         >
             <div style={{ padding: "16px", minWidth: "250px", overflowY: "auto" }}>
                 <OptionsSection>
+                    <OptionsRow name="destination" label={t("print_preview.destination")}>
+                        <select
+                            class="form-select form-select-sm"
+                            value={destination}
+                            onChange={(e) => setDestination((e.target as HTMLSelectElement).value)}
+                            disabled={loading}
+                        >
+                            <option value={DESTINATION_PDF}>{t("print_preview.destination_pdf")}</option>
+                            {printers.length > 0 && (
+                                <optgroup label={t("print_preview.destination_printers")}>
+                                    {printers.map((printer) => (
+                                        <option key={printer.name} value={printer.name}>
+                                            {printer.displayName || printer.name}{printer.isDefault ? ` (${t("print_preview.destination_default")})` : ""}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+                        </select>
+                    </OptionsRow>
+
                     <OptionsRow name="orientation" label={t("print_preview.orientation")}>
                         <ButtonGroup>
                             <Button
