@@ -1,1 +1,10 @@
-{}
+{
+  "keyboard_actions": {
+    "back-in-note-history": "تارىختىكى ئالدىنقى خاتىرىگە قايتىش",
+    "forward-in-note-history": "تارىختىكى كېيىنكى خاتىرىگە ئۆتۈش",
+    "open-jump-to-note-dialog": "\"خاتىرىگە تېز ئۆتۈش\" كۆزنىكىنى ئېچىش",
+    "open-command-palette": "بۇيرۇق تىزىملىكىنى ئېچىش",
+    "quick-search": "تېز ئىزدەشنى قوزغىتىش",
+    "search-in-subtree": "ھازىرقى خاتىرىنىڭ تارماقلىرىدىن ئىزدەش"
+  }
+}
