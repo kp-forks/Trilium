@@ -33,6 +33,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "codeBlockTabWidth",
     "codeNoteTheme",
     "codeNoteTabWidth",
+    "codeNoteIndentWithTabs",
     "syncServerHost",
     "syncServerTimeout",
     "syncServerTimeoutTimeScale",

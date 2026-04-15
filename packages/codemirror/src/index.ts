@@ -34,9 +34,15 @@ export interface EditorConfig {
     /** Disables some of the nice-to-have features (bracket matching, syntax highlighting, indentation markers) in order to improve performance. */
     preferPerformance?: boolean;
     tabIndex?: number;
-    /** The number of spaces used for indentation. Defaults to 4. */
+    /** The number of spaces used for indentation (also used as the tab display width). Defaults to 4. */
     indentSize?: number;
+    /** If true, indent using a tab character instead of spaces. Defaults to false. */
+    useTabs?: boolean;
     onContentChanged?: ContentChangedListener;
+}
+
+function buildIndentUnit(indentSize: number, useTabs: boolean) {
+    return useTabs ? "\t" : " ".repeat(indentSize);
 }
 
 export default class CodeMirror extends EditorView {
@@ -72,7 +78,10 @@ export default class CodeMirror extends EditorView {
             searchHighlightCompartment.of([]),
             highlightActiveLine(),
             lineNumbers(),
-            indentUnitCompartment.of(indentUnit.of(" ".repeat(config.indentSize ?? 4))),
+            indentUnitCompartment.of([
+                indentUnit.of(buildIndentUnit(config.indentSize ?? 4, !!config.useTabs)),
+                EditorState.tabSize.of(config.indentSize ?? 4)
+            ]),
             keymap.of([
                 ...preventCtrlEnterKeymap,
                 ...defaultKeymap,
@@ -173,10 +182,23 @@ export default class CodeMirror extends EditorView {
         });
     }
 
-    setIndentSize(size: number) {
+    setIndent(size: number, useTabs: boolean) {
+        this.config.indentSize = size;
+        this.config.useTabs = useTabs;
         this.dispatch({
-            effects: [ this.indentUnitCompartment.reconfigure(indentUnit.of(" ".repeat(size))) ]
+            effects: [ this.indentUnitCompartment.reconfigure([
+                indentUnit.of(buildIndentUnit(size, useTabs)),
+                EditorState.tabSize.of(size)
+            ]) ]
         });
+    }
+
+    setIndentSize(size: number) {
+        this.setIndent(size, !!this.config.useTabs);
+    }
+
+    setUseTabs(useTabs: boolean) {
+        this.setIndent(this.config.indentSize ?? 4, useTabs);
     }
 
     /**

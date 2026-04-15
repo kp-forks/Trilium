@@ -71,6 +71,7 @@ type Labels = {
     "disabled:webViewSrc": string;
     readOnly: boolean;
     tabWidth: number;
+    indentWithTabs: boolean;
     mapType: string;
     mapRootNoteId: string;
 

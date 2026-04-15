@@ -664,13 +664,27 @@ export function useNoteLabelBoolean(note: FNote | undefined | null, labelName: F
     return [ labelValue, setter ] as const;
 }
 
-export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number) => void] {
+/**
+ * Like {@link useNoteLabelBoolean} but returns `undefined` when the label is absent, allowing the caller
+ * to distinguish between "explicitly false" and "not set" (for inheriting from a global default).
+ */
+export function useNoteLabelOptionalBool(note: FNote | undefined | null, labelName: FilterLabelsByType<boolean>): [ boolean | undefined, (newValue: boolean | null) => void] {
+    //@ts-expect-error `useNoteLabel` only accepts string labels but we need to be able to read boolean ones.
+    const [ value, setValue ] = useNoteLabel(note, labelName);
+    useDebugValue(labelName);
+    return [
+        (value == null ? undefined : value !== "false"),
+        (newValue) => setValue(newValue === null ? null : String(newValue))
+    ];
+}
+
+export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number | null) => void] {
     //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
     const [ value, setValue ] = useNoteLabel(note, labelName);
     useDebugValue(labelName);
     return [
         (value ? parseInt(value, 10) : undefined),
-        (newValue) => setValue(String(newValue))
+        (newValue) => setValue(newValue === null ? null : String(newValue))
     ];
 }
 
