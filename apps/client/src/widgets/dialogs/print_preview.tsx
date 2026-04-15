@@ -5,6 +5,8 @@ import { t } from "../../services/i18n";
 import toast from "../../services/toast";
 import { dynamicRequire, isElectron } from "../../services/utils";
 import Button, { ButtonGroup } from "../react/Button";
+import Dropdown from "../react/Dropdown";
+import { FormListHeader, FormListItem } from "../react/FormList";
 import { useNoteLabelBoolean, useNoteLabelWithDefault, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import Slider from "../react/Slider";
@@ -293,23 +295,30 @@ export default function PrintPreviewDialog() {
             <div style={{ padding: "16px", minWidth: "250px", overflowY: "auto" }}>
                 <OptionsSection>
                     <OptionsRow name="destination" label={t("print_preview.destination")}>
-                        <select
-                            class="form-select form-select-sm"
-                            value={destination}
-                            onChange={(e) => setDestination((e.target as HTMLSelectElement).value)}
+                        <Dropdown
                             disabled={loading}
+                            text={<DestinationLabel destination={destination} printers={printers} />}
                         >
-                            <option value={DESTINATION_PDF}>{t("print_preview.destination_pdf")}</option>
-                            {printers.length > 0 && (
-                                <optgroup label={t("print_preview.destination_printers")}>
-                                    {printers.map((printer) => (
-                                        <option key={printer.name} value={printer.name}>
-                                            {printer.displayName || printer.name}{printer.isDefault ? ` (${t("print_preview.destination_default")})` : ""}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            )}
-                        </select>
+                            <FormListItem
+                                icon="bx bxs-file-pdf"
+                                selected={destination === DESTINATION_PDF}
+                                onClick={() => setDestination(DESTINATION_PDF)}
+                            >
+                                {t("print_preview.destination_pdf")}
+                            </FormListItem>
+                            {printers.length > 0 && <FormListHeader text={t("print_preview.destination_printers")} />}
+                            {printers.map((printer) => (
+                                <FormListItem
+                                    key={printer.name}
+                                    icon="bx bx-printer"
+                                    selected={destination === printer.name}
+                                    onClick={() => setDestination(printer.name)}
+                                    description={printer.isDefault ? t("print_preview.destination_default") : undefined}
+                                >
+                                    {printer.displayName || printer.name}
+                                </FormListItem>
+                            ))}
+                        </Dropdown>
                     </OptionsRow>
 
                     <OptionsRow name="orientation" label={t("print_preview.orientation")}>
@@ -402,6 +411,14 @@ export default function PrintPreviewDialog() {
             </div>
         </Modal>
     );
+}
+
+function DestinationLabel({ destination, printers }: { destination: string; printers: PrinterInfo[] }) {
+    if (destination === DESTINATION_PDF) {
+        return <><span class="bx bxs-file-pdf" /> {t("print_preview.destination_pdf")}</>;
+    }
+    const printer = printers.find((p) => p.name === destination);
+    return <><span class="bx bx-printer" /> {printer?.displayName || printer?.name || destination}</>;
 }
 
 function MarginEditor({ margins, onChange, disabled }: {
