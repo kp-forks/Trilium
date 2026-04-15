@@ -108,6 +108,8 @@ export default function PrintPreviewDialog() {
     const [printers, setPrinters] = useState<PrinterInfo[]>([]);
     const [destination, setDestination] = useState<string>(DESTINATION_PDF);
 
+    const skipNextRegenRef = useRef(false);
+
     useEffect(() => {
         if (!shown || !isElectron()) return;
         const { ipcRenderer } = dynamicRequire("electron");
@@ -131,11 +133,53 @@ export default function PrintPreviewDialog() {
     }, [pdfUrl]);
 
     useTriliumEvent("showPrintPreview", (data: PrintPreviewData) => {
+        skipNextRegenRef.current = true;
         setNote(data.note);
         notePathRef.current = data.notePath;
         updatePreview(data.pdfBuffer);
         setShown(true);
     });
+
+    const regeneratePreview = useCallback((opts: PreviewOpts) => {
+        if (!isElectron()) return;
+
+        setLoading(true);
+        const { ipcRenderer } = dynamicRequire("electron");
+
+        const onResult = (_e: any, { buffer, error }: { buffer?: Uint8Array; error?: string }) => {
+            toast.closePersistent("printing");
+            if (error) {
+                setLoading(false);
+                toast.showError(t("print_preview.render_error"));
+                return;
+            }
+            if (buffer) {
+                updatePreview(buffer);
+            }
+        };
+        ipcRenderer.once("export-as-pdf-preview-result", onResult);
+
+        ipcRenderer.send("export-as-pdf-preview", {
+            notePath: notePathRef.current,
+            pageSize: opts.pageSize,
+            landscape: opts.landscape,
+            scale: opts.scale,
+            margins: opts.margins,
+            pageRanges: opts.pageRanges
+        });
+    }, [updatePreview]);
+
+    useEffect(() => {
+        if (!shown || !pageRangesValid) return;
+        if (skipNextRegenRef.current) {
+            skipNextRegenRef.current = false;
+            return;
+        }
+        const handle = setTimeout(() => {
+            regeneratePreview({ landscape, pageSize, scale, margins: marginsStr, pageRanges: pageRanges.trim() });
+        }, 400);
+        return () => clearTimeout(handle);
+    }, [shown, landscape, pageSize, scale, marginsStr, pageRanges, pageRangesValid, regeneratePreview]);
 
     function handleClose() {
         setShown(false);
@@ -183,90 +227,14 @@ export default function PrintPreviewDialog() {
         }
     }
 
-    function handleOrientationChange(newLandscape: boolean) {
-        if (newLandscape === landscape) return;
-        setLandscape(newLandscape);
-        regeneratePreview({ landscape: newLandscape, pageSize, scale, margins: marginsStr, pageRanges });
-    }
-
-    function handlePageSizeChange(newPageSize: string) {
-        if (newPageSize === pageSize) return;
-        setPageSize(newPageSize);
-        regeneratePreview({ landscape, pageSize: newPageSize, scale, margins: marginsStr, pageRanges });
-    }
-
-    const scaleDebounceRef = useRef<ReturnType<typeof setTimeout>>();
-
     function handleScaleChange(newScale: number) {
         const clamped = Math.min(2, Math.max(0.1, Math.round(newScale * 10) / 10));
         setScaleStr(String(clamped));
-
-        clearTimeout(scaleDebounceRef.current);
-        scaleDebounceRef.current = setTimeout(() => {
-            regeneratePreview({ landscape, pageSize, scale: clamped, margins: marginsStr, pageRanges });
-        }, 500);
     }
-
-    function handleMarginPresetChange(newPreset: string) {
-        if (newPreset === marginPreset) return;
-        const newValue = serializeMargins(newPreset as MarginPreset | "custom", customMargins);
-        setMarginsStr(newValue);
-        regeneratePreview({ landscape, pageSize, scale, margins: newValue, pageRanges });
-    }
-
-    const marginDebounceRef = useRef<ReturnType<typeof setTimeout>>();
 
     function handleCustomMarginChange(side: keyof CustomMargins, value: number) {
         const newCustom = { ...customMargins, [side]: Math.max(0, value) };
-        const newValue = serializeMargins("custom", newCustom);
-        setMarginsStr(newValue);
-
-        clearTimeout(marginDebounceRef.current);
-        marginDebounceRef.current = setTimeout(() => {
-            regeneratePreview({ landscape, pageSize, scale, margins: newValue, pageRanges });
-        }, 500);
-    }
-
-    const pageRangesDebounceRef = useRef<ReturnType<typeof setTimeout>>();
-
-    function handlePageRangesChange(newValue: string) {
-        setPageRanges(newValue);
-
-        clearTimeout(pageRangesDebounceRef.current);
-        if (!isValidPageRanges(newValue)) return;
-
-        pageRangesDebounceRef.current = setTimeout(() => {
-            regeneratePreview({ landscape, pageSize, scale, margins: marginsStr, pageRanges: newValue.trim() });
-        }, 600);
-    }
-
-    function regeneratePreview(opts: PreviewOpts) {
-        if (!isElectron()) return;
-
-        setLoading(true);
-        const { ipcRenderer } = dynamicRequire("electron");
-
-        const onResult = (_e: any, { buffer, error }: { buffer?: Uint8Array; error?: string }) => {
-            toast.closePersistent("printing");
-            if (error) {
-                setLoading(false);
-                toast.showError(t("print_preview.render_error"));
-                return;
-            }
-            if (buffer) {
-                updatePreview(buffer);
-            }
-        };
-        ipcRenderer.once("export-as-pdf-preview-result", onResult);
-
-        ipcRenderer.send("export-as-pdf-preview", {
-            notePath: notePathRef.current,
-            pageSize: opts.pageSize,
-            landscape: opts.landscape,
-            scale: opts.scale,
-            margins: opts.margins,
-            pageRanges: opts.pageRanges
-        });
+        setMarginsStr(serializeMargins("custom", newCustom));
     }
 
     return (
@@ -338,7 +306,7 @@ export default function PrintPreviewDialog() {
                                 text={t("print_preview.portrait")}
                                 icon="bx-rectangle bx-rotate-90"
                                 className={!landscape ? "active" : ""}
-                                onClick={() => handleOrientationChange(false)}
+                                onClick={() => setLandscape(false)}
                                 disabled={loading}
                                 size="small"
                             />
@@ -346,7 +314,7 @@ export default function PrintPreviewDialog() {
                                 text={t("print_preview.landscape")}
                                 icon="bx-rectangle"
                                 className={landscape ? "active" : ""}
-                                onClick={() => handleOrientationChange(true)}
+                                onClick={() => setLandscape(true)}
                                 disabled={loading}
                                 size="small"
                             />
@@ -357,7 +325,7 @@ export default function PrintPreviewDialog() {
                         <select
                             class="form-select form-select-sm"
                             value={pageSize}
-                            onChange={(e) => handlePageSizeChange((e.target as HTMLSelectElement).value)}
+                            onChange={(e) => setPageSize((e.target as HTMLSelectElement).value)}
                             disabled={loading}
                         >
                             {PAGE_SIZES.map((size) => (
@@ -380,7 +348,7 @@ export default function PrintPreviewDialog() {
                         <select
                             class="form-select form-select-sm"
                             value={marginPreset}
-                            onChange={(e) => handleMarginPresetChange((e.target as HTMLSelectElement).value)}
+                            onChange={(e) => setMarginsStr(serializeMargins((e.target as HTMLSelectElement).value as MarginPreset | "custom", customMargins))}
                             disabled={loading}
                         >
                             <option value="default">{t("print_preview.margins_default")}</option>
@@ -404,7 +372,7 @@ export default function PrintPreviewDialog() {
                             class={`form-control form-control-sm ${!pageRangesValid ? "is-invalid" : ""}`}
                             value={pageRanges}
                             placeholder={t("print_preview.page_ranges_placeholder")}
-                            onInput={(e) => handlePageRangesChange((e.target as HTMLInputElement).value)}
+                            onInput={(e) => setPageRanges((e.target as HTMLInputElement).value)}
                             disabled={loading}
                             style={{ width: "140px" }}
                         />
