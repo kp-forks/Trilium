@@ -174,8 +174,8 @@ zadam/Trilium نۇسخىسىدىن TriliumNext/Notes غا كۆچۈش ئۈچۈن 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (ماسقەدەملىك مۇنازىرە)
   - `General `Matrix ئۆيىمۇ [XMPP](xmpp:discuss@trilium.thisgreat.party?join) غا
     ئۇلانغان
-- [Github Discussions](https://github.com/TriliumNext/Trilium/discussions) (For
-  asynchronous discussions.)
+- [GitHub Discussions](https://github.com/TriliumNext/Trilium/discussions)
+  (ئاسىنكرون مۇنازىرە).
 - [Github Issues](https://github.com/TriliumNext/Trilium/issues) (For bug
   reports and feature requests.)
 
