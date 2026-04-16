@@ -21,6 +21,20 @@ button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel, .c
     &.dropdown-toggle-split {
         min-width: unset;
     }
+
+    .btn-group > & {
+        border-radius: 0;
+    }
+
+    .btn-group > &:first-child {
+        border-start-start-radius: 6px;
+        border-end-start-radius: 6px;
+    }
+
+    .btn-group > &:last-child {
+        border-start-end-radius: 6px;
+        border-end-end-radius: 6px;
+    }
 }
 
 button.btn.btn-primary:hover,

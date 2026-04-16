@@ -18,7 +18,7 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore.js";
 import quarterOfYear from "dayjs/plugin/quarterOfYear.js";
 import utc from "dayjs/plugin/utc.js";
-import { LOCALE_IDS } from "./i18n.js";
+import { DISPLAYABLE_LOCALE_IDS, LOCALE_IDS } from "./i18n.js";
 
 dayjs.extend(advancedFormat);
 dayjs.extend(duration);
@@ -31,7 +31,7 @@ dayjs.extend(utc);
 //#endregion
 
 //#region Locales
-export const DAYJS_LOADER: Record<LOCALE_IDS, () => Promise<typeof import("dayjs/locale/en.js")>> = {
+export const DAYJS_LOADER: Record<DISPLAYABLE_LOCALE_IDS, () => Promise<typeof import("dayjs/locale/en.js")>> = {
     "ar": () => import("dayjs/locale/ar.js"),
     "cn": () => import("dayjs/locale/zh-cn.js"),
     "cs": () => import("dayjs/locale/cs.js"),
@@ -40,14 +40,11 @@ export const DAYJS_LOADER: Record<LOCALE_IDS, () => Promise<typeof import("dayjs
     "en-GB": () => import("dayjs/locale/en-gb.js"),
     "en_rtl": () => import("dayjs/locale/en.js"),
     "es": () => import("dayjs/locale/es.js"),
-    "fa": () => import("dayjs/locale/fa.js"),
     "fr": () => import("dayjs/locale/fr.js"),
     "ga": () => import("dayjs/locale/ga.js"),
     "it": () => import("dayjs/locale/it.js"),
-    "he": () => import("dayjs/locale/he.js"),
     "hi": () => import("dayjs/locale/hi.js"),
     "ja": () => import("dayjs/locale/ja.js"),
-    "ku": () => import("dayjs/locale/ku.js"),
     "pt_br": () => import("dayjs/locale/pt-br.js"),
     "pt": () => import("dayjs/locale/pt.js"),
     "pl": () => import("dayjs/locale/pl.js"),
@@ -58,7 +55,7 @@ export const DAYJS_LOADER: Record<LOCALE_IDS, () => Promise<typeof import("dayjs
 }
 
 async function setDayjsLocale(locale: LOCALE_IDS) {
-    const dayjsLocale = DAYJS_LOADER[locale];
+    const dayjsLocale = DAYJS_LOADER[locale as DISPLAYABLE_LOCALE_IDS];
     if (dayjsLocale) {
         dayjs.locale(await dayjsLocale());
     }

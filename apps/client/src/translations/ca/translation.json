@@ -59,12 +59,6 @@
   "recent_changes": {
     "undelete_link": "recuperar"
   },
-  "revisions": {
-    "restore_button": "Restaura",
-    "delete_button": "Suprimeix",
-    "download_button": "Descarrega",
-    "mime": "MIME: "
-  },
   "sort_child_notes": {
     "title": "títol",
     "ascending": "ascendent",

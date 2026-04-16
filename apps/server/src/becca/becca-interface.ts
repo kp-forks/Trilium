@@ -1,4 +1,6 @@
 import sql from "../services/sql.js";
+import log from "../services/log.js";
+import { formatSize } from "../services/utils.js";
 import NoteSet from "../services/search/note_set.js";
 import NotFoundError from "../errors/not_found_error.js";
 import type BOption from "./entities/boption.js";
@@ -31,9 +33,22 @@ export default class Becca {
 
     allNoteSetCache: NoteSet | null;
 
+    /**
+     * Pre-built parallel arrays for fast flat text scanning in search.
+     * Avoids per-note property access overhead when iterating 50K+ notes.
+     * Supports incremental updates: when individual notes change, only their
+     * entries are rebuilt rather than the entire index.
+     */
+    flatTextIndex: { notes: BNote[], flatTexts: string[], noteIdToIdx: Map<string, number> } | null;
+
+    /** NoteIds whose flat text needs to be recomputed in the index. */
+    dirtyFlatTextNoteIds: Set<string>;
+
     constructor() {
-        this.reset();
+        this.dirtyFlatTextNoteIds = new Set();
         this.allNoteSetCache = null;
+        this.flatTextIndex = null;
+        this.reset();
     }
 
     reset() {
@@ -242,6 +257,67 @@ export default class Becca {
     /** Should be called when the set of all non-skeleton notes changes (added/removed) */
     dirtyNoteSetCache() {
         this.allNoteSetCache = null;
+        // Full rebuild needed since the note set itself changed
+        this.flatTextIndex = null;
+        this.dirtyFlatTextNoteIds.clear();
+    }
+
+    /** Mark a single note's flat text as needing recomputation in the index. */
+    dirtyNoteFlatText(noteId: string) {
+        if (this.flatTextIndex) {
+            // Index exists — schedule an incremental update
+            this.dirtyFlatTextNoteIds.add(noteId);
+        }
+        // If flatTextIndex is null, full rebuild will happen on next access anyway
+    }
+
+    /**
+     * Returns pre-built parallel arrays of notes and their flat texts for fast scanning.
+     * The flat texts are already normalized (lowercase, diacritics removed).
+     * Supports incremental updates: when individual notes are dirtied, only their
+     * entries are recomputed rather than rebuilding the entire index.
+     */
+    getFlatTextIndex(): { notes: BNote[], flatTexts: string[], noteIdToIdx: Map<string, number> } {
+        if (!this.flatTextIndex) {
+            // Measure heap before building
+            const heapBefore = process.memoryUsage().heapUsed;
+
+            const allNoteSet = this.getAllNoteSet();
+            const notes: BNote[] = [];
+            const flatTexts: string[] = [];
+            const noteIdToIdx = new Map<string, number>();
+
+            for (const note of allNoteSet.notes) {
+                noteIdToIdx.set(note.noteId, notes.length);
+                notes.push(note);
+                flatTexts.push(note.getFlatText());
+            }
+
+            this.flatTextIndex = { notes, flatTexts, noteIdToIdx };
+            this.dirtyFlatTextNoteIds.clear();
+
+            // Measure heap after building and log
+            const heapAfter = process.memoryUsage().heapUsed;
+            const heapDelta = heapAfter - heapBefore;
+            log.info(`Flat text search index built: ${notes.length} notes, ${formatSize(heapDelta)}`);
+        } else if (this.dirtyFlatTextNoteIds.size > 0) {
+            // Incremental update: only recompute flat texts for dirtied notes
+            const { flatTexts, noteIdToIdx } = this.flatTextIndex;
+
+            for (const noteId of this.dirtyFlatTextNoteIds) {
+                const idx = noteIdToIdx.get(noteId);
+                if (idx !== undefined) {
+                    const note = this.notes[noteId];
+                    if (note) {
+                        flatTexts[idx] = note.getFlatText();
+                    }
+                }
+            }
+
+            this.dirtyFlatTextNoteIds.clear();
+        }
+
+        return this.flatTextIndex;
     }
 
     getAllNoteSet() {

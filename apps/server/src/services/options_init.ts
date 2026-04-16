@@ -131,6 +131,8 @@ const defaultOptions: DefaultOption[] = [
     { name: "autoFixConsistencyIssues", value: "true", isSynced: false },
     { name: "vimKeymapEnabled", value: "false", isSynced: false },
     { name: "codeLineWrapEnabled", value: "true", isSynced: false },
+    { name: "codeNoteTabWidth", value: "4", isSynced: true },
+    { name: "codeNoteIndentWithTabs", value: "false", isSynced: true },
     {
         name: "codeNotesMimeTypes",
         value: '["text/x-csrc","text/x-c++src","text/x-csharp","text/css","text/x-elixir","text/x-go","text/x-groovy","text/x-haskell","text/html","message/http","text/x-java","application/javascript;env=frontend","application/javascript;env=backend","application/json","text/x-kotlin","text/x-markdown","text/x-perl","text/x-php","text/x-python","text/x-ruby",null,"text/x-sql","text/x-sqlite;schema=trilium","text/x-swift","text/xml","text/x-yaml","text/x-sh","application/typescript"]',
@@ -216,6 +218,7 @@ const defaultOptions: DefaultOption[] = [
         isSynced: false
     },
     { name: "codeBlockWordWrap", value: "false", isSynced: true },
+    { name: "codeBlockTabWidth", value: "4", isSynced: true },
 
     // Text note configuration
     { name: "textNoteEditorType", value: "ckeditor-balloon", isSynced: true },
@@ -233,6 +236,10 @@ const defaultOptions: DefaultOption[] = [
         value: JSON.stringify(SANITIZER_DEFAULT_ALLOWED_TAGS),
         isSynced: true
     },
+
+    // Search settings
+    { name: "searchEnableFuzzyMatching", value: "true", isSynced: true },
+    { name: "searchAutocompleteFuzzy", value: "false", isSynced: true },
 
     // Share settings
     { name: "redirectBareDomain", value: "false", isSynced: true },

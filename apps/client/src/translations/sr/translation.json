@@ -248,28 +248,6 @@
     "undelete_link": "poništi brisanje",
     "confirm_undelete": "Da li želite da poništite brisanje ove beleške i njenih podbeleški?"
   },
-  "revisions": {
-    "note_revisions": "Revizije beleški",
-    "delete_all_revisions": "Obriši sve revizije ove beleške",
-    "delete_all_button": "Obriši sve revizije",
-    "help_title": "Pomoć za Revizije beleški",
-    "confirm_delete_all": "Da li želite da obrišete sve revizije ove beleške?",
-    "no_revisions": "Još uvek nema revizija za ovu belešku...",
-    "restore_button": "Vrati",
-    "confirm_restore": "Da li želite da vratite ovu reviziju? Ovo će prepisati trenutan naslov i sadržaj beleške sa ovom revizijom.",
-    "delete_button": "Obriši",
-    "confirm_delete": "Da li želite da obrišete ovu reviziju?",
-    "revisions_deleted": "Revizije beleške su obrisane.",
-    "revision_restored": "Revizija beleške je vraćena.",
-    "revision_deleted": "Revizija beleške je obrisana.",
-    "snapshot_interval": "Interval snimanja revizije beleške: {{seconds}}s.",
-    "maximum_revisions": "Ograničenje broja slika revizije beleške: {{number}}.",
-    "settings": "Podešavanja revizija beleški",
-    "download_button": "Preuzmi",
-    "mime": "MIME: ",
-    "file_size": "Veličina datoteke:",
-    "preview_not_available": "Pregled nije dostupan za ovaj tip beleške."
-  },
   "sort_child_notes": {
     "sort_children_by": "Sortiranje podbeleški po...",
     "sorting_criteria": "Kriterijum za sortiranje",

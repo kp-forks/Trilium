@@ -360,7 +360,8 @@ function copySelectionToClipboard() {
 type dynamicRequireMappings = {
     "@electron/remote": typeof import("@electron/remote"),
     "electron": typeof import("electron"),
-    "child_process": typeof import("child_process")
+    "child_process": typeof import("child_process"),
+    "url": typeof import("url")
 };
 
 export function dynamicRequire<T extends keyof dynamicRequireMappings>(moduleName: T): Awaited<dynamicRequireMappings[T]>{

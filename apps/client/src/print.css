@@ -5,15 +5,15 @@
     --ck-content-color-image-caption-background: transparent !important;
 }
 
+@page {
+    margin: 2cm;
+}
+
 html,
 body {
     width: 100%;
     height: 100%;
     color: black;
-}
-
-@page {
-    margin: 2cm;
 }
 
 .note-list-widget.full-height,

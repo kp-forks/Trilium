@@ -1680,7 +1680,7 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         display: inline !important;
     }
 
-    body.mobile .options-section table {
+    body.mobile .options-section-card table {
         word-break: break-all;
     }
 
@@ -1860,12 +1860,12 @@ button.close:hover {
     margin-bottom: 15px;
 }
 
-.options-section h5 {
+.options-section-card h5 {
     margin-top: 10px;
     margin-bottom: 10px;
 }
 
-.options-section input[type="number"] {
+.options-section-card input[type="number"] {
     /* overriding settings from .form-control */
     width: 10em !important;
     flex-grow: 0 !important;
@@ -2700,4 +2700,8 @@ iframe.print-iframe {
     font-size: 0.9em;
     line-height: 1.4;
     white-space: pre-wrap;
+}
+
+.ck-content pre code {
+    tab-size: var(--code-block-tab-width, 4);
 }

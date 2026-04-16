@@ -198,7 +198,8 @@
     "december": "Dezember"
   },
   "special_notes": {
-    "search_prefix": "Suche:"
+    "search_prefix": "Suche:",
+    "llm_chat_prefix": "Chat:"
   },
   "test_sync": {
     "not-configured": "Der Synchronisations-Server-Host ist nicht konfiguriert. Bitte konfiguriere zuerst die Synchronisation.",
@@ -226,7 +227,7 @@
     "go-to-previous-note-title": "Zur vorherigen Notiz gehen",
     "go-to-next-note-title": "Zur nächsten Notiz gehen",
     "new-note-title": "Neue Notiz",
-    "search-notes-title": "Notizen durchsuchen",
+    "search-notes-title": "Suche Notiz",
     "calendar-title": "Kalender",
     "recent-changes-title": "neue Änderungen",
     "bookmarks-title": "Lesezeichen",
@@ -240,7 +241,7 @@
     "shortcuts-title": "Tastenkürzel",
     "text-notes": "Text Notizen",
     "code-notes-title": "Code Notizen",
-    "images-title": "Bilder",
+    "images-title": "Medien",
     "spellcheck-title": "Rechtschreibprüfung",
     "password-title": "Passwort",
     "etapi-title": "ETAPI",
@@ -256,7 +257,11 @@
     "inbox-title": "Posteingang",
     "zen-mode": "Zen-Modus",
     "command-palette": "Befehlspalette öffnen",
-    "tab-switcher-title": "Tabauswahl"
+    "tab-switcher-title": "Tabauswahl",
+    "llm-chat-history-title": "KI-Chat Historie",
+    "custom-dictionary-title": "Benutzerdefiniertes Verzeichnis",
+    "llm-title": "KI / LLM",
+    "sidebar-chat-title": "KI-Chat"
   },
   "notes": {
     "new-note": "Neue Notiz",
@@ -429,7 +434,10 @@
     "last-updated": "Zuletzt aktualisiert am {{- date}}",
     "subpages": "Unterseiten:",
     "on-this-page": "Auf dieser Seite",
-    "expand": "Erweitern"
+    "expand": "Erweitern",
+    "toggle-navigation": "Navigation umschalten",
+    "toggle-toc": "Inhaltsverzeichnis umschalten",
+    "logo-alt": "Logo"
   },
   "sql_init": {
     "db_not_initialized_desktop": "Datenbank nicht initialisiert, bitte folge den Anweisungen auf dem Bildschirm.",
@@ -437,5 +445,21 @@
   },
   "desktop": {
     "instance_already_running": "Es läuft bereits eine Instanz, bitte beachte stattdessen diese Instanz."
+  },
+  "password": {
+    "incorrect": "Das eingegebene Passwort ist nicht korrekt."
+  },
+  "script": {
+    "wrong-environment": "Kann die Notiz \"{{- noteTitle}}\" ({{- noteId}}) nicht ausführen. Dies ist ein {{- actualEnv}} Skript, aber die Ausführung wurde im {{- expectedEnv}} versucht."
+  },
+  "search": {
+    "error": {
+      "in-context": "Fehler in {{- context}}: {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" ist ein reserviertes Stichwort. Um eine Wortgenaue Suche durchzuführen, verwende Anführungszeichen \"{{- token}}\"",
+      "cannot-compare-with": "Vergleich mit \"{{- token}}\" nicht möglich. Um eine Wortgenaue Suche durchzuführen, verwende Anführungszeichen \"{{- token}}\"",
+      "misplaced-expression": "Fehlplatzierter oder unvollständiger Ausdruck \"{{- token}}\"",
+      "fulltext-after-expression": "\"{{- token}}\" ist kein valider Ausdruck. Um einen Text zu suchen, platziere ihn vor den Attributfiltern (z.B. \"{{- token}} #label\" anstatt \"#label {{- token}}\").",
+      "unrecognized-expression": "Nicht erkannter Ausdruck \"{{- token}}\""
+    }
   }
 }

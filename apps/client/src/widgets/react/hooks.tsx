@@ -664,13 +664,28 @@ export function useNoteLabelBoolean(note: FNote | undefined | null, labelName: F
     return [ labelValue, setter ] as const;
 }
 
-export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number) => void] {
-    //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
+/**
+ * Like {@link useNoteLabelBoolean} but returns `undefined` when the label is absent, allowing the caller
+ * to distinguish between "explicitly false" and "not set" (for inheriting from a global default).
+ */
+export function useNoteLabelOptionalBool(note: FNote | undefined | null, labelName: FilterLabelsByType<boolean>): [ boolean | undefined, (newValue: boolean | null) => void] {
+    //@ts-expect-error `useNoteLabel` only accepts string labels but we need to be able to read boolean ones.
     const [ value, setValue ] = useNoteLabel(note, labelName);
     useDebugValue(labelName);
     return [
-        (value ? parseInt(value, 10) : undefined),
-        (newValue) => setValue(String(newValue))
+        (value == null ? undefined : value !== "false"),
+        (newValue) => setValue(newValue === null ? null : String(newValue))
+    ];
+}
+
+export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number | null) => void] {
+    //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
+    const [ value, setValue ] = useNoteLabel(note, labelName);
+    useDebugValue(labelName);
+    const parsed = value ? parseInt(value, 10) : undefined;
+    return [
+        (Number.isFinite(parsed) ? parsed : undefined),
+        (newValue) => setValue(newValue === null ? null : String(newValue))
     ];
 }
 
@@ -1447,24 +1462,29 @@ export function useColorScheme() {
 export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unknown[]) {
     useEffect(() => {
         if (!containerRef.current) return;
-        // Support both read-only (.math-tex) and CKEditor editing view (.ck-math-tex) classes
-        const mathElements = containerRef.current.querySelectorAll(".math-tex, .ck-math-tex");
+        const mathElements = containerRef.current.querySelectorAll(".math-tex");
 
         for (const mathEl of mathElements) {
             // Skip if already rendered by KaTeX
             if (mathEl.querySelector(".katex")) continue;
 
             try {
-                let equation = mathEl.textContent || "";
+                // CKEditor's data format wraps the equation with \(...\) or \[...\]
+                // delimiters. katex.render() expects raw LaTeX without them.
+                const raw = mathEl.textContent?.trim() ?? "";
+                let equation: string;
+                let displayMode = false;
 
-                // CKEditor widgets store equation without delimiters, add them for KaTeX
-                if (mathEl.classList.contains("ck-math-tex")) {
-                    // Check if it's display mode or inline
-                    const isDisplay = mathEl.classList.contains("ck-math-tex-display");
-                    equation = isDisplay ? `\\[${equation}\\]` : `\\(${equation}\\)`;
+                if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
+                    equation = raw.slice(2, -2);
+                } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
+                    equation = raw.slice(2, -2);
+                    displayMode = true;
+                } else {
+                    equation = raw;
                 }
 
-                math.render(equation, mathEl as HTMLElement);
+                math.render(equation, mathEl as HTMLElement, { displayMode });
             } catch (e) {
                 console.warn("Failed to render math:", e);
             }

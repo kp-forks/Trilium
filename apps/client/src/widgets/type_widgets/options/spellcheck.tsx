@@ -5,11 +5,10 @@ import { t } from "../../../services/i18n";
 import { dynamicRequire, isElectron, restartDesktopApp } from "../../../services/utils";
 import Button from "../../react/Button";
 import FormText from "../../react/FormText";
-import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
 import CheckboxList from "./components/CheckboxList";
-import OptionsRow from "./components/OptionsRow";
+import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function SpellcheckSettings() {
@@ -32,13 +31,12 @@ function ElectronSpellcheckSettings() {
             <OptionsSection title={t("spellcheck.title")}>
                 <FormText>{t("spellcheck.restart-required")}</FormText>
 
-                <OptionsRow name="spell-check-enabled" label={t("spellcheck.enable")}>
-                    <FormToggle
-                        switchOnName="" switchOffName=""
-                        currentValue={spellCheckEnabled}
-                        onChange={setSpellCheckEnabled}
-                    />
-                </OptionsRow>
+                <OptionsRowWithToggle
+                    name="spell-check-enabled"
+                    label={t("spellcheck.enable")}
+                    currentValue={spellCheckEnabled}
+                    onChange={setSpellCheckEnabled}
+                />
 
                 <OptionsRow name="restart" centered>
                     <Button

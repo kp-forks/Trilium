@@ -8,7 +8,7 @@ import appContext, { CommandListenerData } from "../../../components/app_context
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import utils from "../../../services/utils";
-import { useEditorSpacedUpdate, useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteBlob, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import { useEditorSpacedUpdate, useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteBlob, useNoteLabelInt, useNoteLabelOptionalBool, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { refToJQuerySelector } from "../../react/react_utils";
 import TouchBar, { TouchBarButton } from "../../react/TouchBar";
 import { CODE_THEME_DEFAULT_PREFIX as DEFAULT_PREFIX } from "../constants";
@@ -36,6 +36,9 @@ export interface EditableCodeProps extends TypeWidgetProps, Omit<CodeEditorProps
 export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWidgetProps) {
     const [ content, setContent ] = useState("");
     const blob = useNoteBlob(note);
+    const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
+    const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
+    const [ noteWrapLines ] = useNoteLabelOptionalBool(note, "wrapLines");
 
     useEffect(() => {
         if (!blob) return;
@@ -55,6 +58,9 @@ export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWi
             content={content}
             mime={note.mime}
             readOnly
+            {...(noteTabWidth != null && { indentSize: noteTabWidth })}
+            {...(noteUseTabs != null && { useTabs: noteUseTabs })}
+            {...(noteWrapLines != null && { lineWrapping: noteWrapLines })}
         />
     );
 }
@@ -79,6 +85,9 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     const editorRef = useRef<VanillaCodeMirror>(null);
     const containerRef = useRef<HTMLPreElement>(null);
     const [ vimKeymapEnabled ] = useTriliumOptionBool("vimKeymapEnabled");
+    const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
+    const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
+    const [ noteWrapLines ] = useNoteLabelOptionalBool(note, "wrapLines");
     const mime = useNoteProperty(note, "mime");
     const spacedUpdate = useEditorSpacedUpdate({
         note,
@@ -129,6 +138,9 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
                     }
                 }}
                 {...editorProps}
+                {...(noteTabWidth != null && { indentSize: noteTabWidth })}
+                {...(noteUseTabs != null && { useTabs: noteUseTabs })}
+                {...(noteWrapLines != null && { lineWrapping: noteWrapLines })}
             />
 
             <TouchBar>
@@ -146,6 +158,8 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
     const initialized = useRef($.Deferred());
     const [ codeLineWrapEnabled ] = useTriliumOptionBool("codeLineWrapEnabled");
     const [ codeNoteTheme ] = useTriliumOption("codeNoteTheme");
+    const [ codeNoteTabWidth ] = useTriliumOption("codeNoteTabWidth");
+    const [ codeNoteIndentWithTabs ] = useTriliumOptionBool("codeNoteIndentWithTabs");
 
     // React to background color.
     const [ backgroundColor, setBackgroundColor ] = useState<string>();
@@ -200,6 +214,8 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
         editorRef={codeEditorRef}
         containerRef={containerRef}
         lineWrapping={lineWrapping ?? codeLineWrapEnabled}
+        indentSize={editorProps.indentSize ?? (parseInt(codeNoteTabWidth) || 4)}
+        useTabs={editorProps.useTabs ?? codeNoteIndentWithTabs}
         onInitialized={() => {
             if (externalContainerRef && containerRef.current) {
                 externalContainerRef.current = containerRef.current;
