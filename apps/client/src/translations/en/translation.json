@@ -1341,7 +1341,7 @@
     "erase_deleted_notes_now": "Erase deleted notes now",
     "deleted_notes_erased": "Deleted notes have been erased."
   },
-  "revisions": {
+  "revisions_snapshot": {
     "title": "Note Revisions"
   },
   "revisions_snapshot_interval": {
