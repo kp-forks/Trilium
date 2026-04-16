@@ -176,77 +176,81 @@ zadam/Trilium نۇسخىسىدىن TriliumNext/Notes غا كۆچۈش ئۈچۈن 
     ئۇلانغان
 - [GitHub Discussions](https://github.com/TriliumNext/Trilium/discussions)
   (ئاسىنكرون مۇنازىرە).
-- [Github Issues](https://github.com/TriliumNext/Trilium/issues) (For bug
-  reports and feature requests.)
+- [GitHub Issues](https://github.com/TriliumNext/Trilium/issues) (خاتالىق مەلۇم
+  قىلىش ۋە ئىقتىدار ئېھتىياجىنى ئوتتۇرىغا قويۇش).
 
-## 🏗 Installation
+## 🏗 قاچىلاش
 
 ### Windows / MacOS
 
-Download the binary release for your platform from the [latest release
-page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the package
-and run the `trilium` executable.
+[ئەڭ يېڭى نەشرى بېتى](https://github.com/TriliumNext/Trilium/releases/latest)دىن
+سۇپىڭىزغا ماس كېلىدىغان سىستېما ھۆججىتىنى چۈشۈرۈڭ، پرېستىن يەشكەندىن كېيىن
+`trilium` ئىجرا ھۆججىتىنى قوزغىتىڭ.）
 
 ### Linux
 
-If your distribution is listed in the table below, use your distribution's
-package.
+ئەگەر سىز ئىشلىتىۋاتقان نەشرى تۆۋەندىكى جەدۋەلدە بولسا، شۇ نەشرىنىڭ يۇمشاق دېتال
+بوغچىسىنى ئىشلىتىڭ.
 
 [![Packaging
 status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
 
-You may also download the binary release for your platform from the [latest
-release page](https://github.com/TriliumNext/Trilium/releases/latest), unzip the
-package and run the `trilium` executable.
+سىز يەنە [ئەڭ يېڭى ئېلان قىلىنغان
+بەت](https://github.com/TriliumNext/Trilium/releases/latest)تىن مۇناسىپ سۇپىنىڭ
+سىستېما ھۆججىتىنى چۈشۈرۈپ، پرېستىن يېشىپ بولغاندىن كېيىن trilium ئىجرا ھۆججىتىنى
+قوزغاتسىڭىز بولىدۇ.
 
-TriliumNext is also provided as a Flatpak, but not yet published on FlatHub.
+TriliumNext يەنە Flatpak نۇسخىسى بىلەن تەمىنلەيدۇ، ئەمما تېخى FlatHub غا
+چىقىرىلمىدى.
 
 ### Browser (any OS)
 
-If you use a server installation (see below), you can directly access the web
-interface (which is almost identical to the desktop app).
+ئەگەر سىزدە (تۆۋەندىكىدەك) مۇلازىمىتىر قاچىلانمىسى بولسا، تور كۆرۈنمە يۈزىنى
+بىۋاسىتە ساقىلالايسىز (ئۇ بىر تەرەپ قىلغۇچ دېتالى بىلەن ئاساسەن ئوخشاش）
 
-Currently only the latest versions of Chrome & Firefox are supported (and
-tested).
+نۆۋەتتە پەقەت Chrome ۋە Firefox نىڭ ئەڭ يېڭى نەشرىنىلا قوللايدۇ (ھەمدە ئەمەلىي
+سىناقتىن ئۆتكەن).
 
 ### Mobile
 
-To use TriliumNext on a mobile device, you can use a mobile web browser to
-access the mobile interface of a server installation (see below).
+ئەگەر كۆچمە ئۈسكۈنىلەردە TriliumNext نى ئىشلەتمەكچى بولسىڭىز، كۆچمە كۆرگۈچ
+ئارقىلىق مۇلازىمىتىرغا قاچىلانغان كۆچمە نۇسخا كۆرۈنمە يۈزىنى زىيارەت قىلالايسىز
+(تۆۋەنگە قاراڭ).
 
-See issue https://github.com/TriliumNext/Trilium/issues/4962 for more
-information on mobile app support.
+كۆچمە دېتال قوللاشقا ئائىت تېخىمۇ كۆپ ئۇچۇرلار ئۈچۈن،
+https://github.com/TriliumNext/Trilium/issues/4962 مەسىلە بېتىگە قاراڭ.
 
-If you prefer a native Android app, you can use
-[TriliumDroid](https://apt.izzysoft.de/fdroid/index/apk/eu.fliegendewurst.triliumdroid).
-Report bugs and missing features at [their
-repository](https://github.com/FliegendeWurst/TriliumDroid). Note: It is best to
-disable automatic updates on your server installation (see below) when using
-TriliumDroid since the sync version must match between Trilium and TriliumDroid.
+ئەگەر سىز ئەسلى Android دېتالىنى ئىشلىتىشكە ئامراق بولسىڭىز،
+[TriliumDroid](https://apt.izzysoft.de/fdroid/index/apk/eu.fliegendewurst.triliumdroid)
+نى ئىشلەتسىڭىز بولىدۇ. مەسىلە ياكى كەم بولغان ئىقتىدارلارنى مەلۇم قىلماقچى
+بولسىڭىز، [ئۇنىڭ ئامبىرى](https://github.com/FliegendeWurst/TriliumDroid) غا
+مەرھەمەت.
 
 ### Server
 
-To install TriliumNext on your own server (including via Docker from
-[Dockerhub](https://hub.docker.com/r/triliumnext/trilium)) follow [the server
-installation docs](https://docs.triliumnotes.org/user-guide/setup/server).
+ئەگەر ئۆزىڭىزنىڭ مۇلازىمىتىرىغا TriliumNext نى قاچىلىماقچى بولسىڭىز ([Docker
+Hub](https://hub.docker.com/r/triliumnext/trilium) دىن Docker ئارقىلىق
+ئورۇنلاشتۇرۇشنىمۇ ئۆز ئىچىگە ئالىدۇ)، [مۇلازىمىتىر قاچىلاش
+ھۆججىتى](https://docs.triliumnotes.org/user-guide/setup/server) گە ئەمەل قىلىڭ.
 
 
-## 💻 Contribute
+## 💻 تۆھپە قوشۇش
 
-### Translations
+### تەرجىمە
 
-If you are a native speaker, help us translate Trilium by heading over to our
-[Weblate page](https://hosted.weblate.org/engage/trilium/).
+ئەگەر سىز شۇ تىلنىڭ ئىگىسى بولسىڭىز، بىزنىڭ [Weblate
+بېتىمىز](https://hosted.weblate.org/engage/trilium/)گە كىرىپ Trilium نىڭ تەرجىمە
+قىلىنىشىغا ياردەم بېرىشىڭىزنى قارشى ئالىمىز.
 
-Here's the language coverage we have so far:
+تۆۋەندىكىسى نۆۋەتتىكى تىللارنىڭ قاپلىنىش ئەھۋالى:
 
-[![Translation
-status](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
+[![تەرجىمە
+ئەھۋالى](https://hosted.weblate.org/widget/trilium/multi-auto.svg)](https://hosted.weblate.org/engage/trilium/)
 
-### Code
+### پروگرامما كودى
 
-Download the repository, install dependencies using `pnpm` and then run the
-server (available at http://localhost:8080):
+ئامبارنى چۈشۈرۈڭ، `pnpm` ئارقىلىق بېقىندى زاپچاسلارنى قاچىلاڭ، ئاندىن
+مۇلازىمىتىرنى قوزغىتىڭ (مۇلازىمەت ئادرېسى: http://localhost:8080):
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -254,10 +258,10 @@ pnpm install
 pnpm run server:start
 ```
 
-### Documentation
+### ھۆججەت
 
-Download the repository, install dependencies using `pnpm` and then run the
-environment required to edit the documentation:
+ئامبارنى چۈشۈرۈڭ، `pnpm` ئارقىلىق بېقىندى زاپچاسلارنى قاچىلاڭ، ئاندىن ھۆججەت
+تەھرىرلەشكە ئېھتىياجلىق مۇھىتنى قوزغىتىڭ:
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -266,8 +270,8 @@ pnpm edit-docs:edit-docs
 ```
 
 ### Building the Executable
-Download the repository, install dependencies using `pnpm` and then build the
-desktop app for Windows:
+ئامبارنى چۈشۈرۈڭ، `pnpm` ئارقىلىق بېقىندى زاپچاسلارنى قاچىلاڭ، ئاندىن Windows
+ئۈچۈن ئۈستەلئۈستى ئەپىنى قۇرۇپ چىقىڭ:
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -275,10 +279,11 @@ pnpm install
 pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 ```
 
-For more details, see the [development
-docs](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20Guide/Developer%20Guide).
+تېخىمۇ كۆپ تەپسىلاتلار ئۈچۈن [تەتقىقات
+ھۆججەت](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20Guide/Developer%20Guide)گە
+قاراڭ.
 
-### Developer Documentation
+### تەتقىقاتچى ھۆججەتلىرى
 
 Please view the [documentation
 guide](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)
