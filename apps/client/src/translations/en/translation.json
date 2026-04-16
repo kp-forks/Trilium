@@ -9,8 +9,8 @@
       "original-dev": "original developer"
     },
     "role_brief_history": {
-      "lead-dev": "TODO",
-      "original-dev": "TODO"
+      "lead-dev": "Elian Doran founded TriliumNext in 2024, a community fork created after Zadam stepped back from the project. Zadam later transferred the original repository to the TriliumNext team, merging both projects back into one.",
+      "original-dev": "On 25th December 2017, Zadam released the first beta of Trilium (written with a single \"i\", unlike the flower). Dissatisfied with existing note organizers, he built a powerful self-hosted hierarchical knowledge base that gathered over 22,000 GitHub stars. In 2024, as life got busier, he placed the project into maintenance mode."
     },
     "contributor_full_list": "See the entire community",
     "data_directory": "Data directory:",
