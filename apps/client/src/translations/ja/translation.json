@@ -2446,5 +2446,35 @@
     "destination_pdf": "PDF として保存",
     "destination_printers": "プリンター",
     "destination_default": "デフォルト"
+  },
+  "revisions": {
+    "note_revisions": "ノートの変更履歴",
+    "delete_all_revisions": "このノートのすべての変更履歴を削除",
+    "delete_all_button": "すべての変更履歴を削除",
+    "help_title": "ノートの変更履歴に関するヘルプ",
+    "confirm_delete_all": "このノートのすべての変更履歴を削除しますか？",
+    "no_revisions": "このノートにはまだ変更履歴がありません...",
+    "restore_button": "復元",
+    "diff_on": "差分を表示",
+    "diff_off": "内容を表示",
+    "diff_on_hint": "クリックしてノートのソース差分を表示",
+    "diff_off_hint": "クリックしてノートの内容を表示",
+    "diff_not_available": "差分は利用できません。",
+    "confirm_restore": "この変更履歴を復元しますか？ 復元すると、ノートの現在のタイトルと内容がこの変更履歴で上書きされます。",
+    "delete_button": "削除",
+    "confirm_delete": "この変更履歴を削除しますか？",
+    "revisions_deleted": "ノートの変更履歴が削除されました。",
+    "revision_restored": "ノートの変更履歴が復元されました。",
+    "revision_deleted": "ノートの変更履歴が削除されました。",
+    "snapshot_interval": "ノートの変更履歴スナップショット間隔: {{seconds}} 秒。",
+    "maximum_revisions": "ノートの変更履歴スナップショット制限: {{number}}。",
+    "settings": "ノートの変更履歴設定",
+    "download_button": "ダウンロード",
+    "mime": "MIME: ",
+    "file_size": "ファイルサイズ:",
+    "preview_not_available": "このノートタイプではプレビューは利用できません。"
+  },
+  "revisions_snapshot": {
+    "title": "ノートの変更履歴"
   }
 }
