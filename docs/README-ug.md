@@ -172,8 +172,8 @@ zadam/Trilium نۇسخىسىدىن TriliumNext/Notes غا كۆچۈش ئۈچۈن 
 ياكى مەسىلىلەر ھەققىدىكى پىكىرلىرىڭىزنى ئاڭلاشنى ئارزۇ قىلىمىز!
 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (ماسقەدەملىك مۇنازىرە)
-  - The `General` Matrix room is also bridged to
-    [XMPP](xmpp:discuss@trilium.thisgreat.party?join)
+  - `General `Matrix ئۆيىمۇ [XMPP](xmpp:discuss@trilium.thisgreat.party?join) غا
+    ئۇلانغان
 - [Github Discussions](https://github.com/TriliumNext/Trilium/discussions) (For
   asynchronous discussions.)
 - [Github Issues](https://github.com/TriliumNext/Trilium/issues) (For bug
