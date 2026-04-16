@@ -2238,9 +2238,6 @@
     "sample_venn": "Mengen",
     "sample_ishikawa": "Ursache-Wirkung"
   },
-  "revisions": {
-    "title": "Notizrevisionen"
-  },
   "database": {
     "title": "Datenbank"
   },

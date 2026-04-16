@@ -2400,9 +2400,6 @@
     "text_filtered_low_confidence": "OCR は {{confidence}}% の信頼度でテキストを検出しましたが、最小しきい値が {{threshold}}% であるため、破棄されました。",
     "open_media_settings": "設定を開く"
   },
-  "revisions": {
-    "title": "ノートの変更履歴"
-  },
   "database": {
     "title": "データベース"
   },

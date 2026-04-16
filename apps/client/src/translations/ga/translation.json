@@ -2464,9 +2464,6 @@
     "text_filtered_low_confidence": "Bhraith OCR téacs le muinín {{confidence}}%, ach caitheadh leis é mar is é {{threshold}}% an tairseach íosta atá agat.",
     "open_media_settings": "Oscail Socruithe"
   },
-  "revisions": {
-    "title": "Athbhreithnithe Nótaí"
-  },
   "database": {
     "title": "Bunachar Sonraí"
   },

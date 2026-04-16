@@ -97,7 +97,8 @@
     "broken_relations_to_be_deleted": "将删除以下关系并断开连接 ({{ relationCount}})",
     "cancel": "取消",
     "title": "删除笔记",
-    "delete": "删除"
+    "delete": "删除",
+    "clones_label": "克隆"
   },
   "export": {
     "export_note_title": "导出笔记",
