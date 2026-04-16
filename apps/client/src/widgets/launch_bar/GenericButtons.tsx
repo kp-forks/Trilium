@@ -32,6 +32,9 @@ export function CustomNoteLauncher(props: {
             onClick={launch}
             onAuxClick={launch}
             onContextMenu={async evt => {
+                // Must preventDefault synchronously — awaiting getTargetNoteId first would let the
+                // native browser context menu open before showLauncherContextMenu gets a chance to.
+                evt.preventDefault();
                 const targetNoteId = await getTargetNoteId(launcherNote);
                 const hoistedNoteId = getHoistedNoteId?.(launcherNote) ?? null;
                 const linkItems = targetNoteId ? link_context_menu.getItems(evt) : [];

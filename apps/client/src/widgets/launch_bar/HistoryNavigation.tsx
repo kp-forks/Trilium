@@ -27,6 +27,8 @@ export default function HistoryNavigationButton({ launcherNote, command }: Histo
             text={title}
             triggerCommand={command}
             onContextMenu={async (e) => {
+                // Prevent the native menu synchronously before awaiting history items.
+                e.preventDefault();
                 const items = webContents ? await getHistoryItems(webContents) : [];
                 showLauncherContextMenu<string>(launcherNote, e, {
                     extraItems: items,
