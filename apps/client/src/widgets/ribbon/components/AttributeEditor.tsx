@@ -138,6 +138,7 @@ export default function AttributeEditor({
     const [error, setError] = useState<unknown>();
     const [needsSaving, setNeedsSaving] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const suppressNextOnHide = useRef(false);
     const lastSavedContent = useRef<string>();
     const currentValueRef = useRef(currentValue);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -486,6 +487,11 @@ export default function AttributeEditor({
                                 onClick={(e) => {
                                     // Prevent automatic hiding of the context menu due to the button being clicked.
                                     e.stopPropagation();
+                                    if (isMenuOpen) {
+                                        // If we re-show the menu, ContextMenu.show() will call hide()
+                                        // and immediately trigger onHide. Suppress that transient hide.
+                                        suppressNextOnHide.current = true;
+                                    }
                                     setIsMenuOpen(true);
                                     
                                     contextMenu.show<AttributeCommandNames>({
@@ -530,7 +536,13 @@ export default function AttributeEditor({
                                             handleAddNewAttributeCommand(
                                                 item.command,
                                             ),
-                                        onHide: () => setIsMenuOpen(false),
+                                        onHide: () => {
+                                            if (suppressNextOnHide.current) {
+                                                suppressNextOnHide.current = false;
+                                                return;
+                                            }
+                                            setIsMenuOpen(false);
+                                        },
                                     });
                                 }}
                             />
