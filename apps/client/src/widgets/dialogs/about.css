@@ -1,6 +1,6 @@
 .about-dialog {
 
-    body.light-theme & {
+    :where(body.light-theme &) {
         --donate-button-color: #e33f3b;
         
         &.nightly {
@@ -8,9 +8,9 @@
         }
     }
 
-    body.dark-theme & {
+    :where(body.dark-theme &) {
         --donate-button-color: #fba6a5;
-        
+
         &.nightly {
             --modal-background-color: #23182b;
         }
