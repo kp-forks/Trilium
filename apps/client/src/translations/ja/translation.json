@@ -491,7 +491,12 @@
     "export_as_image": "画像としてエクスポート",
     "export_as_image_png": "PNG (raster)",
     "export_as_image_svg": "SVG (vector)",
-    "view_ocr_text": "OCR テキストを表示"
+    "view_ocr_text": "OCR テキストを表示",
+    "word_wrap": "行の折り返し",
+    "word_wrap_auto": "自動",
+    "word_wrap_auto_description": "グローバル設定に従う",
+    "word_wrap_on": "オン",
+    "word_wrap_off": "オフ"
   },
   "command_palette": {
     "export_note_title": "ノートをエクスポート",
@@ -1850,7 +1855,7 @@
   "note_detail": {
     "could_not_find_typewidget": "タイプ {{type}} の typeWidget が見つかりませんでした",
     "printing": "印刷中です...",
-    "printing_pdf": "PDF へのエクスポート中です...",
+    "printing_pdf": "印刷プレビューを準備中...",
     "print_report_title": "レポートを印刷",
     "print_report_collection_content_other": "コレクション内の {{count}} 件のノートは、サポートされていないか保護されているため、印刷できませんでした。",
     "print_report_collection_details_button": "詳細を見る",
@@ -2141,7 +2146,7 @@
     "tab_width_title": "タブ幅を変更",
     "tab_width_spaces": "{{count}} スペース",
     "tab_width_spaces_short": "スペース: {{width}}",
-    "tab_width_tabs": "タブ （{{width}}）",
+    "tab_width_tabs": "タブ: {{width}}",
     "tab_width_use_default": "デフォルトを使用 ({{width}})",
     "tab_width_use_default_style": "デフォルトを使用 ({{style}})",
     "tab_width_display_header": "表示幅",
@@ -2436,6 +2441,13 @@
     "page_ranges": "ページ",
     "page_ranges_hint": "全ページを印刷する場合は空欄のままにしてください。",
     "page_ranges_invalid": "無効な形式です。例: 1-5, 8, 11-13 のように指定してください。",
-    "page_ranges_placeholder": "例: 1-5, 8, 11-13"
+    "page_ranges_placeholder": "例: 1-5, 8, 11-13",
+    "print": "印刷",
+    "export_pdf": "PDF としてエクスポート",
+    "system_print": "システムダイアログを使用して印刷",
+    "destination": "出力先",
+    "destination_pdf": "PDF として保存",
+    "destination_printers": "プリンター",
+    "destination_default": "デフォルト"
   }
 }
