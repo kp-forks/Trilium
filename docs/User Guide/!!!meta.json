@@ -16454,18 +16454,18 @@
                                                     "position": 30
                                                 },
                                                 {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "hrZ1D00cLbal",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                },
+                                                {
                                                     "type": "label",
                                                     "name": "shareAlias",
                                                     "value": "word-count",
                                                     "isInheritable": false,
                                                     "position": 40
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "hrZ1D00cLbal",
-                                                    "isInheritable": false,
-                                                    "position": 50
                                                 }
                                             ],
                                             "format": "markdown",
@@ -18056,6 +18056,33 @@
                                     "dataFileName": "Patterns of personal knowl.png"
                                 }
                             ]
+                        },
+                        {
+                            "isClone": false,
+                            "noteId": "d1Ap6Pg6IjaJ",
+                            "notePath": [
+                                "pOsGYCXsbNQG",
+                                "Fm0j45KqyHpU",
+                                "d1Ap6Pg6IjaJ"
+                            ],
+                            "title": "License",
+                            "notePosition": 40,
+                            "prefix": null,
+                            "isExpanded": false,
+                            "type": "text",
+                            "mime": "text/html",
+                            "attributes": [
+                                {
+                                    "type": "label",
+                                    "name": "shareAlias",
+                                    "value": "license",
+                                    "isInheritable": false,
+                                    "position": 30
+                                }
+                            ],
+                            "format": "markdown",
+                            "dataFileName": "License.md",
+                            "attachments": []
                         }
                     ]
                 }
