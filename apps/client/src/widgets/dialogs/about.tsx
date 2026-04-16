@@ -19,21 +19,21 @@ import clsx from "clsx";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
-    const [shown, setShown] = useState(false);
+    const [isShown, setIsShown] = useState(false);
     const [isNightly, setNightly] = useState(false);
-    const [iconName, setIconName] = useState("default");
-    const [altIconName, setAltIconName] = useState<string | null>(null);
+    const [icon, setIcon] = useState("default");
+    const [altIcon, setAltIcon] = useState<string | null>(null);
 
     const onLoad = useCallback(async () => {
         if (!appInfo) {
             const info = await server.get<AppInfo>("app-info");
             if (info.appVersion.includes("test")) {
                 setNightly(true);
-                setIconName("nightly");
+                setIcon("nightly");
             }
             setAppInfo(info);
         }
-        setShown(true);
+        setIsShown(true);
     }, []);
 
     useTriliumEvent("openAboutDialog", onLoad);
@@ -44,11 +44,11 @@ export default function AboutDialog() {
             if (part === "role" && contributor.role === "original-dev") {
                 if (isHovering) {
                     timeoutID = setTimeout(() => {
-                        setAltIconName("classic");
+                        setAltIcon("classic");
                     }, 500);
                 } else {
                     clearTimeout(timeoutID);
-                    setAltIconName(null);
+                    setAltIcon(null);
                 }
             }
         }
@@ -68,12 +68,12 @@ export default function AboutDialog() {
         <Modal
             className={clsx(["about-dialog", {"nightly": isNightly}])}
             size="md"
-            show={shown}
-            onHidden={() => setShown(false)}
+            show={isShown}
+            onHidden={() => setIsShown(false)}
         >
            <div className="about-dialog-content">
                
-                <div className={"icon"} data-icon={altIconName ?? iconName} />
+                <div className={"icon"} data-icon={altIcon ?? icon} />
                 <h2>Trilium Notes {isNightly && <span className="channel-name">Nightly</span>}</h2>
                 <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
                     triliumnotes.org
