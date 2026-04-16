@@ -1928,6 +1928,9 @@
     "move-to-available-launchers": "Move to available launchers",
     "duplicate-launcher": "Duplicate launcher <kbd data-command=\"duplicateSubtree\">"
   },
+  "launcher_button_context_menu": {
+    "remove_from_launch_bar": "Remove from launch bar"
+  },
   "highlighting": {
     "title": "Code Blocks",
     "description": "Controls the syntax highlighting for code blocks inside text notes, code notes will not be affected.",
