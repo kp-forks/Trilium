@@ -15,6 +15,7 @@ import { Fragment } from "preact/jsx-runtime";
 import { ComponentChildren } from "preact";
 import { useMemo } from "react";
 import { memo } from "preact/compat";
+import clsx from "clsx";
 
 export default function AboutDialog() {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
@@ -65,7 +66,7 @@ export default function AboutDialog() {
 
     return (
         <Modal
-            className={"about-dialog"}
+            className={clsx(["about-dialog", {"nightly": isNightly}])}
             size="md"
             show={shown}
             onHidden={() => setShown(false)}

@@ -2,10 +2,18 @@
 
     body.light-theme & {
         --donate-button-color: #e33f3b;
+        
+        &.nightly {
+            --modal-background-color: #f2e1ff;
+        }
     }
 
     body.dark-theme & {
         --donate-button-color: #fba6a5;
+        
+        &.nightly {
+            --modal-background-color: #23182b;
+        }
     }
 
     --bs-modal-width: 680px;
