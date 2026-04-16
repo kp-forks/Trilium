@@ -458,5 +458,8 @@
       "fulltext-after-expression": "Ní abairt bhailí í \"{{- token}}\". Chun téacs a chuardach, cuir é roimh scagairí tréithe (m.sh., \"{{- token}} #label\" in ionad \"#label {{- token}}\").",
       "unrecognized-expression": "Sloinneadh neamhaitheanta \"{{- token}}\""
     }
+  },
+  "password": {
+    "incorrect": "Tá an focal faire a chuir tú isteach mícheart."
   }
 }
