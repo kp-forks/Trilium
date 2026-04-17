@@ -4,8 +4,8 @@ import VanillaCodeMirror from "@triliumnext/codemirror";
 import { renderToHtml } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
 import { Marked } from "marked";
-import { RefObject } from "preact";
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { createContext } from "preact";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
@@ -13,29 +13,55 @@ import { TypeWidgetProps } from "../type_widget";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
+interface MarkdownContextValue {
+    html: string;
+    setEditorView: (view: VanillaCodeMirror | null) => void;
+    setPreviewEl: (el: HTMLDivElement | null) => void;
+}
+
+const MarkdownContext = createContext<MarkdownContextValue | null>(null);
+
+function useMarkdownContext() {
+    const ctx = useContext(MarkdownContext);
+    if (!ctx) throw new Error("useMarkdownContext must be used within a Markdown component");
+    return ctx;
+}
+
 export default function Markdown(props: TypeWidgetProps) {
     const [ content, setContent ] = useState("");
+    const [ editorView, setEditorView ] = useState<VanillaCodeMirror | null>(null);
+    const [ previewEl, setPreviewEl ] = useState<HTMLDivElement | null>(null);
     const html = useMemo(() => renderWithSourceLines(content), [ content ]);
-    const previewRef = useRef<HTMLDivElement>(null);
-    const editorRef = useRef<VanillaCodeMirror>(null);
 
-    useSyncedScrolling(editorRef, previewRef);
-    useSyncedHighlight(editorRef, previewRef, html);
+    useSyncedScrolling(editorView, previewEl);
+    useSyncedHighlight(editorView, previewEl, html);
+
+    const ctx = useMemo<MarkdownContextValue>(
+        () => ({ html, setEditorView, setPreviewEl }),
+        [ html ]
+    );
 
     return (
-        <SplitEditor
-            noteType="code"
-            {...props}
-            editorRef={editorRef}
-            onContentChanged={setContent}
-            previewContent={(
-                <ReadOnlyTextContent
-                    html={html}
-                    ntxId={props.ntxId}
-                    className="markdown-preview"
-                    contentRef={previewRef}
-                />
-            )}
+        <MarkdownContext.Provider value={ctx}>
+            <SplitEditor
+                noteType="code"
+                {...props}
+                editorRef={setEditorView}
+                onContentChanged={setContent}
+                previewContent={<MarkdownPreview ntxId={props.ntxId} />}
+            />
+        </MarkdownContext.Provider>
+    );
+}
+
+function MarkdownPreview({ ntxId }: { ntxId: TypeWidgetProps["ntxId"] }) {
+    const { html, setPreviewEl } = useMarkdownContext();
+    return (
+        <ReadOnlyTextContent
+            html={html}
+            ntxId={ntxId}
+            className="markdown-preview"
+            contentRef={setPreviewEl}
         />
     );
 }
@@ -47,10 +73,8 @@ export default function Markdown(props: TypeWidgetProps) {
  * preview so the block tagged with that line is at the top — interpolating to
  * the next block for smoothness.
  */
-function useSyncedScrolling(editorRef: RefObject<VanillaCodeMirror>, previewRef: RefObject<HTMLDivElement>) {
+function useSyncedScrolling(view: VanillaCodeMirror | null, preview: HTMLDivElement | null) {
     useEffect(() => {
-        const view = editorRef.current;
-        const preview = previewRef.current;
         if (!view || !preview) return;
 
         const scroller = view.scrollDOM;
@@ -86,7 +110,7 @@ function useSyncedScrolling(editorRef: RefObject<VanillaCodeMirror>, previewRef:
 
         scroller.addEventListener("scroll", onScroll, { passive: true });
         return () => scroller.removeEventListener("scroll", onScroll);
-    }, [ editorRef, previewRef ]);
+    }, [ view, preview ]);
 }
 
 /**
@@ -94,10 +118,8 @@ function useSyncedScrolling(editorRef: RefObject<VanillaCodeMirror>, previewRef:
  * matching the built-in `cm-activeLine` behavior. Re-runs when the rendered
  * HTML changes so newly inserted blocks pick up the current cursor position.
  */
-function useSyncedHighlight(editorRef: RefObject<VanillaCodeMirror>, previewRef: RefObject<HTMLDivElement>, html: string) {
+function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElement | null, html: string) {
     useEffect(() => {
-        const view = editorRef.current;
-        const preview = previewRef.current;
         if (!view || !preview) return;
 
         let current: HTMLElement | null = null;
@@ -124,7 +146,7 @@ function useSyncedHighlight(editorRef: RefObject<VanillaCodeMirror>, previewRef:
             if (v.selectionSet || v.docChanged) update();
         });
         return unsubscribe;
-    }, [ editorRef, previewRef, html ]);
+    }, [ view, preview, html ]);
 }
 
 /** Token types the parser emits but which don't produce top-level block HTML. */

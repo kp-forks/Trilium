@@ -2,7 +2,7 @@ import "./code.css";
 
 import { default as VanillaCodeMirror, getThemeById } from "@triliumnext/codemirror";
 import { NoteType } from "@triliumnext/commons";
-import { RefObject } from "preact";
+import { Ref } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import appContext, { CommandListenerData } from "../../../components/app_context";
@@ -33,7 +33,7 @@ export interface EditableCodeProps extends TypeWidgetProps, Omit<CodeEditorProps
     dataSaved?: () => void;
     placeholder?: string;
     /** Optional external ref to the underlying CodeMirror `EditorView`. Populated once the editor has initialized. */
-    editorRef?: RefObject<VanillaCodeMirror>;
+    editorRef?: Ref<VanillaCodeMirror>;
 }
 
 export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWidgetProps) {
@@ -85,9 +85,13 @@ function formatViewSource(note: FNote, content: string) {
 }
 
 export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentComponent, updateInterval, noteType = "code", onContentChanged, dataSaved, placeholder, editorRef: externalEditorRef, ...editorProps }: EditableCodeProps) {
-    const internalEditorRef = useRef<VanillaCodeMirror>(null);
-    const editorRef = externalEditorRef ?? internalEditorRef;
+    const editorRef = useRef<VanillaCodeMirror>(null);
     const containerRef = useRef<HTMLPreElement>(null);
+    const combinedEditorRef = (view: VanillaCodeMirror | null) => {
+        editorRef.current = view;
+        if (typeof externalEditorRef === "function") externalEditorRef(view);
+        else if (externalEditorRef) externalEditorRef.current = view;
+    };
     const [ vimKeymapEnabled ] = useTriliumOptionBool("vimKeymapEnabled");
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
@@ -126,7 +130,7 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
         <>
             <CodeEditor
                 ntxId={ntxId} parentComponent={parentComponent}
-                editorRef={editorRef} containerRef={containerRef}
+                editorRef={combinedEditorRef} containerRef={containerRef}
                 mime={mime ?? "text/plain"}
                 className="note-detail-code-editor"
                 placeholder={placeholder ?? t("editable_code.placeholder")}
@@ -221,11 +225,13 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
         indentSize={editorProps.indentSize ?? (parseInt(codeNoteTabWidth) || 4)}
         useTabs={editorProps.useTabs ?? codeNoteIndentWithTabs}
         onInitialized={() => {
-            if (externalContainerRef && containerRef.current) {
-                externalContainerRef.current = containerRef.current;
+            if (containerRef.current) {
+                if (typeof externalContainerRef === "function") externalContainerRef(containerRef.current);
+                else if (externalContainerRef) externalContainerRef.current = containerRef.current;
             }
-            if (externalEditorRef && codeEditorRef.current) {
-                externalEditorRef.current = codeEditorRef.current;
+            if (codeEditorRef.current) {
+                if (typeof externalEditorRef === "function") externalEditorRef(codeEditorRef.current);
+                else if (externalEditorRef) externalEditorRef.current = codeEditorRef.current;
             }
             initialized.current.resolve();
             onInitialized?.();

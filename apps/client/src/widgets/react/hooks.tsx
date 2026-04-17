@@ -2,7 +2,7 @@ import { CKTextEditor } from "@triliumnext/ckeditor5";
 import { FilterLabelsByType, KeyboardActionNames, NoteType, OptionNames, RelationNames } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
 import Mark from "mark.js";
-import { RefObject, VNode } from "preact";
+import { Ref, RefObject, VNode } from "preact";
 import { CSSProperties, useSyncExternalStore } from "preact/compat";
 import { MutableRef, useCallback, useContext, useDebugValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -964,11 +964,13 @@ export function useLegacyImperativeHandlers(handlers: Record<string, Function>) 
     }, [ handlers ]);
 }
 
-export function useSyncedRef<T>(externalRef?: RefObject<T>, initialValue: T | null = null): RefObject<T> {
+export function useSyncedRef<T>(externalRef?: Ref<T>, initialValue: T | null = null): RefObject<T> {
     const ref = useRef<T>(initialValue);
 
     useEffect(() => {
-        if (externalRef) {
+        if (typeof externalRef === "function") {
+            externalRef(ref.current);
+        } else if (externalRef) {
             externalRef.current = ref.current;
         }
     }, [ ref, externalRef ]);

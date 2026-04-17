@@ -5,7 +5,7 @@ import "./ReadOnlyText.css";
 import "@triliumnext/ckeditor5";
 
 import clsx from "clsx";
-import { RefObject } from "preact";
+import { Ref } from "preact";
 import { useEffect, useLayoutEffect, useMemo } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
@@ -58,7 +58,7 @@ interface ReadOnlyTextContentProps {
     /** Extra classes appended to the content div. */
     className?: string;
     /** Optional external ref to the rendered content div (e.g. to drive scroll sync). */
-    contentRef?: RefObject<HTMLDivElement>;
+    contentRef?: Ref<HTMLDivElement>;
 }
 
 /**
