@@ -2476,5 +2476,8 @@
   },
   "revisions_snapshot": {
     "title": "ノートの変更履歴"
+  },
+  "launcher_button_context_menu": {
+    "remove_from_launch_bar": "ランチャーバーから削除"
   }
 }
