@@ -7,6 +7,7 @@ import { RefObject } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import SplitEditor from "../helpers/SplitEditor";
+import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
 
 const marked = new Marked({ breaks: true, gfm: true });
@@ -27,11 +28,11 @@ export default function Markdown(props: TypeWidgetProps) {
             editorRef={editorRef}
             onContentChanged={setContent}
             previewContent={(
-                <div
-                    ref={previewRef}
+                <ReadOnlyTextContent
+                    html={html}
+                    ntxId={props.ntxId}
                     className="markdown-preview"
-                    // eslint-disable-next-line react/no-danger
-                    dangerouslySetInnerHTML={{ __html: html }}
+                    contentRef={previewRef}
                 />
             )}
         />

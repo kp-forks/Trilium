@@ -5,7 +5,8 @@ import "./ReadOnlyText.css";
 import "@triliumnext/ckeditor5";
 
 import clsx from "clsx";
-import { useEffect, useMemo, useRef } from "preact/hooks";
+import { RefObject } from "preact";
+import { useEffect, useMemo } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
@@ -13,7 +14,7 @@ import { applyInlineMermaid, rewriteMermaidDiagramsInContainer } from "../../../
 import { getLocaleById } from "../../../services/i18n";
 import { renderMathInElement } from "../../../services/math";
 import { formatCodeBlocks } from "../../../services/syntax_highlight";
-import { useNoteBlob, useNoteLabel, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import { useNoteBlob, useNoteLabel, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { RawHtmlBlock } from "../../react/RawHtml";
 import TouchBar, { TouchBarButton, TouchBarSpacer } from "../../react/TouchBar";
 import { TypeWidgetProps } from "../type_widget";
@@ -22,51 +23,14 @@ import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./util
 
 export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetProps) {
     const blob = useNoteBlob(note);
-    const contentRef = useRef<HTMLDivElement>(null);
-    const [ codeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
-    const [ codeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
     const { isRtl } = useNoteLanguage(note);
-
-    useEffect(() => {
-        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth || "4");
-    }, [codeBlockTabWidth]);
-
-    // Apply necessary transforms.
-    useEffect(() => {
-        const container = contentRef.current;
-        if (!container) return;
-
-        appContext.triggerEvent("contentElRefreshed", { ntxId, contentEl: container });
-
-        rewriteMermaidDiagramsInContainer(container);
-        applyInlineMermaid(container);
-        applyIncludedNotes(container);
-        applyMath(container);
-        applyReferenceLinks(container);
-        formatCodeBlocks($(container));
-        setupImageOpening(container, true);
-    }, [ blob ]);
-
-    // React to included note changes.
-    useTriliumEvent("refreshIncludedNote", ({ noteId }) => {
-        if (!contentRef.current) return;
-        refreshIncludedNote(contentRef.current, noteId);
-    });
-
-    // Search integration.
-    useTriliumEvent("executeWithContentElement", ({ resolve, ntxId: eventNtxId }) => {
-        if (eventNtxId !== ntxId || !contentRef.current) return;
-        resolve($(contentRef.current));
-    });
 
     return (
         <>
-            <RawHtmlBlock
-                containerRef={contentRef}
-                className={clsx("note-detail-readonly-text-content ck-content use-tn-links selectable-text", codeBlockWordWrap && "word-wrap")}
-                tabindex={100}
+            <ReadOnlyTextContent
+                html={blob?.content ?? ""}
+                ntxId={ntxId}
                 dir={isRtl ? "rtl" : "ltr"}
-                html={blob?.content}
             />
 
             <TouchBar>
@@ -82,6 +46,74 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
                 />
             </TouchBar>
         </>
+    );
+}
+
+interface ReadOnlyTextContentProps {
+    /** CKEditor-compatible HTML to render. */
+    html: string;
+    /** Note context id — enables `contentElRefreshed` / `executeWithContentElement` integrations when provided. */
+    ntxId?: string | null;
+    dir?: "ltr" | "rtl";
+    /** Extra classes appended to the content div. */
+    className?: string;
+    /** Optional external ref to the rendered content div (e.g. to drive scroll sync). */
+    contentRef?: RefObject<HTMLDivElement>;
+}
+
+/**
+ * Renders arbitrary CKEditor-style HTML with the same pipeline as {@link ReadOnlyText}:
+ * mermaid rewriting, inline mermaid, included-note expansion, KaTeX math, reference-link
+ * titles, code-block syntax highlighting, and image click handling. Transforms re-run
+ * whenever `html` changes.
+ */
+export function ReadOnlyTextContent({ html, ntxId, dir, className, contentRef: externalContentRef }: ReadOnlyTextContentProps) {
+    const contentRef = useSyncedRef(externalContentRef);
+    const [ codeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
+    const [ codeBlockTabWidth ] = useTriliumOption("codeBlockTabWidth");
+
+    useEffect(() => {
+        document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth || "4");
+    }, [codeBlockTabWidth]);
+
+    // Apply necessary transforms.
+    useEffect(() => {
+        const container = contentRef.current;
+        if (!container) return;
+
+        if (ntxId) {
+            appContext.triggerEvent("contentElRefreshed", { ntxId, contentEl: container });
+        }
+
+        rewriteMermaidDiagramsInContainer(container);
+        applyInlineMermaid(container);
+        applyIncludedNotes(container);
+        applyMath(container);
+        applyReferenceLinks(container);
+        formatCodeBlocks($(container));
+        setupImageOpening(container, true);
+    }, [ html, ntxId, contentRef ]);
+
+    // React to included note changes.
+    useTriliumEvent("refreshIncludedNote", ({ noteId }) => {
+        if (!contentRef.current) return;
+        refreshIncludedNote(contentRef.current, noteId);
+    });
+
+    // Search integration.
+    useTriliumEvent("executeWithContentElement", ({ resolve, ntxId: eventNtxId }) => {
+        if (!ntxId || eventNtxId !== ntxId || !contentRef.current) return;
+        resolve($(contentRef.current));
+    });
+
+    return (
+        <RawHtmlBlock
+            containerRef={contentRef}
+            className={clsx("note-detail-readonly-text-content ck-content use-tn-links selectable-text", codeBlockWordWrap && "word-wrap", className)}
+            tabindex={100}
+            dir={dir}
+            html={html}
+        />
     );
 }
 
