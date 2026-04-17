@@ -1,8 +1,9 @@
 import "./Markdown.css";
 
 import VanillaCodeMirror from "@triliumnext/codemirror";
+import { renderToHtml } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
-import { Marked, type TokensList } from "marked";
+import { Marked } from "marked";
 import { RefObject } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -14,7 +15,7 @@ const marked = new Marked({ breaks: true, gfm: true });
 
 export default function Markdown(props: TypeWidgetProps) {
     const [ content, setContent ] = useState("");
-    const html = useMemo(() => DOMPurify.sanitize(renderWithSourceLines(content), { ADD_ATTR: [ "data-source-line" ] }), [ content ]);
+    const html = useMemo(() => renderWithSourceLines(content), [ content ]);
     const previewRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<VanillaCodeMirror>(null);
 
@@ -126,22 +127,39 @@ function useSyncedHighlight(editorRef: RefObject<VanillaCodeMirror>, previewRef:
     }, [ editorRef, previewRef, html ]);
 }
 
+/** Token types the parser emits but which don't produce top-level block HTML. */
+const NON_RENDERED_TOKENS = new Set([ "space", "def" ]);
+
 /**
  * Render markdown and tag each top-level block with its 1-indexed source line,
- * so the preview can be scrolled to match the editor. Marked does not emit
- * source positions (markedjs/marked#1267) so we count newlines in `raw` ourselves.
+ * so the preview can be scrolled to match the editor. Uses the shared
+ * `renderToHtml` pipeline (admonitions, math, tables, etc.) with DOMPurify for
+ * sanitization, then walks the rendered DOM and pairs each top-level child
+ * with the matching lexer token's start line. Marked does not emit source
+ * positions (markedjs/marked#1267) so we count newlines in `raw` ourselves.
  */
 export function renderWithSourceLines(src: string): string {
+    // Compute the start line of each renderable top-level token in source order.
     const tokens = marked.lexer(src);
+    const lines: number[] = [];
     let line = 1;
-    const parts: string[] = [];
     for (const token of tokens) {
         const startLine = line;
         line += (token.raw.match(/\n/g) ?? []).length;
-        if (token.type === "space") continue;
-        const sub = [ token ] as unknown as TokensList;
-        (sub as TokensList).links = tokens.links;
-        parts.push(`<div data-source-line="${startLine}">${marked.parser(sub)}</div>`);
+        if (!NON_RENDERED_TOKENS.has(token.type)) lines.push(startLine);
+    }
+
+    const html = renderToHtml(src, "", { sanitize: (h) => DOMPurify.sanitize(h) });
+    if (!html) return "";
+
+    const container = document.createElement("div");
+    container.innerHTML = html;
+
+    const parts: string[] = [];
+    const children = Array.from(container.children);
+    for (let i = 0; i < children.length; i++) {
+        const sourceLine = lines[i] ?? lines[lines.length - 1] ?? 1;
+        parts.push(`<div data-source-line="${sourceLine}">${children[i].outerHTML}</div>`);
     }
     return parts.join("");
 }

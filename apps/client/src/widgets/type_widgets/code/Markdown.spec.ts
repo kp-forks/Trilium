@@ -43,9 +43,8 @@ describe("renderWithSourceLines", () => {
     });
 
     it("renders standard markdown constructs inside the wrappers", () => {
-        const html = renderWithSourceLines("# Heading\n\n- item\n");
-        expect(html).toContain("<h1");
-        expect(html).toContain("Heading");
+        const html = renderWithSourceLines("## Heading\n\n- item\n");
+        expect(html).toContain("<h2>Heading</h2>");
         expect(html).toContain("<ul>");
         expect(html).toContain("<li>item</li>");
     });
@@ -59,5 +58,20 @@ describe("renderWithSourceLines", () => {
 
         const html = renderWithSourceLines(src);
         expect(html).toContain('href="https://example.com"');
+    });
+
+    it("normalizes fenced code languages to CKEditor MIME identifiers for syntax highlighting", () => {
+        const html = renderWithSourceLines("```javascript\nconst x = 1;\n```");
+        expect(html).toMatch(/class="language-application-javascript-env-(backend|frontend)"/);
+    });
+
+    it("produces CKEditor admonition markup for GFM callouts", () => {
+        const html = renderWithSourceLines("> [!NOTE]\n> heads up");
+        expect(html).toContain('<aside class="admonition note">');
+    });
+
+    it("produces math-tex spans for inline math", () => {
+        const html = renderWithSourceLines("Energy: $e=mc^2$.");
+        expect(html).toContain('<span class="math-tex">');
     });
 });
