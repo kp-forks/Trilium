@@ -79,4 +79,10 @@ describe("renderWithSourceLines", () => {
         const html = renderWithSourceLines("Energy: $e=mc^2$.");
         expect(html).toContain('<span class="math-tex">');
     });
+
+    it("renders [[wikilinks]] with hash-router hrefs so the preview navigates correctly", () => {
+        const html = renderWithSourceLines("See [[abc123]] for details.");
+        expect(html).toContain('class="reference-link"');
+        expect(html).toContain('href="#root/abc123"');
+    });
 });

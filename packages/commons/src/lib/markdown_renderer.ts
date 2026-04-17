@@ -1,7 +1,14 @@
 import { Marked, Renderer, type Tokens } from "marked";
 
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "./mime_type.js";
-import { transclusionExtension, wikiLinkExtension } from "./marked_extensions.js";
+import {
+    createTransclusionExtension,
+    createWikiLinkExtension,
+    transclusionExtension,
+    type TransclusionOptions,
+    wikiLinkExtension,
+    type WikiLinkOptions
+} from "./marked_extensions.js";
 
 /**
  * Mapping from markdown admonition keywords (case-insensitive) to the ids
@@ -24,6 +31,15 @@ export interface RenderToHtmlOptions {
      *  - client: `DOMPurify.sanitize`
      */
     sanitize: (dirtyHtml: string) => string;
+    /**
+     * How `[[noteId]]` wiki-links should be rendered. Defaults to the
+     * server-side format (`href="/noteId"`), which is what imports want.
+     * Browser callers that navigate via the hash router should pass
+     * `{ formatHref: (id) => `#root/${id}` }`.
+     */
+    wikiLink?: WikiLinkOptions;
+    /** Same as {@link wikiLink}, for `![[noteId]]` transclusions. */
+    transclusion?: TransclusionOptions;
 }
 
 function escapeHtml(str: string): string {
@@ -253,7 +269,10 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
     const marked = new Marked({ async: false });
     marked.use({
         // Order is important, especially for wikilinks.
-        extensions: [ transclusionExtension, wikiLinkExtension ]
+        extensions: [
+            options.transclusion ? createTransclusionExtension(options.transclusion) : transclusionExtension,
+            options.wikiLink ? createWikiLinkExtension(options.wikiLink) : wikiLinkExtension
+        ]
     });
 
     const renderer = new CustomMarkdownRenderer({ async: false });

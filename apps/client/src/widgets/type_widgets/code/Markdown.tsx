@@ -149,7 +149,10 @@ export function renderWithSourceLines(src: string): string {
         if (!NON_RENDERED_TOKENS.has(token.type)) lines.push(startLine);
     }
 
-    const html = renderToHtml(src, "", { sanitize: (h) => DOMPurify.sanitize(h) });
+    const html = renderToHtml(src, "", {
+        sanitize: (h) => DOMPurify.sanitize(h),
+        wikiLink: { formatHref: (id) => `#root/${id}` }
+    });
     if (!html) return "";
 
     const container = document.createElement("div");
