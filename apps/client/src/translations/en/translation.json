@@ -2076,6 +2076,11 @@
     "unlock-editing": "Unlock editing",
     "lock-editing": "Lock editing"
   },
+  "display_mode": {
+    "source": "Source view",
+    "split": "Split view",
+    "preview": "Preview"
+  },
   "png_export_button": {
     "button_title": "Export diagram as PNG"
   },

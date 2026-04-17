@@ -73,6 +73,7 @@ export default function NoteActionsCustom(props: NoteActionsCustomProps) {
             <RunActiveNoteButton {...innerProps } />
             <SwitchSplitOrientationButton {...innerProps} />
             <ToggleReadOnlyButton {...innerProps} />
+            <DisplayModeSwitcher {...innerProps} />
             <SaveToNoteButton {...innerProps} />
             <RefreshButton {...innerProps} />
             <CopyReferenceToClipboardButton {...innerProps} />
@@ -203,7 +204,7 @@ function SwitchSplitOrientationButton({ note, isReadOnly, isDefaultViewMode }: N
 export function ToggleReadOnlyButton({ note, isDefaultViewMode }: NoteActionsCustomInnerProps) {
     const [ isReadOnly, setReadOnly ] = useNoteLabelBoolean(note, "readOnly");
     const isSavedSqlite = note.isTriliumSqlite() && !note.isHiddenCompletely();
-    const isEnabled = ([ "mermaid", "mindMap", "canvas", "spreadsheet" ].includes(note.type) || isSavedSqlite || note.isMarkdown())
+    const isEnabled = ([ "mermaid", "mindMap", "canvas", "spreadsheet" ].includes(note.type) || isSavedSqlite)
             && note.isContentAvailable() && isDefaultViewMode;
 
     return isEnabled && <NoteAction
@@ -211,6 +212,32 @@ export function ToggleReadOnlyButton({ note, isDefaultViewMode }: NoteActionsCus
         icon={isReadOnly ? "bx bx-lock-open-alt" : "bx bx-lock-alt"}
         onClick={() => setReadOnly(!isReadOnly)}
     />;
+}
+
+function DisplayModeSwitcher({ note, isDefaultViewMode }: NoteActionsCustomInnerProps) {
+    const [ displayMode, setDisplayMode ] = useNoteLabel(note, "displayMode");
+    if (!note.isMarkdown() || !note.isContentAvailable() || !isDefaultViewMode) return null;
+
+    const mode = displayMode === "source" || displayMode === "preview" ? displayMode : "split";
+    const buttons: Array<{ value: "source" | "split" | "preview"; icon: string; text: string }> = [
+        { value: "source", icon: "bx bx-code", text: t("display_mode.source") },
+        { value: "split", icon: "bx bxs-dock-left", text: t("display_mode.split") },
+        { value: "preview", icon: "bx bx-show", text: t("display_mode.preview") }
+    ];
+
+    return (
+        <>
+            {buttons.map(({ value, icon, text }) => (
+                <NoteAction
+                    key={value}
+                    icon={icon}
+                    text={text}
+                    active={mode === value}
+                    onClick={() => setDisplayMode(value)}
+                />
+            ))}
+        </>
+    );
 }
 
 function RunActiveNoteButton({ noteMime }: NoteActionsCustomInnerProps) {
@@ -268,12 +295,12 @@ function AddChildButton({ parentComponent, noteType, ntxId, isReadOnly }: NoteAc
 }
 //#endregion
 
-function NoteAction({ text, ...props }: Pick<ActionButtonProps, "text" | "icon" | "disabled" | "triggerCommand"> & {
+function NoteAction({ text, active, ...props }: Pick<ActionButtonProps, "text" | "icon" | "disabled" | "triggerCommand" | "active"> & {
     onClick?: ((e: MouseEvent) => void) | undefined;
 }) {
     return (cachedIsMobile
         ? <FormListItem {...props}>{text}</FormListItem>
-        : <ActionButton text={text} {...props} />
+        : <ActionButton text={text} active={active} {...props} />
     );
 }
 

@@ -20,6 +20,8 @@ export interface SplitEditorProps extends EditableCodeProps {
     editorBefore?: ComponentChildren;
     forceOrientation?: "horizontal" | "vertical";
     extraContent?: ComponentChildren;
+    /** When set, overrides the view chosen by the `readOnly` label. */
+    overrideMode?: "preview" | "split";
 }
 
 /**
@@ -33,8 +35,9 @@ export interface SplitEditorProps extends EditableCodeProps {
  */
 export default function SplitEditor(props: SplitEditorProps) {
     const [ readOnly ] = useNoteLabelBoolean(props.note, "readOnly");
+    const mode = props.overrideMode ?? (readOnly ? "preview" : "split");
 
-    if (readOnly) {
+    if (mode === "preview") {
         return <ReadOnlyView {...props} />;
     }
 
