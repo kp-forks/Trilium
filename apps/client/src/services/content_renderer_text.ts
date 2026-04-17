@@ -110,49 +110,95 @@ export async function rewriteMermaidDiagramsInContainer(container: HTMLDivElemen
  */
 const mermaidSvgCache = new WeakMap<HTMLElement, Map<string, string>>();
 
+/**
+ * Per-container, ordered snapshot of the most recently rendered SVGs. Used as
+ * a positional placeholder so edits to a diagram's source keep the previous
+ * SVG visible while the new one renders offscreen.
+ */
+const mermaidLastRenderedByPosition = new WeakMap<HTMLElement, string[]>();
+
 export async function applyInlineMermaid(container: HTMLDivElement) {
     const nodes = Array.from(container.querySelectorAll<HTMLElement>("div.mermaid-diagram"));
-    if (!nodes.length) return;
+    if (!nodes.length) {
+        mermaidLastRenderedByPosition.delete(container);
+        return;
+    }
 
     let cache = mermaidSvgCache.get(container);
     if (!cache) {
         cache = new Map();
         mermaidSvgCache.set(container, cache);
     }
+    const lastRendered = mermaidLastRenderedByPosition.get(container) ?? [];
 
-    // Paint cached SVGs upfront so unchanged diagrams don't flicker, and collect
-    // only the new/changed diagrams for an actual mermaid render pass.
-    const pendingSources = new Map<HTMLElement, string>();
-    const seen = new Set<string>();
-    for (const node of nodes) {
+    // Decide per node: exact cache hit → paint final SVG; source changed →
+    // paint the previous SVG (by position) as a placeholder and queue an
+    // offscreen re-render. This way the user keeps seeing the old diagram
+    // until mermaid has finished producing the new one.
+    const pending: Array<{ visible: HTMLElement; source: string }> = [];
+    const seenSources = new Set<string>();
+    for (const [ index, node ] of nodes.entries()) {
         const source = (node.textContent ?? "").trim();
-        seen.add(source);
+        seenSources.add(source);
+
         const cached = cache.get(source);
         if (cached) {
             node.innerHTML = cached;
             node.setAttribute("data-processed", "true");
-        } else {
-            pendingSources.set(node, source);
+            continue;
+        }
+
+        pending.push({ visible: node, source });
+        const placeholder = lastRendered[index];
+        if (placeholder) {
+            node.innerHTML = placeholder;
         }
     }
 
-    // Evict entries whose source is no longer present.
+    // Evict cache entries whose source is no longer present.
     for (const key of [ ...cache.keys() ]) {
-        if (!seen.has(key)) cache.delete(key);
+        if (!seenSources.has(key)) cache.delete(key);
     }
 
-    if (!pendingSources.size) return;
+    if (!pending.length) {
+        mermaidLastRenderedByPosition.set(container, nodes.map((n) => n.innerHTML));
+        return;
+    }
 
     const mermaid = (await import("mermaid")).default;
     mermaid.initialize(getMermaidConfig());
+
+    // Render clones offscreen so the visible nodes keep showing the placeholder
+    // until the new SVG is ready. Keeps mermaid away from our placeholder SVG
+    // (which would otherwise confuse its text-based parser).
+    const offscreen = document.createElement("div");
+    offscreen.style.cssText = "position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;visibility:hidden;";
+    document.body.appendChild(offscreen);
+
+    const pairs = pending.map(({ visible, source }) => {
+        const clone = document.createElement("div");
+        clone.className = "mermaid-diagram";
+        clone.textContent = source;
+        offscreen.appendChild(clone);
+        return { visible, clone, source };
+    });
+
     try {
-        await mermaid.run({ nodes: [ ...pendingSources.keys() ] });
-        for (const [ node, source ] of pendingSources) {
-            cache.set(source, node.innerHTML);
+        await mermaid.run({ nodes: pairs.map((p) => p.clone) });
+        for (const { visible, clone, source } of pairs) {
+            if (clone.getAttribute("data-processed") !== "true") continue;
+            const svg = clone.innerHTML;
+            visible.innerHTML = svg;
+            visible.setAttribute("data-processed", "true");
+            cache.set(source, svg);
         }
     } catch (e) {
         console.log(e);
+    } finally {
+        offscreen.remove();
     }
+
+    mermaidLastRenderedByPosition.set(container, nodes.map((n) => n.innerHTML));
 }
 
 async function renderChildrenList($renderedContent: JQuery<HTMLElement>, note: FNote, includeArchivedNotes: boolean) {
