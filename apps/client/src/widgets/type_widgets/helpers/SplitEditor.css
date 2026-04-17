@@ -17,6 +17,10 @@
     flex-grow: 1;
     min-width: 0;
     min-height: 0;
+
+    >* {
+        height: 100%;
+    }
 }
 
 .note-detail-split .note-detail-split-editor .note-detail-code {
