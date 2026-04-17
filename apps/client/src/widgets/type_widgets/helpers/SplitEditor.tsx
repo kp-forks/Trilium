@@ -8,8 +8,8 @@ import { DEFAULT_GUTTER_SIZE } from "../../../services/resizer";
 import utils, { isMobile } from "../../../services/utils";
 import ActionButton, { ActionButtonProps } from "../../react/ActionButton";
 import Admonition from "../../react/Admonition";
-import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
-import { EditableCode, EditableCodeProps } from "../code/Code";
+import { useEffectiveReadOnly, useNoteBlob, useNoteLabel, useTriliumOption } from "../../react/hooks";
+import { EditableCode, EditableCodeProps, ReadOnlyCode } from "../code/Code";
 
 export interface SplitEditorProps extends EditableCodeProps {
     className?: string;
@@ -37,11 +37,11 @@ export interface SplitEditorProps extends EditableCodeProps {
  * - Can display errors to the user via {@link setError}.
  * - Horizontal or vertical orientation for the editor/preview split, adjustable via the switch split orientation button floating button.
  */
-export default function SplitEditor({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, extraContent, ...editorProps }: SplitEditorProps) {
+export default function SplitEditor({ note, noteContext, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, extraContent, ...editorProps }: SplitEditorProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const splitEditorOrientation = useSplitOrientation(forceOrientation);
     const [ displayMode ] = useNoteLabel(note, "displayMode");
-    const [ readOnly ] = useNoteLabelBoolean(note, "readOnly");
+    const readOnly = useEffectiveReadOnly(note, noteContext);
     const mode = displayMode === "source" || displayMode === "split" || displayMode === "preview"
         ? displayMode
         : readOnly ? "preview" : "split";
@@ -52,28 +52,33 @@ export default function SplitEditor({ note, error, splitOptions, previewContent,
     if (mode !== "preview") editorMounted.current = true;
     if (mode !== "source") previewMounted.current = true;
 
-    // While the editor isn't mounted, the preview has no source for its content — feed it from the
-    // blob directly. Once the editor mounts (and stays mounted), it takes over and this short-circuits.
-    const fallbackBlob = useNoteBlob(editorMounted.current ? null : note);
+    // The editor only feeds content to the preview when it's an `EditableCode`. `ReadOnlyCode`
+    // doesn't expose `onContentChanged`, and in preview-only mode the editor isn't mounted at all —
+    // in both cases we read the blob directly so the preview stays populated.
+    const editorPropagatesContent = editorMounted.current && !readOnly;
+    const fallbackBlob = useNoteBlob(editorPropagatesContent ? null : note);
     const onContentChangedRef = useRef(editorProps.onContentChanged);
     useEffect(() => { onContentChangedRef.current = editorProps.onContentChanged; });
     useEffect(() => {
-        if (!editorMounted.current && fallbackBlob) {
+        if (!editorPropagatesContent && fallbackBlob) {
             onContentChangedRef.current?.(fallbackBlob.content ?? "");
         }
-    }, [ fallbackBlob ]);
+    }, [ fallbackBlob, editorPropagatesContent ]);
 
     const editor = editorMounted.current && (
         <div className="note-detail-split-editor-col">
             {editorBefore}
             <div className="note-detail-split-editor">
-                <EditableCode
-                    note={note}
-                    lineWrapping={false}
-                    updateInterval={750} debounceUpdate
-                    noBackgroundChange
-                    {...editorProps}
-                />
+                {readOnly
+                    ? <ReadOnlyCode note={note} noteContext={noteContext} {...editorProps} />
+                    : <EditableCode
+                        note={note}
+                        noteContext={noteContext}
+                        lineWrapping={false}
+                        updateInterval={750} debounceUpdate
+                        noBackgroundChange
+                        {...editorProps}
+                    />}
             </div>
             {error && (
                 <Admonition type="caution" className="note-detail-error-container">

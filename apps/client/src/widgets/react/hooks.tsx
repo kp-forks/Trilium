@@ -1140,6 +1140,29 @@ export function useIsNoteReadOnly(note: FNote | null | undefined, noteContext: N
     return { isReadOnly, enableEditing, temporarilyEditable };
 }
 
+/**
+ * Synchronous effective read-only state for widgets that honor the `#readOnly` label
+ * (mermaid, canvas, mind map, spreadsheet). Combines the label with the temporary
+ * "enable editing" toggle (driven by `readOnlyTemporarilyDisabled`) so clicking the
+ * read-only badge unlocks the widget.
+ */
+export function useEffectiveReadOnly(note: FNote | null | undefined, noteContext: NoteContext | undefined) {
+    const [ readOnlyLabel ] = useNoteLabelBoolean(note, "readOnly");
+    const [ tempDisabled, setTempDisabled ] = useState<boolean>(!!noteContext?.viewScope?.readOnlyTemporarilyDisabled);
+
+    useEffect(() => {
+        setTempDisabled(!!noteContext?.viewScope?.readOnlyTemporarilyDisabled);
+    }, [ note, noteContext, noteContext?.viewScope ]);
+
+    useTriliumEvent("readOnlyTemporarilyDisabled", ({ noteContext: eventNoteContext }) => {
+        if (noteContext?.ntxId === eventNoteContext?.ntxId) {
+            setTempDisabled(!!eventNoteContext?.viewScope?.readOnlyTemporarilyDisabled);
+        }
+    });
+
+    return readOnlyLabel && !tempDisabled;
+}
+
 async function isNoteReadOnly(note: FNote, noteContext: NoteContext) {
 
     if (note.isProtected && !protected_session_holder.isProtectedSessionAvailable()) {
