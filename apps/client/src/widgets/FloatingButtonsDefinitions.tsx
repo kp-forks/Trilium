@@ -20,6 +20,7 @@ import tree from "../services/tree";
 import { createImageSrcUrl, openInAppHelpFromUrl } from "../services/utils";
 import { ViewTypeOptions } from "./collections/interface";
 import ActionButton, { ActionButtonProps } from "./react/ActionButton";
+import { ButtonGroup } from "./react/Button";
 import { useIsNoteReadOnly, useNoteLabel, useNoteLabelBoolean, useTriliumEvent, useTriliumOption, useWindowSize } from "./react/hooks";
 import NoteLink from "./react/NoteLink";
 import RawHtml from "./react/RawHtml";
@@ -122,7 +123,7 @@ function DisplayModeSwitcher({ note, isDefaultViewMode }: FloatingButtonContext)
     ];
 
     return (
-        <>
+        <ButtonGroup size="sm">
             {buttons.map(({ value, icon, text }) => (
                 <FloatingButton
                     key={value}
@@ -132,7 +133,7 @@ function DisplayModeSwitcher({ note, isDefaultViewMode }: FloatingButtonContext)
                     onClick={() => setDisplayMode(value)}
                 />
             ))}
-        </>
+        </ButtonGroup>
     );
 }
 

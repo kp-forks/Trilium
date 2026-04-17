@@ -14,6 +14,7 @@ import { createImageSrcUrl, isMobile, openInAppHelpFromUrl } from "../../service
 import { ViewTypeOptions } from "../collections/interface";
 import { buildSaveSqlToNoteHandler } from "../FloatingButtonsDefinitions";
 import ActionButton, { ActionButtonProps } from "../react/ActionButton";
+import { ButtonGroup } from "../react/Button";
 import { FormFileUploadActionButton, FormFileUploadFormListItem, FormFileUploadProps } from "../react/FormFileUpload";
 import { FormListItem } from "../react/FormList";
 import { useNoteLabel, useNoteLabelBoolean, useNoteProperty, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
@@ -230,8 +231,8 @@ function DisplayModeSwitcher({ note, isDefaultViewMode }: NoteActionsCustomInner
         { value: "preview", icon: "bx bx-show", text: t("display_mode.preview") }
     ];
 
-    return (
-        <>
+    if (cachedIsMobile) {
+        return <>
             {buttons.map(({ value, icon, text }) => (
                 <NoteAction
                     key={value}
@@ -241,7 +242,21 @@ function DisplayModeSwitcher({ note, isDefaultViewMode }: NoteActionsCustomInner
                     onClick={() => setDisplayMode(value)}
                 />
             ))}
-        </>
+        </>;
+    }
+
+    return (
+        <ButtonGroup size="sm">
+            {buttons.map(({ value, icon, text }) => (
+                <NoteAction
+                    key={value}
+                    icon={icon}
+                    text={text}
+                    active={mode === value}
+                    onClick={() => setDisplayMode(value)}
+                />
+            ))}
+        </ButtonGroup>
     );
 }
 
