@@ -101,13 +101,55 @@ export async function rewriteMermaidDiagramsInContainer(container: HTMLDivElemen
     }
 }
 
+/**
+ * Per-container cache of rendered mermaid SVG keyed by diagram source text.
+ * Populated after each successful render; reused on subsequent renders to
+ * avoid flicker when the preview HTML is regenerated (e.g. live markdown
+ * editing). Entries for diagrams no longer present in the container are
+ * evicted on each run so the cache can't grow unbounded.
+ */
+const mermaidSvgCache = new WeakMap<HTMLElement, Map<string, string>>();
+
 export async function applyInlineMermaid(container: HTMLDivElement) {
-    // Initialize mermaid
+    const nodes = Array.from(container.querySelectorAll<HTMLElement>("div.mermaid-diagram"));
+    if (!nodes.length) return;
+
+    let cache = mermaidSvgCache.get(container);
+    if (!cache) {
+        cache = new Map();
+        mermaidSvgCache.set(container, cache);
+    }
+
+    // Paint cached SVGs upfront so unchanged diagrams don't flicker, and collect
+    // only the new/changed diagrams for an actual mermaid render pass.
+    const pendingSources = new Map<HTMLElement, string>();
+    const seen = new Set<string>();
+    for (const node of nodes) {
+        const source = (node.textContent ?? "").trim();
+        seen.add(source);
+        const cached = cache.get(source);
+        if (cached) {
+            node.innerHTML = cached;
+            node.setAttribute("data-processed", "true");
+        } else {
+            pendingSources.set(node, source);
+        }
+    }
+
+    // Evict entries whose source is no longer present.
+    for (const key of [ ...cache.keys() ]) {
+        if (!seen.has(key)) cache.delete(key);
+    }
+
+    if (!pendingSources.size) return;
+
     const mermaid = (await import("mermaid")).default;
     mermaid.initialize(getMermaidConfig());
-    const nodes = Array.from(container.querySelectorAll<HTMLElement>("div.mermaid-diagram"));
     try {
-        await mermaid.run({ nodes });
+        await mermaid.run({ nodes: [ ...pendingSources.keys() ] });
+        for (const [ node, source ] of pendingSources) {
+            cache.set(source, node.innerHTML);
+        }
     } catch (e) {
         console.log(e);
     }

@@ -6,7 +6,7 @@ import "@triliumnext/ckeditor5";
 
 import clsx from "clsx";
 import { RefObject } from "preact";
-import { useEffect, useMemo } from "preact/hooks";
+import { useEffect, useLayoutEffect, useMemo } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
@@ -76,8 +76,11 @@ export function ReadOnlyTextContent({ html, ntxId, dir, className, contentRef: e
         document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth || "4");
     }, [codeBlockTabWidth]);
 
-    // Apply necessary transforms.
-    useEffect(() => {
+    // Apply necessary transforms. Runs in a layout effect so the synchronous
+    // DOM mutations (mermaid rewrite + cached-SVG repaint, math, etc.) happen
+    // before the browser paints — prevents a flash of raw `<pre>` content
+    // during live preview re-renders.
+    useLayoutEffect(() => {
         const container = contentRef.current;
         if (!container) return;
 
