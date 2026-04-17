@@ -2,6 +2,7 @@ import "./code.css";
 
 import { default as VanillaCodeMirror, getThemeById } from "@triliumnext/codemirror";
 import { NoteType } from "@triliumnext/commons";
+import { RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import appContext, { CommandListenerData } from "../../../components/app_context";
@@ -31,6 +32,8 @@ export interface EditableCodeProps extends TypeWidgetProps, Omit<CodeEditorProps
     /** Invoked after the content of the note has been uploaded to the server, using a spaced update. */
     dataSaved?: () => void;
     placeholder?: string;
+    /** Optional external ref to the underlying CodeMirror `EditorView`. Populated once the editor has initialized. */
+    editorRef?: RefObject<VanillaCodeMirror>;
 }
 
 export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWidgetProps) {
@@ -81,8 +84,9 @@ function formatViewSource(note: FNote, content: string) {
     return content;
 }
 
-export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentComponent, updateInterval, noteType = "code", onContentChanged, dataSaved, placeholder, ...editorProps }: EditableCodeProps) {
-    const editorRef = useRef<VanillaCodeMirror>(null);
+export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentComponent, updateInterval, noteType = "code", onContentChanged, dataSaved, placeholder, editorRef: externalEditorRef, ...editorProps }: EditableCodeProps) {
+    const internalEditorRef = useRef<VanillaCodeMirror>(null);
+    const editorRef = externalEditorRef ?? internalEditorRef;
     const containerRef = useRef<HTMLPreElement>(null);
     const [ vimKeymapEnabled ] = useTriliumOptionBool("vimKeymapEnabled");
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");

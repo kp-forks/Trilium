@@ -15,13 +15,15 @@ export default function Markdown(props: TypeWidgetProps) {
     const [ content, setContent ] = useState("");
     const html = useMemo(() => DOMPurify.sanitize(renderWithSourceLines(content), { ADD_ATTR: [ "data-source-line" ] }), [ content ]);
     const previewRef = useRef<HTMLDivElement>(null);
+    const editorRef = useRef<VanillaCodeMirror>(null);
 
-    useSyncedScrolling(previewRef);
+    useSyncedScrolling(editorRef, previewRef);
 
     return (
         <SplitEditor
             noteType="code"
             {...props}
+            editorRef={editorRef}
             onContentChanged={setContent}
             previewContent={(
                 <div
@@ -42,22 +44,20 @@ export default function Markdown(props: TypeWidgetProps) {
  * preview so the block tagged with that line is at the top — interpolating to
  * the next block for smoothness.
  */
-function useSyncedScrolling(previewRef: RefObject<HTMLDivElement>) {
+function useSyncedScrolling(editorRef: RefObject<VanillaCodeMirror>, previewRef: RefObject<HTMLDivElement>) {
     useEffect(() => {
-        let rafId = 0;
-        let scroller: HTMLElement | null = null;
-        let cmEditor: HTMLElement | null = null;
-        let preview: HTMLElement | null = null;
+        const view = editorRef.current;
+        const preview = previewRef.current;
+        if (!view || !preview) return;
+
+        const scroller = view.scrollDOM;
 
         function onScroll() {
-            if (!scroller || !cmEditor || !preview) return;
-            const view = VanillaCodeMirror.findFromDOM(cmEditor);
-            if (!view) return;
-
+            if (!view || !preview) return;
             const topLine = view.state.doc.lineAt(view.lineBlockAtHeight(scroller.scrollTop).from).number;
 
-            const blocks = previewRef.current?.querySelectorAll<HTMLElement>("[data-source-line]");
-            if (!blocks?.length) return;
+            const blocks = preview.querySelectorAll<HTMLElement>("[data-source-line]");
+            if (!blocks.length) return;
 
             let before: HTMLElement | null = null;
             let after: HTMLElement | null = null;
@@ -81,24 +81,9 @@ function useSyncedScrolling(previewRef: RefObject<HTMLDivElement>) {
             preview.scrollTop = beforeOffset + (afterOffset - beforeOffset) * ratio;
         }
 
-        function tryAttach() {
-            const split = previewRef.current?.closest(".note-detail-split");
-            scroller = split?.querySelector<HTMLElement>(".cm-scroller") ?? null;
-            cmEditor = split?.querySelector<HTMLElement>(".cm-editor") ?? null;
-            preview = split?.querySelector<HTMLElement>(".note-detail-split-preview") ?? null;
-            if (!scroller || !cmEditor || !preview) {
-                rafId = requestAnimationFrame(tryAttach);
-                return;
-            }
-            scroller.addEventListener("scroll", onScroll, { passive: true });
-        }
-        tryAttach();
-
-        return () => {
-            cancelAnimationFrame(rafId);
-            scroller?.removeEventListener("scroll", onScroll);
-        };
-    }, [ previewRef ]);
+        scroller.addEventListener("scroll", onScroll, { passive: true });
+        return () => scroller.removeEventListener("scroll", onScroll);
+    }, [ editorRef, previewRef ]);
 }
 
 /**
