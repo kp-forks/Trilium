@@ -6,7 +6,7 @@ WHERE powershell.exe > NUL 2>&1
 IF %ERRORLEVEL% NEQ 0 GOTO BATCH ELSE GOTO POWERSHELL
 
 :POWERSHELL
-powershell -ExecutionPolicy Bypass -NonInteractive -NoLogo -Command "Set-Item -Path Env:TRILIUM_DATA_DIR -Value './trilium-data'; ./trilium.exe"
+powershell -ExecutionPolicy Bypass -NonInteractive -NoLogo -Command "Set-Item -Path Env:TRILIUM_DATA_DIR -Value './trilium-data'; Set-Item -Path Env:ELECTRON_NO_ATTACH_CONSOLE -Value '1'; ./trilium.exe"
 GOTO END
 
 :BATCH
@@ -17,6 +17,7 @@ chcp 65001
 SET DIR=%~dp0
 SET DIR=%DIR:~0,-1%
 SET TRILIUM_DATA_DIR=%DIR%\trilium-data
+SET ELECTRON_NO_ATTACH_CONSOLE=1
 cd "%DIR%"
 start trilium.exe
 GOTO END
