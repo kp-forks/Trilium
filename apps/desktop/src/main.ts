@@ -101,9 +101,22 @@ async function main() {
 
 /**
  * Returns a unique user data directory for Electron so that single instance locks between legitimately different instances such as different port or data directory can still act independently, but we are focusing the main window otherwise.
+ *
+ * When running in portable mode (TRILIUM_DATA_DIR is set), the user data is stored inside the data directory
+ * so that no files are written to the system's roaming profile (e.g. %APPDATA% on Windows).
+ * This can be overridden by setting TRILIUM_ELECTRON_DATA_DIR to a custom path.
  */
 function getUserData() {
+    if (process.env.TRILIUM_ELECTRON_DATA_DIR) {
+        return process.env.TRILIUM_ELECTRON_DATA_DIR;
+    }
+
     const name = `${app.getName()}-${port}`;
+
+    if (process.env.TRILIUM_DATA_DIR) {
+        return join(process.env.TRILIUM_DATA_DIR, "electron-user-data", name);
+    }
+
     return join(app.getPath("appData"), name);
 }
 

@@ -77,6 +77,14 @@ TRILIUM_DATA_DIR=/home/myuser/data/my-trilium-data trilium
 
 You can then save the above command as a shell script on your path for convenience.
 
+## Electron user data directory (desktop only)
+
+When running the desktop application, Electron stores internal data (caches, spell-check dictionaries, session storage, etc.) separately from the Trilium data directory. By default this goes to the system's application data folder (e.g. `%APPDATA%` on Windows), which may be undesirable in corporate environments with roaming profiles or when running in portable mode.
+
+When `TRILIUM_DATA_DIR` is set (e.g. via the `trilium-portable` script), the Electron user data is automatically redirected into `${TRILIUM_DATA_DIR}/electron-user-data/`, so no files are written to the system's roaming profile.
+
+If you need to store the Electron data in a different location than the Trilium data directory, you can set the `TRILIUM_ELECTRON_DATA_DIR` environment variable to an explicit path.
+
 ## Fine-grained directory/path location
 
 Apart from the data directory, some of the subdirectories of it can be moved elsewhere by changing an environment variable:
@@ -89,3 +97,4 @@ Apart from the data directory, some of the subdirectories of it can be moved els
 | `TRILIUM_TMP_DIR` | `${TRILIUM_DATA_DIR}/tmp` | Directory where temporary files are stored (for example when opening in an external app). |
 | `TRILIUM_ANONYMIZED_DB_DIR` | `${TRILIUM_DATA_DIR}/anonymized-db` | Directory where a <a class="reference-link" href="../Troubleshooting/Anonymized%20Database.md">Anonymized Database</a> is stored. |
 | `TRILIUM_CONFIG_INI_PATH` | `${TRILIUM_DATA_DIR}/config.ini` | Path to <a class="reference-link" href="../Advanced%20Usage/Configuration%20(config.ini%20or%20e.md">Configuration (config.ini or environment variables)</a> file. |
+| `TRILIUM_ELECTRON_DATA_DIR` | `${TRILIUM_DATA_DIR}/electron-user-data` (portable) or system appData (default) | Directory where Electron stores internal data such as caches and spell-check dictionaries (desktop only). |
