@@ -155,7 +155,10 @@ class CustomMarkdownRenderer extends Renderer {
 
         text = escapeHtml(text).replace(/&quot;/g, '"');
 
-        const ckEditorLanguage = getNormalizedMimeFromMarkdownLanguage(lang);
+        // `mermaid` isn't in the MIME dictionary, but CKEditor/Trilium's
+        // mermaid rewrite specifically looks for `language-mermaid`, so
+        // preserve the fence language verbatim instead of falling back to auto.
+        const ckEditorLanguage = lang === "mermaid" ? "mermaid" : getNormalizedMimeFromMarkdownLanguage(lang);
         return `<pre><code class="language-${ckEditorLanguage}">${text}</code></pre>`;
     }
 

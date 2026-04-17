@@ -70,6 +70,11 @@ describe("renderWithSourceLines", () => {
         expect(html).toContain('<aside class="admonition note">');
     });
 
+    it("preserves the `mermaid` fence language so the mermaid rewrite can match it", () => {
+        const html = renderWithSourceLines("```mermaid\ngraph TD;\nA-->B;\n```");
+        expect(html).toContain('class="language-mermaid"');
+    });
+
     it("produces math-tex spans for inline math", () => {
         const html = renderWithSourceLines("Energy: $e=mc^2$.");
         expect(html).toContain('<span class="math-tex">');
