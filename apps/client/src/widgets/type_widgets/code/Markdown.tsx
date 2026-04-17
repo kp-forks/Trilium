@@ -3,6 +3,7 @@ import "./Markdown.css";
 import VanillaCodeMirror from "@triliumnext/codemirror";
 import DOMPurify from "dompurify";
 import { Marked, type TokensList } from "marked";
+import { RefObject } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import SplitEditor from "../helpers/SplitEditor";
@@ -10,31 +11,38 @@ import { TypeWidgetProps } from "../type_widget";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
-/**
- * Render markdown and tag each top-level block with its 1-indexed source line,
- * so the preview can be scrolled to match the editor. Marked does not emit
- * source positions (markedjs/marked#1267) so we count newlines in `raw` ourselves.
- */
-function renderWithSourceLines(src: string): string {
-    const tokens = marked.lexer(src);
-    let line = 1;
-    const parts: string[] = [];
-    for (const token of tokens) {
-        const startLine = line;
-        line += (token.raw.match(/\n/g) ?? []).length;
-        if (token.type === "space") continue;
-        const sub = [ token ] as unknown as TokensList;
-        (sub as TokensList).links = tokens.links;
-        parts.push(`<div data-source-line="${startLine}">${marked.parser(sub)}</div>`);
-    }
-    return parts.join("");
-}
-
 export default function Markdown(props: TypeWidgetProps) {
     const [ content, setContent ] = useState("");
     const html = useMemo(() => DOMPurify.sanitize(renderWithSourceLines(content), { ADD_ATTR: [ "data-source-line" ] }), [ content ]);
     const previewRef = useRef<HTMLDivElement>(null);
 
+    useSyncedScrolling(previewRef);
+
+    return (
+        <SplitEditor
+            noteType="code"
+            {...props}
+            onContentChanged={setContent}
+            previewContent={(
+                <div
+                    ref={previewRef}
+                    className="markdown-preview"
+                    // eslint-disable-next-line react/no-danger
+                    dangerouslySetInnerHTML={{ __html: html }}
+                />
+            )}
+        />
+    );
+}
+
+//#region Synced scrolling
+/**
+ * One-directional (editor → preview) scroll sync. On editor scroll, finds the
+ * top visible source line via the CodeMirror `EditorView`, then scrolls the
+ * preview so the block tagged with that line is at the top — interpolating to
+ * the next block for smoothness.
+ */
+function useSyncedScrolling(previewRef: RefObject<HTMLDivElement>) {
     useEffect(() => {
         let rafId = 0;
         let scroller: HTMLElement | null = null;
@@ -90,21 +98,26 @@ export default function Markdown(props: TypeWidgetProps) {
             cancelAnimationFrame(rafId);
             scroller?.removeEventListener("scroll", onScroll);
         };
-    }, []);
-
-    return (
-        <SplitEditor
-            noteType="code"
-            {...props}
-            onContentChanged={setContent}
-            previewContent={(
-                <div
-                    ref={previewRef}
-                    className="markdown-preview"
-                    // eslint-disable-next-line react/no-danger
-                    dangerouslySetInnerHTML={{ __html: html }}
-                />
-            )}
-        />
-    );
+    }, [ previewRef ]);
 }
+
+/**
+ * Render markdown and tag each top-level block with its 1-indexed source line,
+ * so the preview can be scrolled to match the editor. Marked does not emit
+ * source positions (markedjs/marked#1267) so we count newlines in `raw` ourselves.
+ */
+export function renderWithSourceLines(src: string): string {
+    const tokens = marked.lexer(src);
+    let line = 1;
+    const parts: string[] = [];
+    for (const token of tokens) {
+        const startLine = line;
+        line += (token.raw.match(/\n/g) ?? []).length;
+        if (token.type === "space") continue;
+        const sub = [ token ] as unknown as TokensList;
+        (sub as TokensList).links = tokens.links;
+        parts.push(`<div data-source-line="${startLine}">${marked.parser(sub)}</div>`);
+    }
+    return parts.join("");
+}
+//#endregion
