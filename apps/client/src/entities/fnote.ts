@@ -1070,7 +1070,7 @@ export default class FNote {
     }
 
     isMarkdown() {
-        return this.type === "code" && (this.mime === "text/x-markdown" || this.mime === "text/x-gfm");
+        return this.type === "code" && (this.mime === "text/markdown" || this.mime === "text/x-markdown" || this.mime === "text/x-gfm");
     }
 
     isTriliumScript() {

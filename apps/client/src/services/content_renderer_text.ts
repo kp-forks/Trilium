@@ -193,7 +193,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
             cache.set(source, svg);
         }
     } catch (e) {
-        console.log(e);
+        console.error(e);
     } finally {
         offscreen.remove();
     }
