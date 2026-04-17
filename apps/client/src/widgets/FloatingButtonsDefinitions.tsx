@@ -48,8 +48,8 @@ export type FloatingButtonsList = ((context: FloatingButtonContext) => false | V
 
 export const DESKTOP_FLOATING_BUTTONS: FloatingButtonsList = [
     RefreshBackendLogButton,
-    SwitchSplitOrientationButton,
     ToggleReadOnlyButton,
+    SwitchSplitOrientationButton,
     DisplayModeSwitcher,
     EditButton,
     ShowTocWidgetButton,

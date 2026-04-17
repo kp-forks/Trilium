@@ -72,8 +72,8 @@ export default function NoteActionsCustom(props: NoteActionsCustomProps) {
         >
             <AddChildButton {...innerProps} />
             <RunActiveNoteButton {...innerProps } />
-            <DisplayModeSwitcher {...innerProps} />
             <SwitchSplitOrientationButton {...innerProps} />
+            <DisplayModeSwitcher {...innerProps} />
             <SaveToNoteButton {...innerProps} />
             <RefreshButton {...innerProps} />
             <CopyReferenceToClipboardButton {...innerProps} />
@@ -232,17 +232,21 @@ function DisplayModeSwitcher({ note, isDefaultViewMode }: NoteActionsCustomInner
     }
 
     return (
-        <ButtonGroup size="sm">
-            {buttons.map(({ value, icon, text }) => (
-                <NoteAction
-                    key={value}
-                    icon={icon}
-                    text={text}
-                    active={mode === value}
-                    onClick={() => setDisplayMode(value)}
-                />
-            ))}
-        </ButtonGroup>
+        <>
+            <div className="note-actions-custom-spacer" />
+            <ButtonGroup size="sm">
+                {buttons.map(({ value, icon, text }) => (
+                    <NoteAction
+                        key={value}
+                        icon={icon}
+                        text={text}
+                        active={mode === value}
+                        onClick={() => setDisplayMode(value)}
+                    />
+                ))}
+            </ButtonGroup>
+            <div className="note-actions-custom-spacer" />
+        </>
     );
 }
 
