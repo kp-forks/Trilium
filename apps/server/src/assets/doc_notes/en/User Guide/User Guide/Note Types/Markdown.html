@@ -1,0 +1,74 @@
+<p>Trilium has always supported Markdown through its <a href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/mHbBMPDPkVV5/_help_Oau6X9rCuegd">import feature</a>,
+  however the file was either transformed to a&nbsp;<a class="reference-link"
+  href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;note
+  (converted to Trilium's internal HTML format) or saved as a&nbsp;<a class="reference-link"
+  href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_6f9hih2hXXZk">Code</a>&nbsp;note
+  with only syntax highlight.</p>
+<p>v0.103.0 introduces a new note type: Markdown which which displays Markdown
+  source and a preview on the right.</p>
+<h2>Rationale</h2>
+<p>The goal of this note type is to fill a gap: rendering Markdown but not
+  altering its structure or its whitespace which would inevitably change
+  otherwise through import/export.</p>
+<p>Even if Markdown is now specially treated by having a preview mechanism,
+  Trilium remains at its core a WYSWYG editor so Markdown will not replace
+  text notes.</p>
+<aside class="admonition note">
+  <p>Feature requests regarding the Markdown implementation will be considered,
+    but if they are outside the realm of Trilium they will not be implemented.
+    One of the core aspects of the Markdown integration is that it reuses components
+    that are already available through other features of the application.</p>
+</aside>
+<h2>Creating Markdown notes</h2>
+<p>There are two ways to create a Markdown note:</p>
+<ol>
+  <li>Create a new note (e.g. in the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_oPVyFC7WL2Lp">Note Tree</a>)
+    and select the type <em>Markdown</em>, just like all the other note types.</li>
+  <li
+ >Create a note of type&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_6f9hih2hXXZk">Code</a>&nbsp;and
+    select as the language either <em>Markdown </em>or <em>GitHub-Flavored Markdown</em>.
+    This maintains compatibility with your existing notes prior to the introduction
+    of this feature.</li>
+</ol>
+<h2>Supported features in preview</h2>
+<p>The following features are supported by Trilium's Markdown format and
+  will show up in the preview pane:</p>
+<ul>
+  <li>All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes)</li>
+  <li
+ >Code blocks with syntax highlight (e.g. <code spellcheck="false">```js</code>)
+    and automatic syntax highlight</li>
+    <li><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
+    </li>
+    <li><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_YfYAtQBcfo5V">Math Equations</a>
+    </li>
+    <li><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
+      <code
+      spellcheck="false">```mermaid</code>
+    </li>
+    <li>
+      <p><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
+        builtin Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-x-trilium-auto">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
+	&amp;nbsp;
+&lt;/section&gt;</code></pre>
+    </li>
+    <li>
+      <p><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/QEAPj01N5f7w/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
+        its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
+        <a
+        class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-trilium-auto">[[Hg8TS5ZOxti6]]</code></pre>
+    </li>
+</ul>
+<h2>Sync-scrolling</h2>
+<p>When scrolling through the editing pane, the preview pane will attempt
+  to synchronize its position to make it easier to see the preview.</p>
+<p>This feature cannot be disabled as of now; if the scrolling feels distracting,
+  consider temporarily switching to the editor mode and then switching to
+  preview mode when ready.</p>
+<aside class="admonition note">
+  <p>This feature of synchronizing the scroll is based on blocks but it's provided
+    on a best-effort basis since our underlying Markdown library doesn't support
+    this feature natively, so we had to implement our own algorithm. Feel free
+    to <a href="#root/pOsGYCXsbNQG/BgmBlOIl72jZ/_help_wy8So3yZZlH9">report issues</a>,
+    but always provide a sample Markdown file to be able to reproduce it.</p>
+</aside>
