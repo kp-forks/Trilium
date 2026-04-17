@@ -8,7 +8,7 @@ import { DEFAULT_GUTTER_SIZE } from "../../../services/resizer";
 import utils, { isMobile } from "../../../services/utils";
 import ActionButton, { ActionButtonProps } from "../../react/ActionButton";
 import Admonition from "../../react/Admonition";
-import { useNoteLabel, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
+import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
 import { EditableCode, EditableCodeProps } from "../code/Code";
 
 export interface SplitEditorProps extends EditableCodeProps {
@@ -46,7 +46,24 @@ export default function SplitEditor({ note, error, splitOptions, previewContent,
         ? displayMode
         : readOnly ? "preview" : "split";
 
-    const editor = (
+    // Lazy-mount each pane on first need, then keep it mounted so subsequent switches stay instant.
+    const editorMounted = useRef(mode !== "preview");
+    const previewMounted = useRef(mode !== "source");
+    if (mode !== "preview") editorMounted.current = true;
+    if (mode !== "source") previewMounted.current = true;
+
+    // While the editor isn't mounted, the preview has no source for its content — feed it from the
+    // blob directly. Once the editor mounts (and stays mounted), it takes over and this short-circuits.
+    const fallbackBlob = useNoteBlob(editorMounted.current ? null : note);
+    const onContentChangedRef = useRef(editorProps.onContentChanged);
+    useEffect(() => { onContentChangedRef.current = editorProps.onContentChanged; });
+    useEffect(() => {
+        if (!editorMounted.current && fallbackBlob) {
+            onContentChangedRef.current?.(fallbackBlob.content ?? "");
+        }
+    }, [ fallbackBlob ]);
+
+    const editor = editorMounted.current && (
         <div className="note-detail-split-editor-col">
             {editorBefore}
             <div className="note-detail-split-editor">
@@ -67,7 +84,7 @@ export default function SplitEditor({ note, error, splitOptions, previewContent,
         </div>
     );
 
-    const preview = <PreviewContainer
+    const preview = previewMounted.current && <PreviewContainer
         error={error}
         previewContent={previewContent}
         previewButtons={previewButtons}
