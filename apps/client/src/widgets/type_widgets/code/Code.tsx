@@ -36,7 +36,7 @@ export interface EditableCodeProps extends TypeWidgetProps, Omit<CodeEditorProps
     editorRef?: Ref<VanillaCodeMirror>;
 }
 
-export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWidgetProps) {
+export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent, editorRef }: TypeWidgetProps & { editorRef?: Ref<VanillaCodeMirror> }) {
     const [ content, setContent ] = useState("");
     const blob = useNoteBlob(note);
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
@@ -57,6 +57,7 @@ export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent }: TypeWi
     return (
         <CodeEditor
             ntxId={ntxId} parentComponent={parentComponent}
+            editorRef={editorRef}
             className="note-detail-readonly-code-content"
             content={content}
             mime={note.mime}
