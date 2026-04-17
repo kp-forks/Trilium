@@ -49,6 +49,7 @@ export default function Markdown(props: TypeWidgetProps) {
                 editorRef={setEditorView}
                 onContentChanged={setContent}
                 previewContent={<MarkdownPreview ntxId={props.ntxId} />}
+                forceOrientation="horizontal"
             />
         </MarkdownContext.Provider>
     );
