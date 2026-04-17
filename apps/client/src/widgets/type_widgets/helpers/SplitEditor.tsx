@@ -8,7 +8,7 @@ import { DEFAULT_GUTTER_SIZE } from "../../../services/resizer";
 import utils, { isMobile } from "../../../services/utils";
 import ActionButton, { ActionButtonProps } from "../../react/ActionButton";
 import Admonition from "../../react/Admonition";
-import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
+import { useNoteLabel, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
 import { EditableCode, EditableCodeProps } from "../code/Code";
 
 export interface SplitEditorProps extends EditableCodeProps {
@@ -27,7 +27,9 @@ export interface SplitEditorProps extends EditableCodeProps {
  *
  * The active view is driven by the `#displayMode` label (`source`, `split`, `preview`); when unset
  * it falls back to the `#readOnly` label (truthy → preview, falsy → split). `#displayMode` always
- * wins so an explicit choice is never overridden by `#readOnly`.
+ * wins so an explicit choice is never overridden by `#readOnly`. The editor and preview panes are
+ * always mounted; switching modes only toggles a CSS class so CodeMirror state, scroll position and
+ * pending edits survive the change.
  *
  * Features:
  *
@@ -35,25 +37,14 @@ export interface SplitEditorProps extends EditableCodeProps {
  * - Can display errors to the user via {@link setError}.
  * - Horizontal or vertical orientation for the editor/preview split, adjustable via the switch split orientation button floating button.
  */
-export default function SplitEditor(props: SplitEditorProps) {
-    const [ displayMode ] = useNoteLabel(props.note, "displayMode");
-    const [ readOnly ] = useNoteLabelBoolean(props.note, "readOnly");
+export default function SplitEditor({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, extraContent, ...editorProps }: SplitEditorProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const splitEditorOrientation = useSplitOrientation(forceOrientation);
+    const [ displayMode ] = useNoteLabel(note, "displayMode");
+    const [ readOnly ] = useNoteLabelBoolean(note, "readOnly");
     const mode = displayMode === "source" || displayMode === "split" || displayMode === "preview"
         ? displayMode
         : readOnly ? "preview" : "split";
-
-    if (mode === "source") {
-        return <SourceOnlyView {...props} />;
-    }
-    if (mode === "preview") {
-        return <ReadOnlyView {...props} />;
-    }
-    return <EditorWithSplit {...props} />;
-}
-
-function EditorWithSplit({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, extraContent, ...editorProps }: SplitEditorProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const splitEditorOrientation = useSplitOrientation(forceOrientation);
 
     const editor = (
         <div className="note-detail-split-editor-col">
@@ -83,8 +74,10 @@ function EditorWithSplit({ note, error, splitOptions, previewContent, previewBut
     />;
 
     useEffect(() => {
-        if (!utils.isDesktop() || !containerRef.current) return;
-        const elements = Array.from(containerRef.current?.children) as HTMLElement[];
+        if (mode !== "split" || !utils.isDesktop() || !containerRef.current) return;
+        // Only the visible (non-display:none) panes participate in the split.
+        const elements = (Array.from(containerRef.current.children) as HTMLElement[])
+            .filter(el => el.offsetParent !== null);
         const splitInstance = Split(elements, {
             rtl: glob.isRtl,
             sizes: [ 50, 50 ],
@@ -94,58 +87,17 @@ function EditorWithSplit({ note, error, splitOptions, previewContent, previewBut
         });
 
         return () => splitInstance.destroy();
-    }, [ splitEditorOrientation ]);
+    }, [ splitEditorOrientation, mode ]);
+
+    const layoutClass = mode === "source" ? "split-source-only"
+        : mode === "preview" ? "split-read-only"
+        : `split-${splitEditorOrientation}`;
 
     return (
-        <div ref={containerRef} className={`note-detail-split note-detail-printable ${`split-${splitEditorOrientation}`} ${className ?? ""}`}>
+        <div ref={containerRef} className={`note-detail-split note-detail-printable ${layoutClass} ${className ?? ""}`}>
             {splitEditorOrientation === "horizontal"
                 ? <>{editor}{preview}</>
                 : <>{preview}{editor}</>}
-        </div>
-    );
-}
-
-function SourceOnlyView({ note, error, className, editorBefore, extraContent, previewContent, previewButtons, splitOptions, forceOrientation, ...editorProps }: SplitEditorProps) {
-    return (
-        <div className={`note-detail-split note-detail-printable split-source-only ${className ?? ""}`}>
-            <div className="note-detail-split-editor-col">
-                {editorBefore}
-                <div className="note-detail-split-editor">
-                    <EditableCode
-                        note={note}
-                        lineWrapping={false}
-                        updateInterval={750} debounceUpdate
-                        noBackgroundChange
-                        {...editorProps}
-                    />
-                </div>
-                {error && (
-                    <Admonition type="caution" className="note-detail-error-container">
-                        {error}
-                    </Admonition>
-                )}
-                {extraContent}
-            </div>
-        </div>
-    );
-}
-
-function ReadOnlyView({ ...props }: SplitEditorProps) {
-    const { note, onContentChanged } = props;
-    const content = useNoteBlob(note);
-    const onContentChangedRef = useRef(onContentChanged);
-
-    useEffect(() => {
-        onContentChangedRef.current = onContentChanged;
-    });
-
-    useEffect(() => {
-        onContentChangedRef.current?.(content?.content ?? "");
-    }, [ content ]);
-
-    return (
-        <div className={`note-detail-split note-detail-printable ${props.className} split-read-only`}>
-            <PreviewContainer {...props} />
         </div>
     );
 }

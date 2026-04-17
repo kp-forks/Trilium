@@ -91,12 +91,20 @@ body.desktop .note-detail-split .note-detail-code-editor {
 
 /* Read-only view */
 
+.note-detail-split.split-read-only .note-detail-split-editor-col {
+    display: none;
+}
+
 .note-detail-split.split-read-only .note-detail-split-preview-col {
     width: 100%;
     height: 100%;
 }
 
 /* Source-only view */
+
+.note-detail-split.split-source-only .note-detail-split-preview-col {
+    display: none;
+}
 
 .note-detail-split.split-source-only .note-detail-split-editor-col {
     width: 100%;
