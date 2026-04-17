@@ -15,35 +15,45 @@ export default async function renderText(note: FNote | FAttachment, $renderedCon
 
     if (blob && !isHtmlEmpty(blob.content)) {
         $renderedContent.append($('<div class="ck-content">').html(blob.content));
-
-        const seenNoteIds = options.seenNoteIds ?? new Set<string>();
-        seenNoteIds.add("noteId" in note ? note.noteId : note.attachmentId);
-        if (!options.noIncludedNotes) {
-            await renderIncludedNotes($renderedContent[0], seenNoteIds);
-        } else {
-            $renderedContent.find("section.include-note").remove();
-        }
-
-        if ($renderedContent.find("span.math-tex").length > 0) {
-            renderMathInElement($renderedContent[0], { trust: true });
-        }
-
-        const getNoteIdFromLink = (el: HTMLElement) => tree.getNoteIdFromUrl($(el).attr("href") || "");
-        const referenceLinks = $renderedContent.find<HTMLAnchorElement>("a.reference-link");
-        const noteIdsToPrefetch = referenceLinks.map((i, el) => getNoteIdFromLink(el));
-        await froca.getNotes(noteIdsToPrefetch);
-
-        for (const el of referenceLinks) {
-            const innerSpan = document.createElement("span");
-            await link.loadReferenceLinkTitle($(innerSpan), el.href);
-            el.replaceChildren(innerSpan);
-        }
-
-        await rewriteMermaidDiagramsInContainer($renderedContent[0] as HTMLDivElement);
-        await formatCodeBlocks($renderedContent);
+        await postProcessRichContent(note, $renderedContent, options);
     } else if (note instanceof FNote && !options.noChildrenList) {
         await renderChildrenList($renderedContent, note, options.includeArchivedNotes ?? false);
     }
+}
+
+/**
+ * Apply the post-render passes that make CKEditor-compatible HTML fully
+ * interactive: expand `<section class="include-note">`, render inline math and
+ * Mermaid diagrams, rewrite reference-link titles, and highlight code blocks.
+ * Assumes the caller has already appended the HTML inside a `.ck-content` child
+ * of `$renderedContent`.
+ */
+export async function postProcessRichContent(note: FNote | FAttachment, $renderedContent: JQuery<HTMLElement>, options: RenderOptions = {}) {
+    const seenNoteIds = options.seenNoteIds ?? new Set<string>();
+    seenNoteIds.add("noteId" in note ? note.noteId : note.attachmentId);
+    if (!options.noIncludedNotes) {
+        await renderIncludedNotes($renderedContent[0], seenNoteIds);
+    } else {
+        $renderedContent.find("section.include-note").remove();
+    }
+
+    if ($renderedContent.find("span.math-tex").length > 0) {
+        renderMathInElement($renderedContent[0], { trust: true });
+    }
+
+    const getNoteIdFromLink = (el: HTMLElement) => tree.getNoteIdFromUrl($(el).attr("href") || "");
+    const referenceLinks = $renderedContent.find<HTMLAnchorElement>("a.reference-link");
+    const noteIdsToPrefetch = referenceLinks.map((i, el) => getNoteIdFromLink(el));
+    await froca.getNotes(noteIdsToPrefetch);
+
+    for (const el of referenceLinks) {
+        const innerSpan = document.createElement("span");
+        await link.loadReferenceLinkTitle($(innerSpan), el.href);
+        el.replaceChildren(innerSpan);
+    }
+
+    await rewriteMermaidDiagramsInContainer($renderedContent[0] as HTMLDivElement);
+    await formatCodeBlocks($renderedContent);
 }
 
 async function renderIncludedNotes(contentEl: HTMLElement, seenNoteIds: Set<string>) {
@@ -201,7 +211,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
     mermaidLastRenderedByPosition.set(container, nodes.map((n) => n.innerHTML));
 }
 
-async function renderChildrenList($renderedContent: JQuery<HTMLElement>, note: FNote, includeArchivedNotes: boolean) {
+export async function renderChildrenList($renderedContent: JQuery<HTMLElement>, note: FNote, includeArchivedNotes: boolean) {
     let childNoteIds = note.getChildNoteIds();
 
     if (!childNoteIds.length) {
