@@ -4,8 +4,10 @@
   (converted to Trilium's internal HTML format) or saved as a&nbsp;<a class="reference-link"
   href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_6f9hih2hXXZk">Code</a>&nbsp;note
   with only syntax highlight.</p>
-<p>v0.103.0 introduces a new note type: Markdown which which displays Markdown
-  source and a preview on the right.</p>
+<p>This note type is a split view, meaning that both the source code and
+  a preview of the document are displayed side-by-side. See&nbsp;<a class="reference-link"
+  href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_SL5f1Auq7sVN">Note types with split view</a>&nbsp;for
+  more information.</p>
 <h2>Rationale</h2>
 <p>The goal of this note type is to fill a gap: rendering Markdown but not
   altering its structure or its whitespace which would inevitably change
@@ -19,18 +21,15 @@
     One of the core aspects of the Markdown integration is that it reuses components
     that are already available through other features of the application.</p>
 </aside>
-<h2>Creating Markdown notes</h2>
-<p>There are two ways to create a Markdown note:</p>
-<ol>
-  <li>Create a new note (e.g. in the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_oPVyFC7WL2Lp">Note Tree</a>)
-    and select the type <em>Markdown</em>, just like all the other note types.</li>
-  <li
- >Create a note of type&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_6f9hih2hXXZk">Code</a>&nbsp;and
-    select as the language either <em>Markdown </em>or <em>GitHub-Flavored Markdown</em>.
-    This maintains compatibility with your existing notes prior to the introduction
-    of this feature.</li>
-</ol>
-<h2>Supported features in preview</h2>
+<h2>Features</h2>
+<h3>Source view pane</h3>
+<ul>
+  <li>Syntax highlighting for the Markdown syntax.</li>
+  <li>Nested syntax highlighting for code inside code blocks.</li>
+  <li>When editing larger documents, the preview scrolls along with the source
+    editor.</li>
+</ul>
+<h3>Preview pane</h3>
 <p>The following features are supported by Trilium's Markdown format and
   will show up in the preview pane:</p>
 <ul>
@@ -50,7 +49,7 @@
       <p><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
         builtin Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-x-trilium-auto">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
 	&amp;nbsp;
-&lt;/section&gt;</code></pre>
+&lt;/section&gt;n</code></pre>
     </li>
     <li>
       <p><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/QEAPj01N5f7w/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
@@ -59,9 +58,76 @@
         class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-trilium-auto">[[Hg8TS5ZOxti6]]</code></pre>
     </li>
 </ul>
-<h2>Sync-scrolling</h2>
+<h2>Creating Markdown notes</h2>
+<p>There are two ways to create a Markdown note:</p>
+<ol>
+  <li>Create a new note (e.g. in the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_oPVyFC7WL2Lp">Note Tree</a>)
+    and select the type <em>Markdown</em>, just like all the other note types.</li>
+  <li
+ >Create a note of type&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_6f9hih2hXXZk">Code</a>&nbsp;and
+    select as the language either <em>Markdown </em>or <em>GitHub-Flavored Markdown</em>.
+    This maintains compatibility with your existing notes prior to the introduction
+    of this feature.</li>
+</ol>
+<aside class="admonition note">
+  <p>There is no distinction between the new Markdown note type and code notes
+    of type Markdown; internally both are represented as&nbsp;<a class="reference-link"
+    href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_6f9hih2hXXZk">Code</a>&nbsp;notes
+    with the proper MIME type (e.g. <code spellcheck="false">text/x-markdown</code>).</p>
+</aside>
+<h2>Import/export</h2>
+<ul>
+  <li>
+    <p>By default, when importing a single Markdown file it automatically gets
+      converted to a&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;note.
+      To avoid that and have it imported as a Markdown note instead:</p>
+    <ul>
+      <li>
+        <p>Right click the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and
+          select <em>Import into note</em>.</p>
+      </li>
+      <li>
+        <p>Select the file normally.</p>
+      </li>
+      <li>
+        <p>Uncheck <em>Import HTML, Markdown and TXT as text notes if it's unclear from the metadata</em>.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>When exporting Markdown files, the extension is preserved and the content
+      remains the same as in the source view.</p>
+  </li>
+  <li>
+    <p>Once exported as a Trilium ZIP, the ZIP will preserve the Markdown type
+      without converting to text notes thanks to the meta-information in it.</p>
+  </li>
+</ul>
+<h2>Conversion between text notes and Markdown notes</h2>
+<p>Currently there is no built-in functionality to convert a&nbsp;<a class="reference-link"
+  href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;note
+  into a Markdown note or vice-versa. We do have plans to address this in
+  the future.</p>
+<p>This can be achieved manually, for a single note:</p>
+<ol>
+  <li>Export the file as Markdown, with single format.</li>
+  <li>Import the file again, but unchecking <em>Import HTML, Markdown and TXT as text notes if it's unclear from the metadata</em>.</li>
+</ol>
+<p>For multiple notes, the process is slightly more involved:</p>
+<ol>
+  <li>Export the file as Markdown, ZIP.</li>
+  <li>Extract the archive.</li>
+  <li>Remove the <code spellcheck="false">!!!meta.json</code> file.</li>
+  <li>Compress the extracted files back into an archive.</li>
+  <li>Import the newly create archive, but unchecking <em>Import HTML, Markdown and TXT as text notes if it's unclear from the metadata</em>.</li>
+</ol>
+<h2>Sync-scrolling &amp; block highlight</h2>
 <p>When scrolling through the editing pane, the preview pane will attempt
   to synchronize its position to make it easier to see the preview.</p>
+<p>In addition, the block in the preview matching the position of the cursor
+  in the source view will appear slightly highlighted.</p>
+<p>The sync is currently one-way only, scrolling the preview will not synchronize
+  the position of the editor.</p>
 <p>This feature cannot be disabled as of now; if the scrolling feels distracting,
   consider temporarily switching to the editor mode and then switching to
   preview mode when ready.</p>

@@ -4,9 +4,11 @@
 
 <figure class="image image-style-align-center"><img style="aspect-ratio:886/663;" src="2_Mermaid Diagrams_image.png" width="886" height="663"></figure>
 
-## Types of diagrams
-
 Trilium supports Mermaid, which adds support for various diagrams such as flowchart, sequence diagram, class diagram, state diagram, pie charts, etc., all using a text description of the chart instead of manually drawing the diagram.
+
+This note type is a split view, meaning that both the source code and a preview of the document are displayed side-by-side. See <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Note%20types%20with%20split%20view.md">Note types with split view</a> for more information.
+
+## Sample diagrams
 
 Starting with v0.103.0, Mermaid diagrams no longer start with a sample flowchart, but instead a pane at the bottom will show all the supported diagrams with sample code for each:
 
@@ -35,7 +37,7 @@ It's possible to switch between the two layouts at any time by pressing the ![](
 *   In the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Floating%20buttons.md">Floating buttons</a> area:
     *   The source/preview can be laid out left-right or bottom-top via the _Move editing pane to the left / bottom_ option.
     *   Press _Lock editing_ to automatically mark the note as read-only. In this mode, the code pane is hidden and the diagram is displayed full-size. Similarly, press _Unlock editing_ to mark a read-only note as editable.
-    *   Press the _Copy image reference to the clipboard_ to be able to insert the image representation of the diagram into a text note. See <a class="reference-link" href="Text/Images/Image%20references.md">[missing note]</a> for more information.
+    *   Press the _Copy image reference to the clipboard_ to be able to insert the image representation of the diagram into a text note. See <a class="reference-link" href="Text/Images/Image%20references.md">Image references</a> for more information.
     *   Press the _Export diagram as SVG_ to download a scalable/vector rendering of the diagram. Can be used to present the diagram without degrading when zooming.
     *   Press the _Export diagram as PNG_ to download a normal image (at 1x scale, raster) of the diagram. Can be used to send the diagram in more traditional channels such as e-mail.
 
