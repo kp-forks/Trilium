@@ -40,6 +40,14 @@ export interface RenderToHtmlOptions {
     wikiLink?: WikiLinkOptions;
     /** Same as {@link wikiLink}, for `![[noteId]]` transclusions. */
     transclusion?: TransclusionOptions;
+    /**
+     * If `true` (default), strip the first `<h1>` that matches {@link title}
+     * and demote any remaining `<h1>` to `<h2>` — notes render the title as a
+     * separate H1 above the content, so double-H1 would otherwise result.
+     * Set to `false` when there's no surrounding title (e.g. a live editor
+     * preview) so authored H1s are shown as-is.
+     */
+    demoteH1?: boolean;
 }
 
 function escapeHtml(str: string): string {
@@ -281,7 +289,9 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
     html = restoreFromMap(html, formulaMap);
 
     // h1 handling needs to come before sanitization.
-    html = handleH1(html, title);
+    if (options.demoteH1 !== false) {
+        html = handleH1(html, title);
+    }
     html = options.sanitize(html);
 
     // Add a trailing semicolon to CSS styles.

@@ -49,6 +49,11 @@ describe("renderWithSourceLines", () => {
         expect(html).toContain("<li>item</li>");
     });
 
+    it("keeps H1 as H1 in the preview (no title-row context to avoid)", () => {
+        const html = renderWithSourceLines("# Top level");
+        expect(html).toContain("<h1>Top level</h1>");
+    });
+
     it("preserves reference-style links across per-block parsing", () => {
         const src = [
             "[trilium][t]",    // 1

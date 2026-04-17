@@ -151,7 +151,8 @@ export function renderWithSourceLines(src: string): string {
 
     const html = renderToHtml(src, "", {
         sanitize: (h) => DOMPurify.sanitize(h),
-        wikiLink: { formatHref: (id) => `#root/${id}` }
+        wikiLink: { formatHref: (id) => `#root/${id}` },
+        demoteH1: false
     });
     if (!html) return "";
 
