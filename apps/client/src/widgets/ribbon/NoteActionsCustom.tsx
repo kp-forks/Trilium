@@ -218,17 +218,19 @@ function DisplayModeSwitcher({ note, isDefaultViewMode }: NoteActionsCustomInner
     ];
 
     if (cachedIsMobile) {
-        return <>
-            {buttons.map(({ value, icon, text }) => (
-                <NoteAction
-                    key={value}
-                    icon={icon}
-                    text={text}
-                    active={mode === value}
-                    onClick={() => setDisplayMode(value)}
-                />
-            ))}
-        </>;
+        return (
+            <div className="note-actions-custom-display-mode">
+                {buttons.map(({ value, icon, text }) => (
+                    <NoteAction
+                        key={value}
+                        icon={icon}
+                        text={text}
+                        active={mode === value}
+                        onClick={() => setDisplayMode(value)}
+                    />
+                ))}
+            </div>
+        );
     }
 
     return (
