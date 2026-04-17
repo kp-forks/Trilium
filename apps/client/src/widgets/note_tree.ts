@@ -1568,8 +1568,9 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
     toggleHiddenNode(show: boolean) {
         const hiddenNode = this.getNodesByNoteId("_hidden")[0];
-        // TODO: Check how .li exists here.
-        $((hiddenNode as any).li).toggleClass("hidden-node-is-hidden", !show);
+        if (hiddenNode?.li) {
+            $(hiddenNode.li).toggleClass("hidden-node-is-hidden", !show);
+        }
     }
 
     async frocaReloadedEvent() {
