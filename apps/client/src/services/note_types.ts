@@ -49,6 +49,7 @@ export const NOTE_TYPES: NoteTypeMapping[] = [
 
     // Code notes
     { type: "code", mime: "text/plain", title: t("note_types.code"), icon: "bx-code" },
+    { type: "code", mime: "text/x-markdown", title: t("note_types.markdown"), icon: "bxl-markdown" },
 
     // Reserved types (cannot be created by the user)
     { type: "contentWidget", mime: "", title: t("note_types.widget"), reserved: true },
@@ -100,6 +101,7 @@ function getBlankNoteTypes(command?: TreeCommandNames): MenuItem<TreeCommandName
                 title: nt.title,
                 command,
                 type: nt.type,
+                mime: nt.mime,
                 uiIcon: `bx ${nt.icon}`,
                 badges: []
             };

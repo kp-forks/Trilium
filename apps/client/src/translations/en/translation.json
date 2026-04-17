@@ -1671,6 +1671,7 @@
   "note_types": {
     "text": "Text",
     "code": "Code",
+    "markdown": "Markdown",
     "saved-search": "Saved Search",
     "relation-map": "Relation Map",
     "note-map": "Note Map",

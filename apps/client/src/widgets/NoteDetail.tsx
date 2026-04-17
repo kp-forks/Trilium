@@ -352,12 +352,12 @@ export async function getExtendedWidgetType(note: FNote | null | undefined, note
         resultingType = "readOnlyText";
     } else if (note.isTriliumSqlite()) {
         resultingType = "sqlConsole";
+    } else if (note.isMarkdown()) {
+        resultingType = "markdown";
     } else if ((type === "code" || type === "mermaid") && (await noteContext?.isReadOnly())) {
         resultingType = "readOnlyCode";
     } else if (type === "text") {
         resultingType = "editableText";
-    } else if (note.isMarkdown()) {
-        resultingType = "markdown";
     } else if (type === "code") {
         resultingType = "editableCode";
     } else if (type === "launcher") {
