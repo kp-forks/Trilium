@@ -8,7 +8,7 @@ import { DEFAULT_GUTTER_SIZE } from "../../../services/resizer";
 import utils, { isMobile } from "../../../services/utils";
 import ActionButton, { ActionButtonProps } from "../../react/ActionButton";
 import Admonition from "../../react/Admonition";
-import { useNoteBlob, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
+import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useTriliumOption } from "../../react/hooks";
 import { EditableCode, EditableCodeProps } from "../code/Code";
 
 export interface SplitEditorProps extends EditableCodeProps {
@@ -20,12 +20,14 @@ export interface SplitEditorProps extends EditableCodeProps {
     editorBefore?: ComponentChildren;
     forceOrientation?: "horizontal" | "vertical";
     extraContent?: ComponentChildren;
-    /** When set, overrides the view chosen by the `readOnly` label. */
-    overrideMode?: "preview" | "split";
 }
 
 /**
  * Abstract `TypeWidget` which contains a preview and editor pane, each displayed on half of the available screen.
+ *
+ * The active view is driven by the `#displayMode` label (`source`, `split`, `preview`); when unset
+ * it falls back to the `#readOnly` label (truthy → preview, falsy → split). `#displayMode` always
+ * wins so an explicit choice is never overridden by `#readOnly`.
  *
  * Features:
  *
@@ -34,15 +36,19 @@ export interface SplitEditorProps extends EditableCodeProps {
  * - Horizontal or vertical orientation for the editor/preview split, adjustable via the switch split orientation button floating button.
  */
 export default function SplitEditor(props: SplitEditorProps) {
+    const [ displayMode ] = useNoteLabel(props.note, "displayMode");
     const [ readOnly ] = useNoteLabelBoolean(props.note, "readOnly");
-    const mode = props.overrideMode ?? (readOnly ? "preview" : "split");
+    const mode = displayMode === "source" || displayMode === "split" || displayMode === "preview"
+        ? displayMode
+        : readOnly ? "preview" : "split";
 
+    if (mode === "source") {
+        return <SourceOnlyView {...props} />;
+    }
     if (mode === "preview") {
         return <ReadOnlyView {...props} />;
     }
-
     return <EditorWithSplit {...props} />;
-
 }
 
 function EditorWithSplit({ note, error, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, extraContent, ...editorProps }: SplitEditorProps) {
@@ -95,6 +101,31 @@ function EditorWithSplit({ note, error, splitOptions, previewContent, previewBut
             {splitEditorOrientation === "horizontal"
                 ? <>{editor}{preview}</>
                 : <>{preview}{editor}</>}
+        </div>
+    );
+}
+
+function SourceOnlyView({ note, error, className, editorBefore, extraContent, previewContent, previewButtons, splitOptions, forceOrientation, ...editorProps }: SplitEditorProps) {
+    return (
+        <div className={`note-detail-split note-detail-printable split-source-only ${className ?? ""}`}>
+            <div className="note-detail-split-editor-col">
+                {editorBefore}
+                <div className="note-detail-split-editor">
+                    <EditableCode
+                        note={note}
+                        lineWrapping={false}
+                        updateInterval={750} debounceUpdate
+                        noBackgroundChange
+                        {...editorProps}
+                    />
+                </div>
+                {error && (
+                    <Admonition type="caution" className="note-detail-error-container">
+                        {error}
+                    </Admonition>
+                )}
+                {extraContent}
+            </div>
         </div>
     );
 }

@@ -7,34 +7,13 @@ import { Marked } from "marked";
 import { RefObject } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import { useNoteLabel } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
-import { EditableCode } from "./Code";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
 export default function Markdown(props: TypeWidgetProps) {
-    const [ displayMode ] = useNoteLabel(props.note, "displayMode");
-    const mode = displayMode === "source" || displayMode === "preview" ? displayMode : "split";
-
-    if (mode === "source") {
-        return (
-            <EditableCode
-                noteType="code"
-                lineWrapping={false}
-                updateInterval={750} debounceUpdate
-                noBackgroundChange
-                {...props}
-            />
-        );
-    }
-
-    return <SplitMarkdown {...props} overrideMode={mode} />;
-}
-
-function SplitMarkdown({ overrideMode, ...props }: TypeWidgetProps & { overrideMode: "preview" | "split" }) {
     const [ content, setContent ] = useState("");
     const html = useMemo(() => renderWithSourceLines(content), [ content ]);
     const previewRef = useRef<HTMLDivElement>(null);
@@ -47,7 +26,6 @@ function SplitMarkdown({ overrideMode, ...props }: TypeWidgetProps & { overrideM
         <SplitEditor
             noteType="code"
             {...props}
-            overrideMode={overrideMode}
             editorRef={editorRef}
             onContentChanged={setContent}
             previewContent={(
