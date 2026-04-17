@@ -72,7 +72,6 @@ export default function NoteActionsCustom(props: NoteActionsCustomProps) {
         >
             <AddChildButton {...innerProps} />
             <RunActiveNoteButton {...innerProps } />
-            <ToggleReadOnlyButton {...innerProps} />
             <DisplayModeSwitcher {...innerProps} />
             <SwitchSplitOrientationButton {...innerProps} />
             <SaveToNoteButton {...innerProps} />
@@ -203,19 +202,6 @@ function SwitchSplitOrientationButton({ note, isReadOnly, isDefaultViewMode }: N
         icon={upcomingOrientation === "vertical" ? "bx bxs-dock-bottom" : "bx bxs-dock-left"}
         onClick={() => setSplitEditorOrientation(upcomingOrientation)}
         disabled={effectiveMode !== "split"}
-    />;
-}
-
-export function ToggleReadOnlyButton({ note, isDefaultViewMode }: NoteActionsCustomInnerProps) {
-    const [ isReadOnly, setReadOnly ] = useNoteLabelBoolean(note, "readOnly");
-    const isSavedSqlite = note.isTriliumSqlite() && !note.isHiddenCompletely();
-    const isEnabled = ([ "mindMap", "canvas", "spreadsheet" ].includes(note.type) || isSavedSqlite)
-            && note.isContentAvailable() && isDefaultViewMode;
-
-    return isEnabled && <NoteAction
-        text={isReadOnly ? t("toggle_read_only_button.unlock-editing") : t("toggle_read_only_button.lock-editing")}
-        icon={isReadOnly ? "bx bx-lock-open-alt" : "bx bx-lock-alt"}
-        onClick={() => setReadOnly(!isReadOnly)}
     />;
 }
 
