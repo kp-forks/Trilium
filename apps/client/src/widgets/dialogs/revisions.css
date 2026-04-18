@@ -71,6 +71,73 @@ body.mobile .revisions-dialog {
         flex-shrink: 0;
     }
 
+    .save-revision-controls {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        margin-inline-end: 10px;
+
+        .save-revision-input {
+            width: 200px;
+        }
+    }
+
+    .revision-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .revision-source-badge {
+        font-size: 0.75em;
+        padding: 0 4px;
+        border-radius: 3px;
+        background-color: var(--accented-background-color);
+        white-space: nowrap;
+    }
+
+    .revision-item-size {
+        font-size: 0.85em;
+        opacity: 0.7;
+    }
+
+    .revision-item-description {
+        font-size: 0.85em;
+        opacity: 0.7;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .revision-description-editor {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        margin: 3px 0;
+
+        input {
+            flex-grow: 1;
+        }
+    }
+
+    .revision-description-display {
+        display: flex;
+        align-items: center;
+        margin: 3px 0;
+        gap: 5px;
+        min-height: 24px;
+    }
+
+    .revision-description-text {
+        font-size: 0.9em;
+
+        &.empty {
+            opacity: 0.5;
+            font-style: italic;
+        }
+    }
+
     .revision-content.type-file {
         display: flex;
         min-width: 0;

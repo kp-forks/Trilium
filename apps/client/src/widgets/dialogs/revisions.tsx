@@ -164,21 +164,19 @@ function SaveRevisionButton({ noteId, onSaved }: { noteId: string, onSaved: () =
     const [ description, setDescription ] = useState("");
 
     return (
-        <div style={{ display: "flex", gap: "5px", alignItems: "center", marginInlineEnd: "10px" }}>
+        <div className="save-revision-controls">
             <input
                 type="text"
-                className="form-control form-control-sm"
+                className="form-control form-control-sm save-revision-input"
                 placeholder={t("revisions.description_placeholder")}
                 value={description}
                 onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
-                style={{ width: "200px" }}
             />
             <Button
                 icon="bx bx-save"
                 text={t("revisions.save_revision")}
                 title={t("revisions.save_revision_tooltip")}
                 size="small"
-                style={{ padding: "0 10px" }}
                 onClick={async () => {
                     await server.post(`notes/${noteId}/revision`, { description });
                     setDescription("");
@@ -200,25 +198,19 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
                     <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "4px" }}>
+                        <div className="revision-item-header">
                             <span>{item.dateCreated && item.dateCreated.substr(0, 16)}</span>
                             {item.source && item.source !== "auto" && (
-                                <span className="revision-source-badge" style={{
-                                    fontSize: "0.75em",
-                                    padding: "0 4px",
-                                    borderRadius: "3px",
-                                    backgroundColor: "var(--accented-background-color)",
-                                    whiteSpace: "nowrap"
-                                }}>
+                                <span className="revision-source-badge">
                                     {t(`revisions.source_${item.source}`)}
                                 </span>
                             )}
                         </div>
-                        <div style={{ fontSize: "0.85em", opacity: 0.7 }}>
+                        <div className="revision-item-size">
                             {item.contentLength && utils.formatSize(item.contentLength)}
                         </div>
                         {item.description && (
-                            <div className="revision-description" style={{ fontSize: "0.85em", opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div className="revision-item-description">
                                 {item.description}
                             </div>
                         )}
@@ -331,7 +323,7 @@ function RevisionDescription({ revisionItem, editing, draft, onEdit, onDraftChan
 }) {
     if (editing) {
         return (
-            <div style={{ display: "flex", gap: "5px", alignItems: "center", margin: "3px 0" }}>
+            <div className="revision-description-editor">
                 <input
                     type="text"
                     className="form-control form-control-sm"
@@ -344,7 +336,6 @@ function RevisionDescription({ revisionItem, editing, draft, onEdit, onDraftChan
                     }}
                     // eslint-disable-next-line jsx-a11y/no-autofocus
                     autoFocus
-                    style={{ flexGrow: 1 }}
                 />
                 <ActionButton icon="bx bx-check" text={t("revisions.edit_description")} onClick={onSave} />
                 <ActionButton icon="bx bx-x" text={t("revisions.edit_description")} onClick={onCancel} />
@@ -353,8 +344,8 @@ function RevisionDescription({ revisionItem, editing, draft, onEdit, onDraftChan
     }
 
     return (
-        <div style={{ display: "flex", alignItems: "center", margin: "3px 0", gap: "5px", minHeight: "24px" }}>
-            <span style={{ opacity: revisionItem.description ? 1 : 0.5, fontStyle: revisionItem.description ? "normal" : "italic", fontSize: "0.9em" }}>
+        <div className="revision-description-display">
+            <span className={clsx("revision-description-text", { empty: !revisionItem.description })}>
                 {revisionItem.description || t("revisions.description_placeholder")}
             </span>
             <ActionButton
