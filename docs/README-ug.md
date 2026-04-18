@@ -192,8 +192,8 @@ zadam/Trilium نۇسخىسىدىن TriliumNext/Notes غا كۆچۈش ئۈچۈن 
 ئەگەر سىز ئىشلىتىۋاتقان نەشرى تۆۋەندىكى جەدۋەلدە بولسا، شۇ نەشرىنىڭ يۇمشاق دېتال
 بوغچىسىنى ئىشلىتىڭ.
 
-[![Packaging
-status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
+[![بوغچىلاش
+ھالىتى](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
 
 سىز يەنە [ئەڭ يېڭى ئېلان قىلىنغان
 بەت](https://github.com/TriliumNext/Trilium/releases/latest)تىن مۇناسىپ سۇپىنىڭ
@@ -203,7 +203,7 @@ status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://r
 TriliumNext يەنە Flatpak نۇسخىسى بىلەن تەمىنلەيدۇ، ئەمما تېخى FlatHub غا
 چىقىرىلمىدى.
 
-### Browser (any OS)
+### Browser (ھەرقانداق مەشغۇلات سىستېمىسى)
 
 ئەگەر سىزدە (تۆۋەندىكىدەك) مۇلازىمىتىر قاچىلانمىسى بولسا، تور كۆرۈنمە يۈزىنى
 بىۋاسىتە ساقىلالايسىز (ئۇ بىر تەرەپ قىلغۇچ دېتالى بىلەن ئاساسەن ئوخشاش）
@@ -211,7 +211,7 @@ TriliumNext يەنە Flatpak نۇسخىسى بىلەن تەمىنلەيدۇ، ئ
 نۆۋەتتە پەقەت Chrome ۋە Firefox نىڭ ئەڭ يېڭى نەشرىنىلا قوللايدۇ (ھەمدە ئەمەلىي
 سىناقتىن ئۆتكەن).
 
-### Mobile
+### كۆچمە ئۈسكۈنە
 
 ئەگەر كۆچمە ئۈسكۈنىلەردە TriliumNext نى ئىشلەتمەكچى بولسىڭىز، كۆچمە كۆرگۈچ
 ئارقىلىق مۇلازىمىتىرغا قاچىلانغان كۆچمە نۇسخا كۆرۈنمە يۈزىنى زىيارەت قىلالايسىز
