@@ -7,7 +7,7 @@ import becca from "../becca.js";
 import AbstractBeccaEntity from "./abstract_becca_entity.js";
 import sql from "../../services/sql.js";
 import BAttachment from "./battachment.js";
-import type { AttachmentRow, NoteType, RevisionPojo, RevisionRow } from "@triliumnext/commons";
+import type { AttachmentRow, NoteType, RevisionPojo, RevisionRow, RevisionSource } from "@triliumnext/commons";
 import eraseService from "../../services/erase.js";
 
 interface ContentOpts {
@@ -31,7 +31,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
         return "revisionId";
     }
     static get hashedProperties() {
-        return ["revisionId", "noteId", "title", "description", "isProtected", "dateLastEdited", "dateCreated", "utcDateLastEdited", "utcDateCreated", "utcDateModified", "blobId"];
+        return ["revisionId", "noteId", "title", "description", "source", "isProtected", "dateLastEdited", "dateCreated", "utcDateLastEdited", "utcDateCreated", "utcDateModified", "blobId"];
     }
 
     revisionId?: string;
@@ -40,6 +40,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
     mime!: string;
     title!: string;
     description!: string;
+    source!: RevisionSource;
     dateLastEdited?: string;
     utcDateLastEdited?: string;
     contentLength?: number;
@@ -63,6 +64,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
         this.isProtected = !!row.isProtected;
         this.title = row.title;
         this.description = row.description || "";
+        this.source = row.source || "auto";
         this.blobId = row.blobId;
         this.dateLastEdited = row.dateLastEdited;
         this.dateCreated = row.dateCreated;
@@ -196,6 +198,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
             isProtected: this.isProtected,
             title: this.title,
             description: this.description,
+            source: this.source,
             blobId: this.blobId,
             dateLastEdited: this.dateLastEdited,
             dateCreated: this.dateCreated,

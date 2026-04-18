@@ -200,7 +200,23 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
                     <div>
-                        {item.dateCreated && item.dateCreated.substr(0, 16)} ({item.contentLength && utils.formatSize(item.contentLength)})
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "4px" }}>
+                            <span>{item.dateCreated && item.dateCreated.substr(0, 16)}</span>
+                            {item.source && item.source !== "auto" && (
+                                <span className="revision-source-badge" style={{
+                                    fontSize: "0.75em",
+                                    padding: "0 4px",
+                                    borderRadius: "3px",
+                                    backgroundColor: "var(--accented-background-color)",
+                                    whiteSpace: "nowrap"
+                                }}>
+                                    {t(`revisions.source_${item.source}`)}
+                                </span>
+                            )}
+                        </div>
+                        <div style={{ fontSize: "0.85em", opacity: 0.7 }}>
+                            {item.contentLength && utils.formatSize(item.contentLength)}
+                        </div>
                         {item.description && (
                             <div className="revision-description" style={{ fontSize: "0.85em", opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                 {item.description}

@@ -193,7 +193,7 @@ function register(router: Router) {
         const note = eu.getAndCheckNote(req.params.noteId);
 
         const description = req.body?.description || "";
-        const revision = note.saveRevision(description);
+        const revision = note.saveRevision({ description, source: "etapi" });
 
         res.status(201).json(mappers.mapRevisionToPojo(revision));
     });

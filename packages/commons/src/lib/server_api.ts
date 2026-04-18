@@ -1,4 +1,4 @@
-import { AttachmentRow, AttributeRow, BranchRow, NoteRow, NoteType } from "./rows.js";
+import { AttachmentRow, AttributeRow, BranchRow, NoteRow, NoteType, RevisionSource } from "./rows.js";
 
 type Response = {
     success: true,
@@ -34,6 +34,7 @@ export interface RevisionItem {
     type: NoteType;
     title: string;
     description?: string;
+    source?: RevisionSource;
     isProtected?: boolean;
     mime: string;
 }
@@ -46,6 +47,7 @@ export interface RevisionPojo {
     isProtected?: boolean;
     title: string;
     description?: string;
+    source?: RevisionSource;
     blobId?: string;
     dateLastEdited?: string;
     dateCreated?: string;

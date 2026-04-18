@@ -352,7 +352,7 @@ function forceSaveRevision(req: Request<{ noteId: string }>) {
     }
 
     const description = req.body?.description || "";
-    const revision = note.saveRevision(description);
+    const revision = note.saveRevision({ description, source: "manual" });
 
     return {
         revisionId: revision.revisionId

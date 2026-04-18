@@ -137,7 +137,7 @@ function restoreRevision(req: Request<{ revisionId: string }>) {
         const note = revision.getNote();
 
         sql.transactional(() => {
-            note.saveRevision();
+            note.saveRevision({ source: "restore" });
 
             for (const oldNoteAttachment of note.getAttachments()) {
                 oldNoteAttachment.markAsDeleted();

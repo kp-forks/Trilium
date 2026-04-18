@@ -74,6 +74,7 @@ function mapRevisionToPojo(revision: BRevision) {
         isProtected: revision.isProtected,
         title: revision.title,
         description: revision.description,
+        source: revision.source,
         blobId: revision.blobId,
         dateLastEdited: revision.dateLastEdited,
         dateCreated: revision.dateCreated,

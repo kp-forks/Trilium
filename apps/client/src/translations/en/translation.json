@@ -310,7 +310,12 @@
     "description_placeholder": "Add a description (optional)",
     "revision_saved": "Note revision has been saved.",
     "edit_description": "Edit description",
-    "description_updated": "Revision description has been updated."
+    "description_updated": "Revision description has been updated.",
+    "source_auto": "Auto",
+    "source_manual": "Manual",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_restore": "Restore"
   },
   "sort_child_notes": {
     "sort_children_by": "Sort children by...",

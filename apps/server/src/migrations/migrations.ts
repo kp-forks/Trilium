@@ -11,6 +11,7 @@ const MIGRATIONS: (SqlMigration | JsMigration)[] = [
         version: 238,
         sql: /*sql*/`
             ALTER TABLE revisions ADD COLUMN description TEXT DEFAULT '' NOT NULL;
+            ALTER TABLE revisions ADD COLUMN source TEXT DEFAULT 'auto' NOT NULL;
         `,
         ignoreErrors: true
     },
