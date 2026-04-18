@@ -210,6 +210,15 @@ body.desktop .revisions-dialog {
         }
     }
 
+    .revision-diff-code {
+        font-family: var(--font-family-monospace, monospace);
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-width: 100%;
+        padding: 0;
+    }
+
     /* HTML diff styles (htmldiff-js) */
     .revision-diff-content {
         ins {

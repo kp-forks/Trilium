@@ -488,7 +488,7 @@ function RevisionContent({ noteContent, revisionItem, fullRevision, showDiff }: 
         case "text":
             return <RevisionContentText content={content} />;
         case "code":
-            return <pre style={CODE_STYLE}>{content}</pre>;
+            return <div className="revision-diff-code">{content}</div>;
         case "image":
             switch (revisionItem.mime) {
                 case "image/svg+xml": {
@@ -571,7 +571,7 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
         }
     }, [noteContent, itemContent, itemType]);
 
-    return <div ref={contentRef} className={clsx("revision-diff-content", { "ck-content": itemType === "text" })} style={itemType !== "text" ? { whiteSpace: "pre-wrap" } : undefined} />;
+    return <div ref={contentRef} className={clsx("revision-diff-content", itemType === "text" ? "ck-content" : "revision-diff-code")} />;
 }
 
 
