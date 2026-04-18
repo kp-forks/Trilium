@@ -1,6 +1,6 @@
 import "./revisions.css";
 
-import type { RevisionItem, RevisionPojo } from "@triliumnext/commons";
+import { dayjs, type RevisionItem, type RevisionPojo } from "@triliumnext/commons";
 import clsx from "clsx";
 import { diffWords } from "diff";
 import HtmlDiff from "htmldiff-js";
@@ -214,8 +214,8 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                                 {item.description}
                             </div>
                         )}
-                        <div className="revision-item-date">
-                            {item.dateCreated && item.dateCreated.substr(0, 16)}
+                        <div className="revision-item-date" title={item.dateCreated?.substring(0, 16)}>
+                            {item.dateCreated && dayjs(item.dateCreated).fromNow()}
                         </div>
                         <div className="revision-item-meta">
                             <span className="revision-item-size">
