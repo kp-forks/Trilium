@@ -67,7 +67,6 @@ export default function RevisionsDialog() {
             size="xl"
             title={t("revisions.note_revisions")}
             helpPageId="vZWERwf8U3nx"
-            bodyStyle={{ display: "flex", height: "80vh" }}
             header={note && (
                 <RevisionsMenu
                     note={note}
@@ -82,6 +81,18 @@ export default function RevisionsDialog() {
                     hasRevisions={!!revisions?.length}
                 />
             )}
+            sidebar={
+                <RevisionsList
+                    revisions={revisions ?? []}
+                    onSelect={(revisionId) => {
+                        const correspondingRevision = (revisions ?? []).find((r) => r.revisionId === revisionId);
+                        if (correspondingRevision) {
+                            setCurrentRevision(correspondingRevision);
+                        }
+                    }}
+                    currentRevision={currentRevision}
+                />
+            }
             onHidden={() => {
                 setShown(false);
                 setShowDiff(false);
@@ -91,17 +102,6 @@ export default function RevisionsDialog() {
             }}
             show={shown}
         >
-            <RevisionsList
-                revisions={revisions ?? []}
-                onSelect={(revisionId) => {
-                    const correspondingRevision = (revisions ?? []).find((r) => r.revisionId === revisionId);
-                    if (correspondingRevision) {
-                        setCurrentRevision(correspondingRevision);
-                    }
-                }}
-                currentRevision={currentRevision}
-            />
-
             <div className="revision-content-wrapper">
                 <RevisionPreview
                     noteContent={noteContent}

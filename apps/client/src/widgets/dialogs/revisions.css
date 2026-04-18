@@ -103,12 +103,17 @@ body.desktop .revisions-dialog {
         opacity: 0.6;
     }
 
+    .modal-content {
+        height: 80vh;
+    }
+
     .revision-content-wrapper {
         flex-grow: 1;
-        margin-inline: 20px;
+        padding-inline: 20px;
         display: flex;
         flex-direction: column;
         min-width: 0;
+        overflow: auto;
     }
 
     .revision-toolbar-separator {

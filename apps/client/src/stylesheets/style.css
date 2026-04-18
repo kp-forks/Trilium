@@ -1158,6 +1158,33 @@ a.external:not(.no-arrow):after, a[href^="http://"]:not(.no-arrow):after, a[href
     margin: 0 12px;
 }
 
+.modal-content-with-sidebar {
+    flex-direction: row !important;
+}
+
+.modal-content-with-sidebar > .modal-sidebar {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--main-border-color);
+    overflow: auto;
+    flex-shrink: 0;
+}
+
+.modal-content-with-sidebar > .modal-main {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.modal-content-with-sidebar > .modal-main > .modal-body {
+    overflow: auto;
+    flex-grow: 1;
+    min-height: 0;
+}
+
 .ck-mentions .ck-button {
     font-size: var(--detail-font-size) !important;
     padding: 5px;
