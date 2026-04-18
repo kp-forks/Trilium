@@ -89,13 +89,21 @@
   },
   "delete_notes": {
     "delete_all_clones_description": "同時刪除所有克隆（可以在最近修改中撤消）",
-    "erase_notes_description": "通常（軟）刪除僅標記筆記為已刪除，可以在一段時間內透過最近修改對話方塊撤消。勾選此選項將立即擦除筆記，無法撤銷。",
+    "erase_notes_description": "立即刪除筆記，而非執行軟刪除。此操作無法撤銷，且會強制重新載入應用程式。",
     "erase_notes_warning": "永久擦除筆記（無法撤銷），包括所有克隆。這將強制應用程式重新載入。",
-    "notes_to_be_deleted": "將刪除以下筆記 ({{notesCount}})",
+    "notes_to_be_deleted": "待刪除筆記 ({{notesCount}})",
     "no_note_to_delete": "沒有筆記將被刪除（僅克隆）。",
-    "broken_relations_to_be_deleted": "將刪除以下關聯並斷開連接 ({{ relationCount}})",
+    "broken_relations_to_be_deleted": "斷開的關聯 ({{ relationCount}})",
     "cancel": "取消",
-    "close": "關閉"
+    "close": "關閉",
+    "title": "刪除筆記",
+    "clones_label": "克隆",
+    "delete_clones_description_one": "同時刪除 {{count}} 個其他克隆。此操作可在最近修改中撤銷。",
+    "erase_notes_label": "永久擦除",
+    "table_note_with_relation": "有關聯的筆記",
+    "table_relation": "關聯",
+    "table_points_to": "指向 (已刪除)",
+    "delete": "刪除"
   },
   "export": {
     "export_note_title": "匯出筆記",
@@ -206,7 +214,8 @@
     "box_size_small": "小型（顯示大約 10 行）",
     "box_size_medium": "中型 (顯示大約30行)",
     "box_size_full": "完整顯示（完整文字框）",
-    "button_include": "內嵌筆記"
+    "button_include": "內嵌筆記",
+    "box_size_expandable": "可展開（預設為摺疊狀態）"
   },
   "info": {
     "modalTitle": "資訊消息",
@@ -1430,7 +1439,7 @@
     "expand-subtree": "展開子階層",
     "collapse-subtree": "收摺子階層",
     "sort-by": "排序方式…",
-    "recent-changes-in-subtree": "子階層中的最近更改",
+    "recent-changes-in-subtree": "子階層中的最近修改",
     "convert-to-attachment": "轉換為附件",
     "copy-note-path-to-clipboard": "複製筆記路徑至剪貼簿",
     "protect-subtree": "保護子階層",
@@ -2334,5 +2343,14 @@
     "history": "對話歷史",
     "recent_chats": "最近的對話",
     "no_chats": "無先前的對話記錄"
+  },
+  "revisions": {
+    "note_revisions": "筆記歷史版本",
+    "delete_all_revisions": "刪除此筆記的所有歷史版本",
+    "delete_all_button": "刪除所有歷史版本",
+    "help_title": "關於筆記歷史版本的說明",
+    "confirm_delete_all": "您要刪除此筆記的所有歷史版本嗎？",
+    "no_revisions": "尚無此筆記的歷史版本...",
+    "restore_button": "還原"
   }
 }
