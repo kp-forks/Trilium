@@ -1666,6 +1666,21 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         display: flex;
     }
 
+    body.mobile .modal-dialog.modal-dialog-full-page-on-mobile {
+        width: 100%;
+        height: 100%;
+        max-height: unset;
+
+        .modal-content {
+            border-radius: 0;
+            border: 0;
+
+            .modal-body {
+                overflow: scroll;
+            }
+        }
+    }
+
     body.mobile .modal-content {
         overflow-y: auto;
         border-radius: var(--bs-modal-border-radius) var(--bs-modal-border-radius) 0 0;

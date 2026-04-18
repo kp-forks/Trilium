@@ -77,9 +77,13 @@ export interface ModalProps {
      * If true, the modal will not focus itself after becoming visible.
      */
     noFocus?: boolean;
+    /**
+     * Indicates if the dialog will be displayed as a full page on mobile devices.
+     */
+    isFullPageOnMobile?: boolean;
 }
 
-export default function Modal({ children, className, size, title, customTitleBarButtons: titleBarButtons, header, footer, footerStyle, footerAlignment, onShown, onSubmit, helpPageId, minWidth, maxWidth, zIndex, scrollable, onHidden, modalRef: externalModalRef, formRef, bodyStyle, show, stackable, keepInDom, noFocus }: ModalProps) {
+export default function Modal({ children, className, size, title, customTitleBarButtons: titleBarButtons, header, footer, footerStyle, footerAlignment, onShown, onSubmit, helpPageId, minWidth, maxWidth, zIndex, scrollable, onHidden, modalRef: externalModalRef, formRef, bodyStyle, show, stackable, keepInDom, noFocus, isFullPageOnMobile }: ModalProps) {
     const modalRef = useSyncedRef<HTMLDivElement>(externalModalRef);
     const modalInstanceRef = useRef<BootstrapModal>();
     const elementToFocus = useRef<Element | null>();
@@ -143,7 +147,7 @@ export default function Modal({ children, className, size, title, customTitleBar
 
     return (
         <div className={`modal fade mx-auto ${className}`} tabIndex={-1} style={dialogStyle} role="dialog" ref={modalRef}>
-            {(show || keepInDom) && <div className={`modal-dialog modal-${size} ${scrollable ? "modal-dialog-scrollable" : ""}`} style={documentStyle} role="document">
+            {(show || keepInDom) && <div className={clsx("modal-dialog", `modal-${size}`, {"modal-dialog-scrollable": scrollable, "modal-dialog-full-page-on-mobile": isFullPageOnMobile})} style={documentStyle} role="document">
                 <div className="modal-content">
                     <div className="modal-header">
                         {!title || typeof title === "string" ? (
