@@ -434,6 +434,13 @@ async function loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string | n
     const title = await getReferenceLinkTitle(href);
     $el.text(title);
 
+    if (viewScope?.bookmark) {
+        $el.append($("<small>").append(
+            $("<span>").addClass("bx bx-bookmark"),
+            document.createTextNode(viewScope.bookmark)
+        ));
+    }
+
     if (note) {
         const icon = await getLinkIcon(noteId, viewScope.viewMode);
 
@@ -459,8 +466,8 @@ async function getReferenceLinkTitle(href: string) {
 
         return attachment ? attachment.title : "[missing attachment]";
     }
-    return note.title;
 
+    return note.title;
 }
 
 function getReferenceLinkTitleSync(href: string) {
@@ -483,8 +490,12 @@ function getReferenceLinkTitleSync(href: string) {
 
         return attachment ? attachment.title : "[missing attachment]";
     }
-    return note.title;
 
+    if (viewScope?.bookmark) {
+        return `${note.title} - ${viewScope.bookmark}`;
+    }
+
+    return note.title;
 }
 
 if (glob.device !== "print") {
