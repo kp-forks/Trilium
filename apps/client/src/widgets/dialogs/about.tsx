@@ -7,6 +7,7 @@ import openService from "../../services/open.js";
 import { useState, useCallback, useRef } from "preact/hooks";
 import type { AppInfo, Contributor, ContributorList } from "@triliumnext/commons";
 import { useTooltip, useTriliumEvent } from "../react/hooks.jsx";
+import { PropertySheet, PropertySheetItem } from "../react/PropertySheet.js";
 import "./about.css";
 import { Trans } from "react-i18next";
 import type React from "react";
@@ -79,10 +80,9 @@ export default function AboutDialog() {
                     triliumnotes.org
                 </a>
 
-                <div className="property-sheet-table">
-                    <dl>
-                        <dt>{t("about.version_label")}</dt>
-                        <dd className="selectable-text">
+                <PropertySheet>
+                    <PropertySheetItem label={t("about.version_label")}>
+                        <div className="selectable-text">
                             {t("about.version", {
                                 appVersion: appInfo?.appVersion,
                                 dbVersion: appInfo?.dbVersion,
@@ -99,27 +99,25 @@ export default function AboutDialog() {
                                     }}
                                 />
                             </div>
-                        </dd>
-                    </dl>
+                        </div>
+                    </PropertySheetItem>
 
-                    <dl>
-                        <dt>{t("about.contributors_label")}</dt>
-                        <dd className="contributor-list use-tn-links">
+                    <PropertySheetItem label={t("about.contributors_label")}>
+                        <div className="contributor-list use-tn-links">
                             <CachedContributors />
 
                             <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
                                 {t("about.contributor_full_list")}
                             </a>
-                        </dd>
-                    </dl>
+                        </div>
+                    </PropertySheetItem>
 
-                    <dl>
-                        <dt>{t("about.data_directory")}</dt>
-                        <dd className="selectable-text" style={{wordBreak: "break-all"}}>
+                    <PropertySheetItem label={t("about.data_directory")}>
+                        <div className="selectable-text" style={{wordBreak: "break-all"}}>
                             {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} />)}
-                        </dd>
-                    </dl>
-                </div>
+                        </div>
+                    </PropertySheetItem>
+                </PropertySheet>
            </div>
 
            <footer>
