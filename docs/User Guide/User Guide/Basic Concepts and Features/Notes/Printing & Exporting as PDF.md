@@ -99,9 +99,9 @@ To do so:
 For example, to change the font of the document from the one defined by the theme or the user to a serif one:
 
 ```
-body {
-	--main-font-family: serif !important;
-    --detail-font-family: var(--main-font-family) !important;
+:root {
+	--print-font-family: serif;
+    --print-font-size: 11pt;
 }
 ```
 

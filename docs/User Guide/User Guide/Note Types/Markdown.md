@@ -25,15 +25,12 @@ Even if Markdown is now specially treated by having a preview mechanism, Trilium
 The following features are supported by Trilium's Markdown format and will show up in the preview pane:
 
 *   All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes)
-*   Code blocks with syntax highlight (e.g. ` ```js `) and automatic syntax highlight
-*   <a class="reference-link" href="Text/Block%20quotes%20%26%20admonitions.md">Block quotes &amp; admonitions</a>
-*   <a class="reference-link" href="Text/Math%20Equations.md">Math Equations</a>
-*   <a class="reference-link" href="Mermaid%20Diagrams.md">Mermaid Diagrams</a> using ` ```mermaid `
+*   Code blocks with syntax highlight (e.g. `<!--CODE_BLOCK_1776493385878_0-->mermaid`
 *   <a class="reference-link" href="Text/Include%20Note.md">Include Note</a> (no builtin Markdown syntax, but HTML syntax works just fine):
     
     ```
     <section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable">
-    	&nbsp;
+        &nbsp;
     </section>n
     ```
 *   <a class="reference-link" href="Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> via its HTML syntax, or through a _Wikilinks_\-like format (only <a class="reference-link" href="../Advanced%20Usage/Note%20ID.md">Note ID</a>):
