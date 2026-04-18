@@ -198,6 +198,12 @@ const REVISION_SOURCE_ICONS: Record<string, string> = {
 };
 const DEFAULT_REVISION_ICON = "bx bx-file";
 
+function formatRevisionFallback(item: RevisionItem): string {
+    const source = t(`revisions.source_${item.source ?? "auto"}`);
+    const date = item.dateCreated ? dayjs(item.dateCreated).format("MMM D, HH:mm") : "";
+    return date ? `${source} · ${date}` : source;
+}
+
 function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: RevisionItem[], onSelect: (val: string) => void, currentRevision?: RevisionItem }) {
     return (
         <FormList onSelect={onSelect} fullHeight wrapperClassName="revision-list">
@@ -209,11 +215,9 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
                     <div>
-                        {item.description && (
-                            <div className="revision-item-description">
-                                {item.description}
-                            </div>
-                        )}
+                        <div className={clsx("revision-item-description", { fallback: !item.description })}>
+                            {item.description || formatRevisionFallback(item)}
+                        </div>
                         <div className="revision-item-date" title={item.dateCreated?.substring(0, 16)}>
                             {item.dateCreated && dayjs(item.dateCreated).fromNow()}
                         </div>

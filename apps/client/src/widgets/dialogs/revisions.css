@@ -90,6 +90,10 @@ body.mobile .revisions-dialog {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+
+        &.fallback {
+            opacity: 0.75;
+        }
     }
 
     .revision-item-date {
