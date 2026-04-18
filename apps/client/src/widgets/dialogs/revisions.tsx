@@ -4,6 +4,7 @@ import { dayjs, type RevisionItem, type RevisionPojo } from "@triliumnext/common
 import clsx from "clsx";
 import { diffWords } from "diff";
 import HtmlDiff from "htmldiff-js";
+import { Fragment } from "preact";
 import type { CSSProperties } from "preact/compat";
 import { Dispatch, StateUpdater, useEffect, useRef, useState } from "preact/hooks";
 
@@ -207,33 +208,61 @@ function getRevisionSourceTitle(source?: string): string {
     return t(`revisions.source_description_${source ?? "unknown"}`);
 }
 
-function formatRevisionFallback(source?: string): string {
-    return t(`revisions.source_${source ?? "unknown"}`);
+function getRelativeDateGroup(dateStr: string): string {
+    const date = dayjs(dateStr);
+    const now = dayjs();
+
+    if (date.isSame(now, "day")) return t("revisions.date_today");
+    if (date.isSame(now.subtract(1, "day"), "day")) return t("revisions.date_yesterday");
+    if (date.isSame(now, "week")) return t("revisions.date_this_week");
+    if (date.isSame(now, "month")) return t("revisions.date_this_month");
+    return date.format("MMMM YYYY");
+}
+
+function buildRevisionTooltip(item: RevisionItem): string {
+    return [
+        getRevisionSourceTitle(item.source),
+        item.dateCreated && dayjs(item.dateCreated).fromNow(),
+        item.contentLength && utils.formatSize(item.contentLength)
+    ].filter(Boolean).join("\n");
 }
 
 function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: RevisionItem[], onSelect: (val: string) => void, currentRevision?: RevisionItem }) {
+    let lastGroup = "";
+
     return (
         <FormList onSelect={onSelect} fullHeight wrapperClassName="revision-list">
-            {revisions.map((item) =>
-                <FormListItem
-                    key={item.revisionId}
-                    value={item.revisionId}
-                    icon={REVISION_SOURCE_ICONS[item.source ?? ""] ?? DEFAULT_REVISION_ICON}
-                    title={[getRevisionSourceTitle(item.source), item.dateCreated?.substring(0, 16)].filter(Boolean).join("\n")}
-                    active={currentRevision && item.revisionId === currentRevision.revisionId}
-                >
-                    <div>
-                        <div className={clsx("revision-item-description", { fallback: !item.description })}>
-                            {item.description || formatRevisionFallback(item.source)}
-                        </div>
-                        <div className="revision-item-meta">
-                            {item.dateCreated && dayjs(item.dateCreated).fromNow()}
-                            {item.dateCreated && item.contentLength && " · "}
-                            {item.contentLength && utils.formatSize(item.contentLength)}
-                        </div>
-                    </div>
-                </FormListItem>
-            )}
+            {revisions.map((item) => {
+                const group = item.dateCreated ? getRelativeDateGroup(item.dateCreated) : "";
+                const showHeader = group !== lastGroup;
+                lastGroup = group;
+
+                return (
+                    <Fragment key={item.revisionId}>
+                        {showHeader && (
+                            <div className="revision-group-header">{group}</div>
+                        )}
+                        <FormListItem
+                            key={item.revisionId}
+                            value={item.revisionId}
+                            icon={REVISION_SOURCE_ICONS[item.source ?? ""] ?? DEFAULT_REVISION_ICON}
+                            title={buildRevisionTooltip(item)}
+                            active={currentRevision && item.revisionId === currentRevision.revisionId}
+                        >
+                            <div>
+                                <div className="revision-item-date">
+                                    {item.dateCreated && dayjs(item.dateCreated).format("MMM D · HH:mm")}
+                                </div>
+                                {item.description && (
+                                    <div className="revision-item-description">
+                                        {item.description}
+                                    </div>
+                                )}
+                            </div>
+                        </FormListItem>
+                    </Fragment>
+                );
+            })}
         </FormList>);
 }
 
