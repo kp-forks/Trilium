@@ -99,11 +99,14 @@ To do so:
 For example, to change the font of the document from the one defined by the theme or the user to a serif one:
 
 ```
-:root {
+body {
 	--print-font-family: serif;
     --print-font-size: 11pt;
 }
 ```
+
+> [!IMPORTANT]
+> When altering `--print-font-family`, make sure the change is done at `body` level and not `:root`, since otherwise it won't be picked up due to specificity rules.
 
 To remark:
 

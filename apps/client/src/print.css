@@ -1,7 +1,6 @@
 @import "boxicons/css/boxicons.min.css";
 
 :root {
-    --print-font-family: sans-serif;
     --print-font-size: 11pt;
 }
 
@@ -11,6 +10,8 @@
 
 html,
 body {
+    --print-font-family: var(--detail-font-family, sans-serif);
+
     width: 100%;
     height: 100%;
     color: black;

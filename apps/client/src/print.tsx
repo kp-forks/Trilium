@@ -31,6 +31,13 @@ async function main() {
     if (!noteId) return;
 
     await import("./print.css");
+
+    // Load the user's font preferences so that --detail-font-family is available.
+    const fontLink = document.createElement("link");
+    fontLink.rel = "stylesheet";
+    fontLink.href = "api/fonts";
+    document.head.appendChild(fontLink);
+
     const note = await froca.getNote(noteId);
 
     const bodyWrapper = document.createElement("div");
