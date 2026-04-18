@@ -2539,5 +2539,9 @@
       "move_note": "Move note",
       "clone_note": "Clone note"
     }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }

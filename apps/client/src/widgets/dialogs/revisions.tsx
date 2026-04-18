@@ -28,7 +28,7 @@ import FormToggle from "../react/FormToggle";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import NoItems from "../react/NoItems";
-import { RawHtmlBlock } from "../react/RawHtml";
+import { RawHtmlBlock, SanitizedHtml } from "../react/RawHtml";
 import PdfViewer from "../type_widgets/file/PdfViewer";
 
 export default function RevisionsDialog() {
@@ -58,6 +58,7 @@ export default function RevisionsDialog() {
         }
     }, [ note, refreshCounter ]);
 
+    const revisionsLoaded = revisions !== undefined;
     const hasRevisions = !!revisions?.length;
 
     if (revisions?.length && !currentRevision) {
@@ -72,7 +73,7 @@ export default function RevisionsDialog() {
         setRevisions(undefined);
     };
 
-    if (!hasRevisions) {
+    if (revisionsLoaded && !hasRevisions) {
         return (
             <Modal
                 className="revisions-dialog"
@@ -489,8 +490,8 @@ function RevisionDescription({ revisionItem, editing, draft, onEdit, onDraftChan
                     // eslint-disable-next-line jsx-a11y/no-autofocus
                     autoFocus
                 />
-                <ActionButton icon="bx bx-check" text={t("revisions.edit_description")} onClick={onSave} />
-                <ActionButton icon="bx bx-x" text={t("revisions.edit_description")} onClick={onCancel} />
+                <ActionButton icon="bx bx-check" text={t("common.save")} onClick={onSave} />
+                <ActionButton icon="bx bx-x" text={t("common.cancel")} onClick={onCancel} />
             </div>
         );
     }
@@ -584,41 +585,31 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
     itemContent: string | Buffer<ArrayBufferLike> | undefined,
     itemType: string
 }) {
-    const contentRef = useRef<HTMLDivElement>(null);
+    if (!noteContent || typeof itemContent !== "string") {
+        return <div className="revision-diff-content">{t("revisions.diff_not_available")}</div>;
+    }
 
-    useEffect(() => {
-        if (!noteContent || typeof itemContent !== "string") {
-            if (contentRef.current) {
-                contentRef.current.textContent = t("revisions.diff_not_available");
+    let diffHtml: string;
+    if (itemType === "text") {
+        // Use proper HTML-aware diff for rich text content
+        diffHtml = HtmlDiff.execute(noteContent, itemContent);
+    } else {
+        // Use word diff for code/mermaid (plain text)
+        const diff = diffWords(noteContent, itemContent);
+        diffHtml = diff.map(part => {
+            if (part.added) {
+                return `<span class="revision-diff-added">${utils.escapeHtml(part.value)}</span>`;
+            } else if (part.removed) {
+                return `<span class="revision-diff-removed">${utils.escapeHtml(part.value)}</span>`;
             }
-            return;
-        }
+            return utils.escapeHtml(part.value);
+        }).join("");
+    }
 
-        if (itemType === "text") {
-            // Use proper HTML-aware diff for rich text content
-            const diffHtml = HtmlDiff.execute(noteContent, itemContent);
-            if (contentRef.current) {
-                contentRef.current.innerHTML = diffHtml;
-            }
-        } else {
-            // Use word diff for code/mermaid (plain text)
-            const diff = diffWords(noteContent, itemContent);
-            const diffHtml = diff.map(part => {
-                if (part.added) {
-                    return `<span class="revision-diff-added">${utils.escapeHtml(part.value)}</span>`;
-                } else if (part.removed) {
-                    return `<span class="revision-diff-removed">${utils.escapeHtml(part.value)}</span>`;
-                }
-                return utils.escapeHtml(part.value);
-            }).join("");
-
-            if (contentRef.current) {
-                contentRef.current.innerHTML = diffHtml;
-            }
-        }
-    }, [noteContent, itemContent, itemType]);
-
-    return <div ref={contentRef} className={clsx("revision-diff-content", itemType === "text" ? "ck-content" : "revision-diff-code")} />;
+    return <SanitizedHtml
+        className={clsx("revision-diff-content", itemType === "text" ? "ck-content" : "revision-diff-code")}
+        html={diffHtml}
+    />;
 }
 
 

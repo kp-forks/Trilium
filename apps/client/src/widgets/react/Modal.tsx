@@ -153,7 +153,7 @@ export default function Modal({ children, className, size, title, customTitleBar
                 <div className={clsx("modal-content", sidebar && "modal-content-with-sidebar")}>
                     {sidebar && <div className="modal-sidebar">
                         {title && <div className="modal-sidebar-header">
-                            <h5>{typeof title === "string" ? title : title}</h5>
+                            <h5>{title}</h5>
                         </div>}
                         {sidebar}
                     </div>}

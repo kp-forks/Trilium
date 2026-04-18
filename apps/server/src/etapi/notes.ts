@@ -192,7 +192,7 @@ function register(router: Router) {
     eu.route<{ noteId: string }>(router, "post", "/etapi/notes/:noteId/revision", (req, res, next) => {
         const note = eu.getAndCheckNote(req.params.noteId);
 
-        const description = req.body?.description || "";
+        const description = typeof req.body?.description === "string" ? req.body.description : "";
         note.saveRevision({ description, source: "etapi" });
 
         return res.sendStatus(204);

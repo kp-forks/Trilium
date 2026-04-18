@@ -101,11 +101,10 @@ export const noteTools = defineTools({
         description: "Replace the entire content of a note. Use this to completely rewrite a note's content. For text notes, provide Markdown content.",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to update"),
-            content: z.string().describe("The new content for the note (Markdown for text notes, plain text for code notes)"),
-            changeDescription: z.string().describe("A concise description of what was changed and why (e.g. 'Fix typos in introduction', 'Add section on error handling'). Keep it short, under 100 characters.")
+            content: z.string().describe("The new content for the note (Markdown for text notes, plain text for code notes)")
         }),
         mutates: true,
-        execute: ({ noteId, content, changeDescription }) => {
+        execute: ({ noteId, content }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -117,7 +116,7 @@ export const noteTools = defineTools({
                 return { error: `Cannot update content for note type: ${note.type}` };
             }
 
-            note.saveRevision({ description: changeDescription, source: "llm" });
+            note.saveRevision({ source: "llm" });
             setNoteContentFromLlm(note, content);
             return {
                 success: true,
@@ -131,11 +130,10 @@ export const noteTools = defineTools({
         description: "Append content to the end of an existing note. For text notes, provide Markdown content.",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to append to"),
-            content: z.string().describe("The content to append (Markdown for text notes, plain text for code notes)"),
-            changeDescription: z.string().describe("A concise description of what was appended (e.g. 'Add meeting notes for May 15', 'Append troubleshooting section'). Keep it short, under 100 characters.")
+            content: z.string().describe("The content to append (Markdown for text notes, plain text for code notes)")
         }),
         mutates: true,
-        execute: ({ noteId, content, changeDescription }) => {
+        execute: ({ noteId, content }) => {
             const note = becca.getNote(noteId);
             if (!note) {
                 return { error: "Note not found" };
@@ -160,7 +158,7 @@ export const noteTools = defineTools({
                 newContent = existingContent + (existingContent.endsWith("\n") ? "" : "\n") + content;
             }
 
-            note.saveRevision({ description: changeDescription, source: "llm" });
+            note.saveRevision({ source: "llm" });
             note.setContent(newContent);
             return {
                 success: true,
