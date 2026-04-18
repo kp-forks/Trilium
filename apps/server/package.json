@@ -31,16 +31,16 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "3.0.69",
-    "@ai-sdk/google": "3.0.62",
+    "@ai-sdk/google": "3.0.63",
     "@ai-sdk/openai": "3.0.52",
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "ai": "6.0.158",
-    "better-sqlite3": "12.8.0",
+    "ai": "6.0.159",
+    "better-sqlite3": "12.9.0",
     "html-to-text": "9.0.5",
     "js-yaml": "4.1.1",
     "node-html-parser": "7.1.0",
     "sucrase": "3.35.1",
-    "unpdf": "1.4.0"
+    "unpdf": "1.6.0"
   },
   "devDependencies": {
     "@braintree/sanitize-url": "7.1.2",
@@ -118,7 +118,7 @@
     "rand-token": "1.0.1",
     "safe-compare": "1.1.4",
     "sanitize-filename": "1.6.4",
-    "sanitize-html": "2.17.2",
+    "sanitize-html": "2.17.3",
     "sax": "1.6.0",
     "serve-favicon": "2.5.1",
     "stream-throttle": "0.1.3",

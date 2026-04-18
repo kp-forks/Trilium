@@ -1681,6 +1681,7 @@
   "note_types": {
     "text": "Text",
     "code": "Code",
+    "markdown": "Markdown",
     "saved-search": "Saved Search",
     "relation-map": "Relation Map",
     "note-map": "Note Map",
@@ -1938,6 +1939,9 @@
     "move-to-available-launchers": "Move to available launchers",
     "duplicate-launcher": "Duplicate launcher <kbd data-command=\"duplicateSubtree\">"
   },
+  "launcher_button_context_menu": {
+    "remove_from_launch_bar": "Remove from launch bar"
+  },
   "highlighting": {
     "title": "Code Blocks",
     "description": "Controls the syntax highlighting for code blocks inside text notes, code notes will not be affected.",
@@ -2081,6 +2085,11 @@
   "toggle_read_only_button": {
     "unlock-editing": "Unlock editing",
     "lock-editing": "Lock editing"
+  },
+  "display_mode": {
+    "source": "Source view",
+    "split": "Split view",
+    "preview": "Preview"
   },
   "png_export_button": {
     "button_title": "Export diagram as PNG"
