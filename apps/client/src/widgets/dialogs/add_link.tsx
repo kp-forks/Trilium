@@ -59,6 +59,8 @@ export default function AddLinkDialog() {
     useEffect(() => {
         if (!suggestion) {
             resetExternalLink();
+            setBookmarks([]);
+            setSelectedBookmark("");
             return;
         }
 
