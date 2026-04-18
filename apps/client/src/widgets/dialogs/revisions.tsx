@@ -27,6 +27,7 @@ import FormList, { FormDropdownDivider, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
+import NoItems from "../react/NoItems";
 import { RawHtmlBlock } from "../react/RawHtml";
 import PdfViewer from "../type_widgets/file/PdfViewer";
 
@@ -57,8 +58,47 @@ export default function RevisionsDialog() {
         }
     }, [ note, refreshCounter ]);
 
+    const hasRevisions = !!revisions?.length;
+
     if (revisions?.length && !currentRevision) {
         setCurrentRevision(revisions[0]);
+    }
+
+    const onHidden = () => {
+        setShown(false);
+        setShowDiff(true);
+        setNote(undefined);
+        setCurrentRevision(undefined);
+        setRevisions(undefined);
+    };
+
+    if (!hasRevisions) {
+        return (
+            <Modal
+                className="revisions-dialog"
+                size="md"
+                title={t("revisions.note_revisions")}
+                helpPageId="vZWERwf8U3nx"
+                header={note && (
+                    <RevisionsMenu
+                        note={note}
+                        onRevisionSaved={() => {
+                            setRefreshCounter(c => c + 1);
+                            setCurrentRevision(undefined);
+                        }}
+                        onAllDeleted={() => {
+                            setRevisions([]);
+                            setCurrentRevision(undefined);
+                        }}
+                        hasRevisions={false}
+                    />
+                )}
+                onHidden={onHidden}
+                show={shown}
+            >
+                <NoItems icon="bx bx-history" text={t("revisions.no_revisions")} />
+            </Modal>
+        );
     }
 
     return (
@@ -78,7 +118,7 @@ export default function RevisionsDialog() {
                         setRevisions([]);
                         setCurrentRevision(undefined);
                     }}
-                    hasRevisions={!!revisions?.length}
+                    hasRevisions={true}
                 />
             )}
             sidebar={
@@ -93,13 +133,7 @@ export default function RevisionsDialog() {
                     currentRevision={currentRevision}
                 />
             }
-            onHidden={() => {
-                setShown(false);
-                setShowDiff(false);
-                setNote(undefined);
-                setCurrentRevision(undefined);
-                setRevisions(undefined);
-            }}
+            onHidden={onHidden}
             show={shown}
         >
             <RevisionToolbar
@@ -407,7 +441,7 @@ function RevisionPreview({noteContent, revisionItem, showDiff }: {
             className={clsx("revision-content use-tn-links selectable-text", `type-${revisionItem?.type}`)}
             style={{ wordBreak: "break-word" }}
         >
-            <h3 className="revision-title">{revisionItem?.title ?? t("revisions.no_revisions")}</h3>
+            <h3 className="revision-title">{revisionItem?.title}</h3>
             <RevisionContent noteContent={noteContent} revisionItem={revisionItem} fullRevision={fullRevision} showDiff={showDiff}/>
         </div>
     );
