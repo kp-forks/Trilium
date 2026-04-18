@@ -79,10 +79,10 @@ export default function AboutDialog() {
                     triliumnotes.org
                 </a>
 
-                <table className="property-sheet-table">
-                    <tr>
-                        <td>{t("about.version_label")}</td>
-                        <td  className="selectable-text">
+                <div className="property-sheet-table">
+                    <dl>
+                        <dt>{t("about.version_label")}</dt>
+                        <dd className="selectable-text">
                             {t("about.version", {
                                 appVersion: appInfo?.appVersion,
                                 dbVersion: appInfo?.dbVersion,
@@ -99,27 +99,27 @@ export default function AboutDialog() {
                                     }}
                                 />
                             </div>
-                        </td>
-                    </tr>
-                   
-                    <tr>
-                        <td>{t("about.contributors_label")}</td>
-                        <td className="contributor-list use-tn-links">
+                        </dd>
+                    </dl>
+
+                    <dl>
+                        <dt>{t("about.contributors_label")}</dt>
+                        <dd className="contributor-list use-tn-links">
                             <CachedContributors />
 
                             <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
                                 {t("about.contributor_full_list")}
                             </a>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>{t("about.data_directory")}</td>
-                        <td className="selectable-text" style={{wordBreak: "break-all"}}>
+                        </dd>
+                    </dl>
+
+                    <dl>
+                        <dt>{t("about.data_directory")}</dt>
+                        <dd className="selectable-text" style={{wordBreak: "break-all"}}>
                             {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} />)}
-                        </td>
-                    </tr>
-                </table>
+                        </dd>
+                    </dl>
+                </div>
            </div>
 
            <footer>

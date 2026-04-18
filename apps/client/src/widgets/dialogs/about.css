@@ -173,10 +173,12 @@
 
 /* TODO: move to global styles */
 .property-sheet-table {
+    display: table;
     border-spacing: 0 2px;
     border-collapse: separate;
 
-    tr {
+    dl {
+        display: table-row;
         --_br: 8px;
         
         background: var(--card-background-color);
@@ -190,17 +192,18 @@
         }
     }
 
-    td {
+    dt, dd {
+        display: table-cell;
         padding: 10px 16px;
         vertical-align: top;
+    }
 
-        &:first-child {
-            white-space: nowrap;
-            color: var(--muted-text-color);
-        }
+    dt {
+        white-space: nowrap;
+        color: var(--muted-text-color);
+    }
 
-        &:last-child {
-            width: 100%;
-        }
+    dl {
+        width: 100%;
     }
 }
