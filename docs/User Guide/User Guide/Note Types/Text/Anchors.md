@@ -20,17 +20,27 @@ This feature was introduced in TriliumNext v0.94.0 and augmented in v0.130.0 to 
 
 Trilium v0.103.0 introduces cross-note Anchors, which makes it possible to create <a class="reference-link" href="Links/Internal%20(reference)%20links.md">Internal (reference) links</a> which point to a specific anchor in that document.
 
-To do so:
+### Compatibility with documents from previous versions
 
-1.  First, create a anchor in the target note using the same process as described above.
+For notes created prior to Trilium v0.103.0, you might notice that the Anchors might not be identified. This limitation is intentional in order not to have to re-process all the notes, looking for anchors.
+
+To fix this, simply go that note and make any change (e.g. inserting a space), this will trigger the recalculation of the links.
+
+### Linking to anchors through the _Add link_ dialog
+
+1.  Create an anchor in the target note using the same process as described above.
 2.  In another note, press <kbd>Ctrl</kbd>+<kbd>L</kbd> to insert an internal link. Select the target note containing Anchors.
 3.  If the target note contains Anchors, a section will appear underneath the note selector with the list of Anchors.
 4.  Add the link normally.
 
 Clicking on a reference link pointing to a anchor will automatically scroll to the desired section.
 
+### Linking to anchors through the bookmark toolbar
+
+1.  Create an anchor in the target note using the same process as described above.
+2.  Click on the anchor to reveal the anchor's floating toolbar.
+3.  Click on the _Copy anchor reference link_ button.
+4.  Go to the note where to insert the link and press <kbd>Ctrl</kbd>+<kbd>V</kbd>.
+
 > [!NOTE]
-> For notes created prior to Trilium v0.103.0, you might notice that the Anchors might not be identified:
-> 
-> *   To fix this, simply go that note and make any change (e.g. inserting a space), this will trigger the recalculation of the links.
-> *   This limitation is intentional in order not to have to re-process all the notes, looking for anchors.
+> Use this method only to insert <a class="reference-link" href="Links/Internal%20(reference)%20links.md">Internal (reference) links</a> between two documents. To link to an anchor on the same note, use the _Insert link_ dialog (<kbd>Ctrl</kbd>+<kbd>K</kbd>) and select the _Anchors_ item instead.
