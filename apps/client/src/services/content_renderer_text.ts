@@ -48,7 +48,7 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
 
     for (const el of referenceLinks) {
         const innerSpan = document.createElement("span");
-        await link.loadReferenceLinkTitle($(innerSpan), el.href);
+        await link.loadReferenceLinkTitle($(innerSpan), el.getAttribute("href"));
         el.replaceChildren(innerSpan);
     }
 
