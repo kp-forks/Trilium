@@ -35,7 +35,9 @@ export function FluidWrapper({className, breakpoints, children}: FluidWrapperPar
         return () => observer.disconnect();
     }, [sortedBreakpoints]);
 
-    return <div ref={ref} className={clsx("fluid-container", className, activeBreakpoint)}>
-        {children}
+    return <div ref={ref} className="fluid-container">
+        <div className={clsx(className, activeBreakpoint)}>
+            {children}
+        </div>
     </div>
 }
