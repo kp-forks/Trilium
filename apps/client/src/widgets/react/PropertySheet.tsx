@@ -9,12 +9,12 @@ interface PropertySheetParams {
     wideLayoutBreakpoint?: number;
 }
 
-export function PropertySheet({ className, children, wideLayoutBreakpoint }: PropertySheetParams) {
+export function PropertySheet({className, children, wideLayoutBreakpoint}: PropertySheetParams) {
     return <FluidWrapper
-                className="property-sheet-container"
+                className={clsx("property-sheet-container", className)}
                 breakpoints={{narrow: 0, wide: wideLayoutBreakpoint || 600}}>
 
-        <div className={clsx("property-sheet", className)}>
+        <div className="property-sheet">
             {children} 
         </div>
     </FluidWrapper>
