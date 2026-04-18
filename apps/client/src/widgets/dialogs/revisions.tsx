@@ -107,17 +107,21 @@ export default function RevisionsDialog() {
             }}
             show={shown}
         >
+            <RevisionToolbar
+                revisionItem={currentRevision}
+                showDiff={showDiff}
+                setShowDiff={setShowDiff}
+                setShown={setShown}
+                onRevisionDeleted={() => {
+                    setRefreshCounter(c => c + 1);
+                    setCurrentRevision(undefined);
+                }}
+            />
             <div className="revision-content-wrapper">
                 <RevisionPreview
                     noteContent={noteContent}
                     revisionItem={currentRevision}
                     showDiff={showDiff}
-                    setShowDiff={setShowDiff}
-                    setShown={setShown}
-                    onRevisionDeleted={() => {
-                        setRefreshCounter(c => c + 1);
-                        setCurrentRevision(undefined);
-                    }}
                     onDescriptionUpdated={(revisionId, description) => {
                         setRevisions(prev => prev?.map(r =>
                             r.revisionId === revisionId ? { ...r, description } : r
@@ -297,13 +301,72 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
         </FormList>);
 }
 
-function RevisionPreview({noteContent, revisionItem, showDiff, setShowDiff, setShown, onRevisionDeleted, onDescriptionUpdated }: {
-    noteContent?: string,
+function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevisionDeleted }: {
     revisionItem?: RevisionItem,
     showDiff: boolean,
     setShowDiff: Dispatch<StateUpdater<boolean>>,
     setShown: Dispatch<StateUpdater<boolean>>,
     onRevisionDeleted?: () => void,
+}) {
+    const canShowDiff = ["text", "code", "mermaid"].includes(revisionItem?.type ?? "");
+    const canInteract = revisionItem && (!revisionItem.isProtected || protected_session_holder.isProtectedSessionAvailable());
+
+    return (
+        <div className="revision-toolbar">
+            {revisionItem && (
+                <div className="revision-toolbar-actions">
+                    {canShowDiff && (
+                        <FormToggle
+                            currentValue={showDiff}
+                            onChange={(newValue) => setShowDiff(newValue)}
+                            switchOnName={t("revisions.highlight_changes")}
+                            switchOffName={t("revisions.highlight_changes")}
+                        />
+                    )}
+                    <div style="flex-grow: 1" />
+                    {canInteract && (
+                        <>
+                            <ActionButton
+                                icon="bx bx-trash"
+                                text={t("revisions.delete_button")}
+                                onClick={async () => {
+                                    if (await dialog.confirm(t("revisions.confirm_delete"))) {
+                                        await server.remove(`revisions/${revisionItem.revisionId}`);
+                                        toast.showMessage(t("revisions.revision_deleted"));
+                                        onRevisionDeleted?.();
+                                    }
+                                }} frame />
+                            <ActionButton
+                                icon="bx bx-download"
+                                text={t("revisions.download_button")}
+                                onClick={() => {
+                                    if (revisionItem.revisionId) {
+                                        open.downloadRevision(revisionItem.noteId, revisionItem.revisionId);
+                                    }
+                                }}
+                                frame />
+                            <Button
+                                icon="bx bx-history"
+                                text={t("revisions.restore_button")}
+                                onClick={async () => {
+                                    if (await dialog.confirm(t("revisions.confirm_restore"))) {
+                                        await server.post(`revisions/${revisionItem.revisionId}/restore`);
+                                        setShown(false);
+                                        toast.showMessage(t("revisions.revision_restored"));
+                                    }
+                                }}/>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function RevisionPreview({noteContent, revisionItem, showDiff, onDescriptionUpdated }: {
+    noteContent?: string,
+    revisionItem?: RevisionItem,
+    showDiff: boolean,
     onDescriptionUpdated?: (revisionId: string, description: string) => void
 }) {
     const [ fullRevision, setFullRevision ] = useState<RevisionPojo>();
@@ -319,60 +382,12 @@ function RevisionPreview({noteContent, revisionItem, showDiff, setShowDiff, setS
         setEditingDescription(false);
     }, [revisionItem]);
 
-    const canShowDiff = ["text", "code", "mermaid"].includes(revisionItem?.type ?? "");
-    const canInteract = revisionItem && (!revisionItem.isProtected || protected_session_holder.isProtectedSessionAvailable());
-
     return (
-        <>
-            <div className="revision-toolbar">
-                <h3 className="revision-title" title={revisionItem?.title}>{revisionItem?.title ?? t("revisions.no_revisions")}</h3>
-                {revisionItem && (
-                    <div className="revision-title-buttons">
-                        {canShowDiff && (
-                            <FormToggle
-                                currentValue={showDiff}
-                                onChange={(newValue) => setShowDiff(newValue)}
-                                switchOnName={t("revisions.highlight_changes")}
-                                switchOffName={t("revisions.highlight_changes")}
-                            />
-                        )}
-                        {canInteract && canShowDiff && <div className="revision-toolbar-separator" />}
-                        {canInteract && (
-                            <>
-                                <ActionButton
-                                    icon="bx bx-trash"
-                                    text={t("revisions.delete_button")}
-                                    onClick={async () => {
-                                        if (await dialog.confirm(t("revisions.confirm_delete"))) {
-                                            await server.remove(`revisions/${revisionItem.revisionId}`);
-                                            toast.showMessage(t("revisions.revision_deleted"));
-                                            onRevisionDeleted?.();
-                                        }
-                                    }} frame />
-                                <ActionButton
-                                    icon="bx bx-download"
-                                    text={t("revisions.download_button")}
-                                    onClick={() => {
-                                        if (revisionItem.revisionId) {
-                                            open.downloadRevision(revisionItem.noteId, revisionItem.revisionId);
-                                        }
-                                    }}
-                                    frame />
-                                <Button
-                                    icon="bx bx-history"
-                                    text={t("revisions.restore_button")}
-                                    onClick={async () => {
-                                        if (await dialog.confirm(t("revisions.confirm_restore"))) {
-                                            await server.post(`revisions/${revisionItem.revisionId}/restore`);
-                                            setShown(false);
-                                            toast.showMessage(t("revisions.revision_restored"));
-                                        }
-                                    }}/>
-                            </>
-                        )}
-                    </div>
-                )}
-            </div>
+        <div
+            className={clsx("revision-content use-tn-links selectable-text", `type-${revisionItem?.type}`)}
+            style={{ wordBreak: "break-word" }}
+        >
+            <h3 className="revision-title">{revisionItem?.title ?? t("revisions.no_revisions")}</h3>
             {revisionItem && (
                 <RevisionDescription
                     revisionItem={revisionItem}
@@ -392,13 +407,8 @@ function RevisionPreview({noteContent, revisionItem, showDiff, setShowDiff, setS
                     onCancel={() => setEditingDescription(false)}
                 />
             )}
-            <div
-                className={clsx("revision-content use-tn-links selectable-text", `type-${revisionItem?.type}`)}
-                style={{ overflow: "auto", wordBreak: "break-word" }}
-            >
-                <RevisionContent noteContent={noteContent} revisionItem={revisionItem} fullRevision={fullRevision} showDiff={showDiff}/>
-            </div>
-        </>
+            <RevisionContent noteContent={noteContent} revisionItem={revisionItem} fullRevision={fullRevision} showDiff={showDiff}/>
+        </div>
     );
 }
 
