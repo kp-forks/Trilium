@@ -1170,6 +1170,31 @@ a.external:not(.no-arrow):after, a[href^="http://"]:not(.no-arrow):after, a[href
     min-height: 0;
 }
 
+.modal-content-with-sidebar .modal-sidebar-header {
+    padding: 0.75rem 1rem;
+    flex-shrink: 0;
+    text-align: center;
+    border-bottom: 1px solid var(--main-border-color);
+}
+
+.modal-content-with-sidebar .modal-sidebar-header h5 {
+    margin: 0;
+    font-size: 1em;
+}
+
+.modal-content-with-sidebar > .modal-main > .modal-header > .modal-title {
+    visibility: hidden;
+    flex-grow: 1;
+    width: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.modal-content-with-sidebar > .modal-main > .modal-header {
+    flex-wrap: nowrap;
+}
+
 .modal-content-with-sidebar > .modal-main {
     display: flex;
     flex-direction: column;
@@ -1183,6 +1208,32 @@ a.external:not(.no-arrow):after, a[href^="http://"]:not(.no-arrow):after, a[href
     overflow: auto;
     flex-grow: 1;
     min-height: 0;
+}
+
+body.mobile .modal-content-with-sidebar {
+    flex-direction: column !important;
+}
+
+body.mobile .modal-content-with-sidebar > .modal-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--main-border-color);
+    height: 30vh;
+    flex-shrink: 0;
+    overflow: hidden;
+    order: 1;
+}
+
+body.mobile .modal-content-with-sidebar > .modal-main {
+    order: 0;
+}
+
+body.mobile .modal-content-with-sidebar .modal-sidebar-header {
+    display: none;
+}
+
+body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-title {
+    visibility: visible;
+    width: auto;
 }
 
 .ck-mentions .ck-button {

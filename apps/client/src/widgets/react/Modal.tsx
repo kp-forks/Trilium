@@ -151,7 +151,12 @@ export default function Modal({ children, className, size, title, customTitleBar
         <div className={`modal fade mx-auto ${className}`} tabIndex={-1} style={dialogStyle} role="dialog" ref={modalRef}>
             {(show || keepInDom) && <div className={`modal-dialog modal-${size} ${scrollable ? "modal-dialog-scrollable" : ""}`} style={documentStyle} role="document">
                 <div className={clsx("modal-content", sidebar && "modal-content-with-sidebar")}>
-                    {sidebar && <div className="modal-sidebar">{sidebar}</div>}
+                    {sidebar && <div className="modal-sidebar">
+                        {title && <div className="modal-sidebar-header">
+                            <h5>{typeof title === "string" ? title : title}</h5>
+                        </div>}
+                        {sidebar}
+                    </div>}
                     <div className="modal-main">
                         <div className="modal-header">
                             {!title || typeof title === "string" ? (
