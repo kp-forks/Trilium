@@ -41,6 +41,8 @@
     "link_title_mirrors": "link title mirrors the note's current title",
     "link_title_arbitrary": "link title can be changed arbitrarily",
     "link_title": "Link title",
+    "bookmark": "Bookmark (optional)",
+    "bookmark_none": "None (link to note)",
     "button_add_link": "Add link"
   },
   "branch_prefix": {
@@ -861,7 +863,7 @@
     "none": "none"
   },
   "auto_link_attribute_list": {
-    "title": "System Links"
+    "title": "System Attributes"
   },
   "note_info_widget": {
     "note_id": "Note ID",

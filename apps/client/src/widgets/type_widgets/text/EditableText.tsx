@@ -263,6 +263,14 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
                     // We are not using CKEditor's built-in watch dog content, instead we are using the data we store regularly in the spaced update (see `dataSaved`).
                     editor.setData(contentRef.current);
                     parentComponent?.triggerEvent("textEditorRefreshed", { ntxId, editor });
+
+                    // Scroll to bookmark anchor if navigated with ?bookmark=...
+                    const viewScope = noteContext?.viewScope;
+                    if (viewScope?.bookmark) {
+                        const el = editor.editing.view.getDomRoot()?.querySelector(`[id="${CSS.escape(viewScope.bookmark)}"]`);
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        viewScope.bookmark = undefined;
+                    }
                 }}
             />}
 

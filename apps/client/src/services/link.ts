@@ -60,6 +60,8 @@ export interface ViewScope {
      */
     tocPreviousVisible?: boolean;
     tocCollapsedHeadings?:  Set<string>;
+    /** When set, scrolls to a bookmark anchor within the note after navigation. */
+    bookmark?: string;
 }
 
 interface CreateLinkOptions {
@@ -244,7 +246,7 @@ export function parseNavigationStateFromUrl(url: string | undefined) {
                 hoistedNoteId = value;
             } else if (name === "searchString") {
                 searchString = value; // supports triggering search from URL, e.g. #?searchString=blabla
-            } else if (["viewMode", "attachmentId"].includes(name)) {
+            } else if (["viewMode", "attachmentId", "bookmark"].includes(name)) {
                 (viewScope as any)[name] = value;
             } else if (name === "popup") {
                 openInPopup = true;
