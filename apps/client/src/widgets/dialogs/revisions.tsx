@@ -214,14 +214,14 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                     key={item.revisionId}
                     value={item.revisionId}
                     icon={REVISION_SOURCE_ICONS[item.source ?? ""] ?? DEFAULT_REVISION_ICON}
-                    title={getRevisionSourceTitle(item.source)}
+                    title={[getRevisionSourceTitle(item.source), item.dateCreated?.substring(0, 16)].filter(Boolean).join("\n")}
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
                     <div>
                         <div className={clsx("revision-item-description", { fallback: !item.description })}>
                             {item.description || formatRevisionFallback(item.source)}
                         </div>
-                        <div className="revision-item-meta" title={item.dateCreated?.substring(0, 16)}>
+                        <div className="revision-item-meta">
                             {item.dateCreated && dayjs(item.dateCreated).fromNow()}
                             {item.dateCreated && item.contentLength && " · "}
                             {item.contentLength && utils.formatSize(item.contentLength)}

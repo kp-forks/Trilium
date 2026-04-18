@@ -835,6 +835,7 @@ table.promoted-attributes-in-tooltip th {
     text-align: start;
     color: var(--main-text-color) !important;
     max-width: 500px;
+    white-space: pre-line;
     box-shadow: 10px 10px 93px -25px #aaaaaa;
 }
 
