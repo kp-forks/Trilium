@@ -198,22 +198,24 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
                     <div>
-                        <div className="revision-item-header">
-                            <span>{item.dateCreated && item.dateCreated.substr(0, 16)}</span>
+                        {item.description && (
+                            <div className="revision-item-description">
+                                {item.description}
+                            </div>
+                        )}
+                        <div className="revision-item-date">
+                            {item.dateCreated && item.dateCreated.substr(0, 16)}
+                        </div>
+                        <div className="revision-item-meta">
+                            <span className="revision-item-size">
+                                {item.contentLength && utils.formatSize(item.contentLength)}
+                            </span>
                             {item.source && item.source !== "auto" && (
                                 <span className="revision-source-badge">
                                     {t(`revisions.source_${item.source}`)}
                                 </span>
                             )}
                         </div>
-                        <div className="revision-item-size">
-                            {item.contentLength && utils.formatSize(item.contentLength)}
-                        </div>
-                        {item.description && (
-                            <div className="revision-item-description">
-                                {item.description}
-                            </div>
-                        )}
                     </div>
                 </FormListItem>
             )}
