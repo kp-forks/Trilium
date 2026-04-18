@@ -30,7 +30,7 @@ case "$ARCH" in
 esac
 
 # Find the packaged app directory
-PACKAGED_DIR="$DESKTOP_DIR/out/$PRODUCT_NAME-linux-$ARCH"
+PACKAGED_DIR="$DESKTOP_DIR/dist/out/$PRODUCT_NAME-linux-$ARCH"
 if [ ! -d "$PACKAGED_DIR" ]; then
     echo "Error: Packaged app not found at $PACKAGED_DIR"
     echo "Run 'electron-forge make' or 'electron-forge package' first."
@@ -40,7 +40,7 @@ fi
 echo "Building AppImage from: $PACKAGED_DIR"
 
 # Create AppDir structure
-APPDIR="$DESKTOP_DIR/out/$PRODUCT_NAME.AppDir"
+APPDIR="$DESKTOP_DIR/dist/out/$PRODUCT_NAME.AppDir"
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR"
 
