@@ -127,7 +127,7 @@ export default function AboutDialog() {
                 
                 <FooterLink
                     text="AGPL 3.0"
-                    url="https://www.gnu.org/licenses/agpl-3.0.en.html#license-text"
+                    url="https://docs.triliumnotes.org/user-guide/misc/license"
                     tooltip={t("about.license_tooltip")}>
 
                     {/* https://pictogrammers.com/library/mdi/icon/scale-balance/ */}
