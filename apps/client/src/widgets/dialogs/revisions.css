@@ -96,15 +96,7 @@ body.mobile .revisions-dialog {
         }
     }
 
-    .revision-item-date {
-        font-size: 0.85em;
-        opacity: 0.7;
-    }
-
     .revision-item-meta {
-        display: flex;
-        align-items: center;
-        gap: 4px;
         font-size: 0.85em;
         opacity: 0.7;
     }

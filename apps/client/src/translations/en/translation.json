@@ -311,11 +311,18 @@
     "revision_saved": "Note revision has been saved.",
     "edit_description": "Edit description",
     "description_updated": "Revision description has been updated.",
-    "source_auto": "Auto",
-    "source_manual": "Manual",
+    "source_auto": "Auto-save",
+    "source_manual": "Manual save",
     "source_etapi": "ETAPI",
     "source_llm": "LLM",
-    "source_restore": "Restore"
+    "source_restore": "Restore",
+    "source_unknown": "Snapshot",
+    "source_description_auto": "Automatically saved by the system at regular intervals",
+    "source_description_manual": "Manually saved by the user",
+    "source_description_etapi": "Created via the External Trilium API",
+    "source_description_llm": "Created by the AI assistant",
+    "source_description_restore": "Saved before restoring a previous revision",
+    "source_description_unknown": "Source not available"
   },
   "sort_child_notes": {
     "sort_children_by": "Sort children by...",

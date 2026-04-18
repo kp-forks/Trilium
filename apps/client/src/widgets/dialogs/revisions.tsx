@@ -198,10 +198,12 @@ const REVISION_SOURCE_ICONS: Record<string, string> = {
 };
 const DEFAULT_REVISION_ICON = "bx bx-file";
 
-function formatRevisionFallback(item: RevisionItem): string {
-    const source = t(`revisions.source_${item.source ?? "auto"}`);
-    const date = item.dateCreated ? dayjs(item.dateCreated).format("MMM D, HH:mm") : "";
-    return date ? `${source} · ${date}` : source;
+function getRevisionSourceTitle(source?: string): string {
+    return t(`revisions.source_description_${source ?? "unknown"}`);
+}
+
+function formatRevisionFallback(source?: string): string {
+    return t(`revisions.source_${source ?? "unknown"}`);
 }
 
 function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: RevisionItem[], onSelect: (val: string) => void, currentRevision?: RevisionItem }) {
@@ -212,19 +214,17 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                     key={item.revisionId}
                     value={item.revisionId}
                     icon={REVISION_SOURCE_ICONS[item.source ?? ""] ?? DEFAULT_REVISION_ICON}
+                    title={getRevisionSourceTitle(item.source)}
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
                     <div>
                         <div className={clsx("revision-item-description", { fallback: !item.description })}>
-                            {item.description || formatRevisionFallback(item)}
+                            {item.description || formatRevisionFallback(item.source)}
                         </div>
-                        <div className="revision-item-date" title={item.dateCreated?.substring(0, 16)}>
+                        <div className="revision-item-meta" title={item.dateCreated?.substring(0, 16)}>
                             {item.dateCreated && dayjs(item.dateCreated).fromNow()}
-                        </div>
-                        <div className="revision-item-meta">
-                            <span className="revision-item-size">
-                                {item.contentLength && utils.formatSize(item.contentLength)}
-                            </span>
+                            {item.dateCreated && item.contentLength && " · "}
+                            {item.contentLength && utils.formatSize(item.contentLength)}
                         </div>
                     </div>
                 </FormListItem>
