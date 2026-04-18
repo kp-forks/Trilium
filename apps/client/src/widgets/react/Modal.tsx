@@ -157,7 +157,7 @@ export default function Modal({ children, className, size, title, customTitleBar
                         </div>}
                         {sidebar}
                     </div>}
-                    <div className="modal-main">
+                    <ModalMain sidebar={!!sidebar}>
                         <div className="modal-header">
                             {!title || typeof title === "string" ? (
                                 <h5 className="modal-title">{title ?? <>&nbsp;</>}</h5>
@@ -192,11 +192,18 @@ export default function Modal({ children, className, size, title, customTitleBar
                                 {children}
                             </ModalInner>
                         )}
-                    </div>
+                    </ModalMain>
                 </div>
             </div>}
         </div>
     );
+}
+
+function ModalMain({ sidebar, children }: { sidebar: boolean; children: ComponentChildren }) {
+    if (sidebar) {
+        return <div className="modal-main">{children}</div>;
+    }
+    return <>{children}</>;
 }
 
 function ModalInner({ children, footer, footerAlignment, bodyStyle, footerStyle: _footerStyle }: Pick<ModalProps, "children" | "footer" | "footerAlignment" | "bodyStyle" | "footerStyle">) {
