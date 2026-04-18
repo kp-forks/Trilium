@@ -1,4 +1,7 @@
 # Bookmarks
+> [!NOTE]
+> Not to be confused with the <a class="reference-link" href="../../Note%20Types/Text/Bookmarks.md">Bookmarks</a> concept for <a class="reference-link" href="../../Note%20Types/Text.md">Text</a> notes which acts like anchors, allowing navigation to a particular section.
+
 Frequently used notes can be bookmarked, which will make them appear in the <a class="reference-link" href="../UI%20Elements/Launch%20Bar.md">Launch Bar</a> for easy access.
 
 ## Configuring the launch bar
