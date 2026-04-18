@@ -5413,20 +5413,6 @@
                                             "value": "bx bx-bookmarks",
                                             "isInheritable": false,
                                             "position": 30
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "oSuaNgyyKnhu",
-                                            "isInheritable": false,
-                                            "position": 40
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "iPIMuisry3hd",
-                                            "isInheritable": false,
-                                            "position": 50
                                         }
                                     ],
                                     "format": "markdown",
@@ -7204,6 +7190,93 @@
                             "children": [
                                 {
                                     "isClone": false,
+                                    "noteId": "oSuaNgyyKnhu",
+                                    "notePath": [
+                                        "pOsGYCXsbNQG",
+                                        "KSZ04uQ2D1St",
+                                        "iPIMuisry3hd",
+                                        "oSuaNgyyKnhu"
+                                    ],
+                                    "title": "Anchors",
+                                    "notePosition": 10,
+                                    "prefix": null,
+                                    "isExpanded": false,
+                                    "type": "text",
+                                    "mime": "text/html",
+                                    "attributes": [
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "QEAPj01N5f7w",
+                                            "isInheritable": false,
+                                            "position": 10
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "nRhnJkTT8cPs",
+                                            "isInheritable": false,
+                                            "position": 20
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "iconClass",
+                                            "value": "bx bx-bookmark",
+                                            "isInheritable": false,
+                                            "position": 10
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "shareAlias",
+                                            "value": "bookmarks",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "ZlN4nump6EbW",
+                                            "isInheritable": false,
+                                            "position": 60
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "hrZ1D00cLbal",
+                                            "isInheritable": false,
+                                            "position": 70
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "u3YFHC9tQlpm",
+                                            "isInheritable": false,
+                                            "position": 80
+                                        }
+                                    ],
+                                    "format": "markdown",
+                                    "dataFileName": "Anchors.md",
+                                    "attachments": [
+                                        {
+                                            "attachmentId": "2cn9iY3Qgyjs",
+                                            "title": "plus.png",
+                                            "role": "image",
+                                            "mime": "image/png",
+                                            "position": 10,
+                                            "dataFileName": "Anchors_plus.png"
+                                        },
+                                        {
+                                            "attachmentId": "JaiAT3dHDIyy",
+                                            "title": "plus.png",
+                                            "role": "image",
+                                            "mime": "image/png",
+                                            "position": 10,
+                                            "dataFileName": "1_Anchors_plus.png"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "isClone": false,
                                     "noteId": "NwBbFdNZ9h7O",
                                     "notePath": [
                                         "pOsGYCXsbNQG",
@@ -7212,7 +7285,7 @@
                                         "NwBbFdNZ9h7O"
                                     ],
                                     "title": "Block quotes & admonitions",
-                                    "notePosition": 10,
+                                    "notePosition": 20,
                                     "prefix": null,
                                     "isExpanded": false,
                                     "type": "text",
@@ -7273,100 +7346,6 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "2_Block quotes & admonitions.png"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "isClone": false,
-                                    "noteId": "oSuaNgyyKnhu",
-                                    "notePath": [
-                                        "pOsGYCXsbNQG",
-                                        "KSZ04uQ2D1St",
-                                        "iPIMuisry3hd",
-                                        "oSuaNgyyKnhu"
-                                    ],
-                                    "title": "Bookmarks",
-                                    "notePosition": 20,
-                                    "prefix": null,
-                                    "isExpanded": false,
-                                    "type": "text",
-                                    "mime": "text/html",
-                                    "attributes": [
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "QEAPj01N5f7w",
-                                            "isInheritable": false,
-                                            "position": 10
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "nRhnJkTT8cPs",
-                                            "isInheritable": false,
-                                            "position": 20
-                                        },
-                                        {
-                                            "type": "label",
-                                            "name": "iconClass",
-                                            "value": "bx bx-bookmark",
-                                            "isInheritable": false,
-                                            "position": 10
-                                        },
-                                        {
-                                            "type": "label",
-                                            "name": "shareAlias",
-                                            "value": "bookmarks",
-                                            "isInheritable": false,
-                                            "position": 30
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "u3YFHC9tQlpm",
-                                            "isInheritable": false,
-                                            "position": 40
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "xYmIYSP6wE3F",
-                                            "isInheritable": false,
-                                            "position": 50
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "ZlN4nump6EbW",
-                                            "isInheritable": false,
-                                            "position": 60
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "hrZ1D00cLbal",
-                                            "isInheritable": false,
-                                            "position": 70
-                                        }
-                                    ],
-                                    "format": "markdown",
-                                    "dataFileName": "Bookmarks.md",
-                                    "attachments": [
-                                        {
-                                            "attachmentId": "2cn9iY3Qgyjs",
-                                            "title": "plus.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "Bookmarks_plus.png"
-                                        },
-                                        {
-                                            "attachmentId": "JaiAT3dHDIyy",
-                                            "title": "plus.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "1_Bookmarks_plus.png"
                                         }
                                     ]
                                 },

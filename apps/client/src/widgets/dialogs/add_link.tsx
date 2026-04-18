@@ -163,13 +163,13 @@ export default function AddLinkDialog() {
             </FormGroup>
 
             {bookmarks.length > 0 && (
-                <FormGroup label={t("add_link.bookmark")} name="bookmark">
+                <FormGroup label={t("add_link.anchor")} name="anchor">
                     <select
                         className="form-select"
                         value={selectedBookmark}
                         onChange={(e) => setSelectedBookmark((e.target as HTMLSelectElement).value)}
                     >
-                        <option value="">{t("add_link.bookmark_none")}</option>
+                        <option value="">{t("add_link.anchor_none")}</option>
                         {bookmarks.map((bk) => (
                             <option key={bk} value={bk}>{bk}</option>
                         ))}

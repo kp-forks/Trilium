@@ -78,10 +78,10 @@ export default function buildExtraCommands(): SlashCommandDefinition[] {
             commandName: MARKDOWN_IMPORT_COMMAND
         },
         {
-            id: "bookmark",
-            title: "Bookmark",
-            description: "Insert a bookmark anchor for internal linking",
-            aliases: [ "anchor" ],
+            id: "anchor",
+            title: "Anchor",
+            description: "Insert an anchor for internal linking",
+            aliases: [ "bookmark" ],
             icon: bxBookmark,
             execute: (editor: Editor) => {
                 // Defer to the next event loop tick so the slash command fully finishes
