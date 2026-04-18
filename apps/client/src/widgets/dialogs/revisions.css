@@ -69,6 +69,10 @@ body.mobile .revisions-dialog {
 
     .revision-list {
         flex-shrink: 0;
+
+        .dropdown-item + .dropdown-item {
+            border-top: 1px solid var(--main-border-color) !important;
+        }
     }
 
     .save-revision-controls {

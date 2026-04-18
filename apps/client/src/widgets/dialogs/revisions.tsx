@@ -189,6 +189,15 @@ function SaveRevisionButton({ noteId, onSaved }: { noteId: string, onSaved: () =
     );
 }
 
+const REVISION_SOURCE_ICONS: Record<string, string> = {
+    auto: "bx bx-time-five",
+    manual: "bx bx-save",
+    etapi: "bx bx-code-alt",
+    llm: "bx bx-bot",
+    restore: "bx bx-history"
+};
+const DEFAULT_REVISION_ICON = "bx bx-file";
+
 function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: RevisionItem[], onSelect: (val: string) => void, currentRevision?: RevisionItem }) {
     return (
         <FormList onSelect={onSelect} fullHeight wrapperClassName="revision-list">
@@ -196,6 +205,7 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                 <FormListItem
                     key={item.revisionId}
                     value={item.revisionId}
+                    icon={REVISION_SOURCE_ICONS[item.source ?? ""] ?? DEFAULT_REVISION_ICON}
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
                     <div>
