@@ -105,6 +105,9 @@ function SingleNoteRenderer({ note, onReady }: RendererProps) {
 
             // Check custom CSS.
             await loadCustomCss(note);
+
+            // Wait for all fonts (including those from custom CSS) to finish loading.
+            await document.fonts.ready;
         }
 
         load().then(() => requestAnimationFrame(() => onReady({
@@ -130,6 +133,7 @@ function CollectionRenderer({ note, onReady, onProgressChanged }: RendererProps)
         media="print"
         onReady={async (data: PrintReport) => {
             await loadCustomCss(note);
+            await document.fonts.ready;
             onReady(data);
         }}
         onProgressChanged={onProgressChanged}
