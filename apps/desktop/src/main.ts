@@ -107,7 +107,7 @@ async function main() {
  */
 function getUserData() {
     if (process.env.TRILIUM_ELECTRON_DATA_DIR) {
-        return resolve(process.env.TRILIUM_ELECTRON_DATA_DIR, `electron-data-${port}`);
+        return resolve(process.env.TRILIUM_ELECTRON_DATA_DIR);
     }
 
     return join(app.getPath("appData"), `${app.getName()}-${port}`);

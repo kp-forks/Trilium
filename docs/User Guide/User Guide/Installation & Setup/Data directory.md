@@ -81,7 +81,7 @@ You can then save the above command as a shell script on your path for convenien
 
 When running the desktop application, Electron stores internal data (caches, spell-check dictionaries, session storage, etc.) separately from the Trilium data directory. By default this goes to the system's application data folder (e.g. `%APPDATA%` on Windows), which may be undesirable in corporate environments with roaming profiles or when running in portable mode.
 
-To keep Electron data out of the system's roaming profile, set the `TRILIUM_ELECTRON_DATA_DIR` environment variable to an explicit path. The `trilium-portable` script does this automatically, pointing it to `trilium-electron-data/` next to the application. A subdirectory named `electron-data-[port]` is created inside it to allow multiple instances to coexist.
+To keep Electron data out of the system's roaming profile, set the `TRILIUM_ELECTRON_DATA_DIR` environment variable to an explicit path. The `trilium-portable` script does this automatically, pointing it to `trilium-electron-data/` next to the application.
 
 ## Fine-grained directory/path location
 
@@ -95,4 +95,4 @@ Apart from the data directory, some of the subdirectories of it can be moved els
 | `TRILIUM_TMP_DIR` | `${TRILIUM_DATA_DIR}/tmp` | Directory where temporary files are stored (for example when opening in an external app). |
 | `TRILIUM_ANONYMIZED_DB_DIR` | `${TRILIUM_DATA_DIR}/anonymized-db` | Directory where a <a class="reference-link" href="../Troubleshooting/Anonymized%20Database.md">Anonymized Database</a> is stored. |
 | `TRILIUM_CONFIG_INI_PATH` | `${TRILIUM_DATA_DIR}/config.ini` | Path to <a class="reference-link" href="../Advanced%20Usage/Configuration%20(config.ini%20or%20e.md">Configuration (config.ini or environment variables)</a> file. |
-| `TRILIUM_ELECTRON_DATA_DIR` | System appData | Base directory for Electron internal data (caches, spell-check dictionaries, etc.). A `electron-data-[port]` subdirectory is created inside it. Set this in portable mode to avoid writing to the system profile (desktop only). |
+| `TRILIUM_ELECTRON_DATA_DIR` | System appData | Directory for Electron internal data (caches, spell-check dictionaries, etc.). Set this in portable mode to avoid writing to the system profile (desktop only). |
