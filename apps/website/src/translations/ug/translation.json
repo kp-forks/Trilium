@@ -162,7 +162,10 @@
         "description_x64": "كۆپىنچە Linux تارقاتما نۇسخىلىرىغا ماس كېلىدۇ، x86_64 ئارخىتېكتۇرىسى بىلەن ماسلىشىشچانلىقى بار.",
         "description_arm64": "ARM ئارخىتېكتۇرىسىنى ئاساس قىلغان Linux تارقاتما نۇسخىلىرىغا ماس كېلىدۇ، aarch64 ئارخىتېكتۇرىسى بىلەن ماسلىشىشچانلىقى بار.",
         "quick_start": "ئۆزىڭىز ئىشلىتىۋاتقان تارقاتما نۇسخاغا ئاساسەن مۇۋاپىق بولغان يۇمشاق دېتال فورماتىنى تاللاڭ:",
-        "download_deb": ".deb"
+        "download_deb": ".deb",
+        "download_rpm": ".rpm",
+        "download_zip": "Portable (.zip)",
+        "download_nixpkgs": "nixpkgs"
     },
     "download_helper_desktop_macos": {
         "description_x64": "macOS Monterey ياكى ئۇنىڭدىن كېيىنكى سىستېما ئىجرا قىلىنىدىغان Intel يادرولۇق Mac كومپيۇتېرلىرىغا ماس كېلىدۇ.",
@@ -174,7 +177,8 @@
     },
     "download_helper_server_docker": {
         "title": "Docker ئارقىلىق ئۆزىڭىز قۇرۇپ ئىشلىتىش (Self-hosted)",
-        "description": "Docker كونتېينېرى (Container) ئارقىلىق Windows، Linux ياكى macOS سىستېمىلىرىغا ئاسانلا ئورۇنلاشتۇرۇشقا بولىدۇ."
+        "description": "Docker كونتېينېرى (Container) ئارقىلىق Windows، Linux ياكى macOS سىستېمىلىرىغا ئاسانلا ئورۇنلاشتۇرۇشقا بولىدۇ.",
+        "download_dockerhub": "Docker Hub"
     },
     "download_helper_server_linux": {
         "title": "Linuxدا ئۆزىڭىز قۇرۇپ ئىشلىتىش (Self-hosted)",
