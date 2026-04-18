@@ -177,6 +177,11 @@ body.desktop .revisions-dialog {
     }
 
 
+    .revision-description-icon {
+        opacity: 0.5;
+        flex-shrink: 0;
+    }
+
     .revision-description-editor {
         display: flex;
         gap: 5px;

@@ -116,20 +116,21 @@ export default function RevisionsDialog() {
                     setRefreshCounter(c => c + 1);
                     setCurrentRevision(undefined);
                 }}
+                onDescriptionUpdated={(revisionId, description) => {
+                    setRevisions(prev => prev?.map(r =>
+                        r.revisionId === revisionId ? { ...r, description } : r
+                    ));
+                    if (currentRevision?.revisionId === revisionId) {
+                        setCurrentRevision({ ...currentRevision, description });
+                    }
+                }}
             />
             <div className="revision-content-wrapper">
                 <RevisionPreview
                     noteContent={noteContent}
                     revisionItem={currentRevision}
                     showDiff={showDiff}
-                    onDescriptionUpdated={(revisionId, description) => {
-                        setRevisions(prev => prev?.map(r =>
-                            r.revisionId === revisionId ? { ...r, description } : r
-                        ));
-                        if (currentRevision?.revisionId === revisionId) {
-                            setCurrentRevision({ ...currentRevision, description });
-                        }
-                    }} />
+                />
             </div>
         </Modal>
     );
@@ -301,15 +302,22 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
         </FormList>);
 }
 
-function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevisionDeleted }: {
+function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevisionDeleted, onDescriptionUpdated }: {
     revisionItem?: RevisionItem,
     showDiff: boolean,
     setShowDiff: Dispatch<StateUpdater<boolean>>,
     setShown: Dispatch<StateUpdater<boolean>>,
     onRevisionDeleted?: () => void,
+    onDescriptionUpdated?: (revisionId: string, description: string) => void,
 }) {
     const canShowDiff = ["text", "code", "mermaid"].includes(revisionItem?.type ?? "");
     const canInteract = revisionItem && (!revisionItem.isProtected || protected_session_holder.isProtectedSessionAvailable());
+    const [ editingDescription, setEditingDescription ] = useState(false);
+    const [ descriptionDraft, setDescriptionDraft ] = useState("");
+
+    useEffect(() => {
+        setEditingDescription(false);
+    }, [revisionItem]);
 
     return (
         <div className="revision-toolbar">
@@ -359,35 +367,6 @@ function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevi
                     )}
                 </div>
             )}
-        </div>
-    );
-}
-
-function RevisionPreview({noteContent, revisionItem, showDiff, onDescriptionUpdated }: {
-    noteContent?: string,
-    revisionItem?: RevisionItem,
-    showDiff: boolean,
-    onDescriptionUpdated?: (revisionId: string, description: string) => void
-}) {
-    const [ fullRevision, setFullRevision ] = useState<RevisionPojo>();
-    const [ editingDescription, setEditingDescription ] = useState(false);
-    const [ descriptionDraft, setDescriptionDraft ] = useState("");
-
-    useEffect(() => {
-        if (revisionItem) {
-            server.get<RevisionPojo>(`revisions/${revisionItem.revisionId}`).then(setFullRevision);
-        } else {
-            setFullRevision(undefined);
-        }
-        setEditingDescription(false);
-    }, [revisionItem]);
-
-    return (
-        <div
-            className={clsx("revision-content use-tn-links selectable-text", `type-${revisionItem?.type}`)}
-            style={{ wordBreak: "break-word" }}
-        >
-            <h3 className="revision-title">{revisionItem?.title ?? t("revisions.no_revisions")}</h3>
             {revisionItem && (
                 <RevisionDescription
                     revisionItem={revisionItem}
@@ -407,6 +386,31 @@ function RevisionPreview({noteContent, revisionItem, showDiff, onDescriptionUpda
                     onCancel={() => setEditingDescription(false)}
                 />
             )}
+        </div>
+    );
+}
+
+function RevisionPreview({noteContent, revisionItem, showDiff }: {
+    noteContent?: string,
+    revisionItem?: RevisionItem,
+    showDiff: boolean,
+}) {
+    const [ fullRevision, setFullRevision ] = useState<RevisionPojo>();
+
+    useEffect(() => {
+        if (revisionItem) {
+            server.get<RevisionPojo>(`revisions/${revisionItem.revisionId}`).then(setFullRevision);
+        } else {
+            setFullRevision(undefined);
+        }
+    }, [revisionItem]);
+
+    return (
+        <div
+            className={clsx("revision-content use-tn-links selectable-text", `type-${revisionItem?.type}`)}
+            style={{ wordBreak: "break-word" }}
+        >
+            <h3 className="revision-title">{revisionItem?.title ?? t("revisions.no_revisions")}</h3>
             <RevisionContent noteContent={noteContent} revisionItem={revisionItem} fullRevision={fullRevision} showDiff={showDiff}/>
         </div>
     );
@@ -424,6 +428,7 @@ function RevisionDescription({ revisionItem, editing, draft, onEdit, onDraftChan
     if (editing) {
         return (
             <div className="revision-description-editor">
+                <span className="bx bx-purchase-tag revision-description-icon" />
                 <input
                     type="text"
                     className="form-control form-control-sm"
@@ -445,6 +450,7 @@ function RevisionDescription({ revisionItem, editing, draft, onEdit, onDraftChan
 
     return (
         <div className="revision-description-display">
+            <span className="bx bx-purchase-tag revision-description-icon" />
             <span className={clsx("revision-description-text", { empty: !revisionItem.description })}>
                 {revisionItem.description || t("revisions.description_placeholder")}
             </span>
