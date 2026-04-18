@@ -193,9 +193,9 @@ function register(router: Router) {
         const note = eu.getAndCheckNote(req.params.noteId);
 
         const description = req.body?.description || "";
-        const revision = note.saveRevision({ description, source: "etapi" });
+        note.saveRevision({ description, source: "etapi" });
 
-        res.status(201).json(mappers.mapRevisionToPojo(revision));
+        return res.sendStatus(204);
     });
 
     eu.route<{ noteId: string }>(router, "get", "/etapi/notes/:noteId/attachments", (req, res, next) => {
