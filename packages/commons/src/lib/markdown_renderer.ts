@@ -112,7 +112,7 @@ export function extractCodeBlocks(text: string): { processedText: string; placeh
     const timestamp = Date.now();
 
     text = text
-        .replace(/```[\s\S]*?```/g, (m) => {
+        .replace(/^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm, (m) => {
             const key = `<!--CODE_BLOCK_${timestamp}_${id++}-->`;
             codeMap.set(key, m);
             return key;
