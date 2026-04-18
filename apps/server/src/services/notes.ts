@@ -459,7 +459,7 @@ function findImageLinks(content: string, foundLinks: FoundLink[]) {
  * Bookmarks are stored as labels on the note so they can be looked up without parsing content.
  */
 export function findBookmarks(content: string): string[] {
-    const re = /<a\s+id="([^"]+)"[^>]*><\/a>/g;
+    const re = /<a\s+id="([^"]+)"[^>]*>(<\/a>)?/g;
     const bookmarks: string[] = [];
     let match;
 

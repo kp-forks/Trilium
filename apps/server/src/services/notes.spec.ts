@@ -31,4 +31,12 @@ describe("findBookmarks", () => {
         const content = `<a id="same"></a><a id="same"></a>`;
         expect(findBookmarks(content)).toEqual(["same"]);
     });
+
+    it("matches self-closing bookmark anchors (CKEditor empty elements)", () => {
+        const content = `<p>Text</p><a id="my-bookmark"></a><p>More</p>`;
+        // CKEditor may also output without closing tag
+        const contentNoClose = `<p>Text</p><a id="my-bookmark"><p>More</p>`;
+        expect(findBookmarks(content)).toEqual(["my-bookmark"]);
+        expect(findBookmarks(contentNoClose)).toEqual(["my-bookmark"]);
+    });
 });

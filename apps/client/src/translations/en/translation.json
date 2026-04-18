@@ -860,6 +860,9 @@
     "no_inherited_attributes": "No inherited attributes.",
     "none": "none"
   },
+  "auto_link_attribute_list": {
+    "title": "System Links"
+  },
   "note_info_widget": {
     "note_id": "Note ID",
     "created": "Created",
