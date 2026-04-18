@@ -65,7 +65,7 @@ export default function RevisionsDialog() {
         <Modal
             className="revisions-dialog"
             size="xl"
-            title={t("revisions.note_revisions")}
+            title=""
             helpPageId="vZWERwf8U3nx"
             header={note && (
                 <RevisionsMenu
@@ -82,16 +82,21 @@ export default function RevisionsDialog() {
                 />
             )}
             sidebar={
-                <RevisionsList
-                    revisions={revisions ?? []}
-                    onSelect={(revisionId) => {
-                        const correspondingRevision = (revisions ?? []).find((r) => r.revisionId === revisionId);
-                        if (correspondingRevision) {
-                            setCurrentRevision(correspondingRevision);
-                        }
-                    }}
-                    currentRevision={currentRevision}
-                />
+                <>
+                    <div className="revision-sidebar-header">
+                        <h5>{t("revisions.note_revisions")}</h5>
+                    </div>
+                    <RevisionsList
+                        revisions={revisions ?? []}
+                        onSelect={(revisionId) => {
+                            const correspondingRevision = (revisions ?? []).find((r) => r.revisionId === revisionId);
+                            if (correspondingRevision) {
+                                setCurrentRevision(correspondingRevision);
+                            }
+                        }}
+                        currentRevision={currentRevision}
+                    />
+                </>
             }
             onHidden={() => {
                 setShown(false);

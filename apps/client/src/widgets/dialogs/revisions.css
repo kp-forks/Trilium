@@ -72,6 +72,27 @@ body.desktop .revisions-dialog {
         padding: 0;
     }
 
+    .modal-sidebar {
+        background-color: var(--card-background-color);
+    }
+
+    .modal-sidebar .dropdown-menu.static {
+        background-color: transparent !important;
+        border-radius: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .revision-sidebar-header {
+        padding: 0.75rem 1rem;
+        flex-shrink: 0;
+        text-align: center;
+
+        h5 {
+            margin: 0;
+            font-size: 1em;
+        }
+    }
+
     .revision-toolbar {
         display: flex;
         align-items: center;
@@ -124,11 +145,9 @@ body.desktop .revisions-dialog {
     }
 
     .revision-list {
-        flex-shrink: 0;
-
-        .dropdown-item + .dropdown-item {
-            border-top: 1px solid var(--main-border-color) !important;
-        }
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: auto;
 
         .dropdown-item {
             min-height: 2.5em;
