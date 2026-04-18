@@ -62,8 +62,11 @@
 
     .about-dialog-property-sheet {
         margin-block: 30px;
-        font-size: .85em;
-        margin-inline: 20px;  
+
+        &.wide {
+            font-size: .85em;
+            margin-inline: 20px;
+        }
     }
 
     .build-info {
@@ -81,6 +84,10 @@
             text-underline-offset: 3px;
             text-decoration-color: var(--muted-text-color);
             cursor: help;
+        }
+
+        .about-dialog-property-sheet.narrow & {
+            line-height: 1.75;
         }
     }
 
@@ -132,6 +139,7 @@
 
 .about-dialog-brief-history-tooltip {
     --main-font-size: .9em;
+    padding-inline: 30px;
 
     .tooltip-inner {
         max-width: 600px;
