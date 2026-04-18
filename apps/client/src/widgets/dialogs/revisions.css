@@ -191,6 +191,23 @@ body.mobile .revisions-dialog {
                 background-color: color-mix(in srgb, var(--bs-warning) 25%, transparent);
             }
         }
+
+        /* Image diff styles */
+        ins img,
+        del img {
+            border: 3px solid;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        del img {
+            border-color: var(--bs-danger);
+            opacity: 0.6;
+        }
+
+        ins img {
+            border-color: var(--bs-success);
+        }
     }
 
     .revision-content.type-file {
