@@ -41,7 +41,8 @@
     "link_title_mirrors": "ئۇلانما تېمىسى خاتىرىنىڭ ھازىرقى تېمىسى بىلەن ماس قەدەم بولىدۇ",
     "link_title_arbitrary": "ئۇلانما تېمىسىنى خالىغانچە ئۆزگەرتىشكە بولىدۇ",
     "link_title": "ئۇلانما تېمىسى",
-    "button_add_link": "ئۇلانما قوشۇش"
+    "button_add_link": "ئۇلانما قوشۇش",
+    "anchor_none": "يوق (خاتىرىگە ئۇلاش)"
   },
   "branch_prefix": {
     "edit_branch_prefix": "شاخچە ئالدى قوشۇمچىسىنى تەھرىرلەش",
@@ -166,7 +167,13 @@
     "showSQLConsole": "SQL كونترول سۇپىسىنى كۆرسىتىش",
     "other": "باشقىلار",
     "quickSearch": "نۇر بەلگىسىنى تېز ئىزدەش رامكىسىغا يۆتكەش",
-    "inPageSearch": "بەت ئىچىدە ئىزدەش"
+    "inPageSearch": "بەت ئىچىدە ئىزدەش",
+    "showJumpToNoteDialog": "كۆرسىتىش<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"بۇنىڭغا ئاتلاش\" سۆزلىشىش رامكىسى</a>",
+    "closeActiveTab": "ئاكتىپ بەتكۈچنى يېپىش",
+    "activateNextTab": "كېيىنكى بەتكۈچنى ئاكتىپلاش",
+    "activatePreviousTab": "ئالدىنقى بەتكۈچنى ئاكتىپلاش",
+    "editBranchPrefix": "",
+    "editNoteTitle": "دەرەخسىمان خاتىرە تىزىملىكىدە، فوكۇس خاتىرە دەرىخىدىن خاتىرە ماۋزۇسىغا يۆتكىلىدۇ. Enter كۇنۇپكىسىنى باسسىڭىز فوكۇس خاتىرە ماۋزۇسىدىن تېكىست تەھرىرلىگۈچكە يۆتكىلىدۇ. <kbd>Ctrl+.</kbd> كۇنۇپكىسىنى باسسىڭىز فوكۇس تەھرىرلىگۈچتىن يەنە خاتىرە دەرىخىگە قايتىدۇ."
   },
   "import": {
     "importIntoNote": "خاتىرىگە كىرگۈزۈش",
@@ -188,11 +195,23 @@
     },
     "import-status": "كىرگۈزۈش ھالىتى",
     "in-progress": "ئەكىرىلىۋاتىدۇ: {{progress}}",
-    "successful": "كىرگۈزۈش مۇۋەپپەقىيەتلىك تاماملاندى."
+    "successful": "كىرگۈزۈش مۇۋەپپەقىيەتلىك تاماملاندى.",
+    "explodeArchives": "<code>.zip</code>、<code>.enex</code> ۋە<code>.opml</code> ئارخىپ ھۆججەتلىرىنىڭ مەزمۇنىنى ئوقۇش.",
+    "codeImportedAsCode": "ئەگەر مېتا سانلىق مەلۇماتى ئېنىق بولمىسا، پەرقلەندۈرۈلگەن كود ھۆججىتىنى (مەسىلەن<code>.json</code>) كود خاتىرىسى سۈپىتىدە ئەكىرىش"
   },
   "include_note": {
     "dialog_title": "خاتىرىنى ئۆز ئىچىگە ئېلىش",
     "label_note": "خاتىرە",
-    "placeholder_search": "خاتىرىنى نامى بويىچە ئىزدەش"
+    "placeholder_search": "خاتىرىنى نامى بويىچە ئىزدەش",
+    "box_size_prompt": "ئۆز ئىچىگە ئالغان خاتىرىنىڭ رامكا چوڭلۇقى:",
+    "box_size_small": "كىچىك (10 قۇر ئەتراپىدا)",
+    "box_size_medium": "ئوتتۇراھال (30 قۇر ئەتراپىدا)",
+    "box_size_full": "تولۇق (رامكىدا پۈتۈن تېكىست كۆرسىتىلىدۇ)",
+    "box_size_expandable": "يېيىلىدىغان (ئەسلىدىكى ھالەتتە يىغىلغان)",
+    "button_include": "خاتىرىنى ئۆز ئىچىگە ئېلىش"
+  },
+  "info": {
+    "modalTitle": "ئۇچۇر ئۇقتۇرۇشى",
+    "closeButton": "تاقاش"
   }
 }
