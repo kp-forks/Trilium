@@ -27,6 +27,7 @@ export default function AddLinkDialog() {
     const [ suggestion, setSuggestion ] = useState<Suggestion | null>(null);
     const [ bookmarks, setBookmarks ] = useState<string[]>([]);
     const [ selectedBookmark, setSelectedBookmark ] = useState("");
+    const [ noteTitle, setNoteTitle ] = useState("");
     const [ shown, setShown ] = useState(false);
     const hasSubmittedRef = useRef(false);
 
@@ -44,8 +45,9 @@ export default function AddLinkDialog() {
     }, [ opts ]);
 
     async function setDefaultLinkTitle(noteId: string) {
-        const noteTitle = await tree.getNoteTitle(noteId);
-        setLinkTitle(noteTitle);
+        const title = await tree.getNoteTitle(noteId);
+        setNoteTitle(title);
+        setLinkTitle(title);
     }
 
     function resetExternalLink() {
@@ -78,6 +80,14 @@ export default function AddLinkDialog() {
             setLinkType("external-link");
         }
     }, [suggestion]);
+
+    useEffect(() => {
+        if (selectedBookmark) {
+            setLinkTitle(`${noteTitle} - ${selectedBookmark}`);
+        } else {
+            setLinkTitle(noteTitle);
+        }
+    }, [selectedBookmark, noteTitle]);
 
     function onShown() {
         const $autocompleteEl = refToJQuerySelector(autocompleteRef);
@@ -136,6 +146,7 @@ export default function AddLinkDialog() {
                 setSuggestion(null);
                 setBookmarks([]);
                 setSelectedBookmark("");
+                setNoteTitle("");
                 setShown(false);
             }}
             show={shown}
