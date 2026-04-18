@@ -32,8 +32,16 @@ Trilium supports seamless versioning of notes by storing snapshots ("revisions")
 
 Named revisions are a new feature of Trilium v0.103.0 which allows adding a short description of what the changes in the snapshot contain.
 
+In the list of note revisions:
+
 *   The name of the revision is displayed underneath the time of the revision in the sidebar, as well as at the top of the dialog where it is displayed in full.
 *   Clicking on the edit button near the name of the revision allows it to be changed.
+
+To create a named revision, either:
+
+*   Go to the <a class="reference-link" href="../UI%20Elements/Note%20buttons.md">Note buttons</a>, select _Save named revision…_, enter the name of revision and confirm.
+*   Use the corresponding [keyboard shortcut](../Keyboard%20Shortcuts.md) or the <a class="reference-link" href="../Navigation/Jump%20to.md">Jump to...</a> command with the same name.
+*   Save a revision normally, and adjust the name afterwards from the note revision list.
 
 ## When revisions are saved
 

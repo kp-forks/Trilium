@@ -4574,6 +4574,13 @@
                                             "value": "A9Oc6YKKc65v",
                                             "isInheritable": false,
                                             "position": 90
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "F1r9QtzQLZqm",
+                                            "isInheritable": false,
+                                            "position": 100
                                         }
                                     ],
                                     "format": "markdown",

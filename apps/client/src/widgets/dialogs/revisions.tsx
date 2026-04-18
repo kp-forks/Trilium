@@ -199,6 +199,22 @@ function RevisionsMenu({ note, onRevisionSaved, onAllDeleted, hasRevisions }: {
             >
                 {t("revisions.save_revision_now")}
             </FormListItem>
+            <FormListItem
+                icon="bx bx-purchase-tag"
+                onClick={async () => {
+                    const name = await dialog.prompt({
+                        title: t("entrypoints.save-named-revision-title"),
+                        message: t("entrypoints.save-named-revision-message"),
+                        defaultValue: ""
+                    });
+                    if (name === null) return;
+                    await server.post(`notes/${note.noteId}/revision`, { description: name || undefined });
+                    toast.showMessage(t("revisions.revision_saved"));
+                    onRevisionSaved();
+                }}
+            >
+                {t("revisions.save_named_revision")}
+            </FormListItem>
             <FormDropdownDivider />
             <FormListItem disabled className="revision-menu-header">
                 {t("revisions.snapshot_header")}
