@@ -20,10 +20,13 @@ describe("etapi/post-revision", () => {
     });
 
     it("posts note revision", async () => {
-        await supertest(app)
+        const response = await supertest(app)
             .post(`/etapi/notes/${createdNoteId}/revision`)
             .auth(USER, token, { "type": "basic"})
             .send("Changed content")
-            .expect(204);
+            .expect(201);
+
+        expect(response.body.revisionId).toBeTruthy();
+        expect(response.body.noteId).toBe(createdNoteId);
     });
 });
