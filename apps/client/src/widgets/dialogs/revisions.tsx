@@ -101,14 +101,7 @@ export default function RevisionsDialog() {
                 currentRevision={currentRevision}
             />
 
-            <div className="revision-content-wrapper" style={{
-                flexGrow: "1",
-                marginInlineStart: "20px",
-                display: "flex",
-                flexDirection: "column",
-                maxWidth: "calc(100% - 150px)",
-                minWidth: 0
-            }}>
+            <div className="revision-content-wrapper">
                 <RevisionPreview
                     noteContent={noteContent}
                     revisionItem={currentRevision}
@@ -150,8 +143,9 @@ function RevisionsMenu({ note, onRevisionSaved, onAllDeleted, hasRevisions }: {
         <Dropdown
             text={<span className="bx bx-dots-horizontal-rounded" />}
             hideToggleArrow
-            iconAction
-            title={t("revisions.menu_tooltip")}
+            buttonClassName="custom-title-bar-button"
+            noSelectButtonStyle
+            buttonProps={{ title: t("revisions.menu_tooltip") }}
         >
             <FormListItem
                 icon="bx bx-save"

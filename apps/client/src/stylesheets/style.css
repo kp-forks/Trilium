@@ -961,13 +961,17 @@ table.promoted-attributes-in-tooltip th {
     background-color: var(--active-item-background-color);
 }
 
-.help-button {
+.help-button,
+.custom-title-bar-button {
     float: inline-end;
     background: none;
     font-weight: 900;
-    color: orange;
     border: 0;
     cursor: pointer;
+}
+
+.help-button {
+    color: orange;
 }
 
 .multiplicity {
@@ -1148,7 +1152,8 @@ a.external:not(.no-arrow):after, a[href^="http://"]:not(.no-arrow):after, a[href
     padding: 0.5rem 1rem 0.5rem 1rem !important; /* make modal header padding slightly smaller */
 }
 
-.modal-header .help-button {
+.modal-header .help-button,
+.modal-header .custom-title-bar-button {
     padding: 6px;
     margin: 0 12px;
 }
