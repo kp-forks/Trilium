@@ -69,6 +69,7 @@ export default function AboutDialog() {
         <Modal
             className={clsx(["about-dialog", {"nightly": isNightly}])}
             size="md"
+            isFullPageOnMobile
             show={isShown}
             onHidden={() => setIsShown(false)}
         >
