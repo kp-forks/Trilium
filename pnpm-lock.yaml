@@ -315,6 +315,9 @@ importers:
       force-graph:
         specifier: 1.51.2
         version: 1.51.2
+      htmldiff-js:
+        specifier: 1.0.5
+        version: 1.0.5
       i18next:
         specifier: 26.0.4
         version: 26.0.4(typescript@6.0.2)
@@ -9406,6 +9409,9 @@ packages:
     resolution: {integrity: sha512-lw/7YsdKiP3kk5PnR1INY17iJuzdAtJewxr14ozKJWbbR97znovZ0mh+WEMZ8rjc3lgTK+ID/htTjuyGKB52Kw==}
     hasBin: true
 
+  htmldiff-js@1.0.5:
+    resolution: {integrity: sha512-rmow9353OK0elkub15Sbze8Nj7BYfduqoJJw4yEvHHjOcHeCazNPk0PoUbjE8SvxKgjymeRIFU/OnS8jtitRtA==}
+
   htmlfy@0.8.1:
     resolution: {integrity: sha512-xWROBw9+MEGwxpotll0h672KCaLrKKiCYzsyN8ZgL9cQbVumFnyvsk2JqiB9ELAV1GLj1GG/jxZUjV9OZZi/yQ==}
 
@@ -11654,10 +11660,6 @@ packages:
 
   postcss@8.4.49:
     resolution: {integrity: sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==}
-    engines: {node: ^10 || ^12 || >=14}
-
-  postcss@8.5.8:
-    resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
     engines: {node: ^10 || ^12 || >=14}
 
   postcss@8.5.9:
@@ -25000,6 +25002,8 @@ snapshots:
     dependencies:
       concat-stream: 1.6.2
 
+  htmldiff-js@1.0.5: {}
+
   htmlfy@0.8.1: {}
 
   htmlparser2@10.0.0:
@@ -27549,12 +27553,6 @@ snapshots:
   postcss@8.4.49:
     dependencies:
       nanoid: 5.1.7
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
-  postcss@8.5.8:
-    dependencies:
-      nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
 

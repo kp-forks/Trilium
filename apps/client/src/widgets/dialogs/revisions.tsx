@@ -3,6 +3,7 @@ import "./revisions.css";
 import type { RevisionItem, RevisionPojo } from "@triliumnext/commons";
 import clsx from "clsx";
 import { diffWords } from "diff";
+import HtmlDiff from "htmldiff-js";
 import type { CSSProperties } from "preact/compat";
 import { Dispatch, StateUpdater, useEffect, useRef, useState } from "preact/hooks";
 
@@ -443,31 +444,31 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
             return;
         }
 
-        let processedNoteContent = noteContent;
-        let processedItemContent = itemContent;
-
         if (itemType === "text") {
-            processedNoteContent = utils.formatHtml(noteContent);
-            processedItemContent = utils.formatHtml(itemContent);
-        }
-
-        const diff = diffWords(processedNoteContent, processedItemContent);
-        const diffHtml = diff.map(part => {
-            if (part.added) {
-                return `<span class="revision-diff-added">${utils.escapeHtml(part.value)}</span>`;
-            } else if (part.removed) {
-                return `<span class="revision-diff-removed">${utils.escapeHtml(part.value)}</span>`;
+            // Use proper HTML-aware diff for rich text content
+            const diffHtml = HtmlDiff.execute(noteContent, itemContent);
+            if (contentRef.current) {
+                contentRef.current.innerHTML = diffHtml;
             }
-            return utils.escapeHtml(part.value);
+        } else {
+            // Use word diff for code/mermaid (plain text)
+            const diff = diffWords(noteContent, itemContent);
+            const diffHtml = diff.map(part => {
+                if (part.added) {
+                    return `<span class="revision-diff-added">${utils.escapeHtml(part.value)}</span>`;
+                } else if (part.removed) {
+                    return `<span class="revision-diff-removed">${utils.escapeHtml(part.value)}</span>`;
+                }
+                return utils.escapeHtml(part.value);
+            }).join("");
 
-        }).join("");
-
-        if (contentRef.current) {
-            contentRef.current.innerHTML = diffHtml;
+            if (contentRef.current) {
+                contentRef.current.innerHTML = diffHtml;
+            }
         }
     }, [noteContent, itemContent, itemType]);
 
-    return <div ref={contentRef} className="ck-content" style={{ whiteSpace: "pre-wrap" }} />;
+    return <div ref={contentRef} className={clsx("revision-diff-content", { "ck-content": itemType === "text" })} style={itemType !== "text" ? { whiteSpace: "pre-wrap" } : undefined} />;
 }
 
 function RevisionFooter({ note }: { note?: FNote }) {

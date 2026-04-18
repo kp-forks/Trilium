@@ -137,6 +137,33 @@ body.mobile .revisions-dialog {
         }
     }
 
+    /* HTML diff styles (htmldiff-js) */
+    .revision-diff-content {
+        ins {
+            text-decoration: none;
+
+            &.diffins {
+                background-color: color-mix(in srgb, var(--bs-success) 25%, transparent);
+            }
+
+            &.diffmod {
+                background-color: color-mix(in srgb, var(--bs-info) 25%, transparent);
+            }
+        }
+
+        del {
+            text-decoration: line-through;
+
+            &.diffdel {
+                background-color: color-mix(in srgb, var(--bs-danger) 25%, transparent);
+            }
+
+            &.diffmod {
+                background-color: color-mix(in srgb, var(--bs-warning) 25%, transparent);
+            }
+        }
+    }
+
     .revision-content.type-file {
         display: flex;
         min-width: 0;
