@@ -52,6 +52,7 @@
     "dompurify": "3.4.0",
     "draggabilly": "3.0.0",
     "force-graph": "1.51.2",
+    "htmldiff-js": "1.0.5",
     "i18next": "26.0.4",
     "i18next-http-backend": "3.0.4",
     "jquery": "4.0.0",

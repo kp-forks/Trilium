@@ -287,6 +287,7 @@
     "confirm_delete_all": "Do you want to delete all revisions of this note?",
     "no_revisions": "No revisions for this note yet...",
     "restore_button": "Restore",
+    "highlight_changes": "Highlight changes",
     "diff_on": "Show diff",
     "diff_off": "Show content",
     "diff_on_hint": "Click to show note source diff",
@@ -300,11 +301,39 @@
     "revision_deleted": "Note revision has been deleted.",
     "snapshot_interval": "Note Revision Snapshot Interval: {{seconds}}s.",
     "maximum_revisions": "Note Revision Snapshot Limit: {{number}}.",
+    "save_revision_now": "Save a revision now",
+    "save_named_revision": "Save named revision...",
+    "snapshot_header": "Note revision snapshot",
+    "snapshot_interval_value": "Interval: {{seconds}}s",
+    "snapshot_limit_value": "Limit: {{number}}",
     "settings": "Note Revision Settings",
+    "menu_tooltip": "Revision options",
     "download_button": "Download",
     "mime": "MIME: ",
     "file_size": "File size:",
-    "preview_not_available": "Preview isn't available for this note type."
+    "preview_not_available": "Preview isn't available for this note type.",
+    "save_revision": "Save revision",
+    "save_revision_tooltip": "Manually save a snapshot of the current note",
+    "description_placeholder": "Name this revision",
+    "revision_saved": "Note revision has been saved.",
+    "edit_description": "Edit name",
+    "description_updated": "Revision name has been updated.",
+    "source_auto": "Auto-save",
+    "source_manual": "Manual save",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_restore": "Restore",
+    "source_unknown": "Snapshot",
+    "date_today": "Today",
+    "date_yesterday": "Yesterday",
+    "date_this_week": "This week",
+    "date_this_month": "This month",
+    "source_description_auto": "Automatically saved by the system at regular intervals",
+    "source_description_manual": "Manually saved by the user",
+    "source_description_etapi": "Created via the External Trilium API",
+    "source_description_llm": "Created by the AI assistant",
+    "source_description_restore": "Saved before restoring a previous revision",
+    "source_description_unknown": "Source not available"
   },
   "sort_child_notes": {
     "sort_children_by": "Sort children by...",
@@ -718,6 +747,7 @@
     "print_note": "Print note",
     "view_revisions": "Note revisions...",
     "save_revision": "Save revision",
+    "save_named_revision": "Save named revision...",
     "advanced": "Advanced",
     "convert_into_attachment_failed": "Converting note '{{title}}' failed.",
     "convert_into_attachment_successful": "Note '{{title}}' has been converted to attachment.",
@@ -1897,6 +1927,8 @@
   },
   "entrypoints": {
     "note-revision-created": "Note revision has been created.",
+    "save-named-revision-title": "Save named revision",
+    "save-named-revision-message": "Enter a name for this revision (leave empty for no name):",
     "note-executed": "Note executed.",
     "sql-error": "Error occurred while executing SQL query: {{message}}"
   },
@@ -2507,5 +2539,9 @@
       "move_note": "Move note",
       "clone_note": "Clone note"
     }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }

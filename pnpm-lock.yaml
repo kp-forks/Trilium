@@ -315,6 +315,9 @@ importers:
       force-graph:
         specifier: 1.51.2
         version: 1.51.2
+      htmldiff-js:
+        specifier: 1.0.5
+        version: 1.0.5
       i18next:
         specifier: 26.0.4
         version: 26.0.4(typescript@6.0.2)
@@ -9405,6 +9408,9 @@ packages:
   html@1.0.0:
     resolution: {integrity: sha512-lw/7YsdKiP3kk5PnR1INY17iJuzdAtJewxr14ozKJWbbR97znovZ0mh+WEMZ8rjc3lgTK+ID/htTjuyGKB52Kw==}
     hasBin: true
+
+  htmldiff-js@1.0.5:
+    resolution: {integrity: sha512-rmow9353OK0elkub15Sbze8Nj7BYfduqoJJw4yEvHHjOcHeCazNPk0PoUbjE8SvxKgjymeRIFU/OnS8jtitRtA==}
 
   htmlfy@0.8.1:
     resolution: {integrity: sha512-xWROBw9+MEGwxpotll0h672KCaLrKKiCYzsyN8ZgL9cQbVumFnyvsk2JqiB9ELAV1GLj1GG/jxZUjV9OZZi/yQ==}
@@ -24992,6 +24998,8 @@ snapshots:
   html@1.0.0:
     dependencies:
       concat-stream: 1.6.2
+
+  htmldiff-js@1.0.5: {}
 
   htmlfy@0.8.1: {}
 
