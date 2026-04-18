@@ -6,7 +6,7 @@ import "@triliumnext/ckeditor5";
 
 import clsx from "clsx";
 import { Ref } from "preact";
-import { useEffect, useLayoutEffect, useMemo } from "preact/hooks";
+import { useEffect, useLayoutEffect, useMemo, useRef as usePreactRef } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
@@ -24,6 +24,17 @@ import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./util
 export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetProps) {
     const blob = useNoteBlob(note);
     const { isRtl } = useNoteLanguage(note);
+    const readOnlyContentRef = usePreactRef<HTMLDivElement>(null);
+
+    // Scroll to bookmark anchor if navigated with ?bookmark=...
+    useEffect(() => {
+        const viewScope = noteContext?.viewScope;
+        if (!viewScope?.bookmark || !readOnlyContentRef.current) return;
+
+        const el = readOnlyContentRef.current.querySelector(`[id="${CSS.escape(viewScope.bookmark)}"]`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        viewScope.bookmark = undefined;
+    }, [blob]);
 
     return (
         <>
@@ -31,6 +42,7 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
                 html={blob?.content ?? ""}
                 ntxId={ntxId}
                 dir={isRtl ? "rtl" : "ltr"}
+                contentRef={readOnlyContentRef}
             />
 
             <TouchBar>
