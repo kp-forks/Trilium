@@ -1,15 +1,16 @@
 import { ComponentChildren } from "preact";
+import clsx from "clsx";
 import "./PropertySheet.css";
 
-export function PropertySheet({ children }: { children: ComponentChildren }) {
-    return <div className="property-sheet-table">
+export function PropertySheet({ className, children }: { className?: string, children: ComponentChildren }) {
+    return <div className={clsx("property-sheet-table", className)}>
         {children} 
     </div>
 }
 
-export function PropertySheetItem({label, children}: {label: string, children: ComponentChildren}) {
+export function PropertySheetItem({className, label, children}: {className?: string, label: string, children: ComponentChildren}) {
     return <dl>
         <dt>{label}</dt>
-        <dd>{children}</dd>
+        <dd className={className}>{children}</dd>
     </dl>
 }
