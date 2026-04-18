@@ -87,6 +87,13 @@ body.mobile .revisions-dialog {
         flex-shrink: 0;
     }
 
+    .revision-menu-header {
+        font-weight: bold;
+        font-size: 0.85em;
+        text-transform: uppercase;
+        opacity: 0.6;
+    }
+
     .revision-toolbar-separator {
         width: 1px;
         height: 1.2em;

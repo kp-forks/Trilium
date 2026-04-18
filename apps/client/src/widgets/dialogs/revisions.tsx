@@ -21,7 +21,8 @@ import toast from "../../services/toast";
 import utils from "../../services/utils";
 import ActionButton from "../react/ActionButton";
 import Button from "../react/Button";
-import FormList, { FormListItem } from "../react/FormList";
+import Dropdown from "../react/Dropdown";
+import FormList, { FormDropdownDivider, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
@@ -66,38 +67,20 @@ export default function RevisionsDialog() {
             title={t("revisions.note_revisions")}
             helpPageId="vZWERwf8U3nx"
             bodyStyle={{ display: "flex", height: "80vh" }}
-            header={
-                <>
-                    {note && (
-                        <SaveRevisionButton
-                            noteId={note.noteId}
-                            onSaved={() => {
-                                setRefreshCounter(c => c + 1);
-                                setCurrentRevision(undefined);
-                            }}
-                        />
-                    )}
-                    {!!revisions?.length && (
-                        <Button
-                            text={t("revisions.delete_all_revisions")}
-                            size="small"
-                            style={{ padding: "0 10px" }}
-                            onClick={async () => {
-                                const text = t("revisions.confirm_delete_all");
-
-                                if (note && await dialog.confirm(text)) {
-                                    await server.remove(`notes/${note.noteId}/revisions`);
-                                    setRevisions([]);
-                                    setCurrentRevision(undefined);
-                                    toast.showMessage(t("revisions.revisions_deleted"));
-                                }
-                            }}
-                        />
-                    )}
-                </>
-            }
-            footer={<RevisionFooter note={note} />}
-            footerStyle={{ paddingTop: 0, paddingBottom: 0 }}
+            header={note && (
+                <RevisionsMenu
+                    note={note}
+                    onRevisionSaved={() => {
+                        setRefreshCounter(c => c + 1);
+                        setCurrentRevision(undefined);
+                    }}
+                    onAllDeleted={() => {
+                        setRevisions([]);
+                        setCurrentRevision(undefined);
+                    }}
+                    hasRevisions={!!revisions?.length}
+                />
+            )}
             onHidden={() => {
                 setShown(false);
                 setShowDiff(false);
@@ -149,19 +132,71 @@ export default function RevisionsDialog() {
     );
 }
 
-function SaveRevisionButton({ noteId, onSaved }: { noteId: string, onSaved: () => void }) {
+function RevisionsMenu({ note, onRevisionSaved, onAllDeleted, hasRevisions }: {
+    note: FNote,
+    onRevisionSaved: () => void,
+    onAllDeleted: () => void,
+    hasRevisions: boolean
+}) {
+    let revisionsNumberLimit: number | string = parseInt(note.getLabelValue("versioningLimit") ?? "", 10);
+    if (!Number.isInteger(revisionsNumberLimit)) {
+        revisionsNumberLimit = options.getInt("revisionSnapshotNumberLimit") ?? 0;
+    }
+    if (revisionsNumberLimit === -1) {
+        revisionsNumberLimit = "∞";
+    }
+
     return (
-        <Button
-            icon="bx bx-save"
-            text={t("revisions.save_revision")}
-            title={t("revisions.save_revision_tooltip")}
-            size="small"
-            onClick={async () => {
-                await server.post(`notes/${noteId}/revision`);
-                toast.showMessage(t("revisions.revision_saved"));
-                onSaved();
-            }}
-        />
+        <Dropdown
+            text={<span className="bx bx-dots-horizontal-rounded" />}
+            hideToggleArrow
+            iconAction
+            title={t("revisions.menu_tooltip")}
+        >
+            <FormListItem
+                icon="bx bx-save"
+                onClick={async () => {
+                    await server.post(`notes/${note.noteId}/revision`);
+                    toast.showMessage(t("revisions.revision_saved"));
+                    onRevisionSaved();
+                }}
+            >
+                {t("revisions.save_revision_now")}
+            </FormListItem>
+            <FormDropdownDivider />
+            <FormListItem disabled className="revision-menu-header">
+                {t("revisions.snapshot_header")}
+            </FormListItem>
+            <FormListItem disabled>
+                {t("revisions.snapshot_interval_value", { seconds: options.getInt("revisionSnapshotTimeInterval") })}
+            </FormListItem>
+            <FormListItem disabled>
+                {t("revisions.snapshot_limit_value", { number: revisionsNumberLimit })}
+            </FormListItem>
+            <FormListItem
+                icon="bx bx-cog"
+                onClick={() => appContext.tabManager.openContextWithNote("_optionsOther", { activate: true })}
+            >
+                {t("revisions.settings")}
+            </FormListItem>
+            {hasRevisions && (
+                <>
+                    <FormDropdownDivider />
+                    <FormListItem
+                        icon="bx bx-trash"
+                        onClick={async () => {
+                            if (await dialog.confirm(t("revisions.confirm_delete_all"))) {
+                                await server.remove(`notes/${note.noteId}/revisions`);
+                                onAllDeleted();
+                                toast.showMessage(t("revisions.revisions_deleted"));
+                            }
+                        }}
+                    >
+                        {t("revisions.delete_all_revisions")}
+                    </FormListItem>
+                </>
+            )}
+        </Dropdown>
     );
 }
 
@@ -469,32 +504,6 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
     return <div ref={contentRef} className={clsx("revision-diff-content", { "ck-content": itemType === "text" })} style={itemType !== "text" ? { whiteSpace: "pre-wrap" } : undefined} />;
 }
 
-function RevisionFooter({ note }: { note?: FNote }) {
-    if (!note) {
-        return <></>;
-    }
-
-    let revisionsNumberLimit: number | string = parseInt(note?.getLabelValue("versioningLimit") ?? "", 10);
-    if (!Number.isInteger(revisionsNumberLimit)) {
-        revisionsNumberLimit = options.getInt("revisionSnapshotNumberLimit") ?? 0;
-    }
-    if (revisionsNumberLimit === -1) {
-        revisionsNumberLimit = "∞";
-    }
-
-    return <>
-        <span class="revisions-snapshot-interval flex-grow-1 my-0 py-0">
-            {t("revisions.snapshot_interval", { seconds: options.getInt("revisionSnapshotTimeInterval") })}
-        </span>
-        <span class="maximum-revisions-for-current-note flex-grow-1 my-0 py-0">
-            {t("revisions.maximum_revisions", { number: revisionsNumberLimit })}
-        </span>
-        <ActionButton
-            icon="bx bx-cog" text={t("revisions.settings")}
-            onClick={() => appContext.tabManager.openContextWithNote("_optionsOther", { activate: true })}
-        />
-    </>;
-}
 
 function FilePreview({ revisionItem, fullRevision }: { revisionItem: RevisionItem, fullRevision: RevisionPojo }) {
     return (
