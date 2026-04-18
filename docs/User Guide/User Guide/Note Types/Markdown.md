@@ -25,7 +25,10 @@ Even if Markdown is now specially treated by having a preview mechanism, Trilium
 The following features are supported by Trilium's Markdown format and will show up in the preview pane:
 
 *   All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes)
-*   Code blocks with syntax highlight (e.g. `<!--CODE_BLOCK_1776493385878_0-->mermaid`
+*   Code blocks with syntax highlight (e.g. ` ```js `) and automatic syntax highlight
+*   <a class="reference-link" href="Text/Block%20quotes%20%26%20admonitions.md">Block quotes &amp; admonitions</a>
+*   <a class="reference-link" href="Text/Math%20Equations.md">Math Equations</a>
+*   <a class="reference-link" href="Mermaid%20Diagrams.md">Mermaid Diagrams</a> using ` ```mermaid `
 *   <a class="reference-link" href="Text/Include%20Note.md">Include Note</a> (no builtin Markdown syntax, but HTML syntax works just fine):
     
     ```
@@ -52,7 +55,6 @@ There are two ways to create a Markdown note:
 ## Import/export
 
 *   By default, when importing a single Markdown file it automatically gets converted to a <a class="reference-link" href="Text.md">Text</a> note. To avoid that and have it imported as a Markdown note instead:
-    
     *   Right click the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Note%20Tree.md">Note Tree</a> and select _Import into note_.
     *   Select the file normally.
     *   Uncheck _Import HTML, Markdown and TXT as text notes if it's unclear from the metadata_.

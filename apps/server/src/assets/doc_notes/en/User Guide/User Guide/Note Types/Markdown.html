@@ -32,32 +32,38 @@
 <p>The following features are supported by Trilium's Markdown format and
   will show up in the preview pane:</p>
 <ul>
-  <li>
-    <p>All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes)</p>
-  </li>
-  <li>
-    <p>Code blocks with syntax highlight (e.g. <code spellcheck="false">&lt;!--CODE_BLOCK_1776493385878_0--&gt;mermaid</code>
-    </p>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
-      builtin Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-x-trilium-auto">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
+  <li>All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes)</li>
+  <li
+ >Code blocks with syntax highlight (e.g. <code spellcheck="false">```js</code>)
+    and automatic syntax highlight</li>
+    <li><a class="reference-link" href="#root/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
+    </li>
+    <li><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>
+    </li>
+    <li><a class="reference-link" href="#root/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
+      <code
+      spellcheck="false">```mermaid</code>
+    </li>
+    <li>
+      <p><a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
+        builtin Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-x-trilium-auto">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
     &amp;nbsp;
 &lt;/section&gt;n</code></pre>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
-      its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
-      <a
-      class="reference-link" href="#root/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-trilium-auto">[[Hg8TS5ZOxti6]]</code></pre>
-  </li>
+    </li>
+    <li>
+      <p><a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
+        its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
+        <a
+        class="reference-link" href="#root/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-trilium-auto">[[Hg8TS5ZOxti6]]</code></pre>
+    </li>
 </ul>
 <h2>Creating Markdown notes</h2>
 <p>There are two ways to create a Markdown note:</p>
 <ol>
   <li>Create a new note (e.g. in the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>)
     and select the type <em>Markdown</em>, just like all the other note types.</li>
-  <li>Create a note of type&nbsp;<a class="reference-link" href="#root/_help_6f9hih2hXXZk">Code</a>&nbsp;and
+  <li
+ >Create a note of type&nbsp;<a class="reference-link" href="#root/_help_6f9hih2hXXZk">Code</a>&nbsp;and
     select as the language either <em>Markdown</em> or <em>GitHub-Flavored Markdown</em>.
     This maintains compatibility with your existing notes prior to the introduction
     of this feature.</li>
@@ -70,10 +76,9 @@
 </aside>
 <h2>Import/export</h2>
 <ul>
-  <li>
-    <p>By default, when importing a single Markdown file it automatically gets
-      converted to a&nbsp;<a class="reference-link" href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;note.
-      To avoid that and have it imported as a Markdown note instead:</p>
+  <li>By default, when importing a single Markdown file it automatically gets
+    converted to a&nbsp;<a class="reference-link" href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;note.
+    To avoid that and have it imported as a Markdown note instead:
     <ul>
       <li>Right click the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and
         select <em>Import into note</em>.</li>
@@ -81,14 +86,10 @@
       <li>Uncheck <em>Import HTML, Markdown and TXT as text notes if it's unclear from the metadata</em>.</li>
     </ul>
   </li>
-  <li>
-    <p>When exporting Markdown files, the extension is preserved and the content
-      remains the same as in the source view.</p>
-  </li>
-  <li>
-    <p>Once exported as a Trilium ZIP, the ZIP will preserve the Markdown type
-      without converting to text notes thanks to the meta-information in it.</p>
-  </li>
+  <li>When exporting Markdown files, the extension is preserved and the content
+    remains the same as in the source view.</li>
+  <li>Once exported as a Trilium ZIP, the ZIP will preserve the Markdown type
+    without converting to text notes thanks to the meta-information in it.</li>
 </ul>
 <h2>Conversion between text notes and Markdown notes</h2>
 <p>Currently there is no built-in functionality to convert a&nbsp;<a class="reference-link"

@@ -77,14 +77,12 @@
   (e.g. <code spellcheck="false">%APPDATA%</code> on Windows), which may be
   undesirable in corporate environments with roaming profiles or when running
   in portable mode.</p>
-<p>When <code spellcheck="false">TRILIUM_DATA_DIR</code> is set (e.g. via the
+<p>To keep Electron data out of the system's roaming profile, set the
   <code
-  spellcheck="false">trilium-portable</code>script), the Electron user data is automatically
-    redirected into <code spellcheck="false">${TRILIUM_DATA_DIR}/electron-user-data/</code>,
-    so no files are written to the system's roaming profile.</p>
-<p>If you need to store the Electron data in a different location than the
-  Trilium data directory, you can set the <code spellcheck="false">TRILIUM_ELECTRON_DATA_DIR</code> environment
-  variable to an explicit path.</p>
+  spellcheck="false">TRILIUM_ELECTRON_DATA_DIR</code>environment variable to an explicit path.
+    The <code spellcheck="false">trilium-portable</code> script does this automatically,
+    pointing it to <code spellcheck="false">trilium-electron-data/</code> next
+    to the application.</p>
 <h2>Fine-grained directory/path location</h2>
 <p>Apart from the data directory, some of the subdirectories of it can be
   moved elsewhere by changing an environment variable:</p>
@@ -147,10 +145,10 @@
     <tr>
       <td><code spellcheck="false">TRILIUM_ELECTRON_DATA_DIR</code>
       </td>
-      <td><code spellcheck="false">${TRILIUM_DATA_DIR}/electron-user-data</code> (portable)
-        or system appData (default)</td>
-      <td>Directory where Electron stores internal data such as caches and spell-check
-        dictionaries (desktop only).</td>
+      <td>System appData</td>
+      <td>Directory for Electron internal data (caches, spell-check dictionaries,
+        etc.). Set this in portable mode to avoid writing to the system profile
+        (desktop only).</td>
     </tr>
   </tbody>
 </table>
