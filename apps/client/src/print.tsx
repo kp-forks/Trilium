@@ -31,6 +31,13 @@ async function main() {
     if (!noteId) return;
 
     await import("./print.css");
+
+    // Load the user's font preferences so that --detail-font-family is available.
+    const fontLink = document.createElement("link");
+    fontLink.rel = "stylesheet";
+    fontLink.href = "api/fonts";
+    document.head.appendChild(fontLink);
+
     const note = await froca.getNote(noteId);
 
     const bodyWrapper = document.createElement("div");
@@ -105,6 +112,9 @@ function SingleNoteRenderer({ note, onReady }: RendererProps) {
 
             // Check custom CSS.
             await loadCustomCss(note);
+
+            // Wait for all fonts (including those from custom CSS) to finish loading.
+            await document.fonts.ready;
         }
 
         load().then(() => requestAnimationFrame(() => onReady({
@@ -130,6 +140,7 @@ function CollectionRenderer({ note, onReady, onProgressChanged }: RendererProps)
         media="print"
         onReady={async (data: PrintReport) => {
             await loadCustomCss(note);
+            await document.fonts.ready;
             onReady(data);
         }}
         onProgressChanged={onProgressChanged}

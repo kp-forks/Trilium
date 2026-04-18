@@ -33,7 +33,7 @@ The following features are supported by Trilium's Markdown format and will show 
     
     ```
     <section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable">
-    	&nbsp;
+        &nbsp;
     </section>n
     ```
 *   <a class="reference-link" href="Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> via its HTML syntax, or through a _Wikilinks_\-like format (only <a class="reference-link" href="../Advanced%20Usage/Note%20ID.md">Note ID</a>):
@@ -55,7 +55,6 @@ There are two ways to create a Markdown note:
 ## Import/export
 
 *   By default, when importing a single Markdown file it automatically gets converted to a <a class="reference-link" href="Text.md">Text</a> note. To avoid that and have it imported as a Markdown note instead:
-    
     *   Right click the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Note%20Tree.md">Note Tree</a> and select _Import into note_.
     *   Select the file normally.
     *   Uncheck _Import HTML, Markdown and TXT as text notes if it's unclear from the metadata_.

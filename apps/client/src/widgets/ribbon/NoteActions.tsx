@@ -153,6 +153,7 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
 
             <CommandItem command="showRevisions" icon="bx bx-history" text={t("note_actions.view_revisions")} />
             <CommandItem command="forceSaveRevision" icon="bx bx-save" disabled={isInOptionsOrHelp} text={t("note_actions.save_revision")} />
+            <CommandItem command="saveNamedRevision" icon="bx bx-purchase-tag" disabled={isInOptionsOrHelp} text={t("note_actions.save_named_revision")} />
 
             <FormDropdownDivider />
 
