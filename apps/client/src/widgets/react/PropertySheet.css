@@ -7,6 +7,10 @@
         dt {
             color: var(--muted-text-color);
         }
+
+        dd {
+            user-select: text;
+        }
     }
 }
 

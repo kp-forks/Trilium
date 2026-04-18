@@ -82,38 +82,34 @@ export default function AboutDialog() {
 
                 <PropertySheet>
                     <PropertySheetItem label={t("about.version_label")}>
-                        <div className="selectable-text">
-                            {t("about.version", {
-                                appVersion: appInfo?.appVersion,
-                                dbVersion: appInfo?.dbVersion,
-                                syncVersion: appInfo?.syncVersion
-                            })}
-                            <div className="build-info">
-                                <Trans
-                                    i18nKey="about.build_info"
-                                    values={{
-                                        buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""
-                                    }}
-                                    components={{
-                                        buildRevision: RevisionLink(appInfo)
-                                    }}
-                                />
-                            </div>
+                        {t("about.version", {
+                            appVersion: appInfo?.appVersion,
+                            dbVersion: appInfo?.dbVersion,
+                            syncVersion: appInfo?.syncVersion
+                        })}
+                        <div className="build-info">
+                            <Trans
+                                i18nKey="about.build_info"
+                                values={{
+                                    buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""
+                                }}
+                                components={{
+                                    buildRevision: RevisionLink(appInfo)
+                                }}
+                            />
                         </div>
                     </PropertySheetItem>
 
-                    <PropertySheetItem label={t("about.contributors_label")}>
-                        <div className="contributor-list use-tn-links">
-                            <CachedContributors />
+                    <PropertySheetItem className="contributor-list use-tn-links" label={t("about.contributors_label")}>
+                        <CachedContributors />
 
-                            <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
-                                {t("about.contributor_full_list")}
-                            </a>
-                        </div>
+                        <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
+                            {t("about.contributor_full_list")}
+                        </a>
                     </PropertySheetItem>
 
                     <PropertySheetItem label={t("about.data_directory")}>
-                        <div className="selectable-text" style={{wordBreak: "break-all"}}>
+                        <div style={{wordBreak: "break-all"}}>
                             {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} />)}
                         </div>
                     </PropertySheetItem>
