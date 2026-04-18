@@ -81,13 +81,13 @@ body.desktop .revisions-dialog {
     .modal-sidebar .dropdown-menu.static {
         background-color: transparent !important;
         border-radius: 0 !important;
-        padding-top: 0 !important;
     }
 
     .revision-sidebar-header {
         padding: 0.75rem 1rem;
         flex-shrink: 0;
         text-align: center;
+        border-bottom: 1px solid var(--main-border-color);
 
         h5 {
             margin: 0;
@@ -125,7 +125,6 @@ body.desktop .revisions-dialog {
 
     .revision-content-wrapper {
         flex-grow: 1;
-        padding-inline: 20px;
         display: flex;
         flex-direction: column;
         min-width: 0;
@@ -136,6 +135,7 @@ body.desktop .revisions-dialog {
         flex-grow: 1;
         min-height: 0;
         overflow: auto;
+        padding: 20px;
     }
 
 
