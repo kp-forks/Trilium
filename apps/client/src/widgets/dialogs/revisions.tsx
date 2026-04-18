@@ -34,7 +34,7 @@ export default function RevisionsDialog() {
     const [ revisions, setRevisions ] = useState<RevisionItem[]>();
     const [ currentRevision, setCurrentRevision ] = useState<RevisionItem>();
     const [ shown, setShown ] = useState(false);
-    const [ showDiff, setShowDiff ] = useState(false);
+    const [ showDiff, setShowDiff ] = useState(true);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
 
     useTriliumEvent("showRevisions", async ({ noteId }) => {
@@ -78,34 +78,21 @@ export default function RevisionsDialog() {
                         />
                     )}
                     {!!revisions?.length && (
-                        <>
-                            {["text", "code", "mermaid"].includes(currentRevision?.type ?? "") && (
-                                <FormToggle
-                                    currentValue={showDiff}
-                                    onChange={(newValue) => setShowDiff(newValue)}
-                                    switchOnName={t("revisions.diff_on")}
-                                    switchOffName={t("revisions.diff_off")}
-                                    switchOnTooltip={t("revisions.diff_on_hint")}
-                                    switchOffTooltip={t("revisions.diff_off_hint")}
-                                />
-                            )}
-                            &nbsp;
-                            <Button
-                                text={t("revisions.delete_all_revisions")}
-                                size="small"
-                                style={{ padding: "0 10px" }}
-                                onClick={async () => {
-                                    const text = t("revisions.confirm_delete_all");
+                        <Button
+                            text={t("revisions.delete_all_revisions")}
+                            size="small"
+                            style={{ padding: "0 10px" }}
+                            onClick={async () => {
+                                const text = t("revisions.confirm_delete_all");
 
-                                    if (note && await dialog.confirm(text)) {
-                                        await server.remove(`notes/${note.noteId}/revisions`);
-                                        setRevisions([]);
-                                        setCurrentRevision(undefined);
-                                        toast.showMessage(t("revisions.revisions_deleted"));
-                                    }
-                                }}
-                            />
-                        </>
+                                if (note && await dialog.confirm(text)) {
+                                    await server.remove(`notes/${note.noteId}/revisions`);
+                                    setRevisions([]);
+                                    setCurrentRevision(undefined);
+                                    toast.showMessage(t("revisions.revisions_deleted"));
+                                }
+                            }}
+                        />
                     )}
                 </>
             }
@@ -143,6 +130,7 @@ export default function RevisionsDialog() {
                     noteContent={noteContent}
                     revisionItem={currentRevision}
                     showDiff={showDiff}
+                    setShowDiff={setShowDiff}
                     setShown={setShown}
                     onRevisionDeleted={() => {
                         setRefreshCounter(c => c + 1);
@@ -162,30 +150,18 @@ export default function RevisionsDialog() {
 }
 
 function SaveRevisionButton({ noteId, onSaved }: { noteId: string, onSaved: () => void }) {
-    const [ description, setDescription ] = useState("");
-
     return (
-        <div className="save-revision-controls">
-            <input
-                type="text"
-                className="form-control form-control-sm save-revision-input"
-                placeholder={t("revisions.description_placeholder")}
-                value={description}
-                onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
-            />
-            <Button
-                icon="bx bx-save"
-                text={t("revisions.save_revision")}
-                title={t("revisions.save_revision_tooltip")}
-                size="small"
-                onClick={async () => {
-                    await server.post(`notes/${noteId}/revision`, { description });
-                    setDescription("");
-                    toast.showMessage(t("revisions.revision_saved"));
-                    onSaved();
-                }}
-            />
-        </div>
+        <Button
+            icon="bx bx-save"
+            text={t("revisions.save_revision")}
+            title={t("revisions.save_revision_tooltip")}
+            size="small"
+            onClick={async () => {
+                await server.post(`notes/${noteId}/revision`);
+                toast.showMessage(t("revisions.revision_saved"));
+                onSaved();
+            }}
+        />
     );
 }
 
@@ -232,10 +208,11 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
         </FormList>);
 }
 
-function RevisionPreview({noteContent, revisionItem, showDiff, setShown, onRevisionDeleted, onDescriptionUpdated }: {
+function RevisionPreview({noteContent, revisionItem, showDiff, setShowDiff, setShown, onRevisionDeleted, onDescriptionUpdated }: {
     noteContent?: string,
     revisionItem?: RevisionItem,
     showDiff: boolean,
+    setShowDiff: Dispatch<StateUpdater<boolean>>,
     setShown: Dispatch<StateUpdater<boolean>>,
     onRevisionDeleted?: () => void,
     onDescriptionUpdated?: (revisionId: string, description: string) => void
@@ -253,47 +230,59 @@ function RevisionPreview({noteContent, revisionItem, showDiff, setShown, onRevis
         setEditingDescription(false);
     }, [revisionItem]);
 
+    const canShowDiff = ["text", "code", "mermaid"].includes(revisionItem?.type ?? "");
+    const canInteract = revisionItem && (!revisionItem.isProtected || protected_session_holder.isProtectedSessionAvailable());
+
     return (
         <>
-            <div style="flex-grow: 0; display: flex; justify-content: space-between;">
-                <h3 className="revision-title" style="margin: 3px; flex-grow: 100;">{revisionItem?.title ?? t("revisions.no_revisions")}</h3>
-                {(revisionItem && <div className="revision-title-buttons">
-                    {(!revisionItem.isProtected || protected_session_holder.isProtectedSessionAvailable()) &&
-                        <>
-                            <Button
-                                icon="bx bx-history"
-                                text={t("revisions.restore_button")}
-                                onClick={async () => {
-                                    if (await dialog.confirm(t("revisions.confirm_restore"))) {
-                                        await server.post(`revisions/${revisionItem.revisionId}/restore`);
-                                        setShown(false);
-                                        toast.showMessage(t("revisions.revision_restored"));
-                                    }
-                                }}/>
-                            &nbsp;
-                            <Button
-                                icon="bx bx-trash"
-                                text={t("revisions.delete_button")}
-                                onClick={async () => {
-                                    if (await dialog.confirm(t("revisions.confirm_delete"))) {
-                                        await server.remove(`revisions/${revisionItem.revisionId}`);
-                                        toast.showMessage(t("revisions.revision_deleted"));
-                                        onRevisionDeleted?.();
-                                    }
-                                }} />
-                            &nbsp;
-                            <Button
-                                kind="primary"
-                                icon="bx bx-download"
-                                text={t("revisions.download_button")}
-                                onClick={() => {
-                                    if (revisionItem.revisionId) {
-                                        open.downloadRevision(revisionItem.noteId, revisionItem.revisionId);}
-                                }
-                                }/>
-                        </>
-                    }
-                </div>)}
+            <div className="revision-toolbar">
+                <h3 className="revision-title" title={revisionItem?.title}>{revisionItem?.title ?? t("revisions.no_revisions")}</h3>
+                {revisionItem && (
+                    <div className="revision-title-buttons">
+                        {canShowDiff && (
+                            <FormToggle
+                                currentValue={showDiff}
+                                onChange={(newValue) => setShowDiff(newValue)}
+                                switchOnName={t("revisions.highlight_changes")}
+                                switchOffName={t("revisions.highlight_changes")}
+                            />
+                        )}
+                        {canInteract && canShowDiff && <div className="revision-toolbar-separator" />}
+                        {canInteract && (
+                            <>
+                                <ActionButton
+                                    icon="bx bx-trash"
+                                    text={t("revisions.delete_button")}
+                                    onClick={async () => {
+                                        if (await dialog.confirm(t("revisions.confirm_delete"))) {
+                                            await server.remove(`revisions/${revisionItem.revisionId}`);
+                                            toast.showMessage(t("revisions.revision_deleted"));
+                                            onRevisionDeleted?.();
+                                        }
+                                    }} frame />
+                                <ActionButton
+                                    icon="bx bx-download"
+                                    text={t("revisions.download_button")}
+                                    onClick={() => {
+                                        if (revisionItem.revisionId) {
+                                            open.downloadRevision(revisionItem.noteId, revisionItem.revisionId);
+                                        }
+                                    }}
+                                    frame />
+                                <Button
+                                    icon="bx bx-history"
+                                    text={t("revisions.restore_button")}
+                                    onClick={async () => {
+                                        if (await dialog.confirm(t("revisions.confirm_restore"))) {
+                                            await server.post(`revisions/${revisionItem.revisionId}/restore`);
+                                            setShown(false);
+                                            toast.showMessage(t("revisions.revision_restored"));
+                                        }
+                                    }}/>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
             {revisionItem && (
                 <RevisionDescription

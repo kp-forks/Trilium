@@ -63,8 +63,35 @@ body.mobile .revisions-dialog {
 }
 
 .revisions-dialog {
-    .revision-title-buttons {
+    .revision-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         flex-shrink: 0;
+
+        .revision-title {
+            font-size: 1.2em;
+            margin: 3px;
+            flex-grow: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    .revision-title-buttons {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .revision-toolbar-separator {
+        width: 1px;
+        height: 1.2em;
+        background-color: var(--main-border-color);
+        margin: 0 4px;
     }
 
     .revision-list {
@@ -72,17 +99,6 @@ body.mobile .revisions-dialog {
 
         .dropdown-item + .dropdown-item {
             border-top: 1px solid var(--main-border-color) !important;
-        }
-    }
-
-    .save-revision-controls {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-        margin-inline-end: 10px;
-
-        .save-revision-input {
-            width: 200px;
         }
     }
 
