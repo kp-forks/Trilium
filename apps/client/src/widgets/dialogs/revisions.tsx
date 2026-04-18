@@ -246,6 +246,7 @@ function buildRevisionTooltip(item: RevisionItem): string {
         ? `${dayjs(item.dateCreated).format("YYYY-MM-DD HH:mm")} (${dayjs(item.dateCreated).fromNow()})`
         : "";
     return [
+        item.description,
         getRevisionSourceTitle(item.source),
         dateLine,
         item.contentLength && utils.formatSize(item.contentLength)

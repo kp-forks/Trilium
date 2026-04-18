@@ -61,6 +61,12 @@ body.mobile .revisions-dialog {
     }
 }
 
+body.desktop .revisions-dialog {
+    .revision-list {
+        width: 300px;
+    }
+}
+
 .revisions-dialog {
     .modal-body {
         padding: 0;
@@ -102,7 +108,6 @@ body.mobile .revisions-dialog {
         margin-inline: 20px;
         display: flex;
         flex-direction: column;
-        max-width: calc(100% - 150px);
         min-width: 0;
     }
 
@@ -125,6 +130,7 @@ body.mobile .revisions-dialog {
 
             >div {
                 padding-left: 0.25em;
+                min-width: 0;
             }
         }
     }
@@ -149,7 +155,6 @@ body.mobile .revisions-dialog {
         font-size: 0.85em;
         opacity: 0.7;
     }
-
 
 
     .revision-description-editor {
@@ -185,24 +190,18 @@ body.mobile .revisions-dialog {
         ins {
             text-decoration: none;
 
-            &.diffins {
-                background-color: color-mix(in srgb, var(--bs-success) 25%, transparent);
-            }
-
+            &.diffins,
             &.diffmod {
-                background-color: color-mix(in srgb, var(--bs-info) 25%, transparent);
+                background-color: color-mix(in srgb, var(--bs-success) 25%, transparent);
             }
         }
 
         del {
             text-decoration: line-through;
 
-            &.diffdel {
-                background-color: color-mix(in srgb, var(--bs-danger) 25%, transparent);
-            }
-
+            &.diffdel,
             &.diffmod {
-                background-color: color-mix(in srgb, var(--bs-warning) 25%, transparent);
+                background-color: color-mix(in srgb, var(--bs-danger) 25%, transparent);
             }
         }
 
