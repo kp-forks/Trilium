@@ -211,6 +211,11 @@
   },
   "info": {
     "modalTitle": "ئۇچۇر ئۇقتۇرۇشى",
-    "closeButton": "تاقاش"
+    "closeButton": "تاقاش",
+    "okButton": "OK",
+    "copy_to_clipboard": "چاپلاش تاختىسىغا كۆچۈرۈش"
+  },
+  "jump_to_note": {
+    "search_placeholder": "خاتىرىنى نامى ياكى تىپى بويىچە ئىزدەڭ، بۇيرۇق ئۈچۈن >بەلگىسىنى كىرگۈزۈڭ..."
   }
 }
