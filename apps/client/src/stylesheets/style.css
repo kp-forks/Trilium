@@ -1670,6 +1670,7 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         width: 100%;
         height: 100%;
         max-height: unset;
+        max-width: unset;
 
         .modal-content {
             border-radius: 0;
