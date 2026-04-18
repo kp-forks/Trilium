@@ -192,8 +192,8 @@ zadam/Trilium نۇسخىسىدىن TriliumNext/Notes غا كۆچۈش ئۈچۈن 
 ئەگەر سىز ئىشلىتىۋاتقان نەشرى تۆۋەندىكى جەدۋەلدە بولسا، شۇ نەشرىنىڭ يۇمشاق دېتال
 بوغچىسىنى ئىشلىتىڭ.
 
-[![Packaging
-status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
+[![بوغچىلاش
+ھالىتى](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
 
 سىز يەنە [ئەڭ يېڭى ئېلان قىلىنغان
 بەت](https://github.com/TriliumNext/Trilium/releases/latest)تىن مۇناسىپ سۇپىنىڭ
@@ -203,7 +203,7 @@ status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://r
 TriliumNext يەنە Flatpak نۇسخىسى بىلەن تەمىنلەيدۇ، ئەمما تېخى FlatHub غا
 چىقىرىلمىدى.
 
-### Browser (any OS)
+### Browser (ھەرقانداق مەشغۇلات سىستېمىسى)
 
 ئەگەر سىزدە (تۆۋەندىكىدەك) مۇلازىمىتىر قاچىلانمىسى بولسا، تور كۆرۈنمە يۈزىنى
 بىۋاسىتە ساقىلالايسىز (ئۇ بىر تەرەپ قىلغۇچ دېتالى بىلەن ئاساسەن ئوخشاش）
@@ -211,7 +211,7 @@ TriliumNext يەنە Flatpak نۇسخىسى بىلەن تەمىنلەيدۇ، ئ
 نۆۋەتتە پەقەت Chrome ۋە Firefox نىڭ ئەڭ يېڭى نەشرىنىلا قوللايدۇ (ھەمدە ئەمەلىي
 سىناقتىن ئۆتكەن).
 
-### Mobile
+### كۆچمە ئۈسكۈنە
 
 ئەگەر كۆچمە ئۈسكۈنىلەردە TriliumNext نى ئىشلەتمەكچى بولسىڭىز، كۆچمە كۆرگۈچ
 ئارقىلىق مۇلازىمىتىرغا قاچىلانغان كۆچمە نۇسخا كۆرۈنمە يۈزىنى زىيارەت قىلالايسىز
@@ -269,7 +269,7 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-### Building the Executable
+### ئىجرا قىلىنىدىغان ھۆججەتنى قۇرۇش
 ئامبارنى چۈشۈرۈڭ، `pnpm` ئارقىلىق بېقىندى زاپچاسلارنى قاچىلاڭ، ئاندىن Windows
 ئۈچۈن ئۈستەلئۈستى ئەپىنى قۇرۇپ چىقىڭ:
 ```shell
@@ -303,49 +303,54 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
   [antoniotejada](https://github.com/nriver).
 * GitHub مەسىلىلىرى ۋە مۇنازىرىلىرىگە ئاپتوماتىك جاۋاب قايتۇرۇش بىلەن تەمىنلىگەن
   [Dosu](https://dosu.dev/).
-* [Tabler Icons](https://tabler.io/icons) for the system tray icons.
+* سىستېما تەخسىسى سىنبەلگىسى ئۈچۈن [Tabler Icons](https://tabler.io/icons)
+  ئىشلىتىلدى.
 
-Trilium would not be possible without the technologies behind it:
+ئارقا سەپتىكى تېخنىكىلارنىڭ قوللىشى بولمىسا، Trilium تۈرىنى ئەمەلگە ئاشۇرغىلى
+بولمايتتى:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes. We are grateful for being offered a set of the premium features.
-* [CodeMirror](https://github.com/codemirror/CodeMirror) - code editor with
-  support for huge amount of languages.
-* [Excalidraw](https://github.com/excalidraw/excalidraw) - the infinite
-  whiteboard used in Canvas notes.
-* [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) - providing the
-  mind map functionality.
-* [Leaflet](https://github.com/Leaflet/Leaflet) - for rendering geographical
-  maps.
-* [Tabulator](https://github.com/olifolkerd/tabulator) - for the interactive
-  table used in collections.
-* [FancyTree](https://github.com/mar10/fancytree) - feature-rich tree library
-  without real competition.
-* [jsPlumb](https://github.com/jsplumb/jsplumb) - visual connectivity library.
-  Used in [relation
-  maps](https://docs.triliumnotes.org/user-guide/note-types/relation-map) and
-  [link
-  maps](https://docs.triliumnotes.org/user-guide/advanced-usage/note-map#link-map)
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) —— تېكىستلىك خاتىرىلەرنىڭ
+  ئارقا سىپىدىكى كۆرۈنۈشچان تەھرىرلىگۈچ. بىز بۇ يۇقىرى دەرىجىلىك ئىقتىدارلارنى
+  ئىشلىتىش ھوقۇقىغا ئېرىشكەنلىكىمىزدىن تولىمۇ مىننەتدارمىز.
+* [CodeMirror](https://github.com/codemirror/CodeMirror) —— كۆپلىگەن پروگرامما
+  تىللىرىنى قوللايدىغان كود تەھرىرلىگۈچ.
+* [Excalidraw](https://github.com/excalidraw/excalidraw) —— (Canvas) خاتىرىسىدە
+  ئىشلىتىلىدىغان چەكسىز ئاق دوسكا.
+* [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) —— تەپەككۇر
+  خەرىتىسى ئىقتىدارى بىلەن تەمىنلەيدۇ.
+* [Leaflet](https://github.com/Leaflet/Leaflet) —— جۇغراپىيەلىك خەرىتىلەرنى
+  تەسۋىرلەش (Render) ئۈچۈن ئىشلىتىلىدۇ.
+* [Tabulator](https://github.com/olifolkerd/tabulator) —— توپلاملاردىكى ئۆزئارا
+  تەسىرلىشىدىغان جەدۋەللەر ئۈچۈن ئىشلىتىلىدۇ.
+* [FancyTree](https://github.com/mar10/fancytree) —— ئىقتىدارى مول بولغان
+  دەرەخسىمان كونترول كۇتۇپخانىسى، ئۇنىڭغا تەڭ كېلىدىغان باشقا بىر كۇتۇپخانا يوق.
+* [jsPlumb](https://github.com/jsplumb/jsplumb) —— كۆرۈنۈشچان ئۇلىنىش
+  كۇتۇپخانىسى. مۇناسىۋەت خەرىتىسى
+  (https://docs.triliumnotes.org/user-guide/note-types/relation-map) ۋە ئۇلىنىش
+  خەرىتىسى
+  (https://docs.triliumnotes.org/user-guide/advanced-usage/note-map#link-map)
+  ئۈچۈن ئىشلىتىلىدۇ.
 
-## 🤝 Support
+## 🤝 بىزنى قوللاش
 
-Trilium is built and maintained with [hundreds of hours of
-work](https://github.com/TriliumNext/Trilium/graphs/commit-activity). Your
-support keeps it open-source, improves features, and covers costs such as
-hosting.
+Trilium نى ئېچىش ۋە ئاسراشقا [يۈزلىگەن سائەت
+خىزمەت](https://github.com/TriliumNext/Trilium/graphs/commit-activity)
+سىڭدۈرۈلگەن. سىزنىڭ قوللىشىڭىز ئۇنىڭ ئوچۇق كودلۇق خاراكتېرىگە كاپالەتلىك قىلىدۇ،
+ئىقتىدارلىرىنىڭ ياخشىلىنىشىنى ئىلگىرى سۈرىدۇ ھەمدە مۇلازىمېتىر تەننەرخى قاتارلىق
+چىقىملارنى قامدايدۇ.
 
-Consider supporting the main developer
-([eliandoran](https://github.com/eliandoran)) of the application via:
+تۆۋەندىكى ئۇسۇللار ئارقىلىق بۇ ئەپنىڭ ئاساسلىق ئاچقۇچىسى
+([eliandoran](https://github.com/eliandoran)) نى قوللاشنى ئويلىشىپ كۆرۈڭ:
 
 - [GitHub Sponsors](https://github.com/sponsors/eliandoran)
 - [PayPal](https://paypal.me/eliandoran)
 - [Buy Me a Coffee](https://buymeacoffee.com/eliandoran)
 
-## 🔑 License
+## 🔑 ئىجازەتنامە شەرتلىرى
 
-Copyright 2017-2025 zadam, Elian Doran, and other contributors
+نەشر ھوقۇقى 2017–2025 zadam، Elian Doran ۋە باشقا تۆھپىكارلارغا تەۋە
 
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU Affero General Public License as published by the Free
-Software Foundation, either version 3 of the License, or (at your option) any
-later version.
+بۇ پىروگرامما ئەركىن يۇمشاق دېتال: سىز ئەركىن يۇمشاق دېتال فوندى جەمئىيىتى (Free
+Software Foundation) ئېلان قىلغان GNU Affero ئومۇمىي ئاممىۋى ئىجازەتنامىسى (GNU
+AGPL) نىڭ 3-نەشرى ياكى (تاللىشىڭىزغا ئاساسەن) ھەر قانداق كېيىنكى نەشرىنىڭ
+شەرتلىرىگە ئاساسەن، بۇ پىروگراممىنى قايتا تارقىتسىڭىز ياكى ئۆزگەرتسىڭىز بولىدۇ.
