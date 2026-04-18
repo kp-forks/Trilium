@@ -1,5 +1,4 @@
 .about-dialog {
-
     :where(body.light-theme &) {
         --donate-button-color: #e33f3b;
         
@@ -61,7 +60,7 @@
         align-items: center;
     }
 
-    .property-sheet-table {
+    .about-dialog-property-sheet {
         margin-block: 30px;
         font-size: .85em;
         margin-inline: 20px;  

@@ -80,7 +80,7 @@ export default function AboutDialog() {
                     triliumnotes.org
                 </a>
 
-                <PropertySheet>
+                <PropertySheet className="about-dialog-property-sheet">
                     <PropertySheetItem label={t("about.version_label")}>
                         {t("about.version", {
                             appVersion: appInfo?.appVersion,

@@ -1,6 +1,8 @@
-.property-sheet-table {
+:where(.property-sheet) {
     --border-radius: 8px;
+}
 
+.property-sheet {
     dl {
         background: var(--card-background-color);
 
@@ -14,8 +16,7 @@
     }
 }
 
-@media (min-width: 600px) {
-    .property-sheet-table {
+.property-sheet-container.wide .property-sheet {
         display: table;
         border-spacing: 0 2px;
         border-collapse: separate;
@@ -41,43 +42,41 @@
 
         dt {
             white-space: nowrap;
+            font-weight: normal;
         }
 
         dl {
             width: 100%;
     }
-    }
 }
 
-@media (max-width: 599px) {
-    .property-sheet-table {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+.property-sheet-container.narrow .property-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 
-        dl {
+    dl {
+        margin: 0;
+        padding: 12px 20px;
+
+        &:first-child {
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        &:last-child {
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        dt {
+            margin-bottom: 8px;
+            font-size: .85em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: .4pt;
+        }
+        
+        dd {
             margin: 0;
-            padding: 12px 20px;
-
-            &:first-child {
-                border-radius: var(--border-radius) var(--border-radius) 0 0;
-            }
-
-            &:last-child {
-                border-radius: 0 0 var(--border-radius) var(--border-radius);
-            }
-
-            dt {
-                margin-bottom: 8px;
-                font-size: .85em;
-                font-weight: 500;
-                text-transform: uppercase;
-                letter-spacing: .4pt;
-            }
-            
-            dd {
-                margin: 0;
-            }
         }
     }
 }
