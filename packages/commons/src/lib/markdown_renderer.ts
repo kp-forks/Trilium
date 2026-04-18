@@ -106,7 +106,7 @@ function handleH1(content: string, title: string): string {
     });
 }
 
-function extractCodeBlocks(text: string): { processedText: string; placeholderMap: Map<string, string> } {
+export function extractCodeBlocks(text: string): { processedText: string; placeholderMap: Map<string, string> } {
     const codeMap = new Map<string, string>();
     let id = 0;
     const timestamp = Date.now();

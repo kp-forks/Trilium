@@ -1,5 +1,6 @@
-import { ButtonView, Plugin, isWidget } from "ckeditor5";
+import { ButtonView, Plugin } from "ckeditor5";
 import copyIcon from "../icons/copy.svg?raw";
+import { escapeHtml } from "../utils";
 
 /**
  * Adds a "Copy anchor link" button to the bookmark/anchor widget toolbar.
@@ -32,7 +33,7 @@ export default class CopyAnchorLinkButton extends Plugin {
                     if (noteId && bookmarkId) {
                         const href = `#root/${noteId}?bookmark=${encodeURIComponent(bookmarkId)}`;
                         const title = glob.getReferenceLinkTitleSync(href);
-                        const html = `<a class="reference-link" href="${href}">${title}</a>`;
+                        const html = `<a class="reference-link" href="${escapeHtml(href)}">${escapeHtml(title)}</a>`;
                         navigator.clipboard.write([
                             new ClipboardItem({
                                 "text/html": new Blob([html], { type: "text/html" }),

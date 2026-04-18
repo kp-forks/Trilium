@@ -480,7 +480,7 @@ export function findBookmarks(content: string): string[] {
 
 function saveBookmarks(note: BNote, content: string) {
     const foundBookmarks = findBookmarks(content);
-    const existingBookmarks = note.getLabels("internalBookmark");
+    const existingBookmarks = note.getOwnedLabels("internalBookmark");
 
     for (const bookmarkId of foundBookmarks) {
         const existing = existingBookmarks.find((l) => l.value === bookmarkId);

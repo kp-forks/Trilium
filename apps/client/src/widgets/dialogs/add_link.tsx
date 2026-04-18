@@ -50,13 +50,10 @@ export default function AddLinkDialog() {
         setLinkTitle(title);
     }
 
-    function resetExternalLink() {
-        if (linkType === "external-link") {
-            setLinkType("reference-link");
-        }
-    }
-
     useEffect(() => {
+        const resetExternalLink = () =>
+            setLinkType((prev) => prev === "external-link" ? "reference-link" : prev);
+
         if (!suggestion) {
             resetExternalLink();
             setBookmarks([]);
@@ -64,11 +61,14 @@ export default function AddLinkDialog() {
             return;
         }
 
+        let cancelled = false;
+
         if (suggestion.notePath) {
             const noteId = tree.getNoteIdFromUrl(suggestion.notePath);
             if (noteId) {
                 setDefaultLinkTitle(noteId);
                 froca.getNote(noteId).then((note) => {
+                    if (cancelled) return;
                     const bkms = note?.getLabels("internalBookmark").map((l) => l.value) ?? [];
                     setBookmarks(bkms);
                     setSelectedBookmark("");
@@ -81,6 +81,8 @@ export default function AddLinkDialog() {
             setLinkTitle(suggestion.externalLink);
             setLinkType("external-link");
         }
+
+        return () => { cancelled = true; };
     }, [suggestion]);
 
     useEffect(() => {
