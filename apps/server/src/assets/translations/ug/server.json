@@ -102,7 +102,8 @@
     "toggle-image-properties": "رەسىم خاسلىقىنى ئالماشتۇرۇش",
     "toggle-owned-attributes": "ئىگىدارلىق خاسلىقىنى ئالماشتۇرۇش",
     "toggle-inherited-attributes": "ۋارىسلىق قىلىنغان خاسلىقنى ئالماشتۇرۇش",
-    "toggle-promoted-attributes": "يۇقىرى كۆتۈرۈلگەن خاسلىقنى ئالماشتۇرۇش"
+    "toggle-promoted-attributes": "يۇقىرى كۆتۈرۈلگەن خاسلىقنى ئالماشتۇرۇش",
+    "render-active-note": "نۆۋەتتىكى خاتىرىنى رېندېرلاش (قايتا رېندېرلاش)"
   },
   "keyboard_action_names": {
     "back-in-note-history": "خاتىرە تارىخىغا قايتىش",
@@ -174,6 +175,9 @@
     "toggle-right-pane": "ئوڭ تەرەپتىكى كۆزنەكچىنى ئالماشتۇرۇش",
     "print-active-note": "ئاكتىپ خاتىرىنى بېسىپ چىقىرىش",
     "export-active-note-as-pdf": "ئاكتىپ خاتىرىنى PDF شەكلىدە چىقىرىش",
-    "open-note-externally": "خاتىرىنى سىرتقى پروگراممىدا ئېچىش"
+    "open-note-externally": "خاتىرىنى سىرتقى پروگراممىدا ئېچىش",
+    "run-active-note": "نۆۋەتتىكى خاتىرىنى ئىجرا قىلىش",
+    "toggle-note-hoisting": "خاتىرىنى يۇقىرىغا كۆتۈرۈش",
+    "unhoist-note": "خاتىرىنى يۇقىرىغا كۆتۈرۈشنى ئەمەلدىن قالدۇرۇش"
   }
 }
