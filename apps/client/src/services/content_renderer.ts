@@ -35,7 +35,6 @@ export interface RenderOptions {
     /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
     seenNoteIds?: Set<string>;
     showTextRepresentation?: boolean;
-    isPrinting?: boolean;
 }
 
 const CODE_MIME_TYPES = new Set(["application/json"]);

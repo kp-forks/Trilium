@@ -31,8 +31,7 @@ export function ListPrintView({ note, noteIds: unfilteredNoteIds, onReady, onPro
                 if (isNotePrintable(note)) {
                     const content = await content_renderer.getRenderedContent(note, {
                         trim: false,
-                        noChildrenList: true,
-                        isPrinting: true
+                        noChildrenList: true
                     });
 
                     const contentEl = content.$renderedContent[0];
