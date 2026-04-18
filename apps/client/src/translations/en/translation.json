@@ -304,7 +304,13 @@
     "download_button": "Download",
     "mime": "MIME: ",
     "file_size": "File size:",
-    "preview_not_available": "Preview isn't available for this note type."
+    "preview_not_available": "Preview isn't available for this note type.",
+    "save_revision": "Save revision",
+    "save_revision_tooltip": "Manually save a snapshot of the current note",
+    "description_placeholder": "Add a description (optional)",
+    "revision_saved": "Note revision has been saved.",
+    "edit_description": "Edit description",
+    "description_updated": "Revision description has been updated."
   },
   "sort_child_notes": {
     "sort_children_by": "Sort children by...",

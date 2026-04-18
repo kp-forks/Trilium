@@ -1543,7 +1543,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return !(this.noteId in this.becca.notes) || this.isBeingDeleted;
     }
 
-    saveRevision(): BRevision {
+    saveRevision(description?: string): BRevision {
         return sql.transactional(() => {
             let noteContent = this.getContent();
 
@@ -1552,6 +1552,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
                     noteId: this.noteId,
                     // title and text should be decrypted now
                     title: this.title,
+                    description: description || "",
                     type: this.type,
                     mime: this.mime,
                     isProtected: this.isProtected,

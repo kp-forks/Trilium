@@ -33,6 +33,7 @@ export interface RevisionItem {
     contentLength?: number;
     type: NoteType;
     title: string;
+    description?: string;
     isProtected?: boolean;
     mime: string;
 }
@@ -44,6 +45,7 @@ export interface RevisionPojo {
     mime: string;
     isProtected?: boolean;
     title: string;
+    description?: string;
     blobId?: string;
     dateLastEdited?: string;
     dateCreated?: string;

@@ -192,9 +192,10 @@ function register(router: Router) {
     eu.route<{ noteId: string }>(router, "post", "/etapi/notes/:noteId/revision", (req, res, next) => {
         const note = eu.getAndCheckNote(req.params.noteId);
 
-        note.saveRevision();
+        const description = req.body?.description || "";
+        const revision = note.saveRevision(description);
 
-        return res.sendStatus(204);
+        res.status(201).json(mappers.mapRevisionToPojo(revision));
     });
 
     eu.route<{ noteId: string }>(router, "get", "/etapi/notes/:noteId/attachments", (req, res, next) => {

@@ -28,6 +28,7 @@ export interface RevisionRow {
     mime: string;
     isProtected?: boolean;
     title: string;
+    description?: string;
     blobId?: string;
     dateLastEdited?: string;
     dateCreated?: string;

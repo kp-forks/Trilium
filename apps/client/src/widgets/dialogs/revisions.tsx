@@ -66,36 +66,47 @@ export default function RevisionsDialog() {
             helpPageId="vZWERwf8U3nx"
             bodyStyle={{ display: "flex", height: "80vh" }}
             header={
-                !!revisions?.length && (
-                    <>
-                        {["text", "code", "mermaid"].includes(currentRevision?.type ?? "") && (
-                            <FormToggle
-                                currentValue={showDiff}
-                                onChange={(newValue) => setShowDiff(newValue)}
-                                switchOnName={t("revisions.diff_on")}
-                                switchOffName={t("revisions.diff_off")}
-                                switchOnTooltip={t("revisions.diff_on_hint")}
-                                switchOffTooltip={t("revisions.diff_off_hint")}
-                            />
-                        )}
-                        &nbsp;
-                        <Button
-                            text={t("revisions.delete_all_revisions")}
-                            size="small"
-                            style={{ padding: "0 10px" }}
-                            onClick={async () => {
-                                const text = t("revisions.confirm_delete_all");
-
-                                if (note && await dialog.confirm(text)) {
-                                    await server.remove(`notes/${note.noteId}/revisions`);
-                                    setRevisions([]);
-                                    setCurrentRevision(undefined);
-                                    toast.showMessage(t("revisions.revisions_deleted"));
-                                }
+                <>
+                    {note && (
+                        <SaveRevisionButton
+                            noteId={note.noteId}
+                            onSaved={() => {
+                                setRefreshCounter(c => c + 1);
+                                setCurrentRevision(undefined);
                             }}
                         />
-                    </>
-                )
+                    )}
+                    {!!revisions?.length && (
+                        <>
+                            {["text", "code", "mermaid"].includes(currentRevision?.type ?? "") && (
+                                <FormToggle
+                                    currentValue={showDiff}
+                                    onChange={(newValue) => setShowDiff(newValue)}
+                                    switchOnName={t("revisions.diff_on")}
+                                    switchOffName={t("revisions.diff_off")}
+                                    switchOnTooltip={t("revisions.diff_on_hint")}
+                                    switchOffTooltip={t("revisions.diff_off_hint")}
+                                />
+                            )}
+                            &nbsp;
+                            <Button
+                                text={t("revisions.delete_all_revisions")}
+                                size="small"
+                                style={{ padding: "0 10px" }}
+                                onClick={async () => {
+                                    const text = t("revisions.confirm_delete_all");
+
+                                    if (note && await dialog.confirm(text)) {
+                                        await server.remove(`notes/${note.noteId}/revisions`);
+                                        setRevisions([]);
+                                        setCurrentRevision(undefined);
+                                        toast.showMessage(t("revisions.revisions_deleted"));
+                                    }
+                                }}
+                            />
+                        </>
+                    )}
+                </>
             }
             footer={<RevisionFooter note={note} />}
             footerStyle={{ paddingTop: 0, paddingBottom: 0 }}
@@ -135,9 +146,47 @@ export default function RevisionsDialog() {
                     onRevisionDeleted={() => {
                         setRefreshCounter(c => c + 1);
                         setCurrentRevision(undefined);
+                    }}
+                    onDescriptionUpdated={(revisionId, description) => {
+                        setRevisions(prev => prev?.map(r =>
+                            r.revisionId === revisionId ? { ...r, description } : r
+                        ));
+                        if (currentRevision?.revisionId === revisionId) {
+                            setCurrentRevision({ ...currentRevision, description });
+                        }
                     }} />
             </div>
         </Modal>
+    );
+}
+
+function SaveRevisionButton({ noteId, onSaved }: { noteId: string, onSaved: () => void }) {
+    const [ description, setDescription ] = useState("");
+
+    return (
+        <div style={{ display: "flex", gap: "5px", alignItems: "center", marginInlineEnd: "10px" }}>
+            <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder={t("revisions.description_placeholder")}
+                value={description}
+                onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
+                style={{ width: "200px" }}
+            />
+            <Button
+                icon="bx bx-save"
+                text={t("revisions.save_revision")}
+                title={t("revisions.save_revision_tooltip")}
+                size="small"
+                style={{ padding: "0 10px" }}
+                onClick={async () => {
+                    await server.post(`notes/${noteId}/revision`, { description });
+                    setDescription("");
+                    toast.showMessage(t("revisions.revision_saved"));
+                    onSaved();
+                }}
+            />
+        </div>
     );
 }
 
@@ -150,20 +199,30 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                     value={item.revisionId}
                     active={currentRevision && item.revisionId === currentRevision.revisionId}
                 >
-                    {item.dateCreated && item.dateCreated.substr(0, 16)} ({item.contentLength && utils.formatSize(item.contentLength)})
+                    <div>
+                        {item.dateCreated && item.dateCreated.substr(0, 16)} ({item.contentLength && utils.formatSize(item.contentLength)})
+                        {item.description && (
+                            <div className="revision-description" style={{ fontSize: "0.85em", opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {item.description}
+                            </div>
+                        )}
+                    </div>
                 </FormListItem>
             )}
         </FormList>);
 }
 
-function RevisionPreview({noteContent, revisionItem, showDiff, setShown, onRevisionDeleted }: {
+function RevisionPreview({noteContent, revisionItem, showDiff, setShown, onRevisionDeleted, onDescriptionUpdated }: {
     noteContent?: string,
     revisionItem?: RevisionItem,
     showDiff: boolean,
     setShown: Dispatch<StateUpdater<boolean>>,
-    onRevisionDeleted?: () => void
+    onRevisionDeleted?: () => void,
+    onDescriptionUpdated?: (revisionId: string, description: string) => void
 }) {
     const [ fullRevision, setFullRevision ] = useState<RevisionPojo>();
+    const [ editingDescription, setEditingDescription ] = useState(false);
+    const [ descriptionDraft, setDescriptionDraft ] = useState("");
 
     useEffect(() => {
         if (revisionItem) {
@@ -171,6 +230,7 @@ function RevisionPreview({noteContent, revisionItem, showDiff, setShown, onRevis
         } else {
             setFullRevision(undefined);
         }
+        setEditingDescription(false);
     }, [revisionItem]);
 
     return (
@@ -215,6 +275,25 @@ function RevisionPreview({noteContent, revisionItem, showDiff, setShown, onRevis
                     }
                 </div>)}
             </div>
+            {revisionItem && (
+                <RevisionDescription
+                    revisionItem={revisionItem}
+                    editing={editingDescription}
+                    draft={descriptionDraft}
+                    onEdit={() => {
+                        setDescriptionDraft(revisionItem.description || "");
+                        setEditingDescription(true);
+                    }}
+                    onDraftChange={setDescriptionDraft}
+                    onSave={async () => {
+                        await server.patch(`revisions/${revisionItem.revisionId}`, { description: descriptionDraft });
+                        setEditingDescription(false);
+                        toast.showMessage(t("revisions.description_updated"));
+                        onDescriptionUpdated?.(revisionItem.revisionId!, descriptionDraft);
+                    }}
+                    onCancel={() => setEditingDescription(false)}
+                />
+            )}
             <div
                 className={clsx("revision-content use-tn-links selectable-text", `type-${revisionItem?.type}`)}
                 style={{ overflow: "auto", wordBreak: "break-word" }}
@@ -222,6 +301,52 @@ function RevisionPreview({noteContent, revisionItem, showDiff, setShown, onRevis
                 <RevisionContent noteContent={noteContent} revisionItem={revisionItem} fullRevision={fullRevision} showDiff={showDiff}/>
             </div>
         </>
+    );
+}
+
+function RevisionDescription({ revisionItem, editing, draft, onEdit, onDraftChange, onSave, onCancel }: {
+    revisionItem: RevisionItem,
+    editing: boolean,
+    draft: string,
+    onEdit: () => void,
+    onDraftChange: (val: string) => void,
+    onSave: () => void,
+    onCancel: () => void
+}) {
+    if (editing) {
+        return (
+            <div style={{ display: "flex", gap: "5px", alignItems: "center", margin: "3px 0" }}>
+                <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    placeholder={t("revisions.description_placeholder")}
+                    value={draft}
+                    onInput={(e) => onDraftChange((e.target as HTMLInputElement).value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") onSave();
+                        if (e.key === "Escape") onCancel();
+                    }}
+                    // eslint-disable-next-line jsx-a11y/no-autofocus
+                    autoFocus
+                    style={{ flexGrow: 1 }}
+                />
+                <ActionButton icon="bx bx-check" text={t("revisions.edit_description")} onClick={onSave} />
+                <ActionButton icon="bx bx-x" text={t("revisions.edit_description")} onClick={onCancel} />
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: "flex", alignItems: "center", margin: "3px 0", gap: "5px", minHeight: "24px" }}>
+            <span style={{ opacity: revisionItem.description ? 1 : 0.5, fontStyle: revisionItem.description ? "normal" : "italic", fontSize: "0.9em" }}>
+                {revisionItem.description || t("revisions.description_placeholder")}
+            </span>
+            <ActionButton
+                icon="bx bx-edit-alt"
+                text={t("revisions.edit_description")}
+                onClick={onEdit}
+            />
+        </div>
     );
 }
 

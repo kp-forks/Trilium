@@ -31,7 +31,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
         return "revisionId";
     }
     static get hashedProperties() {
-        return ["revisionId", "noteId", "title", "isProtected", "dateLastEdited", "dateCreated", "utcDateLastEdited", "utcDateCreated", "utcDateModified", "blobId"];
+        return ["revisionId", "noteId", "title", "description", "isProtected", "dateLastEdited", "dateCreated", "utcDateLastEdited", "utcDateCreated", "utcDateModified", "blobId"];
     }
 
     revisionId?: string;
@@ -39,6 +39,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
     type!: NoteType;
     mime!: string;
     title!: string;
+    description!: string;
     dateLastEdited?: string;
     utcDateLastEdited?: string;
     contentLength?: number;
@@ -61,6 +62,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
         this.mime = row.mime;
         this.isProtected = !!row.isProtected;
         this.title = row.title;
+        this.description = row.description || "";
         this.blobId = row.blobId;
         this.dateLastEdited = row.dateLastEdited;
         this.dateCreated = row.dateCreated;
@@ -193,6 +195,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
             mime: this.mime,
             isProtected: this.isProtected,
             title: this.title,
+            description: this.description,
             blobId: this.blobId,
             dateLastEdited: this.dateLastEdited,
             dateCreated: this.dateCreated,
