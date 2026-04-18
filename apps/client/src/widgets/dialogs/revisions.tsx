@@ -225,11 +225,6 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                             <span className="revision-item-size">
                                 {item.contentLength && utils.formatSize(item.contentLength)}
                             </span>
-                            {item.source && item.source !== "auto" && (
-                                <span className="revision-source-badge">
-                                    {t(`revisions.source_${item.source}`)}
-                                </span>
-                            )}
                         </div>
                     </div>
                 </FormListItem>
