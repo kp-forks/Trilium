@@ -46,11 +46,11 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
     const noteIdsToPrefetch = referenceLinks.map((i, el) => getNoteIdFromLink(el));
     await froca.getNotes(noteIdsToPrefetch);
 
-    for (const el of referenceLinks) {
+    await Promise.all(referenceLinks.toArray().map(async (el) => {
         const innerSpan = document.createElement("span");
         await link.loadReferenceLinkTitle($(innerSpan), el.getAttribute("href"));
         el.replaceChildren(innerSpan);
-    }
+    }));
 
     await rewriteMermaidDiagramsInContainer($renderedContent[0] as HTMLDivElement);
     await formatCodeBlocks($renderedContent);
