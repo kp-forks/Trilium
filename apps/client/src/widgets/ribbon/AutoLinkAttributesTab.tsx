@@ -51,6 +51,10 @@ function AutoLinkAttribute({ attribute }: { attribute: FAttribute }) {
 }
 
 async function renderAutoLink(attribute: FAttribute) {
+    if (attribute.type === "label") {
+        return `#${escapeHtml(attribute.name)}=${escapeHtml(attribute.value)}`;
+    }
+
     const note = await froca.getNote(attribute.value);
     if (!note) return "";
 

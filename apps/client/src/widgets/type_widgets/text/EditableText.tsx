@@ -264,13 +264,6 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
                     editor.setData(contentRef.current);
                     parentComponent?.triggerEvent("textEditorRefreshed", { ntxId, editor });
 
-                    // Scroll to bookmark anchor if navigated with ?bookmark=...
-                    const viewScope = noteContext?.viewScope;
-                    if (viewScope?.bookmark) {
-                        const el = editor.editing.view.getDomRoot()?.querySelector(`[id="${CSS.escape(viewScope.bookmark)}"]`);
-                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                        viewScope.bookmark = undefined;
-                    }
                 }}
             />}
 
