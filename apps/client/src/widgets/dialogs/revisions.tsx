@@ -208,39 +208,64 @@ function getRevisionSourceTitle(source?: string): string {
     return t(`revisions.source_description_${source ?? "unknown"}`);
 }
 
-function getRelativeDateGroup(dateStr: string): string {
+type DateGroup = "today" | "yesterday" | "this_week" | "this_month" | "older";
+
+function getDateGroup(dateStr: string): DateGroup {
     const date = dayjs(dateStr);
     const now = dayjs();
 
-    if (date.isSame(now, "day")) return t("revisions.date_today");
-    if (date.isSame(now.subtract(1, "day"), "day")) return t("revisions.date_yesterday");
-    if (date.isSame(now, "week")) return t("revisions.date_this_week");
-    if (date.isSame(now, "month")) return t("revisions.date_this_month");
-    return date.format("MMMM YYYY");
+    if (date.isSame(now, "day")) return "today";
+    if (date.isSame(now.subtract(1, "day"), "day")) return "yesterday";
+    if (date.isSame(now, "week")) return "this_week";
+    if (date.isSame(now, "month")) return "this_month";
+    return "older";
+}
+
+function getDateGroupLabel(group: DateGroup, dateStr: string): string {
+    if (group === "older") return dayjs(dateStr).format("MMMM YYYY");
+    return t(`revisions.date_${group}`);
+}
+
+function formatRevisionDate(dateStr: string, group: DateGroup): string {
+    const date = dayjs(dateStr);
+    switch (group) {
+        case "today":
+        case "yesterday":
+            return date.format("HH:mm");
+        case "this_week":
+            return date.format("dddd · HH:mm");
+        default:
+            return date.isSame(dayjs(), "year")
+                ? date.format("MMM D · HH:mm")
+                : date.format("MMM D, YYYY · HH:mm");
+    }
 }
 
 function buildRevisionTooltip(item: RevisionItem): string {
+    const dateLine = item.dateCreated
+        ? `${dayjs(item.dateCreated).format("YYYY-MM-DD HH:mm")} (${dayjs(item.dateCreated).fromNow()})`
+        : "";
     return [
         getRevisionSourceTitle(item.source),
-        item.dateCreated && dayjs(item.dateCreated).fromNow(),
+        dateLine,
         item.contentLength && utils.formatSize(item.contentLength)
     ].filter(Boolean).join("\n");
 }
 
 function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: RevisionItem[], onSelect: (val: string) => void, currentRevision?: RevisionItem }) {
-    let lastGroup = "";
+    let lastGroup: DateGroup | "" = "";
 
     return (
         <FormList onSelect={onSelect} fullHeight wrapperClassName="revision-list">
             {revisions.map((item) => {
-                const group = item.dateCreated ? getRelativeDateGroup(item.dateCreated) : "";
+                const group = item.dateCreated ? getDateGroup(item.dateCreated) : "" as DateGroup;
                 const showHeader = group !== lastGroup;
                 lastGroup = group;
 
                 return (
                     <Fragment key={item.revisionId}>
                         {showHeader && (
-                            <div className="revision-group-header">{group}</div>
+                            <div className="revision-group-header">{item.dateCreated ? getDateGroupLabel(group, item.dateCreated) : ""}</div>
                         )}
                         <FormListItem
                             key={item.revisionId}
@@ -251,7 +276,7 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                         >
                             <div>
                                 <div className="revision-item-date">
-                                    {item.dateCreated && dayjs(item.dateCreated).format("MMM D · HH:mm")}
+                                    {item.dateCreated && formatRevisionDate(item.dateCreated, group)}
                                 </div>
                                 {item.description && (
                                     <div className="revision-item-description">

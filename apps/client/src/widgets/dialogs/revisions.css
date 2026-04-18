@@ -119,6 +119,14 @@ body.mobile .revisions-dialog {
         .dropdown-item + .dropdown-item {
             border-top: 1px solid var(--main-border-color) !important;
         }
+
+        .dropdown-item {
+            min-height: 2.5em;
+
+            >div {
+                padding-left: 0.25em;
+            }
+        }
     }
 
     .revision-item-description {
