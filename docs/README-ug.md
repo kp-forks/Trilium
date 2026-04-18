@@ -285,23 +285,24 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 
 ### تەتقىقاتچى ھۆججەتلىرى
 
-Please view the [documentation
-guide](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)
-for details. If you have more questions, feel free to reach out via the links
-described in the "Discuss with us" section above.
+تەپسىلاتلار ئۈچۈن [ھۆججەت
+يېتەكچىسى](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)گە
+قاراڭ. ئەگەر تېخىمۇ كۆپ سوئاللىرىڭىز بولسا، ئۈستىدىكى "بىز بىلەن ئالاقىلىشىڭ"
+بۆلىكىدە تەمىنلەنگەن ئۇلىنىشلار ئارقىلىق بىز بىلەن ئالاقىلىشىڭنى قارشى ئالىمىز.
 
-## 👏 Shoutouts
+## 👏 مىننەتدارلىق
 
-* [zadam](https://github.com/zadam) for the original concept and implementation
-  of the application.
-* [Sarah Hussein](https://github.com/Sarah-Hussein) for designing the
-  application icon.
-* [nriver](https://github.com/nriver) for his work on internationalization.
-* [Thomas Frei](https://github.com/thfrei) for his original work on the Canvas.
-* [antoniotejada](https://github.com/nriver) for the original syntax highlight
-  widget.
-* [Dosu](https://dosu.dev/) for providing us with the automated responses to
-  GitHub issues and discussions.
+* ئەپنىڭ ئەسلى ئۇقۇم لاھىيەسى ۋە ئەمەلگە ئاشۇرۇلۇشىغا تۆھپە قوشقان
+  [zadam](https://github.com/zadam).
+* ئەپ سىنبەلگىسىنى لاھىيەلىگەن [Sarah
+  Hussein](https://github.com/Sarah-Hussein).
+* خەلقئارالاشتۇرۇش خىزمىتىگە تۆھپە قوشقان [nriver](https://github.com/nriver).
+* Canvas جەھەتتىكى ئەسلى ئىجادىي خىزمەتلىرى ئۈچۈن [Thomas
+  Frei](https://github.com/thfrei).
+* ئەسلى گرامماتىكا گەۋدىلەندۈرۈش كىچىك زاپچاسلارنى ئاپتورى
+  [antoniotejada](https://github.com/nriver).
+* GitHub مەسىلىلىرى ۋە مۇنازىرىلىرىگە ئاپتوماتىك جاۋاب قايتۇرۇش بىلەن تەمىنلىگەن
+  [Dosu](https://dosu.dev/).
 * [Tabler Icons](https://tabler.io/icons) for the system tray icons.
 
 Trilium would not be possible without the technologies behind it:

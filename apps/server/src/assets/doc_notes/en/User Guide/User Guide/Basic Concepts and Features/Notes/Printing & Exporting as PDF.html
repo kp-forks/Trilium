@@ -165,10 +165,16 @@ class="admonition note">
       class="reference-link" href="#root/_help_KC1HB96bqqHX">Templates</a>.</li>
   </ul>
   <p>For example, to change the font of the document from the one defined by
-    the theme or the user to a serif one:</p><pre><code class="language-text-x-trilium-auto">body {
-	--main-font-family: serif !important;
-    --detail-font-family: var(--main-font-family) !important;
+    the theme or the user to a serif one:</p><pre><code class="language-text-x-trilium-auto">body {
+	--print-font-family: serif;
+    --print-font-size: 11pt;
 }</code></pre>
+  <aside class="admonition important">
+    <p>When altering <code spellcheck="false">--print-font-family</code>, make
+      sure the change is done at <code spellcheck="false">body</code> level and
+      not <code spellcheck="false">:root</code>, since otherwise it won't be picked
+      up due to specificity rules.</p>
+  </aside>
   <p>To remark:</p>
   <ul>
     <li>Multiple CSS notes can be add by using multiple <code spellcheck="false">~printCss</code> relations.</li>

@@ -714,6 +714,15 @@ html .note-detail-editable-text :not(figure, .include-note, hr):first-child {
     text-decoration: underline;
 }
 
+.ck-content a.reference-link small {
+    margin-left: 0.25em;
+    opacity: 0.5;
+
+    >span {
+        font-size: 0.7em;
+    }
+}
+
 /*
  * Read-only text content
  */

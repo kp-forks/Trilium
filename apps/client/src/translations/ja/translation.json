@@ -615,7 +615,8 @@
     "collections": "コレクション",
     "ai-chat": "AI チャット",
     "spreadsheet": "スプレッドシート",
-    "llm-chat": "AI チャット"
+    "llm-chat": "AI チャット",
+    "markdown": "Markdown"
   },
   "edited_notes": {
     "no_edited_notes_found": "この日の編集されたノートはまだありません...",
@@ -2479,5 +2480,10 @@
   },
   "launcher_button_context_menu": {
     "remove_from_launch_bar": "ランチャーバーから削除"
+  },
+  "display_mode": {
+    "source": "ソースビュー",
+    "split": "分割ビュー",
+    "preview": "プレビュー"
   }
 }
