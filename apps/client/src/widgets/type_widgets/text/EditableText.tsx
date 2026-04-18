@@ -61,6 +61,17 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
         onContentChange(newContent) {
             contentRef.current = newContent;
             watchdogRef.current?.editor?.setData(newContent);
+
+            // Scroll to bookmark anchor if navigated with ?bookmark=...
+            const viewScope = noteContext?.viewScope;
+            if (viewScope?.bookmark) {
+                requestAnimationFrame(() => {
+                    const el = watchdogRef.current?.editor?.editing.view.getDomRoot()
+                        ?.querySelector(`[id="${CSS.escape(viewScope.bookmark!)}"]`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    viewScope.bookmark = undefined;
+                });
+            }
         },
         dataSaved(savedData) {
             // Store back the saved data in order to retrieve it in case the CKEditor crashes.
