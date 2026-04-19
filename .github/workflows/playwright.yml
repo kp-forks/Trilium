@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  e2e:
+  e2e-server:
     strategy:
       fail-fast: false
       matrix:
@@ -85,3 +85,42 @@ jobs:
       - name: Kill the server
         if: always()
         run: pkill -f trilium || true
+
+  e2e-standalone:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-22.04
+          - name: linux-arm64
+            os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    name: Standalone E2E tests on ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Standalone end-to-end tests
+        run: pnpm --filter client-standalone e2e
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: standalone e2e report ${{ matrix.name }}
+          path: apps/client-standalone/test-output
