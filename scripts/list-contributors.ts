@@ -36,13 +36,16 @@ async function listGitHubContributors() {
         return;
     }
 
-    const contributors: ContributorInfo[] = list.map((c) => {
-        return {
-            name: c.login,
-            url: c.html_url,
-            commitCount: c.contributions
-        } as ContributorInfo;
-    });
+    const MIN_CONTRIBUTIONS = 125;
+    const contributors: ContributorInfo[] = list
+        .filter((c) => c.contributions >= MIN_CONTRIBUTIONS)
+        .map((c) => {
+            return {
+                name: c.login,
+                url: c.html_url,
+                commitCount: c.contributions
+            } as ContributorInfo;
+        });
 
     showTable({
         title: "GitHub Contributor List",
