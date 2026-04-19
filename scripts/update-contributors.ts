@@ -205,7 +205,7 @@ function updateContributorsJson(developers: ContributorInfo[]) {
     }
 
     const output = {
-        "ℹ️": "Auto-generated file. Run `pnpm run list-contributors` to regenerate.",
+        "⚠️": "Auto-generated file. Run `pnpm run update-contributors` to regenerate.",
         contributors
     };
     writeFileSync(CONTRIBUTORS_PATH, JSON.stringify(output, null, 4) + "\n");

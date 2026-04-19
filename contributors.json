@@ -1,5 +1,5 @@
 {
-    "ℹ️": "Auto-generated file. Run `pnpm run list-contributors` to regenerate.",
+    "⚠️": "Auto-generated file. Run `pnpm run update-contributors` to regenerate.",
     "contributors": [
         {
             "name": "eliandoran",
@@ -22,15 +22,6 @@
             "name": "perfectra1n",
             "fullName": "Jon Fuller",
             "url": "https://github.com/perfectra1n"
-        },
-        {
-            "name": "pano9000",
-            "fullName": "Panagiotis Papadopoulos",
-            "url": "https://github.com/pano9000"
-        },
-        {
-            "name": "SiriusXT",
-            "url": "https://github.com/SiriusXT"
         },
         {
             "name": "JYC333",
