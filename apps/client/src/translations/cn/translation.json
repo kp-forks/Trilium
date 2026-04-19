@@ -41,7 +41,9 @@
     "link_title_mirrors": "链接标题跟随笔记标题变化",
     "link_title_arbitrary": "链接标题可随意修改",
     "link_title": "链接标题",
-    "button_add_link": "添加链接"
+    "button_add_link": "添加链接",
+    "anchor": "锚点（可选）",
+    "anchor_none": "无（笔记链接）"
   },
   "branch_prefix": {
     "edit_branch_prefix": "编辑分支前缀",
@@ -1124,9 +1126,9 @@
     "font_family": "字体系列",
     "size": "大小",
     "note_tree_font": "笔记树字体",
-    "note_detail_font": "笔记详情字体",
-    "monospace_font": "等宽（代码）字体",
-    "not_all_fonts_available": "并非所有列出的字体都可能在您的系统上可用。",
+    "note_detail_font": "文档字体",
+    "monospace_font": "等宽字体",
+    "not_all_fonts_available": "并非所有列出的字体都可能在您的系统上可用",
     "generic-fonts": "通用字体",
     "sans-serif-system-fonts": "无衬线系统字体",
     "serif-system-fonts": "衬线系统字体",
@@ -1137,7 +1139,10 @@
     "monospace": "等宽",
     "system-default": "系统默认",
     "custom_fonts": "使用自定义字体",
-    "preview": "预览"
+    "preview": "预览",
+    "monospace_font_description": "用于代码注释和代码块",
+    "size_relative_to_general": "大小相对于一般字体大小",
+    "apply_changes": "重新加载以应用更改"
   },
   "max_content_width": {
     "title": "内容宽度",
@@ -1157,20 +1162,23 @@
     "edited_notes_message": "日记笔记自动打开编辑过的笔记功能区标签页"
   },
   "theme": {
-    "title": "主题",
-    "theme_label": "主题",
+    "title": "用户界面",
+    "theme_label": "应用主题",
     "override_theme_fonts_label": "覆盖主题字体",
-    "triliumnext": "Trilium（跟随系统颜色方案）",
-    "triliumnext-light": "Trilium（浅色）",
-    "triliumnext-dark": "Trilium（深色）",
+    "triliumnext": "跟随系统颜色方案",
+    "triliumnext-light": "浅色",
+    "triliumnext-dark": "深色",
     "layout": "布局",
     "layout-vertical-title": "垂直",
     "layout-horizontal-title": "水平",
     "layout-vertical-description": "启动栏位于左侧（默认）",
     "layout-horizontal-description": "启动栏位于标签页栏下方，标签页栏现在是全宽的。",
-    "auto_theme": "传统（跟随系统配色方案）",
-    "light_theme": "传统（浅色）",
-    "dark_theme": "传统（深色）"
+    "auto_theme": "跟随系统配色方案",
+    "light_theme": "浅色",
+    "dark_theme": "深色",
+    "modern_themes": "现代",
+    "legacy_themes": "传统",
+    "custom_themes": "自定义"
   },
   "zoom_factor": {
     "title": "缩放系数（仅桌面客户端有效）",
@@ -1179,7 +1187,7 @@
   "code_auto_read_only_size": {
     "title": "自动只读大小",
     "description": "自动只读大小是指笔记超过设置的大小后自动设置为只读模式（为性能考虑）。",
-    "label": "自动只读大小（代码笔记）",
+    "label": "自动只读大小",
     "unit": "字符"
   },
   "code_mime_types": {
@@ -1222,22 +1230,27 @@
     "batch_ocr_error": "批量处理过程中出错：{{error}}"
   },
   "attachment_erasure_timeout": {
-    "attachment_erasure_timeout": "附件清理超时",
-    "erase_attachments_after": "在此时间后删除未使用的附件：",
-    "manual_erasing_description": "您还可以手动触发清理（而不考虑上述定义的超时时间）：",
-    "erase_unused_attachments_now": "立即清理未使用的附件笔记",
-    "unused_attachments_erased": "未使用的附件已被删除。"
+    "attachment_erasure_timeout": "未使用的附件",
+    "erase_attachments_after": "在此时间后清理未使用的附件",
+    "manual_erasing_description": "手动触发清理，忽略上述超时。",
+    "erase_unused_attachments_now": "立即清理未使用的附件",
+    "unused_attachments_erased": "未使用的附件已被清理。",
+    "description": "不再被任何笔记引用的附件被视为未使用，可以在一段时间后自动清理。",
+    "erase_attachments_after_description": "未使用附件被永久清理前的时间。"
   },
   "network_connections": {
-    "network_connections_title": "网络连接",
-    "check_for_updates": "自动检查更新"
+    "network_connections_title": "网络",
+    "check_for_updates": "自动检查更新",
+    "check_for_updates_description": "在 GitHub 上检查新版本，并在可用时在全局菜单中显示通知。"
   },
   "note_erasure_timeout": {
-    "note_erasure_timeout_title": "笔记清理超时",
-    "erase_notes_after": "在此时间后删除笔记：",
-    "manual_erasing_description": "您还可以手动触发清理（不考虑上述定义的超时）：",
+    "note_erasure_timeout_title": "已删除的笔记",
+    "erase_notes_after": "在此时间后清理笔记",
+    "manual_erasing_description": "手动触发清理，忽略上述超时。",
     "erase_deleted_notes_now": "立即清理已删除的笔记",
-    "deleted_notes_erased": "已删除的笔记已被清理。"
+    "deleted_notes_erased": "已删除的笔记已被清理。",
+    "description": "删除的笔记最初只是被标记为已删除，可以从“最近的笔记”中恢复。经过一段时间后，它们将被永久清理。",
+    "erase_notes_after_description": "删除的笔记被永久清理之前的时间。"
   },
   "revisions_snapshot_interval": {
     "note_revisions_snapshot_interval_title": "笔记修订快照间隔",
@@ -1859,7 +1872,9 @@
     }
   },
   "code-editor-options": {
-    "title": "编辑器"
+    "title": "编辑器",
+    "tab_width": "制表符宽度",
+    "tab_width_unit": "空格"
   },
   "custom_date_time_format": {
     "title": "自定义日期/时间格式",
@@ -2018,11 +2033,11 @@
   },
   "ui-performance": {
     "title": "性能",
-    "enable-motion": "启用过渡和动画",
-    "enable-shadows": "启用阴影",
-    "enable-backdrop-effects": "启用菜单、弹窗和面板的背景效果",
-    "enable-smooth-scroll": "启用平滑滚动",
-    "app-restart-required": "（需重启程序以应用更改）"
+    "enable-motion": "过渡和动画",
+    "enable-shadows": "阴影",
+    "enable-backdrop-effects": "菜单、弹窗和面板的背景效果",
+    "enable-smooth-scroll": "平滑滚动",
+    "app-restart-required": "需要重启应用"
   },
   "pagination": {
     "total_notes": "{{count}} 篇笔记",
@@ -2348,5 +2363,8 @@
   },
   "database": {
     "title": "数据库"
+  },
+  "auto_link_attribute_list": {
+    "title": "系统属性"
   }
 }

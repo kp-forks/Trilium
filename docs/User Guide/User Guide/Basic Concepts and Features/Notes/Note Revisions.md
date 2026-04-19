@@ -40,7 +40,7 @@ In the list of note revisions:
 To create a named revision, either:
 
 *   Go to the <a class="reference-link" href="../UI%20Elements/Note%20buttons.md">Note buttons</a>, select _Save named revision…_, enter the name of revision and confirm.
-*   Use the corresponding [keyboard shortcut](../Keyboard%20Shortcuts.md) or the <a class="reference-link" href="../Navigation/Jump%20to.md">Jump to...</a> command with the same name.
+*   Use the corresponding [keyboard shortcut](../Keyboard%20Shortcuts.md) or the <a class="reference-link" href="../Navigation/Jump%20to%20%26%20command%20palette.md">Jump to...</a> command with the same name.
 *   Save a revision normally, and adjust the name afterwards from the note revision list.
 
 ## When revisions are saved

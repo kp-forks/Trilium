@@ -32,6 +32,14 @@ async function main() {
 
     await import("./print.css");
 
+    // Browser printing relies on @page margins since there's no programmatic control.
+    // Electron uses printToPDF() margins instead, so we only inject this for the browser path.
+    if (!isElectron()) {
+        const style = document.createElement("style");
+        style.textContent = "@page { margin: 2cm; }";
+        document.head.appendChild(style);
+    }
+
     // Load the user's font preferences so that --detail-font-family is available.
     const fontLink = document.createElement("link");
     fontLink.rel = "stylesheet";
