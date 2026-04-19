@@ -1,5 +1,4 @@
-import officeparser from 'officeparser';
-import type { OfficeParserConfig } from 'officeparser';
+import { OfficeParser, type OfficeParserConfig } from 'officeparser';
 
 import log from '../../log.js';
 import { OCRProcessingOptions, OCRResult } from '../ocr_service.js';
@@ -45,8 +44,8 @@ export class OfficeProcessor extends FileProcessor {
 
         log.info(`Starting Office document text extraction for ${mimeType}...`);
 
-        const text = await officeparser.parseOfficeAsync(buffer, PARSER_CONFIG);
-        const trimmed = text.trim();
+        const ast = await OfficeParser.parseOffice(buffer, PARSER_CONFIG);
+        const trimmed = ast.toText().trim();
 
         return {
             text: trimmed,
