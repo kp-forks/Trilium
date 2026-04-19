@@ -61,7 +61,19 @@ export default class App {
             url = "/";
         }
 
-        await this.page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
+        // If we're already on the target (modulo hash), page.goto treats it as
+        // a same-document navigation and doesn't reload. In standalone that
+        // means the worker keeps its current state — so option changes made
+        // since the last navigation (e.g. a locale switch via setOption) won't
+        // take effect. Force a real reload in that case.
+        const currentUrl = this.page.url();
+        const targetUrl = new URL(url, getBaseUrl()).toString();
+        const stripHash = (u: string) => u.split("#")[0];
+        if (currentUrl !== "about:blank" && stripHash(currentUrl) === stripHash(targetUrl)) {
+            await this.page.reload({ waitUntil: "networkidle", timeout: 30_000 });
+        } else {
+            await this.page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
+        }
 
         // Wait for the page to load.
         if (url === "/") {
