@@ -109,6 +109,7 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
     apiRoute(GET, "/api/revisions/:revisionId", revisionsApiRoute.getRevision);
     apiRoute(GET, "/api/revisions/:revisionId/blob", revisionsApiRoute.getRevisionBlob);
     apiRoute(DEL, "/api/revisions/:revisionId", revisionsApiRoute.eraseRevision);
+    apiRoute(PATCH, "/api/revisions/:revisionId", revisionsApiRoute.updateRevisionDescription);
     apiRoute(PST, "/api/revisions/:revisionId/restore", revisionsApiRoute.restoreRevision);
     apiRoute(GET, "/api/edited-notes/:date", revisionsApiRoute.getEditedNotesOnDate);
 

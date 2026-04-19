@@ -56,8 +56,9 @@ class SearchResult {
         this.fuzzyScore = 0; // Reset fuzzy score tracking
 
         const note = becca.notes[this.noteId];
-        const normalizedQuery = normalizeSearchText(fulltextQuery.toLowerCase());
-        const normalizedTitle = normalizeSearchText(note.title.toLowerCase());
+        // normalizeSearchText already lowercases — no need for .toLowerCase() first
+        const normalizedQuery = normalizeSearchText(fulltextQuery);
+        const normalizedTitle = normalizeSearchText(note.title);
 
         // Note ID exact match, much higher score
         if (note.noteId.toLowerCase() === fulltextQuery) {
@@ -88,30 +89,32 @@ class SearchResult {
     }
 
     addScoreForStrings(tokens: string[], str: string, factor: number, enableFuzzyMatching: boolean = true) {
-        const normalizedStr = normalizeSearchText(str.toLowerCase());
+        // normalizeSearchText already lowercases — no need for .toLowerCase() first
+        const normalizedStr = normalizeSearchText(str);
         const chunks = normalizedStr.split(" ");
+
+        // Pre-normalize tokens once instead of per-chunk
+        const normalizedTokens = tokens.map(t => normalizeSearchText(t));
 
         let tokenScore = 0;
         for (const chunk of chunks) {
-            for (const token of tokens) {
-                const normalizedToken = normalizeSearchText(token.toLowerCase());
+            for (let ti = 0; ti < normalizedTokens.length; ti++) {
+                const normalizedToken = normalizedTokens[ti];
 
                 if (chunk === normalizedToken) {
-                    tokenScore += SCORE_WEIGHTS.TOKEN_EXACT_MATCH * token.length * factor;
+                    tokenScore += SCORE_WEIGHTS.TOKEN_EXACT_MATCH * tokens[ti].length * factor;
                 } else if (chunk.startsWith(normalizedToken)) {
-                    tokenScore += SCORE_WEIGHTS.TOKEN_PREFIX_MATCH * token.length * factor;
+                    tokenScore += SCORE_WEIGHTS.TOKEN_PREFIX_MATCH * tokens[ti].length * factor;
                 } else if (chunk.includes(normalizedToken)) {
-                    tokenScore += SCORE_WEIGHTS.TOKEN_CONTAINS_MATCH * token.length * factor;
-                } else {
-                    // Try fuzzy matching for individual tokens with caps applied
+                    tokenScore += SCORE_WEIGHTS.TOKEN_CONTAINS_MATCH * tokens[ti].length * factor;
+                } else if (enableFuzzyMatching &&
+                           normalizedToken.length >= FUZZY_SEARCH_CONFIG.MIN_FUZZY_TOKEN_LENGTH &&
+                           this.fuzzyScore < SCORE_WEIGHTS.MAX_TOTAL_FUZZY_SCORE) {
+                    // Only compute edit distance when fuzzy matching is enabled
                     const editDistance = calculateOptimizedEditDistance(chunk, normalizedToken, FUZZY_SEARCH_CONFIG.MAX_EDIT_DISTANCE);
-                    if (editDistance <= FUZZY_SEARCH_CONFIG.MAX_EDIT_DISTANCE &&
-                        normalizedToken.length >= FUZZY_SEARCH_CONFIG.MIN_FUZZY_TOKEN_LENGTH &&
-                        this.fuzzyScore < SCORE_WEIGHTS.MAX_TOTAL_FUZZY_SCORE) {
-
+                    if (editDistance <= FUZZY_SEARCH_CONFIG.MAX_EDIT_DISTANCE) {
                         const fuzzyWeight = SCORE_WEIGHTS.TOKEN_FUZZY_MATCH * (1 - editDistance / FUZZY_SEARCH_CONFIG.MAX_EDIT_DISTANCE);
-                        // Apply caps: limit token length multiplier and per-token contribution
-                        const cappedTokenLength = Math.min(token.length, SCORE_WEIGHTS.MAX_FUZZY_TOKEN_LENGTH_MULTIPLIER);
+                        const cappedTokenLength = Math.min(tokens[ti].length, SCORE_WEIGHTS.MAX_FUZZY_TOKEN_LENGTH_MULTIPLIER);
                         const fuzzyTokenScore = Math.min(
                             fuzzyWeight * cappedTokenLength * factor,
                             SCORE_WEIGHTS.MAX_FUZZY_SCORE_PER_TOKEN

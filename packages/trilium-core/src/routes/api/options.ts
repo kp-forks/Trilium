@@ -14,6 +14,7 @@ interface UserTheme {
     val: string; // value of the theme, used in the URL
     title: string; // title of the theme, displayed in the UI
     noteId: string; // ID of the note containing the theme
+    icon: string; // icon class of the note
 }
 
 // options allowed to be updated directly in the Options dialog
@@ -29,7 +30,10 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "theme",
     "codeBlockTheme",
     "codeBlockWordWrap",
+    "codeBlockTabWidth",
     "codeNoteTheme",
+    "codeNoteTabWidth",
+    "codeNoteIndentWithTabs",
     "syncServerHost",
     "syncServerTimeout",
     "syncServerTimeoutTimeScale",
@@ -99,6 +103,8 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "layoutOrientation",
     "backgroundEffects",
     "allowedHtmlTags",
+    "searchEnableFuzzyMatching",
+    "searchAutocompleteFuzzy",
     "redirectBareDomain",
     "showLoginInShareTheme",
     "splitEditorOrientation",
@@ -178,16 +184,18 @@ function getUserThemes() {
     const ret: UserTheme[] = [];
 
     for (const note of notes) {
+        const title = note.getTitleOrProtected();
         let value = note.getOwnedLabelValue("appTheme");
 
         if (!value) {
-            value = note.title.toLowerCase().replace(/[^a-z0-9]/gi, "-");
+            value = title.toLowerCase().replace(/[^a-z0-9]/gi, "-");
         }
 
         ret.push({
             val: value,
-            title: note.title,
-            noteId: note.noteId
+            title,
+            noteId: note.noteId,
+            icon: note.getIcon()
         });
     }
 

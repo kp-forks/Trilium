@@ -1,12 +1,5 @@
 {
   "about": {
-    "title": "Acerca de Trilium Notes",
-    "homepage": "Página principal:",
-    "app_version": "Versión de la aplicación:",
-    "db_version": "Versión de base de datos:",
-    "sync_version": "Versión de sincronización:",
-    "build_date": "Fecha de creación:",
-    "build_revision": "Revisión de compilación:",
     "data_directory": "Directorio de datos:"
   },
   "toast": {
@@ -90,12 +83,22 @@
   "delete_notes": {
     "close": "Cerrar",
     "delete_all_clones_description": "Eliminar también todos los clones (se puede deshacer en cambios recientes)",
-    "erase_notes_description": "La eliminación normal (suave) solo marca las notas como eliminadas y se pueden recuperar (en el cuadro de diálogo de cambios recientes) dentro de un periodo de tiempo. Al marcar esta opción se borrarán las notas inmediatamente y no será posible recuperarlas.",
+    "erase_notes_description": "Borrar notas inmediatamente en lugar de la eliminación con respaldo. Esto no se puede deshacer y forzará la recarga de la aplicación.",
     "erase_notes_warning": "Eliminar notas permanentemente (no se puede deshacer), incluidos todos los clones. Esto forzará la recarga de la aplicación.",
-    "notes_to_be_deleted": "Las siguientes notas serán eliminadas ({{notesCount}})",
+    "notes_to_be_deleted": "Notas a ser eliminadas ({{notesCount}})",
     "no_note_to_delete": "No se eliminará ninguna nota (solo clones).",
-    "broken_relations_to_be_deleted": "Las siguientes relaciones se romperán y serán eliminadas ({{ relationCount}})",
-    "cancel": "Cancelar"
+    "broken_relations_to_be_deleted": "Relaciones rotas ({{ relationCount}})",
+    "cancel": "Cancelar",
+    "title": "Eliminar notas",
+    "clones_label": "Clones",
+    "delete_clones_description_one": "También eliminar otro clon. Puede deshacerse en los cambios recientes.",
+    "delete_clones_description_many": "También eliminar otros {{count}} clones. Puede deshacerse en los cambios recientes.",
+    "delete_clones_description_other": "También eliminar otros {{count}} clones. Puede deshacerse en los cambios recientes.",
+    "erase_notes_label": "Borrar permanentemente",
+    "table_note_with_relation": "Nota con relación",
+    "table_relation": "Relación",
+    "table_points_to": "Apunta a (eliminado)",
+    "delete": "Eliminar"
   },
   "export": {
     "export_note_title": "Exportar nota",
@@ -206,7 +209,8 @@
     "box_size_small": "pequeño (~ 10 líneas)",
     "box_size_medium": "medio (~ 30 líneas)",
     "box_size_full": "completo (el cuadro muestra el texto completo)",
-    "button_include": "Incluir nota"
+    "button_include": "Incluir nota",
+    "box_size_expandable": "expandible (colapsado por defecto)"
   },
   "info": {
     "modalTitle": "Mensaje informativo",
@@ -266,33 +270,6 @@
     "no_changes_message": "Aún no hay cambios...",
     "undelete_link": "recuperar",
     "confirm_undelete": "¿Quiere recuperar esta nota y sus subnotas?"
-  },
-  "revisions": {
-    "note_revisions": "Revisiones de nota",
-    "delete_all_revisions": "Eliminar todas las revisiones de esta nota",
-    "delete_all_button": "Eliminar todas las revisiones",
-    "help_title": "Ayuda sobre revisiones de notas",
-    "confirm_delete_all": "¿Quiere eliminar todas las revisiones de esta nota?",
-    "no_revisions": "Aún no hay revisiones para esta nota...",
-    "restore_button": "Restaurar",
-    "confirm_restore": "¿Quiere restaurar esta revisión? Esto sobrescribirá el título actual y el contenido de la nota con esta revisión.",
-    "delete_button": "Eliminar",
-    "confirm_delete": "¿Quieres eliminar esta revisión?",
-    "revisions_deleted": "Se han eliminado las revisiones de nota.",
-    "revision_restored": "Se ha restaurado la revisión de nota.",
-    "revision_deleted": "Se ha eliminado la revisión de la nota.",
-    "snapshot_interval": "Intervalo de respaldo de revisiones de nota: {{seconds}}s.",
-    "maximum_revisions": "Máximo de revisiones para la nota actual: {{number}}.",
-    "settings": "Ajustes para revisiones de nota",
-    "download_button": "Descargar",
-    "mime": "MIME: ",
-    "file_size": "Tamaño del archivo:",
-    "preview_not_available": "La vista previa no está disponible para este tipo de notas.",
-    "diff_off": "Mostrar contenido",
-    "diff_on": "Mostrar diferencia",
-    "diff_off_hint": "Haga clic para mostrar el contenido de la nota",
-    "diff_not_available": "Diferencias no disponibles.",
-    "diff_on_hint": "Haga clic para ver las diferencias"
   },
   "sort_child_notes": {
     "sort_children_by": "Ordenar hijos por...",
@@ -365,7 +342,7 @@
     "calendar_root": "marca la nota que debe usarse como raíz para las notas del día. Sólo uno debe estar marcado como tal.",
     "archived": "las notas con esta etiqueta no serán visibles de forma predeterminada en los resultados de búsqueda (tampoco en los cuadros de diálogo Saltar a, Agregar vínculo, etc.).",
     "exclude_from_export": "las notas (con su subárbol) no se incluirán en ninguna exportación de notas",
-    "run": "define en qué eventos debe ejecutarse el script. Los valores posibles son:\n<ul>\n<li>frontendStartup - cuando Trilium frontend se inicia (o se actualiza), pero no en móvil.</li>\n<li>mobileStartup - cuando Trilium frontend se inicia (o se actualiza), en móvil.</li>\n<li>backendStartup - cuando Trilium backend se inicia</li>\n<li>hourly - se ejecuta una vez por hora. Se puede usar la etiqueta adicional <code>runAtHour</code> para especificar a qué hora.</li>\n<li>daily - se ejecuta una vez al día</li>\n</ul>",
+    "run": "define en qué eventos debe ejecutarse el script. Los valores posibles son:\n<ul>\n<li>frontendStartup - cuando el frontend de Trilium se inicia (o se actualiza), pero no en móvil.</li>\n<li>mobileStartup - cuando el frontend de Trilium se inicia (o se actualiza), en móvil.</li>\n<li>backendStartup - cuando el backend de Trilium se inicia</li>\n<li>hourly - se ejecuta una vez por hora. Se puede usar la etiqueta adicional <code>runAtHour</code> para especificar a qué hora.</li>\n<li>daily - se ejecuta una vez al día</li>\n</ul>",
     "run_on_instance": "Definir en qué instancia de Trilium se debe ejecutar esto. Predeterminado para todas las instancias.",
     "run_at_hour": "¿A qué hora debería funcionar? Debe usarse junto con <code>#run=hourly</code>. Se puede definir varias veces para varias ejecuciones durante el día.",
     "disable_inclusion": "los scripts con esta etiqueta no se incluirán en la ejecución del script principal.",
@@ -443,7 +420,10 @@
     "and_more": "... y {{count}} más.",
     "print_landscape": "Al exportar a PDF, cambia la orientación de la página a paisaje en lugar de retrato.",
     "print_page_size": "Al exportar a PDF, cambia el tamaño de la página. Valores soportados: <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
-    "color_type": "Color"
+    "color_type": "Color",
+    "textarea": "Texto multilínea",
+    "print_scale": "Al exportar a PDF, cambia la escala del contenido renderizado. Los valores varían de 0.1 (10%) a 2 (200%), por defecto es 1 (100%).",
+    "print_margins": "Al exportar a PDF, establece márgenes de página. Use <code>default</code>, <code>none</code>, <code>minimum</code>, o valores personalizados como <code>top,right,bottom,left</code> en milímetros."
   },
   "attribute_editor": {
     "help_text_body1": "Para agregar una etiqueta, simplemente escriba, por ejemplo. <code>#rock</code> o si desea agregar también valor, p.e. <code>#año = 2020</code>",
@@ -705,7 +685,12 @@
     "export_as_image": "Exportar como imagen",
     "export_as_image_png": "PNG (ráster)",
     "export_as_image_svg": "SVG (vectorial)",
-    "note_map": "Mapa de la nota"
+    "note_map": "Mapa de la nota",
+    "view_ocr_text": "Ver texto OCR",
+    "word_wrap_auto": "Automático",
+    "word_wrap_auto_description": "Seguir el ajuste global",
+    "word_wrap_on": "Encendido",
+    "word_wrap_off": "Apagado"
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
@@ -803,7 +788,13 @@
     "expand_first_level": "Expandir hijos inmediatos",
     "expand_nth_level": "Expandir {{depth}} niveles",
     "expand_all_levels": "Expandir todos los niveles",
-    "hide_child_notes": "Ocultar subnotas en el árbol"
+    "hide_child_notes": "Ocultar subnotas en el árbol",
+    "open_all_in_tabs": "Abrir todo",
+    "open_all_in_tabs_tooltip": "Abrir todos los resultados en nuevas pestañas",
+    "open_all_confirm": "Esto abrirá {{count}} notas en nuevas pestañas. ¿Continuar?",
+    "open_all_too_one": " ",
+    "open_all_too_many": " ",
+    "open_all_too_other": " "
   },
   "edited_notes": {
     "no_edited_notes_found": "Aún no hay notas editadas en este día...",
@@ -857,7 +848,8 @@
     "collapse": "Contraer al tamaño normal",
     "title": "Mapa de notas",
     "fix-nodes": "Fijar nodos",
-    "link-distance": "Distancia de enlace"
+    "link-distance": "Distancia de enlace",
+    "too-many-notes": "Este subárbol contiene {{count}} notas, lo que excede el límite de {{max}} que se puede mostrar en el mapa de notas."
   },
   "note_paths": {
     "title": "Rutas de nota",
@@ -1062,7 +1054,8 @@
     "note_already_in_diagram": "La nota \"{{title}}\" ya está en el diagrama.",
     "enter_title_of_new_note": "Ingrese el título de la nueva nota",
     "default_new_note_title": "nueva nota",
-    "click_on_canvas_to_place_new_note": "Haga clic en el lienzo para colocar una nueva nota"
+    "click_on_canvas_to_place_new_note": "Haga clic en el lienzo para colocar una nueva nota",
+    "rename_relation": "Renombrar relación"
   },
   "backend_log": {
     "refresh": "Refrescar"
@@ -1071,15 +1064,17 @@
     "title": "Comprobación de coherencia",
     "find_and_fix_button": "Buscar y solucionar problemas de coherencia",
     "finding_and_fixing_message": "Buscando y solucionando problemas de coherencia...",
-    "issues_fixed_message": "Los problemas de coherencia han sido solucionados."
+    "issues_fixed_message": "Los problemas de coherencia han sido solucionados.",
+    "find_and_fix_label": "Buscar y solucionar problemas de coherencia",
+    "find_and_fix_description": "Escanear y reparar automáticamente cualquier problema de consistencia de datos en la base de datos."
   },
   "database_anonymization": {
     "title": "Anonimización de bases de datos",
     "full_anonymization": "Anonimización total",
-    "full_anonymization_description": "Esta acción creará una nueva copia de la base de datos y la anonimizará (eliminará todo el contenido de las notas y dejará solo la estructura y algunos metadatos no confidenciales) para compartirla en línea con fines de depuración sin temor a filtrar sus datos personales.",
+    "full_anonymization_description": "Crea una copia de la base de datos con todo el contenido eliminado, dejando solo la estructura y algunos metadatos no confidenciales. Seguro para compartirla en línea con fines de depuración de problemas.",
     "save_fully_anonymized_database": "Guarde la base de datos completamente anónima",
     "light_anonymization": "Anonimización ligera",
-    "light_anonymization_description": "Esta acción creará una nueva copia de la base de datos y realizará una ligera anonimización en ella; específicamente, solo se eliminará el contenido de todas las notas, pero los títulos y atributos permanecerán. Además, se mantendrán las notas de script JS frontend/backend personalizadas y los widgets personalizados. Esto proporciona más contexto para depurar los problemas.",
+    "light_anonymization_description": "Crea una copia con el contenido de las notas eliminado, excepto los títulos, atributos y scripts/widgets personalizados que permanecerán. Esto proporciona más contexto para el depurado.",
     "choose_anonymization": "Puede decidir usted mismo si desea proporcionar una base de datos total o ligeramente anónima. Incluso una base de datos totalmente anónima es muy útil; sin embargo, en algunos casos, una base de datos ligeramente anónima puede acelerar el proceso de identificación y corrección de errores.",
     "save_lightly_anonymized_database": "Guarde una base de datos ligeramente anónima",
     "existing_anonymized_databases": "Bases de datos anónimas existentes",
@@ -1088,15 +1083,17 @@
     "error_creating_anonymized_database": "No se pudo crear una base de datos anónima; consulte los registros de backend para obtener más detalles",
     "successfully_created_fully_anonymized_database": "Se creó una base de datos completamente anónima en {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "Se creó una base de datos ligeramente anónima en {{anonymizedFilePath}}",
-    "no_anonymized_database_yet": "Aún no hay base de datos anónima."
+    "no_anonymized_database_yet": "Aún no hay base de datos anónima.",
+    "description": "Crear una copia anónima de su base de datos para compartir con los desarrolladores cuando depuren problemas, sin exponer datos personales."
   },
   "database_integrity_check": {
     "title": "Verificación de integridad de la base de datos",
-    "description": "Esto verificará que la base de datos no esté dañada en el nivel SQLite. Puede que tarde algún tiempo, dependiendo del tamaño de la base de datos.",
     "check_button": "Verificar la integridad de la base de datos",
     "checking_integrity": "Comprobando la integridad de la base de datos...",
     "integrity_check_succeeded": "La verificación de integridad fue exitosa; no se encontraron problemas.",
-    "integrity_check_failed": "La verificación de integridad falló: {{results}}"
+    "integrity_check_failed": "La verificación de integridad falló: {{results}}",
+    "check_integrity_label": "Verificar la integridad de la base de datos",
+    "check_integrity_description": "Verifcar que la base de datos no está dañada en el nivel SQLite."
   },
   "sync": {
     "title": "Sincronizar",
@@ -1106,7 +1103,10 @@
     "filling_entity_changes": "Rellenar filas de cambios de entidad...",
     "sync_rows_filled_successfully": "Sincronizar filas completadas correctamente",
     "finished-successfully": "La sincronización finalizó exitosamente.",
-    "failed": "La sincronización falló: {{message}}"
+    "failed": "La sincronización falló: {{message}}",
+    "force_full_sync_label": "Forzar sincronización completa",
+    "force_full_sync_description": "Activa una sincronización completa con el servidor de sincronización, resubiendo todos los cambios.",
+    "fill_entity_changes_label": "Llenar cambios de entidad"
   },
   "vacuum_database": {
     "title": "Limpiar base de datos",
@@ -1124,10 +1124,7 @@
     "note_tree_font": "Fuente del árbol de notas",
     "note_detail_font": "Fuente de detalle de nota",
     "monospace_font": "Fuente Monospace (código)",
-    "note_tree_and_detail_font_sizing": "Tenga en cuenta que el tamaño de fuente del árbol y de los detalles es relativo a la configuración del tamaño de fuente principal.",
-    "not_all_fonts_available": "Es posible que no todas las fuentes enumeradas estén disponibles en su sistema.",
-    "apply_font_changes": "Para aplicar cambios de fuente, haga clic en",
-    "reload_frontend": "recargar la interfaz",
+    "not_all_fonts_available": "Es posible que no todas las fuentes enumeradas estén disponibles en su sistema",
     "generic-fonts": "Fuentes genéricas",
     "sans-serif-system-fonts": "Fuentes Sans-serif del sistema",
     "serif-system-fonts": "Fuentes Serif del sistema",
@@ -1200,18 +1197,20 @@
   },
   "images": {
     "images_section_title": "Imágenes",
-    "download_images_automatically": "Descargar imágenes automáticamente para usarlas sin conexión.",
+    "download_images_automatically": "Descargar imágenes automáticamente",
     "download_images_description": "El HTML pegado puede contener referencias a imágenes en línea; Trilium encontrará esas referencias y descargará las imágenes para que estén disponibles sin conexión.",
     "enable_image_compression": "Habilitar la compresión de imágenes",
-    "max_image_dimensions": "Ancho/alto máximo de una imagen en píxeles (la imagen cambiará de tamaño si excede esta configuración).",
+    "max_image_dimensions": "Dimensiones máximas de imagen",
     "max_image_dimensions_unit": "píxeles",
-    "jpeg_quality_description": "Calidad JPEG (10 - peor calidad, 100 - mejor calidad, se recomienda 50 - 85)"
+    "jpeg_quality_description": "Se recomienda un rango 50-85. Valores más pequeños reducen el tamaño del archivo, valores más altos preservan los detalles.",
+    "enable_image_compression_description": "Comprimir y ajustar el tamaño de las imágenes cuando son subidas o pegadas.",
+    "max_image_dimensions_description": "Las imágenes que excedan el límite de tamaño serán ajustadas automáticamente.",
+    "jpeg_quality": "Calidad JPEG"
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Tiempo de espera para borrar archivos adjuntos",
-    "attachment_auto_deletion_description": "Los archivos adjuntos se eliminan (y borran) automáticamente si ya no se hace referencia a ellos en su nota después de un tiempo de espera definido.",
     "erase_attachments_after": "Borrar archivos adjuntos después de:",
-    "manual_erasing_description": "También puede activar el borrado manualmente (sin considerar el tiempo de espera definido anteriormente):",
+    "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
     "erase_unused_attachments_now": "Borrar ahora los archivos adjuntos no utilizados en la nota",
     "unused_attachments_erased": "Los archivos adjuntos no utilizados se han eliminado."
   },
@@ -1221,9 +1220,8 @@
   },
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Tiempo de espera de borrado de notas",
-    "note_erasure_description": "Las notas eliminadas (y los atributos, las revisiones ...) en principio solo están marcadas como eliminadas y es posible recuperarlas del diálogo de Notas recientes. Después de un período de tiempo, las notas eliminadas son \" borradas\", lo que significa que su contenido ya no es recuperable. Esta configuración le permite configurar la longitud del período entre eliminar y borrar la nota.",
     "erase_notes_after": "Borrar notas después de:",
-    "manual_erasing_description": "También puede activar el borrado manualmente (sin considerar el tiempo de espera definido anteriormente):",
+    "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
     "erase_deleted_notes_now": "Borrar notas eliminadas ahora",
     "deleted_notes_erased": "Las notas eliminadas han sido borradas."
   },
@@ -1242,7 +1240,7 @@
   },
   "search_engine": {
     "title": "Motor de búsqueda",
-    "custom_search_engine_info": "El motor de búsqueda personalizado requiere que se establezcan un nombre y una URL. Si alguno de estos no está configurado, DuckDuckGo se utilizará como motor de búsqueda predeterminado.",
+    "custom_search_engine_info": "Utilizado al buscar la web para el texto seleccionado. Si no está configurado, DuckDuckGo será utilizado.",
     "predefined_templates_label": "Plantillas de motor de búsqueda predefinidas",
     "bing": "Bing",
     "baidu": "Baidu",
@@ -1306,7 +1304,6 @@
     "first-week-contains-first-thursday": "Primer semana que contiene al primer jueves del año",
     "first-week-has-minimum-days": "Primer semana que contiene un mínimo de días",
     "min-days-in-first-week": "Días mínimos en la primer semana",
-    "first-week-info": "Primer semana que contiene al primer jueves del año está basado en el estándar<a href=\"https://en.wikipedia.org/wiki/ISO_week_date#First_week\">ISO 8601</a>.",
     "first-week-warning": "Cambiar las opciones de primer semana puede causar duplicados con las Notas Semanales existentes y las Notas Semanales existentes no serán actualizadas respectivamente.",
     "formatting-locale": "Fecha y formato de número",
     "tuesday": "Martes",
@@ -1437,9 +1434,6 @@
     "server_address": "Dirección de la instancia del servidor",
     "timeout": "Tiempo de espera de sincronización (milisegundos)",
     "proxy_label": "Sincronizar servidor proxy (opcional)",
-    "note": "Nota",
-    "note_description": "Si deja la configuración del proxy en blanco, se utilizará el proxy del sistema (se aplica únicamente a la compilación de escritorio/electron).",
-    "special_value_description": "Otro valor especial es <code>noproxy</code> que obliga a ignorar incluso al proxy del sistema y respeta <code>NODE_TLS_REJECT_UNAUTHORIZED</code>.",
     "save": "Guardar",
     "help": "Ayuda",
     "test_title": "Prueba de sincronización",
@@ -1621,7 +1615,7 @@
   "note_detail": {
     "could_not_find_typewidget": "No se pudo encontrar typeWidget para el tipo '{{type}}'",
     "printing": "Impresión en curso...",
-    "printing_pdf": "Exportando a PDF en curso..",
+    "printing_pdf": "Preparando vista preliminar de impresión...",
     "print_report_collection_content_one": "{{count}} nota en la colección no se puede imprimir porque no son compatibles o está protegida.",
     "print_report_collection_content_many": "{{count}} notas en la colección no se pueden imprimir porque no son compatibles o están protegidas.",
     "print_report_collection_content_other": "{{count}} notas en la colección no se pueden imprimir porque no son compatibles o están protegidas.",
@@ -1766,7 +1760,7 @@
         "title": "Fijo",
         "description": "las herramientas de edición aparecen en la pestaña de la cinta \"Formato\")."
       },
-      "multiline-toolbar": "Mostrar la barra de herramientas en múltiples líneas si no cabe."
+      "multiline-toolbar": "Mostrar la barra de herramientas en múltiples líneas si no cabe"
     }
   },
   "electron_context_menu": {

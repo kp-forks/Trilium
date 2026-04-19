@@ -1,5 +1,5 @@
 import type { Locale } from "./i18n.js";
-import { AttachmentRow, AttributeRow, BranchRow, NoteRow, NoteType, OptionRow } from "./rows.js";
+import { AttachmentRow, AttributeRow, BranchRow, NoteRow, NoteType, OptionRow, RevisionSource } from "./rows.js";
 
 type Response = {
     success: true,
@@ -34,6 +34,8 @@ export interface RevisionItem {
     contentLength?: number;
     type: NoteType;
     title: string;
+    description?: string;
+    source?: RevisionSource;
     isProtected?: boolean;
     mime: string;
 }
@@ -45,6 +47,8 @@ export interface RevisionPojo {
     mime: string;
     isProtected?: boolean;
     title: string;
+    description?: string;
+    source?: RevisionSource;
     blobId?: string;
     dateLastEdited?: string;
     dateCreated?: string;

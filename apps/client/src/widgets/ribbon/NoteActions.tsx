@@ -22,7 +22,7 @@ import MovePaneButton from "../buttons/move_pane_button";
 import ActionButton from "../react/ActionButton";
 import Dropdown from "../react/Dropdown";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListHeader, FormListItem, FormListToggleableItem } from "../react/FormList";
-import { useIsNoteReadOnly, useNoteContext, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption } from "../react/hooks";
+import { useIsNoteReadOnly, useNoteContext, useNoteLabel, useNoteLabelBoolean, useNoteLabelOptionalBool, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption } from "../react/hooks";
 import { ParentComponent } from "../react/react_utils";
 import { NoteTypeDropdownContent, useNoteBookmarkState, useShareState } from "./BasicPropertiesTab";
 import NoteActionsCustom from "./NoteActionsCustom";
@@ -75,7 +75,8 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
     const noteType = useNoteProperty(note, "type") ?? "";
     const [viewType] = useNoteLabel(note, "viewType");
     const canBeConvertedToAttachment = note?.isEligibleForConversionToAttachment();
-    const isSearchable = ["text", "code", "book", "mindMap", "doc", "spreadsheet"].includes(noteType);
+    const isSourceView = noteContext?.viewScope?.viewMode === "source";
+    const isSearchable = isSourceView || ["text", "code", "book", "mindMap", "doc", "spreadsheet"].includes(noteType);
     const isInOptionsOrHelp = note?.noteId.startsWith("_options") || note?.noteId.startsWith("_help");
     const isExportableToImage = ["mermaid", "mindMap"].includes(noteType);
     const isContentAvailable = note.isContentAvailable();
@@ -115,6 +116,8 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
         >
             {itemsAtStart}
 
+            {note.type === "code" && <CodeProperties note={note} />}
+
             {isReadOnly && <>
                 <CommandItem icon="bx bx-pencil" text={t("read-only-info.edit-note")}
                     command={() => enableEditing()} />
@@ -143,7 +146,6 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                     notePath: noteContext.notePath,
                     defaultType: "single"
                 })} />
-            {isElectron && <CommandItem command="exportAsPdf" icon="bx bxs-file-pdf" disabled={!isPrintable} text={t("note_actions.print_pdf")} />}
             {isExportableToImage && isNormalViewMode && isContentAvailable && <ExportAsImage ntxId={noteContext.ntxId} parentComponent={parentComponent} />}
             <CommandItem command="printActiveNote" icon="bx bx-printer" disabled={!isPrintable} text={t("note_actions.print_note")} />
 
@@ -151,6 +153,7 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
 
             <CommandItem command="showRevisions" icon="bx bx-history" text={t("note_actions.view_revisions")} />
             <CommandItem command="forceSaveRevision" icon="bx bx-save" disabled={isInOptionsOrHelp} text={t("note_actions.save_revision")} />
+            <CommandItem command="saveNamedRevision" icon="bx bx-purchase-tag" disabled={isInOptionsOrHelp} text={t("note_actions.save_named_revision")} />
 
             <FormDropdownDivider />
 
@@ -177,6 +180,27 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                 command={() => branches.deleteNotes([note.getParentBranches()[0].branchId])}
             />
         </Dropdown>
+    );
+}
+
+function CodeProperties({ note }: { note: FNote }) {
+    const [ wrapLines, setWrapLines ] = useNoteLabelOptionalBool(note, "wrapLines");
+
+    return (
+        <>
+            <FormDropdownSubmenu title={t("note_actions.word_wrap")} icon="bx bx-align-justify" dropStart>
+                <FormListItem checked={wrapLines == null} onClick={() => setWrapLines(null)} description={t("note_actions.word_wrap_auto_description")}>
+                    {t("note_actions.word_wrap_auto")}
+                </FormListItem>
+                <FormListItem checked={wrapLines === true} onClick={() => setWrapLines(true)}>
+                    {t("note_actions.word_wrap_on")}
+                </FormListItem>
+                <FormListItem checked={wrapLines === false} onClick={() => setWrapLines(false)}>
+                    {t("note_actions.word_wrap_off")}
+                </FormListItem>
+            </FormDropdownSubmenu>
+            <FormDropdownDivider />
+        </>
     );
 }
 

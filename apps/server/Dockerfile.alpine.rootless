@@ -1,6 +1,9 @@
 FROM node:24.14.1-alpine AS builder
 RUN corepack enable
 
+# Install build tools required to compile native addons (e.g. better-sqlite3) on ARM
+RUN apk add --no-cache python3 make g++
+
 # Install native dependencies since we might be building cross-platform.
 WORKDIR /usr/src/app
 COPY ./docker/package.json ./docker/pnpm-workspace.yaml /usr/src/app/

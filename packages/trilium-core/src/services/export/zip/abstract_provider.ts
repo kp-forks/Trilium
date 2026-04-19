@@ -5,6 +5,7 @@ import type BBranch from "../../../becca/entities/bbranch.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import { ExportFormat, NoteMeta, NoteMetaFile } from "../../../meta.js";
 import type { ZipArchive } from "../../zip_provider.js";
+import { mapCodeMimeToExtension } from "../single.js";
 
 type RewriteLinksFn = (content: string, noteMeta: NoteMeta) => string;
 
@@ -82,7 +83,7 @@ export abstract class ZipExportProvider {
         } else if (mime?.toLowerCase()?.trim() === "text/mermaid") {
             return "txt";
         }
-        return mimeTypes.extension(mime) || "dat";
+        return mapCodeMimeToExtension(mime) || mimeTypes.extension(mime) || "dat";
 
 
     }

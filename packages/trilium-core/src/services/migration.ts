@@ -131,6 +131,11 @@ function isDbUpToDate() {
 async function migrateIfNecessary() {
     const currentDbVersion = getDbVersion();
 
+    if (isNaN(currentDbVersion)) {
+        getPlatform().crash(t("migration.invalid_db_version"));
+        return;
+    }
+
     if (currentDbVersion > appInfo.dbVersion && getPlatform().getEnv("TRILIUM_IGNORE_DB_VERSION") !== "true") {
         getPlatform().crash(t("migration.wrong_db_version", { version: currentDbVersion, targetVersion: appInfo.dbVersion }));
     }

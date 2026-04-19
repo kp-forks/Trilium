@@ -315,27 +315,17 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
 
             resource.mime = resource.mime || "application/octet-stream";
 
-            const createFileNote = () => {
-                const resourceNote = noteService.createNewNote({
-                    parentNoteId: noteEntity.noteId,
+            const createFileAttachment = () => {
+                const attachment = noteEntity.saveAttachment({
+                    role: "file",
+                    mime: resource.mime || "application/octet-stream",
                     title: resource.title,
-                    content: resource.content ?? "",
-                    type: "file",
-                    mime: resource.mime,
-                    isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable()
-                }).note;
+                    content: resource.content ?? ""
+                });
 
-                for (const attr of resource.attributes) {
-                    resourceNote.addAttribute(attr.type, attr.name, attr.value);
-                }
+                const attachmentLink = `<a class="reference-link" href="#root/${noteEntity.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}">${escapeHtml(resource.title)}</a>`;
 
-                updateDates(resourceNote, utcDateCreated, utcDateModified);
-
-                taskContext.increaseProgressCount();
-
-                const resourceLink = `<a href="#root/${resourceNote.noteId}">${escapeHtml(resource.title)}</a>`;
-
-                content = (content || "").replace(mediaRegex, resourceLink);
+                content = (content || "").replace(mediaRegex, attachmentLink);
             };
 
             if (resource.mime && resource.mime.startsWith("image/")) {
@@ -357,10 +347,10 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
                     }
                 } catch (e: any) {
                     getLog().error(`error when saving image from ENEX file: ${e.message}`);
-                    createFileNote();
+                    createFileAttachment();
                 }
             } else {
-                createFileNote();
+                createFileAttachment();
             }
         }
 

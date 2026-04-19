@@ -2,7 +2,7 @@ import { CKTextEditor } from "@triliumnext/ckeditor5";
 import { FilterLabelsByType, KeyboardActionNames, NoteType, OptionNames, RelationNames } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
 import Mark from "mark.js";
-import { RefObject, VNode } from "preact";
+import { Ref, RefObject, VNode } from "preact";
 import { CSSProperties, useSyncExternalStore } from "preact/compat";
 import { MutableRef, useCallback, useContext, useDebugValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -664,13 +664,28 @@ export function useNoteLabelBoolean(note: FNote | undefined | null, labelName: F
     return [ labelValue, setter ] as const;
 }
 
-export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number) => void] {
-    //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
+/**
+ * Like {@link useNoteLabelBoolean} but returns `undefined` when the label is absent, allowing the caller
+ * to distinguish between "explicitly false" and "not set" (for inheriting from a global default).
+ */
+export function useNoteLabelOptionalBool(note: FNote | undefined | null, labelName: FilterLabelsByType<boolean>): [ boolean | undefined, (newValue: boolean | null) => void] {
+    //@ts-expect-error `useNoteLabel` only accepts string labels but we need to be able to read boolean ones.
     const [ value, setValue ] = useNoteLabel(note, labelName);
     useDebugValue(labelName);
     return [
-        (value ? parseInt(value, 10) : undefined),
-        (newValue) => setValue(String(newValue))
+        (value == null ? undefined : value !== "false"),
+        (newValue) => setValue(newValue === null ? null : String(newValue))
+    ];
+}
+
+export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number | null) => void] {
+    //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
+    const [ value, setValue ] = useNoteLabel(note, labelName);
+    useDebugValue(labelName);
+    const parsed = value ? parseInt(value, 10) : undefined;
+    return [
+        (Number.isFinite(parsed) ? parsed : undefined),
+        (newValue) => setValue(newValue === null ? null : String(newValue))
     ];
 }
 
@@ -949,11 +964,13 @@ export function useLegacyImperativeHandlers(handlers: Record<string, Function>) 
     }, [ handlers ]);
 }
 
-export function useSyncedRef<T>(externalRef?: RefObject<T>, initialValue: T | null = null): RefObject<T> {
+export function useSyncedRef<T>(externalRef?: Ref<T>, initialValue: T | null = null): RefObject<T> {
     const ref = useRef<T>(initialValue);
 
     useEffect(() => {
-        if (externalRef) {
+        if (typeof externalRef === "function") {
+            externalRef(ref.current);
+        } else if (externalRef) {
             externalRef.current = ref.current;
         }
     }, [ ref, externalRef ]);
@@ -1123,6 +1140,29 @@ export function useIsNoteReadOnly(note: FNote | null | undefined, noteContext: N
     });
 
     return { isReadOnly, enableEditing, temporarilyEditable };
+}
+
+/**
+ * Synchronous effective read-only state for widgets that honor the `#readOnly` label
+ * (mermaid, canvas, mind map, spreadsheet). Combines the label with the temporary
+ * "enable editing" toggle (driven by `readOnlyTemporarilyDisabled`) so clicking the
+ * read-only badge unlocks the widget.
+ */
+export function useEffectiveReadOnly(note: FNote | null | undefined, noteContext: NoteContext | undefined) {
+    const [ readOnlyLabel ] = useNoteLabelBoolean(note, "readOnly");
+    const [ tempDisabled, setTempDisabled ] = useState<boolean>(!!noteContext?.viewScope?.readOnlyTemporarilyDisabled);
+
+    useEffect(() => {
+        setTempDisabled(!!noteContext?.viewScope?.readOnlyTemporarilyDisabled);
+    }, [ note, noteContext, noteContext?.viewScope ]);
+
+    useTriliumEvent("readOnlyTemporarilyDisabled", ({ noteContext: eventNoteContext }) => {
+        if (noteContext?.ntxId === eventNoteContext?.ntxId) {
+            setTempDisabled(!!eventNoteContext?.viewScope?.readOnlyTemporarilyDisabled);
+        }
+    });
+
+    return readOnlyLabel && !tempDisabled;
 }
 
 async function isNoteReadOnly(note: FNote, noteContext: NoteContext) {
