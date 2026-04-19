@@ -8,7 +8,7 @@ export default createBaseConfig({
     projectName: "standalone",
     workers: 1,
     webServer: !process.env.TRILIUM_DOCKER ? {
-        command: "pnpm vite preview --port " + port,
+        command: "pnpm start-prod-no-dir",
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         cwd: __dirname,
