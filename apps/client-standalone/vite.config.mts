@@ -164,6 +164,7 @@ if (process.env.TRILIUM_INTEGRATION_TEST) {
                 {
                     src: "../../../packages/trilium-core/src/test/fixtures/document.db",
                     dest: "test-fixtures",
+                    rename: "document.db"
                 }
             ]
         })

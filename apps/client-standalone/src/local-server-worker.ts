@@ -75,6 +75,30 @@ let initError: Error | null = null;
 let queryString = "";
 
 /**
+ * Remove every entry from the OPFS root. Used by integration tests to
+ * guarantee a clean slate — the previous run's DB, logs, and backups would
+ * otherwise survive and cross-contaminate the next run.
+ */
+async function clearOpfs(): Promise<void> {
+    if (typeof navigator === "undefined" || !navigator.storage?.getDirectory) {
+        return;
+    }
+    console.log("[Worker] Clearing OPFS...");
+    const root = await navigator.storage.getDirectory();
+    const names: string[] = [];
+    for await (const name of (root as unknown as { keys(): AsyncIterableIterator<string> }).keys()) {
+        names.push(name);
+    }
+    for (const name of names) {
+        try {
+            await root.removeEntry(name, { recursive: true });
+        } catch (err) {
+            console.warn(`[Worker] Failed to remove OPFS entry "${name}":`, err);
+        }
+    }
+}
+
+/**
  * Load all required modules using dynamic imports.
  * This allows errors to be caught by our error handlers.
  */
@@ -149,7 +173,13 @@ async function initialize(): Promise<void> {
             const params = new URLSearchParams(queryString);
             const integrationTestMode = params.get("integrationTest");
 
+            console.log("Starting with integration test mode ", integrationTestMode);
+
             if (integrationTestMode === "memory") {
+                // Wipe OPFS so e2e runs start from a clean slate (stale DB, logs,
+                // backups from previous sessions would otherwise leak across runs).
+                await clearOpfs();
+
                 // Load the pre-built test fixture database for e2e tests
                 console.log("[Worker] Integration test mode: loading fixture database...");
                 const response = await fetch("/test-fixtures/document.db");

@@ -6,10 +6,28 @@ function showFatalErrorDialog(message: string) {
     alert(message);
 }
 
+/**
+ * Collects query params from both `location.search` and the hash's "?..."
+ * suffix. The SPA uses hash-based routing, so flags like `?integrationTest=memory`
+ * often end up after the `#` (e.g. `/#root/foo?integrationTest=memory`) and
+ * are invisible to `location.search`.
+ */
+function collectQueryString(): string {
+    const params = new URLSearchParams(location.search);
+    const hashQueryIndex = location.hash.indexOf("?");
+    if (hashQueryIndex >= 0) {
+        const hashParams = new URLSearchParams(location.hash.substring(hashQueryIndex + 1));
+        for (const [key, value] of hashParams) {
+            if (!params.has(key)) params.set(key, value);
+        }
+    }
+    return params.toString();
+}
+
 export function startLocalServerWorker() {
     if (localWorker) return localWorker;
     localWorker = new LocalServerWorker();
-    localWorker.postMessage({ type: "INIT", queryString: location.search });
+    localWorker.postMessage({ type: "INIT", queryString: collectQueryString() });
 
     // Handle worker errors during initialization
     localWorker.onerror = (event) => {
