@@ -4,9 +4,6 @@
     --print-font-size: 11pt;
 }
 
-@page {
-    margin: 2cm;
-}
 
 html,
 body {
