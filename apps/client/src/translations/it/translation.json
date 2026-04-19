@@ -1,13 +1,6 @@
 {
   "about": {
-    "app_version": "Versione dell'app:",
-    "db_version": "Versione DB:",
-    "sync_version": "Versione Sync:",
-    "data_directory": "Cartella dati:",
-    "title": "Informazioni su Trilium Notes",
-    "build_date": "Data della build:",
-    "build_revision": "Revisione della build:",
-    "homepage": "Homepage:"
+    "data_directory": "Cartella dati:"
   },
   "toast": {
     "critical-error": {

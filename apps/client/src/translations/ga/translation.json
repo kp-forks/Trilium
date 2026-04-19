@@ -31,13 +31,6 @@
     "search_notes": "Cuardaigh nótaí"
   },
   "about": {
-    "title": "Maidir le Trilium Notes",
-    "homepage": "Leathanach baile:",
-    "app_version": "Leagan an aip:",
-    "db_version": "Leagan DB:",
-    "sync_version": "Leagan sioncrónaithe:",
-    "build_date": "Dáta tógála:",
-    "build_revision": "Athbhreithniú tógála:",
     "data_directory": "Eolaire sonraí:"
   },
   "toast": {
@@ -72,7 +65,9 @@
     "link_title_mirrors": "Léiríonn teideal an naisc teideal reatha an nóta",
     "link_title_arbitrary": "is féidir teideal an naisc a athrú go treallach",
     "link_title": "Teideal an naisc",
-    "button_add_link": "Cuir nasc leis"
+    "button_add_link": "Cuir nasc leis",
+    "anchor": "Ancaire (roghnach)",
+    "anchor_none": "Dada (nasc chuig nóta)"
   },
   "branch_prefix": {
     "edit_branch_prefix": "Cuir réimír na brainse in eagar",
@@ -700,7 +695,8 @@
     "word_wrap_auto": "Uathoibríoch",
     "word_wrap_auto_description": "Lean an suíomh domhanda",
     "word_wrap_on": "Ar",
-    "word_wrap_off": "As"
+    "word_wrap_off": "As",
+    "save_named_revision": "Sábháil athbhreithniú ainmnithe..."
   },
   "onclick_button": {
     "no_click_handler": "Níl aon láimhseálaí cliceáil sainithe ag an ngiuirléid cnaipe '{{componentId}}'"
@@ -1622,7 +1618,8 @@
     "new-feature": "Nua",
     "collections": "Bailiúcháin",
     "spreadsheet": "Scarbhileog",
-    "llm-chat": "Comhrá AI"
+    "llm-chat": "Comhrá AI",
+    "markdown": "Markdown"
   },
   "protect_note": {
     "toggle-on": "Cosain an nóta",
@@ -1787,7 +1784,9 @@
   "entrypoints": {
     "note-revision-created": "Cruthaíodh athbhreithniú nóta.",
     "note-executed": "Nóta curtha i gcrích.",
-    "sql-error": "Tharla earráid agus fiosrúchán SQL á fhorghníomhú: {{message}}"
+    "sql-error": "Tharla earráid agus fiosrúchán SQL á fhorghníomhú: {{message}}",
+    "save-named-revision-title": "Sábháil athbhreithniú ainmnithe",
+    "save-named-revision-message": "Cuir isteach ainm don athbhreithniú seo (fág folamh mura bhfuil ainm ar bith ann):"
   },
   "branches": {
     "cannot-move-notes-here": "Ní féidir nótaí a bhogadh anseo.",
@@ -2510,5 +2509,79 @@
     "page_ranges_hint": "Fág folamh chun na leathanaigh go léir a phriontáil.",
     "page_ranges_invalid": "Formáid neamhbhailí. Úsáid m.sh. 1-5, 8, 11-13.",
     "page_ranges_placeholder": "m.sh. 1-5, 8, 11-13"
+  },
+  "revisions": {
+    "note_revisions": "Athbhreithnithe Nótaí",
+    "delete_all_revisions": "Scrios gach athbhreithniú ar an nóta seo",
+    "delete_all_button": "Scrios gach athbhreithniú",
+    "help_title": "Cabhair le hathbhreithnithe nótaí",
+    "confirm_delete_all": "Ar mhaith leat gach athbhreithniú ar an nóta seo a scriosadh?",
+    "no_revisions": "Gan aon athbhreithnithe don nóta seo go fóill...",
+    "restore_button": "Athchóirigh",
+    "highlight_changes": "Aibhsigh athruithe",
+    "diff_on": "Taispeáin an difríocht",
+    "diff_off": "Taispeáin ábhar",
+    "diff_on_hint": "Cliceáil chun difríocht foinse an nóta a thaispeáint",
+    "diff_off_hint": "Cliceáil chun ábhar an nóta a thaispeáint",
+    "diff_not_available": "Níl an difríocht ar fáil.",
+    "confirm_restore": "Ar mhaith leat an t-athbhreithniú seo a athbhunú? Scríobhfaidh sé seo teideal agus ábhar reatha an nóta leis an athbhreithniú seo.",
+    "delete_button": "Scrios",
+    "confirm_delete": "Ar mhaith leat an t-athbhreithniú seo a scriosadh?",
+    "revisions_deleted": "Scriosadh athbhreithnithe nótaí.",
+    "revision_restored": "Tá athbhreithniú an nóta athchóirithe.",
+    "revision_deleted": "Scriosadh athbhreithniú an nóta.",
+    "snapshot_interval": "Eatramh Léirmheasa ar Nóta: {{seconds}}s.",
+    "maximum_revisions": "Teorainn maidir le hathbhreithniú nóta: {{number}}.",
+    "save_revision_now": "Sábháil athbhreithniú anois",
+    "save_named_revision": "Sábháil athbhreithniú ainmnithe...",
+    "snapshot_header": "Léargas athbhreithnithe nóta",
+    "snapshot_interval_value": "Eatramh: {{seconds}}s",
+    "snapshot_limit_value": "Teorainn: {{number}}",
+    "settings": "Socruithe Athbhreithnithe Nóta",
+    "menu_tooltip": "Roghanna athbhreithnithe",
+    "download_button": "Íoslódáil",
+    "mime": "MIME: ",
+    "file_size": "Méid comhaid:",
+    "preview_not_available": "Níl réamhamharc ar fáil don chineál nóta seo.",
+    "save_revision": "Sábháil athbhreithniú",
+    "save_revision_tooltip": "Sábháil pictiúr den nóta reatha de láimh",
+    "description_placeholder": "Ainmnigh an t-athbhreithniú seo",
+    "revision_saved": "Tá athbhreithniú an nóta sábháilte.",
+    "edit_description": "Cuir ainm in eagar",
+    "description_updated": "Tá ainm an athbhreithnithe nuashonraithe.",
+    "source_auto": "Uath-shábháil",
+    "source_manual": "Sábháil de láimh",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_restore": "Athchóirigh",
+    "source_unknown": "Roghbhlúire",
+    "date_today": "Inniu",
+    "date_yesterday": "Inné",
+    "date_this_week": "An tseachtain seo",
+    "date_this_month": "An mhí seo",
+    "source_description_auto": "Sábháilte go huathoibríoch ag an gcóras ag eatraimh rialta",
+    "source_description_manual": "Sábháilte de láimh ag an úsáideoir",
+    "source_description_etapi": "Cruthaithe tríd an API Seachtrach Trilium",
+    "source_description_llm": "Cruthaithe ag an gcúntóir AI",
+    "source_description_restore": "Sábháilte roimh athchóiriú an athbhreithnithe roimhe seo",
+    "source_description_unknown": "Foinse gan fáil"
+  },
+  "auto_link_attribute_list": {
+    "title": "Tréithe an Chórais"
+  },
+  "revisions_snapshot": {
+    "title": "Athbhreithnithe Nótaí"
+  },
+  "launcher_button_context_menu": {
+    "remove_from_launch_bar": "Bain den bharra lainseála"
+  },
+  "display_mode": {
+    "source": "Radharc foinse",
+    "split": "Radharc scoilte",
+    "preview": "Réamhamharc"
+  },
+  "common": {
+    "save": "Sábháil",
+    "cancel": "Cealaigh"
   }
 }
