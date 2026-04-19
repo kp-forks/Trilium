@@ -11,7 +11,7 @@ export default createBaseConfig({
     projectName: "standalone",
     workers: 1,
     webServer: !process.env.TRILIUM_DOCKER ? {
-        command: `pnpm start-prod-no-dir -- --port ${port}`,
+        command: `pnpm build && pnpm vite preview --host 127.0.0.1 --port ${port}`,
         url: baseURL,
         env: {
             TRILIUM_INTEGRATION_TEST: "memory"
