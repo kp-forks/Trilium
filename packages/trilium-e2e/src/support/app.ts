@@ -162,18 +162,25 @@ export default class App {
     }
 
     async setOption(key: string, value: string) {
-        const csrfToken = await this.page.evaluate(() => {
-            return (window as any).glob.csrfToken;
-        });
-
-        expect(csrfToken).toBeTruthy();
-        await expect(
-            await this.page.request.put(`${getBaseUrl()}/api/options/${key}/${value}`, {
+        // Issue the request from inside the page so standalone's service worker
+        // intercepts it and routes to the local SQLite worker. Playwright's own
+        // request client (page.request.*) bypasses the page entirely, which in
+        // standalone mode just hits the vite preview server and gets 404.
+        const result = await this.page.evaluate(async ({ key, value }) => {
+            const csrfToken = (window as any).glob.csrfToken;
+            if (!csrfToken) {
+                return { ok: false, status: 0, error: "missing csrfToken" };
+            }
+            const response = await fetch(`/api/options/${encodeURIComponent(key)}/${encodeURIComponent(value)}`, {
+                method: "PUT",
                 headers: {
                     "x-csrf-token": csrfToken
                 }
-            })
-        ).toBeOK();
+            });
+            return { ok: response.ok, status: response.status };
+        }, { key, value });
+
+        expect(result.ok, `PUT /api/options/${key}/${value} failed (status=${result.status})`).toBe(true);
     }
 
     dropdown(_locator: Locator): DropdownLocator {
