@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
-import cls from "../cls.js";
+import { getContext } from "../context.js";
 import sql_init from "../sql_init.js";
 import TaskContext from "../task_context.js";
 import enex from "./enex.js";
@@ -17,7 +17,7 @@ async function testImport(fileName: string) {
     const taskContext = TaskContext.getInstance("import-enex", "importNotes", {});
 
     return new Promise<{ importedNote: BNote; rootNote: BNote }>((resolve, reject) => {
-        cls.init(async () => {
+        getContext().init(async () => {
             const rootNote = becca.getNote("root");
             if (!rootNote) {
                 expect(rootNote).toBeTruthy();

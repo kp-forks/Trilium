@@ -1,2 +1,1 @@
-import { becca_mocking } from "@triliumnext/core";
-export const NoteBuilder = becca_mocking.NoteBuilder;
+export { NoteBuilder, note, id, findNoteByTitle } from "@triliumnext/core/src/test/becca_mocking.js";

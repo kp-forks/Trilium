@@ -512,6 +512,54 @@ function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
     return content;
 }
 
+/**
+ * Extracts bookmark IDs from CKEditor bookmark anchors (`<a id="..."></a>` without href).
+ * Bookmarks are stored as labels on the note so they can be looked up without parsing content.
+ */
+export function findBookmarks(content: string): string[] {
+    const re = /<a\s+id="([^"]+)"[^>]*>(<\/a>)?/g;
+    const bookmarks: string[] = [];
+    let match;
+
+    while ((match = re.exec(content))) {
+        // Skip anchors that also have an href (those are regular links, not bookmarks)
+        if (match[0].includes("href=")) {
+            continue;
+        }
+
+        const id = match[1];
+        if (!bookmarks.includes(id)) {
+            bookmarks.push(id);
+        }
+    }
+
+    return bookmarks;
+}
+
+function saveBookmarks(note: BNote, content: string) {
+    const foundBookmarks = findBookmarks(content);
+    const existingBookmarks = note.getOwnedLabels("internalBookmark");
+
+    for (const bookmarkId of foundBookmarks) {
+        const existing = existingBookmarks.find((l) => l.value === bookmarkId);
+
+        if (!existing) {
+            new BAttribute({
+                noteId: note.noteId,
+                type: "label",
+                name: "internalBookmark",
+                value: bookmarkId
+            }).save();
+        }
+    }
+
+    // Remove bookmarks that are no longer in the content
+    const unusedBookmarks = existingBookmarks.filter((l) => !foundBookmarks.includes(l.value));
+    for (const unused of unusedBookmarks) {
+        unused.markAsDeleted();
+    }
+}
+
 function findRelationMapLinks(content: string, foundLinks: FoundLink[]) {
     try {
         const obj = JSON.parse(content);
@@ -727,6 +775,7 @@ function saveLinks(note: BNote, content: string | Uint8Array) {
         content = findImageLinks(content, foundLinks);
         content = findInternalLinks(content, foundLinks);
         content = findIncludeNoteLinks(content, foundLinks);
+        saveBookmarks(note, content);
 
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {

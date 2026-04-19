@@ -5,7 +5,7 @@ import AbstractBeccaEntity from "./abstract_becca_entity.js";
 import dateUtils from "../../services/utils/date";
 import promotedAttributeDefinitionParser from "../../services/promoted_attribute_definition_parser.js";
 import type { AttributeRow, AttributeType } from "@triliumnext/commons";
-import { sanitizeAttributeName } from "../../services/utils/index.js";
+import { normalize, sanitizeAttributeName } from "../../services/utils/index.js";
 
 interface SavingOpts {
     skipValidation?: boolean;
@@ -34,6 +34,11 @@ class BAttribute extends AbstractBeccaEntity<BAttribute> {
     value!: string;
     isInheritable!: boolean;
 
+    /** Pre-normalized (lowercase, diacritics removed) name for search. */
+    normalizedName!: string;
+    /** Pre-normalized (lowercase, diacritics removed) value for search. */
+    normalizedValue!: string;
+
     constructor(row?: AttributeRow) {
         super();
 
@@ -58,6 +63,10 @@ class BAttribute extends AbstractBeccaEntity<BAttribute> {
         this.value = value || "";
         this.isInheritable = !!isInheritable;
         this.utcDateModified = utcDateModified;
+
+        // Pre-compute normalized forms for search (avoids repeated normalize() calls in hot loops)
+        this.normalizedName = normalize(this.name);
+        this.normalizedValue = normalize(this.value);
 
         return this;
     }
@@ -193,6 +202,11 @@ class BAttribute extends AbstractBeccaEntity<BAttribute> {
         this.utcDateModified = dateUtils.utcNowDateTime();
 
         super.beforeSaving();
+
+        // Recompute normalized fields in case name/value were modified directly
+        // (e.g., attr.value = "..." followed by attr.save())
+        this.normalizedName = normalize(this.name);
+        this.normalizedValue = normalize(this.value);
 
         this.becca.attributes[this.attributeId] = this;
     }
