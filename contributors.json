@@ -1,0 +1,35 @@
+{
+    "⚠️": "Auto-generated file. Run `pnpm run update-contributors` to regenerate.",
+    "contributors": [
+        {
+            "name": "eliandoran",
+            "fullName": "Elian Doran",
+            "url": "https://github.com/eliandoran",
+            "role": "lead-dev"
+        },
+        {
+            "name": "zadam",
+            "fullName": "Zadam",
+            "url": "https://github.com/zadam",
+            "role": "original-dev"
+        },
+        {
+            "name": "adoriandoran",
+            "fullName": "Adorian Doran",
+            "url": "https://github.com/adoriandoran"
+        },
+        {
+            "name": "perfectra1n",
+            "fullName": "Jon Fuller",
+            "url": "https://github.com/perfectra1n"
+        },
+        {
+            "name": "JYC333",
+            "url": "https://github.com/JYC333"
+        },
+        {
+            "name": "Nriver",
+            "url": "https://github.com/Nriver"
+        }
+    ]
+}

@@ -1,13 +1,23 @@
 {
-  "about": {
-    "title": "About Trilium Notes",
-    "homepage": "Homepage:",
-    "app_version": "App version:",
-    "db_version": "DB version:",
-    "sync_version": "Sync version:",
-    "build_date": "Build date:",
-    "build_revision": "Build revision:",
-    "data_directory": "Data directory:"
+  "about": {   
+    "version_label": "Version:",
+    "version": "{{appVersion}} (database: {{dbVersion}}, sync protocol: {{syncVersion}})",
+    "build_info": "Build: {{buildDate}}, revision: <buildRevision />",
+    "contributors_label": "Contributors:",
+    "contributor_roles": {
+      "lead-dev": "lead developer",
+      "original-dev": "original developer"
+    },
+    "role_brief_history": {
+      "lead-dev": "Elian Doran founded TriliumNext in 2024, a community fork created after Zadam stepped back from the project. Zadam later transferred the original repository to the TriliumNext team, merging both projects back into one.",
+      "original-dev": "On 25th December 2017, Zadam released the first beta of Trilium (written with a single \"l\", unlike the flower). Dissatisfied with existing note organizers, he built a powerful self-hosted hierarchical knowledge base that gathered over 22,000 GitHub stars. In 2024, as life got busier, he placed the project into maintenance mode."
+    },
+    "contributor_full_list": "See the entire community",
+    "data_directory": "Data directory:",
+    "github_tooltip": "Report bugs, suggest features, or contribute on GitHub",
+    "license_tooltip": "View license",
+    "donate": "Donate",
+    "donate_tooltip": "Donate to support this project"
   },
   "toast": {
     "critical-error": {
