@@ -175,7 +175,7 @@ function FooterLink(props: {children: ComponentChildren, text: string, url: stri
 type HoverCallback = (contributor: Contributor, isHovering: boolean, part: "name" | "role") => void;
 
 function Contributors({data, onHover}: {data: ContributorList, onHover?: HoverCallback}) {
-    return data.contributors.slice(0, 10).map((c, index, array) => {
+    return data.contributors.map((c, index, array) => {
         return <Fragment key={c.name}>
             <ContributorListItem data={c} onHover={onHover} />
             
