@@ -60,6 +60,13 @@ const TRANSLATION_PATHS = [
     "apps/server/src/assets/translations/"
 ];
 
+/** Authors that are bots or automated tools, not real contributors. */
+const EXCLUDED_AUTHORS = new Set([
+    "Languages add-on",
+    "Hosted Weblate",
+    "renovate[bot]"
+]);
+
 function parseShortlog(rawOutput: string): Map<string, { email: string; commitCount: number }> {
     const result = new Map<string, { email: string; commitCount: number }>();
     for (const line of rawOutput.split("\n")) {
@@ -82,6 +89,7 @@ function listLocalGitContributors() {
     const translators: ContributorInfo[] = [];
     let rank = 0;
     for (const [name, { email, commitCount }] of allContribs) {
+        if (EXCLUDED_AUTHORS.has(name)) continue;
         if (++rank > 20) break;
 
         const translationCommitCount = translationContribs.get(name)?.commitCount ?? 0;
