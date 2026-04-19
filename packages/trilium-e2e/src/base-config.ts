@@ -22,13 +22,18 @@ interface BaseConfigOptions {
      * Optional webServer configuration to start the app before tests.
      */
     webServer?: PlaywrightTestConfig["webServer"];
+
+    /**
+     * Number of parallel workers. Defaults to Playwright's default (half of CPU cores).
+     */
+    workers?: number;
 }
 
 /**
  * Creates a base Playwright configuration that includes the shared trilium-e2e
  * tests and optionally app-specific tests.
  */
-export function createBaseConfig({ appDir, localTestDir, projectName, webServer }: BaseConfigOptions) {
+export function createBaseConfig({ appDir, localTestDir, projectName, webServer, workers }: BaseConfigOptions) {
     const port = process.env["TRILIUM_PORT"] ?? "8082";
     const baseURL = process.env["BASE_URL"] || `http://127.0.0.1:${port}`;
     const sharedTestDir = join(__dirname);
@@ -57,6 +62,7 @@ export function createBaseConfig({ appDir, localTestDir, projectName, webServer 
             baseURL,
             trace: "on-first-retry",
         },
+        workers,
         webServer,
         projects,
     });

@@ -6,6 +6,7 @@ const baseURL = process.env["BASE_URL"] || `http://127.0.0.1:${port}`;
 export default createBaseConfig({
     appDir: __dirname,
     projectName: "standalone",
+    workers: 1,
     webServer: !process.env.TRILIUM_DOCKER ? {
         command: "pnpm vite preview --port " + port,
         url: baseURL,
