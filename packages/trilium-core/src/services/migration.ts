@@ -77,9 +77,9 @@ async function migrate() {
 }
 
 async function prepareMigrations(currentDbVersion: number): Promise<MigrationInfo[]> {
-    MIGRATIONS.sort((a, b) => a.version - b.version);
+    const sortedMigrations = [...MIGRATIONS].sort((a, b) => a.version - b.version);
     const migrations: MigrationInfo[] = [];
-    for (const migration of MIGRATIONS) {
+    for (const migration of sortedMigrations) {
         const dbVersion = migration.version;
         if (dbVersion > currentDbVersion) {
             if ("sql" in migration) {
