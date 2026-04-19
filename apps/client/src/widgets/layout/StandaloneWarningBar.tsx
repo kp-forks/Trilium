@@ -1,9 +1,10 @@
 import { useRef } from "preact/hooks";
 import { t } from "../../services/i18n";
-import { useTooltip } from "../react/hooks";
+import { useNoteContext, useTooltip } from "../react/hooks";
 import "./StandaloneWarningBar.css";
 
 export default function StandaloneWarningBar() {
+    const { noteContext } = useNoteContext();
     const badgeRef = useRef<HTMLDivElement>(null);
 
     useTooltip(badgeRef, {
@@ -11,6 +12,11 @@ export default function StandaloneWarningBar() {
         placement: "top",
         delay: 200
     });
+
+    // Only show in the main split, not sub-splits.
+    if (noteContext?.mainNtxId) {
+        return null;
+    }
 
     return (
         <div ref={badgeRef} className="standalone-badge">

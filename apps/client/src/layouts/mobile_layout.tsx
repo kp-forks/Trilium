@@ -47,7 +47,7 @@ export default class MobileLayout {
                             .css("padding-inline-start", "0")
                             .css("padding-inline-end", "0")
                             .css("contain", "content")
-                            .child(new FlexContainer("column").filling().id("mobile-sidebar-wrapper").child(new QuickSearchWidget()).child(new NoteTreeWidget()).optChild(glob.isStandalone, <StandaloneWarningBar />))
+                            .child(new FlexContainer("column").filling().id("mobile-sidebar-wrapper").child(new QuickSearchWidget()).child(new NoteTreeWidget()))
                     )
                     .child(
                         new ScreenContainer("detail", "row")
@@ -65,6 +65,7 @@ export default class MobileLayout {
                                                 .child(<NoteIconWidget />)
                                                 .child(<NoteTitleWidget />)
                                                 .child(<NoteBadges />)
+                                                .optChild(glob.isStandalone, <StandaloneWarningBar />)
                                                 .child(<MobileDetailMenu />)
                                         )
                                         .child(
