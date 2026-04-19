@@ -515,19 +515,27 @@ function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
 /**
  * Extracts bookmark IDs from CKEditor bookmark anchors (`<a id="..."></a>` without href).
  * Bookmarks are stored as labels on the note so they can be looked up without parsing content.
+ * Matches id regardless of attribute order; skips anchors with href (those are regular links).
  */
 export function findBookmarks(content: string): string[] {
-    const re = /<a\s+id="([^"]+)"[^>]*>(<\/a>)?/g;
+    const re = /<a\b([^>]*)>(<\/a>)?/g;
     const bookmarks: string[] = [];
     let match;
 
     while ((match = re.exec(content))) {
+        const attrs = match[1];
+
         // Skip anchors that also have an href (those are regular links, not bookmarks)
-        if (match[0].includes("href=")) {
+        if (/\bhref\s*=/.test(attrs)) {
             continue;
         }
 
-        const id = match[1];
+        const idMatch = /\bid\s*=\s*"([^"]+)"/.exec(attrs) ?? /\bid\s*=\s*'([^']+)'/.exec(attrs);
+        if (!idMatch) {
+            continue;
+        }
+
+        const id = idMatch[1];
         if (!bookmarks.includes(id)) {
             bookmarks.push(id);
         }

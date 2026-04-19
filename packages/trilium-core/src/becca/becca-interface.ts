@@ -279,8 +279,10 @@ export default class Becca {
      */
     getFlatTextIndex(): { notes: BNote[], flatTexts: string[], noteIdToIdx: Map<string, number> } {
         if (!this.flatTextIndex) {
-            // Measure heap before building
-            const heapBefore = process.memoryUsage().heapUsed;
+            // Measure heap before building (only available under Node.js)
+            const heapBefore = typeof process !== "undefined" && typeof process.memoryUsage === "function"
+                ? process.memoryUsage().heapUsed
+                : null;
 
             const allNoteSet = this.getAllNoteSet();
             const notes: BNote[] = [];
@@ -296,10 +298,12 @@ export default class Becca {
             this.flatTextIndex = { notes, flatTexts, noteIdToIdx };
             this.dirtyFlatTextNoteIds.clear();
 
-            // Measure heap after building and log
-            const heapAfter = process.memoryUsage().heapUsed;
-            const heapDelta = heapAfter - heapBefore;
-            getLog().info(`Flat text search index built: ${notes.length} notes, ${formatSize(heapDelta)}`);
+            if (heapBefore !== null) {
+                const heapDelta = process.memoryUsage().heapUsed - heapBefore;
+                getLog().info(`Flat text search index built: ${notes.length} notes, ${formatSize(heapDelta)}`);
+            } else {
+                getLog().info(`Flat text search index built: ${notes.length} notes`);
+            }
         } else if (this.dirtyFlatTextNoteIds.size > 0) {
             // Incremental update: only recompute flat texts for dirtied notes
             const { flatTexts, noteIdToIdx } = this.flatTextIndex;
