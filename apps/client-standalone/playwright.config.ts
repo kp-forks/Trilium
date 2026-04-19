@@ -13,6 +13,9 @@ export default createBaseConfig({
     webServer: !process.env.TRILIUM_DOCKER ? {
         command: `pnpm start-prod-no-dir -- --port ${port}`,
         url: baseURL,
+        env: {
+            TRILIUM_INTEGRATION_TEST: "memory"
+        },
         reuseExistingServer: !process.env.CI,
         cwd: __dirname,
         timeout: 5 * 60 * 1000
