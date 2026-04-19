@@ -1,10 +1,12 @@
 import type { PlatformProvider } from "@triliumnext/core";
 
+// Build-time constant injected by Vite (see `define` in vite.config.mts).
+declare const __TRILIUM_INTEGRATION_TEST__: string;
+
 /** Maps URL query parameter names to TRILIUM_ environment variable names. */
 const QUERY_TO_ENV: Record<string, string> = {
     "safeMode": "TRILIUM_SAFE_MODE",
     "startNoteId": "TRILIUM_START_NOTE_ID",
-    "integrationTest": "TRILIUM_INTEGRATION_TEST",
 };
 
 export default class StandalonePlatformProvider implements PlatformProvider {
@@ -20,6 +22,9 @@ export default class StandalonePlatformProvider implements PlatformProvider {
             if (params.has(queryKey)) {
                 this.envMap[envKey] = params.get(queryKey) || "true";
             }
+        }
+        if (__TRILIUM_INTEGRATION_TEST__) {
+            this.envMap["TRILIUM_INTEGRATION_TEST"] = __TRILIUM_INTEGRATION_TEST__;
         }
     }
 

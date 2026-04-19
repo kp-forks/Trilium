@@ -48,6 +48,9 @@ console.log("[Worker] Error handlers installed, loading modules...");
 // =============================================================================
 import type { BrowserRouter } from './lightweight/browser_router';
 
+// Build-time constant injected by Vite (see `define` in vite.config.mts).
+declare const __TRILIUM_INTEGRATION_TEST__: string;
+
 // =============================================================================
 // MODULE STATE (populated by dynamic imports)
 // =============================================================================
@@ -169,11 +172,10 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Initializing SQLite WASM...");
             await sqlProvider!.initWasm();
 
-            // Check if we're in integration test mode (loaded via ?integrationTest=memory)
-            const params = new URLSearchParams(queryString);
-            const integrationTestMode = params.get("integrationTest");
-
-            console.log("Starting with integration test mode ", integrationTestMode);
+            // Integration test mode is baked in at build time via the
+            // __TRILIUM_INTEGRATION_TEST__ Vite define (derived from the
+            // TRILIUM_INTEGRATION_TEST env var when the bundle was built).
+            const integrationTestMode = __TRILIUM_INTEGRATION_TEST__;
 
             if (integrationTestMode === "memory") {
                 // Wipe OPFS so e2e runs start from a clean slate (stale DB, logs,

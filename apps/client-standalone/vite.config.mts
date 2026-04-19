@@ -298,5 +298,6 @@ export default defineConfig(() => ({
     },
     define: {
         "process.env.IS_PREACT": JSON.stringify("true"),
+        __TRILIUM_INTEGRATION_TEST__: JSON.stringify(process.env.TRILIUM_INTEGRATION_TEST ?? ""),
     }
 }));
