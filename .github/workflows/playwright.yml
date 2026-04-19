@@ -124,7 +124,7 @@ jobs:
       - name: Start standalone preview server
         run: |
           cd apps/client-standalone
-          pnpm vite preview --port $TRILIUM_PORT &
+          pnpm vite preview --port $TRILIUM_PORT --host 127.0.0.1 &
           sleep 5
 
       - name: Standalone end-to-end tests
