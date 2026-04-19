@@ -155,6 +155,27 @@ if (!isDev) {
     ]
 }
 
+// Include the integration test fixture database for e2e tests
+if (process.env.TRILIUM_INTEGRATION_TEST) {
+    plugins = [
+        ...plugins,
+        viteStaticCopy({
+            targets: [
+                {
+                    // Forward slashes are required because fast-glob (used
+                    // internally) treats backslashes as escape characters on
+                    // Windows. `stripBase` drops the source's directory
+                    // structure so the file lands flat at `test-fixtures/document.db`
+                    // rather than mirroring the `packages/trilium-core/...` path.
+                    src: join(__dirname, "../../packages/trilium-core/src/test/fixtures/document.db").replace(/\\/g, "/"),
+                    dest: "test-fixtures",
+                    rename: { stripBase: true }
+                }
+            ]
+        })
+    ]
+}
+
 export default defineConfig(() => ({
     root: join(__dirname, 'src'),  // Set src as root so index.html is served from /
     envDir: __dirname,  // Load .env files from client-standalone directory, not src/
@@ -219,6 +240,12 @@ export default defineConfig(() => ({
             "Cross-Origin-Embedder-Policy": "require-corp"
         }
     },
+    preview: {
+        headers: {
+            "Cross-Origin-Opener-Policy": "same-origin",
+            "Cross-Origin-Embedder-Policy": "require-corp"
+        }
+    },
     optimizeDeps: {
         exclude: ['@sqlite.org/sqlite-wasm', '@triliumnext/core']
     },
@@ -276,5 +303,6 @@ export default defineConfig(() => ({
     },
     define: {
         "process.env.IS_PREACT": JSON.stringify("true"),
+        __TRILIUM_INTEGRATION_TEST__: JSON.stringify(process.env.TRILIUM_INTEGRATION_TEST ?? ""),
     }
 }));

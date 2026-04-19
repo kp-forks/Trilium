@@ -48,6 +48,9 @@ console.log("[Worker] Error handlers installed, loading modules...");
 // =============================================================================
 import type { BrowserRouter } from './lightweight/browser_router';
 
+// Build-time constant injected by Vite (see `define` in vite.config.mts).
+declare const __TRILIUM_INTEGRATION_TEST__: string;
+
 // =============================================================================
 // MODULE STATE (populated by dynamic imports)
 // =============================================================================
@@ -73,6 +76,51 @@ let router: BrowserRouter | null = null;
 let initPromise: Promise<void> | null = null;
 let initError: Error | null = null;
 let queryString = "";
+
+/**
+ * Check whether a file exists at the OPFS root. Used to decide whether the
+ * test fixture needs to be seeded or whether we should reuse the existing
+ * DB (preserving changes made earlier in the same test — e.g. options set
+ * before a page reload).
+ */
+async function opfsFileExists(fileName: string): Promise<boolean> {
+    if (typeof navigator === "undefined" || !navigator.storage?.getDirectory) {
+        return false;
+    }
+    const root = await navigator.storage.getDirectory();
+    try {
+        await root.getFileHandle(fileName);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Write a raw byte buffer to an OPFS file. Used to drop the test fixture DB
+ * into OPFS as a regular file so SQLite's OPFS VFS can then open it. Requires
+ * a Worker context (`createSyncAccessHandle` isn't available on the main thread
+ * in some browsers).
+ */
+async function writeOpfsFile(fileName: string, buffer: Uint8Array): Promise<void> {
+    const root = await navigator.storage.getDirectory();
+    const fileHandle = await root.getFileHandle(fileName, { create: true });
+    const accessHandle = await (fileHandle as unknown as {
+        createSyncAccessHandle(): Promise<{
+            truncate(size: number): void;
+            write(buffer: Uint8Array, opts: { at: number }): number;
+            flush(): void;
+            close(): void;
+        }>;
+    }).createSyncAccessHandle();
+    try {
+        accessHandle.truncate(0);
+        accessHandle.write(buffer, { at: 0 });
+        accessHandle.flush();
+    } finally {
+        accessHandle.close();
+    }
+}
 
 /**
  * Load all required modules using dynamic imports.
@@ -145,8 +193,43 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Initializing SQLite WASM...");
             await sqlProvider!.initWasm();
 
-            // Try to use OPFS for persistent storage
-            if (sqlProvider!.isOpfsAvailable()) {
+            // Integration test mode is baked in at build time via the
+            // __TRILIUM_INTEGRATION_TEST__ Vite define (derived from the
+            // TRILIUM_INTEGRATION_TEST env var when the bundle was built).
+            const integrationTestMode = __TRILIUM_INTEGRATION_TEST__;
+
+            if (integrationTestMode === "memory") {
+                // Use OPFS for the DB in integration test mode so option changes
+                // (and any other writes) survive page reloads within a single test.
+                // Playwright gives each test a fresh BrowserContext, which means a
+                // fresh OPFS — so on the first worker init of a test we seed from
+                // the fixture, and subsequent inits in the same test reuse it.
+                const opfsDbName = "trilium.db";
+                if (!(await opfsFileExists(opfsDbName))) {
+                    console.log("[Worker] Integration test mode: seeding fixture database into OPFS...");
+                    const response = await fetch("/test-fixtures/document.db");
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch test fixture: ${response.status} ${response.statusText}`);
+                    }
+                    const buffer = new Uint8Array(await response.arrayBuffer());
+                    // Verify we actually got a SQLite database, not an SPA-fallback
+                    // index.html served for a missing file. SQLite databases start
+                    // with the 16-byte magic string "SQLite format 3\0".
+                    const magic = new TextDecoder().decode(buffer.subarray(0, 15));
+                    if (magic !== "SQLite format 3") {
+                        throw new Error(
+                            `Test fixture at /test-fixtures/document.db is not a SQLite database ` +
+                            `(got ${buffer.byteLength} bytes starting with "${magic}"). ` +
+                            `The file is likely missing and the SPA fallback is returning index.html.`
+                        );
+                    }
+                    await writeOpfsFile(opfsDbName, buffer);
+                } else {
+                    console.log("[Worker] Integration test mode: reusing existing OPFS DB from earlier in this test");
+                }
+                sqlProvider!.loadFromOpfs(`/${opfsDbName}`);
+            } else if (sqlProvider!.isOpfsAvailable()) {
+                // Try to use OPFS for persistent storage
                 console.log("[Worker] OPFS available, loading persistent database...");
                 sqlProvider!.loadFromOpfs("/trilium.db");
             } else {
@@ -211,6 +294,20 @@ async function initialize(): Promise<void> {
             if (coreModule.sql_init.isDbInitialized()) {
                 console.log("[Worker] Database already initialized, loading becca...");
                 await coreModule.becca_loader.beccaLoaded;
+
+                // `initTranslations` runs before `initSql` inside `initializeCore`
+                // (options_init needs translations, creating a chicken-and-egg),
+                // so it always defaults to "en" on a fresh worker boot. Now that
+                // the DB is up we can read the real locale and, if it differs,
+                // switch i18next and rebuild the hidden subtree with the correct
+                // titles. This must happen BEFORE `startScheduler` registers its
+                // own `dbReady.then(checkHiddenSubtree)` so the scheduled rebuild
+                // sees the right language.
+                const dbLocale = coreModule.options.getOptionOrNull("locale");
+                if (dbLocale && dbLocale !== "en") {
+                    console.log(`[Worker] Reconciling i18next locale to "${dbLocale}" from DB`);
+                    await coreModule.i18n.changeLanguage(dbLocale);
+                }
             } else {
                 console.log("[Worker] Database not initialized, skipping becca load (will be loaded during DB initialization)");
             }
@@ -256,19 +353,9 @@ async function dispatch(request: LocalRequest) {
     return appRouter.dispatch(request.method, request.url, request.body, request.headers);
 }
 
-// Start initialization immediately when the worker loads
-console.log("[Worker] Starting initialization...");
-initialize().catch(err => {
-    console.error("[Worker] Initialization failed:", err);
-    // Post error to main thread
-    self.postMessage({
-        type: "WORKER_ERROR",
-        error: {
-            message: String(err?.message || err),
-            stack: err?.stack
-        }
-    });
-});
+// Wait for the INIT message before initializing so that queryString
+// (which may contain ?integrationTest=memory for e2e) is available.
+let initReceived = false;
 
 self.onmessage = async (event) => {
     const msg = event.data;
@@ -276,6 +363,20 @@ self.onmessage = async (event) => {
 
     if (msg.type === "INIT") {
         queryString = msg.queryString || "";
+        if (!initReceived) {
+            initReceived = true;
+            console.log("[Worker] Starting initialization...");
+            initialize().catch(err => {
+                console.error("[Worker] Initialization failed:", err);
+                self.postMessage({
+                    type: "WORKER_ERROR",
+                    error: {
+                        message: String(err?.message || err),
+                        stack: err?.stack
+                    }
+                });
+            });
+        }
         return;
     }
 

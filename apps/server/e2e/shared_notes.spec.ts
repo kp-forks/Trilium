@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import App from "./support/app";
+import App from "../../../packages/trilium-e2e/src/support/app";
 
 test("Goes to share root", async ({ page, context }) => {
     const app = new App(page, context);

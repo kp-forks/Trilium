@@ -82,7 +82,7 @@ jobs:
           require-healthy: true
 
       - name: Run Playwright tests
-        run: TRILIUM_DOCKER=1 TRILIUM_PORT=8082 pnpm --filter=server-e2e e2e
+        run: TRILIUM_DOCKER=1 TRILIUM_PORT=8082 pnpm --filter=server e2e
 
       - name: Upload Playwright trace
         if: failure()
