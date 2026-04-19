@@ -1,5 +1,5 @@
 {
-    "⚠️": "NOTE: this is an auto-generated list. Do not modify it.",
+    "ℹ️": "Use `npm run list-contributors`. as a reference to update this list.",
     "contributors": [
         {
             "name": "eliandoran",
@@ -18,36 +18,28 @@
             "url": "https://github.com/adoriandoran"
         },
         {
-            "name": "pano9000",
-            "url": "https://github.com/pano9000"
-        },
-        {
             "name": "perfectra1n",
             "url": "https://github.com/perfectra1n"
         },
         {
-            "name": "JYC333",
-            "url": "https://github.com/JYC333"
+            "name": "pano9000",
+            "url": "https://github.com/pano9000"
         },
         {
             "name": "SiriusXT",
             "url": "https://github.com/SiriusXT"
         },
         {
-            "name": "tony",
-            "url": "https://github.com/tony"
-        },
-        {
-            "name": "Nriver",
-            "url": "https://github.com/Nriver"
+            "name": "JYC333",
+            "url": "https://github.com/JYC333"
         },
         {
             "name": "francistw",
             "url": "https://github.com/francistw"
         },
         {
-            "name": "isaul32",
-            "url": "https://github.com/isaul32"
+            "name": "Nriver",
+            "url": "https://github.com/Nriver"
         },
         {
             "name": "thfrei",
