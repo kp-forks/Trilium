@@ -13,9 +13,8 @@ import { Trans } from "react-i18next";
 import type React from "react";
 import contributors from "../../../../../contributors.json"; 
 import { Fragment } from "preact/jsx-runtime";
-import { ComponentChildren } from "preact";
-import { useMemo } from "react";
-import { memo } from "preact/compat";
+import type { ComponentChildren } from "preact";
+import { useMemo, memo } from "preact/compat";
 import clsx from "clsx";
 
 export default function AboutDialog() {
@@ -25,22 +24,26 @@ export default function AboutDialog() {
     const [icon, setIcon] = useState("default");
     const [altIcon, setAltIcon] = useState<string | null>(null);
 
+    const hasLoaded = useRef(false);
+
     const onLoad = useCallback(async () => {
-        if (!appInfo) {
+        if (!hasLoaded.current) {
             const info = await server.get<AppInfo>("app-info");
             if (info.appVersion.includes("test")) {
                 setNightly(true);
                 setIcon("nightly");
             }
             setAppInfo(info);
+            hasLoaded.current = true;
+
         }
         setIsShown(true);
     }, []);
 
     useTriliumEvent("openAboutDialog", onLoad);
 
-    const createContributorHoverHandler = useCallback(() => {
-        let timeoutID;
+    const createContributorHoverHandler = () => {
+        let timeoutID: ReturnType<typeof setTimeout>;
         return (contributor: Contributor, isHovering: boolean, part: "name" | "role") => {
             if (part === "role" && contributor.role === "original-dev") {
                 if (isHovering) {
@@ -53,7 +56,7 @@ export default function AboutDialog() {
                 }
             }
         }
-    }, []);
+    };
 
     /* Cache the contributor list to prevent its rerendering.
      * When the icon changes, it triggers a rerender of the dialog. If this happens while an
@@ -77,7 +80,7 @@ export default function AboutDialog() {
                
                 <div className={"icon"} data-icon={altIcon ?? icon} />
                 <h2>Trilium Notes {isNightly && <span className="channel-name">Nightly</span>}</h2>
-                <a className="tn-link" href="https://triliumnotes.org/" target="_blank">
+                <a className="tn-link" href="https://triliumnotes.org/" target="_blank" rel="noopener noreferrer">
                     triliumnotes.org
                 </a>
 
@@ -95,7 +98,7 @@ export default function AboutDialog() {
                                     buildDate: appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""
                                 }}
                                 components={{
-                                    buildRevision: RevisionLink(appInfo)
+                                    buildRevision: <RevisionLink appInfo={appInfo} /> as React.ReactElement
                                 }}
                             />
                         </div>
@@ -104,7 +107,7 @@ export default function AboutDialog() {
                     <PropertySheetItem className="contributor-list use-tn-links" label={t("about.contributors_label")}>
                         <CachedContributors />
 
-                        <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank">
+                        <a href="https://github.com/TriliumNext/Trilium/graphs/contributors" target="_blank" rel="noopener noreferrer">
                             {t("about.contributor_full_list")}
                         </a>
                     </PropertySheetItem>
@@ -123,7 +126,7 @@ export default function AboutDialog() {
                     url="https://github.com/TriliumNext/Trilium"
                     tooltip={t("about.github_tooltip")}>
 
-                    <i class='bx bxl-github'></i>
+                    <i className='bx bxl-github'></i>
                 </FooterLink>
                 
                 <FooterLink
@@ -141,19 +144,19 @@ export default function AboutDialog() {
                     tooltip={t("about.donate_tooltip")}
                     className="donate-link">
 
-                    <i class='bx bx-heart' ></i>
+                    <i className='bx bx-heart' ></i>
                 </FooterLink>
            </footer>
         </Modal>
     );
 }
 
-function RevisionLink(appInfo: AppInfo | null) {
+function RevisionLink({appInfo}: {appInfo: AppInfo | null}) {
     return <>
-        {appInfo?.buildRevision && <a href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" className="tn-link">
+        {appInfo?.buildRevision && <a href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" rel="noopener noreferrer" className="tn-link">
             {appInfo.buildRevision.substring(0, 7)}
         </a>}
-    </> as React.ReactElement;
+    </>;
 }
 
 function FooterLink(props: {children: ComponentChildren, text: string, url: string, tooltip: string, className?: string}) {
@@ -166,7 +169,7 @@ function FooterLink(props: {children: ComponentChildren, text: string, url: stri
         placement: "bottom"
     })
     
-    return <a ref={linkRef} href={props.url} className={props.className} target="_blank" draggable={false}>
+    return <a ref={linkRef} href={props.url} className={props.className} target="_blank" rel="noopener noreferrer" draggable={false}>
         {props.children}
         {props.text}
     </a>
@@ -202,16 +205,17 @@ function ContributorListItem({data, onHover}: {data: Contributor, onHover?: Hove
         <a
             href={data.url}
             target="_blank"
-            onMouseEnter={(e) => onHover?.(data, true, "name")}
-            onMouseLeave={(e) => onHover?.(data, false, "name")}>
+            rel="noopener noreferrer"
+            onMouseEnter={() => onHover?.(data, true, "name")}
+            onMouseLeave={() => onHover?.(data, false, "name")}>
     
             {data.fullName ?? data.name}
         </a>
 
         {roleString && <span
             ref={roleRef}
-            onMouseEnter={(e) => onHover?.(data, true, "role")}
-            onMouseLeave={(e) => onHover?.(data, false, "role")}>
+            onMouseEnter={() => onHover?.(data, true, "role")}
+            onMouseLeave={() => onHover?.(data, false, "role")}>
             
             (<span className="contributor-role">{roleString}</span>)
         </span>} 
