@@ -31,13 +31,6 @@
     "search_notes": "Cuardaigh nótaí"
   },
   "about": {
-    "title": "Maidir le Trilium Notes",
-    "homepage": "Leathanach baile:",
-    "app_version": "Leagan an aip:",
-    "db_version": "Leagan DB:",
-    "sync_version": "Leagan sioncrónaithe:",
-    "build_date": "Dáta tógála:",
-    "build_revision": "Athbhreithniú tógála:",
     "data_directory": "Eolaire sonraí:"
   },
   "toast": {

@@ -1,12 +1,5 @@
 {
   "about": {
-    "title": "Trilium خاتىرە ھەققىدە",
-    "homepage": "پروگرامما باش بېتى:",
-    "app_version": "App نۇسخىسى:",
-    "db_version": "ساندان نۇسخىسى:",
-    "sync_version": "ماسلاش نۇسخىسى:",
-    "build_date": "قۇرۇلغان ۋاقىت:",
-    "build_revision": "قۇرۇلۇش نۇسخىسى:",
     "data_directory": "سانلىق مەلۇمات مۇندەرىجىسى:"
   },
   "toast": {

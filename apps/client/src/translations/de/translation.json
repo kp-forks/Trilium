@@ -1,12 +1,5 @@
 {
   "about": {
-    "title": "Über Trilium Notes",
-    "homepage": "Startseite:",
-    "app_version": "App-Version:",
-    "db_version": "DB-Version:",
-    "sync_version": "Sync-Version:",
-    "build_date": "Build-Datum:",
-    "build_revision": "Build-Revision:",
     "data_directory": "Datenverzeichnis:"
   },
   "toast": {

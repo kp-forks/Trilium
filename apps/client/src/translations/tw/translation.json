@@ -1,12 +1,5 @@
 {
   "about": {
-    "title": "關於 Trilium Notes",
-    "homepage": "項目主頁：",
-    "app_version": "程式版本：",
-    "db_version": "資料庫版本：",
-    "sync_version": "同步版本：",
-    "build_date": "編譯日期：",
-    "build_revision": "編譯版本：",
     "data_directory": "資料目錄："
   },
   "toast": {

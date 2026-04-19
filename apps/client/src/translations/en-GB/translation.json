@@ -66,13 +66,6 @@
     "set-custom-color": "Set custom note colour"
   },
   "about": {
-    "title": "About Trilium Notes",
-    "homepage": "Homepage:",
-    "app_version": "App version:",
-    "db_version": "DB version:",
-    "sync_version": "Sync version:",
-    "build_date": "Build date:",
-    "build_revision": "Build revision:",
     "data_directory": "Data directory:"
   },
   "toast": {

@@ -1,12 +1,5 @@
 {
   "about": {
-    "title": "Trilium Notesについて",
-    "homepage": "ホームページ:",
-    "app_version": "アプリのバージョン:",
-    "db_version": "データベースのバージョン:",
-    "sync_version": "同期のバージョン:",
-    "build_date": "Build の日時:",
-    "build_revision": "Build のバージョン:",
     "data_directory": "データの場所:"
   },
   "toast": {
