@@ -1,10 +1,18 @@
 import type { BrowserContext } from "@playwright/test";
 import { expect, Locator, Page } from "@playwright/test";
 
-interface GotoOpts {
+export interface GotoOpts {
     url?: string;
     isMobile?: boolean;
     preserveTabs?: boolean;
+}
+
+/**
+ * Extra query parameters to append to all navigations (e.g. "integrationTest=memory").
+ * Set via the TRILIUM_E2E_QUERY_PARAMS environment variable.
+ */
+function getDefaultQueryParams(): string {
+    return process.env["TRILIUM_E2E_QUERY_PARAMS"] ?? "";
 }
 
 export function getBaseUrl(): string {
@@ -61,10 +69,19 @@ export default class App {
             url = "/";
         }
 
+        // Append default query params (e.g. ?integrationTest=memory for standalone)
+        const extraParams = getDefaultQueryParams();
+        if (extraParams) {
+            const separator = url.includes("?") ? "&" : "?";
+            url = `${url}${separator}${extraParams}`;
+        }
+
+        const isRoot = url === "/" || url.startsWith("/?");
+
         await this.page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
 
         // Wait for the page to load.
-        if (url === "/") {
+        if (isRoot) {
             await expect(this.page.locator(".tree", { hasText: "Trilium Integration Test" })).toBeVisible();
             if (!preserveTabs) {
                 await this.closeAllTabs();

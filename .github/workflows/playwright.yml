@@ -119,7 +119,7 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Build standalone
-        run: pnpm --filter client-standalone build
+        run: TRILIUM_INTEGRATION_TEST=memory pnpm --filter client-standalone build
 
       - name: Start standalone preview server
         run: |

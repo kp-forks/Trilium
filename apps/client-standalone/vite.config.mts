@@ -155,6 +155,21 @@ if (!isDev) {
     ]
 }
 
+// Include the integration test fixture database for e2e tests
+if (process.env.TRILIUM_INTEGRATION_TEST) {
+    plugins = [
+        ...plugins,
+        viteStaticCopy({
+            targets: [
+                {
+                    src: "../../../packages/trilium-core/src/test/fixtures/document.db",
+                    dest: "test-fixtures",
+                }
+            ]
+        })
+    ]
+}
+
 export default defineConfig(() => ({
     root: join(__dirname, 'src'),  // Set src as root so index.html is served from /
     envDir: __dirname,  // Load .env files from client-standalone directory, not src/
@@ -215,6 +230,12 @@ export default defineConfig(() => ({
         headers: {
             // Required for SharedArrayBuffer which is needed by SQLite WASM OPFS VFS
             // See: https://sqlite.org/wasm/doc/trunk/persistence.md#coop-coep
+            "Cross-Origin-Opener-Policy": "same-origin",
+            "Cross-Origin-Embedder-Policy": "require-corp"
+        }
+    },
+    preview: {
+        headers: {
             "Cross-Origin-Opener-Policy": "same-origin",
             "Cross-Origin-Embedder-Policy": "require-corp"
         }

@@ -11,7 +11,7 @@
     "start-prod": "pnpm build && pnpm vite preview --port 8888",
     "coverage": "vitest --coverage",
     "e2e": "playwright test",
-    "start-prod-no-dir": "pnpm build && pnpm vite preview --port ${TRILIUM_PORT:-8082} --host 127.0.0.1"
+    "start-prod-no-dir": "cross-env TRILIUM_INTEGRATION_TEST=memory pnpm build && pnpm vite preview --port ${TRILIUM_PORT:-8082} --host 127.0.0.1"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "0.18.0",

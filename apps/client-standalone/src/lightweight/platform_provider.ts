@@ -4,6 +4,7 @@ import type { PlatformProvider } from "@triliumnext/core";
 const QUERY_TO_ENV: Record<string, string> = {
     "safeMode": "TRILIUM_SAFE_MODE",
     "startNoteId": "TRILIUM_START_NOTE_ID",
+    "integrationTest": "TRILIUM_INTEGRATION_TEST",
 };
 
 export default class StandalonePlatformProvider implements PlatformProvider {

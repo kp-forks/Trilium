@@ -145,8 +145,21 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Initializing SQLite WASM...");
             await sqlProvider!.initWasm();
 
-            // Try to use OPFS for persistent storage
-            if (sqlProvider!.isOpfsAvailable()) {
+            // Check if we're in integration test mode (loaded via ?integrationTest=memory)
+            const params = new URLSearchParams(queryString);
+            const integrationTestMode = params.get("integrationTest");
+
+            if (integrationTestMode === "memory") {
+                // Load the pre-built test fixture database for e2e tests
+                console.log("[Worker] Integration test mode: loading fixture database...");
+                const response = await fetch("/test-fixtures/document.db");
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch test fixture: ${response.status} ${response.statusText}`);
+                }
+                const buffer = new Uint8Array(await response.arrayBuffer());
+                sqlProvider!.loadFromBuffer(buffer);
+            } else if (sqlProvider!.isOpfsAvailable()) {
+                // Try to use OPFS for persistent storage
                 console.log("[Worker] OPFS available, loading persistent database...");
                 sqlProvider!.loadFromOpfs("/trilium.db");
             } else {
@@ -256,19 +269,9 @@ async function dispatch(request: LocalRequest) {
     return appRouter.dispatch(request.method, request.url, request.body, request.headers);
 }
 
-// Start initialization immediately when the worker loads
-console.log("[Worker] Starting initialization...");
-initialize().catch(err => {
-    console.error("[Worker] Initialization failed:", err);
-    // Post error to main thread
-    self.postMessage({
-        type: "WORKER_ERROR",
-        error: {
-            message: String(err?.message || err),
-            stack: err?.stack
-        }
-    });
-});
+// Wait for the INIT message before initializing so that queryString
+// (which may contain ?integrationTest=memory for e2e) is available.
+let initReceived = false;
 
 self.onmessage = async (event) => {
     const msg = event.data;
@@ -276,6 +279,20 @@ self.onmessage = async (event) => {
 
     if (msg.type === "INIT") {
         queryString = msg.queryString || "";
+        if (!initReceived) {
+            initReceived = true;
+            console.log("[Worker] Starting initialization...");
+            initialize().catch(err => {
+                console.error("[Worker] Initialization failed:", err);
+                self.postMessage({
+                    type: "WORKER_ERROR",
+                    error: {
+                        message: String(err?.message || err),
+                        stack: err?.stack
+                    }
+                });
+            });
+        }
         return;
     }
 
