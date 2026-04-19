@@ -1,6 +1,23 @@
 {
   "about": {
-    "data_directory": "Directorio de datos:"
+    "data_directory": "Directorio de datos:",
+    "version_label": "Versión:",
+    "version": "{{appVersion}} (base de datos: {{dbVersion}}, protocolo de sincronización: {{syncVersion}})",
+    "build_info": "Compilación: {{buildDate}}, revisión: <buildRevision />",
+    "contributors_label": "Contribuidores:",
+    "contributor_roles": {
+      "lead-dev": "desarrollador principal",
+      "original-dev": "desarrollador original"
+    },
+    "role_brief_history": {
+      "lead-dev": "Elian Doran fundó TriliumNext en 2024, una bifurcación de la comunidad creado después de que Zadam dejara el proyecto. Más tarde Zadam transfirió el repositorio original al equipo de TriliumNext, fusionando ambos proyectos en uno.",
+      "original-dev": "El 25 de diciembre de 2017, Zadam lanzó la primera beta de Trilium (escrito con una solo \"l\", a diferencia de la flor). Insatisfecho con los organizadores de notas existentes, él construyó una poderosa base de conocimientos jerárquica auto hospedada que reunió más de 22.000 estrellas en GitHub. En 2024, a medida que la vida fue más activa, puso el proyecto en modo de mantenimiento."
+    },
+    "contributor_full_list": "Ver la comunidad entera",
+    "github_tooltip": "Reportar errores, sugerir características o contribuir en GitHub",
+    "license_tooltip": "Ver licencia",
+    "donate": "Donar",
+    "donate_tooltip": "Donar para apoyar este proyecto"
   },
   "toast": {
     "critical-error": {
@@ -34,7 +51,9 @@
     "link_title_mirrors": "el título del enlace replica el título actual de la nota",
     "link_title_arbitrary": "el título del enlace se puede cambiar arbitrariamente",
     "link_title": "Título del enlace",
-    "button_add_link": "Agregar enlace"
+    "button_add_link": "Agregar enlace",
+    "anchor": "Ancla (opcional)",
+    "anchor_none": "Ninguna (enlace a la nota)"
   },
   "branch_prefix": {
     "edit_branch_prefix": "Editar prefijo de rama",
@@ -342,7 +361,7 @@
     "calendar_root": "marca la nota que debe usarse como raíz para las notas del día. Sólo uno debe estar marcado como tal.",
     "archived": "las notas con esta etiqueta no serán visibles de forma predeterminada en los resultados de búsqueda (tampoco en los cuadros de diálogo Saltar a, Agregar vínculo, etc.).",
     "exclude_from_export": "las notas (con su subárbol) no se incluirán en ninguna exportación de notas",
-    "run": "define en qué eventos debe ejecutarse el script. Los valores posibles son:\n<ul>\n<li>frontendStartup - cuando el frontend de Trilium se inicia (o se actualiza), pero no en móvil.</li>\n<li>mobileStartup - cuando el frontend de Trilium se inicia (o se actualiza), en móvil.</li>\n<li>backendStartup - cuando el backend de Trilium se inicia</li>\n<li>hourly - se ejecuta una vez por hora. Se puede usar la etiqueta adicional <code>runAtHour</code> para especificar a qué hora.</li>\n<li>daily - se ejecuta una vez al día</li>\n</ul>",
+    "run": "define en qué eventos debe ejecutarse el script. Los valores posibles son:\n<ul>\n<li>frontendStartup - cuando el frontend de Trilium se inicia (o se actualiza), pero no en móvil.</li>\n<li>mobileStartup - cuando el frontend de Trilium se inicia (o se actualiza), en móvil.</li>\n<li>backendStartup - cuando el backend de Trilium se inicia.</li>\n<li>hourly - se ejecuta una vez por hora. Se puede usar la etiqueta adicional <code>runAtHour</code> para especificar a qué hora.</li>\n<li>daily - se ejecuta una vez al día.</li>\n</ul>",
     "run_on_instance": "Definir en qué instancia de Trilium se debe ejecutar esto. Predeterminado para todas las instancias.",
     "run_at_hour": "¿A qué hora debería funcionar? Debe usarse junto con <code>#run=hourly</code>. Se puede definir varias veces para varias ejecuciones durante el día.",
     "disable_inclusion": "los scripts con esta etiqueta no se incluirán en la ejecución del script principal.",
@@ -690,7 +709,8 @@
     "word_wrap_auto": "Automático",
     "word_wrap_auto_description": "Seguir el ajuste global",
     "word_wrap_on": "Encendido",
-    "word_wrap_off": "Apagado"
+    "word_wrap_off": "Apagado",
+    "save_named_revision": "Guardar revisión nombrada..."
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
@@ -1106,14 +1126,17 @@
     "failed": "La sincronización falló: {{message}}",
     "force_full_sync_label": "Forzar sincronización completa",
     "force_full_sync_description": "Activa una sincronización completa con el servidor de sincronización, resubiendo todos los cambios.",
-    "fill_entity_changes_label": "Llenar cambios de entidad"
+    "fill_entity_changes_label": "Llenar cambios de entidad",
+    "fill_entity_changes_description": "Reconstruir récords de cambio de entidad. Uso esto si la sincronización pierde algunos cambios."
   },
   "vacuum_database": {
     "title": "Limpiar base de datos",
     "description": "Esto reconstruirá la base de datos, lo que normalmente dará como resultado un archivo de base de datos más pequeño. En realidad, no se cambiará ningún dato.",
     "button_text": "Limpiar base de datos",
     "vacuuming_database": "Limpiando base de datos...",
-    "database_vacuumed": "La base de datos ha sido limpiada"
+    "database_vacuumed": "La base de datos ha sido limpiada",
+    "vacuum_label": "Limpiar base de datos",
+    "vacuum_description": "Reconstruir la base de datos para reducir el tamaño de archivo. No se cambiarán datos."
   },
   "fonts": {
     "theme_defined": "Tema definido",
@@ -1209,7 +1232,7 @@
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Tiempo de espera para borrar archivos adjuntos",
-    "erase_attachments_after": "Borrar archivos adjuntos después de:",
+    "erase_attachments_after": "Borrar archivos adjuntos después de",
     "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
     "erase_unused_attachments_now": "Borrar ahora los archivos adjuntos no utilizados en la nota",
     "unused_attachments_erased": "Los archivos adjuntos no utilizados se han eliminado."
@@ -1220,7 +1243,7 @@
   },
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Tiempo de espera de borrado de notas",
-    "erase_notes_after": "Borrar notas después de:",
+    "erase_notes_after": "Borrar notas después de",
     "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
     "erase_deleted_notes_now": "Borrar notas eliminadas ahora",
     "deleted_notes_erased": "Las notas eliminadas han sido borradas."
@@ -1228,12 +1251,12 @@
   "revisions_snapshot_interval": {
     "note_revisions_snapshot_interval_title": "Intervalo de instantáneas de revisiones de notas",
     "note_revisions_snapshot_description": "El intervalo de tiempo de la instantánea de revisión de nota es el tiempo después de lo cual se creará una nueva revisión para la nota. Ver <doc>wiki</doc> para obtener más información.",
-    "snapshot_time_interval_label": "Intervalo de tiempo de la instantánea de revisión de notas:"
+    "snapshot_time_interval_label": "Intervalo de la instantánea"
   },
   "revisions_snapshot_limit": {
     "note_revisions_snapshot_limit_title": "Límite de respaldos de revisiones de nota",
     "note_revisions_snapshot_limit_description": "El límite de número de respaldos de revisiones de notas se refiere al número máximo de revisiones que pueden guardarse para cada nota. Donde -1 significa sin límite, 0 significa borrar todas las revisiones. Puede establecer el máximo de revisiones para una sola nota a través de la etiqueta #versioningLimit.",
-    "snapshot_number_limit_label": "Número límite de respaldos de revisiones de nota:",
+    "snapshot_number_limit_label": "Revisiones máximas",
     "snapshot_number_limit_unit": "respaldos",
     "erase_excess_revision_snapshots": "Eliminar el exceso de respaldos de revisiones ahora",
     "erase_excess_revision_snapshots_prompt": "El exceso de respaldos de revisiones han sido eliminadas."
@@ -1290,8 +1313,8 @@
   "custom_date_time_format": {
     "title": "Formato de fecha/hora personalizada",
     "description": "Personalizar el formado de fecha y la hora insertada vía <shortcut /> o la barra de herramientas. Véa la <doc>documentación de Day.js</doc> para más tokens de formato disponibles.",
-    "format_string": "Cadena de formato:",
-    "formatted_time": "Fecha/hora personalizada:"
+    "format_string": "Dar formato a cadena",
+    "formatted_time": "Fecha/hora personalizada"
   },
   "i18n": {
     "title": "Localización",
@@ -1366,7 +1389,7 @@
     "protected_session_timeout_description": "El tiempo de espera de la sesión protegida es el período de tiempo después del cual la sesión protegida se borra de la memoria del navegador. Esto se mide desde la última interacción con notas protegidas. Ver",
     "wiki": "wiki",
     "for_more_info": "para más información.",
-    "protected_session_timeout_label": "Tiempo de espera de sesión protegida:",
+    "protected_session_timeout_label": "Cerrar sesión automáticamente después de",
     "reset_confirmation": "Al restablecer la contraseña, perderá para siempre el acceso a todas sus notas protegidas existentes. ¿Realmente quieres restablecer la contraseña?",
     "reset_success_message": "La contraseña ha sido restablecida. Por favor establezca una nueva contraseña",
     "change_password_heading": "Cambiar contraseña",
@@ -2073,7 +2096,8 @@
     "title": "Opciones experimentales",
     "disclaimer": "Estas opciones son experimentales y pueden causar inestabilidad. Úselas con precaución.",
     "new_layout_name": "Nuevo diseño",
-    "new_layout_description": "Pruebe el nuevo diseño para tener un aspecto más moderno y usabilidad mejorada. Sujeto a grandes cambios en las próximas versiones."
+    "new_layout_description": "Pruebe el nuevo diseño para tener un aspecto más moderno y usabilidad mejorada. Sujeto a grandes cambios en las próximas versiones.",
+    "llm_name": "Chat de IA / LLM"
   },
   "popup-editor": {
     "maximize": "Cambiar a editor completo"
@@ -2232,5 +2256,67 @@
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa",
     "sample_treemap": "Mapa de árbol"
+  },
+  "revisions": {
+    "note_revisions": "Revisiones de nota",
+    "delete_all_revisions": "Eliminar todas las revisiones de esta nota",
+    "delete_all_button": "Eliminar todas las revisiones",
+    "help_title": "Ayuda sobre revisiones de notas",
+    "confirm_delete_all": "¿Quiere eliminar todas las revisiones de esta nota?",
+    "no_revisions": "Aún no hay revisiones para esta nota...",
+    "restore_button": "Restaurar",
+    "highlight_changes": "Resaltar cambios",
+    "diff_on": "Mostrar diferencia",
+    "diff_off": "Mostrar contenido",
+    "diff_on_hint": "Haga clic para ver las diferencias",
+    "diff_off_hint": "Haga clic para mostrar el contenido de la nota",
+    "diff_not_available": "Diferencias no disponibles.",
+    "confirm_restore": "¿Quiere restaurar esta revisión? Esto sobrescribirá el título actual y el contenido de la nota con esta revisión.",
+    "delete_button": "Eliminar",
+    "confirm_delete": "¿Quiere eliminar esta revisión?",
+    "revisions_deleted": "Se han eliminado las revisiones de nota.",
+    "revision_restored": "Se ha restaurado la revisión de nota.",
+    "revision_deleted": "Se ha eliminado la revisión de la nota.",
+    "snapshot_interval": "Intervalo de respaldo de revisiones de nota: {{seconds}}s.",
+    "maximum_revisions": "Máximo de revisiones para la nota actual: {{number}}.",
+    "save_revision_now": "Guardar una revisión ahora",
+    "save_named_revision": "Guardar una revisión nombrada...",
+    "snapshot_interval_value": "Intervalo: {{seconds}}s",
+    "snapshot_limit_value": "Límite: {{number}}",
+    "settings": "Ajustes para revisiones de nota",
+    "menu_tooltip": "Opciones de revisión",
+    "download_button": "Descargar",
+    "mime": "MIME: ",
+    "file_size": "Tamaño del archivo:",
+    "preview_not_available": "La vista previa no está disponible para este tipo de notas.",
+    "save_revision": "Guardar revisión",
+    "description_placeholder": "Nombrar esta revisión",
+    "revision_saved": "Una revisión de nota ha sido guardada.",
+    "edit_description": "Editar nombre",
+    "description_updated": "Se ha actualizado el nombre de revisión.",
+    "source_auto": "Guardado automático",
+    "source_manual": "Guardado manual",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_restore": "Restaurar",
+    "date_today": "Hoy",
+    "date_yesterday": "Ayer",
+    "date_this_week": "Esta semana",
+    "date_this_month": "Este mes",
+    "source_description_auto": "Guardado automáticamente por el sistema a intervalos regulares",
+    "source_description_manual": "Guardado manualmente por el usuario",
+    "source_description_etapi": "Creado a través de la API externa de Trilium",
+    "source_description_llm": "Creado por el asistente de IA",
+    "source_description_restore": "Guardado antes de restaurar una revisión previa",
+    "source_description_unknown": "Fuente no disponible",
+    "snapshot_header": "Instantánea de revisión de nota",
+    "save_revision_tooltip": "Guardar manualmente una instantánea de la nota actual",
+    "source_unknown": "Instantánea"
+  },
+  "auto_link_attribute_list": {
+    "title": "Atributos del sistema"
+  },
+  "database": {
+    "title": "Base de datos"
   }
 }
