@@ -100,11 +100,15 @@ body.setup {
             >.back-button {
                 position: absolute;
                 top: 2em;
-                left: 2em;
+                inset-inline-start: 2em;
                 color: var(--muted-text-color);
 
                 .tn-icon {
-                    margin-right: 0.4em;
+                    margin-inline-end: 0.4em;
+                }
+
+                body[dir=rtl] & .tn-icon {
+                    transform: scaleX(-1);
                 }
             }
 
@@ -134,19 +138,18 @@ body.setup {
             >.page-error {
                 position: absolute;
                 top: 0;
-                left: 0;
-                right: 0;
+                inset-inline: 0;
                 background: var(--admonition-caution-accent-color);
                 z-index: 1;
                 margin: 0;
                 border-radius: 0;
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-                padding-right: 2.5em;
+                padding-inline-end: 2.5em;
 
                 button {
                     position: absolute;
                     top: 0.5em;
-                    right: 0.5em;
+                    inset-inline-end: 0.5em;
                 }
             }
         }
@@ -308,6 +311,22 @@ body.setup.platform-darwin {
     animation-name: slide-in-left;
 }
 
+body[dir=rtl] .slide-out-forward {
+    animation-name: slide-out-right;
+}
+
+body[dir=rtl] .slide-out-backward {
+    animation-name: slide-out-left;
+}
+
+body[dir=rtl] .slide-in-forward {
+    animation-name: slide-in-left;
+}
+
+body[dir=rtl] .slide-in-backward {
+    animation-name: slide-in-right;
+}
+
 .page.select-language {
     .dropdownWrapper {
         padding-bottom: 2em;
@@ -394,7 +413,7 @@ body.setup.platform-darwin {
             font-size: 0.85rem;
             color: var(--muted-text-color);
             min-width: 2.5em;
-            text-align: right;
+            text-align: end;
         }
     }
 }
