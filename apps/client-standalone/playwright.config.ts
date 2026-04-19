@@ -11,7 +11,7 @@ export default createBaseConfig({
     projectName: "standalone",
     workers: 1,
     webServer: !process.env.TRILIUM_DOCKER ? {
-        command: "pnpm start-prod-no-dir",
+        command: `pnpm start-prod-no-dir -- --port ${port}`,
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         cwd: __dirname,
