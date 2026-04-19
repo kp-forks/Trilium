@@ -78,28 +78,36 @@ function listLocalGitContributors() {
     const allContribs = parseShortlog(allOutput);
     const translationContribs = parseShortlog(translationOutput);
 
-    const contributors: ContributorInfo[] = [];
+    const developers: ContributorInfo[] = [];
+    const translators: ContributorInfo[] = [];
     let rank = 0;
     for (const [name, { email, commitCount }] of allContribs) {
         if (++rank > 20) break;
 
         const translationCommitCount = translationContribs.get(name)?.commitCount ?? 0;
-        const role = translationCommitCount > commitCount * 0.5 ? "translator" : undefined;
+        const isTranslator = translationCommitCount > commitCount * 0.5;
 
-        contributors.push({
-            name,
-            email,
-            commitCount,
-            translationCommitCount,
-            role
-        });
+        const entry: ContributorInfo = { name, email, commitCount };
+
+        if (isTranslator) {
+            translators.push(entry);
+        } else {
+            developers.push(entry);
+        }
     }
 
     showTable({
-        title: "Local Git Contributor List",
+        title: "Local Git Contributors (Developers)",
         comment: "",
-        columns: ["name", "email", "commitCount", "translationCommitCount", "role"],
-        contributors
+        columns: ["name", "email", "commitCount"],
+        contributors: developers
+    });
+
+    showTable({
+        title: "Local Git Contributors (Translators)",
+        comment: "Contributors where >50% of commits are to translation files.",
+        columns: ["name", "email", "commitCount"],
+        contributors: translators
     });
 }
 
