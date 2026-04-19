@@ -162,9 +162,14 @@ if (process.env.TRILIUM_INTEGRATION_TEST) {
         viteStaticCopy({
             targets: [
                 {
-                    src: "../../../packages/trilium-core/src/test/fixtures/document.db",
+                    // Forward slashes are required because fast-glob (used
+                    // internally) treats backslashes as escape characters on
+                    // Windows. `stripBase` drops the source's directory
+                    // structure so the file lands flat at `test-fixtures/document.db`
+                    // rather than mirroring the `packages/trilium-core/...` path.
+                    src: join(__dirname, "../../packages/trilium-core/src/test/fixtures/document.db").replace(/\\/g, "/"),
                     dest: "test-fixtures",
-                    rename: "document.db"
+                    rename: { stripBase: true }
                 }
             ]
         })

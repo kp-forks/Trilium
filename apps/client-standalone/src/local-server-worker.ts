@@ -189,6 +189,17 @@ async function initialize(): Promise<void> {
                     throw new Error(`Failed to fetch test fixture: ${response.status} ${response.statusText}`);
                 }
                 const buffer = new Uint8Array(await response.arrayBuffer());
+                // Verify we actually got a SQLite database, not an SPA-fallback
+                // index.html served for a missing file. SQLite databases start
+                // with the 16-byte magic string "SQLite format 3\0".
+                const magic = new TextDecoder().decode(buffer.subarray(0, 15));
+                if (magic !== "SQLite format 3") {
+                    throw new Error(
+                        `Test fixture at /test-fixtures/document.db is not a SQLite database ` +
+                        `(got ${buffer.byteLength} bytes starting with "${magic}"). ` +
+                        `The file is likely missing and the SPA fallback is returning index.html.`
+                    );
+                }
                 sqlProvider!.loadFromBuffer(buffer);
             } else if (sqlProvider!.isOpfsAvailable()) {
                 // Try to use OPFS for persistent storage
