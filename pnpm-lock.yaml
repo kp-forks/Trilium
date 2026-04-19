@@ -1070,12 +1070,6 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
 
-  apps/server-e2e:
-    devDependencies:
-      dotenv:
-        specifier: 17.4.1
-        version: 17.4.1
-
   apps/web-clipper:
     dependencies:
       cash-dom:
@@ -1701,6 +1695,12 @@ importers:
       '@types/sanitize-html':
         specifier: 2.16.1
         version: 2.16.1
+
+  packages/trilium-e2e:
+    devDependencies:
+      dotenv:
+        specifier: 17.4.1
+        version: 17.4.1
 
   packages/turndown-plugin-gfm:
     devDependencies:

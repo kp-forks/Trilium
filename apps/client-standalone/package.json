@@ -9,7 +9,8 @@
     "dev": "vite dev",
     "test": "vitest",
     "start-prod": "pnpm build && pnpm vite preview --port 8888",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest --coverage",
+    "e2e": "pnpm build && playwright test"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "0.18.0",

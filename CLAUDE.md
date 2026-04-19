@@ -59,7 +59,6 @@ apps/
   desktop/              # Electron (bundles server + client)
   client-standalone/    # Standalone client (WASM + service workers, no Node.js)
   standalone-desktop/   # Standalone desktop variant
-  server-e2e/           # Playwright E2E tests for server
   web-clipper/          # Browser extension
   website/              # Project website
   db-compare/, dump-db/, edit-docs/, build-docs/, icon-pack-builder/
@@ -67,6 +66,7 @@ apps/
 packages/
   trilium-core/         # Core business logic: entities, services, SQL, sync
   commons/              # Shared interfaces and utilities
+  trilium-e2e/          # Shared Playwright E2E tests
   ckeditor5/            # Custom rich text editor bundle
   codemirror/           # Code editor integration
   highlightjs/          # Syntax highlighting
@@ -248,7 +248,7 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 
 - **Server tests** (`apps/server/spec/`): Vitest, must run sequentially (shared DB), forks pool, max 6 workers
 - **Client tests** (`apps/client/src/`): Vitest with happy-dom environment, can run in parallel
-- **E2E tests** (`apps/server-e2e/`): Playwright, Chromium, server started automatically on port 8082
+- **E2E tests** (`packages/trilium-e2e/`): Shared Playwright tests, run via `pnpm --filter server e2e` or `pnpm --filter client-standalone e2e`
 - **ETAPI tests** (`apps/server/spec/etapi/`): External API contract tests
 
 ## Documentation

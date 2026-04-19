@@ -7,7 +7,10 @@ interface GotoOpts {
     preserveTabs?: boolean;
 }
 
-const BASE_URL = "http://127.0.0.1:8082";
+export function getBaseUrl(): string {
+    const port = process.env["TRILIUM_PORT"] ?? "8082";
+    return process.env["BASE_URL"] || `http://127.0.0.1:${port}`;
+}
 
 interface DropdownLocator extends Locator {
     selectOptionByText: (text: string) => Promise<void>;
@@ -48,7 +51,7 @@ export default class App {
 
         await this.context.addCookies([
             {
-                url: BASE_URL,
+                url: getBaseUrl(),
                 name: "trilium-device",
                 value: isMobile ? "mobile" : "desktop"
             }
@@ -165,7 +168,7 @@ export default class App {
 
         expect(csrfToken).toBeTruthy();
         await expect(
-            await this.page.request.put(`${BASE_URL}/api/options/${key}/${value}`, {
+            await this.page.request.put(`${getBaseUrl()}/api/options/${key}/${value}`, {
                 headers: {
                     "x-csrf-token": csrfToken
                 }

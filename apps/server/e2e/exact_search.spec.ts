@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
-import App from "./support/app";
+import App, { getBaseUrl } from "../../../packages/trilium-e2e/src/support/app";
 
-const BASE_URL = "http://127.0.0.1:8082";
+const BASE_URL = getBaseUrl();
 
 /**
  * E2E tests for exact search functionality using the leading "=" operator.
