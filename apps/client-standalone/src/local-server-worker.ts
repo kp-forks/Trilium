@@ -123,6 +123,127 @@ async function writeOpfsFile(fileName: string, buffer: Uint8Array): Promise<void
 }
 
 /**
+ * Read a file from the OPFS root into a Uint8Array.
+ * Used during migration from legacy OPFS VFS to SAHPool.
+ */
+async function readOpfsFile(fileName: string): Promise<Uint8Array> {
+    const root = await navigator.storage.getDirectory();
+    const fileHandle = await root.getFileHandle(fileName);
+    const file = await fileHandle.getFile();
+    return new Uint8Array(await file.arrayBuffer());
+}
+
+/**
+ * Delete a file from the OPFS root.
+ * Used to clean up the legacy OPFS database after migration to SAHPool.
+ */
+async function deleteOpfsFile(fileName: string): Promise<void> {
+    const root = await navigator.storage.getDirectory();
+    await root.removeEntry(fileName);
+}
+
+/**
+ * Verify that a buffer contains a valid SQLite database by checking the
+ * 16-byte magic string "SQLite format 3\0".
+ */
+function assertSqliteMagic(buffer: Uint8Array, source: string): void {
+    const magic = new TextDecoder().decode(buffer.subarray(0, 15));
+    if (magic !== "SQLite format 3") {
+        throw new Error(
+            `${source} is not a SQLite database ` +
+            `(got ${buffer.byteLength} bytes starting with "${magic}"). ` +
+            `The file is likely missing and the SPA fallback is returning index.html.`
+        );
+    }
+}
+
+/**
+ * Migrate database from legacy OPFS VFS to SAHPool VFS.
+ * Checks if a legacy `/trilium.db` file exists in the OPFS root, and if the
+ * SAHPool doesn't already have it. If migration is needed, the legacy file is
+ * read, imported into the pool, and then deleted.
+ */
+async function migrateFromLegacyOpfs(dbName: string): Promise<void> {
+    const legacyFileName = dbName.replace(/^\//, ""); // strip leading slash
+    const legacyExists = await opfsFileExists(legacyFileName);
+
+    if (!legacyExists) {
+        return; // Nothing to migrate
+    }
+
+    // Check if SAHPool already has this DB (e.g. migration already happened)
+    const poolFiles = sqlProvider!.sahPool!.getFileNames();
+    if (poolFiles.includes(dbName)) {
+        console.log("[Worker] SAHPool already contains the database, deleting legacy OPFS file...");
+        await deleteOpfsFile(legacyFileName);
+        return;
+    }
+
+    console.log("[Worker] Migrating database from legacy OPFS to SAHPool VFS...");
+    const startTime = performance.now();
+
+    const buffer = await readOpfsFile(legacyFileName);
+    assertSqliteMagic(buffer, "Legacy OPFS database");
+
+    await sqlProvider!.sahPool!.importDb(dbName, buffer);
+    await deleteOpfsFile(legacyFileName);
+
+    // Also clean up legacy journal/WAL files if they exist
+    for (const suffix of ["-journal", "-wal", "-shm"]) {
+        try {
+            await deleteOpfsFile(legacyFileName + suffix);
+        } catch {
+            // Ignore — file may not exist
+        }
+    }
+
+    const elapsed = performance.now() - startTime;
+    console.log(`[Worker] Migration complete in ${elapsed.toFixed(2)}ms (${buffer.byteLength} bytes)`);
+}
+
+/**
+ * Load the test fixture database for integration tests.
+ * Seeds from the fixture if not already present, using SAHPool when available.
+ */
+async function loadTestDatabase(sahPoolAvailable: boolean, dbName: string): Promise<void> {
+    if (sahPoolAvailable) {
+        const poolFiles = sqlProvider!.sahPool!.getFileNames();
+        if (!poolFiles.includes(dbName)) {
+            console.log("[Worker] Integration test mode: seeding fixture database into SAHPool...");
+            const buffer = await fetchTestFixture();
+            await sqlProvider!.sahPool!.importDb(dbName, buffer);
+        } else {
+            console.log("[Worker] Integration test mode: reusing existing SAHPool DB from earlier in this test");
+        }
+        sqlProvider!.loadFromSahPool(dbName);
+    } else {
+        // Fallback to legacy OPFS for tests when SAHPool isn't available
+        const legacyFileName = dbName.replace(/^\//, "");
+        if (!(await opfsFileExists(legacyFileName))) {
+            console.log("[Worker] Integration test mode: seeding fixture database into OPFS...");
+            const buffer = await fetchTestFixture();
+            await writeOpfsFile(legacyFileName, buffer);
+        } else {
+            console.log("[Worker] Integration test mode: reusing existing OPFS DB from earlier in this test");
+        }
+        sqlProvider!.loadFromOpfs(dbName);
+    }
+}
+
+/**
+ * Fetch the test fixture database and validate it.
+ */
+async function fetchTestFixture(): Promise<Uint8Array> {
+    const response = await fetch("/test-fixtures/document.db");
+    if (!response.ok) {
+        throw new Error(`Failed to fetch test fixture: ${response.status} ${response.statusText}`);
+    }
+    const buffer = new Uint8Array(await response.arrayBuffer());
+    assertSqliteMagic(buffer, "Test fixture at /test-fixtures/document.db");
+    return buffer;
+}
+
+/**
  * Load all required modules using dynamic imports.
  * This allows errors to be caught by our error handlers.
  */
@@ -193,10 +314,20 @@ async function initialize(): Promise<void> {
             console.log("[Worker] Initializing SQLite WASM...");
             await sqlProvider!.initWasm();
 
+            // Try to install the SAHPool VFS (preferred: supports WAL, much faster)
+            let sahPoolAvailable = false;
+            try {
+                await sqlProvider!.installSahPool();
+                sahPoolAvailable = true;
+            } catch (e) {
+                console.warn("[Worker] SAHPool VFS not available, will fall back to legacy OPFS or in-memory:", e);
+            }
+
             // Integration test mode is baked in at build time via the
             // __TRILIUM_INTEGRATION_TEST__ Vite define (derived from the
             // TRILIUM_INTEGRATION_TEST env var when the bundle was built).
             const integrationTestMode = __TRILIUM_INTEGRATION_TEST__;
+            const dbName = "/trilium.db";
 
             if (integrationTestMode === "memory") {
                 // Use OPFS for the DB in integration test mode so option changes
@@ -204,34 +335,16 @@ async function initialize(): Promise<void> {
                 // Playwright gives each test a fresh BrowserContext, which means a
                 // fresh OPFS — so on the first worker init of a test we seed from
                 // the fixture, and subsequent inits in the same test reuse it.
-                const opfsDbName = "trilium.db";
-                if (!(await opfsFileExists(opfsDbName))) {
-                    console.log("[Worker] Integration test mode: seeding fixture database into OPFS...");
-                    const response = await fetch("/test-fixtures/document.db");
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch test fixture: ${response.status} ${response.statusText}`);
-                    }
-                    const buffer = new Uint8Array(await response.arrayBuffer());
-                    // Verify we actually got a SQLite database, not an SPA-fallback
-                    // index.html served for a missing file. SQLite databases start
-                    // with the 16-byte magic string "SQLite format 3\0".
-                    const magic = new TextDecoder().decode(buffer.subarray(0, 15));
-                    if (magic !== "SQLite format 3") {
-                        throw new Error(
-                            `Test fixture at /test-fixtures/document.db is not a SQLite database ` +
-                            `(got ${buffer.byteLength} bytes starting with "${magic}"). ` +
-                            `The file is likely missing and the SPA fallback is returning index.html.`
-                        );
-                    }
-                    await writeOpfsFile(opfsDbName, buffer);
-                } else {
-                    console.log("[Worker] Integration test mode: reusing existing OPFS DB from earlier in this test");
-                }
-                sqlProvider!.loadFromOpfs(`/${opfsDbName}`);
+                await loadTestDatabase(sahPoolAvailable, dbName);
+            } else if (sahPoolAvailable) {
+                // SAHPool available — migrate from legacy OPFS if needed, then open
+                await migrateFromLegacyOpfs(dbName);
+                console.log("[Worker] SAHPool available, loading persistent database (WAL mode)...");
+                sqlProvider!.loadFromSahPool(dbName);
             } else if (sqlProvider!.isOpfsAvailable()) {
-                // Try to use OPFS for persistent storage
-                console.log("[Worker] OPFS available, loading persistent database...");
-                sqlProvider!.loadFromOpfs("/trilium.db");
+                // Fall back to legacy OPFS VFS (no WAL, slower writes)
+                console.warn("[Worker] Using legacy OPFS VFS (no WAL mode). Consider enabling COOP/COEP headers for SAHPool.");
+                sqlProvider!.loadFromOpfs(dbName);
             } else {
                 // Fall back to in-memory database (non-persistent)
                 console.warn("[Worker] OPFS not available, using in-memory database (data will not persist)");
