@@ -294,6 +294,20 @@ async function initialize(): Promise<void> {
             if (coreModule.sql_init.isDbInitialized()) {
                 console.log("[Worker] Database already initialized, loading becca...");
                 await coreModule.becca_loader.beccaLoaded;
+
+                // `initTranslations` runs before `initSql` inside `initializeCore`
+                // (options_init needs translations, creating a chicken-and-egg),
+                // so it always defaults to "en" on a fresh worker boot. Now that
+                // the DB is up we can read the real locale and, if it differs,
+                // switch i18next and rebuild the hidden subtree with the correct
+                // titles. This must happen BEFORE `startScheduler` registers its
+                // own `dbReady.then(checkHiddenSubtree)` so the scheduled rebuild
+                // sees the right language.
+                const dbLocale = coreModule.options.getOptionOrNull("locale");
+                if (dbLocale && dbLocale !== "en") {
+                    console.log(`[Worker] Reconciling i18next locale to "${dbLocale}" from DB`);
+                    await coreModule.i18n.changeLanguage(dbLocale);
+                }
             } else {
                 console.log("[Worker] Database not initialized, skipping becca load (will be loaded during DB initialization)");
             }
