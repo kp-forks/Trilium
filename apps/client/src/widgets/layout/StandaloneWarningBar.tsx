@@ -1,26 +1,21 @@
-import { isMobile } from "../../services/utils";
-import Admonition from "../react/Admonition";
+import { useRef } from "preact/hooks";
+import { t } from "../../services/i18n";
+import { useTooltip } from "../react/hooks";
+import "./StandaloneWarningBar.css";
 
 export default function StandaloneWarningBar() {
+    const badgeRef = useRef<HTMLDivElement>(null);
+
+    useTooltip(badgeRef, {
+        title: t("standalone.warning_tooltip"),
+        placement: "top",
+        delay: 200
+    });
+
     return (
-        <div
-            className="standalone-warning-bar"
-            style={{
-                contain: "none"
-            }}
-        >
-            <Admonition
-                type="caution"
-                style={{
-                    margin: 0,
-                    fontSize: "0.8em"
-                }}
-            >
-                {isMobile()
-                    ? "Running Trilium standalone. Beware of data loss and other issues."
-                    : "You are running Trilium in standalone mode. Some features are not available, and you may experience issues or data loss. Use the desktop application or self-hosted server for the best experience."
-                }
-            </Admonition>
+        <div ref={badgeRef} className="standalone-badge">
+            <span className="bx bx-error-circle" />
+            <span className="standalone-badge-text">{t("standalone.badge_label")}</span>
         </div>
     );
 }
