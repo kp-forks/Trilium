@@ -5,7 +5,9 @@ interface ContributorInfo {
     fullName?: string
     email?: string;
     commitCount: number;
-    url: string;
+    translationCommitCount?: number;
+    role?: string;
+    url?: string;
 }
 
 interface showTableParams {
@@ -50,29 +52,51 @@ async function listGitHubContributors() {
     });
 }
 
-function listLocalGitContributors() {
-    const rawOutput = execSync("git shortlog -sne --no-merges HEAD -- src/ apps/")
-        .toString()
-        .split("\n")
-        .slice(0, 20);
-    
-    const contributors: ContributorInfo[] = rawOutput.map((line: string) => {
+const TRANSLATION_PATHS = [
+    "apps/client/src/translations/",
+    "apps/server/src/assets/translations/"
+];
+
+function parseShortlog(rawOutput: string): Map<string, { email: string; commitCount: number }> {
+    const result = new Map<string, { email: string; commitCount: number }>();
+    for (const line of rawOutput.split("\n")) {
         const match = line.match(/^\s*(\d+)\s+(.+?)\s+<(.+)>$/);
-        if (!match) {
-            return null;
+        if (match) {
+            result.set(match[2], { email: match[3], commitCount: parseInt(match[1]) });
         }
-        return {
-            name: match[2],
-            email: match[3],
-            commitCount: parseInt(match[1])
-        }
-    });
+    }
+    return result;
+}
+
+function listLocalGitContributors() {
+    const allOutput = execSync("git shortlog -sne --no-merges HEAD -- src/ apps/").toString();
+    const translationOutput = execSync(`git shortlog -sne --no-merges HEAD -- ${TRANSLATION_PATHS.join(" ")}`).toString();
+
+    const allContribs = parseShortlog(allOutput);
+    const translationContribs = parseShortlog(translationOutput);
+
+    const contributors: ContributorInfo[] = [];
+    let rank = 0;
+    for (const [name, { email, commitCount }] of allContribs) {
+        if (++rank > 20) break;
+
+        const translationCommitCount = translationContribs.get(name)?.commitCount ?? 0;
+        const role = translationCommitCount > commitCount * 0.5 ? "translator" : undefined;
+
+        contributors.push({
+            name,
+            email,
+            commitCount,
+            translationCommitCount,
+            role
+        });
+    }
 
     showTable({
         title: "Local Git Contributor List",
         comment: "",
-        columns: ["name", "email", "commitCount"],
-        contributors: contributors.filter((c: ContributorInfo | null) => c !== null)
+        columns: ["name", "email", "commitCount", "translationCommitCount", "role"],
+        contributors
     });
 }
 
