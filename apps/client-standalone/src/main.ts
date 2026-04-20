@@ -1,8 +1,21 @@
 import { attachServiceWorkerBridge, startLocalServerWorker } from "./local-bridge.js";
 
 async function waitForServiceWorkerControl(): Promise<void> {
-    if (!("serviceWorker" in navigator)) {
-        throw new Error("Service Worker not supported in this browser");
+    if (!("serviceWorker" in navigator) || !navigator.serviceWorker) {
+        const isSecure = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+        const hints: string[] = [];
+        if (!isSecure) {
+            hints.push(`The page is served over ${location.protocol}//${location.hostname} which is not a secure context. Service workers require HTTPS (or localhost).`);
+        }
+        if (window.isSecureContext === false) {
+            hints.push("The browser reports this is not a secure context.");
+        }
+        throw new Error(
+            "Service workers are not available in this browser.\n\n" +
+            "Trilium standalone mode requires service workers to function.\n" +
+            (hints.length ? "\nPossible cause:\n- " + hints.join("\n- ") + "\n" : "") +
+            "\nTo fix this, access the application over HTTPS or via localhost."
+        );
     }
 
     // If already controlling, we're good
@@ -67,7 +80,7 @@ async function bootstrap() {
             <div style="padding: 40px; max-width: 600px; margin: 0 auto; font-family: system-ui, sans-serif;">
                 <h1 style="color: #d32f2f;">Failed to Initialize</h1>
                 <p>The application failed to start. Please check the browser console for details.</p>
-                <pre style="background: #f5f5f5; padding: 16px; border-radius: 4px; overflow: auto;">${err instanceof Error ? err.message : String(err)}</pre>
+                <pre style="background: #f5f5f5; padding: 16px; border-radius: 4px; overflow: auto; white-space: pre-wrap; word-wrap: break-word;">${err instanceof Error ? err.message : String(err)}</pre>
                 <button onclick="location.reload()" style="padding: 12px 24px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
                     Reload Page
                 </button>

@@ -66,6 +66,11 @@ export function startLocalServerWorker() {
 }
 
 export function attachServiceWorkerBridge() {
+    if (!("serviceWorker" in navigator) || !navigator.serviceWorker) {
+        console.warn("[LocalBridge] Service workers not available — skipping bridge setup");
+        return;
+    }
+
     navigator.serviceWorker.addEventListener("message", async (event) => {
         const msg = event.data;
         if (!msg || msg.type !== "LOCAL_FETCH") return;

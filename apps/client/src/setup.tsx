@@ -104,6 +104,8 @@ function SelectLanguage({ setState }: { setState: (state: State) => void }) {
             <FormList onSelect={async (id) => {
                 await i18n.changeLanguage(id);
                 setCurrentLocale(id);
+                const locale = LOCALES.find(l => l.id === id);
+                document.body.dir = locale?.rtl ? "rtl" : "ltr";
             }}>
                 {filteredLocales.map(locale => (
                     <FormListItem key={locale.id} value={locale.id} active={locale.id === currentLocale}>{locale.name}</FormListItem>

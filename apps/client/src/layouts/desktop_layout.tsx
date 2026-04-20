@@ -91,6 +91,7 @@ export default class DesktopLayout {
                     .optChild(launcherPaneIsHorizontal, <LeftPaneToggle isHorizontalLayout={true} />)
                     .child(<TabHistoryNavigationButtons />)
                     .child(new TabRowWidget().class("full-width"))
+                    .optChild(glob.isStandalone, <StandaloneWarningBar />)
                     .optChild(isNewLayout, <RightPaneToggle />)
                     .optChild(customTitleBarButtons, <TitleBarButtons />)
                     .css("height", "40px")
@@ -118,6 +119,7 @@ export default class DesktopLayout {
                                     .class("tab-row-container")
                                     .child(<TabHistoryNavigationButtons />)
                                     .child(new TabRowWidget())
+                                    .optChild(glob.isStandalone, <StandaloneWarningBar />)
                                     .optChild(isNewLayout, <RightPaneToggle />)
                                     .optChild(customTitleBarButtons, <TitleBarButtons />)
                                     .css("height", "40px")
@@ -187,7 +189,6 @@ export default class DesktopLayout {
                     )
             )
             .optChild(launcherPaneIsHorizontal && isNewLayout, <StatusBar />)
-            .optChild(glob.isStandalone, <StandaloneWarningBar />)
             .child(<CloseZenModeButton />)
 
             // Desktop-specific dialogs.

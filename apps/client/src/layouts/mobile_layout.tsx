@@ -56,7 +56,6 @@ export default class MobileLayout {
                             .child(
                                 new SplitNoteContainer(() =>
                                     new NoteWrapperWidget()
-                                        .optChild(glob.isStandalone, <StandaloneWarningBar />)
                                         .child(
                                             new FlexContainer("row")
                                                 .class("title-row note-split-title")
@@ -66,6 +65,7 @@ export default class MobileLayout {
                                                 .child(<NoteIconWidget />)
                                                 .child(<NoteTitleWidget />)
                                                 .child(<NoteBadges />)
+                                                .optChild(glob.isStandalone, <StandaloneWarningBar />)
                                                 .child(<MobileDetailMenu />)
                                         )
                                         .child(
