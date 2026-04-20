@@ -1,0 +1,119 @@
+.mobile-note-navigator {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    contain: content;
+}
+
+.mobile-navigator-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--main-border-color);
+    background: var(--main-background-color);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.mobile-navigator-back {
+    flex: 0 0 auto;
+    font-size: 1.6em;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.mobile-navigator-back.invisible {
+    visibility: hidden;
+}
+
+.mobile-navigator-title {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: var(--main-text-color);
+    padding: 6px 8px;
+    min-height: 40px;
+    font-size: 1.05em;
+    font-weight: 600;
+    text-align: start;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.mobile-navigator-title:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.mobile-navigator-title-icon {
+    font-size: 1.1em;
+    flex: 0 0 auto;
+}
+
+.mobile-navigator-title-text {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mobile-navigator-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.mobile-navigator-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--main-border-color);
+    color: var(--main-text-color);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-navigator-row:active {
+    background: var(--hover-item-background-color);
+}
+
+.mobile-navigator-row.is-active {
+    background: var(--active-item-background-color);
+    color: var(--active-item-text-color);
+}
+
+.mobile-navigator-row.is-archived {
+    opacity: 0.55;
+}
+
+.mobile-navigator-row-icon {
+    flex: 0 0 auto;
+    font-size: 1.2em;
+}
+
+.mobile-navigator-row-title {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1em;
+}
+
+.mobile-navigator-row-chevron {
+    flex: 0 0 auto;
+    font-size: 1.4em;
+    opacity: 0.6;
+}

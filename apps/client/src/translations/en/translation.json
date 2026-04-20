@@ -1861,6 +1861,11 @@
     "subtree-hidden-moved-description-collection": "This collection hides its child notes in the tree.",
     "subtree-hidden-moved-description-other": "Child notes are hidden in the tree for this note."
   },
+  "mobile_note_navigator": {
+    "back": "Go up one level",
+    "loading": "Loading...",
+    "empty": "This note has no children."
+  },
   "title_bar_buttons": {
     "window-on-top": "Keep Window on Top"
   },

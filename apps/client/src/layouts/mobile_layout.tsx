@@ -15,12 +15,12 @@ import NoteBadges from "../widgets/layout/NoteBadges.jsx";
 import NoteTitleActions from "../widgets/layout/NoteTitleActions.jsx";
 import StandaloneWarningBar from "../widgets/layout/StandaloneWarningBar";
 import MobileDetailMenu from "../widgets/mobile_widgets/mobile_detail_menu.js";
+import MobileNoteNavigator from "../widgets/mobile_widgets/MobileNoteNavigator.jsx";
 import ScreenContainer from "../widgets/mobile_widgets/screen_container.js";
 import SidebarContainer from "../widgets/mobile_widgets/sidebar_container.js";
 import ToggleSidebarButton from "../widgets/mobile_widgets/toggle_sidebar_button.jsx";
 import NoteIconWidget from "../widgets/note_icon.jsx";
 import NoteTitleWidget from "../widgets/note_title.js";
-import NoteTreeWidget from "../widgets/note_tree.js";
 import NoteWrapperWidget from "../widgets/note_wrapper.js";
 import NoteDetail from "../widgets/NoteDetail.jsx";
 import QuickSearchWidget from "../widgets/quick_search.js";
@@ -48,7 +48,7 @@ export default class MobileLayout {
                             .css("padding-inline-start", "0")
                             .css("padding-inline-end", "0")
                             .css("contain", "content")
-                            .child(new FlexContainer("column").filling().id("mobile-sidebar-wrapper").child(new QuickSearchWidget()).child(new NoteTreeWidget()))
+                            .child(new FlexContainer("column").filling().id("mobile-sidebar-wrapper").child(new QuickSearchWidget()).child(<MobileNoteNavigator />))
                     )
                     .child(
                         new ScreenContainer("detail", "row")
