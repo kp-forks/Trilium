@@ -52,6 +52,10 @@ body.setup {
                 justify-content: center;
                 gap: 1rem;
 
+                body.desktop & {
+                    gap: 0.75rem;
+                }
+
                 .setup-option-card {
                     padding: 1.5em;
                     cursor: pointer;
@@ -233,13 +237,27 @@ body.setup {
         text-align: center;
         color: var(--muted-text-color);
         opacity: 0.6;
-        margin-block: 1rem;
     }
 
     .illustration-logo {
-        width: 96px;
-        height: 96px;
+        --size: 128px;
+        width: var(--size);
+        height: var(--size);
         margin: auto;
+
+        body.desktop & {
+            --size: 96px;
+        }
+    }
+
+    .illustration-icon,
+    .illustration-logo {
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+
+        body.desktop & {
+            margin-top: 1rem;
+        }
     }
 
     h1 {
