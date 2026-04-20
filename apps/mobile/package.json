@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm --filter @triliumnext/client-standalone build",
-    "sync": "cap sync",
+    "sync": "pnpm build && cap sync",
     "open:android": "cap open android",
     "run:android": "cap run android"
   },
