@@ -301,9 +301,14 @@ export default class BrowserSqlProvider implements DatabaseProvider {
      * Must be called after `initWasm()` and before `loadFromSahPool()`.
      * This is async because it acquires OPFS file handles.
      *
+     * Unlike the legacy OPFS VFS, SAHPool does **not** require SharedArrayBuffer
+     * or COOP/COEP headers — it only needs OPFS itself (a Worker context with
+     * `navigator.storage.getDirectory`). This makes it usable in Capacitor's
+     * Android WebView, which doesn't support cross-origin isolation.
+     *
      * @param options.directory - OPFS directory for the pool (default: auto-derived from VFS name)
      * @param options.initialCapacity - Minimum number of file slots (default: 6)
-     * @throws Error if the environment doesn't support SAHPool (no OPFS, no Worker, no COOP/COEP)
+     * @throws Error if the environment doesn't support OPFS (no Worker, or no OPFS API)
      */
     async installSahPool(options: { directory?: string; initialCapacity?: number } = {}): Promise<void> {
         this.ensureSqlite3();
@@ -508,11 +513,11 @@ export default class BrowserSqlProvider implements DatabaseProvider {
 
     loadFromFile(_path: string, _isReadOnly: boolean): void {
         // Browser environment doesn't have direct file system access.
-        // Use OPFS for persistent storage.
+        // Use SAHPool or OPFS for persistent storage.
         throw new Error(
             "loadFromFile is not supported in browser environment. " +
             "Use loadFromMemory() for temporary databases, loadFromBuffer() to load from data, " +
-            "or loadFromOpfs() for persistent storage."
+            "loadFromSahPool() (preferred) or loadFromOpfs() for persistent storage."
         );
     }
 
@@ -728,7 +733,10 @@ export default class BrowserSqlProvider implements DatabaseProvider {
     private ensureDb(): void {
         this.ensureSqlite3();
         if (!this.db) {
-            throw new Error("Database not opened. Call loadFromMemory(), loadFromBuffer(), or loadFromOpfs() first.");
+            throw new Error(
+                "Database not opened. Call loadFromMemory(), loadFromBuffer(), " +
+                "loadFromSahPool(), or loadFromOpfs() first."
+            );
         }
     }
 }
