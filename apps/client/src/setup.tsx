@@ -15,7 +15,7 @@ import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
 import FormGroup from "./widgets/react/FormGroup";
-import FormList, { FormListItem } from "./widgets/react/FormList";
+import { FormListItem } from "./widgets/react/FormList";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 
@@ -101,16 +101,24 @@ function SelectLanguage({ setState }: { setState: (state: State) => void }) {
             illustration={<Icon icon="bx bx-globe" className="illustration-icon" />}
             footer={<Button text={t("setup.continue")} kind="primary" onClick={() => setState("firstOptions")} />}
         >
-            <FormList onSelect={async (id) => {
-                await i18n.changeLanguage(id);
-                setCurrentLocale(id);
-                const locale = LOCALES.find(l => l.id === id);
-                document.body.dir = locale?.rtl ? "rtl" : "ltr";
-            }}>
-                {filteredLocales.map(locale => (
-                    <FormListItem key={locale.id} value={locale.id} active={locale.id === currentLocale}>{locale.name}</FormListItem>
-                ))}
-            </FormList>
+            <Card>
+                <CardSection>
+                    {filteredLocales.map(locale => (
+                        <FormListItem
+                            key={locale.id}
+                            value={locale.id}
+                            active={locale.id === currentLocale}
+                            onClick={async () => {
+                                await i18n.changeLanguage(locale.id);
+                                setCurrentLocale(locale.id);
+                                document.body.dir = locale.rtl ? "rtl" : "ltr";
+                            }}
+                        >
+                            {locale.name}
+                        </FormListItem>
+                    ))}
+                </CardSection>
+            </Card>
         </SetupPage>
     );
 }

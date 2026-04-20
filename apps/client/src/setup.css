@@ -121,7 +121,6 @@ body.setup {
                 display: flex;
                 flex-direction: column;
                 padding-top: 1em;
-                min-height: 0;
             }
 
             &.contentless {
@@ -130,13 +129,20 @@ body.setup {
             }
 
             >footer {
+                background: var(--main-background-color);
+                position: sticky;
+                bottom: -2rem;
+                left: 0;
+                right: 0;
                 display: flex;
                 justify-content: flex-end;
                 gap: 0.5rem;
                 border-top: 1px solid var(--main-border-color);
                 padding-top: 1rem;
-                margin-inline: -2em;
-                padding-inline: 2em;
+                padding-bottom: 2rem;
+                margin-inline: -2rem;
+                margin-bottom: -2rem;
+                padding-inline: 2rem;
             }
 
             >.page-error {
@@ -332,21 +338,15 @@ body[dir=rtl] .slide-in-backward {
 }
 
 .page.select-language {
-    .dropdownWrapper {
-        padding-bottom: 2em;
+    .tn-card {
         width: 80%;
-        margin: auto;
-    }
-
-    .dropdownWrapper,
-    .dropdown,
-    .dropdown-menu {
+        margin: 0 auto 2em;
         height: 100%;
+        box-sizing: border-box;
     }
 
-    .dropdown-menu {
-        box-sizing: border-box;
-        overflow: auto;
+    .tn-card-body {
+        height: 100%;
     }
 }
 
