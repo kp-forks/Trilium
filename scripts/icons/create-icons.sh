@@ -102,10 +102,10 @@ for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
   mipmap_dir="$mobile_res_dir/mipmap-$density"
   mkdir -p "$mipmap_dir"
 
-  # Adaptive foreground: logo at 60% of the 108dp canvas. The 72dp (66%) safe
+  # Adaptive foreground: logo at 55% of the 108dp canvas. The 72dp (66%) safe
   # zone is the hard clip boundary — any launcher mask (circle, squircle,
   # teardrop) can trim up to it, so we leave extra margin inside.
-  fg_logo=$(( foreground_size * 3 / 5 ))
+  fg_logo=$(( foreground_size * 11 / 20 ))
   inkscape -w $fg_logo -h $fg_logo "$source_icon_dir/icon-color.svg" -o "$mipmap_dir/_tmp_fg.png"
   magick "$mipmap_dir/_tmp_fg.png" -background none -gravity center \
     -extent ${foreground_size}x${foreground_size} "$mipmap_dir/ic_launcher_foreground.png"
