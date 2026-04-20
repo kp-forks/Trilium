@@ -51,6 +51,11 @@ declare global {
         _noteReady?: PrintReport;
 
         EXCALIDRAW_ASSET_PATH?: string;
+
+        Capacitor?: {
+            isNativePlatform?: () => boolean;
+            getPlatform?: () => string;
+        };
     }
 
     interface WindowEventMap {
