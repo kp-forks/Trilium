@@ -338,15 +338,30 @@ body[dir=rtl] .slide-in-backward {
 }
 
 .page.select-language {
+    main {
+        min-height: 0;
+    }
+
     .tn-card {
-        width: 80%;
+        width: 100%;
         margin: 0 auto 2em;
         height: 100%;
         box-sizing: border-box;
+        min-height: 0;
+        overflow: hidden;
+
+        body.desktop & {
+            width: 80%;
+        }
     }
 
     .tn-card-body {
         height: 100%;
+    }
+
+    .tn-card-section {
+        overflow: auto;
+        padding: 0.5em 0;
     }
 }
 
