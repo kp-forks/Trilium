@@ -102,14 +102,22 @@ body.setup {
             display: flex;
             flex-direction: column;
             height: 100%;
-            padding: 2em;
+            padding-top: calc(2em + env(safe-area-inset-top));
+            padding-bottom: calc(2em + env(safe-area-inset-bottom));
+            padding-left: calc(2em + env(safe-area-inset-left));
+            padding-right: calc(2em + env(safe-area-inset-right));
             overflow: auto;
 
             >.back-button {
                 position: absolute;
-                top: 2em;
-                inset-inline-start: 2em;
+                top: calc(1em + env(safe-area-inset-top));
+                inset-inline-start: 1em;
                 color: var(--muted-text-color);
+
+                body.desktop & {
+                    inset-inline-start: 2em;
+                    top: 2em;
+                }
 
                 .tn-icon {
                     margin-inline-end: 0.4em;
@@ -201,6 +209,11 @@ body.setup {
         justify-content: center;
         margin-top: 1.5em;
         margin-bottom: 1.5rem;
+        padding-block: 2em;
+
+        body.desktop & {
+            padding-block: 1em;
+        }
 
         .tn-icon {
             font-size: 3em;
