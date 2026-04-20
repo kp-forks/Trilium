@@ -84,12 +84,19 @@ export default function MobileNoteNavigator() {
         setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
     }, []);
 
-    const openCurrent = useCallback(async () => {
+    const openNotePath = useCallback(
+        async (notePath: string) => {
+            await noteContext?.setNote(notePath);
+            manualStackRef.current = false;
+            parentComponent?.triggerCommand("setActiveScreen", { screen: "detail" });
+        },
+        [noteContext, parentComponent]
+    );
+
+    const openCurrent = useCallback(() => {
         if (!currentParentPath) return;
-        await noteContext?.setNote(currentParentPath);
-        manualStackRef.current = false;
-        parentComponent?.triggerCommand("setActiveScreen", { screen: "detail" });
-    }, [currentParentPath, noteContext, parentComponent]);
+        openNotePath(currentParentPath);
+    }, [currentParentPath, openNotePath]);
 
     const drillInto = useCallback((childNotePath: string) => {
         manualStackRef.current = true;
@@ -154,6 +161,7 @@ export default function MobileNoteNavigator() {
                                 childNotePath={`${currentParentPath}/${child.note.noteId}`}
                                 isActive={child.note.noteId === activeNoteId}
                                 onDrill={drillInto}
+                                onOpen={openNotePath}
                             />
                         ))
                     )}
@@ -169,9 +177,10 @@ interface NavigatorRowProps {
     childNotePath: string;
     isActive: boolean;
     onDrill: (notePath: string) => void;
+    onOpen: (notePath: string) => void;
 }
 
-function NavigatorRow({ note, prefix, childNotePath, isActive, onDrill }: NavigatorRowProps) {
+function NavigatorRow({ note, prefix, childNotePath, isActive, onDrill, onOpen }: NavigatorRowProps) {
     const icon = useNoteIcon(note);
     const hasChildren = note.hasChildren();
     const colorClass = note.getColorClass();
@@ -186,11 +195,11 @@ function NavigatorRow({ note, prefix, childNotePath, isActive, onDrill }: Naviga
             })}
             role="button"
             tabIndex={0}
-            onClick={() => onDrill(childNotePath)}
+            onClick={() => (hasChildren ? onDrill(childNotePath) : onOpen(childNotePath))}
         >
             <Icon icon={icon ?? "bx bx-note"} className="mobile-navigator-row-icon" />
             <span className="mobile-navigator-row-title">{title}</span>
-            <Icon icon="bx bx-chevron-right" className="mobile-navigator-row-chevron" />
+            {hasChildren && <Icon icon="bx bx-chevron-right" className="mobile-navigator-row-chevron" />}
         </div>
     );
 }
