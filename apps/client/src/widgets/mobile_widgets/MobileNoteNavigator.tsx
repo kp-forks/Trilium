@@ -79,6 +79,16 @@ export default function MobileNoteNavigator() {
     const children = useNavigatorChildren(parentNote, hideArchived, isLoaded);
     const canGoBack = stack.length > 1;
 
+    // Gate the visible body on the content preview being ready to avoid a layout shift
+    // when the preview finishes rendering. Tied to the parent's noteId so a stale "ready"
+    // flag from the previous column can't leak into the new one.
+    const [readyForNoteId, setReadyForNoteId] = useState<string | null>(null);
+    const previewReady = !!parentNote && readyForNoteId === parentNote.noteId;
+    const bodyVisible = previewReady && isLoaded;
+    const onPreviewReady = useCallback(() => {
+        if (parentNote) setReadyForNoteId(parentNote.noteId);
+    }, [parentNote]);
+
     const goBack = useCallback(() => {
         manualStackRef.current = true;
         setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
@@ -117,40 +127,38 @@ export default function MobileNoteNavigator() {
                 />
             </div>
 
-            <div className="mobile-navigator-scroll">
-                <div
-                    className={clsx("mobile-navigator-current-tile", {
-                        "is-active": isCurrentActive,
-                        "is-archived": parentNote?.isArchived
-                    })}
-                    role="button"
-                    tabIndex={0}
-                    onClick={openCurrent}
-                >
-                    <div className="mobile-navigator-current-header">
-                        <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
-                        <span className="mobile-navigator-current-title">
-                            {parentNote?.title ?? t("mobile_note_navigator.loading")}
-                        </span>
-                        <Icon icon="bx bx-link-external" className="mobile-navigator-current-open" />
-                    </div>
-                    {parentNote && (
+            <div className={clsx("mobile-navigator-scroll", !bodyVisible && "is-pending")}>
+                {parentNote && (
+                    <div
+                        className={clsx("mobile-navigator-current-tile", {
+                            "is-active": isCurrentActive,
+                            "is-archived": parentNote.isArchived
+                        })}
+                        role="button"
+                        tabIndex={0}
+                        onClick={openCurrent}
+                    >
+                        <div className="mobile-navigator-current-header">
+                            <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
+                            <span className="mobile-navigator-current-title">{parentNote.title}</span>
+                            <Icon icon="bx bx-link-external" className="mobile-navigator-current-open" />
+                        </div>
                         <div className="mobile-navigator-current-preview">
                             <NoteContent
+                                key={parentNote.noteId}
                                 note={parentNote}
                                 trim
                                 noChildrenList
                                 highlightedTokens={null}
                                 includeArchivedNotes={!hideArchived}
+                                onReady={onPreviewReady}
                             />
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
 
                 <div className="mobile-navigator-list">
-                    {!isLoaded ? (
-                        <NoItems icon="bx bx-loader" text={t("mobile_note_navigator.loading")} />
-                    ) : children.length === 0 ? (
+                    {!isLoaded ? null : children.length === 0 ? (
                         <NoItems icon="bx bx-folder-open" text={t("mobile_note_navigator.empty")} />
                     ) : (
                         children.map((child) => (
@@ -166,6 +174,12 @@ export default function MobileNoteNavigator() {
                         ))
                     )}
                 </div>
+
+                {!bodyVisible && (
+                    <div className="mobile-navigator-placeholder">
+                        <span className="bx bx-loader bx-spin" />
+                    </div>
+                )}
             </div>
         </div>
     );
