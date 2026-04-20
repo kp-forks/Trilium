@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks"
 import type FNote from "../../entities/fnote";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
+import { NoteContent } from "../collections/legacy/ListOrGridView";
 import ActionButton from "../react/ActionButton";
 import {
     useActiveNoteContext,
@@ -19,8 +20,9 @@ import NoItems from "../react/NoItems";
 
 /**
  * A touch-native replacement for the Fancytree-based note tree on mobile. Shows one
- * "column" of children at a time (iOS Files / macOS Finder style), with a back
- * chevron to pop up the hierarchy and tappable rows to drill in or open notes.
+ * "column" of children at a time (iOS Files / macOS Finder style): the column's
+ * current note is rendered at the top with a content preview and opens on tap,
+ * while tapping child rows drills deeper without navigating.
  */
 export default function MobileNoteNavigator() {
     const { notePath: activeNotePath, hoistedNoteId, noteContext, parentComponent } = useActiveNoteContext();
@@ -42,7 +44,6 @@ export default function MobileNoteNavigator() {
         const parentPath = stack[stack.length - 1];
         const parentNoteId = getLastSegment(parentPath);
         if (loadResults.getBranchRows().some((b) => b.parentNoteId === parentNoteId)) {
-            // No state change, but force a re-render by resetting the same stack reference.
             setStack((prev) => [...prev]);
         }
     });
@@ -50,6 +51,7 @@ export default function MobileNoteNavigator() {
     const currentParentPath = stack[stack.length - 1];
     const currentParentId = getLastSegment(currentParentPath);
     const parentNote = useNote(currentParentId);
+    const parentIcon = useNoteIcon(parentNote);
     const activeNoteId = activeNotePath ? getLastSegment(activeNotePath) : undefined;
 
     // Froca's initial `tree` response only returns the top of the tree; deeper levels are
@@ -82,34 +84,23 @@ export default function MobileNoteNavigator() {
         setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
     }, []);
 
-    const openNote = useCallback(
-        async (childNotePath: string, closeSidebar: boolean) => {
-            await noteContext?.setNote(childNotePath);
-            if (closeSidebar) {
-                manualStackRef.current = false;
-                parentComponent?.triggerCommand("setActiveScreen", { screen: "detail" });
-            }
-        },
-        [noteContext, parentComponent]
-    );
-
-    const drillInto = useCallback(
-        async (childNotePath: string) => {
-            manualStackRef.current = true;
-            setStack((prev) => [...prev, childNotePath]);
-            await noteContext?.setNote(childNotePath);
-        },
-        [noteContext]
-    );
-
-    const openParent = useCallback(() => {
+    const openCurrent = useCallback(async () => {
         if (!currentParentPath) return;
-        openNote(currentParentPath, true);
-    }, [currentParentPath, openNote]);
+        await noteContext?.setNote(currentParentPath);
+        manualStackRef.current = false;
+        parentComponent?.triggerCommand("setActiveScreen", { screen: "detail" });
+    }, [currentParentPath, noteContext, parentComponent]);
+
+    const drillInto = useCallback((childNotePath: string) => {
+        manualStackRef.current = true;
+        setStack((prev) => [...prev, childNotePath]);
+    }, []);
+
+    const isCurrentActive = !!activeNoteId && activeNoteId === currentParentId;
 
     return (
         <div className="mobile-note-navigator">
-            <div className="mobile-navigator-header">
+            <div className="mobile-navigator-toolbar">
                 <ActionButton
                     className={clsx("mobile-navigator-back", !canGoBack && "invisible")}
                     icon="bx bx-chevron-left"
@@ -117,37 +108,56 @@ export default function MobileNoteNavigator() {
                     onClick={canGoBack ? goBack : undefined}
                     disabled={!canGoBack}
                 />
-                <button
-                    type="button"
-                    className="mobile-navigator-title"
-                    onClick={openParent}
-                    disabled={!parentNote}
-                >
-                    <Icon icon={parentNote?.getIcon() ?? "bx bx-folder"} className="mobile-navigator-title-icon" />
-                    <span className="mobile-navigator-title-text">
-                        {parentNote?.title ?? t("mobile_note_navigator.loading")}
-                    </span>
-                </button>
             </div>
 
-            <div className="mobile-navigator-list">
-                {!isLoaded ? (
-                    <NoItems icon="bx bx-loader" text={t("mobile_note_navigator.loading")} />
-                ) : children.length === 0 ? (
-                    <NoItems icon="bx bx-folder-open" text={t("mobile_note_navigator.empty")} />
-                ) : (
-                    children.map((child) => (
-                        <NavigatorRow
-                            key={child.branchId}
-                            note={child.note}
-                            prefix={child.prefix}
-                            childNotePath={`${currentParentPath}/${child.note.noteId}`}
-                            isActive={child.note.noteId === activeNoteId}
-                            onOpen={openNote}
-                            onDrill={drillInto}
-                        />
-                    ))
-                )}
+            <div className="mobile-navigator-scroll">
+                <div
+                    className={clsx("mobile-navigator-current-tile", {
+                        "is-active": isCurrentActive,
+                        "is-archived": parentNote?.isArchived
+                    })}
+                    role="button"
+                    tabIndex={0}
+                    onClick={openCurrent}
+                >
+                    <div className="mobile-navigator-current-header">
+                        <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
+                        <span className="mobile-navigator-current-title">
+                            {parentNote?.title ?? t("mobile_note_navigator.loading")}
+                        </span>
+                        <Icon icon="bx bx-link-external" className="mobile-navigator-current-open" />
+                    </div>
+                    {parentNote && (
+                        <div className="mobile-navigator-current-preview">
+                            <NoteContent
+                                note={parentNote}
+                                trim
+                                noChildrenList
+                                highlightedTokens={null}
+                                includeArchivedNotes={!hideArchived}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                <div className="mobile-navigator-list">
+                    {!isLoaded ? (
+                        <NoItems icon="bx bx-loader" text={t("mobile_note_navigator.loading")} />
+                    ) : children.length === 0 ? (
+                        <NoItems icon="bx bx-folder-open" text={t("mobile_note_navigator.empty")} />
+                    ) : (
+                        children.map((child) => (
+                            <NavigatorRow
+                                key={child.branchId}
+                                note={child.note}
+                                prefix={child.prefix}
+                                childNotePath={`${currentParentPath}/${child.note.noteId}`}
+                                isActive={child.note.noteId === activeNoteId}
+                                onDrill={drillInto}
+                            />
+                        ))
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -158,11 +168,10 @@ interface NavigatorRowProps {
     prefix?: string;
     childNotePath: string;
     isActive: boolean;
-    onOpen: (notePath: string, closeSidebar: boolean) => void;
     onDrill: (notePath: string) => void;
 }
 
-function NavigatorRow({ note, prefix, childNotePath, isActive, onOpen, onDrill }: NavigatorRowProps) {
+function NavigatorRow({ note, prefix, childNotePath, isActive, onDrill }: NavigatorRowProps) {
     const icon = useNoteIcon(note);
     const hasChildren = note.hasChildren();
     const colorClass = note.getColorClass();
@@ -177,11 +186,11 @@ function NavigatorRow({ note, prefix, childNotePath, isActive, onOpen, onDrill }
             })}
             role="button"
             tabIndex={0}
-            onClick={() => (hasChildren ? onDrill(childNotePath) : onOpen(childNotePath, true))}
+            onClick={() => onDrill(childNotePath)}
         >
             <Icon icon={icon ?? "bx bx-note"} className="mobile-navigator-row-icon" />
             <span className="mobile-navigator-row-title">{title}</span>
-            {hasChildren && <Icon icon="bx bx-chevron-right" className="mobile-navigator-row-chevron" />}
+            <Icon icon="bx bx-chevron-right" className="mobile-navigator-row-chevron" />
         </div>
     );
 }
