@@ -16,7 +16,8 @@
     "github_tooltip": "GitHub دا خاتالىقلارنى مەلۇم قىلىڭ، ئىقتىدار پىكىرى بېرىڭ ياكى تۈرگە تۆھپە قوشۇڭ",
     "license_tooltip": "ئىجازەتنامىنى كۆرۈش",
     "donate": "ئىئانە قىلىش",
-    "donate_tooltip": "بۇ تۈرنى قوللاش ئۈچۈن ئىئانە قىلىڭ"
+    "donate_tooltip": "بۇ تۈرنى قوللاش ئۈچۈن ئىئانە قىلىڭ",
+    "version": "{{appVersion}} (ساندان: {{dbVersion}}، ماسقەدەملەش كېلىشىمى: {{syncVersion}})"
   },
   "toast": {
     "critical-error": {
@@ -680,6 +681,207 @@
     "switch_to_desktop_version": "Desktop نۇسخىسى",
     "zoom": "چوڭايتىش-كىچىكلىتىش",
     "toggle_fullscreen": "تولۇق ئېكرانغا ئالماشتۇرۇش",
-    "zoom_out": "كىچىكلىتىش"
+    "zoom_out": "كىچىكلىتىش",
+    "reset_zoom_level": "چوڭايتىش-كىچىكلىتىش نىسبىتىنى ئەسلىگە كەلتۈرۈش",
+    "zoom_in": "چوڭايتىش",
+    "configure_launchbar": "قوزغىتىش بالدىقىنى سەپلەش",
+    "show_shared_notes_subtree": "ھەمبەھىرلەنگەن خاتىرىلەر تارماق دەرىخىنى كۆرسىتىش",
+    "advanced": "ئالىي",
+    "open_dev_tools": "تەتقىق قىلغۇچى قوراللىرىنى ئېچىش",
+    "open_sql_console": "SQL بۇيرۇق سۇپىسىنى ئېچىش",
+    "open_sql_console_history": "SQL بۇيرۇق سۇپىسى خاتىرىسىنى ئېچىش",
+    "open_search_history": "ئىزدەش خاتىرىسىنى ئېچىش",
+    "show_backend_log": "ئارقا سۇپا خاتىرىسىنى كۆرسىتىش",
+    "reload_hint": "قايتا يۈكلەش ئەپنى قايتا قوزغاتمىسىمۇ بەزى كۆرۈنۈشتىكى خاتالىقلارنى تۈزىتىشكە ياردەم بېرىدۇ.",
+    "show_hidden_subtree": "يوشۇرۇن تارماق دەرەخنى كۆرسىتىش",
+    "show_help": "ياردەمنى كۆرسىتىش",
+    "about": "Trilium Notes ھەققىدە",
+    "show-cheatsheet": "ئەسكەرتمە تاختىسىنى كۆرسىتىش",
+    "new-version-available": "يېڭى نۇسخا بار",
+    "download-update": "{{latestVersion}} نۇسخىنى ئېلىش",
+    "search_notes": "خاتىرىلەرنى ئىزدەش"
+  },
+  "left_pane_toggle": {
+    "show_panel": "تاختىنى كۆرسىتىش",
+    "hide_panel": "تاختىنى يوشۇرۇش"
+  },
+  "move_pane_button": {
+    "move_left": "سولغا يۆتكەش",
+    "move_right": "ئوڭغا يۆتكەش"
+  },
+  "note_actions": {
+    "word_wrap": "قۇرنى ئاپتوماتىك ئالماشتۇرۇش",
+    "word_wrap_auto": "ئاپتوماتىك",
+    "word_wrap_auto_description": "ئومۇمىي تەڭشەككە ئەگىشىش",
+    "word_wrap_on": "ئوچۇق",
+    "word_wrap_off": "تاقىلىق",
+    "convert_into_attachment": "قوشۇمچە ھۆججەتكە ئايلاندۇرۇش",
+    "search_in_note": "خاتىرىدىن ئىزدەش",
+    "note_source": "خاتىرە كودى",
+    "note_attachments": "خاتىرە قوشۇمچە ھۆججەتلىرى",
+    "view_ocr_text": "OCR تېكىستىنى كۆرۈش",
+    "open_note_externally": "خاتىرىنى سىرتتىكى پروگراممىدا ئېچىش",
+    "open_note_externally_title": "ھۆججەت سىرتتىكى پروگراممىدا ئېچىلىدۇ ھەمدە ئۆزگىرىشلەر كۆزىتىلىدۇ. سىز ئۆزگەرتىلگەن نۇسخىسىنى قايتىدىن Trilium غا يۈكلىيەلەيسىز.",
+    "open_note_custom": "خاتىرىنى ئىختىيارىي ئېچىش",
+    "open_note_on_server": "خاتىرىنى مۇلازىمېتىردا ئېچىش",
+    "import_files": "ھۆججەتلەرنى ئەكىرىش",
+    "export_note": "خاتىرىنى چىقىرىش",
+    "delete_note": "خاتىرىنى ئۆچۈرۈش",
+    "print_note": "خاتىرىنى بېسىپ چىقىرىش",
+    "view_revisions": "خاتىرە نۇسخىلىرى...",
+    "save_revision": "نۇسخىنى ساقلاش",
+    "save_named_revision": "نام بېرىپ نۇسخىنى ساقلاش...",
+    "advanced": "ئالىي",
+    "convert_into_attachment_failed": "'{{title}}' خاتىرىسىنى ئايلاندۇرۇش مەغلۇپ بولدى.",
+    "convert_into_attachment_successful": "'{{title}}' خاتىرىسى قوشۇمچە ھۆججەتكە ئايلاندۇرۇلدى.",
+    "convert_into_attachment_prompt": "'{{title}}' خاتىرىسىنى تۈپ خاتىرىنىڭ قوشۇمچە ھۆججىتىگە ئايلاندۇرۇشنى جەزملەشتۈرەمسىز؟",
+    "print_pdf": "PDF قىلىپ چىقىرىش...",
+    "export_as_image": "رەسىم قىلىپ چىقىرىش",
+    "export_as_image_png": "PNG (raster)",
+    "export_as_image_svg": "SVG (ۋېكتورلۇق)",
+    "note_map": "خاتىرە خەرىتىسى"
+  },
+  "revisions_button": {
+    "note_revisions": "خاتىرە نۇسخىلىرى"
+  },
+  "update_available": {
+    "update_available": "يېڭىلانما بار"
+  },
+  "note_launcher": {
+    "this_launcher_doesnt_define_target_note": "بۇ ئىجرا قىلغۇچىغا نىشان خاتىرە بېكىتىلمىگەن."
+  },
+  "code_buttons": {
+    "execute_button_title": "scriptنى ئىجرا قىلىش",
+    "trilium_api_docs_button_title": "Trilium API ھۆججەتلىرىنى ئېچىش",
+    "save_to_note_button_title": "خاتىرىگە ساقلاش",
+    "opening_api_docs_message": "API ھۆججەتلىرى ئېچىلىۋاتىدۇ...",
+    "sql_console_saved_message": "SQL كونسول خاتىرىسى {{note_path}} غا ساقلاندى"
+  },
+  "copy_image_reference_button": {
+    "button_title": "رەسىم نەقىل ئۇلىنىشىنى چاپلاش تاختىسىغا كۆچۈرۈش، تېكىستلىك خاتىرىگە چاپلاشقا بولىدۇ."
+  },
+  "hide_floating_buttons_button": {
+    "button_title": "كۇنۇپكىلارنى يوشۇرۇش"
+  },
+  "show_floating_buttons_button": {
+    "button_title": "كۇنۇپكىلارنى كۆرسىتىش"
+  },
+  "svg_export_button": {
+    "button_title": "دىئاگراممىنى SVG قىلىپ چىقىرىش"
+  },
+  "relation_map_buttons": {
+    "create_child_note_title": "تارماق خاتىرە قۇرۇش ۋە خەرىتىگە قوشۇش",
+    "reset_pan_zoom_title": "سۈرۈش ۋە چوڭايتىشنى دەسلەپكى كوئوردېنات ھەم نىسبەتكە ئەسلىگە كەلتۈرۈش",
+    "zoom_in_title": "چوڭايتىش",
+    "zoom_out_title": "كىچىكلىتىش"
+  },
+  "zpetne_odkazy": {
+    "backlink_one": "{{count}} تەتۈر ئۇلانما",
+    "backlink_other": "{{count}} تەتۈر ئۇلانمالار",
+    "relation": "مۇناسىۋەت"
+  },
+  "mobile_detail_menu": {
+    "insert_child_note": "تارماق خاتىرە قىستۇرۇش",
+    "delete_this_note": "بۇ خاتىرىنى ئۆچۈرۈش",
+    "note_revisions": "خاتىرە نۇسخىلىرى",
+    "error_cannot_get_branch_id": "'{{notePath}}' يولىنىڭ تارماق كىملىكى (branchId) نى ئالغىلى بولمىدى",
+    "error_unrecognized_command": "تونۇغىلى بولمايدىغان بۇيرۇق: {{command}}",
+    "backlinks": "تەتۈر ئۇلانما‬‬‬",
+    "content_language_switcher": "مەزمۇن تىلى: {{language}}"
+  },
+  "note_icon": {
+    "change_note_icon": "خاتىرە icon بەلگىسىنى ئۆزگەرتىش",
+    "search": "ئىزدەش:",
+    "search_placeholder_one": "{{count}} يۈرۈشلۈك ئىچىدىن {{number}}icons بەلگىنى ئىزدەش",
+    "search_placeholder_other": "{{count}} يۈرۈشلۈك ئىچىدىن {{number}} icons بەلگىنى ئىزدەش",
+    "search_placeholder_filtered": "{{name}} ئىچىدىن {{number}} icon بەلگىنى ئىزدەش",
+    "reset-default": "ئەسلىدىكى icon بەلگىگە ئەسلىگە كەلتۈرۈش",
+    "filter": "سۈزۈش",
+    "filter-none": "بارلىق icon بەلگىلەر",
+    "filter-default": "ئەسلىدىكى icons",
+    "icon_tooltip": "{{name}}\nIcon بەلگە : {{iconPack}}"
+  },
+  "basic_properties": {
+    "note_type": "خاتىرە تىپى",
+    "editable": "تەھرىرلىگىلى بولىدۇ",
+    "basic_properties": "ئاساسىي خۇسۇسىيەتلەر",
+    "language": "تىل",
+    "configure_code_notes": "كود خاتىرىسىنى سەپلەش..."
+  },
+  "book_properties": {
+    "view_type": "كۆرۈنۈش تىپى",
+    "grid": "كاتەكچە",
+    "list": "تىزىملىك",
+    "collapse_all_notes": "بارلىق خاتىرىلەرنى يىغىش",
+    "expand_tooltip": "بۇ توپلامنىڭ بىۋاسىتە تارماقلىرىنى ئاچىدۇ (بىر دەرىجە). تېخىمى كۆپ تاللانما ئۈچۈن ئوڭ تەرەپتىكى كۆرسەتكۈچنى بېسىڭ.",
+    "collapse": "يىغىش",
+    "expand": "يېيىش",
+    "expand_first_level": "بىۋاسىتە تارماقلارنى يېيىش",
+    "expand_nth_level": "{{depth}} دەرىجە يېيىش",
+    "expand_all_levels": "بارلىق دەرىجىلەرنى يېيىش",
+    "book_properties": "توپلام خۇسۇسىيەتلىرى",
+    "invalid_view_type": "كۆرۈنۈش تىپى '{{type}}' ئىناۋەتسىز",
+    "calendar": "كالېندار",
+    "table": "جەدۋەل",
+    "geo-map": "جۇغراپىيەلىك خەرىتە",
+    "include_archived_notes": "ئارخىپلانغان خاتىرىلەرنى كۆرسىتىش",
+    "hide_child_notes": "دەرەخسىمان تىزىملىكتە تارماق خاتىرىلەرنى يوشۇرۇش",
+    "open_all_in_tabs": "ھەممىنى ئېچىش",
+    "open_all_in_tabs_tooltip": "بارلىق نەتىجىلەرنى يېڭى بەتتە ئېچىش",
+    "open_all_confirm": "بۇ {{count}} خاتىرىنى يېڭى بەتتە ئاچىدۇ. داۋاملاشتۇرامسىز؟"
+  },
+  "edited_notes": {
+    "no_edited_notes_found": "بۇ كۈندە تېخى تەھرىرلەنگەن خاتىرە يوق...",
+    "title": "تەھرىرلەنگەن خاتىرىلەر",
+    "deleted": "(ئۆچۈرۈلگەن)"
+  },
+  "file_properties": {
+    "note_id": "خاتىرە ID",
+    "original_file_name": "ئەسلى ھۆججەت نامى",
+    "file_type": "ھۆججەت تىپى",
+    "file_size": "ھۆججەت چوڭلۇقى",
+    "download": "چۈشۈرۈش",
+    "open": "سىرتقى پروگراممىدا ئېچىش",
+    "upload_new_revision": "يېڭى نۇسخىسىنى يۈكلەش",
+    "upload_success": "ھۆججەتنىڭ يېڭى نۇسخىسى يۈكلەندى.",
+    "upload_failed": "ھۆججەتنىڭ يېڭى نۇسخىسىنى يۈكلەش مەغلۇپ بولدى.",
+    "title": "ھۆججەت"
+  },
+  "image_properties": {
+    "original_file_name": "ئەسلى ھۆججەت نامى",
+    "file_type": "ھۆججەت تىپى",
+    "file_size": "ھۆججەت چوڭلۇقى",
+    "download": "چۈشۈرۈش",
+    "open": "ئېچىش",
+    "upload_new_revision": "يېڭى نۇسخىسىنى يۈكلەش",
+    "upload_success": "رەسىمنىڭ يېڭى نۇسخىسى يۈكلەندى.",
+    "upload_failed": "رەسىمنىڭ يېڭى نۇسخىسىنى يۈكلەش مەغلۇپ بولدى: {{message}}",
+    "title": "رەسىم"
+  },
+  "inherited_attribute_list": {
+    "title": "ۋارىسلىق قىلىنغان خاسلىقلار",
+    "no_inherited_attributes": "ۋارىسلىق قىلىنغان خاسلىق يوق.",
+    "none": "يوق"
+  },
+  "auto_link_attribute_list": {
+    "title": "سىستېما خاسلىقلىرى"
+  },
+  "note_info_widget": {
+    "note_id": "خاتىرە ID",
+    "created": "قۇرۇلغان",
+    "modified": "ئۆزگەرتىلگەن",
+    "type": "تىپى",
+    "mime": "ھۆججەت تىپى",
+    "note_size": "خاتىرە چوڭلۇقى",
+    "note_size_info": "خاتىرە چوڭلۇقى بۇ خاتىرىنىڭ ساقلاش بوشلۇقى ئېھتىياجىنى تەخمىنەن مۆلچەرلەپ بېرىدۇ. ئۇ خاتىرە مەزمۇنى ۋە ئۇنىڭ نۇسخا تارىخىدىكى مەزمۇنلارنى بىرلىكتە ھېسابلايدۇ.",
+    "calculate": "ھېسابلاش",
+    "subtree_size": "({{count}} خاتىرىدىكى تارماق دەرەخ چوڭلۇقى: {{size}})",
+    "title": "خاتىرە ئۇچۇرى",
+    "show_similar_notes": "ئوخشاش خاتىرىلەرنى كۆرسىتىش"
+  },
+  "note_map": {
+    "open_full": "تولۇق يېيىش",
+    "collapse": "نورمال چوڭلۇقتا يىغىش",
+    "title": "خاتىرە خەرىتىسى"
   }
 }
