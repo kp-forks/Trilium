@@ -82,7 +82,7 @@ cp "$desktop_forge_dir/app-icon/icon-dev.ico" "$server_dir/src/assets/icon-dev.i
 # Legacy launcher: 48/72/96/144/192 px. Adaptive foreground: 108dp canvas with
 # ~66% safe zone (Android masks the outer ring), scaled per density.
 mobile_res_dir="$script_dir/../../apps/mobile/android/app/src/main/res"
-background_color="#FFFFFF"
+background_color="#FAFAFA"
 
 # Circular mask rendered via Inkscape for crisp antialiasing at icon sizes.
 circle_mask_svg=$(mktemp --suffix=.svg)
