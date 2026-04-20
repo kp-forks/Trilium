@@ -1,12 +1,5 @@
 {
   "about": {
-    "title": "Trilium Notesについて",
-    "homepage": "ホームページ:",
-    "app_version": "アプリのバージョン:",
-    "db_version": "データベースのバージョン:",
-    "sync_version": "同期のバージョン:",
-    "build_date": "Build の日時:",
-    "build_revision": "Build のバージョン:",
     "data_directory": "データの場所:"
   },
   "toast": {
@@ -41,7 +34,9 @@
     "help_on_links": "リンクに関するヘルプ",
     "search_note": "ノート名で検索",
     "link_title_mirrors": "リンクタイトルはノートタイトルの変更を反映します",
-    "link_title_arbitrary": "リンクタイトルは自由に変更可能"
+    "link_title_arbitrary": "リンクタイトルは自由に変更可能",
+    "anchor": "アンカー（任意）",
+    "anchor_none": "なし（ノートへのリンク）"
   },
   "branch_prefix": {
     "save": "保存",
@@ -496,7 +491,8 @@
     "word_wrap_auto": "自動",
     "word_wrap_auto_description": "グローバル設定に従う",
     "word_wrap_on": "オン",
-    "word_wrap_off": "オフ"
+    "word_wrap_off": "オフ",
+    "save_named_revision": "名前を付けて変更履歴を保存..."
   },
   "command_palette": {
     "export_note_title": "ノートをエクスポート",
@@ -1876,7 +1872,9 @@
   "entrypoints": {
     "note-revision-created": "ノートの改訂版が作成されました。",
     "sql-error": "SQL クエリの実行中にエラーが発生しました: {{message}}",
-    "note-executed": "ノートが実行されました。"
+    "note-executed": "ノートが実行されました。",
+    "save-named-revision-title": "名前を付けて変更履歴を保存",
+    "save-named-revision-message": "この変更履歴の名前を入力してください（名前なしの場合は空欄のままにしてください）:"
   },
   "branches": {
     "cannot-move-notes-here": "ここにノートを移動することはできません。",
@@ -2473,7 +2471,36 @@
     "download_button": "ダウンロード",
     "mime": "MIME: ",
     "file_size": "ファイルサイズ:",
-    "preview_not_available": "このノートタイプではプレビューは利用できません。"
+    "preview_not_available": "このノートタイプではプレビューは利用できません。",
+    "highlight_changes": "変更箇所をハイライト",
+    "save_revision_now": "今すぐ変更履歴を保存",
+    "save_named_revision": "名前を付けた変更履歴を保存...",
+    "snapshot_header": "ノートの変更履歴スナップショット",
+    "snapshot_interval_value": "間隔: {{seconds}} 秒",
+    "snapshot_limit_value": "制限: {{number}}",
+    "menu_tooltip": "変更履歴オプション",
+    "save_revision": "変更履歴を保存",
+    "save_revision_tooltip": "現在のノートのスナップショットを手動で保存",
+    "description_placeholder": "この変更履歴に名前を付ける",
+    "revision_saved": "ノートの変更履歴が保存されました。",
+    "edit_description": "名前を編集",
+    "description_updated": "変更履歴名が更新されました。",
+    "source_auto": "自動保存",
+    "source_manual": "手動保存",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_restore": "復元",
+    "source_unknown": "スナップショット",
+    "date_today": "今日",
+    "date_yesterday": "昨日",
+    "date_this_week": "今週",
+    "date_this_month": "今月",
+    "source_description_auto": "システムにより定期的に自動保存",
+    "source_description_manual": "ユーザーにより手動保存",
+    "source_description_etapi": "外部 Trilium API 経由で作成",
+    "source_description_llm": "AI アシスタントにより作成",
+    "source_description_restore": "以前の変更履歴を復元する前に保存しました",
+    "source_description_unknown": "ソースが利用できません"
   },
   "revisions_snapshot": {
     "title": "ノートの変更履歴"
@@ -2485,5 +2512,12 @@
     "source": "ソースビュー",
     "split": "分割ビュー",
     "preview": "プレビュー"
+  },
+  "auto_link_attribute_list": {
+    "title": "システム属性"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル"
   }
 }

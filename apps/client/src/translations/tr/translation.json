@@ -1,13 +1,6 @@
 {
   "about": {
-    "homepage": "Anasayfa:",
-    "app_version": "Uygulama versiyonu:",
-    "db_version": "Veritabanı versiyonu:",
-    "title": "Trilium Notes Hakkında",
-    "sync_version": "Eşleştirme versiyonu:",
-    "data_directory": "Veri dizini:",
-    "build_date": "Derleme tarihi:",
-    "build_revision": "Derleme revizyonu:"
+    "data_directory": "Veri dizini:"
   },
   "branch_prefix": {
     "save": "Kaydet",

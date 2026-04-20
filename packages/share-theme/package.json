@@ -37,6 +37,6 @@
     "esbuild": "0.28.0",
     "eslint": "10.2.0",
     "highlight.js": "11.11.1",
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   }
 }
