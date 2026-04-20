@@ -111,6 +111,13 @@ for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
     -extent ${foreground_size}x${foreground_size} "$mipmap_dir/ic_launcher_foreground.png"
   rm "$mipmap_dir/_tmp_fg.png"
 
+  # Monochrome layer for Android 13+ themed icons. Android ignores RGB and
+  # uses only the alpha channel, tinting it with the system theme color.
+  inkscape -w $fg_logo -h $fg_logo "$source_icon_dir/icon-black.svg" -o "$mipmap_dir/_tmp_mono.png"
+  magick "$mipmap_dir/_tmp_mono.png" -background none -gravity center \
+    -extent ${foreground_size}x${foreground_size} "$mipmap_dir/ic_launcher_monochrome.png"
+  rm "$mipmap_dir/_tmp_mono.png"
+
   # Legacy square launcher (logo on solid background)
   sq_logo=$(( launcher_size * 2 / 3 ))
   inkscape -w $sq_logo -h $sq_logo "$source_icon_dir/icon-color.svg" -o "$mipmap_dir/_tmp.png"
