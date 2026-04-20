@@ -313,8 +313,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       force-graph:
-        specifier: 1.51.2
-        version: 1.51.2
+        specifier: 1.51.4
+        version: 1.51.4
       htmldiff-js:
         specifier: 1.0.5
         version: 1.0.5
@@ -8911,8 +8911,8 @@ packages:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
 
-  force-graph@1.51.2:
-    resolution: {integrity: sha512-zZNdMqx8qIQGurgnbgYIUsdXxSfvhfRSIdncsKGv/twUOZpwCsk9hPHmdjdcme1+epATgb41G0rkIGHJ0Wydng==}
+  force-graph@1.51.4:
+    resolution: {integrity: sha512-TdJ2KbkoiDQ7NIRx8IPGD0mAXXpLhamS7c+b7W98b0MHG7lphnda1VOQX/98UDTsttIAdH4TcP0l0MauSnLK8w==}
     engines: {node: '>=12'}
 
   foreach@2.0.6:
@@ -24405,7 +24405,7 @@ snapshots:
     dependencies:
       is-callable: 1.2.7
 
-  force-graph@1.51.2:
+  force-graph@1.51.4:
     dependencies:
       '@tweenjs/tween.js': 25.0.0
       accessor-fn: 1.5.3
