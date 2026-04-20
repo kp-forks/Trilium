@@ -1,7 +1,7 @@
 import "./MobileNoteNavigator.css";
 
 import clsx from "clsx";
-import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import type FNote from "../../entities/fnote";
 import froca from "../../services/froca";
@@ -114,6 +114,9 @@ export default function MobileNoteNavigator() {
     }, [pendingNote]);
 
     const scrollRef = useRef<HTMLDivElement>(null);
+    const bodyRef = useRef<HTMLDivElement>(null);
+    const directionRef = useRef<"forward" | "backward" | null>(null);
+    const [commitCounter, setCommitCounter] = useState(0);
 
     useEffect(() => {
         if (!nextStack || !pendingId || nextReadyNoteId !== pendingId) return;
@@ -121,9 +124,26 @@ export default function MobileNoteNavigator() {
         setReadyForNoteId(pendingId);
         setNextStack(null);
         setNextReadyNoteId(null);
+        setCommitCounter((c) => c + 1);
         // Reset scroll so the committed tile is visible at the top of the column.
         if (scrollRef.current) scrollRef.current.scrollTop = 0;
     }, [nextStack, pendingId, nextReadyNoteId]);
+
+    // Brief slide-in on forward / back so the swap feels directional without blocking the user.
+    useLayoutEffect(() => {
+        if (commitCounter === 0) return;
+        const direction = directionRef.current;
+        directionRef.current = null;
+        if (!direction || !bodyRef.current) return;
+        const offset = direction === "forward" ? "60%" : "-60%";
+        bodyRef.current.animate(
+            [
+                { transform: `translateX(${offset})`, opacity: 0.4 },
+                { transform: "translateX(0)", opacity: 1 }
+            ],
+            { duration: 180, easing: "ease-out" }
+        );
+    }, [commitCounter]);
 
     const navigateTo = useCallback(
         (newStack: string[]) => {
@@ -139,6 +159,7 @@ export default function MobileNoteNavigator() {
     const goBack = useCallback(() => {
         if (stack.length <= 1) return;
         manualStackRef.current = true;
+        directionRef.current = "backward";
         navigateTo(stack.slice(0, -1));
     }, [stack, navigateTo]);
 
@@ -159,6 +180,7 @@ export default function MobileNoteNavigator() {
     const drillInto = useCallback(
         (childNotePath: string) => {
             manualStackRef.current = true;
+            directionRef.current = "forward";
             navigateTo([...stack, childNotePath]);
         },
         [stack, navigateTo]
@@ -179,51 +201,53 @@ export default function MobileNoteNavigator() {
             </div>
 
             <div ref={scrollRef} className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
-                {parentNote && (
-                    <div
-                        className={clsx("mobile-navigator-current-tile", {
-                            "is-active": isCurrentActive,
-                            "is-archived": parentNote.isArchived
-                        })}
-                        role="button"
-                        tabIndex={0}
-                        onClick={openCurrent}
-                    >
-                        <div className="mobile-navigator-current-header">
-                            <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
-                            <span className="mobile-navigator-current-title">{parentNote.title}</span>
-                            <Icon icon="bx bx-link-external" className="mobile-navigator-current-open" />
+                <div ref={bodyRef} className="mobile-navigator-body">
+                    {parentNote && (
+                        <div
+                            className={clsx("mobile-navigator-current-tile", {
+                                "is-active": isCurrentActive,
+                                "is-archived": parentNote.isArchived
+                            })}
+                            role="button"
+                            tabIndex={0}
+                            onClick={openCurrent}
+                        >
+                            <div className="mobile-navigator-current-header">
+                                <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
+                                <span className="mobile-navigator-current-title">{parentNote.title}</span>
+                                <Icon icon="bx bx-link-external" className="mobile-navigator-current-open" />
+                            </div>
+                            <div className="mobile-navigator-current-preview">
+                                <NoteContent
+                                    note={parentNote}
+                                    trim
+                                    noChildrenList
+                                    highlightedTokens={null}
+                                    includeArchivedNotes={!hideArchived}
+                                    onReady={onPreviewReady}
+                                />
+                            </div>
                         </div>
-                        <div className="mobile-navigator-current-preview">
-                            <NoteContent
-                                note={parentNote}
-                                trim
-                                noChildrenList
-                                highlightedTokens={null}
-                                includeArchivedNotes={!hideArchived}
-                                onReady={onPreviewReady}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                <div className="mobile-navigator-list">
-                    {!isLoaded || !parentNote ? null : children.length === 0 ? (
-                        <NoItems icon="bx bx-folder-open" text={t("mobile_note_navigator.empty")} />
-                    ) : (
-                        children.map((child) => (
-                            <NavigatorRow
-                                key={child.branchId}
-                                note={child.note}
-                                prefix={child.prefix}
-                                childNotePath={`${currentParentPath}/${child.note.noteId}`}
-                                isActive={child.note.noteId === activeNoteId}
-                                isPending={child.note.noteId === pendingChildId}
-                                onDrill={drillInto}
-                                onOpen={openNotePath}
-                            />
-                        ))
                     )}
+
+                    <div className="mobile-navigator-list">
+                        {!isLoaded || !parentNote ? null : children.length === 0 ? (
+                            <NoItems icon="bx bx-folder-open" text={t("mobile_note_navigator.empty")} />
+                        ) : (
+                            children.map((child) => (
+                                <NavigatorRow
+                                    key={child.branchId}
+                                    note={child.note}
+                                    prefix={child.prefix}
+                                    childNotePath={`${currentParentPath}/${child.note.noteId}`}
+                                    isActive={child.note.noteId === activeNoteId}
+                                    isPending={child.note.noteId === pendingChildId}
+                                    onDrill={drillInto}
+                                    onOpen={openNotePath}
+                                />
+                            ))
+                        )}
+                    </div>
                 </div>
 
                 {showInitialLoader && (

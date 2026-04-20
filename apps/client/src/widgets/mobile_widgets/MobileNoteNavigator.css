@@ -35,8 +35,7 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-.mobile-navigator-scroll.is-pending > .mobile-navigator-current-tile,
-.mobile-navigator-scroll.is-pending > .mobile-navigator-list {
+.mobile-navigator-scroll.is-pending .mobile-navigator-body {
     visibility: hidden;
 }
 
