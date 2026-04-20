@@ -1,0 +1,10 @@
+{
+  "appId": "org.triliumnotes.trilium",
+  "appName": "Trilium Notes",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}
