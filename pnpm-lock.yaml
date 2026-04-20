@@ -811,17 +811,17 @@ importers:
   apps/mobile:
     dependencies:
       '@capacitor/android':
-        specifier: latest
+        specifier: 8.3.1
         version: 8.3.1(@capacitor/core@8.3.1)
       '@capacitor/core':
-        specifier: latest
+        specifier: 8.3.1
         version: 8.3.1
       '@capacitor/splash-screen':
-        specifier: latest
+        specifier: 8.0.1
         version: 8.0.1(@capacitor/core@8.3.1)
     devDependencies:
       '@capacitor/cli':
-        specifier: latest
+        specifier: 8.3.1
         version: 8.3.1
 
   apps/server:
