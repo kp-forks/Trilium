@@ -1864,7 +1864,9 @@
   "mobile_note_navigator": {
     "back": "Go up one level",
     "loading": "Loading...",
-    "empty": "This note has no children."
+    "empty": "This note has no children.",
+    "children_count_one": "{{count}} note",
+    "children_count_other": "{{count}} notes"
   },
   "title_bar_buttons": {
     "window-on-top": "Keep Window on Top"
