@@ -1156,7 +1156,12 @@
     "serif": "Serif",
     "sans-serif": "Sans Serif",
     "monospace": "Monoespaciada",
-    "system-default": "Predeterminada del sistema"
+    "system-default": "Predeterminada del sistema",
+    "custom_fonts": "Utilizar fuentes personalizadas",
+    "preview": "Vista previa",
+    "monospace_font_description": "Utilizado para notas de código y bloques de código",
+    "size_relative_to_general": "El tamaño es relativo al tamaño de la fuente general",
+    "apply_changes": "Recargar para aplicar cambios"
   },
   "max_content_width": {
     "title": "Ancho del contenido",
@@ -1189,7 +1194,10 @@
     "layout-horizontal-description": "la barra de lanzamiento está debajo de la barra de pestañas, la barra de pestañas ahora tiene ancho completo.",
     "auto_theme": "Heredado (Sigue el esquema de colores del sistema)",
     "light_theme": "Heredado (Claro)",
-    "dark_theme": "Heredado (Oscuro)"
+    "dark_theme": "Heredado (Oscuro)",
+    "modern_themes": "Moderno",
+    "legacy_themes": "Heredado",
+    "custom_themes": "Personalizado"
   },
   "zoom_factor": {
     "title": "Factor de zoom (solo versión de escritorio)",
@@ -1202,7 +1210,9 @@
     "unit": "caracteres"
   },
   "code-editor-options": {
-    "title": "Editor"
+    "title": "Editor",
+    "tab_width": "Ancho de tabulador",
+    "tab_width_unit": "espacios"
   },
   "code_mime_types": {
     "title": "Tipos MIME disponibles en el menú desplegable",
@@ -1228,7 +1238,19 @@
     "jpeg_quality_description": "Se recomienda un rango 50-85. Valores más pequeños reducen el tamaño del archivo, valores más altos preservan los detalles.",
     "enable_image_compression_description": "Comprimir y ajustar el tamaño de las imágenes cuando son subidas o pegadas.",
     "max_image_dimensions_description": "Las imágenes que excedan el límite de tamaño serán ajustadas automáticamente.",
-    "jpeg_quality": "Calidad JPEG"
+    "jpeg_quality": "Calidad JPEG",
+    "ocr_section_title": "Extracción de texto (OCR)",
+    "ocr_related_content_languages": "Idiomas de contenido (utilizados para la extracción de texto)",
+    "ocr_auto_process": "Procesar automáticamente nuevos archivos",
+    "ocr_auto_process_description": "Extraer automáticamente texto de archivos recién cargados o pegados.",
+    "ocr_min_confidence": "Confianza mínima",
+    "ocr_confidence_description": "Sólo extraer texto por encima de este umbral de confianza. Los valores inferiores incluyen más texto pero pueden ser menos exactos.",
+    "batch_ocr_title": "Procesar archivos existentes",
+    "batch_ocr_description": "Extraer texto de todas las imágenes, PDFs y documentos de Office existentes en sus notas. Esto puede tomar algún tiempo dependiendo del número de archivos.",
+    "batch_ocr_start": "Iniciar procesamiento por lotes",
+    "batch_ocr_starting": "Iniciando procesamiento por lotes...",
+    "batch_ocr_progress": "Procesando {{processed}} de {{total}} archivos...",
+    "batch_ocr_completed": "¡Procesamiento por lotes completado! Se procesaron {{processed}} archivos."
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Tiempo de espera para borrar archivos adjuntos",
@@ -2097,7 +2119,8 @@
     "disclaimer": "Estas opciones son experimentales y pueden causar inestabilidad. Úselas con precaución.",
     "new_layout_name": "Nuevo diseño",
     "new_layout_description": "Pruebe el nuevo diseño para tener un aspecto más moderno y usabilidad mejorada. Sujeto a grandes cambios en las próximas versiones.",
-    "llm_name": "Chat de IA / LLM"
+    "llm_name": "Chat de IA / LLM",
+    "llm_description": "Habilitar la barra lateral de chat de IA y las notas de chat LLM alimentadas por grandes modelos de lenguaje."
   },
   "popup-editor": {
     "maximize": "Cambiar a editor completo"
