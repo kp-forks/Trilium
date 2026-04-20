@@ -169,6 +169,20 @@
     opacity: 0.55;
 }
 
+.mobile-navigator-row.is-pending {
+    cursor: progress;
+}
+
+.mobile-navigator-preloader {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    pointer-events: none;
+    visibility: hidden;
+}
+
 .mobile-navigator-row-icon {
     flex: 0 0 auto;
     font-size: 1.2em;

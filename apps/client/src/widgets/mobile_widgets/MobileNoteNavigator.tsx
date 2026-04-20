@@ -30,6 +30,11 @@ export default function MobileNoteNavigator() {
 
     const effectiveHoistedId = hoistedNoteId ?? "root";
     const [stack, setStack] = useState<string[]>([effectiveHoistedId]);
+    // When set, a stack we want to navigate to. We render a hidden NoteContent for its
+    // target to preload the preview, then commit the stack once the preview is ready.
+    // This keeps the previously-committed view visible during drill/back transitions
+    // so there's no placeholder flash.
+    const [nextStack, setNextStack] = useState<string[] | null>(null);
     const manualStackRef = useRef(false);
 
     // Sync stack with the active note path unless the user has manually drilled.
@@ -37,6 +42,7 @@ export default function MobileNoteNavigator() {
         if (manualStackRef.current) return;
         const newStack = buildStackForActiveNote(activeNotePath, effectiveHoistedId);
         setStack(newStack);
+        setNextStack(null);
     }, [activeNotePath, effectiveHoistedId]);
 
     // Rebuild when Froca reports structural changes that could affect the current column.
@@ -53,6 +59,12 @@ export default function MobileNoteNavigator() {
     const parentNote = useNote(currentParentId);
     const parentIcon = useNoteIcon(parentNote);
     const activeNoteId = activeNotePath ? getLastSegment(activeNotePath) : undefined;
+
+    const pendingPath = nextStack?.[nextStack.length - 1];
+    const pendingId = pendingPath ? getLastSegment(pendingPath) : undefined;
+    const pendingNote = useNote(pendingId);
+    const pendingChildId = nextStack && nextStack.length > stack.length ? pendingId : undefined;
+    const pendingPop = !!nextStack && nextStack.length < stack.length;
 
     // Froca's initial `tree` response only returns the top of the tree; deeper levels are
     // normally pulled in by Fancytree's lazy-load. The navigator doesn't use Fancytree,
@@ -89,10 +101,42 @@ export default function MobileNoteNavigator() {
         if (parentNote) setReadyForNoteId(parentNote.noteId);
     }, [parentNote]);
 
+    // Full-screen spinner only for the very first render — once a body has been shown,
+    // subsequent navigations swap views without a global placeholder.
+    const hasCommittedOnceRef = useRef(false);
+    if (bodyVisible) hasCommittedOnceRef.current = true;
+    const showInitialLoader = !bodyVisible && !hasCommittedOnceRef.current;
+
+    // Preload state for the pending stack target. Once ready, commit the stack change.
+    const [nextReadyNoteId, setNextReadyNoteId] = useState<string | null>(null);
+    const onPendingReady = useCallback(() => {
+        if (pendingNote) setNextReadyNoteId(pendingNote.noteId);
+    }, [pendingNote]);
+
+    useEffect(() => {
+        if (!nextStack || !pendingId || nextReadyNoteId !== pendingId) return;
+        setStack(nextStack);
+        setReadyForNoteId(pendingId);
+        setNextStack(null);
+        setNextReadyNoteId(null);
+    }, [nextStack, pendingId, nextReadyNoteId]);
+
+    const navigateTo = useCallback(
+        (newStack: string[]) => {
+            if (hasCommittedOnceRef.current) {
+                setNextStack(newStack);
+            } else {
+                setStack(newStack);
+            }
+        },
+        []
+    );
+
     const goBack = useCallback(() => {
+        if (stack.length <= 1) return;
         manualStackRef.current = true;
-        setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
-    }, []);
+        navigateTo(stack.slice(0, -1));
+    }, [stack, navigateTo]);
 
     const openNotePath = useCallback(
         async (notePath: string) => {
@@ -108,10 +152,13 @@ export default function MobileNoteNavigator() {
         openNotePath(currentParentPath);
     }, [currentParentPath, openNotePath]);
 
-    const drillInto = useCallback((childNotePath: string) => {
-        manualStackRef.current = true;
-        setStack((prev) => [...prev, childNotePath]);
-    }, []);
+    const drillInto = useCallback(
+        (childNotePath: string) => {
+            manualStackRef.current = true;
+            navigateTo([...stack, childNotePath]);
+        },
+        [stack, navigateTo]
+    );
 
     const isCurrentActive = !!activeNoteId && activeNoteId === currentParentId;
 
@@ -120,14 +167,14 @@ export default function MobileNoteNavigator() {
             <div className="mobile-navigator-toolbar">
                 <ActionButton
                     className={clsx("mobile-navigator-back", !canGoBack && "invisible")}
-                    icon="bx bx-chevron-left"
+                    icon={pendingPop ? "bx bx-loader bx-spin" : "bx bx-chevron-left"}
                     text={t("mobile_note_navigator.back")}
-                    onClick={canGoBack ? goBack : undefined}
-                    disabled={!canGoBack}
+                    onClick={canGoBack && !pendingPop ? goBack : undefined}
+                    disabled={!canGoBack || pendingPop}
                 />
             </div>
 
-            <div className={clsx("mobile-navigator-scroll", !bodyVisible && "is-pending")}>
+            <div className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
                 {parentNote && (
                     <div
                         className={clsx("mobile-navigator-current-tile", {
@@ -145,7 +192,6 @@ export default function MobileNoteNavigator() {
                         </div>
                         <div className="mobile-navigator-current-preview">
                             <NoteContent
-                                key={parentNote.noteId}
                                 note={parentNote}
                                 trim
                                 noChildrenList
@@ -168,6 +214,7 @@ export default function MobileNoteNavigator() {
                                 prefix={child.prefix}
                                 childNotePath={`${currentParentPath}/${child.note.noteId}`}
                                 isActive={child.note.noteId === activeNoteId}
+                                isPending={child.note.noteId === pendingChildId}
                                 onDrill={drillInto}
                                 onOpen={openNotePath}
                             />
@@ -175,12 +222,28 @@ export default function MobileNoteNavigator() {
                     )}
                 </div>
 
-                {!bodyVisible && (
+                {showInitialLoader && (
                     <div className="mobile-navigator-placeholder">
                         <span className="bx bx-loader bx-spin" />
                     </div>
                 )}
             </div>
+
+            {/* Hidden preloader: renders NoteContent for the pending target so we can
+                commit the stack change only after its preview is ready. */}
+            {pendingNote && (
+                <div className="mobile-navigator-preloader" aria-hidden="true">
+                    <NoteContent
+                        key={pendingNote.noteId}
+                        note={pendingNote}
+                        trim
+                        noChildrenList
+                        highlightedTokens={null}
+                        includeArchivedNotes={!hideArchived}
+                        onReady={onPendingReady}
+                    />
+                </div>
+            )}
         </div>
     );
 }
@@ -190,11 +253,12 @@ interface NavigatorRowProps {
     prefix?: string;
     childNotePath: string;
     isActive: boolean;
+    isPending: boolean;
     onDrill: (notePath: string) => void;
     onOpen: (notePath: string) => void;
 }
 
-function NavigatorRow({ note, prefix, childNotePath, isActive, onDrill, onOpen }: NavigatorRowProps) {
+function NavigatorRow({ note, prefix, childNotePath, isActive, isPending, onDrill, onOpen }: NavigatorRowProps) {
     const icon = useNoteIcon(note);
     const hasChildren = note.hasChildren();
     const colorClass = note.getColorClass();
@@ -205,15 +269,20 @@ function NavigatorRow({ note, prefix, childNotePath, isActive, onDrill, onOpen }
             className={clsx("mobile-navigator-row", colorClass, {
                 "is-active": isActive,
                 "is-archived": note.isArchived,
+                "is-pending": isPending,
                 "has-children": hasChildren
             })}
             role="button"
             tabIndex={0}
-            onClick={() => (hasChildren ? onDrill(childNotePath) : onOpen(childNotePath))}
+            onClick={isPending ? undefined : () => (hasChildren ? onDrill(childNotePath) : onOpen(childNotePath))}
         >
             <Icon icon={icon ?? "bx bx-note"} className="mobile-navigator-row-icon" />
             <span className="mobile-navigator-row-title">{title}</span>
-            {hasChildren && <Icon icon="bx bx-chevron-right" className="mobile-navigator-row-chevron" />}
+            {isPending ? (
+                <Icon icon="bx bx-loader bx-spin" className="mobile-navigator-row-chevron" />
+            ) : hasChildren ? (
+                <Icon icon="bx bx-chevron-right" className="mobile-navigator-row-chevron" />
+            ) : null}
         </div>
     );
 }
