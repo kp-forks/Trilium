@@ -208,7 +208,7 @@ export default function MobileNoteNavigator() {
                 )}
 
                 <div className="mobile-navigator-list">
-                    {!isLoaded ? null : children.length === 0 ? (
+                    {!isLoaded || !parentNote ? null : children.length === 0 ? (
                         <NoItems icon="bx bx-folder-open" text={t("mobile_note_navigator.empty")} />
                     ) : (
                         children.map((child) => (
