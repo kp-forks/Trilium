@@ -7,7 +7,6 @@ import type FNote from "../../entities/fnote";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
-import ActionButton from "../react/ActionButton";
 import {
     useActiveNoteContext,
     useNote,
@@ -90,6 +89,8 @@ export default function MobileNoteNavigator() {
     const isLoaded = !!currentParentId && loadedParents.has(currentParentId);
     const children = useNavigatorChildren(parentNote, hideArchived, isLoaded);
     const canGoBack = stack.length > 1;
+    const backTargetId = canGoBack ? getLastSegment(stack[stack.length - 2]) : undefined;
+    const backTargetNote = useNote(backTargetId);
 
     // Gate the visible body on the content preview being ready to avoid a layout shift
     // when the preview finishes rendering. Tied to the parent's noteId so a stale "ready"
@@ -191,13 +192,21 @@ export default function MobileNoteNavigator() {
     return (
         <div className="mobile-note-navigator">
             <div className="mobile-navigator-toolbar">
-                <ActionButton
+                <button
+                    type="button"
                     className={clsx("mobile-navigator-back", !canGoBack && "invisible")}
-                    icon={pendingPop ? "bx bx-loader bx-spin" : "bx bx-chevron-left"}
-                    text={t("mobile_note_navigator.back")}
                     onClick={canGoBack && !pendingPop ? goBack : undefined}
                     disabled={!canGoBack || pendingPop}
-                />
+                    aria-label={t("mobile_note_navigator.back")}
+                >
+                    <Icon
+                        icon={pendingPop ? "bx bx-loader bx-spin" : "bx bx-chevron-left"}
+                        className="mobile-navigator-back-icon"
+                    />
+                    <span className="mobile-navigator-back-title">
+                        {backTargetNote?.title ?? ""}
+                    </span>
+                </button>
             </div>
 
             <div ref={scrollRef} className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
