@@ -1,6 +1,10 @@
 {
   "about": {
-    "data_directory": "数据目录："
+    "data_directory": "数据目录：",
+    "version_label": "版本：",
+    "version": "{{appVersion}}（数据库：{{dbVersion}}，同步协议：{{syncVersion}}）",
+    "build_info": "创建: {{buildDate}}, 修订: <buildRevision />",
+    "contributors_label": "贡献者："
   },
   "toast": {
     "critical-error": {
