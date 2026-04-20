@@ -342,13 +342,16 @@ async function initialize(): Promise<void> {
                 console.log("[Worker] SAHPool available, loading persistent database (WAL mode)...");
                 sqlProvider!.loadFromSahPool(dbName);
             } else if (sqlProvider!.isOpfsAvailable()) {
-                // Fall back to legacy OPFS VFS (no WAL, slower writes)
-                console.warn("[Worker] Using legacy OPFS VFS (no WAL mode). Consider enabling COOP/COEP headers for SAHPool.");
+                // Fall back to legacy OPFS VFS (no WAL, slower writes).
+                // This only kicks in if SAHPool installation failed for some
+                // reason but SharedArrayBuffer + legacy OPFS are both available.
+                console.warn("[Worker] SAHPool unavailable; using legacy OPFS VFS (no WAL mode).");
                 sqlProvider!.loadFromOpfs(dbName);
             } else {
-                // Fall back to in-memory database (non-persistent)
+                // Fall back to in-memory database (non-persistent).
+                // SAHPool only needs a Worker + OPFS API, so reaching this
+                // branch means the environment lacks OPFS entirely.
                 console.warn("[Worker] OPFS not available, using in-memory database (data will not persist)");
-                console.warn("[Worker] To enable persistence, ensure COOP/COEP headers are set by the server");
                 sqlProvider!.loadFromMemory();
             }
 

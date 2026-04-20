@@ -149,6 +149,14 @@ export function isPWA() {
     );
 }
 
+/**
+ * Returns `true` when running inside the native Capacitor mobile app wrapper.
+ * PWAs and regular browsers return `false`.
+ */
+export function isMobileApp() {
+    return !!window.Capacitor?.isNativePlatform?.();
+}
+
 export function isMac() {
     return navigator.platform.indexOf("Mac") > -1;
 }

@@ -19,6 +19,8 @@
     "desktop:build": "pnpm run --filter desktop build",
     "desktop:start-prod": "pnpm run --filter desktop start-prod",
     "standalone:start": "pnpm run --filter client-standalone dev",
+    "standalone:build": "pnpm run --filter client-standalone build",
+    "mobile:sync": "pnpm run --filter mobile sync",
     "desktop:start-prod-no-dir": "pnpm run --filter desktop start-prod-no-dir",
     "edit-docs:edit-docs": "pnpm run --filter edit-docs edit-docs",
     "edit-docs:build": "pnpm run --filter edit-docs build",

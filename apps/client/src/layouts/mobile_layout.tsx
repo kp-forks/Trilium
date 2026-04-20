@@ -24,6 +24,7 @@ import NoteTreeWidget from "../widgets/note_tree.js";
 import NoteWrapperWidget from "../widgets/note_wrapper.js";
 import NoteDetail from "../widgets/NoteDetail.jsx";
 import QuickSearchWidget from "../widgets/quick_search.js";
+import { isMobileApp } from "../services/utils";
 import ScrollPadding from "../widgets/scroll_padding";
 import SearchResult from "../widgets/search_result.jsx";
 import MobileEditorToolbar from "../widgets/type_widgets/text/mobile_editor_toolbar.jsx";
@@ -65,7 +66,8 @@ export default class MobileLayout {
                                                 .child(<NoteIconWidget />)
                                                 .child(<NoteTitleWidget />)
                                                 .child(<NoteBadges />)
-                                                .optChild(glob.isStandalone, <StandaloneWarningBar />)
+                                                .optChild(isMobileApp(), <StandaloneWarningBar variant="mobile" />)
+                                                .optChild(glob.isStandalone && !isMobileApp(), <StandaloneWarningBar />)
                                                 .child(<MobileDetailMenu />)
                                         )
                                         .child(
