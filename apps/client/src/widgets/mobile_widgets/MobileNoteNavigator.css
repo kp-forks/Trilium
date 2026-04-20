@@ -137,7 +137,7 @@
 
 .mobile-navigator-current-preview {
     position: relative;
-    height: 140px;
+    max-height: 140px;
     overflow: hidden;
     font-size: 0.92em;
     line-height: 1.35;
@@ -163,6 +163,12 @@
 
 .mobile-navigator-current-preview:empty,
 .mobile-navigator-current-preview .note-book-content:empty {
+    display: none;
+}
+
+/* Collapse the whole preview (and its flex gap) when the rendered content is empty,
+   so pure folders don't show a blank row beneath the title. */
+.mobile-navigator-current-tile:has(.note-book-content-ready:empty) .mobile-navigator-current-preview {
     display: none;
 }
 
