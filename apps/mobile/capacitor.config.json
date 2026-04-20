@@ -1,7 +1,11 @@
 {
   "appId": "org.triliumnotes.trilium",
   "appName": "Trilium Notes",
-  "webDir": "dist",
+  "webDir": "../client-standalone/dist",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "localhost"
+  },
   "plugins": {
     "SplashScreen": {
       "launchAutoHide": false
