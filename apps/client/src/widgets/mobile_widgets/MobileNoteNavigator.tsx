@@ -52,7 +52,29 @@ export default function MobileNoteNavigator() {
     const parentNote = useNote(currentParentId);
     const activeNoteId = activeNotePath ? getLastSegment(activeNotePath) : undefined;
 
-    const children = useNavigatorChildren(parentNote, hideArchived);
+    // Froca's initial `tree` response only returns the top of the tree; deeper levels are
+    // normally pulled in by Fancytree's lazy-load. The navigator doesn't use Fancytree,
+    // so we pull the subtree ourselves whenever the current parent changes.
+    const [loadedParents, setLoadedParents] = useState<Set<string>>(() => new Set());
+    useEffect(() => {
+        if (!currentParentId || loadedParents.has(currentParentId)) return;
+        let cancelled = false;
+        froca.loadSubTree(currentParentId).then(() => {
+            if (cancelled) return;
+            setLoadedParents((prev) => {
+                if (prev.has(currentParentId)) return prev;
+                const next = new Set(prev);
+                next.add(currentParentId);
+                return next;
+            });
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [currentParentId, loadedParents]);
+
+    const isLoaded = !!currentParentId && loadedParents.has(currentParentId);
+    const children = useNavigatorChildren(parentNote, hideArchived, isLoaded);
     const canGoBack = stack.length > 1;
 
     const goBack = useCallback(() => {
@@ -109,7 +131,9 @@ export default function MobileNoteNavigator() {
             </div>
 
             <div className="mobile-navigator-list">
-                {children.length === 0 ? (
+                {!isLoaded ? (
+                    <NoItems icon="bx bx-loader" text={t("mobile_note_navigator.loading")} />
+                ) : children.length === 0 ? (
                     <NoItems icon="bx bx-folder-open" text={t("mobile_note_navigator.empty")} />
                 ) : (
                     children.map((child) => (
@@ -168,9 +192,9 @@ interface NavigatorChild {
     prefix?: string;
 }
 
-function useNavigatorChildren(parentNote: FNote | null | undefined, hideArchived: boolean): NavigatorChild[] {
+function useNavigatorChildren(parentNote: FNote | null | undefined, hideArchived: boolean, isLoaded: boolean): NavigatorChild[] {
     return useMemo(() => {
-        if (!parentNote) return [];
+        if (!parentNote || !isLoaded) return [];
         const result: NavigatorChild[] = [];
         for (const branch of parentNote.getChildBranches()) {
             if (!branch) continue;
@@ -181,7 +205,7 @@ function useNavigatorChildren(parentNote: FNote | null | undefined, hideArchived
             result.push({ note, branchId: branch.branchId, prefix: branch.prefix });
         }
         return result;
-    }, [parentNote, parentNote?.children?.join(","), hideArchived]);
+    }, [parentNote, parentNote?.children?.join(","), hideArchived, isLoaded]);
 }
 
 function getLastSegment(notePath: string): string {
