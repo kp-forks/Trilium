@@ -3,12 +3,18 @@ import { t } from "../../services/i18n";
 import { useNoteContext, useTooltip } from "../react/hooks";
 import "./StandaloneWarningBar.css";
 
-export default function StandaloneWarningBar() {
+type WarningBarVariant = "standalone" | "mobile";
+
+interface WarningBarProps {
+    variant?: WarningBarVariant;
+}
+
+export default function StandaloneWarningBar({ variant = "standalone" }: WarningBarProps) {
     const { noteContext } = useNoteContext();
     const badgeRef = useRef<HTMLDivElement>(null);
 
     useTooltip(badgeRef, {
-        title: t("standalone.warning_tooltip"),
+        title: t(`${variant}.warning_tooltip`),
         placement: "top",
         delay: 200
     });
@@ -21,7 +27,7 @@ export default function StandaloneWarningBar() {
     return (
         <div ref={badgeRef} className="standalone-badge">
             <span className="bx bx-error-circle" />
-            <span className="standalone-badge-text">{t("standalone.badge_label")}</span>
+            <span className="standalone-badge-text">{t(`${variant}.badge_label`)}</span>
         </div>
     );
 }
