@@ -1238,9 +1238,10 @@
     "deleted_notes_erased": "Gelöschte Notizen wurden gelöscht."
   },
   "revisions_snapshot_interval": {
-    "note_revisions_snapshot_interval_title": "Snapshot-Intervall für Notizrevisionen",
-    "note_revisions_snapshot_description": "Das Snapshot-Zeitintervall für Notizrevisionen ist die Zeit, nach der eine neue Notizrevision erstellt wird. Weitere Informationen findest du im <doc>Wiki</doc>.",
-    "snapshot_time_interval_label": "Snapshot Intervall"
+    "note_revisions_snapshot_interval_title": "Schnappschuss-Intervall für Notizrevisionen",
+    "note_revisions_snapshot_description": "Das Schnappschuss-Zeitintervall für Notizrevisionen ist die Zeit, nach der eine neue Notizrevision erstellt wird. Weitere Informationen finden Sie im <doc>Wiki</doc>.",
+    "snapshot_time_interval_label": "Schnappschuss Intervall",
+    "note_revisions_snapshot_description_short": "Zeit, nachdem eine neue Notizrevision erstellt wird."
   },
   "revisions_snapshot_limit": {
     "note_revisions_snapshot_limit_title": "Limit für Notizrevision-Snapshots",
@@ -2345,6 +2346,41 @@
     "confirm_delete": "Möchten Sie diese Revision löschen?",
     "revisions_deleted": "Notiz-Revisionen wurden gelöscht.",
     "revision_restored": "Notiz-Revisionen wurden wiederhergestellt.",
-    "revision_deleted": "Revision wurde gelöscht."
+    "revision_deleted": "Revision wurde gelöscht.",
+    "snapshot_interval": "Speicherintervall für Revisionsverlauf: {{seconds}} Sek.",
+    "maximum_revisions": "Maximale Anzahl an gespeicherten Revisionen einer Notiz: {{number}}.",
+    "save_revision_now": "Eine Revision jetzt speichern",
+    "save_named_revision": "Eine benannte Revision speichern...",
+    "snapshot_header": "Notizrevision Schnappschuss",
+    "snapshot_interval_value": "Speicherintervall: {{seconds}}s",
+    "snapshot_limit_value": "Grenze: {{number}}",
+    "settings": "Notizrevisionen-Einstellungen",
+    "menu_tooltip": "Revisionoptionen",
+    "download_button": "Herunterladen",
+    "mime": "MIME: ",
+    "file_size": "Dateigröße:",
+    "preview_not_available": "Keine Vorschau für diesen Notiztyp verfügbar.",
+    "save_revision": "Revision speichern",
+    "save_revision_tooltip": "Einen Schnappschus dieser Notiz speichern",
+    "description_placeholder": "Diese Revisionen benennen",
+    "revision_saved": "Notizrevision wurde gespeichert.",
+    "edit_description": "Name bearbeiten",
+    "description_updated": "Revisionsname wurde aktualisiert.",
+    "source_auto": "Automatisches Speichern",
+    "source_manual": "Manuelles Speichern",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_restore": "Wiederherstellen",
+    "source_unknown": "Schnappschuss",
+    "date_today": "Heute",
+    "date_yesterday": "Gestern",
+    "date_this_week": "Diese Woche",
+    "date_this_month": "Dieser Monat",
+    "source_description_auto": "Automatisch vom System im Intervall gespeichert",
+    "source_description_manual": "Manuell vom Benutzer gespeichert",
+    "source_description_etapi": "Über die External Trilium API erstellt.",
+    "source_description_llm": "Von KI Assistenten erstellt",
+    "source_description_restore": "Gespeichert vor dem Wiederherstellen einer vorherigen Revision",
+    "source_description_unknown": "Quelle nicht verfügbar"
   }
 }
