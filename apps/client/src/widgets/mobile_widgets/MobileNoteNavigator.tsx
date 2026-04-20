@@ -113,12 +113,16 @@ export default function MobileNoteNavigator() {
         if (pendingNote) setNextReadyNoteId(pendingNote.noteId);
     }, [pendingNote]);
 
+    const scrollRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!nextStack || !pendingId || nextReadyNoteId !== pendingId) return;
         setStack(nextStack);
         setReadyForNoteId(pendingId);
         setNextStack(null);
         setNextReadyNoteId(null);
+        // Reset scroll so the committed tile is visible at the top of the column.
+        if (scrollRef.current) scrollRef.current.scrollTop = 0;
     }, [nextStack, pendingId, nextReadyNoteId]);
 
     const navigateTo = useCallback(
@@ -174,7 +178,7 @@ export default function MobileNoteNavigator() {
                 />
             </div>
 
-            <div className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
+            <div ref={scrollRef} className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
                 {parentNote && (
                     <div
                         className={clsx("mobile-navigator-current-tile", {
