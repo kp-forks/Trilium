@@ -24,7 +24,7 @@ async function main() {
 
     const bodyWrapper = document.createElement("div");
     bodyWrapper.classList.add("setup-outer-wrapper");
-    document.body.classList.add("setup");
+    document.body.classList.add("setup", window.glob.device || "desktop");
     if (isElectron()) {
         document.body.classList.add("electron", `platform-${window.process.platform}`, "background-effects");
     }
