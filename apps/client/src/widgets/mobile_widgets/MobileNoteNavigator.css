@@ -137,12 +137,18 @@
 
 .mobile-navigator-current-preview {
     position: relative;
-    max-height: 140px;
-    overflow: hidden;
     font-size: 0.92em;
     line-height: 1.35;
     color: var(--muted-text-color, var(--main-text-color));
     pointer-events: none;
+}
+
+/* Constrain height on the inner `.note-book-content` itself — that's the element
+   watched by the shared `contentSizeObserver`, so `scrollHeight > clientHeight`
+   there is what toggles `note-book-content-overflowing`. */
+.mobile-navigator-current-preview .note-book-content {
+    max-height: 140px;
+    overflow: hidden;
 }
 
 /* Hide stale content during the brief window between commit and the new content
@@ -152,13 +158,14 @@
     visibility: hidden;
 }
 
-.mobile-navigator-current-preview::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: 32px;
-    background: linear-gradient(to bottom, transparent, var(--main-background-color));
+/* Mirror NoteList's approach: a mask gradient applied only when
+   `.note-book-content-overflowing` is toggled on by the shared
+   `contentSizeObserver` in ListOrGridView.tsx (scrollHeight > clientHeight).
+   This fades the bottom only when the preview is actually truncated. */
+.mobile-navigator-current-preview .note-book-content.note-book-content-overflowing {
+    mask-image: linear-gradient(to bottom, black calc(100% - 32px), transparent 100%);
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
 }
 
 .mobile-navigator-current-preview:empty,
