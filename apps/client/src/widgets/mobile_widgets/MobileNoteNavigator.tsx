@@ -64,6 +64,7 @@ export default function MobileNoteNavigator() {
     }, [activeNotePath, effectiveHoistedId]);
 
     // Rebuild when Froca reports structural changes that could affect the current column.
+    // `useNavigatorChildren` is responsible for loading any newly-added child notes asynchronously.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         const parentPath = stack[stack.length - 1];
         const parentNoteId = getLastSegment(parentPath);
@@ -224,24 +225,24 @@ export default function MobileNoteNavigator() {
     return (
         <div className="mobile-note-navigator">
             {showToolbar && (
-            <div className="mobile-navigator-toolbar">
-                <button
-                    type="button"
-                    className={clsx("mobile-navigator-back", !canGoBack && "invisible")}
-                    onClick={canGoBack && !pendingPop ? goBack : undefined}
-                    disabled={!canGoBack || pendingPop}
-                    aria-label={t("mobile_note_navigator.back")}
-                >
-                    <Icon
-                        icon={pendingPop ? "bx bx-loader bx-spin" : "bx bx-chevron-left"}
-                        className="mobile-navigator-back-icon"
-                    />
-                    <span className="mobile-navigator-back-title">
-                        {backTargetTitle ?? ""}
-                    </span>
-                </button>
-                <HoistedNoteBadge hoistedNoteId={effectiveHoistedId} />
-            </div>
+                <div className="mobile-navigator-toolbar">
+                    <button
+                        type="button"
+                        className={clsx("mobile-navigator-back", !canGoBack && "invisible")}
+                        onClick={canGoBack && !pendingPop ? goBack : undefined}
+                        disabled={!canGoBack || pendingPop}
+                        aria-label={t("mobile_note_navigator.back")}
+                    >
+                        <Icon
+                            icon={pendingPop ? "bx bx-loader bx-spin" : "bx bx-chevron-left"}
+                            className="mobile-navigator-back-icon"
+                        />
+                        <span className="mobile-navigator-back-title">
+                            {backTargetTitle ?? ""}
+                        </span>
+                    </button>
+                    <HoistedNoteBadge hoistedNoteId={effectiveHoistedId} />
+                </div>
             )}
 
             <div ref={scrollRef} className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
@@ -456,19 +457,39 @@ function useNavigatorChildren(
     isLoaded: boolean,
     isParentSubtreeHidden: boolean
 ): NavigatorChild[] {
-    return useMemo(() => {
-        if (!parentNote || !isLoaded || isParentSubtreeHidden) return [];
-        const result: NavigatorChild[] = [];
-        for (const branch of parentNote.getChildBranches()) {
-            if (!branch) continue;
-            const note = froca.getNoteFromCache(branch.noteId);
-            if (!note) continue;
-            if (note.noteId === "_hidden") continue;
-            if (hideArchived && note.isArchived) continue;
-            result.push({ note, branchId: branch.branchId });
+    const [children, setChildren] = useState<NavigatorChild[]>([]);
+    // Re-run when the parent's child list mutates in place (e.g., a new branch is added by
+    // froca_updater). The join captures the current ordered noteIds so a real change in the
+    // children set produces a new dep value.
+    const childrenKey = parentNote?.children?.join(",");
+
+    useEffect(() => {
+        if (!parentNote || !isLoaded || isParentSubtreeHidden) {
+            setChildren([]);
+            return;
         }
-        return result;
-    }, [parentNote, parentNote?.children?.join(","), hideArchived, isLoaded, isParentSubtreeHidden]);
+        let cancelled = false;
+        const branches = parentNote.getChildBranches().filter((b): b is NonNullable<typeof b> => !!b);
+        // Use the async loader so notes that aren't yet in cache (e.g., freshly created via "+")
+        // are pulled in. `processNoteChange` only updates notes already in froca, so without this
+        // newly-created child notes would be silently skipped.
+        froca.getNotes(branches.map((b) => b.noteId), true).then((notes) => {
+            if (cancelled) return;
+            const noteMap = new Map(notes.map((n) => [n.noteId, n]));
+            const result: NavigatorChild[] = [];
+            for (const branch of branches) {
+                const note = noteMap.get(branch.noteId);
+                if (!note) continue;
+                if (note.noteId === "_hidden") continue;
+                if (hideArchived && note.isArchived) continue;
+                result.push({ note, branchId: branch.branchId });
+            }
+            setChildren(result);
+        });
+        return () => { cancelled = true; };
+    }, [parentNote, childrenKey, hideArchived, isLoaded, isParentSubtreeHidden]);
+
+    return children;
 }
 
 function getLastSegment(notePath: string): string {
