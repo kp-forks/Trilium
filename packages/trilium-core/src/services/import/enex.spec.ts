@@ -8,6 +8,7 @@ import type BNote from "../../becca/entities/bnote.js";
 import { getContext } from "../context.js";
 import sql_init from "../sql_init.js";
 import TaskContext from "../task_context.js";
+import { decodeUtf8 } from "../utils/binary.js";
 import enex from "./enex.js";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -61,15 +62,15 @@ describe("importEnex", () => {
         const txt = attachments.find(a => a.title === "attachments1.txt");
         expect(txt).toBeTruthy();
         expect(txt!.mime).toBe("text/plain");
-        expect(txt!.getContent().toString()).toBe("111");
+        expect(decodeUtf8(txt!.getContent())).toBe("111");
 
         const bin = attachments.find(a => a.title === "attachments2");
         expect(bin).toBeTruthy();
         expect(bin!.mime).toBe("application/octet-stream");
-        expect(bin!.getContent().toString()).toBe("222");
+        expect(decodeUtf8(bin!.getContent())).toBe("222");
 
         // The note content should contain reference links to the attachments
-        const content = test1!.getContent().toString();
+        const content = decodeUtf8(test1!.getContent());
         expect(content).toContain(`class="reference-link" href="#root/${test1!.noteId}?viewMode=attachments&amp;attachmentId=${txt!.attachmentId}"`);
         expect(content).toContain(`class="reference-link" href="#root/${test1!.noteId}?viewMode=attachments&amp;attachmentId=${bin!.attachmentId}"`);
     });
