@@ -19,6 +19,8 @@ import Component from "./component.js";
 export interface SetNoteOpts {
     triggerSwitchEvent?: unknown;
     viewScope?: ViewScope;
+    /** If true, skip closing the currently active dialog. Used when opening a note into a stackable popup (e.g. quick-edit) that must not dismiss the dialog it was launched from. */
+    keepActiveDialog?: boolean;
 }
 
 export type GetTextEditorCallback = (editor: CKTextEditor) => void;
@@ -127,7 +129,9 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
 
         await this.triggerEvent("beforeNoteSwitch", { noteContext: this });
 
-        closeActiveDialog();
+        if (!opts.keepActiveDialog) {
+            closeActiveDialog();
+        }
 
         this.notePath = resolvedNotePath;
         this.viewScope = opts.viewScope;
