@@ -3,12 +3,23 @@ import "./MobileNoteNavigator.css";
 import clsx from "clsx";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
+import appContext from "../../components/app_context";
+import type Component from "../../components/component";
 import type FNote from "../../entities/fnote";
+import contextMenu, { MenuItem } from "../../menus/context_menu";
+import NoteColorPicker from "../../menus/custom-items/NoteColorPicker";
+import link_context_menu from "../../menus/link_context_menu";
+import { TreeCommandNames } from "../../menus/tree_context_menu";
+import attributes from "../../services/attributes";
+import branches from "../../services/branches";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
+import note_create from "../../services/note_create";
+import tree from "../../services/tree";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import {
     useActiveNoteContext,
+    useLongPressContextMenu,
     useNote,
     useNoteIcon,
     useTriliumEvent,
@@ -189,6 +200,12 @@ export default function MobileNoteNavigator() {
 
     const isCurrentActive = !!activeNoteId && activeNoteId === currentParentId;
 
+    const currentContextHandler = useMemo(
+        () => buildNoteContextMenu(currentParentPath, parentComponent),
+        [currentParentPath, parentComponent]
+    );
+    const currentContextProps = useLongPressContextMenu(currentContextHandler);
+
     return (
         <div className="mobile-note-navigator">
             <div className="mobile-navigator-toolbar">
@@ -220,6 +237,7 @@ export default function MobileNoteNavigator() {
                             role="button"
                             tabIndex={0}
                             onClick={openCurrent}
+                            {...currentContextProps}
                         >
                             <div className="mobile-navigator-current-header">
                                 <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
@@ -259,6 +277,7 @@ export default function MobileNoteNavigator() {
                                     isPending={child.note.noteId === pendingChildId}
                                     onDrill={drillInto}
                                     onOpen={openNotePath}
+                                    parentComponent={parentComponent}
                                 />
                             ))
                         )}
@@ -299,13 +318,19 @@ interface NavigatorRowProps {
     isPending: boolean;
     onDrill: (notePath: string) => void;
     onOpen: (notePath: string) => void;
+    parentComponent: Component | null;
 }
 
-function NavigatorRow({ note, prefix, childNotePath, isActive, isPending, onDrill, onOpen }: NavigatorRowProps) {
+function NavigatorRow({ note, prefix, childNotePath, isActive, isPending, onDrill, onOpen, parentComponent }: NavigatorRowProps) {
     const icon = useNoteIcon(note);
     const hasChildren = note.hasChildren();
     const colorClass = note.getColorClass();
     const title = prefix ? `${prefix} - ${note.title}` : note.title;
+    const contextHandler = useMemo(
+        () => buildNoteContextMenu(childNotePath, parentComponent),
+        [childNotePath, parentComponent]
+    );
+    const contextProps = useLongPressContextMenu(contextHandler);
 
     return (
         <div
@@ -318,6 +343,7 @@ function NavigatorRow({ note, prefix, childNotePath, isActive, isPending, onDril
             role="button"
             tabIndex={0}
             onClick={isPending ? undefined : () => (hasChildren ? onDrill(childNotePath) : onOpen(childNotePath))}
+            {...contextProps}
         >
             <Icon icon={icon ?? "bx bx-note"} className="mobile-navigator-row-icon" />
             <span className="mobile-navigator-row-title">{title}</span>
@@ -380,4 +406,118 @@ function buildStackForActiveNote(activeNotePath: string | null | undefined, hois
         stack.push(clamped.slice(0, i + 1).join("/"));
     }
     return stack;
+}
+
+/**
+ * Mirrors the tree / breadcrumb right-click menu: open-in-* actions plus
+ * hoist / move / clone / duplicate / archive / delete / color / recent / search.
+ */
+function buildNoteContextMenu(notePath: string, parentComponent: Component | null) {
+    return async (e: MouseEvent) => {
+        e.preventDefault();
+
+        const { noteId, parentNoteId } = tree.getNoteIdAndParentIdFromUrl(notePath);
+        if (!parentNoteId || !noteId) return;
+
+        const branchId = await froca.getBranchId(parentNoteId, noteId);
+        if (!branchId) return;
+        const branch = froca.getBranch(branchId);
+        if (!branch) return;
+
+        const note = await branch.getNote();
+        if (!note) return;
+
+        const notSearch = note.type !== "search";
+        const notOptionsOrHelp = !note.noteId.startsWith("_options") && !note.noteId.startsWith("_help");
+        const isArchived = note.isArchived;
+        const isNotRoot = note.noteId !== "root";
+        const isHoisted = note.noteId === appContext.tabManager.getActiveContext()?.hoistedNoteId;
+        const parentNote = isNotRoot && branch ? await froca.getNote(branch.parentNoteId) : null;
+        const parentNotSearch = !parentNote || parentNote.type !== "search";
+
+        const items = [
+            ...link_context_menu.getItems(e),
+            {
+                title: t("tree-context-menu.hoist-note"),
+                command: "toggleNoteHoisting",
+                uiIcon: "bx bxs-chevrons-up",
+                enabled: notSearch
+            },
+            { kind: "separator" },
+            {
+                title: t("tree-context-menu.move-to"),
+                command: "moveNotesTo",
+                uiIcon: "bx bx-transfer",
+                enabled: isNotRoot && !isHoisted && parentNotSearch
+            },
+            {
+                title: t("tree-context-menu.clone-to"),
+                command: "cloneNotesTo",
+                uiIcon: "bx bx-duplicate",
+                enabled: isNotRoot && !isHoisted
+            },
+            { kind: "separator" },
+            {
+                title: t("tree-context-menu.duplicate"),
+                command: "duplicateSubtree",
+                uiIcon: "bx bx-outline",
+                enabled: parentNotSearch && isNotRoot && !isHoisted && notOptionsOrHelp && note.isContentAvailable(),
+                handler: () => note_create.duplicateSubtree(noteId, branch.parentNoteId)
+            },
+            {
+                title: !isArchived ? t("tree-context-menu.archive") : t("tree-context-menu.unarchive"),
+                uiIcon: !isArchived ? "bx bx-archive" : "bx bx-archive-out",
+                handler: () => {
+                    if (!isArchived) {
+                        attributes.addLabel(note.noteId, "archived");
+                    } else {
+                        attributes.removeOwnedLabelByName(note, "archived");
+                    }
+                }
+            },
+            {
+                title: t("tree-context-menu.delete"),
+                command: "deleteNotes",
+                uiIcon: "bx bx-trash destructive-action-icon",
+                enabled: isNotRoot && !isHoisted && parentNotSearch && notOptionsOrHelp,
+                handler: () => branches.deleteNotes([branchId])
+            },
+            { kind: "separator" },
+            notOptionsOrHelp
+                ? {
+                    kind: "custom",
+                    componentFn: () => NoteColorPicker({ note })
+                }
+                : null,
+            { kind: "separator" },
+            {
+                title: t("tree-context-menu.recent-changes-in-subtree"),
+                uiIcon: "bx bx-history",
+                enabled: notOptionsOrHelp,
+                handler: () => parentComponent?.triggerCommand("showRecentChanges", { ancestorNoteId: noteId })
+            },
+            {
+                title: t("tree-context-menu.search-in-subtree"),
+                command: "searchInSubtree",
+                uiIcon: "bx bx-search",
+                enabled: notSearch
+            }
+        ];
+
+        contextMenu.show({
+            items: items.filter(Boolean) as MenuItem<TreeCommandNames>[],
+            x: e.pageX,
+            y: e.pageY,
+            selectMenuItemHandler: ({ command }) => {
+                if (link_context_menu.handleLinkContextMenuItem(command, e, notePath)) return;
+                if (!command) return;
+                parentComponent?.triggerCommand(command, {
+                    noteId,
+                    notePath,
+                    selectedOrActiveBranchIds: [branchId],
+                    selectedOrActiveNoteIds: [noteId]
+                });
+            }
+        });
+    };
 }
