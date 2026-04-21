@@ -391,6 +391,7 @@ export async function handleTreeContextMenuSelect(
             node: resolved.node,
             notePath,
             noteId: note.noteId,
+            branchId: branch.branchId,
             selectedOrActiveBranchIds,
             selectedOrActiveNoteIds
         });
