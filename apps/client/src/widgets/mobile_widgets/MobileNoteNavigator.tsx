@@ -44,6 +44,12 @@ export default function MobileNoteNavigator() {
     const [nextStack, setNextStack] = useState<string[] | null>(null);
     const manualStackRef = useRef(false);
 
+    // Hoisting always reframes the navigator around the hoisted note, so drop
+    // any manual drill position when it changes.
+    useEffect(() => {
+        manualStackRef.current = false;
+    }, [effectiveHoistedId]);
+
     // Sync stack with the active note path unless the user has manually drilled.
     useEffect(() => {
         if (manualStackRef.current) return;
