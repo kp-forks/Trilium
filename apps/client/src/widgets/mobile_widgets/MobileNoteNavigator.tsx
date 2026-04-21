@@ -17,6 +17,7 @@ import {
     useNote,
     useNoteColorClass,
     useNoteIcon,
+    useNoteLabelBoolean,
     useNoteTitle,
     useTriliumEvent,
     useTriliumOptionBool
@@ -323,7 +324,13 @@ interface NavigatorRowProps {
 
 function NavigatorRow({ note, parentNoteId, childNotePath, isActive, isPending, onDrill, onOpen, parentComponent }: NavigatorRowProps) {
     const icon = useNoteIcon(note);
-    const hasChildren = note.hasChildren();
+    const [isSubtreeHidden] = useNoteLabelBoolean(note, "subtreeHidden");
+    const rawChildCount = note.getChildNoteIds().length;
+    // Notes marked with `#subtreeHidden` hide their children from the tree, so
+    // the navigator treats them as leaves (open-on-tap) and shows a badge with
+    // the hidden count instead of the drill-in chevron.
+    const hasChildren = note.hasChildren() && !isSubtreeHidden;
+    const showHiddenBadge = isSubtreeHidden && rawChildCount > 0;
     const colorClass = useNoteColorClass(note);
     const title = useNoteTitle(note.noteId, parentNoteId) ?? note.title;
     const contextHandler = useMemo(
@@ -347,6 +354,14 @@ function NavigatorRow({ note, parentNoteId, childNotePath, isActive, isPending, 
         >
             <Icon icon={icon ?? "bx bx-note"} className="mobile-navigator-row-icon" />
             <span className="mobile-navigator-row-title">{title}</span>
+            {showHiddenBadge && (
+                <span
+                    className="mobile-navigator-row-hidden-badge"
+                    title={t("note_tree.subtree-hidden-tooltip", { count: rawChildCount })}
+                >
+                    {rawChildCount}
+                </span>
+            )}
             {isPending ? (
                 <Icon icon="bx bx-loader bx-spin" className="mobile-navigator-row-chevron" />
             ) : hasChildren ? (

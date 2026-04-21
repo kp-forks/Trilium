@@ -261,3 +261,16 @@
     font-size: 1.4em;
     opacity: 0.5;
 }
+
+.mobile-navigator-row-hidden-badge {
+    flex: 0 0 auto;
+    min-width: 1.6em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accented-background-color, var(--hover-item-background-color));
+    color: var(--muted-text-color, var(--main-text-color));
+    font-size: 0.75em;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+}
