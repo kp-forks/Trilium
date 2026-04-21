@@ -22,7 +22,6 @@ import SidebarContainer from "../widgets/mobile_widgets/sidebar_container.js";
 import ToggleSidebarButton from "../widgets/mobile_widgets/toggle_sidebar_button.jsx";
 import NoteIconWidget from "../widgets/note_icon.jsx";
 import NoteTitleWidget from "../widgets/note_title.js";
-import NoteTreeWidget from "../widgets/note_tree.js";
 import NoteWrapperWidget from "../widgets/note_wrapper.js";
 import NoteDetail from "../widgets/NoteDetail.jsx";
 import QuickSearchWidget from "../widgets/quick_search.js";
@@ -54,7 +53,7 @@ export default class MobileLayout {
                                     .filling()
                                     .id("mobile-sidebar-wrapper")
                                     .child(new QuickSearchWidget())
-                                    .child(glob.isStandalone ? <MobileNoteNavigator /> : new NoteTreeWidget())
+                                    .child(<MobileNoteNavigator />)
                             )
                     )
                     .child(

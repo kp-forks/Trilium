@@ -15,8 +15,8 @@ import Component from "./component.js";
  * must be at the root of the component tree.
  *
  * Many of these commands are invoked from the tree's context menu (desktop) and the mobile drill-down navigator's
- * context menu (standalone mobile). Because the mobile navigator doesn't contain the `NoteTreeWidget`, command
- * handlers that ought to run regardless of which UI triggered them live here instead of on the widget.
+ * context menu (mobile). Because the mobile navigator doesn't contain the `NoteTreeWidget`, command handlers
+ * that ought to run regardless of which UI triggered them live here instead of on the widget.
  */
 export default class MainTreeExecutors extends Component {
     /**
