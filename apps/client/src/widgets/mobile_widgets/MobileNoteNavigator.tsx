@@ -438,6 +438,7 @@ function buildNoteContextMenu(notePath: string, parentComponent: Component | nul
             branch,
             notePath,
             component: parentComponent,
+            target: "mobile" as const,
             onBeforeCommand: () => {
                 if (utils.isMobile()) {
                     parentComponent.triggerCommand("setActiveScreen", { screen: "detail" });

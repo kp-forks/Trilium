@@ -58,6 +58,12 @@ export interface TreeContextMenuContext {
     /** Whether the note is currently spotlighted (Fancytree only). */
     isSpotlighted?: boolean;
     /**
+     * Which surface is showing the menu. Used to suppress items that don't make
+     * sense on a given surface (e.g. `expandSubtree` / `collapseSubtree` have no
+     * meaning in the mobile drill-down navigator). Defaults to `"desktop"`.
+     */
+    target?: "desktop" | "mobile";
+    /**
      * Invoked right before any command's handler runs. Fancytree uses this to
      * switch to the detail screen on mobile so dialogs/navigations are visible.
      */
@@ -80,7 +86,8 @@ function resolveContext(ctx: TreeContextMenuContext) {
         selectedOrActiveBranchIds: ctx.selectedOrActiveBranchIds ?? [ctx.branch.branchId],
         selectedOrActiveNoteIds: ctx.selectedOrActiveNoteIds ?? [ctx.note.noteId],
         selectedNotes: ctx.selectedNotes ?? [ctx.note],
-        isSpotlighted: ctx.isSpotlighted ?? false
+        isSpotlighted: ctx.isSpotlighted ?? false,
+        target: ctx.target ?? "desktop"
     };
 }
 
@@ -91,7 +98,8 @@ function resolveContext(ctx: TreeContextMenuContext) {
  */
 export async function buildTreeContextMenuItems(ctx: TreeContextMenuContext): Promise<MenuItem<TreeCommandNames>[]> {
     const resolved = resolveContext(ctx);
-    const { note, branch, selectedNotes, isSpotlighted } = resolved;
+    const { note, branch, selectedNotes, isSpotlighted, target } = resolved;
+    const isMobileTarget = target === "mobile";
 
     const isNotRoot = note.noteId !== "root";
     const isHoisted = note.noteId === appContext.tabManager.getActiveContext()?.hoistedNoteId;
@@ -185,8 +193,8 @@ export async function buildTreeContextMenuItems(ctx: TreeContextMenuContext): Pr
 
                 { kind: "separator" },
 
-                !hasSubtreeHidden && { title: t("tree-context-menu.expand-subtree"), command: "expandSubtree", keyboardShortcut: "expandSubtree", uiIcon: "bx bx-expand", enabled: noSelectedNotes },
-                !hasSubtreeHidden && { title: t("tree-context-menu.collapse-subtree"), command: "collapseSubtree", keyboardShortcut: "collapseSubtree", uiIcon: "bx bx-collapse", enabled: noSelectedNotes },
+                !hasSubtreeHidden && !isMobileTarget && { title: t("tree-context-menu.expand-subtree"), command: "expandSubtree", keyboardShortcut: "expandSubtree", uiIcon: "bx bx-expand", enabled: noSelectedNotes },
+                !hasSubtreeHidden && !isMobileTarget && { title: t("tree-context-menu.collapse-subtree"), command: "collapseSubtree", keyboardShortcut: "collapseSubtree", uiIcon: "bx bx-collapse", enabled: noSelectedNotes },
                 {
                     title: hasSubtreeHidden ? t("tree-context-menu.show-subtree") : t("tree-context-menu.hide-subtree"),
                     uiIcon: "bx bx-show",
