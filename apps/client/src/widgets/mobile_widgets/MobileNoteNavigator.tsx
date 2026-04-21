@@ -212,6 +212,8 @@ export default function MobileNoteNavigator() {
     );
 
     const isCurrentActive = !!activeNoteId && activeNoteId === currentParentId;
+    const isHoisted = effectiveHoistedId !== "root";
+    const showToolbar = canGoBack || isHoisted;
 
     const currentContextHandler = useMemo(
         () => buildNoteContextMenu(currentParentPath, parentComponent),
@@ -221,6 +223,7 @@ export default function MobileNoteNavigator() {
 
     return (
         <div className="mobile-note-navigator">
+            {showToolbar && (
             <div className="mobile-navigator-toolbar">
                 <button
                     type="button"
@@ -239,6 +242,7 @@ export default function MobileNoteNavigator() {
                 </button>
                 <HoistedNoteBadge hoistedNoteId={effectiveHoistedId} />
             </div>
+            )}
 
             <div ref={scrollRef} className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
                 <div ref={bodyRef} className="mobile-navigator-body">
