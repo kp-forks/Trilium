@@ -21,6 +21,7 @@ import {
     useActiveNoteContext,
     useLongPressContextMenu,
     useNote,
+    useNoteColorClass,
     useNoteIcon,
     useTriliumEvent,
     useTriliumOptionBool
@@ -68,6 +69,7 @@ export default function MobileNoteNavigator() {
     const currentParentId = getLastSegment(currentParentPath);
     const parentNote = useNote(currentParentId);
     const parentIcon = useNoteIcon(parentNote);
+    const parentColorClass = useNoteColorClass(parentNote);
     const activeNoteId = activeNotePath ? getLastSegment(activeNotePath) : undefined;
 
     const pendingPath = nextStack?.[nextStack.length - 1];
@@ -230,7 +232,7 @@ export default function MobileNoteNavigator() {
                 <div ref={bodyRef} className="mobile-navigator-body">
                     {parentNote && (
                         <div
-                            className={clsx("mobile-navigator-current-tile", parentNote.getColorClass(), {
+                            className={clsx("mobile-navigator-current-tile", parentColorClass, {
                                 "is-active": isCurrentActive,
                                 "is-archived": parentNote.isArchived
                             })}
@@ -324,7 +326,7 @@ interface NavigatorRowProps {
 function NavigatorRow({ note, prefix, childNotePath, isActive, isPending, onDrill, onOpen, parentComponent }: NavigatorRowProps) {
     const icon = useNoteIcon(note);
     const hasChildren = note.hasChildren();
-    const colorClass = note.getColorClass();
+    const colorClass = useNoteColorClass(note);
     const title = prefix ? `${prefix} - ${note.title}` : note.title;
     const contextHandler = useMemo(
         () => buildNoteContextMenu(childNotePath, parentComponent),
