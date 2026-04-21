@@ -1359,8 +1359,8 @@ importers:
         specifier: 0.5.0
         version: 0.5.0
       eslint-linter-browserify:
-        specifier: 10.2.0
-        version: 10.2.0
+        specifier: 10.2.1
+        version: 10.2.1
       globals:
         specifier: 17.5.0
         version: 17.5.0
@@ -8531,8 +8531,8 @@ packages:
     peerDependencies:
       eslint: '>=7.0.0'
 
-  eslint-linter-browserify@10.2.0:
-    resolution: {integrity: sha512-3EI7WAce/YTRTyRmqYUKX7VRROyIoKacg3625Ler+079JvCU5YGQwVJLa/ifvBxr95bxv7gTsy4zw3is+hHpBg==}
+  eslint-linter-browserify@10.2.1:
+    resolution: {integrity: sha512-vtIHGDSGZE9x2S4G1e76naWHYFu0T3BBYya3TnAM5lkwUctKrER5J/VY3vbzZYb7AIXOHJ5+frQh4WA6clGxCg==}
 
   eslint-plugin-ckeditor5-rules@14.1.0:
     resolution: {integrity: sha512-ssewEesRNL0MVfNTraM7l8xtTfBKmlNIjK0kCXsiJgLanmoRn0CZ1LEepICZifNx2eKzCf5tF+6phYVleh88PA==}
@@ -23926,7 +23926,7 @@ snapshots:
     dependencies:
       eslint: 10.2.0(jiti@2.6.1)
 
-  eslint-linter-browserify@10.2.0: {}
+  eslint-linter-browserify@10.2.1: {}
 
   eslint-plugin-ckeditor5-rules@14.1.0:
     dependencies:
