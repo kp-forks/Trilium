@@ -6,11 +6,5 @@
     "androidScheme": "https",
     "hostname": "localhost"
   },
-  "plugins": {
-    "SplashScreen": {
-      "launchAutoHide": true,
-      "launchShowDuration": 2000,
-      "launchFadeOutDuration": 300
-    }
-  }
+  "plugins": {}
 }
