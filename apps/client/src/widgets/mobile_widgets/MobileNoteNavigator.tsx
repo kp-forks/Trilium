@@ -7,16 +7,20 @@ import type Component from "../../components/component";
 import type FNote from "../../entities/fnote";
 import contextMenu from "../../menus/context_menu";
 import { buildTreeContextMenuItems, handleTreeContextMenuSelect } from "../../menus/tree_context_menu";
+import { getReadableTextColor } from "../../services/css_class_manager";
 import froca from "../../services/froca";
+import hoisted_note from "../../services/hoisted_note";
 import { t } from "../../services/i18n";
 import utils from "../../services/utils";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
+import { Badge } from "../react/Badge";
 import {
     useActiveNoteContext,
     useLongPressContextMenu,
     useNote,
     useNoteColorClass,
     useNoteIcon,
+    useNoteLabel,
     useNoteLabelBoolean,
     useNoteTitle,
     useTriliumEvent,
@@ -232,6 +236,7 @@ export default function MobileNoteNavigator() {
                         {backTargetTitle ?? ""}
                     </span>
                 </button>
+                <HoistedNoteBadge hoistedNoteId={effectiveHoistedId} />
             </div>
 
             <div ref={scrollRef} className={clsx("mobile-navigator-scroll", showInitialLoader && "is-pending")}>
@@ -315,6 +320,40 @@ export default function MobileNoteNavigator() {
                 </div>
             )}
         </div>
+    );
+}
+
+/**
+ * Hoisted-note badge (mirrors Breadcrumb.tsx): only shown when hoisted below
+ * root; click anywhere on the badge (including the X) to unhoist. Respects
+ * workspace icon/color overrides.
+ */
+function HoistedNoteBadge({ hoistedNoteId }: { hoistedNoteId: string }) {
+    const isHoisted = hoistedNoteId !== "root";
+    const hoistedNote = useNote(isHoisted ? hoistedNoteId : undefined);
+    const hoistedNoteIcon = useNoteIcon(hoistedNote);
+    const hoistedTitle = useNoteTitle(isHoisted ? hoistedNoteId : undefined, undefined);
+    const [isWorkspace] = useNoteLabelBoolean(hoistedNote, "workspace");
+    const [workspaceIconClass] = useNoteLabel(hoistedNote, "workspaceIconClass");
+    const [workspaceColor] = useNoteLabel(hoistedNote, "workspaceTabBackgroundColor");
+
+    if (!isHoisted || !hoistedNote) return null;
+
+    return (
+        <Badge
+            className="mobile-navigator-hoisted-badge"
+            icon={isWorkspace ? (workspaceIconClass || hoistedNoteIcon) : "bx bxs-chevrons-up"}
+            text={<>
+                <span className="mobile-navigator-hoisted-title">{hoistedTitle ?? hoistedNote.title}</span>
+                <Icon icon="bx bx-x" className="mobile-navigator-hoisted-close" />
+            </>}
+            tooltip={t("breadcrumb.hoisted_badge_title")}
+            onClick={() => hoisted_note.unhoist()}
+            style={workspaceColor ? {
+                "--color": workspaceColor,
+                "color": getReadableTextColor(workspaceColor)
+            } as Record<string, string> : undefined}
+        />
     );
 }
 

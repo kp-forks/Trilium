@@ -9,9 +9,40 @@
 .mobile-navigator-toolbar {
     display: flex;
     align-items: center;
+    gap: 8px;
     padding: 4px 6px;
     border-bottom: 1px solid var(--main-border-color);
     background: var(--main-background-color);
+}
+
+.mobile-navigator-hoisted-badge {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-inline-start: auto;
+    margin-inline-end: 4px;
+    --badge-radius: 12px;
+    --color: var(--input-background-color);
+    color: var(--main-text-color);
+}
+
+.mobile-navigator-hoisted-badge .text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.mobile-navigator-hoisted-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mobile-navigator-hoisted-close {
+    flex: 0 0 auto;
+    font-size: 1.3em;
+    opacity: 0.6;
 }
 
 .mobile-navigator-back {
