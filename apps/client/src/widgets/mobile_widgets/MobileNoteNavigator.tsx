@@ -68,6 +68,7 @@ export default function MobileNoteNavigator() {
     const parentIcon = useNoteIcon(parentNote);
     const parentColorClass = useNoteColorClass(parentNote);
     const parentTitle = useNoteTitle(currentParentId, grandparentId);
+    const [isParentSubtreeHidden] = useNoteLabelBoolean(parentNote, "subtreeHidden");
     const activeNoteId = activeNotePath ? getLastSegment(activeNotePath) : undefined;
 
     const pendingPath = nextStack?.[nextStack.length - 1];
@@ -98,7 +99,7 @@ export default function MobileNoteNavigator() {
     }, [currentParentId, loadedParents]);
 
     const isLoaded = !!currentParentId && loadedParents.has(currentParentId);
-    const children = useNavigatorChildren(parentNote, hideArchived, isLoaded);
+    const children = useNavigatorChildren(parentNote, hideArchived, isLoaded, isParentSubtreeHidden);
     const canGoBack = stack.length > 1;
     const backTargetId = canGoBack ? getLastSegment(stack[stack.length - 2]) : undefined;
     const backTargetParentId = stack.length >= 3 ? getLastSegment(stack[stack.length - 3]) : undefined;
@@ -376,9 +377,14 @@ interface NavigatorChild {
     branchId: string;
 }
 
-function useNavigatorChildren(parentNote: FNote | null | undefined, hideArchived: boolean, isLoaded: boolean): NavigatorChild[] {
+function useNavigatorChildren(
+    parentNote: FNote | null | undefined,
+    hideArchived: boolean,
+    isLoaded: boolean,
+    isParentSubtreeHidden: boolean
+): NavigatorChild[] {
     return useMemo(() => {
-        if (!parentNote || !isLoaded) return [];
+        if (!parentNote || !isLoaded || isParentSubtreeHidden) return [];
         const result: NavigatorChild[] = [];
         for (const branch of parentNote.getChildBranches()) {
             if (!branch) continue;
@@ -389,7 +395,7 @@ function useNavigatorChildren(parentNote: FNote | null | undefined, hideArchived
             result.push({ note, branchId: branch.branchId });
         }
         return result;
-    }, [parentNote, parentNote?.children?.join(","), hideArchived, isLoaded]);
+    }, [parentNote, parentNote?.children?.join(","), hideArchived, isLoaded, isParentSubtreeHidden]);
 }
 
 function getLastSegment(notePath: string): string {
@@ -405,7 +411,10 @@ function buildStackForActiveNote(activeNotePath: string | null | undefined, hois
     const activeNote = froca.getNoteFromCache(activeNoteId);
 
     // If the active note is a folder, show its own children; otherwise show its parent's.
-    const parentSegments = activeNote?.hasChildren() ? segments : segments.slice(0, -1);
+    // Notes marked with `#subtreeHidden` hide their children (e.g. options), so we
+    // treat them like leaves and land on the parent column instead of an empty one.
+    const treatAsFolder = !!activeNote?.hasChildren() && !activeNote.isLabelTruthy("subtreeHidden");
+    const parentSegments = treatAsFolder ? segments : segments.slice(0, -1);
 
     // Clamp to the hoisted root.
     let start = parentSegments.indexOf(hoistedId);
