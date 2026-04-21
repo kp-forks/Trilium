@@ -3,19 +3,13 @@ import "./MobileNoteNavigator.css";
 import clsx from "clsx";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import appContext from "../../components/app_context";
 import type Component from "../../components/component";
 import type FNote from "../../entities/fnote";
-import contextMenu, { MenuItem } from "../../menus/context_menu";
-import NoteColorPicker from "../../menus/custom-items/NoteColorPicker";
-import link_context_menu from "../../menus/link_context_menu";
-import { TreeCommandNames } from "../../menus/tree_context_menu";
-import attributes from "../../services/attributes";
-import branches from "../../services/branches";
+import contextMenu from "../../menus/context_menu";
+import { buildTreeContextMenuItems, handleTreeContextMenuSelect } from "../../menus/tree_context_menu";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
-import note_create from "../../services/note_create";
-import tree from "../../services/tree";
+import utils from "../../services/utils";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import {
     useActiveNoteContext,
@@ -414,15 +408,22 @@ function buildStackForActiveNote(activeNotePath: string | null | undefined, hois
 }
 
 /**
- * Mirrors the tree / breadcrumb right-click menu: open-in-* actions plus
- * hoist / move / clone / duplicate / archive / delete / color / recent / search.
+ * Builds the same rich tree context menu as Fancytree's `TreeContextMenu`, but
+ * sourced from a note path so it can be used from the mobile navigator. The
+ * heavy lifting (item construction, command dispatch) lives in
+ * `tree_context_menu.ts`; this function just resolves `notePath` into the shared
+ * `TreeContextMenuContext` and wires up the `contextMenu.show(...)` boilerplate.
  */
 function buildNoteContextMenu(notePath: string, parentComponent: Component | null) {
     return async (e: MouseEvent) => {
         e.preventDefault();
 
-        const { noteId, parentNoteId } = tree.getNoteIdAndParentIdFromUrl(notePath);
-        if (!parentNoteId || !noteId) return;
+        if (!parentComponent) return;
+
+        const segments = notePath.split("/");
+        const noteId = segments[segments.length - 1];
+        const parentNoteId = segments.length >= 2 ? segments[segments.length - 2] : undefined;
+        if (!noteId || !parentNoteId) return;
 
         const branchId = await froca.getBranchId(parentNoteId, noteId);
         if (!branchId) return;
@@ -432,97 +433,23 @@ function buildNoteContextMenu(notePath: string, parentComponent: Component | nul
         const note = await branch.getNote();
         if (!note) return;
 
-        const notSearch = note.type !== "search";
-        const notOptionsOrHelp = !note.noteId.startsWith("_options") && !note.noteId.startsWith("_help");
-        const isArchived = note.isArchived;
-        const isNotRoot = note.noteId !== "root";
-        const isHoisted = note.noteId === appContext.tabManager.getActiveContext()?.hoistedNoteId;
-        const parentNote = isNotRoot && branch ? await froca.getNote(branch.parentNoteId) : null;
-        const parentNotSearch = !parentNote || parentNote.type !== "search";
-
-        const items = [
-            ...link_context_menu.getItems(e),
-            {
-                title: t("tree-context-menu.hoist-note"),
-                command: "toggleNoteHoisting",
-                uiIcon: "bx bxs-chevrons-up",
-                enabled: notSearch
-            },
-            { kind: "separator" },
-            {
-                title: t("tree-context-menu.move-to"),
-                command: "moveNotesTo",
-                uiIcon: "bx bx-transfer",
-                enabled: isNotRoot && !isHoisted && parentNotSearch
-            },
-            {
-                title: t("tree-context-menu.clone-to"),
-                command: "cloneNotesTo",
-                uiIcon: "bx bx-duplicate",
-                enabled: isNotRoot && !isHoisted
-            },
-            { kind: "separator" },
-            {
-                title: t("tree-context-menu.duplicate"),
-                command: "duplicateSubtree",
-                uiIcon: "bx bx-outline",
-                enabled: parentNotSearch && isNotRoot && !isHoisted && notOptionsOrHelp && note.isContentAvailable(),
-                handler: () => note_create.duplicateSubtree(noteId, branch.parentNoteId)
-            },
-            {
-                title: !isArchived ? t("tree-context-menu.archive") : t("tree-context-menu.unarchive"),
-                uiIcon: !isArchived ? "bx bx-archive" : "bx bx-archive-out",
-                handler: () => {
-                    if (!isArchived) {
-                        attributes.addLabel(note.noteId, "archived");
-                    } else {
-                        attributes.removeOwnedLabelByName(note, "archived");
-                    }
+        const ctx = {
+            note,
+            branch,
+            notePath,
+            component: parentComponent,
+            onBeforeCommand: () => {
+                if (utils.isMobile()) {
+                    parentComponent.triggerCommand("setActiveScreen", { screen: "detail" });
                 }
-            },
-            {
-                title: t("tree-context-menu.delete"),
-                command: "deleteNotes",
-                uiIcon: "bx bx-trash destructive-action-icon",
-                enabled: isNotRoot && !isHoisted && parentNotSearch && notOptionsOrHelp,
-                handler: () => branches.deleteNotes([branchId])
-            },
-            { kind: "separator" },
-            notOptionsOrHelp
-                ? {
-                    kind: "custom",
-                    componentFn: () => NoteColorPicker({ note })
-                }
-                : null,
-            { kind: "separator" },
-            {
-                title: t("tree-context-menu.recent-changes-in-subtree"),
-                uiIcon: "bx bx-history",
-                enabled: notOptionsOrHelp,
-                handler: () => parentComponent?.triggerCommand("showRecentChanges", { ancestorNoteId: noteId })
-            },
-            {
-                title: t("tree-context-menu.search-in-subtree"),
-                command: "searchInSubtree",
-                uiIcon: "bx bx-search",
-                enabled: notSearch
             }
-        ];
+        };
 
-        contextMenu.show({
-            items: items.filter(Boolean) as MenuItem<TreeCommandNames>[],
+        await contextMenu.show({
             x: e.pageX,
             y: e.pageY,
-            selectMenuItemHandler: ({ command }) => {
-                if (link_context_menu.handleLinkContextMenuItem(command, e, notePath)) return;
-                if (!command) return;
-                parentComponent?.triggerCommand(command, {
-                    noteId,
-                    notePath,
-                    selectedOrActiveBranchIds: [branchId],
-                    selectedOrActiveNoteIds: [noteId]
-                });
-            }
+            items: await buildTreeContextMenuItems(ctx),
+            selectMenuItemHandler: (item) => handleTreeContextMenuSelect(item, ctx)
         });
     };
 }
