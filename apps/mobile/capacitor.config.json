@@ -4,7 +4,11 @@
   "webDir": "../client-standalone/dist",
   "server": {
     "androidScheme": "https",
+    "iosScheme": "https",
     "hostname": "localhost"
+  },
+  "ios": {
+    "limitsNavigationsToAppBoundDomains": true
   },
   "plugins": {}
 }
