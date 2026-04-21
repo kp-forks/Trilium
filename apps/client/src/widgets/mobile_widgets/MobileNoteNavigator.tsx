@@ -230,7 +230,7 @@ export default function MobileNoteNavigator() {
                 <div ref={bodyRef} className="mobile-navigator-body">
                     {parentNote && (
                         <div
-                            className={clsx("mobile-navigator-current-tile", {
+                            className={clsx("mobile-navigator-current-tile", parentNote.getColorClass(), {
                                 "is-active": isCurrentActive,
                                 "is-archived": parentNote.isArchived
                             })}

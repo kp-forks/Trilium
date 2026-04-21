@@ -213,6 +213,15 @@
     opacity: 0.55;
 }
 
+/* Colored notes: `--custom-color` is set by the theme on `.use-note-color`
+   (see css_class_manager.createClassForColor). Apply it to the title/icon. */
+.mobile-navigator-row.use-note-color .mobile-navigator-row-title,
+.mobile-navigator-row.use-note-color .mobile-navigator-row-icon,
+.mobile-navigator-current-tile.use-note-color .mobile-navigator-current-title,
+.mobile-navigator-current-tile.use-note-color .mobile-navigator-current-icon {
+    color: var(--custom-color, inherit);
+}
+
 .mobile-navigator-row.is-pending {
     cursor: progress;
 }
