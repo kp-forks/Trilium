@@ -23,6 +23,7 @@ import {
     useNote,
     useNoteColorClass,
     useNoteIcon,
+    useNoteTitle,
     useTriliumEvent,
     useTriliumOptionBool
 } from "../react/hooks";
@@ -67,9 +68,11 @@ export default function MobileNoteNavigator() {
 
     const currentParentPath = stack[stack.length - 1];
     const currentParentId = getLastSegment(currentParentPath);
+    const grandparentId = stack.length >= 2 ? getLastSegment(stack[stack.length - 2]) : undefined;
     const parentNote = useNote(currentParentId);
     const parentIcon = useNoteIcon(parentNote);
     const parentColorClass = useNoteColorClass(parentNote);
+    const parentTitle = useNoteTitle(currentParentId, grandparentId);
     const activeNoteId = activeNotePath ? getLastSegment(activeNotePath) : undefined;
 
     const pendingPath = nextStack?.[nextStack.length - 1];
@@ -103,7 +106,8 @@ export default function MobileNoteNavigator() {
     const children = useNavigatorChildren(parentNote, hideArchived, isLoaded);
     const canGoBack = stack.length > 1;
     const backTargetId = canGoBack ? getLastSegment(stack[stack.length - 2]) : undefined;
-    const backTargetNote = useNote(backTargetId);
+    const backTargetParentId = stack.length >= 3 ? getLastSegment(stack[stack.length - 3]) : undefined;
+    const backTargetTitle = useNoteTitle(backTargetId, backTargetParentId);
 
     // Gate the visible body on the content preview being ready to avoid a layout shift
     // when the preview finishes rendering. Tied to the parent's noteId so a stale "ready"
@@ -223,7 +227,7 @@ export default function MobileNoteNavigator() {
                         className="mobile-navigator-back-icon"
                     />
                     <span className="mobile-navigator-back-title">
-                        {backTargetNote?.title ?? ""}
+                        {backTargetTitle ?? ""}
                     </span>
                 </button>
             </div>
@@ -243,7 +247,7 @@ export default function MobileNoteNavigator() {
                         >
                             <div className="mobile-navigator-current-header">
                                 <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
-                                <span className="mobile-navigator-current-title">{parentNote.title}</span>
+                                <span className="mobile-navigator-current-title">{parentTitle ?? parentNote.title}</span>
                                 <Icon icon="bx bx-link-external" className="mobile-navigator-current-open" />
                             </div>
                             <div className="mobile-navigator-current-preview">
@@ -273,7 +277,7 @@ export default function MobileNoteNavigator() {
                                 <NavigatorRow
                                     key={child.branchId}
                                     note={child.note}
-                                    prefix={child.prefix}
+                                    parentNoteId={currentParentId}
                                     childNotePath={`${currentParentPath}/${child.note.noteId}`}
                                     isActive={child.note.noteId === activeNoteId}
                                     isPending={child.note.noteId === pendingChildId}
@@ -314,7 +318,7 @@ export default function MobileNoteNavigator() {
 
 interface NavigatorRowProps {
     note: FNote;
-    prefix?: string;
+    parentNoteId: string | undefined;
     childNotePath: string;
     isActive: boolean;
     isPending: boolean;
@@ -323,11 +327,11 @@ interface NavigatorRowProps {
     parentComponent: Component | null;
 }
 
-function NavigatorRow({ note, prefix, childNotePath, isActive, isPending, onDrill, onOpen, parentComponent }: NavigatorRowProps) {
+function NavigatorRow({ note, parentNoteId, childNotePath, isActive, isPending, onDrill, onOpen, parentComponent }: NavigatorRowProps) {
     const icon = useNoteIcon(note);
     const hasChildren = note.hasChildren();
     const colorClass = useNoteColorClass(note);
-    const title = prefix ? `${prefix} - ${note.title}` : note.title;
+    const title = useNoteTitle(note.noteId, parentNoteId) ?? note.title;
     const contextHandler = useMemo(
         () => buildNoteContextMenu(childNotePath, parentComponent),
         [childNotePath, parentComponent]
@@ -361,7 +365,6 @@ function NavigatorRow({ note, prefix, childNotePath, isActive, isPending, onDril
 interface NavigatorChild {
     note: FNote;
     branchId: string;
-    prefix?: string;
 }
 
 function useNavigatorChildren(parentNote: FNote | null | undefined, hideArchived: boolean, isLoaded: boolean): NavigatorChild[] {
@@ -374,7 +377,7 @@ function useNavigatorChildren(parentNote: FNote | null | undefined, hideArchived
             if (!note) continue;
             if (note.noteId === "_hidden") continue;
             if (hideArchived && note.isArchived) continue;
-            result.push({ note, branchId: branch.branchId, prefix: branch.prefix });
+            result.push({ note, branchId: branch.branchId });
         }
         return result;
     }, [parentNote, parentNote?.children?.join(","), hideArchived, isLoaded]);
