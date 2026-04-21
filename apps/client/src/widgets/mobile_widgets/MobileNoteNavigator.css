@@ -160,10 +160,25 @@
     font-weight: 600;
 }
 
-.mobile-navigator-current-open {
+.mobile-navigator-current-action {
     flex: 0 0 auto;
-    font-size: 1.1em;
-    opacity: 0.6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1.2em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-navigator-current-action:active {
+    background: var(--hover-item-background-color);
 }
 
 .mobile-navigator-current-preview {

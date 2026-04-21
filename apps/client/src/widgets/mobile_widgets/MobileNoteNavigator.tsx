@@ -11,6 +11,7 @@ import { getReadableTextColor } from "../../services/css_class_manager";
 import froca from "../../services/froca";
 import hoisted_note from "../../services/hoisted_note";
 import { t } from "../../services/i18n";
+import note_create from "../../services/note_create";
 import utils from "../../services/utils";
 import { NoteContent } from "../collections/legacy/ListOrGridView";
 import { Badge } from "../react/Badge";
@@ -255,7 +256,30 @@ export default function MobileNoteNavigator() {
                             <div className="mobile-navigator-current-header">
                                 <Icon icon={parentIcon ?? "bx bx-folder"} className="mobile-navigator-current-icon" />
                                 <span className="mobile-navigator-current-title">{parentTitle ?? parentNote.title}</span>
-                                <Icon icon="bx bx-link-external" className="mobile-navigator-current-open" />
+                                <button
+                                    type="button"
+                                    className="mobile-navigator-current-action"
+                                    aria-label={t("mobile_note_navigator.add_child")}
+                                    title={t("mobile_note_navigator.add_child")}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (currentParentPath) note_create.createNote(currentParentPath);
+                                    }}
+                                >
+                                    <Icon icon="bx bx-plus" />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="mobile-navigator-current-action"
+                                    aria-label={t("mobile_note_navigator.more_actions")}
+                                    title={t("mobile_note_navigator.more_actions")}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        currentContextHandler(e as unknown as MouseEvent);
+                                    }}
+                                >
+                                    <Icon icon="bx bx-dots-horizontal-rounded" />
+                                </button>
                             </div>
                             <div className="mobile-navigator-current-preview">
                                 <NoteContent
@@ -491,10 +515,16 @@ function buildNoteContextMenu(notePath: string, parentComponent: Component | nul
 
         const segments = notePath.split("/");
         const noteId = segments[segments.length - 1];
-        const parentNoteId = segments.length >= 2 ? segments[segments.length - 2] : undefined;
-        if (!noteId || !parentNoteId) return;
+        if (!noteId) return;
+        // If the path has no parent segment (top of a hoisted column), fall back to one of
+        // the note's actual parents so the menu still works for hoisted roots. Root itself
+        // resolves through the special "none_root" branch and needs no parent.
+        const parentNoteId = segments.length >= 2
+            ? segments[segments.length - 2]
+            : froca.getNoteFromCache(noteId)?.getParentNoteIds()[0];
+        if (noteId !== "root" && !parentNoteId) return;
 
-        const branchId = await froca.getBranchId(parentNoteId, noteId);
+        const branchId = await froca.getBranchId(parentNoteId ?? "", noteId);
         if (!branchId) return;
         const branch = froca.getBranch(branchId);
         if (!branch) return;
