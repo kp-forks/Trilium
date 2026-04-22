@@ -263,11 +263,11 @@ function watchScripts() {
             ws.sendMessageToAllClients({
                 type: "execute-script",
                 script: `function() {
-                    const note = api.getActiveContextNote();
-                    console.log("[script-deployer] refresh check:", note?.noteId, "expected:", "${renderNoteId}", "match:", note?.noteId === "${renderNoteId}");
-                    if (note?.noteId === "${renderNoteId}") {
-                        api.triggerEvent("refreshData", { ntxId: api.getActiveContext().ntxId });
-                        console.log("[script-deployer] triggered refreshData for", "${meta.title}");
+                    for (const ctx of api.getNoteContexts()) {
+                        if (ctx.noteId === "${renderNoteId}") {
+                            api.triggerEvent("refreshData", { ntxId: ctx.ntxId });
+                            console.log("[script-deployer] refreshed", "${meta.title}", "in context", ctx.ntxId);
+                        }
                     }
                 }`,
                 params: [],
