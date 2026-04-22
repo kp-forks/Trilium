@@ -1,6 +1,23 @@
 {
   "about": {
-    "data_directory": "データの場所:"
+    "data_directory": "データの場所:",
+    "version_label": "バージョン:",
+    "version": "{{appVersion}} (データベース: {{dbVersion}}、同期プロトコル: {{syncVersion}})",
+    "build_info": "ビルド: {{buildDate}}、リビジョン: <buildRevision />",
+    "contributors_label": "貢献者:",
+    "contributor_roles": {
+      "lead-dev": "リード開発者",
+      "original-dev": "オリジナル開発者"
+    },
+    "role_brief_history": {
+      "lead-dev": "Elian Doran は、Zadam がプロジェクトから離脱した後に作成されたコミュニティフォークである TriliumNext を2024年に設立しました。その後、Zadam は元のリポジトリを TriliumNext チームに譲渡し、両プロジェクトは再び統合されました。",
+      "original-dev": "2017年12月25日、Zadam は Trilium（花の名前とは異なり、\"l\" は1つ）の最初のベータ版をリリースしました。既存のノート管理ツールに満足できなかった彼は、強力な自己ホスト型の階層型知識ベースを構築し、GitHub で22,000以上のスターを獲得しました。2024年、生活が忙しくなったため、彼はプロジェクトをメンテナンスモードに移行しました。"
+    },
+    "contributor_full_list": "コミュニティ全体を見る",
+    "github_tooltip": "バグの報告、機能の提案、またはGitHubでの貢献",
+    "license_tooltip": "ライセンスを表示",
+    "donate": "寄付",
+    "donate_tooltip": "このプロジェクトを支援するために寄付をお願いします"
   },
   "toast": {
     "critical-error": {

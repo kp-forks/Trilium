@@ -21,7 +21,6 @@ export default class App {
     readonly context: BrowserContext;
 
     readonly tabBar: Locator;
-    readonly noteTree: Locator;
     readonly noteTreeActiveNote: Locator;
     readonly noteTreeHoistedNote: Locator;
     readonly launcherBar: Locator;
@@ -36,14 +35,20 @@ export default class App {
         this.context = context;
 
         this.tabBar = page.locator(".tab-row-widget-container");
-        this.noteTree = page.locator(".tree-wrapper");
-        this.noteTreeActiveNote = this.noteTree.locator(".fancytree-node.fancytree-active");
-        this.noteTreeHoistedNote = this.noteTree.locator(".fancytree-node", { has: page.locator(".unhoist-button") });
+        const desktopTree = page.locator(".tree-wrapper");
+        this.noteTreeActiveNote = desktopTree.locator(".fancytree-node.fancytree-active");
+        this.noteTreeHoistedNote = desktopTree.locator(".fancytree-node", { has: page.locator(".unhoist-button") });
         this.launcherBar = page.locator("#launcher-container");
         this.currentNoteSplit = page.locator(".note-split:not(.hidden-ext)");
         this.currentNoteSplitTitle = this.currentNoteSplit.locator(".note-title").first();
         this.currentNoteSplitContent = this.currentNoteSplit.locator(".note-detail-printable.visible");
         this.sidebar = page.locator("#right-pane");
+    }
+
+    get noteTree(): Locator {
+        return this.isMobile
+            ? this.page.locator(".mobile-note-navigator")
+            : this.page.locator(".tree-wrapper");
     }
 
     async goto({ url, isMobile, preserveTabs }: GotoOpts = {}) {
@@ -77,7 +82,7 @@ export default class App {
 
         // Wait for the page to load.
         if (url === "/") {
-            await expect(this.page.locator(".tree", { hasText: "Trilium Integration Test" })).toBeVisible();
+            await expect(this.noteTree).toContainText("Trilium Integration Test");
             if (!preserveTabs) {
                 await this.closeAllTabs();
             }
