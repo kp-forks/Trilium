@@ -1,3 +1,11 @@
+/**
+ * @trilium-script
+ * 
+ * id: import-xopp-to-canvas
+ * type: render
+ * title: Import XOPP to Canvas
+ */
+
 import { useState, useCallback, useRef } from "trilium:preact";
 import { runOnBackend, showMessage, showError, activateNote } from "trilium:api";
 

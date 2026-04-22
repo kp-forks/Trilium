@@ -22,7 +22,8 @@ process.env.TRILIUM_RESOURCE_DIR = resolve(__dirname, "../../server/src");
 process.env.NODE_ENV = "development";
 process.env.TRILIUM_ENV = "dev";
 
-// ── Bootstrap ───────────────────────────────────────────────────────────────
+// ── Constants ───────────────────────────────────────────────────────────────
+const SCRIPTS_NOTE_ID = "_scripts";
 const needsInit = !existsSync(join(DATA_DIR, "document.db"));
 
 async function ensureTranslations() {
@@ -66,15 +67,37 @@ async function ensureEtapiToken() {
     console.log(`ETAPI token: ${authToken}`);
 }
 
+async function ensureScriptsFolder() {
+    const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
+    if (becca.notes[SCRIPTS_NOTE_ID]) return;
+
+    const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+    const notesService = (await import("@triliumnext/server/src/services/notes.js")).default;
+
+    cls.init(() => {
+        notesService.createNewNote({
+            noteId: SCRIPTS_NOTE_ID,
+            parentNoteId: "root",
+            title: "Scripts",
+            type: "doc",
+            content: "",
+        });
+    });
+
+    console.log("Created 'Scripts' folder note.");
+}
+
 async function main() {
     await ensureTranslations();
     await ensureDatabase();
     await ensureEtapiToken();
 
-    // Now start the full HTTP server (it will re-init the DB connection
-    // harmlessly since it's already initialised).
+    // Start the full HTTP server — this loads becca and makes the note
+    // tree available for subsequent setup steps.
     const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
     await startTriliumServer();
+
+    await ensureScriptsFolder();
 
     console.log(`\nScript-deployer Trilium instance running on http://localhost:${PORT}`);
     console.log(`Token file: ${TOKEN_PATH}\n`);
