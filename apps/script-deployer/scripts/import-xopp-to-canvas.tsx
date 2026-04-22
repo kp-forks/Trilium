@@ -91,7 +91,7 @@ function makeBaseElement(type: string, x: number, y: number, width: number, heig
         strokeColor: "#000000",
         backgroundColor: "transparent",
         fillStyle: "solid",
-        strokeWidth: 2,
+        strokeWidth: 1,
         strokeStyle: "solid",
         roughness: 0,
         opacity: 100,
@@ -163,7 +163,8 @@ function convertStroke(strokeEl: Element, yOffset: number): ExcalidrawElement | 
     el.pressures = hasPressure ? pressures : [];
     el.simulatePressure = !hasPressure;
     el.strokeColor = convertColor(color);
-    el.strokeWidth = widths[0] || 2;
+    el.strokeWidth = Math.floor(widths[0] || 1);
+    console.log("Stroke width ", widths[0], el.strokeWidth);
     el.opacity = isHighlighter ? 40 : extractOpacity(color);
     el.lastCommittedPoint = points[points.length - 1] || null;
 
