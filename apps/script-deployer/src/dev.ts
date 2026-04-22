@@ -254,6 +254,29 @@ function watchScripts() {
         cls.init(() => {
             note.setContent(source);
         });
+
+        // For render scripts, trigger a refresh of the active render note
+        // by injecting a small client-side script via websocket.
+        if (meta.type === "render") {
+            const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
+            const renderNoteId = `_sd_${meta.id}_render`;
+            ws.sendMessageToAllClients({
+                type: "execute-script",
+                script: `function() {
+                    const note = api.getActiveContextNote();
+                    console.log("[script-deployer] refresh check:", note?.noteId, "expected:", "${renderNoteId}", "match:", note?.noteId === "${renderNoteId}");
+                    if (note?.noteId === "${renderNoteId}") {
+                        api.triggerEvent("refreshData", { ntxId: api.getActiveContext().ntxId });
+                        console.log("[script-deployer] triggered refreshData for", "${meta.title}");
+                    }
+                }`,
+                params: [],
+                currentNoteId: codeNoteId,
+                originEntityName: "notes",
+                originEntityId: codeNoteId,
+            });
+        }
+
         console.log(`  [watch] Synced: ${meta.title}`);
     }
 
