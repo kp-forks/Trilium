@@ -631,59 +631,20 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
         if (isMobile) {
             let showTimeout: Timeout;
-            let touchStart = 0;
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let touchMoved = false;
 
             this.$tree.on("touchstart", ".fancytree-node", (e) => {
-                const touch = (e.originalEvent as TouchEvent).touches[0];
-                touchStart = Date.now();
-                touchStartX = touch.clientX;
-                touchStartY = touch.clientY;
-                touchMoved = false;
+                touchStart = new Date().getTime();
                 showTimeout = setTimeout(() => {
                     this.showContextMenu(e);
                 }, 300);
             });
 
             this.$tree.on("touchmove", ".fancytree-node", (e) => {
-                const touch = (e.originalEvent as TouchEvent).touches[0];
-                if (Math.abs(touch.clientX - touchStartX) > 10 || Math.abs(touch.clientY - touchStartY) > 10) {
-                    touchMoved = true;
-                    clearTimeout(showTimeout);
-                }
+                clearTimeout(showTimeout);
             });
 
-            // Drive activation directly off touchend so a single tap always opens
-            // the tapped note on iOS. The synthesised click event from WKWebView
-            // is unreliable in this widget — Fancytree sometimes only activates
-            // on the second tap, forcing the user to double-tap.
             this.$tree.on("touchend", ".fancytree-node", (e) => {
                 clearTimeout(showTimeout);
-                if (touchMoved) return;
-                if (Date.now() - touchStart > 300) return; // long press — context menu already fired
-
-                // Let Fancytree handle expander taps (expand/collapse).
-                if ((e.target as HTMLElement).closest(".fancytree-expander")) return;
-
-                const node = $.ui.fancytree.getNode(e as unknown as Event);
-                if (!node) return;
-
-                if (node.isActive()) {
-                    this.tree.reactivate();
-                } else {
-                    node.setActive();
-                }
-
-                // setNote early-returns when the tapped note is already the
-                // active one, which means the mobile screen switch inside
-                // setNote never fires. Trigger it explicitly so the sidebar
-                // always closes on tap.
-                appContext.triggerCommand("setActiveScreen", { screen: "detail" });
-
-                // Suppress the synthesised click that would re-run this logic.
-                e.preventDefault();
             });
         } else {
             this.$tree.on("contextmenu", ".fancytree-node", (e) => {
@@ -709,6 +670,8 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                 }
             });
         }
+
+        let touchStart;
 
         this.tree = $.ui.fancytree.getTree(this.$tree);
     }
