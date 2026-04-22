@@ -54,3 +54,4 @@ scripts/translation/.language*.json
 
 # AI
 .claude/settings.local.json
+apps/mobile/ios/App/CapApp-SPM/Package.swift
