@@ -175,9 +175,34 @@ async function deployScripts() {
                 existing.save();
                 existing.setContent(source);
                 console.log(`  Updated: ${meta.title} (${codeNoteId})`);
+            } else if (meta.type === "render") {
+                // Create a render note under Scripts, with the code note
+                // as its child linked via ~renderNote.
+                const renderNoteId = `_sd_${meta.id}_render`;
+                notesService.createNewNote({
+                    noteId: renderNoteId,
+                    parentNoteId: SCRIPTS_NOTE_ID,
+                    title: meta.title,
+                    type: "render",
+                    content: "",
+                });
+
+                notesService.createNewNote({
+                    noteId: codeNoteId,
+                    parentNoteId: renderNoteId,
+                    title: meta.title,
+                    type: "code",
+                    mime,
+                    content: source,
+                });
+
+                const renderNote = becca.notes[renderNoteId];
+                renderNote.setRelation("renderNote", codeNoteId);
+
+                console.log(`  Created: ${meta.title} (${meta.type})`);
             } else {
-                // Create the code note under Scripts.
-                const { note } = notesService.createNewNote({
+                // Plain code note (widget, backend script, etc.)
+                notesService.createNewNote({
                     noteId: codeNoteId,
                     parentNoteId: SCRIPTS_NOTE_ID,
                     title: meta.title,
@@ -185,21 +210,6 @@ async function deployScripts() {
                     mime,
                     content: source,
                 });
-
-                // For render scripts, create a sibling render note that
-                // points to the code note via ~renderNote.
-                if (meta.type === "render") {
-                    const renderNoteId = `_sd_${meta.id}_render`;
-                    notesService.createNewNote({
-                        noteId: renderNoteId,
-                        parentNoteId: SCRIPTS_NOTE_ID,
-                        title: meta.title,
-                        type: "render",
-                        content: "",
-                    });
-                    const renderNote = becca.notes[renderNoteId];
-                    renderNote.setRelation("renderNote", codeNoteId);
-                }
 
                 console.log(`  Created: ${meta.title} (${meta.type})`);
             }
