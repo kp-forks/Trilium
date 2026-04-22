@@ -300,4 +300,41 @@ describe("deployScript", () => {
             });
         });
     });
+
+    describe("backend script", () => {
+        const meta = { id: "hello-world", type: "backend", run: "backendStartup", title: "Hello World" };
+        const content = `api.log("Hello from script-deployer!");`;
+        const mime = "application/javascript;env=backend";
+
+        it("creates a code note with #run label", () => {
+            deployScript(meta, content, mime, becca, notesService);
+
+            const codeId = codeNoteId(meta.id);
+            const codeNote = becca.notes[codeId];
+
+            expect(codeNote).toBeDefined();
+            expect(codeNote.type).toBe("code");
+
+            const runLabel = codeNote.getLabels().find((a) => a.name === "run");
+            expect(runLabel).toBeDefined();
+            expect(runLabel!.value).toBe("backendStartup");
+        });
+
+        it("places the code note under scripts folder, no render note", () => {
+            deployScript(meta, content, mime, becca, notesService);
+
+            const codeId = codeNoteId(meta.id);
+            const codeNote = becca.notes[codeId];
+            expect(codeNote.getParentBranches().some((b) => b.parentNoteId === SCRIPTS_NOTE_ID)).toBe(true);
+            expect(becca.notes[renderNoteId(meta.id)]).toBeUndefined();
+        });
+
+        it("does not set #run when run field is absent", () => {
+            const metaNoRun = { id: "no-run", type: "backend", title: "No Run" };
+            deployScript(metaNoRun, content, mime, becca, notesService);
+
+            const codeNote = becca.notes[codeNoteId(metaNoRun.id)];
+            expect(codeNote.getLabels().find((a) => a.name === "run")).toBeUndefined();
+        });
+    });
 });

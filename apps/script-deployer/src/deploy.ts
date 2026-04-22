@@ -133,6 +133,7 @@ export interface BeccaLike {
         save(): void;
         setContent(content: string): void;
         setRelation(name: string, targetNoteId: string): void;
+        setLabel(name: string, value?: string): void;
     }>;
 }
 
@@ -196,7 +197,7 @@ export function deployScript(
         return { action: "created", codeNoteId: codeId, renderNoteId: renderId, title: meta.title, type: meta.type };
     }
 
-    // Plain code note.
+    // Plain code note (backend script, widget, etc.)
     notesService.createNewNote({
         noteId: codeId,
         parentNoteId,
@@ -205,6 +206,12 @@ export function deployScript(
         mime,
         content,
     });
+
+    // Backend scripts need a #run label to be executed by the scheduler.
+    if (meta.type === "backend" && meta.run) {
+        const codeNote = becca.notes[codeId];
+        codeNote.setLabel("run", meta.run);
+    }
 
     return { action: "created", codeNoteId: codeId, title: meta.title, type: meta.type };
 }
