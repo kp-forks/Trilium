@@ -24,8 +24,6 @@ const XOPP_COLORS = {
     white: "#ffffff",
 };
 
-// Hi there.
-
 function convertColor(color) {
     if (!color) return "#000000";
     const lower = color.toLowerCase();
