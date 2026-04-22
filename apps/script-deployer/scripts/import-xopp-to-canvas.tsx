@@ -1,16 +1,42 @@
 /**
  * @trilium-script
- * 
+ *
  * id: import-xopp-to-canvas
  * type: render
  * title: Import XOPP to Canvas
  */
 
-import { useState, useCallback, useRef } from "trilium:preact";
-import { runOnBackend, showMessage, showError, activateNote } from "trilium:api";
+import { activateNote, runOnBackend, showError, showMessage } from "trilium:api";
+import { useCallback, useRef, useState } from "trilium:preact";
+
+interface ExcalidrawElement {
+    [key: string]: unknown;
+    id: string;
+    type: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    strokeColor: string;
+    opacity: number;
+}
+
+interface ExcalidrawFile {
+    mimeType: string;
+    id: string;
+    dataURL: string;
+    created: number;
+    lastRetrieved: number;
+}
+
+interface ImportStats {
+    elementCount: number;
+    fileCount: number;
+    title: string;
+}
 
 // Xournal++ named colors → hex
-const XOPP_COLORS = {
+const XOPP_COLORS: Record<string, string> = {
     black: "#000000",
     blue: "#3333cc",
     red: "#ff0000",
@@ -24,7 +50,7 @@ const XOPP_COLORS = {
     white: "#ffffff",
 };
 
-function convertColor(color) {
+function convertColor(color: string | null): string {
     if (!color) return "#000000";
     const lower = color.toLowerCase();
     if (XOPP_COLORS[lower]) return XOPP_COLORS[lower];
@@ -35,7 +61,7 @@ function convertColor(color) {
     return "#000000";
 }
 
-function extractOpacity(color) {
+function extractOpacity(color: string | null): number {
     if (!color) return 100;
     if (color.startsWith("#") && color.length === 9) {
         const alpha = parseInt(color.slice(7, 9), 16);
@@ -53,7 +79,7 @@ function generateId() {
     return id;
 }
 
-function makeBaseElement(type, x, y, width, height) {
+function makeBaseElement(type: string, x: number, y: number, width: number, height: number): ExcalidrawElement {
     return {
         id: generateId(),
         type,
@@ -84,14 +110,14 @@ function makeBaseElement(type, x, y, width, height) {
     };
 }
 
-function convertStroke(strokeEl, yOffset) {
+function convertStroke(strokeEl: Element, yOffset: number): ExcalidrawElement | null {
     const coordText = strokeEl.textContent.trim();
     const coords = coordText.split(/\s+/).map(Number);
     if (coords.length < 4) return null;
 
     const originX = coords[0];
     const originY = coords[1] + yOffset;
-    const points = [];
+    const points: number[][] = [];
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
     for (let i = 0; i < coords.length; i += 2) {
@@ -109,7 +135,7 @@ function convertStroke(strokeEl, yOffset) {
     const hasPressure = widths.length > 1;
 
     // Normalize pressures to 0-1 range
-    let pressures = [];
+    let pressures: number[] = [];
     if (hasPressure) {
         const maxW = Math.max(...widths);
         pressures = widths.map((w) => maxW > 0 ? w / maxW : 0.5);
@@ -144,12 +170,12 @@ function convertStroke(strokeEl, yOffset) {
     return el;
 }
 
-function convertText(textEl, yOffset) {
-    const x = parseFloat(textEl.getAttribute("x")) || 0;
-    const y = (parseFloat(textEl.getAttribute("y")) || 0) + yOffset;
-    const size = parseFloat(textEl.getAttribute("size")) || 12;
+function convertText(textEl: Element, yOffset: number): ExcalidrawElement | null {
+    const x = parseFloat(textEl.getAttribute("x") ?? "0");
+    const y = parseFloat(textEl.getAttribute("y") ?? "0") + yOffset;
+    const size = parseFloat(textEl.getAttribute("size") ?? "12");
     const color = textEl.getAttribute("color") || "black";
-    const content = textEl.textContent.trim();
+    const content = textEl.textContent?.trim();
 
     if (!content) return null;
 
@@ -174,7 +200,7 @@ function convertText(textEl, yOffset) {
     return el;
 }
 
-function convertImage(imageEl, yOffset, files) {
+function convertImage(imageEl: Element, yOffset: number, files: Record<string, ExcalidrawFile>): ExcalidrawElement | null {
     const leftAttr = imageEl.getAttribute("left");
     const topAttr = imageEl.getAttribute("top");
     const rightAttr = imageEl.getAttribute("right");
@@ -187,7 +213,7 @@ function convertImage(imageEl, yOffset, files) {
     const right = parseFloat(rightAttr);
     const bottom = parseFloat(bottomAttr) + yOffset;
 
-    const imgData = imageEl.textContent.trim();
+    const imgData = imageEl.textContent?.trim();
     if (!imgData) return null;
 
     const fileId = generateId();
@@ -207,33 +233,33 @@ function convertImage(imageEl, yOffset, files) {
     return el;
 }
 
-async function gunzip(buffer) {
+async function gunzip(buffer: ArrayBuffer): Promise<string> {
     const ds = new DecompressionStream("gzip");
     const stream = new Blob([buffer]).stream().pipeThrough(ds);
     return await new Response(stream).text();
 }
 
-async function convertXopp(buffer) {
+async function convertXopp(buffer: ArrayBuffer) {
     const xmlString = await gunzip(buffer);
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlString, "text/xml");
 
     const parserError = doc.querySelector("parsererror");
     if (parserError) {
-        throw new Error("Failed to parse .xopp XML: " + parserError.textContent);
+        throw new Error(`Failed to parse .xopp XML: ${  parserError.textContent}`);
     }
 
     const pages = doc.querySelectorAll("page");
-    const elements = [];
-    const files = {};
+    const elements: ExcalidrawElement[] = [];
+    const files: Record<string, ExcalidrawFile> = {};
     let yOffset = 0;
     const PAGE_GAP = 80;
 
     for (const page of pages) {
-        const pageHeight = parseFloat(page.getAttribute("height")) || 792;
+        const pageHeight = parseFloat(page.getAttribute("height") ?? "792");
 
         // Draw a subtle page boundary rectangle
-        const pageWidth = parseFloat(page.getAttribute("width")) || 612;
+        const pageWidth = parseFloat(page.getAttribute("width") ?? "612");
         const bgRect = makeBaseElement("rectangle", 0, yOffset, pageWidth, pageHeight);
         bgRect.strokeColor = "#d0d0d0";
         bgRect.strokeWidth = 1;
@@ -246,7 +272,7 @@ async function convertXopp(buffer) {
         for (const layer of layers) {
             for (const child of layer.children) {
                 const tag = child.tagName.toLowerCase();
-                let el = null;
+                let el: ExcalidrawElement | null = null;
 
                 if (tag === "stroke") {
                     el = convertStroke(child, yOffset);
@@ -276,13 +302,13 @@ async function convertXopp(buffer) {
 }
 
 export default function XoppImporter() {
-    const [status, setStatus] = useState("idle"); // idle | converting | done | error
+    const [status, setStatus] = useState<"idle" | "converting" | "done" | "error">("idle");
     const [message, setMessage] = useState("");
-    const [stats, setStats] = useState(null);
-    const fileInputRef = useRef(null);
+    const [stats, setStats] = useState<ImportStats | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFile = useCallback(async (e) => {
-        const file = e.target.files?.[0];
+    const handleFile = useCallback(async (e: Event) => {
+        const file = (e.target as HTMLInputElement)?.files?.[0];
         if (!file) return;
 
         if (!file.name.endsWith(".xopp")) {
@@ -303,11 +329,11 @@ export default function XoppImporter() {
 
             // Create the canvas note on the backend
             const noteId = await runOnBackend(
-                (title, content) => {
+                (title: string, content: string) => {
                     const { note } = api.createNewNote({
                         parentNoteId: "root",
-                        title: title,
-                        content: content,
+                        title,
+                        content,
                         type: "canvas",
                         mime: "application/json",
                     });
@@ -325,10 +351,11 @@ export default function XoppImporter() {
             if (noteId) {
                 activateNote(noteId);
             }
-        } catch (err) {
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
             setStatus("error");
-            setMessage(`Error: ${err.message}`);
-            showError(`Failed to convert: ${err.message}`);
+            setMessage(`Error: ${msg}`);
+            showError(`Failed to convert: ${msg}`);
         }
 
         // Reset file input

@@ -8,6 +8,7 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { resolve, join, basename, extname } from "node:path";
+import { transformSync } from "esbuild";
 
 // ── Environment — must be set before any server module is imported ──────────
 const DATA_DIR = resolve(__dirname, "../data");
@@ -29,11 +30,33 @@ const needsInit = !existsSync(join(DATA_DIR, "document.db"));
 
 const MIME_BY_EXT: Record<string, string> = {
     ".jsx": "text/jsx",
+    ".tsx": "text/jsx",
     ".js": "application/javascript;env=frontend",
     ".ts": "application/javascript;env=backend",
     ".html": "text/html",
     ".css": "text/css",
 };
+
+/** Extensions that need esbuild transpilation before deployment. */
+const TRANSPILE_EXTS = new Set([".tsx", ".ts"]);
+
+/**
+ * Transpiles TypeScript/TSX source to JavaScript via esbuild.
+ * Preserves bare `trilium:*` imports (esbuild's `transform` doesn't resolve them).
+ */
+function transpile(source: string, filePath: string): string {
+    const ext = extname(filePath);
+    if (!TRANSPILE_EXTS.has(ext)) return source;
+
+    const result = transformSync(source, {
+        loader: ext === ".tsx" ? "tsx" : "ts",
+        jsx: "transform",
+        jsxFactory: "h",
+        jsxFragment: "Fragment",
+        sourcemap: false,
+    });
+    return result.code;
+}
 
 // ── Front matter parsing ────────────────────────────────────────────────────
 
@@ -166,6 +189,7 @@ async function deployScripts() {
 
         const mime = MIME_BY_EXT[extname(file)]!;
         const codeNoteId = `_sd_${meta.id}`;
+        const content = transpile(source, file);
 
         cls.init(() => {
             const existing = becca.notes[codeNoteId];
@@ -173,7 +197,7 @@ async function deployScripts() {
                 // Update content and title of existing note.
                 existing.title = meta.title;
                 existing.save();
-                existing.setContent(source);
+                existing.setContent(content);
                 console.log(`  Updated: ${meta.title} (${codeNoteId})`);
             } else if (meta.type === "render") {
                 // Create a render note under Scripts, with the code note
@@ -193,7 +217,7 @@ async function deployScripts() {
                     title: meta.title,
                     type: "code",
                     mime,
-                    content: source,
+                    content,
                 });
 
                 const renderNote = becca.notes[renderNoteId];
@@ -208,7 +232,7 @@ async function deployScripts() {
                     title: meta.title,
                     type: "code",
                     mime,
-                    content: source,
+                    content,
                 });
 
                 console.log(`  Created: ${meta.title} (${meta.type})`);
@@ -251,8 +275,10 @@ function watchScripts() {
             return;
         }
 
+        const content = transpile(source, filename);
+
         cls.init(() => {
-            note.setContent(source);
+            note.setContent(content);
         });
 
         // For render scripts, trigger a refresh of the active render note

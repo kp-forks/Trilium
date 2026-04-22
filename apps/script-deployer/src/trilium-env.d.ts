@@ -30,6 +30,23 @@ declare module "trilium:preact" {
     } from "preact/hooks";
 }
 
+/**
+ * Global `api` object available inside `runOnBackend()` callbacks.
+ * The function body is serialised and executed on the server where
+ * Trilium injects this global.
+ */
+// eslint-disable-next-line no-var
+declare var api: {
+    createNewNote(params: {
+        parentNoteId: string;
+        title: string;
+        content: string;
+        type: string;
+        mime?: string;
+    }): { note: { noteId: string } };
+    [key: string]: unknown;
+};
+
 declare module "trilium:api" {
     /** Run a function on the backend. The first arg is serialised. */
     export function runOnBackend<T>(fn: (...args: any[]) => T, params?: any[]): Promise<T>;
