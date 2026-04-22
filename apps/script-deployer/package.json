@@ -1,0 +1,10 @@
+{
+  "name": "@triliumnext/script-deployer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development harness for writing and deploying Trilium scripts to a local instance",
+  "scripts": {
+    "dev": "tsx src/dev.ts",
+    "clean": "rm -rf data"
+  }
+}
