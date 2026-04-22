@@ -7,20 +7,64 @@
  * These modules don't exist on disk — the server rewrites imports at
  * runtime — but providing declarations here gives us editor
  * intellisense and `tsc` checking for scripts in the `scripts/` dir.
+ *
+ * Types are pulled directly from the real implementations so they
+ * stay in sync automatically.
  */
 
+type FrontendApi = import("@triliumnext/client/src/services/frontend_script_api").Api;
+type PreactApi = typeof import("@triliumnext/client/src/services/frontend_script_api_preact").preactAPI;
+
+/**
+ * `trilium:api` — destructured members of the frontend script API.
+ *
+ * At runtime the server rewrites `require("trilium:api")` to `api`,
+ * which is the FrontendApi instance. Scripts destructure named
+ * members from it: `import { runOnBackend, showMessage } from "trilium:api"`.
+ */
+declare module "trilium:api" {
+    // Re-export every member of the frontend API as a named export.
+    export const {
+        activateNote,
+        showMessage,
+        showError,
+        runOnBackend,
+        getNote,
+        getActiveContextNote,
+        getActiveContextTextEditor,
+        getActiveContextCodeEditor,
+        getActiveContextNotePath,
+        getComponentByEl,
+        bindGlobalShortcut,
+        triggerEvent,
+        triggerCommand,
+        getNoteContexts,
+        refreshIncludedNote,
+        createLink,
+        startNote,
+        currentNote,
+        originEntity,
+        dayjs,
+    }: FrontendApi;
+}
+
+/**
+ * `trilium:preact` — destructured members of the Preact API surface.
+ *
+ * At runtime the server rewrites `require("trilium:preact")` to
+ * `api.preact`, which is the frozen preactAPI object. Scripts
+ * destructure from it: `import { useState, h } from "trilium:preact"`.
+ */
 declare module "trilium:preact" {
-    export {
-        Component,
+    export const {
+        // Core
+        h,
         Fragment,
         createContext,
-        createElement,
-        createRef,
-        h,
-        render,
-    } from "preact";
+        defineWidget,
+        defineLauncherWidget,
 
-    export {
+        // Hooks
         useCallback,
         useContext,
         useEffect,
@@ -29,36 +73,43 @@ declare module "trilium:preact" {
         useReducer,
         useRef,
         useState,
-    } from "preact/hooks";
+
+        // Built-in components
+        ActionButton,
+        Admonition,
+        Button,
+        CKEditor,
+        Collapsible,
+        Dropdown,
+        FormCheckbox,
+        FormDropdownList,
+        FormFileUploadButton,
+        FormFileUploadActionButton,
+        FormGroup,
+        FormListItem,
+        FormDropdownDivider,
+        FormDropdownSubmenu,
+        FormRadioGroup,
+        FormText,
+        FormTextArea,
+        FormTextBox,
+        FormToggle,
+        Icon,
+        LinkButton,
+        LoadingSpinner,
+        Modal,
+        NoteAutocomplete,
+        NoteLink,
+        RawHtml,
+        Slider,
+        RightPanelWidget,
+    }: PreactApi;
 }
 
 /**
  * Global `api` object available inside `runOnBackend()` callbacks.
  * The function body is serialised and executed on the server where
- * Trilium injects this global.
+ * Trilium injects this as a global.
  */
 // eslint-disable-next-line no-var
-declare var api: {
-    createNewNote(params: {
-        parentNoteId: string;
-        title: string;
-        content: string;
-        type: string;
-        mime?: string;
-    }): { note: { noteId: string } };
-    [key: string]: unknown;
-};
-
-declare module "trilium:api" {
-    /** Run a function on the backend. The first arg is serialised. */
-    export function runOnBackend<T>(fn: (...args: any[]) => T, params?: any[]): Promise<T>;
-
-    /** Show a toast message. */
-    export function showMessage(message: string, timeout?: number): void;
-
-    /** Show an error toast. */
-    export function showError(message: string, timeout?: number): void;
-
-    /** Navigate to a note by its ID. */
-    export function activateNote(noteId: string): Promise<void>;
-}
+declare var api: import("@triliumnext/server/src/services/backend_script_api").Api;
