@@ -38,11 +38,11 @@ const MIME_BY_EXT: Record<string, string> = {
 };
 
 /** Extensions that need esbuild transpilation before deployment. */
-const TRANSPILE_EXTS = new Set([".tsx", ".ts"]);
+const TRANSPILE_EXTS = new Set([".ts", ".tsx"]);
 
 /**
- * Transpiles TypeScript/TSX source to JavaScript via esbuild.
- * Preserves bare `trilium:*` imports (esbuild's `transform` doesn't resolve them).
+ * Strips TypeScript type annotations via esbuild, preserving JSX intact.
+ * Trilium's frontend handles JSX natively, so we only strip types.
  */
 function transpile(source: string, filePath: string): string {
     const ext = extname(filePath);
@@ -50,9 +50,7 @@ function transpile(source: string, filePath: string): string {
 
     const result = transformSync(source, {
         loader: ext === ".tsx" ? "tsx" : "ts",
-        jsx: "transform",
-        jsxFactory: "h",
-        jsxFragment: "Fragment",
+        jsx: "preserve",
         sourcemap: false,
     });
     return result.code;
