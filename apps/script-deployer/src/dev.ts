@@ -6,8 +6,8 @@
  * On subsequent runs it just boots the server.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve, join, extname } from "node:path";
 
 // ── Environment — must be set before any server module is imported ──────────
 const DATA_DIR = resolve(__dirname, "../data");
@@ -23,8 +23,66 @@ process.env.NODE_ENV = "development";
 process.env.TRILIUM_ENV = "dev";
 
 // ── Constants ───────────────────────────────────────────────────────────────
+const SCRIPTS_DIR = resolve(__dirname, "../scripts");
 const SCRIPTS_NOTE_ID = "_scripts";
 const needsInit = !existsSync(join(DATA_DIR, "document.db"));
+
+const MIME_BY_EXT: Record<string, string> = {
+    ".jsx": "text/jsx",
+    ".js": "application/javascript;env=frontend",
+    ".ts": "application/javascript;env=backend",
+    ".html": "text/html",
+    ".css": "text/css",
+};
+
+// ── Front matter parsing ────────────────────────────────────────────────────
+
+interface ScriptMeta {
+    id: string;
+    type: string;
+    title: string;
+    [key: string]: string;
+}
+
+/**
+ * Parses the @trilium-script YAML front matter from a JSDoc comment block.
+ *
+ *   /**
+ *    * @trilium-script
+ *    *
+ *    * id: my-script
+ *    * type: render
+ *    * title: My Script
+ *    *\/
+ */
+function parseScriptMeta(source: string, filePath: string): ScriptMeta | null {
+    const match = source.match(/\/\*\*[\s\S]*?@trilium-script\s*([\s\S]*?)\*\//);
+    if (!match) return null;
+
+    const block = match[1];
+    const meta: Record<string, string> = {};
+
+    for (const line of block.split("\n")) {
+        // Strip leading ` * ` prefix and trim.
+        const cleaned = line.replace(/^\s*\*\s?/, "").trim();
+        if (!cleaned) continue;
+
+        const colon = cleaned.indexOf(":");
+        if (colon === -1) continue;
+
+        const key = cleaned.slice(0, colon).trim();
+        const value = cleaned.slice(colon + 1).trim();
+        if (key && value) meta[key] = value;
+    }
+
+    const missing = ["id", "type", "title"].filter((k) => !meta[k]);
+    if (missing.length) {
+        console.error(`  SKIP ${filePath}: missing required fields: ${missing.join(", ")}`);
+        return null;
+    }
+
+    return meta as ScriptMeta;
+}
 
 async function ensureTranslations() {
     const i18n = await import("@triliumnext/server/src/services/i18n.js");
@@ -87,6 +145,68 @@ async function ensureScriptsFolder() {
     console.log("Created 'Scripts' folder note.");
 }
 
+async function deployScripts() {
+    const files = readdirSync(SCRIPTS_DIR).filter((f) => MIME_BY_EXT[extname(f)]);
+    if (!files.length) {
+        console.log("No scripts to deploy.");
+        return;
+    }
+
+    const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
+    const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+    const notesService = (await import("@triliumnext/server/src/services/notes.js")).default;
+
+    console.log(`Deploying ${files.length} script(s)…`);
+
+    for (const file of files) {
+        const filePath = join(SCRIPTS_DIR, file);
+        const source = readFileSync(filePath, "utf-8");
+        const meta = parseScriptMeta(source, file);
+        if (!meta) continue;
+
+        const mime = MIME_BY_EXT[extname(file)]!;
+        const codeNoteId = `_sd_${meta.id}`;
+
+        cls.init(() => {
+            const existing = becca.notes[codeNoteId];
+            if (existing) {
+                // Update content and title of existing note.
+                existing.title = meta.title;
+                existing.save();
+                existing.setContent(source);
+                console.log(`  Updated: ${meta.title} (${codeNoteId})`);
+            } else {
+                // Create the code note under Scripts.
+                const { note } = notesService.createNewNote({
+                    noteId: codeNoteId,
+                    parentNoteId: SCRIPTS_NOTE_ID,
+                    title: meta.title,
+                    type: "code",
+                    mime,
+                    content: source,
+                });
+
+                // For render scripts, create a sibling render note that
+                // points to the code note via ~renderNote.
+                if (meta.type === "render") {
+                    const renderNoteId = `_sd_${meta.id}_render`;
+                    notesService.createNewNote({
+                        noteId: renderNoteId,
+                        parentNoteId: SCRIPTS_NOTE_ID,
+                        title: meta.title,
+                        type: "render",
+                        content: "",
+                    });
+                    const renderNote = becca.notes[renderNoteId];
+                    renderNote.setRelation("renderNote", codeNoteId);
+                }
+
+                console.log(`  Created: ${meta.title} (${meta.type})`);
+            }
+        });
+    }
+}
+
 async function main() {
     await ensureTranslations();
     await ensureDatabase();
@@ -98,6 +218,7 @@ async function main() {
     await startTriliumServer();
 
     await ensureScriptsFolder();
+    await deployScripts();
 
     console.log(`\nScript-deployer Trilium instance running on http://localhost:${PORT}`);
     console.log(`Token file: ${TOKEN_PATH}\n`);
