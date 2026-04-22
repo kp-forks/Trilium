@@ -25,13 +25,15 @@ process.env.TRILIUM_ENV = "dev";
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 const needsInit = !existsSync(join(DATA_DIR, "document.db"));
 
+async function ensureTranslations() {
+    const i18n = await import("@triliumnext/server/src/services/i18n.js");
+    await i18n.initializeTranslations();
+}
+
 async function ensureDatabase() {
     if (!needsInit) return;
 
     console.log("No database found — creating a fresh instance…");
-
-    const i18n = await import("@triliumnext/server/src/services/i18n.js");
-    await i18n.initializeTranslations();
 
     const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
     const sqlInit = (await import("@triliumnext/server/src/services/sql_init.js")).default;
@@ -65,6 +67,7 @@ async function ensureEtapiToken() {
 }
 
 async function main() {
+    await ensureTranslations();
     await ensureDatabase();
     await ensureEtapiToken();
 
