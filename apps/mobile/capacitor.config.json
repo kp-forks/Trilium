@@ -10,5 +10,9 @@
   "ios": {
     "limitsNavigationsToAppBoundDomains": true
   },
-  "plugins": {}
+  "plugins": {
+    "Keyboard": {
+      "resize": "native"
+    }
+  }
 }
