@@ -6,8 +6,8 @@
  * On subsequent runs it just boots the server.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve, join, extname } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
+import { resolve, join, basename, extname } from "node:path";
 
 // ── Environment — must be set before any server module is imported ──────────
 const DATA_DIR = resolve(__dirname, "../data");
@@ -217,6 +217,49 @@ async function deployScripts() {
     }
 }
 
+function watchScripts() {
+    // Debounce per file — editors can fire multiple events on a single save.
+    const timers = new Map<string, ReturnType<typeof setTimeout>>();
+
+    watch(SCRIPTS_DIR, (eventType, filename) => {
+        if (!filename || !MIME_BY_EXT[extname(filename)]) return;
+
+        if (timers.has(filename)) clearTimeout(timers.get(filename));
+        timers.set(filename, setTimeout(() => {
+            timers.delete(filename);
+            syncFile(filename);
+        }, 100));
+    });
+
+    async function syncFile(filename: string) {
+        const filePath = join(SCRIPTS_DIR, filename);
+        if (!existsSync(filePath)) return;
+
+        const source = readFileSync(filePath, "utf-8");
+        const meta = parseScriptMeta(source, filename);
+        if (!meta) return;
+
+        const codeNoteId = `_sd_${meta.id}`;
+
+        // Already in memory from deployScripts(), import() returns from cache.
+        const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
+        const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+
+        const note = becca.notes[codeNoteId];
+        if (!note) {
+            console.log(`  [watch] ${filename}: note ${codeNoteId} not found, restart to create.`);
+            return;
+        }
+
+        cls.init(() => {
+            note.setContent(source);
+        });
+        console.log(`  [watch] Synced: ${meta.title}`);
+    }
+
+    console.log(`Watching ${SCRIPTS_DIR} for changes…`);
+}
+
 async function main() {
     await ensureTranslations();
     await ensureDatabase();
@@ -229,6 +272,7 @@ async function main() {
 
     await ensureScriptsFolder();
     await deployScripts();
+    watchScripts();
 
     console.log(`\nScript-deployer Trilium instance running on http://localhost:${PORT}`);
     console.log(`Token file: ${TOKEN_PATH}\n`);

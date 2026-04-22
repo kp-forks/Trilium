@@ -24,6 +24,8 @@ const XOPP_COLORS = {
     white: "#ffffff",
 };
 
+// Hi there.
+
 function convertColor(color) {
     if (!color) return "#000000";
     const lower = color.toLowerCase();
@@ -339,7 +341,7 @@ export default function XoppImporter() {
 
     return (
         <div style={{ padding: "20px", maxWidth: "600px" }}>
-            <h2 style={{ marginTop: 0 }}>Xournal++ Importer</h2>
+            <h2 style={{ marginTop: 0 }}>Xournal-- Importer</h2>
             <p style={{ color: "#666" }}>
                 Convert <code>.xopp</code> files to Excalidraw canvas notes.
                 Multi-page documents are stacked vertically.
