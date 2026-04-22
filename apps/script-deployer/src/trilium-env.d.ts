@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 /**
  * Ambient type declarations for the virtual modules available inside
  * Trilium user scripts (`trilium:preact` and `trilium:api`).
