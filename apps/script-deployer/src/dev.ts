@@ -7,8 +7,8 @@
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
-import { resolve, join, basename, extname } from "node:path";
-import { transformSync } from "esbuild";
+import { resolve, join, extname } from "node:path";
+import { MIME_BY_EXT, SCRIPTS_NOTE_ID, codeNoteId, renderNoteId, deployScript, parseScriptMeta, transpile, asNoteService } from "./deploy";
 
 // ── Environment — must be set before any server module is imported ──────────
 const DATA_DIR = resolve(__dirname, "../data");
@@ -25,85 +25,7 @@ process.env.TRILIUM_ENV = "dev";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 const SCRIPTS_DIR = resolve(__dirname, "../scripts");
-const SCRIPTS_NOTE_ID = "_scripts";
 const needsInit = !existsSync(join(DATA_DIR, "document.db"));
-
-const MIME_BY_EXT: Record<string, string> = {
-    ".jsx": "text/jsx",
-    ".tsx": "text/jsx",
-    ".js": "application/javascript;env=frontend",
-    ".ts": "application/javascript;env=backend",
-    ".html": "text/html",
-    ".css": "text/css",
-};
-
-/** Extensions that need esbuild transpilation before deployment. */
-const TRANSPILE_EXTS = new Set([".ts", ".tsx"]);
-
-/**
- * Strips TypeScript type annotations via esbuild, preserving JSX intact.
- * Trilium's frontend handles JSX natively, so we only strip types.
- */
-function transpile(source: string, filePath: string): string {
-    const ext = extname(filePath);
-    if (!TRANSPILE_EXTS.has(ext)) return source;
-
-    const result = transformSync(source, {
-        loader: ext === ".tsx" ? "tsx" : "ts",
-        jsx: "preserve",
-        sourcemap: false,
-    });
-    return result.code;
-}
-
-// ── Front matter parsing ────────────────────────────────────────────────────
-
-interface ScriptMeta {
-    id: string;
-    type: string;
-    title: string;
-    [key: string]: string;
-}
-
-/**
- * Parses the @trilium-script YAML front matter from a JSDoc comment block.
- *
- *   /**
- *    * @trilium-script
- *    *
- *    * id: my-script
- *    * type: render
- *    * title: My Script
- *    *\/
- */
-function parseScriptMeta(source: string, filePath: string): ScriptMeta | null {
-    const match = source.match(/\/\*\*[\s\S]*?@trilium-script\s*([\s\S]*?)\*\//);
-    if (!match) return null;
-
-    const block = match[1];
-    const meta: Record<string, string> = {};
-
-    for (const line of block.split("\n")) {
-        // Strip leading ` * ` prefix and trim.
-        const cleaned = line.replace(/^\s*\*\s?/, "").trim();
-        if (!cleaned) continue;
-
-        const colon = cleaned.indexOf(":");
-        if (colon === -1) continue;
-
-        const key = cleaned.slice(0, colon).trim();
-        const value = cleaned.slice(colon + 1).trim();
-        if (key && value) meta[key] = value;
-    }
-
-    const missing = ["id", "type", "title"].filter((k) => !meta[k]);
-    if (missing.length) {
-        console.error(`  SKIP ${filePath}: missing required fields: ${missing.join(", ")}`);
-        return null;
-    }
-
-    return meta as ScriptMeta;
-}
 
 async function ensureTranslations() {
     const i18n = await import("@triliumnext/server/src/services/i18n.js");
@@ -186,55 +108,11 @@ async function deployScripts() {
         if (!meta) continue;
 
         const mime = MIME_BY_EXT[extname(file)]!;
-        const codeNoteId = `_sd_${meta.id}`;
         const content = transpile(source, file);
 
         cls.init(() => {
-            const existing = becca.notes[codeNoteId];
-            if (existing) {
-                // Update content and title of existing note.
-                existing.title = meta.title;
-                existing.save();
-                existing.setContent(content);
-                console.log(`  Updated: ${meta.title} (${codeNoteId})`);
-            } else if (meta.type === "render") {
-                // Create a render note under Scripts, with the code note
-                // as its child linked via ~renderNote.
-                const renderNoteId = `_sd_${meta.id}_render`;
-                notesService.createNewNote({
-                    noteId: renderNoteId,
-                    parentNoteId: SCRIPTS_NOTE_ID,
-                    title: meta.title,
-                    type: "render",
-                    content: "",
-                });
-
-                notesService.createNewNote({
-                    noteId: codeNoteId,
-                    parentNoteId: renderNoteId,
-                    title: meta.title,
-                    type: "code",
-                    mime,
-                    content,
-                });
-
-                const renderNote = becca.notes[renderNoteId];
-                renderNote.setRelation("renderNote", codeNoteId);
-
-                console.log(`  Created: ${meta.title} (${meta.type})`);
-            } else {
-                // Plain code note (widget, backend script, etc.)
-                notesService.createNewNote({
-                    noteId: codeNoteId,
-                    parentNoteId: SCRIPTS_NOTE_ID,
-                    title: meta.title,
-                    type: "code",
-                    mime,
-                    content,
-                });
-
-                console.log(`  Created: ${meta.title} (${meta.type})`);
-            }
+            const result = deployScript(meta, content, mime, becca, asNoteService(notesService));
+            console.log(`  ${result.action === "created" ? "Created" : "Updated"}: ${result.title} (${result.codeNoteId})`);
         });
     }
 }
@@ -243,7 +121,7 @@ function watchScripts() {
     // Debounce per file — editors can fire multiple events on a single save.
     const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
-    watch(SCRIPTS_DIR, (eventType, filename) => {
+    watch(SCRIPTS_DIR, (_eventType, filename) => {
         if (!filename || !MIME_BY_EXT[extname(filename)]) return;
 
         if (timers.has(filename)) clearTimeout(timers.get(filename));
@@ -261,15 +139,14 @@ function watchScripts() {
         const meta = parseScriptMeta(source, filename);
         if (!meta) return;
 
-        const codeNoteId = `_sd_${meta.id}`;
+        const noteId = codeNoteId(meta.id);
 
-        // Already in memory from deployScripts(), import() returns from cache.
         const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
         const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
 
-        const note = becca.notes[codeNoteId];
+        const note = becca.notes[noteId];
         if (!note) {
-            console.log(`  [watch] ${filename}: note ${codeNoteId} not found, restart to create.`);
+            console.log(`  [watch] ${filename}: note ${noteId} not found, restart to create.`);
             return;
         }
 
@@ -279,25 +156,25 @@ function watchScripts() {
             note.setContent(content);
         });
 
-        // For render scripts, trigger a refresh of the active render note
-        // by injecting a small client-side script via websocket.
+        // For render scripts, trigger a refresh of all contexts viewing
+        // the render note by injecting a client-side script via websocket.
         if (meta.type === "render") {
             const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
-            const renderNoteId = `_sd_${meta.id}_render`;
+            const renderId = renderNoteId(meta.id);
             ws.sendMessageToAllClients({
                 type: "execute-script",
                 script: `function() {
                     for (const ctx of api.getNoteContexts()) {
-                        if (ctx.noteId === "${renderNoteId}") {
+                        if (ctx.noteId === "${renderId}") {
                             api.triggerEvent("refreshData", { ntxId: ctx.ntxId });
                             console.log("[script-deployer] refreshed", "${meta.title}", "in context", ctx.ntxId);
                         }
                     }
                 }`,
                 params: [],
-                currentNoteId: codeNoteId,
+                currentNoteId: noteId,
                 originEntityName: "notes",
-                originEntityId: codeNoteId,
+                originEntityId: noteId,
             });
         }
 
