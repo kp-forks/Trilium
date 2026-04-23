@@ -337,4 +337,49 @@ describe("deployScript", () => {
             expect(codeNote.getLabels().find((a) => a.name === "run")).toBeUndefined();
         });
     });
+
+    describe("execute labels", () => {
+        const content = `api.log("test");`;
+        const mime = "application/javascript;env=backend";
+
+        it("sets executeButton, executeDescription, and executeTitle on creation", () => {
+            const meta = {
+                id: "exec-test",
+                type: "backend",
+                title: "Exec Test",
+                executeButton: "true",
+                executeDescription: "Does something useful",
+                executeTitle: "Run It",
+            };
+            deployScript(meta, content, mime, becca, notesService);
+
+            const codeNote = becca.notes[codeNoteId(meta.id)];
+            const labels = codeNote.getLabels();
+            expect(labels.find((a) => a.name === "executeButton")?.value).toBe("true");
+            expect(labels.find((a) => a.name === "executeDescription")?.value).toBe("Does something useful");
+            expect(labels.find((a) => a.name === "executeTitle")?.value).toBe("Run It");
+        });
+
+        it("sets execute labels on update of an existing note", () => {
+            const meta = { id: "exec-update", type: "backend", title: "Before" };
+            deployScript(meta, content, mime, becca, notesService);
+
+            const updated = { ...meta, title: "After", executeButton: "true", executeDescription: "Now executable" };
+            const result = deployScript(updated, content, mime, becca, notesService);
+
+            expect(result.action).toBe("updated");
+            const labels = becca.notes[codeNoteId(meta.id)].getLabels();
+            expect(labels.find((a) => a.name === "executeButton")?.value).toBe("true");
+            expect(labels.find((a) => a.name === "executeDescription")?.value).toBe("Now executable");
+        });
+
+        it("does not set execute labels when absent from metadata", () => {
+            const meta = { id: "no-exec", type: "backend", title: "Plain" };
+            deployScript(meta, content, mime, becca, notesService);
+
+            const labels = becca.notes[codeNoteId(meta.id)].getLabels();
+            expect(labels.find((a) => a.name === "executeButton")).toBeUndefined();
+            expect(labels.find((a) => a.name === "executeDescription")).toBeUndefined();
+        });
+    });
 });

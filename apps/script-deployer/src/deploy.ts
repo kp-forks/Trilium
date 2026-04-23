@@ -145,6 +145,17 @@ export interface DeployResult {
     type: string;
 }
 
+/** Labels that map directly from front-matter keys to note attributes. */
+const PASSTHROUGH_LABELS = ["run", "executeButton", "executeDescription", "executeTitle"] as const;
+
+function applyLabels(note: BeccaLike["notes"][string], meta: ScriptMeta) {
+    for (const label of PASSTHROUGH_LABELS) {
+        if (meta[label]) {
+            note.setLabel(label, meta[label]);
+        }
+    }
+}
+
 /**
  * Deploys a single script file into the Trilium note tree.
  *
@@ -168,6 +179,7 @@ export function deployScript(
         existing.title = meta.title;
         existing.save();
         existing.setContent(content);
+        applyLabels(existing, meta);
         return { action: "updated", codeNoteId: codeId, title: meta.title, type: meta.type };
     }
 
@@ -207,19 +219,7 @@ export function deployScript(
         content,
     });
 
-    const codeNote = becca.notes[codeId];
-
-    // Backend scripts need a #run label to be executed by the scheduler.
-    if (meta.type === "backend" && meta.run) {
-        codeNote.setLabel("run", meta.run);
-    }
-
-    // Labels that map directly from front-matter to note attributes.
-    for (const label of ["executeButton", "executeDescription", "executeTitle"] as const) {
-        if (meta[label]) {
-            codeNote.setLabel(label, meta[label]);
-        }
-    }
+    applyLabels(becca.notes[codeId], meta);
 
     return { action: "created", codeNoteId: codeId, title: meta.title, type: meta.type };
 }
