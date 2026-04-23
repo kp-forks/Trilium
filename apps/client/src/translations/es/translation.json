@@ -710,7 +710,8 @@
     "word_wrap_auto_description": "Seguir el ajuste global",
     "word_wrap_on": "Encendido",
     "word_wrap_off": "Apagado",
-    "save_named_revision": "Guardar revisión nombrada..."
+    "save_named_revision": "Guardar revisión nombrada...",
+    "word_wrap": "Ajuste de línea"
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
@@ -1820,7 +1821,8 @@
     "theme_group_dark": "Temas oscuros",
     "copy_title": "Copiar al portapapeles",
     "tab_width": "Ancho de tabulador",
-    "tab_width_unit": "espacios"
+    "tab_width_unit": "espacios",
+    "click_to_copy": "Haga clic para copiar"
   },
   "classic_editor_toolbar": {
     "title": "Formato"
@@ -2136,7 +2138,19 @@
     "note_info_title": "Ver información de la nota (p. e., fechas, tamaño de la nota)",
     "attributes_title": "Atributos propios y atributos heredados",
     "note_paths_title": "Rutas de nota",
-    "code_note_switcher": "Cambiar modo de idioma"
+    "code_note_switcher": "Cambiar modo de idioma",
+    "tab_width": "Ancho de tabulación: {{width}}",
+    "tab_width_title": "Cambiar ancho de tabulación",
+    "tab_width_spaces": "{{count}} espacios",
+    "tab_width_spaces_short": "Espacios: {{width}}",
+    "tab_width_tabs": "Tabulaciones: {{width}}",
+    "tab_width_use_default": "Usar predeterminado ({{width}})",
+    "tab_width_use_default_style": "Usar predeterminado ({{style}})",
+    "tab_width_display_header": "Visualización",
+    "tab_width_reindent_header": "Reindentar contenido a",
+    "tab_width_style_header": "Indentar usando",
+    "tab_width_style_spaces": "Espacios",
+    "tab_width_style_tabs": "Tabuladores"
   },
   "pdf": {
     "attachments_one": "{{count}} adjunto",
@@ -2315,7 +2329,9 @@
     "sample_xy": "XY",
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa",
-    "sample_treemap": "Mapa de árbol"
+    "sample_treemap": "Mapa de árbol",
+    "sample_treeview": "Vista de árbol",
+    "sample_wardley": "Mapa de Wardley"
   },
   "revisions": {
     "note_revisions": "Revisiones de nota",
@@ -2418,7 +2434,12 @@
     "note_context_disabled": "Haga clic para incluir la nota actual en contexto",
     "no_provider_message": "Ningún proveedor de IA configurado. Añada uno para empezar a charlar.",
     "add_provider": "Añadir proveedor de IA",
-    "stop": "Parar"
+    "stop": "Parar",
+    "tokens_detail": "{{prompt}} (entrada) + {{completion}} (respuesta)",
+    "tokens_used": "{{prompt}} (entrada) + {{completion}} (respuesta) = {{total}} tokens",
+    "tokens_used_with_cost": "{{prompt}} (entrada) + {{completion}} (respuesta) = {{total}} tokens (~${{cost}})",
+    "tokens_used_with_model": "{{model}}: {{prompt}} (entrada) + {{completion}} (respuesta) = {{total}} tokens",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} (entrada) + {{completion}} (respuesta) = {{total}} tokens (~${{cost}})"
   },
   "sidebar_chat": {
     "title": "Chat de IA",
@@ -2453,5 +2474,102 @@
     "text_filtered_low_confidence": "Texto OCR detectado con {{confidence}}% de confianza, pero fue descartado porque su umbral mínimo es {{threshold}}%.",
     "open_media_settings": "Abrir ajustes",
     "view_extracted_text": "Ver texto extraído (OCR)"
+  },
+  "launcher_button_context_menu": {
+    "remove_from_launch_bar": "Quitar de la barra de inicio"
+  },
+  "print_preview": {
+    "title": "Vista previa de impresión",
+    "close": "Cerrar",
+    "save": "Guardar como PDF",
+    "print": "Imprimir",
+    "export_pdf": "Exportar como PDF",
+    "system_print": "Imprimir usando el diálogo del sistema",
+    "destination": "Destino",
+    "destination_pdf": "Guardar como PDF",
+    "destination_printers": "Impresoras",
+    "destination_default": "Predeterminado",
+    "orientation": "Orientación",
+    "portrait": "Vertical",
+    "landscape": "Horizontal",
+    "page_size": "Tamaño de página",
+    "scale": "Escala",
+    "margins": "Márgenes",
+    "render_error": "No se puede generar el PDF con la configuración actual. Comprueba los márgenes y la escala.",
+    "margins_default": "Predeterminados",
+    "margins_none": "Sin márgenes",
+    "margins_minimum": "Mínimos",
+    "margins_custom": "Personalizados",
+    "margin_top": "Superior",
+    "margin_right": "Derecho",
+    "margin_bottom": "Inferior",
+    "margin_left": "Izquierdo",
+    "page_ranges": "Páginas",
+    "page_ranges_hint": "Déjelo vacío para imprimir todas las páginas.",
+    "page_ranges_invalid": "Formato inválido. Use por ejemplo: 1-5, 8, 11-13.",
+    "page_ranges_placeholder": "Ej.: 1-5, 8, 11-13"
+  },
+  "mind-map": {
+    "addChild": "Añadir hijo",
+    "addParent": "Añadir padre",
+    "addSibling": "Añadir hermano",
+    "removeNode": "Eliminar nodo",
+    "focus": "Modo enfoque",
+    "cancelFocus": "Salir del modo enfoque",
+    "moveUp": "Mover arriba",
+    "moveDown": "Mover abajo",
+    "link": "Enlace",
+    "linkBidirectional": "Enlace bidireccional",
+    "clickTips": "Haz clic en el nodo de destino",
+    "summary": "Resumen"
+  },
+  "llm": {
+    "settings_title": "IA / LLM",
+    "settings_description": "Configure integraciones de inteligencia artificial y modelos de lenguaje.",
+    "feature_not_enabled": "Active la función experimental LLM en Ajustes → Avanzado → Funciones experimentales para usar integraciones de IA.",
+    "add_provider": "Añadir proveedor",
+    "add_provider_title": "Añadir proveedor de IA",
+    "configured_providers": "Proveedores configurados",
+    "no_providers_configured": "Aún no hay proveedores configurados.",
+    "provider_name": "Nombre",
+    "provider_type": "Proveedor",
+    "actions": "Acciones",
+    "delete_provider": "Eliminar",
+    "delete_provider_confirmation": "¿Está seguro de que desea eliminar el proveedor \"{{name}}\"?",
+    "api_key": "Clave API",
+    "api_key_placeholder": "Introduzca su clave API",
+    "cancel": "Cancelar",
+    "mcp_title": "MCP (Model Context Protocol)",
+    "mcp_enabled": "Servidor MCP",
+    "mcp_enabled_description": "Exponga un endpoint MCP (Model Context Protocol) para que asistentes de IA (como Claude Code o GitHub Copilot) puedan leer y modificar sus notas. El endpoint solo es accesible desde localhost.",
+    "mcp_endpoint_title": "URL del endpoint",
+    "mcp_endpoint_description": "Añada esta URL a la configuración MCP de su asistente de IA",
+    "tools": {
+      "search_notes": "Buscar notas",
+      "get_note": "Obtener nota",
+      "get_note_content": "Obtener contenido de la nota",
+      "update_note_content": "Actualizar contenido de la nota",
+      "append_to_note": "Añadir al final de la nota",
+      "create_note": "Crear nota",
+      "get_attributes": "Obtener atributos",
+      "get_attribute": "Obtener atributo",
+      "set_attribute": "Establecer atributo",
+      "delete_attribute": "Eliminar atributo",
+      "get_child_notes": "Obtener notas hijas",
+      "get_subtree": "Obtener subárbol",
+      "load_skill": "Cargar habilidad",
+      "web_search": "Buscar en la web",
+      "note_in_parent": "<Note/> en <Parent/>",
+      "get_attachment": "Obtener adjunto",
+      "get_attachment_content": "Leer contenido del adjunto",
+      "rename_note": "Renombrar nota",
+      "delete_note": "Eliminar nota",
+      "move_note": "Mover nota",
+      "clone_note": "Clonar nota"
+    }
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar"
   }
 }
