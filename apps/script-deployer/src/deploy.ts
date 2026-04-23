@@ -151,6 +151,7 @@ export interface DeployResult {
 const PASSTHROUGH_LABELS = ["run", "executeButton", "executeDescription", "executeTitle"] as const;
 
 function applyLabels(note: BeccaLike["notes"][string], meta: ScriptMeta) {
+    note.setLabel("readOnly");
     for (const label of PASSTHROUGH_LABELS) {
         if (meta[label]) {
             note.setLabel(label, meta[label]);
