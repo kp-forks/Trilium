@@ -116,6 +116,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                         "sheet.contextMenu.permission": { hidden: true },
                         "sheet-permission.operation.openPanel": { hidden: true },
                         "sheet.command.add-range-protection-from-toolbar": { hidden: true },
+                        "sheet.command.set-range-font-family": { hidden: true },
                     },
                 }),
                 UniverSheetsFindReplacePreset(),
