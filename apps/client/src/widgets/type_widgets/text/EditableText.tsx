@@ -235,6 +235,100 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
         document.body.style.setProperty("--code-block-tab-width", codeBlockTabWidth || "4");
     }, [codeBlockTabWidth]);
 
+    // Mobile-only: when the keyboard opens, scroll the caret into view.
+    //
+    // Under iOS WKWebView the outer scroll view is pinned to zero (see
+    // ViewController.swift) so the toolbar doesn't get dragged off-screen
+    // — which also suppresses iOS's native scroll-focused-element-into-
+    // view behaviour. Without this effect, tapping near the bottom of a
+    // long note leaves the view stuck at the top with the caret behind
+    // the keyboard.
+    //
+    // Find the nearest scrollable ancestor of the caret, clamp its
+    // "visible bottom" to `visualViewport.height` (so the caret lands
+    // above the keyboard, not merely inside the container's rect), and
+    // adjust scrollTop directly.
+    useEffect(() => {
+        if (!isMobile()) return;
+
+        const CARET_BOTTOM_MARGIN_PX = 48;
+
+        const findScrollableAncestor = (start: Node | null | undefined): HTMLElement | null => {
+            let el: Node | null | undefined = start;
+            while (el) {
+                if (el instanceof HTMLElement) {
+                    const overflowY = getComputedStyle(el).overflowY;
+                    if ((overflowY === "auto" || overflowY === "scroll")
+                        && el.scrollHeight > el.clientHeight + 1) {
+                        return el;
+                    }
+                }
+                el = el.parentNode;
+            }
+            return null;
+        };
+
+        const getCaretRect = (): DOMRect | null => {
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return null;
+            let rect = sel.getRangeAt(0).getBoundingClientRect();
+            // Collapsed carets at end-of-line return a zero rect; fall
+            // back to the containing element.
+            if (rect.width === 0 && rect.height === 0) {
+                const el = sel.focusNode instanceof Element
+                    ? sel.focusNode
+                    : sel.focusNode?.parentElement;
+                if (el) rect = el.getBoundingClientRect();
+            }
+            return rect;
+        };
+
+        const scrollCaretIntoView = () => {
+            const caretRect = getCaretRect();
+            if (!caretRect) return;
+            const scroller = findScrollableAncestor(window.getSelection()?.focusNode);
+            if (!scroller) return;
+
+            const vv = window.visualViewport;
+            const containerRect = scroller.getBoundingClientRect();
+            const viewportBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+            const viewportTop = vv?.offsetTop ?? 0;
+            const visibleBottom = Math.min(containerRect.bottom, viewportBottom);
+            const visibleTop = Math.max(containerRect.top, viewportTop);
+
+            const overshoot = caretRect.bottom - (visibleBottom - CARET_BOTTOM_MARGIN_PX);
+            if (overshoot > 0) {
+                scroller.scrollTop += overshoot;
+                return;
+            }
+            const undershoot = (visibleTop + CARET_BOTTOM_MARGIN_PX) - caretRect.top;
+            if (undershoot > 0) {
+                scroller.scrollTop -= undershoot;
+            }
+        };
+
+        let pending: number | null = null;
+        const schedule = () => {
+            if (pending !== null) return;
+            // Double rAF lets the keyboard animation, WebView resize, and
+            // CKEditor's post-focus layout all settle before we measure.
+            pending = requestAnimationFrame(() => {
+                pending = requestAnimationFrame(() => {
+                    pending = null;
+                    scrollCaretIntoView();
+                });
+            });
+        };
+
+        window.visualViewport?.addEventListener("resize", schedule);
+        document.addEventListener("focusin", schedule);
+        return () => {
+            window.visualViewport?.removeEventListener("resize", schedule);
+            document.removeEventListener("focusin", schedule);
+            if (pending !== null) cancelAnimationFrame(pending);
+        };
+    }, []);
+
     // Mobile-only: toggle todo-list checkboxes on the first tap and widen the
     // hit area so finger taps don't have to land precisely on the ~16px box.
     // Two problems are being solved:
