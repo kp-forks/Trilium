@@ -85,10 +85,12 @@ export function transpile(source: string, filePath: string): string {
     const ext = extname(filePath);
     if (!TRANSPILE_EXTS.has(ext)) return source;
 
+    const isBackend = ext === ".ts";
     const result = transformSync(source, {
         loader: ext === ".tsx" ? "tsx" : "ts",
         jsx: "preserve",
         sourcemap: false,
+        ...(isBackend && { format: "cjs" }),
     });
     return result.code;
 }

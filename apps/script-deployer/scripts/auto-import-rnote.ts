@@ -8,7 +8,7 @@
  * executeDescription: Converts all .rnote children of this note into Excalidraw canvas notes.
  */
 
-const zlib = require("zlib");
+import zlib from "zlib";
 
 // ── Types (rnote v0.9+ / v0.13 JSON format) ────────────────────────────────
 

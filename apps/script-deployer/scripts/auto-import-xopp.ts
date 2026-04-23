@@ -8,7 +8,7 @@
  * executeDescription: Converts all .xopp children of this note into Excalidraw canvas notes.
  */
 
-const zlib = require("zlib");
+import zlib from "zlib";
 
 // ── Color mapping ────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ function text(node: Record<string, unknown>): string {
 function children(node: Record<string, unknown>, tag: string): Record<string, unknown>[] {
     const val = node[tag];
     if (!val) return [];
-    return Array.isArray(val) ? val : [val];
+    return Array.isArray(val) ? val : [val as Record<string, unknown>];
 }
 
 // ── Converters ───────────────────────────────────────────────────────────────
