@@ -404,20 +404,6 @@ function initHelpDropdown($el: JQuery<HTMLElement>) {
     // stop inside clicks from closing the menu
     const $dropdownMenu = $el.find(".help-dropdown .dropdown-menu");
     $dropdownMenu.on("click", (e) => e.stopPropagation());
-
-    // previous propagation stop will also block help buttons from being opened, so we need to re-init for this element
-    initHelpButtons($dropdownMenu);
-}
-
-async function openInAppHelp($button: JQuery<HTMLElement>) {
-    if ($button.length === 0) {
-        return;
-    }
-
-    const inAppHelpPage = $button.attr("data-in-app-help");
-    if (inAppHelpPage) {
-        openInAppHelpFromUrl(inAppHelpPage);
-    }
 }
 
 /**
@@ -460,14 +446,6 @@ export async function openInReusableSplit(targetNoteId: string, targetViewMode: 
         // There is already a target split open, make sure it opens on the right note.
         existingSubcontext.setNote(targetNoteId, { viewScope });
     }
-}
-
-function initHelpButtons($el: JQuery<HTMLElement> | JQuery<Window>) {
-    // for some reason, the .on(event, listener, handler) does not work here (e.g. Options -> Sync -> Help button)
-    // so we do it manually
-    $el.on("click", (e) => {
-        openInAppHelp($(e.target).closest("[data-in-app-help]"));
-    });
 }
 
 function filterAttributeName(name: string) {
@@ -929,7 +907,6 @@ export default {
     dynamicRequire,
     timeLimit,
     initHelpDropdown,
-    initHelpButtons,
     filterAttributeName,
     isValidAttributeName,
     sleep,

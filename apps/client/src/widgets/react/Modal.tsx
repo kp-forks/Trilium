@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import { openDialog } from "../../services/dialog";
 import { t } from "../../services/i18n";
+import { openInAppHelpFromUrl } from "../../services/utils";
 import { useSyncedRef } from "./hooks";
 
 interface CustomTitleBarButton {
@@ -170,7 +171,7 @@ export default function Modal({ children, className, size, title, customTitleBar
                             )}
                             {header}
                             {helpPageId && (
-                                <button className="help-button" type="button" data-in-app-help={helpPageId} title={t("modal.help_title")}>?</button>
+                                <button className="help-button" type="button" onClick={() => openInAppHelpFromUrl(helpPageId)} title={t("modal.help_title")}>?</button>
                             )}
 
                             {titleBarButtons?.filter((b) => b !== null).map((titleBarButton) => (
