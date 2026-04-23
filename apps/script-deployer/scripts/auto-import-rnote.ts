@@ -1,0 +1,377 @@
+/**
+ * @trilium-script
+ *
+ * id: auto-import-rnote
+ * type: backend
+ * title: Auto-import Rnote to Canvas
+ * executeButton: true
+ * executeDescription: Converts all .rnote children of this note into Excalidraw canvas notes.
+ */
+
+const zlib = require("zlib");
+
+// ── Types (rnote v0.9+ / v0.13 JSON format) ────────────────────────────────
+
+interface RnoteColor {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+}
+
+interface RnoteElement {
+    pos: [number, number];
+    pressure: number;
+}
+
+interface RnoteSegment {
+    lineto?: { end: RnoteElement };
+    quadbezto?: { cp: [number, number]; end: RnoteElement };
+    cubbezto?: { cp1: [number, number]; cp2: [number, number]; end: RnoteElement };
+}
+
+interface RnotePath {
+    start: RnoteElement;
+    segments: RnoteSegment[];
+}
+
+interface RnoteSmoothStyle {
+    stroke_width: number;
+    stroke_color: RnoteColor;
+    fill_color?: RnoteColor;
+    pressure_curve: string;
+    line_style?: string;
+    line_cap?: string;
+}
+
+interface RnoteBrushStroke {
+    path: RnotePath;
+    style: { smooth?: RnoteSmoothStyle; rough?: Record<string, unknown>; textured?: Record<string, unknown> };
+}
+
+interface RnoteTextStroke {
+    text: string;
+    transform: { affine: number[][] };
+    style: { font_family?: string; font_size?: number; color?: RnoteColor };
+}
+
+interface RnoteBitmapImage {
+    image: string; // base64 PNG data
+    rectangle: { mins: [number, number]; maxs: [number, number] };
+}
+
+interface RnoteSlotEntry {
+    value: {
+        brushstroke?: RnoteBrushStroke;
+        textstroke?: RnoteTextStroke;
+        bitmapimage?: RnoteBitmapImage;
+        vectorimage?: Record<string, unknown>;
+        shapestroke?: Record<string, unknown>;
+    } | null;
+    version: number;
+}
+
+interface RnoteFile {
+    version: string;
+    data: {
+        engine_snapshot: {
+            document: {
+                x: number;
+                y: number;
+                width: number;
+                height: number;
+            };
+            stroke_components: RnoteSlotEntry[];
+        };
+    };
+}
+
+// ── Color conversion ────────────────────────────────────────────────────────
+
+function convertColor(c: RnoteColor): string {
+    const r = Math.round(c.r * 255);
+    const g = Math.round(c.g * 255);
+    const b = Math.round(c.b * 255);
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
+function convertOpacity(c: RnoteColor): number {
+    return Math.round(c.a * 100);
+}
+
+// ── Excalidraw element helpers ──────────────────────────────────────────────
+
+function generateId(): string {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let id = "";
+    for (let i = 0; i < 20; i++) {
+        id += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return id;
+}
+
+function makeBaseElement(type: string, x: number, y: number, width: number, height: number) {
+    return {
+        id: generateId(),
+        type,
+        x,
+        y,
+        width,
+        height,
+        angle: 0,
+        strokeColor: "#000000",
+        backgroundColor: "transparent",
+        fillStyle: "solid",
+        strokeWidth: 1,
+        strokeStyle: "solid",
+        roughness: 0,
+        opacity: 100,
+        groupIds: [] as string[],
+        frameId: null,
+        index: null,
+        roundness: null,
+        seed: Math.floor(Math.random() * 2_000_000_000),
+        version: 1,
+        versionNonce: Math.floor(Math.random() * 2_000_000_000),
+        isDeleted: false,
+        boundElements: null,
+        updated: Date.now(),
+        link: null,
+        locked: false,
+    } as Record<string, unknown>;
+}
+
+// ── Bezier flattening ───────────────────────────────────────────────────────
+
+const BEZIER_STEPS = 8;
+
+function flattenQuadBezier(
+    p0: [number, number], pr0: number,
+    cp: [number, number],
+    p1: [number, number], pr1: number,
+): { pos: [number, number]; pressure: number }[] {
+    const result: { pos: [number, number]; pressure: number }[] = [];
+    for (let i = 1; i <= BEZIER_STEPS; i++) {
+        const t = i / BEZIER_STEPS;
+        const u = 1 - t;
+        const x = u * u * p0[0] + 2 * u * t * cp[0] + t * t * p1[0];
+        const y = u * u * p0[1] + 2 * u * t * cp[1] + t * t * p1[1];
+        const p = u * pr0 + t * pr1;
+        result.push({ pos: [x, y], pressure: p });
+    }
+    return result;
+}
+
+function flattenCubicBezier(
+    p0: [number, number], pr0: number,
+    cp1: [number, number], cp2: [number, number],
+    p1: [number, number], pr1: number,
+): { pos: [number, number]; pressure: number }[] {
+    const result: { pos: [number, number]; pressure: number }[] = [];
+    for (let i = 1; i <= BEZIER_STEPS; i++) {
+        const t = i / BEZIER_STEPS;
+        const u = 1 - t;
+        const x = u * u * u * p0[0] + 3 * u * u * t * cp1[0] + 3 * u * t * t * cp2[0] + t * t * t * p1[0];
+        const y = u * u * u * p0[1] + 3 * u * u * t * cp1[1] + 3 * u * t * t * cp2[1] + t * t * t * p1[1];
+        const p = u * pr0 + t * pr1;
+        result.push({ pos: [x, y], pressure: p });
+    }
+    return result;
+}
+
+// ── Converters ──────────────────────────────────────────────────────────────
+
+interface ExcalidrawFile {
+    mimeType: string;
+    id: string;
+    dataURL: string;
+    created: number;
+    lastRetrieved: number;
+}
+
+function convertBrushStroke(stroke: RnoteBrushStroke) {
+    const style = stroke.style.smooth;
+    if (!style) return null; // rough/textured styles not yet supported
+
+    // Flatten path into points + pressures
+    const allPoints: { pos: [number, number]; pressure: number }[] = [
+        { pos: stroke.path.start.pos, pressure: stroke.path.start.pressure },
+    ];
+
+    let lastPos = stroke.path.start.pos;
+    let lastPressure = stroke.path.start.pressure;
+
+    for (const seg of stroke.path.segments) {
+        if (seg.lineto) {
+            const end = seg.lineto.end;
+            allPoints.push({ pos: end.pos, pressure: end.pressure });
+            lastPos = end.pos;
+            lastPressure = end.pressure;
+        } else if (seg.quadbezto) {
+            const end = seg.quadbezto.end;
+            const flattened = flattenQuadBezier(lastPos, lastPressure, seg.quadbezto.cp, end.pos, end.pressure);
+            allPoints.push(...flattened);
+            lastPos = end.pos;
+            lastPressure = end.pressure;
+        } else if (seg.cubbezto) {
+            const end = seg.cubbezto.end;
+            const flattened = flattenCubicBezier(lastPos, lastPressure, seg.cubbezto.cp1, seg.cubbezto.cp2, end.pos, end.pressure);
+            allPoints.push(...flattened);
+            lastPos = end.pos;
+            lastPressure = end.pressure;
+        }
+    }
+
+    if (allPoints.length < 2) return null;
+
+    const originX = allPoints[0].pos[0];
+    const originY = allPoints[0].pos[1];
+
+    const points: number[][] = [];
+    const pressures: number[] = [];
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    for (const pt of allPoints) {
+        const px = pt.pos[0] - originX;
+        const py = pt.pos[1] - originY;
+        points.push([px, py]);
+        pressures.push(pt.pressure);
+        minX = Math.min(minX, px);
+        minY = Math.min(minY, py);
+        maxX = Math.max(maxX, px);
+        maxY = Math.max(maxY, py);
+    }
+
+    const el = makeBaseElement("freedraw", originX, originY, maxX - minX, maxY - minY);
+    el.points = points;
+    el.pressures = pressures;
+    el.simulatePressure = false;
+    el.strokeColor = convertColor(style.stroke_color);
+    el.strokeWidth = Math.max(1, Math.floor((style.stroke_width || 1) / 2));
+    el.opacity = convertOpacity(style.stroke_color);
+    el.lastCommittedPoint = points[points.length - 1] || null;
+
+    return el;
+}
+
+function convertTextStroke(text: RnoteTextStroke) {
+    if (!text.text) return null;
+
+    // Extract position from the affine transform matrix
+    // affine is a 3x3 matrix where [0][2] = tx, [1][2] = ty
+    const affine = text.transform?.affine;
+    const x = affine?.[0]?.[2] ?? 0;
+    const y = affine?.[1]?.[2] ?? 0;
+    const size = text.style?.font_size ?? 12;
+    const color = text.style?.color ?? { r: 0, g: 0, b: 0, a: 1 };
+
+    const lines = text.text.split("\n");
+    const estWidth = Math.max(...lines.map((l) => l.length)) * size * 0.6;
+    const estHeight = lines.length * size * 1.3;
+
+    const el = makeBaseElement("text", x, y, estWidth, estHeight);
+    el.text = text.text;
+    el.fontSize = size;
+    el.fontFamily = 5;
+    el.textAlign = "left";
+    el.verticalAlign = "top";
+    el.strokeColor = convertColor(color);
+    el.opacity = convertOpacity(color);
+    el.containerId = null;
+    el.originalText = text.text;
+    el.autoResize = true;
+    el.lineHeight = 1.25;
+
+    return el;
+}
+
+function convertBitmapImage(img: RnoteBitmapImage, files: Record<string, ExcalidrawFile>) {
+    if (!img.image) return null;
+
+    const [minX, minY] = img.rectangle.mins;
+    const [maxX, maxY] = img.rectangle.maxs;
+
+    const fileId = generateId();
+    files[fileId] = {
+        mimeType: "image/png",
+        id: fileId,
+        dataURL: `data:image/png;base64,${img.image}`,
+        created: Date.now(),
+        lastRetrieved: Date.now(),
+    };
+
+    const el = makeBaseElement("image", minX, minY, maxX - minX, maxY - minY);
+    el.fileId = fileId;
+    el.status = "saved";
+    el.scale = [1, 1];
+
+    return el;
+}
+
+// ── Main conversion ─────────────────────────────────────────────────────────
+
+function convertRnote(doc: RnoteFile) {
+    const snapshot = doc.data?.engine_snapshot;
+    if (!snapshot) throw new Error("Not a valid .rnote file: missing engine_snapshot");
+
+    const elements: Record<string, unknown>[] = [];
+    const files: Record<string, ExcalidrawFile> = {};
+
+    for (const entry of snapshot.stroke_components) {
+        if (!entry.value) continue;
+
+        if (entry.value.brushstroke) {
+            const el = convertBrushStroke(entry.value.brushstroke);
+            if (el) elements.push(el);
+        } else if (entry.value.textstroke) {
+            const el = convertTextStroke(entry.value.textstroke);
+            if (el) elements.push(el);
+        } else if (entry.value.bitmapimage) {
+            const el = convertBitmapImage(entry.value.bitmapimage, files);
+            if (el) elements.push(el);
+        }
+    }
+
+    return {
+        type: "excalidraw",
+        version: 2,
+        elements,
+        files,
+        appState: {
+            gridModeEnabled: false,
+            viewBackgroundColor: "#ffffff",
+        },
+    };
+}
+
+// ── Entry point ─────────────────────────────────────────────────────────────
+
+const scriptNote = api.currentNote;
+const childNotes = scriptNote.getChildNotes();
+
+for (const note of childNotes) {
+    if (note.type !== "file" || !note.title?.endsWith(".rnote")) {
+        continue;
+    }
+
+    try {
+        const content = note.getContent();
+        const jsonBuffer = zlib.gunzipSync(content);
+        const doc: RnoteFile = JSON.parse(jsonBuffer.toString("utf-8"));
+
+        const excalidrawData = convertRnote(doc);
+        const title = note.title.replace(/\.rnote$/, "");
+
+        const { note: canvasNote } = api.createNewNote({
+            parentNoteId: scriptNote.noteId,
+            title,
+            content: JSON.stringify(excalidrawData),
+            type: "canvas",
+        });
+
+        api.log(`auto-import-rnote: converted "${note.title}" → canvas note ${canvasNote.noteId}`);
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        api.log(`auto-import-rnote: failed for "${note.title}": ${msg}`);
+    }
+}
