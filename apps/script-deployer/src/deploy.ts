@@ -207,10 +207,18 @@ export function deployScript(
         content,
     });
 
+    const codeNote = becca.notes[codeId];
+
     // Backend scripts need a #run label to be executed by the scheduler.
     if (meta.type === "backend" && meta.run) {
-        const codeNote = becca.notes[codeId];
         codeNote.setLabel("run", meta.run);
+    }
+
+    // Labels that map directly from front-matter to note attributes.
+    for (const label of ["executeButton", "executeDescription", "executeTitle"] as const) {
+        if (meta[label]) {
+            codeNote.setLabel(label, meta[label]);
+        }
     }
 
     return { action: "created", codeNoteId: codeId, title: meta.title, type: meta.type };
