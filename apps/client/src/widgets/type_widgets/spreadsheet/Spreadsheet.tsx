@@ -41,7 +41,7 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
 
     useInitializeSpreadsheet(containerRef, apiRef, readOnly);
     useDarkMode(apiRef);
-    usePersistence(note, noteContext, apiRef, containerRef, readOnly);
+    usePersistence(note, noteContext, apiRef, containerRef);
     useSearchIntegration(apiRef);
     useFixRadixPortals();
 
@@ -127,6 +127,18 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                 UniverSheetsConditionalFormattingPreset()
             ]
         });
+        if (readOnly) {
+            univerAPI.addEvent(univerAPI.Event.LifeCycleChanged, ({ stage }) => {
+                if (stage === univerAPI.Enum.LifecycleStages.Rendered) {
+                    const workbook = univerAPI.getActiveWorkbook();
+                    if (!workbook) return;
+
+                    workbook.disableSelection();
+                    workbook.getWorkbookPermission().setReadOnly();
+                }
+            });
+        }
+
         apiRef.current = univerAPI;
         return () => univerAPI.dispose();
     }, [ apiRef, containerRef, readOnly ]);
