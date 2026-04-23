@@ -7,8 +7,9 @@
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
-import { resolve, join, extname } from "node:path";
-import { MIME_BY_EXT, SCRIPTS_NOTE_ID, codeNoteId, renderNoteId, deployScript, parseScriptMeta, transpile, asNoteService } from "./deploy";
+import { extname,join, resolve } from "node:path";
+
+import { asNoteService,codeNoteId, deployScript, MIME_BY_EXT, parseScriptMeta, renderNoteId, SCRIPTS_NOTE_ID, transpile } from "./deploy";
 
 // ── Environment — must be set before any server module is imported ──────────
 const DATA_DIR = resolve(__dirname, "../data");
@@ -63,7 +64,7 @@ async function ensureEtapiToken() {
         return authToken;
     });
 
-    writeFileSync(TOKEN_PATH, authToken + "\n");
+    writeFileSync(TOKEN_PATH, `${authToken  }\n`);
     console.log(`ETAPI token created and saved to ${TOKEN_PATH}`);
     console.log(`ETAPI token: ${authToken}`);
 }
@@ -163,15 +164,18 @@ function watchScripts() {
             const renderId = renderNoteId(meta.id);
             ws.sendMessageToAllClients({
                 type: "execute-script",
-                script: `function() {
+                script: `function({ renderId, title }) {
                     for (const ctx of api.getNoteContexts()) {
-                        if (ctx.noteId === "${renderId}") {
+                        if (ctx.noteId === renderId) {
                             api.triggerEvent("refreshData", { ntxId: ctx.ntxId });
-                            console.log("[script-deployer] refreshed", "${meta.title}", "in context", ctx.ntxId);
+                            console.log("[script-deployer] refreshed", title, "in context", ctx.ntxId);
                         }
                     }
                 }`,
-                params: [],
+                params: [{
+                    renderId,
+                    title: meta.title
+                }],
                 currentNoteId: noteId,
                 originEntityName: "notes",
                 originEntityId: noteId,
