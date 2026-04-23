@@ -24,9 +24,34 @@ import UniverPresetSheetsSortEnUS from '@univerjs/preset-sheets-sort/locales/en-
 import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
+import { t } from "../../../services/i18n";
 import { useColorScheme, useEffectiveReadOnly, useTriliumEvent } from "../../react/hooks";
 import { TypeWidgetProps } from "../type_widget";
 import usePersistence from "./persistence";
+
+function buildReadOnlyLocaleOverrides() {
+    const msg = t("spreadsheet.read-only");
+    return {
+        permission: {
+            dialog: {
+                editErr: msg,
+                commonErr: msg,
+                pasteErr: msg,
+                setStyleErr: msg,
+                copyErr: msg,
+                setRowColStyleErr: msg,
+                moveRowColErr: msg,
+                moveRangeErr: msg,
+                autoFillErr: msg,
+                filterErr: msg,
+                operatorSheetErr: msg,
+                formulaErr: msg,
+                hyperLinkErr: msg,
+                commentErr: msg,
+            }
+        }
+    };
+}
 
 export default function Spreadsheet(props: TypeWidgetProps) {
     const readOnly = useEffectiveReadOnly(props.note, props.noteContext);
@@ -103,6 +128,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     UniverPresetSheetsSortEnUS,
                     UniverPresetSheetsDataValidationEnUS,
                     UniverPresetSheetsConditionalFormattingEnUS,
+                    readOnly ? buildReadOnlyLocaleOverrides() : {},
                 ),
             },
             presets: [

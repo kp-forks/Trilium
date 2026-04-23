@@ -2553,5 +2553,8 @@
   "common": {
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "spreadsheet": {
+    "read-only": "This note is read-only."
   }
 }
