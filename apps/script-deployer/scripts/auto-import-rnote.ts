@@ -64,8 +64,8 @@ interface RnoteTextStroke {
 }
 
 interface RnoteBitmapImage {
-    // v0.13: image is base64 string, v0.14: image is { data: string, ... }
-    image: string | { data: string };
+    // v0.13: image is base64 string, v0.14: image is { data, pixel_width, pixel_height, ... }
+    image: string | { data: string; pixel_width?: number; pixel_height?: number; memory_format?: string };
     // v0.13: { mins, maxs }, v0.14: { cuboid: { half_extents }, transform: { affine } }
     rectangle:
         | { mins: [number, number]; maxs: [number, number] }
@@ -96,6 +96,72 @@ interface RnoteFile {
             stroke_components: RnoteSlotEntry[];
         };
     };
+}
+
+// ── Raw RGBA → PNG encoding ─────────────────────────────────────────────────
+
+/** Encode raw RGBA pixels into a minimal PNG buffer using zlib. */
+function encodeRawRgbaToPng(data: Buffer, width: number, height: number): Buffer {
+    // Un-premultiply alpha (R8g8b8a8Premultiplied → straight RGBA)
+    const straight = Buffer.from(data);
+    for (let i = 0; i < straight.length; i += 4) {
+        const a = straight[i + 3];
+        if (a > 0 && a < 255) {
+            straight[i] = Math.min(255, Math.round((straight[i] * 255) / a));
+            straight[i + 1] = Math.min(255, Math.round((straight[i + 1] * 255) / a));
+            straight[i + 2] = Math.min(255, Math.round((straight[i + 2] * 255) / a));
+        }
+    }
+
+    // Build PNG filter rows: each row prefixed with filter byte 0 (None)
+    const rowLen = width * 4;
+    const rawRows = Buffer.alloc(height * (1 + rowLen));
+    for (let y = 0; y < height; y++) {
+        rawRows[y * (1 + rowLen)] = 0; // filter: None
+        straight.copy(rawRows, y * (1 + rowLen) + 1, y * rowLen, y * rowLen + rowLen);
+    }
+
+    const compressed = zlib.deflateSync(rawRows);
+
+    // CRC-32 (used by PNG chunks)
+    const crcTable: number[] = [];
+    for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        crcTable[n] = c;
+    }
+    function crc32(buf: Buffer): number {
+        let crc = 0xffffffff;
+        for (let i = 0; i < buf.length; i++) crc = crcTable[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
+        return (crc ^ 0xffffffff) >>> 0;
+    }
+
+    function makeChunk(type: string, data: Buffer): Buffer {
+        const len = Buffer.alloc(4);
+        len.writeUInt32BE(data.length);
+        const typeB = Buffer.from(type, "ascii");
+        const payload = Buffer.concat([typeB, data]);
+        const crcB = Buffer.alloc(4);
+        crcB.writeUInt32BE(crc32(payload));
+        return Buffer.concat([len, payload, crcB]);
+    }
+
+    // IHDR: width, height, bit depth 8, color type 6 (RGBA)
+    const ihdrData = Buffer.alloc(13);
+    ihdrData.writeUInt32BE(width, 0);
+    ihdrData.writeUInt32BE(height, 4);
+    ihdrData[8] = 8;  // bit depth
+    ihdrData[9] = 6;  // color type: RGBA
+    ihdrData[10] = 0; // compression
+    ihdrData[11] = 0; // filter
+    ihdrData[12] = 0; // interlace
+
+    return Buffer.concat([
+        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), // PNG signature
+        makeChunk("IHDR", ihdrData),
+        makeChunk("IDAT", compressed),
+        makeChunk("IEND", Buffer.alloc(0)),
+    ]);
 }
 
 // ── Color conversion ────────────────────────────────────────────────────────
@@ -312,9 +378,20 @@ function convertTextStroke(text: RnoteTextStroke) {
 function convertBitmapImage(img: RnoteBitmapImage, files: Record<string, ExcalidrawFile>) {
     if (!img.image) return null;
 
-    // Extract base64 data: v0.13 is a string, v0.14 is { data: string }
-    const imageData = typeof img.image === "string" ? img.image : img.image.data;
-    if (!imageData) return null;
+    // Extract base64 image data and encode as PNG if needed
+    let dataURL: string;
+    if (typeof img.image === "string") {
+        // v0.13: already PNG base64
+        dataURL = `data:image/png;base64,${img.image}`;
+    } else {
+        // v0.14: raw RGBA pixels, need to encode as PNG
+        const rawBuf = Buffer.from(img.image.data, "base64");
+        const pw = img.image.pixel_width ?? 0;
+        const ph = img.image.pixel_height ?? 0;
+        if (!pw || !ph) return null;
+        const pngBuf = encodeRawRgbaToPng(rawBuf, pw, ph);
+        dataURL = `data:image/png;base64,${pngBuf.toString("base64")}`;
+    }
 
     // Extract bounds: v0.13 uses mins/maxs, v0.14 uses cuboid + transform
     let minX: number, minY: number, w: number, h: number;
@@ -339,7 +416,7 @@ function convertBitmapImage(img: RnoteBitmapImage, files: Record<string, Excalid
     files[fileId] = {
         mimeType: "image/png",
         id: fileId,
-        dataURL: `data:image/png;base64,${imageData}`,
+        dataURL,
         created: Date.now(),
         lastRetrieved: Date.now(),
     };
