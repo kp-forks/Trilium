@@ -409,22 +409,6 @@ function initHelpDropdown($el: JQuery<HTMLElement>) {
     initHelpButtons($dropdownMenu);
 }
 
-const wikiBaseUrl = "https://triliumnext.github.io/Docs/Wiki/";
-
-function openHelp($button: JQuery<HTMLElement>) {
-    if ($button.length === 0) {
-        return;
-    }
-
-    const helpPage = $button.attr("data-help-page");
-
-    if (helpPage) {
-        const url = wikiBaseUrl + helpPage;
-
-        window.open(url, "_blank");
-    }
-}
-
 async function openInAppHelp($button: JQuery<HTMLElement>) {
     if ($button.length === 0) {
         return;
@@ -482,7 +466,6 @@ function initHelpButtons($el: JQuery<HTMLElement> | JQuery<Window>) {
     // for some reason, the .on(event, listener, handler) does not work here (e.g. Options -> Sync -> Help button)
     // so we do it manually
     $el.on("click", (e) => {
-        openHelp($(e.target).closest("[data-help-page]"));
         openInAppHelp($(e.target).closest("[data-in-app-help]"));
     });
 }
@@ -947,7 +930,6 @@ export default {
     timeLimit,
     initHelpDropdown,
     initHelpButtons,
-    openHelp,
     filterAttributeName,
     isValidAttributeName,
     sleep,
