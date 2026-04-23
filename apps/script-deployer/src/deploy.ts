@@ -136,6 +136,7 @@ export interface BeccaLike {
         setContent(content: string): void;
         setRelation(name: string, targetNoteId: string): void;
         setLabel(name: string, value?: string): void;
+        invalidateThisCache(): void;
     }>;
 }
 
@@ -157,6 +158,9 @@ function applyLabels(note: BeccaLike["notes"][string], meta: ScriptMeta) {
             note.setLabel(label, meta[label]);
         }
     }
+    // BNote caches attributes eagerly during setLabel's save() path.
+    // Invalidate so subsequent reads see all labels we just set.
+    note.invalidateThisCache();
 }
 
 /**

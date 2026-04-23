@@ -21,6 +21,7 @@ vi.mock("@triliumnext/server/src/services/sql", () => ({
         execute: () => {},
         replace: () => {},
         getMap: () => {},
+        getValue: () => null,
     },
 }));
 
