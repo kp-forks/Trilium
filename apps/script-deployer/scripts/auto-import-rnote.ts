@@ -49,15 +49,27 @@ interface RnoteBrushStroke {
     style: { smooth?: RnoteSmoothStyle; rough?: Record<string, unknown>; textured?: Record<string, unknown> };
 }
 
+interface RnoteTextStyle {
+    font_family?: string;
+    font_size?: number;
+    color?: RnoteColor;
+}
+
 interface RnoteTextStroke {
     text: string;
-    transform: { affine: number[][] };
-    style: { font_family?: string; font_size?: number; color?: RnoteColor };
+    transform: { affine: number[] | number[][] };
+    // v0.13: style, v0.14: text_style
+    style?: RnoteTextStyle;
+    text_style?: RnoteTextStyle;
 }
 
 interface RnoteBitmapImage {
-    image: string; // base64 PNG data
-    rectangle: { mins: [number, number]; maxs: [number, number] };
+    // v0.13: image is base64 string, v0.14: image is { data: string, ... }
+    image: string | { data: string };
+    // v0.13: { mins, maxs }, v0.14: { cuboid: { half_extents }, transform: { affine } }
+    rectangle:
+        | { mins: [number, number]; maxs: [number, number] }
+        | { cuboid: { half_extents: [number, number] }; transform: { affine: number[] } };
 }
 
 interface RnoteSlotEntry {
@@ -257,13 +269,25 @@ function convertBrushStroke(stroke: RnoteBrushStroke) {
 function convertTextStroke(text: RnoteTextStroke) {
     if (!text.text) return null;
 
-    // Extract position from the affine transform matrix
-    // affine is a 3x3 matrix where [0][2] = tx, [1][2] = ty
+    // Extract position from affine transform
+    // v0.13: nested arrays [[1,0,tx],[0,1,ty],[0,0,1]]
+    // v0.14: flat array [1,0,0, 0,1,0, tx,ty,1]
     const affine = text.transform?.affine;
-    const x = affine?.[0]?.[2] ?? 0;
-    const y = affine?.[1]?.[2] ?? 0;
-    const size = text.style?.font_size ?? 12;
-    const color = text.style?.color ?? { r: 0, g: 0, b: 0, a: 1 };
+    let x = 0, y = 0;
+    if (Array.isArray(affine?.[0])) {
+        // nested: row-major 3x3
+        const nested = affine as number[][];
+        x = nested[0]?.[2] ?? 0;
+        y = nested[1]?.[2] ?? 0;
+    } else if (affine) {
+        // flat 9-element array (column-major: [m00,m10,m20, m01,m11,m21, tx,ty,1])
+        const flat = affine as number[];
+        x = flat[6] ?? 0;
+        y = flat[7] ?? 0;
+    }
+    const ts = text.text_style ?? text.style;
+    const size = ts?.font_size ?? 12;
+    const color = ts?.color ?? { r: 0, g: 0, b: 0, a: 1 };
 
     const lines = text.text.split("\n");
     const estWidth = Math.max(...lines.map((l) => l.length)) * size * 0.6;
@@ -288,19 +312,39 @@ function convertTextStroke(text: RnoteTextStroke) {
 function convertBitmapImage(img: RnoteBitmapImage, files: Record<string, ExcalidrawFile>) {
     if (!img.image) return null;
 
-    const [minX, minY] = img.rectangle.mins;
-    const [maxX, maxY] = img.rectangle.maxs;
+    // Extract base64 data: v0.13 is a string, v0.14 is { data: string }
+    const imageData = typeof img.image === "string" ? img.image : img.image.data;
+    if (!imageData) return null;
+
+    // Extract bounds: v0.13 uses mins/maxs, v0.14 uses cuboid + transform
+    let minX: number, minY: number, w: number, h: number;
+    if ("mins" in img.rectangle) {
+        [minX, minY] = img.rectangle.mins;
+        const [maxX, maxY] = img.rectangle.maxs;
+        w = maxX - minX;
+        h = maxY - minY;
+    } else {
+        const [halfW, halfH] = img.rectangle.cuboid.half_extents;
+        const affine = img.rectangle.transform.affine;
+        // flat affine: tx=affine[6], ty=affine[7]
+        const cx = affine[6] ?? 0;
+        const cy = affine[7] ?? 0;
+        minX = cx - halfW;
+        minY = cy - halfH;
+        w = halfW * 2;
+        h = halfH * 2;
+    }
 
     const fileId = generateId();
     files[fileId] = {
         mimeType: "image/png",
         id: fileId,
-        dataURL: `data:image/png;base64,${img.image}`,
+        dataURL: `data:image/png;base64,${imageData}`,
         created: Date.now(),
         lastRetrieved: Date.now(),
     };
 
-    const el = makeBaseElement("image", minX, minY, maxX - minX, maxY - minY);
+    const el = makeBaseElement("image", minX, minY, w, h);
     el.fileId = fileId;
     el.status = "saved";
     el.scale = [1, 1];
