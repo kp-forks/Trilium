@@ -5,6 +5,7 @@ import "@univerjs/preset-sheets-conditional-formatting/lib/index.css";
 import "@univerjs/preset-sheets-find-replace/lib/index.css";
 import "@univerjs/preset-sheets-note/lib/index.css";
 import "@univerjs/preset-sheets-filter/lib/index.css";
+import "@univerjs/preset-sheets-hyper-link/lib/index.css";
 import "@univerjs/preset-sheets-data-validation/lib/index.css";
 
 import { UniverSheetsConditionalFormattingPreset } from '@univerjs/preset-sheets-conditional-formatting';
@@ -15,6 +16,8 @@ import { UniverSheetsDataValidationPreset } from '@univerjs/preset-sheets-data-v
 import UniverPresetSheetsDataValidationEnUS from '@univerjs/preset-sheets-data-validation/locales/en-US';
 import { UniverSheetsFilterPreset } from '@univerjs/preset-sheets-filter';
 import UniverPresetSheetsFilterEnUS from '@univerjs/preset-sheets-filter/locales/en-US';
+import { UniverSheetsHyperLinkPreset } from '@univerjs/preset-sheets-hyper-link';
+import UniverPresetSheetsHyperLinkEnUS from '@univerjs/preset-sheets-hyper-link/locales/en-US';
 import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
 import sheetsFindReplaceEnUS from '@univerjs/preset-sheets-find-replace/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
@@ -128,6 +131,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     UniverPresetSheetsSortEnUS,
                     UniverPresetSheetsDataValidationEnUS,
                     UniverPresetSheetsConditionalFormattingEnUS,
+                    UniverPresetSheetsHyperLinkEnUS,
                     readOnly ? buildReadOnlyLocaleOverrides() : {},
                 ),
             },
@@ -150,7 +154,8 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                 UniverSheetsFilterPreset(),
                 UniverSheetsSortPreset(),
                 UniverSheetsDataValidationPreset(),
-                UniverSheetsConditionalFormattingPreset()
+                UniverSheetsConditionalFormattingPreset(),
+                UniverSheetsHyperLinkPreset()
             ]
         });
         if (readOnly) {
