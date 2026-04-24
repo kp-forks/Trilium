@@ -374,7 +374,7 @@ div.tn-tool-dialog {
 .help-dialog .help-cards kbd,
 .ck-content kbd {
     display: inline-block;
-    margin: 0 2px !important;
+    margin: 0 2px 2px !important;
     border: 1px solid var(--help-kbd-shortcut-border);
     border-radius: 5px;
     padding: 2px 8px;
@@ -388,7 +388,7 @@ div.tn-tool-dialog {
     font-weight: normal;
     line-height: 1.4;
     letter-spacing: 0.5pt;
-    vertical-align: middle;
+    vertical-align: 1px;
     white-space: nowrap;
 }
 
