@@ -15,8 +15,10 @@
         user-select: text;
 
         .mermaid-diagram,
-        .mermaid-diagram svg {
+        .mermaid-diagram svg,
+        img {
             max-width: 100%;
+            height: auto;
         }
     }
 
