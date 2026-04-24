@@ -29,7 +29,12 @@ export default class KbdEditing extends Plugin {
 
 		editor.conversion.attributeToElement( {
 			model: KBD,
-			view: KBD
+			view: {
+				name: KBD,
+				attributes: {
+					spellcheck: 'false'
+				}
+			}
 		} );
 
 		editor.commands.add( KBD, new AttributeCommand( editor, KBD ) );
