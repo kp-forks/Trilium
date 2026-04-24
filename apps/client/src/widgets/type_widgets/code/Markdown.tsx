@@ -1,9 +1,9 @@
 import "./Markdown.css";
 
 import VanillaCodeMirror from "@triliumnext/codemirror";
-import { renderToHtml } from "@triliumnext/commons";
+import { CustomMarkdownRenderer, renderToHtml } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
-import { Marked } from "marked";
+import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
@@ -12,6 +12,23 @@ import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
 
 const marked = new Marked({ breaks: true, gfm: true });
+
+/**
+ * The default {@link CustomMarkdownRenderer} falls back to
+ * `language-text-x-trilium-auto` on unlabeled fences, which drives
+ * `syntax_highlight.ts` into `highlightAuto` — that dynamic-imports every hljs
+ * language bundle on first render and runs detection on each block, which is
+ * both slow and often wrong on short snippets. For the live preview we instead
+ * emit unlabeled fences without a `language-` class so the highlighter skips
+ * them entirely.
+ */
+class MarkdownPreviewRenderer extends CustomMarkdownRenderer {
+    override code(token: Tokens.Code): string {
+        const html = super.code(token);
+        if (token.lang) return html;
+        return html.replace('<code class="language-text-x-trilium-auto">', `<code class="language-text-plain">`);
+    }
+}
 
 interface MarkdownContextValue {
     html: string;
@@ -175,7 +192,8 @@ export function renderWithSourceLines(src: string): string {
     const html = renderToHtml(src, "", {
         sanitize: (h) => DOMPurify.sanitize(h),
         wikiLink: { formatHref: (id) => `#root/${id}` },
-        demoteH1: false
+        demoteH1: false,
+        renderer: new MarkdownPreviewRenderer({ async: false })
     });
     if (!html) return "";
 

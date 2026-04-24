@@ -48,6 +48,14 @@ export interface RenderToHtmlOptions {
      * preview) so authored H1s are shown as-is.
      */
     demoteH1?: boolean;
+    /**
+     * Optional custom renderer — defaults to {@link CustomMarkdownRenderer}.
+     * Callers that need caller-specific output (e.g. the Markdown live preview
+     * suppressing the auto-language fallback on unlabeled fences) can subclass
+     * and pass an instance. A fresh instance should be passed per call since
+     * marked attaches a parser to the renderer during parsing.
+     */
+    renderer?: Renderer;
 }
 
 function escapeHtml(str: string): string {
@@ -160,8 +168,12 @@ function restoreFromMap(text: string, map: Map<string, string>): string {
 
 /**
  * Keep renderer code up to date with https://github.com/markedjs/marked/blob/master/src/Renderer.ts.
+ *
+ * Exported so callers can subclass and override specific methods (e.g. `code()`) for
+ * caller-specific output, then pass the subclass instance through
+ * {@link RenderToHtmlOptions.renderer}.
  */
-class CustomMarkdownRenderer extends Renderer {
+export class CustomMarkdownRenderer extends Renderer {
 
     override heading(data: Tokens.Heading): string {
         if (data.depth === 1) {
@@ -283,7 +295,7 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
         ]
     });
 
-    const renderer = new CustomMarkdownRenderer({ async: false });
+    const renderer = options.renderer ?? new CustomMarkdownRenderer({ async: false });
     let html = marked.parse(processedText, { async: false, renderer }) as string;
 
     html = restoreFromMap(html, formulaMap);
