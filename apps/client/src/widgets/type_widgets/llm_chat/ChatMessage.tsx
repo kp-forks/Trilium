@@ -213,7 +213,7 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                         {message.usage.cost != null && (
                             <>
                                 <span className="llm-chat-usage-separator">·</span>
-                                <span className="llm-chat-usage-cost">~${message.usage.cost.toFixed(4)}</span>
+                                <span className="llm-chat-usage-cost">~${message.usage.cost.toFixed(2)}</span>
                             </>
                         )}
                     </>
