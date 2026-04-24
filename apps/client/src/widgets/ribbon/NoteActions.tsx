@@ -81,7 +81,7 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
     const isExportableToImage = ["mermaid", "mindMap"].includes(noteType);
     const isContentAvailable = note.isContentAvailable();
     const isPrintable = isContentAvailable && (
-        ["text", "code"].includes(noteType) ||
+        ["text", "code", "spreadsheet"].includes(noteType) ||
         (noteType === "book" && ["presentation", "list", "table"].includes(viewType ?? ""))
     );
     const isElectron = getIsElectron();

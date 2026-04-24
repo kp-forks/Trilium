@@ -6,7 +6,7 @@ import DOMPurify from "dompurify";
 import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
-
+import NoteContext from "../../../components/note_context";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
@@ -30,8 +30,16 @@ class MarkdownPreviewRenderer extends CustomMarkdownRenderer {
     }
 }
 
+export interface MarkdownHeading {
+    id: string;
+    level: number;
+    text: string;
+    line: number;
+}
+
 interface MarkdownContextValue {
     html: string;
+    headings: MarkdownHeading[];
     setEditorView: (view: VanillaCodeMirror | null) => void;
     setPreviewEl: (el: HTMLDivElement | null) => void;
 }
@@ -48,14 +56,15 @@ export default function Markdown(props: TypeWidgetProps) {
     const [ content, setContent ] = useState("");
     const [ editorView, setEditorView ] = useState<VanillaCodeMirror | null>(null);
     const [ previewEl, setPreviewEl ] = useState<HTMLDivElement | null>(null);
-    const html = useMemo(() => renderWithSourceLines(content), [ content ]);
+    const { html, headings } = useMemo(() => renderWithSourceLines(content), [ content ]);
 
     useSyncedScrolling(editorView, previewEl);
     useSyncedHighlight(editorView, previewEl, html);
+    usePublishToc(props.noteContext, editorView, headings);
 
     const ctx = useMemo<MarkdownContextValue>(
-        () => ({ html, setEditorView, setPreviewEl }),
-        [ html ]
+        () => ({ html, headings, setEditorView, setPreviewEl }),
+        [ html, headings ]
     );
 
     return (
@@ -83,6 +92,36 @@ function MarkdownPreview({ ntxId }: { ntxId: TypeWidgetProps["ntxId"] }) {
         />
     );
 }
+
+//#region Table of contents
+/**
+ * Publishes heading data via `setContextData("toc", ...)` so the sidebar
+ * Table of Contents can display headings extracted from the markdown source,
+ * independent of whether the preview pane is visible.
+ */
+function usePublishToc(
+    noteContext: NoteContext | undefined,
+    editorView: VanillaCodeMirror | null,
+    headings: MarkdownHeading[]
+) {
+    useEffect(() => {
+        if (!noteContext) return;
+        noteContext.setContextData("toc", {
+            headings,
+            scrollToHeading(heading) {
+                if (!editorView) return;
+                const mdHeading = headings.find(h => h.id === heading.id);
+                if (!mdHeading) return;
+                const line = editorView.state.doc.line(Math.min(mdHeading.line, editorView.state.doc.lines));
+                const lineBlock = editorView.lineBlockAt(line.from);
+                const scrollerHeight = editorView.scrollDOM.clientHeight;
+                const targetTop = lineBlock.top - scrollerHeight / 2 + lineBlock.height / 2;
+                editorView.scrollDOM.scrollTo({ top: targetTop, behavior: "smooth" });
+            }
+        });
+    }, [ noteContext, headings, editorView ]);
+}
+//#endregion
 
 //#region Synced scrolling
 /**
@@ -178,15 +217,25 @@ const NON_RENDERED_TOKENS = new Set([ "space", "def" ]);
  * with the matching lexer token's start line. Marked does not emit source
  * positions (markedjs/marked#1267) so we count newlines in `raw` ourselves.
  */
-export function renderWithSourceLines(src: string): string {
+export function renderWithSourceLines(src: string): { html: string; headings: MarkdownHeading[] } {
     // Compute the start line of each renderable top-level token in source order.
     const tokens = marked.lexer(src);
     const lines: number[] = [];
+    const headings: MarkdownHeading[] = [];
     let line = 1;
+    let headingIdx = 0;
     for (const token of tokens) {
         const startLine = line;
         line += (token.raw.match(/\n/g) ?? []).length;
         if (!NON_RENDERED_TOKENS.has(token.type)) lines.push(startLine);
+        if (token.type === "heading") {
+            headings.push({
+                id: `md-heading-${headingIdx++}`,
+                level: (token as { depth: number }).depth,
+                text: token.text ?? "",
+                line: startLine
+            });
+        }
     }
 
     const html = renderToHtml(src, "", {
@@ -195,7 +244,7 @@ export function renderWithSourceLines(src: string): string {
         demoteH1: false,
         renderer: new MarkdownPreviewRenderer({ async: false })
     });
-    if (!html) return "";
+    if (!html) return { html: "", headings };
 
     const container = document.createElement("div");
     container.innerHTML = html;
@@ -206,6 +255,6 @@ export function renderWithSourceLines(src: string): string {
         const sourceLine = lines[i] ?? lines[lines.length - 1] ?? 1;
         parts.push(`<div data-source-line="${sourceLine}">${children[i].outerHTML}</div>`);
     }
-    return parts.join("");
+    return { html: parts.join(""), headings };
 }
 //#endregion

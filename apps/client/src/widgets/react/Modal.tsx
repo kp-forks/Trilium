@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from "preact/hooks";
 import appContext from "../../components/app_context";
 import { openDialog } from "../../services/dialog";
 import { t } from "../../services/i18n";
+import { openInAppHelpFromUrl } from "../../services/utils";
 import { useSyncedRef } from "./hooks";
 
 interface CustomTitleBarButton {

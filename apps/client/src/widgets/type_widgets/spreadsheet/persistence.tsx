@@ -18,7 +18,7 @@ interface SpreadsheetViewState {
     scrollCol?: number;
 }
 
-export default function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>, readOnly: boolean) {
+export default function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>) {
     const changeListener = useRef<IDisposable>(null);
     const pendingContent = useRef<string | null>(null);
 
@@ -90,12 +90,6 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
         }
 
         const workbook = univerAPI.createWorkbook(workbookData);
-        if (readOnly) {
-            workbook.disableSelection();
-            const permission = workbook.getPermission();
-            permission.setWorkbookEditPermission(workbook.getId(), false);
-            permission.setPermissionDialogVisible(false);
-        }
 
         restoreViewState(workbook, viewState);
 
