@@ -1,10 +1,10 @@
 import "./ChatMessage.css";
 
 import DOMPurify from "dompurify";
-import { Marked } from "marked";
+import { Marked, Renderer, type Tokens } from "marked";
 import { useEffect, useMemo, useRef } from "preact/hooks";
 
-import { type LlmCitation, createWikiLinkExtension } from "@triliumnext/commons";
+import { ADMONITION_TYPE_MAPPINGS, type LlmCitation, createWikiLinkExtension } from "@triliumnext/commons";
 
 import link from "../../../services/link.js";
 import { t } from "../../../services/i18n.js";
@@ -19,6 +19,25 @@ function shortenNumber(n: number): string {
     return n.toString();
 }
 
+/** Renderer that turns GitHub-style `> [!NOTE]` blockquotes into admonition asides. */
+class ChatMarkdownRenderer extends Renderer {
+    override blockquote({ tokens }: Tokens.Blockquote): string {
+        const body = this.parser.parse(tokens);
+        const match = /^<p>\[\!([A-Z]+)\]/.exec(body);
+        if (match) {
+            const type = match[1].toLowerCase();
+            if (ADMONITION_TYPE_MAPPINGS[type]) {
+                const bodyWithoutHeader = body
+                    // `breaks: true` turns the newline after the marker into a <br>, so strip that too.
+                    .replace(/^<p>\[\!([A-Z]+)\]\s*(?:<br\s*\/?>\s*)?/, "<p>")
+                    .replace(/^<p><\/p>/, "");
+                return `<aside class="admonition ${type}">${bodyWithoutHeader.trim()}</aside>`;
+            }
+        }
+        return `<blockquote>${body}</blockquote>`;
+    }
+}
+
 // Configure marked for safe rendering with client-side URL format
 const markedInstance = new Marked({
     breaks: true, // Convert \n to <br>
@@ -30,7 +49,8 @@ markedInstance.use({
 
 /** Parse markdown to HTML. */
 function renderMarkdown(markdown: string): string {
-    return markedInstance.parse(markdown) as string;
+    // marked attaches a parser to the renderer during parsing, so use a fresh instance per call.
+    return markedInstance.parse(markdown, { renderer: new ChatMarkdownRenderer() }) as string;
 }
 
 /** Renders markdown content with reference link title loading. */

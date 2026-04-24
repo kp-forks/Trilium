@@ -122,6 +122,18 @@ export abstract class BaseProvider implements LlmProvider {
             );
         }
 
+        // Admonition formatting hint
+        parts.push(
+            `When calling out information that deserves visual emphasis, use GitHub-style admonitions. They render as colored callouts in the chat. Use them sparingly — only when a plain paragraph would under-sell the point — and pick the type that matches the intent:\n`
+                + `- \`> [!NOTE]\` — neutral side information worth highlighting\n`
+                + `- \`> [!TIP]\` — an optional improvement or shortcut\n`
+                + `- \`> [!IMPORTANT]\` — information the user should not miss\n`
+                + `- \`> [!WARNING]\` — something that may cause problems or surprise\n`
+                + `- \`> [!CAUTION]\` — a destructive or irreversible action\n\n`
+                + `Syntax: the marker must be on its own line, and every content line must also start with \`>\`. For example:\n\n`
+                + `> [!WARNING]\n> Deleting a note also removes its children and attachments.`
+        );
+
         return parts.length > 0 ? parts.join("\n\n") : undefined;
     }
 
