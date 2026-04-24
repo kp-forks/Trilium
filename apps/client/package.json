@@ -16,7 +16,7 @@
     "circular-deps": "dpdm -T src/**/*.ts --tree=false --warning=false --skip-dynamic-imports=circular"
   },
   "dependencies": {
-    "@excalidraw/excalidraw": "0.18.0",
+    "@excalidraw/excalidraw": "0.18.1",
     "@fullcalendar/core": "6.1.20",
     "@fullcalendar/daygrid": "6.1.20",
     "@fullcalendar/interaction": "6.1.20",
