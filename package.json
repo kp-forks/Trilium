@@ -9,6 +9,7 @@
     "client:test": "pnpm run --filter client test",
     "client:build": "pnpm run --filter client build",
     "client:coverage": "pnpm run --filter client test --coverage",
+    "client:stylelint": "pnpm run --filter client stylelint",
     "server:test": "pnpm run --filter server test",
     "server:build": "pnpm run --filter server build",
     "server:coverage": "pnpm run --filter server test --coverage",
