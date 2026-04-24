@@ -122,6 +122,13 @@ export abstract class BaseProvider implements LlmProvider {
             );
         }
 
+        // Parallel tool-call hint
+        if (config.enableNoteTools || config.enableWebSearch) {
+            parts.push(
+                `When you need several independent pieces of information, issue the tool calls in parallel within the same turn instead of waiting for each result before requesting the next. Only chain calls sequentially when a later call genuinely depends on the output of an earlier one.`
+            );
+        }
+
         // Admonition formatting hint
         parts.push(
             `When calling out information that deserves visual emphasis, use GitHub-style admonitions. They render as colored callouts in the chat. Use them sparingly — only when a plain paragraph would under-sell the point — and pick the type that matches the intent:\n`
