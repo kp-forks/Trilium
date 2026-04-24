@@ -75,7 +75,7 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
     const definitions: RightPanelWidgetDefinition[] = [
         {
             el: <TableOfContents />,
-            enabled: (noteType === "text" || noteType === "doc" || isPdf),
+            enabled: (noteType === "text" || noteType === "doc" || isPdf || !!note?.isMarkdown()),
         },
         {
             el: <PdfPages />,

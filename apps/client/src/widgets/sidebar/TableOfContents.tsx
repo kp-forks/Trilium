@@ -39,6 +39,7 @@ export default function TableOfContents() {
             {((noteType === "text" && isReadOnly) || (noteType === "doc")) && <ReadOnlyTextTableOfContents />}
             {noteType === "text" && !isReadOnly && <EditableTextTableOfContents />}
             {noteType === "file" && noteMime === "application/pdf" && <PdfTableOfContents />}
+            {note?.isMarkdown() && <ReadOnlyTextTableOfContents />}
         </RightPanelWidget>
     );
 }
