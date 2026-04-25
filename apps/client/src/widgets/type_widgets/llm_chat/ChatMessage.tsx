@@ -4,6 +4,7 @@ import DOMPurify from "dompurify";
 import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import { type LlmCitation, renderToHtml } from "@triliumnext/commons";
+import { renderMathInElement } from "../../../services/math.js";
 
 import link from "../../../services/link.js";
 import { t } from "../../../services/i18n.js";
@@ -38,6 +39,11 @@ function MarkdownContent({ html, isStreaming }: { html: string; isStreaming?: bo
         const referenceLinks = containerRef.current.querySelectorAll<HTMLAnchorElement>("a.reference-link");
         for (const el of referenceLinks) {
             link.loadReferenceLinkTitle($(el), el.href);
+        }
+
+        const equations = containerRef.current.querySelectorAll("span.math-tex");
+        for (const equation of equations) {
+            renderMathInElement(equation, { trust: true });
         }
     }, [html]);
 
