@@ -124,47 +124,73 @@ export function setupAnnotationLiveUpdates() {
 
 async function extractAndSendAnnotations() {
     const app = window.PDFViewerApplication;
-
     try {
-        const numPages = app.pdfDocument.numPages;
-        const storage = app.pdfDocument.annotationStorage;
-        const annotations: PdfAnnotationInfo[] = [];
+        const annotations = await extractFromDocument(app.pdfDocument);
+        applyEditorOverrides(annotations, app.pdfDocument.annotationStorage);
+        sendAnnotations(annotations);
+    } catch (error) {
+        console.error("Error extracting annotations:", error);
+        sendAnnotations([]);
+    }
+}
 
-        for (let i = 1; i <= numPages; i++) {
-            const page = await app.pdfDocument.getPage(i);
-            const pageAnnotations = await page.getAnnotations({ intent: "display" });
+/**
+ * Re-extract annotations from freshly saved PDF bytes.
+ * Opens a temporary document to read the latest data (including
+ * newly created highlights with their overlaidText), then closes it.
+ */
+export async function extractFromSavedData(data: ArrayBuffer | Uint8Array) {
+    try {
+        const tempDoc = await (globalThis as any).pdfjsLib.getDocument({ data }).promise;
+        const annotations = await extractFromDocument(tempDoc);
+        tempDoc.destroy();
+        sendAnnotations(annotations);
+    } catch (error) {
+        console.error("Error extracting annotations from saved data:", error);
+    }
+}
 
-            for (const ann of pageAnnotations) {
-                const processed = processAnnotation(ann, i);
-                if (!processed) continue;
+async function extractFromDocument(pdfDocument: any): Promise<PdfAnnotationInfo[]> {
+    const numPages = pdfDocument.numPages;
+    const annotations: PdfAnnotationInfo[] = [];
 
-                // Check if there's an active editor overriding this annotation
-                const editor = (storage as any).getEditor?.(ann.id);
-                if (editor) {
-                    if (editor.deleted) continue;
-                    if (editor.color) {
-                        processed.color = editor.color;
-                    }
-                    if (editor.comment?.text) {
-                        processed.contents = editor.comment.text;
-                    }
-                }
+    for (let i = 1; i <= numPages; i++) {
+        const page = await pdfDocument.getPage(i);
+        const pageAnnotations = await page.getAnnotations({ intent: "display" });
 
+        for (const ann of pageAnnotations) {
+            const processed = processAnnotation(ann, i);
+            if (processed) {
                 annotations.push(processed);
             }
         }
-
-        window.parent.postMessage({
-            type: "pdfjs-viewer-annotations",
-            annotations
-        } satisfies PdfViewerAnnotationsMessage, window.location.origin);
-    } catch (error) {
-        console.error("Error extracting annotations:", error);
-        window.parent.postMessage({
-            type: "pdfjs-viewer-annotations",
-            annotations: []
-        } satisfies PdfViewerAnnotationsMessage, window.location.origin);
     }
+
+    return annotations;
+}
+
+function applyEditorOverrides(annotations: PdfAnnotationInfo[], storage: any) {
+    for (const ann of annotations) {
+        const editor = storage.getEditor?.(ann.id);
+        if (!editor) continue;
+        if (editor.deleted) {
+            annotations.splice(annotations.indexOf(ann), 1);
+            continue;
+        }
+        if (editor.color) {
+            ann.color = editor.color;
+        }
+        if (editor.comment?.text) {
+            ann.contents = editor.comment.text;
+        }
+    }
+}
+
+function sendAnnotations(annotations: PdfAnnotationInfo[]) {
+    window.parent.postMessage({
+        type: "pdfjs-viewer-annotations",
+        annotations
+    } satisfies PdfViewerAnnotationsMessage, window.location.origin);
 }
 
 function scrollToAnnotation(annotationId: string, pageNumber: number) {
