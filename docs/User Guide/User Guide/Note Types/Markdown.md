@@ -50,6 +50,11 @@ The following features are supported by Trilium's Markdown format and will show 
     [^2]: the second footnote
     ```
 
+### Other features
+
+*   The <a class="reference-link" href="Text/Table%20of%20contents.md">Table of contents</a> will be displayed in the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Right%20Sidebar.md">Right Sidebar</a> based on the Markdown-level headings.
+    *   This feature is available only on the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/New%20Layout.md">New Layout</a>.
+
 ### Shared notes
 
 When a Markdown note is [shared publicly](../Advanced%20Usage/Sharing.md), it will be rendered with extended formatting just like <a class="reference-link" href="Text.md">Text</a> notes.
