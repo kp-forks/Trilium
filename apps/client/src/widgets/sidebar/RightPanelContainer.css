@@ -13,9 +13,16 @@ body.experimental-feature-new-layout #right-pane {
             justify-content: flex-start;
             --icon-button-size: 26px;
 
+            .icon-action {
+                flex-shrink: 0;
+            }
+
             .card-header-title {
                 padding-inline: 0;
                 flex-grow: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
 
