@@ -10812,6 +10812,13 @@
                                             "value": "CoFPLs3dRlXc",
                                             "isInheritable": false,
                                             "position": 70
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "KC1HB96bqqHX",
+                                            "isInheritable": false,
+                                            "position": 80
                                         }
                                     ],
                                     "format": "markdown",
