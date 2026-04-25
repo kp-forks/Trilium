@@ -81,6 +81,10 @@ export function setupAnnotationLiveUpdates() {
 
     // Fires when editor properties change (e.g. color, thickness).
     app.eventBus.on("annotationeditorparamschanged", debouncedRefresh);
+
+    // Catches deletions, undo/redo, and comment deletion which
+    // don't trigger onSetModified or annotationeditorparamschanged.
+    app.eventBus.on("editingstateschanged", debouncedRefresh);
 }
 
 async function extractAndSendAnnotations() {

@@ -126,6 +126,11 @@ function manageSave() {
     app.eventBus.on("switchannotationeditorparams", () => {
         onChange();
     });
+    // Catches deletions of existing annotations, undo/redo, and comment deletion
+    // which don't trigger onSetModified or switchannotationeditorparams.
+    app.eventBus.on("editingstateschanged", () => {
+        onChange();
+    });
 }
 
 function manageDownload() {
