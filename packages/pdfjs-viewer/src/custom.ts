@@ -17,7 +17,7 @@ async function main() {
     }
 
     if (isEditable) {
-        interceptPersistence(getCustomAppOptions(urlParams));
+        interceptPersistence();
     }
 
     configurePdfViewerOptions();
@@ -44,16 +44,26 @@ async function main() {
 };
 
 function configurePdfViewerOptions() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const locale = urlParams.get("locale");
+
     const pdfOptionsHandler = (event: CustomEvent) => {
         if (event.detail?.source === window && window.PDFViewerApplicationOptions) {
             window.PDFViewerApplicationOptions.set("disablePreferences", true);
             window.PDFViewerApplicationOptions.set("enableHighlightFloatingButton", true);
             window.PDFViewerApplicationOptions.set("enableComment", true);
+            if (locale) {
+                window.PDFViewerApplicationOptions.set("localeProperties", { lang: locale });
+            }
         }
     };
-    if (window.parent && window.parent !== window) {
+
+    const isInIframe = window.parent && window.parent !== window;
+    if (isInIframe) {
         window.parent.addEventListener("webviewerloaded", pdfOptionsHandler, { once: true });
         window.addEventListener("pagehide", () => window.parent?.removeEventListener("webviewerloaded", pdfOptionsHandler));
+    } else {
+        document.addEventListener("webviewerloaded", pdfOptionsHandler, { once: true });
     }
 }
 
@@ -67,15 +77,6 @@ function hideSidebar() {
         }
         toggleButtonEl.style.display = "none";
     }
-}
-
-function getCustomAppOptions(urlParams: URLSearchParams) {
-    return {
-        localeProperties: {
-            // Read from URL query
-            lang: urlParams.get("lang") || "en"
-        }
-    };
 }
 
 function manageSave() {
