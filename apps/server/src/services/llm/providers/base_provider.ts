@@ -129,16 +129,23 @@ export abstract class BaseProvider implements LlmProvider {
             );
         }
 
-        // Admonition formatting hint
+        // Markdown formatting hints
         parts.push(
-            `When calling out information that deserves visual emphasis, use GitHub-style admonitions. They render as colored callouts in the chat. Use them sparingly — only when a plain paragraph would under-sell the point — and pick the type that matches the intent:\n`
+            `Your responses are rendered as Markdown with extended features. Use them when appropriate:\n\n`
+                + `**Admonitions** — GitHub-style callout blocks. Use sparingly, only when a plain paragraph would under-sell the point:\n`
                 + `- \`> [!NOTE]\` — neutral side information worth highlighting\n`
                 + `- \`> [!TIP]\` — an optional improvement or shortcut\n`
                 + `- \`> [!IMPORTANT]\` — information the user should not miss\n`
                 + `- \`> [!WARNING]\` — something that may cause problems or surprise\n`
-                + `- \`> [!CAUTION]\` — a destructive or irreversible action\n\n`
-                + `Syntax: the marker must be on its own line, and every content line must also start with \`>\`. For example:\n\n`
-                + `> [!WARNING]\n> Deleting a note also removes its children and attachments.`
+                + `- \`> [!CAUTION]\` — a destructive or irreversible action\n`
+                + `Syntax: the marker must be on its own line, and every content line must start with \`>\`.\n\n`
+                + `**Math equations** — KaTeX (LaTeX subset). Use \`$...$\` for inline math and \`$$...$$\` for display (block) math. Example: \`$E = mc^2$\` or:\n`
+                + `$$\n\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}\n$$\n\n`
+                + `**Mermaid diagrams** — use a fenced code block with the \`mermaid\` language tag. Example:\n`
+                + "```mermaid\ngraph LR\n    A --> B\n```\n\n"
+                + `**Code blocks** — use fenced code blocks with a language tag for syntax highlighting (e.g. \`\`\`js, \`\`\`python).\n\n`
+                + `**Footnotes** — use \`[^1]\` in text and \`[^1]: explanation\` at the bottom.\n\n`
+                + `**Task lists** — use \`- [ ]\` for unchecked and \`- [x]\` for checked items.`
         );
 
         return parts.length > 0 ? parts.join("\n\n") : undefined;
