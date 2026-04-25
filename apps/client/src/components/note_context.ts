@@ -321,7 +321,8 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
         }
 
         // Note types that support a read-only state (via the #readOnly label, source view, or auto-readonly).
-        if (!READ_ONLY_CAPABLE_TYPES.includes(this.note.type)) {
+        const isPdf = this.note.type === "file" && this.note.mime === "application/pdf";
+        if (!isPdf && !READ_ONLY_CAPABLE_TYPES.includes(this.note.type)) {
             return false;
         }
 
