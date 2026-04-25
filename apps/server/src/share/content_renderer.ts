@@ -473,7 +473,8 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
     const parseOpts: Partial<Options> = { blockTextElements: {} };
     const document = parse(html, parseOpts);
     for (const codeEl of document.querySelectorAll("pre code")) {
-        if (codeEl.classList.contains("language-mermaid")) {
+        if (codeEl.classList.contains("language-mermaid")
+            || codeEl.classList.contains("language-text-x-trilium-auto")) {
             continue;
         }
 
