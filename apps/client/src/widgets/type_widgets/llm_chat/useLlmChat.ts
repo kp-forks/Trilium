@@ -166,20 +166,17 @@ export function useLlmChat(
     }, []);
 
     // Scroll to bottom when content changes, but only if user hasn't scrolled away.
-    // Use instant scroll for message changes (includes initial load), smooth for streaming.
-    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    // Always use instant scroll — smooth animations race with the scroll listener
+    // during streaming, causing the auto-scroll to "unstick" mid-animation.
+    const scrollToBottom = useCallback(() => {
         if (isNearBottomRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior });
+            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
         }
     }, []);
 
     useEffect(() => {
-        scrollToBottom("instant");
-    }, [messages, scrollToBottom]);
-
-    useEffect(() => {
         scrollToBottom();
-    }, [streamingContent, streamingThinking, scrollToBottom]);
+    }, [messages, streamingContent, streamingThinking, scrollToBottom]);
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
