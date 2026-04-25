@@ -8,6 +8,7 @@ import "@univerjs/preset-sheets-filter/lib/index.css";
 import "@univerjs/preset-sheets-hyper-link/lib/index.css";
 import "@univerjs/preset-sheets-data-validation/lib/index.css";
 
+import { DEFAULT_STYLES } from '@univerjs/core';
 import { UniverSheetsConditionalFormattingPreset } from '@univerjs/preset-sheets-conditional-formatting';
 import UniverPresetSheetsConditionalFormattingEnUS from '@univerjs/preset-sheets-conditional-formatting/locales/en-US';
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
@@ -121,6 +122,12 @@ function useFixRadixPortals() {
 function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean) {
     useEffect(() => {
         if (!containerRef.current) return;
+
+        // Override Univer's hardcoded default font to match Trilium's UI font.
+        const ff = getComputedStyle(document.documentElement).getPropertyValue("--detail-font-family").trim();
+        if (ff) {
+            DEFAULT_STYLES.ff = ff;
+        }
 
         const { univerAPI } = createUniver({
             locale: LocaleType.EN_US,
