@@ -22,6 +22,8 @@ This makes it useful when reading large documents since the position is remember
 
 Since v0.102.0 it's possible to annotate PDFs. To do so, look for the annotation buttons on the right side of the PDF toolbar (<img src="1_PDFs_image.png" width="120" height="32">).
 
+Since v0.103.0, annotations are disabled if the note is marked as <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/Notes/Read-Only%20Notes.md">Read-Only Notes</a>.
+
 ### Supported annotations
 
 The following annotation methods are supported:
