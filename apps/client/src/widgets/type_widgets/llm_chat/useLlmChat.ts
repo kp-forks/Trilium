@@ -38,6 +38,7 @@ export interface UseLlmChatReturn {
     contextNoteId: string | undefined;
     lastPromptTokens: number;
     messagesEndRef: RefObject<HTMLDivElement>;
+    scrollContainerRef: RefObject<HTMLDivElement>;
     textareaRef: RefObject<HTMLTextAreaElement>;
     /** Whether a provider is configured and available */
     hasProvider: boolean;
@@ -90,8 +91,10 @@ export function useLlmChat(
     const [hasProvider, setHasProvider] = useState<boolean>(true); // Assume true initially
     const [isCheckingProvider, setIsCheckingProvider] = useState<boolean>(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const isNearBottomRef = useRef(true);
 
     // Refs to get fresh values in getContent (avoids stale closures)
     const messagesRef = useRef(messages);
@@ -147,9 +150,26 @@ export function useLlmChat(
         refreshModels();
     }, []);
 
-    // Scroll to bottom when content changes
+    // Track whether the user is near the bottom of the scroll container
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const THRESHOLD = 50; // px from bottom
+        const handleScroll = () => {
+            isNearBottomRef.current =
+                container.scrollHeight - container.scrollTop - container.clientHeight <= THRESHOLD;
+        };
+
+        container.addEventListener("scroll", handleScroll, { passive: true });
+        return () => container.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    // Scroll to bottom when content changes, but only if user hasn't scrolled away
     const scrollToBottom = useCallback(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (isNearBottomRef.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
     }, []);
 
     useEffect(() => {
@@ -419,6 +439,7 @@ export function useLlmChat(
         contextNoteId,
         lastPromptTokens,
         messagesEndRef,
+        scrollContainerRef,
         textareaRef,
         hasProvider,
         isCheckingProvider,
