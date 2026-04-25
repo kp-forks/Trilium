@@ -16,15 +16,16 @@ import { UniverSheetsDataValidationPreset } from '@univerjs/preset-sheets-data-v
 import UniverPresetSheetsDataValidationEnUS from '@univerjs/preset-sheets-data-validation/locales/en-US';
 import { UniverSheetsFilterPreset } from '@univerjs/preset-sheets-filter';
 import UniverPresetSheetsFilterEnUS from '@univerjs/preset-sheets-filter/locales/en-US';
-import { UniverSheetsHyperLinkPreset } from '@univerjs/preset-sheets-hyper-link';
-import UniverPresetSheetsHyperLinkEnUS from '@univerjs/preset-sheets-hyper-link/locales/en-US';
 import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
 import sheetsFindReplaceEnUS from '@univerjs/preset-sheets-find-replace/locales/en-US';
+import { UniverSheetsHyperLinkPreset } from '@univerjs/preset-sheets-hyper-link';
+import UniverPresetSheetsHyperLinkEnUS from '@univerjs/preset-sheets-hyper-link/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
 import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { UniverSheetsSortPreset } from '@univerjs/preset-sheets-sort';
 import UniverPresetSheetsSortEnUS from '@univerjs/preset-sheets-sort/locales/en-US';
 import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
+import { IDialogService, ISidebarService } from '@univerjs/ui';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
@@ -71,6 +72,7 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef);
     useSearchIntegration(apiRef);
+    useDismissDialogsOnNoteSwitch(apiRef);
     useFixRadixPortals();
 
     // Focus the spreadsheet when the note is focused.
@@ -193,5 +195,16 @@ function useSearchIntegration(apiRef: MutableRef<FUniver | undefined>) {
 
         // Open find/replace panel and populate the search term.
         univerAPI.executeCommand("ui.operation.open-find-dialog");
+    });
+}
+
+function useDismissDialogsOnNoteSwitch(apiRef: MutableRef<FUniver | undefined>) {
+    useTriliumEvent("beforeNoteSwitch", () => {
+        const univerAPI = apiRef.current;
+        if (!univerAPI) return;
+
+        const injector = (univerAPI as unknown as { _injector: { get(id: unknown): { closeAll(): void; close(): void } } })._injector;
+        injector.get(IDialogService).closeAll();
+        injector.get(ISidebarService).close();
     });
 }
