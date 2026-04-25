@@ -8,7 +8,9 @@ async function main() {
     const urlParams = new URLSearchParams(window.location.search);
     const isEditable = urlParams.get("editable") === "1";
 
+    const hideToolbar = urlParams.get("toolbar") === "0";
     document.body.classList.toggle("read-only-document", !isEditable);
+    document.body.classList.toggle("no-toolbar", hideToolbar);
 
     if (urlParams.get("sidebar") === "0") {
         hideSidebar();

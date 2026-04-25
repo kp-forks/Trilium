@@ -28,6 +28,13 @@ body.read-only-document {
     }
 }
 
+body.no-toolbar {
+    --toolbar-height: 0;
+    .toolbar {
+        display: none !important;
+    }
+}
+
 :root button,
 :root dialog,
 :root #toolbarContainer,
