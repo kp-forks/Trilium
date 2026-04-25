@@ -2231,6 +2231,7 @@
     "processing_complete": "OCR processing complete.",
     "processing_failed": "Failed to start OCR processing",
     "text_filtered_low_confidence": "OCR detected text with {{confidence}}% confidence, but it was discarded because your minimum threshold is {{threshold}}%.",
+    "image_based_pdf_not_supported": "This PDF appears to be image-based (scanned). Text extraction from image-based PDFs is not yet supported.",
     "open_media_settings": "Open Settings",
     "view_extracted_text": "View extracted text (OCR)"
   },
