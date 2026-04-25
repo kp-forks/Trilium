@@ -7,19 +7,7 @@ import RightPanelWidget from "../RightPanelWidget";
 
 const TYPE_ICONS: Record<string, string> = {
     text: "bx bxs-comment-detail",
-    freetext: "bx bx-text",
     highlight: "bx bx-highlight",
-    underline: "bx bx-underline",
-    squiggly: "bx bx-water",
-    strikeout: "bx bx-strikethrough",
-    ink: "bx bx-pen",
-    stamp: "bx bx-stamp",
-    line: "bx bx-minus",
-    square: "bx bx-rectangle",
-    circle: "bx bx-circle",
-    polygon: "bx bx-shape-polygon",
-    polyline: "bx bx-git-branch",
-    caret: "bx bx-caret-up"
 };
 
 export default function PdfAnnotations() {

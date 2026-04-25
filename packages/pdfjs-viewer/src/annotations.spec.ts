@@ -49,7 +49,7 @@ describe("processAnnotation", () => {
     });
 
     it("skips non-comment types and empty annotations", () => {
-        const link = { ...SAMPLE_HIGHLIGHT, annotationType: AnnotationType.LINK };
+        const link = { ...SAMPLE_HIGHLIGHT, annotationType: 2 }; // LINK
         expect(processAnnotation(link, 1)).toBeNull();
 
         const empty = { ...SAMPLE_HIGHLIGHT, contentsObj: { str: "", dir: "ltr" }, overlaidText: "" };

@@ -1,57 +1,18 @@
 // PDF annotation type constants (from PDF spec / pdfjs-dist AnnotationType)
 export const AnnotationType = {
     TEXT: 1,
-    LINK: 2,
-    FREETEXT: 3,
-    LINE: 4,
-    SQUARE: 5,
-    CIRCLE: 6,
-    POLYGON: 7,
-    POLYLINE: 8,
     HIGHLIGHT: 9,
-    UNDERLINE: 10,
-    SQUIGGLY: 11,
-    STRIKEOUT: 12,
-    STAMP: 13,
-    CARET: 14,
-    INK: 15,
-    POPUP: 16,
-    FILEATTACHMENT: 17
 } as const;
 
-/** Annotation types that carry user-visible comments or markup. */
+/** Annotation types we display in the sidebar. */
 const COMMENT_TYPES = new Set([
     AnnotationType.TEXT,
-    AnnotationType.FREETEXT,
     AnnotationType.HIGHLIGHT,
-    AnnotationType.UNDERLINE,
-    AnnotationType.SQUIGGLY,
-    AnnotationType.STRIKEOUT,
-    AnnotationType.INK,
-    AnnotationType.STAMP,
-    AnnotationType.LINE,
-    AnnotationType.SQUARE,
-    AnnotationType.CIRCLE,
-    AnnotationType.POLYGON,
-    AnnotationType.POLYLINE,
-    AnnotationType.CARET
 ]);
 
 const TYPE_NAMES: Record<number, string> = {
     [AnnotationType.TEXT]: "text",
-    [AnnotationType.FREETEXT]: "freetext",
     [AnnotationType.HIGHLIGHT]: "highlight",
-    [AnnotationType.UNDERLINE]: "underline",
-    [AnnotationType.SQUIGGLY]: "squiggly",
-    [AnnotationType.STRIKEOUT]: "strikeout",
-    [AnnotationType.INK]: "ink",
-    [AnnotationType.STAMP]: "stamp",
-    [AnnotationType.LINE]: "line",
-    [AnnotationType.SQUARE]: "square",
-    [AnnotationType.CIRCLE]: "circle",
-    [AnnotationType.POLYGON]: "polygon",
-    [AnnotationType.POLYLINE]: "polyline",
-    [AnnotationType.CARET]: "caret"
 };
 
 /**
