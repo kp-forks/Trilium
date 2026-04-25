@@ -10,6 +10,7 @@ import { useActiveNoteContext, useGetContextData, useNoteProperty } from "../../
 import RightPanelWidget from "../RightPanelWidget";
 
 const ROW_HEIGHT = 180;
+const COLUMNS = 2;
 
 export default function PdfPages() {
     const { note } = useActiveNoteContext();
@@ -73,9 +74,10 @@ function PdfPagesList({ pagesData }: { pagesData: NoteContextDataMap["pdfPages"]
             {containerHeight > 0 && (
                 <List
                     rowComponent={PdfPageRow}
-                    rowCount={pagesData.totalPages}
+                    rowCount={Math.ceil(pagesData.totalPages / COLUMNS)}
                     rowHeight={ROW_HEIGHT}
                     rowProps={{
+                        totalPages: pagesData.totalPages,
                         thumbnails,
                         currentPage: pagesData.currentPage,
                         requestThumbnail,
@@ -89,6 +91,7 @@ function PdfPagesList({ pagesData }: { pagesData: NoteContextDataMap["pdfPages"]
 }
 
 interface PdfPageRowData {
+    totalPages: number;
     thumbnails: Map<number, string>;
     currentPage: number;
     requestThumbnail: (page: number) => void;
@@ -96,10 +99,33 @@ interface PdfPageRowData {
 }
 
 function PdfPageRow({ index, style, ...data }: RowComponentProps<PdfPageRowData>) {
-    const pageNumber = index + 1;
-    const { thumbnails, currentPage, requestThumbnail, scrollToPage } = data;
-    const thumbnail = thumbnails.get(pageNumber);
-    const isActive = pageNumber === currentPage;
+    const { totalPages, thumbnails, currentPage, requestThumbnail, scrollToPage } = data;
+    const startPage = index * COLUMNS + 1;
+    const pages = Array.from({ length: COLUMNS }, (_, i) => startPage + i).filter(p => p <= totalPages);
+
+    return (
+        <div style={style as preact.JSX.CSSProperties} className="pdf-page-row">
+            {pages.map(pageNumber => (
+                <PdfPageCell
+                    key={pageNumber}
+                    pageNumber={pageNumber}
+                    isActive={pageNumber === currentPage}
+                    thumbnail={thumbnails.get(pageNumber)}
+                    requestThumbnail={requestThumbnail}
+                    scrollToPage={scrollToPage}
+                />
+            ))}
+        </div>
+    ) as React.ReactElement;
+}
+
+function PdfPageCell({ pageNumber, isActive, thumbnail, requestThumbnail, scrollToPage }: {
+    pageNumber: number;
+    isActive: boolean;
+    thumbnail?: string;
+    requestThumbnail: (page: number) => void;
+    scrollToPage: (page: number) => void;
+}) {
     const hasRequested = useRef(false);
 
     useEffect(() => {
@@ -111,7 +137,6 @@ function PdfPageRow({ index, style, ...data }: RowComponentProps<PdfPageRowData>
 
     return (
         <div
-            style={style as preact.JSX.CSSProperties}
             className={`pdf-page-item ${isActive ? 'active' : ''}`}
             onClick={() => scrollToPage(pageNumber)}
         >
@@ -124,5 +149,5 @@ function PdfPageRow({ index, style, ...data }: RowComponentProps<PdfPageRowData>
             </div>
             <div className="pdf-page-number">{pageNumber}</div>
         </div>
-    ) as React.ReactElement;
+    );
 }
