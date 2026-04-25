@@ -78,7 +78,9 @@ function PdfAnnotationItem({
     annotation: PdfAnnotationInfo;
     onNavigate: (annotationId: string, pageNumber: number) => void;
 }) {
-    const icon = TYPE_ICONS[annotation.type] ?? "bx bx-comment";
+    const icon = annotation.contents
+        ? "bx bxs-comment-detail"
+        : TYPE_ICONS[annotation.type] ?? "bx bx-comment";
 
     return (
         <div className="pdf-annotation-item" onClick={() => onNavigate(annotation.id, annotation.pageNumber)}>
