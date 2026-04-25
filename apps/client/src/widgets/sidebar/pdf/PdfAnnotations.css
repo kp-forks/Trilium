@@ -42,6 +42,16 @@
     min-width: 0;
 }
 
+.pdf-annotation-highlighted-text {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--muted-text-color);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
 .pdf-annotation-contents {
     font-size: 13px;
     color: var(--main-text-color);

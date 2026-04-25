@@ -1,5 +1,5 @@
 // PDF annotation type constants (from PDF spec / pdfjs-dist AnnotationType)
-const AnnotationType = {
+export const AnnotationType = {
     TEXT: 1,
     LINK: 2,
     FREETEXT: 3,
@@ -54,6 +54,36 @@ const TYPE_NAMES: Record<number, string> = {
     [AnnotationType.CARET]: "caret"
 };
 
+/**
+ * Process a raw PDF.js annotation object into a normalized PdfAnnotationInfo,
+ * or return null if it should be skipped.
+ */
+export function processAnnotation(ann: Record<string, any>, pageNumber: number): PdfAnnotationInfo | null {
+    if (!COMMENT_TYPES.has(ann.annotationType)) {
+        return null;
+    }
+
+    const contents = ann.contentsObj?.str || "";
+    const highlightedText = ann.overlaidText || "";
+
+    // Skip annotations that have no meaningful content
+    if (!contents && !highlightedText) {
+        return null;
+    }
+
+    return {
+        id: ann.id,
+        type: TYPE_NAMES[ann.annotationType] ?? "unknown",
+        contents,
+        highlightedText,
+        author: ann.titleObj?.str || "",
+        pageNumber,
+        color: ann.color ? rgbToHex(ann.color) : null,
+        creationDate: ann.creationDate || null,
+        modificationDate: ann.modificationDate || null
+    };
+}
+
 export async function setupPdfAnnotations() {
     await extractAndSendAnnotations();
 
@@ -78,20 +108,10 @@ async function extractAndSendAnnotations() {
             const pageAnnotations = await page.getAnnotations({ intent: "display" });
 
             for (const ann of pageAnnotations) {
-                if (!COMMENT_TYPES.has(ann.annotationType)) continue;
-                // Skip annotations that have no meaningful content
-                if (!ann.contents && !ann.richText && ann.annotationType !== AnnotationType.HIGHLIGHT) continue;
-
-                annotations.push({
-                    id: ann.id,
-                    type: TYPE_NAMES[ann.annotationType] ?? "unknown",
-                    contents: ann.contents || "",
-                    author: ann.titleObj?.str || "",
-                    pageNumber: i,
-                    color: ann.color ? rgbToHex(ann.color) : null,
-                    creationDate: ann.creationDate || null,
-                    modificationDate: ann.modificationDate || null
-                });
+                const processed = processAnnotation(ann, i);
+                if (processed) {
+                    annotations.push(processed);
+                }
             }
         }
 
@@ -113,7 +133,7 @@ function scrollToAnnotation(pageNumber: number) {
     app.pdfViewer.currentPageNumber = pageNumber;
 }
 
-function rgbToHex(rgb: Uint8ClampedArray | number[]): string {
+export function rgbToHex(rgb: Uint8ClampedArray | Record<number, number> | number[]): string {
     const r = rgb[0];
     const g = rgb[1];
     const b = rgb[2];

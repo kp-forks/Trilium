@@ -111,6 +111,7 @@ interface PdfAnnotationInfo {
     id: string;
     type: string;
     contents: string;
+    highlightedText: string;
     author: string;
     pageNumber: number;
     color: string | null;

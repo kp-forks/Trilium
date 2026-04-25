@@ -86,6 +86,9 @@ function PdfAnnotationItem({
                 <Icon icon={icon} />
             </div>
             <div className="pdf-annotation-info">
+                {annotation.highlightedText && (
+                    <div className="pdf-annotation-highlighted-text">{annotation.highlightedText}</div>
+                )}
                 {annotation.contents && (
                     <div className="pdf-annotation-contents">{annotation.contents}</div>
                 )}
