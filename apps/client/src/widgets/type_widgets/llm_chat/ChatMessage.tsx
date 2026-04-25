@@ -1,14 +1,12 @@
 import "./ChatMessage.css";
 
-import DOMPurify from "dompurify";
-import { useEffect, useMemo, useRef } from "preact/hooks";
-
 import { type LlmCitation, renderToHtml } from "@triliumnext/commons";
-import { renderMathInElement } from "../../../services/math.js";
+import DOMPurify from "dompurify";
+import { useMemo } from "preact/hooks";
 
-import link from "../../../services/link.js";
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
+import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import { type ContentBlock, getMessageText, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import ToolCallCard from "./ToolCallCard.js";
@@ -29,32 +27,11 @@ function renderMarkdown(markdown: string): string {
     });
 }
 
-/** Renders markdown content with reference link title loading. */
+/** Renders markdown content using the shared read-only text pipeline (math, syntax highlighting, mermaid, etc.). */
 function MarkdownContent({ html, isStreaming }: { html: string; isStreaming?: boolean }) {
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        const referenceLinks = containerRef.current.querySelectorAll<HTMLAnchorElement>("a.reference-link");
-        for (const el of referenceLinks) {
-            link.loadReferenceLinkTitle($(el), el.href);
-        }
-
-        const equations = containerRef.current.querySelectorAll("span.math-tex");
-        for (const equation of equations) {
-            renderMathInElement(equation, { trust: true });
-        }
-    }, [html]);
-
     return (
         <>
-            <div
-                ref={containerRef}
-                className="llm-chat-markdown"
-                // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
-            />
+            <ReadOnlyTextContent html={html} className="llm-chat-markdown" />
             {isStreaming && <span className="llm-chat-cursor" />}
         </>
     );
