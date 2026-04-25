@@ -41,6 +41,14 @@ The following features are supported by Trilium's Markdown format and will show 
     ```
     [[Hg8TS5ZOxti6]]
     ```
+*   <a class="reference-link" href="Text/Footnotes.md">Footnotes</a> are also supported via the corresponding Markdown syntax:
+    
+    ```
+    This is [^1], while this is [^2].
+    
+    [^1]: the first footnote
+    [^2]: the second footnote
+    ```
 
 ### Shared notes
 

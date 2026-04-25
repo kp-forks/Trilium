@@ -1,4 +1,5 @@
 import { Marked, Renderer, type Tokens } from "marked";
+import markedFootnote from "marked-footnote";
 
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "./mime_type.js";
 import {
@@ -287,6 +288,7 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
     const { processedText, placeholderMap: formulaMap } = extractFormulas(content);
 
     const marked = new Marked({ async: false });
+    marked.use(markedFootnote());
     marked.use({
         // Order is important, especially for wikilinks.
         extensions: [

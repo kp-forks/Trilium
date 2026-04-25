@@ -1373,6 +1373,9 @@ importers:
       marked:
         specifier: 18.0.2
         version: 18.0.2
+      marked-footnote:
+        specifier: 1.4.0
+        version: 1.4.0(marked@18.0.2)
 
   packages/express-partial-content: {}
 
@@ -10515,6 +10518,11 @@ packages:
 
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
+
+  marked-footnote@1.4.0:
+    resolution: {integrity: sha512-fZTxAhI1TcLEs5UOjCfYfTHpyKGaWQevbxaGTEA68B51l7i87SctPFtHETYqPkEN0ka5opvy4Dy1l/yXVC+hmg==}
+    peerDependencies:
+      marked: '>=7.0.0'
 
   marked@16.4.2:
     resolution: {integrity: sha512-TI3V8YYWvkVf3KJe1dRkpnjs68JUPyEa5vjKrp1XEEJUAOaQc+Qj+L1qWbPd0SJuAdQkFU0h73sXXqwDYxsiDA==}
@@ -26144,6 +26152,10 @@ snapshots:
       uc.micro: 2.1.0
 
   markdown-table@3.0.4: {}
+
+  marked-footnote@1.4.0(marked@18.0.2):
+    dependencies:
+      marked: 18.0.2
 
   marked@16.4.2: {}
 
