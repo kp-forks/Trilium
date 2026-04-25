@@ -29,7 +29,7 @@ import { IDialogService, ISidebarService } from '@univerjs/ui';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
-import { useColorScheme, useEffectiveReadOnly, useTriliumEvent } from "../../react/hooks";
+import { useColorScheme, useEffectiveReadOnly, useTriliumEvent, useTriliumEvents } from "../../react/hooks";
 import { TypeWidgetProps } from "../type_widget";
 import usePersistence from "./persistence";
 
@@ -199,7 +199,7 @@ function useSearchIntegration(apiRef: MutableRef<FUniver | undefined>) {
 }
 
 function useDismissDialogsOnNoteSwitch(apiRef: MutableRef<FUniver | undefined>) {
-    useTriliumEvent("beforeNoteSwitch", () => {
+    useTriliumEvents(["beforeNoteSwitch", "noteTypeMimeChanged"], () => {
         const univerAPI = apiRef.current;
         if (!univerAPI) return;
 
