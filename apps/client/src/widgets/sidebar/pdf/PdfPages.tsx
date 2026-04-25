@@ -1,11 +1,15 @@
 import "./PdfPages.css";
 
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import type React from "react";
+import { List, type RowComponentProps } from "react-window";
 
 import { NoteContextDataMap } from "../../../components/note_context";
 import { t } from "../../../services/i18n";
 import { useActiveNoteContext, useGetContextData, useNoteProperty } from "../../react/hooks";
 import RightPanelWidget from "../RightPanelWidget";
+
+const ROW_HEIGHT = 180;
 
 export default function PdfPages() {
     const { note } = useActiveNoteContext();
@@ -27,9 +31,10 @@ export default function PdfPages() {
 function PdfPagesList({ pagesData }: { pagesData: NoteContextDataMap["pdfPages"] }) {
     const [thumbnails, setThumbnails] = useState<Map<number, string>>(new Map());
     const requestedThumbnails = useRef<Set<number>>(new Set());
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [containerHeight, setContainerHeight] = useState(0);
 
     useEffect(() => {
-        // Listen for thumbnail responses via custom event
         function handleThumbnail(event: CustomEvent) {
             const { pageNumber, dataUrl } = event.detail;
             setThumbnails(prev => new Map(prev).set(pageNumber, dataUrl));
@@ -41,8 +46,18 @@ function PdfPagesList({ pagesData }: { pagesData: NoteContextDataMap["pdfPages"]
         };
     }, []);
 
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const observer = new ResizeObserver(([entry]) => {
+            setContainerHeight(entry.contentRect.height);
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
     const requestThumbnail = useCallback((pageNumber: number) => {
-        // Only request if we haven't already requested it and don't have it
         if (!requestedThumbnails.current.has(pageNumber) && !thumbnails.has(pageNumber) && pagesData) {
             requestedThumbnails.current.add(pageNumber);
             pagesData.requestThumbnail(pageNumber);
@@ -53,52 +68,53 @@ function PdfPagesList({ pagesData }: { pagesData: NoteContextDataMap["pdfPages"]
         return <div className="no-pages">No pages available</div>;
     }
 
-    const pages = Array.from({ length: pagesData.totalPages }, (_, i) => i + 1);
-
     return (
-        <div className="pdf-pages-list">
-            {pages.map(pageNumber => (
-                <PdfPageItem
-                    key={pageNumber}
-                    pageNumber={pageNumber}
-                    isActive={pageNumber === pagesData.currentPage}
-                    thumbnail={thumbnails.get(pageNumber)}
-                    onRequestThumbnail={requestThumbnail}
-                    onPageClick={() => pagesData.scrollToPage(pageNumber)}
+        <div ref={containerRef} className="pdf-pages-list">
+            {containerHeight > 0 && (
+                <List
+                    rowComponent={PdfPageRow}
+                    rowCount={pagesData.totalPages}
+                    rowHeight={ROW_HEIGHT}
+                    rowProps={{
+                        thumbnails,
+                        currentPage: pagesData.currentPage,
+                        requestThumbnail,
+                        scrollToPage: pagesData.scrollToPage
+                    }}
+                    style={{ height: containerHeight }}
                 />
-            ))}
+            )}
         </div>
     );
 }
 
-function PdfPageItem({
-    pageNumber,
-    isActive,
-    thumbnail,
-    onRequestThumbnail,
-    onPageClick
-}: {
-    pageNumber: number;
-    isActive: boolean;
-    thumbnail?: string;
-    onRequestThumbnail(page: number): void;
-    onPageClick(): void;
-}) {
+interface PdfPageRowData {
+    thumbnails: Map<number, string>;
+    currentPage: number;
+    requestThumbnail: (page: number) => void;
+    scrollToPage: (page: number) => void;
+}
+
+function PdfPageRow({ index, style, ...data }: RowComponentProps<PdfPageRowData>) {
+    const pageNumber = index + 1;
+    const { thumbnails, currentPage, requestThumbnail, scrollToPage } = data;
+    const thumbnail = thumbnails.get(pageNumber);
+    const isActive = pageNumber === currentPage;
     const hasRequested = useRef(false);
 
     useEffect(() => {
         if (!thumbnail && !hasRequested.current) {
             hasRequested.current = true;
-            onRequestThumbnail(pageNumber);
+            requestThumbnail(pageNumber);
         }
-    }, [pageNumber, thumbnail, onRequestThumbnail]);
+    }, [pageNumber, thumbnail, requestThumbnail]);
 
     return (
         <div
+            style={style as preact.JSX.CSSProperties}
             className={`pdf-page-item ${isActive ? 'active' : ''}`}
-            onClick={onPageClick}
+            onClick={() => scrollToPage(pageNumber)}
         >
-            <div className="pdf-page-number">{pageNumber}</div>
             <div className="pdf-page-thumbnail">
                 {thumbnail ? (
                     <img src={thumbnail} alt={t("pdf.pages_alt", { pageNumber })} />
@@ -106,6 +122,7 @@ function PdfPageItem({
                     <div className="pdf-page-loading">{t("pdf.pages_loading")}</div>
                 )}
             </div>
+            <div className="pdf-page-number">{pageNumber}</div>
         </div>
-    );
+    ) as React.ReactElement;
 }
