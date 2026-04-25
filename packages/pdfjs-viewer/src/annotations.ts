@@ -96,11 +96,38 @@ export async function setupPdfAnnotations() {
     });
 }
 
+/**
+ * Must be called AFTER manageSave() so we can chain onto the
+ * onSetModified callback it installs.
+ */
+export function setupAnnotationLiveUpdates() {
+    const app = window.PDFViewerApplication!;
+    const storage = app.pdfDocument.annotationStorage;
+
+    let debounceTimer: number | null = null;
+    const debouncedRefresh = () => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = window.setTimeout(() => extractAndSendAnnotations(), 500);
+    };
+
+    // Chain onto the existing onSetModified set by manageSave.
+    // Fires when annotations are added/removed.
+    const previousOnSetModified = (storage as any).onSetModified;
+    (storage as any).onSetModified = () => {
+        previousOnSetModified?.();
+        debouncedRefresh();
+    };
+
+    // Fires when editor properties change (e.g. color, thickness).
+    app.eventBus.on("annotationeditorparamschanged", debouncedRefresh);
+}
+
 async function extractAndSendAnnotations() {
     const app = window.PDFViewerApplication;
 
     try {
         const numPages = app.pdfDocument.numPages;
+        const storage = app.pdfDocument.annotationStorage;
         const annotations: PdfAnnotationInfo[] = [];
 
         for (let i = 1; i <= numPages; i++) {
@@ -109,9 +136,21 @@ async function extractAndSendAnnotations() {
 
             for (const ann of pageAnnotations) {
                 const processed = processAnnotation(ann, i);
-                if (processed) {
-                    annotations.push(processed);
+                if (!processed) continue;
+
+                // Check if there's an active editor overriding this annotation
+                const editor = (storage as any).getEditor?.(ann.id);
+                if (editor) {
+                    if (editor.deleted) continue;
+                    if (editor.color) {
+                        processed.color = editor.color;
+                    }
+                    if (editor.comment?.text) {
+                        processed.contents = editor.comment.text;
+                    }
                 }
+
+                annotations.push(processed);
             }
         }
 

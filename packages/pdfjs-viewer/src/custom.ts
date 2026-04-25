@@ -3,7 +3,7 @@ import { extractAndSendToc, setupScrollToHeading, setupActiveHeadingTracking } f
 import { setupPdfPages } from "./pages";
 import { setupPdfAttachments } from "./attachments";
 import { setupPdfLayers } from "./layers";
-import { setupPdfAnnotations } from "./annotations";
+import { setupPdfAnnotations, setupAnnotationLiveUpdates } from "./annotations";
 
 async function main() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -45,6 +45,8 @@ async function main() {
             setupPdfPages();
             setupPdfAttachments();
             setupPdfLayers();
+            // Must be after manageSave() so we chain onto its onSetModified
+            setupAnnotationLiveUpdates();
         });
     }
     await app.initializedPromise;
