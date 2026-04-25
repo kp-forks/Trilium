@@ -36,35 +36,15 @@ export default function PdfAnnotations() {
         return null;
     }
 
-    // Group annotations by page
-    const byPage = new Map<number, PdfAnnotationInfo[]>();
-    for (const ann of annotationsData.annotations) {
-        let list = byPage.get(ann.pageNumber);
-        if (!list) {
-            list = [];
-            byPage.set(ann.pageNumber, list);
-        }
-        list.push(ann);
-    }
-
-    const pages = [...byPage.entries()].sort((a, b) => a[0] - b[0]);
-
     return (
         <RightPanelWidget id="pdf-annotations" title={t("pdf.annotations", { count: annotationsData.annotations.length })}>
             <div className="pdf-annotations-list">
-                {pages.map(([pageNumber, annotations]) => (
-                    <div key={pageNumber} className="pdf-annotations-page-group">
-                        <div className="pdf-annotations-page-header">
-                            {t("pdf.annotations_page", { page: pageNumber })}
-                        </div>
-                        {annotations.map((annotation) => (
-                            <PdfAnnotationItem
-                                key={annotation.id}
-                                annotation={annotation}
-                                onNavigate={annotationsData.scrollToAnnotation}
-                            />
-                        ))}
-                    </div>
+                {annotationsData.annotations.map((annotation) => (
+                    <PdfAnnotationItem
+                        key={annotation.id}
+                        annotation={annotation}
+                        onNavigate={annotationsData.scrollToAnnotation}
+                    />
                 ))}
             </div>
         </RightPanelWidget>

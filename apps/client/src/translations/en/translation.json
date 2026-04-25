@@ -2424,8 +2424,7 @@
     "pages_alt": "Page {{pageNumber}}",
     "pages_loading": "Loading...",
     "annotations_one": "{{count}} annotation",
-    "annotations_other": "{{count}} annotations",
-    "annotations_page": "Page {{page}}"
+    "annotations_other": "{{count}} annotations"
   },
   "platform_indicator": {
     "available_on": "Available on {{platform}}"

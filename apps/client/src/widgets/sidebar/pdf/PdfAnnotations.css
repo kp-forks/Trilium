@@ -2,16 +2,6 @@
     width: 100%;
 }
 
-.pdf-annotations-page-header {
-    padding: 4px 12px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted-text-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background-color: var(--accented-background-color);
-    border-bottom: 1px solid var(--main-border-color);
-}
 
 .pdf-annotation-item {
     display: flex;
