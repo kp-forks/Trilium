@@ -83,8 +83,12 @@ function PdfAnnotationItem({
         : TYPE_ICONS[annotation.type] ?? "bx bx-comment";
 
     return (
-        <div className="pdf-annotation-item" onClick={() => onNavigate(annotation.id, annotation.pageNumber)}>
-            <Icon icon={icon} style={annotation.color ? { color: annotation.color } : undefined} />
+        <div
+            className="pdf-annotation-item"
+            onClick={() => onNavigate(annotation.id, annotation.pageNumber)}
+            style={annotation.color ? { backgroundColor: annotation.color } : undefined}
+        >
+            <Icon icon={icon} />
             <div className="pdf-annotation-info">
                 {annotation.highlightedText && (
                     <div className="pdf-annotation-highlighted-text">{annotation.highlightedText}</div>

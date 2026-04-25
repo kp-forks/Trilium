@@ -18,17 +18,14 @@
     align-items: flex-start;
     gap: 8px;
     padding: 8px 12px;
+    margin: 6px 8px;
+    border-radius: 6px;
     cursor: pointer;
-    border-bottom: 1px solid var(--main-border-color);
-    transition: background-color 0.2s;
+    transition: filter 0.2s;
 }
 
 .pdf-annotation-item:hover {
-    background-color: var(--hover-item-background-color);
-}
-
-.pdf-annotations-page-group:last-child .pdf-annotation-item:last-child {
-    border-bottom: none;
+    filter: brightness(0.9);
 }
 
 .pdf-annotation-item .tn-icon {
