@@ -8,7 +8,7 @@ import RightPanelWidget from "../RightPanelWidget";
 const TYPE_ICONS: Record<string, string> = {
     text: "bx bxs-comment-detail",
     freetext: "bx bx-text",
-    highlight: "bx bxs-highlight",
+    highlight: "bx bx-highlight",
     underline: "bx bx-underline",
     squiggly: "bx bx-water",
     strikeout: "bx bx-strikethrough",
@@ -82,9 +82,7 @@ function PdfAnnotationItem({
 
     return (
         <div className="pdf-annotation-item" onClick={() => onNavigate(annotation.pageNumber)}>
-            <div className="pdf-annotation-icon" style={annotation.color ? { color: annotation.color } : undefined}>
-                <Icon icon={icon} />
-            </div>
+            <Icon icon={icon} style={annotation.color ? { color: annotation.color } : undefined} />
             <div className="pdf-annotation-info">
                 {annotation.highlightedText && (
                     <div className="pdf-annotation-highlighted-text">{annotation.highlightedText}</div>

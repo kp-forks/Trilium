@@ -31,10 +31,9 @@
     border-bottom: none;
 }
 
-.pdf-annotation-icon {
+.pdf-annotation-item .tn-icon {
     flex-shrink: 0;
-    font-size: 16px;
-    padding-top: 1px;
+    font-size: 18px;
 }
 
 .pdf-annotation-info {
