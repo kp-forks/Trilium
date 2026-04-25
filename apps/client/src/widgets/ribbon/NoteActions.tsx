@@ -82,7 +82,8 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
     const isContentAvailable = note.isContentAvailable();
     const isPrintable = isContentAvailable && (
         ["text", "code", "spreadsheet"].includes(noteType) ||
-        (noteType === "book" && ["presentation", "list", "table"].includes(viewType ?? ""))
+        (noteType === "book" && ["presentation", "list", "table"].includes(viewType ?? "")) ||
+        (noteType === "file" && note.mime === "application/pdf")
     );
     const isElectron = getIsElectron();
     const isMac = getIsMac();

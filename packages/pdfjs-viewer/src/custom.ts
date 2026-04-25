@@ -28,6 +28,8 @@ async function main() {
     }
     const app = window.PDFViewerApplication;
 
+    managePrint();
+
     if (isEditable) {
         app.eventBus.on("documentloaded", () => {
             manageSave();
@@ -123,6 +125,16 @@ function manageDownload() {
         if (event.data?.type === "trilium-request-download") {
             const app = window.PDFViewerApplication;
             app.eventBus.dispatch("download", { source: window });
+        }
+    });
+}
+
+function managePrint() {
+    window.addEventListener("message", event => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data?.type === "trilium-print") {
+            window.print();
         }
     });
 }

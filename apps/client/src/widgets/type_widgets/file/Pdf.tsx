@@ -181,6 +181,13 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
         });
     });
 
+    useTriliumEvent("printActiveNote", () => {
+        if (!noteContext.isActive()) return;
+        iframeRef.current?.contentWindow?.postMessage({
+            type: "trilium-print"
+        }, window.location.origin);
+    });
+
     return (historyConfig &&
         <PdfViewer
             iframeRef={iframeRef}

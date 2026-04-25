@@ -182,6 +182,9 @@ export default function NoteDetail() {
     useTriliumEvent("printActiveNote", () => {
         if (!noteContext?.isActive() || !note) return;
 
+        // PDF printing is handled by the PDF viewer's own print mechanism.
+        if (note.type === "file" && note.mime === "application/pdf") return;
+
         if (isElectron()) {
             // On Electron, open the print preview dialog. Actual print/PDF actions
             // are triggered from the dialog's footer buttons.
