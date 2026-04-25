@@ -52,6 +52,10 @@ export interface NoteContextDataMap {
         layers: PdfLayer[];
         toggleLayer(layerId: string, visible: boolean): void;
     };
+    pdfAnnotations: {
+        annotations: PdfAnnotationInfo[];
+        scrollToAnnotation(pageNumber: number): void;
+    };
     saveState: {
         state: SaveState;
     };

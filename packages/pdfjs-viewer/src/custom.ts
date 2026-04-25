@@ -3,6 +3,7 @@ import { extractAndSendToc, setupScrollToHeading, setupActiveHeadingTracking } f
 import { setupPdfPages } from "./pages";
 import { setupPdfAttachments } from "./attachments";
 import { setupPdfLayers } from "./layers";
+import { setupPdfAnnotations } from "./annotations";
 
 async function main() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -29,6 +30,10 @@ async function main() {
     const app = window.PDFViewerApplication;
 
     manageParentCommands();
+
+    app.eventBus.on("documentloaded", () => {
+        setupPdfAnnotations();
+    });
 
     if (isEditable) {
         app.eventBus.on("documentloaded", () => {

@@ -154,6 +154,18 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
                 });
             }
 
+            if (event.data.type === "pdfjs-viewer-annotations") {
+                noteContext.setContextData("pdfAnnotations", {
+                    annotations: event.data.annotations,
+                    scrollToAnnotation: (pageNumber: number) => {
+                        iframeRef.current?.contentWindow?.postMessage({
+                            type: "trilium-scroll-to-annotation",
+                            pageNumber
+                        }, window.location.origin);
+                    }
+                });
+            }
+
             if (event.data.type === "pdfjs-viewer-layers") {
                 noteContext.setContextData("pdfLayers", {
                     layers: event.data.layers,

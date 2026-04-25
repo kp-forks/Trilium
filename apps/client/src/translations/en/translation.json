@@ -2422,7 +2422,10 @@
     "pages_one": "{{count}} page",
     "pages_other": "{{count}} pages",
     "pages_alt": "Page {{pageNumber}}",
-    "pages_loading": "Loading..."
+    "pages_loading": "Loading...",
+    "annotations_one": "{{count}} annotation",
+    "annotations_other": "{{count}} annotations",
+    "annotations_page": "Page {{page}}"
   },
   "platform_indicator": {
     "available_on": "Available on {{platform}}"
