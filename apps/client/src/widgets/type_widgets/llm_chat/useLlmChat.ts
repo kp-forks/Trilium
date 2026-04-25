@@ -165,16 +165,21 @@ export function useLlmChat(
         return () => container.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Scroll to bottom when content changes, but only if user hasn't scrolled away
-    const scrollToBottom = useCallback(() => {
+    // Scroll to bottom when content changes, but only if user hasn't scrolled away.
+    // Use instant scroll for message changes (includes initial load), smooth for streaming.
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
         if (isNearBottomRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            messagesEndRef.current?.scrollIntoView({ behavior });
         }
     }, []);
 
     useEffect(() => {
+        scrollToBottom("instant");
+    }, [messages, scrollToBottom]);
+
+    useEffect(() => {
         scrollToBottom();
-    }, [messages, streamingContent, streamingThinking, scrollToBottom]);
+    }, [streamingContent, streamingThinking, scrollToBottom]);
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
