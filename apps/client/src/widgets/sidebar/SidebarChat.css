@@ -50,7 +50,7 @@
 }
 
 /* Make the sidebar chat widget grow to fill available space when expanded */
-#right-pane .widget.grow:not(.collapsed) {
+#right-pane #sidebar-chat.widget.grow:not(.collapsed) {
     flex: 1;
     flex-shrink: 1; /* Override flex-shrink: 0 from main styles */
     min-height: 0;
@@ -58,7 +58,7 @@
     flex-direction: column;
 }
 
-#right-pane .widget.grow:not(.collapsed) .body-wrapper {
+#right-pane #sidebar-chat.widget.grow:not(.collapsed) .body-wrapper {
     flex: 1;
     min-height: 0;
     display: flex;
@@ -66,7 +66,7 @@
     overflow: hidden; /* Override overflow: auto from main styles */
 }
 
-#right-pane .widget.grow:not(.collapsed) .card-body {
+#right-pane #sidebar-chat.widget.grow:not(.collapsed) .card-body {
     flex: 1;
     min-height: 0;
     overflow: hidden; /* Override overflow: auto - let child handle scrolling */
