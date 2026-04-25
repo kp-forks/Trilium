@@ -28,6 +28,11 @@
     filter: brightness(0.9);
 }
 
+.pdf-annotation-item,
+.pdf-annotation-item .tn-icon {
+    color: #333;
+}
+
 .pdf-annotation-item .tn-icon {
     flex-shrink: 0;
     font-size: 18px;
@@ -41,7 +46,7 @@
 .pdf-annotation-highlighted-text {
     font-size: 13px;
     font-style: italic;
-    color: var(--muted-text-color);
+    color: #555;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -50,7 +55,7 @@
 
 .pdf-annotation-contents {
     font-size: 13px;
-    color: var(--main-text-color);
+    color: #333;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -59,6 +64,6 @@
 
 .pdf-annotation-author {
     font-size: 11px;
-    color: var(--muted-text-color);
+    color: #555;
     margin-top: 2px;
 }
