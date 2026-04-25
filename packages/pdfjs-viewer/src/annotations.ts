@@ -195,11 +195,22 @@ function sendAnnotations(annotations: PdfAnnotationInfo[]) {
 
 function scrollToAnnotation(annotationId: string, pageNumber: number) {
     const app = window.PDFViewerApplication;
+    const container = app.pdfViewer.container as HTMLElement;
+
+    function scrollToEl(el: Element) {
+        const containerRect = container.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const offsetTop = elRect.top - containerRect.top + container.scrollTop;
+        container.scrollTo({
+            top: offsetTop - container.clientHeight / 2 + elRect.height / 2,
+            behavior: "smooth"
+        });
+    }
 
     // Try to find the element directly (nearby pages are pre-rendered)
     const el = document.querySelector(`[data-annotation-id="${CSS.escape(annotationId)}"]`);
     if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        scrollToEl(el);
         return;
     }
 
@@ -209,7 +220,7 @@ function scrollToAnnotation(annotationId: string, pageNumber: number) {
         const el = document.querySelector(`[data-annotation-id="${CSS.escape(annotationId)}"]`);
         if (el) {
             observer.disconnect();
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            scrollToEl(el);
         }
     });
     observer.observe(document.getElementById("viewer")!, { childList: true, subtree: true });
