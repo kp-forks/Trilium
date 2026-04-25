@@ -57,11 +57,6 @@ export interface RenderToHtmlOptions {
      * marked attaches a parser to the renderer during parsing.
      */
     renderer?: Renderer;
-    /**
-     * If `true`, convert single newlines (`\n`) to `<br>`. Useful for chat-style
-     * content where LLMs use single newlines as line breaks. Default: `false`.
-     */
-    breaks?: boolean;
 }
 
 function escapeHtml(str: string): string {
@@ -292,7 +287,7 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
 
     const { processedText, placeholderMap: formulaMap } = extractFormulas(content);
 
-    const marked = new Marked({ async: false, breaks: options.breaks ?? false, gfm: true });
+    const marked = new Marked({ async: false, gfm: true });
     marked.use(markedFootnote());
     marked.use({
         // Order is important, especially for wikilinks.

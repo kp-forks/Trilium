@@ -22,8 +22,7 @@ function renderMarkdown(markdown: string): string {
     return renderToHtml(markdown, "", {
         sanitize: (h) => DOMPurify.sanitize(h),
         wikiLink: { formatHref: (id) => `#root/${id}` },
-        demoteH1: false,
-        breaks: true
+        demoteH1: false
     });
 }
 
