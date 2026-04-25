@@ -76,7 +76,8 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
     const [viewType] = useNoteLabel(note, "viewType");
     const canBeConvertedToAttachment = note?.isEligibleForConversionToAttachment();
     const isSourceView = noteContext?.viewScope?.viewMode === "source";
-    const isSearchable = isSourceView || ["text", "code", "book", "mindMap", "doc", "spreadsheet"].includes(noteType);
+    const isSearchable = isSourceView || ["text", "code", "book", "mindMap", "doc", "spreadsheet"].includes(noteType)
+        || (noteType === "file" && note.mime === "application/pdf");
     const isInOptionsOrHelp = note?.noteId.startsWith("_options") || note?.noteId.startsWith("_help");
     const isExportableToImage = ["mermaid", "mindMap"].includes(noteType);
     const isContentAvailable = note.isContentAvailable();

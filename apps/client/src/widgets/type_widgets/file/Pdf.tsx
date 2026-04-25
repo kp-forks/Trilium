@@ -188,6 +188,13 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
         }, window.location.origin);
     });
 
+    useTriliumEvent("findInText", () => {
+        if (!noteContext.isActive()) return;
+        iframeRef.current?.contentWindow?.postMessage({
+            type: "trilium-find"
+        }, window.location.origin);
+    });
+
     return (historyConfig &&
         <PdfViewer
             iframeRef={iframeRef}

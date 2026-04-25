@@ -28,7 +28,7 @@ async function main() {
     }
     const app = window.PDFViewerApplication;
 
-    managePrint();
+    manageParentCommands();
 
     if (isEditable) {
         app.eventBus.on("documentloaded", () => {
@@ -129,12 +129,16 @@ function manageDownload() {
     });
 }
 
-function managePrint() {
+function manageParentCommands() {
     window.addEventListener("message", event => {
         if (event.origin !== window.location.origin) return;
 
         if (event.data?.type === "trilium-print") {
             window.print();
+        }
+
+        if (event.data?.type === "trilium-find") {
+            window.PDFViewerApplication?.findBar?.open();
         }
     });
 }
