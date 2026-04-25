@@ -5,7 +5,7 @@ import type NoteContext from "../../../components/note_context";
 import FBlob from "../../../entities/fblob";
 import FNote from "../../../entities/fnote";
 import { useViewModeConfig } from "../../collections/NoteList";
-import { useBlobEditorSpacedUpdate, useTriliumEvent } from "../../react/hooks";
+import { useBlobEditorSpacedUpdate, useEffectiveReadOnly, useTriliumEvent } from "../../react/hooks";
 import PdfViewer from "./PdfViewer";
 
 export default function PdfPreview({ note, blob, componentId, noteContext }: {
@@ -15,6 +15,7 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
     componentId: string | undefined;
 }) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const isReadOnly = useEffectiveReadOnly(note, noteContext);
     const historyConfig = useViewModeConfig<HistoryData>(note, "pdfHistory");
 
     const spacedUpdate = useBlobEditorSpacedUpdate({
@@ -56,7 +57,7 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
     useEffect(() => {
         function handleMessage(event: PdfMessageEvent) {
             if (event.data?.type === "pdfjs-viewer-document-modified") {
-                if (event.data.noteId === note.noteId && event.data.ntxId === noteContext.ntxId) {
+                if (!isReadOnly && event.data.noteId === note.noteId && event.data.ntxId === noteContext.ntxId) {
                     spacedUpdate.resetUpdateTimer();
                     spacedUpdate.scheduleUpdate();
                 }
@@ -171,7 +172,7 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
         return () => {
             window.removeEventListener("message", handleMessage);
         };
-    }, [ note, historyConfig, componentId, blob, noteContext ]);
+    }, [ note, historyConfig, componentId, blob, noteContext, isReadOnly, spacedUpdate ]);
 
     useTriliumEvent("customDownload", ({ ntxId }) => {
         if (ntxId !== noteContext.ntxId) return;
@@ -199,7 +200,7 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
                     });
                 }
             }}
-            editable
+            editable={!isReadOnly}
         />
     );
 }
