@@ -91,7 +91,7 @@ export async function setupPdfAnnotations() {
         if (event.origin !== window.location.origin) return;
 
         if (event.data?.type === "trilium-scroll-to-annotation") {
-            scrollToAnnotation(event.data.pageNumber);
+            scrollToAnnotation(event.data.annotationId, event.data.pageNumber);
         }
     });
 }
@@ -128,9 +128,28 @@ async function extractAndSendAnnotations() {
     }
 }
 
-function scrollToAnnotation(pageNumber: number) {
+function scrollToAnnotation(annotationId: string, pageNumber: number) {
     const app = window.PDFViewerApplication;
+
+    // Try to find the element directly (nearby pages are pre-rendered)
+    const el = document.querySelector(`[data-annotation-id="${CSS.escape(annotationId)}"]`);
+    if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+    }
+
+    // Element not in DOM yet — jump to the page and wait for it to render
     app.pdfViewer.currentPageNumber = pageNumber;
+    const observer = new MutationObserver(() => {
+        const el = document.querySelector(`[data-annotation-id="${CSS.escape(annotationId)}"]`);
+        if (el) {
+            observer.disconnect();
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    });
+    observer.observe(document.getElementById("viewer")!, { childList: true, subtree: true });
+    // Clean up if annotation never appears
+    setTimeout(() => observer.disconnect(), 3000);
 }
 
 export function rgbToHex(rgb: Uint8ClampedArray | Record<number, number> | number[]): string {

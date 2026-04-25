@@ -157,9 +157,10 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
             if (event.data.type === "pdfjs-viewer-annotations") {
                 noteContext.setContextData("pdfAnnotations", {
                     annotations: event.data.annotations,
-                    scrollToAnnotation: (pageNumber: number) => {
+                    scrollToAnnotation: (annotationId: string, pageNumber: number) => {
                         iframeRef.current?.contentWindow?.postMessage({
                             type: "trilium-scroll-to-annotation",
+                            annotationId,
                             pageNumber
                         }, window.location.origin);
                     }

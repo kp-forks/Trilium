@@ -54,7 +54,7 @@ export interface NoteContextDataMap {
     };
     pdfAnnotations: {
         annotations: PdfAnnotationInfo[];
-        scrollToAnnotation(pageNumber: number): void;
+        scrollToAnnotation(annotationId: string, pageNumber: number): void;
     };
     saveState: {
         state: SaveState;
