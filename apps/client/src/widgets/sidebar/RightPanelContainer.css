@@ -15,6 +15,7 @@ body.experimental-feature-new-layout #right-pane {
 
             .icon-action {
                 flex-shrink: 0;
+                transition: transform 0.15s ease;
             }
 
             .card-header-title {
@@ -35,7 +36,7 @@ body.experimental-feature-new-layout #right-pane {
             border-bottom: 0;
         }
 
-        &.collapsed .card-header > .tn-icon {
+        &.collapsed .card-header > .icon-action {
             transform: rotate(-90deg);
         }
     }
