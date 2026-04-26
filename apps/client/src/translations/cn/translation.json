@@ -1,10 +1,28 @@
 {
-    "about": {
-        "data_directory": "数据目录：",
-        "version_label": "版本：",
-        "version": "{{appVersion}}（数据库：{{dbVersion}}，同步协议：{{syncVersion}}）",
-        "build_info": "创建: {{buildDate}}, 修订: <buildRevision />",
-        "contributors_label": "贡献者："
+  "about": {
+    "data_directory": "数据目录：",
+    "version_label": "版本：",
+    "version": "{{appVersion}}（数据库：{{dbVersion}}，同步协议：{{syncVersion}}）",
+    "build_info": "创建: {{buildDate}}, 修订: <buildRevision />",
+    "contributors_label": "贡献者：",
+    "contributor_roles": {
+      "lead-dev": "首席开发者",
+      "original-dev": "原始开发者"
+    },
+    "role_brief_history": {
+      "lead-dev": "Elian Doran 于 2024 年创立了 TriliumNext，这是在 Zadam 从该项目退出后创建的一个社区分支。Zadam 后来将原始仓库转移给 TriliumNext 团队，将两个项目合并回一个。",
+      "original-dev": "2017年12月25日，Zadam发布了Trilium的第一个测试版（写作时只用一个“l”，不同于那种花）。由于对现有的笔记整理工具不满意，他构建了一个强大的自托管层次化知识库，该项目在GitHub上获得了超过22,000颗星。到了2024年，随着生活变得更加忙碌，他将该项目置于维护模式。"
+    },
+    "contributor_full_list": "查看整个社区",
+    "github_tooltip": "在 GitHub 上报告错误、提出功能建议或贡献代码",
+    "license_tooltip": "查看许可证",
+    "donate": "捐赠",
+    "donate_tooltip": "捐款支持这个项目"
+  },
+  "toast": {
+    "critical-error": {
+      "title": "严重错误",
+      "message": "发生了严重错误，导致客户端应用程序无法启动：\n\n{{message}}\n\n这很可能是由于脚本以意外的方式失败引起的。请尝试以安全模式启动应用程序并解决问题。"
     },
     "toast": {
         "critical-error": {
@@ -2364,4 +2382,591 @@
     "auto_link_attribute_list": {
         "title": "系统属性"
     }
+  },
+  "electron_context_menu": {
+    "add-term-to-dictionary": "将 \"{{term}}\" 添加到字典",
+    "cut": "剪切",
+    "copy": "复制",
+    "copy-as-markdown": "复制为 Markdown",
+    "copy-link": "复制链接",
+    "paste": "粘贴",
+    "paste-as-plain-text": "以纯文本粘贴",
+    "search_online": "用 {{searchEngine}} 搜索 \"{{term}}\"",
+    "search_in_trilium": "在 Trilium 中搜索「{{term}}」"
+  },
+  "image_context_menu": {
+    "copy_reference_to_clipboard": "复制引用到剪贴板",
+    "copy_image_to_clipboard": "复制图片到剪贴板"
+  },
+  "link_context_menu": {
+    "open_note_in_new_tab": "在新标签页中打开笔记",
+    "open_note_in_new_split": "在新分屏中打开笔记",
+    "open_note_in_new_window": "在新窗口中打开笔记",
+    "open_note_in_popup": "快速编辑",
+    "open_note_in_other_split": "在另一个分屏中打开笔记"
+  },
+  "electron_integration": {
+    "desktop-application": "桌面应用程序",
+    "native-title-bar": "原生标题栏",
+    "native-title-bar-description": "对于 Windows 和 macOS，关闭原生标题栏可使应用程序看起来更紧凑。在 Linux 上，保留原生标题栏可以更好地与系统集成。",
+    "background-effects": "启用背景效果",
+    "background-effects-description": "为应用窗口添加模糊且时尚的背景，营造出深度感和现代外观。「原生标题栏」必須被禁用。",
+    "restart-app-button": "重启应用程序以查看更改",
+    "zoom-factor": "缩放系数"
+  },
+  "note_autocomplete": {
+    "search-for": "搜索 \"{{term}}\"",
+    "create-note": "创建并链接子笔记 \"{{term}}\"",
+    "insert-external-link": "插入指向 \"{{term}}\" 的外部链接",
+    "clear-text-field": "清除文本字段",
+    "show-recent-notes": "显示最近的笔记",
+    "full-text-search": "全文搜索"
+  },
+  "note_tooltip": {
+    "note-has-been-deleted": "笔记已被删除。",
+    "quick-edit": "快速编辑"
+  },
+  "geo-map": {
+    "create-child-note-title": "创建一个新的子笔记并将其添加到地图中",
+    "create-child-note-instruction": "单击地图以在该位置创建新笔记，或按 Escape 以取消。",
+    "unable-to-load-map": "无法加载地图。",
+    "create-child-note-text": "添加标记"
+  },
+  "geo-map-context": {
+    "open-location": "打开位置",
+    "remove-from-map": "从地图中移除",
+    "add-note": "在这个位置添加一个标记"
+  },
+  "help-button": {
+    "title": "打开相关帮助页面"
+  },
+  "duration": {
+    "seconds": "秒",
+    "minutes": "分钟",
+    "hours": "小时",
+    "days": "天"
+  },
+  "share": {
+    "title": "共享设置",
+    "redirect_bare_domain": "将裸域重定向到共享页面",
+    "redirect_bare_domain_description": "将匿名用户重定向到共享页面，而不是显示登录",
+    "show_login_link": "在共享主题中显示登录链接",
+    "show_login_link_description": "在共享页面底部添加登录链接",
+    "check_share_root": "检查共享根状态",
+    "share_root_found": "共享根笔记 '{{noteTitle}}' 已准备好",
+    "share_root_not_found": "未找到带有 #shareRoot 标签的笔记",
+    "share_root_not_shared": "笔记 '{{noteTitle}}' 具有 #shareRoot 标签，但未共享"
+  },
+  "time_selector": {
+    "invalid_input": "输入的时间值不是有效数字。",
+    "minimum_input": "输入的时间值需要至少 {{minimumSeconds}} 秒。"
+  },
+  "tasks": {
+    "due": {
+      "today": "今天",
+      "tomorrow": "明天",
+      "yesterday": "昨天"
+    }
+  },
+  "code-editor-options": {
+    "title": "编辑器",
+    "tab_width": "制表符宽度",
+    "tab_width_unit": "空格"
+  },
+  "custom_date_time_format": {
+    "title": "自定义日期/时间格式",
+    "description": "自定义通过 <shortcut /> 或工具栏插入的日期和时间格式。有关日期/时间格式字符串中各个字符的含义，请参阅<doc>Day.js docs</doc>。",
+    "format_string": "日期/时间格式字符串：",
+    "formatted_time": "格式化后日期/时间："
+  },
+  "content_widget": {
+    "unknown_widget": "未知组件：\"{{id}}\"."
+  },
+  "note_language": {
+    "not_set": "未设置语言",
+    "configure-languages": "设置语言...",
+    "help-on-languages": "内容语言帮助..."
+  },
+  "content_language": {
+    "title": "内容语言",
+    "description": "在只读或可编辑文本笔记的“基本属性”部分，选择一种或多种语言，这些语言将显示在语言选择列表中。这将启用拼写检查、从右到左的阅读支持和文本提取（OCR）等功能。"
+  },
+  "switch_layout_button": {
+    "title_vertical": "将编辑面板移至底部",
+    "title_horizontal": "将编辑面板移至左侧"
+  },
+  "toggle_read_only_button": {
+    "unlock-editing": "解锁编辑",
+    "lock-editing": "锁定编辑"
+  },
+  "png_export_button": {
+    "button_title": "将图表导出为PNG"
+  },
+  "svg": {
+    "export_to_png": "无法将图表导出为PNG。",
+    "export_to_svg": "此图像无法导出为SVG。"
+  },
+  "code_theme": {
+    "title": "外观",
+    "word_wrapping": "自动换行",
+    "color-scheme": "配色方案"
+  },
+  "cpu_arch_warning": {
+    "title": "请下载ARM64版本",
+    "message_macos": "TriliumNext当前正在通过Rosetta 2转译运行，这意味着您在Apple Silicon芯片的Mac上使用的是Intel（x64）版本。这将显著影响性能和电池续航。",
+    "message_windows": "TriliumNext当前正在模拟环境中运行，这意味着您在ARM架构的Windows设备上使用的是Intel（x64）版本。这将显著影响性能和电池续航。",
+    "recommendation": "为获得最佳体验，请从我们的发布页面下载TriliumNext的原生ARM64版本。",
+    "download_link": "下载原生版本",
+    "continue_anyway": "仍然继续",
+    "dont_show_again": "不再显示此警告"
+  },
+  "editorfeatures": {
+    "title": "功能",
+    "emoji_completion_enabled": "启用表情自动补全",
+    "note_completion_enabled": "启用笔记自动补全",
+    "emoji_completion_description": "如果启用，表情可以轻易地经由输入 `:` 加上表情名称来插入。",
+    "note_completion_description": "如果启用，导向笔记的链接可以经由输入 `@` 加上笔记标题来创建。",
+    "slash_commands_enabled": "启用斜杠命令",
+    "slash_commands_description": "如果启用，可以经由输入 `/` 来触发命令，如插入换行符或标题。"
+  },
+  "table_view": {
+    "new-row": "新增行",
+    "new-column": "新增列",
+    "sort-column-by": "按\"{{title}}\"排序",
+    "sort-column-ascending": "升序",
+    "sort-column-descending": "降序",
+    "sort-column-clear": "清除排序",
+    "hide-column": "隐藏\"{{title}}\"列",
+    "show-hide-columns": "显示/隐藏列",
+    "row-insert-above": "在上方插入行",
+    "row-insert-below": "在下方插入行",
+    "row-insert-child": "插入子笔记",
+    "add-column-to-the-left": "在左侧添加列",
+    "add-column-to-the-right": "在右侧添加列",
+    "edit-column": "编辑列",
+    "delete_column_confirmation": "确定要删除此列吗？所有笔记中对应的属性都将被移除。",
+    "delete-column": "删除列",
+    "new-column-label": "标签",
+    "new-column-relation": "关联"
+  },
+  "book_properties_config": {
+    "hide-weekends": "隐藏周末",
+    "display-week-numbers": "显示周数",
+    "map-style": "地图样式",
+    "max-nesting-depth": "最大嵌套深度：",
+    "raster": "栅格",
+    "vector_light": "矢量（浅色）",
+    "vector_dark": "矢量（深色）",
+    "show-scale": "显示比例尺",
+    "show-labels": "显示标记名称"
+  },
+  "table_context_menu": {
+    "delete_row": "删除行"
+  },
+  "board_view": {
+    "delete-note": "删除笔记...",
+    "move-to": "移动到",
+    "insert-above": "在上方插入",
+    "insert-below": "在下方插入",
+    "delete-column": "删除列",
+    "delete-column-confirmation": "确定要删除此列吗？此列下所有笔记中对应的属性也将被删除。",
+    "new-item": "新增项目",
+    "add-column": "添加列",
+    "archive-note": "存档笔记",
+    "unarchive-note": "解压笔记",
+    "new-item-placeholder": "输入笔记标题...",
+    "add-column-placeholder": "请输入列名...",
+    "edit-note-title": "点击编辑笔记标题",
+    "edit-column-title": "点击编辑列标题",
+    "remove-from-board": "从看板上移除",
+    "column-already-exists": "此列已在看板上。"
+  },
+  "command_palette": {
+    "tree-action-name": "树形：{{name}}",
+    "export_note_title": "导出笔记",
+    "export_note_description": "导出当前笔记",
+    "show_attachments_title": "显示附件",
+    "show_attachments_description": "查看笔记附件",
+    "search_notes_title": "搜索笔记",
+    "search_notes_description": "打开高级搜索",
+    "search_subtree_title": "在子树中搜索",
+    "search_subtree_description": "在当前子树范围内搜索",
+    "search_history_title": "显示搜索历史",
+    "search_history_description": "查看之前的搜索记录",
+    "configure_launch_bar_title": "配置启动栏",
+    "configure_launch_bar_description": "打开启动栏配置，添加或移除项目。"
+  },
+  "content_renderer": {
+    "open_externally": "用外部程序打开"
+  },
+  "modal": {
+    "close": "关闭",
+    "help_title": "显示关于此画面的更多信息"
+  },
+  "call_to_action": {
+    "background_effects_title": "背景效果现已推出稳定版本",
+    "background_effects_message": "在 Windows 和 macOS 设备上，背景效果现在已稳定。背景效果通过模糊背后的背景，为使用者界面增添一抹色彩。",
+    "background_effects_button": "启用背景效果",
+    "next_theme_title": "试用新 Trilium 主题",
+    "next_theme_message": "当前使用旧版主题，要试用新主题吗？",
+    "next_theme_button": "试用新主题",
+    "dismiss": "关闭",
+    "new_layout_message": "我们为 Trilium 引入了现代化的布局。Ribbon 界面已被移除并无缝集成到主界面中，新的状态栏和可展开部分（例如“已提升属性”）取代了其主要功能。\n\n新布局默认启用，您可以通过“选项”→“外观”暂时禁用它。",
+    "new_layout_button": "更多信息",
+    "new_layout_title": "新布局"
+  },
+  "settings": {
+    "related_settings": "相关设置"
+  },
+  "settings_appearance": {
+    "related_code_blocks": "文本笔记中代码块的色彩方案",
+    "related_code_notes": "代码笔记的色彩方案",
+    "ui": "用户界面",
+    "ui_old_layout": "旧布局",
+    "ui_new_layout": "新布局"
+  },
+  "units": {
+    "percentage": "%"
+  },
+  "ui-performance": {
+    "title": "性能",
+    "enable-motion": "过渡和动画",
+    "enable-shadows": "阴影",
+    "enable-backdrop-effects": "菜单、弹窗和面板的背景效果",
+    "enable-smooth-scroll": "平滑滚动",
+    "app-restart-required": "需要重启应用"
+  },
+  "pagination": {
+    "total_notes": "{{count}} 篇笔记",
+    "prev_page": "上一页",
+    "next_page": "下一页"
+  },
+  "collections": {
+    "rendering_error": "出现错误无法显示内容。"
+  },
+  "presentation_view": {
+    "edit-slide": "编辑此幻灯片",
+    "start-presentation": "开始演示",
+    "slide-overview": "切换幻灯片概览"
+  },
+  "calendar_view": {
+    "delete_note": "删除笔记..."
+  },
+  "read-only-info": {
+    "read-only-note": "当前正在查看一个只读笔记。",
+    "auto-read-only-note": "这条笔记以只读模式显示便于快速加载。",
+    "edit-note": "编辑笔记"
+  },
+  "note-color": {
+    "clear-color": "清除笔记颜色",
+    "set-color": "设置笔记颜色",
+    "set-custom-color": "设置自定义笔记颜色"
+  },
+  "popup-editor": {
+    "maximize": "切换至完整编辑器"
+  },
+  "server": {
+    "unknown_http_error_title": "与服务器通讯错误",
+    "unknown_http_error_content": "状态码: {{statusCode}}\n地址: {{method}} {{url}}\n信息: {{message}}",
+    "traefik_blocks_requests": "如果您使用 Traefik 反向代理，它引入了一项影响与服务器的通信重大更改。"
+  },
+  "experimental_features": {
+    "title": "实验选项",
+    "disclaimer": "这些选项处于实验阶段，可能导致系统不稳定。请谨慎使用。",
+    "new_layout_name": "新布局",
+    "new_layout_description": "尝试全新布局，呈现更现代的外观并提升易用性。后续版本将进行重大调整。",
+    "llm_name": "AI/大语言模型对话",
+    "llm_description": "启用由大语言模型驱动的 AI对话侧边栏和大语言模型对话笔记。"
+  },
+  "tab_history_navigation_buttons": {
+    "go-back": "返回前一笔记",
+    "go-forward": "前往下一笔记"
+  },
+  "breadcrumb_badges": {
+    "read_only_explicit": "只读",
+    "read_only_auto": "自动只读",
+    "shared_publicly": "公开共享",
+    "shared_locally": "本地共享",
+    "read_only_explicit_description": "此笔记已被手动设置为只读。\n点击可临时编辑。",
+    "read_only_auto_description": "出于性能原因，此笔记已被自动设置为只读模式。此自动限制可以在设置中调整。\n\n点击可临时编辑。",
+    "read_only_temporarily_disabled": "临时编辑",
+    "read_only_temporarily_disabled_description": "此笔记当前可编辑，但通常是只读的。一旦你切换到其他笔记，该笔记将恢复为只读模式。\n\n点击以重新启用只读模式。",
+    "clipped_note": "网页剪辑",
+    "clipped_note_description": "此笔记最初来自 {{url}}。\n\n点击即可跳转至源网页。",
+    "execute_script": "运行脚本",
+    "execute_script_description": "这是一篇脚本笔记。点击即可执行脚本。",
+    "execute_sql": "运行SQL",
+    "execute_sql_description": "这是一篇 SQL 笔记。点击即可执行 SQL 查询。",
+    "shared_copy_to_clipboard": "复制链接到剪贴板",
+    "shared_open_in_browser": "在浏览器中打开链接",
+    "shared_unshare": "取消共享",
+    "save_status_saved": "已保存",
+    "save_status_saving": "保存中...",
+    "save_status_unsaved": "未保存",
+    "save_status_error": "保存失败",
+    "save_status_unsaved_tooltip": "还有一些更改尚未保存。它们将稍后自动保存。",
+    "save_status_error_tooltip": "保存笔记时出错。如果可以，请尝试将笔记内容复制到其他位置并重新加载应用程序。",
+    "save_status_saving_tooltip": "更改正在保存。"
+  },
+  "status_bar": {
+    "language_title": "更改内容语言",
+    "note_info_title": "查看笔记信息（例如日期，笔记大小）",
+    "backlinks_title_other": "查看反链",
+    "attachments_title_other": "在新标签页中查看附件",
+    "attributes_other": "{{count}} 个属性",
+    "attributes_title": "拥有的属性和继承的属性",
+    "note_paths_title": "笔记路径",
+    "code_note_switcher": "更改语言模式",
+    "backlinks_other": "{{count}} 个反链",
+    "attachments_other": "{{count}} 个附件",
+    "note_paths_other": "{{count}} 条路径"
+  },
+  "breadcrumb": {
+    "workspace_badge": "工作空间",
+    "scroll_to_top_title": "跳转到笔记开始",
+    "hoisted_badge_title": "取消聚焦",
+    "hoisted_badge": "聚焦",
+    "create_new_note": "新建子笔记",
+    "empty_hide_archived_notes": "隐藏已存档的笔记"
+  },
+  "right_pane": {
+    "empty_button": "隐藏面板",
+    "toggle": "切换右侧面板",
+    "custom_widget_go_to_source": "跳转到源码",
+    "empty_message": "这篇笔记没有展示内容"
+  },
+  "attributes_panel": {
+    "title": "笔记属性"
+  },
+  "pdf": {
+    "attachments_other": "{{count}} 个附件",
+    "pages_other": "共{{count}}页",
+    "pages_alt": "第{{pageNumber}}页",
+    "pages_loading": "加载中...",
+    "layers_other": "{{count}} 层"
+  },
+  "platform_indicator": {
+    "available_on": "在 {{platform}} 上可用"
+  },
+  "mobile_tab_switcher": {
+    "title_other": "{{count}} 选项卡",
+    "more_options": "更多选项"
+  },
+  "bookmark_buttons": {
+    "bookmarks": "书签"
+  },
+  "web_view_setup": {
+    "title": "直接在 Trilium 中创建网页的实时视图",
+    "url_placeholder": "输入或粘贴网站地址，例如 https://triliumnotes.org",
+    "create_button": "创建网页视图",
+    "invalid_url_title": "无效的地址",
+    "invalid_url_message": "请输入有效的网址，例如 https://triliumnotes.org。",
+    "disabled_description": "此网页视图来自外部来源。为保护您免受网络钓鱼或恶意内容侵害，该视图不会自动加载。若您信任该来源，可手动启用加载功能。",
+    "disabled_button_enable": "启用网页视图"
+  },
+  "render": {
+    "setup_title": "在此笔记中显示自定义 HTML 或 Preact JSX",
+    "setup_create_sample_preact": "使用 Preact 建立范例笔记",
+    "setup_create_sample_html": "使用 HTML 建立范例笔记",
+    "setup_sample_created": "已建立一个范例笔记作为子笔记。",
+    "disabled_description": "此渲染笔记来自外部来源。为保护您免受恶意内容侵害，该功能默认处于禁用状态。启用前请确保您信任该来源。",
+    "disabled_button_enable": "启用渲染笔记"
+  },
+  "active_content_badges": {
+    "type_icon_pack": "图标包",
+    "type_backend_script": "后端脚本",
+    "type_frontend_script": "前端脚本",
+    "type_widget": "小部件",
+    "type_app_css": "自定义 CSS",
+    "type_render_note": "渲染笔记",
+    "type_web_view": "网页视图",
+    "type_app_theme": "自定义主题",
+    "toggle_tooltip_enable_tooltip": "点击以启用此 {{type}}。",
+    "toggle_tooltip_disable_tooltip": "点击以禁用此 {{type}}。",
+    "menu_docs": "打开文档",
+    "menu_execute_now": "立即执行脚本",
+    "menu_run": "自动执行",
+    "menu_run_disabled": "手动",
+    "menu_run_backend_startup": "当后端启动时",
+    "menu_run_hourly": "每小时",
+    "menu_run_daily": "每日",
+    "menu_run_frontend_startup": "当桌面前端启动时",
+    "menu_run_mobile_startup": "当移动前端启动时",
+    "menu_change_to_widget": "更改为小部件",
+    "menu_change_to_frontend_script": "更改为前端脚本",
+    "menu_theme_base": "主题基底"
+  },
+  "setup_form": {
+    "more_info": "了解更多"
+  },
+  "media": {
+    "play": "播放（空格）",
+    "pause": "暂停（空格）",
+    "back-10s": "后退10秒（左箭头键）",
+    "forward-30s": "前进30秒",
+    "mute": "静音（M）",
+    "unmute": "取消静音（M）",
+    "playback-speed": "播放速度",
+    "loop": "循环播放",
+    "disable-loop": "禁用循环播放",
+    "rotate": "旋转",
+    "picture-in-picture": "画中画",
+    "exit-picture-in-picture": "退出画中画",
+    "fullscreen": "全屏（F）",
+    "exit-fullscreen": "退出全屏",
+    "unsupported-format": "此文件格式不支持媒体预览：\n{{mime}}",
+    "zoom-to-fit": "缩放以填充",
+    "zoom-reset": "重置缩放以填充"
+  },
+  "mermaid": {
+    "sample_diagrams": "示例图：",
+    "sample_flowchart": "流程图",
+    "sample_class": "类图",
+    "sample_sequence": "时序图",
+    "sample_entity_relationship": "实体关系图",
+    "sample_state": "状态图",
+    "sample_mindmap": "思维导图",
+    "sample_architecture": "架构图",
+    "sample_block": "模块图",
+    "sample_c4": "C4 图",
+    "sample_gantt": "甘特图",
+    "sample_git": "Git 流程图",
+    "sample_kanban": "看板图",
+    "sample_packet": "数据包图",
+    "sample_pie": "饼图",
+    "sample_quadrant": "象限图",
+    "sample_radar": "雷达图",
+    "sample_requirement": "需求图",
+    "sample_sankey": "桑基图",
+    "sample_timeline": "时间轴图",
+    "sample_treemap": "树形图",
+    "sample_user_journey": "用户旅程图",
+    "sample_xy": "散点图",
+    "sample_venn": "韦恩图",
+    "sample_ishikawa": "鱼骨图",
+    "placeholder": "输入你的美人鱼图的内容，或者使用下面的示例图之一。",
+    "sample_treeview": "树形视图",
+    "sample_wardley": "沃德利地图"
+  },
+  "llm_chat": {
+    "placeholder": "输入消息…",
+    "send": "发送",
+    "sending": "正在发送...",
+    "empty_state": "在下方输入消息，即可开始对话。",
+    "searching_web": "在网上搜索…",
+    "web_search": "联网搜索",
+    "sources": "来源",
+    "extended_thinking": "延伸思考",
+    "legacy_models": "传统模型",
+    "thinking": "正在思考...",
+    "thought_process": "思考过程",
+    "tool_calls": "{{count}} 次工具调用",
+    "input": "输入",
+    "result": "结果",
+    "error": "错误",
+    "tool_error": "失败",
+    "total_tokens": "{{total}} 个词元",
+    "tokens_detail": "{{prompt}} 提示词 + {{completion}} 补全",
+    "tokens_used": "{{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元",
+    "tokens_used_with_cost": "{{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元（约 ${{cost}}）",
+    "tokens_used_with_model": "{{model}}: {{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元",
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} 提示词 + {{completion}} 补全 = {{total}} 个词元（约 ${{cost}}）",
+    "tokens": "词元",
+    "context_used": "{{percentage}}% 使用率",
+    "note_context_enabled": "点击即可禁用笔记上下文：{{title}}",
+    "note_context_disabled": "点击即可将当前注释添加到上下文中",
+    "no_provider_message": "未配置人工智能提供商。添加一个即可开始对话。",
+    "add_provider": "添加人工智能提供商",
+    "note_tools": "笔记访问",
+    "sources_summary": "来自 {{sites}} 个网站的 {{count}} 个来源"
+  },
+  "sidebar_chat": {
+    "title": "AI对话",
+    "launcher_title": "打开AI对话",
+    "new_chat": "开始新对话",
+    "save_chat": "将对话保存到笔记",
+    "empty_state": "开始对话",
+    "history": "对话历史",
+    "recent_chats": "最近对话",
+    "no_chats": "无历史对话"
+  },
+  "ocr": {
+    "extracted_text": "提取文本（OCR）",
+    "extracted_text_title": "提取文本（OCR）",
+    "loading_text": "正在加载OCR文本...",
+    "no_text_available": "暂无OCR文本",
+    "no_text_explanation": "该笔记未进行 OCR 文本提取处理，或未找到文本。",
+    "failed_to_load": "OCR文本加载失败",
+    "process_now": "处理 OCR",
+    "processing": "正在处理...",
+    "processing_started": "OCR识别已开始。请稍候片刻并刷新页面。",
+    "processing_failed": "OCR处理启动失败",
+    "view_extracted_text": "查看提取的文本（OCR）",
+    "processing_complete": "OCR识别处理完成。",
+    "text_filtered_low_confidence": "OCR 检测到文本，置信度为 {{confidence}}% ，但由于您的最小阈值为 {{threshold}}% ，因此该文本已被丢弃。",
+    "open_media_settings": "打开设置"
+  },
+  "mind-map": {
+    "addChild": "添加子节点",
+    "addParent": "添加父节点",
+    "addSibling": "添加同级节点",
+    "removeNode": "删除节点",
+    "focus": "专注模式",
+    "cancelFocus": "退出专注模式",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "link": "链接",
+    "linkBidirectional": "双向链接",
+    "clickTips": "请点击目标节点",
+    "summary": "总结"
+  },
+  "llm": {
+    "settings_description": "配置人工智能和大语言模型集成。",
+    "add_provider": "添加提供商",
+    "settings_title": "AI / LLM",
+    "feature_not_enabled": "在“设置”→“高级”→“实验性功能”中启用 LLM 实验性功能，即可使用 AI 集成。",
+    "add_provider_title": "添加AI供应商",
+    "configured_providers": "已配置的供应商",
+    "no_providers_configured": "尚未配置任何供应商。",
+    "provider_name": "名称",
+    "provider_type": "供应商"
+  },
+  "revisions": {
+    "note_revisions": "笔记修订",
+    "delete_all_revisions": "删除此笔记的所有修订版本",
+    "delete_all_button": "删除所有修订版本",
+    "help_title": "关于笔记修订的帮助",
+    "confirm_delete_all": "是否要删除此笔记的所有修订版本？",
+    "no_revisions": "这篇笔记目前还没有修改……",
+    "restore_button": "恢复",
+    "diff_on": "显示差异",
+    "diff_off": "显示内容",
+    "diff_on_hint": "点击显示笔记来源差异",
+    "diff_off_hint": "点击显示笔记内容",
+    "diff_not_available": "差异数据不可用。",
+    "confirm_restore": "是否恢复此版本？这将用此版本覆盖笔记的当前标题和内容。",
+    "delete_button": "删除",
+    "confirm_delete": "您要删除此修订吗？",
+    "revisions_deleted": "笔记修订已被删除。",
+    "revision_restored": "笔记修订已恢复。",
+    "revision_deleted": "笔记修订已删除。",
+    "snapshot_interval": "笔记修订快照间隔：{{seconds}}秒。",
+    "maximum_revisions": "笔记修订快照限制：{{number}}。",
+    "settings": "笔记修订设置",
+    "download_button": "下载",
+    "mime": "MIME 类型： ",
+    "file_size": "文件大小：",
+    "preview_not_available": "无法预览此类型的笔记。",
+    "highlight_changes": "高亮变更",
+    "save_revision_now": "立即保存修订",
+    "save_named_revision": "保存已命名的修订...",
+    "snapshot_header": "笔记修订快照",
+    "snapshot_interval_value": "间隔：{{seconds}}秒"
+  },
+  "database": {
+    "title": "数据库"
+  },
+  "auto_link_attribute_list": {
+    "title": "系统属性"
+  }
 }
