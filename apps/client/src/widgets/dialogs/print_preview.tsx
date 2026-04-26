@@ -275,6 +275,7 @@ export default function PrintPreviewDialog() {
             size="xl"
             show={shown}
             onHidden={handleClose}
+            stackable
             footerAlignment="between"
             footer={
                 <>
