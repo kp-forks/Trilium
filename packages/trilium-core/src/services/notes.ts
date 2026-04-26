@@ -1,4 +1,4 @@
-import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, NoteType } from "@triliumnext/commons";
+import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, type NoteType } from "@triliumnext/commons";
 import fs from "fs";
 import html2plaintext from "html2plaintext";
 import { t } from "i18next";
@@ -9,10 +9,10 @@ import BAttachment from "../becca/entities/battachment.js";
 import BAttribute from "../becca/entities/battribute.js";
 import BBranch from "../becca/entities/bbranch.js";
 import BNote from "../becca/entities/bnote.js";
-import log, { getLog } from "../services/log.js";
+import { ValidationError } from "../errors.js";
+import { getLog } from "../services/log.js";
 import protectedSessionService from "../services/protected_session.js";
-import { newEntityId, quoteRegex, toMap, unescapeHtml } from "./utils/index.js";
-import date_utils from "./utils/date.js";
+import * as cls from "./context.js";
 import entityChangesService from "./entity_changes.js";
 import eventService from "./events.js";
 import imageService from "./image.js";
@@ -20,14 +20,14 @@ import noteTypesService from "./note_types.js";
 import optionService from "./options.js";
 import request from "./request.js";
 import revisionService from "./revisions.js";
-import type TaskContext from "./task_context.js";
-import ws from "./ws.js";
-import { decodeBase64 } from "./utils/binary.js";
-import { getSql } from "./sql/index.js";
 import { sanitizeHtml } from "./sanitizer.js";
-import { ValidationError } from "../errors.js";
-import * as cls from "./context.js";
+import { getSql } from "./sql/index.js";
+import type TaskContext from "./task_context.js";
+import { decodeBase64 } from "./utils/binary.js";
+import date_utils from "./utils/date.js";
+import { newEntityId, quoteRegex, toMap, unescapeHtml } from "./utils/index.js";
 import { basename } from "./utils/path.js";
+import ws from "./ws.js";
 
 interface FoundLink {
     name: "imageLink" | "internalLink" | "includeNoteLink" | "relationMapLink";
@@ -224,6 +224,17 @@ function createNewNote(params: NoteParams): {
         throw new Error(error);
     }
 
+    // When creating from a template, inherit the template's type and mime if not explicitly provided.
+    // This ensures binary types (PDF, images, etc.) get the correct mime from the start.
+    if (params.templateNoteId) {
+        const templateNote = becca.getNote(params.templateNoteId);
+        if (templateNote) {
+            if (!params.mime) {
+                params.mime = templateNote.mime;
+            }
+        }
+    }
+
     return getSql().transactional(() => {
         let note, branch, isEntityEventsDisabled;
 
@@ -278,6 +289,15 @@ function createNewNote(params: NoteParams): {
             const templateNote = becca.getNote(params.templateNoteId);
             if (!templateNote) {
                 throw new Error(`Template note '${params.templateNoteId}' does not exist.`);
+            }
+
+            // for binary content types (PDF, images, etc.), copy the template's content directly
+            // since the event handler in handlers.ts only handles string content
+            if (!templateNote.hasStringContent()) {
+                const templateContent = templateNote.getContent();
+                if (templateContent) {
+                    note.setContent(templateContent);
+                }
             }
 
             note.addRelation("template", params.templateNoteId);
@@ -694,40 +714,40 @@ function downloadImages(noteId: string, content: string) {
 
             cls.getContext().init(() => {
                 getSql().transactional(() => {
-                    const imageNotes = becca.getNotes(Object.values(imageUrlToAttachmentIdMapping), true);
+                const imageNotes = becca.getNotes(Object.values(imageUrlToAttachmentIdMapping), true);
                     const log = getLog();
 
-                    const origNote = becca.getNote(noteId);
+                const origNote = becca.getNote(noteId);
 
-                    if (!origNote) {
-                        log.error(`Cannot find note '${noteId}' to replace image link.`);
-                        return;
+                if (!origNote) {
+                    log.error(`Cannot find note '${noteId}' to replace image link.`);
+                    return;
+                }
+
+                const origContent = origNote.getContent();
+                let updatedContent = origContent;
+
+                if (typeof updatedContent !== "string") {
+                    log.error(`Note '${noteId}' has a non-string content, cannot replace image link.`);
+                    return;
+                }
+
+                for (const url in imageUrlToAttachmentIdMapping) {
+                    const imageNote = imageNotes.find((note) => note.noteId === imageUrlToAttachmentIdMapping[url]);
+
+                    if (imageNote) {
+                        updatedContent = replaceUrl(updatedContent, url, imageNote);
                     }
+                }
 
-                    const origContent = origNote.getContent();
-                    let updatedContent = origContent;
+                // update only if the links have not been already fixed.
+                if (updatedContent !== origContent) {
+                    origNote.setContent(updatedContent);
 
-                    if (typeof updatedContent !== "string") {
-                        log.error(`Note '${noteId}' has a non-string content, cannot replace image link.`);
-                        return;
-                    }
+                    asyncPostProcessContent(origNote, updatedContent);
 
-                    for (const url in imageUrlToAttachmentIdMapping) {
-                        const imageNote = imageNotes.find((note) => note.noteId === imageUrlToAttachmentIdMapping[url]);
-
-                        if (imageNote) {
-                            updatedContent = replaceUrl(updatedContent, url, imageNote);
-                        }
-                    }
-
-                    // update only if the links have not been already fixed.
-                    if (updatedContent !== origContent) {
-                        origNote.setContent(updatedContent);
-
-                        asyncPostProcessContent(origNote, updatedContent);
-
-                        console.log(`Fixed the image links for note '${noteId}' to the offline saved.`);
-                    }
+                    console.log(`Fixed the image links for note '${noteId}' to the offline saved.`);
+                }
                 });
             });
         }, 5000);

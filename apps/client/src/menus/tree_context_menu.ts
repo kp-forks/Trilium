@@ -198,6 +198,7 @@ export async function buildTreeContextMenuItems(ctx: TreeContextMenuContext): Pr
                 {
                     title: hasSubtreeHidden ? t("tree-context-menu.show-subtree") : t("tree-context-menu.hide-subtree"),
                     uiIcon: "bx bx-show",
+                    enabled: isNotRoot,
                     handler: async () => {
                         attributes.setBooleanWithInheritance(note, "subtreeHidden", !hasSubtreeHidden);
                     }

@@ -74,6 +74,9 @@
     },
     {
       "path": "./scripts"
+    },
+    {
+      "path": "./apps/script-deployer"
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { extractSpreadsheetText } from "@triliumnext/commons";
 import striptags from "striptags";
 import { normalizeSearchText } from "../utils/text_utils";
 import { normalize } from "../../utils/index";
@@ -16,6 +17,8 @@ export default function preprocessContent(rawContent: string | Uint8Array, type:
         content = processMindmapContent(content);
     } else if (type === "canvas" && mime === "application/json") {
         content = processCanvasContent(content);
+    } else if (type === "spreadsheet" && mime === "application/json") {
+        content = extractSpreadsheetText(content);
     }
 
     return content.trim();

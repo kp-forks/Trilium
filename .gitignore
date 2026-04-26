@@ -53,4 +53,4 @@ apps/*/coverage
 scripts/translation/.language*.json
 
 # AI
-.claude/settings.local.json
+.claude
