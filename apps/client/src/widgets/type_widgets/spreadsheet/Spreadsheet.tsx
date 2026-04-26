@@ -29,6 +29,7 @@ import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/prese
 import { IDialogService, ISidebarService } from '@univerjs/ui';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
+import type NoteContext from "../../../components/note_context";
 import { t } from "../../../services/i18n";
 import { useColorScheme, useEffectiveReadOnly, useTriliumEvent, useTriliumEvents } from "../../react/hooks";
 import { TypeWidgetProps } from "../type_widget";
@@ -72,7 +73,7 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
     useInitializeSpreadsheet(containerRef, apiRef, readOnly);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef);
-    useSearchIntegration(apiRef);
+    useSearchIntegration(apiRef, noteContext);
     useDismissDialogsOnNoteSwitch(apiRef);
     useFixRadixPortals();
 
@@ -195,8 +196,10 @@ function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {
     }, [ colorScheme, apiRef ]);
 }
 
-function useSearchIntegration(apiRef: MutableRef<FUniver | undefined>) {
+function useSearchIntegration(apiRef: MutableRef<FUniver | undefined>, noteContext: NoteContext | undefined) {
     useTriliumEvent("findInText", () => {
+        if (!noteContext?.isActive()) return;
+
         const univerAPI = apiRef.current;
         if (!univerAPI) return;
 
