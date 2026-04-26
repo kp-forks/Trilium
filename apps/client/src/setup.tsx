@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import logo from "./assets/icon-color.svg?url";
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
-import { isElectron, replaceHtmlEscapedSlashes } from "./services/utils";
+import { isElectron, isMobileApp, replaceHtmlEscapedSlashes } from "./services/utils";
 import ActionButton from "./widgets/react/ActionButton";
 import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
@@ -246,6 +246,12 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
                     </CardSection>
                 ))}
             </Card>
+
+            {isMobileApp() && (
+                <Admonition type="note" className="sync-banner">
+                    {t("setup.sync-in-progress-banner")}
+                </Admonition>
+            )}
         </SetupPage>
     );
 }

@@ -2526,6 +2526,7 @@
     "sync-from-server-page-description": "Enter your server details below to connect your existing workspace.",
     "sync-in-progress-title": "Sync in progress",
     "sync-in-progress-description": "Your device is now connected and items are being synchronized.",
+    "sync-in-progress-banner": "This may take a while depending on the size of your notes. Please do not switch to another application until the sync is complete.",
     "button-back": "Back",
     "button-finish-setup": "Finish setup",
     "sync-step-connecting": "Connecting to server",
