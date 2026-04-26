@@ -77,7 +77,25 @@ const pdfjsServePlugin = (): Plugin => ({
     }
 });
 
-// Always copy SQLite WASM files so they're available to the module
+// Remove the hashed sqlite3.wasm duplicate from the bundle.
+// Vite detects `new URL("sqlite3.wasm", import.meta.url)` in the sqlite-wasm library and
+// emits a hashed copy (e.g. sqlite3-B5ovX4lD.wasm). Since the service worker needs the
+// unhashed filename anyway (provided by viteStaticCopy), we drop the hashed duplicate.
+const sqliteWasmDedupePlugin = (): Plugin => ({
+    name: "sqlite-wasm-dedupe",
+    generateBundle(_options, bundle) {
+        for (const fileName of Object.keys(bundle)) {
+            const asset = bundle[fileName];
+            if (asset.type === "asset" && /sqlite3-\w+\.wasm$/.test(fileName)) {
+                delete bundle[fileName];
+            }
+        }
+    }
+});
+
+// Copy SQLite WASM files so they're available to the service worker at runtime.
+// The .wasm file must be copied with its original name because the sqlite-wasm library
+// resolves it by convention inside the worker (where Vite's hashed import.meta.url won't work).
 const sqliteWasmPlugin = viteStaticCopy({
     targets: [
         {
@@ -94,7 +112,8 @@ const sqliteWasmPlugin = viteStaticCopy({
 });
 
 let plugins: any = [
-    sqliteWasmPlugin,  // Always include SQLite WASM files
+    sqliteWasmDedupePlugin(),
+    sqliteWasmPlugin,
     viteStaticCopy({
         targets: clientAssets.map((asset) => ({
             src: `../../client/src/${asset}/**/*`,
