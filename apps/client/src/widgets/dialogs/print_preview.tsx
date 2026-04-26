@@ -195,16 +195,23 @@ export default function PrintPreviewDialog() {
         });
     }, []);
 
+    const isFirstGenerationRef = useRef(true);
+
     useEffect(() => {
         if (!shown || !pageRangesValid) return;
+
+        const delay = isFirstGenerationRef.current ? 0 : 800;
+        isFirstGenerationRef.current = false;
+
         const handle = setTimeout(() => {
             regeneratePreview({ landscape, pageSize, scale, margins: marginsStr, pageRanges: pageRanges.trim() });
-        }, 400);
+        }, delay);
         return () => clearTimeout(handle);
     }, [shown, landscape, pageSize, scale, marginsStr, pageRanges, pageRangesValid, regeneratePreview]);
 
     function handleClose() {
         setShown(false);
+        isFirstGenerationRef.current = true;
         toast.closePersistent("print-preview-error");
         if (pdfUrlRef.current) {
             URL.revokeObjectURL(pdfUrlRef.current);
