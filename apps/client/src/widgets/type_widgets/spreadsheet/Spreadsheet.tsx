@@ -124,7 +124,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
         if (!containerRef.current) return;
 
         // Override Univer's hardcoded default font to match Trilium's UI font.
-        const ff = getComputedStyle(document.documentElement).getPropertyValue("--detail-font-family").trim();
+        const ff = getComputedStyle(document.body).getPropertyValue("--detail-font-family").trim();
         if (ff) {
             DEFAULT_STYLES.ff = ff;
         }
