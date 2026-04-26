@@ -1,124 +1,219 @@
 {
-    "about": {
-        "data_directory": "資料目錄：",
-        "version_label": "版本：",
-        "version": "{{appVersion}}（資料庫：{{dbVersion}}，同步協定：{{syncVersion}}）",
-        "build_info": "建置日期：{{buildDate}}，修訂版本：<buildRevision />",
-        "contributors_label": "貢獻者：",
-        "contributor_roles": {
-            "lead-dev": "首席開發者",
-            "original-dev": "原始開發者"
-        },
-        "role_brief_history": {
-            "lead-dev": "Elian Doran 於 2024 年創立了 TriliumNext，這是 Zadam 退出該專案後所建立的社群分支。後來，Zadam 將原始儲存庫移交給 TriliumNext 團隊，將兩個專案重新合併為一。",
-            "original-dev": "2017年12月25日，Zadam 發布了 Trilium（與花名不同，此處僅寫一個「l」）的首個測試版。由於對現有的筆記管理工具感到不滿，他開發了一個功能強大的自託管式分層知識庫，該專案在 GitHub 上獲得了超過 22,000 顆星。2024 年，隨著生活日益繁忙，他將該專案轉為維護模式。"
-        },
-        "contributor_full_list": "查看整個社群",
-        "github_tooltip": "在 GitHub 上回報錯誤、提出功能建議或貢獻程式碼",
-        "license_tooltip": "查看許可證",
-        "donate": "捐款",
-        "donate_tooltip": "捐款支持此專案"
+  "about": {
+    "data_directory": "資料目錄：",
+    "version_label": "版本：",
+    "version": "{{appVersion}}（資料庫：{{dbVersion}}，同步協定：{{syncVersion}}）",
+    "build_info": "建置日期：{{buildDate}}，修訂版本：<buildRevision />",
+    "contributors_label": "貢獻者：",
+    "contributor_roles": {
+      "lead-dev": "首席開發者",
+      "original-dev": "原始開發者"
     },
-    "toast": {
-        "critical-error": {
-            "title": "嚴重錯誤",
-            "message": "發生了嚴重錯誤，導致客戶端應用程式無法啟動：\n\n{{message}}\n\n這很可能是由於腳本以意外的方式失敗引起的。請嘗試以安全模式啟動應用程式並解決問題。"
-        },
-        "widget-error": {
-            "title": "元件初始化失敗",
-            "message-custom": "來自 ID 為 \"{{id}}\"、標題為 \"{{title}}\" 的筆記的自訂元件因以下原因無法初始化：\n\n{{message}}",
-            "message-unknown": "未知元件因以下原因無法初始化：\n\n{{message}}"
-        },
-        "bundle-error": {
-            "title": "載入自訂腳本失敗",
-            "message": "腳本因以下原因無法執行：\n\n{{message}}"
-        },
-        "widget-list-error": {
-            "title": "無法從伺服器取得元件清單"
-        },
-        "widget-render-error": {
-            "title": "無法渲染自訂 React 元件"
-        },
-        "widget-missing-parent": "自訂元件未定義強制性的 \"{{property}}\" 屬性。\n\n若此腳本需在無 UI 的情況下執行，請改用 \"#run=frontendStartup\"。",
-        "open-script-note": "打開腳本筆記",
-        "scripting-error": "自訂腳本錯誤：{{title}}"
+    "role_brief_history": {
+      "lead-dev": "Elian Doran 於 2024 年創立了 TriliumNext，這是 Zadam 退出該專案後所建立的社群分支。後來，Zadam 將原始儲存庫移交給 TriliumNext 團隊，將兩個專案重新合併為一。",
+      "original-dev": "2017年12月25日，Zadam 發布了 Trilium（與花名不同，此處僅寫一個「l」）的首個測試版。由於對現有的筆記管理工具感到不滿，他開發了一個功能強大的自託管式分層知識庫，該專案在 GitHub 上獲得了超過 22,000 顆星。2024 年，隨著生活日益繁忙，他將該專案轉為維護模式。"
     },
-    "add_link": {
-        "add_link": "新增連結",
-        "help_on_links": "連結說明",
-        "note": "筆記",
-        "search_note": "依名稱搜尋筆記",
-        "link_title_mirrors": "連結標題跟隨筆記標題變化",
-        "link_title_arbitrary": "連結標題可隨意修改",
-        "link_title": "連結標題",
-        "button_add_link": "新增連結",
-        "anchor": "錨點（可選）",
-        "anchor_none": "無（連結至筆記）"
+    "contributor_full_list": "查看整個社群",
+    "github_tooltip": "在 GitHub 上回報錯誤、提出功能建議或貢獻程式碼",
+    "license_tooltip": "查看許可證",
+    "donate": "捐款",
+    "donate_tooltip": "捐款支持此專案"
+  },
+  "toast": {
+    "critical-error": {
+      "title": "嚴重錯誤",
+      "message": "發生了嚴重錯誤，導致客戶端應用程式無法啟動：\n\n{{message}}\n\n這很可能是由於腳本以意外的方式失敗引起的。請嘗試以安全模式啟動應用程式並解決問題。"
     },
-    "branch_prefix": {
-        "edit_branch_prefix": "編輯分支前綴",
-        "help_on_tree_prefix": "有關樹前綴的說明",
-        "prefix": "前綴： ",
-        "save": "儲存",
-        "branch_prefix_saved": "已儲存分支前綴。",
-        "edit_branch_prefix_multiple": "編輯 {{count}} 個分支的前綴",
-        "branch_prefix_saved_multiple": "已為 {{count}} 個分支儲存分支前綴。",
-        "affected_branches": "受影響的分支 ({{count}}):"
+    "widget-error": {
+      "title": "元件初始化失敗",
+      "message-custom": "來自 ID 為 \"{{id}}\"、標題為 \"{{title}}\" 的筆記的自訂元件因以下原因無法初始化：\n\n{{message}}",
+      "message-unknown": "未知元件因以下原因無法初始化：\n\n{{message}}"
     },
-    "bulk_actions": {
-        "bulk_actions": "批次操作",
-        "affected_notes": "受影響的筆記",
-        "include_descendants": "包括所選筆記的子筆記",
-        "available_actions": "可用操作",
-        "chosen_actions": "已選操作",
-        "execute_bulk_actions": "執行批次操作",
-        "bulk_actions_executed": "已成功執行批次操作。",
-        "none_yet": "暫無操作…透過點擊上方的可用操作新增一個操作。",
-        "labels": "標籤",
-        "relations": "關聯",
-        "notes": "筆記",
-        "other": "其他"
+    "bundle-error": {
+      "title": "載入自訂腳本失敗",
+      "message": "腳本因以下原因無法執行：\n\n{{message}}"
     },
-    "clone_to": {
-        "clone_notes_to": "克隆筆記至…",
-        "help_on_links": "連結說明",
-        "notes_to_clone": "要克隆的筆記",
-        "target_parent_note": "目標父級筆記",
-        "search_for_note_by_its_name": "依名稱搜尋筆記",
-        "cloned_note_prefix_title": "克隆的筆記將在筆記樹中顯示給定的前綴",
-        "prefix_optional": "前綴（可選）",
-        "clone_to_selected_note": "克隆至所選的筆記",
-        "no_path_to_clone_to": "沒有克隆路徑。",
-        "note_cloned": "筆記 \"{{clonedTitle}}\" 已克隆至 \"{{targetTitle}}\""
+    "widget-list-error": {
+      "title": "無法從伺服器取得元件清單"
     },
-    "confirm": {
-        "confirmation": "確認",
-        "cancel": "取消",
-        "ok": "確定",
-        "are_you_sure_remove_note": "確定要從關聯圖中移除筆記 \"{{title}}\" ？ ",
-        "if_you_dont_check": "如果不勾選此項，筆記將僅從關聯圖中移除。",
-        "also_delete_note": "同時刪除筆記"
+    "widget-render-error": {
+      "title": "無法渲染自訂 React 元件"
     },
-    "delete_notes": {
-        "delete_all_clones_description": "同時刪除所有克隆（可以在最近修改中撤消）",
-        "erase_notes_description": "立即刪除筆記，而非執行軟刪除。此操作無法撤銷，且會強制重新載入應用程式。",
-        "erase_notes_warning": "永久擦除筆記（無法撤銷），包括所有克隆。這將強制應用程式重新載入。",
-        "notes_to_be_deleted": "待刪除筆記 ({{notesCount}})",
-        "no_note_to_delete": "沒有筆記將被刪除（僅克隆）。",
-        "broken_relations_to_be_deleted": "斷開的關聯 ({{ relationCount}})",
-        "cancel": "取消",
-        "close": "關閉",
-        "title": "刪除筆記",
-        "clones_label": "克隆",
-        "delete_clones_description_one": "同時刪除 {{count}} 個其他克隆。此操作可在最近修改中撤銷。",
-        "delete_clones_description_other": "",
-        "erase_notes_label": "永久擦除",
-        "table_note_with_relation": "有關聯的筆記",
-        "table_relation": "關聯",
-        "table_points_to": "指向 (已刪除)",
-        "delete": "刪除"
-    },
+    "widget-missing-parent": "自訂元件未定義強制性的 \"{{property}}\" 屬性。\n\n若此腳本需在無 UI 的情況下執行，請改用 \"#run=frontendStartup\"。",
+    "open-script-note": "打開腳本筆記",
+    "scripting-error": "自訂腳本錯誤：{{title}}"
+  },
+  "add_link": {
+    "add_link": "新增連結",
+    "help_on_links": "連結說明",
+    "note": "筆記",
+    "search_note": "依名稱搜尋筆記",
+    "link_title_mirrors": "連結標題跟隨筆記標題變化",
+    "link_title_arbitrary": "連結標題可隨意修改",
+    "link_title": "連結標題",
+    "button_add_link": "新增連結",
+    "anchor": "錨點（可選）",
+    "anchor_none": "無（連結至筆記）"
+  },
+  "branch_prefix": {
+    "edit_branch_prefix": "編輯分支前綴",
+    "help_on_tree_prefix": "有關樹前綴的說明",
+    "prefix": "前綴： ",
+    "save": "儲存",
+    "branch_prefix_saved": "已儲存分支前綴。",
+    "edit_branch_prefix_multiple": "編輯 {{count}} 個分支的前綴",
+    "branch_prefix_saved_multiple": "已為 {{count}} 個分支儲存分支前綴。",
+    "affected_branches": "受影響的分支 ({{count}}):"
+  },
+  "bulk_actions": {
+    "bulk_actions": "批次操作",
+    "affected_notes": "受影響的筆記",
+    "include_descendants": "包括所選筆記的子筆記",
+    "available_actions": "可用操作",
+    "chosen_actions": "已選操作",
+    "execute_bulk_actions": "執行批次操作",
+    "bulk_actions_executed": "已成功執行批次操作。",
+    "none_yet": "暫無操作…透過點擊上方的可用操作新增一個操作。",
+    "labels": "標籤",
+    "relations": "關聯",
+    "notes": "筆記",
+    "other": "其他"
+  },
+  "clone_to": {
+    "clone_notes_to": "克隆筆記至…",
+    "help_on_links": "連結說明",
+    "notes_to_clone": "要克隆的筆記",
+    "target_parent_note": "目標父級筆記",
+    "search_for_note_by_its_name": "依名稱搜尋筆記",
+    "cloned_note_prefix_title": "克隆的筆記將在筆記樹中顯示給定的前綴",
+    "prefix_optional": "前綴（可選）",
+    "clone_to_selected_note": "克隆至所選的筆記",
+    "no_path_to_clone_to": "沒有克隆路徑。",
+    "note_cloned": "筆記 \"{{clonedTitle}}\" 已克隆至 \"{{targetTitle}}\""
+  },
+  "confirm": {
+    "confirmation": "確認",
+    "cancel": "取消",
+    "ok": "確定",
+    "are_you_sure_remove_note": "確定要從關聯圖中移除筆記 \"{{title}}\" ？ ",
+    "if_you_dont_check": "如果不勾選此項，筆記將僅從關聯圖中移除。",
+    "also_delete_note": "同時刪除筆記"
+  },
+  "delete_notes": {
+    "delete_all_clones_description": "同時刪除所有克隆（可以在最近修改中撤消）",
+    "erase_notes_description": "立即刪除筆記，而非執行軟刪除。此操作無法撤銷，且會強制重新載入應用程式。",
+    "erase_notes_warning": "永久擦除筆記（無法撤銷），包括所有克隆。這將強制應用程式重新載入。",
+    "notes_to_be_deleted": "待刪除筆記 ({{notesCount}})",
+    "no_note_to_delete": "沒有筆記將被刪除（僅克隆）。",
+    "broken_relations_to_be_deleted": "斷開的關聯 ({{ relationCount}})",
+    "cancel": "取消",
+    "close": "關閉",
+    "title": "刪除筆記",
+    "clones_label": "克隆",
+    "delete_clones_description_one": "同時刪除 {{count}} 個其他克隆。此操作可在最近修改中撤銷。",
+    "delete_clones_description_other": "",
+    "erase_notes_label": "永久擦除",
+    "table_note_with_relation": "有關聯的筆記",
+    "table_relation": "關聯",
+    "table_points_to": "指向 (已刪除)",
+    "delete": "刪除"
+  },
+  "export": {
+    "export_note_title": "匯出筆記",
+    "close": "關閉",
+    "export_type_subtree": "此筆記及其所有子筆記",
+    "format_html_zip": "HTML ZIP 封存 - 建議使用此選項，因為它保留了所有格式。",
+    "format_markdown": "Markdown - 保留大部分格式。",
+    "format_opml": "OPML - 大綱交換格式，僅限文字。不包括格式、圖片和檔案。",
+    "opml_version_1": "OPML v1.0 - 僅限純文字",
+    "opml_version_2": "OPML v2.0 - 還允許 HTML",
+    "export_type_single": "僅此筆記，不包括子筆記",
+    "export": "匯出",
+    "choose_export_type": "請先選擇匯出類型",
+    "export_status": "匯出狀態",
+    "export_in_progress": "正在匯出：{{progressCount}}",
+    "export_finished_successfully": "成功匯出。",
+    "format_html": "HTML - 推薦，因為它保留了所有格式",
+    "format_pdf": "PDF - 用於列印或與他人分享。",
+    "share-format": "HTML 網頁發佈——使用與共享筆記相同的佈景主題，但可發佈為靜態網站。"
+  },
+  "help": {
+    "noteNavigation": "筆記導航",
+    "goUpDown": "在筆記列表中向上 / 向下移動",
+    "collapseExpand": "收摺 / 展開節點",
+    "notSet": "未設定",
+    "goBackForwards": "在歷史記錄中前後移動",
+    "showJumpToNoteDialog": "顯示<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"跳轉至\" 對話方塊</a>",
+    "scrollToActiveNote": "捲動至使用中筆記",
+    "jumpToParentNote": "跳轉至父級筆記",
+    "collapseWholeTree": "收摺整個筆記樹",
+    "collapseSubTree": "收摺子階層",
+    "tabShortcuts": "標籤快捷鍵",
+    "onlyInDesktop": "僅在桌面版（以 Electron 構建）中",
+    "openEmptyTab": "打開空白分頁",
+    "closeActiveTab": "關閉使用中分頁",
+    "activateNextTab": "切換至下一個分頁",
+    "activatePreviousTab": "切換至上一個分頁",
+    "creatingNotes": "新增筆記",
+    "createNoteAfter": "在使用中筆記後新增筆記",
+    "createNoteInto": "在使用中筆記中新增新子筆記",
+    "editBranchPrefix": "編輯使用中筆記克隆的<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/tree-concepts.html#prefix\">前綴</a>",
+    "movingCloningNotes": "移動 / 克隆筆記",
+    "moveNoteUpDown": "在筆記列表中向上 / 向下移動筆記",
+    "moveNoteUpHierarchy": "在層級結構中向上移動筆記",
+    "multiSelectNote": "多選上 / 下筆記",
+    "selectAllNotes": "選擇目前級別的所有筆記",
+    "selectNote": "選擇筆記",
+    "copyNotes": "將使用中筆記（或目前選擇）複製到剪貼簿（用於<a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/cloning-notes.html#cloning-notes\">克隆</a>）",
+    "cutNotes": "將目前筆記（或目前選擇）剪下到剪貼簿（用於移動筆記）",
+    "pasteNotes": "將筆記貼上為使用中筆記的子筆記（根據是複製還是剪下至剪貼簿來決定是移動還是克隆）",
+    "deleteNotes": "刪除筆記 / 子階層",
+    "editingNotes": "編輯筆記",
+    "editNoteTitle": "在筆記樹中，焦點會從筆記樹切換至筆記標題。按下 Enter 鍵會將焦點從筆記標題切換至文字編輯器。按下 <kbd>Ctrl+.</kbd> 會將焦點從編輯器切換回筆記樹。",
+    "createEditLink": "新增 / 編輯外部連結",
+    "createInternalLink": "新增內部連結",
+    "followLink": "跟隨游標下的連結",
+    "insertDateTime": "在插入點插入目前日期和時間",
+    "jumpToTreePane": "跳轉至筆記樹面板並捲動至使用中筆記",
+    "markdownAutoformat": "類 Markdown自動格式化",
+    "headings": "<code>##</code>, <code>###</code>, <code>####</code>  等，後跟空格，自動轉換為標題",
+    "bulletList": "<code>*</code> 或 <code>-</code> 後跟空格，自動轉換為項目符號列表",
+    "numberedList": "<code>1.</code> or <code>1)</code> 後跟空格，自動轉換為編號列表",
+    "blockQuote": "一行以 <code>></code> 開頭並後跟空格，自動轉換為區塊引用",
+    "troubleshooting": "故障排除",
+    "reloadFrontend": "重新載入Trilium前端",
+    "showDevTools": "顯示開發者工具",
+    "showSQLConsole": "顯示 SQL 控制台",
+    "other": "其他",
+    "quickSearch": "定位至快速搜尋框",
+    "inPageSearch": "頁面內搜尋",
+    "title": "列表",
+    "newTabNoteLink": "在新分頁開啟筆記連結",
+    "newTabWithActivationNoteLink": "在新分頁開啟並切換至筆記連結",
+    "editShortcuts": "編輯鍵盤快捷鍵"
+  },
   "import": {
+    "importIntoNote": "匯入至筆記",
+    "chooseImportFile": "選擇檔案匯入",
+    "importDescription": "所選檔案的內容將作為子筆記匯入至",
+    "options": "選項",
+    "safeImportTooltip": "Trilium <code>.zip</code> 匯出的檔案可能包含可能有害的可執行腳本。安全匯入將停用所有匯入腳本的自動執行。僅當您完全信任匯入的可執行腳本的內容時，才取消勾選「安全匯入」。",
+    "safeImport": "安全匯入",
+    "explodeArchivesTooltip": "如果勾選此項，則 Trilium 將讀取<code>.zip</code>、<code>.enex</code>和<code>.opml</code>文件，並從這些封存文件內部的檔案新增筆記。如果未勾選，則 Trilium 會將這些封存文件本身附加至筆記中。",
+    "explodeArchives": "讀取<code>.zip</code>、<code>.enex</code>和<code>.opml</code>封存文件的內容。",
+    "shrinkImagesTooltip": "<p>如果勾選此選項，Trilium 將嘗試透過縮放和最佳化來縮小匯入的圖片，這可能會影響圖片的觀看品質。如果未勾選，圖片將不做修改直接匯入。</p><p>這不適用於帶有詮釋資料的<code>.zip</code>匯入，因為這些文件被認為已最佳化。</p>",
+    "shrinkImages": "壓縮圖片",
+    "textImportedAsText": "如果元數據不明確，將HTML、Markdown和TXT匯入為文字筆記",
+    "codeImportedAsCode": "如果詮釋資料不明確，將識別的程式碼檔案（例如<code>.json</code>）匯入為程式碼筆記",
+    "replaceUnderscoresWithSpaces": "在匯入的筆記名稱中將下劃線替換為空格",
+    "import": "匯入",
+    "failed": "匯入失敗: {{message}}.",
+    "html_import_tags": {
+      "title": "匯入 HTML 標籤",
+      "description": "設定在匯入筆記時應保留的 HTML 標籤。不在此列表中的標籤將在匯入過程中被移除。一些標籤（例如 'script'）為了安全性會始終被移除。",
+      "placeholder": "輸入 HTML 標籤，每行一個",
+      "reset_button": "重設為預設列表"
+    },
     "import-status": "匯入狀態",
     "in-progress": "正在匯入：{{progress}}",
     "successful": "匯入成功。",
@@ -281,8 +376,8 @@
     "css_class": "該標籤的值將作為 CSS 類新增至樹中表示給定筆記的節點。這對於進階主題設定非常有用。可用於模板筆記。",
     "icon_class": "該標籤的值將作為 CSS 類新增至樹中圖標上，有助於從視覺上區分筆記樹裡的筆記。比如可以是 bx bx-home——圖標來自 boxicons。可用於模板筆記。",
     "page_size": "筆記列表中每頁的項目數",
-    "custom_request_handler": "自訂請求處理程序",
-    "custom_resource_provider": "自訂請求處理程序",
+    "custom_request_handler": "請參閱<a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">自訂請求處理程序</a>",
+    "custom_resource_provider": "請參閱<a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">自訂請求處理程序</a>",
     "widget": "將此筆記標記為將新增至 Trilium 元件樹中的自訂元件",
     "workspace": "將此筆記標記為允許輕鬆聚焦的工作區",
     "workspace_icon_class": "定義在選項卡中聚焦至此筆記時將使用的框圖圖標 CSS 類",

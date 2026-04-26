@@ -55,6 +55,50 @@
     "anchor": "Ancoraggio (facoltativo)",
     "anchor_none": "Nessuna (link alla nota)"
   },
+  "branch_prefix": {
+    "edit_branch_prefix": "Modifica il prefisso del ramo",
+    "help_on_tree_prefix": "Aiuto sui prefissi dell'Albero",
+    "prefix": "Prefisso: ",
+    "save": "Salva",
+    "branch_prefix_saved": "Il prefisso del ramo è stato salvato.",
+    "edit_branch_prefix_multiple": "Modifica prefisso ramo per {{count}} rami",
+    "branch_prefix_saved_multiple": "Il prefisso del ramo è stato salvato per {{count}} rami.",
+    "affected_branches": "Rami interessati ({{count}}):"
+  },
+  "bulk_actions": {
+    "bulk_actions": "Azioni massive",
+    "affected_notes": "Note influenzate",
+    "include_descendants": "Includi i discendenti della nota selezionata",
+    "available_actions": "Azioni disponibili",
+    "chosen_actions": "Azioni scelte",
+    "execute_bulk_actions": "Esegui le azioni massive",
+    "bulk_actions_executed": "Le azioni massive sono state eseguite con successo.",
+    "none_yet": "Ancora nessuna... aggiungi una azione cliccando su una di quelle disponibili sopra.",
+    "labels": "Etichette",
+    "relations": "Relazioni",
+    "notes": "Note",
+    "other": "Altro"
+  },
+  "clone_to": {
+    "clone_notes_to": "Clona note in...",
+    "help_on_links": "Aiuto sui collegamenti",
+    "notes_to_clone": "Note da clonare",
+    "target_parent_note": "Nodo padre obiettivo",
+    "search_for_note_by_its_name": "cerca una nota per nome",
+    "cloned_note_prefix_title": "Le note clonate saranno mostrate nell'albero delle note con il dato prefisso",
+    "prefix_optional": "Prefisso (opzionale)",
+    "clone_to_selected_note": "Clona verso la nota selezionata <kbd>invio</kbd>",
+    "no_path_to_clone_to": "Nessun percorso per clonare dentro.",
+    "note_cloned": "La nota \"{{clonedTitle}}\" è stata clonata in \"{{targetTitle}}\""
+  },
+  "confirm": {
+    "cancel": "Annulla",
+    "ok": "OK",
+    "confirmation": "Conferma",
+    "are_you_sure_remove_note": "Sei sicuro di voler rimuovere la nota \"{{title}}\" dalla mappa delle relazioni? ",
+    "if_you_dont_check": "Se non lo selezioni, la nota sarà rimossa solamente dalla mappa delle relazioni.",
+    "also_delete_note": "Rimuove anche la nota"
+  },
   "delete_notes": {
     "close": "Chiudi",
     "delete_all_clones_description": "Elimina anche tutti i cloni (può essere ripristinato nella sezione cambiamenti recenti)",
@@ -765,8 +809,8 @@
     "css_class": "Il valore di questa etichetta viene quindi aggiunto come classe CSS al nodo che rappresenta una determinata nota nell'albero. Ciò può essere utile per la personalizzazione avanzata dei temi. Può essere utilizzato nelle note dei modelli.",
     "icon_class": "Il valore di questa etichetta viene aggiunto come classe CSS all'icona sull'albero, il che può aiutare a distinguere visivamente le note nell'albero. Un esempio potrebbe essere bx bx-home - le icone sono prese da boxicons. Può essere utilizzato nelle note del modello.",
     "page_size": "numero di elementi per pagina nell'elenco delle note",
-    "custom_request_handler": "Gestore richieste personalizzato",
-    "custom_resource_provider": "Gestore richieste personalizzato",
+    "custom_request_handler": "vedi <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Gestore richieste personalizzato</a>",
+    "custom_resource_provider": "vedi <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Gestore richieste personalizzato</a>",
     "widget": "contrassegna questa nota come widget personalizzato che verrà aggiunto all'albero dei componenti Trilium",
     "workspace": "contrassegna questa nota come area di lavoro che consente un facile ancoraggio",
     "workspace_icon_class": "definisce la classe CSS dell'icona della casella che verrà utilizzata nella scheda quando viene sollevata su questa nota",

@@ -1,125 +1,220 @@
 {
-    "about": {
-        "data_directory": "Directorio de datos:",
-        "version_label": "Versión:",
-        "version": "{{appVersion}} (base de datos: {{dbVersion}}, protocolo de sincronización: {{syncVersion}})",
-        "build_info": "Compilación: {{buildDate}}, revisión: <buildRevision />",
-        "contributors_label": "Contribuidores:",
-        "contributor_roles": {
-            "lead-dev": "desarrollador principal",
-            "original-dev": "desarrollador original"
-        },
-        "role_brief_history": {
-            "lead-dev": "Elian Doran fundó TriliumNext en 2024, una bifurcación de la comunidad creado después de que Zadam dejara el proyecto. Más tarde Zadam transfirió el repositorio original al equipo de TriliumNext, fusionando ambos proyectos en uno.",
-            "original-dev": "El 25 de diciembre de 2017, Zadam lanzó la primera beta de Trilium (escrito con una solo \"l\", a diferencia de la flor). Insatisfecho con los organizadores de notas existentes, él construyó una poderosa base de conocimientos jerárquica auto hospedada que reunió más de 22.000 estrellas en GitHub. En 2024, a medida que la vida fue más activa, puso el proyecto en modo de mantenimiento."
-        },
-        "contributor_full_list": "Ver la comunidad entera",
-        "github_tooltip": "Reportar errores, sugerir características o contribuir en GitHub",
-        "license_tooltip": "Ver licencia",
-        "donate": "Donar",
-        "donate_tooltip": "Donar para apoyar este proyecto"
+  "about": {
+    "data_directory": "Directorio de datos:",
+    "version_label": "Versión:",
+    "version": "{{appVersion}} (base de datos: {{dbVersion}}, protocolo de sincronización: {{syncVersion}})",
+    "build_info": "Compilación: {{buildDate}}, revisión: <buildRevision />",
+    "contributors_label": "Contribuidores:",
+    "contributor_roles": {
+      "lead-dev": "desarrollador principal",
+      "original-dev": "desarrollador original"
     },
-    "toast": {
-        "critical-error": {
-            "title": "Error crítico",
-            "message": "Ha ocurrido un error crítico que previene que el cliente de la aplicación inicie:\n\n{{message}}\n\nMuy probablemente es causado por un script que falla de forma inesperada. Intente iniciar la aplicación en modo seguro y atienda el error."
-        },
-        "widget-error": {
-            "title": "Hubo un fallo al inicializar un widget",
-            "message-custom": "El widget personalizado de la nota con ID \"{{id}}\", titulada \"{{title}}\" no pudo ser inicializado debido a:\n\n{{message}}",
-            "message-unknown": "Un widget no pudo ser inicializado debido a:\n\n{{message}}"
-        },
-        "bundle-error": {
-            "title": "Hubo un fallo al cargar un script personalizado",
-            "message": "El script no pudo ser ejecutado debido a:\n\n{{message}}"
-        },
-        "widget-list-error": {
-            "title": "Hubo un fallo al obtener la lista de widgets del servidor"
-        },
-        "widget-render-error": {
-            "title": "Hubo un fallo al renderizar un widget personalizado de React"
-        },
-        "widget-missing-parent": "El widget personalizado no tiene definida la propiedad obligatoria '{{property}}'.\n\nSi este script está pensado para ejecutarse sin un elemento de interfaz de usuario, utilice '#run=frontendStartup' en su lugar.",
-        "open-script-note": "Abrir script",
-        "scripting-error": "Error en script personalizado: {{title}}"
+    "role_brief_history": {
+      "lead-dev": "Elian Doran fundó TriliumNext en 2024, una bifurcación de la comunidad creado después de que Zadam dejara el proyecto. Más tarde Zadam transfirió el repositorio original al equipo de TriliumNext, fusionando ambos proyectos en uno.",
+      "original-dev": "El 25 de diciembre de 2017, Zadam lanzó la primera beta de Trilium (escrito con una solo \"l\", a diferencia de la flor). Insatisfecho con los organizadores de notas existentes, él construyó una poderosa base de conocimientos jerárquica auto hospedada que reunió más de 22.000 estrellas en GitHub. En 2024, a medida que la vida fue más activa, puso el proyecto en modo de mantenimiento."
     },
-    "add_link": {
-        "add_link": "Agregar enlace",
-        "help_on_links": "Ayuda sobre enlaces",
-        "note": "Nota",
-        "search_note": "buscar nota por su nombre",
-        "link_title_mirrors": "el título del enlace replica el título actual de la nota",
-        "link_title_arbitrary": "el título del enlace se puede cambiar arbitrariamente",
-        "link_title": "Título del enlace",
-        "button_add_link": "Agregar enlace",
-        "anchor": "Ancla (opcional)",
-        "anchor_none": "Ninguna (enlace a la nota)"
+    "contributor_full_list": "Ver la comunidad entera",
+    "github_tooltip": "Reportar errores, sugerir características o contribuir en GitHub",
+    "license_tooltip": "Ver licencia",
+    "donate": "Donar",
+    "donate_tooltip": "Donar para apoyar este proyecto"
+  },
+  "toast": {
+    "critical-error": {
+      "title": "Error crítico",
+      "message": "Ha ocurrido un error crítico que previene que el cliente de la aplicación inicie:\n\n{{message}}\n\nMuy probablemente es causado por un script que falla de forma inesperada. Intente iniciar la aplicación en modo seguro y atienda el error."
     },
-    "branch_prefix": {
-        "edit_branch_prefix": "Editar prefijo de rama",
-        "help_on_tree_prefix": "Ayuda sobre el prefijo del árbol",
-        "prefix": "Prefijo: ",
-        "save": "Guardar",
-        "branch_prefix_saved": "Se ha guardado el prefijo de rama.",
-        "edit_branch_prefix_multiple": "Editar prefijo de rama para {{count}} ramas",
-        "branch_prefix_saved_multiple": "El prefijo de rama se ha guardado para {{count}} ramas.",
-        "affected_branches": "Ramas afectadas ({{count}}):"
+    "widget-error": {
+      "title": "Hubo un fallo al inicializar un widget",
+      "message-custom": "El widget personalizado de la nota con ID \"{{id}}\", titulada \"{{title}}\" no pudo ser inicializado debido a:\n\n{{message}}",
+      "message-unknown": "Un widget no pudo ser inicializado debido a:\n\n{{message}}"
     },
-    "bulk_actions": {
-        "bulk_actions": "Acciones en bloque",
-        "affected_notes": "Notas afectadas",
-        "include_descendants": "Incluir descendientes de las notas seleccionadas",
-        "available_actions": "Acciones disponibles",
-        "chosen_actions": "Acciones elegidas",
-        "execute_bulk_actions": "Ejecutar acciones en bloque",
-        "bulk_actions_executed": "Las acciones en bloque se han ejecutado con éxito.",
-        "none_yet": "Ninguna todavía... agregue una acción haciendo clic en una de las disponibles arriba.",
-        "labels": "Etiquetas",
-        "relations": "Relaciones",
-        "notes": "Notas",
-        "other": "Otro"
+    "bundle-error": {
+      "title": "Hubo un fallo al cargar un script personalizado",
+      "message": "El script no pudo ser ejecutado debido a:\n\n{{message}}"
     },
-    "clone_to": {
-        "clone_notes_to": "Clonar notas a...",
-        "help_on_links": "Ayuda sobre enlaces",
-        "notes_to_clone": "Notas a clonar",
-        "target_parent_note": "Nota padre de destino",
-        "search_for_note_by_its_name": "buscar nota por su nombre",
-        "cloned_note_prefix_title": "La nota clonada se mostrará en el árbol de notas con el prefijo dado",
-        "prefix_optional": "Prefijo (opcional)",
-        "clone_to_selected_note": "Clonar a nota seleccionada",
-        "no_path_to_clone_to": "No hay ruta para clonar.",
-        "note_cloned": "La nota \"{{clonedTitle}}\" a sido clonada en \"{{targetTitle}}\""
+    "widget-list-error": {
+      "title": "Hubo un fallo al obtener la lista de widgets del servidor"
     },
-    "confirm": {
-        "confirmation": "Confirmación",
-        "cancel": "Cancelar",
-        "ok": "Aceptar",
-        "are_you_sure_remove_note": "¿Está seguro que desea eliminar la nota \"{{title}}\" del mapa de relaciones? ",
-        "if_you_dont_check": "Si no marca esto, la nota solo se eliminará del mapa de relaciones.",
-        "also_delete_note": "También eliminar la nota"
+    "widget-render-error": {
+      "title": "Hubo un fallo al renderizar un widget personalizado de React"
     },
-    "delete_notes": {
-        "close": "Cerrar",
-        "delete_all_clones_description": "Eliminar también todos los clones (se puede deshacer en cambios recientes)",
-        "erase_notes_description": "Borrar notas inmediatamente en lugar de la eliminación con respaldo. Esto no se puede deshacer y forzará la recarga de la aplicación.",
-        "erase_notes_warning": "Eliminar notas permanentemente (no se puede deshacer), incluidos todos los clones. Esto forzará la recarga de la aplicación.",
-        "notes_to_be_deleted": "Notas a ser eliminadas ({{notesCount}})",
-        "no_note_to_delete": "No se eliminará ninguna nota (solo clones).",
-        "broken_relations_to_be_deleted": "Relaciones rotas ({{ relationCount}})",
-        "cancel": "Cancelar",
-        "title": "Eliminar notas",
-        "clones_label": "Clones",
-        "delete_clones_description_one": "También eliminar otro clon. Puede deshacerse en los cambios recientes.",
-        "delete_clones_description_many": "También eliminar otros {{count}} clones. Puede deshacerse en los cambios recientes.",
-        "delete_clones_description_other": "También eliminar otros {{count}} clones. Puede deshacerse en los cambios recientes.",
-        "erase_notes_label": "Borrar permanentemente",
-        "table_note_with_relation": "Nota con relación",
-        "table_relation": "Relación",
-        "table_points_to": "Apunta a (eliminado)",
-        "delete": "Eliminar"
-    },
+    "widget-missing-parent": "El widget personalizado no tiene definida la propiedad obligatoria '{{property}}'.\n\nSi este script está pensado para ejecutarse sin un elemento de interfaz de usuario, utilice '#run=frontendStartup' en su lugar.",
+    "open-script-note": "Abrir script",
+    "scripting-error": "Error en script personalizado: {{title}}"
+  },
+  "add_link": {
+    "add_link": "Agregar enlace",
+    "help_on_links": "Ayuda sobre enlaces",
+    "note": "Nota",
+    "search_note": "buscar nota por su nombre",
+    "link_title_mirrors": "el título del enlace replica el título actual de la nota",
+    "link_title_arbitrary": "el título del enlace se puede cambiar arbitrariamente",
+    "link_title": "Título del enlace",
+    "button_add_link": "Agregar enlace",
+    "anchor": "Ancla (opcional)",
+    "anchor_none": "Ninguna (enlace a la nota)"
+  },
+  "branch_prefix": {
+    "edit_branch_prefix": "Editar prefijo de rama",
+    "help_on_tree_prefix": "Ayuda sobre el prefijo del árbol",
+    "prefix": "Prefijo: ",
+    "save": "Guardar",
+    "branch_prefix_saved": "Se ha guardado el prefijo de rama.",
+    "edit_branch_prefix_multiple": "Editar prefijo de rama para {{count}} ramas",
+    "branch_prefix_saved_multiple": "El prefijo de rama se ha guardado para {{count}} ramas.",
+    "affected_branches": "Ramas afectadas ({{count}}):"
+  },
+  "bulk_actions": {
+    "bulk_actions": "Acciones en bloque",
+    "affected_notes": "Notas afectadas",
+    "include_descendants": "Incluir descendientes de las notas seleccionadas",
+    "available_actions": "Acciones disponibles",
+    "chosen_actions": "Acciones elegidas",
+    "execute_bulk_actions": "Ejecutar acciones en bloque",
+    "bulk_actions_executed": "Las acciones en bloque se han ejecutado con éxito.",
+    "none_yet": "Ninguna todavía... agregue una acción haciendo clic en una de las disponibles arriba.",
+    "labels": "Etiquetas",
+    "relations": "Relaciones",
+    "notes": "Notas",
+    "other": "Otro"
+  },
+  "clone_to": {
+    "clone_notes_to": "Clonar notas a...",
+    "help_on_links": "Ayuda sobre enlaces",
+    "notes_to_clone": "Notas a clonar",
+    "target_parent_note": "Nota padre de destino",
+    "search_for_note_by_its_name": "buscar nota por su nombre",
+    "cloned_note_prefix_title": "La nota clonada se mostrará en el árbol de notas con el prefijo dado",
+    "prefix_optional": "Prefijo (opcional)",
+    "clone_to_selected_note": "Clonar a nota seleccionada",
+    "no_path_to_clone_to": "No hay ruta para clonar.",
+    "note_cloned": "La nota \"{{clonedTitle}}\" a sido clonada en \"{{targetTitle}}\""
+  },
+  "confirm": {
+    "confirmation": "Confirmación",
+    "cancel": "Cancelar",
+    "ok": "Aceptar",
+    "are_you_sure_remove_note": "¿Está seguro que desea eliminar la nota \"{{title}}\" del mapa de relaciones? ",
+    "if_you_dont_check": "Si no marca esto, la nota solo se eliminará del mapa de relaciones.",
+    "also_delete_note": "También eliminar la nota"
+  },
+  "delete_notes": {
+    "close": "Cerrar",
+    "delete_all_clones_description": "Eliminar también todos los clones (se puede deshacer en cambios recientes)",
+    "erase_notes_description": "Borrar notas inmediatamente en lugar de la eliminación con respaldo. Esto no se puede deshacer y forzará la recarga de la aplicación.",
+    "erase_notes_warning": "Eliminar notas permanentemente (no se puede deshacer), incluidos todos los clones. Esto forzará la recarga de la aplicación.",
+    "notes_to_be_deleted": "Notas a ser eliminadas ({{notesCount}})",
+    "no_note_to_delete": "No se eliminará ninguna nota (solo clones).",
+    "broken_relations_to_be_deleted": "Relaciones rotas ({{ relationCount}})",
+    "cancel": "Cancelar",
+    "title": "Eliminar notas",
+    "clones_label": "Clones",
+    "delete_clones_description_one": "También eliminar otro clon. Puede deshacerse en los cambios recientes.",
+    "delete_clones_description_many": "También eliminar otros {{count}} clones. Puede deshacerse en los cambios recientes.",
+    "delete_clones_description_other": "También eliminar otros {{count}} clones. Puede deshacerse en los cambios recientes.",
+    "erase_notes_label": "Borrar permanentemente",
+    "table_note_with_relation": "Nota con relación",
+    "table_relation": "Relación",
+    "table_points_to": "Apunta a (eliminado)",
+    "delete": "Eliminar"
+  },
+  "export": {
+    "export_note_title": "Exportar nota",
+    "close": "Cerrar",
+    "export_type_subtree": "Esta nota y todos sus descendientes",
+    "format_html": "HTML - ya que preserva todo el formato",
+    "format_html_zip": "HTML en un archivo ZIP: se recomienda ya que conserva todo el formato.",
+    "format_markdown": "Markdown: esto conserva la mayor parte del formato.",
+    "format_opml": "OPML: formato de intercambio de esquemas solo para texto. El formato, las imágenes y los archivos no están incluidos.",
+    "opml_version_1": "OPML v1.0: solo texto sin formato",
+    "opml_version_2": "OPML v2.0 - también permite HTML",
+    "export_type_single": "Sólo esta nota sin sus descendientes",
+    "export": "Exportar",
+    "choose_export_type": "Por favor, elija primero el tipo de exportación",
+    "export_status": "Estado de exportación",
+    "export_in_progress": "Exportación en curso: {{progressCount}}",
+    "export_finished_successfully": "La exportación finalizó exitosamente.",
+    "format_pdf": "PDF - para propósitos de impresión o compartición.",
+    "share-format": "HTML para publicación web: utiliza el mismo tema que se utiliza en las notas compartidas, pero se puede publicar como un sitio web estático."
+  },
+  "help": {
+    "noteNavigation": "Navegación de notas",
+    "goUpDown": "subir/bajar en la lista de notas",
+    "collapseExpand": "colapsar/expandir nodo",
+    "notSet": "no establecido",
+    "goBackForwards": "retroceder / avanzar en la historia",
+    "showJumpToNoteDialog": "mostrar <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"Saltar a\" diálogo</a>",
+    "scrollToActiveNote": "desplazarse hasta la nota activa",
+    "jumpToParentNote": "saltar a la nota padre",
+    "collapseWholeTree": "colapsar todo el árbol de notas",
+    "collapseSubTree": "colapsar subárbol",
+    "tabShortcuts": "Atajos de pestañas",
+    "newTabNoteLink": "en el enlace de la nota abre la nota en una nueva pestaña",
+    "newTabWithActivationNoteLink": "en el enlace de la nota abre y activa la nota en una nueva pestaña",
+    "onlyInDesktop": "Solo en escritorio (compilación con Electron)",
+    "openEmptyTab": "abrir pestaña vacía",
+    "closeActiveTab": "cerrar pestaña activa",
+    "activateNextTab": "activar pestaña siguiente",
+    "activatePreviousTab": "activar pestaña anterior",
+    "creatingNotes": "Creando notas",
+    "createNoteAfter": "crear una nueva nota después de la nota activa",
+    "createNoteInto": "crear una nueva subnota en la nota activa",
+    "editBranchPrefix": "edición <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/tree-concepts.html#prefix\">prefix</a> de clon de nota activa",
+    "movingCloningNotes": "Moviendo/clonando notas",
+    "moveNoteUpDown": "mover nota arriba/abajo en la lista de notas",
+    "moveNoteUpHierarchy": "mover nota hacia arriba en la jerarquía",
+    "multiSelectNote": "selección múltiple de nota hacia arriba/abajo",
+    "selectAllNotes": "seleccionar todas las notas en el nivel actual",
+    "selectNote": "seleccionar nota",
+    "copyNotes": "copiar nota activa (o selección actual) al portapapeles (usado para <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/cloning-notes.html#cloning-notes\">clonar</a>)",
+    "cutNotes": "cortar la nota actual (o la selección actual) en el portapapeles (usado para mover notas)",
+    "pasteNotes": "pegar notas como subnotas en la nota activa (que se puede mover o clonar dependiendo de si se copió o cortó en el portapapeles)",
+    "deleteNotes": "eliminar nota/subárbol",
+    "editingNotes": "Editando notas",
+    "editNoteTitle": "en el panel de árbol cambiará del panel de árbol al título de la nota. Ingresar desde el título de la nota cambiará el foco al editor de texto. <kbd>Ctrl+.</kbd> cambiará de nuevo del editor al panel de árbol.",
+    "createEditLink": "crear/editar enlace externo",
+    "createInternalLink": "crear enlace interno",
+    "followLink": "siga el enlace debajo del cursor",
+    "insertDateTime": "insertar la fecha y hora actuales en la posición del cursor",
+    "jumpToTreePane": "saltar al panel de árbol y desplazarse hasta la nota activa",
+    "markdownAutoformat": "Autoformato tipo Markdown",
+    "headings": "<code>##</code>, <code>###</code>, <code>####</code>  etc. seguido de espacio para encabezados",
+    "bulletList": "<code>*</code> o <code>-</code> seguido de espacio para la lista de viñetas",
+    "numberedList": "<code>1.</code> o <code>1)</code> seguido de espacio para la lista numerada",
+    "blockQuote": "comience una línea con <code>></code> seguido de espacio para el bloque de cita",
+    "troubleshooting": "Solución de problemas",
+    "reloadFrontend": "recargar la interfaz de Trilium",
+    "showDevTools": "mostrar herramientas de desarrollador",
+    "showSQLConsole": "mostrar consola SQL",
+    "other": "Otro",
+    "quickSearch": "centrarse en la entrada de búsqueda rápida",
+    "inPageSearch": "búsqueda en la página",
+    "title": "Hoja de ayuda",
+    "editShortcuts": "Editar atajos de teclado"
+  },
   "import": {
+    "importIntoNote": "Importar a nota",
+    "chooseImportFile": "Elija el archivo de importación",
+    "importDescription": "El contenido de los archivos seleccionados se importará como notas secundarias en",
+    "options": "Opciones",
+    "safeImportTooltip": "Los archivos <code>.zip</code> de Trilium pueden contener scripts ejecutables que pudieran tener un comportamiento peligroso. La importación segura va a desactivar la ejecución automática de todos los scripts importados. Desmarque \"Importación segura\" solo si el archivo importado contiene scripts ejecutables y usted confía totalmente en el contenido del archivo importado.",
+    "safeImport": "Importación segura",
+    "explodeArchivesTooltip": "Si esto está marcado, Trilium leerá los archivos <code>.zip</code>, <code>.enex</code> y <code>.opml</code> y creará notas a partir de archivos dentro de esos archivos. Si no está marcado, Trilium adjuntará los archivos a la nota.",
+    "explodeArchives": "Leer el contenido de los archivos <code>.zip</code>, <code>.enex</code> y <code>.opml</code>.",
+    "shrinkImagesTooltip": "<p>Si marca esta opción, Trilium intentará reducir las imágenes importadas mediante escalado y optimización, lo que puede afectar la calidad de la imagen percibida. Si no está marcada, las imágenes se importarán sin cambios.</p><p>Esto no se aplica a las importaciones <code>.zip</code> con metadatos, ya que se supone que estos archivos ya están optimizados.</p>",
+    "shrinkImages": "Reducir imágenes",
+    "textImportedAsText": "Importar HTML, Markdown y TXT como notas de texto si no está claro en los metadatos",
+    "codeImportedAsCode": "Importar archivos de código reconocidos (por ejemplo, <code>.json</code>) como notas de código si no están claros en los metadatos",
+    "replaceUnderscoresWithSpaces": "Reemplazar guiones bajos con espacios en nombres de notas importadas",
+    "import": "Importar",
+    "failed": "La importación falló: {{message}}.",
+    "html_import_tags": {
+      "title": "HTML Importar Etiquetas",
+      "description": "Configurar que etiquetas HTML deben ser preservadas al importar notas. Las etiquetas que no estén en esta lista serán eliminadas durante la importación. Algunas etiquetas (como 'script') siempre son eliminadas por seguridad.",
+      "placeholder": "Ingrese las etiquetas HTML, una por línea",
+      "reset_button": "Restablecer a lista por defecto"
+    },
     "import-status": "Estado de importación",
     "in-progress": "Importación en progreso: {{progress}}",
     "successful": "Importación finalizada exitosamente.",
@@ -283,8 +378,8 @@
     "css_class": "el valor de esta etiqueta se agrega como clase CSS al nodo que representa la nota dada en el árbol. Esto puede resultar útil para temas avanzados. Se puede utilizar en notas de plantilla.",
     "icon_class": "el valor de esta etiqueta se agrega como una clase CSS al icono en el árbol, lo que puede ayudar a distinguir visualmente las notas en el árbol. El ejemplo podría ser bx bx-home: los iconos se toman de boxicons. Se puede utilizar en notas de plantilla.",
     "page_size": "número de elementos por página en el listado de notas",
-    "custom_request_handler": "véa Manejador de solicitudes personalizado",
-    "custom_resource_provider": "véa Manejador de solicitudes personalizado",
+    "custom_request_handler": "véa <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Manejador de solicitudes personalizado</a>",
+    "custom_resource_provider": "véa <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Manejador de solicitudes personalizado</a>",
     "widget": "marca esta nota como un widget personalizado que se agregará al árbol de componentes de Trilium",
     "workspace": "marca esta nota como un espacio de trabajo que permite un fácil levantamiento",
     "workspace_icon_class": "define la clase CSS del icono de cuadro que se usará en la pestaña cuando se levante a esta nota",
