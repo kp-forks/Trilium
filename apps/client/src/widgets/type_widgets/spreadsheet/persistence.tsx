@@ -69,12 +69,7 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
 
     function applyContent(univerAPI: FUniver, newContent: string) {
         const viewState = saveViewState(univerAPI);
-
-        // Dispose the existing workbook.
         const existingWorkbook = univerAPI.getActiveWorkbook();
-        if (existingWorkbook) {
-            univerAPI.disposeUnit(existingWorkbook.getId());
-        }
 
         let workbookData: Partial<IWorkbookData> = {};
         if (newContent) {
@@ -89,7 +84,13 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
             }
         }
 
+        // Create the new workbook BEFORE disposing the old one so the formula
+        // engine transitions cleanly without a gap where stale state could leak.
         const workbook = univerAPI.createWorkbook(workbookData);
+
+        if (existingWorkbook) {
+            univerAPI.disposeUnit(existingWorkbook.getId());
+        }
 
         restoreViewState(workbook, viewState);
 
