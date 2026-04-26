@@ -69,13 +69,16 @@ Frontend uses a widget system (`apps/client/src/widgets/`):
 - Type-specific widgets in `type_widgets/` directory
 
 #### Reusable Preact Components
-Common UI components are available in `apps/client/src/widgets/react/` — prefer reusing these over creating custom implementations:
+Common UI components are available in `apps/client/src/widgets/react/` — **always** reuse these instead of writing raw HTML elements or custom implementations:
 - `NoItems` - Empty state placeholder with icon and message (use for "no results", "too many items", error states)
 - `ActionButton` - Consistent button styling with icon support
-- `FormTextBox` - Text input with validation and controlled input handling
+- `FormTextBox` - Text input with validation and controlled input handling; `FormTextBoxWithUnit` for inputs with a unit suffix (e.g. "mm", "px")
+- `FormSelect` - Dropdown/combobox taking an object array as data
 - `Slider` - Range slider with label
 - `Checkbox`, `RadioButton` - Form controls
 - `CollapsibleSection` - Expandable content sections
+
+**Do not use Bootstrap utility classes** (e.g. `form-control-sm`, `form-select-sm`, `input-group`) on these components — they manage their own styling internally. If you need to adjust sizing or layout, use props provided by the component or CSS custom properties, not Bootstrap overrides.
 
 #### API Architecture
 - **Internal API**: REST endpoints in `apps/server/src/routes/api/`

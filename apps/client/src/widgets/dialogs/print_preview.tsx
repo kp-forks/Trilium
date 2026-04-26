@@ -7,6 +7,8 @@ import { dynamicRequire, isElectron } from "../../services/utils";
 import Button, { ButtonGroup } from "../react/Button";
 import Dropdown from "../react/Dropdown";
 import { FormListHeader, FormListItem } from "../react/FormList";
+import FormSelect from "../react/FormSelect";
+import FormTextBox, { FormTextBoxWithUnit } from "../react/FormTextBox";
 import { useNoteLabelBoolean, useNoteLabelWithDefault, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import Slider from "../react/Slider";
@@ -356,16 +358,14 @@ export default function PrintPreviewDialog() {
                     </OptionsRow>
 
                     <OptionsRow name="pageSize" label={t("print_preview.page_size")}>
-                        <select
-                            class="form-select form-select-sm"
-                            value={pageSize}
-                            onChange={(e) => setPageSize((e.target as HTMLSelectElement).value)}
+                        <FormSelect
+                            values={PAGE_SIZES.map((size) => ({ key: size, title: size }))}
+                            keyProperty="key"
+                            titleProperty="title"
+                            currentValue={pageSize}
+                            onChange={setPageSize}
                             disabled={loading}
-                        >
-                            {PAGE_SIZES.map((size) => (
-                                <option key={size} value={size}>{size}</option>
-                            ))}
-                        </select>
+                        />
                     </OptionsRow>
 
                     <OptionsRow name="scale" label={t("print_preview.scale")} description={`${Math.round(scale * 100)}%`}>
@@ -379,17 +379,19 @@ export default function PrintPreviewDialog() {
                     </OptionsRow>
 
                     <OptionsRow name="margins" label={t("print_preview.margins")}>
-                        <select
-                            class="form-select form-select-sm"
-                            value={marginPreset}
-                            onChange={(e) => setMarginsStr(serializeMargins((e.target as HTMLSelectElement).value as MarginPreset | "custom", customMargins))}
+                        <FormSelect
+                            values={[
+                                { key: "default", title: t("print_preview.margins_default") },
+                                { key: "none", title: t("print_preview.margins_none") },
+                                { key: "minimum", title: t("print_preview.margins_minimum") },
+                                { key: "custom", title: t("print_preview.margins_custom") },
+                            ]}
+                            keyProperty="key"
+                            titleProperty="title"
+                            currentValue={marginPreset}
+                            onChange={(value) => setMarginsStr(serializeMargins(value as MarginPreset | "custom", customMargins))}
                             disabled={loading}
-                        >
-                            <option value="default">{t("print_preview.margins_default")}</option>
-                            <option value="none">{t("print_preview.margins_none")}</option>
-                            <option value="minimum">{t("print_preview.margins_minimum")}</option>
-                            <option value="custom">{t("print_preview.margins_custom")}</option>
-                        </select>
+                        />
                     </OptionsRow>
 
                     {marginPreset === "custom" && (
@@ -401,12 +403,11 @@ export default function PrintPreviewDialog() {
                         label={t("print_preview.page_ranges")}
                         description={!pageRangesValid ? t("print_preview.page_ranges_invalid") : t("print_preview.page_ranges_hint")}
                     >
-                        <input
-                            type="text"
-                            class={`form-control form-control-sm ${!pageRangesValid ? "is-invalid" : ""}`}
-                            value={pageRanges}
+                        <FormTextBox
+                            className={!pageRangesValid ? "is-invalid" : ""}
+                            currentValue={pageRanges}
                             placeholder={t("print_preview.page_ranges_placeholder")}
-                            onInput={(e) => setPageRanges((e.target as HTMLInputElement).value)}
+                            onChange={(value) => setPageRanges(value)}
                             disabled={loading}
                             style={{ width: "140px" }}
                         />
@@ -461,20 +462,18 @@ function MarginSpinner({ label, value, onChange, disabled, style }: {
     style?: Record<string, string>;
 }) {
     return (
-        <div class="input-group input-group-sm" style={style}>
-            <input
-                type="number"
-                class="form-control form-control-sm"
-                title={label}
-                aria-label={label}
-                value={value}
-                min={0}
-                max={100}
-                step={1}
-                onChange={(e) => onChange(Math.min(100, (e.target as HTMLInputElement).valueAsNumber || 0))}
-                disabled={disabled}
-            />
-            <span class="input-group-text">mm</span>
-        </div>
+        <FormTextBoxWithUnit
+            type="number"
+            style={style}
+            title={label}
+            aria-label={label}
+            currentValue={String(value)}
+            min={0}
+            max={100}
+            step={1}
+            onChange={(val) => onChange(Math.min(100, parseInt(val, 10) || 0))}
+            disabled={disabled}
+            unit="mm"
+        />
     );
 }
