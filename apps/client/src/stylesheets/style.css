@@ -115,6 +115,10 @@ body.mobile #root-widget.virtual-keyboard-opened #mobile-bottom-bar {
     padding-bottom: var(--mobile-bottom-offset);
 }
 
+body.desktop #root-widget {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
 body.desktop #root-widget.horizontal-layout {
     padding-top: env(safe-area-inset-top);
     background-color: var(--launcher-pane-background-color);
@@ -124,6 +128,7 @@ body.desktop #root-widget.vertical-layout #launcher-pane,
 body.desktop #root-widget.vertical-layout #left-pane,
 body.desktop #root-widget.vertical-layout #rest-pane {
     padding-top: env(safe-area-inset-top);
+
 }
 
 a {
