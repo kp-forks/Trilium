@@ -173,9 +173,36 @@ function getSyncStep(stats: { outstandingPullCount: number; totalPullCount: numb
     return "connecting";
 }
 
+function useWakeLock() {
+    const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+    useEffect(() => {
+        if (!("wakeLock" in navigator)) return;
+
+        let released = false;
+
+        navigator.wakeLock.request("screen").then((lock) => {
+            if (released) {
+                lock.release();
+            } else {
+                wakeLockRef.current = lock;
+            }
+        }).catch(() => {
+            // Wake Lock not supported or permission denied — ignore silently.
+        });
+
+        return () => {
+            released = true;
+            wakeLockRef.current?.release();
+            wakeLockRef.current = null;
+        };
+    }, []);
+}
+
 function SyncInProgress({ device }: { device: "server" | "desktop" }) {
     const stats = useOutstandingSyncInfo();
     const step = getSyncStep(stats);
+    useWakeLock();
 
     useEffect(() => {
         if (stats.initialized) {
