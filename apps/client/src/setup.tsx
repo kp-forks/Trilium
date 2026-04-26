@@ -444,10 +444,17 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncIllustration({ targetDevice }: { targetDevice: "desktop" | "server" }) {
+    let icon = "bx bx-globe";
+    if (isMobileApp()) {
+        icon = "bx bx-mobile-alt";
+    } else if (isElectron()) {
+        icon = "bx bx-desktop";
+    }
+
     return (
         <div class="sync-illustration">
             <div>
-                <Icon icon={isElectron() ? "bx bx-desktop" : "bx bx-globe"} />
+                <Icon icon={icon} />
                 {t("setup.sync-illustration-this-device")}
             </div>
             <div class="sync-illustration-arrows" />
