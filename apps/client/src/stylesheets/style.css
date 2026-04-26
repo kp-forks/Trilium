@@ -1709,16 +1709,21 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
         visibility: visible;
     }
 
-    #mobile-sidebar-wrapper {
+    #mobile-rest-container > #mobile-sidebar-wrapper {
         position: absolute;
         top: 0;
         inset-inline-start: 0;
         height: 100dvh;
         width: 85vw;
         padding-top: env(safe-area-inset-top);
+        transform: translateX(-100%);
         transition: transform 250ms ease-in-out;
         background: var(--main-background-color);
         z-index: 2000;
+    }
+
+    body[dir="rtl"] #mobile-rest-container > #mobile-sidebar-wrapper {
+        transform: translateX(100%);
     }
 
     #detail-container {
