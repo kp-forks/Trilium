@@ -1142,12 +1142,12 @@
   "fonts": {
     "theme_defined": "Tema definido",
     "fonts": "Fuentes",
-    "main_font": "Fuente principal",
+    "main_font": "Texto de la interfaz",
     "font_family": "Familia de fuentes",
     "size": "Tamaño",
-    "note_tree_font": "Fuente del árbol de notas",
-    "note_detail_font": "Fuente de detalle de nota",
-    "monospace_font": "Fuente Monospace (código)",
+    "note_tree_font": "Texto del árbol de notas",
+    "note_detail_font": "Texto del documento",
+    "monospace_font": "Texto monoespacio",
     "not_all_fonts_available": "Es posible que no todas las fuentes enumeradas estén disponibles en su sistema",
     "generic-fonts": "Fuentes genéricas",
     "sans-serif-system-fonts": "Fuentes Sans-serif del sistema",
@@ -1182,20 +1182,20 @@
     "edited_notes_message": "La pestaña de la cinta Notas editadas se abrirá automáticamente en las notas del día"
   },
   "theme": {
-    "title": "Tema",
-    "theme_label": "Tema",
+    "title": "Interfaz de usuario",
+    "theme_label": "Tema de aplicación",
     "override_theme_fonts_label": "Sobreescribir fuentes de tema",
-    "triliumnext": "Trilium (Sigue el esquema de color del sistema)",
-    "triliumnext-light": "Trilium (Claro)",
-    "triliumnext-dark": "Trilium (Oscuro)",
+    "triliumnext": "Seguir el esquema de color del sistema",
+    "triliumnext-light": "Claro",
+    "triliumnext-dark": "Oscuro",
     "layout": "Disposición",
     "layout-vertical-title": "Vertical",
     "layout-horizontal-title": "Horizontal",
     "layout-vertical-description": "la barra de lanzamiento está en la izquierda (por defecto)",
     "layout-horizontal-description": "la barra de lanzamiento está debajo de la barra de pestañas, la barra de pestañas ahora tiene ancho completo.",
-    "auto_theme": "Heredado (Sigue el esquema de colores del sistema)",
-    "light_theme": "Heredado (Claro)",
-    "dark_theme": "Heredado (Oscuro)",
+    "auto_theme": "Seguir el esquema de colores del sistema",
+    "light_theme": "Claro",
+    "dark_theme": "Oscuro",
     "modern_themes": "Moderno",
     "legacy_themes": "Heredado",
     "custom_themes": "Personalizado"
@@ -1207,7 +1207,7 @@
   "code_auto_read_only_size": {
     "title": "Tamaño automático de solo lectura",
     "description": "El tamaño de nota de solo lectura automático es el tamaño después del cual las notas se mostrarán en modo de solo lectura (por razones de rendimiento).",
-    "label": "Tamaño automático de solo lectura (notas de código)",
+    "label": "Tamaño automático de solo lectura",
     "unit": "caracteres"
   },
   "code-editor-options": {
@@ -1232,8 +1232,8 @@
   "images": {
     "images_section_title": "Imágenes",
     "download_images_automatically": "Descargar imágenes automáticamente",
-    "download_images_description": "El HTML pegado puede contener referencias a imágenes en línea; Trilium encontrará esas referencias y descargará las imágenes para que estén disponibles sin conexión.",
-    "enable_image_compression": "Habilitar la compresión de imágenes",
+    "download_images_description": "Descargar imágenes en línea referenciadas del HTML pegado para que estén disponibles sin conexión.",
+    "enable_image_compression": "Compresión de imágenes",
     "max_image_dimensions": "Dimensiones máximas de imagen",
     "max_image_dimensions_unit": "píxeles",
     "jpeg_quality_description": "Se recomienda un rango 50-85. Valores más pequeños reducen el tamaño del archivo, valores más altos preservan los detalles.",
@@ -1255,21 +1255,21 @@
     "batch_ocr_error": "Error durante el procesamiento por lotes: {{error}}"
   },
   "attachment_erasure_timeout": {
-    "attachment_erasure_timeout": "Tiempo de espera para borrar archivos adjuntos",
+    "attachment_erasure_timeout": "Archivos adjuntos sin usar",
     "erase_attachments_after": "Borrar archivos adjuntos después de",
     "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
-    "erase_unused_attachments_now": "Borrar ahora los archivos adjuntos no utilizados en la nota",
+    "erase_unused_attachments_now": "Borrar ahora los archivos adjuntos no utilizados",
     "unused_attachments_erased": "Los archivos adjuntos no utilizados se han eliminado.",
     "description": "Los archivos adjuntos que ya no son referenciados por ninguna nota se consideran no utilizados y se pueden borrar automáticamente después de un período de tiempo.",
     "erase_attachments_after_description": "El tiempo antes del cual los archivos adjuntos no utilizados se borran permanentemente."
   },
   "network_connections": {
-    "network_connections_title": "Conexiones de red",
+    "network_connections_title": "Red",
     "check_for_updates": "Buscar actualizaciones automáticamente",
     "check_for_updates_description": "Checa por nuevas versiones en GitHub y muestra una notificación en el menú global cuando estén disponibles."
   },
   "note_erasure_timeout": {
-    "note_erasure_timeout_title": "Tiempo de espera de borrado de notas",
+    "note_erasure_timeout_title": "Notas eliminadas",
     "erase_notes_after": "Borrar notas después de",
     "manual_erasing_description": "Activar el borrado manualmente, ignorando el tiempo de espera definido anteriormente.",
     "erase_deleted_notes_now": "Borrar notas eliminadas ahora",
@@ -1296,25 +1296,25 @@
   "search_engine": {
     "title": "Motor de búsqueda",
     "custom_search_engine_info": "Utilizado al buscar la web para el texto seleccionado. Si no está configurado, DuckDuckGo será utilizado.",
-    "predefined_templates_label": "Plantillas de motor de búsqueda predefinidas",
+    "predefined_templates_label": "Valores predeterminados",
     "bing": "Bing",
     "baidu": "Baidu",
     "duckduckgo": "DuckDuckGo",
     "google": "Google",
-    "custom_name_label": "Nombre del motor de búsqueda personalizado",
-    "custom_name_placeholder": "Personalizar el nombre del motor de búsqueda",
-    "custom_url_label": "La URL del motor de búsqueda personalizado debe incluir {keyword} como marcador de posición para el término de búsqueda.",
-    "custom_url_placeholder": "Personalizar la URL del motor de búsqueda",
+    "custom_name_label": "Nombre",
+    "custom_name_placeholder": "Nombre del motor de búsqueda",
+    "custom_url_label": "URL",
+    "custom_url_placeholder": "URL del motor de búsqueda",
     "save_button": "Guardar",
     "custom_url_description": "Utiliza {keyword} como marcador de posición para el término de búsqueda."
   },
   "tray": {
     "title": "Bandeja de sistema",
-    "enable_tray": "Habilitar bandeja (es necesario reiniciar Trilium para que este cambio surta efecto)",
+    "enable_tray": "Icono de bandeja",
     "enable_tray_description": "Trilium debe ser reiniciado para que este cambio surta efecto."
   },
   "heading_style": {
-    "title": "Estilo de título",
+    "title": "Estilo de títulos",
     "plain": "Plano",
     "underline": "Subrayar",
     "markdown": "Estilo Markdown",
@@ -1342,11 +1342,11 @@
   "text_auto_read_only_size": {
     "title": "Tamaño para modo de solo lectura automático",
     "description": "El tamaño de nota de solo lectura automático es el tamaño después del cual las notas se mostrarán en modo de solo lectura (por razones de rendimiento).",
-    "label": "Tamaño para modo de solo lectura automático (notas de texto)",
+    "label": "Tamaño para modo de solo lectura automático",
     "unit": "caracteres"
   },
   "custom_date_time_format": {
-    "title": "Formato de fecha/hora personalizada",
+    "title": "Formato de fecha/hora",
     "description": "Personalizar el formado de fecha y la hora insertada vía <shortcut /> o la barra de herramientas. Véa la <doc>documentación de Day.js</doc> para más tokens de formato disponibles.",
     "format_string": "Dar formato a cadena",
     "formatted_time": "Fecha/hora personalizada",
@@ -1361,10 +1361,10 @@
     "monday": "Lunes",
     "first-week-of-the-year": "Primer semana del año",
     "first-week-contains-first-day": "Primer semana que contiene al primer día del año",
-    "first-week-contains-first-thursday": "Primer semana que contiene al primer jueves del año",
+    "first-week-contains-first-thursday": "Primer semana que contiene al primer jueves (ISO 8601)",
     "first-week-has-minimum-days": "Primer semana que contiene un mínimo de días",
     "min-days-in-first-week": "Días mínimos en la primer semana",
-    "first-week-warning": "Cambiar las opciones de primer semana puede causar duplicados con las Notas Semanales existentes y las Notas Semanales existentes no serán actualizadas respectivamente.",
+    "first-week-warning": "Cambiar esto puede causar duplicados con las Notas semanales existentes.",
     "formatting-locale": "Fecha y formato de número",
     "tuesday": "Martes",
     "wednesday": "Miércoles",
@@ -1376,9 +1376,9 @@
   "backup": {
     "automatic_backup": "Copia de seguridad automática",
     "automatic_backup_description": "Trilium puede realizar copias de seguridad de la base de datos automáticamente:",
-    "enable_daily_backup": "Habilitar copia de seguridad diaria",
-    "enable_weekly_backup": "Habilitar copia de seguridad semanal",
-    "enable_monthly_backup": "Habilitar copia de seguridad mensual",
+    "enable_daily_backup": "Copia de seguridad diaria",
+    "enable_weekly_backup": "Copia de seguridad semanal",
+    "enable_monthly_backup": "Copia de seguridad mensual",
     "backup_recommendation": "Se recomienda mantener la copia de seguridad activada, pero esto puede ralentizar el inicio de la aplicación con bases de datos grandes y/o dispositivos de almacenamiento lentos.",
     "backup_now": "Realizar copia de seguridad ahora",
     "backup_database_now": "Realizar copia de seguridad de la base de datos ahora",
@@ -1423,7 +1423,7 @@
     "new_password": "Nueva contraseña",
     "new_password_confirmation": "Confirmación de nueva contraseña",
     "change_password": "Cambiar contraseña",
-    "protected_session_timeout": "Tiempo de espera de sesión protegida",
+    "protected_session_timeout": "Sesión protegida",
     "protected_session_timeout_description": "El tiempo de espera de la sesión protegida es el período de tiempo después del cual la sesión protegida se borra de la memoria del navegador. Esto se mide desde la última interacción con notas protegidas. Ver",
     "wiki": "wiki",
     "for_more_info": "para más información.",
@@ -2068,11 +2068,11 @@
   },
   "ui-performance": {
     "title": "Rendimiento",
-    "enable-motion": "Habilitar transiciones y animaciones",
-    "enable-shadows": "Activar sombras",
-    "enable-backdrop-effects": "Habilitar efectos de fondo para menús, ventanas emergentes y paneles",
-    "enable-smooth-scroll": "Habilitar desplazamiento suave",
-    "app-restart-required": "(es necesario reiniciar la aplicación para que el cambio surta efecto)"
+    "enable-motion": "Transiciones y animaciones",
+    "enable-shadows": "Sombras",
+    "enable-backdrop-effects": "Efectos de fondo para menús, ventanas emergentes y paneles",
+    "enable-smooth-scroll": "Desplazamiento suave",
+    "app-restart-required": "Requiere reiniciar la aplicación"
   },
   "settings": {
     "related_settings": "Configuración relacionada"
