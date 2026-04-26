@@ -75,7 +75,6 @@ function isValidPageRanges(value: string): boolean {
 }
 
 export interface PrintPreviewData {
-    pdfBuffer: Uint8Array;
     note: FNote;
     notePath: string;
 }
@@ -96,7 +95,7 @@ export default function PrintPreviewDialog() {
     const bufferRef = useRef<Uint8Array>();
     const notePathRef = useRef("");
     const pdfUrlRef = useRef<string>();
-    const generationRef = useRef(0);
+
 
     const [landscape, setLandscape] = useNoteLabelBoolean(note, "printLandscape");
     const [pageSize, setPageSize] = useNoteLabelWithDefault(note, "printPageSize", "Letter");
@@ -113,8 +112,6 @@ export default function PrintPreviewDialog() {
     // any other value is the system printer name to use for silent printing.
     const [printers, setPrinters] = useState<PrinterInfo[]>([]);
     const [destination, setDestination] = useState<string>(DESTINATION_PDF);
-
-    const skipNextRegenRef = useRef(false);
 
     useEffect(() => {
         if (!shown || !isElectron()) return;
@@ -141,15 +138,11 @@ export default function PrintPreviewDialog() {
     }, []);
 
     useTriliumEvent("showPrintPreview", (data: PrintPreviewData) => {
-        // When the dialog is already open, it manages its own regeneration via
-        // a persistent IPC listener. Ignore duplicate events from NoteDetail's
-        // listener to avoid overwriting the preview with stale data.
         if (shown) return;
 
-        skipNextRegenRef.current = true;
         setNote(data.note);
         notePathRef.current = data.notePath;
-        updatePreview(data.pdfBuffer);
+        setLoading(true);
         setShown(true);
     });
 
@@ -161,8 +154,6 @@ export default function PrintPreviewDialog() {
         const { ipcRenderer } = dynamicRequire("electron");
 
         const onResult = (_e: any, { buffer, error }: { buffer?: Uint8Array; error?: string }) => {
-            if (generationRef.current <= 0) return;
-
             toast.closePersistent("printing");
             if (error) {
                 setLoading(false);
@@ -192,7 +183,6 @@ export default function PrintPreviewDialog() {
     const regeneratePreview = useCallback((opts: PreviewOpts) => {
         if (!isElectron()) return;
 
-        ++generationRef.current;
         setLoading(true);
         const { ipcRenderer } = dynamicRequire("electron");
         ipcRenderer.send("export-as-pdf-preview", {
@@ -207,10 +197,6 @@ export default function PrintPreviewDialog() {
 
     useEffect(() => {
         if (!shown || !pageRangesValid) return;
-        if (skipNextRegenRef.current) {
-            skipNextRegenRef.current = false;
-            return;
-        }
         const handle = setTimeout(() => {
             regeneratePreview({ landscape, pageSize, scale, margins: marginsStr, pageRanges: pageRanges.trim() });
         }, 400);
