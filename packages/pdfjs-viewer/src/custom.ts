@@ -128,8 +128,11 @@ function manageSave() {
     });
     // Catches deletions of existing annotations, undo/redo, and comment deletion
     // which don't trigger onSetModified or switchannotationeditorparams.
-    app.eventBus.on("editingstateschanged", () => {
-        onChange();
+    // Only trigger when there are actual unsaved changes, not on selection.
+    app.eventBus.on("editingstateschanged", ({ details }: { details: Record<string, boolean> }) => {
+        if (details.hasSomethingToUndo) {
+            onChange();
+        }
     });
 }
 
