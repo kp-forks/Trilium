@@ -1,3 +1,5 @@
+import "./print_preview.css";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
@@ -280,7 +282,6 @@ export default function PrintPreviewDialog() {
             size="xl"
             show={shown}
             onHidden={handleClose}
-            bodyStyle={{ height: "78vh", padding: 0, display: "flex" }}
             footerAlignment="between"
             footer={
                 <>
@@ -307,7 +308,7 @@ export default function PrintPreviewDialog() {
                 </>
             }
         >
-            <div style={{ padding: "16px", minWidth: "250px", overflowY: "auto" }}>
+            <div class="print-preview-settings">
                 <OptionsSection>
                     <OptionsRow name="destination" label={t("print_preview.destination")}>
                         <Dropdown
@@ -404,21 +405,20 @@ export default function PrintPreviewDialog() {
                         description={!pageRangesValid ? t("print_preview.page_ranges_invalid") : t("print_preview.page_ranges_hint")}
                     >
                         <FormTextBox
-                            className={!pageRangesValid ? "is-invalid" : ""}
+                            className={`print-preview-page-ranges ${!pageRangesValid ? "is-invalid" : ""}`}
                             currentValue={pageRanges}
                             placeholder={t("print_preview.page_ranges_placeholder")}
                             onChange={(value) => setPageRanges(value)}
                             disabled={loading}
-                            style={{ width: "140px" }}
                         />
                     </OptionsRow>
                 </OptionsSection>
             </div>
 
-            <div style={{ flex: 1, position: "relative" }}>
+            <div class="print-preview-pane">
                 {loading && (
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1, backgroundColor: "var(--modal-bg-color, rgba(255,255,255,0.8))" }}>
-                        <span class="bx bx-loader-circle bx-spin" style={{ fontSize: "2rem" }} />
+                    <div class="print-preview-loading-overlay">
+                        <span class="bx bx-loader-circle bx-spin" />
                     </div>
                 )}
                 {pdfUrl && <PdfViewer pdfUrl={pdfUrl} toolbar={false} disableSelection />}
@@ -440,31 +440,28 @@ function MarginEditor({ margins, onChange, disabled }: {
     onChange: (side: keyof CustomMargins, value: number) => void;
     disabled: boolean;
 }) {
-    const spinnerStyle = { width: "130px" };
-
     return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "8px 0" }}>
-            <MarginSpinner label={t("print_preview.margin_top")} value={margins.top} onChange={(v) => onChange("top", v)} disabled={disabled} style={spinnerStyle} />
-            <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-                <MarginSpinner label={t("print_preview.margin_left")} value={margins.left} onChange={(v) => onChange("left", v)} disabled={disabled} style={spinnerStyle} />
-                <MarginSpinner label={t("print_preview.margin_right")} value={margins.right} onChange={(v) => onChange("right", v)} disabled={disabled} style={spinnerStyle} />
+        <div class="margin-editor">
+            <MarginSpinner label={t("print_preview.margin_top")} value={margins.top} onChange={(v) => onChange("top", v)} disabled={disabled} />
+            <div class="margin-editor-row">
+                <MarginSpinner label={t("print_preview.margin_left")} value={margins.left} onChange={(v) => onChange("left", v)} disabled={disabled} />
+                <MarginSpinner label={t("print_preview.margin_right")} value={margins.right} onChange={(v) => onChange("right", v)} disabled={disabled} />
             </div>
-            <MarginSpinner label={t("print_preview.margin_bottom")} value={margins.bottom} onChange={(v) => onChange("bottom", v)} disabled={disabled} style={spinnerStyle} />
+            <MarginSpinner label={t("print_preview.margin_bottom")} value={margins.bottom} onChange={(v) => onChange("bottom", v)} disabled={disabled} />
         </div>
     );
 }
 
-function MarginSpinner({ label, value, onChange, disabled, style }: {
+function MarginSpinner({ label, value, onChange, disabled }: {
     label: string;
     value: number;
     onChange: (value: number) => void;
     disabled: boolean;
-    style?: Record<string, string>;
 }) {
     return (
         <FormTextBoxWithUnit
             type="number"
-            style={style}
+            className="margin-spinner"
             title={label}
             aria-label={label}
             currentValue={String(value)}
