@@ -1,103 +1,43 @@
 {
-    "about": {
-        "data_directory": "Cartella dati:",
-        "version_label": "Versione:",
-        "version": "{{appVersion}} (database: {{dbVersion}},sync protocol: {{syncVersion}})",
-        "build_info": "Build: {{buildDate}}, revisione: <buildRevision />",
-        "contributors_label": "Collaboratori:",
-        "contributor_roles": {
-            "lead-dev": "sviluppatore capo",
-            "original-dev": "sviluppatore originale"
-        },
-        "role_brief_history": {
-            "lead-dev": "Elian Doran ha fondato TriliumNext nel 2024, un fork della comunità creato dopo che Zadam si era ritirato dal progetto. Successivamente, Zadam ha trasferito il repository originale al team di TriliumNext, unendo nuovamente i due progetti in uno solo.",
-            "original-dev": "Il 25 dicembre 2017, Zadam ha rilasciato la prima versione beta di Trilium (scritto con una sola \"l\", a differenza del fiore). Insoddisfatto di altri sistemi di organizzazione note, ha creato una potente base di conoscenza gerarchica self-hosted che ha raccolto oltre 22.000 stelle su GitHub. Nel 2024, con l'aumentare degli impegni, ha messo il progetto in modalità di manutenzione."
-        },
-        "contributor_full_list": "Scopri tutta la community",
-        "github_tooltip": "Segnala bug, suggerisci nuove funzionalità o contribuisci su GitHub",
-        "license_tooltip": "Visualizza licenza",
-        "donate": "Fai una donazione",
-        "donate_tooltip": "Fai una donazione per sostenere questo progetto"
+  "about": {
+    "data_directory": "Cartella dati:",
+    "version_label": "Versione:",
+    "version": "{{appVersion}} (database: {{dbVersion}},sync protocol: {{syncVersion}})",
+    "build_info": "Build: {{buildDate}}, revisione: <buildRevision />",
+    "contributors_label": "Collaboratori:",
+    "contributor_roles": {
+      "lead-dev": "sviluppatore capo",
+      "original-dev": "sviluppatore originale"
     },
-    "toast": {
-        "critical-error": {
-            "title": "Errore critico",
-            "message": "Si è verificato un errore critico che impedisce l'avvio dell'applicazione client:\n\n{{message}}\n\nQuesto è probabilmente causato da un errore di script inaspettato. Prova a avviare l'applicazione in modo sicuro e controlla il problema."
-        },
-        "bundle-error": {
-            "title": "Non si è riusciti a caricare uno script personalizzato",
-            "message": "Impossibile eseguire lo script a causa di:\n\n{{message}}"
-        },
-        "widget-error": {
-            "title": "Impossibile inizializzare un widget",
-            "message-custom": "Il widget personalizzato dalla nota con ID “{{id}}”, intitolato “{{title}}”, non è stato possibile inizializzare a causa di:\n\n{{message}}",
-            "message-unknown": "Un widget sconosciuto non è stato inizializzato a causa di:\n\n{{message}}"
-        },
-        "widget-list-error": {
-            "title": "Impossibile ottenere l'elenco dei widget dal server"
-        },
-        "widget-render-error": {
-            "title": "Impossibile eseguire il rendering di un widget React personalizzato"
-        },
-        "widget-missing-parent": "Il widget personalizzato non ha la proprietà obbligatoria '{{property}}' definita.\n\nSe questo script deve essere eseguito senza un elemento dell'interfaccia utente, utilizzare invece '#run=frontendStartup'.",
-        "open-script-note": "Apri script note",
-        "scripting-error": "Errore script personalizzato: {{title}}"
+    "role_brief_history": {
+      "lead-dev": "Elian Doran ha fondato TriliumNext nel 2024, un fork della comunità creato dopo che Zadam si era ritirato dal progetto. Successivamente, Zadam ha trasferito il repository originale al team di TriliumNext, unendo nuovamente i due progetti in uno solo.",
+      "original-dev": "Il 25 dicembre 2017, Zadam ha rilasciato la prima versione beta di Trilium (scritto con una sola \"l\", a differenza del fiore). Insoddisfatto di altri sistemi di organizzazione note, ha creato una potente base di conoscenza gerarchica self-hosted che ha raccolto oltre 22.000 stelle su GitHub. Nel 2024, con l'aumentare degli impegni, ha messo il progetto in modalità di manutenzione."
     },
-    "add_link": {
-        "add_link": "Aggiungi un collegamento",
-        "note": "Nota",
-        "search_note": "cerca una nota per nome",
-        "link_title_mirrors": "il titolo del collegamento rispecchia il titolo della nota corrente",
-        "link_title_arbitrary": "il titolo del collegamento può essere modificato arbitrariamente",
-        "link_title": "Titolo del collegamento",
-        "button_add_link": "Aggiungi il collegamento",
-        "help_on_links": "Aiuto sui collegamenti",
-        "anchor": "Ancoraggio (facoltativo)",
-        "anchor_none": "Nessuna (link alla nota)"
+    "contributor_full_list": "Scopri tutta la community",
+    "github_tooltip": "Segnala bug, suggerisci nuove funzionalità o contribuisci su GitHub",
+    "license_tooltip": "Visualizza licenza",
+    "donate": "Fai una donazione",
+    "donate_tooltip": "Fai una donazione per sostenere questo progetto"
+  },
+  "toast": {
+    "critical-error": {
+      "title": "Errore critico",
+      "message": "Si è verificato un errore critico che impedisce l'avvio dell'applicazione client:\n\n{{message}}\n\nQuesto è probabilmente causato da un errore di script inaspettato. Prova a avviare l'applicazione in modo sicuro e controlla il problema."
     },
-    "branch_prefix": {
-        "edit_branch_prefix": "Modifica il prefisso del ramo",
-        "help_on_tree_prefix": "Aiuto sui prefissi dell'Albero",
-        "prefix": "Prefisso: ",
-        "save": "Salva",
-        "branch_prefix_saved": "Il prefisso del ramo è stato salvato.",
-        "edit_branch_prefix_multiple": "Modifica prefisso ramo per {{count}} rami",
-        "branch_prefix_saved_multiple": "Il prefisso del ramo è stato salvato per {{count}} rami.",
-        "affected_branches": "Rami interessati ({{count}}):"
+    "bundle-error": {
+      "title": "Non si è riusciti a caricare uno script personalizzato",
+      "message": "Impossibile eseguire lo script a causa di:\n\n{{message}}"
     },
-    "bulk_actions": {
-        "bulk_actions": "Azioni massive",
-        "affected_notes": "Note influenzate",
-        "include_descendants": "Includi i discendenti della nota selezionata",
-        "available_actions": "Azioni disponibili",
-        "chosen_actions": "Azioni scelte",
-        "execute_bulk_actions": "Esegui le azioni massive",
-        "bulk_actions_executed": "Le azioni massive sono state eseguite con successo.",
-        "none_yet": "Ancora nessuna... aggiungi una azione cliccando su una di quelle disponibili sopra.",
-        "labels": "Etichette",
-        "relations": "Relazioni",
-        "notes": "Note",
-        "other": "Altro"
+    "widget-error": {
+      "title": "Impossibile inizializzare un widget",
+      "message-custom": "Il widget personalizzato dalla nota con ID “{{id}}”, intitolato “{{title}}”, non è stato possibile inizializzare a causa di:\n\n{{message}}",
+      "message-unknown": "Un widget sconosciuto non è stato inizializzato a causa di:\n\n{{message}}"
     },
-    "clone_to": {
-        "clone_notes_to": "Clona note in...",
-        "help_on_links": "Aiuto sui collegamenti",
-        "notes_to_clone": "Note da clonare",
-        "target_parent_note": "Nodo padre obiettivo",
-        "search_for_note_by_its_name": "cerca una nota per nome",
-        "cloned_note_prefix_title": "Le note clonate saranno mostrate nell'albero delle note con il dato prefisso",
-        "prefix_optional": "Prefisso (opzionale)",
-        "clone_to_selected_note": "Clona verso la nota selezionata <kbd>invio</kbd>",
-        "no_path_to_clone_to": "Nessun percorso per clonare dentro.",
-        "note_cloned": "La nota \"{{clonedTitle}}\" è stata clonata in \"{{targetTitle}}\""
+    "widget-list-error": {
+      "title": "Impossibile ottenere l'elenco dei widget dal server"
     },
-    "confirm": {
-        "cancel": "Annulla",
-        "ok": "OK",
-        "confirmation": "Conferma",
-        "are_you_sure_remove_note": "Sei sicuro di voler rimuovere la nota \"{{title}}\" dalla mappa delle relazioni? ",
-        "if_you_dont_check": "Se non lo selezioni, la nota sarà rimossa solamente dalla mappa delle relazioni.",
-        "also_delete_note": "Rimuove anche la nota"
+    "widget-render-error": {
+      "title": "Impossibile eseguire il rendering di un widget React personalizzato"
     },
     "widget-missing-parent": "Il widget personalizzato non ha la proprietà obbligatoria '{{property}}' definita.\n\nSe questo script deve essere eseguito senza un elemento dell'interfaccia utente, utilizzare invece '#run=frontendStartup'.",
     "open-script-note": "Apri script note",
@@ -114,50 +54,6 @@
     "help_on_links": "Aiuto sui collegamenti",
     "anchor": "Ancoraggio (facoltativo)",
     "anchor_none": "Nessuna (link alla nota)"
-  },
-  "branch_prefix": {
-    "edit_branch_prefix": "Modifica il prefisso del ramo",
-    "help_on_tree_prefix": "Aiuto sui prefissi dell'Albero",
-    "prefix": "Prefisso: ",
-    "save": "Salva",
-    "branch_prefix_saved": "Il prefisso del ramo è stato salvato.",
-    "edit_branch_prefix_multiple": "Modifica prefisso ramo per {{count}} rami",
-    "branch_prefix_saved_multiple": "Il prefisso del ramo è stato salvato per {{count}} rami.",
-    "affected_branches": "Rami interessati ({{count}}):"
-  },
-  "bulk_actions": {
-    "bulk_actions": "Azioni massive",
-    "affected_notes": "Note influenzate",
-    "include_descendants": "Includi i discendenti della nota selezionata",
-    "available_actions": "Azioni disponibili",
-    "chosen_actions": "Azioni scelte",
-    "execute_bulk_actions": "Esegui le azioni massive",
-    "bulk_actions_executed": "Le azioni massive sono state eseguite con successo.",
-    "none_yet": "Ancora nessuna... aggiungi una azione cliccando su una di quelle disponibili sopra.",
-    "labels": "Etichette",
-    "relations": "Relazioni",
-    "notes": "Note",
-    "other": "Altro"
-  },
-  "clone_to": {
-    "clone_notes_to": "Clona note in...",
-    "help_on_links": "Aiuto sui collegamenti",
-    "notes_to_clone": "Note da clonare",
-    "target_parent_note": "Nodo padre obiettivo",
-    "search_for_note_by_its_name": "cerca una nota per nome",
-    "cloned_note_prefix_title": "Le note clonate saranno mostrate nell'albero delle note con il dato prefisso",
-    "prefix_optional": "Prefisso (opzionale)",
-    "clone_to_selected_note": "Clona verso la nota selezionata <kbd>invio</kbd>",
-    "no_path_to_clone_to": "Nessun percorso per clonare dentro.",
-    "note_cloned": "La nota \"{{clonedTitle}}\" è stata clonata in \"{{targetTitle}}\""
-  },
-  "confirm": {
-    "cancel": "Annulla",
-    "ok": "OK",
-    "confirmation": "Conferma",
-    "are_you_sure_remove_note": "Sei sicuro di voler rimuovere la nota \"{{title}}\" dalla mappa delle relazioni? ",
-    "if_you_dont_check": "Se non lo selezioni, la nota sarà rimossa solamente dalla mappa delle relazioni.",
-    "also_delete_note": "Rimuove anche la nota"
   },
   "delete_notes": {
     "close": "Chiudi",

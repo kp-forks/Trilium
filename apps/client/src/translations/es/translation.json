@@ -119,6 +119,7 @@
         "table_points_to": "Apunta a (eliminado)",
         "delete": "Eliminar"
     },
+  "import": {
     "import-status": "Estado de importación",
     "in-progress": "Importación en progreso: {{progress}}",
     "successful": "Importación finalizada exitosamente.",
