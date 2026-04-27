@@ -60,6 +60,7 @@ let BrowserExecutionContext: typeof import('./lightweight/cls_provider').default
 let BrowserCryptoProvider: typeof import('./lightweight/crypto_provider').default;
 let BrowserZipProvider: typeof import('./lightweight/zip_provider').default;
 let FetchRequestProvider: typeof import('./lightweight/request_provider').default;
+let BridgedRequestProvider: typeof import('./lightweight/bridged_request_provider').default;
 let StandalonePlatformProvider: typeof import('./lightweight/platform_provider').default;
 let StandaloneLogService: typeof import('./lightweight/log_provider').default;
 let StandaloneBackupService: typeof import('./lightweight/backup_provider').default;
@@ -76,6 +77,7 @@ let router: BrowserRouter | null = null;
 let initPromise: Promise<void> | null = null;
 let initError: Error | null = null;
 let queryString = "";
+let useNativeHttp = false;
 
 /**
  * Check whether a file exists at the OPFS root. Used to decide whether the
@@ -287,6 +289,9 @@ async function loadModules(): Promise<void> {
     translationProvider = translationModule.default;
     createConfiguredRouter = routesModule.createConfiguredRouter;
 
+    // Loaded separately to avoid breaking Promise.all tuple inference
+    BridgedRequestProvider = (await import('./lightweight/bridged_request_provider.js')).default;
+
     // Create instances
     sqlProvider = new BrowserSqlProvider();
     messagingProvider = new WorkerMessagingProvider();
@@ -372,7 +377,7 @@ async function initialize(): Promise<void> {
                 zip: new BrowserZipProvider(),
                 zipExportProviderFactory: (await import("./lightweight/zip_export_provider_factory.js")).standaloneZipExportProviderFactory,
                 messaging: messagingProvider!,
-                request: new FetchRequestProvider(),
+                request: useNativeHttp ? new BridgedRequestProvider() : new FetchRequestProvider(),
                 platform: new StandalonePlatformProvider(queryString),
                 log: logService,
                 backup: new StandaloneBackupService(coreModule!.options),
@@ -479,6 +484,7 @@ self.onmessage = async (event) => {
 
     if (msg.type === "INIT") {
         queryString = msg.queryString || "";
+        useNativeHttp = msg.useNativeHttp || false;
         if (!initReceived) {
             initReceived = true;
             console.log("[Worker] Starting initialization...");
