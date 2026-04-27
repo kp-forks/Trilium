@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import logo from "./assets/icon-color.svg?url";
 import { initLocale, t } from "./services/i18n";
 import server from "./services/server";
-import { isElectron, replaceHtmlEscapedSlashes } from "./services/utils";
+import { isElectron, isMobileApp, replaceHtmlEscapedSlashes } from "./services/utils";
 import ActionButton from "./widgets/react/ActionButton";
 import Admonition from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
@@ -173,9 +173,36 @@ function getSyncStep(stats: { outstandingPullCount: number; totalPullCount: numb
     return "connecting";
 }
 
+function useWakeLock() {
+    const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+    useEffect(() => {
+        if (!("wakeLock" in navigator)) return;
+
+        let released = false;
+
+        navigator.wakeLock.request("screen").then((lock) => {
+            if (released) {
+                lock.release();
+            } else {
+                wakeLockRef.current = lock;
+            }
+        }).catch(() => {
+            // Wake Lock not supported or permission denied — ignore silently.
+        });
+
+        return () => {
+            released = true;
+            wakeLockRef.current?.release();
+            wakeLockRef.current = null;
+        };
+    }, []);
+}
+
 function SyncInProgress({ device }: { device: "server" | "desktop" }) {
     const stats = useOutstandingSyncInfo();
     const step = getSyncStep(stats);
+    useWakeLock();
 
     useEffect(() => {
         if (stats.initialized) {
@@ -219,6 +246,12 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
                     </CardSection>
                 ))}
             </Card>
+
+            {isMobileApp() && (
+                <Admonition type="note" className="sync-banner">
+                    {t("setup.sync-in-progress-banner")}
+                </Admonition>
+            )}
         </SetupPage>
     );
 }
@@ -411,10 +444,17 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncIllustration({ targetDevice }: { targetDevice: "desktop" | "server" }) {
+    let icon = "bx bx-globe";
+    if (isMobileApp()) {
+        icon = "bx bx-mobile-alt";
+    } else if (isElectron()) {
+        icon = "bx bx-desktop";
+    }
+
     return (
         <div class="sync-illustration">
             <div>
-                <Icon icon={isElectron() ? "bx bx-desktop" : "bx bx-globe"} />
+                <Icon icon={icon} />
                 {t("setup.sync-illustration-this-device")}
             </div>
             <div class="sync-illustration-arrows" />
