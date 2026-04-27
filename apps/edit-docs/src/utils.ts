@@ -1,5 +1,4 @@
 import cls from "@triliumnext/server/src/services/cls.js";
-import TaskContext from "@triliumnext/server/src/services/task_context.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import archiver, { type Archiver } from "archiver";
 import electron from "electron";
@@ -62,9 +61,8 @@ export function startElectron(callback: () => void): DeferredPromise<void> {
 
 export async function importData(path: string) {
     const buffer = await createImportZip(path);
-    const { zipImportService } = (await import("@triliumnext/core"));
+    const { zipImportService, TaskContext, becca } = (await import("@triliumnext/core"));
     const context = new TaskContext("no-progress-reporting", "importNotes", null);
-    const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
 
     const rootNote = becca.getRoot();
     if (!rootNote) {

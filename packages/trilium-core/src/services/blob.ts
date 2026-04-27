@@ -52,7 +52,8 @@ function processContent(content: Uint8Array | string | null, isProtected: boolea
 }
 
 function calculateContentHash({ blobId, content, textRepresentation }: Pick<BlobRow, "blobId" | "content" | "textRepresentation">) {
-    return hash(`${blobId}|${content.toString()}|${textRepresentation ?? ""}`);
+    const textRepresentationSegment = textRepresentation ? `|${textRepresentation}` : "";
+    return hash(`${blobId}|${content.toString()}${textRepresentationSegment}`);
 }
 
 export default {
