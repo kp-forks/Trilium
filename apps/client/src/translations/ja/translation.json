@@ -1014,7 +1014,7 @@
     "existing_backups": "既存のバックアップ",
     "date-and-time": "日時",
     "path": "パス",
-    "database_backed_up_to": "データベースは{{backupFilePath}}にバックアップされました",
+    "database_backed_up_to": "データベースは {{- backupFilePath}} にバックアップされました",
     "no_backup_yet": "バックアップがありません",
     "download": "ダウンロード",
     "title": "バックアップ"
@@ -1159,8 +1159,8 @@
     "css_class": "このラベルの値は、ツリー内の特定のノートを表すノードにCSSクラスとして追加されます。これは高度なテーマ設定に役立ちます。テンプレートノートで使用できます。",
     "icon_class": "このラベルの値は、ツリー上のアイコンにCSSクラスとして追加され、ツリー内のノートを視覚的に区別するのに役立ちます。例えば、bx bx-home のように、アイコンは boxicons から取得されます。テンプレートノートで使用できます。",
     "page_size": "ノートリストの1ページあたりの項目数",
-    "custom_request_handler": "<a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">カスタムリクエストハンドラー</a>を参照してください",
-    "custom_resource_provider": "<a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">カスタムリクエストハンドラー</a>を参照してください",
+    "custom_request_handler": "カスタムリクエストハンドラー",
+    "custom_resource_provider": "カスタムリソースプロバイダー",
     "widget": "このノートをカスタムウィジェットとしてマークし、Trilium コンポーネントツリーに追加します",
     "workspace": "このノートをワークスペースとしてマークし、簡単にホイストできるようにします",
     "workspace_icon_class": "このノートにホイストされたときにタブで使用されるボックスアイコンのCSSクラスを定義します",
@@ -2193,7 +2193,8 @@
     "layers_other": "{{count}} 層",
     "pages_other": "{{count}} ページ",
     "pages_alt": "ページ {{pageNumber}}",
-    "pages_loading": "読み込み中..."
+    "pages_loading": "読み込み中...",
+    "annotations_other": "{{count}} 注釈"
   },
   "platform_indicator": {
     "available_on": "{{platform}} で利用可能"
@@ -2414,7 +2415,8 @@
     "view_extracted_text": "抽出されたテキスト（OCR）を表示",
     "processing_complete": "OCR 処理が完了しました。",
     "text_filtered_low_confidence": "OCR は {{confidence}}% の信頼度でテキストを検出しましたが、最小しきい値が {{threshold}}% であるため、破棄されました。",
-    "open_media_settings": "設定を開く"
+    "open_media_settings": "設定を開く",
+    "image_based_pdf_not_supported": "この PDF は画像ベース（スキャン画像）のようです。画像ベースの PDF からのテキスト抽出は、現時点ではサポートされていません。"
   },
   "database": {
     "title": "データベース"
@@ -2536,5 +2538,8 @@
   "common": {
     "save": "保存",
     "cancel": "キャンセル"
+  },
+  "spreadsheet": {
+    "read-only": "このノートは読み取り専用です。"
   }
 }
