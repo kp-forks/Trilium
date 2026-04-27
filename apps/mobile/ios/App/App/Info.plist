@@ -51,5 +51,14 @@
 	<array>
 		<string>localhost</string>
 	</array>
+	<!-- App Transport Security: Trilium users self-host the sync server,
+	     often on LAN IPs, *.local, or personal domains without HTTPS.
+	     iOS blocks plain http:// by default — allow it so users can
+	     point the app at any sync server they have. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>
