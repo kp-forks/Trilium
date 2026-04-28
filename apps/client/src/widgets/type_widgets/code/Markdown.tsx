@@ -434,6 +434,18 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     });
                                 }
                             },
+                            {
+                                label: "/mermaid",
+                                detail: "Insert a Mermaid diagram",
+                                apply(view, _completion, from, to) {
+                                    const placeholder = "graph TD\n    A --> B";
+                                    const template = `\`\`\`mermaid\n${placeholder}\n\`\`\``;
+                                    view.dispatch({
+                                        changes: { from, to, insert: template },
+                                        selection: { anchor: from + 11, head: from + 11 + placeholder.length }
+                                    });
+                                }
+                            },
                             ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
                                 label: `/${admonitionType}`,
                                 detail: `Insert ${admonitionType} admonition`,
