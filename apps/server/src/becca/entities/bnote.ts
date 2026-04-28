@@ -284,6 +284,11 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return ["code", "file", "render"].includes(this.type) && this.mime === "text/html";
     }
 
+    /** @returns true if this note is a Markdown code note */
+    isMarkdown() {
+        return this.type === "code" && (this.mime === "text/markdown" || this.mime === "text/x-markdown" || this.mime === "text/x-gfm");
+    }
+
     /** @returns true if this note is an image */
     isImage() {
         return this.type === "image" || (this.type === "file" && this.mime?.startsWith("image/"));

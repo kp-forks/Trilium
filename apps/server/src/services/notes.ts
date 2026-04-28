@@ -387,18 +387,28 @@ function protectNote(note: BNote, protect: boolean) {
     }
 }
 
-function checkImageAttachments(note: BNote, content: string) {
+export function checkImageAttachments(note: BNote, content: string) {
     const foundAttachmentIds = new Set<string>();
     let match;
 
-    const imgRegExp = /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g;
-    while ((match = imgRegExp.exec(content))) {
-        foundAttachmentIds.add(match[1]);
-    }
+    const patterns = note.isMarkdown()
+        ? [
+            // ![...](api/attachments/{id}/image/...)
+            /!\[[^\]]*\]\([^)]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
+            /\[[^\]]*\]\([^)]+attachmentId=([a-zA-Z0-9_]+)/g
+        ]
+        : [
+            // <img src="api/attachments/{id}/image/...">
+            /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // <a href="...attachmentId={id}">
+            /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g
+        ];
 
-    const linkRegExp = /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g;
-    while ((match = linkRegExp.exec(content))) {
-        foundAttachmentIds.add(match[1]);
+    for (const pattern of patterns) {
+        while ((match = pattern.exec(content))) {
+            foundAttachmentIds.add(match[1]);
+        }
     }
 
     const attachments = note.getAttachments();
@@ -745,8 +755,9 @@ function saveAttachments(note: BNote, content: string) {
     return content;
 }
 
+
 function saveLinks(note: BNote, content: string | Buffer) {
-    if ((note.type !== "text" && note.type !== "relationMap") || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
+    if ((note.type !== "text" && note.type !== "relationMap" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
         return {
             forceFrontendReload: false,
             content
@@ -765,6 +776,8 @@ function saveLinks(note: BNote, content: string | Buffer) {
         content = findIncludeNoteLinks(content, foundLinks);
         saveBookmarks(note, content);
 
+        ({ forceFrontendReload, content } = checkImageAttachments(note, content));
+    } else if (note.isMarkdown() && typeof content === "string") {
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {
         findRelationMapLinks(content, foundLinks);

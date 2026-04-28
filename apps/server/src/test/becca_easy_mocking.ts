@@ -127,6 +127,7 @@ export function buildNote(noteDef: NoteDefinition) {
             allAttachments.push(attachment);
         }
 
+        note.getAttachments = () => allAttachments;
         note.getAttachmentsByRole = (role) => allAttachments.filter(a => a.role === role);
     }
 
