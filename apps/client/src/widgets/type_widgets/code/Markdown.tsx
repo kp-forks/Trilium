@@ -8,7 +8,11 @@ import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
+import keyboard_actions from "../../../services/keyboard_actions";
 import server from "../../../services/server";
+import { removeIndividualBinding } from "../../../services/shortcuts";
+import tree from "../../../services/tree";
+import { useLegacyImperativeHandlers } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
@@ -60,10 +64,25 @@ export default function Markdown(props: TypeWidgetProps) {
     const [ previewEl, setPreviewEl ] = useState<HTMLDivElement | null>(null);
     const { html, headings } = useMemo(() => renderWithSourceLines(content), [ content ]);
 
+    // Bind text-detail shortcuts (e.g. Ctrl+L for add link) to CodeMirror's contentDOM,
+    // since the outer `dom` only receives events after CodeMirror has already handled them.
+    useEffect(() => {
+        if (!editorView || !props.parentComponent) return;
+        const $el = $(editorView.contentDOM);
+        const bindingPromise = keyboard_actions.setupActionsForElement("text-detail", $el, props.parentComponent, props.ntxId);
+        return async () => {
+            const bindings = await bindingPromise;
+            for (const binding of bindings) {
+                removeIndividualBinding(binding);
+            }
+        };
+    }, [editorView, props.parentComponent, props.ntxId]);
+
     useSyncedScrolling(editorView, previewEl);
     useSyncedHighlight(editorView, previewEl, html);
     usePublishToc(props.noteContext, editorView, headings);
     useImageDrop(props.note, editorView);
+    useAddLink(props.parentComponent, editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
         () => ({ html, headings, setEditorView, setPreviewEl }),
@@ -208,6 +227,51 @@ function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElem
         return unsubscribe;
     }, [ view, preview, html ]);
 }
+
+//#region Add link
+/**
+ * Handles the "Add Link" command (Ctrl+L) by opening the add-link dialog
+ * and inserting markdown link syntax at the cursor.
+ */
+function useAddLink(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null) {
+    useLegacyImperativeHandlers({
+        addLinkToTextCommand() {
+            if (!editorView) return;
+
+            const { from, to } = editorView.state.selection.main;
+            const selectedText = editorView.state.sliceDoc(from, to);
+
+            parentComponent?.triggerCommand("showAddLinkDialog", {
+                text: selectedText,
+                hasSelection: from !== to,
+                async addLink(notePath: string, linkTitle: string | null, externalLink?: boolean) {
+                    if (!editorView) return;
+
+                    let md: string;
+                    if (externalLink) {
+                        const label = (from !== to) ? selectedText : (linkTitle || notePath);
+                        md = `[${label}](${notePath})`;
+                    } else if (linkTitle) {
+                        // Hyper link with explicit title, or wrapping selected text.
+                        const label = (from !== to) ? selectedText : linkTitle;
+                        md = `[${label}](#${notePath})`;
+                    } else {
+                        // Reference link — use wiki-link syntax so the title mirrors the note.
+                        const noteId = tree.getNoteIdFromUrl(notePath);
+                        md = `[[${noteId}]]`;
+                    }
+
+                    editorView.dispatch({
+                        changes: { from, to, insert: md },
+                        selection: { anchor: from + md.length }
+                    });
+                    editorView.focus();
+                }
+            });
+        }
+    });
+}
+//#endregion
 
 //#region Image upload
 /**
