@@ -246,6 +246,16 @@
     "import_button": "Import",
     "import_success": "Markdown content has been imported into the document."
   },
+  "markdown_slash_commands": {
+    "date": "Insert current date and time",
+    "include": "Include another note",
+    "image": "Upload and insert an image",
+    "link": "Insert a note link",
+    "math": "Insert a math equation block",
+    "footnote": "Insert a footnote",
+    "mermaid": "Insert a Mermaid diagram",
+    "admonition": "Insert {{type}} admonition"
+  },
   "move_to": {
     "dialog_title": "Move notes to ...",
     "notes_to_move": "Notes to move",

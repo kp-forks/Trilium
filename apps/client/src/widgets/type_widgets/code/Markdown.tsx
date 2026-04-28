@@ -15,6 +15,7 @@ import appContext from "../../../components/app_context";
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
 import froca from "../../../services/froca";
+import { t } from "../../../services/i18n";
 import keyboard_actions from "../../../services/keyboard_actions";
 import note_create from "../../../services/note_create";
 import options from "../../../services/options";
@@ -486,7 +487,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                     options: [
                         {
                             label: "/date",
-                            detail: "Insert current date and time",
+                            detail: t("markdown_slash_commands.date"),
                             apply(view, _completion, from, to) {
                                 view.dispatch({ changes: { from, to } });
                                 parentRef.current?.triggerCommand("insertDateTimeToText");
@@ -494,7 +495,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         },
                         {
                             label: "/include",
-                            detail: "Include another note",
+                            detail: t("markdown_slash_commands.include"),
                             apply(view, _completion, from, to) {
                                 view.dispatch({ changes: { from, to } });
                                 parentRef.current?.triggerCommand("addIncludeNoteToText");
@@ -502,7 +503,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         },
                         {
                             label: "/image",
-                            detail: "Upload and insert an image",
+                            detail: t("markdown_slash_commands.image"),
                             apply(view, _completion, from, to) {
                                 view.dispatch({ changes: { from, to } });
                                 const input = document.createElement("input");
@@ -517,7 +518,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         },
                         {
                             label: "/link",
-                            detail: "Insert a note link",
+                            detail: t("markdown_slash_commands.link"),
                             apply(view, _completion, from, to) {
                                 view.dispatch({ changes: { from, to } });
                                 parentRef.current?.triggerCommand("addLinkToText");
@@ -525,7 +526,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         },
                         {
                             label: "/math",
-                            detail: "Insert a math equation block",
+                            detail: t("markdown_slash_commands.math"),
                             apply(view, _completion, from, to) {
                                 const placeholder = "\\text{equation}";
                                 const template = `$$\n${placeholder}\n$$`;
@@ -537,7 +538,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         },
                         {
                             label: "/footnote",
-                            detail: "Insert a footnote",
+                            detail: t("markdown_slash_commands.footnote"),
                             apply(view, _completion, from, to) {
                                 const doc = view.state.doc.toString();
                                 let maxFootnote = 0;
@@ -560,7 +561,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         },
                         {
                             label: "/mermaid",
-                            detail: "Insert a Mermaid diagram",
+                            detail: t("markdown_slash_commands.mermaid"),
                             apply(view, _completion, from, to) {
                                 const placeholder = "graph TD\n    A --> B";
                                 const template = `\`\`\`mermaid\n${placeholder}\n\`\`\``;
@@ -572,7 +573,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         },
                         ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
                             label: `/${admonitionType}`,
-                            detail: `Insert ${admonitionType} admonition`,
+                            detail: t("markdown_slash_commands.admonition", { type: admonitionType }),
                             apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
                                 const template = `> [!${admonitionType.toUpperCase()}]\n> `;
                                 view.dispatch({
