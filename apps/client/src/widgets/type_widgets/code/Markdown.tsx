@@ -232,6 +232,23 @@ function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElem
     }, [ view, preview, html ]);
 }
 
+/** Inserts text at the given position (or cursor) and moves the cursor to the end of the inserted text. */
+function insertText(view: VanillaCodeMirror, text: string, pos?: number) {
+    const from = pos ?? view.state.selection.main.head;
+    view.dispatch({
+        changes: { from, insert: text },
+        selection: { anchor: from + text.length }
+    });
+}
+
+/** Replaces the selection range with text and moves the cursor to the end. */
+function replaceSelection(view: VanillaCodeMirror, text: string, from: number, to: number) {
+    view.dispatch({
+        changes: { from, to, insert: text },
+        selection: { anchor: from + text.length }
+    });
+}
+
 //#region Text commands
 /**
  * Handles text-detail commands for the Markdown editor:
@@ -264,10 +281,7 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
                         md = `[[${noteId}]]`;
                     }
 
-                    editorView.dispatch({
-                        changes: { from, to, insert: md },
-                        selection: { anchor: from + md.length }
-                    });
+                    replaceSelection(editorView, md, from, to);
                     editorView.focus();
                 }
             });
@@ -277,36 +291,24 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
             if (!editorView) return;
 
             const dateString = utils.formatDateTime(new Date(), options.get("customDateTimeFormat"));
-            const pos = editorView.state.selection.main.head;
-            editorView.dispatch({
-                changes: { from: pos, insert: dateString },
-                selection: { anchor: pos + dateString.length }
-            });
+            insertText(editorView, dateString);
         },
 
         addIncludeNoteToTextCommand() {
             if (!editorView) return;
 
-            function insertAtCursor(text: string) {
-                const pos = editorView!.state.selection.main.head;
-                editorView!.dispatch({
-                    changes: { from: pos, insert: text },
-                    selection: { anchor: pos + text.length }
-                });
-                editorView!.focus();
-            }
-
             parentComponent?.triggerCommand("showIncludeNoteDialog", {
-                // Only addIncludeNote and addImage are used by the dialog.
                 editorApi: {
                     addIncludeNote(noteId: string, boxSize?: string) {
-                        insertAtCursor(`<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
+                        insertText(editorView!, `<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
+                        editorView!.focus();
                     },
                     async addImage(noteId: string) {
                         const note = await froca.getNote(noteId);
                         if (!note) return;
                         const encodedTitle = encodeURIComponent(note.title);
-                        insertAtCursor(`![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
+                        insertText(editorView!, `![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
+                        editorView!.focus();
                     }
                 }
             });
@@ -333,12 +335,7 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             ) as { uploaded: boolean; url?: string };
             if (!result?.uploaded || !result.url) return;
 
-            const insertPos = pos ?? editorView!.state.selection.main.head;
-            const markdown = `![${file.name}](${result.url})`;
-            editorView!.dispatch({
-                changes: { from: insertPos, insert: markdown },
-                selection: { anchor: insertPos + markdown.length }
-            });
+            insertText(editorView!, `![${file.name}](${result.url})`, pos);
         }
 
         function handleDrop(e: DragEvent) {
@@ -369,12 +366,7 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
                     e.preventDefault();
                     const src = imgMatch[2];
                     const alt = html.match(/<img[^>]+alt="([^"]*)"/)?.[1] ?? "image";
-                    const pos = editorView!.state.selection.main.head;
-                    const md = `![${alt}](${src})`;
-                    editorView!.dispatch({
-                        changes: { from: pos, insert: md },
-                        selection: { anchor: pos + md.length }
-                    });
+                    insertText(editorView!, `![${alt}](${src})`);
                     return;
                 }
             }
