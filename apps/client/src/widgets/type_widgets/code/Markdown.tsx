@@ -89,7 +89,7 @@ export default function Markdown(props: TypeWidgetProps) {
     usePublishToc(props.noteContext, editorView, headings);
     useImageDrop(props.note, editorView);
     useTextCommands(props.parentComponent, editorView);
-    useSlashCommands(props.parentComponent, editorView);
+    useSlashCommands(props.parentComponent, editorView, props.note);
     useMarkdownKeymap(editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
@@ -234,6 +234,17 @@ function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElem
         });
         return unsubscribe;
     }, [ view, preview, html ]);
+}
+
+/** Uploads the image as a note attachment and inserts a markdown image reference at `pos` (or the cursor). */
+async function uploadImageAndInsert(view: VanillaCodeMirror, note: FNote, file: File, pos?: number) {
+    const result = await server.upload(
+        `notes/${note.noteId}/attachments/upload`,
+        file, undefined, "POST"
+    ) as { uploaded: boolean; url?: string };
+    if (!result?.uploaded || !result.url) return;
+
+    insertText(view, `![${file.name}](${result.url})`, pos);
 }
 
 /** Inserts text at the given position (or cursor) and moves the cursor to the end of the inserted text. */
@@ -443,7 +454,7 @@ function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
  * Adds `/`-triggered autocomplete to the CodeMirror editor.
  * Typing `/` at the start of a line (or after whitespace) shows a menu of commands.
  */
-function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null) {
+function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null, note: FNote) {
     useEffect(() => {
         if (!editorView) return;
 
@@ -473,6 +484,21 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 apply(view, _completion, from, to) {
                                     view.dispatch({ changes: { from, to } });
                                     parentComponent?.triggerCommand("addIncludeNoteToText");
+                                }
+                            },
+                            {
+                                label: "/image",
+                                detail: "Upload and insert an image",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+                                    const input = document.createElement("input");
+                                    input.type = "file";
+                                    input.accept = "image/*";
+                                    input.addEventListener("change", () => {
+                                        const file = input.files?.[0];
+                                        if (file && editorView) uploadImageAndInsert(editorView, note, file);
+                                    });
+                                    input.click();
                                 }
                             },
                             {
@@ -549,7 +575,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
 
             editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
         });
-    }, [editorView, parentComponent]);
+    }, [editorView, parentComponent, note]);
 }
 //#endregion
 
@@ -564,16 +590,6 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
 
         const dom = editorView.dom;
 
-        async function uploadAndInsert(file: File, pos?: number) {
-            const result = await server.upload(
-                `notes/${note.noteId}/attachments/upload`,
-                file, undefined, "POST"
-            ) as { uploaded: boolean; url?: string };
-            if (!result?.uploaded || !result.url) return;
-
-            insertText(editorView!, `![${file.name}](${result.url})`, pos);
-        }
-
         function handleDrop(e: DragEvent) {
             const files = e.dataTransfer?.files;
             if (!files?.length) return;
@@ -586,7 +602,7 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
 
             const dropPos = editorView!.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined;
             for (const file of imageFiles) {
-                uploadAndInsert(file, dropPos);
+                uploadImageAndInsert(editorView!, note, file, dropPos);
             }
         }
 
@@ -620,7 +636,7 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
 
             e.preventDefault();
             for (const file of imageFiles) {
-                uploadAndInsert(file);
+                uploadImageAndInsert(editorView!, note, file);
             }
         }
 
@@ -639,7 +655,7 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             dom.removeEventListener("paste", handlePaste);
             dom.removeEventListener("dragover", handleDragOver);
         };
-    }, [editorView, note.noteId]);
+    }, [editorView, note]);
 }
 //#endregion
 
