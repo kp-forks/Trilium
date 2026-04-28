@@ -90,6 +90,7 @@ export default function Markdown(props: TypeWidgetProps) {
     useImageDrop(props.note, editorView);
     useTextCommands(props.parentComponent, editorView);
     useSlashCommands(props.parentComponent, editorView);
+    useMarkdownKeymap(editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
         () => ({ html, headings, setEditorView, setPreviewEl }),
@@ -351,6 +352,76 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
             }
         }
     });
+}
+//#endregion
+
+//#region Markdown keymap
+/**
+ * Adds markdown-specific formatting shortcuts (bold, italic, strikethrough, math).
+ * Toggles the wrapper around the selection, or inserts it at the cursor.
+ */
+function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
+    useEffect(() => {
+        if (!editorView) return;
+
+        function toggleWrap(wrapper: string): boolean {
+            if (!editorView) return false;
+            const { from, to } = editorView.state.selection.main;
+            const len = wrapper.length;
+
+            if (from === to) {
+                // No selection — insert wrapper pair and place cursor inside.
+                const text = `${wrapper}${wrapper}`;
+                editorView.dispatch({
+                    changes: { from, insert: text },
+                    selection: { anchor: from + len }
+                });
+                return true;
+            }
+
+            const selected = editorView.state.sliceDoc(from, to);
+
+            // If already wrapped, unwrap.
+            if (selected.startsWith(wrapper) && selected.endsWith(wrapper) && selected.length >= len * 2) {
+                const inner = selected.slice(len, -len);
+                replaceSelection(editorView, inner, from, to);
+                return true;
+            }
+
+            // Also check if the wrapper is outside the selection.
+            const before = editorView.state.sliceDoc(from - len, from);
+            const after = editorView.state.sliceDoc(to, to + len);
+            if (before === wrapper && after === wrapper) {
+                editorView.dispatch({
+                    changes: [
+                        { from: from - len, to: from },
+                        { from: to, to: to + len }
+                    ],
+                    selection: { anchor: from - len, head: to - len }
+                });
+                return true;
+            }
+
+            // Wrap selection.
+            const wrapped = `${wrapper}${selected}${wrapper}`;
+            replaceSelection(editorView, wrapped, from, to);
+            // Re-select just the inner text.
+            editorView.dispatch({ selection: { anchor: from + len, head: to + len } });
+            return true;
+        }
+
+        import("@codemirror/state").then(({ StateEffect }) => {
+            import("@codemirror/view").then(({ keymap }) => {
+                const ext = keymap.of([
+                    { key: "Mod-b", run: () => toggleWrap("**"), preventDefault: true },
+                    { key: "Mod-i", run: () => toggleWrap("*"), preventDefault: true },
+                    { key: "Mod-Shift-x", run: () => toggleWrap("~~"), preventDefault: true },
+                    { key: "Mod-m", run: () => toggleWrap("$"), preventDefault: true }
+                ]);
+                editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
+            });
+        });
+    }, [editorView]);
 }
 //#endregion
 
