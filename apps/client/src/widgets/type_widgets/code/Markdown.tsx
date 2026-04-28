@@ -468,12 +468,19 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
 
         Promise.all([
             import("@codemirror/autocomplete"),
-            import("@codemirror/state")
-        ]).then(([{ autocompletion }, { StateEffect }]) => {
+            import("@codemirror/state"),
+            import("@codemirror/language")
+        ]).then(([{ autocompletion }, { StateEffect }, { syntaxTree }]) => {
             const ext = autocompletion({
                 override: [(ctx) => {
                     const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
                     if (!match) return null;
+
+                    // Suppress slash menu inside fenced/indented code blocks and inline code spans —
+                    // a leading `/` there is part of the code, not a command trigger.
+                    for (let node: import("@lezer/common").SyntaxNode | null = syntaxTree(ctx.state).resolveInner(ctx.pos, -1); node; node = node.parent) {
+                        if (/Code(Block|Text)|FencedCode|InlineCode/.test(node.name)) return null;
+                    }
 
                     return {
                         from: match.from,
