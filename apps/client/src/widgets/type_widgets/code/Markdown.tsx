@@ -11,8 +11,8 @@ import appContext from "../../../components/app_context";
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
 import froca from "../../../services/froca";
-import note_create from "../../../services/note_create";
 import keyboard_actions from "../../../services/keyboard_actions";
+import note_create from "../../../services/note_create";
 import options from "../../../services/options";
 import server from "../../../services/server";
 import { removeIndividualBinding } from "../../../services/shortcuts";
@@ -89,6 +89,7 @@ export default function Markdown(props: TypeWidgetProps) {
     usePublishToc(props.noteContext, editorView, headings);
     useImageDrop(props.note, editorView);
     useTextCommands(props.parentComponent, editorView);
+    useSlashCommands(props.parentComponent, editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
         () => ({ html, headings, setEditorView, setPreviewEl }),
@@ -350,6 +351,47 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
             }
         }
     });
+}
+//#endregion
+
+//#region Slash commands
+/**
+ * Adds `/`-triggered autocomplete to the CodeMirror editor.
+ * Typing `/` at the start of a line (or after whitespace) shows a menu of commands.
+ */
+function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null) {
+    useEffect(() => {
+        if (!editorView) return;
+
+        Promise.all([
+            import("@codemirror/autocomplete"),
+            import("@codemirror/state")
+        ]).then(([{ autocompletion }, { StateEffect }]) => {
+            const ext = autocompletion({
+                override: [(ctx) => {
+                    const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
+                    if (!match) return null;
+
+                    return {
+                        from: match.from,
+                        options: [
+                            {
+                                label: "/date",
+                                detail: "Insert current date and time",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+                                    parentComponent?.triggerCommand("insertDateTimeToText");
+                                }
+                            }
+                        ]
+                    };
+                }],
+                activateOnTyping: true
+            });
+
+            editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
+        });
+    }, [editorView, parentComponent]);
 }
 //#endregion
 
