@@ -7,9 +7,11 @@ import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
+import appContext from "../../../components/app_context";
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
 import froca from "../../../services/froca";
+import note_create from "../../../services/note_create";
 import keyboard_actions from "../../../services/keyboard_actions";
 import options from "../../../services/options";
 import server from "../../../services/server";
@@ -312,6 +314,40 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
                     }
                 }
             });
+        },
+
+        async cutIntoNoteCommand() {
+            if (!editorView) return;
+
+            const { from, to } = editorView.state.selection.main;
+            if (from === to) return;
+
+            const selectedText = editorView.state.sliceDoc(from, to);
+
+            // Extract first heading as title, if present.
+            const headingMatch = selectedText.match(/^(#{1,6})\s+(.+)$/m);
+            const title = headingMatch ? headingMatch[2].trim() : null;
+            const content = headingMatch
+                ? selectedText.replace(headingMatch[0], "").trim()
+                : selectedText;
+
+            const note = appContext.tabManager.getActiveContextNote();
+            const parentNotePath = appContext.tabManager.getActiveContextNotePath();
+            if (!note || !parentNotePath) return;
+
+            const result = await note_create.createNote(parentNotePath, {
+                isProtected: note.isProtected,
+                title,
+                content,
+                type: "code",
+                mime: "text/x-markdown",
+                activate: false
+            });
+
+            if (result?.note) {
+                // Replace selection with a wiki-link to the new note.
+                replaceSelection(editorView, `[[${result.note.noteId}]]`, from, to);
+            }
         }
     });
 }
