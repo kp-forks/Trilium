@@ -410,17 +410,30 @@ function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
             return true;
         }
 
-        import("@codemirror/state").then(({ StateEffect }) => {
-            import("@codemirror/view").then(({ keymap }) => {
-                const ext = keymap.of([
-                    { key: "Mod-b", run: () => toggleWrap("**"), preventDefault: true },
-                    { key: "Mod-i", run: () => toggleWrap("*"), preventDefault: true },
-                    { key: "Mod-Shift-x", run: () => toggleWrap("~~"), preventDefault: true },
-                    { key: "Mod-m", run: () => toggleWrap("$"), preventDefault: true }
-                ]);
-                editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
-            });
-        });
+        const bindings: Record<string, string> = {
+            "b": "**",
+            "i": "*",
+            "m": "$"
+        };
+        const shiftBindings: Record<string, string> = {
+            "x": "~~"
+        };
+
+        function onKeydown(e: KeyboardEvent) {
+            const mod = e.ctrlKey || e.metaKey;
+            if (!mod) return;
+
+            const key = e.key.toLowerCase();
+            const wrapper = e.shiftKey ? shiftBindings[key] : bindings[key];
+            if (!wrapper) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWrap(wrapper);
+        }
+
+        editorView.contentDOM.addEventListener("keydown", onKeydown, true);
+        return () => editorView.contentDOM.removeEventListener("keydown", onKeydown, true);
     }, [editorView]);
 }
 //#endregion
