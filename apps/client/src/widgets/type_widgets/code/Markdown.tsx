@@ -5,7 +5,7 @@ import { CustomMarkdownRenderer, renderToHtml } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
 import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+import { useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import NoteContext from "../../../components/note_context";
@@ -455,6 +455,14 @@ function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
  * Typing `/` at the start of a line (or after whitespace) shows a menu of commands.
  */
 function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null, note: FNote) {
+    // Held in refs so the slash-command closures always read the current note
+    // and parent component without re-registering the autocomplete extension —
+    // `appendConfig` would otherwise stack a duplicate extension on each switch.
+    const noteRef = useRef(note);
+    const parentRef = useRef(parentComponent);
+    useEffect(() => { noteRef.current = note; }, [note]);
+    useEffect(() => { parentRef.current = parentComponent; }, [parentComponent]);
+
     useEffect(() => {
         if (!editorView) return;
 
@@ -475,7 +483,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 detail: "Insert current date and time",
                                 apply(view, _completion, from, to) {
                                     view.dispatch({ changes: { from, to } });
-                                    parentComponent?.triggerCommand("insertDateTimeToText");
+                                    parentRef.current?.triggerCommand("insertDateTimeToText");
                                 }
                             },
                             {
@@ -483,7 +491,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 detail: "Include another note",
                                 apply(view, _completion, from, to) {
                                     view.dispatch({ changes: { from, to } });
-                                    parentComponent?.triggerCommand("addIncludeNoteToText");
+                                    parentRef.current?.triggerCommand("addIncludeNoteToText");
                                 }
                             },
                             {
@@ -496,7 +504,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     input.accept = "image/*";
                                     input.addEventListener("change", () => {
                                         const file = input.files?.[0];
-                                        if (file && editorView) uploadImageAndInsert(editorView, note, file);
+                                        if (file) uploadImageAndInsert(editorView, noteRef.current, file);
                                     });
                                     input.click();
                                 }
@@ -506,7 +514,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 detail: "Insert a note link",
                                 apply(view, _completion, from, to) {
                                     view.dispatch({ changes: { from, to } });
-                                    parentComponent?.triggerCommand("addLinkToText");
+                                    parentRef.current?.triggerCommand("addLinkToText");
                                 }
                             },
                             {
@@ -575,7 +583,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
 
             editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
         });
-    }, [editorView, parentComponent, note]);
+    }, [editorView]);
 }
 //#endregion
 
