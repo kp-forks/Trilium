@@ -390,7 +390,54 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     view.dispatch({ changes: { from, to } });
                                     parentComponent?.triggerCommand("addIncludeNoteToText");
                                 }
-                            }
+                            },
+                            {
+                                label: "/link",
+                                detail: "Insert a note link",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+                                    parentComponent?.triggerCommand("addLinkToText");
+                                }
+                            },
+                            {
+                                label: "/math",
+                                detail: "Insert a math equation block",
+                                apply(view, _completion, from, to) {
+                                    const placeholder = "\\text{equation}";
+                                    const template = `$$\n${placeholder}\n$$`;
+                                    view.dispatch({
+                                        changes: { from, to, insert: template },
+                                        selection: { anchor: from + 3, head: from + 3 + placeholder.length }
+                                    });
+                                }
+                            },
+                            {
+                                label: "/footnote",
+                                detail: "Insert a footnote",
+                                apply(view, _completion, from, to) {
+                                    const ref = "[^1]";
+                                    const def = "\n\n[^1]: ";
+                                    const docEnd = view.state.doc.length;
+                                    view.dispatch({
+                                        changes: [
+                                            { from, to, insert: ref },
+                                            { from: docEnd, insert: def }
+                                        ],
+                                        selection: { anchor: docEnd + def.length }
+                                    });
+                                }
+                            },
+                            ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
+                                label: `/${admonitionType}`,
+                                detail: `Insert ${admonitionType} admonition`,
+                                apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
+                                    const template = `> [!${admonitionType.toUpperCase()}]\n> `;
+                                    view.dispatch({
+                                        changes: { from, to, insert: template },
+                                        selection: { anchor: from + template.length }
+                                    });
+                                }
+                            }))
                         ]
                     };
                 }],
