@@ -415,15 +415,22 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 label: "/footnote",
                                 detail: "Insert a footnote",
                                 apply(view, _completion, from, to) {
-                                    const ref = "[^1]";
-                                    const def = "\n\n[^1]: ";
+                                    const doc = view.state.doc.toString();
+                                    let maxFootnote = 0;
+                                    for (const m of doc.matchAll(/\[\^(\d+)\]/g)) {
+                                        maxFootnote = Math.max(maxFootnote, parseInt(m[1], 10));
+                                    }
+                                    const n = maxFootnote + 1;
+                                    const ref = `[^${n}]`;
+                                    const def = `\n\n[^${n}]: `;
                                     const docEnd = view.state.doc.length;
+                                    const newDocEnd = docEnd - (to - from) + ref.length + def.length;
                                     view.dispatch({
                                         changes: [
                                             { from, to, insert: ref },
                                             { from: docEnd, insert: def }
                                         ],
-                                        selection: { anchor: docEnd + def.length }
+                                        selection: { anchor: newDocEnd }
                                     });
                                 }
                             },
