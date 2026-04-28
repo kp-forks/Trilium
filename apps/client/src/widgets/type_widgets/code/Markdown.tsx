@@ -1,5 +1,9 @@
 import "./Markdown.css";
 
+import { autocompletion } from "@codemirror/autocomplete";
+import { syntaxTree } from "@codemirror/language";
+import { StateEffect } from "@codemirror/state";
+import type { SyntaxNode } from "@lezer/common";
 import VanillaCodeMirror from "@triliumnext/codemirror";
 import { CustomMarkdownRenderer, renderToHtml } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
@@ -466,130 +470,124 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
     useEffect(() => {
         if (!editorView) return;
 
-        Promise.all([
-            import("@codemirror/autocomplete"),
-            import("@codemirror/state"),
-            import("@codemirror/language")
-        ]).then(([{ autocompletion }, { StateEffect }, { syntaxTree }]) => {
-            const ext = autocompletion({
-                override: [(ctx) => {
-                    const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
-                    if (!match) return null;
+        const ext = autocompletion({
+            override: [(ctx) => {
+                const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
+                if (!match) return null;
 
-                    // Suppress slash menu inside fenced/indented code blocks and inline code spans —
-                    // a leading `/` there is part of the code, not a command trigger.
-                    for (let node: import("@lezer/common").SyntaxNode | null = syntaxTree(ctx.state).resolveInner(ctx.pos, -1); node; node = node.parent) {
-                        if (/Code(Block|Text)|FencedCode|InlineCode/.test(node.name)) return null;
-                    }
+                // Suppress slash menu inside fenced/indented code blocks and inline code spans —
+                // a leading `/` there is part of the code, not a command trigger.
+                for (let node: SyntaxNode | null = syntaxTree(ctx.state).resolveInner(ctx.pos, -1); node; node = node.parent) {
+                    if (/Code(Block|Text)|FencedCode|InlineCode/.test(node.name)) return null;
+                }
 
-                    return {
-                        from: match.from,
-                        options: [
-                            {
-                                label: "/date",
-                                detail: "Insert current date and time",
-                                apply(view, _completion, from, to) {
-                                    view.dispatch({ changes: { from, to } });
-                                    parentRef.current?.triggerCommand("insertDateTimeToText");
+                return {
+                    from: match.from,
+                    options: [
+                        {
+                            label: "/date",
+                            detail: "Insert current date and time",
+                            apply(view, _completion, from, to) {
+                                view.dispatch({ changes: { from, to } });
+                                parentRef.current?.triggerCommand("insertDateTimeToText");
+                            }
+                        },
+                        {
+                            label: "/include",
+                            detail: "Include another note",
+                            apply(view, _completion, from, to) {
+                                view.dispatch({ changes: { from, to } });
+                                parentRef.current?.triggerCommand("addIncludeNoteToText");
+                            }
+                        },
+                        {
+                            label: "/image",
+                            detail: "Upload and insert an image",
+                            apply(view, _completion, from, to) {
+                                view.dispatch({ changes: { from, to } });
+                                const input = document.createElement("input");
+                                input.type = "file";
+                                input.accept = "image/*";
+                                input.addEventListener("change", () => {
+                                    const file = input.files?.[0];
+                                    if (file) uploadImageAndInsert(editorView, noteRef.current, file);
+                                });
+                                input.click();
+                            }
+                        },
+                        {
+                            label: "/link",
+                            detail: "Insert a note link",
+                            apply(view, _completion, from, to) {
+                                view.dispatch({ changes: { from, to } });
+                                parentRef.current?.triggerCommand("addLinkToText");
+                            }
+                        },
+                        {
+                            label: "/math",
+                            detail: "Insert a math equation block",
+                            apply(view, _completion, from, to) {
+                                const placeholder = "\\text{equation}";
+                                const template = `$$\n${placeholder}\n$$`;
+                                view.dispatch({
+                                    changes: { from, to, insert: template },
+                                    selection: { anchor: from + 3, head: from + 3 + placeholder.length }
+                                });
+                            }
+                        },
+                        {
+                            label: "/footnote",
+                            detail: "Insert a footnote",
+                            apply(view, _completion, from, to) {
+                                const doc = view.state.doc.toString();
+                                let maxFootnote = 0;
+                                for (const m of doc.matchAll(/\[\^(\d+)\]/g)) {
+                                    maxFootnote = Math.max(maxFootnote, parseInt(m[1], 10));
                                 }
-                            },
-                            {
-                                label: "/include",
-                                detail: "Include another note",
-                                apply(view, _completion, from, to) {
-                                    view.dispatch({ changes: { from, to } });
-                                    parentRef.current?.triggerCommand("addIncludeNoteToText");
-                                }
-                            },
-                            {
-                                label: "/image",
-                                detail: "Upload and insert an image",
-                                apply(view, _completion, from, to) {
-                                    view.dispatch({ changes: { from, to } });
-                                    const input = document.createElement("input");
-                                    input.type = "file";
-                                    input.accept = "image/*";
-                                    input.addEventListener("change", () => {
-                                        const file = input.files?.[0];
-                                        if (file) uploadImageAndInsert(editorView, noteRef.current, file);
-                                    });
-                                    input.click();
-                                }
-                            },
-                            {
-                                label: "/link",
-                                detail: "Insert a note link",
-                                apply(view, _completion, from, to) {
-                                    view.dispatch({ changes: { from, to } });
-                                    parentRef.current?.triggerCommand("addLinkToText");
-                                }
-                            },
-                            {
-                                label: "/math",
-                                detail: "Insert a math equation block",
-                                apply(view, _completion, from, to) {
-                                    const placeholder = "\\text{equation}";
-                                    const template = `$$\n${placeholder}\n$$`;
-                                    view.dispatch({
-                                        changes: { from, to, insert: template },
-                                        selection: { anchor: from + 3, head: from + 3 + placeholder.length }
-                                    });
-                                }
-                            },
-                            {
-                                label: "/footnote",
-                                detail: "Insert a footnote",
-                                apply(view, _completion, from, to) {
-                                    const doc = view.state.doc.toString();
-                                    let maxFootnote = 0;
-                                    for (const m of doc.matchAll(/\[\^(\d+)\]/g)) {
-                                        maxFootnote = Math.max(maxFootnote, parseInt(m[1], 10));
-                                    }
-                                    const n = maxFootnote + 1;
-                                    const ref = `[^${n}]`;
-                                    const def = `\n\n[^${n}]: `;
-                                    const docEnd = view.state.doc.length;
-                                    const newDocEnd = docEnd - (to - from) + ref.length + def.length;
-                                    view.dispatch({
-                                        changes: [
-                                            { from, to, insert: ref },
-                                            { from: docEnd, insert: def }
-                                        ],
-                                        selection: { anchor: newDocEnd }
-                                    });
-                                }
-                            },
-                            {
-                                label: "/mermaid",
-                                detail: "Insert a Mermaid diagram",
-                                apply(view, _completion, from, to) {
-                                    const placeholder = "graph TD\n    A --> B";
-                                    const template = `\`\`\`mermaid\n${placeholder}\n\`\`\``;
-                                    view.dispatch({
-                                        changes: { from, to, insert: template },
-                                        selection: { anchor: from + 11, head: from + 11 + placeholder.length }
-                                    });
-                                }
-                            },
-                            ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
-                                label: `/${admonitionType}`,
-                                detail: `Insert ${admonitionType} admonition`,
-                                apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
-                                    const template = `> [!${admonitionType.toUpperCase()}]\n> `;
-                                    view.dispatch({
-                                        changes: { from, to, insert: template },
-                                        selection: { anchor: from + template.length }
-                                    });
-                                }
-                            }))
-                        ]
-                    };
-                }],
-                activateOnTyping: true
-            });
-
-            editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
+                                const n = maxFootnote + 1;
+                                const ref = `[^${n}]`;
+                                const def = `\n\n[^${n}]: `;
+                                const docEnd = view.state.doc.length;
+                                const newDocEnd = docEnd - (to - from) + ref.length + def.length;
+                                view.dispatch({
+                                    changes: [
+                                        { from, to, insert: ref },
+                                        { from: docEnd, insert: def }
+                                    ],
+                                    selection: { anchor: newDocEnd }
+                                });
+                            }
+                        },
+                        {
+                            label: "/mermaid",
+                            detail: "Insert a Mermaid diagram",
+                            apply(view, _completion, from, to) {
+                                const placeholder = "graph TD\n    A --> B";
+                                const template = `\`\`\`mermaid\n${placeholder}\n\`\`\``;
+                                view.dispatch({
+                                    changes: { from, to, insert: template },
+                                    selection: { anchor: from + 11, head: from + 11 + placeholder.length }
+                                });
+                            }
+                        },
+                        ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
+                            label: `/${admonitionType}`,
+                            detail: `Insert ${admonitionType} admonition`,
+                            apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
+                                const template = `> [!${admonitionType.toUpperCase()}]\n> `;
+                                view.dispatch({
+                                    changes: { from, to, insert: template },
+                                    selection: { anchor: from + template.length }
+                                });
+                            }
+                        }))
+                    ]
+                };
+            }],
+            activateOnTyping: true
         });
+
+        editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
     }, [editorView]);
 }
 //#endregion
