@@ -254,6 +254,23 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             const items = e.clipboardData?.items;
             if (!items) return;
 
+            // Check for HTML containing attachment image references (e.g. from "Copy link to clipboard").
+            const html = e.clipboardData?.getData("text/html");
+            if (html) {
+                const imgMatch = html.match(/<img[^>]+src="([^"]*)(api\/attachments\/[a-zA-Z0-9_]+\/image\/[^"?]+)/);
+                if (imgMatch) {
+                    e.preventDefault();
+                    const src = imgMatch[2];
+                    const alt = html.match(/<img[^>]+alt="([^"]*)"/)?.[1] ?? "image";
+                    const pos = editorView!.state.selection.main.head;
+                    editorView!.dispatch({
+                        changes: { from: pos, insert: `![${alt}](${src})` }
+                    });
+                    return;
+                }
+            }
+
+            // Check for pasted image files (e.g. screenshot paste).
             const imageFiles: File[] = [];
             for (const item of items) {
                 if (item.type.startsWith("image/")) {
