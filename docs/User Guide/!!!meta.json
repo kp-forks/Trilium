@@ -1221,7 +1221,74 @@
                                     ],
                                     "format": "markdown",
                                     "dataFileName": "Authentication.md",
-                                    "attachments": []
+                                    "attachments": [],
+                                    "dirFileName": "Authentication",
+                                    "children": [
+                                        {
+                                            "isClone": false,
+                                            "noteId": "lwAX5SvbrK2g",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "Otzi9La2YAUX",
+                                                "WOcw2SLH6tbX",
+                                                "0hzsNCP31IAB",
+                                                "lwAX5SvbrK2g"
+                                            ],
+                                            "title": "Resetting your password",
+                                            "notePosition": 10,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "password-reset",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "wX4HbRucYSDD",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "tAassRL4RSQL",
+                                                    "isInheritable": false,
+                                                    "position": 50
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "0hzsNCP31IAB",
+                                                    "isInheritable": false,
+                                                    "position": 60
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "4TIF1oA4VQRO",
+                                                    "isInheritable": false,
+                                                    "position": 70
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "iconClass",
+                                                    "value": "bx bx-key",
+                                                    "isInheritable": false,
+                                                    "position": 80
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Resetting your password.md",
+                                            "attachments": []
+                                        }
+                                    ]
                                 },
                                 {
                                     "isClone": false,
@@ -4097,6 +4164,13 @@
                                             "value": "HI6GBBIduIgv",
                                             "isInheritable": false,
                                             "position": 80
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "shareAlias",
+                                            "value": "content-width",
+                                            "isInheritable": false,
+                                            "position": 90
                                         }
                                     ],
                                     "format": "markdown",
@@ -12337,20 +12411,6 @@
                         {
                             "type": "relation",
                             "name": "internalLink",
-                            "value": "wX4HbRucYSDD",
-                            "isInheritable": false,
-                            "position": 40
-                        },
-                        {
-                            "type": "relation",
-                            "name": "internalLink",
-                            "value": "tAassRL4RSQL",
-                            "isInheritable": false,
-                            "position": 50
-                        },
-                        {
-                            "type": "relation",
-                            "name": "internalLink",
                             "value": "qzNzp9LYQyPT",
                             "isInheritable": false,
                             "position": 60
@@ -12368,6 +12428,13 @@
                             "value": "bx bx-bug",
                             "isInheritable": false,
                             "position": 30
+                        },
+                        {
+                            "type": "relation",
+                            "name": "internalLink",
+                            "value": "lwAX5SvbrK2g",
+                            "isInheritable": false,
+                            "position": 70
                         }
                     ],
                     "format": "markdown",
