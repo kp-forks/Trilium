@@ -7,6 +7,8 @@ import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 import NoteContext from "../../../components/note_context";
+import FNote from "../../../entities/fnote";
+import server from "../../../services/server";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
@@ -61,6 +63,7 @@ export default function Markdown(props: TypeWidgetProps) {
     useSyncedScrolling(editorView, previewEl);
     useSyncedHighlight(editorView, previewEl, html);
     usePublishToc(props.noteContext, editorView, headings);
+    useImageDrop(props.note, editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
         () => ({ html, headings, setEditorView, setPreviewEl }),
@@ -205,6 +208,86 @@ function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElem
         return unsubscribe;
     }, [ view, preview, html ]);
 }
+
+//#region Image upload
+/**
+ * Handles drag-and-drop and paste of images into the CodeMirror editor.
+ * Uploads the image as an attachment and inserts markdown image syntax at the cursor.
+ */
+function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
+    useEffect(() => {
+        if (!editorView) return;
+
+        const dom = editorView.dom;
+
+        async function uploadAndInsert(file: File, pos?: number) {
+            const result = await server.upload(
+                `notes/${note.noteId}/attachments/upload`,
+                file, undefined, "POST"
+            ) as { uploaded: boolean; url?: string };
+            if (!result?.uploaded || !result.url) return;
+
+            const insertPos = pos ?? editorView!.state.selection.main.head;
+            const markdown = `![${file.name}](${result.url})`;
+            editorView!.dispatch({
+                changes: { from: insertPos, insert: markdown }
+            });
+        }
+
+        function handleDrop(e: DragEvent) {
+            const files = e.dataTransfer?.files;
+            if (!files?.length) return;
+
+            const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
+            if (!imageFiles.length) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const dropPos = editorView!.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined;
+            for (const file of imageFiles) {
+                uploadAndInsert(file, dropPos);
+            }
+        }
+
+        function handlePaste(e: ClipboardEvent) {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            const imageFiles: File[] = [];
+            for (const item of items) {
+                if (item.type.startsWith("image/")) {
+                    const file = item.getAsFile();
+                    if (file) imageFiles.push(file);
+                }
+            }
+
+            if (!imageFiles.length) return;
+
+            e.preventDefault();
+            for (const file of imageFiles) {
+                uploadAndInsert(file);
+            }
+        }
+
+        function handleDragOver(e: DragEvent) {
+            if (e.dataTransfer?.types.includes("Files")) {
+                e.preventDefault();
+            }
+        }
+
+        dom.addEventListener("drop", handleDrop);
+        dom.addEventListener("paste", handlePaste);
+        dom.addEventListener("dragover", handleDragOver);
+
+        return () => {
+            dom.removeEventListener("drop", handleDrop);
+            dom.removeEventListener("paste", handlePaste);
+            dom.removeEventListener("dragover", handleDragOver);
+        };
+    }, [editorView, note.noteId]);
+}
+//#endregion
 
 /** Token types the parser emits but which don't produce top-level block HTML. */
 const NON_RENDERED_TOKENS = new Set([ "space", "def" ]);
