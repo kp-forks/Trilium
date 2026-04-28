@@ -9,9 +9,11 @@ import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
 import keyboard_actions from "../../../services/keyboard_actions";
+import options from "../../../services/options";
 import server from "../../../services/server";
 import { removeIndividualBinding } from "../../../services/shortcuts";
 import tree from "../../../services/tree";
+import utils from "../../../services/utils";
 import { useLegacyImperativeHandlers } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
@@ -82,7 +84,7 @@ export default function Markdown(props: TypeWidgetProps) {
     useSyncedHighlight(editorView, previewEl, html);
     usePublishToc(props.noteContext, editorView, headings);
     useImageDrop(props.note, editorView);
-    useAddLink(props.parentComponent, editorView);
+    useTextCommands(props.parentComponent, editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
         () => ({ html, headings, setEditorView, setPreviewEl }),
@@ -228,12 +230,13 @@ function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElem
     }, [ view, preview, html ]);
 }
 
-//#region Add link
+//#region Text commands
 /**
- * Handles the "Add Link" command (Ctrl+L) by opening the add-link dialog
- * and inserting markdown link syntax at the cursor.
+ * Handles text-detail commands for the Markdown editor:
+ * - Add Link (Ctrl+L): opens the add-link dialog, inserts markdown link syntax
+ * - Insert Date/Time (Alt+T): inserts a formatted date/time string
  */
-function useAddLink(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null) {
+function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null) {
     useLegacyImperativeHandlers({
         addLinkToTextCommand() {
             if (!editorView) return;
@@ -252,11 +255,9 @@ function useAddLink(parentComponent: TypeWidgetProps["parentComponent"], editorV
                         const label = (from !== to) ? selectedText : (linkTitle || notePath);
                         md = `[${label}](${notePath})`;
                     } else if (linkTitle) {
-                        // Hyper link with explicit title, or wrapping selected text.
                         const label = (from !== to) ? selectedText : linkTitle;
                         md = `[${label}](#${notePath})`;
                     } else {
-                        // Reference link — use wiki-link syntax so the title mirrors the note.
                         const noteId = tree.getNoteIdFromUrl(notePath);
                         md = `[[${noteId}]]`;
                     }
@@ -267,6 +268,17 @@ function useAddLink(parentComponent: TypeWidgetProps["parentComponent"], editorV
                     });
                     editorView.focus();
                 }
+            });
+        },
+
+        insertDateTimeToTextCommand() {
+            if (!editorView) return;
+
+            const dateString = utils.formatDateTime(new Date(), options.get("customDateTimeFormat"));
+            const pos = editorView.state.selection.main.head;
+            editorView.dispatch({
+                changes: { from: pos, insert: dateString },
+                selection: { anchor: pos + dateString.length }
             });
         }
     });
