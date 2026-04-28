@@ -382,6 +382,14 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     view.dispatch({ changes: { from, to } });
                                     parentComponent?.triggerCommand("insertDateTimeToText");
                                 }
+                            },
+                            {
+                                label: "/include",
+                                detail: "Include another note",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+                                    parentComponent?.triggerCommand("addIncludeNoteToText");
+                                }
                             }
                         ]
                     };
