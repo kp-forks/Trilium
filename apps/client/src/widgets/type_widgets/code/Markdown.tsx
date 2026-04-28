@@ -294,7 +294,8 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             const insertPos = pos ?? editorView!.state.selection.main.head;
             const markdown = `![${file.name}](${result.url})`;
             editorView!.dispatch({
-                changes: { from: insertPos, insert: markdown }
+                changes: { from: insertPos, insert: markdown },
+                selection: { anchor: insertPos + markdown.length }
             });
         }
 
@@ -327,8 +328,10 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
                     const src = imgMatch[2];
                     const alt = html.match(/<img[^>]+alt="([^"]*)"/)?.[1] ?? "image";
                     const pos = editorView!.state.selection.main.head;
+                    const md = `![${alt}](${src})`;
                     editorView!.dispatch({
-                        changes: { from: pos, insert: `![${alt}](${src})` }
+                        changes: { from: pos, insert: md },
+                        selection: { anchor: pos + md.length }
                     });
                     return;
                 }
