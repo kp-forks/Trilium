@@ -6,8 +6,10 @@ import DOMPurify from "dompurify";
 import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
+import froca from "../../../services/froca";
 import keyboard_actions from "../../../services/keyboard_actions";
 import options from "../../../services/options";
 import server from "../../../services/server";
@@ -279,6 +281,34 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
             editorView.dispatch({
                 changes: { from: pos, insert: dateString },
                 selection: { anchor: pos + dateString.length }
+            });
+        },
+
+        addIncludeNoteToTextCommand() {
+            if (!editorView) return;
+
+            function insertAtCursor(text: string) {
+                const pos = editorView!.state.selection.main.head;
+                editorView!.dispatch({
+                    changes: { from: pos, insert: text },
+                    selection: { anchor: pos + text.length }
+                });
+                editorView!.focus();
+            }
+
+            parentComponent?.triggerCommand("showIncludeNoteDialog", {
+                // Only addIncludeNote and addImage are used by the dialog.
+                editorApi: {
+                    addIncludeNote(noteId: string, boxSize?: string) {
+                        insertAtCursor(`<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
+                    },
+                    async addImage(noteId: string) {
+                        const note = await froca.getNote(noteId);
+                        if (!note) return;
+                        const encodedTitle = encodeURIComponent(note.title);
+                        insertAtCursor(`![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
+                    }
+                }
             });
         }
     });
