@@ -135,7 +135,7 @@ Note: It is best to disable automatic updates on your server installation (see b
 #### Pocket Trilium
 
 If you want a full-featured native Android app, check out [Pocket Trilium](https://github.com/Nriver/pocket-trilium).
-It runs a complete Trilium instance on your phone, supports full offline use, also allows you to sync with your server.
+It runs a complete Trilium instance on your phone, supports full offline use, and allows you to sync with your server.
 
 ### Server
 
