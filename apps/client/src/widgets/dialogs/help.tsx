@@ -29,6 +29,7 @@ export default function HelpDialog() {
                         <FixedKeyboardShortcut keys={["Backspace"]} description={t("help.jumpToParentNote")} />
                         <KeyboardShortcut commands="collapseTree" description={t("help.collapseWholeTree")} />
                         <KeyboardShortcut commands="collapseSubtree" description={t("help.collapseSubTree")} />
+                        <KeyboardShortcut commands="toggleArchivedNotes" description={t("help.toggleArchivedNotes")} />
                     </ul>
                 </Card>
 

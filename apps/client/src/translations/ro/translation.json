@@ -630,6 +630,7 @@
     "collapseExpand": "minimizează/expandează nodul",
     "collapseSubTree": "minimizează subarborele",
     "collapseWholeTree": "minimizează întregul arbore de notițe",
+    "toggleArchivedNotes": "afișează/ascunde notițele arhivate",
     "copyNotes": "copiază notița activă (sau selecția curentă) în clipboard (utilizat pentru <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/cloning-notes.html#cloning-notes\">clonare</a>)",
     "createEditLink": "crează/editează legătură externă",
     "createInternalLink": "crează legătură internă",
