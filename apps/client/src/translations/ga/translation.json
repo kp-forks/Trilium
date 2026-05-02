@@ -224,7 +224,8 @@
     "showSQLConsole": "taispeáin consól SQL",
     "other": "Eile",
     "quickSearch": "díriú ar ionchur cuardaigh thapa",
-    "inPageSearch": "cuardach in-leathanaigh"
+    "inPageSearch": "cuardach in-leathanaigh",
+    "toggleArchivedNotes": "nótaí cartlannaithe a thaispeáint/a cheilt"
   },
   "import": {
     "importIntoNote": "Iompórtáil isteach i nóta",
