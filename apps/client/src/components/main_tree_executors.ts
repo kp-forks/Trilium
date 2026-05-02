@@ -79,4 +79,8 @@ export default class MainTreeExecutors extends Component {
             saveSelection: false
         });
     }
+
+    async toggleArchivedNotesCommand(){
+        this.tree?.toggleArchivedNotes();
+    }
 }
