@@ -113,6 +113,14 @@ function getDefaultKeyboardActions() {
             description: t("keyboard_actions.sort-child-notes"),
             scope: "note-tree"
         },
+        {
+            actionName: "toggleArchivedNotes",
+            friendlyName: t("keyboard_action_names.toggle-archived-notes"),
+            iconClass: "bx bx-low-vision",
+            defaultShortcuts: (!isMac) ? ["Ctrl+H"] : ["CommandOrControl+Shift+H"],
+            description: t("keyboard_actions.toggle-archived-notes"),
+            scope: "window"
+        },
 
         {
             separator: t("keyboard_actions.creating-and-moving-notes")

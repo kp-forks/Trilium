@@ -340,6 +340,11 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         return options.is(`hideArchivedNotes_${this.treeName}`);
     }
 
+    async toggleArchivedNotes() {
+        await options.toggle(`hideArchivedNotes_${this.treeName}`);
+        await this.reloadTreeFromCache();
+    }
+
     async setHideArchivedNotes(val: string) {
         await options.save(`hideArchivedNotes_${this.treeName}`, val.toString());
     }

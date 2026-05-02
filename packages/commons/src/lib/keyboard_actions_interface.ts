@@ -10,6 +10,7 @@ const enum KeyboardActionNamesEnum {
     collapseTree,
     collapseSubtree,
     sortChildNotes,
+    toggleArchivedNotes,
     createNoteAfter,
     createNoteInto,
     createNoteIntoInbox,
