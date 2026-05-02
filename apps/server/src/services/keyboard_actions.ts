@@ -117,7 +117,7 @@ function getDefaultKeyboardActions() {
             actionName: "toggleArchivedNotes",
             friendlyName: t("keyboard_action_names.toggle-archived-notes"),
             iconClass: "bx bx-low-vision",
-            defaultShortcuts: ["Ctrl+H"],
+            defaultShortcuts: (!isMac) ? ["Ctrl+H"] : ["CommandOrControl+Shift+H"],
             description: t("keyboard_actions.toggle-archived-notes"),
             scope: "window"
         },
