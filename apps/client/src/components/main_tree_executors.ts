@@ -81,6 +81,6 @@ export default class MainTreeExecutors extends Component {
     }
 
     async toggleArchivedNotesCommand(){
-        this.tree?.toggleArchivedNotes();
+        await this.tree?.toggleArchivedNotes();
     }
 }
