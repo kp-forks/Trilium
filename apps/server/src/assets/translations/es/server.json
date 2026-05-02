@@ -104,7 +104,8 @@
     "open-command-palette": "Abrir paleta de comandos",
     "clone-notes-to": "Clonar notas seleccionadas",
     "move-notes-to": "Mover notas seleccionadas",
-    "save-named-revision": "Guardar una revisión nombrada de la nota activa"
+    "save-named-revision": "Guardar una revisión nombrada de la nota activa",
+    "toggle-archived-notes": "Mostrar/Ocultar notas archivadas (ocultas) en el árbol de notas"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -412,7 +413,8 @@
     "toggle-ribbon-tab-similar-notes": "Mostrar pestaña de la cinta de opciones: Notas similares",
     "toggle-ribbon-tab-owned-attributes": "Mostrar pestaña de la cinta de opciones: Propiedades asignadas",
     "toggle-ribbon-tab-promoted-attributes": "Mostrar pestaña de la cinta de opciones: Atributos destacados",
-    "save-named-revision": "Guardar revisión nombrada"
+    "save-named-revision": "Guardar revisión nombrada",
+    "toggle-archived-notes": "Alternar visibilidad de notas archivadas"
   },
   "hidden_subtree_templates": {
     "board_note_first": "Primera nota",
