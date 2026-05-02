@@ -191,7 +191,8 @@
     "quickSearch": "centrarse en la entrada de búsqueda rápida",
     "inPageSearch": "búsqueda en la página",
     "title": "Hoja de ayuda",
-    "editShortcuts": "Editar atajos de teclado"
+    "editShortcuts": "Editar atajos de teclado",
+    "toggleArchivedNotes": "mostrar/ocultar notas archivadas"
   },
   "import": {
     "importIntoNote": "Importar a nota",
