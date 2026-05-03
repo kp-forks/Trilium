@@ -348,7 +348,8 @@
     "notSet": "未設定",
     "goUpDown": "ノートのリストで上下する",
     "editBranchPrefix": "アクティブノートのクローンの <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/tree-concepts.html#prefix\">プレフィックス</a> を編集する",
-    "editShortcuts": "キーボードショートカットを編集"
+    "editShortcuts": "キーボードショートカットを編集",
+    "toggleArchivedNotes": "アーカイブされたノートを表示 / 非表示"
   },
   "import": {
     "importIntoNote": "ノートにインポート",
