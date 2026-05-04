@@ -1,0 +1,33 @@
+/*
+ * Shared styles for collapsible blocks (rendered as native HTML <details>/<summary>).
+ * Used in both the editor and the read-only/published view via .ck-content.
+ */
+
+.ck-content details.trilium-collapsible {
+    border: 1px solid var(--card-border-color, #ddd);
+    border-radius: 6px;
+    background: var(--card-background-color, transparent);
+    padding: 0.5em 1em;
+    margin: 1em 0;
+}
+
+.ck-content details.trilium-collapsible > summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.25em 0;
+    outline: none;
+}
+
+.ck-content details.trilium-collapsible[open] > summary {
+    margin-bottom: 0.5em;
+}
+
+/*
+ * Editing-only tweaks: while the user is editing we keep the block expanded
+ * (the `open` attribute is forced by the editing downcast) and we make the
+ * summary behave like a regular editable text block instead of a toggle.
+ */
+
+.ck-editor__editable details.trilium-collapsible > summary {
+    cursor: text;
+}

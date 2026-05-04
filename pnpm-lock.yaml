@@ -948,6 +948,9 @@ importers:
       '@triliumnext/ckeditor5-admonition':
         specifier: workspace:*
         version: link:../ckeditor5-admonition
+      '@triliumnext/ckeditor5-collapsible':
+        specifier: workspace:*
+        version: link:../ckeditor5-collapsible
       '@triliumnext/ckeditor5-footnotes':
         specifier: workspace:*
         version: link:../ckeditor5-footnotes
@@ -1014,6 +1017,15 @@ importers:
       webdriverio:
         specifier: 9.27.0
         version: 9.27.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+
+  packages/ckeditor5-collapsible:
+    devDependencies:
+      ckeditor5:
+        specifier: 48.0.1
+        version: 48.0.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
 
   packages/ckeditor5-footnotes:
     devDependencies:
