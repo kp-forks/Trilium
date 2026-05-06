@@ -371,6 +371,22 @@
     color: var(--accent);
 }
 
+/* Code dropdown */
+
+.ck.ck-dropdown.ck-code-block-dropdown .ck-dropdown__panel,
+.ck.ck-toolbar-container.codeblock-language-list .ck.ck-dropdown__panel {
+    --_panel-height: 400px;
+
+    overflow: hidden;
+    max-height: var(--_panel-height);
+}
+
+.ck-code-block-dropdown .ck-dropdown__panel .ck-list,
+.ck.ck-toolbar-container.codeblock-language-list .ck.ck-dropdown__panel .ck-list {
+    overflow: auto;
+    max-height: calc(var(--_panel-height) - var(--ck-editor-popup-padding) * 2);
+}
+
 /* Text snippet dropdown */
 
 div.ck-template-form {
