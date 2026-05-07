@@ -344,13 +344,12 @@ body[dir=ltr] #launcher-container {
 }
 
 .tooltip .tooltip-inner {
-    padding: 6px 10px !important;
-    box-shadow:
-        -1px -1px 2px var(--tooltip-shadow-color),
-        2px 2px 8px var(--tooltip-shadow-color) !important;
+    padding: var(--tooltip-padding) !important;
+    box-shadow: var(--tooltip-box-shadow) !important;
     border: unset !important;
-    border-radius: 6px;
-    backdrop-filter: blur(5px);
+    border-radius: var(--tooltip-border-radius);
+    backdrop-filter: var(--tooltip-backdrop-filter);
+    font-size: var(--tooltip-font-size);
     color: var(--tooltip-foreground-color) !important;
 }
 
