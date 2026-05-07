@@ -1,6 +1,7 @@
 {
   "about": {
-    "data_directory": "Directorul de date:"
+    "data_directory": "Directorul de date:",
+    "version_label": "Versiune:"
   },
   "abstract_bulk_action": {
     "remove_this_search_action": "Înlătură acesată acțiune la căutare"
