@@ -1313,9 +1313,18 @@ body.layout-horizontal #rest-pane > .classic-toolbar-widget {
  * CENTER PANE
  */
 
+ /* Note split */
+ body.desktop.experimental-feature-new-layout .vertical-layout #center-pane .note-split {
+    border-bottom: 1px solid var(--status-bar-border-color);
+ }
+
  /* The first visible note split */
 .vertical-layout #center-pane .note-split:not(.visible ~ .visible) {
     border-start-start-radius: var(--center-pane-border-radius);
+}
+
+body.desktop.experimental-feature-new-layout .vertical-layout #center-pane .note-split:not(.visible ~ .visible) {
+    border-end-start-radius: var(--center-pane-border-radius);
 }
 
 #center-pane .note-split {

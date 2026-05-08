@@ -1,6 +1,5 @@
 .component.status-bar {
     contain: none;
-    border-top: 1px solid var(--status-bar-border-color);
 
     > .status-bar-main-row {
         min-height: 28px;
