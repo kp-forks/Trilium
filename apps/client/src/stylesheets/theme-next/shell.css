@@ -1882,6 +1882,11 @@ div.find-replace-widget div.find-widget-found-wrapper > span {
     background: var(--right-pane-background-color);
 }
 
+/* New layout: status bar delimiter */
+body.desktop.experimental-feature-new-layout .vertical-layout #right-pane {
+    border-bottom: 1px solid var(--status-bar-border-color);
+ }
+
 #right-pane > * {
     animation: fade-in 200ms ease-in;
 }
