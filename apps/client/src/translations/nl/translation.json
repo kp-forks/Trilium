@@ -1,6 +1,16 @@
 {
   "about": {
-    "data_directory": "Gegevensmap:"
+    "data_directory": "Gegevensmap:",
+    "version_label": "Versie:",
+    "version": "{{appVersion}} (databank: {{dbVersion}}, synchroniseringsprotocol: {{syncVersion}})",
+    "build_info": "Build: {{buildDate}}, revisie: <buildRevision />",
+    "contributors_label": "Collaborateuren:",
+    "contributor_roles": {
+      "original-dev": "Originele ontwikkelaar"
+    },
+    "role_brief_history": {
+      "lead-dev": "Elian Doran heeft TriliumNext opgericht in 2014 nadat Zadam, de originele oprichter, zich terugtrok uit het project. Later heeft Zadam de originele repository overgedragen over aan het TriliumNext team, waarbij beide projecten uiteindelijk zijn samengevoegd."
+    }
   },
   "toast": {
     "critical-error": {
