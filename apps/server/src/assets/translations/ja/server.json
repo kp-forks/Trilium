@@ -105,7 +105,7 @@
     "force-save-revision": "アクティブノートの新しいノートリヴィジョンを強制する",
     "toggle-classic-editor-toolbar": "固定ツールバーエディターの書式設定タブ切り替え",
     "save-named-revision": "アクティブなノートの変更履歴を名前を付けて保存",
-    "toggle-archived-notes": "ノートツリーのアーカイブ済み（非表示）ノートを表示 / 非表示にする"
+    "toggle-archived-notes": "ノートツリーでアーカイブされたノートを表示 / 非表示にする"
   },
   "keyboard_action_names": {
     "back-in-note-history": "ノートの履歴を戻る",
