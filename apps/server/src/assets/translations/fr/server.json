@@ -103,7 +103,8 @@
     "quick-search": "Activer la barre de recherche rapide",
     "create-note-after": "Créer une note après la note active",
     "create-note-into": "Créer une note enfant de la note active",
-    "find-in-text": "Afficher/Masquer le panneau de recherche"
+    "find-in-text": "Afficher/Masquer le panneau de recherche",
+    "toggle-archived-notes": "Afficher/masquer les notes archivées dans l'arborescence des notes"
   },
   "login": {
     "title": "Connexion",
