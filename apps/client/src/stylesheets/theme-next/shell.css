@@ -1325,6 +1325,11 @@ body.layout-horizontal #rest-pane > .classic-toolbar-widget {
 
 body.desktop.experimental-feature-new-layout .vertical-layout #center-pane .note-split:not(.visible ~ .visible) {
     border-end-start-radius: var(--center-pane-border-radius);
+
+    > .scrolling-container {
+        /* Use clip-path to force rounded bottom corner for the note content */
+        clip-path: inset(0px round 0 0 0 var(--center-pane-border-radius));
+    }
 }
 
 #center-pane .note-split {
