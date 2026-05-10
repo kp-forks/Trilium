@@ -17,7 +17,7 @@ import options from "../../../services/options";
 import server from "../../../services/server";
 import { removeIndividualBinding } from "../../../services/shortcuts";
 import tree from "../../../services/tree";
-import utils from "../../../services/utils";
+import utils, { isDesktop } from "../../../services/utils";
 import { useLegacyImperativeHandlers } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
@@ -105,7 +105,7 @@ export default function Markdown(props: TypeWidgetProps) {
                 editorRef={setEditorView}
                 onContentChanged={setContent}
                 previewContent={<MarkdownPreview ntxId={props.ntxId} />}
-                forceOrientation="horizontal"
+                forceOrientation={isDesktop() ? "horizontal" : "vertical"}
             />
         </MarkdownContext.Provider>
     );
