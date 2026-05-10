@@ -6,7 +6,19 @@ import DOMPurify from "dompurify";
 import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+
+import appContext from "../../../components/app_context";
 import NoteContext from "../../../components/note_context";
+import FNote from "../../../entities/fnote";
+import froca from "../../../services/froca";
+import keyboard_actions from "../../../services/keyboard_actions";
+import note_create from "../../../services/note_create";
+import options from "../../../services/options";
+import server from "../../../services/server";
+import { removeIndividualBinding } from "../../../services/shortcuts";
+import tree from "../../../services/tree";
+import utils, { isDesktop } from "../../../services/utils";
+import { useLegacyImperativeHandlers } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
@@ -58,9 +70,28 @@ export default function Markdown(props: TypeWidgetProps) {
     const [ previewEl, setPreviewEl ] = useState<HTMLDivElement | null>(null);
     const { html, headings } = useMemo(() => renderWithSourceLines(content), [ content ]);
 
+    // Bind text-detail shortcuts (e.g. Ctrl+L for add link) to CodeMirror's contentDOM,
+    // since the outer `dom` only receives events after CodeMirror has already handled them.
+    useEffect(() => {
+        if (!editorView || !props.parentComponent) return;
+        const $el = $(editorView.contentDOM);
+        const bindingPromise = keyboard_actions.setupActionsForElement("text-detail", $el, props.parentComponent, props.ntxId);
+        return () => {
+            bindingPromise.then(bindings => {
+                for (const binding of bindings) {
+                    removeIndividualBinding(binding);
+                }
+            });
+        };
+    }, [editorView, props.parentComponent, props.ntxId]);
+
     useSyncedScrolling(editorView, previewEl);
     useSyncedHighlight(editorView, previewEl, html);
     usePublishToc(props.noteContext, editorView, headings);
+    useImageDrop(props.note, editorView);
+    useTextCommands(props.parentComponent, editorView);
+    useSlashCommands(props.parentComponent, editorView, props.note);
+    useMarkdownKeymap(editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
         () => ({ html, headings, setEditorView, setPreviewEl }),
@@ -75,7 +106,7 @@ export default function Markdown(props: TypeWidgetProps) {
                 editorRef={setEditorView}
                 onContentChanged={setContent}
                 previewContent={<MarkdownPreview ntxId={props.ntxId} />}
-                forceOrientation="horizontal"
+                forceOrientation={isDesktop() ? "horizontal" : "vertical"}
             />
         </MarkdownContext.Provider>
     );
@@ -205,6 +236,443 @@ function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElem
         return unsubscribe;
     }, [ view, preview, html ]);
 }
+
+/** Inserts text at the given position (or cursor) and moves the cursor to the end of the inserted text. */
+function insertText(view: VanillaCodeMirror, text: string, pos?: number) {
+    const from = pos ?? view.state.selection.main.head;
+    view.dispatch({
+        changes: { from, insert: text },
+        selection: { anchor: from + text.length }
+    });
+}
+
+/** Replaces the selection range with text and moves the cursor to the end. */
+function replaceSelection(view: VanillaCodeMirror, text: string, from: number, to: number) {
+    view.dispatch({
+        changes: { from, to, insert: text },
+        selection: { anchor: from + text.length }
+    });
+}
+
+//#region Text commands
+/**
+ * Handles text-detail commands for the Markdown editor:
+ * - Add Link (Ctrl+L): opens the add-link dialog, inserts markdown link syntax
+ * - Insert Date/Time (Alt+T): inserts a formatted date/time string
+ */
+function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null) {
+    useLegacyImperativeHandlers({
+        addLinkToTextCommand() {
+            if (!editorView) return;
+
+            const { from, to } = editorView.state.selection.main;
+            const selectedText = editorView.state.sliceDoc(from, to);
+
+            parentComponent?.triggerCommand("showAddLinkDialog", {
+                text: selectedText,
+                hasSelection: from !== to,
+                async addLink(notePath: string, linkTitle: string | null, externalLink?: boolean) {
+                    if (!editorView) return;
+
+                    let md: string;
+                    if (externalLink) {
+                        const label = (from !== to) ? selectedText : (linkTitle || notePath);
+                        md = `[${label}](${notePath})`;
+                    } else if (linkTitle) {
+                        const label = (from !== to) ? selectedText : linkTitle;
+                        md = `[${label}](#${notePath})`;
+                    } else {
+                        const noteId = tree.getNoteIdFromUrl(notePath);
+                        md = `[[${noteId}]]`;
+                    }
+
+                    replaceSelection(editorView, md, from, to);
+                    editorView.focus();
+                }
+            });
+        },
+
+        insertDateTimeToTextCommand() {
+            if (!editorView) return;
+
+            const dateString = utils.formatDateTime(new Date(), options.get("customDateTimeFormat"));
+            insertText(editorView, dateString);
+        },
+
+        addIncludeNoteToTextCommand() {
+            if (!editorView) return;
+
+            parentComponent?.triggerCommand("showIncludeNoteDialog", {
+                editorApi: {
+                    addIncludeNote(noteId: string, boxSize?: string) {
+                        insertText(editorView, `<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
+                        editorView.focus();
+                    },
+                    async addImage(noteId: string) {
+                        const note = await froca.getNote(noteId);
+                        if (!note) return;
+                        const encodedTitle = encodeURIComponent(note.title);
+                        insertText(editorView, `![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
+                        editorView.focus();
+                    }
+                }
+            });
+        },
+
+        async cutIntoNoteCommand() {
+            if (!editorView) return;
+
+            const { from, to } = editorView.state.selection.main;
+            if (from === to) return;
+
+            const selectedText = editorView.state.sliceDoc(from, to);
+
+            // Extract first heading as title, if present.
+            const headingMatch = selectedText.match(/^(#{1,6})\s+(.+)$/m);
+            const title = headingMatch ? headingMatch[2].trim() : null;
+            const content = headingMatch
+                ? selectedText.replace(headingMatch[0], "").trim()
+                : selectedText;
+
+            const note = appContext.tabManager.getActiveContextNote();
+            const parentNotePath = appContext.tabManager.getActiveContextNotePath();
+            if (!note || !parentNotePath) return;
+
+            const result = await note_create.createNote(parentNotePath, {
+                isProtected: note.isProtected,
+                title,
+                content,
+                type: "code",
+                mime: "text/x-markdown",
+                activate: false
+            });
+
+            if (result?.note) {
+                // Replace selection with a wiki-link to the new note.
+                replaceSelection(editorView, `[[${result.note.noteId}]]`, from, to);
+            }
+        }
+    });
+}
+//#endregion
+
+//#region Markdown keymap
+/**
+ * Adds markdown-specific formatting shortcuts (bold, italic, strikethrough, math).
+ * Toggles the wrapper around the selection, or inserts it at the cursor.
+ */
+function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
+    useEffect(() => {
+        if (!editorView) return;
+
+        function toggleWrap(wrapper: string): boolean {
+            if (!editorView) return false;
+            const { from, to } = editorView.state.selection.main;
+            const len = wrapper.length;
+
+            if (from === to) {
+                // No selection — insert wrapper pair and place cursor inside.
+                const text = `${wrapper}${wrapper}`;
+                editorView.dispatch({
+                    changes: { from, insert: text },
+                    selection: { anchor: from + len }
+                });
+                return true;
+            }
+
+            const selected = editorView.state.sliceDoc(from, to);
+
+            // If already wrapped, unwrap.
+            if (selected.startsWith(wrapper) && selected.endsWith(wrapper) && selected.length >= len * 2) {
+                const inner = selected.slice(len, -len);
+                replaceSelection(editorView, inner, from, to);
+                return true;
+            }
+
+            // Also check if the wrapper is outside the selection.
+            const before = editorView.state.sliceDoc(from - len, from);
+            const after = editorView.state.sliceDoc(to, to + len);
+            if (before === wrapper && after === wrapper) {
+                editorView.dispatch({
+                    changes: [
+                        { from: from - len, to: from },
+                        { from: to, to: to + len }
+                    ],
+                    selection: { anchor: from - len, head: to - len }
+                });
+                return true;
+            }
+
+            // Wrap selection.
+            const wrapped = `${wrapper}${selected}${wrapper}`;
+            replaceSelection(editorView, wrapped, from, to);
+            // Re-select just the inner text.
+            editorView.dispatch({ selection: { anchor: from + len, head: to + len } });
+            return true;
+        }
+
+        const bindings: Record<string, string> = {
+            "b": "**",
+            "i": "*",
+            "m": "$"
+        };
+        const shiftBindings: Record<string, string> = {
+            "x": "~~"
+        };
+
+        function onKeydown(e: KeyboardEvent) {
+            const mod = e.ctrlKey || e.metaKey;
+            if (!mod) return;
+
+            const key = e.key.toLowerCase();
+            const wrapper = e.shiftKey ? shiftBindings[key] : bindings[key];
+            if (!wrapper) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWrap(wrapper);
+        }
+
+        editorView.contentDOM.addEventListener("keydown", onKeydown, true);
+        return () => editorView.contentDOM.removeEventListener("keydown", onKeydown, true);
+    }, [editorView]);
+}
+//#endregion
+
+//#region Slash commands
+/**
+ * Adds `/`-triggered autocomplete to the CodeMirror editor.
+ * Typing `/` at the start of a line (or after whitespace) shows a menu of commands.
+ */
+function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null, note: FNote) {
+    useEffect(() => {
+        if (!editorView) return;
+
+        Promise.all([
+            import("@codemirror/autocomplete"),
+            import("@codemirror/state")
+        ]).then(([{ autocompletion }, { StateEffect }]) => {
+            const ext = autocompletion({
+                override: [(ctx) => {
+                    const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
+                    if (!match) return null;
+
+                    // Suppress inside fenced code blocks (``` ... ```).
+                    const textBefore = ctx.state.sliceDoc(0, match.from);
+                    const fenceCount = (textBefore.match(/^(`{3,}|~{3,})/gm) ?? []).length;
+                    if (fenceCount % 2 !== 0) return null;
+
+                    return {
+                        from: match.from,
+                        options: [
+                            {
+                                label: "/date",
+                                detail: "Insert current date and time",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+                                    parentComponent?.triggerCommand("insertDateTimeToText");
+                                }
+                            },
+                            {
+                                label: "/include",
+                                detail: "Include another note",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+                                    parentComponent?.triggerCommand("addIncludeNoteToText");
+                                }
+                            },
+                            {
+                                label: "/link",
+                                detail: "Insert a note link",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+                                    parentComponent?.triggerCommand("addLinkToText");
+                                }
+                            },
+                            {
+                                label: "/math",
+                                detail: "Insert a math equation block",
+                                apply(view, _completion, from, to) {
+                                    const placeholder = "\\text{equation}";
+                                    const template = `$$\n${placeholder}\n$$`;
+                                    view.dispatch({
+                                        changes: { from, to, insert: template },
+                                        selection: { anchor: from + 3, head: from + 3 + placeholder.length }
+                                    });
+                                }
+                            },
+                            {
+                                label: "/footnote",
+                                detail: "Insert a footnote",
+                                apply(view, _completion, from, to) {
+                                    const doc = view.state.doc.toString();
+                                    let maxFootnote = 0;
+                                    for (const m of doc.matchAll(/\[\^(\d+)\]/g)) {
+                                        maxFootnote = Math.max(maxFootnote, parseInt(m[1], 10));
+                                    }
+                                    const n = maxFootnote + 1;
+                                    const ref = `[^${n}]`;
+                                    const def = `\n\n[^${n}]: `;
+                                    const docEnd = view.state.doc.length;
+                                    const newDocEnd = docEnd - (to - from) + ref.length + def.length;
+                                    view.dispatch({
+                                        changes: [
+                                            { from, to, insert: ref },
+                                            { from: docEnd, insert: def }
+                                        ],
+                                        selection: { anchor: newDocEnd }
+                                    });
+                                }
+                            },
+                            {
+                                label: "/mermaid",
+                                detail: "Insert a Mermaid diagram",
+                                apply(view, _completion, from, to) {
+                                    const placeholder = "graph TD\n    A --> B";
+                                    const template = `\`\`\`mermaid\n${placeholder}\n\`\`\``;
+                                    view.dispatch({
+                                        changes: { from, to, insert: template },
+                                        selection: { anchor: from + 11, head: from + 11 + placeholder.length }
+                                    });
+                                }
+                            },
+                            {
+                                label: "/image",
+                                detail: "Upload an image attachment",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+
+                                    const input = document.createElement("input");
+                                    input.type = "file";
+                                    input.accept = "image/*";
+                                    input.onchange = async () => {
+                                        const file = input.files?.[0];
+                                        if (!file) return;
+
+                                        const result = await server.upload(
+                                            `notes/${note.noteId}/attachments/upload`,
+                                            file, undefined, "POST"
+                                        ) as { uploaded: boolean; url?: string };
+                                        if (!result?.uploaded || !result.url) return;
+
+                                        insertText(editorView, `![${file.name}](${result.url})`);
+                                        editorView.focus();
+                                    };
+                                    input.click();
+                                }
+                            },
+                            ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
+                                label: `/${admonitionType}`,
+                                detail: `Insert ${admonitionType} admonition`,
+                                apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
+                                    const template = `> [!${admonitionType.toUpperCase()}]\n> `;
+                                    view.dispatch({
+                                        changes: { from, to, insert: template },
+                                        selection: { anchor: from + template.length }
+                                    });
+                                }
+                            }))
+                        ]
+                    };
+                }],
+                activateOnTyping: true
+            });
+
+            editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
+        });
+    }, [editorView, parentComponent, note.noteId]);
+}
+//#endregion
+
+//#region Image upload
+/**
+ * Handles drag-and-drop and paste of images into the CodeMirror editor.
+ * Uploads the image as an attachment and inserts markdown image syntax at the cursor.
+ */
+function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
+    useEffect(() => {
+        if (!editorView) return;
+
+        const dom = editorView.dom;
+
+        async function uploadAndInsert(file: File, pos?: number) {
+            const result = await server.upload(
+                `notes/${note.noteId}/attachments/upload`,
+                file, undefined, "POST"
+            ) as { uploaded: boolean; url?: string };
+            if (!result?.uploaded || !result.url || !editorView) return;
+
+            insertText(editorView, `![${file.name}](${result.url})`, pos);
+        }
+
+        function handleDrop(e: DragEvent) {
+            const files = e.dataTransfer?.files;
+            if (!files?.length) return;
+
+            const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
+            if (!imageFiles.length || !editorView) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const dropPos = editorView.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined;
+            for (const file of imageFiles) {
+                uploadAndInsert(file, dropPos);
+            }
+        }
+
+        function handlePaste(e: ClipboardEvent) {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            // Check for HTML containing attachment image references (e.g. from "Copy link to clipboard").
+            const html = e.clipboardData?.getData("text/html");
+            if (html) {
+                const imgMatch = html.match(/<img[^>]+src="([^"]*)(api\/attachments\/[a-zA-Z0-9_]+\/image\/[^"?]+)/);
+                if (imgMatch && editorView) {
+                    e.preventDefault();
+                    const src = imgMatch[2];
+                    const alt = html.match(/<img[^>]+alt="([^"]*)"/)?.[1] ?? "image";
+                    insertText(editorView, `![${alt}](${src})`);
+                    return;
+                }
+            }
+
+            // Check for pasted image files (e.g. screenshot paste).
+            const imageFiles: File[] = [];
+            for (const item of items) {
+                if (item.type.startsWith("image/")) {
+                    const file = item.getAsFile();
+                    if (file) imageFiles.push(file);
+                }
+            }
+
+            if (!imageFiles.length) return;
+
+            e.preventDefault();
+            for (const file of imageFiles) {
+                uploadAndInsert(file);
+            }
+        }
+
+        function handleDragOver(e: DragEvent) {
+            if (e.dataTransfer?.types.includes("Files")) {
+                e.preventDefault();
+            }
+        }
+
+        dom.addEventListener("drop", handleDrop);
+        dom.addEventListener("paste", handlePaste);
+        dom.addEventListener("dragover", handleDragOver);
+
+        return () => {
+            dom.removeEventListener("drop", handleDrop);
+            dom.removeEventListener("paste", handlePaste);
+            dom.removeEventListener("dragover", handleDragOver);
+        };
+    }, [editorView, note.noteId]);
+}
+//#endregion
 
 /** Token types the parser emits but which don't produce top-level block HTML. */
 const NON_RENDERED_TOKENS = new Set([ "space", "def" ]);

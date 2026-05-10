@@ -23,6 +23,7 @@ import type TaskContext from "../task_context.js";
 import treeService from "../tree.js";
 import markdownService from "./markdown.js";
 import mimeService from "./mime.js";
+import { isMarkdownCodeNote } from "../export/rewrite_links.js";
 
 interface MetaFile {
     files: NoteMeta[];
@@ -297,9 +298,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
         if (attachmentMeta && attachmentMeta.attachmentId && noteMeta.noteId) {
             return {
                 attachmentId: getNewAttachmentId(attachmentMeta.attachmentId),
+                attachmentTitle: attachmentMeta.title,
                 noteId: getNewNoteId(noteMeta.noteId)
             };
-        } 
+        }
         // don't check for noteMeta since it's not mandatory for notes
         return {
             noteId: getNoteId(noteMeta, absUrl)
@@ -406,6 +408,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             content = processTextNoteContent(content, noteTitle, filePath, noteMeta);
         }
 
+        if (type === "code" && isMarkdownCodeNote(mime) && typeof content === "string") {
+            content = processMarkdownCodeNoteContent(content, filePath);
+        }
+
         if (type === "relationMap" && noteMeta && typeof content === "string") {
             const relationMapLinks = (noteMeta.attributes || []).filter((attr) => attr.type === "relation" && attr.name === "relationMapLink");
 
@@ -415,6 +421,62 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
                 content = content.replace(new RegExp(link.value, "g"), getNewNoteId(link.value));
             }
         }
+
+        return content;
+    }
+
+    /**
+     * Rewrites relative file paths in markdown code notes back to Trilium internal
+     * URLs (counterpart to `rewriteMarkdownContentLinks` in the export).
+     */
+    function processMarkdownCodeNoteContent(content: string, filePath: string) {
+        function isUrlAbsolute(url: string) {
+            return /^(?:[a-z]+:)?\/\//i.test(url);
+        }
+
+        // Image links: ![alt](relative/path)
+        content = content.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+            try {
+                url = decodeURIComponent(url).trim();
+            } catch {
+                return match;
+            }
+
+            if (isUrlAbsolute(url) || url.startsWith("api/")) {
+                return match;
+            }
+
+            const target = getEntityIdFromRelativeUrl(url, filePath);
+
+            if (target.attachmentId) {
+                return `![${alt}](api/attachments/${target.attachmentId}/image/${encodeURIComponent(target.attachmentTitle || "image")})`;
+            } else if (target.noteId) {
+                return `![${alt}](api/images/${target.noteId}/${path.basename(url)})`;
+            }
+            return match;
+        });
+
+        // Non-image links: [text](relative/path)
+        content = content.replace(/(?<!!)\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
+            try {
+                url = decodeURIComponent(url).trim();
+            } catch {
+                return match;
+            }
+
+            if (isUrlAbsolute(url) || url.startsWith("#") || url.startsWith("api/")) {
+                return match;
+            }
+
+            const target = getEntityIdFromRelativeUrl(url, filePath);
+
+            if (target.attachmentId) {
+                return `[${text}](#root/${target.noteId}?viewMode=attachments&attachmentId=${target.attachmentId})`;
+            } else if (target.noteId) {
+                return `[${text}](#root/${target.noteId})`;
+            }
+            return match;
+        });
 
         return content;
     }
