@@ -61,7 +61,7 @@ export default function StatusBar() {
     const isHiddenNote = note?.isHiddenCompletely();
 
     return (
-        <div className="status-bar">
+        <div className={clsx("status-bar", {"status-bar-panel-open": !!activePane})}>
             {attributesContext && <AttributesPane {...attributesContext} />}
             {noteInfoContext && <SimilarNotesPane {...noteInfoContext} />}
 
