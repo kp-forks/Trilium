@@ -105,7 +105,7 @@
     "export-as-pdf": "Easpórtáil an nóta reatha mar PDF",
     "toggle-zen-mode": "Cumasaíonn/díchumasaíonn sé an mód zen (comhad úsáideora íosta le haghaidh eagarthóireacht níos dírithe)",
     "save-named-revision": "Sábháil athbhreithniú ainmnithe den nóta gníomhach",
-    "toggle-archived-notes": "Taispeáin/folaigh nótaí cartlannaithe (i bhfolach) sa chrann nótaí"
+    "toggle-archived-notes": "Taispeáin/folaigh nótaí cartlannaithe sa chrann nótaí"
   },
   "keyboard_action_names": {
     "back-in-note-history": "Ar ais i Stair na Nótaí",
