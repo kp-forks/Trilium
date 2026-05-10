@@ -387,6 +387,8 @@ function protectNote(note: BNote, protect: boolean) {
     }
 }
 
+export { saveLinks };
+
 export function checkImageAttachments(note: BNote, content: string) {
     const foundAttachmentIds = new Set<string>();
     let match;
@@ -545,6 +547,41 @@ function findInternalLinks(content: string, foundLinks: FoundLink[]) {
 
     // removing absolute references to server to keep it working between instances
     return content.replace(/href="[^"]*#root/g, 'href="#root');
+}
+
+function findMarkdownImageLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /!\[[^\]]*\]\([^)]*api\/images\/([a-zA-Z0-9_]+)\//g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "imageLink",
+            value: match[1]
+        });
+    }
+}
+
+function findMarkdownInternalLinks(content: string, foundLinks: FoundLink[]) {
+    // [text](#root/.../noteId)
+    const hashRootRe = /\[[^\]]*\]\(#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)[^)]*\)/g;
+    let match;
+
+    while ((match = hashRootRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+
+    // [[noteId]] wiki-links
+    const wikiLinkRe = /\[\[([a-zA-Z0-9_]+)\]\]/g;
+
+    while ((match = wikiLinkRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
 }
 
 function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
@@ -778,6 +815,8 @@ function saveLinks(note: BNote, content: string | Buffer) {
 
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.isMarkdown() && typeof content === "string") {
+        findMarkdownImageLinks(content, foundLinks);
+        findMarkdownInternalLinks(content, foundLinks);
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {
         findRelationMapLinks(content, foundLinks);
