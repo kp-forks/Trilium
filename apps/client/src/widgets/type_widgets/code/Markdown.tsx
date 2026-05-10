@@ -76,11 +76,12 @@ export default function Markdown(props: TypeWidgetProps) {
         if (!editorView || !props.parentComponent) return;
         const $el = $(editorView.contentDOM);
         const bindingPromise = keyboard_actions.setupActionsForElement("text-detail", $el, props.parentComponent, props.ntxId);
-        return async () => {
-            const bindings = await bindingPromise;
-            for (const binding of bindings) {
-                removeIndividualBinding(binding);
-            }
+        return () => {
+            bindingPromise.then(bindings => {
+                for (const binding of bindings) {
+                    removeIndividualBinding(binding);
+                }
+            });
         };
     }, [editorView, props.parentComponent, props.ntxId]);
 
@@ -304,15 +305,15 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
             parentComponent?.triggerCommand("showIncludeNoteDialog", {
                 editorApi: {
                     addIncludeNote(noteId: string, boxSize?: string) {
-                        insertText(editorView!, `<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
-                        editorView!.focus();
+                        insertText(editorView, `<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
+                        editorView.focus();
                     },
                     async addImage(noteId: string) {
                         const note = await froca.getNote(noteId);
                         if (!note) return;
                         const encodedTitle = encodeURIComponent(note.title);
-                        insertText(editorView!, `![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
-                        editorView!.focus();
+                        insertText(editorView, `![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
+                        editorView.focus();
                     }
                 }
             });
@@ -554,8 +555,8 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                         ) as { uploaded: boolean; url?: string };
                                         if (!result?.uploaded || !result.url) return;
 
-                                        insertText(editorView!, `![${file.name}](${result.url})`);
-                                        editorView!.focus();
+                                        insertText(editorView, `![${file.name}](${result.url})`);
+                                        editorView.focus();
                                     };
                                     input.click();
                                 }
@@ -599,9 +600,9 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
                 `notes/${note.noteId}/attachments/upload`,
                 file, undefined, "POST"
             ) as { uploaded: boolean; url?: string };
-            if (!result?.uploaded || !result.url) return;
+            if (!result?.uploaded || !result.url || !editorView) return;
 
-            insertText(editorView!, `![${file.name}](${result.url})`, pos);
+            insertText(editorView, `![${file.name}](${result.url})`, pos);
         }
 
         function handleDrop(e: DragEvent) {
@@ -609,12 +610,12 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             if (!files?.length) return;
 
             const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
-            if (!imageFiles.length) return;
+            if (!imageFiles.length || !editorView) return;
 
             e.preventDefault();
             e.stopPropagation();
 
-            const dropPos = editorView!.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined;
+            const dropPos = editorView.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined;
             for (const file of imageFiles) {
                 uploadAndInsert(file, dropPos);
             }
@@ -628,11 +629,11 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             const html = e.clipboardData?.getData("text/html");
             if (html) {
                 const imgMatch = html.match(/<img[^>]+src="([^"]*)(api\/attachments\/[a-zA-Z0-9_]+\/image\/[^"?]+)/);
-                if (imgMatch) {
+                if (imgMatch && editorView) {
                     e.preventDefault();
                     const src = imgMatch[2];
                     const alt = html.match(/<img[^>]+alt="([^"]*)"/)?.[1] ?? "image";
-                    insertText(editorView!, `![${alt}](${src})`);
+                    insertText(editorView, `![${alt}](${src})`);
                     return;
                 }
             }
