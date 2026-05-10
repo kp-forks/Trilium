@@ -150,6 +150,7 @@
     "jumpToParentNote": "jump to parent note",
     "collapseWholeTree": "collapse whole note tree",
     "collapseSubTree": "collapse sub-tree",
+    "toggleArchivedNotes": "show/hide archived notes",
     "tabShortcuts": "Tab shortcuts",
     "newTabNoteLink": "on note link opens note in a new tab",
     "newTabWithActivationNoteLink": "on note link opens and activates the note in a new tab",
