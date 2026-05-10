@@ -456,6 +456,11 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                     const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
                     if (!match) return null;
 
+                    // Suppress inside fenced code blocks (``` ... ```).
+                    const textBefore = ctx.state.sliceDoc(0, match.from);
+                    const fenceCount = (textBefore.match(/^(`{3,}|~{3,})/gm) ?? []).length;
+                    if (fenceCount % 2 !== 0) return null;
+
                     return {
                         from: match.from,
                         options: [
