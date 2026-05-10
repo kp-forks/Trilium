@@ -142,6 +142,7 @@ export function AttachmentDetail({ note, viewScope }: TypeWidgetProps) {
 function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment, isFullDetail?: boolean }) {
     const contentWrapper = useRef<HTMLDivElement>(null);
     const [ ocrModalShown, setOcrModalShown ] = useState(false);
+    const [ title, setTitle ] = useState(attachment.title);
     const [ textContent, setTextContent ] = useState<string | null>(null);
     const supportsOcr = attachment.role === "image" || attachment.role === "file";
 
@@ -154,6 +155,8 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
         if (attachment.role === "file") {
             attachment.getBlob().then(blob => setTextContent(blob?.content ?? null));
         }
+
+        setTitle(attachment.title);
     }
 
     useEffect(refresh, [ attachment ]);
@@ -197,13 +200,13 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                         {!isFullDetail ? (
                             <NoteLink
                                 notePath={attachment.ownerId}
-                                title={attachment.title}
+                                title={title}
                                 viewScope={{
                                     viewMode: "attachments",
                                     attachmentId: attachment.attachmentId
                                 }}
                             />
-                        ) : (attachment.title)}
+                        ) : title}
                     </h4>
                     <div className="attachment-details">
                         {t("attachment_detail_2.role_and_size", {
