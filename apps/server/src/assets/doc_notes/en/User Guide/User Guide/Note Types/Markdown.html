@@ -37,43 +37,50 @@
  >Basic HTML is also supported (e.g. collapsible blocks using <code spellcheck="false">&lt;details&gt;</code> and
     <code
     spellcheck="false">&lt;summary&gt;</code>).</li>
-      <li>Code blocks with syntax highlight. Note that the language must be specified
-        for syntax highlight to apply (e.g. <code spellcheck="false">```js</code>).</li>
-      <li
-     ><a class="reference-link" href="#root/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
-        </li>
-        <li><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>&nbsp;(both
-          inline and block)</li>
-        <li><a class="reference-link" href="#root/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
-          <code
-          spellcheck="false">```mermaid</code>
-        </li>
-        <li>
-          <p><a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
-            built-in Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-html">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
+      <li>Code blocks with syntax highlight.
+        <ul>
+          <li>The language must be specified for syntax highlight to be applied (e.g.
+            <code
+            spellcheck="false">```js</code>).</li>
+          <li>Code blocks will respect the text wrapping from the&nbsp;<a class="reference-link"
+            href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;section
+            in&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_4TIF1oA4VQRO">Options</a>.</li>
+        </ul>
+      </li>
+      <li><a class="reference-link" href="#root/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
+      </li>
+      <li><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>&nbsp;(both
+        inline and block)</li>
+      <li><a class="reference-link" href="#root/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
+        <code
+        spellcheck="false">```mermaid</code>
+      </li>
+      <li>
+        <p><a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
+          built-in Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-html">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
     &amp;nbsp;
 &lt;/section&gt;</code></pre>
-          <ul>
-            <li>These can also be quickly created via the <code spellcheck="false">/include</code> command
-              or via a dedicated keyboard shortcut (not assigned by default).</li>
-          </ul>
-        </li>
-        <li>
-          <p><a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
-            its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
-            <a
-            class="reference-link" href="#root/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-markdown">[[Hg8TS5ZOxti6]]</code></pre>
-        </li>
-        <li>
-          <p><a class="reference-link" href="#root/_help_AgjCISero73a">Footnotes</a>&nbsp;are
-            also supported via the corresponding Markdown syntax:</p><pre><code class="language-text-x-markdown">This is [^1], while this is [^2].
+        <ul>
+          <li>These can also be quickly created via the <code spellcheck="false">/include</code> command
+            or via a dedicated keyboard shortcut (not assigned by default).</li>
+        </ul>
+      </li>
+      <li>
+        <p><a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
+          its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
+          <a
+          class="reference-link" href="#root/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-markdown">[[Hg8TS5ZOxti6]]</code></pre>
+      </li>
+      <li>
+        <p><a class="reference-link" href="#root/_help_AgjCISero73a">Footnotes</a>&nbsp;are
+          also supported via the corresponding Markdown syntax:</p><pre><code class="language-text-x-markdown">This is [^1], while this is [^2].
 
 [^1]: the first footnote
 [^2]: the second footnote</code></pre>
-          <ul>
-            <li>These can also be quickly created using the <code spellcheck="false">/footnote</code> command.</li>
-          </ul>
-        </li>
+        <ul>
+          <li>These can also be quickly created using the <code spellcheck="false">/footnote</code> command.</li>
+        </ul>
+      </li>
 </ul>
 <h3>Links</h3>
 <p>Multiple types of links are supported:</p>
