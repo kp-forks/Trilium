@@ -89,7 +89,7 @@ export default function Markdown(props: TypeWidgetProps) {
     usePublishToc(props.noteContext, editorView, headings);
     useImageDrop(props.note, editorView);
     useTextCommands(props.parentComponent, editorView);
-    useSlashCommands(props.parentComponent, editorView);
+    useSlashCommands(props.parentComponent, editorView, props.note);
     useMarkdownKeymap(editorView);
 
     const ctx = useMemo<MarkdownContextValue>(
@@ -443,7 +443,7 @@ function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
  * Adds `/`-triggered autocomplete to the CodeMirror editor.
  * Typing `/` at the start of a line (or after whitespace) shows a menu of commands.
  */
-function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null) {
+function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null, note: FNote) {
     useEffect(() => {
         if (!editorView) return;
 
@@ -530,6 +530,31 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     });
                                 }
                             },
+                            {
+                                label: "/image",
+                                detail: "Upload an image attachment",
+                                apply(view, _completion, from, to) {
+                                    view.dispatch({ changes: { from, to } });
+
+                                    const input = document.createElement("input");
+                                    input.type = "file";
+                                    input.accept = "image/*";
+                                    input.onchange = async () => {
+                                        const file = input.files?.[0];
+                                        if (!file) return;
+
+                                        const result = await server.upload(
+                                            `notes/${note.noteId}/attachments/upload`,
+                                            file, undefined, "POST"
+                                        ) as { uploaded: boolean; url?: string };
+                                        if (!result?.uploaded || !result.url) return;
+
+                                        insertText(editorView!, `![${file.name}](${result.url})`);
+                                        editorView!.focus();
+                                    };
+                                    input.click();
+                                }
+                            },
                             ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
                                 label: `/${admonitionType}`,
                                 detail: `Insert ${admonitionType} admonition`,
@@ -549,7 +574,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
 
             editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
         });
-    }, [editorView, parentComponent]);
+    }, [editorView, parentComponent, note.noteId]);
 }
 //#endregion
 
