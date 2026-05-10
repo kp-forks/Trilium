@@ -395,10 +395,10 @@ export function checkImageAttachments(note: BNote, content: string) {
 
     const patterns = note.isMarkdown()
         ? [
-            // ![...](api/attachments/{id}/image/...)
-            /!\[[^\]]*\]\([^)]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // ![...](api/attachments/{id}/image/...) or similar markdown image syntax
+            /api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
             // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
-            /\[[^\]]*\]\([^)]+attachmentId=([a-zA-Z0-9_]+)/g
+            /attachmentId=([a-zA-Z0-9_]+)/g
         ]
         : [
             // <img src="api/attachments/{id}/image/...">
@@ -550,7 +550,7 @@ function findInternalLinks(content: string, foundLinks: FoundLink[]) {
 }
 
 function findMarkdownImageLinks(content: string, foundLinks: FoundLink[]) {
-    const re = /!\[[^\]]*\]\([^)]*api\/images\/([a-zA-Z0-9_]+)\//g;
+    const re = /api\/images\/([a-zA-Z0-9_]+)\//g;
     let match;
 
     while ((match = re.exec(content))) {
@@ -562,8 +562,8 @@ function findMarkdownImageLinks(content: string, foundLinks: FoundLink[]) {
 }
 
 function findMarkdownInternalLinks(content: string, foundLinks: FoundLink[]) {
-    // [text](#root/.../noteId)
-    const hashRootRe = /\[[^\]]*\]\(#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)[^)]*\)/g;
+    // [text](#root/.../noteId) or [text](#root/.../noteId?query)
+    const hashRootRe = /#root[a-zA-Z0-9_/]*\/([a-zA-Z0-9_]+)/g;
     let match;
 
     while ((match = hashRootRe.exec(content))) {
