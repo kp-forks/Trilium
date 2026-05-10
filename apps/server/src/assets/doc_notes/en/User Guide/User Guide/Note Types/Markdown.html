@@ -195,22 +195,28 @@
   </ul>
 </aside>
 <h2>Import/export</h2>
+<h3>Import</h3>
+<p>By default, when importing a single Markdown file it automatically gets
+  converted to a&nbsp;<a class="reference-link" href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;note.
+  To avoid that and have it imported as a Markdown note instead:</p>
 <ul>
-  <li>By default, when importing a single Markdown file it automatically gets
-    converted to a&nbsp;<a class="reference-link" href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;note.
-    To avoid that and have it imported as a Markdown note instead:
-    <ul>
-      <li>Right click the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and
-        select <em>Import into note</em>.</li>
-      <li>Select the file normally.</li>
-      <li>Uncheck <em>Import HTML, Markdown and TXT as text notes if it's unclear from the metadata</em>.</li>
-    </ul>
-  </li>
-  <li>When exporting Markdown files, the extension is preserved and the content
-    remains the same as in the source view.</li>
-  <li>Once exported as a Trilium ZIP, the ZIP will preserve the Markdown type
-    without converting to text notes thanks to the meta-information in it.</li>
+  <li>Right click the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and
+    select <em>Import into note</em>.</li>
+  <li>Select the file normally.</li>
+  <li>Uncheck <em>Import HTML, Markdown and TXT as text notes if it's unclear from the metadata</em>.</li>
 </ul>
+<p>When importing a Trilium ZIP, it will preserve the Markdown type without
+  converting to text notes thanks to the meta-information in it.</p>
+<h3>Exporting</h3>
+<p>When exporting Markdown files, the extension is preserved and the content
+  remains the same as in the source view (with some small exceptions such
+  as handling of attachments).</p>
+<p>When exporting Markdown files as ZIP, choosing HTML or Markdown as the
+  export format makes no difference as that only affects&nbsp;<a class="reference-link"
+  href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;notes.</p>
+<p>If the Markdown note contains attachments, a ZIP export will rewrite the
+  links to attachments so that they are replaced with a relative path to
+  the attachment. On import, the links are re-written back.</p>
 <h2>Conversion between text notes and Markdown notes</h2>
 <p>Currently there is no built-in functionality to convert a&nbsp;<a class="reference-link"
   href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;note into a Markdown note or vice-versa.

@@ -298,9 +298,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
         if (attachmentMeta && attachmentMeta.attachmentId && noteMeta.noteId) {
             return {
                 attachmentId: getNewAttachmentId(attachmentMeta.attachmentId),
+                attachmentTitle: attachmentMeta.title,
                 noteId: getNewNoteId(noteMeta.noteId)
             };
-        } 
+        }
         // don't check for noteMeta since it's not mandatory for notes
         return {
             noteId: getNoteId(noteMeta, absUrl)
@@ -448,9 +449,9 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Bu
             const target = getEntityIdFromRelativeUrl(url, filePath);
 
             if (target.attachmentId) {
-                return `![${alt}](api/attachments/${target.attachmentId}/image/image)`;
+                return `![${alt}](api/attachments/${target.attachmentId}/image/${encodeURIComponent(target.attachmentTitle || "image")})`;
             } else if (target.noteId) {
-                return `![${alt}](api/images/${target.noteId}/image)`;
+                return `![${alt}](api/images/${target.noteId}/${path.basename(url)})`;
             }
             return match;
         });

@@ -141,12 +141,23 @@ There are two ways to create a Markdown note:
 
 ## Import/export
 
-*   By default, when importing a single Markdown file it automatically gets converted to a <a class="reference-link" href="Text.md">Text</a> note. To avoid that and have it imported as a Markdown note instead:
-    *   Right click the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Note%20Tree.md">Note Tree</a> and select _Import into note_.
-    *   Select the file normally.
-    *   Uncheck _Import HTML, Markdown and TXT as text notes if it's unclear from the metadata_.
-*   When exporting Markdown files, the extension is preserved and the content remains the same as in the source view.
-*   Once exported as a Trilium ZIP, the ZIP will preserve the Markdown type without converting to text notes thanks to the meta-information in it.
+### Import
+
+By default, when importing a single Markdown file it automatically gets converted to a <a class="reference-link" href="Text.md">Text</a> note. To avoid that and have it imported as a Markdown note instead:
+
+*   Right click the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Note%20Tree.md">Note Tree</a> and select _Import into note_.
+*   Select the file normally.
+*   Uncheck _Import HTML, Markdown and TXT as text notes if it's unclear from the metadata_.
+
+When importing a Trilium ZIP, it will preserve the Markdown type without converting to text notes thanks to the meta-information in it.
+
+### Exporting
+
+When exporting Markdown files, the extension is preserved and the content remains the same as in the source view (with some small exceptions such as handling of attachments).
+
+When exporting Markdown files as ZIP, choosing HTML or Markdown as the export format makes no difference as that only affects <a class="reference-link" href="Text.md">Text</a> notes.
+
+If the Markdown note contains attachments, a ZIP export will rewrite the links to attachments so that they are replaced with a relative path to the attachment. On import, the links are re-written back.
 
 ## Conversion between text notes and Markdown notes
 
