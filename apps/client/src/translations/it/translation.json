@@ -673,7 +673,8 @@
     "other": "Altro",
     "quickSearch": "concentrati sull'input della ricerca rapida",
     "inPageSearch": "ricerca all'interno della pagina",
-    "editShortcuts": "Modifica scorciatoie da tastiera"
+    "editShortcuts": "Modifica scorciatoie da tastiera",
+    "toggleArchivedNotes": "Mostra/nascondi le note archiviate"
   },
   "i18n": {
     "saturday": "Sabato",
