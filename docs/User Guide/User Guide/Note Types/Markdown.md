@@ -89,6 +89,13 @@ The Markdown notes share some of the keyboard shortcuts from <a class="referenc
 *   _Insert date/time_ (<kbd spellcheck="false">Alt</kbd>+<kbd spellcheck="false">T</kbd>) which respects the same formatting as text notes.
 *   _Include note_ (not assigned by default), which triggers the same dialog to insert notes as the one for text notes.
 
+In addition, the following formatting keyboard shortcuts are available:
+
+*   <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">B</kbd> to toggle **bold**.
+*   <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">I</kbd> to toggle _italic_.
+*   <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">M</kbd> to wrap the current selection in an inline math (`$`).
+*   <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">Shift</kbd>+<kbd spellcheck="false">X</kbd> to toggle ~~strikethrough~~.
+
 ### Images & attachments
 
 Images can be inserted into the document in four different methods:
