@@ -1,5 +1,5 @@
 {
-  "about": {   
+  "about": {
     "version_label": "Version:",
     "version": "{{appVersion}} (database: {{dbVersion}}, sync protocol: {{syncVersion}})",
     "build_info": "Build: {{buildDate}}, revision: <buildRevision />",
@@ -755,7 +755,8 @@
     "import_files": "Import files",
     "export_note": "Export note",
     "delete_note": "Delete note",
-    "print_note": "Print note",
+    "print_note": "Print note...",
+    "print_or_export_to_pdf": "Print/export to PDF...",
     "view_revisions": "Note revisions...",
     "save_revision": "Save revision",
     "save_named_revision": "Save named revision...",
