@@ -84,12 +84,12 @@ export class AnthropicProvider extends BaseProvider {
 
     private anthropic: AnthropicSDKProvider;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, baseURL?: string) {
         super();
         if (!apiKey) {
             throw new Error("API key is required for Anthropic provider");
         }
-        this.anthropic = createAnthropic({ apiKey });
+        this.anthropic = createAnthropic({ apiKey, ...(baseURL && { baseURL }) });
     }
 
     protected createModel(modelId: string) {
