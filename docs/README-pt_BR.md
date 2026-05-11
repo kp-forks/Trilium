@@ -58,9 +58,9 @@ Nossa documentação está disponível em vários formatos:
 
 ### Links rápidos
 - [Getting Started Guide](https://docs.triliumnotes.org/)
-- [Installation Instructions](https://docs.triliumnotes.org/user-guide/setup)
-- [Docker
-  Setup](https://docs.triliumnotes.org/user-guide/setup/server/installation/docker)
+- [Instruções de instalação](https://docs.triliumnotes.org/user-guide/setup)
+- [Configuração do
+  docker](https://docs.triliumnotes.org/user-guide/setup/server/installation/docker)
 - [Upgrading
   TriliumNext](https://docs.triliumnotes.org/user-guide/setup/upgrading)
 - [Basic Concepts and
@@ -68,7 +68,7 @@ Nossa documentação está disponível em vários formatos:
 - [Patterns of Personal Knowledge
   Base](https://docs.triliumnotes.org/user-guide/misc/patterns-of-personal-knowledge)
 
-## 🎁 Features
+## 🎁 Recursos
 
 * Notes can be arranged into arbitrarily deep tree. Single note can be placed
   into multiple places in the tree (see
