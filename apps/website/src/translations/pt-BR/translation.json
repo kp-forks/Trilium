@@ -201,6 +201,7 @@
     "resources": {
         "title": "Recursos",
         "download": "Baixar",
-        "website": "Site"
+        "website": "Site",
+        "icon_packs": "Pacote de ícones"
     }
 }
