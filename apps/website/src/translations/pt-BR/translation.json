@@ -46,7 +46,7 @@
         "code_description": "Amostras grandes de código-fonte ou scripts usam um editor dedicado, com realce de sintaxe para muitas linguagens de programação e diversos temas de cores.",
         "file_title": "Notas de arquivo",
         "file_description": "Incorpore arquivos multimídia como PDFs, imagens e vídeos, com uma visualização dentro do aplicativo.",
-        "canvas_title": "Canvas",
+        "canvas_title": "Tela",
         "canvas_description": "Organize formas, imagens e texto em um canvas infinito, usando a mesma tecnologia por trás do excalidraw.com. Ideal para diagramas, esboços e planejamento visual.",
         "mermaid_title": "Diagramas Mermaid",
         "mermaid_description": "Crie diagramas como fluxogramas, diagramas de classe e de sequência, gráficos de Gantt e muitos outros, usando a sintaxe Mermaid.",
@@ -202,6 +202,7 @@
         "title": "Recursos",
         "download": "Baixar",
         "website": "Site",
-        "icon_packs": "Pacote de ícones"
+        "icon_packs": "Pacote de ícones",
+        "icon_packs_intro": "Amplie a seleção de ícones disponíveis para suas anotações usando um pacote de ícones. Para obter mais informações sobre pacotes de ícones, consulte a <DocumentationLink>documentação oficial</DocumentationLink>."
     }
 }
