@@ -33,13 +33,13 @@ interface Theme {
 }
 
 const MODERN_THEMES: Theme[] = [
-    { val: "next", title: t("theme.triliumnext"), icon: "bx bx-sun bx-flip-horizontal" },
+    { val: "next", title: t("theme.triliumnext"), icon: "bx bx-brightness-half" },
     { val: "next-light", title: t("theme.triliumnext-light"), icon: "bx bx-sun" },
     { val: "next-dark", title: t("theme.triliumnext-dark"), icon: "bx bx-moon" }
 ];
 
 const LEGACY_THEMES: Theme[] = [
-    { val: "auto", title: t("theme.auto_theme"), icon: "bx bx-sun bx-flip-horizontal" },
+    { val: "auto", title: t("theme.auto_theme"), icon: "bx bx-brightness-half" },
     { val: "light", title: t("theme.light_theme"), icon: "bx bx-sun" },
     { val: "dark", title: t("theme.dark_theme"), icon: "bx bx-moon" }
 ];
