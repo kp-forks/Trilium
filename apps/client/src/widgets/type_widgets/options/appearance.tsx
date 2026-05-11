@@ -46,13 +46,13 @@ const THEME_FAMILIES: ThemeFamily[] = [
     {
         key: "modern",
         title: t("theme.modern_themes"),
-        icon: "bx bx-palette",
+        icon: "bx bx-star",
         schemes: { system: "next", light: "next-light", dark: "next-dark" }
     },
     {
         key: "legacy",
         title: t("theme.legacy_themes"),
-        icon: "bx bx-palette",
+        icon: "bx bx-history",
         schemes: { system: "auto", light: "light", dark: "dark" }
     }
 ];
