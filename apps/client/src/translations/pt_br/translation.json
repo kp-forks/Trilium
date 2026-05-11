@@ -32,7 +32,7 @@
     },
     "bundle-error": {
       "title": "Falha para carregar o script customizado",
-      "message": "O script da nota com ID \"{{id}}\", intitulada \"{{title}}\", não pôde ser executado devido a:\n\n{{message}}"
+      "message": "O script não pôde ser executado devido a:\n\n{{message}}"
     },
     "widget-list-error": {
       "title": "Falha ao obter a lista de widgets do servidor"
@@ -180,7 +180,8 @@
     "quickSearch": "focar no campo de pesquisa rápida",
     "inPageSearch": "pesquisa na página",
     "title": "Folha de Dicas",
-    "editShortcuts": "Editar atalhos de teclado"
+    "editShortcuts": "Editar atalhos de teclado",
+    "toggleArchivedNotes": "mostrar/ocultar notas arquivadas"
   },
   "import": {
     "importIntoNote": "Importar para a nota",
