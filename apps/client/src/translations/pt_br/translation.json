@@ -4,10 +4,21 @@
     "theme_group_light": "Temas claros",
     "theme_group_dark": "Temas escuros",
     "word_wrapping": "Quebra automática de linhas",
-    "copy_title": "Copiar para a área de transferência"
+    "copy_title": "Copiar para a área de transferência",
+    "tab_width_unit": "espaços"
   },
   "about": {
-    "data_directory": "Diretório de dados:"
+    "data_directory": "Diretório de dados:",
+    "contributor_roles": {
+      "original-dev": "Desenvolvedor original"
+    },
+    "contributor_full_list": "Veja toda a comunidade",
+    "github_tooltip": "Reportar bugs, sugerir recursos, ou contribuir no github",
+    "license_tooltip": "Ver licença",
+    "donate": "Doar",
+    "donate_tooltip": "Doar para apoiar esse projeto",
+    "version_label": "Versão:",
+    "contributors_label": "Contribuidores:"
   },
   "toast": {
     "critical-error": {
@@ -94,7 +105,8 @@
     "notes_to_be_deleted": "As seguintes notas serão excluídas ({{notesCount}})",
     "no_note_to_delete": "Nenhuma nota será excluída (apenas os clones).",
     "broken_relations_to_be_deleted": "As seguintes relações serão quebradas e excluídas ({{ relationCount}})",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "table_relation": "Relação"
   },
   "export": {
     "export_note_title": "Exportar nota",
@@ -778,7 +790,9 @@
     "export_as_image": "Exportar como imagem",
     "export_as_image_png": "PNG (raster)",
     "export_as_image_svg": "SVG (vetorial)",
-    "note_map": "Mapa de notas"
+    "note_map": "Mapa de notas",
+    "word_wrap_on": "Ligado",
+    "word_wrap_off": "Desligado"
   },
   "protected_session_status": {
     "inactive": "Clique para entrar na sessão protegida",
@@ -963,7 +977,8 @@
     "fast_search_description": "A opção de pesquisa rápida desabilita a pesquisa de texto completo do conteúdo de nota, o que pode acelerar a pesquisa em grandes bancos de dados.",
     "include_archived_notes_description": "As notas arquivadas são por padrão excluídas dos resultados da pesquisa, com esta opção elas serão incluídas.",
     "debug_description": "A depuração irá imprimir informações adicionais no console para ajudar na depuração de consultas complexas",
-    "view_options": "Ver opções:"
+    "view_options": "Ver opções:",
+    "option": "Opção"
   },
   "similar_notes": {
     "title": "Notas Similares",
@@ -1169,7 +1184,8 @@
     "layout-vertical-title": "Vertical",
     "layout-horizontal-title": "Horizontal",
     "layout-vertical-description": "barra de atalho está a esquerda (padrão)",
-    "layout-horizontal-description": "barra de atalho está abaixo da barra de abas, a barra de abas agora tem a largura total."
+    "layout-horizontal-description": "barra de atalho está abaixo da barra de abas, a barra de abas agora tem a largura total.",
+    "modern_themes": "Moderno"
   },
   "note_launcher": {
     "this_launcher_doesnt_define_target_note": "Este atalho não define uma nota destino."
@@ -1224,7 +1240,8 @@
     "unit": "caracteres"
   },
   "code-editor-options": {
-    "title": "Editor"
+    "title": "Editor",
+    "tab_width_unit": "espaços"
   },
   "code_mime_types": {
     "title": "Tipos MIME disponíveis no dropdown",
@@ -1368,7 +1385,9 @@
     "date-and-time": "Data & hora",
     "path": "Caminho",
     "database_backed_up_to": "Backup do banco de dados criado em {{backupFilePath}}",
-    "no_backup_yet": "ainda não existe nenhum backup"
+    "no_backup_yet": "ainda não existe nenhum backup",
+    "download": "Baixar",
+    "title": "Backup"
   },
   "note_types": {
     "relation-map": "Map de Relação",
@@ -1392,7 +1411,9 @@
     "collections": "Coleções",
     "text": "Texto",
     "code": "Código",
-    "saved-search": "Pesquisa Salva"
+    "saved-search": "Pesquisa Salva",
+    "spreadsheet": "Planilha",
+    "markdown": "Markdown"
   },
   "protect_note": {
     "toggle-on": "Proteger a nota",
@@ -1847,7 +1868,8 @@
     "set_password_heading": "Definir Senha",
     "set_password": "Definir Senha",
     "password_mismatch": "As novas senhas não são iguais.",
-    "password_changed_success": "A senha foi alterada. O Trilium será recarregado após você pressionar OK."
+    "password_changed_success": "A senha foi alterada. O Trilium será recarregado após você pressionar OK.",
+    "cancel": "Cancelar"
   },
   "multi_factor_authentication": {
     "title": "Autenticação Multifator",
@@ -1986,7 +2008,8 @@
     "execute_script": "Executar script",
     "execute_script_description": "Esta nota é uma nota de script. Clique para executar o script.",
     "execute_sql": "Executar SQL",
-    "execute_sql_description": "Esta nota é uma nota SQL. Clique para executar a consulta SQL."
+    "execute_sql_description": "Esta nota é uma nota SQL. Clique para executar a consulta SQL.",
+    "save_status_unsaved": "Não salvo"
   },
   "status_bar": {
     "language_title": "Alterar idioma do conteúdo",
@@ -2011,7 +2034,9 @@
     "note_paths_many": "{{count}} caminhos",
     "note_paths_other": "{{count}} caminhos",
     "note_paths_title": "Caminhos da nota",
-    "code_note_switcher": "Alterar modo de idioma"
+    "code_note_switcher": "Alterar modo de idioma",
+    "tab_width_style_spaces": "Espaços",
+    "tab_width_style_tabs": "Abas"
   },
   "attributes_panel": {
     "title": "Atributos da nota"
@@ -2021,5 +2046,87 @@
     "empty_button": "Ocultar o painel",
     "toggle": "Alternar painel direito",
     "custom_widget_go_to_source": "Ir para o código-fonte"
+  },
+  "active_content_badges": {
+    "menu_run_disabled": "Manualmente",
+    "menu_run_daily": "Diariamente"
+  },
+  "media": {
+    "loop": "Loop",
+    "rotate": "Rotacionar"
+  },
+  "mermaid": {
+    "sample_flowchart": "Fluxograma",
+    "sample_class": "Classe",
+    "sample_sequence": "Sequência",
+    "sample_state": "Estado",
+    "sample_mindmap": "Mapa mental",
+    "sample_architecture": "Arquitetura",
+    "sample_block": "Bloquear",
+    "sample_radar": "Radar",
+    "sample_requirement": "Requisitos",
+    "sample_timeline": "Linha do tempo"
+  },
+  "llm_chat": {
+    "send": "Enviar",
+    "sending": "Enviando...",
+    "sources": "Fonte",
+    "thinking": "Pensando...",
+    "result": "Resultado",
+    "error": "Erro",
+    "tool_error": "Falhou",
+    "stop": "Parar"
+  },
+  "llm": {
+    "provider_name": "Nome",
+    "provider_type": "Provedor",
+    "actions": "Ações",
+    "delete_provider": "Deletar",
+    "cancel": "Cancelar"
+  },
+  "mind-map": {
+    "summary": "Sumário"
+  },
+  "ocr": {
+    "processing": "Processando..."
+  },
+  "search": {
+    "title": "Pesquisar"
+  },
+  "database": {
+    "title": "Banco de dados"
+  },
+  "text_editor": {
+    "title": "Editor"
+  },
+  "print_preview": {
+    "close": "Fechar",
+    "orientation": "Orientação",
+    "portrait": "Retrato",
+    "landscape": "Paisagem",
+    "scale": "Escala",
+    "margins": "Margem",
+    "margins_default": "Padrão",
+    "margins_minimum": "Mínimo",
+    "margins_custom": "Personalizado",
+    "margin_right": "Direita",
+    "margin_top": "Cima",
+    "margin_bottom": "Baixo",
+    "margin_left": "Esquerda",
+    "page_ranges": "Páginas",
+    "destination": "Destino",
+    "destination_default": "Padrão"
+  },
+  "revisions": {
+    "delete_button": "Deletar",
+    "download_button": "Baixar",
+    "source_auto": "Salvamento automático",
+    "source_restore": "Restaurar",
+    "date_today": "Hoje",
+    "date_yesterday": "Ontem"
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar"
   }
 }
