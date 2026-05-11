@@ -83,17 +83,16 @@ Dokümantasyonumuz birden fazla formatta mevcuttur:
   (not yükseltme)
 * Sorunsuz [not
   versiyonlama](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
-* Note
-  [attributes](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
-  can be used for note organization, querying and advanced
-  [scripting](https://docs.triliumnotes.org/user-guide/scripts)
+* [Özellikler](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
+  notları düzenlemek, sorgulamak ve gelişmiş [komut dosyası
+  oluşturma](https://docs.triliumnotes.org/user-guide/scripts) işlemleri için
+  kullanılabilir
 * Arayüz; İngilizce, Almanca, İspanyolca, Fransızca, Rumence ve Çince
   (basitleştirilmiş ve geleneksel) dillerinde mevcuttur
-* Direct [OpenID and TOTP
-  integration](https://docs.triliumnotes.org/user-guide/setup/server/mfa) for
-  more secure login
-* [Synchronization](https://docs.triliumnotes.org/user-guide/setup/synchronization)
-  with self-hosted sync server
+* Daha güvenli oturum açma için [OpenID ve TOTP
+  entegrasyonu](https://docs.triliumnotes.org/user-guide/setup/server/mfa)
+* Kendi barındırdığınız senkronizasyon sunucusuyla
+  [senkronizasyon](https://docs.triliumnotes.org/user-guide/setup/synchronization)
   * there are [3rd party services for hosting synchronisation
     server](https://docs.triliumnotes.org/user-guide/setup/server/cloud-hosting)
 * [Sharing](https://docs.triliumnotes.org/user-guide/advanced-usage/sharing)
