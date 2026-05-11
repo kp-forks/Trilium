@@ -1297,6 +1297,7 @@
     "modern_themes": "Modern",
     "legacy_themes": "Legacy",
     "custom_themes": "Custom",
+    "recommended": "Recommended",
     "layout": "Layout",
     "layout-vertical-title": "Vertical",
     "layout-horizontal-title": "Horizontal",

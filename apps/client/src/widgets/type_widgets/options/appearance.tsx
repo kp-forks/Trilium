@@ -148,6 +148,7 @@ function UserInterface() {
                             icon={th.icon}
                             selected={theme === th.val}
                             onClick={() => setTheme(th.val)}
+                            badges={th.val === "next" ? [{ text: t("theme.recommended") }] : undefined}
                         >
                             {th.title}
                         </FormListItem>
