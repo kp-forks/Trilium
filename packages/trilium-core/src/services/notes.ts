@@ -823,7 +823,7 @@ function saveAttachments(note: BNote, content: string) {
 }
 
 
-export function saveLinks(note: BNote, content: string | Buffer) {
+export function saveLinks(note: BNote, content: string | Uint8Array) {
     if ((note.type !== "text" && note.type !== "relationMap" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
         return {
             forceFrontendReload: false,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rewriteMarkdownContentLinks } from "./rewrite_links.js";
-import type NoteMeta from "../meta/note_meta.js";
+import type { NoteMeta } from "../../meta.js";
 
 function buildNoteMeta(attachments: Array<{ attachmentId: string; dataFileName: string }>): NoteMeta {
     return {
