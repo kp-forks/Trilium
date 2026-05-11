@@ -39,7 +39,7 @@
     "better-sqlite3": "12.9.0",
     "html-to-text": "9.0.5",
     "i18next-fs-backend": "2.6.3",
-    "i18next": "26.0.5",
+    "i18next": "26.0.8",
     "js-yaml": "4.1.1",
     "unpdf": "1.6.0"
   },
@@ -103,7 +103,7 @@
     "is-animated": "2.0.2",
     "is-svg": "6.1.0",
     "jimp": "1.6.1",
-    "marked": "18.0.2",
+    "marked": "18.0.3",
     "mime-types": "3.0.2",
     "multer": "2.1.1",
     "normalize-strings": "1.1.1",

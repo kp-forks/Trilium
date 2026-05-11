@@ -18,6 +18,7 @@ import treeService from "../tree.js";
 import markdownService from "./markdown.js";
 import mimeService from "./mime.js";
 import { AttributeMeta, NoteMeta } from "../../meta.js";
+import { isMarkdownCodeNote } from "../export/rewrite_links.js";
 import { sanitizeHtml } from "../sanitizer.js";
 
 interface MetaFile {
@@ -293,6 +294,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         if (attachmentMeta && attachmentMeta.attachmentId && noteMeta.noteId) {
             return {
                 attachmentId: getNewAttachmentId(attachmentMeta.attachmentId),
+                attachmentTitle: attachmentMeta.title,
                 noteId: getNewNoteId(noteMeta.noteId)
             };
         }
@@ -401,6 +403,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
             content = processTextNoteContent(content, noteTitle, filePath, noteMeta);
         }
 
+        if (type === "code" && isMarkdownCodeNote(mime) && typeof content === "string") {
+            content = processMarkdownCodeNoteContent(content, filePath);
+        }
+
         if (type === "relationMap" && noteMeta && typeof content === "string") {
             const relationMapLinks = (noteMeta.attributes || []).filter((attr) => attr.type === "relation" && attr.name === "relationMapLink");
 
@@ -410,6 +416,62 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
                 content = content.replace(new RegExp(link.value, "g"), getNewNoteId(link.value));
             }
         }
+
+        return content;
+    }
+
+    /**
+     * Rewrites relative file paths in markdown code notes back to Trilium internal
+     * URLs (counterpart to `rewriteMarkdownContentLinks` in the export).
+     */
+    function processMarkdownCodeNoteContent(content: string, filePath: string) {
+        function isUrlAbsolute(url: string) {
+            return /^(?:[a-z]+:)?\/\//i.test(url);
+        }
+
+        // Image links: ![alt](relative/path)
+        content = content.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+            try {
+                url = decodeURIComponent(url).trim();
+            } catch {
+                return match;
+            }
+
+            if (isUrlAbsolute(url) || url.startsWith("api/")) {
+                return match;
+            }
+
+            const target = getEntityIdFromRelativeUrl(url, filePath);
+
+            if (target.attachmentId) {
+                return `![${alt}](api/attachments/${target.attachmentId}/image/${encodeURIComponent(target.attachmentTitle || "image")})`;
+            } else if (target.noteId) {
+                return `![${alt}](api/images/${target.noteId}/${basename(url)})`;
+            }
+            return match;
+        });
+
+        // Non-image links: [text](relative/path)
+        content = content.replace(/(?<!!)\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
+            try {
+                url = decodeURIComponent(url).trim();
+            } catch {
+                return match;
+            }
+
+            if (isUrlAbsolute(url) || url.startsWith("#") || url.startsWith("api/")) {
+                return match;
+            }
+
+            const target = getEntityIdFromRelativeUrl(url, filePath);
+
+            if (target.attachmentId) {
+                return `[${text}](#root/${target.noteId}?viewMode=attachments&attachmentId=${target.attachmentId})`;
+            } else if (target.noteId) {
+                return `[${text}](#root/${target.noteId})`;
+            }
+            return match;
+        });
 
         return content;
     }
@@ -556,9 +618,13 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         }
     }
 
+    const zipProvider = getZipProvider();
+
+    // Detect filename encoding once for the whole ZIP (e.g. GBK for Chinese Windows ZIPs)
+    const filenameEncoding = await zipProvider.detectFilenameEncoding(fileBuffer);
+
     // we're running two passes in order to obtain critical information first (meta file and root)
     const topLevelItems = new Set<string>();
-    const zipProvider = getZipProvider();
 
     await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
@@ -573,7 +639,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         const firstSlash = filePath.indexOf("/");
         const topLevelPath = (firstSlash !== -1 ? filePath.substring(0, firstSlash) : filePath);
         topLevelItems.add(topLevelPath);
-    });
+    }, filenameEncoding);
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
 
@@ -587,7 +653,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         }
 
         taskContext.increaseProgressCount();
-    });
+    }, filenameEncoding);
 
     for (const noteId of createdNoteIds) {
         const note = becca.getNote(noteId);

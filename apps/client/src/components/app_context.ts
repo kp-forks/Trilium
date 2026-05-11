@@ -180,6 +180,7 @@ export type CommandMappings = {
     duplicateSubtree: ContextMenuCommandData;
     expandSubtree: ContextMenuCommandData;
     collapseSubtree: ContextMenuCommandData;
+    toggleArchivedNotes: CommandData;
     sortChildNotes: ContextMenuCommandData;
     copyNotePathToClipboard: ContextMenuCommandData;
     recentChangesInSubtree: ContextMenuCommandData;

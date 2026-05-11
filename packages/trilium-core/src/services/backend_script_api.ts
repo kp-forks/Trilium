@@ -213,9 +213,10 @@ export interface Api {
     logSpacedUpdates: Record<string, SpacedUpdate>;
 
     /**
-     * Log given message to trilium logs and log pane in UI
+     * Log given message to trilium logs and log pane in UI.
+     * Accepts multiple arguments which are joined with spaces, similar to `console.log`.
      */
-    log(message: string | object): void;
+    log(...args: unknown[]): void;
 
     /**
      * Returns root note of the calendar.
@@ -560,8 +561,8 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
 
     const logInstance = getLog();
     const sql = getSql();
-    this.log = (rawMessage) => {
-        const message = formatLogMessage(rawMessage);
+    this.log = (...rawMessages) => {
+        const message = formatLogMessage(rawMessages);
         logInstance.info(message);
 
         if (!this.startNote) {

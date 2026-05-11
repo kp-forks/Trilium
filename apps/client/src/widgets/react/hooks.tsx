@@ -1266,6 +1266,12 @@ export function useChildNotes(parentNoteId: string | undefined) {
         refresh();
     }, [ refresh ]);
 
+    // Swap to fresh FNote refs after a full froca reload (e.g. entering a protected session
+    // clears the cache and creates new instances — old refs are orphaned with stale titles).
+    useTriliumEvent("frocaReloaded", () => {
+        refresh();
+    });
+
     // Refresh on branch changes.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (parentNoteId && loadResults.getBranchRows().some(branch => branch.parentNoteId === parentNoteId)) {

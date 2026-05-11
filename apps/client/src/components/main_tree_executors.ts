@@ -1,12 +1,12 @@
-import appContext, { type CommandListenerData, type EventData } from "./app_context.js";
 import branchService from "../services/branches.js";
 import clipboard from "../services/clipboard.js";
 import froca from "../services/froca.js";
 import hoistedNoteService from "../services/hoisted_note.js";
 import noteCreateService from "../services/note_create.js";
-import protectedSessionHolder from "../services/protected_session_holder.js";
 import protectedSessionService from "../services/protected_session.js";
+import protectedSessionHolder from "../services/protected_session_holder.js";
 import treeService from "../services/tree.js";
+import appContext, { type CommandListenerData, type EventData } from "./app_context.js";
 import Component from "./component.js";
 
 /**
@@ -84,7 +84,7 @@ export default class MainTreeExecutors extends Component {
         await noteCreateService.createNote(parentNotePath, {
             target: "after",
             targetBranchId: node.data.branchId,
-            isProtected: isProtected,
+            isProtected,
             saveSelection: false
         });
     }
@@ -174,5 +174,9 @@ export default class MainTreeExecutors extends Component {
         const ancestorNoteId = noteId ?? node?.data.noteId;
         if (!ancestorNoteId) return;
         this.triggerCommand("showRecentChanges", { ancestorNoteId });
+    }
+
+    async toggleArchivedNotesCommand(){
+        await this.tree?.toggleArchivedNotes();
     }
 }

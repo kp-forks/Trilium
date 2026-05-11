@@ -21,7 +21,7 @@ There are two options, both involving access to the device that is running your 
 1.  Access the [database](../../../Advanced%20Usage/Database.md) file in the [data directory](../../Data%20directory.md). Open the `document.db` file with an SQLite client (e.g., [DB Browser](https://sqlitebrowser.org/)).
 2.  Execute the following queries:
     
-    ```trilium
+    ```
     UPDATE options SET value = '77/twC5O00cuQgNC63VK32qOKKYwj21ev3jZDXoytVU=' WHERE name = 'passwordVerificationSalt';
     UPDATE options SET value = '710BMasZCAgibzIc07X4P9Q4TeBd4ONnqJOho+pWcBM=' WHERE name = 'passwordDerivedKeySalt';
     UPDATE options SET value = 'Eb8af1/T57b89lCRuS97tPEl4CwxsAWAU7YNJ77oY+s=' WHERE name = 'passwordVerificationHash';

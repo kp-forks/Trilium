@@ -20,7 +20,6 @@ import BRevision from "./brevision.js";
 import { getLog } from "../../services/log.js";
 import { getSql } from "../../services/sql/index.js";
 import { formatDownloadTitle, isStringNote, normalize, randomString, replaceAll } from "../../services/utils/index.js";
-import scriptService from "../../services/script.js";
 
 const LABEL = "label";
 const RELATION = "relation";
@@ -285,6 +284,11 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return ["code", "file", "render"].includes(this.type) && this.mime === "text/html";
     }
 
+    /** @returns true if this note is a Markdown code note */
+    isMarkdown() {
+        return this.type === "code" && (this.mime === "text/markdown" || this.mime === "text/x-markdown" || this.mime === "text/x-gfm");
+    }
+
     /** @returns true if this note is an image */
     isImage() {
         return this.type === "image" || (this.type === "file" && this.mime?.startsWith("image/"));
@@ -323,6 +327,9 @@ class BNote extends AbstractBeccaEntity<BNote> {
      * @returns the return value of the executed script
      */
     executeScript() {
+        // Lazy require to avoid circular dependency (script.ts imports BNote as a type).
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const scriptService = require("../../services/script.js").default;
         return scriptService.executeNote(this, { originEntity: this });
     }
 
@@ -800,6 +807,9 @@ class BNote extends AbstractBeccaEntity<BNote> {
         this.__attributeCache = null;
         this.__inheritableAttributeCache = null;
         this.__ancestorCache = null;
+
+        // Mark only this note's flat text as dirty for incremental index update
+        this.becca.dirtyNoteFlatText(this.noteId);
     }
 
     invalidateSubTree(path: string[] = []) {

@@ -46,6 +46,11 @@ class BrowserZipArchive implements ZipArchive {
 }
 
 export default class BrowserZipProvider implements ZipProvider {
+    async detectFilenameEncoding(_buffer: Uint8Array): Promise<string> {
+        // fflate handles filename decoding internally; no additional detection needed.
+        return "utf-8";
+    }
+
     createZipArchive(): ZipArchive {
         return new BrowserZipArchive();
     }
@@ -56,7 +61,8 @@ export default class BrowserZipProvider implements ZipProvider {
 
     readZipFile(
         buffer: Uint8Array,
-        processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>
+        processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>,
+        _filenameEncoding?: string
     ): Promise<void> {
         return new Promise<void>((res, rej) => {
             unzip(buffer, async (err, files) => {
