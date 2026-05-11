@@ -112,7 +112,8 @@
     "header": {
         "get-started": "Primeiros passos",
         "documentation": "Documentação",
-        "support-us": "Apoie-nos"
+        "support-us": "Apoie-nos",
+        "resources": "Recursos"
     },
     "footer": {
         "copyright_and_the": " e a ",
@@ -196,5 +197,10 @@
         "description": "Trilium Notes hospedado no PikaPods, um serviço pago para facilitar o acesso e o gerenciamento. Não é diretamente afiliado à equipe do Trilium.",
         "download_pikapod": "Configurar no PikaPods",
         "download_triliumcc": "Ou veja trilium.cc"
+    },
+    "resources": {
+        "title": "Recursos",
+        "download": "Baixar",
+        "website": "Site"
     }
 }
