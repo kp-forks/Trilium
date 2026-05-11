@@ -629,6 +629,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
+        if (isMacOSMetadata(filePath)) {
+            return;
+        }
+
         // make sure that the meta file is loaded before the rest of the files is processed.
         if (filePath === "!!!meta.json") {
             const content = await readContent();
@@ -645,6 +649,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
 
     await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
+
+        if (isMacOSMetadata(filePath)) {
+            return;
+        }
 
         if (/\/$/.test(entry.fileName)) {
             saveDirectory(filePath);
@@ -684,6 +692,11 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     }
 
     return firstNote;
+}
+
+/** Skips macOS resource fork metadata that pollutes ZIP archives created on macOS. */
+function isMacOSMetadata(filePath: string): boolean {
+    return filePath.startsWith("__MACOSX/") || filePath === "__MACOSX";
 }
 
 /** @returns path without leading or trailing slash and backslashes converted to forward ones */
