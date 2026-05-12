@@ -57,21 +57,21 @@ Nossa documentação está disponível em vários formatos:
   repositório
 
 ### Links rápidos
-- [Getting Started Guide](https://docs.triliumnotes.org/)
+- [Guia de Introdução](https://docs.triliumnotes.org/)
 - [Instruções de instalação](https://docs.triliumnotes.org/user-guide/setup)
 - [Configuração do
   docker](https://docs.triliumnotes.org/user-guide/setup/server/installation/docker)
-- [Upgrading
+- [Atualizando o
   TriliumNext](https://docs.triliumnotes.org/user-guide/setup/upgrading)
-- [Basic Concepts and
-  Features](https://docs.triliumnotes.org/user-guide/concepts/notes)
-- [Patterns of Personal Knowledge
-  Base](https://docs.triliumnotes.org/user-guide/misc/patterns-of-personal-knowledge)
+- [Conceitos e básicos e
+  recursos](https://docs.triliumnotes.org/user-guide/concepts/notes)
+- [Padrões de Base de Conhecimento
+  Pessoal](https://docs.triliumnotes.org/user-guide/misc/patterns-of-personal-knowledge)
 
 ## 🎁 Recursos
 
-* Notes can be arranged into arbitrarily deep tree. Single note can be placed
-  into multiple places in the tree (see
+* As notas podem ser organizadas em árvores de profundidade arbitrária. Uma
+  única nota pode ser colocada em vários lugares na árvore (veja
   [cloning](https://docs.triliumnotes.org/user-guide/concepts/notes/cloning))
 * Rich WYSIWYG note editor including e.g. tables, images and
   [math](https://docs.triliumnotes.org/user-guide/note-types/text) with markdown
