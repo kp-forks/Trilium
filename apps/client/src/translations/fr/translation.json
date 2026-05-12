@@ -7,7 +7,7 @@
     "contributors_label": "Contributeurs :",
     "contributor_roles": {
       "lead-dev": "développeur principal",
-      "original-dev": "développeur original"
+      "original-dev": "développeur initial"
     },
     "role_brief_history": {
       "lead-dev": "Elian Doran a fondé TriliumNext en 2024, une branche communautaire créée après que Zadam se soit retiré du projet. Zadam a ensuite transféré le dépôt d'origine à l'équipe de TriliumNext, fusionnant ainsi les deux projets en un seul.",
@@ -100,15 +100,22 @@
   "delete_notes": {
     "close": "Fermer",
     "delete_all_clones_description": "Supprimer aussi les clones (peut être annulé dans des modifications récentes)",
-    "erase_notes_description": "La suppression normale (douce) marque uniquement les notes comme supprimées et elles peuvent être restaurées (dans la boîte de dialogue des Modifications récentes) dans un délai donné. Cocher cette option effacera les notes immédiatement et il ne sera pas possible de les restaurer.",
+    "erase_notes_description": "Effacer immédiatement les notes sans avoir la possibilité de les restaurer . Cette action est irréversible et entraînera un rechargement de l'application.",
     "erase_notes_warning": "Efface les notes de manière permanente (ne peut pas être annulée), y compris les clones. L'application va être rechargée.",
-    "notes_to_be_deleted": "Les notes suivantes seront supprimées ({{notesCount}})",
+    "notes_to_be_deleted": "Notes à supprimer ({{notesCount}})",
     "no_note_to_delete": "Aucune note ne sera supprimée (uniquement les clones).",
-    "broken_relations_to_be_deleted": "Les relations suivantes seront rompues et supprimées ({{ relationCount}})",
+    "broken_relations_to_be_deleted": "Relations rompues ({{ relationCount}})",
     "cancel": "Annuler",
     "title": "Notes supprimées",
     "clones_label": "Clone",
-    "erase_notes_label": "Supprimer définitivement"
+    "erase_notes_label": "Supprimer définitivement",
+    "delete_clones_description_one": "Supprimer aussi {{count}} autre clone. Peut être annulé dans les modifications récentes.",
+    "delete_clones_description_many": "Supprimer aussi {{count}} autres clones. Peut être annulé dans les modifications récentes.",
+    "delete_clones_description_other": "Supprimer aussi {{count}} autres clones. Peut être annulé dans les modifications récentes.",
+    "table_note_with_relation": "Note avec relation",
+    "table_relation": "Relation",
+    "table_points_to": "Pointe vers (supprimé)",
+    "delete": "Supprimer"
   },
   "export": {
     "export_note_title": "Exporter la note",
@@ -182,7 +189,8 @@
     "inPageSearch": "recherche sur la page",
     "title": "Aide-mémoire",
     "newTabWithActivationNoteLink": "Lorsqu’on clique sur un lien de note, celle-ci s’ouvre et devient active dans un nouvel onglet",
-    "editShortcuts": "Modifier les raccourcis clavier"
+    "editShortcuts": "Modifier les raccourcis clavier",
+    "toggleArchivedNotes": "Afficher/Masquer les notes archivées"
   },
   "import": {
     "importIntoNote": "Importer dans la note",
@@ -219,7 +227,8 @@
     "box_size_small": "petit (~ 10 lignes)",
     "box_size_medium": "moyen (~ 30 lignes)",
     "box_size_full": "complet (la boîte affiche le texte complet)",
-    "button_include": "Inclure une note"
+    "button_include": "Inclure une note",
+    "box_size_expandable": "déployable (replié par défaut)"
   },
   "info": {
     "modalTitle": "Message d'information",
@@ -2288,5 +2297,32 @@
   },
   "attributes_panel": {
     "title": "Attributs de la note"
+  },
+  "revisions": {
+    "note_revisions": "Révisions de la note",
+    "delete_all_revisions": "Supprimer toutes les révisions de cette note",
+    "delete_all_button": "Supprimer toutes les révisions",
+    "help_title": "Aide sur les révisions de note",
+    "confirm_delete_all": "Voulez-vous supprimer toutes les révisions de cette note ?",
+    "no_revisions": "Aucune révision pour cette note pour le moment…",
+    "restore_button": "Restaurer",
+    "highlight_changes": "Mettre en évidence les modifications",
+    "diff_on": "Voir le diff",
+    "diff_off": "Voir le contenu",
+    "diff_on_hint": "Cliquez pour voir le diff de la source",
+    "diff_off_hint": "Cliquez pour voir le contenu de la note",
+    "diff_not_available": "Diff non disponible.",
+    "confirm_restore": "Voulez-vous restaurer cette révision ? Cela écrasera le titre et le contenu actuels de la note avec ceux de cette révision.",
+    "delete_button": "Supprimer",
+    "confirm_delete": "Voulez-vous supprimer cette révision ?",
+    "revisions_deleted": "Les révisions de la note ont été supprimées.",
+    "revision_restored": "La révision de la note a été restaurée.",
+    "revision_deleted": "La révision de la note a été supprimée.",
+    "snapshot_interval": "Intervalle de snapshot de révision de note : {{seconds}}s.",
+    "maximum_revisions": "Limite de snapshots de révision de la note : {{number}}.",
+    "save_revision_now": "Enregistrer une révision maintenant",
+    "save_named_revision": "Enregistrer une révision nommée…",
+    "snapshot_header": "Snapshot de révision de la note",
+    "snapshot_interval_value": "Intervalle : {{seconds}}s"
   }
 }
