@@ -387,18 +387,30 @@ function protectNote(note: BNote, protect: boolean) {
     }
 }
 
-function checkImageAttachments(note: BNote, content: string) {
+export { saveLinks };
+
+export function checkImageAttachments(note: BNote, content: string) {
     const foundAttachmentIds = new Set<string>();
     let match;
 
-    const imgRegExp = /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g;
-    while ((match = imgRegExp.exec(content))) {
-        foundAttachmentIds.add(match[1]);
-    }
+    const patterns = note.isMarkdown()
+        ? [
+            // ![...](api/attachments/{id}/image/...) or similar markdown image syntax
+            /api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
+            /attachmentId=([a-zA-Z0-9_]+)/g
+        ]
+        : [
+            // <img src="api/attachments/{id}/image/...">
+            /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // <a href="...attachmentId={id}">
+            /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g
+        ];
 
-    const linkRegExp = /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g;
-    while ((match = linkRegExp.exec(content))) {
-        foundAttachmentIds.add(match[1]);
+    for (const pattern of patterns) {
+        while ((match = pattern.exec(content))) {
+            foundAttachmentIds.add(match[1]);
+        }
     }
 
     const attachments = note.getAttachments();
@@ -535,6 +547,41 @@ function findInternalLinks(content: string, foundLinks: FoundLink[]) {
 
     // removing absolute references to server to keep it working between instances
     return content.replace(/href="[^"]*#root/g, 'href="#root');
+}
+
+function findMarkdownImageLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /api\/images\/([a-zA-Z0-9_]+)\//g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "imageLink",
+            value: match[1]
+        });
+    }
+}
+
+function findMarkdownInternalLinks(content: string, foundLinks: FoundLink[]) {
+    // [text](#root/.../noteId) or [text](#root/.../noteId?query)
+    const hashRootRe = /#root[a-zA-Z0-9_/]*\/([a-zA-Z0-9_]+)/g;
+    let match;
+
+    while ((match = hashRootRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+
+    // [[noteId]] wiki-links
+    const wikiLinkRe = /\[\[([a-zA-Z0-9_]+)\]\]/g;
+
+    while ((match = wikiLinkRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
 }
 
 function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
@@ -745,8 +792,9 @@ function saveAttachments(note: BNote, content: string) {
     return content;
 }
 
+
 function saveLinks(note: BNote, content: string | Buffer) {
-    if ((note.type !== "text" && note.type !== "relationMap") || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
+    if ((note.type !== "text" && note.type !== "relationMap" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
         return {
             forceFrontendReload: false,
             content
@@ -765,6 +813,10 @@ function saveLinks(note: BNote, content: string | Buffer) {
         content = findIncludeNoteLinks(content, foundLinks);
         saveBookmarks(note, content);
 
+        ({ forceFrontendReload, content } = checkImageAttachments(note, content));
+    } else if (note.isMarkdown() && typeof content === "string") {
+        findMarkdownImageLinks(content, foundLinks);
+        findMarkdownInternalLinks(content, foundLinks);
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {
         findRelationMapLinks(content, foundLinks);

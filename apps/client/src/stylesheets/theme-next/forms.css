@@ -24,6 +24,7 @@ button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel, .c
 
     .btn-group > & {
         border-radius: 0;
+        margin-inline-start: 0 !important;
     }
 
     .btn-group > &:first-child {

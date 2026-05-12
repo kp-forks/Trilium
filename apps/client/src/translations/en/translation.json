@@ -1,5 +1,5 @@
 {
-  "about": {   
+  "about": {
     "version_label": "Version:",
     "version": "{{appVersion}} (database: {{dbVersion}}, sync protocol: {{syncVersion}})",
     "build_info": "Build: {{buildDate}}, revision: <buildRevision />",
@@ -755,7 +755,8 @@
     "import_files": "Import files",
     "export_note": "Export note",
     "delete_note": "Delete note",
-    "print_note": "Print note",
+    "print_note": "Print note...",
+    "print_or_export_to_pdf": "Print/export to PDF...",
     "view_revisions": "Note revisions...",
     "save_revision": "Save revision",
     "save_named_revision": "Save named revision...",
@@ -1296,6 +1297,12 @@
     "modern_themes": "Modern",
     "legacy_themes": "Legacy",
     "custom_themes": "Custom",
+    "recommended": "Recommended",
+    "color_scheme": "Color scheme",
+    "color_scheme_system": "System",
+    "color_scheme_light": "Light",
+    "color_scheme_dark": "Dark",
+    "color_scheme_custom_disabled": "Color scheme override is not available for custom themes",
     "layout": "Layout",
     "layout-vertical-title": "Vertical",
     "layout-horizontal-title": "Horizontal",

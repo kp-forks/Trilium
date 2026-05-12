@@ -14,7 +14,7 @@ import { t } from "../../services/i18n";
 import protected_session from "../../services/protected_session";
 import server from "../../services/server";
 import toast from "../../services/toast";
-import { isElectron as getIsElectron, isMac as getIsMac } from "../../services/utils";
+import { isDesktop,isElectron as getIsElectron, isMac as getIsMac } from "../../services/utils";
 import ws from "../../services/ws";
 import ClosePaneButton from "../buttons/close_pane_button";
 import CreatePaneButton from "../buttons/create_pane_button";
@@ -149,7 +149,9 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                     defaultType: "single"
                 })} />
             {isExportableToImage && isNormalViewMode && isContentAvailable && <ExportAsImage ntxId={noteContext.ntxId} parentComponent={parentComponent} />}
-            <CommandItem command="printActiveNote" icon="bx bx-printer" disabled={!isPrintable} text={t("note_actions.print_note")} />
+            <CommandItem command="printActiveNote" icon="bx bx-printer" disabled={!isPrintable}
+                text={isElectron ? t("note_actions.print_or_export_to_pdf") : t("note_actions.print_note")}
+            />
 
             <FormDropdownDivider />
 

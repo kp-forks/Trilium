@@ -11,7 +11,7 @@
     "collapse-tree": "Collapses the complete note tree",
     "collapse-subtree": "Collapses subtree of current note",
     "sort-child-notes": "Sort child notes",
-    "toggle-archived-notes": "Show/hide archived (hidden) notes in the note tree",
+    "toggle-archived-notes": "Show/hide archived notes in the note tree",
     "creating-and-moving-notes": "Creating and moving notes",
     "create-note-after": "Create note after active note",
     "create-note-into": "Create note as child of active note",

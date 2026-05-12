@@ -1,6 +1,23 @@
 {
   "about": {
-    "data_directory": "Répertoire des données :"
+    "data_directory": "Répertoire des données :",
+    "version_label": "Version :",
+    "version": "{{appVersion}} (base de données : {{dbVersion}}, protocole de sync : {{syncVersion}})",
+    "build_info": "Build : {{buildDate}}, révision : <buildRevision />",
+    "contributors_label": "Contributeurs :",
+    "contributor_roles": {
+      "lead-dev": "développeur principal",
+      "original-dev": "développeur original"
+    },
+    "role_brief_history": {
+      "lead-dev": "Elian Doran a fondé TriliumNext en 2024, une branche communautaire créée après que Zadam se soit retiré du projet. Zadam a ensuite transféré le dépôt d'origine à l'équipe de TriliumNext, fusionnant ainsi les deux projets en un seul.",
+      "original-dev": "Le 25 décembre 2017, Zadam a publié la première version bêta de Trilium (écrit avec un seul « l », contrairement à la fleur). Insatisfait des gestionnaires de notes existants, il a développé une puissante base de connaissances hiérarchique auto-hébergée qui a recueilli plus de 22 000 étoiles sur GitHub. En 2024, sa vie devenant de plus en plus chargée, il a mis le projet en mode maintenance."
+    },
+    "contributor_full_list": "Découvrez toute la communauté",
+    "github_tooltip": "Signalez des bugs, proposez des fonctionnalités ou contribuez sur GitHub",
+    "license_tooltip": "Voir la licence",
+    "donate": "Faire un don",
+    "donate_tooltip": "Faites un don pour soutenir ce projet"
   },
   "toast": {
     "critical-error": {
