@@ -104,7 +104,8 @@
     "create-note-after": "Créer une note après la note active",
     "create-note-into": "Créer une note enfant de la note active",
     "find-in-text": "Afficher/Masquer le panneau de recherche",
-    "toggle-archived-notes": "Afficher/masquer les notes archivées dans l'arborescence des notes"
+    "toggle-archived-notes": "Afficher/masquer les notes archivées dans l'arborescence des notes",
+    "save-named-revision": "Enregistrer une révision nommée de la note active"
   },
   "login": {
     "title": "Connexion",
@@ -395,7 +396,9 @@
     "toggle-ribbon-tab-note-paths": "Basculer les chemins de notes de l'onglet du ruban",
     "toggle-ribbon-tab-similar-notes": "Basculer l'onglet du ruban Notes similaires",
     "toggle-note-hoisting": "Activer la focalisation sur la note",
-    "unhoist-note": "Désactiver la focalisation sur la note"
+    "unhoist-note": "Désactiver la focalisation sur la note",
+    "toggle-archived-notes": "Voir les notes archivées",
+    "save-named-revision": "Enregistrer une révision nommée"
   },
   "sql_init": {
     "db_not_initialized_desktop": "Base de données non initialisée, merci de suivre les instructions à l'écran.",
@@ -442,5 +445,8 @@
     "presentation_slide_first": "Première diapositive",
     "presentation_slide_second": "Deuxième diapositive",
     "background": "Arrière-plan"
+  },
+  "password": {
+    "incorrect": "Le mot de passe que vous avez saisi est incorrect."
   }
 }
