@@ -95,7 +95,7 @@ async function mouseEnterHandler<T>(this: HTMLElement, e: JQuery.TriggeredEvent<
     }
 
     const html = `<div class="note-tooltip-content">${content}</div>`;
-    const tooltipClass = `tooltip-${  Math.floor(Math.random() * 999_999_999)} ${note?.getColorClass()}`;
+    const tooltipClass = `tooltip-${Math.floor(Math.random() * 999_999_999)}${note ? ` ${note.getColorClass()}` : ""}`;
 
     // we need to check if we're still hovering over the element
     // since the operation to get tooltip content was async, it is possible that
