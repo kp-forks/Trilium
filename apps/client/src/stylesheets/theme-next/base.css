@@ -595,7 +595,7 @@ li.dropdown-item a.dropdown-item-button:focus-visible {
     --tooltip-box-shadow: var(--note-tooltip-box-shadow);
     
     > .tooltip-inner {
-        border: 1px solid var(--main-border-color, var(--main-border-color)) !important;
+        outline: 1px solid var(--main-border-color);
         border-radius: 12px;
         min-height: 120px;
     }
