@@ -55,3 +55,4 @@ jobs:
           name: trilium-mobile-debug-apk
           path: apps/mobile/android/app/build/outputs/apk/debug/*.apk
           retention-days: 14
+          archive: false
