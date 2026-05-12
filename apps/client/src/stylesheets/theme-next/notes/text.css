@@ -384,7 +384,7 @@
 .ck-code-block-dropdown .ck-dropdown__panel .ck-list,
 .ck.ck-toolbar-container.codeblock-language-list .ck.ck-dropdown__panel .ck-list {
     overflow: auto;
-    max-height: calc(var(--_panel-height) - var(--ck-editor-popup-padding) * 2);
+    max-height: calc(var(--_panel-height) - var(--ck-editor-popup-padding) * 2 - 2px);
 }
 
 /* Text snippet dropdown */
