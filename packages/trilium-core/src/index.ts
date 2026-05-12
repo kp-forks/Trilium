@@ -159,7 +159,7 @@ export async function initializeCore({ dbConfig, executionContext, crypto, zip, 
     initZipProvider(zip);
     initZipExportProviderFactory(zipExportProviderFactory);
     initContext(executionContext);
-    initSql(new SqlService(dbConfig, getLog()));
+    await initSql(new SqlService(dbConfig, getLog()));
     initSchema(schema);
     initImageProvider(image);
     if (getDemoArchive) {
