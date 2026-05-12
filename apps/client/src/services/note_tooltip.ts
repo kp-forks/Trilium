@@ -80,7 +80,7 @@ async function mouseEnterHandler<T>(this: HTMLElement, e: JQuery.TriggeredEvent<
     if (url && url.startsWith("#") && !url.startsWith("#root/")) {
         renderPromise = renderFootnoteOrAnchor($link, url);
     } else {
-        note = await froca.getNote(noteId)
+        note = await froca.getNote(noteId);
         renderPromise = renderTooltip(note);
     }
 
