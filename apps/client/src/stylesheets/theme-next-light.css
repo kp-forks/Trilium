@@ -48,6 +48,11 @@
     --icon-button-hover-background: var(--hover-item-background-color);
     --icon-button-hover-color: var(--hover-item-text-color);
 
+    --opaque-icon-button-background: #e6e6e6d7;
+    --opaque-icon-button-color: var(--icon-button-color);
+    --opaque-icon-button-hover-background-color: #cbcbcbd7;
+    --opaque-icon-button-hover-color: var(--icon-button-hover-color);
+
     --muted-text-color: #666;
 
     --input-background-color: #00000012;
@@ -273,6 +278,9 @@
     --tooltip-foreground-color: #ffffffeb;
     --tooltip-shadow-color: rgba(0, 0, 0, 0.2);
 
+    --note-tooltip-background-color: white;
+
+
     --help-background-color: #fffc;
     --help-card-background: var(--card-background-color);
     --help-card-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
@@ -318,7 +326,8 @@
     --custom-bg-color: hsl(var(--custom-color-hue), 37%, 89%, 1);
 }
 
-.quick-edit-dialog-wrapper.with-hue {
+.quick-edit-dialog-wrapper.with-hue,
+.note-tooltip.with-hue {
     --modal-background-color: hsl(var(--custom-color-hue), 56%, 96%);
     --modal-border-color: hsl(var(--custom-color-hue), 33%, 41%);
     --promoted-attribute-card-background-color: hsl(var(--custom-color-hue), 40%, 88%);
@@ -351,4 +360,8 @@
 .note-book-card.with-hue {
     --card-background-color: hsl(var(--custom-color-hue), 21%, 94%);
     --card-background-hover-color: hsl(var(--custom-color-hue), 21%, 87%);
+}
+
+.note-tooltip.with-hue {
+    --tooltip-background-color: hsl(var(--custom-color-hue), 56%, 96%);
 }
