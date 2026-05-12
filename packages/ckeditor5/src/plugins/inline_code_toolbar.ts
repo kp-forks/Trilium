@@ -64,29 +64,37 @@ export default class InlineCodeToolbar extends Plugin {
         // Check if cursor is on inline code
         const textNode = position?.textNode;
         if (textNode?.hasAttribute("code")) {
-            this.showToolbar(textNode);
+            this.showToolbar();
         } else {
             this.hideToolbar();
         }
     }
 
-    private showToolbar(textNode: unknown) {
+    private showToolbar() {
         if (!this.balloon) return;
 
         const editor = this.editor;
         const view = editor.editing.view;
         const mapper = editor.editing.mapper;
+        const position = editor.model.document.selection.getFirstPosition();
 
-        // Map model text node to view element
-        const viewRange = mapper.toViewRange(editor.model.createRangeOn(textNode as any));
-        const viewElement = viewRange.getContainedElement();
-
-        if (!viewElement) {
+        if (!position) {
             this.hideToolbar();
             return;
         }
 
-        const domElement = view.domConverter.mapViewToDom(viewElement);
+        // Map model position to view and find the <code> ancestor element
+        const viewPosition = mapper.toViewPosition(position);
+        const codeElement = viewPosition.getAncestors().find(
+            (ancestor) => ancestor.is("attributeElement") && ancestor.name === "code"
+        );
+
+        if (!codeElement || !codeElement.is("attributeElement")) {
+            this.hideToolbar();
+            return;
+        }
+
+        const domElement = view.domConverter.mapViewToDom(codeElement);
         if (!domElement || !(domElement instanceof HTMLElement)) {
             this.hideToolbar();
             return;
