@@ -41,11 +41,11 @@ describe("Tree", () => {
         });
 
         vi.mock("./sql_init.js", () => {
-            return {
-                dbReady: () => {
-                    console.log("Hello world");
-                }
+            const mock = {
+                initializeDb: () => {},
+                dbReady: Promise.resolve()
             };
+            return { default: mock, ...mock };
         });
     });
     it("sorts notes by title (base case)", () => {
