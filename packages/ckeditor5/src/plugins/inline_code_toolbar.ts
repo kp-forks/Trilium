@@ -37,8 +37,10 @@ export default class InlineCodeToolbar extends Plugin {
 
         editor.ui.view.body.add(this.balloon);
 
-        // Show/hide based on selection
-        this.listenTo(editor.model.document.selection, "change:range", () => {
+        // Show/hide after the UI has fully updated (selection, commands, DOM
+        // are all settled), so the code command's value and native selection
+        // are both current.
+        this.listenTo(editor.ui, "update", () => {
             this.updateToolbarVisibility();
         });
 
@@ -52,8 +54,7 @@ export default class InlineCodeToolbar extends Plugin {
 
     private updateToolbarVisibility() {
         const editor = this.editor;
-        const selection = editor.model.document.selection;
-        const position = selection.getFirstPosition();
+        const position = editor.model.document.selection.getFirstPosition();
 
         // Don't show for code blocks (they have their own toolbar)
         if (position?.findAncestor("codeBlock")) {
@@ -61,9 +62,10 @@ export default class InlineCodeToolbar extends Plugin {
             return;
         }
 
-        // Check if cursor is on inline code
-        const textNode = position?.textNode;
-        if (textNode?.hasAttribute("code")) {
+        // Use the code command's value — it reliably reflects whether the
+        // cursor is inside inline code, including at boundary positions.
+        const codeCommand = editor.commands.get("code");
+        if (codeCommand?.value) {
             this.showToolbar();
         } else {
             this.hideToolbar();
@@ -73,29 +75,16 @@ export default class InlineCodeToolbar extends Plugin {
     private showToolbar() {
         if (!this.balloon) return;
 
-        const editor = this.editor;
-        const view = editor.editing.view;
-        const mapper = editor.editing.mapper;
-        const position = editor.model.document.selection.getFirstPosition();
-
-        if (!position) {
+        // Find the <code> DOM element from the native selection
+        const domSelection = window.getSelection();
+        const anchorNode = domSelection?.anchorNode;
+        if (!anchorNode) {
             this.hideToolbar();
             return;
         }
 
-        // Map model position to view and find the <code> ancestor element
-        const viewPosition = mapper.toViewPosition(position);
-        const codeElement = viewPosition.getAncestors().find(
-            (ancestor) => ancestor.is("attributeElement") && ancestor.name === "code"
-        );
-
-        if (!codeElement || !codeElement.is("attributeElement")) {
-            this.hideToolbar();
-            return;
-        }
-
-        const domElement = view.domConverter.mapViewToDom(codeElement);
-        if (!domElement || !(domElement instanceof HTMLElement)) {
+        const domElement = (anchorNode instanceof HTMLElement ? anchorNode : anchorNode.parentElement)?.closest("code");
+        if (!domElement) {
             this.hideToolbar();
             return;
         }
