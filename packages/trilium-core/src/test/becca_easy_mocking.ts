@@ -17,6 +17,7 @@ interface NoteDefinition extends AttributeDefinitions, RelationDefinitions {
     mime?: string;
     children?: NoteDefinition[];
     attachments?: {
+        id?: string;
         title: string;
         role: string;
         mime: string;
@@ -116,9 +117,9 @@ export function buildNote(noteDef: NoteDefinition) {
     // Handle attachments.
     if (noteDef.attachments) {
         const allAttachments: BAttachment[] = [];
-        for (const { title, role, mime } of noteDef.attachments) {
+        for (const { id, title, role, mime } of noteDef.attachments) {
             const attachment = new BAttachment({
-                attachmentId: randomString(10),
+                attachmentId: id ?? randomString(10),
                 ownerId: note.noteId,
                 title,
                 role,
