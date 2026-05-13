@@ -41,6 +41,9 @@
     --cmd-button-keyboard-shortcut-color: white;
     --cmd-button-disabled-opacity: 0.5;
 
+    --low-profile-button-active-background-color: #ffffff2c;
+    --low-profile-button-active-color: white;
+
     --button-group-background-color: #00000051;
     --button-group-active-button-background-color: #4f4f4f;
     --button-group-active-button-color: white;
