@@ -2,6 +2,7 @@ import "./Attachment.css";
 
 import { ConvertAttachmentToNoteResponse } from "@triliumnext/commons";
 import { t } from "i18next";
+import { createPortal } from "preact/compat";
 import { useContext, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
@@ -223,7 +224,7 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                 <div ref={contentWrapper} className="attachment-content-wrapper" />
             </div>
 
-            {supportsOcr && (
+            {supportsOcr && createPortal(
                 <Modal
                     className="ocr-text-modal"
                     title={t("ocr.extracted_text_title")}
@@ -236,7 +237,8 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                         textUrl={`ocr/attachments/${attachment.attachmentId}/text`}
                         processUrl={`ocr/process-attachment/${attachment.attachmentId}`}
                     />
-                </Modal>
+                </Modal>,
+                document.body
             )}
         </div>
     );
