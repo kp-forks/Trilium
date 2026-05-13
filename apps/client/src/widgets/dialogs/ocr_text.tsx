@@ -4,6 +4,7 @@ import type { OCRProcessResponse, TextRepresentationResponse } from "@triliumnex
 import { useEffect, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
+import { copyTextWithToast } from "../../services/clipboard_ext";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
@@ -128,21 +129,38 @@ function TextRepresentationModal({ textUrl, processUrl, onHidden }: TextRepresen
         }
     }
 
-    const processButton = state.kind !== "loading" && (
-        <Button
-            icon={processing ? "bx-loader-alt bx-spin" : "bx-refresh"}
-            text={processing ? t("ocr.processing") : t("ocr.process_now")}
-            size="small"
-            disabled={processing}
-            onClick={processOCR}
-        />
+    function copyToClipboard() {
+        if (state.kind === "loaded") {
+            copyTextWithToast(state.text);
+        }
+    }
+
+    const footer = state.kind !== "loading" && (
+        <>
+            <Button
+                icon={processing ? "bx-loader-alt bx-spin" : "bx-refresh"}
+                text={processing ? t("ocr.processing") : t("ocr.process_now")}
+                size="small"
+                disabled={processing}
+                onClick={processOCR}
+            />
+            {state.kind === "loaded" && (
+                <Button
+                    icon="bx-copy"
+                    text={t("info.copy_to_clipboard")}
+                    size="small"
+                    onClick={copyToClipboard}
+                />
+            )}
+        </>
     );
 
     return (
         <Modal
             className="ocr-text-modal"
             title={t("ocr.extracted_text_title")}
-            footer={processButton}
+            footer={footer}
+            footerAlignment="between"
             show={true}
             onHidden={onHidden}
             size="lg"
