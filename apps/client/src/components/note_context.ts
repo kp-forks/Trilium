@@ -149,17 +149,12 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
         if (this.noteId !== previousNoteId) {
             const oldKeys = Array.from(this.contextData.keys());
             this.contextData.clear();
-            if (oldKeys.length > 0) {
-                // Notify subscribers asynchronously to avoid blocking navigation
-                window.setTimeout(() => {
-                    for (const key of oldKeys) {
-                        this.triggerEvent("contextDataChanged", {
-                            noteContext: this,
-                            key,
-                            value: undefined
-                        });
-                    }
-                }, 0);
+            for (const key of oldKeys) {
+                this.triggerEvent("contextDataChanged", {
+                    noteContext: this,
+                    key,
+                    value: undefined
+                });
             }
         }
 
