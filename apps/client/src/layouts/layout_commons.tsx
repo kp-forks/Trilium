@@ -23,6 +23,7 @@ import DeleteNotesDialog from "../widgets/dialogs/delete_notes.js";
 import InfoDialog from "../widgets/dialogs/info.js";
 import IncorrectCpuArchDialog from "../widgets/dialogs/incorrect_cpu_arch.js";
 import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
+import OcrTextDialog from "../widgets/dialogs/ocr_text.js";
 import PopupEditorDialog from "../widgets/dialogs/PopupEditor.jsx";
 import PrintPreviewDialog from "../widgets/dialogs/print_preview.jsx";
 import ToastContainer from "../widgets/Toast.jsx";
@@ -54,5 +55,6 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<IncorrectCpuArchDialog />)
         .child(<PopupEditorDialog />)
         .child(<CallToActionDialog />)
+        .child(<OcrTextDialog />)
         .child(<ToastContainer />);
 }

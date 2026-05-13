@@ -105,7 +105,7 @@
     "clone-notes-to": "Clonar notas seleccionadas",
     "move-notes-to": "Mover notas seleccionadas",
     "save-named-revision": "Guardar una revisión nombrada de la nota activa",
-    "toggle-archived-notes": "Mostrar/Ocultar notas archivadas (ocultas) en el árbol de notas"
+    "toggle-archived-notes": "Mostrar/Ocultar notas archivadas en el árbol de notas"
   },
   "login": {
     "title": "Iniciar sesión",

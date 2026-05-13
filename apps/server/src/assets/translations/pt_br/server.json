@@ -103,7 +103,8 @@
     "find-in-text": "Alternar painel de busca",
     "export-as-pdf": "Exportar a nota atual como PDF",
     "toggle-zen-mode": "Ativa/desativa o modo zen (interface mínima para uma edição mais focada)",
-    "show-cheatsheet": "Exibir um modal com operações comuns de teclado"
+    "show-cheatsheet": "Exibir um modal com operações comuns de teclado",
+    "toggle-archived-notes": "Mostrar/ocultar notas arquivadas na árvore de notas"
   },
   "login": {
     "title": "Login",

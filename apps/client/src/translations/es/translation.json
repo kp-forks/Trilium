@@ -693,7 +693,7 @@
     "import_files": "Importar archivos",
     "export_note": "Exportar nota",
     "delete_note": "Eliminar nota",
-    "print_note": "Imprimir nota",
+    "print_note": "Imprimir nota...",
     "save_revision": "Guardar revisión",
     "convert_into_attachment_failed": "La conversión de nota '{{title}}' falló.",
     "convert_into_attachment_successful": "La nota '{{title}}' ha sido convertida a un archivo adjunto.",
@@ -712,7 +712,8 @@
     "word_wrap_on": "Encendido",
     "word_wrap_off": "Apagado",
     "save_named_revision": "Guardar revisión nombrada...",
-    "word_wrap": "Ajuste de línea"
+    "word_wrap": "Ajuste de línea",
+    "print_or_export_to_pdf": "Imprimir/exportar a PDF..."
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
@@ -1199,7 +1200,13 @@
     "dark_theme": "Oscuro",
     "modern_themes": "Moderno",
     "legacy_themes": "Heredado",
-    "custom_themes": "Personalizado"
+    "custom_themes": "Personalizado",
+    "recommended": "Recomendado",
+    "color_scheme": "esquema de colores",
+    "color_scheme_system": "Sistema",
+    "color_scheme_light": "Luz",
+    "color_scheme_dark": "Oscuro",
+    "color_scheme_custom_disabled": "La opción de anulación de la combinación de colores no está disponible para temas personalizados"
   },
   "zoom_factor": {
     "title": "Factor de zoom (solo versión de escritorio)",
