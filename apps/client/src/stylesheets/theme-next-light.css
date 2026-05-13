@@ -44,6 +44,11 @@
     --button-group-active-button-background: #00000026;
     --button-group-active-button-text-color: black;
 
+    --button-group-background-color: var(--input-background-color);
+    --button-group-active-button-background-color: white;
+    --button-group-active-button-color: black;
+    --button-group-active-button-shadow-color: #00000056;
+
     --icon-button-color: currentColor;
     --icon-button-hover-background: var(--hover-item-background-color);
     --icon-button-hover-color: var(--hover-item-text-color);

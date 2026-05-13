@@ -44,6 +44,11 @@
     --button-group-active-button-background: #ffffff4e;
     --button-group-active-button-text-color: white;
 
+    --button-group-background-color: #00000051;
+    --button-group-active-button-background-color: #4f4f4f;
+    --button-group-active-button-color: white;
+    --button-group-active-button-shadow-color: #000000;
+
     --icon-button-color: currentColor;
     --icon-button-hover-background: var(--hover-item-background-color);
     --icon-button-hover-color: var(--hover-item-text-color);
