@@ -5,6 +5,13 @@ import becca from "../becca/becca.js";
 import { buildNote } from "../test/becca_easy_mocking.js";
 import cls from "./cls.js";
 import scriptService, { buildJsx, executeBundle, getScriptBundle } from "./script.js";
+import ws from "./ws.js";
+
+vi.mock("./ws.js", () => ({
+    default: {
+        sendMessageToAllClients: vi.fn()
+    }
+}));
 
 describe("Script", () => {
     beforeEach(() => {
@@ -42,6 +49,32 @@ describe("Script", () => {
                 html: "",
             });
             expect(result).toBe("world");
+        });
+    });
+
+    it("executes runOnFrontend from a backend script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: ""
+        });
+
+        cls.init(() => {
+            const bundle = getScriptBundle(note, true, "backend", [], `
+                api.runOnFrontend(() => {
+                    api.showMessage("Hello frontend");
+                });
+            `);
+            expect(bundle).toBeDefined();
+            executeBundle(bundle!);
+
+            expect(ws.sendMessageToAllClients).toHaveBeenCalledOnce();
+            expect(ws.sendMessageToAllClients).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: "execute-script",
+                    script: expect.stringContaining("Hello frontend")
+                })
+            );
         });
     });
 
@@ -129,9 +162,31 @@ describe("getScriptBundle", () => {
     });
 });
 
+describe("executeNote", () => {
+    beforeEach(() => {
+        becca.reset();
+        vi.mocked(ws.sendMessageToAllClients).mockClear();
+    });
+
+    it("sends a toast when trying to execute a frontend script in the backend", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=frontend",
+            content: "api.log('hello');"
+        });
+
+        scriptService.executeNote(note, {});
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledOnce();
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledWith(
+            expect.objectContaining({ type: "toast" })
+        );
+    });
+});
+
 describe("getScriptBundleForFrontend", () => {
     beforeEach(() => {
         becca.reset();
+        vi.mocked(ws.sendMessageToAllClients).mockClear();
     });
 
     it("returns a bundle with noteIds instead of note objects", () => {
@@ -149,7 +204,7 @@ describe("getScriptBundleForFrontend", () => {
         expect(bundle!.allNotes).toBeUndefined();
     });
 
-    it("returns undefined for backend scripts", () => {
+    it("returns undefined and sends a toast for backend scripts", () => {
         const note = buildNote({
             type: "code",
             mime: "application/javascript;env=backend",
@@ -158,6 +213,27 @@ describe("getScriptBundleForFrontend", () => {
 
         const bundle = scriptService.getScriptBundleForFrontend(note);
         expect(bundle).toBeUndefined();
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledOnce();
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledWith(
+            expect.objectContaining({ type: "toast" })
+        );
+    });
+
+    it("returns a bundle when a backend note uses runOnFrontend with an override script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: `
+                api.runOnFrontend(() => {
+                    api.showMessage("Hello frontend");
+                });
+            `
+        });
+
+        const frontendScript = `() => { api.showMessage("Hello frontend"); }`;
+        const bundle = scriptService.getScriptBundleForFrontend(note, frontendScript);
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("Hello frontend");
     });
 });
 
