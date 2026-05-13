@@ -489,7 +489,7 @@
     "import_files": "ファイルをインポート",
     "export_note": "ノートをエクスポート",
     "delete_note": "ノートを削除",
-    "print_note": "ノートを印刷",
+    "print_note": "ノートを印刷...",
     "print_pdf": "PDFとしてエクスポート...",
     "convert_into_attachment": "添付ファイルに変換",
     "save_revision": "変更履歴を保存",
@@ -510,7 +510,8 @@
     "word_wrap_auto_description": "グローバル設定に従う",
     "word_wrap_on": "オン",
     "word_wrap_off": "オフ",
-    "save_named_revision": "名前を付けて変更履歴を保存..."
+    "save_named_revision": "名前を付けて変更履歴を保存...",
+    "print_or_export_to_pdf": "印刷 / PDF へのエクスポート..."
   },
   "command_palette": {
     "export_note_title": "ノートをエクスポート",
@@ -897,7 +898,13 @@
     "layout-horizontal-description": "ランチャーバーはタブバーの下にあり、タブバーは全幅に。",
     "modern_themes": "モダン",
     "legacy_themes": "レガシー",
-    "custom_themes": "カスタム"
+    "custom_themes": "カスタム",
+    "recommended": "推奨",
+    "color_scheme": "配色",
+    "color_scheme_system": "システム",
+    "color_scheme_light": "ライト",
+    "color_scheme_dark": "ダーク",
+    "color_scheme_custom_disabled": "カスタムテーマでは配色の上書きは利用できません"
   },
   "vim_key_bindings": {
     "use_vim_keybindings_in_code_notes": "Vimキーバインド",
@@ -1569,7 +1576,8 @@
     "title": "ノートマップ",
     "link-distance": "リンク距離",
     "fix-nodes": "ノードを修正",
-    "too-many-notes": "このサブツリーには {{count}} 件のノートが含まれており、ノートマップに表示できる {{max}} の上限を超えています。"
+    "too-many-notes": "ここには {{count}} 件のノートがあります。すべて表示すると処理速度が遅くなる可能性があります。",
+    "show-anyway": "マップを表示"
   },
   "owned_attribute_list": {
     "owned_attributes": "所有属性"
