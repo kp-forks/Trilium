@@ -1145,7 +1145,7 @@
     "import_files": "Importa file",
     "export_note": "Nota di esportazione",
     "delete_note": "Elimina nota",
-    "print_note": "Stampa nota",
+    "print_note": "Stampa nota...",
     "save_revision": "Salva la revisione",
     "convert_into_attachment_failed": "Conversione della nota '{{title}}' fallita.",
     "convert_into_attachment_successful": "Nota '{{title}}' è stato convertito in allegato.",
@@ -1164,7 +1164,8 @@
     "word_wrap_auto_description": "Segui l'impostazione globale",
     "word_wrap_on": "On",
     "word_wrap_off": "Off",
-    "save_named_revision": "Salva revisione con nome..."
+    "save_named_revision": "Salva revisione con nome...",
+    "print_or_export_to_pdf": "Stampa/esporta in PDF..."
   },
   "onclick_button": {
     "no_click_handler": "Il widget pulsante '{{componentId}}' non ha un gestore di clic definito"
@@ -1320,7 +1321,8 @@
     "title": "Nota Mappa",
     "fix-nodes": "Fissare i nodi",
     "link-distance": "Distanza del collegamento",
-    "too-many-notes": "Questo sottoalbero contiene {{count}} note, un numero superiore al limite di {{max}} che può essere visualizzato nella mappa delle note."
+    "too-many-notes": "Qui ci sono {{count}} note. Visualizzarle tutte potrebbe rallentare il sistema.",
+    "show-anyway": "Mostra mappa"
   },
   "note_paths": {
     "title": "Percorsi delle note",
@@ -1522,14 +1524,20 @@
     "triliumnext": "Segui la combinazione di colori del sistema",
     "triliumnext-light": "Chiara",
     "triliumnext-dark": "Scura",
-    "layout": "Disposizione",
+    "layout": "Impaginazione",
     "layout-vertical-title": "Verticale",
     "layout-horizontal-title": "Orizzontale",
     "layout-vertical-description": "la barra di avvio è a sinistra (impostazione predefinita)",
     "layout-horizontal-description": "la barra di avvio si trova sotto la barra delle schede, che ora è a larghezza intera.",
     "modern_themes": "Moderna",
     "legacy_themes": "Legacy",
-    "custom_themes": "Personalizzata"
+    "custom_themes": "Personalizzata",
+    "recommended": "Consigliato",
+    "color_scheme": "Combinazione di colori",
+    "color_scheme_system": "Sistema",
+    "color_scheme_light": "Chiara",
+    "color_scheme_dark": "Scura",
+    "color_scheme_custom_disabled": "La sostituzione della combinazione di colori non è disponibile per i temi personalizzati"
   },
   "ui-performance": {
     "title": "Prestazione",
