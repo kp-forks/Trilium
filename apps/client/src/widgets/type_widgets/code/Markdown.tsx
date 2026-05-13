@@ -448,10 +448,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
     useEffect(() => {
         if (!editorView) return;
 
-        Promise.all([
-            import("@codemirror/autocomplete"),
-            import("@codemirror/state")
-        ]).then(([{ autocompletion }, { StateEffect }]) => {
+        import("@codemirror/autocomplete").then(({ autocompletion }) => {
             const ext = autocompletion({
                 override: [(ctx) => {
                     const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
@@ -578,7 +575,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                 activateOnTyping: true
             });
 
-            editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
+            editorView.setNamedExtension("slashCommands", ext);
         });
     }, [editorView, parentComponent, note.noteId]);
 }
