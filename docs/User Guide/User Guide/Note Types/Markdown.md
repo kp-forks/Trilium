@@ -44,12 +44,12 @@ The following features are supported by Trilium's Markdown format and will show 
     *   These can also be quickly created via the `/include` command or via a dedicated keyboard shortcut (not assigned by default).
 *   <a class="reference-link" href="Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> via its HTML syntax, or through a _Wikilinks_\-like format (only <a class="reference-link" href="../Advanced%20Usage/Note%20ID.md">Note ID</a>):
     
-    ```gfm
+    ```
     [[Hg8TS5ZOxti6]]
     ```
 *   <a class="reference-link" href="Text/Footnotes.md">Footnotes</a> are also supported via the corresponding Markdown syntax:
     
-    ```gfm
+    ```
     This is [^1], while this is [^2].
     
     [^1]: the first footnote
@@ -64,17 +64,17 @@ Multiple types of links are supported:
 
 *   Web URLs can be written with the standard Markdown syntax:
     
-    ```gfm
+    ```
     [Wikipedia](https://www.wikipedia.org)
     ```
 *   [Reference link](Text/Links/Internal%20\(reference\)%20links.md) to other notes with dynamic title, either by manually entering the note ID or via the _Add link_ dialog:
     
-    ```gfm
+    ```
     [[B9oMG6rFvvfq]]
     ```
 *   [Reference link](Text/Links/Internal%20\(reference\)%20links.md) to other notes with a custom text:
     
-    ```gfm
+    ```
     [This is a link](#root/LhtnZxtVsUMp)
     ```
 
@@ -110,7 +110,7 @@ Images can be inserted into the document in four different methods:
 
 An image reference to an attachment looks like this:
 
-```gfm
+```
 ![Name.jpeg](api/attachments/z50RceuHXe9J/image/image)
 ```
 

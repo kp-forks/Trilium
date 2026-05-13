@@ -96,9 +96,7 @@ This feature is on by default but it can easily be disabled by clicking on the m
 
 ## Alternative solutions (MCP)
 
-Given the recent advancements of the AI scene, MCP has grown to be more powerful and facilitates easier integrations with various application.
-
-As such, there are third-party solutions that integrate an MCP server that can be used with Trilium:
+The following are alternatives to Trilium's built-in MCP feature. Since Trilium's AI implementation is still experimental, its tooling might not be as mature as external tools.
 
 *   [tan-yong-sheng/triliumnext-mcp](https://github.com/tan-yong-sheng/triliumnext-mcp)
 *   [perfectra1n/triliumnext-mcp](https://github.com/perfectra1n/triliumnext-mcp)
