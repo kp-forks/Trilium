@@ -41,9 +41,6 @@
     --cmd-button-keyboard-shortcut-color: black;
     --cmd-button-disabled-opacity: 0.5;
 
-    --button-group-active-button-background: #00000026;
-    --button-group-active-button-text-color: black;
-
     --button-group-background-color: var(--input-background-color);
     --button-group-active-button-background-color: white;
     --button-group-active-button-color: black;
