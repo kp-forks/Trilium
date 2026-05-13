@@ -16,56 +16,34 @@
 <p>OCR in Trilium supports the following formats:</p>
 <h3>Images</h3>
 <ul>
-  <li>
-    <p>Both <a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_W8vYD3Q1zjCR">individual image notes</a> and
-      <a
-      href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_mT0HEkOsz6i1">attachments in text files</a>are supported.</p>
-  </li>
-  <li>
-    <p>Supported formats: JPEG, PNG, GIF, BMP, TIFF, WebP.</p>
-  </li>
-  <li>
-    <p>Currently only single-page TIFFs are supported. If you have multi-page
-      TIFFs consider splitting them into individual images.</p>
-  </li>
-  <li>
-    <p>Note that this feature works best for computer-rendered text rather than
-      handwriting.</p>
-  </li>
-  <li>
-    <p>The underlying technology is Tesseract.js.</p>
-  </li>
+  <li>Both <a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_W8vYD3Q1zjCR">individual image notes</a> and
+    <a
+    href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_mT0HEkOsz6i1">attachments in text files</a>are supported.</li>
+  <li>Supported formats: JPEG, PNG, GIF, BMP, TIFF, WebP.</li>
+  <li>Currently only single-page TIFFs are supported. If you have multi-page
+    TIFFs consider splitting them into individual images.</li>
+  <li>Note that this feature works best for computer-rendered text rather than
+    handwriting.</li>
+  <li>The underlying technology is Tesseract.js.</li>
 </ul>
 <h3>PDFs</h3>
 <p>Currently only text extraction is supported and not OCR.</p>
 <ul>
-  <li>
-    <p>This means that the PDF needs to have proper text information in it (i.e.
-      the text can be selected in a PDF viewer), whereas scanned documents are
-      not yet supported.</p>
-  </li>
-  <li>
-    <p>There are plans to integrate the same OCR-based recognition for PDFs used
-      for images, but this is not yet implemented.</p>
-  </li>
+  <li>This means that the PDF needs to have proper text information in it (i.e.
+    the text can be selected in a PDF viewer), whereas scanned documents are
+    not yet supported.</li>
+  <li>There are plans to integrate the same OCR-based recognition for PDFs used
+    for images, but this is not yet implemented.</li>
 </ul>
 <h3>Office documents</h3>
 <p>The text will be extracted from the following file formats:</p>
 <ul>
-  <li>
-    <p>Microsoft Word documents</p>
-  </li>
-  <li>
-    <p>Microsoft Excel documents (only the raw text information, the cell structure
-      is not maintained).</p>
-  </li>
-  <li>
-    <p>Microsoft PowerPoint documents</p>
-  </li>
-  <li>
-    <p>The OpenDocument alternatives to the previous formats (Text, Spreadsheet,
-      Presentation), created by editors such as LibreOffice and OpenOffice.</p>
-  </li>
+  <li>Microsoft Word documents</li>
+  <li>Microsoft Excel documents (only the raw text information, the cell structure
+    is not maintained).</li>
+  <li>Microsoft PowerPoint documents</li>
+  <li>The OpenDocument alternatives to the previous formats (Text, Spreadsheet,
+    Presentation), created by editors such as LibreOffice and OpenOffice.</li>
 </ul>
 <h2>Configuring and triggering OCR</h2>
 <p>The OCR can be configured by going to&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_4TIF1oA4VQRO">Options</a>&nbsp;→&nbsp;
@@ -73,19 +51,13 @@
   class="reference-link" href="#root/_hidden/_options/_help__optionsMedia">Media</a>&nbsp;and looking for the <em>Text Extraction (OCR) </em>section.</p>
 <p>There are three ways to trigger the OCR:</p>
 <ul>
-  <li>
-    <p>By enabling <em>Auto-process new files</em> which will process only the
-      notes or attachments created after enabling the option, existing files
-      will remain unprocessed.</p>
-  </li>
-  <li>
-    <p>By pressing <em>Start Batch Processing</em> which will process all the existing
-      notes.</p>
-  </li>
-  <li>
-    <p>By manually requesting for an image or file to have its text extracted,
-      regardless of whether the automatic processing is enabled or not.</p>
-  </li>
+  <li>By enabling <em>Auto-process new files</em> which will process only the
+    notes or attachments created after enabling the option, existing files
+    will remain unprocessed.</li>
+  <li>By pressing <em>Start Batch Processing</em> which will process all the existing
+    notes.</li>
+  <li>By manually requesting for an image or file to have its text extracted,
+    regardless of whether the automatic processing is enabled or not.</li>
 </ul>
 <h3>Minimum confidence</h3>
 <p>When extracting text from an image, there is a certain level of confidence
@@ -124,31 +96,22 @@
 <h2>Viewing extracted content for a single note</h2>
 <p>To access the extracted content of a note:</p>
 <ul>
-  <li>
-    <p>For&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_W8vYD3Q1zjCR">File</a>&nbsp;notes,
-      go to the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_8YBEPzcpUgxw">Note buttons</a>&nbsp;→ <em>Advanced</em> → <em>View OCR Text</em>.</p>
-  </li>
-  <li>
-    <p>For&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_0vhv7lsOLy82">Attachments</a>&nbsp;(e.g.&nbsp;
-      <a
-      class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_mT0HEkOsz6i1">Images</a>&nbsp;in&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;notes),
-        double-click the attachment to view the details, press the […] button at
-        the left and select <em>View extracted text (OCR)</em>.</p>
-  </li>
+  <li>For&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_W8vYD3Q1zjCR">File</a>&nbsp;notes,
+    go to the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_8YBEPzcpUgxw">Note buttons</a>&nbsp;→ <em>Advanced</em> → <em>View OCR Text</em>.</li>
+  <li
+ >For&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_0vhv7lsOLy82">Attachments</a>&nbsp;(e.g.&nbsp;
+    <a
+    class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_mT0HEkOsz6i1">Images</a>&nbsp;in&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;notes),
+      double-click the attachment to view the details, press the […] button at
+      the left and select <em>View extracted text (OCR)</em>.</li>
 </ul>
 <p>This section allows:</p>
 <ul>
-  <li>
-    <p>Viewing the extracted text, which can be copied elsewhere if needed or
-      just to check the quality of the extraction.</p>
-  </li>
-  <li>
-    <p>If the note has not been extracted yet, pressing <em>Process OCR </em>will
-      process it in the background. If the extraction confidence is lower than
-      the minimum confidence, there will be a notification.</p>
-  </li>
-  <li>
-    <p>Similarly, if the minimum confidence was changed in settings, it is possible
-      to press the <em>Process OCR </em>button again to extract the text again.</p>
-  </li>
+  <li>Viewing the extracted text, which can be copied elsewhere if needed or
+    just to check the quality of the extraction.</li>
+  <li>If the note has not been extracted yet, pressing <em>Process OCR </em>will
+    process it in the background. If the extraction confidence is lower than
+    the minimum confidence, there will be a notification.</li>
+  <li>Similarly, if the minimum confidence was changed in settings, it is possible
+    to press the <em>Process OCR </em>button again to extract the text again.</li>
 </ul>

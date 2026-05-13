@@ -10,7 +10,7 @@ import { formatCodeBlocks } from "./syntax_highlight.js";
  */
 export function isValidDocName(docName: string): boolean {
     // Allow alphanumeric characters, spaces, underscores, hyphens, and forward slashes.
-    const validDocNameRegex = /^[a-zA-Z0-9_/\- ]+$/;
+    const validDocNameRegex = /^[a-zA-Z0-9_/\- ()]+$/;
     return validDocNameRegex.test(docName);
 }
 
