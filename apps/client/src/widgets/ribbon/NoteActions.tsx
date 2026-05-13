@@ -1,8 +1,7 @@
 import { ConvertToAttachmentResponse } from "@triliumnext/commons";
 import { Dropdown as BootstrapDropdown } from "bootstrap";
 import { ComponentChildren, RefObject } from "preact";
-import { createPortal } from "preact/compat";
-import { useContext, useEffect, useRef, useState } from "preact/hooks";
+import { useContext, useEffect, useRef } from "preact/hooks";
 
 import appContext, { CommandNames } from "../../components/app_context";
 import Component from "../../components/component";
@@ -24,9 +23,7 @@ import ActionButton from "../react/ActionButton";
 import Dropdown from "../react/Dropdown";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListHeader, FormListItem, FormListToggleableItem } from "../react/FormList";
 import { useIsNoteReadOnly, useNoteContext, useNoteLabel, useNoteLabelBoolean, useNoteLabelOptionalBool, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption } from "../react/hooks";
-import Modal from "../react/Modal";
 import { ParentComponent } from "../react/react_utils";
-import { TextRepresentation } from "../type_widgets/ReadOnlyTextRepresentation";
 import { NoteTypeDropdownContent, useNoteBookmarkState, useShareState } from "./BasicPropertiesTab";
 import NoteActionsCustom from "./NoteActionsCustom";
 
@@ -98,9 +95,6 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
     const { isReadOnly, enableEditing } = useIsNoteReadOnly(note, noteContext);
     const isNormalViewMode = noteContext?.viewScope?.viewMode === "default";
     const itemToFocusRef = useRef<ItemToFocus>(null);
-    const supportsOcr = ["image", "file"].includes(noteType);
-    const [ ocrModalShown, setOcrModalShown ] = useState(false);
-
     // Keyboard shortcuts.
     useTriliumEvent("toggleRibbonTabBasicProperties", () => {
         if (!isNewLayout) return;
@@ -175,7 +169,7 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                     <CommandItem command="openNoteExternally" icon="bx bx-file-find" disabled={isSearchOrBook || !isElectron} text={t("note_actions.open_note_externally")} title={t("note_actions.open_note_externally_title")} />
                     <CommandItem command="openNoteCustom" icon="bx bx-customize" disabled={isSearchOrBook || isMac || !isElectron} text={t("note_actions.open_note_custom")} />
                     <CommandItem command="showNoteSource" icon="bx bx-code" disabled={!hasSource} text={t("note_actions.note_source")} />
-                    <CommandItem command={() => setOcrModalShown(true)} icon="bx bx-text" disabled={!supportsOcr} text={t("note_actions.view_ocr_text")} />
+                    <CommandItem command="showNoteOCRText" icon="bx bx-text" disabled={!["image", "file"].includes(noteType)} text={t("note_actions.view_ocr_text")} />
                     {(syncServerHost && isElectron) &&
                         <CommandItem command="openNoteOnServer" icon="bx bx-world" disabled={!syncServerHost} text={t("note_actions.open_note_on_server")} />
                     }
@@ -190,23 +184,6 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                     command={() => branches.deleteNotes([note.getParentBranches()[0].branchId])}
                 />
             </Dropdown>
-
-            {supportsOcr && createPortal(
-                <Modal
-                    className="ocr-text-modal"
-                    title={t("ocr.extracted_text_title")}
-                    show={ocrModalShown}
-                    onHidden={() => setOcrModalShown(false)}
-                    size="lg"
-                    scrollable
-                >
-                    <TextRepresentation
-                        textUrl={`ocr/notes/${note.noteId}/text`}
-                        processUrl={`ocr/process-note/${note.noteId}`}
-                    />
-                </Modal>,
-                document.body
-            )}
         </>
     );
 }

@@ -1,4 +1,4 @@
-import "./ReadOnlyTextRepresentation.css";
+import "./ocr_text.css";
 
 import type { OCRProcessResponse, TextRepresentationResponse } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
@@ -8,7 +8,8 @@ import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
 import { randomString } from "../../services/utils";
-import { TypeWidgetProps } from "./type_widget";
+import { useTriliumEvent } from "../react/hooks";
+import Modal from "../react/Modal";
 
 type State =
     | { kind: "loading" }
@@ -16,19 +17,35 @@ type State =
     | { kind: "empty" }
     | { kind: "error"; message: string };
 
-interface TextRepresentationProps {
+export interface TextRepresentationProps {
     /** The API path to fetch OCR text from (e.g. `ocr/notes/{id}/text`). */
     textUrl: string;
     /** The API path to trigger OCR processing (e.g. `ocr/process-note/{id}`). */
     processUrl: string;
 }
 
-export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
+export default function OcrTextDialog() {
+    const [ shown, setShown ] = useState(false);
+    const [ textUrl, setTextUrl ] = useState("");
+    const [ processUrl, setProcessUrl ] = useState("");
+
+    useTriliumEvent("showOcrTextDialog", ({ textUrl, processUrl }) => {
+        setTextUrl(textUrl);
+        setProcessUrl(processUrl);
+        setShown(true);
+    });
+
     return (
-        <TextRepresentation
-            textUrl={`ocr/notes/${note.noteId}/text`}
-            processUrl={`ocr/process-note/${note.noteId}`}
-        />
+        <Modal
+            className="ocr-text-modal"
+            title={t("ocr.extracted_text_title")}
+            show={shown}
+            onHidden={() => setShown(false)}
+            size="lg"
+            scrollable
+        >
+            {shown && <TextRepresentation textUrl={textUrl} processUrl={processUrl} />}
+        </Modal>
     );
 }
 
@@ -112,11 +129,7 @@ export function TextRepresentation({ textUrl, processUrl }: TextRepresentationPr
     }
 
     return (
-        <div className="text-representation note-detail-printable">
-            <div className="text-representation-header">
-                <span className="bx bx-text" />{" "}{t("ocr.extracted_text_title")}
-            </div>
-
+        <div className="text-representation">
             {state.kind === "loading" && (
                 <div className="text-representation-loading">
                     <span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.loading_text")}
@@ -124,11 +137,9 @@ export function TextRepresentation({ textUrl, processUrl }: TextRepresentationPr
             )}
 
             {state.kind === "loaded" && (
-                <>
-                    <div className="text-representation-content">
-                        {state.text}
-                    </div>
-                </>
+                <div className="text-representation-content">
+                    {state.text}
+                </div>
             )}
 
             {state.kind === "empty" && (
