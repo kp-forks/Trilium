@@ -8,6 +8,7 @@ import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
 import { randomString } from "../../services/utils";
+import Button from "../react/Button";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 
@@ -17,7 +18,7 @@ type State =
     | { kind: "empty" }
     | { kind: "error"; message: string };
 
-export interface TextRepresentationProps {
+interface TextRepresentationProps {
     /** The API path to fetch OCR text from (e.g. `ocr/notes/{id}/text`). */
     textUrl: string;
     /** The API path to trigger OCR processing (e.g. `ocr/process-note/{id}`). */
@@ -35,21 +36,20 @@ export default function OcrTextDialog() {
         setShown(true);
     });
 
-    return (
-        <Modal
-            className="ocr-text-modal"
-            title={t("ocr.extracted_text_title")}
-            show={shown}
+    return shown && (
+        <TextRepresentationModal
+            textUrl={textUrl}
+            processUrl={processUrl}
             onHidden={() => setShown(false)}
-            size="lg"
-            scrollable
-        >
-            {shown && <TextRepresentation textUrl={textUrl} processUrl={processUrl} />}
-        </Modal>
+        />
     );
 }
 
-export function TextRepresentation({ textUrl, processUrl }: TextRepresentationProps) {
+interface TextRepresentationModalProps extends TextRepresentationProps {
+    onHidden: () => void;
+}
+
+function TextRepresentationModal({ textUrl, processUrl, onHidden }: TextRepresentationModalProps) {
     const [ state, setState ] = useState<State>({ kind: "loading" });
     const [ processing, setProcessing ] = useState(false);
 
@@ -128,50 +128,51 @@ export function TextRepresentation({ textUrl, processUrl }: TextRepresentationPr
         }
     }
 
+    const processButton = state.kind !== "loading" && (
+        <Button
+            icon={processing ? "bx-loader-alt bx-spin" : "bx-refresh"}
+            text={processing ? t("ocr.processing") : t("ocr.process_now")}
+            size="small"
+            disabled={processing}
+            onClick={processOCR}
+        />
+    );
+
     return (
-        <div className="text-representation">
+        <Modal
+            className="ocr-text-modal"
+            title={t("ocr.extracted_text_title")}
+            footer={processButton}
+            show={true}
+            onHidden={onHidden}
+            size="lg"
+            scrollable
+        >
             {state.kind === "loading" && (
-                <div className="text-representation-loading">
+                <div className="ocr-text-modal-loading">
                     <span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.loading_text")}
                 </div>
             )}
 
             {state.kind === "loaded" && (
-                <div className="text-representation-content">
+                <div className="ocr-text-modal-content">
                     {state.text}
                 </div>
             )}
 
             {state.kind === "empty" && (
-                <>
-                    <div className="text-representation-empty">
-                        <span className="bx bx-info-circle" />{" "}{t("ocr.no_text_available")}
-                    </div>
-                    <div className="text-representation-meta">
-                        {t("ocr.no_text_explanation")}
-                    </div>
-                </>
-            )}
-
-            {state.kind === "error" && (
-                <div className="text-representation-error">
-                    <span className="bx bx-error" />{" "}{state.message}
+                <div className="ocr-text-modal-empty">
+                    <span className="bx bx-info-circle" />
+                    <div>{t("ocr.no_text_available")}</div>
+                    <div className="ocr-text-modal-explanation">{t("ocr.no_text_explanation")}</div>
                 </div>
             )}
 
-            {state.kind !== "loading" && (
-                <button
-                    type="button"
-                    className="btn btn-secondary text-representation-process-btn"
-                    disabled={processing}
-                    onClick={processOCR}
-                >
-                    {processing
-                        ? <><span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.processing")}</>
-                        : <><span className="bx bx-play" />{" "}{t("ocr.process_now")}</>
-                    }
-                </button>
+            {state.kind === "error" && (
+                <div className="ocr-text-modal-error">
+                    <span className="bx bx-error" />{" "}{state.message}
+                </div>
             )}
-        </div>
+        </Modal>
     );
 }
