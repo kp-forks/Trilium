@@ -2209,7 +2209,8 @@
     "pages_other": "",
     "pages_alt": "第 {{pageNumber}} 頁",
     "pages_loading": "正在載入…",
-    "annotations_one": "{{count}} 註解"
+    "annotations_one": "{{count}} 註解",
+    "annotations_other": ""
   },
   "mobile_tab_switcher": {
     "more_options": "更多選項",

@@ -314,6 +314,10 @@ export type CommandMappings = {
     lastTab: CommandData;
     showNoteSource: CommandData;
     showNoteOCRText: CommandData;
+    showOcrTextDialog: CommandData & {
+        textUrl: string;
+        processUrl: string;
+    };
     showSQLConsole: CommandData;
     showBackendLog: CommandData;
     showCheatsheet: CommandData;

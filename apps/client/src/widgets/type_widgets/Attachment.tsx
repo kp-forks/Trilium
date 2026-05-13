@@ -26,12 +26,10 @@ import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import HelpButton from "../react/HelpButton";
 import { useTriliumEvent } from "../react/hooks";
 import Icon from "../react/Icon";
-import Modal from "../react/Modal";
 import NoItems from "../react/NoItems";
 import NoteLink from "../react/NoteLink";
 import { ParentComponent, refToJQuerySelector } from "../react/react_utils";
 import { TextPreview } from "./File";
-import { TextRepresentation } from "./ReadOnlyTextRepresentation";
 import { TypeWidgetProps } from "./type_widget";
 
 /**
@@ -141,7 +139,6 @@ export function AttachmentDetail({ note, viewScope }: TypeWidgetProps) {
 
 function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment, isFullDetail?: boolean }) {
     const contentWrapper = useRef<HTMLDivElement>(null);
-    const [ ocrModalShown, setOcrModalShown ] = useState(false);
     const [ title, setTitle ] = useState(attachment.title);
     const [ textContent, setTextContent ] = useState<string | null>(null);
     const supportsOcr = attachment.role === "image" || attachment.role === "file";
@@ -194,7 +191,10 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                     <AttachmentActions
                         attachment={attachment}
                         copyAttachmentLinkToClipboard={copyAttachmentLinkToClipboard}
-                        onShowOcr={supportsOcr ? () => setOcrModalShown(true) : undefined}
+                        onShowOcr={supportsOcr ? () => appContext.triggerCommand("showOcrTextDialog", {
+                            textUrl: `ocr/attachments/${attachment.attachmentId}/text`,
+                            processUrl: `ocr/process-attachment/${attachment.attachmentId}`
+                        }) : undefined}
                     />
                     <h4 className="attachment-title">
                         {!isFullDetail ? (
@@ -223,21 +223,6 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                 <div ref={contentWrapper} className="attachment-content-wrapper" />
             </div>
 
-            {supportsOcr && (
-                <Modal
-                    className="ocr-text-modal"
-                    title={t("ocr.extracted_text_title")}
-                    show={ocrModalShown}
-                    onHidden={() => setOcrModalShown(false)}
-                    size="lg"
-                    scrollable
-                >
-                    <TextRepresentation
-                        textUrl={`ocr/attachments/${attachment.attachmentId}/text`}
-                        processUrl={`ocr/process-attachment/${attachment.attachmentId}`}
-                    />
-                </Modal>
-            )}
         </div>
     );
 }

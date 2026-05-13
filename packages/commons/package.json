@@ -1,6 +1,6 @@
 {
   "name": "@triliumnext/commons",
-  "version": "0.102.2",
+  "version": "0.103.0",
   "description": "Shared library between the clients (e.g. browser, Electron) and the server, mostly for type definitions and utility methods.",
   "private": true,
   "type": "module",

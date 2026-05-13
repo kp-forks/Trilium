@@ -411,8 +411,8 @@ importers:
         specifier: 8.11.12
         version: 8.11.12
       '@types/tabulator-tables':
-        specifier: 6.3.2
-        version: 6.3.2
+        specifier: 6.3.3
+        version: 6.3.3
       copy-webpack-plugin:
         specifier: 14.0.0
         version: 14.0.0(webpack@5.105.4(esbuild@0.28.0))
@@ -6124,8 +6124,8 @@ packages:
   '@types/tabulator-tables@6.3.1':
     resolution: {integrity: sha512-qL05wGXVy0yfWcF8LCE9+9uSeUIpeKdgpm8YmOAPTjLd3FaoZziPOhVxIiLzEhLTFfOvbuwnaWDm4v4i87diRQ==}
 
-  '@types/tabulator-tables@6.3.2':
-    resolution: {integrity: sha512-ox1MLWti8gNnWMNYd0Kob2nRNxttvjB0FwtZkWC3MkDtO9SdOe785dfEN+8Bjmrn9x5RzGR6Lj837Icr0seOeg==}
+  '@types/tabulator-tables@6.3.3':
+    resolution: {integrity: sha512-7HaugASx842qF+uN7Gwz/23ssmBGIrEhqlQDV99/pTTOu202Jje0A+Z6N3kyJZ5zpdFfAABI2Z+qpNoa4q0RLg==}
 
   '@types/tmp@0.2.6':
     resolution: {integrity: sha512-chhaNf2oKHlRkDGt+tiKE2Z5aJ6qalm7Z9rlLdBwmOiAAf09YQvvoLXjWK4HWPF1xU/fqvMgfNfpVoBscA/tKA==}
@@ -13047,6 +13047,7 @@ packages:
 
   sliced@1.0.1:
     resolution: {integrity: sha512-VZBmZP8WU3sMOZm1bdgTadsQbcscK0UM8oKxKVBs4XAhUo2Xxzm/OFMGBkPusxw9xL3Uy8LrzEqGqJhclsr0yA==}
+    deprecated: Unsupported
 
   slugify@1.4.7:
     resolution: {integrity: sha512-tf+h5W1IrjNm/9rKKj0JU2MDMruiopx0jjVA5zCdBtcGjfp0+c5rHw/zADLC3IeKlGHtVbHtpfzvYA0OYT+HKg==}
@@ -20192,7 +20193,7 @@ snapshots:
 
   '@types/tabulator-tables@6.3.1': {}
 
-  '@types/tabulator-tables@6.3.2': {}
+  '@types/tabulator-tables@6.3.3': {}
 
   '@types/tmp@0.2.6': {}
 
