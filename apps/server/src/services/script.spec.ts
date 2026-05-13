@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import becca from "../becca/becca.js";
 import { buildNote } from "../test/becca_easy_mocking.js";
 import cls from "./cls.js";
-import { buildJsx, executeBundle, getScriptBundle } from "./script.js";
+import scriptService, { buildJsx, executeBundle, getScriptBundle } from "./script.js";
 
 describe("Script", () => {
     beforeEach(() => {
@@ -69,6 +69,95 @@ describe("Script", () => {
                 expect(result).toBe(true);
             });
         });
+    });
+});
+
+describe("getScriptBundle", () => {
+    beforeEach(() => {
+        becca.reset();
+    });
+
+    it("returns a bundle for a backend script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = getScriptBundle(note, true, "backend");
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("api.log('hello');");
+        expect(bundle!.note).toBe(note);
+        expect(bundle!.allNotes).toContain(note);
+    });
+
+    it("returns a bundle for a frontend script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=frontend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = getScriptBundle(note, true, "frontend");
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("api.log('hello');");
+    });
+
+    it("returns undefined for non-script notes", () => {
+        const note = buildNote({ type: "text", content: "just text" });
+
+        const bundle = getScriptBundle(note, true, "backend");
+        expect(bundle).toBeUndefined();
+    });
+
+    it("skips child notes with mismatched script env", () => {
+        const parent = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: "api.log('backend');",
+            children: [{
+                type: "code",
+                mime: "application/javascript;env=frontend",
+                content: "api.log('frontend');"
+            }]
+        });
+
+        const bundle = getScriptBundle(parent, true, "backend");
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("api.log('backend');");
+        expect(bundle!.script).not.toContain("api.log('frontend');");
+    });
+});
+
+describe("getScriptBundleForFrontend", () => {
+    beforeEach(() => {
+        becca.reset();
+    });
+
+    it("returns a bundle with noteIds instead of note objects", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=frontend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = scriptService.getScriptBundleForFrontend(note);
+        expect(bundle).toBeDefined();
+        expect(bundle!.noteId).toBe(note.noteId);
+        expect(bundle!.note).toBeUndefined();
+        expect(bundle!.allNoteIds).toContain(note.noteId);
+        expect(bundle!.allNotes).toBeUndefined();
+    });
+
+    it("returns undefined for backend scripts", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = scriptService.getScriptBundleForFrontend(note);
+        expect(bundle).toBeUndefined();
     });
 });
 
