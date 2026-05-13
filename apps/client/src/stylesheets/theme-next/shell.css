@@ -1790,6 +1790,17 @@ div.floating-buttons-children .close-floating-buttons:has(.close-floating-button
     font-size: var(--floating-button-icon-size);
 }
 
+/* Button gropus */
+:root .floating-buttons .btn-group {
+    background: transparent;
+    padding: 0;
+    
+    button.btn.floating-button.btn {
+        border-radius: 0;
+        box-shadow: unset;
+    }
+}
+
 /*
  * Find and replace bar
  */
