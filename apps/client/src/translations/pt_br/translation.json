@@ -1276,7 +1276,7 @@
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Tempo Limite para Exclusão de um Anexo",
-    "erase_attachments_after": "Apagar anexos não utilizados após:",
+    "erase_attachments_after": "Apagar anexos não utilizados após",
     "manual_erasing_description": "Acione o apagamento manualmente, ignorando o tempo limite acima.",
     "erase_unused_attachments_now": "Apagar anexos não utilizados agora",
     "unused_attachments_erased": "Os anexos não utilizados foram apagados."
@@ -1287,7 +1287,7 @@
   },
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Tempo Limite para Exclusão de uma Nota",
-    "erase_notes_after": "Apagar notas após:",
+    "erase_notes_after": "Apagar notas após",
     "manual_erasing_description": "Acione o apagamento manualmente, ignorando o tempo limite acima.",
     "erase_deleted_notes_now": "Apague as notas excluídas agora",
     "deleted_notes_erased": "As notas excluídas foram removidas permanentemente."
@@ -1295,12 +1295,12 @@
   "revisions_snapshot_interval": {
     "note_revisions_snapshot_interval_title": "Intervalo de Captura de Versão da Nota",
     "note_revisions_snapshot_description": "O intervalo de captura de versão da nota é o tempo após o qual uma nova revisão será criada para a nota. Veja <doc>wiki</doc> para mais informações.",
-    "snapshot_time_interval_label": "Intervalo de Captura de Versão da Nota:"
+    "snapshot_time_interval_label": "Intervalo de snapshot da Nota"
   },
   "revisions_snapshot_limit": {
     "note_revisions_snapshot_limit_title": "Limite de Capturas das Versões da Nota",
     "note_revisions_snapshot_limit_description": "O limite de número de captura de versões das notas refere-se ao número máximo de revisões que podem ser salvas para cada nota. Onde -1 significa nenhum limite, 0 significa excluir todas as revisões. Você pode definir as revisões máximas para uma única nota através da etiqueta #versioningLimit.",
-    "snapshot_number_limit_label": "Quantidade limite de capturas de versão:",
+    "snapshot_number_limit_label": "Numero máximo de revisões",
     "snapshot_number_limit_unit": "capturas",
     "erase_excess_revision_snapshots": "Apagar capturas de versão excedentes agora",
     "erase_excess_revision_snapshots_prompt": "As capturas de versão excedentes foram apagadas."
@@ -1357,8 +1357,8 @@
   "custom_date_time_format": {
     "title": "Formato Personalizado de Data/Hora",
     "description": "Personaliza o formato de data e hora inseridos via <shortcut /> ou barra de ferramentas. Veja a <doc>documentação do Day.js</doc> para os tokens de formatos disponíveis.",
-    "format_string": "Formato:",
-    "formatted_time": "Data/hora formatada:"
+    "format_string": "Formato",
+    "formatted_time": "Data/hora formatada"
   },
   "i18n": {
     "title": "Localização",
