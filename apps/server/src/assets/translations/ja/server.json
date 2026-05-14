@@ -104,7 +104,8 @@
     "toggle-promoted-attributes": "プロモート属性切り替え",
     "force-save-revision": "アクティブノートの新しいノートリヴィジョンを強制する",
     "toggle-classic-editor-toolbar": "固定ツールバーエディターの書式設定タブ切り替え",
-    "save-named-revision": "アクティブなノートの変更履歴を名前を付けて保存"
+    "save-named-revision": "アクティブなノートの変更履歴を名前を付けて保存",
+    "toggle-archived-notes": "ノートツリーでアーカイブされたノートを表示 / 非表示にする"
   },
   "keyboard_action_names": {
     "back-in-note-history": "ノートの履歴を戻る",
@@ -202,7 +203,8 @@
     "add-include-note-to-text": "埋め込みノートを追加",
     "toggle-ribbon-tab-classic-editor": "リボンタブのクラシックエディターに切り替える",
     "toggle-ribbon-tab-promoted-attributes": "リボンタブ切り替え：プロモート属性",
-    "save-named-revision": "変更履歴を名前を付けて保存"
+    "save-named-revision": "変更履歴を名前を付けて保存",
+    "toggle-archived-notes": "アーカイブ済みノートの表示の切り替え"
   },
   "login": {
     "title": "ログイン",

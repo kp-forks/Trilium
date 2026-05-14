@@ -2,14 +2,13 @@ import "./Markdown.css";
 
 import { autocompletion } from "@codemirror/autocomplete";
 import { syntaxTree } from "@codemirror/language";
-import { StateEffect } from "@codemirror/state";
 import type { SyntaxNode } from "@lezer/common";
 import VanillaCodeMirror from "@triliumnext/codemirror";
 import { CustomMarkdownRenderer, renderToHtml } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
 import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
-import { useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import NoteContext from "../../../components/note_context";
@@ -22,8 +21,8 @@ import options from "../../../services/options";
 import server from "../../../services/server";
 import { removeIndividualBinding } from "../../../services/shortcuts";
 import tree from "../../../services/tree";
-import utils from "../../../services/utils";
-import { useLegacyImperativeHandlers } from "../../react/hooks";
+import utils, { isDesktop } from "../../../services/utils";
+import { useLegacyImperativeHandlers, useTriliumEvent } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
@@ -81,17 +80,18 @@ export default function Markdown(props: TypeWidgetProps) {
         if (!editorView || !props.parentComponent) return;
         const $el = $(editorView.contentDOM);
         const bindingPromise = keyboard_actions.setupActionsForElement("text-detail", $el, props.parentComponent, props.ntxId);
-        return async () => {
-            const bindings = await bindingPromise;
-            for (const binding of bindings) {
-                removeIndividualBinding(binding);
-            }
+        return () => {
+            bindingPromise.then(bindings => {
+                for (const binding of bindings) {
+                    removeIndividualBinding(binding);
+                }
+            });
         };
     }, [editorView, props.parentComponent, props.ntxId]);
 
     useSyncedScrolling(editorView, previewEl);
     useSyncedHighlight(editorView, previewEl, html);
-    usePublishToc(props.noteContext, editorView, headings);
+    usePublishToc(props.noteContext, editorView, headings, props.note);
     useImageDrop(props.note, editorView);
     useTextCommands(props.parentComponent, editorView);
     useSlashCommands(props.parentComponent, editorView, props.note);
@@ -110,7 +110,7 @@ export default function Markdown(props: TypeWidgetProps) {
                 editorRef={setEditorView}
                 onContentChanged={setContent}
                 previewContent={<MarkdownPreview ntxId={props.ntxId} />}
-                forceOrientation="horizontal"
+                forceOrientation={isDesktop() ? "horizontal" : "vertical"}
             />
         </MarkdownContext.Provider>
     );
@@ -137,10 +137,11 @@ function MarkdownPreview({ ntxId }: { ntxId: TypeWidgetProps["ntxId"] }) {
 function usePublishToc(
     noteContext: NoteContext | undefined,
     editorView: VanillaCodeMirror | null,
-    headings: MarkdownHeading[]
+    headings: MarkdownHeading[],
+    note: FNote
 ) {
-    useEffect(() => {
-        if (!noteContext) return;
+    const publish = useCallback(() => {
+        if (!noteContext || noteContext.noteId !== note.noteId) return;
         noteContext.setContextData("toc", {
             headings,
             scrollToHeading(heading) {
@@ -154,7 +155,19 @@ function usePublishToc(
                 editorView.scrollDOM.scrollTo({ top: targetTop, behavior: "smooth" });
             }
         });
-    }, [ noteContext, headings, editorView ]);
+    }, [ noteContext, headings, editorView, note.noteId ]);
+
+    // Publish when headings or editor change.
+    useEffect(() => { publish(); }, [ publish ]);
+
+    // Re-publish after note switches: context data is cleared when the noteId
+    // changes, so when our note becomes active again we need to restore it.
+    // The noteId guard in publish() prevents overwriting another widget's ToC.
+    useTriliumEvent("noteSwitched", ({ noteContext: ctx }) => {
+        if (ctx === noteContext) {
+            publish();
+        }
+    });
 }
 //#endregion
 
@@ -320,15 +333,15 @@ function useTextCommands(parentComponent: TypeWidgetProps["parentComponent"], ed
             parentComponent?.triggerCommand("showIncludeNoteDialog", {
                 editorApi: {
                     addIncludeNote(noteId: string, boxSize?: string) {
-                        insertText(editorView!, `<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
-                        editorView!.focus();
+                        insertText(editorView, `<section class="include-note" data-note-id="${noteId}" data-box-size="${boxSize ?? "full"}"></section>\n`);
+                        editorView.focus();
                     },
                     async addImage(noteId: string) {
                         const note = await froca.getNote(noteId);
                         if (!note) return;
                         const encodedTitle = encodeURIComponent(note.title);
-                        insertText(editorView!, `![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
-                        editorView!.focus();
+                        insertText(editorView, `![${note.title}](api/images/${noteId}/${encodedTitle})\n`);
+                        editorView.focus();
                     }
                 }
             });
@@ -588,7 +601,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
             activateOnTyping: true
         });
 
-        editorView.dispatch({ effects: StateEffect.appendConfig.of(ext) });
+        editorView.setNamedExtension("slashCommands", ext);
     }, [editorView]);
 }
 //#endregion
@@ -609,12 +622,12 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             if (!files?.length) return;
 
             const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
-            if (!imageFiles.length) return;
+            if (!imageFiles.length || !editorView) return;
 
             e.preventDefault();
             e.stopPropagation();
 
-            const dropPos = editorView!.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined;
+            const dropPos = editorView.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined;
             for (const file of imageFiles) {
                 uploadImageAndInsert(editorView!, note, file, dropPos);
             }
@@ -628,11 +641,11 @@ function useImageDrop(note: FNote, editorView: VanillaCodeMirror | null) {
             const html = e.clipboardData?.getData("text/html");
             if (html) {
                 const imgMatch = html.match(/<img[^>]+src="([^"]*)(api\/attachments\/[a-zA-Z0-9_]+\/image\/[^"?]+)/);
-                if (imgMatch) {
+                if (imgMatch && editorView) {
                     e.preventDefault();
                     const src = imgMatch[2];
                     const alt = html.match(/<img[^>]+alt="([^"]*)"/)?.[1] ?? "image";
-                    insertText(editorView!, `![${alt}](${src})`);
+                    insertText(editorView, `![${alt}](${src})`);
                     return;
                 }
             }

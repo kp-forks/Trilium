@@ -3,7 +3,8 @@ import becca from "../becca/becca.js";
 import BAttachment from "../becca/entities/battachment.js";
 import { buildNote } from "../test/becca_easy_mocking.js";
 import { randomString } from "./utils.js";
-import { checkImageAttachments, findBookmarks } from "./notes.js";
+import BAttribute from "../becca/entities/battribute.js";
+import { checkImageAttachments, findBookmarks, saveLinks } from "./notes.js";
 
 vi.mock("./sql.js", () => ({
     default: {
@@ -242,5 +243,87 @@ describe("checkImageAttachments", () => {
             expect(result.forceFrontendReload).toBe(true);
             expect(result.content).not.toContain("foreignAtt2");
         });
+    });
+});
+
+describe("saveLinks", () => {
+    beforeEach(() => {
+        becca.reset();
+    });
+
+    function makeLinkRelation(noteId: string, name: string, targetNoteId: string) {
+        const attr = new BAttribute({
+            attributeId: randomString(10),
+            noteId,
+            type: "relation",
+            name,
+            value: targetNoteId
+        });
+        attr.markAsDeleted = vi.fn();
+        return attr;
+    }
+
+    it("does not delete existing imageLink relations on markdown notes that reference images", () => {
+        const note = buildNote({ title: "Test", type: "code", mime: "text/x-markdown" });
+        const targetNote = buildNote({ title: "Image Note", type: "image" });
+        becca.notes[targetNote.noteId] = targetNote;
+
+        const imageLink = makeLinkRelation(note.noteId, "imageLink", targetNote.noteId);
+        note.getRelations = () => [imageLink];
+        note.getAttachments = () => [];
+
+        const content = `![diagram](api/images/${targetNote.noteId}/diagram.png)`;
+        saveLinks(note, content);
+
+        expect(imageLink.markAsDeleted).not.toHaveBeenCalled();
+    });
+
+    it("does not delete existing internalLink relations on markdown notes using #root links", () => {
+        const note = buildNote({ title: "Test", type: "code", mime: "text/x-markdown" });
+        const targetNote = buildNote({ title: "Other Note" });
+        becca.notes[targetNote.noteId] = targetNote;
+
+        const internalLink = makeLinkRelation(note.noteId, "internalLink", targetNote.noteId);
+        note.getRelations = () => [internalLink];
+        note.getAttachments = () => [];
+
+        const content = `See [Other Note](#root/${targetNote.noteId})`;
+        saveLinks(note, content);
+
+        expect(internalLink.markAsDeleted).not.toHaveBeenCalled();
+    });
+
+    it("does not delete existing internalLink relations on markdown notes using wiki-links", () => {
+        const note = buildNote({ title: "Test", type: "code", mime: "text/x-markdown" });
+        const targetNote = buildNote({ title: "Linked Note" });
+        becca.notes[targetNote.noteId] = targetNote;
+
+        const internalLink = makeLinkRelation(note.noteId, "internalLink", targetNote.noteId);
+        note.getRelations = () => [internalLink];
+        note.getAttachments = () => [];
+
+        const content = `See [[${targetNote.noteId}]] for details.`;
+        saveLinks(note, content);
+
+        expect(internalLink.markAsDeleted).not.toHaveBeenCalled();
+    });
+
+    it("detects both wiki-links and #root links in the same content", () => {
+        const note = buildNote({ title: "Test", type: "code", mime: "text/x-markdown" });
+        const targetA = buildNote({ title: "Note A" });
+        const targetB = buildNote({ title: "Note B" });
+        becca.notes[targetA.noteId] = targetA;
+        becca.notes[targetB.noteId] = targetB;
+
+        const linkA = makeLinkRelation(note.noteId, "internalLink", targetA.noteId);
+        const linkB = makeLinkRelation(note.noteId, "internalLink", targetB.noteId);
+        note.getRelations = () => [linkA, linkB];
+        note.getAttachments = () => [];
+
+        const content = `Link to [[${targetA.noteId}]] and [Note B](#root/${targetB.noteId})`;
+        saveLinks(note, content);
+
+        expect(linkA.markAsDeleted).not.toHaveBeenCalled();
+        expect(linkB.markAsDeleted).not.toHaveBeenCalled();
     });
 });

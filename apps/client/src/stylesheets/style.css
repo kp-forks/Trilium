@@ -543,11 +543,6 @@ body.mobile .dropdown .dropdown-submenu {
     font-family: var(--monospace-font-family) !important;
 }
 
-body .cm-editor .cm-gutters {
-    background-color: inherit !important;
-    border-inline-end: none;
-}
-
 body .cm-editor .cm-placeholder {
     color: #999 !important;
 }
@@ -2731,7 +2726,7 @@ iframe.print-iframe {
 
 /* Scrolling container */
 
-.scrolling-container:has(> :is(.note-detail.full-height, .note-list-widget.full-height)) {
+.note-split:not(.type-text) > .scrolling-container:has(> :is(.note-detail.full-height, .note-list-widget.full-height)) {
     display: flex;
     flex-direction: column;
 }

@@ -191,7 +191,8 @@
     "quickSearch": "centrarse en la entrada de búsqueda rápida",
     "inPageSearch": "búsqueda en la página",
     "title": "Hoja de ayuda",
-    "editShortcuts": "Editar atajos de teclado"
+    "editShortcuts": "Editar atajos de teclado",
+    "toggleArchivedNotes": "mostrar/ocultar notas archivadas"
   },
   "import": {
     "importIntoNote": "Importar a nota",
@@ -378,8 +379,8 @@
     "css_class": "el valor de esta etiqueta se agrega como clase CSS al nodo que representa la nota dada en el árbol. Esto puede resultar útil para temas avanzados. Se puede utilizar en notas de plantilla.",
     "icon_class": "el valor de esta etiqueta se agrega como una clase CSS al icono en el árbol, lo que puede ayudar a distinguir visualmente las notas en el árbol. El ejemplo podría ser bx bx-home: los iconos se toman de boxicons. Se puede utilizar en notas de plantilla.",
     "page_size": "número de elementos por página en el listado de notas",
-    "custom_request_handler": "véa <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Manejador de solicitudes personalizado</a>",
-    "custom_resource_provider": "véa <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Manejador de solicitudes personalizado</a>",
+    "custom_request_handler": "manejador de solicitudes personalizado",
+    "custom_resource_provider": "proveedor de recursos personalizado",
     "widget": "marca esta nota como un widget personalizado que se agregará al árbol de componentes de Trilium",
     "workspace": "marca esta nota como un espacio de trabajo que permite un fácil levantamiento",
     "workspace_icon_class": "define la clase CSS del icono de cuadro que se usará en la pestaña cuando se levante a esta nota",
@@ -692,7 +693,7 @@
     "import_files": "Importar archivos",
     "export_note": "Exportar nota",
     "delete_note": "Eliminar nota",
-    "print_note": "Imprimir nota",
+    "print_note": "Imprimir nota...",
     "save_revision": "Guardar revisión",
     "convert_into_attachment_failed": "La conversión de nota '{{title}}' falló.",
     "convert_into_attachment_successful": "La nota '{{title}}' ha sido convertida a un archivo adjunto.",
@@ -711,7 +712,8 @@
     "word_wrap_on": "Encendido",
     "word_wrap_off": "Apagado",
     "save_named_revision": "Guardar revisión nombrada...",
-    "word_wrap": "Ajuste de línea"
+    "word_wrap": "Ajuste de línea",
+    "print_or_export_to_pdf": "Imprimir/exportar a PDF..."
   },
   "onclick_button": {
     "no_click_handler": "El widget de botón '{{componentId}}' no tiene un controlador de clics definido"
@@ -1198,7 +1200,13 @@
     "dark_theme": "Oscuro",
     "modern_themes": "Moderno",
     "legacy_themes": "Heredado",
-    "custom_themes": "Personalizado"
+    "custom_themes": "Personalizado",
+    "recommended": "Recomendado",
+    "color_scheme": "esquema de colores",
+    "color_scheme_system": "Sistema",
+    "color_scheme_light": "Luz",
+    "color_scheme_dark": "Oscuro",
+    "color_scheme_custom_disabled": "La opción de anulación de la combinación de colores no está disponible para temas personalizados"
   },
   "zoom_factor": {
     "title": "Factor de zoom (solo versión de escritorio)",
@@ -1385,7 +1393,7 @@
     "existing_backups": "Copias de seguridad existentes",
     "date-and-time": "Fecha y hora",
     "path": "Ruta",
-    "database_backed_up_to": "Se ha realizado una copia de seguridad de la base de datos en {{backupFilePath}}",
+    "database_backed_up_to": "Se ha realizado una copia de seguridad de la base de datos en {{- backupFilePath}}",
     "no_backup_yet": "no hay copia de seguridad todavía",
     "download": "Descargar",
     "title": "Respaldo"
@@ -1424,7 +1432,7 @@
     "new_password_confirmation": "Confirmación de nueva contraseña",
     "change_password": "Cambiar contraseña",
     "protected_session_timeout": "Sesión protegida",
-    "protected_session_timeout_description": "El tiempo de espera de la sesión protegida es el período de tiempo después del cual la sesión protegida se borra de la memoria del navegador. Esto se mide desde la última interacción con notas protegidas. Ver",
+    "protected_session_timeout_description": "Tiempo de inactividad antes del cual la sesión protegida se borra de la memoria del navegador. Ver",
     "wiki": "wiki",
     "for_more_info": "para más información.",
     "protected_session_timeout_label": "Cerrar sesión automáticamente después de",
@@ -1490,8 +1498,8 @@
   "spellcheck": {
     "title": "Revisión ortográfica",
     "description": "Estas opciones se aplican sólo para compilaciones de escritorio; los navegadores utilizarán su corrector ortográfico nativo.",
-    "enable": "Habilitar corrector ortográfico",
-    "language_code_label": "Código(s) de idioma",
+    "enable": "Comprobación ortográfica",
+    "language_code_label": "Idiomas del corrector ortográfico",
     "restart-required": "Los cambios en las opciones de corrección ortográfica entrarán en vigor después del reinicio de la aplicación.",
     "custom_dictionary_title": "Diccionario personalizado",
     "custom_dictionary_description": "Las palabras agregadas al diccionario se sincronizan en todos sus dispositivos.",
@@ -1501,14 +1509,14 @@
     "related_description": "Configurar idiomas del corrector ortográfico y diccionario personalizado."
   },
   "sync_2": {
-    "config_title": "Configuración de sincronización",
-    "server_address": "Dirección de la instancia del servidor",
-    "timeout": "Tiempo de espera de sincronización (milisegundos)",
-    "proxy_label": "Sincronizar servidor proxy (opcional)",
+    "config_title": "Sincronizar servidor",
+    "server_address": "Dirección del servidor",
+    "timeout": "Tiempo de espera de conexión",
+    "proxy_label": "Servidor proxy",
     "save": "Guardar",
     "help": "Ayuda",
-    "test_title": "Prueba de sincronización",
-    "test_description": "Esto probará la conexión y el protocolo de enlace con el servidor de sincronización. Si el servidor de sincronización no está inicializado, esto lo configurará para sincronizarse con el documento local.",
+    "test_title": "Prueba de conexión",
+    "test_description": "Probar la conexión al servidor de sincronización. Si no está inicializado, esto lo configurará la sincronización.",
     "test_button": "Prueba de sincronización",
     "handshake_failed": "Error en el protocolo de enlace del servidor de sincronización, error: {{message}}",
     "server_address_description": "URL del servidor Trilium para sincronizar.",
@@ -1909,7 +1917,7 @@
     "days": "Días"
   },
   "share": {
-    "title": "Ajustes de uso compartido",
+    "title": "Compartir",
     "redirect_bare_domain": "Redirigir el dominio absoluto a página Compartir",
     "redirect_bare_domain_description": "Redirigir usuarios anónimos a la página Compartir en vez de mostrar Inicio de sesión",
     "show_login_link": "Mostrar enlace a Inicio de sesión en tema de Compartir",
@@ -1940,7 +1948,7 @@
   },
   "content_language": {
     "title": "Idiomas de contenido",
-    "description": "Seleccione uno o más idiomas que deben aparecer en la selección del idioma en la sección Propiedades Básicas de una nota de texto de solo lectura o editable. Esto permitirá características tales como corrección de ortografía o soporte de derecha a izquierda."
+    "description": "Seleccione uno o más idiomas que deben aparecer en la selección del idioma en la sección Propiedades Básicas de una nota de texto de solo lectura o editable. Esto permitirá características tales como corrección ortográfica, soporte de derecha a izquierda y extracción de texto (OCR)."
   },
   "switch_layout_button": {
     "title_vertical": "Mover el panel de edición hacia abajo",
@@ -2027,13 +2035,13 @@
     "row-insert-child": "Insertar subnota"
   },
   "editorfeatures": {
-    "note_completion_enabled": "Activar autocompletado de notas",
-    "emoji_completion_enabled": "Activar autocompletado de emojis",
+    "note_completion_enabled": "Completado automático de notas",
+    "emoji_completion_enabled": "Autocompletado de emojis",
     "title": "Funciones",
-    "emoji_completion_description": "Si está habilitado, los emojis pueden fácilmente insertarse en el texto escribiendo `:`, seguido del nombre de un emoji.",
-    "note_completion_description": "Si está habilitado, los vínculos a notas pueden crearse escribiendo `@` seguido del título de una nota.",
-    "slash_commands_enabled": "Habilitar comandos de barra",
-    "slash_commands_description": "Si está habilitado, editar comandos como insertar saltos de línea o títulos, puede alternarse escribiendo `/`."
+    "emoji_completion_description": "Los emojis pueden fácilmente insertarse en el texto escribiendo `:`, seguido del nombre de un emoji.",
+    "note_completion_description": "Los vínculos a notas pueden crearse escribiendo `@` seguido del título de una nota.",
+    "slash_commands_enabled": "Comandos de barra",
+    "slash_commands_description": "Comandos de edición como insertar saltos de línea o títulos, puede alternarse escribiendo `/`."
   },
   "command_palette": {
     "tree-action-name": "Árbol:{{name}}",
@@ -2163,7 +2171,10 @@
     "pages_many": "{{count}} páginas",
     "pages_other": "{{count}} páginas",
     "pages_alt": "Página {{pageNumber}}",
-    "pages_loading": "Cargando..."
+    "pages_loading": "Cargando...",
+    "annotations_one": "{{count}} anotación",
+    "annotations_many": "{{count}} anotaciones",
+    "annotations_other": "{{count}} anotaciones"
   },
   "experimental_features": {
     "title": "Opciones experimentales",
@@ -2473,7 +2484,8 @@
     "processing_failed": "Fallo al iniciar procesamiento de OCR",
     "text_filtered_low_confidence": "Texto OCR detectado con {{confidence}}% de confianza, pero fue descartado porque su umbral mínimo es {{threshold}}%.",
     "open_media_settings": "Abrir ajustes",
-    "view_extracted_text": "Ver texto extraído (OCR)"
+    "view_extracted_text": "Ver texto extraído (OCR)",
+    "image_based_pdf_not_supported": "Este PDF parece estar basado en una imagen (escaneado). Todavía no se admite la extracción de texto de PDF basados en imágenes."
   },
   "launcher_button_context_menu": {
     "remove_from_launch_bar": "Quitar de la barra de inicio"
@@ -2571,5 +2583,8 @@
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar"
+  },
+  "spreadsheet": {
+    "read-only": "Esta nota es de sólo lectura."
   }
 }

@@ -1,5 +1,5 @@
 {
-  "about": {   
+  "about": {
     "version_label": "Version:",
     "version": "{{appVersion}} (database: {{dbVersion}}, sync protocol: {{syncVersion}})",
     "build_info": "Build: {{buildDate}}, revision: <buildRevision />",
@@ -150,6 +150,7 @@
     "jumpToParentNote": "jump to parent note",
     "collapseWholeTree": "collapse whole note tree",
     "collapseSubTree": "collapse sub-tree",
+    "toggleArchivedNotes": "show/hide archived notes",
     "tabShortcuts": "Tab shortcuts",
     "newTabNoteLink": "on note link opens note in a new tab",
     "newTabWithActivationNoteLink": "on note link opens and activates the note in a new tab",
@@ -764,7 +765,8 @@
     "import_files": "Import files",
     "export_note": "Export note",
     "delete_note": "Delete note",
-    "print_note": "Print note",
+    "print_note": "Print note...",
+    "print_or_export_to_pdf": "Print/export to PDF...",
     "view_revisions": "Note revisions...",
     "save_revision": "Save revision",
     "save_named_revision": "Save named revision...",
@@ -934,7 +936,8 @@
     "title": "Note Map",
     "fix-nodes": "Fix nodes",
     "link-distance": "Link distance",
-    "too-many-notes": "This subtree contains {{count}} notes, which exceeds the limit of {{max}} that can be displayed in the note map."
+    "too-many-notes": "There are {{count}} notes here. Showing them all may slow things down.",
+    "show-anyway": "Show map"
   },
   "note_paths": {
     "title": "Note Paths",
@@ -1305,6 +1308,12 @@
     "modern_themes": "Modern",
     "legacy_themes": "Legacy",
     "custom_themes": "Custom",
+    "recommended": "Recommended",
+    "color_scheme": "Color scheme",
+    "color_scheme_system": "System",
+    "color_scheme_light": "Light",
+    "color_scheme_dark": "Dark",
+    "color_scheme_custom_disabled": "Color scheme override is not available for custom themes",
     "layout": "Layout",
     "layout-vertical-title": "Vertical",
     "layout-horizontal-title": "Horizontal",

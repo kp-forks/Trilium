@@ -1,14 +1,17 @@
-import "./ReadOnlyTextRepresentation.css";
+import "./ocr_text.css";
 
 import type { OCRProcessResponse, TextRepresentationResponse } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
+import { copyTextWithToast } from "../../services/clipboard_ext";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
 import { randomString } from "../../services/utils";
-import { TypeWidgetProps } from "./type_widget";
+import Button from "../react/Button";
+import { useTriliumEvent } from "../react/hooks";
+import Modal from "../react/Modal";
 
 type State =
     | { kind: "loading" }
@@ -23,16 +26,31 @@ interface TextRepresentationProps {
     processUrl: string;
 }
 
-export default function ReadOnlyTextRepresentation({ note }: TypeWidgetProps) {
-    return (
-        <TextRepresentation
-            textUrl={`ocr/notes/${note.noteId}/text`}
-            processUrl={`ocr/process-note/${note.noteId}`}
+export default function OcrTextDialog() {
+    const [ shown, setShown ] = useState(false);
+    const [ textUrl, setTextUrl ] = useState("");
+    const [ processUrl, setProcessUrl ] = useState("");
+
+    useTriliumEvent("showOcrTextDialog", ({ textUrl, processUrl }) => {
+        setTextUrl(textUrl);
+        setProcessUrl(processUrl);
+        setShown(true);
+    });
+
+    return shown && (
+        <TextRepresentationModal
+            textUrl={textUrl}
+            processUrl={processUrl}
+            onHidden={() => setShown(false)}
         />
     );
 }
 
-export function TextRepresentation({ textUrl, processUrl }: TextRepresentationProps) {
+interface TextRepresentationModalProps extends TextRepresentationProps {
+    onHidden: () => void;
+}
+
+function TextRepresentationModal({ textUrl, processUrl, onHidden }: TextRepresentationModalProps) {
     const [ state, setState ] = useState<State>({ kind: "loading" });
     const [ processing, setProcessing ] = useState(false);
 
@@ -111,56 +129,68 @@ export function TextRepresentation({ textUrl, processUrl }: TextRepresentationPr
         }
     }
 
-    return (
-        <div className="text-representation note-detail-printable">
-            <div className="text-representation-header">
-                <span className="bx bx-text" />{" "}{t("ocr.extracted_text_title")}
-            </div>
+    function copyToClipboard() {
+        if (state.kind === "loaded") {
+            copyTextWithToast(state.text);
+        }
+    }
 
+    const footer = state.kind !== "loading" && (
+        <>
+            <Button
+                icon={processing ? "bx-loader-alt bx-spin" : "bx-refresh"}
+                text={processing ? t("ocr.processing") : t("ocr.process_now")}
+                size="small"
+                disabled={processing}
+                onClick={processOCR}
+            />
+            {state.kind === "loaded" && (
+                <Button
+                    icon="bx-copy"
+                    text={t("info.copy_to_clipboard")}
+                    size="small"
+                    onClick={copyToClipboard}
+                />
+            )}
+        </>
+    );
+
+    return (
+        <Modal
+            className="ocr-text-modal"
+            title={t("ocr.extracted_text_title")}
+            footer={footer}
+            footerAlignment="between"
+            show={true}
+            onHidden={onHidden}
+            size="lg"
+            scrollable
+        >
             {state.kind === "loading" && (
-                <div className="text-representation-loading">
+                <div className="ocr-text-modal-loading">
                     <span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.loading_text")}
                 </div>
             )}
 
             {state.kind === "loaded" && (
-                <>
-                    <div className="text-representation-content">
-                        {state.text}
-                    </div>
-                </>
-            )}
-
-            {state.kind === "empty" && (
-                <>
-                    <div className="text-representation-empty">
-                        <span className="bx bx-info-circle" />{" "}{t("ocr.no_text_available")}
-                    </div>
-                    <div className="text-representation-meta">
-                        {t("ocr.no_text_explanation")}
-                    </div>
-                </>
-            )}
-
-            {state.kind === "error" && (
-                <div className="text-representation-error">
-                    <span className="bx bx-error" />{" "}{state.message}
+                <div className="ocr-text-modal-content">
+                    {state.text}
                 </div>
             )}
 
-            {state.kind !== "loading" && (
-                <button
-                    type="button"
-                    className="btn btn-secondary text-representation-process-btn"
-                    disabled={processing}
-                    onClick={processOCR}
-                >
-                    {processing
-                        ? <><span className="bx bx-loader-alt bx-spin" />{" "}{t("ocr.processing")}</>
-                        : <><span className="bx bx-play" />{" "}{t("ocr.process_now")}</>
-                    }
-                </button>
+            {state.kind === "empty" && (
+                <div className="ocr-text-modal-empty">
+                    <span className="bx bx-info-circle" />
+                    <div>{t("ocr.no_text_available")}</div>
+                    <div className="ocr-text-modal-explanation">{t("ocr.no_text_explanation")}</div>
+                </div>
             )}
-        </div>
+
+            {state.kind === "error" && (
+                <div className="ocr-text-modal-error">
+                    <span className="bx bx-error" />{" "}{state.message}
+                </div>
+            )}
+        </Modal>
     );
 }

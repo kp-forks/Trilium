@@ -224,7 +224,8 @@
     "showSQLConsole": "taispeáin consól SQL",
     "other": "Eile",
     "quickSearch": "díriú ar ionchur cuardaigh thapa",
-    "inPageSearch": "cuardach in-leathanaigh"
+    "inPageSearch": "cuardach in-leathanaigh",
+    "toggleArchivedNotes": "nótaí cartlannaithe a thaispeáint/a cheilt"
   },
   "import": {
     "importIntoNote": "Iompórtáil isteach i nóta",
@@ -411,8 +412,8 @@
     "css_class": "Cuirtear luach an lipéid seo leis an nód mar rang CSS ansin, a léiríonn an nóta tugtha sa chrann. Is féidir é seo a bheith úsáideach le haghaidh téamaithe ardleibhéil. Is féidir é a úsáid i nótaí teimpléid.",
     "icon_class": "Cuirtear luach an lipéid seo leis an deilbhín ar an gcrann mar rang CSS, rud a chabhróidh le hidirdhealú amhairc a dhéanamh idir na nótaí sa chrann. D’fhéadfadh sampla a bheith ann de bx bx-home - tógtar deilbhíní ó boxicons. Is féidir iad a úsáid i nótaí teimpléid.",
     "page_size": "líon na míreanna in aghaidh an leathanaigh i liostú nótaí",
-    "custom_request_handler": "féach <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">láimhseálaí iarratais saincheaptha</a>",
-    "custom_resource_provider": "féach <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">láimhseálaí iarratais saincheaptha</a>",
+    "custom_request_handler": "láimhseálaí iarratais saincheaptha",
+    "custom_resource_provider": "soláthraí acmhainní saincheaptha",
     "widget": "marcálann an nóta seo mar ghiuirléid saincheaptha a chuirfear leis an gcrann comhpháirte Trilium",
     "workspace": "marcálann an nóta seo mar spás oibre a ligeann d’ardú go héasca",
     "workspace_icon_class": "sainmhíníonn sé rang CSS deilbhín bosca a úsáidfear sa chluaisín nuair a ardófar chuig an nóta seo é",
@@ -1404,7 +1405,7 @@
     "existing_backups": "Cúltacaí atá ann cheana féin",
     "date-and-time": "Dáta & am",
     "path": "Cosán",
-    "database_backed_up_to": "Tá cúltaca déanta den bhunachar sonraí chuig {{backupFilePath}}",
+    "database_backed_up_to": "Tá cúltaca déanta den bhunachar sonraí chuig {{- backupFilePath}}",
     "no_backup_yet": "gan aon chúltaca fós",
     "download": "Íoslódáil",
     "title": "Cúltaca"
@@ -2253,7 +2254,12 @@
     "pages_many": "{{count}} leathanaigh",
     "pages_other": "{{count}} leathanaigh",
     "pages_alt": "Leathanach {{pageNumber}}",
-    "pages_loading": "Ag lódáil..."
+    "pages_loading": "Ag lódáil...",
+    "annotations_one": "{{count}} nóta",
+    "annotations_two": "{{count}} nótaí",
+    "annotations_few": "{{count}} nótaí",
+    "annotations_many": "{{count}} nótaí",
+    "annotations_other": "{{count}} nótaí"
   },
   "platform_indicator": {
     "available_on": "Ar fáil ar {{platform}}"
@@ -2478,7 +2484,8 @@
     "view_extracted_text": "Féach ar théacs eastósctha (OCR)",
     "processing_complete": "Próiseáil OCR críochnaithe.",
     "text_filtered_low_confidence": "Bhraith OCR téacs le muinín {{confidence}}%, ach caitheadh leis é mar is é {{threshold}}% an tairseach íosta atá agat.",
-    "open_media_settings": "Oscail Socruithe"
+    "open_media_settings": "Oscail Socruithe",
+    "image_based_pdf_not_supported": "Is cosúil go bhfuil an PDF seo bunaithe ar íomhánna (scanadh). Ní thacaítear le téacs a bhaint as PDFanna bunaithe ar íomhánna go fóill."
   },
   "database": {
     "title": "Bunachar Sonraí"
@@ -2600,5 +2607,8 @@
   "common": {
     "save": "Sábháil",
     "cancel": "Cealaigh"
+  },
+  "spreadsheet": {
+    "read-only": "Is nóta inléite amháin atá ann."
   }
 }

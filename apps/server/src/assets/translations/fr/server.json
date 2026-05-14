@@ -103,7 +103,9 @@
     "quick-search": "Activer la barre de recherche rapide",
     "create-note-after": "Créer une note après la note active",
     "create-note-into": "Créer une note enfant de la note active",
-    "find-in-text": "Afficher/Masquer le panneau de recherche"
+    "find-in-text": "Afficher/Masquer le panneau de recherche",
+    "toggle-archived-notes": "Afficher/masquer les notes archivées dans l'arborescence des notes",
+    "save-named-revision": "Enregistrer une révision nommée de la note active"
   },
   "login": {
     "title": "Connexion",
@@ -260,7 +262,8 @@
     "llm-chat-history-title": "Historique du chat",
     "llm-title": "AI / LLM",
     "tab-switcher-title": "Commutateur d'onglets",
-    "sidebar-chat-title": "AI Chat"
+    "sidebar-chat-title": "AI Chat",
+    "custom-dictionary-title": "Dictionnaire personnalisé"
   },
   "notes": {
     "new-note": "Nouvelle note",
@@ -294,7 +297,8 @@
   "migration": {
     "old_version": "La migration directe à partir de votre version actuelle n'est pas prise en charge. Veuillez d'abord mettre à jour vers la version v0.60.4, puis vers cette nouvelle version.",
     "error_message": "Erreur lors de la migration vers la version {{version}}: {{stack}}",
-    "wrong_db_version": "La version de la base de données ({{version}}) est plus récente que ce que l'application supporte actuellement ({{targetVersion}}), ce qui signifie qu'elle a été créée par une version plus récente et incompatible de Trilium. Mettez à jour vers la dernière version de Trilium pour résoudre ce problème."
+    "wrong_db_version": "La version de la base de données ({{version}}) est plus récente que ce que l'application supporte actuellement ({{targetVersion}}), ce qui signifie qu'elle a été créée par une version plus récente et incompatible de Trilium. Mettez à jour vers la dernière version de Trilium pour résoudre ce problème.",
+    "invalid_db_version": "La version de la base de données n'est pas un nombre valide. Cela indique généralement que l'option « dbVersion » de la base de données est corrompue. Veuillez restaurer la base à partir d'une sauvegarde."
   },
   "modals": {
     "error_title": "Erreur"
@@ -394,7 +398,9 @@
     "toggle-ribbon-tab-note-paths": "Basculer les chemins de notes de l'onglet du ruban",
     "toggle-ribbon-tab-similar-notes": "Basculer l'onglet du ruban Notes similaires",
     "toggle-note-hoisting": "Activer la focalisation sur la note",
-    "unhoist-note": "Désactiver la focalisation sur la note"
+    "unhoist-note": "Désactiver la focalisation sur la note",
+    "toggle-archived-notes": "Voir les notes archivées",
+    "save-named-revision": "Enregistrer une révision nommée"
   },
   "sql_init": {
     "db_not_initialized_desktop": "Base de données non initialisée, merci de suivre les instructions à l'écran.",
@@ -441,5 +447,21 @@
     "presentation_slide_first": "Première diapositive",
     "presentation_slide_second": "Deuxième diapositive",
     "background": "Arrière-plan"
+  },
+  "password": {
+    "incorrect": "Le mot de passe que vous avez saisi est incorrect."
+  },
+  "script": {
+    "wrong-environment": "Impossible d'exécuter la note \"{{- noteTitle}}\" {{- noteId}}. Il s'agit d'un script {{- actualEnv}} mais l'exécution a été tentée dans {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Erreur dans {{- context}} : {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" est un mot-clé réservé. Pour rechercher une valeur littérale, utilisez des guillemets : \"{{- token}}\"",
+      "cannot-compare-with": "ne peut pas être comparé à \"{{- token}}\". Pour rechercher une valeur littérale, utilisez des guillemets : \"{{- token}}\"",
+      "misplaced-expression": "Expression \"{{- token}}\" mal placée ou incomplète",
+      "fulltext-after-expression": "\"{{- token}}\" n'est pas une expression valide. Pour rechercher du texte, placez-le avant les filtres d'attributs (par exemple, \"{{- token}} #label\" au lieu de \"#label {{- token}}\").",
+      "unrecognized-expression": "Expression inconnue \"{{- token}}\""
+    }
   }
 }
