@@ -7,16 +7,11 @@ import { getContext } from "./context.js";
 import scriptService, { buildJsx, executeBundle, getScriptBundle } from "./script.js";
 import ws from "./ws.js";
 
-vi.mock("./ws.js", () => ({
-    default: {
-        sendMessageToAllClients: vi.fn()
-    }
-}));
-
 describe("Script", () => {
     beforeEach(() => {
 
         becca.reset();
+        vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {}).mockClear();
 
         buildNote({ id: "root", title: "root" });
 
@@ -173,7 +168,7 @@ describe("getScriptBundle", () => {
 describe("executeNote", () => {
     beforeEach(() => {
         becca.reset();
-        vi.mocked(ws.sendMessageToAllClients).mockClear();
+        vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {}).mockClear();
     });
 
     it("sends a toast when trying to execute a frontend script in the backend", () => {
@@ -194,7 +189,7 @@ describe("executeNote", () => {
 describe("getScriptBundleForFrontend", () => {
     beforeEach(() => {
         becca.reset();
-        vi.mocked(ws.sendMessageToAllClients).mockClear();
+        vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {}).mockClear();
     });
 
     it("returns a bundle with noteIds instead of note objects", () => {
