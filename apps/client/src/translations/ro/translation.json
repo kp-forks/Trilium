@@ -2124,7 +2124,6 @@
     "sync-from-desktop-step3": "Clic pe categoria „Sincronizare”.",
     "sync-from-desktop-step4": "Schimbați adresa server-ului către: {{- host}} și apăsați „Salvează”.",
     "sync-from-desktop-step5": "Clic pe butonul „Testează sincronizarea” pentru a verifica dacă conexiunea a fost făcută cu succes.",
-    "sync-from-desktop-final": "După ce ați finalizat acești pași, puteți trece la pasul următor.",
     "sync-from-desktop-waiting": "Așteptare pentru conexiune...",
     "advanced-options": "Opțiuni avansate",
     "sync-failed": "Sincronizare eșuată: {{message}}",
