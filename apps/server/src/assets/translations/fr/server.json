@@ -71,7 +71,7 @@
     "toggle-note-paths": "Afficher/masquer les Emplacements de la note",
     "toggle-similar-notes": "Afficher/masquer les Notes similaires",
     "other": "Autre",
-    "toggle-right-pane": "Afficher/masquer le volet droit, qui inclut la Table des matières et les Accentuations",
+    "toggle-right-pane": "Afficher/masquer le volet droit, qui inclut la Table des matières et les Mises en évidence",
     "print-active-note": "Imprimer la note active",
     "open-note-externally": "Ouvrir la note comme fichier avec l'application par défaut",
     "render-active-note": "Rendre (ou re-rendre) la note active",
@@ -418,7 +418,8 @@
     "last-updated": "Dernière mise à jour le {{- date}}",
     "subpages": "Sous-pages:",
     "on-this-page": "Sur cette page",
-    "expand": "Développer"
+    "expand": "Développer",
+    "logo-alt": "Logo"
   },
   "hidden_subtree_templates": {
     "text-snippet": "Extrait de texte",
