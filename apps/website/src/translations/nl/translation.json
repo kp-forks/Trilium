@@ -51,5 +51,8 @@
         "mermaid_title": "Mermaid diagrammen",
         "mermaid_description": "Creëer diagrammen zoals flowcharts, class & sequence diagrammen, Gantt diagrammen en nog veel meer, met de Mermaid syntax.",
         "mindmap_title": "Mindmap"
+    },
+    "collections": {
+        "title": "Verzamelingen"
     }
 }
