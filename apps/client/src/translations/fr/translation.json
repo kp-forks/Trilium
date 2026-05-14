@@ -108,7 +108,7 @@
     "cancel": "Annuler",
     "title": "Supprimer les notes",
     "clones_label": "Clone",
-    "erase_notes_label": "Supprimer définitivement",
+    "erase_notes_label": "Effacer définitivement",
     "delete_clones_description_one": "Supprimer aussi {{count}} autre clone. Peut être annulé dans les modifications récentes.",
     "delete_clones_description_many": "Supprimer aussi {{count}} autres clones. Peut être annulé dans les modifications récentes.",
     "delete_clones_description_other": "Supprimer aussi {{count}} autres clones. Peut être annulé dans les modifications récentes.",
@@ -1252,10 +1252,10 @@
     "attachment_erasure_timeout": "Pièces jointes inutilisées",
     "erase_attachments_after": "Effacer les pièces jointes inutilisées après",
     "manual_erasing_description": "Lancer la suppression manuellement, sans tenir compte du délai ci-dessus.",
-    "erase_unused_attachments_now": "Supprimer maintenant les pièces jointes inutilisées",
-    "unused_attachments_erased": "Les pièces jointes inutilisées ont été supprimées.",
-    "description": "Les pièces jointes qui ne sont plus référencées par aucune note sont considérées comme inutilisées et peuvent être automatiquement supprimées après un certain délai.",
-    "erase_attachments_after_description": "Délai avant la suppression définitive des pièces jointes inutilisées."
+    "erase_unused_attachments_now": "Effacer maintenant les pièces jointes inutilisées",
+    "unused_attachments_erased": "Les pièces jointes inutilisées ont été effacées.",
+    "description": "Les pièces jointes qui ne sont plus référencées par aucune note sont considérées comme inutilisées et peuvent être automatiquement effacées après un certain délai.",
+    "erase_attachments_after_description": "Délai avant l'effacement définitif des pièces jointes inutilisées."
   },
   "network_connections": {
     "network_connections_title": "Réseau",
@@ -1264,25 +1264,28 @@
   },
   "note_erasure_timeout": {
     "note_erasure_timeout_title": "Notes supprimées",
-    "erase_notes_after": "Supprimer les notes après",
-    "manual_erasing_description": "Déclencher l'effacement manuel, sans tenir compte du délai d'expiration indiqué ci-dessus.",
+    "erase_notes_after": "Effacer les notes après",
+    "manual_erasing_description": "Lancer la suppression manuellement, sans tenir compte du délai ci-dessus.",
     "erase_deleted_notes_now": "Effacer les notes supprimées maintenant",
     "deleted_notes_erased": "Les notes supprimées ont été effacées.",
-    "description": "Les notes supprimées sont d’abord simplement marquées comme supprimées et peuvent être restaurées depuis les Modifications récentes. Après un certain délai, elles sont définitivement supprimées.",
-    "erase_notes_after_description": "Délai avant la suppression définitive des notes supprimées."
+    "description": "Les notes supprimées sont d’abord simplement marquées comme supprimées et peuvent être restaurées depuis les Modifications récentes. Après un certain délai, elles sont définitivement effacées.",
+    "erase_notes_after_description": "Délai avant l'effacement définitif des notes supprimées."
   },
   "revisions_snapshot_interval": {
-    "note_revisions_snapshot_interval_title": "Délai d'enregistrement automatique d'une version de note",
-    "note_revisions_snapshot_description": "Le délai d'enregistrement automatique des versions de note définit le temps avant la création automatique d'une nouvelle version de note. Consultez le <doc>wiki</doc> pour plus d'informations.",
-    "snapshot_time_interval_label": "Intervalle entre les snapshots"
+    "note_revisions_snapshot_interval_title": "Intervalle des instantanés de révision de note",
+    "note_revisions_snapshot_description": "L’intervalle des instantanés de révision de note correspond au délai après lequel une nouvelle révision de la note est créée. Voir <doc>wiki</doc> pour plus d’informations.",
+    "snapshot_time_interval_label": "Intervalle entre les instantanés",
+    "note_revisions_snapshot_description_short": "Délai après lequel une nouvelle révision de note sera créée."
   },
   "revisions_snapshot_limit": {
-    "note_revisions_snapshot_limit_title": "Limite du nombre de versions de note",
-    "note_revisions_snapshot_limit_description": "La limite du nombre de versions de note désigne le nombre maximum de versions pouvant être enregistrées pour chaque note. -1 signifie aucune limite, 0 signifie supprimer toutes les versions. Vous pouvez définir le nombre maximal de versions pour une seule note avec le label #versioningLimit.",
+    "note_revisions_snapshot_limit_title": "Nombre maximal d’instantanés de révision de note",
+    "note_revisions_snapshot_limit_description": "La limite du nombre de révision de note désigne le nombre maximum de révisions pouvant être enregistrées pour chaque note. -1 signifie aucune limite, 0 signifie supprimer toutes les révisions. Vous pouvez définir le nombre maximal de révisions pour une seule note avec le label #versioningLimit.",
     "snapshot_number_limit_label": "Nombre maximal de révisions",
-    "erase_excess_revision_snapshots": "Effacer maintenant les versions en excès",
-    "erase_excess_revision_snapshots_prompt": "Les versions en excès ont été effacées.",
-    "snapshot_number_limit_unit": "instantanés"
+    "erase_excess_revision_snapshots": "Effacer maintenant les instantanés de révision en excès",
+    "erase_excess_revision_snapshots_prompt": "Les révisions en excès ont été effacées.",
+    "snapshot_number_limit_unit": "instantanés",
+    "erase_excess_revision_snapshots_description": "Supprimer les révisions excédant la limite pour toutes les notes.",
+    "note_revisions_snapshot_limit_description_short": "Nombre maximal de révisions par note. Utilisez -1 pour aucune limite, 0 pour désactiver."
   },
   "search_engine": {
     "title": "Moteur de recherche",
@@ -2381,11 +2384,11 @@
     "revisions_deleted": "Les révisions de la note ont été supprimées.",
     "revision_restored": "La révision de la note a été restaurée.",
     "revision_deleted": "La révision de la note a été supprimée.",
-    "snapshot_interval": "Intervalle de snapshot de révision de note : {{seconds}}s.",
-    "maximum_revisions": "Limite de snapshots de révision de la note : {{number}}.",
+    "snapshot_interval": "Intervalle des instantanés de révision de note : {{seconds}}s.",
+    "maximum_revisions": "Nombre maximal d’instantanés de révision de note : {{number}}.",
     "save_revision_now": "Enregistrer une révision maintenant",
     "save_named_revision": "Enregistrer une révision nommée…",
-    "snapshot_header": "Snapshot de révision de la note",
+    "snapshot_header": "Instantané de révision de la note",
     "snapshot_interval_value": "Intervalle : {{seconds}}s",
     "snapshot_limit_value": "Limite : {{number}}",
     "settings": "Paramètres de révision des notes",
@@ -2394,7 +2397,7 @@
     "file_size": "Taille du fichier :",
     "preview_not_available": "L'aperçu n'est pas disponible pour ce type de note.",
     "save_revision": "Enregistrer la révision",
-    "save_revision_tooltip": "Enregistrer manuellement un snapshot de la note actuelle",
+    "save_revision_tooltip": "Enregistrer manuellement un instantané de la note actuelle",
     "description_placeholder": "Nommer cette révision",
     "revision_saved": "La révision de la note a été enregistrée.",
     "description_updated": "Le nom de la révision a été mis à jour.",
@@ -2410,17 +2413,20 @@
     "source_description_restore": "Enregistrée avant la restauration d'une révision antérieure",
     "source_description_unknown": "Source indisponible",
     "edit_description": "Modifier le nom",
-    "source_description_etapi": "Créé via l'API externe Trilium",
-    "source_description_llm": "Créé par l'assistant IA",
+    "source_description_etapi": "Créée via l'API externe Trilium",
+    "source_description_llm": "Créée par l'assistant IA",
     "mime": "MIME : ",
     "source_etapi": "ETAPI",
     "source_llm": "LLM",
-    "source_unknown": "Snapshot"
+    "source_unknown": "Instantané"
   },
   "database": {
     "title": "Base de données"
   },
   "launcher_button_context_menu": {
     "remove_from_launch_bar": "Supprimer de la barre de raccourcis"
+  },
+  "revisions_snapshot": {
+    "title": "Révisions de la note"
   }
 }
