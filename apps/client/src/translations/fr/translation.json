@@ -439,7 +439,9 @@
     "print_landscape": "Lors de l'exportation en PDF, change l'orientation de la page en paysage au lieu de portrait.",
     "print_page_size": "Lors de l'exportation en PDF, change la taille de la page. Valeurs supportées : <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
     "color_type": "Couleur",
-    "textarea": "Texte multiligne"
+    "textarea": "Texte multiligne",
+    "print_scale": "Lors de l'exportation en PDF, modifie l'échelle du contenu affiché. Les valeurs vont de 0,1 (10 %) à 2 (200 %) ; la valeur par défaut est 1 (100 %).",
+    "print_margins": "Lors de l'exportation en PDF, permet de définir les marges de page. Utilisez <code>par défaut</code>, <code>aucune</code>, <code>minimale</code> ou des valeurs personnalisées telles que <code>haut, droite, bas, gauche</code> en millimètres."
   },
   "attribute_editor": {
     "help_text_body1": "Pour ajouter un label, tapez simplement par ex. <code>#rock</code>, ou si vous souhaitez également ajouter une valeur, tapez par ex. <code>#année = 2020</code>",
@@ -625,7 +627,7 @@
     "show_toc": "Afficher la Table des matières"
   },
   "show_highlights_list_widget_button": {
-    "show_highlights_list": "Afficher la liste des Accentuations"
+    "show_highlights_list": "Afficher la liste des Mises en évidence"
   },
   "global_menu": {
     "menu": "Menu",
@@ -690,7 +692,7 @@
     "export_note": "Exporter la note",
     "delete_note": "Supprimer la note",
     "print_note": "Imprimer la note...",
-    "save_revision": "Enregistrer la version",
+    "save_revision": "Enregistrer la révision",
     "convert_into_attachment_failed": "La conversion de la note '{{title}}' a échoué.",
     "convert_into_attachment_successful": "La note '{{title}}' a été convertie en pièce jointe.",
     "convert_into_attachment_prompt": "Êtes-vous sûr de vouloir convertir la note '{{title}}' en une pièce jointe de la note parente ?",
@@ -701,7 +703,13 @@
     "export_as_image": "Exporter en tant qu'image",
     "export_as_image_png": "PNG",
     "export_as_image_svg": "SVG (vectoriel)",
-    "note_map": "Note Carte"
+    "note_map": "Note Carte",
+    "word_wrap": "Retour à la ligne",
+    "word_wrap_auto": "Auto",
+    "word_wrap_auto_description": "Suivre les paramètres généraux",
+    "view_ocr_text": "Afficher le texte OCR",
+    "print_or_export_to_pdf": "Imprimer/exporter en PDF...",
+    "save_named_revision": "Enregistrer une révision nommée…"
   },
   "onclick_button": {
     "no_click_handler": "Le widget bouton '{{componentId}}' n'a pas de gestionnaire de clic défini"
@@ -799,7 +807,10 @@
     "expand_first_level": "Développer les enfants directs",
     "expand_nth_level": "Développer sur {{depth}} niveaux",
     "expand_all_levels": "Développer tous les niveaux",
-    "hide_child_notes": "Masquer les notes enfants dans l’arborescence"
+    "hide_child_notes": "Masquer les notes enfants dans l’arborescence",
+    "open_all_in_tabs_tooltip": "Ouvrir tous les résultats dans de nouveaux onglets",
+    "open_all_confirm": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
+    "open_all_in_tabs": "Tout ouvrir"
   },
   "edited_notes": {
     "no_edited_notes_found": "Aucune note modifiée ce jour-là...",
@@ -853,7 +864,8 @@
     "collapse": "Réduire à la taille normale",
     "title": "Carte de la Note",
     "fix-nodes": "Réparer les nœuds",
-    "link-distance": "Distance du lien"
+    "link-distance": "Distance du lien",
+    "too-many-notes": "Il y a {{count}} notes ici. Les afficher toutes pourrait ralentir le chargement."
   },
   "note_paths": {
     "title": "Chemins de la Note",
@@ -1058,7 +1070,8 @@
     "note_already_in_diagram": "La note \"{{title}}\" est déjà dans le diagramme.",
     "enter_title_of_new_note": "Entrez le titre de la nouvelle note",
     "default_new_note_title": "nouvelle note",
-    "click_on_canvas_to_place_new_note": "Cliquez sur le canevas pour placer une nouvelle note"
+    "click_on_canvas_to_place_new_note": "Cliquez sur le canevas pour placer une nouvelle note",
+    "rename_relation": "Renommer la relation"
   },
   "backend_log": {
     "refresh": "Rafraîchir"
@@ -1067,7 +1080,9 @@
     "title": "Vérification de la cohérence",
     "find_and_fix_button": "Rechercher et résoudre les problèmes de cohérence",
     "finding_and_fixing_message": "Recherche et résolution des problèmes de cohérence...",
-    "issues_fixed_message": "Les problèmes de cohérence devraient être résolus."
+    "issues_fixed_message": "Les problèmes de cohérence devraient être résolus.",
+    "find_and_fix_label": "Identifier et corriger les problèmes de cohérence",
+    "find_and_fix_description": "Rechercher et corriger automatiquement tout problème de cohérence des données dans la base de données."
   },
   "database_anonymization": {
     "title": "Anonymisation de la base de données",
@@ -1084,31 +1099,38 @@
     "error_creating_anonymized_database": "Impossible de créer une base de données anonymisée, vérifiez les journaux backend pour plus de détails",
     "successfully_created_fully_anonymized_database": "Base de données entièrement anonymisée crée dans {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "Base de données partiellement anonymisée crée dans {{anonymizedFilePath}}",
-    "no_anonymized_database_yet": "Aucune base de données anonymisée."
+    "no_anonymized_database_yet": "Aucune base de données anonymisée.",
+    "description": "Créer une copie anonymisée de votre base de données afin de la partager avec les développeurs lors du débogage de problèmes, sans divulguer de données personnelles."
   },
   "database_integrity_check": {
     "title": "Vérification de l'intégrité de la base de données",
     "check_button": "Vérifier l'intégrité de la base de données",
     "checking_integrity": "Vérification de l'intégrité de la base de données...",
     "integrity_check_succeeded": "Le contrôle d'intégrité a réussi - aucun problème détecté.",
-    "integrity_check_failed": "Échec du contrôle d'intégrité : {{results}}"
+    "integrity_check_failed": "Échec du contrôle d'intégrité : {{results}}",
+    "check_integrity_label": "Vérifier l'intégrité de la base de données",
+    "check_integrity_description": "Vérifie que la base de données n'est pas corrompue au niveau SQLite."
   },
   "sync": {
     "title": "Synchroniser",
     "force_full_sync_button": "Forcer la synchronisation complète",
     "fill_entity_changes_button": "Remplir les enregistrements de modifications d'entité",
-    "full_sync_triggered": "Synchronisation complète déclenchée",
+    "full_sync_triggered": "Synchronisation complète lancée",
     "filling_entity_changes": "Remplissage changements de ligne d'entité ...",
     "sync_rows_filled_successfully": "Synchronisation avec succès des lignes remplies",
     "finished-successfully": "Synchronisation terminée avec succès.",
-    "failed": "Échec de la synchronisation : {{message}}"
+    "failed": "Échec de la synchronisation : {{message}}",
+    "force_full_sync_label": "Forcer une synchronisation complète",
+    "force_full_sync_description": "Lancer une synchronisation complète avec le serveur, réenvoyant ainsi toutes les modifications."
   },
   "vacuum_database": {
     "title": "Nettoyage de la base de données",
     "description": "Cela reconstruira la base de données, ce qui générera un fichier de base de données généralement plus petit. Aucune donnée ne sera réellement modifiée.",
     "button_text": "Nettoyer la base de données",
     "vacuuming_database": "Nettoyage de la base de données en cours...",
-    "database_vacuumed": "La base de données a été nettoyée"
+    "database_vacuumed": "La base de données a été nettoyée",
+    "vacuum_description": "Reconstruit la base de données pour réduire sa taille. Aucune donnée ne sera modifiée.",
+    "vacuum_label": "Nettoyage de la base de données"
   },
   "fonts": {
     "theme_defined": "Défini par le thème",
@@ -1128,7 +1150,12 @@
     "serif": "Serif",
     "sans-serif": "Sans sérif",
     "monospace": "Monospace",
-    "system-default": "Thème système"
+    "system-default": "Thème système",
+    "custom_fonts": "Utiliser des polices personnalisées",
+    "preview": "Aperçu",
+    "monospace_font_description": "Utilisée pour les notes de code et les blocs de code",
+    "size_relative_to_general": "La taille est relative à la taille générale de la police",
+    "apply_changes": "Actualiser pour appliquer les modifications"
   },
   "max_content_width": {
     "title": "Largeur du contenu",
@@ -1161,7 +1188,16 @@
     "layout-horizontal-description": "la barre de raccourcis est sous la barre des onglets, cette-dernière est s'affiche en pleine largeur.",
     "auto_theme": "Hérité (suivre le schéma de couleurs du système)",
     "light_theme": "Hérité (clair)",
-    "dark_theme": "Hérité (foncé)"
+    "dark_theme": "Hérité (foncé)",
+    "modern_themes": "Moderne",
+    "legacy_themes": "Historique",
+    "custom_themes": "Personnalisé",
+    "recommended": "Recommandé",
+    "color_scheme": "Palette de couleurs",
+    "color_scheme_system": "Système",
+    "color_scheme_light": "Clair",
+    "color_scheme_dark": "Sombre",
+    "color_scheme_custom_disabled": "La modification de la palette de couleurs n'est pas disponible pour les thèmes personnalisés"
   },
   "zoom_factor": {
     "title": "Facteur de zoom (version bureau uniquement)",
@@ -1170,12 +1206,12 @@
   "code_auto_read_only_size": {
     "title": "Taille pour la lecture seule automatique",
     "description": "La taille pour la lecture seule automatique est le seuil au-delà de laquelle les notes seront affichées en mode lecture seule (pour optimiser les performances).",
-    "label": "Taille pour la lecture seule automatique (notes de code)",
+    "label": "Taille pour la lecture seule automatique",
     "unit": "caractères"
   },
   "code_mime_types": {
     "title": "Types MIME disponibles dans la liste déroulante",
-    "tooltip_syntax_highlighting": "Mise en évidence de la syntaxe",
+    "tooltip_syntax_highlighting": "Coloration syntaxique",
     "tooltip_code_block_syntax": "Blocs de code dans les notes textuelles",
     "tooltip_code_note_syntax": "Notes de code"
   },
@@ -1195,25 +1231,45 @@
     "max_image_dimensions": "Dimensions maximales d'une image",
     "jpeg_quality_description": "La plage recommandée est entre 50 et 85. Des valeurs plus faibles réduisent la taille du fichier, des valeurs plus élevées préservent les détails.",
     "max_image_dimensions_unit": "pixels",
-    "jpeg_quality": "Qualité JPEG"
+    "jpeg_quality": "Qualité JPEG",
+    "enable_image_compression_description": "Compresser et redimensionner les images lors de leur téléchargement ou de leur copie.",
+    "max_image_dimensions_description": "Les images dépassant cette taille seront automatiquement redimensionnées.",
+    "ocr_section_title": "Extraction de texte (OCR)",
+    "ocr_related_content_languages": "Langues du contenu (utilisées pour l’extraction de texte)",
+    "ocr_auto_process": "Traiter automatiquement les nouveaux fichiers",
+    "ocr_auto_process_description": "Extraire automatiquement le texte des fichiers nouvellement importés ou collés.",
+    "ocr_min_confidence": "Seuil de confiance minimal",
+    "ocr_confidence_description": "N’extraire que le texte dont la confiance est supérieure à ce seuil. Des valeurs plus faibles incluent davantage de texte, mais peuvent être moins précises.",
+    "batch_ocr_title": "Traiter les fichiers existants",
+    "batch_ocr_description": "Extraire le texte de toutes les images, PDF et documents Office existants dans vos notes. Cette opération peut prendre du temps en fonction du nombre de fichiers.",
+    "batch_ocr_start": "Démarrer le traitement par lot",
+    "batch_ocr_starting": "Démarrage du traitement par lot…",
+    "batch_ocr_progress": "Traitement de {{processed}} sur {{total}} fichiers…",
+    "batch_ocr_completed": "Traitement par lot terminé ! {{processed}} fichiers traités.",
+    "batch_ocr_error": "Erreur lors du traitement par lot : {{error}}"
   },
   "attachment_erasure_timeout": {
-    "attachment_erasure_timeout": "Délai d'effacement des pièces jointes",
+    "attachment_erasure_timeout": "Pièces jointes inutilisées",
     "erase_attachments_after": "Effacer les pièces jointes inutilisées après",
-    "manual_erasing_description": "Déclencher l'effacement manuel, sans tenir compte du délai d'expiration indiqué ci-dessus.",
-    "erase_unused_attachments_now": "Effacez maintenant les pièces jointes inutilisées",
-    "unused_attachments_erased": "Les pièces jointes inutilisées ont été effacées."
+    "manual_erasing_description": "Lancer la suppression manuellement, sans tenir compte du délai ci-dessus.",
+    "erase_unused_attachments_now": "Supprimer maintenant les pièces jointes inutilisées",
+    "unused_attachments_erased": "Les pièces jointes inutilisées ont été supprimées.",
+    "description": "Les pièces jointes qui ne sont plus référencées par aucune note sont considérées comme inutilisées et peuvent être automatiquement supprimées après un certain délai.",
+    "erase_attachments_after_description": "Délai avant la suppression définitive des pièces jointes inutilisées."
   },
   "network_connections": {
-    "network_connections_title": "Connexions réseau",
-    "check_for_updates": "Rechercher automatiquement les mises à jour"
+    "network_connections_title": "Réseau",
+    "check_for_updates": "Rechercher automatiquement les mises à jour",
+    "check_for_updates_description": "Vérifie les nouvelles versions sur GitHub et affiche une notification dans le menu global lorsqu’une mise à jour est disponible."
   },
   "note_erasure_timeout": {
-    "note_erasure_timeout_title": "Délai d'effacement des notes",
-    "erase_notes_after": "Effacer les notes après",
+    "note_erasure_timeout_title": "Notes supprimées",
+    "erase_notes_after": "Supprimer les notes après",
     "manual_erasing_description": "Déclencher l'effacement manuel, sans tenir compte du délai d'expiration indiqué ci-dessus.",
     "erase_deleted_notes_now": "Effacer les notes supprimées maintenant",
-    "deleted_notes_erased": "Les notes supprimées ont été effacées."
+    "deleted_notes_erased": "Les notes supprimées ont été effacées.",
+    "description": "Les notes supprimées sont d’abord simplement marquées comme supprimées et peuvent être restaurées depuis les Modifications récentes. Après un certain délai, elles sont définitivement supprimées.",
+    "erase_notes_after_description": "Délai avant la suppression définitive des notes supprimées."
   },
   "revisions_snapshot_interval": {
     "note_revisions_snapshot_interval_title": "Délai d'enregistrement automatique d'une version de note",
@@ -1253,16 +1309,16 @@
     "markdown": "Style Markdown"
   },
   "highlights_list": {
-    "title": "Accentuations",
-    "description": "Vous pouvez personnaliser la liste des accentuations affichée dans le panneau de droite :",
+    "title": "Mises en évidence",
+    "description": "Vous pouvez personnaliser les mises en évidence affichées dans le panneau de droite :",
     "bold": "Texte en gras",
     "italic": "Texte en italique",
     "underline": "Texte souligné",
     "color": "Texte en couleur",
     "bg_color": "Texte avec couleur de fond",
-    "visibility_title": "Visibilité de la Liste des Accentuations",
-    "visibility_description": "Vous pouvez masquer le widget des accentuations par note en ajoutant un label #hideHighlightWidget.",
-    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour basculer rapidement vers le volet droit (comprenant les Accentuations) dans Options -> Raccourcis (nom « toggleRightPane »)."
+    "visibility_title": "Visibilité de la Liste des Mises en évidence",
+    "visibility_description": "Vous pouvez masquer le widget des mises en évidence par note en ajoutant un label #hideHighlightWidget.",
+    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour basculer rapidement vers le volet droit (comprenant les Mises en évidence) dans Options -> Raccourcis (nom « toggleRightPane »)."
   },
   "table_of_contents": {
     "title": "Table des matières",
@@ -1272,9 +1328,9 @@
     "unit": "titres"
   },
   "text_auto_read_only_size": {
-    "title": "Taille automatique en lecture seule",
+    "title": "Taille pour la lecture seule automatique",
     "description": "La taille automatique des notes en lecture seule est la taille au-delà de laquelle les notes seront affichées en mode lecture seule (pour des raisons de performances).",
-    "label": "Taille automatique en lecture seule (notes de texte)",
+    "label": "Taille pour la lecture seule automatique",
     "unit": "caractères"
   },
   "i18n": {
@@ -1487,7 +1543,8 @@
     "collections": "Collections",
     "ai-chat": "Chat IA",
     "llm-chat": "Chat AI",
-    "spreadsheet": "Feuille de calcul"
+    "spreadsheet": "Feuille de calcul",
+    "markdown": "Markdown"
   },
   "protect_note": {
     "toggle-on": "Protéger la note",
@@ -1517,12 +1574,12 @@
     "replace_all": "Tout remplacer"
   },
   "highlights_list_2": {
-    "title": "Accentuations",
+    "title": "Mises en évidence",
     "options": "Options",
     "title_with_count_one": "{{count}} mise en évidence",
     "title_with_count_many": "{{count}} mises en évidence",
     "title_with_count_other": "{{count}} mises en évidence",
-    "modal_title": "Configurer les mises en évidence",
+    "modal_title": "Configurer les Mises en évidence",
     "menu_configure": "Configuration des mises en évidence...",
     "no_highlights": "Aucune mise en évidence."
   },
@@ -1578,8 +1635,8 @@
   },
   "note_title": {
     "placeholder": "saisir le titre de la note ici...",
-    "created_on": "Créé le <Value />",
-    "last_modified": "Modifié le <Value />",
+    "created_on": "Créée le <Value />",
+    "last_modified": "Modifiée le <Value />",
     "note_type_switcher_label": "Basculer de {{type}} à :",
     "note_type_switcher_others": "Autre type de note",
     "note_type_switcher_templates": "Modèle",
@@ -1718,7 +1775,7 @@
     "add-term-to-dictionary": "Ajouter «{{term}}» au dictionnaire",
     "cut": "Couper",
     "copy": "Copier",
-    "copy-as-markdown": "Copier en markdown",
+    "copy-as-markdown": "Copier en Markdown",
     "copy-link": "Copier le lien",
     "paste": "Coller",
     "paste-as-plain-text": "Coller comme texte brut",
@@ -1841,7 +1898,8 @@
     "title": "Format de date/heure personnalisé",
     "description": "Personnalisez le format de la date et de l'heure insérées via <shortcut /> ou la barre d'outils. Consultez la <doc>Day.js docs</doc> pour connaître les formats disponibles.",
     "format_string": "Chaîne de format :",
-    "formatted_time": "Date/heure formatée"
+    "formatted_time": "Date/heure formatée",
+    "description_short": "Personnaliser le format de l'horodatage inséré via la barre d'outils."
   },
   "table_view": {
     "delete_column_confirmation": "Êtes-vous sûr de vouloir supprimer cette colonne ? L'attribut correspondant sera supprimé de toutes les notes.",
@@ -1937,8 +1995,10 @@
     "related_code_blocks": "Schéma de coloration syntaxique pour les blocs de code dans les notes de texte",
     "related_code_notes": "Schéma de couleurs pour les notes de code",
     "ui": "Interface utilisateur",
-    "ui_old_layout": "Ancienne mise en page",
-    "ui_new_layout": "Nouvelle mise en page"
+    "ui_old_layout": "Ancien",
+    "ui_new_layout": "Nouveau",
+    "ui_layout_style": "Style de disposition",
+    "ui_layout_orientation": "Orientation de la barre de raccourcis"
   },
   "units": {
     "percentage": "%"
@@ -1952,7 +2012,9 @@
     "rendering_error": "Impossible d'afficher le contenu en raison d'une erreur."
   },
   "code-editor-options": {
-    "title": "Éditeur"
+    "title": "Éditeur",
+    "tab_width": "Largeur de tabulation",
+    "tab_width_unit": "espaces"
   },
   "tasks": {
     "due": {
@@ -1990,7 +2052,7 @@
   },
   "code_theme": {
     "title": "Apparence",
-    "word_wrapping": "retour à la ligne automatique",
+    "word_wrapping": "Retour à la ligne automatique",
     "color-scheme": "Jeu de couleurs"
   },
   "cpu_arch_warning": {
@@ -2131,8 +2193,8 @@
   },
   "breadcrumb_badges": {
     "read_only_explicit": "Lecture seule",
-    "read_only_explicit_description": "Cette note a été paramétrée manuellement en lecture seule.\nCliquer pour temporairement l'éditer.",
-    "read_only_auto": "Lecture seule automatique",
+    "read_only_explicit_description": "Cette note a été définie manuellement en lecture seule.\nCliquer pour l'éditer temporairement.",
+    "read_only_auto": "Lecture seule (auto)",
     "read_only_auto_description": "Cette note a été réglée automatiquement en mode lecture seule pour des raisons de performances. Cette limite automatique est réglable à partir des paramètres.\n\nCliquez pour la modifier temporairement.",
     "read_only_temporarily_disabled": "Temporairement modifiable",
     "read_only_temporarily_disabled_description": "Cette note est actuellement modifiable, mais elle est normalement en lecture seule. La note redeviendra en lecture seule dès que vous accéderez à une autre note.\n\nCliquez pour réactiver le mode lecture seule.",
@@ -2147,11 +2209,11 @@
     "execute_script_description": "Cette note est une note de script. Cliquez pour exécuter le script.",
     "execute_sql": "Exécuter la commande SQL",
     "execute_sql_description": "Cette note est une note SQL. Cliquer pour exécuter la requête SQL.",
-    "save_status_saved": "Enregister",
+    "save_status_saved": "Enregistrée",
     "save_status_saving": "Enregistrement...",
-    "save_status_unsaved": "Non sauvée",
-    "save_status_error": "La sauvegarde a échoué",
-    "save_status_saving_tooltip": "Les modifications sont enregistrées.",
+    "save_status_unsaved": "Non enregistrée",
+    "save_status_error": "L'enregistrement a échoué",
+    "save_status_saving_tooltip": "Les modifications sont en cours d'enregistrement.",
     "save_status_unsaved_tooltip": "Il y a des changements non enregistrés. Ils seront enregistrés automatiquement dans un instant.",
     "save_status_error_tooltip": "Une erreur s'est produite lors de l'enregistrement de la note. Si possible, essayez de copier le contenu de la note ailleurs et de recharger l'application."
   },
@@ -2346,6 +2408,19 @@
     "source_description_auto": "Enregistrée automatiquement par le système à intervalles réguliers",
     "source_description_manual": "Enregistrée manuellement par l'utilisateur",
     "source_description_restore": "Enregistrée avant la restauration d'une révision antérieure",
-    "source_description_unknown": "Source indisponible"
+    "source_description_unknown": "Source indisponible",
+    "edit_description": "Modifier le nom",
+    "source_description_etapi": "Créé via l'API externe Trilium",
+    "source_description_llm": "Créé par l'assistant IA",
+    "mime": "MIME : ",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_unknown": "Snapshot"
+  },
+  "database": {
+    "title": "Base de données"
+  },
+  "launcher_button_context_menu": {
+    "remove_from_launch_bar": "Supprimer de la barre de raccourcis"
   }
 }
