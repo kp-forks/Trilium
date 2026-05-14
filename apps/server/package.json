@@ -38,7 +38,7 @@
     "ai": "6.0.168",
     "better-sqlite3": "12.9.0",
     "html-to-text": "9.0.5",
-    "i18next-fs-backend": "2.6.3",
+    "i18next-fs-backend": "2.6.4",
     "i18next": "26.0.8",
     "js-yaml": "4.1.1",
     "unpdf": "1.6.0"
