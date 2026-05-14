@@ -88,18 +88,6 @@
     "show-help": "فتح دليل التعليمات",
     "copy-without-formatting": "نسخ النص المحدد بدون تنسيق"
   },
-  "setup_sync-from-server": {
-    "note": "ملاحظة:",
-    "password": "كلمة المرور",
-    "password-placeholder": "كلمة المرور",
-    "back": "رجوع",
-    "server-host-placeholder": "https://<hostname>:<port>",
-    "proxy-server-placeholder": "https://<hostname>:<port>",
-    "finish-setup": "اكمال التثبيت",
-    "heading": "مزامنة من الخادم",
-    "server-host": "عنوان خادم تريليوم",
-    "proxy-server": "خادم وكيل (اختياري)"
-  },
   "weekdays": {
     "monday": "الاثنين",
     "tuesday": "الثلاثاء",

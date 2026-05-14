@@ -12,9 +12,6 @@
     "other": "Andre",
     "expand-subtree": "Utvid undertre for gjeldende notat"
   },
-  "setup_sync-from-desktop": {
-    "step6-here": "her"
-  },
   "set_password": {
     "password": "Passord"
   },
@@ -23,17 +20,6 @@
     "password": "Passord",
     "button": "Logg inn",
     "remember-me": "Husk meg"
-  },
-  "setup_sync-from-server": {
-    "server-host-placeholder": "https://<hostnavn>:<port>",
-    "proxy-server-placeholder": "https://<hostnavn>:<port>",
-    "note": "Obs:",
-    "password": "Passord",
-    "password-placeholder": "Passord",
-    "back": "Tilbake"
-  },
-  "setup_sync-in-progress": {
-    "outstanding-items-default": "N/A"
   },
   "share_page": {
     "parent": "overordnet notat:"

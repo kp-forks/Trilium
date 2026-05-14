@@ -125,47 +125,6 @@
     "password-confirmation": "Confirmation du mot de passe",
     "button": "Définir le mot de passe"
   },
-  "setup": {
-    "heading": "Configuration de Trilium Notes",
-    "new-document": "Je suis un nouvel utilisateur et je souhaite créer un nouveau document Trilium pour mes notes",
-    "sync-from-desktop": "J'ai déjà l'application de bureau et je souhaite configurer la synchronisation avec celle-ci",
-    "sync-from-server": "J'ai déjà un serveur et je souhaite configurer la synchronisation avec celui-ci",
-    "next": "Suivant",
-    "init-in-progress": "Initialisation du document en cours",
-    "redirecting": "Vous serez bientôt redirigé vers l'application.",
-    "title": "Configuration"
-  },
-  "setup_sync-from-desktop": {
-    "heading": "Synchroniser depuis une application de bureau",
-    "description": "Cette procédure doit être réalisée depuis l'application de bureau :",
-    "step1": "Ouvrez l'application Trilium Notes.",
-    "step2": "Dans le menu Trilium, cliquez sur Options.",
-    "step3": "Cliquez sur la catégorie Synchroniser.",
-    "step4": "Remplacez l'adresse de l'instance de serveur par : {{- host}} et cliquez sur Enregistrer.",
-    "step5": "Cliquez sur le bouton 'Tester la synchronisation' pour vérifier que la connexion fonctionne.",
-    "step6": "Une fois que vous avez terminé ces étapes, cliquez sur {{- link}}.",
-    "step6-here": "ici"
-  },
-  "setup_sync-from-server": {
-    "heading": "Synchroniser depuis le serveur",
-    "instructions": "Veuillez saisir l'adresse du serveur Trilium et les informations d'identification ci-dessous. Cela téléchargera l'intégralité du document Trilium à partir du serveur et configurera la synchronisation avec celui-ci. En fonction de la taille du document et de votre vitesse de connexion, cela peut prendre un plusieurs minutes.",
-    "server-host": "Adresse du serveur Trilium",
-    "server-host-placeholder": "https://<nom d'hôte>:<port>",
-    "proxy-server": "Serveur proxy (facultatif)",
-    "proxy-server-placeholder": "https://<nom d'hôte>:<port>",
-    "note": "Note :",
-    "proxy-instruction": "Si vous laissez le paramètre de proxy vide, le proxy du système sera utilisé (s'applique uniquement à l'application de bureau)",
-    "password": "Mot de passe",
-    "password-placeholder": "Mot de passe",
-    "back": "Retour",
-    "finish-setup": "Terminer"
-  },
-  "setup_sync-in-progress": {
-    "heading": "Synchronisation en cours",
-    "successful": "La synchronisation a été correctement configurée. La synchronisation initiale prendra un certain temps. Une fois terminée, vous serez redirigé vers la page de connexion.",
-    "outstanding-items": "Éléments de synchronisation exceptionnels :",
-    "outstanding-items-default": "N/A"
-  },
   "share_404": {
     "title": "Page non trouvée",
     "heading": "Page non trouvée"
