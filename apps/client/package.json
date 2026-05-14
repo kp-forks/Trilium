@@ -1,6 +1,6 @@
 {
   "name": "@triliumnext/client",
-  "version": "0.102.2",
+  "version": "0.103.0",
   "description": "JQuery-based client for TriliumNext, used for both web and desktop (via Electron)",
   "private": true,
   "license": "AGPL-3.0-only",
