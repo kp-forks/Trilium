@@ -16,6 +16,7 @@ import { getZipExportProviderFactory } from "./zip_export_provider_factory.js";
 import { AttachmentMeta, AttributeMeta, ExportFormat, NoteMeta, NoteMetaFile } from "../../meta";
 import { ValidationError } from "../../errors";
 import { extname } from "../utils/path";
+import { rewriteMarkdownContentLinks, isMarkdownCodeNote } from "./rewrite_links.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Record<string, any>, setHeaders = true, zipExportOptions?: AdvancedExportOptions) {
@@ -306,6 +307,13 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
         content = provider.prepareContent(title, content, noteMeta, note, branch);
 
+        // Rewrite markdown-style links for code notes with markdown MIME.
+        // These notes store content as markdown (not HTML), so the HTML-based
+        // rewriteLinks in the providers won't match their link syntax.
+        if (noteMeta.type === "code" && isMarkdownCodeNote(noteMeta.mime) && typeof content === "string") {
+            content = rewriteMarkdownContentLinks(content, noteMeta, getNoteTargetUrl);
+        }
+
         return content;
     }
 
@@ -404,7 +412,6 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
                     return true;
                 }
                 return false;
-
             });
         }
 

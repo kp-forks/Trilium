@@ -52,5 +52,5 @@ site/
 apps/*/coverage
 scripts/translation/.language*.json
 
-# AI
 .claude
+.pnpm-store

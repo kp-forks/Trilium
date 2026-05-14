@@ -480,7 +480,7 @@
     "existing_backups": "Backup esistenti",
     "date-and-time": "Data e ora",
     "path": "Percorso",
-    "database_backed_up_to": "Il database è stato archiviato in {{backupFilePath}}",
+    "database_backed_up_to": "È stato eseguito il backup del database su {{- backupFilePath}}",
     "enable_daily_backup": "Backup giornalieri",
     "no_backup_yet": "Ancora nessuna archiviazione",
     "automatic_backup": "Backup Automatico",
@@ -673,7 +673,8 @@
     "other": "Altro",
     "quickSearch": "concentrati sull'input della ricerca rapida",
     "inPageSearch": "ricerca all'interno della pagina",
-    "editShortcuts": "Modifica scorciatoie da tastiera"
+    "editShortcuts": "Modifica scorciatoie da tastiera",
+    "toggleArchivedNotes": "Mostra/nascondi le note archiviate"
   },
   "i18n": {
     "saturday": "Sabato",
@@ -809,8 +810,8 @@
     "css_class": "Il valore di questa etichetta viene quindi aggiunto come classe CSS al nodo che rappresenta una determinata nota nell'albero. Ciò può essere utile per la personalizzazione avanzata dei temi. Può essere utilizzato nelle note dei modelli.",
     "icon_class": "Il valore di questa etichetta viene aggiunto come classe CSS all'icona sull'albero, il che può aiutare a distinguere visivamente le note nell'albero. Un esempio potrebbe essere bx bx-home - le icone sono prese da boxicons. Può essere utilizzato nelle note del modello.",
     "page_size": "numero di elementi per pagina nell'elenco delle note",
-    "custom_request_handler": "vedi <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Gestore richieste personalizzato</a>",
-    "custom_resource_provider": "vedi <a href=\"javascript:\" data-help-page=\"custom-request-handler.html\">Gestore richieste personalizzato</a>",
+    "custom_request_handler": "gestore delle richieste personalizzato",
+    "custom_resource_provider": "fornitore di risorse personalizzato",
     "widget": "contrassegna questa nota come widget personalizzato che verrà aggiunto all'albero dei componenti Trilium",
     "workspace": "contrassegna questa nota come area di lavoro che consente un facile ancoraggio",
     "workspace_icon_class": "definisce la classe CSS dell'icona della casella che verrà utilizzata nella scheda quando viene sollevata su questa nota",
@@ -1144,7 +1145,7 @@
     "import_files": "Importa file",
     "export_note": "Nota di esportazione",
     "delete_note": "Elimina nota",
-    "print_note": "Stampa nota",
+    "print_note": "Stampa nota...",
     "save_revision": "Salva la revisione",
     "convert_into_attachment_failed": "Conversione della nota '{{title}}' fallita.",
     "convert_into_attachment_successful": "Nota '{{title}}' è stato convertito in allegato.",
@@ -1163,7 +1164,8 @@
     "word_wrap_auto_description": "Segui l'impostazione globale",
     "word_wrap_on": "On",
     "word_wrap_off": "Off",
-    "save_named_revision": "Salva revisione con nome..."
+    "save_named_revision": "Salva revisione con nome...",
+    "print_or_export_to_pdf": "Stampa/esporta in PDF..."
   },
   "onclick_button": {
     "no_click_handler": "Il widget pulsante '{{componentId}}' non ha un gestore di clic definito"
@@ -1319,7 +1321,8 @@
     "title": "Nota Mappa",
     "fix-nodes": "Fissare i nodi",
     "link-distance": "Distanza del collegamento",
-    "too-many-notes": "Questo sottoalbero contiene {{count}} note, un numero superiore al limite di {{max}} che può essere visualizzato nella mappa delle note."
+    "too-many-notes": "Qui ci sono {{count}} note. Visualizzarle tutte potrebbe rallentare il sistema.",
+    "show-anyway": "Mostra mappa"
   },
   "note_paths": {
     "title": "Percorsi delle note",
@@ -1521,14 +1524,20 @@
     "triliumnext": "Segui la combinazione di colori del sistema",
     "triliumnext-light": "Chiara",
     "triliumnext-dark": "Scura",
-    "layout": "Disposizione",
+    "layout": "Impaginazione",
     "layout-vertical-title": "Verticale",
     "layout-horizontal-title": "Orizzontale",
     "layout-vertical-description": "la barra di avvio è a sinistra (impostazione predefinita)",
     "layout-horizontal-description": "la barra di avvio si trova sotto la barra delle schede, che ora è a larghezza intera.",
     "modern_themes": "Moderna",
     "legacy_themes": "Legacy",
-    "custom_themes": "Personalizzata"
+    "custom_themes": "Personalizzata",
+    "recommended": "Consigliato",
+    "color_scheme": "Combinazione di colori",
+    "color_scheme_system": "Sistema",
+    "color_scheme_light": "Chiara",
+    "color_scheme_dark": "Scura",
+    "color_scheme_custom_disabled": "La sostituzione della combinazione di colori non è disponibile per i temi personalizzati"
   },
   "ui-performance": {
     "title": "Prestazione",
@@ -2223,7 +2232,10 @@
     "pages_many": "{{count}} pagine",
     "pages_other": "{{count}} pagine",
     "pages_alt": "Pagina {{pageNumber}}",
-    "pages_loading": "Caricamento in corso..."
+    "pages_loading": "Caricamento in corso...",
+    "annotations_one": "{{count}} annotazione",
+    "annotations_many": "{{count}} annotazioni",
+    "annotations_other": "{{count}} annotazioni"
   },
   "web_view_setup": {
     "title": "Crea una visualizzazione live di una pagina web direttamente in Trilium",
@@ -2432,7 +2444,8 @@
     "processing_failed": "Impossibile avviare l'elaborazione OCR",
     "text_filtered_low_confidence": "L'OCR ha rilevato il testo con un livello di affidabilità del {{confidence}}%, ma è stato scartato perché la soglia minima impostata è del {{threshold}}%.",
     "open_media_settings": "Apri Impostazioni",
-    "view_extracted_text": "Visualizza il testo estratto (OCR)"
+    "view_extracted_text": "Visualizza il testo estratto (OCR)",
+    "image_based_pdf_not_supported": "Questo PDF sembra essere un documento basato su immagini (scansionato). L'estrazione del testo dai PDF basati su immagini non è ancora supportata."
   },
   "mind-map": {
     "addChild": "Aggiungi figlio",
@@ -2568,5 +2581,8 @@
   "common": {
     "save": "Salva",
     "cancel": "Annulla"
+  },
+  "spreadsheet": {
+    "read-only": "Questa nota è di sola lettura."
   }
 }

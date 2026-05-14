@@ -158,6 +158,7 @@
     "jumpToParentNote": "jump to parent note",
     "collapseWholeTree": "collapse whole note tree",
     "collapseSubTree": "collapse sub-tree",
+    "toggleArchivedNotes": "show/hide archived notes",
     "tabShortcuts": "Tab shortcuts",
     "newTabNoteLink": "on note link opens note in a new tab",
     "newTabWithActivationNoteLink": "on note link opens and activates the note in a new tab",
@@ -248,11 +249,24 @@
     "search_placeholder": "Search for note by its name or type > for commands...",
     "search_button": "Search in full text"
   },
+  "markdown_editor": {
+    "image_upload_failed": "Cannot upload image \"{{name}}\"."
+  },
   "markdown_import": {
     "dialog_title": "Markdown import",
     "modal_body_text": "Because of browser sandbox it's not possible to directly read clipboard from JavaScript. Please paste the Markdown to import to textarea below and click on Import button",
     "import_button": "Import",
     "import_success": "Markdown content has been imported into the document."
+  },
+  "markdown_slash_commands": {
+    "date": "Insert current date and time",
+    "include": "Include another note",
+    "image": "Upload and insert an image",
+    "link": "Insert a note link",
+    "math": "Insert a math equation block",
+    "footnote": "Insert a footnote",
+    "mermaid": "Insert a Mermaid diagram",
+    "admonition": "Insert {{type}} admonition"
   },
   "move_to": {
     "dialog_title": "Move notes to ...",
@@ -762,7 +776,8 @@
     "import_files": "Import files",
     "export_note": "Export note",
     "delete_note": "Delete note",
-    "print_note": "Print note",
+    "print_note": "Print note...",
+    "print_or_export_to_pdf": "Print/export to PDF...",
     "view_revisions": "Note revisions...",
     "save_revision": "Save revision",
     "save_named_revision": "Save named revision...",
@@ -932,7 +947,8 @@
     "title": "Note Map",
     "fix-nodes": "Fix nodes",
     "link-distance": "Link distance",
-    "too-many-notes": "This subtree contains {{count}} notes, which exceeds the limit of {{max}} that can be displayed in the note map."
+    "too-many-notes": "There are {{count}} notes here. Showing them all may slow things down.",
+    "show-anyway": "Show map"
   },
   "note_paths": {
     "title": "Note Paths",
@@ -1303,6 +1319,12 @@
     "modern_themes": "Modern",
     "legacy_themes": "Legacy",
     "custom_themes": "Custom",
+    "recommended": "Recommended",
+    "color_scheme": "Color scheme",
+    "color_scheme_system": "System",
+    "color_scheme_light": "Light",
+    "color_scheme_dark": "Dark",
+    "color_scheme_custom_disabled": "Color scheme override is not available for custom themes",
     "layout": "Layout",
     "layout-vertical-title": "Vertical",
     "layout-horizontal-title": "Horizontal",

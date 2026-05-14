@@ -49,6 +49,7 @@
     "seventh-tab": "Activeer het zevende tabblad in de lijst",
     "eight-tab": "Activeer het achtste tabblad in de lijst",
     "ninth-tab": "Activeer het negende tabblad in de lijst",
-    "last-tab": "Activeer het laatste tabblad in de lijst"
+    "last-tab": "Activeer het laatste tabblad in de lijst",
+    "toggle-archived-notes": "Toon/verberg gearchiveerde notities in het notitie overzicht"
   }
 }

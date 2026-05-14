@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import archiver from "archiver";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { PassThrough } from "stream";
 import zip, { removeTriliumTags } from "./zip.js";
 import becca from "../../becca/becca.js";
 import BNote from "../../becca/entities/bnote.js";
@@ -12,7 +14,11 @@ import { getContext } from "../context.js";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 
 async function testImport(fileName: string) {
-    const mdxSample = fs.readFileSync(`${scriptDir}/samples/${fileName}`);
+    const buffer = fs.readFileSync(`${scriptDir}/samples/${fileName}`);
+    return testImportBuffer(buffer);
+}
+
+async function testImportBuffer(buffer: Buffer) {
     const taskContext = TaskContext.getInstance("import-mdx", "importNotes", {
         textImportedAsText: true
     });
@@ -25,13 +31,26 @@ async function testImport(fileName: string) {
                 return;
             }
 
-            const importedNote = await zip.importZip(taskContext, mdxSample, rootNote as BNote);
+            const importedNote = await zip.importZip(taskContext, buffer, rootNote as BNote);
             resolve({
                 importedNote,
                 rootNote
             });
         });
     });
+}
+
+async function createZipBuffer(files: Record<string, string | Buffer>): Promise<Buffer> {
+    const archive = archiver("zip");
+    const chunks: Buffer[] = [];
+    const passthrough = new PassThrough();
+    passthrough.on("data", (chunk: Buffer) => chunks.push(chunk));
+    archive.pipe(passthrough);
+    for (const [name, content] of Object.entries(files)) {
+        archive.append(content, { name });
+    }
+    await archive.finalize();
+    return Buffer.concat(chunks);
 }
 
 describe("processNoteContent", () => {
@@ -75,6 +94,15 @@ describe("processNoteContent", () => {
         expect(importedNote.title).toBe("测试");
     });
 
+    it("can import ZIP with GBK-encoded filenames (Chinese Windows)", async () => {
+        const { rootNote } = await testImport("gbk-support.zip");
+        const children = rootNote.getChildNotes().map((n) => n.title);
+        expect(children).toContain("测试文件.txt");
+        expect(children).toContain("中文目录");
+        const dirNote = rootNote.getChildNotes().find((n) => n.title === "中文目录")!;
+        expect(dirNote.getChildNotes().map((n) => n.title)).toContain("子文件.txt");
+    });
+
     it("can import old geomap notes", async () => {
         const { importedNote } = await testImport("geomap.zip");
         expect(importedNote.type).toBe("book");
@@ -86,6 +114,40 @@ describe("processNoteContent", () => {
         expect(attachment.mime).toBe("application/json");
         const content = attachment.getContent();
         expect(content).toStrictEqual(`{"view":{"center":{"lat":49.19598332223546,"lng":-2.1414576506668808},"zoom":12}}`);
+    });
+
+    it("rewrites relative attachment paths in markdown code notes on import", async () => {
+        const metaFile = {
+            formatVersion: 2,
+            appVersion: "0.0.0",
+            files: [{
+                noteId: "mdCodeNote1",
+                title: "Markdown Note",
+                type: "code",
+                mime: "text/x-markdown",
+                dataFileName: "Markdown Note.md",
+                attachments: [{
+                    attachmentId: "imgAtt1",
+                    title: "image.jpg",
+                    role: "image",
+                    mime: "image/jpeg",
+                    position: 10,
+                    dataFileName: "Markdown Note_image.jpg"
+                }]
+            }]
+        };
+
+        const zipBuffer = await createZipBuffer({
+            "!!!meta.json": JSON.stringify(metaFile),
+            "Markdown Note.md": "# Hello\n\n![photo](Markdown Note_image.jpg)",
+            "Markdown Note_image.jpg": Buffer.from("fake image data")
+        });
+
+        const { importedNote } = await testImportBuffer(zipBuffer);
+        const content = importedNote.getContent() as string;
+        expect(content).toContain("![photo](api/attachments/");
+        expect(content).toContain("/image/image.jpg)");
+        expect(content).not.toContain("Markdown Note_image.jpg");
     });
 }, 60_000);
 

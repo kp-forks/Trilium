@@ -1,6 +1,23 @@
 {
   "about": {
-    "data_directory": "Répertoire des données :"
+    "data_directory": "Répertoire des données :",
+    "version_label": "Version :",
+    "version": "{{appVersion}} (base de données : {{dbVersion}}, protocole de sync : {{syncVersion}})",
+    "build_info": "Build : {{buildDate}}, révision : <buildRevision />",
+    "contributors_label": "Contributeurs :",
+    "contributor_roles": {
+      "lead-dev": "développeur principal",
+      "original-dev": "développeur initial"
+    },
+    "role_brief_history": {
+      "lead-dev": "Elian Doran a fondé TriliumNext en 2024, une branche communautaire créée après que Zadam se soit retiré du projet. Zadam a ensuite transféré le dépôt d'origine à l'équipe de TriliumNext, fusionnant ainsi les deux projets en un seul.",
+      "original-dev": "Le 25 décembre 2017, Zadam a publié la première version bêta de Trilium (écrit avec un seul « l », contrairement à la fleur). Insatisfait des gestionnaires de notes existants, il a développé une puissante base de connaissances hiérarchique auto-hébergée qui a recueilli plus de 22 000 étoiles sur GitHub. En 2024, sa vie devenant de plus en plus chargée, il a mis le projet en mode maintenance."
+    },
+    "contributor_full_list": "Découvrez toute la communauté",
+    "github_tooltip": "Signalez des bugs, proposez des fonctionnalités ou contribuez sur GitHub",
+    "license_tooltip": "Voir la licence",
+    "donate": "Faire un don",
+    "donate_tooltip": "Faites un don pour soutenir ce projet"
   },
   "toast": {
     "critical-error": {
@@ -83,15 +100,22 @@
   "delete_notes": {
     "close": "Fermer",
     "delete_all_clones_description": "Supprimer aussi les clones (peut être annulé dans des modifications récentes)",
-    "erase_notes_description": "La suppression normale (douce) marque uniquement les notes comme supprimées et elles peuvent être restaurées (dans la boîte de dialogue des Modifications récentes) dans un délai donné. Cocher cette option effacera les notes immédiatement et il ne sera pas possible de les restaurer.",
+    "erase_notes_description": "Effacer immédiatement les notes sans avoir la possibilité de les restaurer . Cette action est irréversible et entraînera un rechargement de l'application.",
     "erase_notes_warning": "Efface les notes de manière permanente (ne peut pas être annulée), y compris les clones. L'application va être rechargée.",
-    "notes_to_be_deleted": "Les notes suivantes seront supprimées ({{notesCount}})",
+    "notes_to_be_deleted": "Notes à supprimer ({{notesCount}})",
     "no_note_to_delete": "Aucune note ne sera supprimée (uniquement les clones).",
-    "broken_relations_to_be_deleted": "Les relations suivantes seront rompues et supprimées ({{ relationCount}})",
+    "broken_relations_to_be_deleted": "Relations rompues ({{ relationCount}})",
     "cancel": "Annuler",
-    "title": "Notes supprimées",
+    "title": "Supprimer les notes",
     "clones_label": "Clone",
-    "erase_notes_label": "Supprimer définitivement"
+    "erase_notes_label": "Effacer définitivement",
+    "delete_clones_description_one": "Supprimer aussi {{count}} autre clone. Peut être annulé dans les modifications récentes.",
+    "delete_clones_description_many": "Supprimer aussi {{count}} autres clones. Peut être annulé dans les modifications récentes.",
+    "delete_clones_description_other": "Supprimer aussi {{count}} autres clones. Peut être annulé dans les modifications récentes.",
+    "table_note_with_relation": "Note avec relation",
+    "table_relation": "Relation",
+    "table_points_to": "Pointe vers (supprimé)",
+    "delete": "Supprimer"
   },
   "export": {
     "export_note_title": "Exporter la note",
@@ -165,7 +189,8 @@
     "inPageSearch": "recherche sur la page",
     "title": "Aide-mémoire",
     "newTabWithActivationNoteLink": "Lorsqu’on clique sur un lien de note, celle-ci s’ouvre et devient active dans un nouvel onglet",
-    "editShortcuts": "Modifier les raccourcis clavier"
+    "editShortcuts": "Modifier les raccourcis clavier",
+    "toggleArchivedNotes": "Afficher/Masquer les notes archivées"
   },
   "import": {
     "importIntoNote": "Importer dans la note",
@@ -202,7 +227,8 @@
     "box_size_small": "petit (~ 10 lignes)",
     "box_size_medium": "moyen (~ 30 lignes)",
     "box_size_full": "complet (la boîte affiche le texte complet)",
-    "button_include": "Inclure une note"
+    "button_include": "Inclure une note",
+    "box_size_expandable": "déployable (replié par défaut)"
   },
   "info": {
     "modalTitle": "Message d'information",
@@ -413,7 +439,9 @@
     "print_landscape": "Lors de l'exportation en PDF, change l'orientation de la page en paysage au lieu de portrait.",
     "print_page_size": "Lors de l'exportation en PDF, change la taille de la page. Valeurs supportées : <code>A0</code>, <code>A1</code>, <code>A2</code>, <code>A3</code>, <code>A4</code>, <code>A5</code>, <code>A6</code>, <code>Legal</code>, <code>Letter</code>, <code>Tabloid</code>, <code>Ledger</code>.",
     "color_type": "Couleur",
-    "textarea": "Texte multiligne"
+    "textarea": "Texte multiligne",
+    "print_scale": "Lors de l'exportation en PDF, modifie l'échelle du contenu affiché. Les valeurs vont de 0,1 (10 %) à 2 (200 %) ; la valeur par défaut est 1 (100 %).",
+    "print_margins": "Lors de l'exportation en PDF, permet de définir les marges de page. Utilisez <code>par défaut</code>, <code>aucune</code>, <code>minimale</code> ou des valeurs personnalisées telles que <code>haut, droite, bas, gauche</code> en millimètres."
   },
   "attribute_editor": {
     "help_text_body1": "Pour ajouter un label, tapez simplement par ex. <code>#rock</code>, ou si vous souhaitez également ajouter une valeur, tapez par ex. <code>#année = 2020</code>",
@@ -599,7 +627,7 @@
     "show_toc": "Afficher la Table des matières"
   },
   "show_highlights_list_widget_button": {
-    "show_highlights_list": "Afficher la liste des Accentuations"
+    "show_highlights_list": "Afficher la liste des Mises en évidence"
   },
   "global_menu": {
     "menu": "Menu",
@@ -663,8 +691,8 @@
     "import_files": "Importer des fichiers",
     "export_note": "Exporter la note",
     "delete_note": "Supprimer la note",
-    "print_note": "Imprimer la note",
-    "save_revision": "Enregistrer la version",
+    "print_note": "Imprimer la note...",
+    "save_revision": "Enregistrer la révision",
     "convert_into_attachment_failed": "La conversion de la note '{{title}}' a échoué.",
     "convert_into_attachment_successful": "La note '{{title}}' a été convertie en pièce jointe.",
     "convert_into_attachment_prompt": "Êtes-vous sûr de vouloir convertir la note '{{title}}' en une pièce jointe de la note parente ?",
@@ -675,7 +703,13 @@
     "export_as_image": "Exporter en tant qu'image",
     "export_as_image_png": "PNG",
     "export_as_image_svg": "SVG (vectoriel)",
-    "note_map": "Note Carte"
+    "note_map": "Note Carte",
+    "word_wrap": "Retour à la ligne",
+    "word_wrap_auto": "Auto",
+    "word_wrap_auto_description": "Suivre les paramètres généraux",
+    "view_ocr_text": "Afficher le texte OCR",
+    "print_or_export_to_pdf": "Imprimer/exporter en PDF...",
+    "save_named_revision": "Enregistrer une révision nommée…"
   },
   "onclick_button": {
     "no_click_handler": "Le widget bouton '{{componentId}}' n'a pas de gestionnaire de clic défini"
@@ -773,7 +807,10 @@
     "expand_first_level": "Développer les enfants directs",
     "expand_nth_level": "Développer sur {{depth}} niveaux",
     "expand_all_levels": "Développer tous les niveaux",
-    "hide_child_notes": "Masquer les notes enfants dans l’arborescence"
+    "hide_child_notes": "Masquer les notes enfants dans l’arborescence",
+    "open_all_in_tabs_tooltip": "Ouvrir tous les résultats dans de nouveaux onglets",
+    "open_all_confirm": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
+    "open_all_in_tabs": "Tout ouvrir"
   },
   "edited_notes": {
     "no_edited_notes_found": "Aucune note modifiée ce jour-là...",
@@ -827,7 +864,8 @@
     "collapse": "Réduire à la taille normale",
     "title": "Carte de la Note",
     "fix-nodes": "Réparer les nœuds",
-    "link-distance": "Distance du lien"
+    "link-distance": "Distance du lien",
+    "too-many-notes": "Il y a {{count}} notes ici. Les afficher toutes pourrait ralentir le chargement."
   },
   "note_paths": {
     "title": "Chemins de la Note",
@@ -1032,7 +1070,8 @@
     "note_already_in_diagram": "La note \"{{title}}\" est déjà dans le diagramme.",
     "enter_title_of_new_note": "Entrez le titre de la nouvelle note",
     "default_new_note_title": "nouvelle note",
-    "click_on_canvas_to_place_new_note": "Cliquez sur le canevas pour placer une nouvelle note"
+    "click_on_canvas_to_place_new_note": "Cliquez sur le canevas pour placer une nouvelle note",
+    "rename_relation": "Renommer la relation"
   },
   "backend_log": {
     "refresh": "Rafraîchir"
@@ -1041,7 +1080,9 @@
     "title": "Vérification de la cohérence",
     "find_and_fix_button": "Rechercher et résoudre les problèmes de cohérence",
     "finding_and_fixing_message": "Recherche et résolution des problèmes de cohérence...",
-    "issues_fixed_message": "Les problèmes de cohérence devraient être résolus."
+    "issues_fixed_message": "Les problèmes de cohérence devraient être résolus.",
+    "find_and_fix_label": "Identifier et corriger les problèmes de cohérence",
+    "find_and_fix_description": "Rechercher et corriger automatiquement tout problème de cohérence des données dans la base de données."
   },
   "database_anonymization": {
     "title": "Anonymisation de la base de données",
@@ -1058,31 +1099,38 @@
     "error_creating_anonymized_database": "Impossible de créer une base de données anonymisée, vérifiez les journaux backend pour plus de détails",
     "successfully_created_fully_anonymized_database": "Base de données entièrement anonymisée crée dans {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "Base de données partiellement anonymisée crée dans {{anonymizedFilePath}}",
-    "no_anonymized_database_yet": "Aucune base de données anonymisée."
+    "no_anonymized_database_yet": "Aucune base de données anonymisée.",
+    "description": "Créer une copie anonymisée de votre base de données afin de la partager avec les développeurs lors du débogage de problèmes, sans divulguer de données personnelles."
   },
   "database_integrity_check": {
     "title": "Vérification de l'intégrité de la base de données",
     "check_button": "Vérifier l'intégrité de la base de données",
     "checking_integrity": "Vérification de l'intégrité de la base de données...",
     "integrity_check_succeeded": "Le contrôle d'intégrité a réussi - aucun problème détecté.",
-    "integrity_check_failed": "Échec du contrôle d'intégrité : {{results}}"
+    "integrity_check_failed": "Échec du contrôle d'intégrité : {{results}}",
+    "check_integrity_label": "Vérifier l'intégrité de la base de données",
+    "check_integrity_description": "Vérifie que la base de données n'est pas corrompue au niveau SQLite."
   },
   "sync": {
     "title": "Synchroniser",
     "force_full_sync_button": "Forcer la synchronisation complète",
     "fill_entity_changes_button": "Remplir les enregistrements de modifications d'entité",
-    "full_sync_triggered": "Synchronisation complète déclenchée",
+    "full_sync_triggered": "Synchronisation complète lancée",
     "filling_entity_changes": "Remplissage changements de ligne d'entité ...",
     "sync_rows_filled_successfully": "Synchronisation avec succès des lignes remplies",
     "finished-successfully": "Synchronisation terminée avec succès.",
-    "failed": "Échec de la synchronisation : {{message}}"
+    "failed": "Échec de la synchronisation : {{message}}",
+    "force_full_sync_label": "Forcer une synchronisation complète",
+    "force_full_sync_description": "Lancer une synchronisation complète avec le serveur, réenvoyant ainsi toutes les modifications."
   },
   "vacuum_database": {
     "title": "Nettoyage de la base de données",
     "description": "Cela reconstruira la base de données, ce qui générera un fichier de base de données généralement plus petit. Aucune donnée ne sera réellement modifiée.",
     "button_text": "Nettoyer la base de données",
     "vacuuming_database": "Nettoyage de la base de données en cours...",
-    "database_vacuumed": "La base de données a été nettoyée"
+    "database_vacuumed": "La base de données a été nettoyée",
+    "vacuum_description": "Reconstruit la base de données pour réduire sa taille. Aucune donnée ne sera modifiée.",
+    "vacuum_label": "Nettoyage de la base de données"
   },
   "fonts": {
     "theme_defined": "Défini par le thème",
@@ -1093,7 +1141,7 @@
     "note_tree_font": "Police de l'arborescence",
     "note_detail_font": "Police du contenu des notes",
     "monospace_font": "Police Monospace (code)",
-    "not_all_fonts_available": "Toutes les polices répertoriées peuvent ne pas être disponibles sur votre système.",
+    "not_all_fonts_available": "Toutes les polices répertoriées peuvent ne pas être disponibles sur votre système",
     "generic-fonts": "Polices génériques",
     "sans-serif-system-fonts": "Polices système sans serif",
     "serif-system-fonts": "Polices système Serif",
@@ -1102,7 +1150,12 @@
     "serif": "Serif",
     "sans-serif": "Sans sérif",
     "monospace": "Monospace",
-    "system-default": "Thème système"
+    "system-default": "Thème système",
+    "custom_fonts": "Utiliser des polices personnalisées",
+    "preview": "Aperçu",
+    "monospace_font_description": "Utilisée pour les notes de code et les blocs de code",
+    "size_relative_to_general": "La taille est relative à la taille générale de la police",
+    "apply_changes": "Actualiser pour appliquer les modifications"
   },
   "max_content_width": {
     "title": "Largeur du contenu",
@@ -1135,7 +1188,16 @@
     "layout-horizontal-description": "la barre de raccourcis est sous la barre des onglets, cette-dernière est s'affiche en pleine largeur.",
     "auto_theme": "Hérité (suivre le schéma de couleurs du système)",
     "light_theme": "Hérité (clair)",
-    "dark_theme": "Hérité (foncé)"
+    "dark_theme": "Hérité (foncé)",
+    "modern_themes": "Moderne",
+    "legacy_themes": "Historique",
+    "custom_themes": "Personnalisé",
+    "recommended": "Recommandé",
+    "color_scheme": "Palette de couleurs",
+    "color_scheme_system": "Système",
+    "color_scheme_light": "Clair",
+    "color_scheme_dark": "Sombre",
+    "color_scheme_custom_disabled": "La modification de la palette de couleurs n'est pas disponible pour les thèmes personnalisés"
   },
   "zoom_factor": {
     "title": "Facteur de zoom (version bureau uniquement)",
@@ -1144,12 +1206,12 @@
   "code_auto_read_only_size": {
     "title": "Taille pour la lecture seule automatique",
     "description": "La taille pour la lecture seule automatique est le seuil au-delà de laquelle les notes seront affichées en mode lecture seule (pour optimiser les performances).",
-    "label": "Taille pour la lecture seule automatique (notes de code)",
+    "label": "Taille pour la lecture seule automatique",
     "unit": "caractères"
   },
   "code_mime_types": {
     "title": "Types MIME disponibles dans la liste déroulante",
-    "tooltip_syntax_highlighting": "Mise en évidence de la syntaxe",
+    "tooltip_syntax_highlighting": "Coloration syntaxique",
     "tooltip_code_block_syntax": "Blocs de code dans les notes textuelles",
     "tooltip_code_note_syntax": "Notes de code"
   },
@@ -1163,47 +1225,71 @@
   },
   "images": {
     "images_section_title": "Images",
-    "download_images_automatically": "Téléchargez automatiquement les images pour une utilisation hors ligne.",
+    "download_images_automatically": "Télécharger automatiquement les images",
     "download_images_description": "Le HTML collé peut contenir des références à des images en ligne, Trilium trouvera ces références et téléchargera les images afin qu'elles soient disponibles hors ligne.",
     "enable_image_compression": "Activer la compression des images",
-    "max_image_dimensions": "Largeur/hauteur maximale d'une image en pixels (l'image sera redimensionnée si elle dépasse ce paramètre).",
-    "jpeg_quality_description": "Qualité JPEG (10 - pire qualité, 100 - meilleure qualité, 50 - 85 est recommandé)",
-    "max_image_dimensions_unit": "pixels"
+    "max_image_dimensions": "Dimensions maximales d'une image",
+    "jpeg_quality_description": "La plage recommandée est entre 50 et 85. Des valeurs plus faibles réduisent la taille du fichier, des valeurs plus élevées préservent les détails.",
+    "max_image_dimensions_unit": "pixels",
+    "jpeg_quality": "Qualité JPEG",
+    "enable_image_compression_description": "Compresser et redimensionner les images lors de leur téléchargement ou de leur copie.",
+    "max_image_dimensions_description": "Les images dépassant cette taille seront automatiquement redimensionnées.",
+    "ocr_section_title": "Extraction de texte (OCR)",
+    "ocr_related_content_languages": "Langues du contenu (utilisées pour l’extraction de texte)",
+    "ocr_auto_process": "Traiter automatiquement les nouveaux fichiers",
+    "ocr_auto_process_description": "Extraire automatiquement le texte des fichiers nouvellement importés ou collés.",
+    "ocr_min_confidence": "Seuil de confiance minimal",
+    "ocr_confidence_description": "N’extraire que le texte dont la confiance est supérieure à ce seuil. Des valeurs plus faibles incluent davantage de texte, mais peuvent être moins précises.",
+    "batch_ocr_title": "Traiter les fichiers existants",
+    "batch_ocr_description": "Extraire le texte de toutes les images, PDF et documents Office existants dans vos notes. Cette opération peut prendre du temps en fonction du nombre de fichiers.",
+    "batch_ocr_start": "Démarrer le traitement par lot",
+    "batch_ocr_starting": "Démarrage du traitement par lot…",
+    "batch_ocr_progress": "Traitement de {{processed}} sur {{total}} fichiers…",
+    "batch_ocr_completed": "Traitement par lot terminé ! {{processed}} fichiers traités.",
+    "batch_ocr_error": "Erreur lors du traitement par lot : {{error}}"
   },
   "attachment_erasure_timeout": {
-    "attachment_erasure_timeout": "Délai d'effacement des pièces jointes",
-    "erase_attachments_after": "Effacer les pièces jointes inutilisées après :",
-    "manual_erasing_description": "Vous pouvez également déclencher l'effacement manuellement (sans tenir compte du délai défini ci-dessus) :",
-    "erase_unused_attachments_now": "Effacez maintenant les pièces jointes inutilisées",
-    "unused_attachments_erased": "Les pièces jointes inutilisées ont été effacées."
+    "attachment_erasure_timeout": "Pièces jointes inutilisées",
+    "erase_attachments_after": "Effacer les pièces jointes inutilisées après",
+    "manual_erasing_description": "Lancer la suppression manuellement, sans tenir compte du délai ci-dessus.",
+    "erase_unused_attachments_now": "Effacer maintenant les pièces jointes inutilisées",
+    "unused_attachments_erased": "Les pièces jointes inutilisées ont été effacées.",
+    "description": "Les pièces jointes qui ne sont plus référencées par aucune note sont considérées comme inutilisées et peuvent être automatiquement effacées après un certain délai.",
+    "erase_attachments_after_description": "Délai avant l'effacement définitif des pièces jointes inutilisées."
   },
   "network_connections": {
-    "network_connections_title": "Connexions réseau",
-    "check_for_updates": "Rechercher automatiquement les mises à jour"
+    "network_connections_title": "Réseau",
+    "check_for_updates": "Rechercher automatiquement les mises à jour",
+    "check_for_updates_description": "Vérifie les nouvelles versions sur GitHub et affiche une notification dans le menu global lorsqu’une mise à jour est disponible."
   },
   "note_erasure_timeout": {
-    "note_erasure_timeout_title": "Délai d'effacement des notes",
-    "erase_notes_after": "Effacer les notes après :",
-    "manual_erasing_description": "Vous pouvez également déclencher l'effacement manuellement (sans tenir compte de la durée définie ci-dessus) :",
+    "note_erasure_timeout_title": "Notes supprimées",
+    "erase_notes_after": "Effacer les notes après",
+    "manual_erasing_description": "Lancer la suppression manuellement, sans tenir compte du délai ci-dessus.",
     "erase_deleted_notes_now": "Effacer les notes supprimées maintenant",
-    "deleted_notes_erased": "Les notes supprimées ont été effacées."
+    "deleted_notes_erased": "Les notes supprimées ont été effacées.",
+    "description": "Les notes supprimées sont d’abord simplement marquées comme supprimées et peuvent être restaurées depuis les Modifications récentes. Après un certain délai, elles sont définitivement effacées.",
+    "erase_notes_after_description": "Délai avant l'effacement définitif des notes supprimées."
   },
   "revisions_snapshot_interval": {
-    "note_revisions_snapshot_interval_title": "Délai d'enregistrement automatique d'une version de note",
-    "note_revisions_snapshot_description": "Le délai d'enregistrement automatique des versions de note définit le temps avant la création automatique d'une nouvelle version de note. Consultez le <doc>wiki</doc> pour plus d'informations.",
-    "snapshot_time_interval_label": "Délai d'enregistrement automatique de version de note :"
+    "note_revisions_snapshot_interval_title": "Intervalle des instantanés de révision de note",
+    "note_revisions_snapshot_description": "L’intervalle des instantanés de révision de note correspond au délai après lequel une nouvelle révision de la note est créée. Voir <doc>wiki</doc> pour plus d’informations.",
+    "snapshot_time_interval_label": "Intervalle entre les instantanés",
+    "note_revisions_snapshot_description_short": "Délai après lequel une nouvelle révision de note sera créée."
   },
   "revisions_snapshot_limit": {
-    "note_revisions_snapshot_limit_title": "Limite du nombre de versions de note",
-    "note_revisions_snapshot_limit_description": "La limite du nombre de versions de note désigne le nombre maximum de versions pouvant être enregistrées pour chaque note. -1 signifie aucune limite, 0 signifie supprimer toutes les versions. Vous pouvez définir le nombre maximal de versions pour une seule note avec le label #versioningLimit.",
-    "snapshot_number_limit_label": "Nombre limite de versions de note :",
-    "erase_excess_revision_snapshots": "Effacer maintenant les versions en excès",
-    "erase_excess_revision_snapshots_prompt": "Les versions en excès ont été effacées.",
-    "snapshot_number_limit_unit": "instantanés"
+    "note_revisions_snapshot_limit_title": "Nombre maximal d’instantanés de révision de note",
+    "note_revisions_snapshot_limit_description": "La limite du nombre de révision de note désigne le nombre maximum de révisions pouvant être enregistrées pour chaque note. -1 signifie aucune limite, 0 signifie supprimer toutes les révisions. Vous pouvez définir le nombre maximal de révisions pour une seule note avec le label #versioningLimit.",
+    "snapshot_number_limit_label": "Nombre maximal de révisions",
+    "erase_excess_revision_snapshots": "Effacer maintenant les instantanés de révision en excès",
+    "erase_excess_revision_snapshots_prompt": "Les révisions en excès ont été effacées.",
+    "snapshot_number_limit_unit": "instantanés",
+    "erase_excess_revision_snapshots_description": "Supprimer les révisions excédant la limite pour toutes les notes.",
+    "note_revisions_snapshot_limit_description_short": "Nombre maximal de révisions par note. Utilisez -1 pour aucune limite, 0 pour désactiver."
   },
   "search_engine": {
     "title": "Moteur de recherche",
-    "custom_search_engine_info": "Le moteur de recherche personnalisé nécessite à la fois la définition d’un nom et d’une URL. Si l’un ou l’autre de ces éléments n’est défini, DuckDuckGo sera utilisé comme moteur de recherche par défaut.",
+    "custom_search_engine_info": "Utilisé pour effectuer une recherche sur le Web à partir du texte sélectionné. Si cette option n'est pas configurée, DuckDuckGo sera utilisé.",
     "predefined_templates_label": "Modèles de moteur de recherche prédéfinis",
     "bing": "Bing",
     "baidu": "Baidu",
@@ -1226,16 +1312,16 @@
     "markdown": "Style Markdown"
   },
   "highlights_list": {
-    "title": "Accentuations",
-    "description": "Vous pouvez personnaliser la liste des accentuations affichée dans le panneau de droite :",
+    "title": "Mises en évidence",
+    "description": "Vous pouvez personnaliser les mises en évidence affichées dans le panneau de droite :",
     "bold": "Texte en gras",
     "italic": "Texte en italique",
     "underline": "Texte souligné",
     "color": "Texte en couleur",
     "bg_color": "Texte avec couleur de fond",
-    "visibility_title": "Visibilité de la Liste des Accentuations",
-    "visibility_description": "Vous pouvez masquer le widget des accentuations par note en ajoutant un label #hideHighlightWidget.",
-    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour basculer rapidement vers le volet droit (comprenant les Accentuations) dans Options -> Raccourcis (nom « toggleRightPane »)."
+    "visibility_title": "Visibilité de la Liste des Mises en évidence",
+    "visibility_description": "Vous pouvez masquer le widget des mises en évidence par note en ajoutant un label #hideHighlightWidget.",
+    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour basculer rapidement vers le volet droit (comprenant les Mises en évidence) dans Options -> Raccourcis (nom « toggleRightPane »)."
   },
   "table_of_contents": {
     "title": "Table des matières",
@@ -1245,9 +1331,9 @@
     "unit": "titres"
   },
   "text_auto_read_only_size": {
-    "title": "Taille automatique en lecture seule",
+    "title": "Taille pour la lecture seule automatique",
     "description": "La taille automatique des notes en lecture seule est la taille au-delà de laquelle les notes seront affichées en mode lecture seule (pour des raisons de performances).",
-    "label": "Taille automatique en lecture seule (notes de texte)",
+    "label": "Taille pour la lecture seule automatique",
     "unit": "caractères"
   },
   "i18n": {
@@ -1282,7 +1368,7 @@
     "existing_backups": "Sauvegardes existantes",
     "date-and-time": "Date & heure",
     "path": "Chemin",
-    "database_backed_up_to": "La base de données a été sauvegardée dans {{backupFilePath}}",
+    "database_backed_up_to": "La base de données a été sauvegardée dans {{- backupFilePath}}",
     "no_backup_yet": "pas encore de sauvegarde"
   },
   "etapi": {
@@ -1322,7 +1408,7 @@
     "protected_session_timeout_description": "Le délai d'expiration de la session protégée est une période de temps après laquelle la session protégée est effacée de la mémoire du navigateur. Il est mesuré à partir de la dernière interaction avec des notes protégées. Voir",
     "wiki": "wiki",
     "for_more_info": "pour plus d'informations.",
-    "protected_session_timeout_label": "Délai d'expiration de la session protégée :",
+    "protected_session_timeout_label": "Fermer automatiquement la session après",
     "reset_confirmation": "En réinitialisant le mot de passe, vous perdrez à jamais l'accès à toutes vos notes protégées existantes. Voulez-vous vraiment réinitialiser le mot de passe ?",
     "reset_success_message": "Le mot de passe a été réinitialisé. Veuillez définir un nouveau mot de passe",
     "change_password_heading": "Changer le mot de passe",
@@ -1460,7 +1546,8 @@
     "collections": "Collections",
     "ai-chat": "Chat IA",
     "llm-chat": "Chat AI",
-    "spreadsheet": "Feuille de calcul"
+    "spreadsheet": "Feuille de calcul",
+    "markdown": "Markdown"
   },
   "protect_note": {
     "toggle-on": "Protéger la note",
@@ -1490,12 +1577,12 @@
     "replace_all": "Tout remplacer"
   },
   "highlights_list_2": {
-    "title": "Accentuations",
+    "title": "Mises en évidence",
     "options": "Options",
     "title_with_count_one": "{{count}} mise en évidence",
     "title_with_count_many": "{{count}} mises en évidence",
     "title_with_count_other": "{{count}} mises en évidence",
-    "modal_title": "Configurer les mises en évidence",
+    "modal_title": "Configurer les Mises en évidence",
     "menu_configure": "Configuration des mises en évidence...",
     "no_highlights": "Aucune mise en évidence."
   },
@@ -1539,7 +1626,7 @@
   "note_detail": {
     "could_not_find_typewidget": "Impossible de trouver typeWidget pour le type '{{type}}'",
     "printing": "Impression en cours...",
-    "printing_pdf": "Export au format PDF en cours...",
+    "printing_pdf": "Préparation de l'aperçu avant impression...",
     "print_report_title": "Imprimer le rapport",
     "print_report_collection_details_button": "Consulter les détails",
     "print_report_collection_details_ignored_notes": "Notes ignorées",
@@ -1551,8 +1638,8 @@
   },
   "note_title": {
     "placeholder": "saisir le titre de la note ici...",
-    "created_on": "Créé le <Value />",
-    "last_modified": "Modifié le <Value />",
+    "created_on": "Créée le <Value />",
+    "last_modified": "Modifiée le <Value />",
     "note_type_switcher_label": "Basculer de {{type}} à :",
     "note_type_switcher_others": "Autre type de note",
     "note_type_switcher_templates": "Modèle",
@@ -1684,14 +1771,14 @@
         "title": "Fixe",
         "description": "les outils d'édition apparaissent dans l'onglet \"Mise en forme\"."
       },
-      "multiline-toolbar": "Afficher la barre d'outils sur plusieurs lignes si elle est trop grande."
+      "multiline-toolbar": "Afficher la barre d'outils sur plusieurs lignes si elle est trop grande"
     }
   },
   "electron_context_menu": {
     "add-term-to-dictionary": "Ajouter «{{term}}» au dictionnaire",
     "cut": "Couper",
     "copy": "Copier",
-    "copy-as-markdown": "Copier en markdown",
+    "copy-as-markdown": "Copier en Markdown",
     "copy-link": "Copier le lien",
     "paste": "Coller",
     "paste-as-plain-text": "Coller comme texte brut",
@@ -1814,7 +1901,8 @@
     "title": "Format de date/heure personnalisé",
     "description": "Personnalisez le format de la date et de l'heure insérées via <shortcut /> ou la barre d'outils. Consultez la <doc>Day.js docs</doc> pour connaître les formats disponibles.",
     "format_string": "Chaîne de format :",
-    "formatted_time": "Date/heure formatée :"
+    "formatted_time": "Date/heure formatée",
+    "description_short": "Personnaliser le format de l'horodatage inséré via la barre d'outils."
   },
   "table_view": {
     "delete_column_confirmation": "Êtes-vous sûr de vouloir supprimer cette colonne ? L'attribut correspondant sera supprimé de toutes les notes.",
@@ -1910,8 +1998,10 @@
     "related_code_blocks": "Schéma de coloration syntaxique pour les blocs de code dans les notes de texte",
     "related_code_notes": "Schéma de couleurs pour les notes de code",
     "ui": "Interface utilisateur",
-    "ui_old_layout": "Ancienne mise en page",
-    "ui_new_layout": "Nouvelle mise en page"
+    "ui_old_layout": "Ancien",
+    "ui_new_layout": "Nouveau",
+    "ui_layout_style": "Style de disposition",
+    "ui_layout_orientation": "Orientation de la barre de raccourcis"
   },
   "units": {
     "percentage": "%"
@@ -1925,7 +2015,9 @@
     "rendering_error": "Impossible d'afficher le contenu en raison d'une erreur."
   },
   "code-editor-options": {
-    "title": "Éditeur"
+    "title": "Éditeur",
+    "tab_width": "Largeur de tabulation",
+    "tab_width_unit": "espaces"
   },
   "tasks": {
     "due": {
@@ -1963,7 +2055,7 @@
   },
   "code_theme": {
     "title": "Apparence",
-    "word_wrapping": "retour à la ligne automatique",
+    "word_wrapping": "Retour à la ligne automatique",
     "color-scheme": "Jeu de couleurs"
   },
   "cpu_arch_warning": {
@@ -2104,8 +2196,8 @@
   },
   "breadcrumb_badges": {
     "read_only_explicit": "Lecture seule",
-    "read_only_explicit_description": "Cette note a été paramétrée manuellement en lecture seule.\nCliquer pour temporairement l'éditer.",
-    "read_only_auto": "Lecture seule automatique",
+    "read_only_explicit_description": "Cette note a été définie manuellement en lecture seule.\nCliquer pour l'éditer temporairement.",
+    "read_only_auto": "Lecture seule (auto)",
     "read_only_auto_description": "Cette note a été réglée automatiquement en mode lecture seule pour des raisons de performances. Cette limite automatique est réglable à partir des paramètres.\n\nCliquez pour la modifier temporairement.",
     "read_only_temporarily_disabled": "Temporairement modifiable",
     "read_only_temporarily_disabled_description": "Cette note est actuellement modifiable, mais elle est normalement en lecture seule. La note redeviendra en lecture seule dès que vous accéderez à une autre note.\n\nCliquez pour réactiver le mode lecture seule.",
@@ -2120,11 +2212,11 @@
     "execute_script_description": "Cette note est une note de script. Cliquez pour exécuter le script.",
     "execute_sql": "Exécuter la commande SQL",
     "execute_sql_description": "Cette note est une note SQL. Cliquer pour exécuter la requête SQL.",
-    "save_status_saved": "Enregister",
+    "save_status_saved": "Enregistrée",
     "save_status_saving": "Enregistrement...",
-    "save_status_unsaved": "Non sauvée",
-    "save_status_error": "La sauvegarde a échoué",
-    "save_status_saving_tooltip": "Les modifications sont enregistrées.",
+    "save_status_unsaved": "Non enregistrée",
+    "save_status_error": "L'enregistrement a échoué",
+    "save_status_saving_tooltip": "Les modifications sont en cours d'enregistrement.",
     "save_status_unsaved_tooltip": "Il y a des changements non enregistrés. Ils seront enregistrés automatiquement dans un instant.",
     "save_status_error_tooltip": "Une erreur s'est produite lors de l'enregistrement de la note. Si possible, essayez de copier le contenu de la note ailleurs et de recharger l'application."
   },
@@ -2271,5 +2363,70 @@
   },
   "attributes_panel": {
     "title": "Attributs de la note"
+  },
+  "revisions": {
+    "note_revisions": "Révisions de la note",
+    "delete_all_revisions": "Supprimer toutes les révisions de cette note",
+    "delete_all_button": "Supprimer toutes les révisions",
+    "help_title": "Aide sur les révisions de note",
+    "confirm_delete_all": "Voulez-vous supprimer toutes les révisions de cette note ?",
+    "no_revisions": "Aucune révision pour cette note pour le moment…",
+    "restore_button": "Restaurer",
+    "highlight_changes": "Mettre en évidence les modifications",
+    "diff_on": "Voir le diff",
+    "diff_off": "Voir le contenu",
+    "diff_on_hint": "Cliquez pour voir le diff de la source",
+    "diff_off_hint": "Cliquez pour voir le contenu de la note",
+    "diff_not_available": "Diff non disponible.",
+    "confirm_restore": "Voulez-vous restaurer cette révision ? Cela écrasera le titre et le contenu actuels de la note avec ceux de cette révision.",
+    "delete_button": "Supprimer",
+    "confirm_delete": "Voulez-vous supprimer cette révision ?",
+    "revisions_deleted": "Les révisions de la note ont été supprimées.",
+    "revision_restored": "La révision de la note a été restaurée.",
+    "revision_deleted": "La révision de la note a été supprimée.",
+    "snapshot_interval": "Intervalle des instantanés de révision de note : {{seconds}}s.",
+    "maximum_revisions": "Nombre maximal d’instantanés de révision de note : {{number}}.",
+    "save_revision_now": "Enregistrer une révision maintenant",
+    "save_named_revision": "Enregistrer une révision nommée…",
+    "snapshot_header": "Instantané de révision de la note",
+    "snapshot_interval_value": "Intervalle : {{seconds}}s",
+    "snapshot_limit_value": "Limite : {{number}}",
+    "settings": "Paramètres de révision des notes",
+    "menu_tooltip": "Options de révision",
+    "download_button": "Télécharger",
+    "file_size": "Taille du fichier :",
+    "preview_not_available": "L'aperçu n'est pas disponible pour ce type de note.",
+    "save_revision": "Enregistrer la révision",
+    "save_revision_tooltip": "Enregistrer manuellement un instantané de la note actuelle",
+    "description_placeholder": "Nommer cette révision",
+    "revision_saved": "La révision de la note a été enregistrée.",
+    "description_updated": "Le nom de la révision a été mis à jour.",
+    "source_auto": "Enregistrement automatique",
+    "source_manual": "Enregistrement manuel",
+    "source_restore": "Restaurer",
+    "date_today": "Aujourd'hui",
+    "date_yesterday": "Hier",
+    "date_this_week": "Cette semaine",
+    "date_this_month": "Ce mois-ci",
+    "source_description_auto": "Enregistrée automatiquement par le système à intervalles réguliers",
+    "source_description_manual": "Enregistrée manuellement par l'utilisateur",
+    "source_description_restore": "Enregistrée avant la restauration d'une révision antérieure",
+    "source_description_unknown": "Source indisponible",
+    "edit_description": "Modifier le nom",
+    "source_description_etapi": "Créée via l'API externe Trilium",
+    "source_description_llm": "Créée par l'assistant IA",
+    "mime": "MIME : ",
+    "source_etapi": "ETAPI",
+    "source_llm": "LLM",
+    "source_unknown": "Instantané"
+  },
+  "database": {
+    "title": "Base de données"
+  },
+  "launcher_button_context_menu": {
+    "remove_from_launch_bar": "Supprimer de la barre de raccourcis"
+  },
+  "revisions_snapshot": {
+    "title": "Révisions de la note"
   }
 }

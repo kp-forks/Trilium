@@ -180,6 +180,7 @@ export type CommandMappings = {
     duplicateSubtree: ContextMenuCommandData;
     expandSubtree: ContextMenuCommandData;
     collapseSubtree: ContextMenuCommandData;
+    toggleArchivedNotes: CommandData;
     sortChildNotes: ContextMenuCommandData;
     copyNotePathToClipboard: ContextMenuCommandData;
     recentChangesInSubtree: ContextMenuCommandData;
@@ -313,6 +314,10 @@ export type CommandMappings = {
     lastTab: CommandData;
     showNoteSource: CommandData;
     showNoteOCRText: CommandData;
+    showOcrTextDialog: CommandData & {
+        textUrl: string;
+        processUrl: string;
+    };
     showSQLConsole: CommandData;
     showBackendLog: CommandData;
     showCheatsheet: CommandData;

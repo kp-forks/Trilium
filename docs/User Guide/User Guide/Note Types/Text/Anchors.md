@@ -4,7 +4,7 @@
 
 Anchors allows creating [links](Links.md) to a certain part of a note, such as referencing a particular heading or section within a note.
 
-This feature was introduced in TriliumNext v0.94.0 and augmented in v0.130.0 to support linking across notes.
+This feature was introduced in TriliumNext v0.94.0 and augmented in v0.103.0 to support linking across notes.
 
 ## Interaction
 

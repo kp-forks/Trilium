@@ -1,6 +1,7 @@
 {
   "about": {
-    "data_directory": "Directorul de date:"
+    "data_directory": "Directorul de date:",
+    "version_label": "Versiune:"
   },
   "abstract_bulk_action": {
     "remove_this_search_action": "Înlătură acesată acțiune la căutare"
@@ -630,6 +631,7 @@
     "collapseExpand": "minimizează/expandează nodul",
     "collapseSubTree": "minimizează subarborele",
     "collapseWholeTree": "minimizează întregul arbore de notițe",
+    "toggleArchivedNotes": "afișează/ascunde notițele arhivate",
     "copyNotes": "copiază notița activă (sau selecția curentă) în clipboard (utilizat pentru <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/cloning-notes.html#cloning-notes\">clonare</a>)",
     "createEditLink": "crează/editează legătură externă",
     "createInternalLink": "crează legătură internă",
@@ -2122,7 +2124,6 @@
     "sync-from-desktop-step3": "Clic pe categoria „Sincronizare”.",
     "sync-from-desktop-step4": "Schimbați adresa server-ului către: {{- host}} și apăsați „Salvează”.",
     "sync-from-desktop-step5": "Clic pe butonul „Testează sincronizarea” pentru a verifica dacă conexiunea a fost făcută cu succes.",
-    "sync-from-desktop-final": "După ce ați finalizat acești pași, puteți trece la pasul următor.",
     "sync-from-desktop-waiting": "Așteptare pentru conexiune...",
     "advanced-options": "Opțiuni avansate",
     "sync-failed": "Sincronizare eșuată: {{message}}",

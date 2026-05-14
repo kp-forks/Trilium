@@ -104,7 +104,8 @@
     "toggle-classic-editor-toolbar": "Athraigh an cluaisín Formáidithe don eagarthóir leis an mbarra uirlisí socraithe",
     "export-as-pdf": "Easpórtáil an nóta reatha mar PDF",
     "toggle-zen-mode": "Cumasaíonn/díchumasaíonn sé an mód zen (comhad úsáideora íosta le haghaidh eagarthóireacht níos dírithe)",
-    "save-named-revision": "Sábháil athbhreithniú ainmnithe den nóta gníomhach"
+    "save-named-revision": "Sábháil athbhreithniú ainmnithe den nóta gníomhach",
+    "toggle-archived-notes": "Taispeáin/folaigh nótaí cartlannaithe sa chrann nótaí"
   },
   "keyboard_action_names": {
     "back-in-note-history": "Ar ais i Stair na Nótaí",
@@ -202,7 +203,8 @@
     "reset-zoom-level": "Athshocraigh Leibhéal Súmála",
     "copy-without-formatting": "Cóipeáil Gan Formáidiú",
     "force-save-revision": "Athbhreithniú Sábháilte Fórsála",
-    "save-named-revision": "Sábháil Athbhreithniú Ainmnithe"
+    "save-named-revision": "Sábháil Athbhreithniú Ainmnithe",
+    "toggle-archived-notes": "Infheictheacht Nótaí Cartlainne a Athrú"
   },
   "login": {
     "title": "Logáil Isteach",

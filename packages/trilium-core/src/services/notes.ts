@@ -416,18 +416,28 @@ function protectNote(note: BNote, protect: boolean) {
     }
 }
 
-function checkImageAttachments(note: BNote, content: string) {
+export function checkImageAttachments(note: BNote, content: string) {
     const foundAttachmentIds = new Set<string>();
     let match;
 
-    const imgRegExp = /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g;
-    while ((match = imgRegExp.exec(content))) {
-        foundAttachmentIds.add(match[1]);
-    }
+    const patterns = note.isMarkdown()
+        ? [
+            // ![...](api/attachments/{id}/image/...) or similar markdown image syntax
+            /api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
+            /attachmentId=([a-zA-Z0-9_]+)/g
+        ]
+        : [
+            // <img src="api/attachments/{id}/image/...">
+            /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // <a href="...attachmentId={id}">
+            /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g
+        ];
 
-    const linkRegExp = /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g;
-    while ((match = linkRegExp.exec(content))) {
+    for (const pattern of patterns) {
+        while ((match = pattern.exec(content))) {
         foundAttachmentIds.add(match[1]);
+        }
     }
 
     const attachments = note.getAttachments();
@@ -503,59 +513,22 @@ function findImageLinks(content: string, foundLinks: FoundLink[]) {
     return content.replace(/src="[^"]*\/api\/images\//g, 'src="api/images/');
 }
 
-function findInternalLinks(content: string, foundLinks: FoundLink[]) {
-    const re = /href="[^"]*#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)\/?"/g;
-    let match;
-
-    while ((match = re.exec(content))) {
-        foundLinks.push({
-            name: "internalLink",
-            value: match[1]
-        });
-    }
-
-    // removing absolute references to server to keep it working between instances
-    return content.replace(/href="[^"]*#root/g, 'href="#root');
-}
-
-function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
-    const re = /<section class="include-note[^>]+data-note-id="([a-zA-Z0-9_]+)"[^>]*>/g;
-    let match;
-
-    while ((match = re.exec(content))) {
-        foundLinks.push({
-            name: "includeNoteLink",
-            value: match[1]
-        });
-    }
-
-    return content;
-}
-
 /**
  * Extracts bookmark IDs from CKEditor bookmark anchors (`<a id="..."></a>` without href).
  * Bookmarks are stored as labels on the note so they can be looked up without parsing content.
- * Matches id regardless of attribute order; skips anchors with href (those are regular links).
  */
 export function findBookmarks(content: string): string[] {
-    const re = /<a\b([^>]*)>(<\/a>)?/g;
+    const re = /<a\s+id="([^"]+)"[^>]*>(<\/a>)?/g;
     const bookmarks: string[] = [];
     let match;
 
     while ((match = re.exec(content))) {
-        const attrs = match[1];
-
         // Skip anchors that also have an href (those are regular links, not bookmarks)
-        if (/\bhref\s*=/.test(attrs)) {
+        if (match[0].includes("href=")) {
             continue;
         }
 
-        const idMatch = /\bid\s*=\s*"([^"]+)"/.exec(attrs) ?? /\bid\s*=\s*'([^']+)'/.exec(attrs);
-        if (!idMatch) {
-            continue;
-        }
-
-        const id = idMatch[1];
+        const id = match[1];
         if (!bookmarks.includes(id)) {
             bookmarks.push(id);
         }
@@ -586,6 +559,70 @@ function saveBookmarks(note: BNote, content: string) {
     for (const unused of unusedBookmarks) {
         unused.markAsDeleted();
     }
+}
+
+function findInternalLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /href="[^"]*#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)\/?"/g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+
+    // removing absolute references to server to keep it working between instances
+    return content.replace(/href="[^"]*#root/g, 'href="#root');
+}
+
+function findMarkdownImageLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /api\/images\/([a-zA-Z0-9_]+)\//g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "imageLink",
+            value: match[1]
+        });
+    }
+}
+
+function findMarkdownInternalLinks(content: string, foundLinks: FoundLink[]) {
+    // [text](#root/.../noteId) or [text](#root/.../noteId?query)
+    const hashRootRe = /#root[a-zA-Z0-9_/]*\/([a-zA-Z0-9_]+)/g;
+    let match;
+
+    while ((match = hashRootRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+
+    // [[noteId]] wiki-links
+    const wikiLinkRe = /\[\[([a-zA-Z0-9_]+)\]\]/g;
+
+    while ((match = wikiLinkRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+}
+
+function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /<section class="include-note[^>]+data-note-id="([a-zA-Z0-9_]+)"[^>]*>/g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "includeNoteLink",
+            value: match[1]
+        });
+    }
+
+    return content;
 }
 
 function findRelationMapLinks(content: string, foundLinks: FoundLink[]) {
@@ -785,8 +822,9 @@ function saveAttachments(note: BNote, content: string) {
     return content;
 }
 
-function saveLinks(note: BNote, content: string | Uint8Array) {
-    if ((note.type !== "text" && note.type !== "relationMap") || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
+
+export function saveLinks(note: BNote, content: string | Uint8Array) {
+    if ((note.type !== "text" && note.type !== "relationMap" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
         return {
             forceFrontendReload: false,
             content
@@ -805,6 +843,10 @@ function saveLinks(note: BNote, content: string | Uint8Array) {
         content = findIncludeNoteLinks(content, foundLinks);
         saveBookmarks(note, content);
 
+        ({ forceFrontendReload, content } = checkImageAttachments(note, content));
+    } else if (note.isMarkdown() && typeof content === "string") {
+        findMarkdownImageLinks(content, foundLinks);
+        findMarkdownInternalLinks(content, foundLinks);
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {
         findRelationMapLinks(content, foundLinks);

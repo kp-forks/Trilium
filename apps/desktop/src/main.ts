@@ -1,18 +1,17 @@
-import { getLog, initializeCore, sql_init } from "@triliumnext/core";
+import { getLog, initializeCore, options, sql_init } from "@triliumnext/core";
+import ServerBackupService from "@triliumnext/server/src/backup_provider.js";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
-import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import { loadCoreSchema } from "@triliumnext/server/src/core_assets.js";
+import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provider.js";
+import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
-import { options } from "@triliumnext/core";
 import port from "@triliumnext/server/src/services/port.js";
 import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import tray from "@triliumnext/server/src/services/tray.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
-import ServerBackupService from "@triliumnext/server/src/backup_provider.js";
-import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { app, BrowserWindow,globalShortcut } from "electron";
@@ -27,6 +26,16 @@ import { PRODUCT_NAME } from "./app-info";
 import DesktopPlatformProvider from "./platform_provider";
 
 async function main() {
+    // Ignore EPIPE errors on stdout/stderr — these occur when the parent process
+    // pipe breaks (e.g. after system suspend with Snap packaging).
+    for (const stream of [process.stdout, process.stderr]) {
+        stream?.on("error", (err: NodeJS.ErrnoException) => {
+            if (err.code !== "EPIPE") {
+                throw err;
+            }
+        });
+    }
+
     const userDataPath = getUserData();
     app.setPath("userData", userDataPath);
 

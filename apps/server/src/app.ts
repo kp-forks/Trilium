@@ -26,12 +26,6 @@ import utils, { getResourceDir, isDev } from "./services/utils.js";
 // Allow serving assets even if the installation path contains a hidden (dot-prefixed) directory.
 const STATIC_OPTIONS: serveStatic.ServeStaticOptions = { dotfiles: "allow" };
 
-// Capacitor WebView origins for the mobile app — baked in so the mobile client
-// can sync against any Trilium server without per-server CORS configuration.
-const MOBILE_APP_ORIGINS = ["https://localhost", "capacitor://localhost"];
-const DEFAULT_CORS_METHODS = "GET, POST, PUT, DELETE, PATCH, OPTIONS";
-const DEFAULT_CORS_HEADERS = "Content-Type, Authorization, trilium-cred, pageCount, pageIndex, requestId";
-
 export default async function buildApp() {
     const app = express();
 
@@ -44,9 +38,25 @@ export default async function buildApp() {
     app.engine("ejs", (filePath, options, callback) => ejs.renderFile(filePath, options, callback));
     app.set("view engine", "ejs");
 
-    setupCors(app);
+    app.use((req, res, next) => {
+        // set CORS headers
+        if (config["Network"]["corsAllowOrigin"]) {
+            res.header("Access-Control-Allow-Origin", config["Network"]["corsAllowOrigin"]);
+            res.header("Access-Control-Allow-Credentials", "true");
+        }
+        if (config["Network"]["corsAllowMethods"]) {
+            res.header("Access-Control-Allow-Methods", config["Network"]["corsAllowMethods"]);
+        }
+        if (config["Network"]["corsAllowHeaders"]) {
+            res.header("Access-Control-Allow-Headers", config["Network"]["corsAllowHeaders"]);
+        }
 
-    app.use((_req, res, next) => {
+        // Handle preflight OPTIONS requests
+        if (req.method === "OPTIONS" && config["Network"]["corsAllowOrigin"]) {
+            res.sendStatus(204);
+            return;
+        }
+
         res.locals.t = t;
         return next();
     });
@@ -122,29 +132,4 @@ export default async function buildApp() {
     }
 
     return app;
-}
-
-function setupCors(app: express.Express) {
-    const configuredOrigins = (config["Network"]["corsAllowOrigin"] || "")
-        .split(",")
-        .map(o => o.trim())
-        .filter(Boolean);
-    const allowedOrigins = new Set([...MOBILE_APP_ORIGINS, ...configuredOrigins]);
-
-    app.use((req, res, next) => {
-        const requestOrigin = req.get("origin");
-        if (requestOrigin && allowedOrigins.has(requestOrigin)) {
-            res.header("Access-Control-Allow-Origin", requestOrigin);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Vary", "Origin");
-            res.header("Access-Control-Allow-Methods", config["Network"]["corsAllowMethods"] || DEFAULT_CORS_METHODS);
-            res.header("Access-Control-Allow-Headers", config["Network"]["corsAllowHeaders"] || DEFAULT_CORS_HEADERS);
-
-            if (req.method === "OPTIONS") {
-                res.sendStatus(204);
-                return;
-            }
-        }
-        return next();
-    });
 }

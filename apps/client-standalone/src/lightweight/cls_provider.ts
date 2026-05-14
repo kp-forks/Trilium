@@ -18,8 +18,11 @@ export default class BrowserExecutionContext implements ExecutionContext {
         return this.contextStack[this.contextStack.length - 1];
     }
 
-    get<T = any>(key: string): T {
-        return this.getCurrentContext().get(key);
+    get<T = any>(key: string): T | undefined {
+        if (this.contextStack.length === 0) {
+            return undefined;
+        }
+        return this.contextStack[this.contextStack.length - 1].get(key);
     }
 
     set(key: string, value: any): void {

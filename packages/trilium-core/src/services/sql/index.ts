@@ -1,11 +1,11 @@
-import sql_init from "../sql_init";
 import type { SqlService } from "./sql";
 
 let sql: SqlService | null = null;
 
-export function initSql(instance: SqlService) {
+export async function initSql(instance: SqlService) {
     if (sql) throw new Error("SQL already initialized");
     sql = instance;
+    const sql_init = (await import("../sql_init.js")).default;
     sql_init.initializeDb();
 }
 

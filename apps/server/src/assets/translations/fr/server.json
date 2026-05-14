@@ -71,7 +71,7 @@
     "toggle-note-paths": "Afficher/masquer les Emplacements de la note",
     "toggle-similar-notes": "Afficher/masquer les Notes similaires",
     "other": "Autre",
-    "toggle-right-pane": "Afficher/masquer le volet droit, qui inclut la Table des matières et les Accentuations",
+    "toggle-right-pane": "Afficher/masquer le volet droit, qui inclut la Table des matières et les Mises en évidence",
     "print-active-note": "Imprimer la note active",
     "open-note-externally": "Ouvrir la note comme fichier avec l'application par défaut",
     "render-active-note": "Rendre (ou re-rendre) la note active",
@@ -103,7 +103,9 @@
     "quick-search": "Activer la barre de recherche rapide",
     "create-note-after": "Créer une note après la note active",
     "create-note-into": "Créer une note enfant de la note active",
-    "find-in-text": "Afficher/Masquer le panneau de recherche"
+    "find-in-text": "Afficher/Masquer le panneau de recherche",
+    "toggle-archived-notes": "Afficher/masquer les notes archivées dans l'arborescence des notes",
+    "save-named-revision": "Enregistrer une révision nommée de la note active"
   },
   "login": {
     "title": "Connexion",
@@ -122,47 +124,6 @@
     "password": "Mot de passe",
     "password-confirmation": "Confirmation du mot de passe",
     "button": "Définir le mot de passe"
-  },
-  "setup": {
-    "heading": "Configuration de Trilium Notes",
-    "new-document": "Je suis un nouvel utilisateur et je souhaite créer un nouveau document Trilium pour mes notes",
-    "sync-from-desktop": "J'ai déjà l'application de bureau et je souhaite configurer la synchronisation avec celle-ci",
-    "sync-from-server": "J'ai déjà un serveur et je souhaite configurer la synchronisation avec celui-ci",
-    "next": "Suivant",
-    "init-in-progress": "Initialisation du document en cours",
-    "redirecting": "Vous serez bientôt redirigé vers l'application.",
-    "title": "Configuration"
-  },
-  "setup_sync-from-desktop": {
-    "heading": "Synchroniser depuis une application de bureau",
-    "description": "Cette procédure doit être réalisée depuis l'application de bureau :",
-    "step1": "Ouvrez l'application Trilium Notes.",
-    "step2": "Dans le menu Trilium, cliquez sur Options.",
-    "step3": "Cliquez sur la catégorie Synchroniser.",
-    "step4": "Remplacez l'adresse de l'instance de serveur par : {{- host}} et cliquez sur Enregistrer.",
-    "step5": "Cliquez sur le bouton 'Tester la synchronisation' pour vérifier que la connexion fonctionne.",
-    "step6": "Une fois que vous avez terminé ces étapes, cliquez sur {{- link}}.",
-    "step6-here": "ici"
-  },
-  "setup_sync-from-server": {
-    "heading": "Synchroniser depuis le serveur",
-    "instructions": "Veuillez saisir l'adresse du serveur Trilium et les informations d'identification ci-dessous. Cela téléchargera l'intégralité du document Trilium à partir du serveur et configurera la synchronisation avec celui-ci. En fonction de la taille du document et de votre vitesse de connexion, cela peut prendre un plusieurs minutes.",
-    "server-host": "Adresse du serveur Trilium",
-    "server-host-placeholder": "https://<nom d'hôte>:<port>",
-    "proxy-server": "Serveur proxy (facultatif)",
-    "proxy-server-placeholder": "https://<nom d'hôte>:<port>",
-    "note": "Note :",
-    "proxy-instruction": "Si vous laissez le paramètre de proxy vide, le proxy du système sera utilisé (s'applique uniquement à l'application de bureau)",
-    "password": "Mot de passe",
-    "password-placeholder": "Mot de passe",
-    "back": "Retour",
-    "finish-setup": "Terminer"
-  },
-  "setup_sync-in-progress": {
-    "heading": "Synchronisation en cours",
-    "successful": "La synchronisation a été correctement configurée. La synchronisation initiale prendra un certain temps. Une fois terminée, vous serez redirigé vers la page de connexion.",
-    "outstanding-items": "Éléments de synchronisation exceptionnels :",
-    "outstanding-items-default": "N/A"
   },
   "share_404": {
     "title": "Page non trouvée",
@@ -260,7 +221,8 @@
     "llm-chat-history-title": "Historique du chat",
     "llm-title": "AI / LLM",
     "tab-switcher-title": "Commutateur d'onglets",
-    "sidebar-chat-title": "AI Chat"
+    "sidebar-chat-title": "AI Chat",
+    "custom-dictionary-title": "Dictionnaire personnalisé"
   },
   "notes": {
     "new-note": "Nouvelle note",
@@ -294,7 +256,8 @@
   "migration": {
     "old_version": "La migration directe à partir de votre version actuelle n'est pas prise en charge. Veuillez d'abord mettre à jour vers la version v0.60.4, puis vers cette nouvelle version.",
     "error_message": "Erreur lors de la migration vers la version {{version}}: {{stack}}",
-    "wrong_db_version": "La version de la base de données ({{version}}) est plus récente que ce que l'application supporte actuellement ({{targetVersion}}), ce qui signifie qu'elle a été créée par une version plus récente et incompatible de Trilium. Mettez à jour vers la dernière version de Trilium pour résoudre ce problème."
+    "wrong_db_version": "La version de la base de données ({{version}}) est plus récente que ce que l'application supporte actuellement ({{targetVersion}}), ce qui signifie qu'elle a été créée par une version plus récente et incompatible de Trilium. Mettez à jour vers la dernière version de Trilium pour résoudre ce problème.",
+    "invalid_db_version": "La version de la base de données n'est pas un nombre valide. Cela indique généralement que l'option « dbVersion » de la base de données est corrompue. Veuillez restaurer la base à partir d'une sauvegarde."
   },
   "modals": {
     "error_title": "Erreur"
@@ -394,7 +357,9 @@
     "toggle-ribbon-tab-note-paths": "Basculer les chemins de notes de l'onglet du ruban",
     "toggle-ribbon-tab-similar-notes": "Basculer l'onglet du ruban Notes similaires",
     "toggle-note-hoisting": "Activer la focalisation sur la note",
-    "unhoist-note": "Désactiver la focalisation sur la note"
+    "unhoist-note": "Désactiver la focalisation sur la note",
+    "toggle-archived-notes": "Voir les notes archivées",
+    "save-named-revision": "Enregistrer une révision nommée"
   },
   "sql_init": {
     "db_not_initialized_desktop": "Base de données non initialisée, merci de suivre les instructions à l'écran.",
@@ -412,7 +377,8 @@
     "last-updated": "Dernière mise à jour le {{- date}}",
     "subpages": "Sous-pages:",
     "on-this-page": "Sur cette page",
-    "expand": "Développer"
+    "expand": "Développer",
+    "logo-alt": "Logo"
   },
   "hidden_subtree_templates": {
     "text-snippet": "Extrait de texte",
@@ -441,5 +407,21 @@
     "presentation_slide_first": "Première diapositive",
     "presentation_slide_second": "Deuxième diapositive",
     "background": "Arrière-plan"
+  },
+  "password": {
+    "incorrect": "Le mot de passe que vous avez saisi est incorrect."
+  },
+  "script": {
+    "wrong-environment": "Impossible d'exécuter la note \"{{- noteTitle}}\" {{- noteId}}. Il s'agit d'un script {{- actualEnv}} mais l'exécution a été tentée dans {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Erreur dans {{- context}} : {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" est un mot-clé réservé. Pour rechercher une valeur littérale, utilisez des guillemets : \"{{- token}}\"",
+      "cannot-compare-with": "ne peut pas être comparé à \"{{- token}}\". Pour rechercher une valeur littérale, utilisez des guillemets : \"{{- token}}\"",
+      "misplaced-expression": "Expression \"{{- token}}\" mal placée ou incomplète",
+      "fulltext-after-expression": "\"{{- token}}\" n'est pas une expression valide. Pour rechercher du texte, placez-le avant les filtres d'attributs (par exemple, \"{{- token}} #label\" au lieu de \"#label {{- token}}\").",
+      "unrecognized-expression": "Expression inconnue \"{{- token}}\""
+    }
   }
 }
