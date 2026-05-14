@@ -142,21 +142,29 @@ function getOptions() {
     return resultMap;
 }
 
-function updateOption(req: Request<{ name: string; value: string }>) {
+async function updateOption(req: Request<{ name: string; value: string }>) {
     const { name, value } = req.params;
 
     if (!update(name, value)) {
         throw new ValidationError("not allowed option to change");
     }
+
+    if (name === "locale") {
+        await changeLanguage(value);
+    }
 }
 
-function updateOptions(req: Request) {
+async function updateOptions(req: Request) {
     for (const optionName in req.body) {
         if (!update(optionName, req.body[optionName])) {
             // this should be improved
             // it should return 400 instead of current 500, but at least it now rollbacks transaction
             throw new Error(`Option '${optionName}' is not allowed to be changed`);
         }
+    }
+
+    if ("locale" in req.body) {
+        await changeLanguage(req.body["locale"]);
     }
 }
 
@@ -170,11 +178,6 @@ function update(name: string, value: string) {
     }
 
     optionService.setOption(name as OptionNames, value);
-
-    if (name === "locale") {
-        // This runs asynchronously, so it's not perfect, but it does the trick for now.
-        changeLanguage(value);
-    }
 
     return true;
 }
