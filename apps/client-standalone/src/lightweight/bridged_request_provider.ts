@@ -139,10 +139,7 @@ export default class BridgedRequestProvider implements RequestProvider {
 
         // The main thread should send back a base64-encoded body for binary responses
         const binary = atob(msg.body);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
+        const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
         return bytes.buffer;
     }
 }

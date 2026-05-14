@@ -21,6 +21,7 @@ function getCapacitorHttp() {
             url: string;
             headers: Record<string, string>;
             data?: string;
+            responseType?: string;
         }): Promise<CapacitorHttpResponse>;
     };
 }
@@ -36,7 +37,8 @@ export const capacitorHttpHandler: NativeHttpHandler = async (request) => {
         method: request.method,
         url: request.url,
         headers: request.headers,
-        data: request.body
+        data: request.body,
+        responseType: request.responseType
     });
 
     // Normalize header keys to lowercase for consistent access in the worker
@@ -47,12 +49,8 @@ export const capacitorHttpHandler: NativeHttpHandler = async (request) => {
 
     let body: string;
     if (request.responseType === "arraybuffer") {
-        // For binary responses, encode as base64 for postMessage transfer
-        if (typeof response.data === "string") {
-            body = btoa(response.data);
-        } else {
-            body = btoa(JSON.stringify(response.data));
-        }
+        // Capacitor returns binary data as a base64 string — pass it through directly
+        body = String(response.data);
     } else {
         body = typeof response.data === "string"
             ? response.data
