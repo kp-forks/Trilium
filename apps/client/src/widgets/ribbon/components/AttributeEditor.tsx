@@ -27,9 +27,7 @@ type AttributeCommandNames = FilteredCommandNames<CommandData>;
 
 const HELP_TEXT = `
 <p>${t("attribute_editor.help_text_body1")}</p>
-
 <p>${t("attribute_editor.help_text_body2")}</p>
-
 <p>${t("attribute_editor.help_text_body3")}</p>`;
 
 const mentionSetup: MentionFeed[] = [
@@ -108,11 +106,12 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
     const [ locale ] = useTriliumOption("locale");
 
     const { showTooltip, hideTooltip } = useTooltip(wrapperRef, {
-        trigger: "focus",
+        trigger: "click",
         html: true,
         title: HELP_TEXT,
         placement: "bottom",
-        offset: "0,30"
+        offset: "0,30",
+        
     });
 
     const [ attributeDetailWidgetEl, attributeDetailWidget ] = useLegacyWidget(() => new AttributeDetailWidget());
