@@ -1591,7 +1591,13 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                 hotKeyMap[shortcutService.normalizeShortcut(shortcut)] = (node) => {
                     const notePath = treeService.getNotePath(node);
 
-                    this.triggerCommand(action.actionName, { node, notePath });
+                    this.triggerCommand(action.actionName, {
+                        node,
+                        notePath,
+                        noteId: node.data.noteId,
+                        selectedOrActiveBranchIds: this.getSelectedOrActiveBranchIds(node),
+                        selectedOrActiveNoteIds: this.getSelectedOrActiveNoteIds(node)
+                    });
 
                     return false;
                 };
