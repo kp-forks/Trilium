@@ -223,7 +223,7 @@
 
 /* Collapsible section */
 
-.ck.ck-collapsible {
+div.ck.ck-collapsible {
     position: relative;
     border: unset !important;
     padding-top: var(--ck-editor-popup-padding);
