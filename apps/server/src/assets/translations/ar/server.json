@@ -88,18 +88,6 @@
     "show-help": "فتح دليل التعليمات",
     "copy-without-formatting": "نسخ النص المحدد بدون تنسيق"
   },
-  "setup_sync-from-server": {
-    "note": "ملاحظة:",
-    "password": "كلمة المرور",
-    "password-placeholder": "كلمة المرور",
-    "back": "رجوع",
-    "server-host-placeholder": "https://<hostname>:<port>",
-    "proxy-server-placeholder": "https://<hostname>:<port>",
-    "finish-setup": "اكمال التثبيت",
-    "heading": "مزامنة من الخادم",
-    "server-host": "عنوان خادم تريليوم",
-    "proxy-server": "خادم وكيل (اختياري)"
-  },
   "weekdays": {
     "monday": "الاثنين",
     "tuesday": "الثلاثاء",
@@ -240,22 +228,6 @@
     "heading": "تعين كلمة المرور",
     "password-confirmation": "تاكيد كلمة المرور",
     "button": "تعين كلمة المرور"
-  },
-  "setup": {
-    "next": "التالي",
-    "title": "تثبيت",
-    "heading": "تثبيت تريليوم للملاحظات",
-    "init-in-progress": "جار تهيئة المستند"
-  },
-  "setup_sync-from-desktop": {
-    "step6-here": "هنا",
-    "heading": "مزامنة من سطح المكتب",
-    "step3": "انقر على صنف المزامنة."
-  },
-  "setup_sync-in-progress": {
-    "outstanding-items-default": "غير متوفر",
-    "heading": "المزامنة جارية",
-    "outstanding-items": "عناصر المزامنة المعلقة:"
   },
   "share_page": {
     "parent": "الأصل:",
