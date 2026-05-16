@@ -41,7 +41,7 @@
     "i18next-fs-backend": "2.6.4",
     "i18next": "26.0.8",
     "js-yaml": "4.1.1",
-    "unpdf": "1.6.0"
+    "unpdf": "1.6.2"
   },
   "devDependencies": {
     "@braintree/sanitize-url": "7.1.2",
