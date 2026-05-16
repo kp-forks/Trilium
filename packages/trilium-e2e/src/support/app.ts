@@ -12,6 +12,10 @@ export function getBaseUrl(): string {
     return process.env["BASE_URL"] || `http://127.0.0.1:${port}`;
 }
 
+export function isStandalone(testInfo: { project: { name: string } }): boolean {
+    return testInfo.project.name.includes("standalone");
+}
+
 interface DropdownLocator extends Locator {
     selectOptionByText: (text: string) => Promise<void>;
 }
