@@ -371,7 +371,8 @@
     "export_filter": "مستند PDF (.pdf)",
     "unable-to-export-title": "تعذر التصدير كملف PDF",
     "unable-to-export-message": "تعذّر تصدير الملاحظة الحالية إلى ملف PDF.",
-    "unable-to-save-message": "تعذّر الكتابة إلى الملف المحدد. حاول مرة أخرى أو اختر وجهة أخرى."
+    "unable-to-save-message": "تعذّر الكتابة إلى الملف المحدد. حاول مرة أخرى أو اختر وجهة أخرى.",
+    "unable-to-print": "تعذّر طباعة الملاحظة"
   },
   "test_sync": {
     "not-configured": "لم يتم إعداد مضيف مزامنة الخادم. يرجى إعداد المزامنة أولًا.",
