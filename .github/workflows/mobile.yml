@@ -44,7 +44,7 @@ jobs:
       - name: Update build info
         run: pnpm run chore:update-build-info
 
-      - name: Build client-standalone (webDir for Capacitor)
+      - name: Build standalone (webDir for Capacitor)
         run: pnpm --filter @triliumnext/mobile build
 
       - name: Sync Capacitor Android project

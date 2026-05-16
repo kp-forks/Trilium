@@ -8,6 +8,7 @@ import { changeLanguage } from "../../services/i18n.js";
 import { getLog } from "../../services/log.js";
 import optionService from "../../services/options.js";
 import searchService from "../../services/search/services/search.js";
+import { getSql } from "../../services/sql/index.js";
 import { ValidationError } from "../../errors.js";
 
 interface UserTheme {
@@ -155,13 +156,19 @@ async function updateOption(req: Request<{ name: string; value: string }>) {
 }
 
 async function updateOptions(req: Request) {
-    for (const optionName in req.body) {
-        if (!update(optionName, req.body[optionName])) {
-            // this should be improved
-            // it should return 400 instead of current 500, but at least it now rollbacks transaction
-            throw new Error(`Option '${optionName}' is not allowed to be changed`);
+    // The route is registered with asyncApiRoute (no automatic transaction wrapping) because the
+    // synchronous sql.transactional() cannot await promises — the transaction would commit at the
+    // first await and changeLanguage() would run outside it. Wrap the option-setting loop manually
+    // so a failure mid-batch still rolls back earlier options in the same request.
+    getSql().transactional(() => {
+        for (const optionName in req.body) {
+            if (!update(optionName, req.body[optionName])) {
+                // this should be improved
+                // it should return 400 instead of current 500, but at least it now rollbacks transaction
+                throw new Error(`Option '${optionName}' is not allowed to be changed`);
+            }
         }
-    }
+    });
 
     if ("locale" in req.body) {
         await changeLanguage(req.body["locale"]);

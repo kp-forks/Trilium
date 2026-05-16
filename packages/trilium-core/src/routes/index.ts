@@ -61,8 +61,8 @@ export function buildSharedApiRoutes({ route, asyncRoute, apiRoute, asyncApiRout
 
     apiRoute(GET, "/api/options", optionsApiRoute.getOptions);
     // FIXME: possibly change to sending value in the body to avoid host of HTTP server issues with slashes
-    apiRoute(PUT, "/api/options/:name/:value", optionsApiRoute.updateOption);
-    apiRoute(PUT, "/api/options", optionsApiRoute.updateOptions);
+    asyncApiRoute(PUT, "/api/options/:name/:value", optionsApiRoute.updateOption);
+    asyncApiRoute(PUT, "/api/options", optionsApiRoute.updateOptions);
     apiRoute(GET, "/api/options/user-themes", optionsApiRoute.getUserThemes);
 
     apiRoute(PST, "/api/notes/:noteId/convert-to-attachment", notesApiRoute.convertNoteToAttachment);

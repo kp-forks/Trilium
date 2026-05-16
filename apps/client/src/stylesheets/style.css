@@ -63,7 +63,6 @@ body#trilium-app.backdrop-effects-disabled *::after {
 :root {
     --submenu-opening-delay: 300ms;
     --launcher-pane-size: 53px;
-    --mobile-bottom-offset: calc(env(safe-area-inset-bottom) * 0.75);
     --bs-body-color: var(--main-text-color);
 }
 
@@ -89,6 +88,11 @@ body {
     --native-titlebar-darwin-y-offset: 12;
     --launcher-pane-height: 53px;
     --tab-bar-height: 40px;
+    --mobile-bottom-offset: env(safe-area-inset-bottom);
+}
+
+body.ios {
+    --mobile-bottom-offset: calc(env(safe-area-inset-bottom) * 0.25);
 }
 
 body.desktop .mobile-only,
@@ -103,7 +107,7 @@ body.mobile.context-menu-shown * {
 }
 
 body.mobile #root-widget {
-    padding-top: env(safe-area-inset-top);
+    padding-top: var(--safe-area-inset-top, env(safe-area-inset-top));
 }
 
 body.mobile #root-widget.virtual-keyboard-opened #mobile-bottom-bar {
@@ -124,11 +128,31 @@ body.desktop #root-widget.horizontal-layout {
     background-color: var(--launcher-pane-background-color);
 }
 
-body.desktop #root-widget.vertical-layout #launcher-pane,
-body.desktop #root-widget.vertical-layout #left-pane,
-body.desktop #root-widget.vertical-layout #rest-pane {
-    padding-top: env(safe-area-inset-top);
+body.desktop {
+    #root-widget.vertical-layout {
+        #launcher-pane,
+        #left-pane,
+        #rest-pane {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
 
+    &.experimental-feature-new-layout #root-widget.horizontal-layout {
+        >.status-bar {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
+
+    &:not(.experimental-feature-new-layout) #root-widget.horizontal-layout {
+        #horizontal-main-container {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
+
+    .modal .modal-dialog {
+        margin-top: calc(env(safe-area-inset-top) + var(--bs-modal-margin));
+    }
 }
 
 a {
