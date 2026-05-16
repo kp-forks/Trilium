@@ -524,7 +524,9 @@
   "note_type_chooser": {
     "templates": "قوالب",
     "builtin_templates": "القوالب المدمجة",
-    "modal_title": "اختر نوع الملاحظة"
+    "modal_title": "اختر نوع الملاحظة",
+    "search_placeholder": "البحث في المسار حسب الاسم (الافتراضي إذا كان فارغًا)",
+    "modal_body": "اختر نوع الملاحظة / قالب الملاحظة الجديدة:"
   },
   "prompt": {
     "title": "ترقية",
@@ -535,7 +537,8 @@
     "close_label": "أغلاق",
     "modal_title": "جلسة محمية",
     "start_button": "بدء جلسة محمية",
-    "help_title": "مساعدة حول الملاحظات المحمية"
+    "help_title": "مساعدة حول الملاحظات المحمية",
+    "form_label": "لمتابعة الإجراء المطلوب، يجب بدء جلسة محمية عبر إدخال كلمة المرور:"
   },
   "sort_child_notes": {
     "title": "عنوان",
@@ -557,7 +560,8 @@
     "title": "التغيرات الاخيرة",
     "no_changes_message": "لايوجد تغيير لحد الان...",
     "erase_notes_button": "مسح الملاحظات المحذوفة الان",
-    "deleted_notes_message": "تم حذف الملاحظات نهائيا."
+    "deleted_notes_message": "تم حذف الملاحظات نهائيا.",
+    "confirm_undelete": "هل تريد استعادة هذه الملاحظة وجميع الملاحظات الفرعية التابعة لها؟"
   },
   "edited_notes": {
     "deleted": "(حذف)",
@@ -1359,7 +1363,9 @@
   },
   "password_not_set": {
     "title": "لم يتم تعيين كلمة المرور",
-    "go_to_password_options": "اذهب الى خيارات كلمة المرور"
+    "go_to_password_options": "اذهب الى خيارات كلمة المرور",
+    "body1": "تُشفَّر الملاحظات المحمية باستخدام كلمة مرور خاصة بالمستخدم، لكن لم يتم تعيين كلمة المرور بعد.",
+    "body2": "لكي تتمكن من حماية الملاحظات، اضغط الزر أدناه لفتح نافذة الخيارات وتعيين كلمة المرور الخاصة بك."
   },
   "abstract_bulk_action": {
     "remove_this_search_action": "حذف اجراء البحث هذا"
@@ -1412,5 +1418,61 @@
   "mobile": {
     "badge_label": "الموبايل",
     "warning_tooltip": "أنت تقوم بتشغيل Trilium في وضع الهاتف المحمول. بعض الميزات غير متاحة. للحصول على أفضل تجربة، استخدم تطبيق سطح المكتب أو تخطيط سطح المكتب."
+  },
+  "revisions": {
+    "note_revisions": "مراجعات الملاحظة",
+    "delete_all_revisions": "حذف جميع مراجعات هذه الملاحظة",
+    "delete_all_button": "حذف جميع المراجعات",
+    "help_title": "مساعدة حول مراجعات الملاحظة",
+    "confirm_delete_all": "هل تريد حذف جميع إصدارات هذه الملاحظة؟",
+    "no_revisions": "لا توجد إصدارات لهذه الملاحظة حتى الآن...",
+    "restore_button": "استعادة",
+    "highlight_changes": "إبراز التغييرات",
+    "diff_on": "عرض الفروقات",
+    "diff_off": "عرض المحتويات",
+    "diff_on_hint": "انقر لعرض الفرق بين مصدر الملاحظة",
+    "diff_off_hint": "انقر لعرض محتوى الملاحظة",
+    "diff_not_available": "عرض الفروقات غير متاح.",
+    "confirm_restore": "هل تريد استعادة هذا الإصدار؟ سيؤدي ذلك إلى استبدال العنوان والمحتوى الحاليين للملاحظة بهذا الإصدار.",
+    "delete_button": "حذف",
+    "confirm_delete": "هل تريد حذف هذا الإصدار؟",
+    "revisions_deleted": "تم حذف إصدارات الملاحظة.",
+    "revision_restored": "تمت استعادة إصدار الملاحظة.",
+    "revision_deleted": "تم حذف إصدار الملاحظة.",
+    "snapshot_interval": "فاصل التقاط لقطات إصدارات الملاحظة: {{seconds}} ثانية.",
+    "maximum_revisions": "حدّ لقطات إصدارات الملاحظة: {{number}}.",
+    "save_revision_now": "حفظ إصدار الآن",
+    "save_named_revision": "حفظ إصدار باسم...",
+    "snapshot_header": "لقطة إصدار الملاحظة",
+    "snapshot_interval_value": "الفاصل الزمني: {{seconds}} ثانية",
+    "snapshot_limit_value": "الحد: {{number}}",
+    "settings": "إعدادات إصدارات الملاحظة",
+    "menu_tooltip": "خيارات الإصدارات",
+    "download_button": "تنزيل",
+    "mime": "MIME: ",
+    "file_size": "حجم الملف:",
+    "preview_not_available": "المعاينة غير متاحة لهذا النوع من الملاحظات.",
+    "save_revision": "حفظ إصدار",
+    "save_revision_tooltip": "حفظ لقطة يدوية للملاحظة الحالية",
+    "description_placeholder": "تسمية هذا الإصدار",
+    "revision_saved": "تم حفظ إصدار الملاحظة.",
+    "edit_description": "تعديل الاسم",
+    "description_updated": "تم تحديث اسم الإصدار.",
+    "source_auto": "حفظ تلقائي",
+    "source_manual": "حفظ يدوي",
+    "source_etapi": "واجهة ETAPI",
+    "source_llm": "نموذج اللغة الكبير (LLM)",
+    "source_restore": "استعادة",
+    "source_unknown": "لقطة",
+    "date_today": "اليوم",
+    "date_yesterday": "امس",
+    "date_this_week": "هذا الاسبوع",
+    "date_this_month": "هذا الشهر",
+    "source_description_auto": "تم الحفظ تلقائيًا بواسطة النظام على فترات منتظمة",
+    "source_description_manual": "تم الحفظ يدويًا بواسطة المستخدم",
+    "source_description_etapi": "تم الإنشاء عبر واجهة Trilium الخارجية (ETAPI)",
+    "source_description_llm": "تم الإنشاء بواسطة مساعد الذكاء الاصطناعي",
+    "source_description_restore": "تم الحفظ قبل استعادة إصدار سابق",
+    "source_description_unknown": "المصدر غير متاح"
   }
 }
