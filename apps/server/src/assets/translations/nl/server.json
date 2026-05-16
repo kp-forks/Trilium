@@ -328,6 +328,69 @@
     "sidebar-chat-title": "AI Chat"
   },
   "notes": {
-    "new-note": "Nieuwe Notitie"
+    "new-note": "Nieuwe Notitie",
+    "duplicate-note-suffix": "(dup)",
+    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}"
+  },
+  "hidden_subtree_templates": {
+    "geolocation": "Geolocatie",
+    "built-in-templates": "Ingebouwde Sjablonen",
+    "board": "Kanban Bord",
+    "status": "Status",
+    "board_note_first": "Eerste Notitie",
+    "board_note_second": "Tweede Notitie",
+    "board_note_third": "Derde Notitie",
+    "board_status_todo": "Te doen",
+    "board_status_progress": "In Behandeling",
+    "board_status_done": "Afgewerkt",
+    "presentation": "Presentatie",
+    "presentation_slide": "Presentatie dia",
+    "presentation_slide_first": "Eerste dia",
+    "presentation_slide_second": "Tweede dia",
+    "background": "Achtergrond"
+  },
+  "sql_init": {
+    "db_not_initialized_desktop": "Database is niet geïnitialiseerd, volg de instructies op het scherm.",
+    "db_not_initialized_server": "Database is niet geïnitialiseerd, bezoek de setup pagina - http://[your-server-host]:{{port}} voor instructies om Trilium te initialiseren."
+  },
+  "desktop": {
+    "instance_already_running": "Er draait al een instantie, deze wordt in de plaats geopend."
+  },
+  "script": {
+    "wrong-environment": "Kan de Notitie \"{{- noteTitle}}\" ({{- noteId}}) niet uitvoeren. Dit is een {{- actualEnv}} script, maar werd geprobeerd uit te voeren in de {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Fout in {{- context}}: {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" is een gereserveerde term. Gebruik aanhalingstekens om naar een letterlijke waarde te zoeken: \"{{- token}}\"",
+      "cannot-compare-with": "Kan niet vergelijken met \"{{- token}}\". Gebruik aanhalingstekens om naar een letterlijke waarde te zoeken: \"{{- token}}\"",
+      "misplaced-expression": "Misplaatste of onvolledige uitdrukking \"{{- token}}\"",
+      "fulltext-after-expression": "\"{{- token}}\" is geen geldige uitdrukking. Om tekst te zoeken, plaats deze voor attribuut filters (bv., \"{{- token}} #label\" in plaats van \"#label {{- token}}\").",
+      "unrecognized-expression": "Niet-herkende uitdrukking \"{{- token}}\""
+    }
+  },
+  "backend_log": {
+    "log-does-not-exist": "Het backend logbestand '{{ fileName }}' bestaat (nog) niet.",
+    "reading-log-failed": "Het lezen van het backend logbestand '{{ fileName }}' is mislukt."
+  },
+  "content_renderer": {
+    "note-cannot-be-displayed": "Dit type Notitie kan niet weergegeven worden."
+  },
+  "pdf": {
+    "export_filter": "PDF Document (*.pdf)",
+    "unable-to-export-message": "De huidige Notitie kon niet geëxporteerd worden als PDF.",
+    "unable-to-export-title": "Niet in staat om te exporteren als PDF",
+    "unable-to-save-message": "Er kon niet naar het gekozen bestand geschreven worden. Probeer opnieuw of kies een andere bestemming.",
+    "unable-to-print": "Niet in staat de Notitie af te drukken"
+  },
+  "tray": {
+    "tooltip": "Trilium Notities",
+    "close": "Trilium verlaten",
+    "recents": "Recente Notities",
+    "bookmarks": "Boekenleggers",
+    "today": "Open de Dagboek Notitie van vandaag",
+    "new-note": "Nieuwe Notitie",
+    "show-windows": "Toon vensters",
+    "open_new_window": "Open een nieuw venster"
   }
 }
