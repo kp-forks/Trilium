@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@triliumnext/client": "workspace:*",
+    "@triliumnext/commons": "workspace:*",
     "@triliumnext/core": "workspace:*",
     "@triliumnext/desktop": "workspace:*",
     "copy-webpack-plugin": "14.0.0",

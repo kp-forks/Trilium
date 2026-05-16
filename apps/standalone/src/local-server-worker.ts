@@ -64,6 +64,7 @@ let BridgedRequestProvider: typeof import('./lightweight/bridged_request_provide
 let StandalonePlatformProvider: typeof import('./lightweight/platform_provider').default;
 let StandaloneLogService: typeof import('./lightweight/log_provider').default;
 let StandaloneBackupService: typeof import('./lightweight/backup_provider').default;
+let StandaloneInAppHelpProvider: typeof import('./lightweight/in_app_help_provider').default;
 let translationProvider: typeof import('./lightweight/translation_provider').default;
 let createConfiguredRouter: typeof import('./lightweight/browser_routes').createConfiguredRouter;
 
@@ -291,6 +292,7 @@ async function loadModules(): Promise<void> {
 
     // Loaded separately to avoid breaking Promise.all tuple inference
     BridgedRequestProvider = (await import('./lightweight/bridged_request_provider.js')).default;
+    StandaloneInAppHelpProvider = (await import('./lightweight/in_app_help_provider.js')).default;
 
     // Create instances
     sqlProvider = new BrowserSqlProvider();
@@ -372,6 +374,9 @@ async function initialize(): Promise<void> {
             const schemaModule = await import("@triliumnext/core/src/assets/schema.sql?raw");
             coreModule = await import("@triliumnext/core");
 
+            const inAppHelp = new StandaloneInAppHelpProvider();
+            await inAppHelp.init();
+
             await coreModule.initializeCore({
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
@@ -389,6 +394,7 @@ async function initialize(): Promise<void> {
                     if (!response.ok) return null;
                     return new Uint8Array(await response.arrayBuffer());
                 },
+                inAppHelp,
                 image: (await import("./services/image_provider.js")).standaloneImageProvider,
                 dbConfig: {
                     provider: sqlProvider!,

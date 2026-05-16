@@ -1,5 +1,6 @@
 import debounce from "@triliumnext/client/src/services/debounce.js";
 import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/core";
+import type { HiddenSubtreeItem } from "@triliumnext/commons";
 import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provider.js";
 import cls from "@triliumnext/server/src/services/cls.js";
 import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
@@ -248,10 +249,61 @@ async function cleanUpMeta(outputPath: string, minify: boolean) {
     if (minify) {
         const subtree = new NodejsInAppHelpProvider().parseNoteMetaFile(meta, BASE_URL);
         await fs.writeFile(metaPath, JSON.stringify(subtree));
+
+        // Generate standalone variant: doc notes with docUrl become webView notes with webViewSrc
+        const standaloneSubtree = transformForStandalone(subtree);
+        const standaloneMetaPath = path.join(outputPath, "!!!meta.standalone.json");
+        await fs.writeFile(standaloneMetaPath, JSON.stringify(standaloneSubtree));
     } else {
         await fs.writeFile(metaPath, JSON.stringify(meta, null, 4));
     }
 
+}
+
+/**
+ * Transforms the help subtree for standalone mode: converts `doc` notes that have a `docUrl`
+ * into `webView` notes with `webViewSrc`, removing the `docName` attribute.
+ * Notes of type `doc` without a `docUrl` are excluded since their content isn't available offline.
+ */
+function transformForStandalone(items: HiddenSubtreeItem[]): HiddenSubtreeItem[] {
+    const result: HiddenSubtreeItem[] = [];
+
+    for (const item of items) {
+        const transformed = transformItemForStandalone(item);
+        if (transformed) {
+            result.push(transformed);
+        }
+    }
+
+    return result;
+}
+
+function transformItemForStandalone(item: HiddenSubtreeItem): HiddenSubtreeItem | null {
+    const docUrl = item.attributes?.find(a => a.name === "docUrl")?.value;
+    const hasDocName = item.attributes?.some(a => a.name === "docName");
+
+    // If it's a doc note with content but no online URL, skip it
+    if (item.type === "doc" && hasDocName && !docUrl) {
+        return null;
+    }
+
+    const newItem: HiddenSubtreeItem = { ...item };
+
+    // Convert doc notes with docUrl to webView notes
+    if (item.type === "doc" && hasDocName && docUrl) {
+        newItem.type = "webView";
+        newItem.enforceAttributes = true;
+        newItem.attributes = (item.attributes ?? [])
+            .filter(a => a.name !== "docName" && a.name !== "docUrl")
+            .concat({ type: "label", name: "webViewSrc", value: docUrl });
+    }
+
+    // Recursively transform children
+    if (item.children) {
+        newItem.children = transformForStandalone(item.children);
+    }
+
+    return newItem;
 }
 
 async function registerHandlers() {
