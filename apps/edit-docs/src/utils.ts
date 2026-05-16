@@ -1,10 +1,10 @@
-import { BackupService, initializeCore, type ImageProvider } from "@triliumnext/core";
+import { BackupService, type ImageProvider,initializeCore } from "@triliumnext/core";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import ServerPlatformProvider from "@triliumnext/server/src/platform_provider.js";
 import windowService from "@triliumnext/server/src/services/window.js";
-import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
+import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import archiver, { type Archiver } from "archiver";
 import electron from "electron";
@@ -49,7 +49,10 @@ export async function initializeEditDocsCore() {
         dbConfig: {
             provider: dbProvider,
             isReadOnly: false,
-            onTransactionCommit: () => {},
+            async onTransactionCommit() {
+                const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
+                ws.sendTransactionEntityChangesToAllClients();
+            },
             onTransactionRollback: () => {}
         },
         crypto: new NodejsCryptoProvider(),

@@ -124,6 +124,7 @@ async function main() {
     // Create the in-memory database schema and resolve dbReady (requires CLS context)
     const { sql_init, becca_loader: beccaLoader } = await import("@triliumnext/core");
     cls.init(async () => {
+        cls.ignoreEntityChangeIds();
         await sql_init.createInitialDatabase(true);
         await beccaLoader.beccaLoaded;
 
