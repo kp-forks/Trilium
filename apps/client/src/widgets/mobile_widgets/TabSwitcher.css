@@ -82,7 +82,8 @@
                 user-select: none;
                 pointer-events: none;
 
-                &.type-text {
+                &.type-text,
+                &.type-code .type-markdown {
                     padding: 10px;
                     --ck-content-todo-list-checkmark-size: 8px;
 
