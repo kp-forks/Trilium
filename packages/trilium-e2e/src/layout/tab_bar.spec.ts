@@ -1,6 +1,6 @@
 import { expect,test } from "@playwright/test";
 
-import App from "../support/app";
+import App, { isStandalone } from "../support/app";
 
 const NOTE_TITLE = "Trilium Integration Test DB";
 
@@ -30,7 +30,9 @@ test("Can drag tabs around", async ({ page, context }) => {
     await expect(await app.getTab(0)).toContainText(NOTE_TITLE);
 });
 
-test("Can drag tab to new window", async ({ page, context }) => {
+test("Can drag tab to new window", async ({ page, context }, testInfo) => {
+    test.skip(isStandalone(testInfo), "Standalone does not support multiple windows");
+
     const app = new App(page, context);
     await app.goto();
 
