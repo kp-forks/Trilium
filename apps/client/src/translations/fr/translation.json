@@ -62,12 +62,15 @@
   "branch_prefix": {
     "edit_branch_prefix": "Modifier le préfixe de branche",
     "help_on_tree_prefix": "Aide sur le préfixe de l'arbre",
-    "prefix": "Préfixe : ",
+    "prefix": "Préfixe",
     "save": "Sauvegarder",
     "branch_prefix_saved": "Le préfixe de la branche a été enregistré.",
     "edit_branch_prefix_multiple": "Modifier le préfixe pour {{count}} branches",
     "branch_prefix_saved_multiple": "Le préfixe de la branche a été sauvegardé pour {{count}} branches.",
-    "affected_branches": "Branches impactées ({{count}}):"
+    "affected_branches": "Branches impactées ({{count}}):",
+    "preview_in_tree": "Aperçu dans l’arborescence",
+    "description": "Préfixé au titre de la note dans cette branche uniquement. Les autres branches conservent le titre d’origine.",
+    "cancel": "Annuler"
   },
   "bulk_actions": {
     "bulk_actions": "Actions groupées",
@@ -363,7 +366,7 @@
     "relation": "Détail de la relation",
     "relation_definition": "Détail de la définition de la relation",
     "disable_versioning": "désactive la gestion automatique des versions. Utile pour les notes volumineuses mais sans importance - par ex. grandes bibliothèques JS utilisées pour les scripts",
-    "calendar_root": "indique la note qui doit être utilisée comme racine pour les notes journalières. Une seule note doit être marquée comme telle.",
+    "calendar_root": "indique la note qui doit être utilisée comme racine pour les notes du jour. Une seule note doit être marquée comme telle.",
     "archived": "les notes portant ce label ne seront pas visibles par défaut dans les résultats de recherche (ou dans les boîtes de dialogue Aller à, Ajouter un lien, etc.).",
     "exclude_from_export": "les notes (avec leurs sous-arbres) ne seront incluses dans aucune exportation de notes",
     "run": "définit sur quels événements le script doit s'exécuter. Les valeurs possibles sont :\n<ul>\n<li>frontendStartup - lorsque l'interface Trilium démarre (ou est actualisée), mais pas sur mobile.</li>\n<li>mobileStartup - lorsque l'interface Trilium démarre (ou est actualisée), sur mobile.</li>\n<li>backendStartup - lorsque le backend de Trilium démarre.</li>\n<li>hourly - exécute le script une fois par heure. Vous pouvez utiliser le label supplémentaire <code>runAtHour</code> pour spécifier l'heure d’exécution.</li>\n<li>daily - exécute le script une fois par jour.</li>\n</ul>",
@@ -594,7 +597,7 @@
     "fri": "Ven",
     "sat": "Sam",
     "sun": "Dim",
-    "cannot_find_day_note": "Note journalière introuvable",
+    "cannot_find_day_note": "Note du jour introuvable",
     "january": "Janvier",
     "february": "Février",
     "march": "Mars",
@@ -653,7 +656,7 @@
     "open_sql_console": "Ouvrir la Console SQL",
     "open_sql_console_history": "Ouvrir l'Historique de la console SQL",
     "open_search_history": "Ouvrir l'Historique de recherche",
-    "show_backend_log": "Afficher le Journal back-end",
+    "show_backend_log": "Afficher les logs du backend",
     "reload_hint": "Recharger l'interface peut aider à résoudre certains problèmes visuels sans redémarrer l'application.",
     "reload_frontend": "Recharger l'interface",
     "show_hidden_subtree": "Afficher le Sous-arbre caché",
@@ -709,7 +712,7 @@
     "export_as_image": "Exporter en tant qu'image",
     "export_as_image_png": "PNG",
     "export_as_image_svg": "SVG (vectoriel)",
-    "note_map": "Note Carte",
+    "note_map": "Carte des notes",
     "word_wrap": "Retour à la ligne",
     "word_wrap_auto": "Auto",
     "word_wrap_auto_description": "Suivre le paramètre global",
@@ -870,9 +873,9 @@
   "note_map": {
     "open_full": "Développer au maximum",
     "collapse": "Réduire à la taille normale",
-    "title": "Carte de la Note",
+    "title": "Carte des notes",
     "fix-nodes": "Réparer les nœuds",
-    "link-distance": "Distance du lien",
+    "link-distance": "Longueur des liens",
     "too-many-notes": "Il y a {{count}} notes ici. Les afficher toutes pourrait ralentir le chargement.",
     "show-anyway": "Afficher la carte"
   },
@@ -955,7 +958,7 @@
   "debug": {
     "debug": "Debug",
     "debug_info": "Debug imprimera des informations supplémentaires dans la console pour faciliter le débogage des requêtes complexes.",
-    "access_info": "Pour accéder aux informations de débogage, exécutez la requête et cliquez sur \"Afficher le journal backend\" dans le coin supérieur gauche."
+    "access_info": "Pour accéder aux informations de débogage, exécutez la requête et cliquez sur \"Afficher les logs du backend\" dans le coin supérieur gauche."
   },
   "fast_search": {
     "fast_search": "Recherche rapide",
@@ -1183,7 +1186,7 @@
   "ribbon": {
     "widgets": "Ruban de widgets",
     "promoted_attributes_message": "L'onglet du ruban Attributs promus s'ouvrira automatiquement si la note possède des attributs mis en avant",
-    "edited_notes_message": "L'onglet du ruban Notes modifiées s'ouvrira automatiquement sur les notes journalières"
+    "edited_notes_message": "L’onglet du ruban \"Notes modifiées\" s’ouvrira automatiquement sur les notes du jour"
   },
   "theme": {
     "title": "Interface utilisateur",
@@ -1555,7 +1558,7 @@
     "code": "Code",
     "saved-search": "Recherche enregistrée",
     "relation-map": "Carte des relations",
-    "note-map": "Carte de notes",
+    "note-map": "Carte des notes",
     "render-note": "Rendu Html",
     "mermaid-diagram": "Diagramme Mermaid",
     "canvas": "Canevas",
@@ -1709,7 +1712,7 @@
   "toc": {
     "table_of_contents": "Table des matières",
     "options": "Options",
-    "no_headings": "Pas d'en-tête."
+    "no_headings": "Aucun titre défini."
   },
   "watched_file_update_status": {
     "file_last_modified": "Le fichier <code class=\"file-path\"></code> a été modifié pour la dernière fois le <span class=\"file-last-modified\"></span>.",
@@ -2256,7 +2259,9 @@
     "save_status_error": "L'enregistrement a échoué",
     "save_status_saving_tooltip": "Les modifications sont en cours d'enregistrement.",
     "save_status_unsaved_tooltip": "Il y a des changements non enregistrés. Ils seront enregistrés automatiquement dans un instant.",
-    "save_status_error_tooltip": "Une erreur s'est produite lors de l'enregistrement de la note. Si possible, essayez de copier le contenu de la note ailleurs et de recharger l'application."
+    "save_status_error_tooltip": "Une erreur s'est produite lors de l'enregistrement de la note. Si possible, essayez de copier le contenu de la note ailleurs et de recharger l'application.",
+    "doc_url": "Docs en ligne",
+    "doc_url_description": "Cliquez pour consulter cette page dans la documentation en ligne."
   },
   "right_pane": {
     "toggle": "Afficher/Masquer le panneau de droite",
@@ -2399,7 +2404,7 @@
       "rename_note": "Renommer la note",
       "delete_note": "Supprimer la note",
       "move_note": "Déplacer la note",
-      "clone_note": "Dupliquer la note"
+      "clone_note": "Cloner la note"
     },
     "feature_not_enabled": "Activez la fonctionnalité expérimentale LLM dans Paramètres → Avancé → Fonctionnalités expérimentales pour utiliser les intégrations d’IA.",
     "mcp_title": "MCP (Model Context Protocol)",
@@ -2508,7 +2513,7 @@
     "title": "Base de données"
   },
   "launcher_button_context_menu": {
-    "remove_from_launch_bar": "Supprimer de la barre de raccourcis"
+    "remove_from_launch_bar": "Retirer de la barre de raccourcis"
   },
   "revisions_snapshot": {
     "title": "Révisions de la note"
