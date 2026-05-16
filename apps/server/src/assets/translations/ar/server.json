@@ -369,10 +369,19 @@
   "quarterNumber": "الربع {رقم الربع}",
   "pdf": {
     "export_filter": "مستند PDF (.pdf)",
-    "unable-to-export-title": "تعذر التصدير كملف PDF"
+    "unable-to-export-title": "تعذر التصدير كملف PDF",
+    "unable-to-export-message": "تعذّر تصدير الملاحظة الحالية إلى ملف PDF.",
+    "unable-to-save-message": "تعذّر الكتابة إلى الملف المحدد. حاول مرة أخرى أو اختر وجهة أخرى."
   },
   "test_sync": {
     "not-configured": "لم يتم إعداد مضيف مزامنة الخادم. يرجى إعداد المزامنة أولًا.",
     "successful": "تم الاتصال بخادم المزامنة بنجاح، وبدأت عملية المزامنة."
+  },
+  "backend_log": {
+    "log-does-not-exist": "ملف سجل الخلفية '{{ fileName }}' غير موجود (حتى الآن).",
+    "reading-log-failed": "فشل قراءة ملف سجل الخلفية '{{ fileName }}'."
+  },
+  "content_renderer": {
+    "note-cannot-be-displayed": "لا يمكن عرض هذا النوع من الملاحظات."
   }
 }
