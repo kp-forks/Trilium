@@ -127,7 +127,8 @@
     "december": "ديسمبر"
   },
   "special_notes": {
-    "search_prefix": "بحث:"
+    "search_prefix": "بحث:",
+    "llm_chat_prefix": "محادثة:"
   },
   "hidden-subtree": {
     "calendar-title": "تقويم",
@@ -136,7 +137,7 @@
     "options-title": "خيارات",
     "appearance-title": "المظهر",
     "shortcuts-title": "أختصارات",
-    "images-title": "صور",
+    "images-title": "وسائط",
     "password-title": "كلمة المرور",
     "backup-title": "نسخة أحتياطية",
     "sync-title": "مزامنة",
@@ -178,7 +179,14 @@
     "localization": "اللغة والمنطقة",
     "go-to-previous-note-title": "اذهب الى الملاحظة السابقة",
     "go-to-next-note-title": "اذهب الى الملاحظة التالية",
-    "open-today-journal-note-title": "فتح ملاحظة مجلة اليوم"
+    "open-today-journal-note-title": "فتح ملاحظة مجلة اليوم",
+    "llm-chat-history-title": "سجل محادثة الذكاء الاصطناعي",
+    "custom-dictionary-title": "قاموس مخصص",
+    "command-palette": "فتح لوحة الأوامر",
+    "zen-mode": "وضع التركيز (Zen Mode)",
+    "llm-title": "الذكاء الاصطناعي / نموذج اللغة الكبير (LLM)",
+    "tab-switcher-title": "مبدّل علامات التبويب (Tab Switcher)",
+    "sidebar-chat-title": "محادثة الذكاء الاصطناعي"
   },
   "tray": {
     "bookmarks": "العلامات المرجعية",
@@ -247,11 +255,13 @@
   "share_page": {
     "parent": "الأصل:",
     "child-notes": "الملاحظات الفرعية:",
-    "no-content": "لاتحتوي هذة الملاحظة على محتوى."
+    "no-content": "لاتحتوي هذة الملاحظة على محتوى.",
+    "clipped-from": "تم اقتباس هذه الملاحظة أصلًا من ‎{{- url}}‎"
   },
   "notes": {
     "duplicate-note-suffix": "(مكرر)",
-    "new-note": "ملاحظة جديدة"
+    "new-note": "ملاحظة جديدة",
+    "duplicate-note-title": "{{- noteTitle }}{{ duplicateNoteSuffix }}"
   },
   "keyboard_action_names": {
     "jump-to-note": "انتقل الى ...",
@@ -360,5 +370,9 @@
   "pdf": {
     "export_filter": "مستند PDF (.pdf)",
     "unable-to-export-title": "تعذر التصدير كملف PDF"
+  },
+  "test_sync": {
+    "not-configured": "لم يتم إعداد مضيف مزامنة الخادم. يرجى إعداد المزامنة أولًا.",
+    "successful": "تم الاتصال بخادم المزامنة بنجاح، وبدأت عملية المزامنة."
   }
 }
