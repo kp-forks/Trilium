@@ -553,7 +553,9 @@
     "natural_sort": "الترتيب الطبيعي",
     "natural_sort_language": "لغات الترتيب الطبيعي",
     "sort_children_by": "ترتيب العناصر الفرعية حسب...",
-    "sort_folders_at_top": "ترتيب المجلدات في الاعلى"
+    "sort_folders_at_top": "ترتيب المجلدات في الاعلى",
+    "sort_with_respect_to_different_character_sorting": "الفرز وفق قواعد ترتيب الحروف (Collation) المختلفة في اللغات والمناطق.",
+    "the_language_code_for_natural_sort": "رمز اللغة للفرز الطبيعي، مثل \"zh-CN\" للغة الصينية."
   },
   "recent_changes": {
     "undelete_link": "الغاء الحذف",
