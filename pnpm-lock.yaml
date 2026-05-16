@@ -1677,8 +1677,8 @@ importers:
   packages/trilium-core:
     dependencies:
       '@braintree/sanitize-url':
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.1.2
+        version: 7.1.2
       '@triliumnext/commons':
         specifier: workspace:*
         version: link:../commons
@@ -1972,9 +1972,6 @@ packages:
 
   '@braintree/sanitize-url@6.0.2':
     resolution: {integrity: sha512-Tbsj02wXCbqGmzdnXNk0SOF19ChhRU70BsroIi4Pm6Ehp56in6vch94mfbdQ17DozxkL3BAVjbZ4Qc1a0HFRAg==}
-
-  '@braintree/sanitize-url@7.1.1':
-    resolution: {integrity: sha512-i1L7noDNxtFyL5DmZafWy1wRVhGehQmzZaz1HiN5e7iylJMSZR7ekOV7NsIqa5qBldlLrsKv4HbgFUVlQrz8Mw==}
 
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
@@ -14939,8 +14936,6 @@ snapshots:
   '@borewit/text-codec@0.2.2': {}
 
   '@braintree/sanitize-url@6.0.2': {}
-
-  '@braintree/sanitize-url@7.1.1': {}
 
   '@braintree/sanitize-url@7.1.2': {}
 

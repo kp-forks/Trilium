@@ -7,7 +7,7 @@
     "test": "echo \"Note: Core tests are run either through apps/server or apps/standalone, since they have different runtime environments.\""
   },
   "dependencies": {
-    "@braintree/sanitize-url": "7.1.1",
+    "@braintree/sanitize-url": "7.1.2",
     "@triliumnext/commons": "workspace:*",
     "@triliumnext/turndown-plugin-gfm": "workspace:*",
     "async-mutex": "0.5.0",
