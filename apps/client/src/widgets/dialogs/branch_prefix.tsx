@@ -10,8 +10,10 @@ import server from "../../services/server.js";
 import toast from "../../services/toast.js";
 import tree from "../../services/tree.js";
 import Button from "../react/Button.jsx";
+import { Card, CardSection } from "../react/Card.js";
 import FormGroup from "../react/FormGroup.js";
 import { useTriliumEvent } from "../react/hooks.jsx";
+import Icon from "../react/Icon.js";
 import Modal from "../react/Modal.jsx";
 
 // Virtual branches (e.g., from search results) start with this prefix
@@ -101,20 +103,22 @@ export default function BranchPrefixDialog() {
                 <input class="branch-prefix-input form-control" value={prefix} ref={branchInput}
                     onChange={(e) => setPrefix((e.target as HTMLInputElement).value)} />
             </FormGroup>
-            <div className="branch-prefix-notes-list">
-                <strong>{t("branch_prefix.preview_in_tree")}</strong>
-                <ul>
-                    {branches.map((branch) => {
-                        const note = branch.getNoteFromCache();
-                        return note && (
-                            <li key={branch.branchId}>
-                                {prefix && <span className="branch-prefix-current">{prefix} - </span>}
-                                {note.title}
-                            </li>
-                        );
-                    })}
-                </ul>
-            </div>
+            <Card heading={t("branch_prefix.preview_in_tree")}>
+                <CardSection noPadding>
+                    <ul className="preview-list">
+                        {branches.map((branch) => {
+                            const note = branch.getNoteFromCache();
+                            return note && (
+                                <li key={branch.branchId}>
+                                    <Icon icon={note.getIcon()} />
+                                    {prefix && <span className="branch-prefix-current">{prefix} - </span>}
+                                    {note.title}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </CardSection>
+            </Card>
         </Modal>
     );
 }
