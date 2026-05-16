@@ -802,8 +802,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1
       officeparser:
-        specifier: 6.1.0
-        version: 6.1.0(encoding@0.1.13)
+        specifier: 6.1.1
+        version: 6.1.1(encoding@0.1.13)
       rand-token:
         specifier: 1.0.1
         version: 1.0.1
@@ -6811,6 +6811,10 @@ packages:
   '@wxt-dev/storage@1.2.6':
     resolution: {integrity: sha512-f6AknnpJvhNHW4s0WqwSGCuZAj0fjP3EVNPBO5kB30pY+3Zt/nqZGqJN6FgBLCSkYjPJ8VL1hNX5LMVmvxQoDw==}
 
+  '@xmldom/xmldom@0.9.10':
+    resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
+    engines: {node: '>=14.6'}
+
   '@xmldom/xmldom@0.9.9':
     resolution: {integrity: sha512-qycIHAucxy/LXAYIjmLmtQ8q9GPnMbnjG1KXhWm9o5sCr6pOYDATkMPiTNa6/v8eELyqOQ2FsEqeoFYmgv/gJg==}
     engines: {node: '>=14.6'}
@@ -11299,8 +11303,8 @@ packages:
   ofetch@1.5.1:
     resolution: {integrity: sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA==}
 
-  officeparser@6.1.0:
-    resolution: {integrity: sha512-S/dMjUyhbeyDNUjnuGKsmuDx3IoOTcyy6uFzZ6321paaF5NVQVS+Ht8SkQEzEQ85DJ256LnTroMTP2PVKebX1Q==}
+  officeparser@6.1.1:
+    resolution: {integrity: sha512-C8XcY7h/4It+ZZDTnPs9p7v2c09zcJUVQKZH4Q8ZtBLeVrauSSrJvvV8Orcq8fSJjxPFuQAueQqkqTfGv3HlPw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -21615,6 +21619,8 @@ snapshots:
       async-mutex: 0.5.0
       dequal: 2.0.3
 
+  '@xmldom/xmldom@0.9.10': {}
+
   '@xmldom/xmldom@0.9.9': {}
 
   '@xtuc/ieee754@1.2.0': {}
@@ -26984,9 +26990,9 @@ snapshots:
       node-fetch-native: 1.6.7
       ufo: 1.6.1
 
-  officeparser@6.1.0(encoding@0.1.13):
+  officeparser@6.1.1(encoding@0.1.13):
     dependencies:
-      '@xmldom/xmldom': 0.9.9
+      '@xmldom/xmldom': 0.9.10
       fflate: 0.8.2
       file-type: 22.0.1
       pdfjs-dist: 5.6.205
