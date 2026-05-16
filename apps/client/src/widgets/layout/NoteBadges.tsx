@@ -19,6 +19,7 @@ export default function NoteBadges() {
             <ReadOnlyBadge />
             <ShareBadge />
             <ClippedNoteBadge />
+            <DocUrlBadge />
             <ExecuteBadge />
             <ActiveContentBadges />
         </div>
@@ -88,6 +89,21 @@ function ClippedNoteBadge() {
             text={t("breadcrumb_badges.clipped_note")}
             tooltip={t("breadcrumb_badges.clipped_note_description", { url: pageUrl })}
             href={pageUrl}
+        />
+    );
+}
+
+function DocUrlBadge() {
+    const { note } = useNoteContext();
+    const [ docUrl ] = useNoteLabel(note, "docUrl");
+
+    return (docUrl &&
+        <Badge
+            className="doc-url-badge"
+            icon="bx bx-file-find"
+            text={t("breadcrumb_badges.doc_url")}
+            tooltip={t("breadcrumb_badges.doc_url_description")}
+            href={docUrl}
         />
     );
 }
