@@ -145,6 +145,10 @@ body.desktop {
             padding-bottom: env(safe-area-inset-bottom);
         }
     }
+
+    .modal .modal-dialog {
+        margin-top: calc(env(safe-area-inset-top) + var(--bs-modal-margin));
+    }
 }
 
 a {
