@@ -99,7 +99,7 @@ export default function BranchPrefixDialog() {
             footer={<Button text={t("branch_prefix.save")} />}
             show={shown}
         >
-            <FormGroup label={t("branch_prefix.prefix")} name="prefix">
+            <FormGroup label={t("branch_prefix.prefix")} name="prefix" description={t("branch_prefix.description")}>
                 <input class="branch-prefix-input form-control" value={prefix} ref={branchInput}
                     onChange={(e) => setPrefix((e.target as HTMLInputElement).value)} />
             </FormGroup>
