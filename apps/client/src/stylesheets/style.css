@@ -133,6 +133,18 @@ body.desktop {
             padding-bottom: env(safe-area-inset-bottom);
         }
     }
+
+    &.experimental-feature-new-layout #root-widget.horizontal-layout {
+        >.status-bar {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
+
+    &:not(.experimental-feature-new-layout) #root-widget.horizontal-layout {
+        #horizontal-main-container {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
 }
 
 a {
