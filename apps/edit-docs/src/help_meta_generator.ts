@@ -70,6 +70,7 @@ function parseNoteMeta(noteMeta: NoteMeta, handleTextNote: TextNoteHandler, docN
     // Build the URL for this note
     const shareAlias = noteMeta.attributes?.find((a) => a.type === "label" && a.name === "shareAlias")?.value;
     const currentUrl = parentUrl && shareAlias ? `${parentUrl}/${shareAlias}` : parentUrl;
+    const noteUrl = shareAlias ? currentUrl : undefined;
 
     // Handle attributes
     for (const attribute of noteMeta.attributes ?? []) {
@@ -94,7 +95,7 @@ function parseNoteMeta(noteMeta: NoteMeta, handleTextNote: TextNoteHandler, docN
     // Handle text notes
     if (noteMeta.type === "text" && noteMeta.dataFileName) {
         const docPath = `${docNameRoot}/${path.basename(noteMeta.dataFileName, ".html")}`.substring(1);
-        if (!handleTextNote(item, docPath, currentUrl)) {
+        if (!handleTextNote(item, docPath, noteUrl)) {
             return null;
         }
     }
