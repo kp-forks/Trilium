@@ -55,7 +55,7 @@
   "devDependencies": {
     "@electron/rebuild": "4.0.4",
     "@fast-csv/parse": "5.0.5",
-    "@playwright/test": "1.59.1",
+    "@playwright/test": "1.60.0",
     "@triliumnext/server": "workspace:*",
     "@types/express": "5.0.6",
     "@types/js-yaml": "4.0.9",
