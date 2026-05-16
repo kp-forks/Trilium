@@ -181,18 +181,30 @@ function useWakeLock() {
 
         let released = false;
 
-        navigator.wakeLock.request("screen").then((lock) => {
-            if (released) {
-                lock.release();
-            } else {
-                wakeLockRef.current = lock;
+        const acquireLock = () => {
+            navigator.wakeLock.request("screen").then((lock) => {
+                if (released) {
+                    lock.release();
+                } else {
+                    wakeLockRef.current = lock;
+                }
+            }).catch(() => {
+                // Wake Lock not supported or permission denied — ignore silently.
+            });
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible" && !released) {
+                acquireLock();
             }
-        }).catch(() => {
-            // Wake Lock not supported or permission denied — ignore silently.
-        });
+        };
+
+        acquireLock();
+        document.addEventListener("visibilitychange", onVisibilityChange);
 
         return () => {
             released = true;
+            document.removeEventListener("visibilitychange", onVisibilityChange);
             wakeLockRef.current?.release();
             wakeLockRef.current = null;
         };

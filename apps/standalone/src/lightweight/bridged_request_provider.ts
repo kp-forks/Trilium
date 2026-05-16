@@ -61,8 +61,6 @@ export default class BridgedRequestProvider implements RequestProvider {
 
         const id = String(this.nextId++);
         const msg = await new Promise<any>((resolve, reject) => {
-            this.pending.set(id, { resolve, reject });
-
             const timeoutId = opts.timeout
                 ? setTimeout(() => {
                     this.pending.delete(id);
