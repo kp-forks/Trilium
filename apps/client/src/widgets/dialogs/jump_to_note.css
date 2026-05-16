@@ -1,6 +1,10 @@
 .jump-to-note-dialog .modal-dialog {
     max-width: 900px;
     width: 90%;
+
+    body.mobile & {
+        height: 100vh;
+    }
 }
 
 .jump-to-note-dialog .modal-header {
