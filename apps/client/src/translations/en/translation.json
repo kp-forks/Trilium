@@ -69,7 +69,8 @@
     "branch_prefix_saved_multiple": "Branch prefix has been saved for {{count}} branches.",
     "affected_branches": "Affected branches ({{count}}):",
     "preview_in_tree": "Preview in tree",
-    "description": "Prepended to the note title in this branch only. Other branches keep the original title."
+    "description": "Prepended to the note title in this branch only. Other branches keep the original title.",
+    "cancel": "Cancel"
   },
   "bulk_actions": {
     "bulk_actions": "Bulk actions",

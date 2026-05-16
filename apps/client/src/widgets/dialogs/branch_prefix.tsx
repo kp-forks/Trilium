@@ -96,7 +96,10 @@ export default function BranchPrefixDialog() {
             onHidden={() => setShown(false)}
             onSubmit={onSubmit}
             helpPageId="TBwsyfadTA18"
-            footer={<Button text={t("branch_prefix.save")} />}
+            footer={<>
+                <Button text={t("branch_prefix.cancel")} onClick={() => setShown(false)} />
+                <Button text={t("branch_prefix.save")} kind="primary" />
+            </>}
             show={shown}
         >
             <FormGroup label={t("branch_prefix.prefix")} name="prefix" description={t("branch_prefix.description")}>
