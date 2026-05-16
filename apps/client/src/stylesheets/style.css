@@ -124,10 +124,15 @@ body.desktop #root-widget.horizontal-layout {
     background-color: var(--launcher-pane-background-color);
 }
 
-body.desktop #root-widget.vertical-layout #launcher-pane,
-body.desktop #root-widget.vertical-layout #left-pane,
-body.desktop #root-widget.vertical-layout #rest-pane {
-    padding-top: env(safe-area-inset-top);
+body.desktop {
+    #root-widget.vertical-layout {
+        #launcher-pane,
+        #left-pane,
+        #rest-pane {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
 }
 
 a {
