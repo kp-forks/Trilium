@@ -293,7 +293,7 @@ export default class BrowserSqlProvider implements DatabaseProvider {
     /**
      * Install the OPFS SAHPool VFS. This pre-allocates a pool of OPFS
      * SyncAccessHandle objects, enabling WAL mode and significantly faster
-     * writes compared to in-memory databases.
+     * writes compared to the legacy OPFS VFS.
      *
      * Must be called after `initWasm()` and before `loadFromSahPool()`.
      * This is async because it acquires OPFS file handles.
