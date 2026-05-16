@@ -36,7 +36,7 @@
     "@ai-sdk/openai": "3.0.64",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "ai": "6.0.184",
-    "better-sqlite3": "12.9.0",
+    "better-sqlite3": "12.10.0",
     "html-to-text": "9.0.5",
     "i18next-fs-backend": "2.6.4",
     "i18next": "26.0.8",
