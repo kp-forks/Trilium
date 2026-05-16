@@ -579,18 +579,18 @@ importers:
   apps/mobile:
     dependencies:
       '@capacitor/android':
-        specifier: 8.3.1
-        version: 8.3.1(@capacitor/core@8.3.1)
+        specifier: 8.3.4
+        version: 8.3.4(@capacitor/core@8.3.4)
       '@capacitor/core':
-        specifier: 8.3.1
-        version: 8.3.1
+        specifier: 8.3.4
+        version: 8.3.4
       '@capacitor/splash-screen':
         specifier: 8.0.1
-        version: 8.0.1(@capacitor/core@8.3.1)
+        version: 8.0.1(@capacitor/core@8.3.4)
     devDependencies:
       '@capacitor/cli':
-        specifier: 8.3.1
-        version: 8.3.1
+        specifier: 8.3.4
+        version: 8.3.4
 
   apps/script-deployer: {}
 
@@ -1988,18 +1988,18 @@ packages:
   '@cacheable/utils@2.3.3':
     resolution: {integrity: sha512-JsXDL70gQ+1Vc2W/KUFfkAJzgb4puKwwKehNLuB+HrNKWf91O736kGfxn4KujXCCSuh6mRRL4XEB0PkAFjWS0A==}
 
-  '@capacitor/android@8.3.1':
-    resolution: {integrity: sha512-hjskIG8YcBEh3X4yaTXvE9gcqpdcxunTgFruSKnuPxtMxAUzEK4Oq25x0Z1g3cz+MQPc+lRG09R7Ovc+ydKsNw==}
+  '@capacitor/android@8.3.4':
+    resolution: {integrity: sha512-7gJjrG3X32Am1QMLqgMztWTYMLMVNE+VZwhekNxhvYizH4mOV05vH+rC9B+f17bCkYZfyu/qXQX6hoY7kLeVZw==}
     peerDependencies:
       '@capacitor/core': ^8.3.0
 
-  '@capacitor/cli@8.3.1':
-    resolution: {integrity: sha512-1sPGW4THTDfR6YjXwZ0jM7oAfAtciPOHN00qs/3sNAQx1kKrrEYSfDPwCm1/xlAgi0OeL69SiRfw314Ans+1sw==}
+  '@capacitor/cli@8.3.4':
+    resolution: {integrity: sha512-QEmyNdiDDVNYl0Mahm7YTVA/3t2tKcy7FWYDapeKGavS6HDNHZSjyTVwQpUXQbDZrrs/PS2Wau3Aii+LIFwm/A==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@capacitor/core@8.3.1':
-    resolution: {integrity: sha512-UF8ItlHguU1Z6GXfPTeT2gakf+ctNI8pAS1kwSBQlsJMlfD4OPoto/SmKnOxKCQvnF4WRcdWeg6C0zREUNaAQg==}
+  '@capacitor/core@8.3.4':
+    resolution: {integrity: sha512-CqRQCkb6HXxcx/N7s+hHTN6ef2CmamFiRMITwm4qB840ph56mS42bzUgn6tKCP+RZjdDweiRHj9ytDDeN6jFag==}
 
   '@capacitor/splash-screen@8.0.1':
     resolution: {integrity: sha512-c/ew/Z3eA7z8l06WoRAtzVF16VwYYrExmHmfGq1Cg675pVzaC/yuucB8/1xG1vhEfnW4fZ1KhSf/kzR1RiVYgg==}
@@ -6953,11 +6953,6 @@ packages:
 
   '@wxt-dev/storage@1.2.6':
     resolution: {integrity: sha512-f6AknnpJvhNHW4s0WqwSGCuZAj0fjP3EVNPBO5kB30pY+3Zt/nqZGqJN6FgBLCSkYjPJ8VL1hNX5LMVmvxQoDw==}
-
-  '@xmldom/xmldom@0.8.12':
-    resolution: {integrity: sha512-9k/gHF6n/pAi/9tqr3m3aqkuiNosYTurLLUtc7xQ9sxB/wm7WPygCv8GYa6mS0fLJEHhqMC1ATYhz++U/lRHqg==}
-    engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
 
   '@xmldom/xmldom@0.9.9':
     resolution: {integrity: sha512-qycIHAucxy/LXAYIjmLmtQ8q9GPnMbnjG1KXhWm9o5sCr6pOYDATkMPiTNa6/v8eELyqOQ2FsEqeoFYmgv/gJg==}
@@ -14885,11 +14880,11 @@ snapshots:
       hashery: 1.4.0
       keyv: 5.6.0
 
-  '@capacitor/android@8.3.1(@capacitor/core@8.3.1)':
+  '@capacitor/android@8.3.4(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.3.1
+      '@capacitor/core': 8.3.4
 
-  '@capacitor/cli@8.3.1':
+  '@capacitor/cli@8.3.4':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
       '@ionic/utils-subprocess': 3.0.1
@@ -14911,13 +14906,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/core@8.3.1':
+  '@capacitor/core@8.3.4':
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/splash-screen@8.0.1(@capacitor/core@8.3.1)':
+  '@capacitor/splash-screen@8.0.1(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.3.1
+      '@capacitor/core': 8.3.4
 
   '@catppuccin/codemirror@1.0.3':
     dependencies:
@@ -21906,8 +21901,6 @@ snapshots:
       async-mutex: 0.5.0
       dequal: 2.0.3
 
-  '@xmldom/xmldom@0.8.12': {}
-
   '@xmldom/xmldom@0.9.9': {}
 
   '@xtuc/ieee754@1.2.0': {}
@@ -27718,7 +27711,7 @@ snapshots:
 
   plist@3.1.0:
     dependencies:
-      '@xmldom/xmldom': 0.8.12
+      '@xmldom/xmldom': 0.9.9
       base64-js: 1.5.1
       xmlbuilder: 15.1.1
 
