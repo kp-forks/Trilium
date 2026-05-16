@@ -124,7 +124,7 @@ body.desktop #root-widget {
 }
 
 body.desktop #root-widget.horizontal-layout {
-    padding-top: env(safe-area-inset-top);
+    padding-top: var(--safe-area-inset-top, env(safe-area-inset-top));
     background-color: var(--launcher-pane-background-color);
 }
 
@@ -133,7 +133,7 @@ body.desktop {
         #launcher-pane,
         #left-pane,
         #rest-pane {
-            padding-top: env(safe-area-inset-top);
+            padding-top: var(--safe-area-inset-top, env(safe-area-inset-top));
             padding-bottom: env(safe-area-inset-bottom);
         }
     }
@@ -151,7 +151,7 @@ body.desktop {
     }
 
     .modal .modal-dialog {
-        margin-top: calc(env(safe-area-inset-top) + var(--bs-modal-margin));
+        margin-top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + var(--bs-modal-margin));
     }
 }
 
