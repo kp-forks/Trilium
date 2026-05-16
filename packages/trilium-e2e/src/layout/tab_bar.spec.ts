@@ -82,11 +82,13 @@ test("Tabs are restored in right order", async ({ page, context }) => {
     await expect(app.noteTreeActiveNote).toContainText("Text notes");
     await recentNotesSaved;
 
-    // Refresh the page and check the order.
+    // Refresh the page and check the order. Asserting on the wrapper
+    // collection (rather than each tab individually) waits for all three
+    // titles to populate — restoration renders the active tab first and
+    // fills in the others asynchronously.
     await app.goto( { preserveTabs: true });
-    await expect(await app.getTab(0)).toContainText("Code notes");
-    await expect(await app.getTab(1)).toContainText("Text notes");
-    await expect(await app.getTab(2)).toContainText("Mermaid");
+    await expect(app.tabBar.locator(".note-tab-wrapper"))
+        .toHaveText([/Code notes/, /Text notes/, /Mermaid/]);
 
     // Check the note tree has the right active node.
     await expect(app.noteTreeActiveNote).toContainText("Text notes");
