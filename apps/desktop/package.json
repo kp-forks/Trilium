@@ -1,6 +1,6 @@
 {
   "name": "@triliumnext/desktop",
-  "version": "0.102.2",
+  "version": "0.103.0",
   "description": "Build your personal knowledge base with Trilium Notes",
   "private": true,
   "main": "src/main.ts",
@@ -41,6 +41,7 @@
     "@electron-forge/plugin-fuses": "7.11.1",
     "@electron/fuses": "2.1.1",
     "@triliumnext/commons": "workspace:*",
+    "@triliumnext/core": "workspace:*",
     "@triliumnext/server": "workspace:*",
     "@types/electron-squirrel-startup": "1.0.2",
     "copy-webpack-plugin": "14.0.0",

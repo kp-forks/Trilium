@@ -17,7 +17,11 @@
     "github_tooltip": "バグの報告、機能の提案、またはGitHubでの貢献",
     "license_tooltip": "ライセンスを表示",
     "donate": "寄付",
-    "donate_tooltip": "このプロジェクトを支援するために寄付をお願いします"
+    "donate_tooltip": "このプロジェクトを支援するために寄付をお願いします",
+    "channel": {
+      "nightly": "ナイトリー",
+      "standalone": "スタンドアロン"
+    }
   },
   "toast": {
     "critical-error": {
@@ -348,7 +352,8 @@
     "notSet": "未設定",
     "goUpDown": "ノートのリストで上下する",
     "editBranchPrefix": "アクティブノートのクローンの <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/tree-concepts.html#prefix\">プレフィックス</a> を編集する",
-    "editShortcuts": "キーボードショートカットを編集"
+    "editShortcuts": "キーボードショートカットを編集",
+    "toggleArchivedNotes": "アーカイブされたノートを表示 / 非表示"
   },
   "import": {
     "importIntoNote": "ノートにインポート",
@@ -488,7 +493,7 @@
     "import_files": "ファイルをインポート",
     "export_note": "ノートをエクスポート",
     "delete_note": "ノートを削除",
-    "print_note": "ノートを印刷",
+    "print_note": "ノートを印刷...",
     "print_pdf": "PDFとしてエクスポート...",
     "convert_into_attachment": "添付ファイルに変換",
     "save_revision": "変更履歴を保存",
@@ -509,7 +514,8 @@
     "word_wrap_auto_description": "グローバル設定に従う",
     "word_wrap_on": "オン",
     "word_wrap_off": "オフ",
-    "save_named_revision": "名前を付けて変更履歴を保存..."
+    "save_named_revision": "名前を付けて変更履歴を保存...",
+    "print_or_export_to_pdf": "印刷 / PDF へのエクスポート..."
   },
   "command_palette": {
     "export_note_title": "ノートをエクスポート",
@@ -896,7 +902,13 @@
     "layout-horizontal-description": "ランチャーバーはタブバーの下にあり、タブバーは全幅に。",
     "modern_themes": "モダン",
     "legacy_themes": "レガシー",
-    "custom_themes": "カスタム"
+    "custom_themes": "カスタム",
+    "recommended": "推奨",
+    "color_scheme": "配色",
+    "color_scheme_system": "システム",
+    "color_scheme_light": "ライト",
+    "color_scheme_dark": "ダーク",
+    "color_scheme_custom_disabled": "カスタムテーマでは配色の上書きは利用できません"
   },
   "vim_key_bindings": {
     "use_vim_keybindings_in_code_notes": "Vimキーバインド",
@@ -1066,7 +1078,7 @@
     "help": "ヘルプ",
     "test_title": "接続テスト",
     "test_description": "同期サーバーへの接続をテストします。初期化されていない場合は、同期の設定を行います。",
-    "test_button": "同期試行",
+    "test_button": "同期テスト",
     "handshake_failed": "同期サーバーのハンドシェイクに失敗しました。エラー: {{message}}",
     "timeout_description": "接続が遅い場合に接続を断念するまでの待機時間。",
     "server_address_description": "同期先の Trilium サーバーの URL。",
@@ -1568,7 +1580,8 @@
     "title": "ノートマップ",
     "link-distance": "リンク距離",
     "fix-nodes": "ノードを修正",
-    "too-many-notes": "このサブツリーには {{count}} 件のノートが含まれており、ノートマップに表示できる {{max}} の上限を超えています。"
+    "too-many-notes": "ここには {{count}} 件のノートがあります。すべて表示すると処理速度が遅くなる可能性があります。",
+    "show-anyway": "マップを表示"
   },
   "owned_attribute_list": {
     "owned_attributes": "所有属性"
@@ -2541,5 +2554,78 @@
   },
   "spreadsheet": {
     "read-only": "このノートは読み取り専用です。"
+  },
+  "markdown_editor": {
+    "image_upload_failed": "画像 \"{{name}}\" をアップロードできません。"
+  },
+  "markdown_slash_commands": {
+    "date": "現在の日付と時刻を挿入",
+    "include": "別のノートを追加",
+    "image": "画像をアップロードして挿入",
+    "link": "ノートのリンクを挿入",
+    "math": "数式ブロックを挿入",
+    "footnote": "脚注を挿入",
+    "mermaid": "マーメイド図を挿入",
+    "admonition": "{{type}} の注意書きを挿入"
+  },
+  "mobile_note_navigator": {
+    "back": "1つ上の階層へ移動",
+    "loading": "読み込み中...",
+    "empty": "このノートには子ノートがありません。",
+    "children_count_other": "{{count}} ノート",
+    "add_child": "子ノートを追加",
+    "more_actions": "その他の操作"
+  },
+  "setup": {
+    "heading": "Trilium をはじめましょう",
+    "new-document": "新しいナレッジベース",
+    "new-document-description": "クリーンな知識ベースを用意し、すぐにはじめましょう。",
+    "sync-from-desktop": "デスクトップアプリを接続する",
+    "sync-from-desktop-description": "Trilium のデスクトップアプリは別のデバイスでのみ実行されています。このデバイスは、そのデスクトップアプリからデータを同期します。",
+    "sync-from-server": "既存のサーバーに接続",
+    "sync-from-server-description": "Trilium サーバーは別の場所（セルフホストまたはクラウド）で実行しています。このデバイスは、そのサーバーからデータを同期します。",
+    "next": "次へ",
+    "init-in-progress": "ドキュメントの初期化処理中",
+    "redirecting": "まもなくアプリケーションページにリダイレクトされます。",
+    "title": "セットアップ",
+    "sync-from-server-page-description": "既存のワークスペースに接続するには、以下にサーバー情報を入力してください。",
+    "sync-in-progress-title": "同期中",
+    "sync-in-progress-description": "デバイスが接続され、アイテムが同期されています。",
+    "button-back": "戻る",
+    "button-finish-setup": "セットアップを完了する",
+    "sync-step-connecting": "サーバーに接続中",
+    "sync-step-syncing": "データを同期中",
+    "sync-step-finalizing": "オプション設定",
+    "create-new-document-options-title": "どのようにはじめますか？",
+    "create-new-document-options-with-demo": "デモコンテンツ付き",
+    "create-new-document-options-with-demo-description": "サンプルコンテンツを使って Trilium を体験してみましょう。",
+    "create-new-document-options-empty": "空の状態",
+    "create-new-document-options-empty-description": "空のナレッジベースからはじめる。デモノートは後でインポートできます。",
+    "create-new-document-title": "ナレッジベースを準備中",
+    "create-new-document-description": "ほんの少しで完了します。",
+    "sync-illustration-this-device": "このデバイス",
+    "sync-illustration-desktop-app": "デスクトップアプリ",
+    "sync-illustration-server": "サーバー",
+    "sync-from-desktop-step1": "Trilium Notes のデスクトップ版を開いてください。",
+    "sync-from-desktop-step2": "Trilium メニューから「オプション」をクリックします。",
+    "sync-from-desktop-step3": "ノートツリーの「同期」カテゴリをクリックします。",
+    "sync-from-desktop-step4": "サーバーインスタンスアドレスを右側のいずれかのアドレスに変更し、「保存」をクリックします。",
+    "sync-from-desktop-step5": "\"同期テスト\" ボタンをクリックして、接続が成功したことを確認します。",
+    "sync-from-desktop-warning": "両方のデバイスが同じネットワークに接続されていることを確認してください。",
+    "sync-from-desktop-waiting": "接続を待機中...",
+    "advanced-options": "詳細オプション",
+    "sync-failed": "同期に失敗しました: {{message}}",
+    "server-host": "Trilium サーバーアドレス",
+    "server-host-placeholder": "https://<hostname>:<port>",
+    "server-password": "パスワード",
+    "proxy-server": "プロキシサーバー（任意）",
+    "proxy-server-placeholder": "https://<hostname>:<port>",
+    "proxy-instruction": "プロキシ設定を空欄にした場合、システムプロキシが使用されます。",
+    "dismiss-error": "エラーを閉じる",
+    "wrong-password": "パスワードが間違っています。もう一度お試しください。",
+    "language": "言語",
+    "continue": "続行",
+    "your-ip-addresses": "このデバイスのアドレス",
+    "sync-in-progress-banner": "ノートのサイズによっては、同期に時間がかかる場合があります。同期が完了するまで、他のアプリケーションに切り替えないでください。"
   }
 }

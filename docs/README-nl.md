@@ -98,34 +98,38 @@ Onze documentatie is beschikbaar in meerdere formaten:
     synchronisatieserver](https://docs.triliumnotes.org/user-guide/setup/server/cloud-hosting)
 * [Delen](https://docs.triliumnotes.org/user-guide/advanced-usage/sharing)
   (publiceer) notities naar het internet (publieklijk)
-* Strong [note
-  encryption](https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes)
-  with per-note granularity
-* Sketching diagrams, based on [Excalidraw](https://excalidraw.com/) (note type
-  "canvas")
-* [Relation
-  maps](https://docs.triliumnotes.org/user-guide/note-types/relation-map) and
-  [note/link maps](https://docs.triliumnotes.org/user-guide/note-types/note-map)
-  for visualizing notes and their relations
-* Mind maps, based on [Mind Elixir](https://docs.mind-elixir.com/)
-* [Geo maps](https://docs.triliumnotes.org/user-guide/collections/geomap) with
-  location pins and GPX tracks
-* [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - see [Advanced
-  showcases](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
-* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) for
-  automation
-* Scales well in both usability and performance upwards of 100 000 notes
-* Touch optimized [mobile
-  frontend](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend) for
-  smartphones and tablets
-* Built-in [dark
-  theme](https://docs.triliumnotes.org/user-guide/concepts/themes), support for
-  user themes
+* Sterke [encryptie van
+  notities](https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes)
+  met granulariteit per notitie
+* Teken diagrammen, gebaseerd op [Excalidraw](https://excalidraw.com/) (notitie
+  type "canvas")
+* [Relatie
+  overzichten](https://docs.triliumnotes.org/user-guide/note-types/relation-map)
+  en [notitie/koppeling
+  overzichten](https://docs.triliumnotes.org/user-guide/note-types/note-map)
+  voor het visualiseren van notities en hun relaties
+* Mind maps, gebaseerd op [Mind Elixir](https://docs.mind-elixir.com/)
+* [Geografische
+  kaarten](https://docs.triliumnotes.org/user-guide/collections/geomap) met
+  locatie pins en GPX tracks
+* [Scripting](https://docs.triliumnotes.org/user-guide/scripts) - zie
+  [Geavanceerde
+  voorbeelden](https://docs.triliumnotes.org/user-guide/advanced-usage/advanced-showcases)
+* [REST API](https://docs.triliumnotes.org/user-guide/advanced-usage/etapi) voor
+  automatisering
+* Schaalt goed in zowel bruikbaarheid als performantie met meer dan 100 000
+  notities
+* Voor aanraakschermen geoptimaliseerde [mobiele
+  interface](https://docs.triliumnotes.org/user-guide/setup/mobile-frontend)
+  voor smartphones en tablets
+* Ingebouwd [donker
+  thema](https://docs.triliumnotes.org/user-guide/concepts/themes),
+  ondersteuning voor gebruikera thema's
 * [Evernote](https://docs.triliumnotes.org/user-guide/concepts/import-export/evernote)
-  and [Markdown import &
-  export](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
-* [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) for
-  easy saving of web content
+  en [Markdown importeren &
+  exporteren](https://docs.triliumnotes.org/user-guide/concepts/import-export/markdown)
+* [Web Clipper](https://docs.triliumnotes.org/user-guide/setup/web-clipper) om
+  eenvoudig webinhoud op te slaan
 * Customizable UI (sidebar buttons, user-defined widgets, ...)
 * [Metrics](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics),
   along with a Grafana Dashboard.
