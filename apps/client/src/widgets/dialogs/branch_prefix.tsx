@@ -85,12 +85,10 @@ export default function BranchPrefixDialog() {
         setShown(false);
     }
 
-    const isSingleBranch = branches.length === 1;
-
     return (
         <Modal
             className="branch-prefix-dialog"
-            title={isSingleBranch ? t("branch_prefix.edit_branch_prefix") : t("branch_prefix.edit_branch_prefix_multiple", { count: branches.length })}
+            title={branches.length === 1 ? t("branch_prefix.edit_branch_prefix") : t("branch_prefix.edit_branch_prefix_multiple", { count: branches.length })}
             size="lg"
             onShown={() => branchInput.current?.select()}
             onHidden={() => setShown(false)}
@@ -100,30 +98,23 @@ export default function BranchPrefixDialog() {
             show={shown}
         >
             <FormGroup label={t("branch_prefix.prefix")} name="prefix">
-                <div class="input-group">
-                    <input class="branch-prefix-input form-control" value={prefix} ref={branchInput}
-                        onChange={(e) => setPrefix((e.target as HTMLInputElement).value)} />
-                    {isSingleBranch && branches[0] && (
-                        <div class="branch-prefix-note-title input-group-text"> - {branches[0].getNoteFromCache()?.title}</div>
-                    )}
-                </div>
+                <input class="branch-prefix-input form-control" value={prefix} ref={branchInput}
+                    onChange={(e) => setPrefix((e.target as HTMLInputElement).value)} />
             </FormGroup>
-            {!isSingleBranch && (
-                <div className="branch-prefix-notes-list">
-                    <strong>{t("branch_prefix.affected_branches", { count: branches.length })}</strong>
-                    <ul>
-                        {branches.map((branch) => {
-                            const note = branch.getNoteFromCache();
-                            return note && (
-                                <li key={branch.branchId}>
-                                    {branch.prefix && <span className="branch-prefix-current">{branch.prefix} - </span>}
-                                    {note.title}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
-            )}
+            <div className="branch-prefix-notes-list">
+                <strong>{t("branch_prefix.preview_in_tree")}</strong>
+                <ul>
+                    {branches.map((branch) => {
+                        const note = branch.getNoteFromCache();
+                        return note && (
+                            <li key={branch.branchId}>
+                                {prefix && <span className="branch-prefix-current">{prefix} - </span>}
+                                {note.title}
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
         </Modal>
     );
 }

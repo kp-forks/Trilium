@@ -63,11 +63,12 @@
     "edit_branch_prefix": "Edit branch prefix",
     "edit_branch_prefix_multiple": "Edit branch prefix for {{count}} branches",
     "help_on_tree_prefix": "Help on Tree prefix",
-    "prefix": "Prefix: ",
+    "prefix": "Prefix",
     "save": "Save",
     "branch_prefix_saved": "Branch prefix has been saved.",
     "branch_prefix_saved_multiple": "Branch prefix has been saved for {{count}} branches.",
-    "affected_branches": "Affected branches ({{count}}):"
+    "affected_branches": "Affected branches ({{count}}):",
+    "preview_in_tree": "Preview in tree"
   },
   "bulk_actions": {
     "bulk_actions": "Bulk actions",
