@@ -132,9 +132,6 @@ importers:
       eslint-config-preact:
         specifier: 2.0.0
         version: 2.0.0(eslint@10.3.0(jiti@2.6.1))
-      eslint-config-prettier:
-        specifier: 10.1.8
-        version: 10.1.8(eslint@10.3.0(jiti@2.6.1))
       eslint-plugin-playwright:
         specifier: 2.10.2
         version: 2.10.2(eslint@10.3.0(jiti@2.6.1))
@@ -156,9 +153,6 @@ importers:
       jsonc-eslint-parser:
         specifier: 3.1.0
         version: 3.1.0
-      react-refresh:
-        specifier: 0.18.0
-        version: 0.18.0
       rollup-plugin-webpack-stats:
         specifier: 3.1.2
         version: 3.1.2(rolldown@1.0.0-rc.17)(rollup@4.60.1)(vite@8.0.10(@types/node@24.12.2)(esbuild@0.28.0)(jiti@2.6.1)(less@4.1.3)(sass-embedded@1.91.0)(sass@1.91.0)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.3))
@@ -8740,12 +8734,6 @@ packages:
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0
 
-  eslint-config-prettier@10.1.8:
-    resolution: {integrity: sha512-82GZUjRS0p/jganf6q1rEO25VSoHH0hKPCTrgillPjdI/3bgBhAE1QzHrHTizjpRvy6pGAvKjDJtk2pF9NDq8w==}
-    hasBin: true
-    peerDependencies:
-      eslint: '>=7.0.0'
-
   eslint-linter-browserify@10.3.0:
     resolution: {integrity: sha512-wrI/6uxKnVA6qabsiM6Q1SfqgoDvwX3f3DepbrDxdKn0yqDDY/Y2xvUR0TjhB/0s77gVxZd6FTKz5dXW2RTzmA==}
 
@@ -12154,10 +12142,6 @@ packages:
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
-
-  react-refresh@0.18.0:
-    resolution: {integrity: sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==}
-    engines: {node: '>=0.10.0'}
 
   react-remove-scroll-bar@2.3.8:
     resolution: {integrity: sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q==}
@@ -24004,10 +23988,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-config-prettier@10.1.8(eslint@10.3.0(jiti@2.6.1)):
-    dependencies:
-      eslint: 10.3.0(jiti@2.6.1)
-
   eslint-linter-browserify@10.3.0: {}
 
   eslint-plugin-ckeditor5-rules@15.0.0:
@@ -27916,8 +27896,6 @@ snapshots:
       react: 16.14.0
 
   react-is@16.13.1: {}
-
-  react-refresh@0.18.0: {}
 
   react-remove-scroll-bar@2.3.8(@types/react@19.1.7)(react@19.2.4):
     dependencies:
