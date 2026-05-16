@@ -50,24 +50,37 @@ public class MainActivity extends BridgeActivity {
     /**
      * Injects system bar insets into the WebView as CSS custom properties,
      * since Android's WebView doesn't populate env(safe-area-inset-*).
+     * Also handles IME (keyboard) insets to shrink the viewport instead of scrolling.
      */
     private void forwardInsetsToWebView() {
         View decorView = getWindow().getDecorView();
         ViewCompat.setOnApplyWindowInsetsListener(decorView, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            boolean isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
             float density = getResources().getDisplayMetrics().density;
 
             int top = Math.round(systemBars.top / density);
             int bottom = Math.round(systemBars.bottom / density);
             int left = Math.round(systemBars.left / density);
             int right = Math.round(systemBars.right / density);
+            int keyboardHeight = Math.round(ime.bottom / density);
 
             String js = "document.documentElement.style.setProperty('--safe-area-inset-top', '" + top + "px');"
                     + "document.documentElement.style.setProperty('--safe-area-inset-bottom', '" + bottom + "px');"
                     + "document.documentElement.style.setProperty('--safe-area-inset-left', '" + left + "px');"
-                    + "document.documentElement.style.setProperty('--safe-area-inset-right', '" + right + "px');";
+                    + "document.documentElement.style.setProperty('--safe-area-inset-right', '" + right + "px');"
+                    + "document.documentElement.style.setProperty('--keyboard-height', '" + keyboardHeight + "px');";
 
             getBridge().getWebView().evaluateJavascript(js, null);
+
+            // Resize the WebView so the CSS viewport shrinks when the keyboard is open
+            View webView = getBridge().getWebView();
+            if (webView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) webView.getLayoutParams();
+                params.bottomMargin = isKeyboardVisible ? ime.bottom : 0;
+                webView.requestLayout();
+            }
 
             return insets;
         });
