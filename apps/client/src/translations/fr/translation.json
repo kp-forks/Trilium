@@ -2509,14 +2509,6 @@
   "revisions_snapshot": {
     "title": "Révisions de la note"
   },
-  "standalone": {
-    "warning_tooltip": "Vous utilisez Trilium en mode autonome. Certaines fonctionnalités ne sont pas disponibles et vous pourriez rencontrer des problèmes ou des pertes de données. Pour une meilleure expérience, utilisez l’application de bureau ou un serveur auto-hébergé.",
-    "badge_label": "Autonome"
-  },
-  "mobile": {
-    "badge_label": "Mobile",
-    "warning_tooltip": "Vous utilisez Trilium en mode mobile. Certaines fonctionnalités ne sont pas disponibles. Pour une meilleure expérience, utilisez l’application de bureau ou l’affichage bureau."
-  },
   "markdown_editor": {
     "image_upload_failed": "Impossible de téléverser l’image \"{{name}}\"."
   },
