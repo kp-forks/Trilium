@@ -17,7 +17,11 @@
     "github_tooltip": "Signalez des bugs, proposez des fonctionnalités ou contribuez sur GitHub",
     "license_tooltip": "Voir la licence",
     "donate": "Faire un don",
-    "donate_tooltip": "Faites un don pour soutenir ce projet"
+    "donate_tooltip": "Faites un don pour soutenir ce projet",
+    "channel": {
+      "nightly": "Nightly",
+      "standalone": "Web autonome"
+    }
   },
   "toast": {
     "critical-error": {
@@ -2650,7 +2654,8 @@
     "wrong-password": "Mot de passe incorrect. Veuillez réessayer.",
     "language": "Langue",
     "continue": "Continuer",
-    "your-ip-addresses": "Adresses pour cet appareil"
+    "your-ip-addresses": "Adresses pour cet appareil",
+    "sync-in-progress-banner": "La synchronisation peut prendre quelques instants selon le volume de vos notes. Merci de rester sur cette application jusqu’à la fin de l’opération."
   },
   "common": {
     "save": "Enregistrer",
