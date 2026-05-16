@@ -545,9 +545,6 @@ importers:
       '@triliumnext/client':
         specifier: workspace:*
         version: link:../client
-      '@triliumnext/commons':
-        specifier: workspace:*
-        version: link:../../packages/commons
       '@triliumnext/core':
         specifier: workspace:*
         version: link:../../packages/trilium-core
