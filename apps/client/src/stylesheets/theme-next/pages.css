@@ -195,6 +195,7 @@ body.desktop .options-section:not(.tn-no-card) {
 }
 
 .options-section-card {
+    container-type: inline-size;
     box-shadow: var(--card-box-shadow);
     border: 1px solid var(--card-border-color);
     border-radius: 8px;
