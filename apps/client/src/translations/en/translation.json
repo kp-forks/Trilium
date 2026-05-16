@@ -13,6 +13,10 @@
       "original-dev": "On 25th December 2017, Zadam released the first beta of Trilium (written with a single \"l\", unlike the flower). Dissatisfied with existing note organizers, he built a powerful self-hosted hierarchical knowledge base that gathered over 22,000 GitHub stars. In 2024, as life got busier, he placed the project into maintenance mode."
     },
     "contributor_full_list": "See the entire community",
+    "channel": {
+      "nightly": "Nightly",
+      "standalone": "Standalone"
+    },
     "data_directory": "Data directory:",
     "github_tooltip": "Report bugs, suggest features, or contribute on GitHub",
     "license_tooltip": "View license",
