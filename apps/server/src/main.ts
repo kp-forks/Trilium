@@ -12,7 +12,7 @@ import ServerBackupService from "./backup_provider.js";
 import ClsHookedExecutionContext from "./cls_provider.js";
 import { getIntegrationTestDbPath, loadCoreSchema } from "./core_assets.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
-import NodejsInAppHelpProvider from "./in_app_help_provider.js";
+import NodejsInAppHelpProvider from "./in_app_help_server_provider.js";
 import ServerLogService from "./log_provider.js";
 import ServerPlatformProvider from "./platform_provider.js";
 import dataDirs from "./services/data_dir.js";

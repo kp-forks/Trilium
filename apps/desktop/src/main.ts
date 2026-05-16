@@ -3,7 +3,7 @@ import ServerBackupService from "@triliumnext/server/src/backup_provider.js";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import { loadCoreSchema } from "@triliumnext/server/src/core_assets.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
-import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provider.js";
+import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_server_provider.js";
 import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import port from "@triliumnext/server/src/services/port.js";

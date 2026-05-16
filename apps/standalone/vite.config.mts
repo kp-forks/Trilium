@@ -133,7 +133,7 @@ let plugins: any = [
                 src: [
                     "../../server/src/assets/**/*",
                     // Exclude the User Guide (~20 MB) since it's not needed in standalone mode.
-                    // The standalone meta file is included separately below.
+                    // Only the meta file is included for the in-app help tree structure.
                     "!../../server/src/assets/doc_notes/en/User Guide/**"
                 ],
                 dest: "server-assets",

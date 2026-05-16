@@ -1,6 +1,7 @@
 import debounce from "@triliumnext/client/src/services/debounce.js";
 import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/core";
-import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provider.js";
+import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_server_provider.js";
+import StandaloneInAppHelpProvider from "@triliumnext/server/src/in_app_help_standalone_provider.js";
 import cls from "@triliumnext/server/src/services/cls.js";
 import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
 import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
@@ -249,8 +250,8 @@ async function cleanUpMeta(outputPath: string, minify: boolean) {
         const subtree = new NodejsInAppHelpProvider().parseNoteMetaFile(meta, BASE_URL);
         await fs.writeFile(metaPath, JSON.stringify(subtree));
 
-        // Generate standalone variant: doc notes with docUrl become webView notes with webViewSrc
-        const standaloneSubtree = NodejsInAppHelpProvider.transformForStandalone(subtree);
+        // Generate standalone meta: webView-based, pointing to online docs.
+        const standaloneSubtree = new StandaloneInAppHelpProvider().parseNoteMetaFile(meta, BASE_URL);
         const standaloneMetaPath = path.join(outputPath, "!!!meta.standalone.json");
         await fs.writeFile(standaloneMetaPath, JSON.stringify(standaloneSubtree));
     } else {

@@ -1,27 +1,22 @@
 import type { HiddenSubtreeItem } from "@triliumnext/commons";
 import type { InAppHelpProvider } from "@triliumnext/core";
-import fs from "fs";
 import path from "path";
 
 import becca from "./becca/becca.js";
 import type BNote from "./becca/entities/bnote.js";
 import type NoteMeta from "./services/meta/note_meta.js";
 import type { NoteMetaFile } from "./services/meta/note_meta.js";
-import { RESOURCE_DIR } from "./services/resource_dir.js";
 
-export default class NodejsInAppHelpProvider implements InAppHelpProvider {
+/**
+ * Abstract base class for in-app help providers. Contains shared logic for
+ * parsing NoteMetaFile into HiddenSubtreeItem[] and cleaning up stale help notes.
+ *
+ * Subclasses define how text notes are represented (e.g. doc with offline content,
+ * or webView pointing to online docs).
+ */
+export abstract class AbstractInAppHelpProvider implements InAppHelpProvider {
 
-    getHelpHiddenSubtreeData(): HiddenSubtreeItem[] {
-        const helpDir = path.join(RESOURCE_DIR, "doc_notes", "en", "User Guide");
-        const metaFilePath = path.join(helpDir, "!!!meta.json");
-
-        try {
-            return JSON.parse(fs.readFileSync(metaFilePath).toString("utf-8"));
-        } catch (e) {
-            console.warn(e);
-            return [];
-        }
-    }
+    abstract getHelpHiddenSubtreeData(): HiddenSubtreeItem[];
 
     parseNoteMetaFile(noteMetaFile: NoteMetaFile, baseUrl?: string): HiddenSubtreeItem[] {
         if (!noteMetaFile.files) {
@@ -73,21 +68,11 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
             }
         }
 
-        // Handle text notes
+        // Handle text notes — subclasses decide the representation
         if (noteMeta.type === "text" && noteMeta.dataFileName) {
             const docPath = `${docNameRoot}/${path.basename(noteMeta.dataFileName, ".html")}`.substring(1);
-            item.attributes?.push({
-                type: "label",
-                name: "docName",
-                value: docPath
-            });
-
-            if (currentUrl) {
-                item.attributes?.push({
-                    type: "label",
-                    name: "docUrl",
-                    value: currentUrl
-                });
+            if (!this.handleTextNote(item, docPath, currentUrl)) {
+                return null;
             }
         }
 
@@ -101,10 +86,10 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
         if (noteMeta.children) {
             const children: HiddenSubtreeItem[] = [];
             for (const childMeta of noteMeta.children) {
-                let newDocNameRoot = noteMeta.dirFileName ? `${docNameRoot}/${noteMeta.dirFileName}` : docNameRoot;
-                const item = this.parseNoteMeta(childMeta, newDocNameRoot, currentUrl);
-                if (item) {
-                    children.push(item);
+                const newDocNameRoot = noteMeta.dirFileName ? `${docNameRoot}/${noteMeta.dirFileName}` : docNameRoot;
+                const child = this.parseNoteMeta(childMeta, newDocNameRoot, currentUrl);
+                if (child) {
+                    children.push(child);
                 }
             }
 
@@ -121,59 +106,18 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
         return item;
     }
 
-    private getShareAlias(noteMeta: NoteMeta): string | undefined {
-        return noteMeta.attributes?.find((a) => a.type === "label" && a.name === "shareAlias")?.value;
-    }
-
     /**
-     * Transforms the help subtree for standalone mode: converts `doc` notes that have a `docUrl`
-     * into `webView` notes with `webViewSrc`, removing the `docName` attribute.
-     * Notes of type `doc` without a `docUrl` are excluded since their content isn't available offline.
+     * Defines how a text note with content is represented in the help tree.
+     * @param item the HiddenSubtreeItem being built (mutate in place)
+     * @param docPath the documentation path (e.g. "User Guide/Quick Start")
+     * @param currentUrl the online URL for this note (if available)
+     * @returns true to include the item, false to exclude it
      */
-    static transformForStandalone(items: HiddenSubtreeItem[]): HiddenSubtreeItem[] {
-        const result: HiddenSubtreeItem[] = [];
-        for (const item of items) {
-            const transformed = NodejsInAppHelpProvider.transformItemForStandalone(item);
-            if (transformed) {
-                result.push(transformed);
-            }
-        }
-        return result;
-    }
-
-    private static transformItemForStandalone(item: HiddenSubtreeItem): HiddenSubtreeItem | null {
-        const docUrl = item.attributes?.find(a => a.name === "docUrl")?.value;
-        const hasDocName = item.attributes?.some(a => a.name === "docName");
-
-        // If it's a doc note with content but no online URL, skip it
-        if (item.type === "doc" && hasDocName && !docUrl) {
-            return null;
-        }
-
-        const newItem: HiddenSubtreeItem = { ...item };
-
-        // Convert doc notes with docUrl to webView notes
-        if (item.type === "doc" && hasDocName && docUrl) {
-            newItem.type = "webView";
-            newItem.enforceAttributes = true;
-            newItem.attributes = (item.attributes ?? [])
-                .filter(a => a.name !== "docName" && a.name !== "docUrl")
-                .concat({ type: "label", name: "webViewSrc", value: docUrl });
-        }
-
-        // Recursively transform children
-        if (item.children) {
-            newItem.children = NodejsInAppHelpProvider.transformForStandalone(item.children);
-        }
-
-        return newItem;
-    }
+    protected abstract handleTextNote(item: HiddenSubtreeItem, docPath: string, currentUrl: string | undefined): boolean;
 
     /**
      * Iterates recursively through the help subtree that the user has and compares it against the definition
      * to remove any notes that are no longer present in the latest version of the help.
-     *
-     * @param helpDefinition the hidden subtree definition for the help, to compare against the user's structure.
      */
     cleanUpHelp(helpDefinition: HiddenSubtreeItem[]): void {
         function getFlatIds(items: HiddenSubtreeItem | HiddenSubtreeItem[]) {
@@ -222,4 +166,7 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
         }
     }
 
+    private getShareAlias(noteMeta: NoteMeta): string | undefined {
+        return noteMeta.attributes?.find((a) => a.type === "label" && a.name === "shareAlias")?.value;
+    }
 }

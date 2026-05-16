@@ -1,12 +1,13 @@
-import type { HiddenSubtreeItem } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
-import NodejsInAppHelpProvider from "../in_app_help_provider.js";
+import NodejsInAppHelpProvider from "../in_app_help_server_provider.js";
+import StandaloneInAppHelpProvider from "../in_app_help_standalone_provider.js";
 import type NoteMeta from "./meta/note_meta.js";
 
-const provider = new NodejsInAppHelpProvider();
+const serverProvider = new NodejsInAppHelpProvider();
+const standaloneProvider = new StandaloneInAppHelpProvider();
 
-describe("In-app help", () => {
+describe("In-app help (server provider)", () => {
     it("preserves custom folder icon", () => {
         const meta: NoteMeta = {
             isClone: false,
@@ -33,7 +34,7 @@ describe("In-app help", () => {
             children: []
         };
 
-        const item = provider.parseNoteMeta(meta, "/");
+        const item = serverProvider.parseNoteMeta(meta, "/");
         const icon = item?.attributes?.find((a) => a.name === "iconClass");
         expect(icon?.value).toBe("bx bx-star");
     });
@@ -91,9 +92,8 @@ describe("In-app help", () => {
         };
 
         const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [meta] };
-        const items = provider.parseNoteMetaFile(metaFile, "https://docs.triliumnotes.org");
+        const items = serverProvider.parseNoteMetaFile(metaFile, "https://docs.triliumnotes.org");
 
-        // The root's children are returned, so items[0] is "Feature Highlights"
         const child = items[0];
         const docUrl = child?.attributes?.find((a) => a.name === "docUrl");
         expect(docUrl?.value).toBe("https://docs.triliumnotes.org/user-guide/feature-highlights");
@@ -152,7 +152,7 @@ describe("In-app help", () => {
         };
 
         const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [meta] };
-        const items = provider.parseNoteMetaFile(metaFile);
+        const items = serverProvider.parseNoteMetaFile(metaFile);
 
         const child = items[0];
         const docUrl = child?.attributes?.find((a) => a.name === "docUrl");
@@ -185,107 +185,133 @@ describe("In-app help", () => {
             children: []
         };
 
-        const item = provider.parseNoteMeta(meta, "/");
+        const item = serverProvider.parseNoteMeta(meta, "/");
         expect(item).toBeFalsy();
     });
 });
 
-describe("transformForStandalone", () => {
-    it("converts doc notes with docUrl to webView notes", () => {
-        const items: HiddenSubtreeItem[] = [{
-            id: "_help_abc123",
-            title: "Test Note",
-            type: "doc",
+describe("In-app help (standalone provider)", () => {
+    it("converts text notes with URL to webView", () => {
+        const meta: NoteMeta = {
+            isClone: false,
+            noteId: "childNote456",
+            notePath: [ "rootNote123", "childNote456" ],
+            title: "Feature Highlights",
+            notePosition: 10,
+            prefix: null,
+            isExpanded: false,
+            type: "text",
+            mime: "text/html",
             attributes: [
-                { type: "label", name: "docName", value: "User Guide/Test Note" },
-                { type: "label", name: "docUrl", value: "https://docs.triliumnotes.org/test-note" },
-                { type: "label", name: "iconClass", value: "bx bx-file" }
-            ]
-        }];
+                {
+                    type: "label",
+                    name: "shareAlias",
+                    value: "feature-highlights",
+                    isInheritable: false,
+                    position: 10
+                }
+            ],
+            format: "html",
+            dataFileName: "Feature Highlights.html",
+            attachments: [],
+            children: []
+        };
 
-        const result = NodejsInAppHelpProvider.transformForStandalone(items);
+        const item = standaloneProvider.parseNoteMeta(meta, "/", "https://docs.triliumnotes.org");
 
-        expect(result).toHaveLength(1);
-        expect(result[0].type).toBe("webView");
-        expect(result[0].enforceAttributes).toBe(true);
-        expect(result[0].attributes).toContainEqual({
-            type: "label", name: "webViewSrc", value: "https://docs.triliumnotes.org/test-note"
+        expect(item).not.toBeNull();
+        expect(item!.type).toBe("webView");
+        expect(item!.enforceAttributes).toBe(true);
+        expect(item!.attributes).toContainEqual({
+            type: "label", name: "webViewSrc", value: "https://docs.triliumnotes.org/feature-highlights"
         });
-        expect(result[0].attributes?.find(a => a.name === "docName")).toBeUndefined();
-        expect(result[0].attributes?.find(a => a.name === "docUrl")).toBeUndefined();
-        expect(result[0].attributes?.find(a => a.name === "iconClass")).toBeDefined();
+        expect(item!.attributes?.find(a => a.name === "docName")).toBeUndefined();
     });
 
-    it("excludes doc notes without docUrl", () => {
-        const items: HiddenSubtreeItem[] = [{
-            id: "_help_abc123",
-            title: "Offline Only Note",
-            type: "doc",
-            attributes: [
-                { type: "label", name: "docName", value: "User Guide/Offline" },
-                { type: "label", name: "iconClass", value: "bx bx-file" }
-            ]
-        }];
+    it("excludes text notes without URL", () => {
+        const meta: NoteMeta = {
+            isClone: false,
+            noteId: "childNote456",
+            notePath: [ "rootNote123", "childNote456" ],
+            title: "Feature Highlights",
+            notePosition: 10,
+            prefix: null,
+            isExpanded: false,
+            type: "text",
+            mime: "text/html",
+            attributes: [],
+            format: "html",
+            dataFileName: "Feature Highlights.html",
+            attachments: [],
+            children: []
+        };
 
-        const result = NodejsInAppHelpProvider.transformForStandalone(items);
-        expect(result).toHaveLength(0);
+        const item = standaloneProvider.parseNoteMeta(meta, "/");
+        expect(item).toBeNull();
     });
 
-    it("preserves book and webView notes unchanged", () => {
-        const items: HiddenSubtreeItem[] = [
-            {
-                id: "_help_book1",
-                title: "Section",
-                type: "book",
-                attributes: [{ type: "label", name: "iconClass", value: "bx bx-folder" }]
-            },
-            {
-                id: "_help_wv1",
-                title: "API Docs",
-                type: "webView",
-                attributes: [{ type: "label", name: "webViewSrc", value: "/api/docs" }]
-            }
-        ];
+    it("preserves folder notes", () => {
+        const meta: NoteMeta = {
+            isClone: false,
+            noteId: "folderNote",
+            notePath: [ "folderNote" ],
+            title: "Section",
+            notePosition: 1,
+            prefix: null,
+            isExpanded: false,
+            type: "text",
+            mime: "text/html",
+            attributes: [],
+            format: "html",
+            attachments: [],
+            dirFileName: "Section",
+            children: []
+        };
 
-        const result = NodejsInAppHelpProvider.transformForStandalone(items);
-
-        expect(result).toHaveLength(2);
-        expect(result[0].type).toBe("book");
-        expect(result[1].type).toBe("webView");
+        const item = standaloneProvider.parseNoteMeta(meta, "/");
+        expect(item).not.toBeNull();
+        expect(item!.type).toBe("book");
     });
 
-    it("recursively transforms children", () => {
-        const items: HiddenSubtreeItem[] = [{
-            id: "_help_parent",
-            title: "Parent",
-            type: "book",
-            attributes: [{ type: "label", name: "iconClass", value: "bx bx-folder" }],
+    it("excludes children without URL when no baseUrl provided", () => {
+        const meta: NoteMeta = {
+            isClone: false,
+            noteId: "rootNote123",
+            notePath: [ "rootNote123" ],
+            title: "User Guide",
+            notePosition: 1,
+            prefix: null,
+            isExpanded: false,
+            type: "text",
+            mime: "text/html",
+            attributes: [],
+            format: "html",
+            dirFileName: "User Guide",
+            attachments: [],
             children: [
                 {
-                    id: "_help_child1",
-                    title: "Child With URL",
-                    type: "doc",
-                    attributes: [
-                        { type: "label", name: "docName", value: "User Guide/Child" },
-                        { type: "label", name: "docUrl", value: "https://docs.triliumnotes.org/child" }
-                    ]
-                },
-                {
-                    id: "_help_child2",
-                    title: "Child Without URL",
-                    type: "doc",
-                    attributes: [
-                        { type: "label", name: "docName", value: "User Guide/Child2" }
-                    ]
+                    isClone: false,
+                    noteId: "childNote",
+                    notePath: [ "rootNote123", "childNote" ],
+                    title: "Some Page",
+                    notePosition: 10,
+                    prefix: null,
+                    isExpanded: false,
+                    type: "text",
+                    mime: "text/html",
+                    attributes: [],
+                    format: "html",
+                    dataFileName: "Some Page.html",
+                    attachments: [],
+                    children: []
                 }
             ]
-        }];
+        };
 
-        const result = NodejsInAppHelpProvider.transformForStandalone(items);
+        const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [meta] };
+        // No baseUrl → no URLs for any notes → all text notes excluded
+        const items = standaloneProvider.parseNoteMetaFile(metaFile);
 
-        expect(result).toHaveLength(1);
-        expect(result[0].children).toHaveLength(1);
-        expect(result[0].children![0].type).toBe("webView");
-        expect(result[0].children![0].id).toBe("_help_child1");
+        expect(items).toHaveLength(0);
     });
 });
