@@ -19,7 +19,6 @@ export default function NoteBadges() {
             <ReadOnlyBadge />
             <ShareBadge />
             <ClippedNoteBadge />
-            <DocUrlBadge />
             <ExecuteBadge />
             <ActiveContentBadges />
         </div>
@@ -80,30 +79,30 @@ function ShareBadge() {
 
 function ClippedNoteBadge() {
     const { note } = useNoteContext();
-    const [ pageUrl ] = useNoteLabel(note, "pageUrl");
+    const isHelpNote = !!note?.noteId.startsWith("_help");
+    const [ url ] = useNoteLabel(note, isHelpNote ? "docUrl" : "pageUrl");
 
-    return (pageUrl &&
+    if (!url) return;
+
+    if (isHelpNote) {
+        return (
+            <Badge
+                className="doc-url-badge"
+                icon="bx bx-file-find"
+                text={t("breadcrumb_badges.doc_url")}
+                tooltip={t("breadcrumb_badges.doc_url_description")}
+                href={url}
+            />
+        );
+    }
+
+    return (
         <Badge
             className="clipped-note-badge"
             icon="bx bx-globe"
             text={t("breadcrumb_badges.clipped_note")}
-            tooltip={t("breadcrumb_badges.clipped_note_description", { url: pageUrl })}
-            href={pageUrl}
-        />
-    );
-}
-
-function DocUrlBadge() {
-    const { note } = useNoteContext();
-    const [ docUrl ] = useNoteLabel(note, "docUrl");
-
-    return (docUrl &&
-        <Badge
-            className="doc-url-badge"
-            icon="bx bx-file-find"
-            text={t("breadcrumb_badges.doc_url")}
-            tooltip={t("breadcrumb_badges.doc_url_description")}
-            href={docUrl}
+            tooltip={t("breadcrumb_badges.clipped_note_description", { url })}
+            href={url}
         />
     );
 }
