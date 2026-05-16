@@ -1,17 +1,18 @@
+import "./branch_prefix.css";
+
 import { useRef, useState } from "preact/hooks";
-import appContext from "../../components/app_context.js";
+
+import { type ContextMenuCommandData, default as appContext } from "../../components/app_context.js";
+import FBranch from "../../entities/fbranch.js";
+import froca from "../../services/froca.js";
 import { t } from "../../services/i18n.js";
 import server from "../../services/server.js";
 import toast from "../../services/toast.js";
-import Modal from "../react/Modal.jsx";
-import froca from "../../services/froca.js";
 import tree from "../../services/tree.js";
 import Button from "../react/Button.jsx";
 import FormGroup from "../react/FormGroup.js";
 import { useTriliumEvent } from "../react/hooks.jsx";
-import FBranch from "../../entities/fbranch.js";
-import type { ContextMenuCommandData } from "../../components/app_context.js";
-import "./branch_prefix.css";
+import Modal from "../react/Modal.jsx";
 
 // Virtual branches (e.g., from search results) start with this prefix
 const VIRTUAL_BRANCH_PREFIX = "virt-";
@@ -91,7 +92,7 @@ export default function BranchPrefixDialog() {
             className="branch-prefix-dialog"
             title={isSingleBranch ? t("branch_prefix.edit_branch_prefix") : t("branch_prefix.edit_branch_prefix_multiple", { count: branches.length })}
             size="lg"
-            onShown={() => branchInput.current?.focus()}
+            onShown={() => branchInput.current?.select()}
             onHidden={() => setShown(false)}
             onSubmit={onSubmit}
             helpPageId="TBwsyfadTA18"
@@ -128,7 +129,7 @@ export default function BranchPrefixDialog() {
 }
 
 async function savePrefix(branchId: string, prefix: string) {
-    await server.put(`branches/${branchId}/set-prefix`, { prefix: prefix });
+    await server.put(`branches/${branchId}/set-prefix`, { prefix });
     toast.showMessage(t("branch_prefix.branch_prefix_saved"));
 }
 
