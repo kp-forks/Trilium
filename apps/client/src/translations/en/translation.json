@@ -1,12 +1,4 @@
 {
-  "standalone": {
-    "badge_label": "Standalone",
-    "warning_tooltip": "You are running Trilium in standalone mode. Some features are not available, and you may experience issues or data loss. Use the desktop application or self-hosted server for the best experience."
-  },
-  "mobile": {
-    "badge_label": "Mobile",
-    "warning_tooltip": "You are running Trilium in mobile mode. Some features are not available. Use the desktop application or desktop layout for the best experience."
-  },
   "about": {
     "version_label": "Version:",
     "version": "{{appVersion}} (database: {{dbVersion}}, sync protocol: {{syncVersion}})",
