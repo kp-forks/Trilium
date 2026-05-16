@@ -1,3 +1,4 @@
+import type { HiddenSubtreeItem } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
 import NodejsInAppHelpProvider from "../in_app_help_provider.js";
@@ -186,5 +187,105 @@ describe("In-app help", () => {
 
         const item = provider.parseNoteMeta(meta, "/");
         expect(item).toBeFalsy();
+    });
+});
+
+describe("transformForStandalone", () => {
+    it("converts doc notes with docUrl to webView notes", () => {
+        const items: HiddenSubtreeItem[] = [{
+            id: "_help_abc123",
+            title: "Test Note",
+            type: "doc",
+            attributes: [
+                { type: "label", name: "docName", value: "User Guide/Test Note" },
+                { type: "label", name: "docUrl", value: "https://docs.triliumnotes.org/test-note" },
+                { type: "label", name: "iconClass", value: "bx bx-file" }
+            ]
+        }];
+
+        const result = NodejsInAppHelpProvider.transformForStandalone(items);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].type).toBe("webView");
+        expect(result[0].enforceAttributes).toBe(true);
+        expect(result[0].attributes).toContainEqual({
+            type: "label", name: "webViewSrc", value: "https://docs.triliumnotes.org/test-note"
+        });
+        expect(result[0].attributes?.find(a => a.name === "docName")).toBeUndefined();
+        expect(result[0].attributes?.find(a => a.name === "docUrl")).toBeUndefined();
+        expect(result[0].attributes?.find(a => a.name === "iconClass")).toBeDefined();
+    });
+
+    it("excludes doc notes without docUrl", () => {
+        const items: HiddenSubtreeItem[] = [{
+            id: "_help_abc123",
+            title: "Offline Only Note",
+            type: "doc",
+            attributes: [
+                { type: "label", name: "docName", value: "User Guide/Offline" },
+                { type: "label", name: "iconClass", value: "bx bx-file" }
+            ]
+        }];
+
+        const result = NodejsInAppHelpProvider.transformForStandalone(items);
+        expect(result).toHaveLength(0);
+    });
+
+    it("preserves book and webView notes unchanged", () => {
+        const items: HiddenSubtreeItem[] = [
+            {
+                id: "_help_book1",
+                title: "Section",
+                type: "book",
+                attributes: [{ type: "label", name: "iconClass", value: "bx bx-folder" }]
+            },
+            {
+                id: "_help_wv1",
+                title: "API Docs",
+                type: "webView",
+                attributes: [{ type: "label", name: "webViewSrc", value: "/api/docs" }]
+            }
+        ];
+
+        const result = NodejsInAppHelpProvider.transformForStandalone(items);
+
+        expect(result).toHaveLength(2);
+        expect(result[0].type).toBe("book");
+        expect(result[1].type).toBe("webView");
+    });
+
+    it("recursively transforms children", () => {
+        const items: HiddenSubtreeItem[] = [{
+            id: "_help_parent",
+            title: "Parent",
+            type: "book",
+            attributes: [{ type: "label", name: "iconClass", value: "bx bx-folder" }],
+            children: [
+                {
+                    id: "_help_child1",
+                    title: "Child With URL",
+                    type: "doc",
+                    attributes: [
+                        { type: "label", name: "docName", value: "User Guide/Child" },
+                        { type: "label", name: "docUrl", value: "https://docs.triliumnotes.org/child" }
+                    ]
+                },
+                {
+                    id: "_help_child2",
+                    title: "Child Without URL",
+                    type: "doc",
+                    attributes: [
+                        { type: "label", name: "docName", value: "User Guide/Child2" }
+                    ]
+                }
+            ]
+        }];
+
+        const result = NodejsInAppHelpProvider.transformForStandalone(items);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].children).toHaveLength(1);
+        expect(result[0].children![0].type).toBe("webView");
+        expect(result[0].children![0].id).toBe("_help_child1");
     });
 });

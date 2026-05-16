@@ -126,6 +126,50 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
     }
 
     /**
+     * Transforms the help subtree for standalone mode: converts `doc` notes that have a `docUrl`
+     * into `webView` notes with `webViewSrc`, removing the `docName` attribute.
+     * Notes of type `doc` without a `docUrl` are excluded since their content isn't available offline.
+     */
+    static transformForStandalone(items: HiddenSubtreeItem[]): HiddenSubtreeItem[] {
+        const result: HiddenSubtreeItem[] = [];
+        for (const item of items) {
+            const transformed = NodejsInAppHelpProvider.transformItemForStandalone(item);
+            if (transformed) {
+                result.push(transformed);
+            }
+        }
+        return result;
+    }
+
+    private static transformItemForStandalone(item: HiddenSubtreeItem): HiddenSubtreeItem | null {
+        const docUrl = item.attributes?.find(a => a.name === "docUrl")?.value;
+        const hasDocName = item.attributes?.some(a => a.name === "docName");
+
+        // If it's a doc note with content but no online URL, skip it
+        if (item.type === "doc" && hasDocName && !docUrl) {
+            return null;
+        }
+
+        const newItem: HiddenSubtreeItem = { ...item };
+
+        // Convert doc notes with docUrl to webView notes
+        if (item.type === "doc" && hasDocName && docUrl) {
+            newItem.type = "webView";
+            newItem.enforceAttributes = true;
+            newItem.attributes = (item.attributes ?? [])
+                .filter(a => a.name !== "docName" && a.name !== "docUrl")
+                .concat({ type: "label", name: "webViewSrc", value: docUrl });
+        }
+
+        // Recursively transform children
+        if (item.children) {
+            newItem.children = NodejsInAppHelpProvider.transformForStandalone(item.children);
+        }
+
+        return newItem;
+    }
+
+    /**
      * Iterates recursively through the help subtree that the user has and compares it against the definition
      * to remove any notes that are no longer present in the latest version of the help.
      *
