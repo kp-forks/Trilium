@@ -302,6 +302,32 @@
     "zen-mode": "Zen Modus",
     "open-today-journal-note-title": "Open de Dagboek Notitie van Vandaag",
     "quick-search-title": "Snel Zoeken",
-    "protected-session-title": "Beschermde Sessie"
+    "protected-session-title": "Beschermde Sessie",
+    "sync-status-title": "Synchronisatie Status",
+    "settings-title": "Instellingen",
+    "options-title": "Opties",
+    "appearance-title": "Uitzicht",
+    "shortcuts-title": "Snelkoppelingen",
+    "text-notes": "Tekst Notities",
+    "code-notes-title": "Code Notities",
+    "images-title": "Media",
+    "spellcheck-title": "Spellingscontrole",
+    "password-title": "Wachtwoord",
+    "multi-factor-authentication-title": "MFA",
+    "etapi-title": "ETAPI",
+    "backup-title": "Backup",
+    "sync-title": "Synchronisatie",
+    "other": "Andere",
+    "advanced-title": "Geavanceerd",
+    "llm-title": "AI / LLM",
+    "visible-launchers-title": "Zichtbare Snelkoppelingen",
+    "user-guide": "Gebruikersgids",
+    "localization": "Taal & Regio",
+    "inbox-title": "Postvak In",
+    "tab-switcher-title": "Tab Wisselaar",
+    "sidebar-chat-title": "AI Chat"
+  },
+  "notes": {
+    "new-note": "Nieuwe Notitie"
   }
 }
