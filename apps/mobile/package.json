@@ -6,7 +6,7 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @triliumnext/client-standalone build",
+    "build": "pnpm --filter @triliumnext/standalone build",
     "sync": "pnpm build && cap sync",
     "open:android": "cap open android",
     "run:android": "cap run android"
