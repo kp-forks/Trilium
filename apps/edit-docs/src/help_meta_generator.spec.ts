@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import NodejsInAppHelpProvider from "../in_app_help_server_provider.js";
-import StandaloneInAppHelpProvider from "../in_app_help_standalone_provider.js";
-import type NoteMeta from "./meta/note_meta.js";
+import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
 
-const serverProvider = new NodejsInAppHelpProvider();
-const standaloneProvider = new StandaloneInAppHelpProvider();
+import { parseNoteMetaFile, serverTextNoteHandler, standaloneTextNoteHandler } from "./help_meta_generator.js";
 
-describe("In-app help (server provider)", () => {
+describe("Help meta generation (server)", () => {
     it("preserves custom folder icon", () => {
-        const meta: NoteMeta = {
+        const child: NoteMeta = {
             isClone: false,
             noteId: "yoAe4jV2yzbd",
             notePath: [ "OkOZllzB3fqN", "yoAe4jV2yzbd" ],
@@ -20,22 +17,23 @@ describe("In-app help (server provider)", () => {
             type: "text",
             mime: "text/html",
             attributes: [
-                {
-                    type: "label",
-                    name: "iconClass",
-                    value: "bx bx-star",
-                    isInheritable: false,
-                    position: 10
-                }
+                { type: "label", name: "iconClass", value: "bx bx-star", isInheritable: false, position: 10 }
             ],
             format: "html",
             attachments: [],
             dirFileName: "Features",
             children: []
         };
+        const root: NoteMeta = {
+            isClone: false, noteId: "root", notePath: ["root"], title: "Root",
+            notePosition: 1, prefix: null, isExpanded: false, type: "text",
+            mime: "text/html", attributes: [], format: "html", attachments: [],
+            dirFileName: "Root", children: [child]
+        };
 
-        const item = serverProvider.parseNoteMeta(meta, "/");
-        const icon = item?.attributes?.find((a) => a.name === "iconClass");
+        const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [root] };
+        const items = parseNoteMetaFile(metaFile, serverTextNoteHandler);
+        const icon = items[0]?.attributes?.find((a) => a.name === "iconClass");
         expect(icon?.value).toBe("bx bx-star");
     });
 
@@ -51,13 +49,7 @@ describe("In-app help (server provider)", () => {
             type: "text",
             mime: "text/html",
             attributes: [
-                {
-                    type: "label",
-                    name: "shareAlias",
-                    value: "user-guide",
-                    isInheritable: false,
-                    position: 10
-                }
+                { type: "label", name: "shareAlias", value: "user-guide", isInheritable: false, position: 10 }
             ],
             format: "html",
             dataFileName: "User Guide.html",
@@ -75,13 +67,7 @@ describe("In-app help (server provider)", () => {
                     type: "text",
                     mime: "text/html",
                     attributes: [
-                        {
-                            type: "label",
-                            name: "shareAlias",
-                            value: "feature-highlights",
-                            isInheritable: false,
-                            position: 10
-                        }
+                        { type: "label", name: "shareAlias", value: "feature-highlights", isInheritable: false, position: 10 }
                     ],
                     format: "html",
                     dataFileName: "Feature Highlights.html",
@@ -92,7 +78,7 @@ describe("In-app help (server provider)", () => {
         };
 
         const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [meta] };
-        const items = serverProvider.parseNoteMetaFile(metaFile, "https://docs.triliumnotes.org");
+        const items = parseNoteMetaFile(metaFile, serverTextNoteHandler, "https://docs.triliumnotes.org");
 
         const child = items[0];
         const docUrl = child?.attributes?.find((a) => a.name === "docUrl");
@@ -111,13 +97,7 @@ describe("In-app help (server provider)", () => {
             type: "text",
             mime: "text/html",
             attributes: [
-                {
-                    type: "label",
-                    name: "shareAlias",
-                    value: "user-guide",
-                    isInheritable: false,
-                    position: 10
-                }
+                { type: "label", name: "shareAlias", value: "user-guide", isInheritable: false, position: 10 }
             ],
             format: "html",
             dataFileName: "User Guide.html",
@@ -135,13 +115,7 @@ describe("In-app help (server provider)", () => {
                     type: "text",
                     mime: "text/html",
                     attributes: [
-                        {
-                            type: "label",
-                            name: "shareAlias",
-                            value: "feature-highlights",
-                            isInheritable: false,
-                            position: 10
-                        }
+                        { type: "label", name: "shareAlias", value: "feature-highlights", isInheritable: false, position: 10 }
                     ],
                     format: "html",
                     dataFileName: "Feature Highlights.html",
@@ -152,7 +126,7 @@ describe("In-app help (server provider)", () => {
         };
 
         const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [meta] };
-        const items = serverProvider.parseNoteMetaFile(metaFile);
+        const items = parseNoteMetaFile(metaFile, serverTextNoteHandler);
 
         const child = items[0];
         const docUrl = child?.attributes?.find((a) => a.name === "docUrl");
@@ -171,13 +145,7 @@ describe("In-app help (server provider)", () => {
             type: "text",
             mime: "text/html",
             attributes: [
-                {
-                    type: "label",
-                    name: "shareHiddenFromTree",
-                    value: "",
-                    isInheritable: false,
-                    position: 10
-                }
+                { type: "label", name: "shareHiddenFromTree", value: "", isInheritable: false, position: 10 }
             ],
             format: "html",
             attachments: [],
@@ -185,14 +153,15 @@ describe("In-app help (server provider)", () => {
             children: []
         };
 
-        const item = serverProvider.parseNoteMeta(meta, "/");
-        expect(item).toBeFalsy();
+        const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [meta] };
+        const items = parseNoteMetaFile(metaFile, serverTextNoteHandler);
+        expect(items).toHaveLength(0);
     });
 });
 
-describe("In-app help (standalone provider)", () => {
+describe("Help meta generation (standalone)", () => {
     it("converts text notes with URL to webView", () => {
-        const meta: NoteMeta = {
+        const child: NoteMeta = {
             isClone: false,
             noteId: "childNote456",
             notePath: [ "rootNote123", "childNote456" ],
@@ -203,33 +172,36 @@ describe("In-app help (standalone provider)", () => {
             type: "text",
             mime: "text/html",
             attributes: [
-                {
-                    type: "label",
-                    name: "shareAlias",
-                    value: "feature-highlights",
-                    isInheritable: false,
-                    position: 10
-                }
+                { type: "label", name: "shareAlias", value: "feature-highlights", isInheritable: false, position: 10 }
             ],
             format: "html",
             dataFileName: "Feature Highlights.html",
             attachments: [],
             children: []
         };
+        const root: NoteMeta = {
+            isClone: false, noteId: "root", notePath: ["root"], title: "Root",
+            notePosition: 1, prefix: null, isExpanded: false, type: "text",
+            mime: "text/html", attributes: [
+                { type: "label", name: "shareAlias", value: "root", isInheritable: false, position: 10 }
+            ], format: "html", attachments: [],
+            dirFileName: "Root", children: [child]
+        };
 
-        const item = standaloneProvider.parseNoteMeta(meta, "/", "https://docs.triliumnotes.org");
+        const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [root] };
+        const items = parseNoteMetaFile(metaFile, standaloneTextNoteHandler, "https://docs.triliumnotes.org");
 
-        expect(item).not.toBeNull();
-        expect(item!.type).toBe("webView");
-        expect(item!.enforceAttributes).toBe(true);
-        expect(item!.attributes).toContainEqual({
-            type: "label", name: "webViewSrc", value: "https://docs.triliumnotes.org/feature-highlights"
+        expect(items).toHaveLength(1);
+        expect(items[0].type).toBe("webView");
+        expect(items[0].enforceAttributes).toBe(true);
+        expect(items[0].attributes).toContainEqual({
+            type: "label", name: "webViewSrc", value: "https://docs.triliumnotes.org/root/feature-highlights"
         });
-        expect(item!.attributes?.find(a => a.name === "docName")).toBeUndefined();
+        expect(items[0].attributes?.find(a => a.name === "docName")).toBeUndefined();
     });
 
     it("excludes text notes without URL", () => {
-        const meta: NoteMeta = {
+        const child: NoteMeta = {
             isClone: false,
             noteId: "childNote456",
             notePath: [ "rootNote123", "childNote456" ],
@@ -245,16 +217,23 @@ describe("In-app help (standalone provider)", () => {
             attachments: [],
             children: []
         };
+        const root: NoteMeta = {
+            isClone: false, noteId: "root", notePath: ["root"], title: "Root",
+            notePosition: 1, prefix: null, isExpanded: false, type: "text",
+            mime: "text/html", attributes: [], format: "html", attachments: [],
+            dirFileName: "Root", children: [child]
+        };
 
-        const item = standaloneProvider.parseNoteMeta(meta, "/");
-        expect(item).toBeNull();
+        const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [root] };
+        const items = parseNoteMetaFile(metaFile, standaloneTextNoteHandler);
+        expect(items).toHaveLength(0);
     });
 
     it("preserves folder notes", () => {
-        const meta: NoteMeta = {
+        const child: NoteMeta = {
             isClone: false,
             noteId: "folderNote",
-            notePath: [ "folderNote" ],
+            notePath: [ "root", "folderNote" ],
             title: "Section",
             notePosition: 1,
             prefix: null,
@@ -267,51 +246,17 @@ describe("In-app help (standalone provider)", () => {
             dirFileName: "Section",
             children: []
         };
-
-        const item = standaloneProvider.parseNoteMeta(meta, "/");
-        expect(item).not.toBeNull();
-        expect(item!.type).toBe("book");
-    });
-
-    it("excludes children without URL when no baseUrl provided", () => {
-        const meta: NoteMeta = {
-            isClone: false,
-            noteId: "rootNote123",
-            notePath: [ "rootNote123" ],
-            title: "User Guide",
-            notePosition: 1,
-            prefix: null,
-            isExpanded: false,
-            type: "text",
-            mime: "text/html",
-            attributes: [],
-            format: "html",
-            dirFileName: "User Guide",
-            attachments: [],
-            children: [
-                {
-                    isClone: false,
-                    noteId: "childNote",
-                    notePath: [ "rootNote123", "childNote" ],
-                    title: "Some Page",
-                    notePosition: 10,
-                    prefix: null,
-                    isExpanded: false,
-                    type: "text",
-                    mime: "text/html",
-                    attributes: [],
-                    format: "html",
-                    dataFileName: "Some Page.html",
-                    attachments: [],
-                    children: []
-                }
-            ]
+        const root: NoteMeta = {
+            isClone: false, noteId: "root", notePath: ["root"], title: "Root",
+            notePosition: 1, prefix: null, isExpanded: false, type: "text",
+            mime: "text/html", attributes: [], format: "html", attachments: [],
+            dirFileName: "Root", children: [child]
         };
 
-        const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [meta] };
-        // No baseUrl → no URLs for any notes → all text notes excluded
-        const items = standaloneProvider.parseNoteMetaFile(metaFile);
+        const metaFile = { formatVersion: 2, appVersion: "0.103.0", files: [root] };
+        const items = parseNoteMetaFile(metaFile, standaloneTextNoteHandler);
 
-        expect(items).toHaveLength(0);
+        expect(items).toHaveLength(1);
+        expect(items[0].type).toBe("book");
     });
 });

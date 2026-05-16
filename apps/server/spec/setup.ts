@@ -9,7 +9,7 @@ import NodejsCryptoProvider from "../src/crypto_provider.js";
 import NodejsZipProvider from "../src/zip_provider.js";
 import ServerPlatformProvider from "../src/platform_provider.js";
 import BetterSqlite3Provider from "../src/sql_provider.js";
-import NodejsInAppHelpProvider from "../src/in_app_help_server_provider.js";
+import NodejsInAppHelpProvider from "../src/in_app_help_provider.js";
 import { initializeTranslationsWithParams } from "../src/services/i18n.js";
 import ServerLogService from "../src/log_provider.js";
 import { serverImageProvider } from "../src/services/image_provider.js";

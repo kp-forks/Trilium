@@ -374,9 +374,6 @@ async function initialize(): Promise<void> {
             const schemaModule = await import("@triliumnext/core/src/assets/schema.sql?raw");
             coreModule = await import("@triliumnext/core");
 
-            const inAppHelp = new StandaloneInAppHelpProvider();
-            await inAppHelp.init();
-
             await coreModule.initializeCore({
                 executionContext: new BrowserExecutionContext(),
                 crypto: new BrowserCryptoProvider(),
@@ -394,7 +391,7 @@ async function initialize(): Promise<void> {
                     if (!response.ok) return null;
                     return new Uint8Array(await response.arrayBuffer());
                 },
-                inAppHelp,
+                inAppHelp: new StandaloneInAppHelpProvider(),
                 image: (await import("./services/image_provider.js")).standaloneImageProvider,
                 dbConfig: {
                     provider: sqlProvider!,

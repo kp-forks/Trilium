@@ -133,16 +133,10 @@ let plugins: any = [
                 src: [
                     "../../server/src/assets/**/*",
                     // Exclude the User Guide (~20 MB) since it's not needed in standalone mode.
-                    // Only the meta file is included for the in-app help tree structure.
                     "!../../server/src/assets/doc_notes/en/User Guide/**"
                 ],
                 dest: "server-assets",
                 rename: { stripBase: 3 }
-            },
-            {
-                // Include only the standalone help meta (webView-based, no offline content).
-                src: "../../server/src/assets/doc_notes/en/User Guide/!!!meta.standalone.json",
-                dest: "server-assets/doc_notes/en/User Guide",
             }
         ]
     }),

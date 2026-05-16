@@ -1,18 +1,11 @@
-import type { HiddenSubtreeItem } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
-import StandaloneRuntimeInAppHelpProvider from "./in_app_help_provider.js";
+import StandaloneInAppHelpProvider from "./in_app_help_provider.js";
 
-describe("StandaloneRuntimeInAppHelpProvider", () => {
-    it("returns empty array before init", () => {
-        const provider = new StandaloneRuntimeInAppHelpProvider();
+describe("StandaloneInAppHelpProvider", () => {
+    it("returns help data from the imported meta", () => {
+        const provider = new StandaloneInAppHelpProvider();
+        // The placeholder help_meta.json is an empty array
         expect(provider.getHelpHiddenSubtreeData()).toEqual([]);
-    });
-
-    it("cleanUpHelp is a no-op", () => {
-        const provider = new StandaloneRuntimeInAppHelpProvider();
-        const items: HiddenSubtreeItem[] = [{ id: "_help_test", title: "Test", type: "webView" }];
-        // Should not throw
-        provider.cleanUpHelp(items);
     });
 });
