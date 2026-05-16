@@ -2,6 +2,17 @@ name: Mobile
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - "apps/mobile/**"
+      - "apps/client/**"
+      - "apps/standalone/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - ".github/workflows/mobile.yml"
   workflow_dispatch:
 
 permissions:

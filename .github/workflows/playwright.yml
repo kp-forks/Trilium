@@ -5,9 +5,27 @@ on:
     branches:
       - main
       - hotfix
-    paths-ignore:
-      - "apps/website/**"
+    paths:
+      - "apps/client/**"
+      - "apps/server/**"
+      - "apps/desktop/**"
+      - "apps/standalone/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - ".github/workflows/playwright.yml"
+      - ".github/actions/build-server/**"
   pull_request:
+    paths:
+      - "apps/client/**"
+      - "apps/server/**"
+      - "apps/desktop/**"
+      - "apps/standalone/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - ".github/workflows/playwright.yml"
+      - ".github/actions/build-server/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
