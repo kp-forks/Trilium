@@ -107,7 +107,7 @@ body.mobile.context-menu-shown * {
 }
 
 body.mobile #root-widget {
-    padding-top: env(safe-area-inset-top);
+    padding-top: var(--safe-area-inset-top, env(safe-area-inset-top));
 }
 
 body.mobile #root-widget.virtual-keyboard-opened #mobile-bottom-bar {
