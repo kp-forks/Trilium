@@ -893,7 +893,7 @@ importers:
         version: 0.2.1(mermaid@11.15.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.10.0)
+        version: 5.0.1(mind-elixir@5.11.0)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
@@ -1009,8 +1009,8 @@ importers:
         specifier: 11.15.0
         version: 11.15.0
       mind-elixir:
-        specifier: 5.10.0
-        version: 5.10.0
+        specifier: 5.11.0
+        version: 5.11.0
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -10919,9 +10919,6 @@ packages:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
 
-  mind-elixir@5.10.0:
-    resolution: {integrity: sha512-AY/tDXz8stMbx0MIutdn63Dz0uwY1VVMKIxCqOOA2hg5WGdCGm2qqEZF498deLDxoZbL+hDf1SwBWzvWADBoPA==}
-
   mind-elixir@5.11.0:
     resolution: {integrity: sha512-KaTi6/rwFEV1deDSjXF1z7PfvjTXSpul+viGuu6LT4SD6ATLBzkkBmsz5HOmpDj/bAyFP9oGlqzScSXsiOOXUA==}
 
@@ -17877,10 +17874,6 @@ snapshots:
   '@mermaid-js/parser@1.1.1':
     dependencies:
       '@chevrotain/types': 11.1.1
-
-  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.10.0)':
-    dependencies:
-      mind-elixir: 5.10.0
 
   '@mind-elixir/node-menu@5.0.1(mind-elixir@5.11.0)':
     dependencies:
@@ -26582,8 +26575,6 @@ snapshots:
   mimic-response@1.0.1: {}
 
   mimic-response@3.1.0: {}
-
-  mind-elixir@5.10.0: {}
 
   mind-elixir@5.11.0: {}
 
