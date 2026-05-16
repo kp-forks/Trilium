@@ -246,7 +246,7 @@ async function cleanUpMeta(outputPath: string, minify: boolean) {
     }
 
     if (minify) {
-        const subtree = new NodejsInAppHelpProvider().parseNoteMetaFile(meta);
+        const subtree = new NodejsInAppHelpProvider().parseNoteMetaFile(meta, BASE_URL);
         await fs.writeFile(metaPath, JSON.stringify(subtree));
     } else {
         await fs.writeFile(metaPath, JSON.stringify(meta, null, 4));

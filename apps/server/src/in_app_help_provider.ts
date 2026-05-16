@@ -23,18 +23,18 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
         }
     }
 
-    parseNoteMetaFile(noteMetaFile: NoteMetaFile): HiddenSubtreeItem[] {
+    parseNoteMetaFile(noteMetaFile: NoteMetaFile, baseUrl?: string): HiddenSubtreeItem[] {
         if (!noteMetaFile.files) {
             console.warn("No meta files found to parse.");
             return [];
         }
 
         const metaRoot = noteMetaFile.files[0];
-        const parsedMetaRoot = this.parseNoteMeta(metaRoot, "/" + (metaRoot.dirFileName ?? ""));
+        const parsedMetaRoot = this.parseNoteMeta(metaRoot, "/" + (metaRoot.dirFileName ?? ""), baseUrl);
         return parsedMetaRoot?.children ?? [];
     }
 
-    parseNoteMeta(noteMeta: NoteMeta, docNameRoot: string): HiddenSubtreeItem | null {
+    parseNoteMeta(noteMeta: NoteMeta, docNameRoot: string, parentUrl?: string): HiddenSubtreeItem | null {
         let iconClass: string = "bx bx-file";
         const item: HiddenSubtreeItem = {
             id: `_help_${noteMeta.noteId}`,
@@ -48,6 +48,10 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
             iconClass = "bx bx-folder";
             item.type = "book";
         }
+
+        // Build the docUrl for this note
+        const shareAlias = this.getShareAlias(noteMeta);
+        const currentUrl = parentUrl && shareAlias ? `${parentUrl}/${shareAlias}` : parentUrl;
 
         // Handle attributes
         for (const attribute of noteMeta.attributes ?? []) {
@@ -77,6 +81,14 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
                 name: "docName",
                 value: docPath
             });
+
+            if (currentUrl) {
+                item.attributes?.push({
+                    type: "label",
+                    name: "docUrl",
+                    value: currentUrl
+                });
+            }
         }
 
         // Handle web views
@@ -90,7 +102,7 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
             const children: HiddenSubtreeItem[] = [];
             for (const childMeta of noteMeta.children) {
                 let newDocNameRoot = noteMeta.dirFileName ? `${docNameRoot}/${noteMeta.dirFileName}` : docNameRoot;
-                const item = this.parseNoteMeta(childMeta, newDocNameRoot);
+                const item = this.parseNoteMeta(childMeta, newDocNameRoot, currentUrl);
                 if (item) {
                     children.push(item);
                 }
@@ -107,6 +119,10 @@ export default class NodejsInAppHelpProvider implements InAppHelpProvider {
         });
 
         return item;
+    }
+
+    private getShareAlias(noteMeta: NoteMeta): string | undefined {
+        return noteMeta.attributes?.find((a) => a.type === "label" && a.name === "shareAlias")?.value;
     }
 
     /**
