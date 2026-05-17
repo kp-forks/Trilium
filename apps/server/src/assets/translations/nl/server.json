@@ -347,7 +347,18 @@
     "presentation_slide": "Presentatie dia",
     "presentation_slide_first": "Eerste dia",
     "presentation_slide_second": "Tweede dia",
-    "background": "Achtergrond"
+    "background": "Achtergrond",
+    "text-snippet": "Tekst knipsel",
+    "description": "Omschrijving",
+    "list-view": "Lijst Weergave",
+    "grid-view": "Raster Weergave",
+    "calendar": "Kalender",
+    "table": "Tabel",
+    "geo-map": "Geografische Kaart",
+    "start-date": "Startdatum",
+    "end-date": "Einddatum",
+    "start-time": "Starttijd",
+    "end-time": "Eindtijd"
   },
   "sql_init": {
     "db_not_initialized_desktop": "Database is niet geïnitialiseerd, volg de instructies op het scherm.",
@@ -392,5 +403,26 @@
     "new-note": "Nieuwe Notitie",
     "show-windows": "Toon vensters",
     "open_new_window": "Open een nieuw venster"
+  },
+  "migration": {
+    "old_version": "Rechtstreekse migratie van uw huidige versie is niet ondersteund. Upgrade a.u.b. eerst naar de laatste versie v0.60.4 en alleen dan naar deze versie.",
+    "error_message": "Fout tijdens migratie naar versie {{version}}: {{stack}}",
+    "wrong_db_version": "De versie van de database ({{version}}) is nieuwer dan de toepassing verwacht ({{targetVersion}}), wat betekent dat deze gemaakt werd met een nieuwere, niet-compatibele versie van Trilium. Upgrade naar de laatste versie van Trilium om dit probleem op te lossen.",
+    "invalid_db_version": "De database versie is geen geldig getal. Dit wijst gewoonlijk op een corrupte 'dbVersion' optie in de database. Herstel a.u.b. van een backup."
+  },
+  "modals": {
+    "error_title": "Fout"
+  },
+  "share_theme": {
+    "site-theme": "Site Thema",
+    "search_placeholder": "Zoeken...",
+    "image_alt": "Artikel Afbeelding",
+    "last-updated": "Laatst geopend op {{- date}}",
+    "subpages": "Subpaginas:",
+    "on-this-page": "Op deze pagina",
+    "expand": "Uitvouwen",
+    "toggle-navigation": "Wissel Navigatie",
+    "toggle-toc": "Wissel Inhoudstafel",
+    "logo-alt": "Logo"
   }
 }
