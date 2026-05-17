@@ -245,7 +245,7 @@
     "saturday": "Zaterdag",
     "sunday": "Zondag"
   },
-  "weekdayNumber": "Week {weekNumber}",
+  "weekdayNumber": "Week {{weekNumber}}",
   "months": {
     "january": "Januari",
     "february": "Februari",
@@ -260,7 +260,7 @@
     "november": "November",
     "december": "December"
   },
-  "quarterNumber": "Kwartaal {quarterNumber}",
+  "quarterNumber": "Kwartaal {{quarterNumber}}",
   "special_notes": {
     "search_prefix": "Zoeken:",
     "llm_chat_prefix": "Chat:"
