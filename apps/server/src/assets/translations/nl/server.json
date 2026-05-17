@@ -119,7 +119,7 @@
     "show-sql-console": "Toon SQL Console",
     "show-backend-log": "Toon Backend Log",
     "show-help": "Toon Help",
-    "show-cheatsheet": "Toon Cheatsheet",
+    "show-cheatsheet": "Toon Spiekblad",
     "add-link-to-text": "Voeg een Koppeling toe aan de Tekst",
     "follow-link-under-cursor": "Volg de koppeling onder de cursor",
     "insert-date-and-time-to-text": "Voeg Datum en Tijd toe aan de Tekst",
@@ -177,7 +177,7 @@
     "toggle-ribbon-tab-basic-properties": "Toon / Verberg de Basis Eigenschappen op de Lint Tab",
     "toggle-ribbon-tab-book-properties": "Toon / Verberg de Boek Eigenschappen op de Lint Tab",
     "toggle-ribbon-tab-file-properties": "Toon / Verberg de Bestandseigenschappen op de Lint Tab",
-    "toggle-ribbon-tab-image-properties": "Toon / Verberg de Afbeeldingseigenschappen op de Lint Tab",
+    "toggle-ribbon-tab-image-properties": "Toon / Verberg de Afbeelding Eigenschappen op de Lint Tab",
     "toggle-ribbon-tab-owned-attributes": "Toon / Verberg de Eigen Attributen op de Lint Tab",
     "toggle-ribbon-tab-inherited-attributes": "Toon / Verberg de Geërfde Attributen op de Lint Tab",
     "toggle-ribbon-tab-promoted-attributes": "Toon / Verberg de Gepromoveerde Attributen op de Lint Tab",
@@ -195,6 +195,202 @@
     "unhoist-note": "Stop Notitie Ophalen",
     "reload-frontend-app": "Herlaad de Interface",
     "open-developer-tools": "Open Ontwikkelaars Gereedschap",
-    "find-in-text": "Zoek in de Tekst"
+    "find-in-text": "Zoek in de Tekst",
+    "toggle-left-pane": "Toon / Verberg het linker Paneel",
+    "toggle-full-screen": "Wissel Volledig Scherm",
+    "zoom-out": "Zoom uit",
+    "zoom-in": "Zoom in",
+    "reset-zoom-level": "Herstel Zoom niveau",
+    "copy-without-formatting": "Kopieer zonder opmaak",
+    "force-save-revision": "Forceer Revisie opslaan",
+    "save-named-revision": "Sla Revisie op met een naam"
+  },
+  "login": {
+    "title": "Log in",
+    "heading": "Log in op Trilium",
+    "incorrect-totp": "TOTP is onjuist. Probeer opnieuw.",
+    "incorrect-password": "Wachtwoord is onjuist. Probeer opnieuw.",
+    "password": "Wachtwoord",
+    "remember-me": "Onthoud me",
+    "button": "Log in",
+    "sign_in_with_sso": "Meld aan met {{ ssoIssuerName }}"
+  },
+  "password": {
+    "incorrect": "Het wachtwoord dat u ingaf is onjuist."
+  },
+  "set_password": {
+    "title": "Stel wachtwoord in",
+    "heading": "Stel wachtwoord in",
+    "description": "Voor je Trilium kan beginnen gebruiken via het web, moet je eerst een wachtwoord instellen. Je kan dan aanmelden met dit wachtwoord.",
+    "password": "Wachtwoord",
+    "password-confirmation": "Wachtwoord bevestiging",
+    "button": "Stel wachtwoord in"
+  },
+  "share_404": {
+    "title": "Niet gevonden",
+    "heading": "Niet gevonden"
+  },
+  "share_page": {
+    "parent": "ouder:",
+    "clipped-from": "Deze Notitie werd origineel gekopieerd van {{- url}}",
+    "child-notes": "Kind Notities:",
+    "no-content": "Deze Notitie heeft geen inhoud."
+  },
+  "weekdays": {
+    "monday": "Maandag",
+    "tuesday": "Dinsdag",
+    "wednesday": "Woensdag",
+    "thursday": "Donderdag",
+    "friday": "Vrijdag",
+    "saturday": "Zaterdag",
+    "sunday": "Zondag"
+  },
+  "weekdayNumber": "Week {{weekNumber}}",
+  "months": {
+    "january": "Januari",
+    "february": "Februari",
+    "march": "Maart",
+    "april": "April",
+    "may": "Mei",
+    "june": "Juni",
+    "july": "Juli",
+    "august": "Augustus",
+    "september": "September",
+    "october": "Oktober",
+    "november": "November",
+    "december": "December"
+  },
+  "quarterNumber": "Kwartaal {{quarterNumber}}",
+  "special_notes": {
+    "search_prefix": "Zoeken:",
+    "llm_chat_prefix": "Chat:"
+  },
+  "test_sync": {
+    "not-configured": "Sync server host is niet ingesteld. Stel eerst de sync in.",
+    "successful": "Sync server verbinding was succesvol, synchronisatie gestart."
+  },
+  "hidden-subtree": {
+    "root-title": "Verborgen Notities",
+    "search-history-title": "Zoek Geschiedenis",
+    "note-map-title": "Notitie Overzicht",
+    "sql-console-history-title": "SQL Console Geschiedenis",
+    "llm-chat-history-title": "AI Chat Geschiedenis",
+    "shared-notes-title": "Gedeelde Notities",
+    "bulk-action-title": "Bulk Handelingen",
+    "backend-log-title": "Backend Log",
+    "custom-dictionary-title": "Gepersonaliseerde Woordenboek",
+    "user-hidden-title": "Gebruiker Verborgen",
+    "launch-bar-templates-title": "Snelkoppeling Balk Sjablonen",
+    "base-abstract-launcher-title": "Basis Abstractie Snelkoppeling",
+    "command-launcher-title": "Commando Snelkoppeling",
+    "note-launcher-title": "Notitie Snelkoppeling",
+    "script-launcher-title": "Script Snelkoppeling",
+    "built-in-widget-title": "Ingebouwde Widget",
+    "spacer-title": "Scheiding",
+    "custom-widget-title": "Gepersonaliseerde Widget",
+    "launch-bar-title": "Snelkoppeling Balk",
+    "available-launchers-title": "Beschikbare Snelkoppelingen",
+    "go-to-previous-note-title": "Ga naar de vorige Notitie",
+    "go-to-next-note-title": "Ga naar de Volgende Notitie",
+    "new-note-title": "Nieuwe Notitie",
+    "search-notes-title": "Zoek Notities",
+    "jump-to-note-title": "Ga naar...",
+    "calendar-title": "Kalender",
+    "recent-changes-title": "Recente Aanpassingen",
+    "bookmarks-title": "Boekenleggers",
+    "command-palette": "Open Commando Paneel",
+    "zen-mode": "Zen Modus",
+    "open-today-journal-note-title": "Open de Dagboek Notitie van Vandaag",
+    "quick-search-title": "Snel Zoeken",
+    "protected-session-title": "Beschermde Sessie",
+    "sync-status-title": "Synchronisatie Status",
+    "settings-title": "Instellingen",
+    "options-title": "Opties",
+    "appearance-title": "Uitzicht",
+    "shortcuts-title": "Snelkoppelingen",
+    "text-notes": "Tekst Notities",
+    "code-notes-title": "Code Notities",
+    "images-title": "Media",
+    "spellcheck-title": "Spellingscontrole",
+    "password-title": "Wachtwoord",
+    "multi-factor-authentication-title": "MFA",
+    "etapi-title": "ETAPI",
+    "backup-title": "Backup",
+    "sync-title": "Synchronisatie",
+    "other": "Andere",
+    "advanced-title": "Geavanceerd",
+    "llm-title": "AI / LLM",
+    "visible-launchers-title": "Zichtbare Snelkoppelingen",
+    "user-guide": "Gebruikersgids",
+    "localization": "Taal & Regio",
+    "inbox-title": "Postvak In",
+    "tab-switcher-title": "Tab Wisselaar",
+    "sidebar-chat-title": "AI Chat"
+  },
+  "notes": {
+    "new-note": "Nieuwe Notitie",
+    "duplicate-note-suffix": "(dup)",
+    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}"
+  },
+  "hidden_subtree_templates": {
+    "geolocation": "Geolocatie",
+    "built-in-templates": "Ingebouwde Sjablonen",
+    "board": "Kanban Bord",
+    "status": "Status",
+    "board_note_first": "Eerste Notitie",
+    "board_note_second": "Tweede Notitie",
+    "board_note_third": "Derde Notitie",
+    "board_status_todo": "Te doen",
+    "board_status_progress": "In Behandeling",
+    "board_status_done": "Afgewerkt",
+    "presentation": "Presentatie",
+    "presentation_slide": "Presentatie dia",
+    "presentation_slide_first": "Eerste dia",
+    "presentation_slide_second": "Tweede dia",
+    "background": "Achtergrond"
+  },
+  "sql_init": {
+    "db_not_initialized_desktop": "Database is niet geïnitialiseerd, volg de instructies op het scherm.",
+    "db_not_initialized_server": "Database is niet geïnitialiseerd, bezoek de setup pagina - http://[your-server-host]:{{port}} voor instructies om Trilium te initialiseren."
+  },
+  "desktop": {
+    "instance_already_running": "Er draait al een instantie, deze wordt in de plaats geopend."
+  },
+  "script": {
+    "wrong-environment": "Kan de Notitie \"{{- noteTitle}}\" ({{- noteId}}) niet uitvoeren. Dit is een {{- actualEnv}} script, maar werd geprobeerd uit te voeren in de {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Fout in {{- context}}: {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" is een gereserveerde term. Gebruik aanhalingstekens om naar een letterlijke waarde te zoeken: \"{{- token}}\"",
+      "cannot-compare-with": "Kan niet vergelijken met \"{{- token}}\". Gebruik aanhalingstekens om naar een letterlijke waarde te zoeken: \"{{- token}}\"",
+      "misplaced-expression": "Misplaatste of onvolledige uitdrukking \"{{- token}}\"",
+      "fulltext-after-expression": "\"{{- token}}\" is geen geldige uitdrukking. Om tekst te zoeken, plaats deze voor attribuut filters (bv., \"{{- token}} #label\" in plaats van \"#label {{- token}}\").",
+      "unrecognized-expression": "Niet-herkende uitdrukking \"{{- token}}\""
+    }
+  },
+  "backend_log": {
+    "log-does-not-exist": "Het backend logbestand '{{ fileName }}' bestaat (nog) niet.",
+    "reading-log-failed": "Het lezen van het backend logbestand '{{ fileName }}' is mislukt."
+  },
+  "content_renderer": {
+    "note-cannot-be-displayed": "Dit type Notitie kan niet weergegeven worden."
+  },
+  "pdf": {
+    "export_filter": "PDF Document (*.pdf)",
+    "unable-to-export-message": "De huidige Notitie kon niet geëxporteerd worden als PDF.",
+    "unable-to-export-title": "Niet in staat om te exporteren als PDF",
+    "unable-to-save-message": "Er kon niet naar het gekozen bestand geschreven worden. Probeer opnieuw of kies een andere bestemming.",
+    "unable-to-print": "Niet in staat de Notitie af te drukken"
+  },
+  "tray": {
+    "tooltip": "Trilium Notities",
+    "close": "Trilium verlaten",
+    "recents": "Recente Notities",
+    "bookmarks": "Boekenleggers",
+    "today": "Open de Dagboek Notitie van vandaag",
+    "new-note": "Nieuwe Notitie",
+    "show-windows": "Toon vensters",
+    "open_new_window": "Open een nieuw venster"
   }
 }
