@@ -8,11 +8,10 @@ import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import mime_types from "../../../services/mime_types";
-import { getEffectiveThemeStyle } from "../../../services/theme";
 import { ButtonGroup } from "../../react/Button";
 import FormSelect from "../../react/FormSelect";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
-import { useStaticTooltip, useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
+import { useColorScheme, useStaticTooltip, useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import { CODE_THEME_DEFAULT_PREFIX as DEFAULT_PREFIX } from "../constants";
 import CheckboxList from "./components/CheckboxList";
@@ -107,12 +106,13 @@ function Appearance({ wordWrapping, indentSize }: AppearanceProps) {
     const [lightTheme, setLightTheme] = useTriliumOption("codeNoteThemeLight");
     const [darkTheme, setDarkTheme] = useTriliumOption("codeNoteThemeDark");
 
+    const colorScheme = useColorScheme();
     const allThemes = useFilteredThemes();
     const lightThemes = useFilteredThemes("light");
     const darkThemes = useFilteredThemes("dark");
 
     const effectiveTheme = matchesApp
-        ? (getEffectiveThemeStyle() === "dark" ? darkTheme : lightTheme)
+        ? (colorScheme === "dark" ? darkTheme : lightTheme)
         : codeNoteTheme;
 
     return (

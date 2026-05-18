@@ -3,14 +3,13 @@ import "./code.css";
 import { default as VanillaCodeMirror, getThemeById } from "@triliumnext/codemirror";
 import { NoteType } from "@triliumnext/commons";
 import { Ref } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import appContext, { CommandListenerData } from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
-import { getEffectiveThemeStyle } from "../../../services/theme";
 import utils from "../../../services/utils";
-import { useEditorSpacedUpdate, useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteBlob, useNoteLabelInt, useNoteLabelOptionalBool, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import { useColorScheme, useEditorSpacedUpdate, useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteBlob, useNoteLabelInt, useNoteLabelOptionalBool, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { refToJQuerySelector } from "../../react/react_utils";
 import TouchBar, { TouchBarButton } from "../../react/TouchBar";
 import { CODE_THEME_DEFAULT_PREFIX as DEFAULT_PREFIX } from "../constants";
@@ -173,23 +172,10 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
     const [ matchesApp ] = useTriliumOptionBool("codeNoteThemeMatchesApp");
     const [ lightTheme ] = useTriliumOption("codeNoteThemeLight");
     const [ darkTheme ] = useTriliumOption("codeNoteThemeDark");
-
-    // When "match app appearance" is enabled, resolve the theme based on the
-    // current effective app style and react to OS color-scheme changes.
-    const [ appStyle, setAppStyle ] = useState(getEffectiveThemeStyle);
-    useEffect(() => {
-        if (!matchesApp) return;
-        // Re-evaluate whenever the OS preference changes.
-        const mq = window.matchMedia("(prefers-color-scheme: dark)");
-        const handler = () => setAppStyle(getEffectiveThemeStyle());
-        mq.addEventListener("change", handler);
-        // Also recalculate immediately in case the app theme option changed.
-        setAppStyle(getEffectiveThemeStyle());
-        return () => mq.removeEventListener("change", handler);
-    }, [ matchesApp ]);
+    const colorScheme = useColorScheme();
 
     const effectiveTheme = matchesApp
-        ? (appStyle === "dark" ? darkTheme : lightTheme)
+        ? (colorScheme === "dark" ? darkTheme : lightTheme)
         : codeNoteTheme;
 
     // React to background color.
@@ -199,9 +185,10 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
         parentComponent?.$widget.closest(".scrolling-container").css("--code-background-color", backgroundColor);
     }, [ backgroundColor ]);
 
-    const applyTheme = useCallback((themeName: string) => {
-        if (codeEditorRef.current && themeName.startsWith(DEFAULT_PREFIX)) {
-            const theme = getThemeById(themeName.substring(DEFAULT_PREFIX.length));
+    // React to theme changes.
+    useEffect(() => {
+        if (codeEditorRef.current && effectiveTheme.startsWith(DEFAULT_PREFIX)) {
+            const theme = getThemeById(effectiveTheme.substring(DEFAULT_PREFIX.length));
             if (theme) {
                 codeEditorRef.current.setTheme(theme).then(() => {
                     const editor = containerRef.current?.querySelector(".cm-editor");
@@ -211,12 +198,7 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
                 });
             }
         }
-    }, []);
-
-    // React to theme changes.
-    useEffect(() => {
-        applyTheme(effectiveTheme);
-    }, [ codeEditorRef, effectiveTheme, applyTheme ]);
+    }, [ codeEditorRef, effectiveTheme ]);
 
     useTriliumEvent("executeWithCodeEditor", async ({ resolve, ntxId: eventNtxId }) => {
         if (eventNtxId !== ntxId) return;
