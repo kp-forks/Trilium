@@ -136,6 +136,9 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     backdropEffectsEnabled: boolean;
     smoothScrollEnabled: boolean;
     codeNoteTheme: string;
+    codeNoteThemeMatchesApp: boolean;
+    codeNoteThemeLight: string;
+    codeNoteThemeDark: string;
 
     initialized: boolean;
     databaseReadonly: boolean;

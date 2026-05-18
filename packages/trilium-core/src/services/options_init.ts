@@ -197,6 +197,9 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "codeNoteThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeNoteThemeLight", value: "default:vs-code-light", isSynced: false },
+    { name: "codeNoteThemeDark", value: "default:vs-code-dark", isSynced: false },
     { name: "motionEnabled", value: "true", isSynced: false },
     { name: "shadowsEnabled", value: "true", isSynced: false },
     { name: "backdropEffectsEnabled", value: "true", isSynced: false },
