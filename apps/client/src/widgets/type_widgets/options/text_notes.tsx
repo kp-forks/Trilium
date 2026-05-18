@@ -286,10 +286,6 @@ function CodeBlockStyle() {
         loadHighlightingTheme(effectiveTheme);
     }, [effectiveTheme]);
 
-    const onThemeChange = (newTheme: string) => {
-        setCodeBlockTheme(newTheme);
-    };
-
     return (
         <OptionsSection title={t("highlighting.title")}>
             <ThemeModeSelector matchesApp={matchesApp} onMatchesAppChange={setMatchesApp} />
@@ -316,7 +312,7 @@ function CodeBlockStyle() {
                     <FormSelectWithGroups
                         values={groupedThemes}
                         keyProperty="val" titleProperty="title"
-                        currentValue={codeBlockTheme} onChange={onThemeChange}
+                        currentValue={codeBlockTheme} onChange={setCodeBlockTheme}
                     />
                 </OptionsRow>
             )}
