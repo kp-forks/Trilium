@@ -18,6 +18,20 @@ function getEffectiveCodeBlockTheme(): string {
     return String(options.get("codeBlockTheme"));
 }
 
+// Re-apply the highlight.js theme when the OS color scheme changes, so that
+// "match app appearance" reacts in real time.
+let colorSchemeListenerRegistered = false;
+function ensureColorSchemeListener() {
+    if (colorSchemeListenerRegistered) return;
+    colorSchemeListenerRegistered = true;
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if (highlightingLoaded && options.get("codeBlockThemeMatchesApp") === "true") {
+            loadHighlightingTheme(getEffectiveCodeBlockTheme());
+        }
+    });
+}
+
 // Highlight.js can spend tens of milliseconds per block (php/c# are especially slow).
 // The Markdown live preview replaces the entire rendered DOM on every keystroke, so the
 // same unchanged code blocks would otherwise be re-highlighted continuously. Cache the
@@ -146,6 +160,7 @@ export async function ensureMimeTypesForHighlighting(mimeTypeHint?: string) {
     // Load theme.
     if (!highlightingLoaded) {
         await loadHighlightingTheme(getEffectiveCodeBlockTheme());
+        ensureColorSchemeListener();
     }
 
     // Load mime types.
