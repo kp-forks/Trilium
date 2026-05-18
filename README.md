@@ -18,7 +18,7 @@
 
 <!-- translate:off -->
 <!-- LANGUAGE SWITCHER -->
-[Chinese (Simplified Han script)](./docs/README-ZH_CN.md) | [Chinese (Traditional Han script)](./docs/README-ZH_TW.md) | [English](./docs/README.md) | [French](./docs/README-fr.md) | [German](./docs/README-de.md) | [Greek](./docs/README-el.md) | [Italian](./docs/README-it.md) | [Japanese](./docs/README-ja.md) | [Romanian](./docs/README-ro.md) | [Spanish](./docs/README-es.md)
+[Arabic](./docs/README-ar.md) | [Chinese (Simplified Han script)](./docs/README-ZH_CN.md) | [Chinese (Traditional Han script)](./docs/README-ZH_TW.md) | [Czech](./docs/README-cs.md) | [English (United Kingdom)](./docs/README-en_GB.md) | [English](./docs/README.md) | [French](./docs/README-fr.md) | [German](./docs/README-de.md) | [Greek](./docs/README-el.md) | [Irish](./docs/README-ga.md) | [Italian](./docs/README-it.md) | [Japanese](./docs/README-ja.md) | [Korean](./docs/README-ko.md) | [Polish](./docs/README-pl.md) | [Romanian](./docs/README-ro.md) | [Russian](./docs/README-ru.md) | [Spanish](./docs/README-es.md) | [Ukrainian](./docs/README-uk.md) | [Uyghur](./docs/README-ug.md)
 <!-- translate:on -->
 
 Trilium Notes is a free and open-source, cross-platform hierarchical note taking application with focus on building large personal knowledge bases.
