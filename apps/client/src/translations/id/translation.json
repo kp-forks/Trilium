@@ -1,6 +1,7 @@
 {
   "about": {
-    "data_directory": "Direktori data:"
+    "data_directory": "Direktori data:",
+    "version_label": "Versi:"
   },
   "toast": {
     "critical-error": {
