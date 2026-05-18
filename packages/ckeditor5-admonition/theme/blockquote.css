@@ -8,8 +8,7 @@
 	overflow: hidden;
 
 	/* https://github.com/ckeditor/ckeditor5-block-quote/issues/15 */
-	padding-right: 2.0em;
-	padding-left: 2.0em;
+	padding-inline: 2em;
 
 	margin-left: 0;
 	margin-right: 0;
