@@ -930,6 +930,7 @@ export default {
     createImageSrcUrl,
     downloadAsSvg,
     downloadAsPng,
+    triggerDownload,
     compareVersions,
     isUpdateAvailable,
     isLaunchBarConfig
