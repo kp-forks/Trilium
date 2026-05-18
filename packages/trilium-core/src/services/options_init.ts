@@ -226,6 +226,9 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "codeBlockThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeBlockThemeLight", value: "default:stackoverflow-light", isSynced: false },
+    { name: "codeBlockThemeDark", value: "default:stackoverflow-dark", isSynced: false },
     { name: "codeBlockWordWrap", value: "false", isSynced: true },
     { name: "codeBlockTabWidth", value: "4", isSynced: true },
 

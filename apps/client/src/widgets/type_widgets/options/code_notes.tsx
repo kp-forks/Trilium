@@ -8,15 +8,14 @@ import { useEffect, useMemo, useRef } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import mime_types from "../../../services/mime_types";
-import { ButtonGroup } from "../../react/Button";
 import FormSelect from "../../react/FormSelect";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useColorScheme, useStaticTooltip, useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
-import Icon from "../../react/Icon";
 import { CODE_THEME_DEFAULT_PREFIX as DEFAULT_PREFIX } from "../constants";
 import CheckboxList from "./components/CheckboxList";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
+import ThemeModeSelector from "./components/ThemeModeSelector";
 import codeNoteSample from "./samples/code_note.txt?raw";
 
 const SAMPLE_MIME = "application/typescript";
@@ -116,25 +115,8 @@ function Appearance({ wordWrapping, indentSize }: AppearanceProps) {
         : codeNoteTheme;
 
     return (
-        <OptionsSection title={t("code_theme.title")}>
-            <OptionsRow name="theme-mode" label={t("code_theme.theme_mode")}>
-                <ButtonGroup>
-                    <button
-                        type="button"
-                        className={`btn btn-sm btn-secondary ${matchesApp ? "active" : ""}`}
-                        onClick={() => setMatchesApp(true)}
-                    >
-                        <Icon icon="bx bx-brightness-half" />{" "}{t("code_theme.match_app_appearance")}
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn btn-sm btn-secondary ${!matchesApp ? "active" : ""}`}
-                        onClick={() => setMatchesApp(false)}
-                    >
-                        <Icon icon="bx bx-pin" />{" "}{t("code_theme.always_use_one_theme")}
-                    </button>
-                </ButtonGroup>
-            </OptionsRow>
+        <OptionsSection title={t("code_theme.title")} className="code-block-appearance">
+            <ThemeModeSelector matchesApp={matchesApp} onMatchesAppChange={setMatchesApp} />
 
             {matchesApp ? (
                 <>

@@ -73,6 +73,9 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     locale: string;
     formattingLocale: string;
     codeBlockTheme: string;
+    codeBlockThemeMatchesApp: boolean;
+    codeBlockThemeLight: string;
+    codeBlockThemeDark: string;
     textNoteEditorType: string;
     layoutOrientation: string;
     allowedHtmlTags: string;
