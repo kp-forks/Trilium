@@ -9,8 +9,8 @@ import { isExperimentalFeatureEnabled } from "../../../services/experimental_fea
 import { t } from "../../../services/i18n";
 import { ensureMimeTypesForHighlighting, loadHighlightingTheme } from "../../../services/syntax_highlight";
 import { formatDateTime, toggleBodyClass } from "../../../services/utils";
-import FormGroup from "../../react/FormGroup";
 import Dropdown from "../../react/Dropdown";
+import FormGroup from "../../react/FormGroup";
 import { FormListItem } from "../../react/FormList";
 import FormSelect, { FormSelectGroup, FormSelectWithGroups } from "../../react/FormSelect";
 import FormText from "../../react/FormText";
@@ -282,8 +282,11 @@ function CodeBlockStyle() {
         ? (colorScheme === "dark" ? darkTheme : lightTheme)
         : codeBlockTheme;
 
+    useEffect(() => {
+        loadHighlightingTheme(effectiveTheme);
+    }, [effectiveTheme]);
+
     const onThemeChange = (newTheme: string) => {
-        loadHighlightingTheme(newTheme);
         setCodeBlockTheme(newTheme);
     };
 
