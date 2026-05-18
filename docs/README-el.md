@@ -277,7 +277,7 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+Εναλλακτικά, αν έχετε εγκαταστήσει το Nix:
 ```shell
 # Run directly
 nix run .#edit-docs
@@ -309,7 +309,7 @@ development](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20G
 επικοινωνήσετε μέσω των συνδέσμων που περιγράφονται στην ενότητα «Συζητήστε μαζί
 μας» παραπάνω.
 
-## 💖 Sponsors
+## 💖 Χορηγοί
 
 <table>
   <tr>
@@ -352,8 +352,8 @@ development](https://github.com/TriliumNext/Trilium/tree/main/docs/Developer%20G
 
 Το Trilium δεν θα ήταν εφικτό χωρίς τις τεχνολογίες πίσω από αυτό:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - ο οπτικός συντάκτης πίσω
+  από σημειώσεις κειμένου.
 * [CodeMirror](https://github.com/codemirror/CodeMirror) - επεξεργαστής κώδικα
   με υποστήριξη για τεράστιο αριθμό γλωσσών.
 * [Excalidraw](https://github.com/excalidraw/excalidraw) - ο άπειρος πίνακας που
