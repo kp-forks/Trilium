@@ -211,6 +211,13 @@ function buildFigureFilter(): Rule {
     };
 }
 
+const TASK_STATE_TO_MARKDOWN_MARKER: Record<string, string> = {
+    doing: "/",
+    done: "x",
+    cancelled: "-",
+    maybe: "?"
+};
+
 // Keep in line with https://github.com/mixmark-io/turndown/blob/master/src/commonmark-rules.js.
 function buildListItemFilter(): Rule {
     return {
@@ -226,8 +233,14 @@ function buildListItemFilter(): Rule {
                 const index = Array.prototype.indexOf.call(parent.children, node);
                 prefix = `${start ? Number(start) + index : index + 1}.  `;
             } else if (parent.classList.contains("todo-list")) {
-                const isChecked = node.querySelector("input[type=checkbox]:checked");
-                prefix = (isChecked ? "- [x] " : "- [ ] ");
+                const state = (node as HTMLElement).getAttribute("data-task-state");
+                const stateMarker = state ? TASK_STATE_TO_MARKDOWN_MARKER[state] : undefined;
+                if (stateMarker) {
+                    prefix = `- [${stateMarker}] `;
+                } else {
+                    const isChecked = node.querySelector("input[type=checkbox]:checked");
+                    prefix = (isChecked ? "- [x] " : "- [ ] ");
+                }
             }
 
             const result = prefix + content + (node.nextSibling && !/\n$/.test(content) ? '\n' : '');

@@ -1,5 +1,59 @@
-import { Marked, Renderer, type Tokens } from "marked";
+import { Marked, Renderer, type Token, type Tokens } from "marked";
 import markedFootnote from "marked-footnote";
+
+const MARKDOWN_MARKER_TO_TASK_STATE: Record<string, string> = {
+    "/": "doing",
+    "-": "cancelled",
+    "?": "maybe"
+};
+const TASK_MARKER_STRIP_PATTERN = /^\[[/?-]\]\s?/;
+const TASK_MARKER_RAW_PATTERN = /^[ \t]*[-*+]\s+\[([/?-])\]\s?/;
+
+type TaskListItem = Tokens.ListItem & { _taskState?: string };
+
+function stripTaskMarkerFromTokens(tokens: Token[] | undefined): void {
+    if (!tokens || tokens.length === 0) {
+        return;
+    }
+    const first = tokens[0] as Token & { text?: string; raw?: string; tokens?: Token[] };
+    if (typeof first.text === "string") {
+        first.text = first.text.replace(TASK_MARKER_STRIP_PATTERN, "");
+    }
+    if (typeof first.raw === "string") {
+        first.raw = first.raw.replace(TASK_MARKER_STRIP_PATTERN, "");
+    }
+    if (Array.isArray(first.tokens)) {
+        stripTaskMarkerFromTokens(first.tokens);
+    }
+}
+
+/**
+ * Marked `walkTokens` hook that recognises non-standard task markers `[/]`, `[-]`, `[?]`
+ * in list items (marked only understands `[x]`/`[ ]`). When found, the item is converted
+ * into a task item with `_taskState` carrying the corresponding state for downstream rendering.
+ */
+function detectCustomTaskState(token: Token): void {
+    if (token.type !== "list_item") {
+        return;
+    }
+    const item = token as TaskListItem;
+    if (item.task) {
+        return;
+    }
+    const match = TASK_MARKER_RAW_PATTERN.exec(item.raw);
+    if (!match) {
+        return;
+    }
+    const state = MARKDOWN_MARKER_TO_TASK_STATE[match[1]];
+    if (!state) {
+        return;
+    }
+    item.task = true;
+    item.checked = false;
+    item._taskState = state;
+    item.text = item.text.replace(TASK_MARKER_STRIP_PATTERN, "");
+    stripTaskMarkerFromTokens(item.tokens);
+}
 
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "./mime_type.js";
 import {
@@ -219,6 +273,8 @@ export class CustomMarkdownRenderer extends Renderer {
 
     override listitem(item: Tokens.ListItem): string {
         if (item.task) {
+            const taskState = (item as TaskListItem)._taskState;
+            const dataAttr = taskState ? ` data-task-state="${taskState}"` : "";
             let itemBody = "";
             const checkbox = this.checkbox({ checked: !!item.checked, raw: "- [ ]", type: "checkbox" });
             if (item.loose) {
@@ -241,7 +297,7 @@ export class CustomMarkdownRenderer extends Renderer {
             }
 
             itemBody += `<span class="todo-list__label__description">${this.parser.parse(item.tokens.filter((t) => t.type !== "checkbox"))}</span>`;
-            return `<li><label class="todo-list__label">${itemBody}</label></li>`;
+            return `<li${dataAttr}><label class="todo-list__label">${itemBody}</label></li>`;
         }
 
         return super.listitem(item).trimEnd();
@@ -293,6 +349,7 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
 
     const marked = new Marked({ async: false, gfm: true });
     marked.use(markedFootnote());
+    marked.use({ walkTokens: detectCustomTaskState });
     marked.use({
         // Order is important, especially for wikilinks.
         extensions: [
