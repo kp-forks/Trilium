@@ -2545,6 +2545,14 @@ footer.webview-footer button {
     opacity: 0.6;
 }
 
+.ck-content ul.todo-list > li.todo-list-a {
+    background-color: rgba(255, 235, 130, 0.25);
+}
+
+.ck-content ul.todo-list > li.todo-list-b {
+    background-color: rgba(130, 200, 255, 0.25);
+}
+
 .chat-options-container {
     display: flex;
     margin: 5px 0;

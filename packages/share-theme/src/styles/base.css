@@ -147,3 +147,11 @@ iframe.pdf-view {
     background-color: var(--background-primary);
     border-color: var(--text-primary) !important;
 }
+
+.ck-content ul.todo-list > li.todo-list-a {
+    background-color: rgba(255, 235, 130, 0.25);
+}
+
+.ck-content ul.todo-list > li.todo-list-b {
+    background-color: rgba(130, 200, 255, 0.25);
+}
