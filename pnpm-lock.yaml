@@ -643,9 +643,6 @@ importers:
       '@triliumnext/highlightjs':
         specifier: workspace:*
         version: link:../../packages/highlightjs
-      '@types/archiver':
-        specifier: 7.0.0
-        version: 7.0.0
       '@types/better-sqlite3':
         specifier: 7.6.13
         version: 7.6.13
@@ -5760,9 +5757,6 @@ packages:
   '@types/appdmg@0.5.5':
     resolution: {integrity: sha512-G+n6DgZTZFOteITE30LnWj+HRVIGr7wMlAiLWOO02uJFWVEitaPU9JVXm9wJokkgshBawb2O1OykdcsmkkZfgg==}
 
-  '@types/archiver@7.0.0':
-    resolution: {integrity: sha512-/3vwGwx9n+mCQdYZ2IKGGHEFL30I96UgBlk8EtRDDFQ9uxM1l4O5Ci6r00EMAkiDaTqD9DQ6nVrWRICnBPtzzg==}
-
   '@types/better-sqlite3@7.6.13':
     resolution: {integrity: sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA==}
 
@@ -6081,9 +6075,6 @@ packages:
 
   '@types/react@19.1.7':
     resolution: {integrity: sha512-BnsPLV43ddr05N71gaGzyZ5hzkCmGwhMvYc8zmvI8Ci1bRkkDSzDDVfAXfN2tk748OwI7ediiPX6PfT9p0QGVg==}
-
-  '@types/readdir-glob@1.1.5':
-    resolution: {integrity: sha512-raiuEPUYqXu+nvtY2Pe8s8FEmZ3x5yAH4VkLdihcPdalvsHltomrRC9BzuStrJ9yk06470hS0Crw0f1pXqD+Hg==}
 
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
@@ -19535,10 +19526,6 @@ snapshots:
       '@types/node': 24.12.4
     optional: true
 
-  '@types/archiver@7.0.0':
-    dependencies:
-      '@types/readdir-glob': 1.1.5
-
   '@types/better-sqlite3@7.6.13':
     dependencies:
       '@types/node': 22.18.8
@@ -19907,10 +19894,6 @@ snapshots:
     dependencies:
       csstype: 3.2.3
     optional: true
-
-  '@types/readdir-glob@1.1.5':
-    dependencies:
-      '@types/node': 24.12.4
 
   '@types/responselike@1.0.3':
     dependencies:
