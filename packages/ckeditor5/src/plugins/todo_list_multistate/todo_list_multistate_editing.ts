@@ -30,6 +30,18 @@ export default class TodoListMultistateEditing extends Plugin {
 
         editor.commands.add("setTaskState", new SetTaskStateCommand(editor));
 
+        editor.keystrokes.set("Ctrl+Shift+Enter", (_data, cancel) => {
+            const command = editor.commands.get("setTaskState");
+            if (!command?.isEnabled) {
+                return;
+            }
+            const current = (command.value as TaskState | null) ?? "none";
+            const idx = TASK_STATES.indexOf(current);
+            const next = TASK_STATES[(idx + 1) % TASK_STATES.length];
+            editor.execute("setTaskState", {state: next});
+            cancel();
+        });
+
         const listEditing = editor.plugins.get(ListEditing);
         listEditing.registerDowncastStrategy({
             scope: "item",
