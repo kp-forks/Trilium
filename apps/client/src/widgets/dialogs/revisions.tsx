@@ -588,7 +588,11 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
     itemType: string
 }) {
     if (!noteContent || typeof itemContent !== "string") {
-        return <div className="revision-diff-content">{t("revisions.diff_not_available")}</div>;
+        return (
+            <div className="revision-diff-content">
+                <NoItems icon="bx bx-low-vision" text={t("revisions.diff_not_available")} />
+            </div>
+        );
     }
 
     let diffHtml: string;
