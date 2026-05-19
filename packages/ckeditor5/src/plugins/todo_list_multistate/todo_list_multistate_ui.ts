@@ -18,7 +18,7 @@ export default class TodoListMultistateUI extends Plugin {
                     label: state.title || state.name,
                     withText: false,
                     tooltip: true,
-                    class: `ck-task-state-button ck-task-state-${state.name}`
+                    class: `ck-task-state-button ck-task-state-${state.name}${state.icon ? ` ${state.icon}` : ""}`
                 });
                 if (state.color) {
                     button.extendTemplate({
