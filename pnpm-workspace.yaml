@@ -3,3 +3,10 @@ packages:
 - apps/*
 
 nodeLinker: hoisted
+
+# pnpm v11 enabled this by default; @electron/rebuild pulls @electron/node-gyp via git.
+blockExoticSubdeps: false
+
+# pnpm v11 introduced a 1-day default release age; keep at 0 so Renovate-driven
+# updates and regular installs aren't stalled.
+minimumReleaseAge: 0
