@@ -667,7 +667,7 @@
     "toggle-zen-mode": "Zen Mode",
     "new-version-available": "Nouvelle mise à jour disponible",
     "download-update": "Obtenir la version {{latestVersion}}",
-    "search_notes": "Rechercher notes"
+    "search_notes": "Rechercher des notes"
   },
   "zen_mode": {
     "button_exit": "Sortir du Zen mode"
