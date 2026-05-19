@@ -164,7 +164,7 @@
     },
     "collections": {
         "calendar_title": "Calendrier",
-        "calendar_description": "Organisez vos événements personnels ou professionnels grâce à un calendrier compatible avec les événements d'une journée ou de plusieurs jours. Visualisez vos événements en un coup d'œil grâce aux vues hebdomadaire, mensuelle et annuelle. Ajoutez ou déplacez facilement des événements.",
+        "calendar_description": "Organisez vos événements personnels ou professionnels dans un calendrier, avec prise en charge des événements sur une ou plusieurs journées. Visualisez-les en un coup d’œil en vue semaine, mois ou année, et ajoutez ou déplacez-les facilement par glisser-déposer.",
         "table_title": "Tableau",
         "table_description": "Affichez et modifiez les informations relatives aux notes dans une structure tabulaire, avec différents types de colonnes (texte, nombre, cases à cocher, date et heure, liens, couleurs) et la prise en charge des relations. Vous pouvez également afficher les notes sous forme d'arborescence à l'intérieur du tableau.",
         "board_title": "Tableau de bord",

@@ -203,12 +203,12 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+或者，如果您已安裝 Nix：
 ```shell
-# Run directly
+# 直接執行
 nix run .#edit-docs
 
-# Or install to your profile
+# 或安裝至您的設定檔
 nix profile install .#edit-docs
 trilium-edit-docs
 ```
@@ -229,7 +229,7 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 
 請參閱[文件指南](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)。若有更多疑問，歡迎透過上方「與我們交流」章節所列連結與我們聯繫。
 
-## 💖 Sponsors
+## 💖 贊助者
 
 <table>
   <tr>
@@ -268,8 +268,7 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 
 若無其背後的技術支撐，Trilium 便無法開發完成：
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) —— 文字筆記背後所採用的視覺化編輯器。
 * [CodeMirror](https://github.com/codemirror/CodeMirror) —— 支援大量語言的程式碼編輯器。
 * [Excalidraw](https://github.com/excalidraw/excalidraw) —— 畫布筆記中使用的無限白板。
 * [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) —— 提供心智圖功能。
