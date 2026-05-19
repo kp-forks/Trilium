@@ -612,6 +612,11 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
         }).join("");
     }
 
+    // Diff returned no results, meaning that they are identical.
+    if (!diffHtml) {
+        return <NoItems className="revision-diff-content" icon="bx bx-copy" text={t("revisions.diff_identical")} />;
+    }
+
     return <SanitizedHtml
         className={clsx("revision-diff-content", itemType === "text" ? "ck-content" : "revision-diff-code")}
         html={diffHtml}
