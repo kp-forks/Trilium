@@ -1,3 +1,4 @@
+import { Tooltip } from "bootstrap";
 import { Command, ListEditing, Plugin, TodoList, type ModelElement, type ViewElement } from "ckeditor5";
 
 export const TASK_STATES = ["none", "doing", "done", "cancelled", "maybe"] as const;
@@ -48,6 +49,18 @@ export default class TodoListMultistateEditing extends Plugin {
             model: {
                 key: TASK_STATE_ATTRIBUTE,
                 value: (viewElement: ViewElement) => normaliseState(viewElement.getAttribute("data-task-state"))
+            }
+        });
+
+        this.listenTo(editor.editing.view, "render", () => {
+            const domRoot = editor.editing.view.getDomRoot();
+            if (!domRoot) {
+                return;
+            }
+            for (const input of domRoot.querySelectorAll<HTMLInputElement>(".todo-list__label input[type=\"checkbox\"]")) {
+                if (!Tooltip.getInstance(input)) {
+                    new Tooltip(input, {title: "Tooltip"});
+                }
             }
         });
 
