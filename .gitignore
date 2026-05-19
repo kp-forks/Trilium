@@ -53,3 +53,4 @@ apps/*/coverage
 scripts/translation/.language*.json
 
 .claude
+.pnpm-store

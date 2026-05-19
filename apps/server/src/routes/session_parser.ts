@@ -1,9 +1,11 @@
-import sql from "../services/sql.js";
+import type express from "express";
 import session, { Store } from "express-session";
-import sessionSecret from "../services/session_secret.js";
+
 import config from "../services/config.js";
 import log from "../services/log.js";
-import type express from "express";
+import sessionSecret from "../services/session_secret.js";
+import sql from "../services/sql.js";
+import sqlInit from "../services/sql_init.js";
 
 /**
  * The amount of time in milliseconds after which expired sessions are cleaned up.
@@ -20,6 +22,10 @@ export const SESSION_COOKIE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 export class SQLiteSessionStore extends Store {
 
     get(sid: string, callback: (err: any, session?: session.SessionData | null) => void): void {
+        if (!sqlInit.isDbInitialized()) {
+            return callback(null, null);
+        }
+
         try {
             const data = sql.getValue<string>(/*sql*/`SELECT data FROM sessions WHERE id = ?`, sid);
             let session = null;
@@ -34,6 +40,10 @@ export class SQLiteSessionStore extends Store {
     }
 
     set(id: string, session: session.SessionData, callback?: (err?: any) => void): void {
+        if (!sqlInit.isDbInitialized()) {
+            return callback?.();
+        }
+
         try {
             const expires = session.cookie?.expires
                 ? new Date(session.cookie.expires).getTime()
@@ -53,6 +63,10 @@ export class SQLiteSessionStore extends Store {
     }
 
     destroy(sid: string, callback?: (err?: any) => void): void {
+        if (!sqlInit.isDbInitialized()) {
+            return callback?.();
+        }
+
         try {
             sql.execute(/*sql*/`DELETE FROM sessions WHERE id = ?`, sid);
             callback?.();
@@ -63,6 +77,10 @@ export class SQLiteSessionStore extends Store {
     }
 
     touch(sid: string, session: session.SessionData, callback?: (err?: any) => void): void {
+        if (!sqlInit.isDbInitialized()) {
+            return callback?.();
+        }
+
         // For now it's only for session cookies ("Remember me" unchecked).
         if (session.cookie?.expires) {
             callback?.();
@@ -99,12 +117,6 @@ export class SQLiteSessionStore extends Store {
 
 export const sessionStore = new SQLiteSessionStore();
 
-// Enable cross-site cookies only when CORS is configured with a specific
-// origin allowlist. A wildcard or unset origin means there's no trusted
-// cross-site consumer, so we keep the safer SameSite=Lax default.
-const corsAllowOrigin = (config["Network"]["corsAllowOrigin"] || "").trim();
-const allowCrossSiteCookie = corsAllowOrigin !== "" && corsAllowOrigin !== "*";
-
 const sessionParser: express.RequestHandler = session({
     secret: sessionSecret,
     resave: false, // true forces the session to be saved back to the session store, even if the session was never modified during the request.
@@ -113,8 +125,6 @@ const sessionParser: express.RequestHandler = session({
     cookie: {
         path: "/",
         httpOnly: true,
-        sameSite: allowCrossSiteCookie ? "none" : "lax",
-        secure: allowCrossSiteCookie,
         maxAge: config.Session.cookieMaxAge * 1000 // needs value in milliseconds
     },
     name: "trilium.sid",
@@ -123,6 +133,8 @@ const sessionParser: express.RequestHandler = session({
 
 export function startSessionCleanup() {
     setInterval(() => {
+        if (!sqlInit.isDbInitialized()) return;
+
         // Clean up expired sessions.
         const now = Date.now();
         const result = sql.execute(/*sql*/`DELETE FROM sessions WHERE expires < ?`, now);
