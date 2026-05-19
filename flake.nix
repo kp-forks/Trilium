@@ -225,11 +225,8 @@
 
         desktop = makeApp {
           app = "desktop";
-          # pnpm throws an error at the end of `pnpm postinstall`, but it doesn't seem to matter:
-          # ENOENT: no such file or directory, lstat
-          # '/build/source/apps/desktop/node_modules/better-sqlite3/build/node_gyp_bins'
           preBuildCommands = ''
-            export npm_config_nodedir=${electron.headers}
+            export ELECTRON_NODEDIR=${electron.headers}
             pnpm postinstall
           '';
           buildTask = "desktop:build";
@@ -286,7 +283,7 @@
         edit-docs = makeApp {
           app = "edit-docs";
           preBuildCommands = ''
-            export npm_config_nodedir=${electron.headers}
+            export ELECTRON_NODEDIR=${electron.headers}
             pnpm postinstall
           '';
           buildTask = "edit-docs:build";
