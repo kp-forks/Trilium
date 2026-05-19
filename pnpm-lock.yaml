@@ -185,8 +185,8 @@ importers:
         version: link:../server
     devDependencies:
       '@redocly/cli':
-        specifier: 2.30.5
-        version: 2.30.5(@opentelemetry/api@1.9.0)(bufferutil@4.0.9)(core-js@3.46.0)(css-to-react-native@3.2.0)(encoding@0.1.13)(utf-8-validate@6.0.5)
+        specifier: 2.30.6
+        version: 2.30.6(@opentelemetry/api@1.9.0)(bufferutil@4.0.9)(core-js@3.46.0)(css-to-react-native@3.2.0)(encoding@0.1.13)(utf-8-validate@6.0.5)
       archiver:
         specifier: 7.0.1
         version: 7.0.1
@@ -2590,7 +2590,7 @@ packages:
     engines: {node: '>=14'}
 
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
+    resolution: {gitHosted: true, integrity: sha512-MXgzlTDEEndJB3TBbvd5uFQO/8gaINo1Hfen8vef5rq/VHVPeB63uuv/uO5+8GFsAJ/rauu6XB79S6K4+aXc+w==, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
     version: 10.2.0-electron.1
     engines: {node: '>=12.13.0'}
     hasBin: true
@@ -5160,8 +5160,8 @@ packages:
   '@redocly/cli-otel@0.1.2':
     resolution: {integrity: sha512-Bg7BoO5t1x3lVK+KhA5aGPmeXpQmdf6WtTYHhelKJCsQ+tRMiJoFAQoKHoBHAoNxXrhlS3K9lKFLHGmtxsFQfA==}
 
-  '@redocly/cli@2.30.5':
-    resolution: {integrity: sha512-jjPXcTJbpH14Nu1EdD8DorkLmtiaKQV945YPVlpS627GIwJ6FJp9qeoNeS0JksVkmWYQyNLwNq3qCapKgelMHg==}
+  '@redocly/cli@2.30.6':
+    resolution: {integrity: sha512-BFkviDxeuLbisRdaSfPmSehL0AIBGfA9mziZF0APumaFo92D2g+a3r25mPbhdD3EgmIKPZRvAe8AR8BudebVJA==}
     engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
     hasBin: true
 
@@ -5175,12 +5175,12 @@ packages:
     resolution: {integrity: sha512-0EbE8LRbkogtcCXU7liAyC00n9uNG9hJ+eMyHFdUsy9lB/WGqnEBgwjA9q2cyzAVcdTkQqTBBU1XePNnN3OijA==}
     engines: {node: '>=18.17.0', npm: '>=9.5.0'}
 
-  '@redocly/openapi-core@2.30.5':
-    resolution: {integrity: sha512-ikljMaow1wX3GoRvLiJvqOq8H3f6XsuMBZqCGmeY0+UPmlnVhrvW8m/gC1vkKcGNvYINUrgi/Z6dBtzQ7854wA==}
+  '@redocly/openapi-core@2.30.6':
+    resolution: {integrity: sha512-nxyqXRzWQQlvpLLv686ycOQg+fNWbF/ZvkyC8bXoDU6LxMM5qSjrNomcVwoExbNpvGt9qJilpT6qQlk155RnmA==}
     engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
 
-  '@redocly/respect-core@2.30.5':
-    resolution: {integrity: sha512-8rmMr5/8CCIFU5fghxSQ+SZC+W4ewM15w4U+ZH36MVSjdROLrwiPjC+lfe6VxdaJunbmRACzent2HTLLgw4+BQ==}
+  '@redocly/respect-core@2.30.6':
+    resolution: {integrity: sha512-rE38QmhQ6EQNFR5Ry99oFXVL5q6D8W/CcyLGfdA/jf7Hv4fT/35M6Q6zONueC+j9N6fxbQC+Vvpd6JJKukrGFQ==}
     engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
 
   '@replit/codemirror-indentation-markers@6.5.3':
@@ -18933,15 +18933,15 @@ snapshots:
     dependencies:
       ulid: 2.4.0
 
-  '@redocly/cli@2.30.5(@opentelemetry/api@1.9.0)(bufferutil@4.0.9)(core-js@3.46.0)(css-to-react-native@3.2.0)(encoding@0.1.13)(utf-8-validate@6.0.5)':
+  '@redocly/cli@2.30.6(@opentelemetry/api@1.9.0)(bufferutil@4.0.9)(core-js@3.46.0)(css-to-react-native@3.2.0)(encoding@0.1.13)(utf-8-validate@6.0.5)':
     dependencies:
       '@opentelemetry/exporter-trace-otlp-http': 0.214.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 2.6.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-node': 2.6.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.40.0
       '@redocly/cli-otel': 0.1.2
-      '@redocly/openapi-core': 2.30.5
-      '@redocly/respect-core': 2.30.5
+      '@redocly/openapi-core': 2.30.6
+      '@redocly/respect-core': 2.30.6
       ajv: '@redocly/ajv@8.18.1'
       ajv-formats: 3.0.1(@redocly/ajv@8.18.1)
       colorette: 1.4.0
@@ -18993,7 +18993,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@redocly/openapi-core@2.30.5':
+  '@redocly/openapi-core@2.30.6':
     dependencies:
       '@redocly/ajv': 8.18.1
       '@redocly/config': 0.48.1
@@ -19006,12 +19006,12 @@ snapshots:
       pluralize: 8.0.0
       yaml-ast-parser: 0.0.43
 
-  '@redocly/respect-core@2.30.5':
+  '@redocly/respect-core@2.30.6':
     dependencies:
       '@faker-js/faker': 7.6.0
       '@noble/hashes': 1.8.0
       '@redocly/ajv': 8.18.1
-      '@redocly/openapi-core': 2.30.5
+      '@redocly/openapi-core': 2.30.6
       ajv: '@redocly/ajv@8.18.1'
       better-ajv-errors: 2.0.3(@redocly/ajv@8.18.1)
       colorette: 2.0.20
@@ -21316,7 +21316,7 @@ snapshots:
   '@uploadcare/upload-client@6.14.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
       form-data: 4.0.5
-      ws: 8.20.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      ws: 8.20.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -21324,7 +21324,7 @@ snapshots:
   '@uploadcare/upload-client@6.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
       form-data: 4.0.5
-      ws: 8.20.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      ws: 8.20.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -26897,14 +26897,14 @@ snapshots:
     dependencies:
       '@exodus/schemasafe': 1.3.0
       should: 13.2.3
-      yaml: 2.8.3
+      yaml: 2.9.0
 
   oas-resolver@2.5.6:
     dependencies:
       node-fetch-h2: 2.3.0
       oas-kit-common: 1.0.8
       reftools: 1.1.9
-      yaml: 2.8.3
+      yaml: 2.9.0
       yargs: 17.7.2
 
   oas-schema-walker@1.1.5: {}
@@ -26918,7 +26918,7 @@ snapshots:
       oas-schema-walker: 1.1.5
       reftools: 1.1.9
       should: 13.2.3
-      yaml: 2.8.3
+      yaml: 2.9.0
 
   object-assign@4.1.1: {}
 
@@ -29141,7 +29141,7 @@ snapshots:
       oas-schema-walker: 1.1.5
       oas-validator: 5.0.8
       reftools: 1.1.9
-      yaml: 2.8.3
+      yaml: 2.9.0
       yargs: 17.7.2
     transitivePeerDependencies:
       - encoding
@@ -30257,7 +30257,6 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.0.9
       utf-8-validate: 6.0.5
-    optional: true
 
   wsl-utils@0.3.1:
     dependencies:
