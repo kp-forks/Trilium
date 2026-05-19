@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     pnpm2nix = {
-      url = "github:TriliumNext/pnpm2nix-nzbr/fix/optional_dependencies_filtering";
+      url = "github:TriliumNext/pnpm2nix-nzbr/main";
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
@@ -202,7 +202,7 @@
               "apps/dump-db"
               "apps/edit-docs"
               "apps/server"
-              "apps/server-e2e"
+              "packages/trilium-e2e"
             ];
 
             desktopItems = lib.optionals (app == "desktop") [

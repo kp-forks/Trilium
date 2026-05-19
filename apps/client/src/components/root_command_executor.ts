@@ -148,15 +148,12 @@ export default class RootCommandExecutor extends Component {
         }
     }
 
-    async showNoteOCRTextCommand() {
-        const notePath = appContext.tabManager.getActiveContextNotePath();
-
-        if (notePath) {
-            await appContext.tabManager.openTabWithNoteWithHoisting(notePath, {
-                activate: true,
-                viewScope: {
-                    viewMode: "ocr"
-                }
+    showNoteOCRTextCommand() {
+        const noteId = appContext.tabManager.getActiveContextNoteId();
+        if (noteId) {
+            appContext.triggerCommand("showOcrTextDialog", {
+                textUrl: `ocr/notes/${noteId}/text`,
+                processUrl: `ocr/process-note/${noteId}`
             });
         }
     }
