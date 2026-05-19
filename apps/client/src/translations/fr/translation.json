@@ -1207,11 +1207,11 @@
     "legacy_themes": "Historique",
     "custom_themes": "Personnalisé",
     "recommended": "Recommandé",
-    "color_scheme": "Palette de couleurs",
+    "color_scheme": "Thème de couleurs",
     "color_scheme_system": "Système",
     "color_scheme_light": "Clair",
     "color_scheme_dark": "Sombre",
-    "color_scheme_custom_disabled": "La modification de la palette de couleurs n'est pas disponible pour les thèmes personnalisés"
+    "color_scheme_custom_disabled": "Le thème de couleurs ne peut pas être modifié avec un thème personnalisé"
   },
   "zoom_factor": {
     "title": "Facteur de zoom (version bureau uniquement)",
@@ -1778,11 +1778,11 @@
   },
   "highlighting": {
     "description": "Contrôle la coloration syntaxique des blocs de code à l'intérieur des notes texte, les notes de code ne seront pas affectées.",
-    "color-scheme": "Jeu de couleurs",
+    "color-scheme": "Thème de couleurs",
     "title": "Blocs de code"
   },
   "code_block": {
-    "word_wrapping": "Saut à la ligne automatique suivant la largeur",
+    "word_wrapping": "Retour à la ligne automatique",
     "theme_none": "Pas de coloration syntaxique",
     "theme_group_light": "Thèmes clairs",
     "theme_group_dark": "Thèmes sombres",
@@ -2034,8 +2034,8 @@
     "related_settings": "Paramètres associés"
   },
   "settings_appearance": {
-    "related_code_blocks": "Schéma de coloration syntaxique pour les blocs de code dans les notes de texte",
-    "related_code_notes": "Schéma de couleurs pour les notes de code",
+    "related_code_blocks": "Thème de couleurs des blocs de code dans les notes de texte",
+    "related_code_notes": "Thème de couleurs pour les notes de code",
     "ui": "Interface utilisateur",
     "ui_old_layout": "Ancien",
     "ui_new_layout": "Nouveau",
@@ -2095,7 +2095,11 @@
   "code_theme": {
     "title": "Apparence",
     "word_wrapping": "Retour à la ligne automatique",
-    "color-scheme": "Jeu de couleurs"
+    "color-scheme": "Thème de couleurs",
+    "light_theme": "Clair",
+    "theme_mode": "Thème",
+    "dark_theme": "Sombre",
+    "match_app_appearance": "Suit le thème de l'application"
   },
   "cpu_arch_warning": {
     "title": "Veuillez télécharger la version ARM64",

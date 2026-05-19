@@ -73,6 +73,9 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     locale: string;
     formattingLocale: string;
     codeBlockTheme: string;
+    codeBlockThemeMatchesApp: boolean;
+    codeBlockThemeLight: string;
+    codeBlockThemeDark: string;
     textNoteEditorType: string;
     layoutOrientation: string;
     allowedHtmlTags: string;
@@ -136,6 +139,9 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     backdropEffectsEnabled: boolean;
     smoothScrollEnabled: boolean;
     codeNoteTheme: string;
+    codeNoteThemeMatchesApp: boolean;
+    codeNoteThemeLight: string;
+    codeNoteThemeDark: string;
 
     initialized: boolean;
     databaseReadonly: boolean;
