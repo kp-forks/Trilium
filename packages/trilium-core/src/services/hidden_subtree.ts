@@ -88,7 +88,7 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
             {
                 id: "_taskStates",
                 title: t("hidden-subtree.task-states-title"),
-                type: "book",
+                type: "doc",
                 icon: "bx-list-check",
                 isExpanded: true,
                 attributes: [
