@@ -1,8 +1,10 @@
 import {
     BalloonPanelView,
+    ButtonView,
     ContextualBalloon,
     DomEventObserver,
     Plugin,
+    ToolbarSeparatorView,
     ToolbarView,
     clickOutsideHandler,
     type ModelElement,
@@ -76,7 +78,26 @@ export default class TodoListMultistateToolbar extends Plugin {
         for (const state of getConfiguredTaskStates(editor)) {
             toolbar.items.add(editor.ui.componentFactory.create(`taskState:${state.name}`));
         }
+        toolbar.items.add(new ToolbarSeparatorView(editor.locale));
+        toolbar.items.add(this._createEditButton());
         return toolbar;
+    }
+
+    private _createEditButton(): ButtonView {
+        const editor = this.editor;
+        const button = new ButtonView(editor.locale);
+        button.set({
+            label: editor.t("Edit task states"),
+            withText: false,
+            tooltip: true,
+            class: "ck-task-state-edit bx bx-pencil"
+        });
+        button.on("execute", () => {
+            this._hide();
+            const editTaskStates = editor.config.get("editTaskStates") as (() => void) | undefined;
+            editTaskStates?.();
+        });
+        return button;
     }
 
     private _show(checkbox: ViewElement) {

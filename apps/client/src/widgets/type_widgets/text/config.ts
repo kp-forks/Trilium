@@ -2,6 +2,7 @@ import { buildExtraCommands, type EditorConfig, getCkLocale, loadPremiumPlugins,
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/src/emoji_definitions/en.json?url";
 import { ALLOWED_PROTOCOLS, DEFAULT_TASK_STATES, DISPLAYABLE_LOCALE_IDS, DONE_TASK_STATE, MIME_TYPE_AUTO, NONE_TASK_STATE, normalizeMimeTypeForCKEditor, type TaskStateDef } from "@triliumnext/commons";
 
+import appContext from "../../../components/app_context.js";
 import froca from "../../../services/froca.js";
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
 import { t } from "../../../services/i18n.js";
@@ -177,6 +178,9 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
 
     // User-configurable todo task states (from the `_taskStates` hidden subtree).
     (config as Record<string, unknown>).taskStates = await fetchTaskStates();
+    (config as Record<string, unknown>).editTaskStates = () => {
+        void appContext.tabManager.openInNewTab("_taskStates", "_taskStates", true);
+    };
 
     // Set up content language.
     const { contentLanguage } = opts;
