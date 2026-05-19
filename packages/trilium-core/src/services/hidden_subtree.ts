@@ -96,6 +96,24 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { type: "label", name: "child:label:markdownSymbol", value: "promoted,single,text" },
                     { type: "label", name: "child:label:checkboxValue", value: "promoted,single,bool" },
                     { type: "label", name: "child:label:color", value: "promoted,single,text" }
+                ],
+                // Non-customizable anchor states — recreated if missing; they only
+                // determine where `none`/`done` sit in the toolbar/cycling order.
+                children: [
+                    {
+                        id: "_taskStateNone",
+                        title: t("hidden-subtree.task-state-none"),
+                        type: "doc",
+                        icon: "bx-checkbox",
+                        attributes: [{ type: "label", name: "hidePromotedAttributes" }]
+                    },
+                    {
+                        id: "_taskStateDone",
+                        title: t("hidden-subtree.task-state-done"),
+                        type: "doc",
+                        icon: "bx-checkbox-checked",
+                        attributes: [{ type: "label", name: "hidePromotedAttributes" }]
+                    }
                 ]
             },
             {

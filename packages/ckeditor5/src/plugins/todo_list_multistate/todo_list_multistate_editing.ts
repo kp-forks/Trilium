@@ -1,4 +1,4 @@
-import { DEFAULT_TASK_STATES, type TaskStateDef } from "@triliumnext/commons";
+import { DEFAULT_TASK_STATES, DONE_STATE_NAME, isAnchorState, NONE_STATE_NAME, type TaskStateDef } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
 import { Command, ListEditing, Plugin, TodoList, type Editor, type ModelElement, type ViewElement } from "ckeditor5";
 
@@ -6,8 +6,8 @@ export const TASK_STATE_ATTRIBUTE = "taskState";
 const TODO_LIST_CHECKED_ATTRIBUTE = "todoListChecked";
 
 /**
- * The configured non-binary task states. `none` (unchecked) and `done` (checked)
- * are CKEditor's native checkbox behaviour and are not part of this list.
+ * The ordered task states. Includes the built-in `none`/`done` anchors — those
+ * are never written as `data-task-state`; they map to the native checkbox.
  */
 export function getConfiguredTaskStates(editor: Editor): TaskStateDef[] {
     const states = editor.config.get("taskStates") as TaskStateDef[] | undefined;
@@ -34,8 +34,8 @@ export default class TodoListMultistateEditing extends Plugin {
             if (!command?.isEnabled) {
                 return;
             }
-            const cycle: (string | null)[] = [null, ...states.map((state) => state.name)];
-            const current = (command.value as string | null) ?? null;
+            const cycle = states.map((state) => state.name);
+            const current = (command.value as string | null) ?? NONE_STATE_NAME;
             const idx = cycle.indexOf(current);
             const next = cycle[(idx + 1) % cycle.length];
             editor.execute("setTaskState", {state: next});
@@ -47,7 +47,8 @@ export default class TodoListMultistateEditing extends Plugin {
             scope: "item",
             attributeName: TASK_STATE_ATTRIBUTE,
             setAttributeOnDowncast(writer, value, element) {
-                if (typeof value === "string" && stateByName.has(value)) {
+                // Only customizable states carry `data-task-state`; none/done are native.
+                if (typeof value === "string" && stateByName.has(value) && !isAnchorState(value)) {
                     writer.setAttribute("data-task-state", value, element);
                 } else {
                     writer.removeAttribute("data-task-state", element);
@@ -61,7 +62,9 @@ export default class TodoListMultistateEditing extends Plugin {
                 key: TASK_STATE_ATTRIBUTE,
                 value: (viewElement: ViewElement) => {
                     const value = viewElement.getAttribute("data-task-state");
-                    return typeof value === "string" && stateByName.has(value) ? value : null;
+                    return typeof value === "string" && stateByName.has(value) && !isAnchorState(value)
+                        ? value
+                        : null;
                 }
             }
         });
@@ -103,12 +106,12 @@ export default class TodoListMultistateEditing extends Plugin {
 
             let changed = false;
 
-            // A configured state forces the checkbox to its `checkboxValue`.
+            // A customizable state forces the checkbox to its `checkboxValue`.
             for (const el of stateChanged) {
                 const stateName = el.getAttribute(TASK_STATE_ATTRIBUTE);
                 const state = typeof stateName === "string" ? stateByName.get(stateName) : undefined;
                 if (!state) {
-                    // State cleared — leave the native checkbox (none/done) untouched.
+                    // State cleared — the command already set the native checkbox.
                     continue;
                 }
                 if (!!el.getAttribute(TODO_LIST_CHECKED_ATTRIBUTE) !== state.checkboxValue) {
@@ -146,19 +149,27 @@ class SetTaskStateCommand extends Command {
             return;
         }
         const stored = block.getAttribute(TASK_STATE_ATTRIBUTE);
-        this.value = typeof stored === "string" ? stored : null;
+        if (typeof stored === "string") {
+            this.value = stored;
+        } else {
+            this.value = block.getAttribute(TODO_LIST_CHECKED_ATTRIBUTE) ? DONE_STATE_NAME : NONE_STATE_NAME;
+        }
     }
 
     execute(options: {state: string | null}) {
         const model = this.editor.model;
-        const {state} = options;
+        const state = options.state ?? NONE_STATE_NAME;
         model.change((writer) => {
             for (const block of model.document.selection.getSelectedBlocks()) {
                 if (block.getAttribute("listType") !== "todo") {
                     continue;
                 }
-                if (!state || state === "none") {
+                if (state === NONE_STATE_NAME) {
                     writer.removeAttribute(TASK_STATE_ATTRIBUTE, block);
+                    writer.setAttribute(TODO_LIST_CHECKED_ATTRIBUTE, false, block);
+                } else if (state === DONE_STATE_NAME) {
+                    writer.removeAttribute(TASK_STATE_ATTRIBUTE, block);
+                    writer.setAttribute(TODO_LIST_CHECKED_ATTRIBUTE, true, block);
                 } else {
                     writer.setAttribute(TASK_STATE_ATTRIBUTE, state, block);
                 }

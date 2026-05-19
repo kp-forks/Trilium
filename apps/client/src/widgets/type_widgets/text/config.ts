@@ -1,6 +1,6 @@
 import { buildExtraCommands, type EditorConfig, getCkLocale, loadPremiumPlugins, TemplateDefinition } from "@triliumnext/ckeditor5";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/src/emoji_definitions/en.json?url";
-import { ALLOWED_PROTOCOLS, DEFAULT_TASK_STATES, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor, type TaskStateDef } from "@triliumnext/commons";
+import { ALLOWED_PROTOCOLS, DEFAULT_TASK_STATES, DISPLAYABLE_LOCALE_IDS, DONE_TASK_STATE, MIME_TYPE_AUTO, NONE_TASK_STATE, normalizeMimeTypeForCKEditor, type TaskStateDef } from "@triliumnext/commons";
 
 import froca from "../../../services/froca.js";
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
@@ -237,15 +237,27 @@ async function fetchTaskStates(): Promise<TaskStateDef[]> {
     }
 
     const states = (await container.getChildNotes())
-        .map((note): TaskStateDef => ({
-            name: note.getLabelValue("stateName") ?? "",
-            title: note.title,
-            markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
-            checkboxValue: note.getLabelValue("checkboxValue") === "true",
-            color: note.getLabelValue("color") ?? "",
-            icon: note.getLabelValue("iconClass") ?? ""
-        }))
-        .filter((state) => state.name);
+        .map((note): TaskStateDef | null => {
+            if (note.noteId === "_taskStateNone") {
+                return NONE_TASK_STATE;
+            }
+            if (note.noteId === "_taskStateDone") {
+                return DONE_TASK_STATE;
+            }
+            const name = note.getLabelValue("stateName");
+            if (!name) {
+                return null;
+            }
+            return {
+                name,
+                title: note.title,
+                markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
+                checkboxValue: note.getLabelValue("checkboxValue") === "true",
+                color: note.getLabelValue("color") ?? "",
+                icon: note.getLabelValue("iconClass") ?? ""
+            };
+        })
+        .filter((state): state is TaskStateDef => state !== null);
 
     return states.length ? states : DEFAULT_TASK_STATES;
 }

@@ -73,7 +73,6 @@ export default class TodoListMultistateToolbar extends Plugin {
         const editor = this.editor;
         const toolbar = new ToolbarView(editor.locale);
         toolbar.class = "task-state-toolbar";
-        toolbar.items.add(editor.ui.componentFactory.create("taskState:none"));
         for (const state of getConfiguredTaskStates(editor)) {
             toolbar.items.add(editor.ui.componentFactory.create(`taskState:${state.name}`));
         }
