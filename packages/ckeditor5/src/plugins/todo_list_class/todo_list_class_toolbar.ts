@@ -1,7 +1,7 @@
 import {
     BalloonPanelView,
-    ClickObserver,
     ContextualBalloon,
+    DomEventObserver,
     Plugin,
     ToolbarView,
     clickOutsideHandler,
@@ -10,6 +10,15 @@ import {
 } from "ckeditor5";
 import { TODO_LIST_CLASSES } from "./todo_list_class_editing.js";
 import TodoListClassUI from "./todo_list_class_ui.js";
+
+class TodoCheckboxContextMenuObserver extends DomEventObserver<"contextmenu"> {
+    get domEventType() {
+        return "contextmenu" as const;
+    }
+    onDomEvent(domEvent: MouseEvent) {
+        this.fire("contextmenu", domEvent);
+    }
+}
 
 export default class TodoListClassToolbar extends Plugin {
 
@@ -24,15 +33,15 @@ export default class TodoListClassToolbar extends Plugin {
     init() {
         const editor = this.editor;
         this._balloon = editor.plugins.get(ContextualBalloon);
-        editor.editing.view.addObserver(ClickObserver);
+        editor.editing.view.addObserver(TodoCheckboxContextMenuObserver);
         this._toolbarView = this._createToolbarView();
 
-        this.listenTo(editor.editing.view.document, "click", (_evt, data) => {
+        this.listenTo(editor.editing.view.document, "contextmenu", (_evt, data) => {
             const target = (data as {target?: unknown}).target;
             if (!isTodoCheckbox(target)) {
-                this._hide();
                 return;
             }
+            (data as {domEvent: MouseEvent}).domEvent.preventDefault();
             this._show(target);
         });
 
