@@ -11,6 +11,9 @@ blockExoticSubdeps: false
 # updates and regular installs aren't stalled.
 minimumReleaseAge: 0
 
+# Don't fail when corepack provides a slightly different pnpm version than packageManager declares.
+pmOnFail: ignore
+
 overrides:
   "@codemirror/language": "6.12.3"
   "@lezer/highlight": "1.2.3"
