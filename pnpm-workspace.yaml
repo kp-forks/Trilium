@@ -1,6 +1,6 @@
 packages:
-- packages/*
-- apps/*
+  - packages/*
+  - apps/*
 
 nodeLinker: hoisted
 
@@ -11,13 +11,16 @@ blockExoticSubdeps: false
 # updates and regular installs aren't stalled.
 minimumReleaseAge: 0
 
-onlyBuiltDependencies:
-- better-sqlite3
-- electron
-- electron-winstaller
-- esbuild
-- fs-xattr
-- macos-alias
-
-ignoredBuiltDependencies:
-- sqlite3
+allowBuilds:
+  better-sqlite3: true
+  core-js: false
+  edgedriver: false
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  geckodriver: false
+  protobufjs: true
+  sharp: true
+  spawn-sync: true
+  sqlite3: false
+  tesseract.js: true
