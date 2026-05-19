@@ -1,8 +1,13 @@
-import { ADMONITION_TYPE_MAPPINGS } from "@triliumnext/commons";
+import { ADMONITION_TYPE_MAPPINGS, type TaskStateDef } from "@triliumnext/commons";
 import { gfm } from "@triliumnext/turndown-plugin-gfm";
 import Turnish, { type Rule } from "turnish";
 
+import { getTaskStates } from "../task_states.js";
+
 let instance: Turnish | null = null;
+
+/** Task states for the current `toMarkdown` invocation, consulted by the list-item filter. */
+let currentTaskStates: TaskStateDef[] = [];
 
 export { ADMONITION_TYPE_MAPPINGS };
 
@@ -26,6 +31,8 @@ const fencedCodeBlockFilter: Rule = {
 };
 
 function toMarkdown(content: string) {
+    currentTaskStates = getTaskStates();
+
     if (instance === null) {
         instance = new Turnish({
             headingStyle: "atx",
@@ -211,13 +218,6 @@ function buildFigureFilter(): Rule {
     };
 }
 
-const TASK_STATE_TO_MARKDOWN_MARKER: Record<string, string> = {
-    doing: "/",
-    done: "x",
-    cancelled: "-",
-    maybe: "?"
-};
-
 // Keep in line with https://github.com/mixmark-io/turndown/blob/master/src/commonmark-rules.js.
 function buildListItemFilter(): Rule {
     return {
@@ -234,7 +234,9 @@ function buildListItemFilter(): Rule {
                 prefix = `${start ? Number(start) + index : index + 1}.  `;
             } else if (parent.classList.contains("todo-list")) {
                 const state = (node as HTMLElement).getAttribute("data-task-state");
-                const stateMarker = state ? TASK_STATE_TO_MARKDOWN_MARKER[state] : undefined;
+                const stateMarker = state
+                    ? currentTaskStates.find((s) => s.name === state)?.markdownSymbol
+                    : undefined;
                 if (stateMarker) {
                     prefix = `- [${stateMarker}] `;
                 } else {

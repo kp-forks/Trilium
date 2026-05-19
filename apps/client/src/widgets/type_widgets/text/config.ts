@@ -1,7 +1,8 @@
 import { buildExtraCommands, type EditorConfig, getCkLocale, loadPremiumPlugins, TemplateDefinition } from "@triliumnext/ckeditor5";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/src/emoji_definitions/en.json?url";
-import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import { ALLOWED_PROTOCOLS, DEFAULT_TASK_STATES, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor, type TaskStateDef } from "@triliumnext/commons";
 
+import froca from "../../../services/froca.js";
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
 import { t } from "../../../services/i18n.js";
 import { getMermaidConfig } from "../../../services/mermaid.js";
@@ -174,6 +175,9 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         ...await getCkLocale(opts.uiLanguage)
     };
 
+    // User-configurable todo task states (from the `_taskStates` hidden subtree).
+    (config as Record<string, unknown>).taskStates = await fetchTaskStates();
+
     // Set up content language.
     const { contentLanguage } = opts;
     if (contentLanguage) {
@@ -224,6 +228,26 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         ...config,
         ...buildToolbarConfig(opts.isClassicEditor)
     };
+}
+
+async function fetchTaskStates(): Promise<TaskStateDef[]> {
+    const container = await froca.getNote("_taskStates");
+    if (!container) {
+        return DEFAULT_TASK_STATES;
+    }
+
+    const states = (await container.getChildNotes())
+        .map((note): TaskStateDef => ({
+            name: note.getLabelValue("stateName") ?? "",
+            title: note.title,
+            markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
+            checkboxValue: note.getLabelValue("checkboxValue") === "true",
+            color: note.getLabelValue("color") ?? "",
+            icon: note.getLabelValue("iconClass") ?? ""
+        }))
+        .filter((state) => state.name);
+
+    return states.length ? states : DEFAULT_TASK_STATES;
 }
 
 function buildListOfLanguages() {

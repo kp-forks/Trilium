@@ -1,58 +1,76 @@
 import { Marked, Renderer, type Token, type Tokens } from "marked";
 import markedFootnote from "marked-footnote";
 
-const MARKDOWN_MARKER_TO_TASK_STATE: Record<string, string> = {
-    "/": "doing",
-    "-": "cancelled",
-    "?": "maybe"
-};
-const TASK_MARKER_STRIP_PATTERN = /^\[[/?-]\]\s?/;
-const TASK_MARKER_RAW_PATTERN = /^[ \t]*[-*+]\s+\[([/?-])\]\s?/;
+import { DEFAULT_TASK_STATES, type TaskStateDef } from "./task_states.js";
 
 type TaskListItem = Tokens.ListItem & { _taskState?: string };
 
-function stripTaskMarkerFromTokens(tokens: Token[] | undefined): void {
+function escapeForCharClass(char: string): string {
+    return char.replace(/[^\w]/g, (c) => `\\${c}`);
+}
+
+function stripTaskMarkerFromTokens(tokens: Token[] | undefined, stripPattern: RegExp): void {
     if (!tokens || tokens.length === 0) {
         return;
     }
     const first = tokens[0] as Token & { text?: string; raw?: string; tokens?: Token[] };
     if (typeof first.text === "string") {
-        first.text = first.text.replace(TASK_MARKER_STRIP_PATTERN, "");
+        first.text = first.text.replace(stripPattern, "");
     }
     if (typeof first.raw === "string") {
-        first.raw = first.raw.replace(TASK_MARKER_STRIP_PATTERN, "");
+        first.raw = first.raw.replace(stripPattern, "");
     }
     if (Array.isArray(first.tokens)) {
-        stripTaskMarkerFromTokens(first.tokens);
+        stripTaskMarkerFromTokens(first.tokens, stripPattern);
     }
 }
 
 /**
- * Marked `walkTokens` hook that recognises non-standard task markers `[/]`, `[-]`, `[?]`
- * in list items (marked only understands `[x]`/`[ ]`). When found, the item is converted
- * into a task item with `_taskState` carrying the corresponding state for downstream rendering.
+ * Builds a marked `walkTokens` hook that recognises non-standard task markers
+ * (e.g. `[/]`, `[-]`, `[?]`) derived from the configured task states — marked
+ * itself only understands `[x]`/`[ ]`. A matched item is converted into a task
+ * item with `_taskState` carrying the resolved state name for downstream rendering.
  */
-function detectCustomTaskState(token: Token): void {
-    if (token.type !== "list_item") {
-        return;
+function createTaskStateDetector(states: TaskStateDef[]): (token: Token) => void {
+    const symbolToName = new Map<string, string>();
+    for (const state of states) {
+        const symbol = state.markdownSymbol;
+        // `x` and ` ` are the native checked/unchecked markers handled by marked.
+        if (symbol.length === 1 && symbol !== "x" && symbol !== " ") {
+            symbolToName.set(symbol, state.name);
+        }
     }
-    const item = token as TaskListItem;
-    if (item.task) {
-        return;
+
+    if (symbolToName.size === 0) {
+        return () => {};
     }
-    const match = TASK_MARKER_RAW_PATTERN.exec(item.raw);
-    if (!match) {
-        return;
-    }
-    const state = MARKDOWN_MARKER_TO_TASK_STATE[match[1]];
-    if (!state) {
-        return;
-    }
-    item.task = true;
-    item.checked = false;
-    item._taskState = state;
-    item.text = item.text.replace(TASK_MARKER_STRIP_PATTERN, "");
-    stripTaskMarkerFromTokens(item.tokens);
+
+    const charClass = [...symbolToName.keys()].map(escapeForCharClass).join("");
+    const rawPattern = new RegExp(`^[ \\t]*[-*+]\\s+\\[([${charClass}])\\]\\s?`);
+    const stripPattern = new RegExp(`^\\[[${charClass}]\\]\\s?`);
+
+    return (token: Token): void => {
+        if (token.type !== "list_item") {
+            return;
+        }
+        const item = token as TaskListItem;
+        if (item.task) {
+            return;
+        }
+        const match = rawPattern.exec(item.raw);
+        if (!match) {
+            return;
+        }
+        const name = symbolToName.get(match[1]);
+        if (!name) {
+            return;
+        }
+        item.task = true;
+        item.checked = false;
+        item._taskState = name;
+        item.text = item.text.replace(stripPattern, "");
+        stripTaskMarkerFromTokens(item.tokens, stripPattern);
+    };
 }
 
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "./mime_type.js";
@@ -111,6 +129,11 @@ export interface RenderToHtmlOptions {
      * marked attaches a parser to the renderer during parsing.
      */
     renderer?: Renderer;
+    /**
+     * Configured todo task states, used to recognise non-standard task markers
+     * (e.g. `[/]`) in list items. Defaults to {@link DEFAULT_TASK_STATES}.
+     */
+    taskStates?: TaskStateDef[];
 }
 
 function escapeHtml(str: string): string {
@@ -349,7 +372,7 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
 
     const marked = new Marked({ async: false, gfm: true });
     marked.use(markedFootnote());
-    marked.use({ walkTokens: detectCustomTaskState });
+    marked.use({ walkTokens: createTaskStateDetector(options.taskStates ?? DEFAULT_TASK_STATES) });
     marked.use({
         // Order is important, especially for wikilinks.
         extensions: [

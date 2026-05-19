@@ -12,6 +12,7 @@ import migrationService from "./migration.js";
 import noteService from "./notes.js";
 import { getLog } from "./log.js";
 import { getSql } from "./sql/index.js";
+import { seedDefaultTaskStates } from "./task_states.js";
 
 export const LBTPL_ROOT = "_lbTplRoot";
 export const LBTPL_BASE = "_lbTplBase";
@@ -83,6 +84,19 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 id: "_bulkAction",
                 title: t("hidden-subtree.bulk-action-title"),
                 type: "doc"
+            },
+            {
+                id: "_taskStates",
+                title: t("hidden-subtree.task-states-title"),
+                type: "book",
+                icon: "bx-list-check",
+                isExpanded: true,
+                attributes: [
+                    { type: "label", name: "child:label:stateName", value: "promoted,single,text" },
+                    { type: "label", name: "child:label:markdownSymbol", value: "promoted,single,text" },
+                    { type: "label", name: "child:label:checkboxValue", value: "promoted,single,bool" },
+                    { type: "label", name: "child:label:color", value: "promoted,single,text" }
+                ]
             },
             {
                 id: "_backendLog",
@@ -298,7 +312,15 @@ function checkHiddenSubtree(force = false, extraOpts: CheckHiddenExtraOpts = {})
     }
 
     getSql().transactional(() => {
+        const taskStatesExisted = !!becca.notes["_taskStates"];
+
         checkHiddenSubtreeRecursively("root", hiddenSubtreeDefinition, extraOpts);
+
+        // Seed the default task states only the first time the container is created,
+        // so that later user deletions stick instead of being recreated on startup.
+        if (!taskStatesExisted) {
+            seedDefaultTaskStates();
+        }
 
         try {
             cleanUpHelp(helpSubtree);

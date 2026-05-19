@@ -1,13 +1,5 @@
 import { ButtonView, Plugin } from "ckeditor5";
-import TodoListMultistateEditing, { TASK_STATES, type TaskState } from "./todo_list_multistate_editing.js";
-
-const STATE_LABELS: Record<TaskState, string> = {
-    none: "None",
-    doing: "Doing",
-    done: "Done",
-    maybe: "Maybe",
-    cancelled: "Cancelled"
-};
+import TodoListMultistateEditing, { getConfiguredTaskStates } from "./todo_list_multistate_editing.js";
 
 export default class TodoListMultistateUI extends Plugin {
 
@@ -19,20 +11,42 @@ export default class TodoListMultistateUI extends Plugin {
         const editor = this.editor;
         const command = editor.commands.get("setTaskState")!;
 
-        for (const state of TASK_STATES) {
-            const componentName = `taskState:${state}`;
-            editor.ui.componentFactory.add(componentName, (locale) => {
+        // Clear button — drops back to the native none/done checkbox.
+        editor.ui.componentFactory.add("taskState:none", (locale) => {
+            const button = new ButtonView(locale);
+            button.set({
+                label: editor.t("Clear task state"),
+                withText: false,
+                tooltip: true,
+                class: "ck-task-state-button ck-task-state-none"
+            });
+            button.bind("isOn").to(command, "value", (value) => value === null);
+            button.bind("isEnabled").to(command, "isEnabled");
+            button.on("execute", () => {
+                editor.execute("setTaskState", {state: null});
+                editor.editing.view.focus();
+            });
+            return button;
+        });
+
+        for (const state of getConfiguredTaskStates(editor)) {
+            editor.ui.componentFactory.add(`taskState:${state.name}`, (locale) => {
                 const button = new ButtonView(locale);
                 button.set({
-                    label: STATE_LABELS[state],
+                    label: state.title || state.name,
                     withText: false,
                     tooltip: true,
-                    class: `ck-task-state-button ck-task-state-${state}`
+                    class: `ck-task-state-button ck-task-state-${state.name}`
                 });
-                button.bind("isOn").to(command, "value", (value) => value === state);
+                if (state.color) {
+                    button.extendTemplate({
+                        attributes: {style: `--task-state-color:${state.color}`}
+                    });
+                }
+                button.bind("isOn").to(command, "value", (value) => value === state.name);
                 button.bind("isEnabled").to(command, "isEnabled");
                 button.on("execute", () => {
-                    editor.execute("setTaskState", {state: state as TaskState});
+                    editor.execute("setTaskState", {state: state.name});
                     editor.editing.view.focus();
                 });
                 return button;

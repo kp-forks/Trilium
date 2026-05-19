@@ -2549,10 +2549,6 @@ footer.webview-footer button {
     background-color: rgba(255, 200, 100, 0.25);
 }
 
-.ck-content ul.todo-list > li[data-task-state="done"] {
-    background-color: rgba(130, 220, 130, 0.25);
-}
-
 .ck-content ul.todo-list > li[data-task-state="cancelled"] {
     background-color: rgba(180, 180, 180, 0.25);
 }
