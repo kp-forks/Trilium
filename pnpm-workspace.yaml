@@ -10,3 +10,14 @@ blockExoticSubdeps: false
 # pnpm v11 introduced a 1-day default release age; keep at 0 so Renovate-driven
 # updates and regular installs aren't stalled.
 minimumReleaseAge: 0
+
+onlyBuiltDependencies:
+- better-sqlite3
+- electron
+- electron-winstaller
+- esbuild
+- fs-xattr
+- macos-alias
+
+ignoredBuiltDependencies:
+- sqlite3
