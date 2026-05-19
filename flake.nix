@@ -30,9 +30,9 @@
         # This patch deduplicates entries in PATH, which results in an equivalent but shorter entry.
         # https://github.com/pnpm/pnpm/issues/6106
         # https://github.com/pnpm/pnpm/issues/8552
-        pnpm = (pkgs.pnpm_10.overrideAttrs (prev: {
+        pnpm = (pkgs.pnpm_11.overrideAttrs (prev: {
           postInstall = prev.postInstall + ''
-            patch $out/libexec/pnpm/dist/pnpm.cjs ${./patches/pnpm-PATH-reduction.patch}
+            patch $out/libexec/pnpm/dist/pnpm.mjs ${./patches/pnpm-PATH-reduction.patch}
           '';
         }));
         inherit (pkgs)
