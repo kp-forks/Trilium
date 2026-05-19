@@ -8,8 +8,8 @@ import {
     type ModelElement,
     type ViewElement
 } from "ckeditor5";
-import { TODO_LIST_CLASSES } from "./todo_list_class_editing.js";
-import TodoListClassUI from "./todo_list_class_ui.js";
+import { TASK_STATES } from "./todo_list_multistate_editing.js";
+import TodoListMultistateUI from "./todo_list_multistate_ui.js";
 
 class TodoCheckboxContextMenuObserver extends DomEventObserver<"contextmenu"> {
     get domEventType() {
@@ -20,10 +20,10 @@ class TodoCheckboxContextMenuObserver extends DomEventObserver<"contextmenu"> {
     }
 }
 
-export default class TodoListClassToolbar extends Plugin {
+export default class TodoListMultistateToolbar extends Plugin {
 
     static get requires() {
-        return [ContextualBalloon, TodoListClassUI] as const;
+        return [ContextualBalloon, TodoListMultistateUI] as const;
     }
 
     private _balloon!: ContextualBalloon;
@@ -72,10 +72,9 @@ export default class TodoListClassToolbar extends Plugin {
     private _createToolbarView(): ToolbarView {
         const editor = this.editor;
         const toolbar = new ToolbarView(editor.locale);
-        toolbar.class = "todo-list-class-toolbar";
-        toolbar.items.add(editor.ui.componentFactory.create("todoListClass:none"));
-        for (const className of TODO_LIST_CLASSES) {
-            toolbar.items.add(editor.ui.componentFactory.create(`todoListClass:${className}`));
+        toolbar.class = "task-state-toolbar";
+        for (const state of TASK_STATES) {
+            toolbar.items.add(editor.ui.componentFactory.create(`taskState:${state}`));
         }
         return toolbar;
     }
@@ -114,7 +113,7 @@ export default class TodoListClassToolbar extends Plugin {
             this._balloon.add({
                 view: this._toolbarView,
                 position,
-                balloonClassName: "ck-toolbar-container todo-list-class-toolbar"
+                balloonClassName: "ck-toolbar-container task-state-toolbar"
             });
         }
     }
