@@ -587,7 +587,7 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
     itemContent: string | Uint8Array | undefined,
     itemType: string
 }) {
-    if (!noteContent || typeof itemContent !== "string") {
+    if (typeof itemContent !== "string") {
         return (
             <div className="revision-diff-content">
                 <NoItems icon="bx bx-low-vision" text={t("revisions.diff_not_available")} />
@@ -601,7 +601,7 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
         diffHtml = HtmlDiff.execute(noteContent, itemContent);
     } else {
         // Use word diff for code/mermaid (plain text)
-        const diff = diffWords(noteContent, itemContent);
+        const diff = diffWords(noteContent ?? "", itemContent);
         diffHtml = diff.map(part => {
             if (part.added) {
                 return `<span class="revision-diff-added">${utils.escapeHtml(part.value)}</span>`;
