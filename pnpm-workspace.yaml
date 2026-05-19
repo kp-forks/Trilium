@@ -90,7 +90,9 @@ allowBuilds:
   electron: true
   electron-winstaller: true
   esbuild: true
+  fs-xattr: true
   geckodriver: false
+  macos-alias: true
   protobufjs: true
   sharp: true
   spawn-sync: true
