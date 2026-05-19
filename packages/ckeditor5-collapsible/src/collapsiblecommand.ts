@@ -31,17 +31,6 @@ export default class CollapsibleCommand extends Command {
 
             model.insertContent(detailsEl);
 
-            // Make sure the user can put the caret immediately above and below the block
-            // without having to escape via keyboard tricks (matches the table plugin's UX).
-            const before = detailsEl.previousSibling;
-            if (!before || !before.is("element", "paragraph")) {
-                writer.insertElement("paragraph", writer.createPositionBefore(detailsEl));
-            }
-            const after = detailsEl.nextSibling;
-            if (!after || !after.is("element", "paragraph")) {
-                writer.insertElement("paragraph", writer.createPositionAfter(detailsEl));
-            }
-
             // Place the cursor inside the summary so the user can immediately type a title.
             writer.setSelection(summaryEl, 0);
         });

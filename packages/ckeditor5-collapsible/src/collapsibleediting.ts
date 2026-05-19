@@ -27,6 +27,8 @@ export default class CollapsibleEditing extends Plugin {
         const editor = this.editor;
         const schema = editor.model.schema;
         const conversion = editor.conversion;
+        const viewDocument = editor.editing.view.document;
+        const selection = editor.model.document.selection;
 
         editor.commands.add("collapsible", new CollapsibleCommand(editor));
 
@@ -38,8 +40,7 @@ export default class CollapsibleEditing extends Plugin {
 
         schema.register("summary", {
             allowIn: "details",
-            allowContentOf: "$block",
-            isLimit: true
+            allowContentOf: "$block"
         });
 
         // Conversion ----------------------------------------------------------
@@ -73,9 +74,45 @@ export default class CollapsibleEditing extends Plugin {
         conversion.for("upcast").elementToElement({ view: "summary", model: "summary" });
         conversion.for("downcast").elementToElement({ model: "summary", view: "summary" });
 
+        // UX: allow up-arrow to move cursor into the last block of a collapsible from below.
+        this.listenTo<ViewDocumentEnterEvent>(viewDocument, "arrowKey", (evt, data) => {
+            if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) {
+                return;
+            }
+
+            const position = selection.getFirstPosition();
+            if (!position) {
+                return;
+            }
+
+            const block = position.parent;
+            if (!block || !block.is("element")) {
+                return;
+            }
+
+            // If we're at the start of a block, check if the previous sibling is a <details>.
+            if (!position.isAtStart) {
+                return;
+            }
+
+            const prevSibling = block.previousSibling;
+            if (!prevSibling || !prevSibling.is("element", "details")) {
+                return;
+            }
+
+            // Move cursor to the last child of the details.
+            editor.model.change(writer => {
+                const lastChild = prevSibling.getChild(prevSibling.childCount - 1);
+                if (lastChild && lastChild.is("element")) {
+                    writer.setSelection(lastChild, 0);
+                }
+            });
+
+            data.preventDefault();
+            evt.stop();
+        });
+
         // UX: pressing Enter inside an empty summary moves the cursor into the body.
-        const viewDocument = editor.editing.view.document;
-        const selection = editor.model.document.selection;
 
         this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter", (evt, data) => {
             if (!selection.isCollapsed) {
@@ -142,6 +179,44 @@ export default class CollapsibleEditing extends Plugin {
             });
         });
 
+        // UX: explicitly handle deletion of <details> blocks to prevent orphaned structure.
+        this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete", (evt, data) => {
+            if (!selection.isCollapsed) {
+                return;
+            }
+
+            const position = selection.getFirstPosition();
+            if (!position) {
+                return;
+            }
+
+            // Deleting forward: check if we're about to delete a <details> block.
+            if (data.direction === "forward") {
+                const nextNode = position.nodeAfter;
+                if (nextNode && nextNode.is("element", "details")) {
+                    editor.model.change(writer => {
+                        writer.remove(nextNode);
+                    });
+                    data.preventDefault();
+                    evt.stop();
+                    return;
+                }
+            }
+
+            // Deleting backward: check if we're right after a <details> block.
+            if (data.direction === "backward") {
+                const prevNode = position.nodeBefore;
+                if (prevNode && prevNode.is("element", "details")) {
+                    editor.model.change(writer => {
+                        writer.remove(prevNode);
+                    });
+                    data.preventDefault();
+                    evt.stop();
+                    return;
+                }
+            }
+        });
+
         // UX: backspace at the start of an empty summary unwraps the collapsible.
         this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete", (evt, data) => {
             if (data.direction !== "backward" || !selection.isCollapsed) {
@@ -167,20 +242,50 @@ export default class CollapsibleEditing extends Plugin {
             });
         }, { context: "summary" });
 
-        // Postfixer: drop entirely empty <details> elements (defensive cleanup).
+        // Postfixer: remove orphaned elements and clean up invalid structure.
         editor.model.document.registerPostFixer(writer => {
             const changes = editor.model.document.differ.getChanges();
+            let changed = false;
+
             for (const entry of changes) {
                 if (entry.type !== "remove" && entry.type !== "insert") {
                     continue;
                 }
-                const parent = entry.position.parent;
-                if (parent.is("element", "details") && parent.isEmpty) {
-                    writer.remove(parent);
-                    return true;
+
+                const node = entry.position.nodeAfter || entry.position.nodeBefore;
+                if (!node || !node.is("element")) {
+                    continue;
+                }
+
+                // Walk up and check: if this is a summary not inside details, remove it.
+                let current: any = node;
+                while (current) {
+                    if (current.is("element", "summary")) {
+                        const parent = current.parent;
+                        if (!parent || !parent.is("element", "details")) {
+                            writer.remove(current);
+                            changed = true;
+                        }
+                        break;
+                    }
+                    current = current.parent;
+                }
+
+                // Remove empty <details> elements.
+                if (node.is("element", "details") && node.isEmpty) {
+                    writer.remove(node);
+                    changed = true;
+                    continue;
+                }
+
+                // Clean up empty list items.
+                if (node.is("element", "listItem") && node.isEmpty) {
+                    writer.remove(node);
+                    changed = true;
                 }
             }
-            return false;
+
+            return changed;
         });
     }
 }
