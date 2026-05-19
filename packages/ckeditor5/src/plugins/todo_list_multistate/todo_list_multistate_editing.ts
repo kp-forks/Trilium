@@ -1,7 +1,7 @@
 import { Tooltip } from "bootstrap";
 import { Command, ListEditing, Plugin, TodoList, type ModelElement, type ViewElement } from "ckeditor5";
 
-export const TASK_STATES = ["none", "doing", "done", "cancelled", "maybe"] as const;
+export const TASK_STATES = ["none", "doing", "done", "maybe","cancelled"] as const;
 export type TaskState = typeof TASK_STATES[number];
 export const TASK_STATE_ATTRIBUTE = "taskState";
 const TODO_LIST_CHECKED_ATTRIBUTE = "todoListChecked";

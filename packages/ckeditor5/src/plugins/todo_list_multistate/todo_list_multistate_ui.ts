@@ -5,8 +5,8 @@ const STATE_LABELS: Record<TaskState, string> = {
     none: "None",
     doing: "Doing",
     done: "Done",
-    cancelled: "Cancelled",
-    maybe: "Maybe"
+    maybe: "Maybe",
+    cancelled: "Cancelled"
 };
 
 export default class TodoListMultistateUI extends Plugin {
