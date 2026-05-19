@@ -224,7 +224,7 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+あるいは、Nixがインストールされている場合は:
 ```shell
 # Run directly
 nix run .#edit-docs
@@ -252,7 +252,7 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 詳細については、[ドキュメントガイド](https://github.com/TriliumNext/Trilium/blob/main/docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md)
 をご覧ください。ご質問がございましたら、上記の「私たちと議論しましょう」セクションに記載されているリンクからお気軽にお問い合わせください。
 
-## 💖 Sponsors
+## 💖 スポンサー
 
 <table>
   <tr>
@@ -291,8 +291,7 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 
 Trilium は、その基盤となる技術なしには実現できませんでした:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - テキストノートのビジュアルエディタ。
 * [CodeMirror](https://github.com/codemirror/CodeMirror) -
   膨大な数の言語をサポートするコードエディター。
 * [Excalidraw](https://github.com/excalidraw/excalidraw) - Canvas
