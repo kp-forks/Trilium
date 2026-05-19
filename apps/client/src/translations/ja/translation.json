@@ -63,11 +63,14 @@
     "save": "保存",
     "edit_branch_prefix": "ブランチ接頭辞の編集",
     "help_on_tree_prefix": "ツリー接頭辞に関するヘルプ",
-    "prefix": "接頭辞: ",
+    "prefix": "接頭辞",
     "branch_prefix_saved": "ブランチの接頭辞が保存されました。",
     "edit_branch_prefix_multiple": "{{count}} ブランチのブランチ接頭辞を編集",
     "branch_prefix_saved_multiple": "{{count}} ブランチのブランチ接頭辞が保存されました。",
-    "affected_branches": "影響を受けるブランチ {{count}}:"
+    "affected_branches": "影響を受けるブランチ {{count}}:",
+    "preview_in_tree": "ツリーでプレビュー",
+    "description": "このブランチのノートタイトルにのみ追加されます。他のブランチでは元のタイトルが保持されます。",
+    "cancel": "キャンセル"
   },
   "global_menu": {
     "menu": "メニュー",
@@ -1460,7 +1463,12 @@
   "code_theme": {
     "title": "外観",
     "word_wrapping": "単語の折り返し",
-    "color-scheme": "カラースキーム"
+    "color-scheme": "カラースキーム",
+    "theme_mode": "テーマモード",
+    "match_app_appearance": "アプリの外観を統一",
+    "always_use_one_theme": "常に同じテーマを使用",
+    "light_theme": "ライトテーマ",
+    "dark_theme": "ダークテーマ"
   },
   "cpu_arch_warning": {
     "title": "ARM64版をダウンロードしてください",
@@ -2157,7 +2165,9 @@
     "save_status_error": "保存に失敗しました",
     "save_status_saving_tooltip": "変更を保存しています。",
     "save_status_unsaved_tooltip": "未保存の変更があります。すぐに自動的に保存されます。",
-    "save_status_error_tooltip": "ノートの保存中にエラーが発生しました。可能であれば、ノートの内容を別の場所にコピーして、アプリケーションを再読み込みしてください。"
+    "save_status_error_tooltip": "ノートの保存中にエラーが発生しました。可能であれば、ノートの内容を別の場所にコピーして、アプリケーションを再読み込みしてください。",
+    "doc_url": "オンラインドキュメント",
+    "doc_url_description": "クリックすると、オンラインドキュメントサイトでこのページが表示されます。"
   },
   "status_bar": {
     "language_title": "コンテンツの言語を変更",
