@@ -74,16 +74,24 @@ export const DEFAULT_TASK_STATES: TaskStateDef[] = [
     DEFAULT_CUSTOM_TASK_STATES[2]
 ];
 
+/** Stable identifier of why a custom task state failed validation. */
+export type TaskStateValidationReason =
+    | "undefined-name"
+    | "invalid-name"
+    | "duplicate-name"
+    | "missing-title"
+    | "missing-icon"
+    | "invalid-symbol"
+    | "duplicate-symbol";
+
 /** A custom task state that failed validation and was dropped. */
 export interface TaskStateValidationError {
     /** The dropped state note's id. */
     id: string;
     /** The dropped state's title (falls back to its name). */
     title: string;
-    /** Short machine-ish reason. */
-    reason: string;
-    /** Ready-to-display message. */
-    message: string;
+    /** Stable reason key — the caller localizes it for display. */
+    reason: TaskStateValidationReason;
 }
 
 export interface TaskStateValidationResult {
@@ -102,28 +110,28 @@ function checkCustomState(
     state: TaskStateDef,
     seenNames: Set<string>,
     seenSymbols: Set<string>
-): string | null {
+): TaskStateValidationReason | null {
     if (!state.name) {
-        return "undefined stateName";
+        return "undefined-name";
     }
     if (!VALID_STATE_NAME_PATTERN.test(state.name)) {
-        return "invalid stateName";
+        return "invalid-name";
     }
     if (seenNames.has(state.name)) {
-        return "duplicate stateName";
+        return "duplicate-name";
     }
     if (!state.title) {
-        return "missing title";
+        return "missing-title";
     }
     if (!state.icon) {
-        return "missing icon";
+        return "missing-icon";
     }
     if (state.markdownSymbol) {
         if (state.markdownSymbol.length !== 1 || FORBIDDEN_MARKDOWN_SYMBOLS.has(state.markdownSymbol)) {
-            return `the markdown symbol should be one character, excepting "[", " ", "X", and "]"`;
+            return "invalid-symbol";
         }
         if (seenSymbols.has(state.markdownSymbol)) {
-            return "duplicate markdown symbol";
+            return "duplicate-symbol";
         }
     }
     return null;
@@ -148,13 +156,10 @@ export function validateTaskStates(states: TaskStateDef[]): TaskStateValidationR
 
         const reason = checkCustomState(state, seenNames, seenSymbols);
         if (reason) {
-            const title = state.title || state.name || "";
-            const id = state.id ?? "";
             errors.push({
-                id,
-                title,
-                reason,
-                message: `Dropped custom task state definition "${title}" (${id}) due to: ${reason}`
+                id: state.id ?? "",
+                title: state.title || state.name || "",
+                reason
             });
             continue;
         }

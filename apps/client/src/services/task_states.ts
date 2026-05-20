@@ -12,6 +12,7 @@ import {
 
 import appContext from "../components/app_context.js";
 import froca from "./froca.js";
+import { t } from "./i18n.js";
 import { showError } from "./toast.js";
 
 let validationReported = false;
@@ -23,7 +24,8 @@ function reportValidationErrors(errors: TaskStateValidationError[]) {
     }
     validationReported = true;
     for (const error of errors) {
-        showError(error.message);
+        const reason = t(`text-editor.validation-errors.${error.reason}`);
+        showError(t("text-editor.task-state-dropped", {title: error.title, id: error.id, reason}));
     }
 }
 

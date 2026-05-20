@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DONE_TASK_STATE, NONE_TASK_STATE, type TaskStateDef, validateTaskStates } from "./task_states.js";
+import { DONE_TASK_STATE, NONE_TASK_STATE, type TaskStateDef, type TaskStateValidationReason, validateTaskStates } from "./task_states.js";
 
 function customState(overrides: Partial<TaskStateDef>): TaskStateDef {
     return {
@@ -15,8 +15,6 @@ function customState(overrides: Partial<TaskStateDef>): TaskStateDef {
     };
 }
 
-const SYMBOL_REASON = `the markdown symbol should be one character, excepting "[", " ", "X", and "]"`;
-
 describe("validateTaskStates", () => {
     it("keeps anchors and valid custom states", () => {
         const states = [NONE_TASK_STATE, customState({ id: "a", name: "doing" }), DONE_TASK_STATE];
@@ -27,18 +25,18 @@ describe("validateTaskStates", () => {
     });
 
     it("drops invalid custom states with the matching reason", () => {
-        const scenarios: Array<[Partial<TaskStateDef>, string]> = [
-            [{ name: "" }, "undefined stateName"],
-            [{ name: "in progress" }, "invalid stateName"],
-            [{ name: "<b>" }, "invalid stateName"],
-            [{ name: "done" }, "duplicate stateName"],
-            [{ name: "none" }, "duplicate stateName"],
-            [{ title: "" }, "missing title"],
-            [{ icon: "" }, "missing icon"],
-            [{ markdownSymbol: "//" }, SYMBOL_REASON],
-            [{ markdownSymbol: " " }, SYMBOL_REASON],
-            [{ markdownSymbol: "[" }, SYMBOL_REASON],
-            [{ markdownSymbol: "X" }, SYMBOL_REASON]
+        const scenarios: Array<[Partial<TaskStateDef>, TaskStateValidationReason]> = [
+            [{ name: "" }, "undefined-name"],
+            [{ name: "in progress" }, "invalid-name"],
+            [{ name: "<b>" }, "invalid-name"],
+            [{ name: "done" }, "duplicate-name"],
+            [{ name: "none" }, "duplicate-name"],
+            [{ title: "" }, "missing-title"],
+            [{ icon: "" }, "missing-icon"],
+            [{ markdownSymbol: "//" }, "invalid-symbol"],
+            [{ markdownSymbol: " " }, "invalid-symbol"],
+            [{ markdownSymbol: "[" }, "invalid-symbol"],
+            [{ markdownSymbol: "X" }, "invalid-symbol"]
         ];
 
         for (const [overrides, reason] of scenarios) {
@@ -57,12 +55,12 @@ describe("validateTaskStates", () => {
         const { valid, errors } = validateTaskStates([first, dupName, dupSymbol]);
 
         expect(valid).toEqual([first]);
-        expect(errors.map((e) => e.reason)).toEqual(["duplicate stateName", "duplicate markdown symbol"]);
+        expect(errors.map((e) => e.reason)).toEqual(["duplicate-name", "duplicate-symbol"]);
     });
 
-    it("builds the drop message", () => {
+    it("reports the dropped state's id and title", () => {
         const { errors } = validateTaskStates([customState({ id: "abc", title: "My State", name: "" })]);
-        expect(errors[0].message).toBe(`Dropped custom task state definition "My State" (abc) due to: undefined stateName`);
+        expect(errors[0]).toEqual({ id: "abc", title: "My State", reason: "undefined-name" });
     });
 
     it("allows a custom state with no markdown symbol", () => {

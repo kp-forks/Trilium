@@ -2660,6 +2660,16 @@
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states. Press Ctrl+Shift+Enter to cycle between states.",
     "edit-states-tooltip": "Edit task states",
-    "unknown-task-state": "Undefined custom task state"
+    "unknown-task-state": "Undefined custom task state",
+    "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",
+    "validation-errors": {
+      "undefined-name": "undefined stateName",
+      "invalid-name": "invalid stateName",
+      "duplicate-name": "duplicate stateName",
+      "missing-title": "missing title",
+      "missing-icon": "missing icon",
+      "invalid-symbol": "the markdown symbol should be one character, excepting \"[\", \" \", \"X\", and \"]\"",
+      "duplicate-symbol": "duplicate markdown symbol"
+    }
   }
 }
