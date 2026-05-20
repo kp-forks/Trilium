@@ -2390,7 +2390,9 @@
     "actions": "Aktionen",
     "provider_type": "Anbieter",
     "provider_name": "Name",
-    "settings_title": "KI / LLM"
+    "settings_title": "KI / LLM",
+    "add_provider": "Anbieter hinzufügen",
+    "add_provider_title": "KI-Anbieter hinzufügen"
   },
   "mind-map": {
     "summary": "Zusammenfassung",
