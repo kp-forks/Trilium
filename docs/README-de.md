@@ -274,12 +274,12 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+Alternativ, wenn Nix installiert ist:
 ```shell
-# Run directly
+# Direkt ausführen
 nix run .#edit-docs
 
-# Or install to your profile
+# Oder ins Profil installieren
 nix profile install .#edit-docs
 trilium-edit-docs
 ```
@@ -349,8 +349,8 @@ enthält weitere Details. Bei offenen Fragen kann über die im Abschnitt
 
 Trilium wäre ohne die zugrundeliegenden Technologien nicht möglich:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - der visuelle Editor für
+  Textnotizen.
 * [CodeMirror](https://github.com/codemirror/CodeMirror) - Code-Editor mit
   Unterstützung für eine Vielzahl von Sprachen.
 * [Excalidraw](https://github.com/excalidraw/excalidraw) – das unendliche
