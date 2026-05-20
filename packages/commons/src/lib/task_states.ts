@@ -38,7 +38,7 @@ export const NONE_TASK_STATE: TaskStateDef = {
 
 /** The built-in checked anchor state. */
 export const DONE_TASK_STATE: TaskStateDef = {
-    name: DONE_STATE_NAME, title: "Done", markdownSymbol: "x", checkboxValue: true, color: "", icon: "bx bx-checkbox-checked"
+    name: DONE_STATE_NAME, title: "Done", markdownSymbol: "x", checkboxValue: true, color: "#4de64d", icon: "bx bx-check"
 };
 
 /**
@@ -47,8 +47,8 @@ export const DONE_TASK_STATE: TaskStateDef = {
  */
 export const DEFAULT_CUSTOM_TASK_STATES: TaskStateDef[] = [
     {name: "doing", title: "Doing", markdownSymbol: "/", checkboxValue: false, color: "#e6a23c", icon: "bx bx-loader"},
-    {name: "maybe", title: "Maybe", markdownSymbol: "?", checkboxValue: false, color: "#a06cd5", icon: "bx bx-help-circle"},
-    {name: "cancelled", title: "Cancelled", markdownSymbol: "-", checkboxValue: false, color: "#909399", icon: "bx bx-x"}
+    {name: "maybe", title: "Maybe", markdownSymbol: "?", checkboxValue: false, color: "#4d4de6", icon: "bx bx-question-mark"},
+    {name: "cancelled", title: "Cancelled", markdownSymbol: "-", checkboxValue: false, color: "#e64d4d", icon: "bx bx-block"}
 ];
 
 /**
