@@ -1,4 +1,4 @@
-import { DEFAULT_CUSTOM_TASK_STATES, DEFAULT_TASK_STATES, DONE_TASK_STATE, isAnchorState, NONE_TASK_STATE, type TaskStateDef } from "@triliumnext/commons";
+import { DEFAULT_CUSTOM_TASK_STATES, DEFAULT_TASK_STATES, DONE_TASK_STATE, isAnchorState, NONE_TASK_STATE, type TaskStateDef, validateTaskStates } from "@triliumnext/commons";
 import { t } from "i18next";
 
 import becca from "../becca/becca.js";
@@ -26,31 +26,27 @@ export function getTaskStates(): TaskStateDef[] {
         return DEFAULT_TASK_STATES;
     }
 
-    const states = container.getChildNotes()
-        .map((note): TaskStateDef | null => {
-            if (note.noteId === NONE_NOTE_ID) {
-                return NONE_TASK_STATE;
-            }
-            if (note.noteId === DONE_NOTE_ID) {
-                return DONE_TASK_STATE;
-            }
-            const name = note.getLabelValue("stateName");
-            if (!name) {
-                return null;
-            }
-            return {
-                name,
-                title: note.title,
-                markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
-                checkboxValue: note.getLabelValue("checkboxValue") === "true",
-                color: note.getLabelValue("color") ?? "",
-                icon: note.getLabelValue("iconClass") ?? "",
-                archived: note.isArchived
-            };
-        })
-        .filter((state): state is TaskStateDef => state !== null);
+    const states = container.getChildNotes().map((note): TaskStateDef => {
+        if (note.noteId === NONE_NOTE_ID) {
+            return NONE_TASK_STATE;
+        }
+        if (note.noteId === DONE_NOTE_ID) {
+            return DONE_TASK_STATE;
+        }
+        return {
+            id: note.noteId,
+            name: note.getLabelValue("stateName") ?? "",
+            title: note.title,
+            markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
+            checkboxValue: note.getLabelValue("checkboxValue") === "true",
+            color: note.getLabelValue("color") ?? "",
+            icon: note.getLabelValue("iconClass") ?? "",
+            archived: note.isArchived
+        };
+    });
 
-    return states.length ? states : DEFAULT_TASK_STATES;
+    const {valid} = validateTaskStates(states);
+    return valid.length ? valid : DEFAULT_TASK_STATES;
 }
 
 /**

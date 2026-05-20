@@ -1,10 +1,11 @@
 import { buildExtraCommands, type EditorConfig, getCkLocale, loadPremiumPlugins, TemplateDefinition } from "@triliumnext/ckeditor5";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/src/emoji_definitions/en.json?url";
-import { ALLOWED_PROTOCOLS, DEFAULT_TASK_STATES, DISPLAYABLE_LOCALE_IDS, DONE_TASK_STATE, MIME_TYPE_AUTO, NONE_TASK_STATE, normalizeMimeTypeForCKEditor, type TaskStateDef } from "@triliumnext/commons";
+import { ALLOWED_PROTOCOLS, DEFAULT_TASK_STATES, DISPLAYABLE_LOCALE_IDS, DONE_TASK_STATE, MIME_TYPE_AUTO, NONE_TASK_STATE, normalizeMimeTypeForCKEditor, type TaskStateDef, type TaskStateValidationError, validateTaskStates } from "@triliumnext/commons";
 
 import appContext from "../../../components/app_context.js";
 import froca from "../../../services/froca.js";
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
+import { showError } from "../../../services/toast.js";
 import { t } from "../../../services/i18n.js";
 import { getMermaidConfig } from "../../../services/mermaid.js";
 import { default as mimeTypesService, getHighlightJsNameForMime } from "../../../services/mime_types.js";
@@ -244,19 +245,16 @@ async function fetchTaskStates(): Promise<TaskStateDef[]> {
     }
 
     const states = (await container.getChildNotes())
-        .map((note): TaskStateDef | null => {
+        .map((note): TaskStateDef => {
             if (note.noteId === "_taskStateNone") {
                 return NONE_TASK_STATE;
             }
             if (note.noteId === "_taskStateDone") {
                 return DONE_TASK_STATE;
             }
-            const name = note.getLabelValue("stateName");
-            if (!name) {
-                return null;
-            }
             return {
-                name,
+                id: note.noteId,
+                name: note.getLabelValue("stateName") ?? "",
                 title: note.title,
                 markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
                 checkboxValue: note.getLabelValue("checkboxValue") === "true",
@@ -264,10 +262,24 @@ async function fetchTaskStates(): Promise<TaskStateDef[]> {
                 icon: note.getLabelValue("iconClass") ?? "",
                 archived: note.isArchived
             };
-        })
-        .filter((state): state is TaskStateDef => state !== null);
+        });
 
-    return states.length ? states : DEFAULT_TASK_STATES;
+    const {valid, errors} = validateTaskStates(states);
+    reportTaskStateValidationErrors(errors);
+    return valid.length ? valid : DEFAULT_TASK_STATES;
+}
+
+let taskStateValidationReported = false;
+
+/** Surfaces dropped-task-state warnings once per session — as a toast and in the console. */
+function reportTaskStateValidationErrors(errors: TaskStateValidationError[]) {
+    if (taskStateValidationReported || errors.length === 0) {
+        return;
+    }
+    taskStateValidationReported = true;
+    for (const error of errors) {
+        showError(error.message);
+    }
 }
 
 function buildListOfLanguages() {

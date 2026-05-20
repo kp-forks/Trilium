@@ -7,6 +7,8 @@
  * customizable states for toolbar order and keyboard cycling.
  */
 export interface TaskStateDef {
+    /** The state note's id (used in validation messages; absent on hardcoded fallbacks). */
+    id?: string;
     /** The `stateName` label value — used verbatim as the `data-trilium-task-state` attribute. */
     name: string;
     /** Human-readable display name (the state note's title). */
@@ -28,6 +30,11 @@ export const NONE_STATE_NAME = "none";
 /** Reserved name of the built-in checked anchor state. */
 export const DONE_STATE_NAME = "done";
 
+/** Note id of the built-in unchecked anchor state. */
+export const NONE_STATE_ID = "_taskStateNone";
+/** Note id of the built-in checked anchor state. */
+export const DONE_STATE_ID = "_taskStateDone";
+
 /** Whether `name` is a built-in anchor state (`none`/`done`) rather than a customizable one. */
 export function isAnchorState(name: string): boolean {
     return name === NONE_STATE_NAME || name === DONE_STATE_NAME;
@@ -35,12 +42,12 @@ export function isAnchorState(name: string): boolean {
 
 /** The built-in unchecked anchor state. */
 export const NONE_TASK_STATE: TaskStateDef = {
-    name: NONE_STATE_NAME, title: "None", markdownSymbol: " ", checkboxValue: false, color: "", icon: "bx bx-checkbox"
+    id: NONE_STATE_ID, name: NONE_STATE_NAME, title: "None", markdownSymbol: " ", checkboxValue: false, color: "", icon: "bx bx-checkbox"
 };
 
 /** The built-in checked anchor state. */
 export const DONE_TASK_STATE: TaskStateDef = {
-    name: DONE_STATE_NAME, title: "Done", markdownSymbol: "x", checkboxValue: true, color: "#4de64d", icon: "bx bx-check"
+    id: DONE_STATE_ID, name: DONE_STATE_NAME, title: "Done", markdownSymbol: "x", checkboxValue: true, color: "#4de64d", icon: "bx bx-check"
 };
 
 /**
@@ -48,9 +55,9 @@ export const DONE_TASK_STATE: TaskStateDef = {
  * installation.
  */
 export const DEFAULT_CUSTOM_TASK_STATES: TaskStateDef[] = [
-    {name: "doing", title: "Doing", markdownSymbol: "/", checkboxValue: false, color: "#e6a23c", icon: "bx bx-loader"},
-    {name: "maybe", title: "Maybe", markdownSymbol: "?", checkboxValue: false, color: "#4d4de6", icon: "bx bx-question-mark"},
-    {name: "cancelled", title: "Cancelled", markdownSymbol: "-", checkboxValue: false, color: "#e64d4d", icon: "bx bx-block"}
+    {id: "_taskStateDoing", name: "doing", title: "Doing", markdownSymbol: "/", checkboxValue: false, color: "#e6a23c", icon: "bx bx-loader"},
+    {id: "_taskStateMaybe", name: "maybe", title: "Maybe", markdownSymbol: "?", checkboxValue: false, color: "#4d4de6", icon: "bx bx-question-mark"},
+    {id: "_taskStateCancelled", name: "cancelled", title: "Cancelled", markdownSymbol: "-", checkboxValue: false, color: "#e64d4d", icon: "bx bx-block"}
 ];
 
 /**
@@ -64,3 +71,98 @@ export const DEFAULT_TASK_STATES: TaskStateDef[] = [
     DEFAULT_CUSTOM_TASK_STATES[1],
     DEFAULT_CUSTOM_TASK_STATES[2]
 ];
+
+/** A custom task state that failed validation and was dropped. */
+export interface TaskStateValidationError {
+    /** The dropped state note's id. */
+    id: string;
+    /** The dropped state's title (falls back to its name). */
+    title: string;
+    /** Short machine-ish reason. */
+    reason: string;
+    /** Ready-to-display message. */
+    message: string;
+}
+
+export interface TaskStateValidationResult {
+    /** The accepted states (anchors plus valid custom states), in input order. */
+    valid: TaskStateDef[];
+    /** Dropped custom states with their reasons. */
+    errors: TaskStateValidationError[];
+}
+
+/** `stateName` is embedded in HTML attributes, CSS selectors and JSON — keep it strictly safe. */
+const VALID_STATE_NAME_PATTERN = /^[A-Za-z0-9_-]+$/;
+/** Symbols reserved by the markdown task-list syntax `- [ ]` / `- [x]`. */
+const FORBIDDEN_MARKDOWN_SYMBOLS = new Set(["[", "]", " ", "x", "X"]);
+
+function checkCustomState(
+    state: TaskStateDef,
+    seenNames: Set<string>,
+    seenSymbols: Set<string>
+): string | null {
+    if (!state.name) {
+        return "undefined stateName";
+    }
+    if (!VALID_STATE_NAME_PATTERN.test(state.name)) {
+        return "invalid stateName";
+    }
+    if (seenNames.has(state.name)) {
+        return "duplicate stateName";
+    }
+    if (!state.title) {
+        return "missing title";
+    }
+    if (!state.icon) {
+        return "missing icon";
+    }
+    if (state.markdownSymbol) {
+        if (state.markdownSymbol.length !== 1 || FORBIDDEN_MARKDOWN_SYMBOLS.has(state.markdownSymbol)) {
+            return `the markdown symbol should be one character, excepting "[", " ", "X", and "]"`;
+        }
+        if (seenSymbols.has(state.markdownSymbol)) {
+            return "duplicate markdown symbol";
+        }
+    }
+    return null;
+}
+
+/**
+ * Validates custom task states, dropping invalid ones. Anchor states (`none`/`done`)
+ * pass through untouched. Single pass — O(n) over a small set.
+ */
+export function validateTaskStates(states: TaskStateDef[]): TaskStateValidationResult {
+    const valid: TaskStateDef[] = [];
+    const errors: TaskStateValidationError[] = [];
+    // Seed with the reserved anchor names so a custom state may not reuse them.
+    const seenNames = new Set<string>([NONE_STATE_NAME, DONE_STATE_NAME]);
+    const seenSymbols = new Set<string>();
+
+    for (const state of states) {
+        if (state.id === NONE_STATE_ID || state.id === DONE_STATE_ID) {
+            valid.push(state);
+            continue;
+        }
+
+        const reason = checkCustomState(state, seenNames, seenSymbols);
+        if (reason) {
+            const title = state.title || state.name || "";
+            const id = state.id ?? "";
+            errors.push({
+                id,
+                title,
+                reason,
+                message: `Dropped custom task state definition "${title}" (${id}) due to: ${reason}`
+            });
+            continue;
+        }
+
+        seenNames.add(state.name);
+        if (state.markdownSymbol) {
+            seenSymbols.add(state.markdownSymbol);
+        }
+        valid.push(state);
+    }
+
+    return { valid, errors };
+}
