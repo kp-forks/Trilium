@@ -250,14 +250,18 @@
     "password": "كلمة المرور",
     "button": "تسجيل الدخول",
     "heading": "تسجيل الدخول الى تريليوم",
-    "remember-me": "تذكرني"
+    "remember-me": "تذكرني",
+    "incorrect-totp": "رمز TOTP غير صحيح. يرجى المحاولة مرة أخرى.",
+    "incorrect-password": "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.",
+    "sign_in_with_sso": "تسجيل الدخول باستخدام {{ ssoIssuerName }}"
   },
   "set_password": {
     "password": "كلمة المرور",
     "title": "تعين كلمة المرور",
     "heading": "تعين كلمة المرور",
     "password-confirmation": "تاكيد كلمة المرور",
-    "button": "تعين كلمة المرور"
+    "button": "تعين كلمة المرور",
+    "description": "قبل أن تتمكن من البدء باستخدام Trilium من الويب، يجب عليك تعيين كلمة مرور أولاً. بعد ذلك ستستخدم هذه كلمة المرور لتسجيل الدخول."
   },
   "share_page": {
     "parent": "الأصل:",
@@ -366,7 +370,8 @@
     "toggle-archived-notes": "تبديل عرض الملاحظات المؤرشفة",
     "insert-date-and-time-to-text": "إدراج التاريخ والوقت في النص",
     "toggle-ribbon-tab-note-info": "تبديل تبويب الشريط: معلومات الملاحظة",
-    "toggle-ribbon-tab-note-paths": "تبديل تبويب الشريط: مسارات الملاحظة"
+    "toggle-ribbon-tab-note-paths": "تبديل تبويب الشريط: مسارات الملاحظة",
+    "save-named-revision": "حفظ نسخة مُسمّاة"
   },
   "share_404": {
     "title": "غير موجود",
@@ -417,5 +422,8 @@
       "fulltext-after-expression": "\"{{- token}}\" ليس تعبيرًا صالحًا. للبحث عن نص، ضع النص قبل فلاتر الخصائص (مثل: \"{{- token}} #label\" بدلًا من \"#label {{- token}}\").",
       "unrecognized-expression": "التعبير \"{{- token}}\" غير معروف"
     }
+  },
+  "password": {
+    "incorrect": "كلمة المرور التي أدخلتها غير صحيحة."
   }
 }
