@@ -112,8 +112,11 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                         id: "_taskStateDone",
                         title: t("hidden-subtree.task-state-done"),
                         type: "doc",
-                        icon: "bx-checkbox-checked",
-                        attributes: [{ type: "label", name: "hidePromotedAttributes" }]
+                        icon: "bx-check",
+                        attributes: [
+                            { type: "label", name: "hidePromotedAttributes" },
+                            { type: "label", name: "color", value: "#4de64d" }
+                        ]
                     }
                 ]
             },
