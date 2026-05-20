@@ -68,7 +68,6 @@
     "@types/stream-throttle": "0.1.4",
     "@types/supertest": "7.2.0",
     "@types/tmp": "0.2.6",
-    "@types/turndown": "5.0.6",
     "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
     "archiver": "8.0.0",
