@@ -370,7 +370,10 @@
     "last-updated": "Atualizado pela última vez em {{- date}}",
     "subpages": "Subpáginas:",
     "on-this-page": "Nesta página",
-    "expand": "Expandir"
+    "expand": "Expandir",
+    "toggle-navigation": "Alternar Navegação",
+    "toggle-toc": "Alternar Índice",
+    "logo-alt": "Logótipo"
   },
   "hidden_subtree_templates": {
     "text-snippet": "Trecho de texto",
@@ -409,5 +412,18 @@
   },
   "password": {
     "incorrect": "A senha digitada está incorreta."
+  },
+  "script": {
+    "wrong-environment": "Não é possível executar a nota «{{- noteTitle}}» ({{- noteId}}). Trata-se de um script {{- actualEnv}}, mas a execução foi tentada no ambiente {{- expectedEnv}}."
+  },
+  "search": {
+    "error": {
+      "in-context": "Erro em {{- context}}: {{- message}}",
+      "reserved-keyword": "“{{- token}}” é uma palavra-chave reservada. Para pesquisar um valor literal, utilize aspas: “{{- token}}”",
+      "cannot-compare-with": "não pode ser comparado com “{{- token}}”. Para pesquisar um valor literal, utilize aspas: “{{- token}}”",
+      "misplaced-expression": "Expressão “{{- token}}” incorreta ou incompleta",
+      "fulltext-after-expression": "“{{- token}}” não é uma expressão válida. Para pesquisar texto, coloque-o antes dos filtros de atributos (por exemplo, “{{- token}} #label” em vez de “#label {{- token}}”).",
+      "unrecognized-expression": "Expressão não reconhecida \"{{- token}}\""
+    }
   }
 }
