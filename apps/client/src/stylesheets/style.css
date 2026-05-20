@@ -757,6 +757,19 @@ table.promoted-attributes-in-tooltip th {
     z-index: 32767 !important;
 }
 
+
+/* Tooltip for text editor content, placed at the bottom of the screen to be less intruive when editing */
+.tooltip.text-editor-content-tooltip {
+    position: fixed !important;
+    inset: auto auto 1rem 1rem !important;
+    transform: none !important;
+    margin: 0 !important;
+}
+
+.tooltip.text-editor-content-tooltip .tooltip-arrow {
+    display: none;
+}
+
 .pre-wrap-text {
     white-space: pre-wrap;
 }

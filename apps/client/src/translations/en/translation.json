@@ -2658,7 +2658,7 @@
     "read-only": "This note is read-only."
   },
   "text-editor": {
-    "checkbox-tooltip": "Right click for more task states. Press Ctrl+Shift+Enter to cycle between states.",
+    "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
     "edit-states-tooltip": "Edit task states",
     "unknown-task-state": "Undefined custom task state",
     "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",

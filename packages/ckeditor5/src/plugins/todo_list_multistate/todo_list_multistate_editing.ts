@@ -1,6 +1,6 @@
 import { DEFAULT_TASK_STATES, DONE_STATE_NAME, isAnchorState, NONE_STATE_NAME, type TaskStateDef } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
-import { Command, ListEditing, Plugin, TodoList, type Editor, type ModelElement, type ViewElement } from "ckeditor5";
+import { Command, getEnvKeystrokeText, ListEditing, Plugin, TodoList, type Editor, type ModelElement, type ViewElement } from "ckeditor5";
 
 export const TASK_STATE_ATTRIBUTE = "taskState";
 const TODO_LIST_CHECKED_ATTRIBUTE = "todoListChecked";
@@ -28,11 +28,14 @@ export default class TodoListMultistateEditing extends Plugin {
         return [TodoList, ListEditing] as const;
     }
 
+    /** Checkboxes that currently have a tooltip attached, so stale ones can be disposed. */
+    private readonly _checkboxTooltips = new Set<HTMLInputElement>();
+
     init() {
         const editor = this.editor;
         const states = getConfiguredTaskStates(editor);
         const stateByName = new Map(states.map((state) => [state.name, state]));
-        const translate = (editor.config.get("translate") as ((key: string) => string) | undefined)
+        const translate = (editor.config.get("translate") as ((key: string, params?: Record<string, unknown>) => string) | undefined)
             ?? ((key: string) => key);
 
         editor.model.schema.extend("$block", {allowAttributes: TASK_STATE_ATTRIBUTE});
@@ -85,9 +88,21 @@ export default class TodoListMultistateEditing extends Plugin {
             if (!domRoot) {
                 return;
             }
+            // CKEditor recreates the checkbox element when a todo item reconverts
+            // (e.g. on click); dispose tooltips left on the detached old checkboxes.
+            for (const input of this._checkboxTooltips) {
+                if (!input.isConnected) {
+                    Tooltip.getInstance(input)?.dispose();
+                    this._checkboxTooltips.delete(input);
+                }
+            }
             for (const input of domRoot.querySelectorAll<HTMLInputElement>(".todo-list__label input[type=\"checkbox\"]")) {
                 if (!Tooltip.getInstance(input)) {
-                    new Tooltip(input, {title: translate("text-editor.checkbox-tooltip")});
+                    const title = translate("text-editor.checkbox-tooltip", {
+                        shortcut: getEnvKeystrokeText("Ctrl+Shift+Enter")
+                    });
+                    new Tooltip(input, {title, customClass: "text-editor-content-tooltip"});
+                    this._checkboxTooltips.add(input);
                 }
             }
         });
@@ -144,6 +159,14 @@ export default class TodoListMultistateEditing extends Plugin {
 
             return changed;
         });
+    }
+
+    override destroy() {
+        for (const input of this._checkboxTooltips) {
+            Tooltip.getInstance(input)?.dispose();
+        }
+        this._checkboxTooltips.clear();
+        super.destroy();
     }
 
 }
