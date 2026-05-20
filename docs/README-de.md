@@ -305,7 +305,7 @@ Die
 enthält weitere Details. Bei offenen Fragen kann über die im Abschnitt
 „Diskussion mit uns“ genannten Kommunikationskanäle Kontakt aufgenommen werden.
 
-## 💖 Sponsors
+## 💖 Sponsoren
 
 <table>
   <tr>

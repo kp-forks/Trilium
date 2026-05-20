@@ -2511,7 +2511,8 @@
     "mime": "MIME : ",
     "source_etapi": "ETAPI",
     "source_llm": "LLM",
-    "source_unknown": "Instantané"
+    "source_unknown": "Instantané",
+    "diff_identical": "Cette révision est identique au contenu actuel de la note."
   },
   "database": {
     "title": "Base de données"
