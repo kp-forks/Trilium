@@ -1285,10 +1285,6 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     line-height: 1.5;
 }
 
-.ck-content .todo-list .todo-list__label > input:before {
-    border: 1px solid var(--muted-text-color) !important;
-}
-
 .ck-link-actions .ck-tooltip {
     /* force hide the tooltip since it shows misleading "open link in new tab */
     display: none !important;
@@ -2545,18 +2541,6 @@ footer.webview-footer button {
     opacity: 0.6;
 }
 
-.ck-content ul.todo-list > li[data-task-state="doing"] {
-    background-color: rgba(255, 200, 100, 0.25);
-}
-
-.ck-content ul.todo-list > li[data-task-state="cancelled"] {
-    background-color: rgba(180, 180, 180, 0.25);
-}
-
-.ck-content ul.todo-list > li[data-task-state="maybe"] {
-    background-color: rgba(200, 150, 240, 0.25);
-}
-
 .chat-options-container {
     display: flex;
     margin: 5px 0;
@@ -2748,4 +2732,64 @@ iframe.print-iframe {
 
 .ck-content pre code {
     tab-size: var(--code-block-tab-width, 4);
+}
+
+/* Task states in CK Editor */
+
+:root {
+    --task-checkbox-background: rgb(213, 213, 213);
+    --task-checkbox-done-color: green;
+    --task-checkbox-color: white;
+    --task-checkbox-border-radius: 4px;
+    --task-checkbox-padding: 2.5px;
+}
+
+:root .tn-task-checkbox {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+/* Default checked state */
+.ck-content li input[type="checkbox"]:checked,
+.tn-task-checkbox[data-task-state="done"] {
+    --task-state-color: var(--task-checkbox-done-color);
+    --task-state-glyph: "";
+    --task-state-glyph-font-family: boxicons;
+}
+
+:root .ck.ck.ck-content li span.todo-list__label input[type="checkbox"],
+:root .note-detail-readonly-text-content.ck-content ul.todo-list li .todo-list__label input[type="checkbox"],
+.tn-task-checkbox {    
+    /* Checkbox body */
+    &::before {
+        all: unset;
+
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: var(--task-checkbox-border-radius);
+        background: var(--task-state-color, var(--task-checkbox-background));
+    }
+
+    /* Checkbox tick */
+    &::after {
+        all: unset;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        inset: var(--task-checkbox-padding);
+        content: var(--task-state-glyph);
+        font-family: var(--task-state-glyph-font-family, inherit);
+        font-size: calc(100% - var(--task-checkbox-padding) * 2);
+        color: var(--task-checkbox-color);
+    }
+
+    &:disabled {
+        opacity: 1;
+        cursor: not-allowed;
+    }
 }

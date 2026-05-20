@@ -150,7 +150,7 @@ export function generateTaskStateCss(): string {
         if (!resolved) {
             continue;
         }
-        const selector = `li[data-task-state="${escapeCssString(state.name)}"]`;
+        const selector = `li[data-task-state="${escapeCssString(state.name)}"], .tn-task-checkbox[data-task-state="${escapeCssString(state.name)}"]`;
         rules.push(`${selector} {
             --task-state-glyph: "${resolved.glyph}";
             --task-state-glyph-font-family: "${resolved.fontFamily}";

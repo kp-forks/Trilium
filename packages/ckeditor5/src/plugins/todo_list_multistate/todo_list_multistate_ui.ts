@@ -1,4 +1,4 @@
-import { ButtonView, Plugin } from "ckeditor5";
+import { ButtonView, Plugin, View } from "ckeditor5";
 import TodoListMultistateEditing, { getConfiguredTaskStates } from "./todo_list_multistate_editing.js";
 
 export default class TodoListMultistateUI extends Plugin {
@@ -18,13 +18,21 @@ export default class TodoListMultistateUI extends Plugin {
                     label: state.title || state.name,
                     withText: false,
                     tooltip: true,
-                    class: `ck-task-state-button ck-task-state-${state.name}${state.icon ? ` ${state.icon}` : ""}`
+                    class: "ck-task-state-button"
                 });
-                if (state.color) {
-                    button.extendTemplate({
-                        attributes: {style: `--task-state-color:${state.color}`}
-                    });
-                }
+
+                // A checkbox preview inside the button, styled by the same
+                // `[data-task-state]` CSS that decorates the real checkboxes.
+                const preview = new View(locale);
+                preview.setTemplate({
+                    tag: "div",
+                    attributes: {
+                        class: "tn-task-checkbox ck-reset_all-excluded",
+                        "data-task-state": state.name
+                    }
+                });
+                button.children.add(preview);
+
                 button.bind("isOn").to(command, "value", (value) => value === state.name);
                 button.bind("isEnabled").to(command, "isEnabled");
                 button.on("execute", () => {
