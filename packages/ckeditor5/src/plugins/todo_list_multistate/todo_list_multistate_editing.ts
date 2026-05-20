@@ -59,13 +59,23 @@ export default class TodoListMultistateEditing extends Plugin {
         listEditing.registerDowncastStrategy({
             scope: "item",
             attributeName: TASK_STATE_ATTRIBUTE,
-            setAttributeOnDowncast(writer, value, element) {
+            setAttributeOnDowncast(writer, value, element, options) {
                 // Customizable states carry `data-trilium-task-state`; none/done are native.
                 // Unrecognized states are preserved so they survive a state-config change.
                 if (typeof value === "string" && value !== "" && !isAnchorState(value)) {
                     writer.setAttribute("data-trilium-task-state", value, element);
                 } else {
                     writer.removeAttribute("data-trilium-task-state", element);
+                }
+
+                // Editing-only class for states missing from the current config. Added on
+                // the editing pipeline only, so it is never written into the saved content.
+                const isUnknown = typeof value === "string" && value !== ""
+                    && !isAnchorState(value) && !stateByName.has(value);
+                if (isUnknown && !options?.dataPipeline) {
+                    writer.addClass("tn-unknown-task-state", element);
+                } else {
+                    writer.removeClass("tn-unknown-task-state", element);
                 }
             }
         });
