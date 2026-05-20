@@ -20,24 +20,30 @@ export function getTaskStates(): TaskStateDef[] {
         return DEFAULT_TASK_STATES;
     }
 
-    const states = container.getChildNotes().map((note): TaskStateDef => {
-        if (note.noteId === NONE_STATE_ID) {
-            return NONE_TASK_STATE;
-        }
-        if (note.noteId === DONE_STATE_ID) {
-            return DONE_TASK_STATE;
-        }
-        return {
-            id: note.noteId,
-            name: note.getLabelValue("stateName") ?? "",
-            title: note.title,
-            markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
-            isCompleted: note.getLabelValue("isCompleted") === "true",
-            color: note.getLabelValue("color") ?? "",
-            icon: note.getLabelValue("iconClass") ?? "",
-            archived: note.isArchived
-        };
-    });
+    const states = container.getChildNotes()
+        .map((note): TaskStateDef | null => {
+            if (note.noteId === NONE_STATE_ID) {
+                return NONE_TASK_STATE;
+            }
+            if (note.noteId === DONE_STATE_ID) {
+                return DONE_TASK_STATE;
+            }
+            // Archived definition notes are completely ignored — never enumerated.
+            if (note.isArchived) {
+                return null;
+            }
+            return {
+                id: note.noteId,
+                name: note.getLabelValue("stateName") ?? "",
+                title: note.title,
+                markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
+                isCompleted: note.getLabelValue("isCompleted") === "true",
+                color: note.getLabelValue("color") ?? "",
+                icon: note.getLabelValue("iconClass") ?? "",
+                isHidden: note.getLabelValue("isHidden") === "true"
+            };
+        })
+        .filter((state): state is TaskStateDef => state !== null);
 
     const {valid} = validateTaskStates(states);
     return valid.length ? valid : DEFAULT_TASK_STATES;

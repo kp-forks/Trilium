@@ -16,10 +16,10 @@ export function getConfiguredTaskStates(editor: Editor): TaskStateDef[] {
 
 /**
  * The states surfaced in the toolbar and keyboard cycle — configured states
- * minus archived ones. Archived states still round-trip and keep their CSS.
+ * minus hidden ones. Hidden states still round-trip and keep their CSS.
  */
 export function getActiveTaskStates(editor: Editor): TaskStateDef[] {
-    return getConfiguredTaskStates(editor).filter((state) => !state.archived);
+    return getConfiguredTaskStates(editor).filter((state) => !state.isHidden);
 }
 
 export default class TodoListMultistateEditing extends Plugin {

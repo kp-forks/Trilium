@@ -21,8 +21,8 @@ export interface TaskStateDef {
     color: string;
     /** Icon class, e.g. `bx bx-loader`. */
     icon: string;
-    /** Whether the state note is archived — kept for CSS/round-trip, hidden from the toolbar and cycle. */
-    archived?: boolean;
+    /** The `isHidden` label — kept for CSS/round-trip, but hidden from the toolbar and keyboard cycle. */
+    isHidden?: boolean;
 }
 
 /** Reserved name of the built-in unchecked anchor state. */
