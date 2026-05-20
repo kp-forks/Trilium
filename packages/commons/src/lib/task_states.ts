@@ -15,8 +15,8 @@ export interface TaskStateDef {
     title: string;
     /** Single-character markdown marker, e.g. `/` for `- [/]`. */
     markdownSymbol: string;
-    /** Whether the checkbox renders as checked while in this state. */
-    checkboxValue: boolean;
+    /** Indicates whether the task is completed in this state. */
+    isCompleted: boolean;
     /** CSS color associated with the state, e.g. `#e6a23c`. */
     color: string;
     /** Icon class, e.g. `bx bx-loader`. */
@@ -44,12 +44,12 @@ export function isAnchorState(name: string): boolean {
 
 /** The built-in unchecked anchor state. */
 export const NONE_TASK_STATE: TaskStateDef = {
-    id: NONE_STATE_ID, name: NONE_STATE_NAME, title: "None", markdownSymbol: " ", checkboxValue: false, color: "", icon: "bx bx-checkbox"
+    id: NONE_STATE_ID, name: NONE_STATE_NAME, title: "None", markdownSymbol: " ", isCompleted: false, color: "", icon: "bx bx-checkbox"
 };
 
 /** The built-in checked anchor state. */
 export const DONE_TASK_STATE: TaskStateDef = {
-    id: DONE_STATE_ID, name: DONE_STATE_NAME, title: "Done", markdownSymbol: "x", checkboxValue: true, color: "#4de64d", icon: "bx bx-check"
+    id: DONE_STATE_ID, name: DONE_STATE_NAME, title: "Done", markdownSymbol: "x", isCompleted: true, color: "#4de64d", icon: "bx bx-check"
 };
 
 /**
@@ -57,9 +57,9 @@ export const DONE_TASK_STATE: TaskStateDef = {
  * installation.
  */
 export const DEFAULT_CUSTOM_TASK_STATES: TaskStateDef[] = [
-    {id: "_taskStateDoing", name: "doing", title: "Doing", markdownSymbol: "/", checkboxValue: false, color: "#e6a23c", icon: "bx bx-loader"},
-    {id: "_taskStateMaybe", name: "maybe", title: "Maybe", markdownSymbol: "?", checkboxValue: false, color: "#4d4de6", icon: "bx bx-question-mark"},
-    {id: "_taskStateCancelled", name: "cancelled", title: "Cancelled", markdownSymbol: "-", checkboxValue: false, color: "#e64d4d", icon: "bx bx-block"}
+    {id: "_taskStateDoing", name: "doing", title: "Doing", markdownSymbol: "/", isCompleted: false, color: "#e6a23c", icon: "bx bx-loader"},
+    {id: "_taskStateMaybe", name: "maybe", title: "Maybe", markdownSymbol: "?", isCompleted: false, color: "#4d4de6", icon: "bx bx-question-mark"},
+    {id: "_taskStateCancelled", name: "cancelled", title: "Cancelled", markdownSymbol: "-", isCompleted: false, color: "#e64d4d", icon: "bx bx-block"}
 ];
 
 /**

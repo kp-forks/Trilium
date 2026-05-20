@@ -117,7 +117,7 @@ export default class TodoListMultistateEditing extends Plugin {
 
             let changed = false;
 
-            // A customizable state forces the checkbox to its `checkboxValue`.
+            // A customizable state forces the checkbox to its `isCompleted`.
             for (const el of stateChanged) {
                 const stateName = el.getAttribute(TASK_STATE_ATTRIBUTE);
                 const state = typeof stateName === "string" ? stateByName.get(stateName) : undefined;
@@ -125,8 +125,8 @@ export default class TodoListMultistateEditing extends Plugin {
                     // State cleared — the command already set the native checkbox.
                     continue;
                 }
-                if (!!el.getAttribute(TODO_LIST_CHECKED_ATTRIBUTE) !== state.checkboxValue) {
-                    writer.setAttribute(TODO_LIST_CHECKED_ATTRIBUTE, state.checkboxValue, el);
+                if (!!el.getAttribute(TODO_LIST_CHECKED_ATTRIBUTE) !== state.isCompleted) {
+                    writer.setAttribute(TODO_LIST_CHECKED_ATTRIBUTE, state.isCompleted, el);
                     changed = true;
                 }
             }

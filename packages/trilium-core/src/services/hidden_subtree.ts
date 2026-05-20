@@ -94,7 +94,7 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 attributes: [
                     { type: "label", name: "child:label:stateName", value: "promoted,single,text" },
                     { type: "label", name: "child:label:markdownSymbol", value: "promoted,single,text" },
-                    { type: "label", name: "child:label:checkboxValue", value: "promoted,single,bool" },
+                    { type: "label", name: "child:label:isCompleted", value: "promoted,single,bool" },
                     { type: "label", name: "child:label:color", value: "promoted,single,text" }
                 ],
                 // Non-customizable anchor states — recreated if missing; they only

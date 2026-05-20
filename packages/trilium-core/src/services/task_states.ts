@@ -32,7 +32,7 @@ export function getTaskStates(): TaskStateDef[] {
             name: note.getLabelValue("stateName") ?? "",
             title: note.title,
             markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
-            checkboxValue: note.getLabelValue("checkboxValue") === "true",
+            isCompleted: note.getLabelValue("isCompleted") === "true",
             color: note.getLabelValue("color") ?? "",
             icon: note.getLabelValue("iconClass") ?? "",
             archived: note.isArchived
@@ -62,7 +62,7 @@ export function createTaskStateNote(state: TaskStateDef, options: {noteId?: stri
         iconClass: state.icon,
         stateName: state.name,
         markdownSymbol: state.markdownSymbol,
-        checkboxValue: String(state.checkboxValue),
+        isCompleted: String(state.isCompleted),
         color: state.color
     };
 

@@ -8,7 +8,7 @@ function customState(overrides: Partial<TaskStateDef>): TaskStateDef {
         name: "doing",
         title: "Doing",
         markdownSymbol: "/",
-        checkboxValue: false,
+        isCompleted: false,
         color: "",
         icon: "bx bx-loader",
         ...overrides
