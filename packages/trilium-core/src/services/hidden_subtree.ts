@@ -94,9 +94,9 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 attributes: [
                     { type: "label", name: "child:label:stateName", value: "promoted,single,text" },
                     { type: "label", name: "child:label:markdownSymbol", value: "promoted,single,text" },
-                    { type: "label", name: "child:label:isCompleted", value: "promoted,single,bool" },
-                    { type: "label", name: "child:label:color", value: "promoted,single,text" },
-                    { type: "label", name: "child:label:isHidden", value: "promoted,single,bool" }
+                    { type: "label", name: "child:label:isCompleted", value: "promoted,single,boolean" },
+                    { type: "label", name: "child:label:color", value: "promoted,single,color" },
+                    { type: "label", name: "child:label:isHidden", value: "promoted,single,boolean" }
                 ],
                 // Non-customizable anchor states — recreated if missing; they only
                 // determine where `none`/`done` sit in the toolbar/cycling order.
