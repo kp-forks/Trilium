@@ -49,8 +49,9 @@ export default class TodoListMultistateEditing extends Plugin {
             scope: "item",
             attributeName: TASK_STATE_ATTRIBUTE,
             setAttributeOnDowncast(writer, value, element) {
-                // Only customizable states carry `data-trilium-task-state`; none/done are native.
-                if (typeof value === "string" && stateByName.has(value) && !isAnchorState(value)) {
+                // Customizable states carry `data-trilium-task-state`; none/done are native.
+                // Unrecognized states are preserved so they survive a state-config change.
+                if (typeof value === "string" && value !== "" && !isAnchorState(value)) {
                     writer.setAttribute("data-trilium-task-state", value, element);
                 } else {
                     writer.removeAttribute("data-trilium-task-state", element);
@@ -64,7 +65,7 @@ export default class TodoListMultistateEditing extends Plugin {
                 key: TASK_STATE_ATTRIBUTE,
                 value: (viewElement: ViewElement) => {
                     const value = viewElement.getAttribute("data-trilium-task-state");
-                    return typeof value === "string" && stateByName.has(value) && !isAnchorState(value)
+                    return typeof value === "string" && value !== "" && !isAnchorState(value)
                         ? value
                         : null;
                 }

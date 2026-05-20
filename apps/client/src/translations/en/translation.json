@@ -2659,6 +2659,7 @@
   },
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states. Press Ctrl+Shift+Enter to cycle between states.",
-    "edit-states-tooltip": "Edit task states"
+    "edit-states-tooltip": "Edit task states",
+    "unknown-task-state": "Undefined custom task state"
   }
 }

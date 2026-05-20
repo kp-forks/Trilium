@@ -6,11 +6,12 @@ import {
     Plugin,
     ToolbarSeparatorView,
     ToolbarView,
+    View,
     clickOutsideHandler,
     type ModelElement,
     type ViewElement
 } from "ckeditor5";
-import { getConfiguredTaskStates } from "./todo_list_multistate_editing.js";
+import { getConfiguredTaskStates, TASK_STATE_ATTRIBUTE } from "./todo_list_multistate_editing.js";
 import TodoListMultistateUI from "./todo_list_multistate_ui.js";
 
 class TodoCheckboxContextMenuObserver extends DomEventObserver<"contextmenu"> {
@@ -31,6 +32,7 @@ export default class TodoListMultistateToolbar extends Plugin {
     private _balloon!: ContextualBalloon;
     private _toolbarView!: ToolbarView;
     private _targetItemId: string | null = null;
+    private _unknownStateItems: View[] = [];
 
     init() {
         const editor = this.editor;
@@ -83,14 +85,17 @@ export default class TodoListMultistateToolbar extends Plugin {
         return toolbar;
     }
 
+    private _translate(key: string): string {
+        const translate = this.editor.config.get("translate") as ((key: string) => string) | undefined;
+        return translate ? translate(key) : key;
+    }
+
     private _createEditButton(): ButtonView {
         const editor = this.editor;
         const button = new ButtonView(editor.locale);
-        const translate = (editor.config.get("translate") as ((key: string) => string) | undefined)
-            ?? ((key: string) => key);
-            
+
         button.set({
-            label: translate("text-editor.edit-states-tooltip"),
+            label: this._translate("text-editor.edit-states-tooltip"),
             withText: false,
             tooltip: true,
             class: "ck-task-state-edit bx bx-pencil"
@@ -122,6 +127,14 @@ export default class TodoListMultistateToolbar extends Plugin {
         editor.model.change((writer) => {
             writer.setSelection(writer.createPositionAt(block, 0));
         });
+
+        const knownStateNames = new Set(getConfiguredTaskStates(editor).map((state) => state.name));
+        const taskState = block.getAttribute(TASK_STATE_ATTRIBUTE);
+        this._updateUnknownStateLabel(
+            typeof taskState === "string" && taskState !== "" && !knownStateNames.has(taskState)
+                ? taskState
+                : null
+        );
 
         const position = {
             target: anchorDom,
@@ -165,6 +178,50 @@ export default class TodoListMultistateToolbar extends Plugin {
             }
         }
         return null;
+    }
+
+    /**
+     * Appends (or clears) a "Unknown state: …" label at the end of the toolbar
+     * when the current todo item carries a state that is not configured.
+     */
+    private _updateUnknownStateLabel(stateName: string | null) {
+        for (const item of this._unknownStateItems) {
+            if (this._toolbarView.items.has(item)) {
+                this._toolbarView.items.remove(item);
+            }
+            item.destroy();
+        }
+        this._unknownStateItems = [];
+
+        if (!stateName) {
+            return;
+        }
+
+        const locale = this.editor.locale;
+        const separator = new ToolbarSeparatorView(locale);
+        const label = new View(locale);
+        label.setTemplate({
+            tag: "span",
+            attributes: {
+                class: "ck tn-task-state-unknown"
+            },
+            children: [
+                { text: `${this._translate("text-editor.unknown-task-state")}: ` },
+                {
+                    tag: "span",
+                    attributes: {
+                        class: "tn-task-state-unknown-name ck-reset_all-excluded"
+                    },
+                    children: [
+                        { text: stateName }
+                    ]
+                }
+            ]
+        });
+
+        this._toolbarView.items.add(separator);
+        this._toolbarView.items.add(label);
+        this._unknownStateItems = [separator, label];
     }
 
     private _hide() {
