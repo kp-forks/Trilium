@@ -2656,5 +2656,9 @@
   },
   "spreadsheet": {
     "read-only": "This note is read-only."
+  },
+  "text-editor": {
+    "checkbox-tooltip": "Right click for more task states. Press Ctrl+Shift+Enter to cycle between states.",
+    "edit-states-tooltip": "Edit task states"
   }
 }

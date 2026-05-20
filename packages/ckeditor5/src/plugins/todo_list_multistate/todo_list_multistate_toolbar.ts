@@ -86,8 +86,11 @@ export default class TodoListMultistateToolbar extends Plugin {
     private _createEditButton(): ButtonView {
         const editor = this.editor;
         const button = new ButtonView(editor.locale);
+        const translate = (editor.config.get("translate") as ((key: string) => string) | undefined)
+            ?? ((key: string) => key);
+            
         button.set({
-            label: editor.t("Edit task states"),
+            label: translate("text-editor.edit-states-tooltip"),
             withText: false,
             tooltip: true,
             class: "ck-task-state-edit bx bx-pencil"

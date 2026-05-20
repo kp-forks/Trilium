@@ -24,6 +24,8 @@ export default class TodoListMultistateEditing extends Plugin {
         const editor = this.editor;
         const states = getConfiguredTaskStates(editor);
         const stateByName = new Map(states.map((state) => [state.name, state]));
+        const translate = (editor.config.get("translate") as ((key: string) => string) | undefined)
+            ?? ((key: string) => key);
 
         editor.model.schema.extend("$block", {allowAttributes: TASK_STATE_ATTRIBUTE});
 
@@ -76,7 +78,7 @@ export default class TodoListMultistateEditing extends Plugin {
             }
             for (const input of domRoot.querySelectorAll<HTMLInputElement>(".todo-list__label input[type=\"checkbox\"]")) {
                 if (!Tooltip.getInstance(input)) {
-                    new Tooltip(input, {title: "Tooltip"});
+                    new Tooltip(input, {title: translate("text-editor.checkbox-tooltip")});
                 }
             }
         });

@@ -182,6 +182,9 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         void appContext.tabManager.openInNewTab("_taskStates", "_taskStates", true);
     };
 
+    // The app's i18n translate function, so plugins can resolve Trilium translation keys.
+    (config as Record<string, unknown>).translate = (key: string) => t(key);
+
     // Set up content language.
     const { contentLanguage } = opts;
     if (contentLanguage) {
