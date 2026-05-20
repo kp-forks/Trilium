@@ -261,7 +261,8 @@ async function fetchTaskStates(): Promise<TaskStateDef[]> {
                 markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
                 checkboxValue: note.getLabelValue("checkboxValue") === "true",
                 color: note.getLabelValue("color") ?? "",
-                icon: note.getLabelValue("iconClass") ?? ""
+                icon: note.getLabelValue("iconClass") ?? "",
+                archived: note.isArchived
             };
         })
         .filter((state): state is TaskStateDef => state !== null);
