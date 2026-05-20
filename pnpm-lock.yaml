@@ -647,9 +647,6 @@ importers:
       '@types/cookie-parser':
         specifier: 1.4.10
         version: 1.4.10(@types/express@5.0.6)
-      '@types/debounce':
-        specifier: 1.2.4
-        version: 1.2.4
       '@types/ejs':
         specifier: 3.1.5
         version: 3.1.5
@@ -716,9 +713,6 @@ importers:
       csrf-csrf:
         specifier: 4.0.3
         version: 4.0.3
-      debounce:
-        specifier: 3.0.0
-        version: 3.0.0
       debug:
         specifier: 4.4.3
         version: 4.4.3
@@ -5216,9 +5210,6 @@ packages:
 
   '@types/d3@7.4.3':
     resolution: {integrity: sha512-lZXZ9ckh5R8uiFVt8ogUNf+pIrK4EsWrx2Np75WvF/eTpJ0FMHNhjXk8CKEx/+gpHbNQyJWehbFaTvqmHWB3ww==}
-
-  '@types/debounce@1.2.4':
-    resolution: {integrity: sha512-jBqiORIzKDOToaF63Fm//haOCHuwQuLa2202RK4MozpA6lh93eCBc+/8+wZn5OzjJt3ySdc+74SXWXB55Ewtyw==}
 
   '@types/debug@4.1.13':
     resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==}
@@ -18084,8 +18075,6 @@ snapshots:
       '@types/d3-timer': 3.0.2
       '@types/d3-transition': 3.0.9
       '@types/d3-zoom': 3.0.8
-
-  '@types/debounce@1.2.4': {}
 
   '@types/debug@4.1.13':
     dependencies:
