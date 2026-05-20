@@ -30,6 +30,8 @@ export const NONE_STATE_NAME = "none";
 /** Reserved name of the built-in checked anchor state. */
 export const DONE_STATE_NAME = "done";
 
+/** Hidden-subtree note that contains the task state definitions. */
+export const TASK_STATES_CONTAINER_ID = "_taskStates";
 /** Note id of the built-in unchecked anchor state. */
 export const NONE_STATE_ID = "_taskStateNone";
 /** Note id of the built-in checked anchor state. */

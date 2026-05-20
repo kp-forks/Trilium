@@ -1,24 +1,18 @@
-import { DEFAULT_CUSTOM_TASK_STATES, DEFAULT_TASK_STATES, DONE_TASK_STATE, isAnchorState, NONE_TASK_STATE, type TaskStateDef, validateTaskStates } from "@triliumnext/commons";
+import { DEFAULT_CUSTOM_TASK_STATES, DEFAULT_TASK_STATES, DONE_STATE_ID, DONE_TASK_STATE, isAnchorState, NONE_STATE_ID, NONE_TASK_STATE, TASK_STATES_CONTAINER_ID, type TaskStateDef, validateTaskStates } from "@triliumnext/commons";
 import { t } from "i18next";
 
 import becca from "../becca/becca.js";
 import BAttribute from "../becca/entities/battribute.js";
+import type BNote from "../becca/entities/bnote.js";
 import { getIconPacks } from "./icon_packs.js";
 import noteService from "./notes.js";
-
-export const TASK_STATES_CONTAINER_ID = "_taskStates";
-const NONE_NOTE_ID = "_taskStateNone";
-const DONE_NOTE_ID = "_taskStateDone";
-
-function noteIdForState(name: string): string {
-    return `_taskState${name.charAt(0).toUpperCase()}${name.slice(1)}`;
-}
 
 /**
  * Returns the task states from the `_taskStates` hidden subtree, in note order.
  * The `none`/`done` anchor notes map to their fixed built-in definitions; other
- * children are read from their promoted attributes. Falls back to
- * {@link DEFAULT_TASK_STATES} when the container is missing or empty.
+ * children are read from their promoted attributes. Invalid custom states are
+ * dropped. Falls back to {@link DEFAULT_TASK_STATES} when the container is
+ * missing or empty.
  */
 export function getTaskStates(): TaskStateDef[] {
     const container = becca.notes[TASK_STATES_CONTAINER_ID];
@@ -27,10 +21,10 @@ export function getTaskStates(): TaskStateDef[] {
     }
 
     const states = container.getChildNotes().map((note): TaskStateDef => {
-        if (note.noteId === NONE_NOTE_ID) {
+        if (note.noteId === NONE_STATE_ID) {
             return NONE_TASK_STATE;
         }
-        if (note.noteId === DONE_NOTE_ID) {
+        if (note.noteId === DONE_STATE_ID) {
             return DONE_TASK_STATE;
         }
         return {
@@ -50,6 +44,42 @@ export function getTaskStates(): TaskStateDef[] {
 }
 
 /**
+ * Creates a single task-state definition note under the `_taskStates` container,
+ * with its promoted attributes. Reusable for seeding and for adding states from
+ * any feature (text editor, kanban, todo collection view).
+ */
+export function createTaskStateNote(state: TaskStateDef, options: {noteId?: string; title?: string} = {}): BNote {
+    const {note} = noteService.createNewNote({
+        noteId: options.noteId,
+        title: options.title ?? state.title,
+        type: "text",
+        parentNoteId: TASK_STATES_CONTAINER_ID,
+        content: "",
+        ignoreForbiddenParents: true
+    });
+
+    const labels: Record<string, string> = {
+        iconClass: state.icon,
+        stateName: state.name,
+        markdownSymbol: state.markdownSymbol,
+        checkboxValue: String(state.checkboxValue),
+        color: state.color
+    };
+
+    for (const [name, value] of Object.entries(labels)) {
+        new BAttribute({
+            attributeId: `${note.noteId}_l${name}`,
+            noteId: note.noteId,
+            type: "label",
+            name,
+            value
+        }).save();
+    }
+
+    return note;
+}
+
+/**
  * Seeds the customizable default task states under the `_taskStates` container
  * and applies the default ordering across all states (anchors included). Called
  * exactly once — when the container is first created — so user changes stick.
@@ -62,37 +92,12 @@ export function seedDefaultTaskStates() {
     };
 
     for (const state of DEFAULT_CUSTOM_TASK_STATES) {
-        const {note} = noteService.createNewNote({
-            noteId: noteIdForState(state.name),
-            title: t(titleKeys[state.name]),
-            type: "text",
-            parentNoteId: TASK_STATES_CONTAINER_ID,
-            content: "",
-            ignoreForbiddenParents: true
-        });
-
-        const labels: Record<string, string> = {
-            iconClass: state.icon,
-            stateName: state.name,
-            markdownSymbol: state.markdownSymbol,
-            checkboxValue: String(state.checkboxValue),
-            color: state.color
-        };
-
-        for (const [name, value] of Object.entries(labels)) {
-            new BAttribute({
-                attributeId: `${note.noteId}_l${name}`,
-                noteId: note.noteId,
-                type: "label",
-                name,
-                value
-            }).save();
-        }
+        createTaskStateNote(state, {noteId: state.id, title: t(titleKeys[state.name])});
     }
 
     // Apply the default ordering (None, Doing, Done, Maybe, Cancelled) across all states.
     DEFAULT_TASK_STATES.forEach((state, index) => {
-        const note = becca.notes[noteIdForState(state.name)];
+        const note = state.id ? becca.notes[state.id] : undefined;
         const branch = note?.getParentBranches().find((b) => b.parentNoteId === TASK_STATES_CONTAINER_ID);
         if (branch) {
             branch.notePosition = index * 10;

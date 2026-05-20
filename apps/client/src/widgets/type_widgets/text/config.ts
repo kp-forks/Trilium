@@ -1,12 +1,10 @@
 import { buildExtraCommands, type EditorConfig, getCkLocale, loadPremiumPlugins, TemplateDefinition } from "@triliumnext/ckeditor5";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/src/emoji_definitions/en.json?url";
-import { ALLOWED_PROTOCOLS, DEFAULT_TASK_STATES, DISPLAYABLE_LOCALE_IDS, DONE_TASK_STATE, MIME_TYPE_AUTO, NONE_TASK_STATE, normalizeMimeTypeForCKEditor, type TaskStateDef, type TaskStateValidationError, validateTaskStates } from "@triliumnext/commons";
+import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 
-import appContext from "../../../components/app_context.js";
-import froca from "../../../services/froca.js";
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
-import { showError } from "../../../services/toast.js";
 import { t } from "../../../services/i18n.js";
+import { getTaskStateDefinitions, openCustomTaskStateConfig } from "../../../services/task_states.js";
 import { getMermaidConfig } from "../../../services/mermaid.js";
 import { default as mimeTypesService, getHighlightJsNameForMime } from "../../../services/mime_types.js";
 import noteAutocompleteService, { type Suggestion } from "../../../services/note_autocomplete.js";
@@ -178,10 +176,8 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
     };
 
     // User-configurable todo task states (from the `_taskStates` hidden subtree).
-    (config as Record<string, unknown>).taskStates = await fetchTaskStates();
-    (config as Record<string, unknown>).editTaskStates = () => {
-        void appContext.tabManager.openInNewTab("_taskStates", "_taskStates", true);
-    };
+    (config as Record<string, unknown>).taskStates = await getTaskStateDefinitions();
+    (config as Record<string, unknown>).editTaskStates = openCustomTaskStateConfig;
 
     // The app's i18n translate function, so plugins can resolve Trilium translation keys.
     (config as Record<string, unknown>).translate = (key: string) => t(key);
@@ -236,50 +232,6 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         ...config,
         ...buildToolbarConfig(opts.isClassicEditor)
     };
-}
-
-async function fetchTaskStates(): Promise<TaskStateDef[]> {
-    const container = await froca.getNote("_taskStates");
-    if (!container) {
-        return DEFAULT_TASK_STATES;
-    }
-
-    const states = (await container.getChildNotes())
-        .map((note): TaskStateDef => {
-            if (note.noteId === "_taskStateNone") {
-                return NONE_TASK_STATE;
-            }
-            if (note.noteId === "_taskStateDone") {
-                return DONE_TASK_STATE;
-            }
-            return {
-                id: note.noteId,
-                name: note.getLabelValue("stateName") ?? "",
-                title: note.title,
-                markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
-                checkboxValue: note.getLabelValue("checkboxValue") === "true",
-                color: note.getLabelValue("color") ?? "",
-                icon: note.getLabelValue("iconClass") ?? "",
-                archived: note.isArchived
-            };
-        });
-
-    const {valid, errors} = validateTaskStates(states);
-    reportTaskStateValidationErrors(errors);
-    return valid.length ? valid : DEFAULT_TASK_STATES;
-}
-
-let taskStateValidationReported = false;
-
-/** Surfaces dropped-task-state warnings once per session — as a toast and in the console. */
-function reportTaskStateValidationErrors(errors: TaskStateValidationError[]) {
-    if (taskStateValidationReported || errors.length === 0) {
-        return;
-    }
-    taskStateValidationReported = true;
-    for (const error of errors) {
-        showError(error.message);
-    }
 }
 
 function buildListOfLanguages() {
