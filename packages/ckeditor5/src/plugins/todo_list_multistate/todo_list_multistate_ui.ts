@@ -22,13 +22,13 @@ export default class TodoListMultistateUI extends Plugin {
                 });
 
                 // A checkbox preview inside the button, styled by the same
-                // `[data-task-state]` CSS that decorates the real checkboxes.
+                // `[data-trilium-task-state]` CSS that decorates the real checkboxes.
                 const preview = new View(locale);
                 preview.setTemplate({
                     tag: "div",
                     attributes: {
                         class: "tn-task-checkbox ck-reset_all-excluded",
-                        "data-task-state": state.name
+                        "data-trilium-task-state": state.name
                     }
                 });
                 button.children.add(preview);

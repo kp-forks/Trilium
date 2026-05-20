@@ -7,7 +7,7 @@
  * customizable states for toolbar order and keyboard cycling.
  */
 export interface TaskStateDef {
-    /** The `stateName` label value — used verbatim as the `data-task-state` attribute. */
+    /** The `stateName` label value — used verbatim as the `data-trilium-task-state` attribute. */
     name: string;
     /** Human-readable display name (the state note's title). */
     title: string;

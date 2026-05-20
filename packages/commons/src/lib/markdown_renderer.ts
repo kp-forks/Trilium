@@ -297,7 +297,7 @@ export class CustomMarkdownRenderer extends Renderer {
     override listitem(item: Tokens.ListItem): string {
         if (item.task) {
             const taskState = (item as TaskListItem)._taskState;
-            const dataAttr = taskState ? ` data-task-state="${taskState}"` : "";
+            const dataAttr = taskState ? ` data-trilium-task-state="${taskState}"` : "";
             let itemBody = "";
             const checkbox = this.checkbox({ checked: !!item.checked, raw: "- [ ]", type: "checkbox" });
             if (item.loose) {

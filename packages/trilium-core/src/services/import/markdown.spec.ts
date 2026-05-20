@@ -284,16 +284,16 @@ $$`;
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
-    it("imports todo list multistate markers as data-task-state", () => {
+    it("imports todo list multistate markers as data-trilium-task-state", () => {
         const input = trimIndentation`\
             - [/] Doing
             - [-] Cancelled
             - [?] Maybe`;
         const expected = [
             `<ul class="todo-list">`,
-            `<li data-task-state="doing"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Doing</span></label></li>`,
-            `<li data-task-state="cancelled"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Cancelled</span></label></li>`,
-            `<li data-task-state="maybe"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Maybe</span></label></li>`,
+            `<li data-trilium-task-state="doing"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Doing</span></label></li>`,
+            `<li data-trilium-task-state="cancelled"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Cancelled</span></label></li>`,
+            `<li data-trilium-task-state="maybe"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Maybe</span></label></li>`,
             `</ul>`
         ].join("");
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);

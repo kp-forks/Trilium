@@ -2753,7 +2753,7 @@ iframe.print-iframe {
 
 /* Default checked state */
 .ck-content li input[type="checkbox"]:checked,
-.tn-task-checkbox[data-task-state="done"] {
+.tn-task-checkbox[data-trilium-task-state="done"] {
     --task-state-color: var(--task-checkbox-done-color);
     --task-state-glyph: "";
     --task-state-glyph-font-family: boxicons;

@@ -233,7 +233,7 @@ function buildListItemFilter(): Rule {
                 const index = Array.prototype.indexOf.call(parent.children, node);
                 prefix = `${start ? Number(start) + index : index + 1}.  `;
             } else if (parent.classList.contains("todo-list")) {
-                const state = (node as HTMLElement).getAttribute("data-task-state");
+                const state = (node as HTMLElement).getAttribute("data-trilium-task-state");
                 const stateMarker = state
                     ? currentTaskStates.find((s) => s.name === state)?.markdownSymbol
                     : undefined;

@@ -136,7 +136,7 @@ function resolveIconGlyph(iconClass: string): {glyph: string; fontFamily: string
 }
 
 /**
- * Generates the CSS that renders each task state's icon on its `data-task-state`
+ * Generates the CSS that renders each task state's icon on its `data-trilium-task-state`
  * checkbox. Resolution is a plain manifest lookup, so this works server-side and
  * the same stylesheet can be served to both the app and shared notes.
  */
@@ -150,7 +150,7 @@ export function generateTaskStateCss(): string {
         if (!resolved) {
             continue;
         }
-        const selector = `li[data-task-state="${escapeCssString(state.name)}"], .tn-task-checkbox[data-task-state="${escapeCssString(state.name)}"]`;
+        const selector = `li[data-trilium-task-state="${escapeCssString(state.name)}"], .tn-task-checkbox[data-trilium-task-state="${escapeCssString(state.name)}"]`;
         rules.push(`${selector} {
             --task-state-glyph: "${resolved.glyph}";
             --task-state-glyph-font-family: "${resolved.fontFamily}";

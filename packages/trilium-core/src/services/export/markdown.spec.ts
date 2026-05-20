@@ -348,25 +348,25 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
-    it("exports todo list multistate markers from data-task-state", () => {
+    it("exports todo list multistate markers from data-trilium-task-state", () => {
         const html = trimIndentation/*html*/`\
             <ul class="todo-list">
-                <li data-task-state="doing">
+                <li data-trilium-task-state="doing">
                     <label class="todo-list__label">
                         <input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Doing</span>
                     </label>
                 </li>
-                <li data-task-state="done">
+                <li data-trilium-task-state="done">
                     <label class="todo-list__label">
                         <input type="checkbox" checked="checked" disabled="disabled"><span class="todo-list__label__description">Done</span>
                     </label>
                 </li>
-                <li data-task-state="cancelled">
+                <li data-trilium-task-state="cancelled">
                     <label class="todo-list__label">
                         <input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Cancelled</span>
                     </label>
                 </li>
-                <li data-task-state="maybe">
+                <li data-trilium-task-state="maybe">
                     <label class="todo-list__label">
                         <input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Maybe</span>
                     </label>

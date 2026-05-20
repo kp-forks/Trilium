@@ -7,7 +7,7 @@ const TODO_LIST_CHECKED_ATTRIBUTE = "todoListChecked";
 
 /**
  * The ordered task states. Includes the built-in `none`/`done` anchors — those
- * are never written as `data-task-state`; they map to the native checkbox.
+ * are never written as `data-trilium-task-state`; they map to the native checkbox.
  */
 export function getConfiguredTaskStates(editor: Editor): TaskStateDef[] {
     const states = editor.config.get("taskStates") as TaskStateDef[] | undefined;
@@ -47,21 +47,21 @@ export default class TodoListMultistateEditing extends Plugin {
             scope: "item",
             attributeName: TASK_STATE_ATTRIBUTE,
             setAttributeOnDowncast(writer, value, element) {
-                // Only customizable states carry `data-task-state`; none/done are native.
+                // Only customizable states carry `data-trilium-task-state`; none/done are native.
                 if (typeof value === "string" && stateByName.has(value) && !isAnchorState(value)) {
-                    writer.setAttribute("data-task-state", value, element);
+                    writer.setAttribute("data-trilium-task-state", value, element);
                 } else {
-                    writer.removeAttribute("data-task-state", element);
+                    writer.removeAttribute("data-trilium-task-state", element);
                 }
             }
         });
 
         editor.conversion.for("upcast").attributeToAttribute({
-            view: {key: "data-task-state"},
+            view: {key: "data-trilium-task-state"},
             model: {
                 key: TASK_STATE_ATTRIBUTE,
                 value: (viewElement: ViewElement) => {
-                    const value = viewElement.getAttribute("data-task-state");
+                    const value = viewElement.getAttribute("data-trilium-task-state");
                     return typeof value === "string" && stateByName.has(value) && !isAnchorState(value)
                         ? value
                         : null;
