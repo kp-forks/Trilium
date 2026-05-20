@@ -1,8 +1,9 @@
-import { DEFAULT_CUSTOM_TASK_STATES, DEFAULT_TASK_STATES, DONE_TASK_STATE, NONE_TASK_STATE, type TaskStateDef } from "@triliumnext/commons";
+import { DEFAULT_CUSTOM_TASK_STATES, DEFAULT_TASK_STATES, DONE_TASK_STATE, isAnchorState, NONE_TASK_STATE, type TaskStateDef } from "@triliumnext/commons";
 import { t } from "i18next";
 
 import becca from "../becca/becca.js";
 import BAttribute from "../becca/entities/battribute.js";
+import { getIconPacks } from "./icon_packs.js";
 import noteService from "./notes.js";
 
 export const TASK_STATES_CONTAINER_ID = "_taskStates";
@@ -101,4 +102,61 @@ export function seedDefaultTaskStates() {
             branch.save();
         }
     });
+}
+
+function escapeCssString(value: string): string {
+    return value.replace(/[\\"]/g, "\\$&");
+}
+
+/**
+ * Resolves an icon class (e.g. `bx bx-cancel`) to its font glyph and family
+ * using the icon-pack manifests — the same data that powers the icon picker.
+ * Works for any installed pack without a browser or font-CSS parsing.
+ */
+function resolveIconGlyph(iconClass: string): {glyph: string; fontFamily: string} | null {
+    const parts = iconClass.trim().split(/\s+/);
+    if (parts.length < 2) {
+        return null;
+    }
+    const [prefix, name] = parts;
+    for (const pack of getIconPacks()) {
+        if (pack.prefix !== prefix) {
+            continue;
+        }
+        const icon = pack.manifest.icons[name];
+        if (!icon) {
+            return null;
+        }
+        return {
+            glyph: icon.glyph,
+            fontFamily: pack.builtin ? pack.fontAttachmentId : `trilium-icon-pack-${pack.prefix}`
+        };
+    }
+    return null;
+}
+
+/**
+ * Generates the CSS that renders each task state's icon on its `data-task-state`
+ * checkbox. Resolution is a plain manifest lookup, so this works server-side and
+ * the same stylesheet can be served to both the app and shared notes.
+ */
+export function generateTaskStateCss(): string {
+    const rules: string[] = [];
+    for (const state of getTaskStates()) {
+        if (isAnchorState(state.name) || !state.icon) {
+            continue;
+        }
+        const resolved = resolveIconGlyph(state.icon);
+        if (!resolved) {
+            continue;
+        }
+        const selector = `li[data-task-state="${escapeCssString(state.name)}"]`;
+        rules.push(`${selector} {
+            --task-state-glyph: "${resolved.glyph}";
+            --task-state-glyph-font-family: "${resolved.fontFamily}";
+            --task-state-color: ${state.color || "inherit"};
+            --task-state-hue: 0;
+        }`);
+    }
+    return rules.join("\n");
 }
