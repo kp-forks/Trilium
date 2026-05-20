@@ -1,5 +1,5 @@
 import { ButtonView, Plugin, View } from "ckeditor5";
-import TodoListMultistateEditing, { getConfiguredTaskStates } from "./todo_list_multistate_editing.js";
+import TodoListMultistateEditing, { getActiveTaskStates } from "./todo_list_multistate_editing.js";
 
 export default class TodoListMultistateUI extends Plugin {
 
@@ -11,7 +11,7 @@ export default class TodoListMultistateUI extends Plugin {
         const editor = this.editor;
         const command = editor.commands.get("setTaskState")!;
 
-        for (const state of getConfiguredTaskStates(editor)) {
+        for (const state of getActiveTaskStates(editor)) {
             editor.ui.componentFactory.add(`taskState:${state.name}`, (locale) => {
                 const button = new ButtonView(locale);
                 button.set({

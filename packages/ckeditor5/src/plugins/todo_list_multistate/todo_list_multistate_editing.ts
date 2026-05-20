@@ -14,6 +14,14 @@ export function getConfiguredTaskStates(editor: Editor): TaskStateDef[] {
     return states && states.length ? states : DEFAULT_TASK_STATES;
 }
 
+/**
+ * The states surfaced in the toolbar and keyboard cycle — configured states
+ * minus archived ones. Archived states still round-trip and keep their CSS.
+ */
+export function getActiveTaskStates(editor: Editor): TaskStateDef[] {
+    return getConfiguredTaskStates(editor).filter((state) => !state.archived);
+}
+
 export default class TodoListMultistateEditing extends Plugin {
 
     static get requires() {
@@ -36,7 +44,7 @@ export default class TodoListMultistateEditing extends Plugin {
             if (!command?.isEnabled) {
                 return;
             }
-            const cycle = states.map((state) => state.name);
+            const cycle = getActiveTaskStates(editor).map((state) => state.name);
             const current = (command.value as string | null) ?? NONE_STATE_NAME;
             const idx = cycle.indexOf(current);
             const next = cycle[(idx + 1) % cycle.length];

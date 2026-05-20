@@ -11,7 +11,7 @@ import {
     type ModelElement,
     type ViewElement
 } from "ckeditor5";
-import { getConfiguredTaskStates, TASK_STATE_ATTRIBUTE } from "./todo_list_multistate_editing.js";
+import { getActiveTaskStates, getConfiguredTaskStates, TASK_STATE_ATTRIBUTE } from "./todo_list_multistate_editing.js";
 import TodoListMultistateUI from "./todo_list_multistate_ui.js";
 
 class TodoCheckboxContextMenuObserver extends DomEventObserver<"contextmenu"> {
@@ -77,7 +77,7 @@ export default class TodoListMultistateToolbar extends Plugin {
         const editor = this.editor;
         const toolbar = new ToolbarView(editor.locale);
         toolbar.class = "task-state-toolbar";
-        for (const state of getConfiguredTaskStates(editor)) {
+        for (const state of getActiveTaskStates(editor)) {
             toolbar.items.add(editor.ui.componentFactory.create(`taskState:${state.name}`));
         }
         toolbar.items.add(new ToolbarSeparatorView(editor.locale));
