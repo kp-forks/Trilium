@@ -253,7 +253,7 @@
     "remember-me": "تذكرني",
     "incorrect-totp": "رمز TOTP غير صحيح. يرجى المحاولة مرة أخرى.",
     "incorrect-password": "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.",
-    "sign_in_with_sso": "تسجيل الدخول باستخدام {{ ssoIssuerName }}"
+    "sign_in_with_sso": "تسجيل الدخول باستخدام {{ssoIssuerName}}"
   },
   "set_password": {
     "password": "كلمة المرور",
