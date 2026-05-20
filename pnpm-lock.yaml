@@ -795,8 +795,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1
       officeparser:
-        specifier: 6.1.1
-        version: 6.1.1(encoding@0.1.13)
+        specifier: 7.0.3
+        version: 7.0.3(encoding@0.1.13)
       rand-token:
         specifier: 1.0.1
         version: 1.0.1
@@ -10639,10 +10639,15 @@ packages:
   ofetch@1.5.1:
     resolution: {integrity: sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA==}
 
-  officeparser@6.1.1:
-    resolution: {integrity: sha512-C8XcY7h/4It+ZZDTnPs9p7v2c09zcJUVQKZH4Q8ZtBLeVrauSSrJvvV8Orcq8fSJjxPFuQAueQqkqTfGv3HlPw==}
+  officeparser@7.0.3:
+    resolution: {integrity: sha512-kFYMS0OzIu53/LyRi+l9UIIPpeOVFlz/GVJvsAUrU6IuHBfmc0Y9/C4w/QadQxio7761U/X1frsFRNjAuyBzmg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
+    peerDependencies:
+      puppeteer: '*'
+    peerDependenciesMeta:
+      puppeteer:
+        optional: true
 
   ohash@2.0.11:
     resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
@@ -25322,7 +25327,7 @@ snapshots:
       node-fetch-native: 1.6.7
       ufo: 1.6.4
 
-  officeparser@6.1.1(encoding@0.1.13):
+  officeparser@7.0.3(encoding@0.1.13):
     dependencies:
       '@xmldom/xmldom': 0.9.10
       fflate: 0.8.2
