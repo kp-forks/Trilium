@@ -104,7 +104,8 @@
     "find-in-text": "Suchleiste umschalten",
     "toggle-classic-editor-toolbar": "Schalte um zum Formatierungs-Tab für den Editor mit fester Werkzeugleiste",
     "toggle-zen-mode": "Zen-Modus ein-/ausschalten (reduzierte Benutzeroberfläche für ablenkungsfreies Arbeiten)",
-    "save-named-revision": "Speichere eine benannte Revision der aktuellen Notiz"
+    "save-named-revision": "Speichere eine benannte Revision der aktuellen Notiz",
+    "toggle-archived-notes": "Archivierte Notizen im Notizbaum anzeigen/ausblenden"
   },
   "login": {
     "title": "Anmeldung",
@@ -168,15 +169,15 @@
   "hidden-subtree": {
     "root-title": "Versteckte Notizen",
     "search-history-title": "Suchverlauf",
-    "note-map-title": "Notiz Karte",
-    "sql-console-history-title": "SQL Konsolen Verlauf",
+    "note-map-title": "Notiz-Karte",
+    "sql-console-history-title": "SQL-Konsolen-Verlauf",
     "shared-notes-title": "Geteilte Notizen",
     "bulk-action-title": "Massenverarbeitung",
     "backend-log-title": "Backend Log",
     "user-hidden-title": "Versteckt vom Nutzer",
     "launch-bar-templates-title": "Startleiste Vorlagen",
     "base-abstract-launcher-title": "Basis Abstrakte Startleiste",
-    "command-launcher-title": "Befehlslauncher",
+    "command-launcher-title": "Befehls-Launcher",
     "note-launcher-title": "Notiz-Starter",
     "script-launcher-title": "Skript-Starter",
     "built-in-widget-title": "Eingebautes Widget",
@@ -187,9 +188,9 @@
     "go-to-previous-note-title": "Zur vorherigen Notiz gehen",
     "go-to-next-note-title": "Zur nächsten Notiz gehen",
     "new-note-title": "Neue Notiz",
-    "search-notes-title": "Suche Notiz",
+    "search-notes-title": "Notizen suchen",
     "calendar-title": "Kalender",
-    "recent-changes-title": "neue Änderungen",
+    "recent-changes-title": "Letzte Änderungen",
     "bookmarks-title": "Lesezeichen",
     "open-today-journal-note-title": "Heutigen Journaleintrag öffnen",
     "quick-search-title": "Schnellsuche",
@@ -211,13 +212,13 @@
     "advanced-title": "Erweitert",
     "visible-launchers-title": "Sichtbare Starter",
     "user-guide": "Nutzerhandbuch",
-    "jump-to-note-title": "Springe zu...",
+    "jump-to-note-title": "Wechseln zu...",
     "multi-factor-authentication-title": "MFA",
     "localization": "Sprache & Region",
     "inbox-title": "Posteingang",
     "zen-mode": "Zen-Modus",
     "command-palette": "Befehlspalette öffnen",
-    "tab-switcher-title": "Tabauswahl",
+    "tab-switcher-title": "Tab-Auswahl",
     "llm-chat-history-title": "KI-Chat Historie",
     "custom-dictionary-title": "Benutzerdefiniertes Verzeichnis",
     "llm-title": "KI / LLM",
@@ -330,14 +331,14 @@
     "show-recent-changes": "Zeige letzte Änderungen",
     "show-sql-console": "Zeige SQL Konsole",
     "show-backend-log": "Zeige Backend-Protokoll",
-    "show-help": "Zeige Hilfe",
-    "show-cheatsheet": "Zeige Cheatsheet",
+    "show-help": "Hilfe anzeigen",
+    "show-cheatsheet": "Cheatsheet anzeigen",
     "add-link-to-text": "Link zum Text hinzufügen",
     "cut-into-note": "In neue Notiz verschieben",
     "add-new-label": "Neues Label hinzufügen",
     "add-new-relation": "Neue Beziehung hinzufügen",
-    "print-active-note": "Drucke aktive Notiz",
-    "export-active-note-as-pdf": "Exportiere aktive Notiz als PDF",
+    "print-active-note": "Aktive Notiz drucken",
+    "export-active-note-as-pdf": "Aktive Notiz als PDF exportieren",
     "move-note-up-in-hierarchy": "Notiz in der Hierarchie nach oben verschieben",
     "move-note-down-in-hierarchy": "Notiz in der Hierarchie nach unten verschieben",
     "edit-branch-prefix": "Zweigpräfix bearbeiten",
@@ -367,7 +368,7 @@
     "toggle-note-hoisting": "Notiz hochziehen umschalten",
     "unhoist-note": "Notiz hochziehen rückgängig machen",
     "reload-frontend-app": "Oberfläche neu laden",
-    "open-developer-tools": "Öffne Entwickler-Tools",
+    "open-developer-tools": "Entwickler-Tools öffnen",
     "find-in-text": "Im Text suchen",
     "toggle-left-pane": "Linken Bereich ein-/ausblenden",
     "toggle-full-screen": "Vollbild-Modus de-/aktivieren",
@@ -376,7 +377,8 @@
     "reset-zoom-level": "Zoom zurücksetzen",
     "copy-without-formatting": "Kopieren ohne Formatierung",
     "force-save-revision": "Speichern der Notizrevision erzwingen",
-    "save-named-revision": "Speichere benannte Revision"
+    "save-named-revision": "Benannte Revision speichern",
+    "toggle-archived-notes": "Sichtbarkeit archivierter Notizen umschalten"
   },
   "weekdayNumber": "Woche {weekNumber}",
   "quarterNumber": "Quartal {quarterNumber}",
@@ -406,7 +408,7 @@
     "db_not_initialized_server": "DB nicht initialisiert, bitte besuche die Einrichtungsseite - http://[Server-Host]:{{port}}, um Anweisungen zur Initialisierung von Trilium zu erhalten."
   },
   "desktop": {
-    "instance_already_running": "Es läuft bereits eine Instanz, bitte beachte stattdessen diese Instanz."
+    "instance_already_running": "Es läuft bereits eine Instanz. Diese wird stattdessen in den Vordergrund geholt."
   },
   "password": {
     "incorrect": "Das eingegebene Passwort ist nicht korrekt."
