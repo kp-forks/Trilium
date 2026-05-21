@@ -8,14 +8,14 @@ import type { StreamResult } from "./types.js";
 type ErrorChunk = Extract<LlmStreamChunk, { type: "error" }>;
 
 /** Build a minimal fake StreamResult exposing just what streamToChunks consumes. */
-function fakeResult(parts: unknown[], usage: Promise<unknown>): StreamResult {
+function fakeResult(parts: unknown[], totalUsage: Promise<unknown>): StreamResult {
     return {
         fullStream: (async function* () {
             for (const part of parts) {
                 yield part;
             }
         })(),
-        usage
+        totalUsage
     } as unknown as StreamResult;
 }
 
@@ -40,8 +40,8 @@ function apiCallError(): APICallError {
 }
 
 /**
- * The AI SDK rejects `result.usage` with this generic message whenever the stream
- * produced no steps — which is exactly what happens after a connection-level error.
+ * The AI SDK rejects `result.totalUsage` with this generic message whenever the
+ * stream produced no steps — which is exactly what happens after a connection-level error.
  */
 function noOutputUsage(): Promise<never> {
     return Promise.reject(new Error("No output generated. Check the stream for errors."));
@@ -72,7 +72,7 @@ describe("streamToChunks", () => {
     });
 
     it("does not mask a real stream error with the generic 'No output generated' error", async () => {
-        // A genuine error part arrives, then `usage` rejects because no steps ran.
+        // A genuine error part arrives, then `totalUsage` rejects because no steps ran.
         const chunks = await collect(fakeResult(
             [{ type: "error", error: apiCallError() }],
             noOutputUsage()

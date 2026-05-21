@@ -136,14 +136,16 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
             }
         }
 
-        // Get usage information after the stream completes. When the stream produced
-        // no steps, the AI SDK rejects `usage` with a generic NoOutputGeneratedError
-        // ("No output generated. Check the stream for errors."). If a real error was
-        // already emitted above, that earlier error is the actual cause — don't mask
-        // it with the generic one.
+        // Get usage information after the stream completes. Use `totalUsage`, which
+        // aggregates token usage across every step of the agentic loop — `usage` only
+        // reports the final step, undercounting cost on turns that involve tool calls.
+        // When the stream produced no steps, the AI SDK rejects `totalUsage` with a
+        // generic NoOutputGeneratedError ("No output generated. Check the stream for
+        // errors."). If a real error was already emitted above, that earlier error is
+        // the actual cause — don't mask it with the generic one.
         let usage: LanguageModelUsage;
         try {
-            usage = await result.usage;
+            usage = await result.totalUsage;
         } catch (error) {
             if (!errorEmitted) {
                 yield { type: "error", error: describeStreamError(error) };
