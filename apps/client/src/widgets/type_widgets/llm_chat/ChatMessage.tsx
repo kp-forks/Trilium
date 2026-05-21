@@ -114,16 +114,15 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
 
     // Render markdown for assistant messages with legacy string content
     const renderedContent = useMemo(() => {
-        if (message.role === "assistant" && !isError && !isThinking && typeof message.content === "string") {
+        if (message.role === "assistant" && !isThinking && typeof message.content === "string") {
             return renderMarkdown(message.content);
         }
         return null;
-    }, [message.content, message.role, isError, isThinking]);
+    }, [message.content, message.role, isThinking]);
 
     const messageClasses = [
         "llm-chat-message",
         `llm-chat-message-${message.role}`,
-        isError && "llm-chat-message-error",
         isThinking && "llm-chat-message-thinking"
     ].filter(Boolean).join(" ");
 
@@ -143,14 +142,35 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
         );
     }
 
+    // Render error messages as a "caution" admonition, matching the callouts the
+    // model itself can emit in its responses.
+    if (isError) {
+        return (
+            <div className="llm-chat-message-wrapper llm-chat-message-wrapper-assistant">
+                <div className="admonition caution llm-chat-error">
+                    {textContent}
+                    {onRetry && (
+                        <div className="llm-chat-error-actions">
+                            <Button
+                                text={t("llm_chat.retry")}
+                                icon="bx-revision"
+                                size="small"
+                                onClick={onRetry}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     const hasBlockContent = Array.isArray(message.content);
 
     return (
         <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`}>
             <div className={messageClasses}>
-                {isError && <div className="llm-chat-message-role">Error</div>}
                 <div className="llm-chat-message-content">
-                    {message.role === "assistant" && !isError ? (
+                    {message.role === "assistant" ? (
                         hasBlockContent ? (
                             renderContentBlocks(message.content as ContentBlock[], isStreaming)
                         ) : (
@@ -162,16 +182,6 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
                 </div>
                 {message.citations && message.citations.length > 0 && (
                     <CitationsSection citations={message.citations} />
-                )}
-                {isError && onRetry && (
-                    <div className="llm-chat-error-actions">
-                        <Button
-                            text={t("llm_chat.retry")}
-                            icon="bx-revision"
-                            size="small"
-                            onClick={onRetry}
-                        />
-                    </div>
                 )}
             </div>
             <div className={`llm-chat-footer llm-chat-footer-${message.role}`}>

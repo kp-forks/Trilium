@@ -37,10 +37,6 @@
     font-size: 0.9rem;
 }
 
-.sidebar-chat-messages .llm-chat-message-role {
-    font-size: 0.75rem;
-}
-
 .sidebar-chat-messages .llm-chat-tool-activity {
     font-size: 0.85rem;
     padding: 0.375rem 0.75rem;
