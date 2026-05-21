@@ -49,6 +49,7 @@ export interface StreamOptions {
  * This is provider-agnostic - works with any AI SDK provider.
  */
 export async function* streamToChunks(result: StreamResult, options: StreamOptions = {}): AsyncIterable<LlmStreamChunk> {
+    let errorEmitted = false;
     try {
         for await (const part of result.fullStream) {
             switch (part.type) {
@@ -96,13 +97,27 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
                     break;
 
                 case "error":
+                    errorEmitted = true;
                     yield { type: "error", error: String(part.error) };
                     break;
             }
         }
 
-        // Get usage information after stream completes
-        const usage = await result.usage;
+        // Get usage information after the stream completes. When the stream produced
+        // no steps, the AI SDK rejects `usage` with a generic NoOutputGeneratedError
+        // ("No output generated. Check the stream for errors."). If a real error was
+        // already emitted above, that earlier error is the actual cause — don't mask
+        // it with the generic one.
+        let usage: LanguageModelUsage;
+        try {
+            usage = await result.usage;
+        } catch (error) {
+            if (!errorEmitted) {
+                yield { type: "error", error: error instanceof Error ? error.message : "Unknown error" };
+            }
+            return;
+        }
+
         if (usage && typeof usage.inputTokens === "number" && typeof usage.outputTokens === "number") {
             const cost = calculateCost(usage, options.pricing);
             yield {
@@ -119,7 +134,9 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
 
         yield { type: "done" };
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown error";
-        yield { type: "error", error: message };
+        if (!errorEmitted) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            yield { type: "error", error: message };
+        }
     }
 }
