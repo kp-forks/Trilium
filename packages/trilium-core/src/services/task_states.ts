@@ -35,7 +35,7 @@ export function getTaskStates(): TaskStateDef[] {
             }
             return {
                 id: note.noteId,
-                name: note.getLabelValue("stateName") ?? "",
+                name: note.getLabelValue("stateId") ?? "",
                 title: note.title,
                 markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
                 isCompleted: note.getLabelValue("isCompleted") === "true",
@@ -67,7 +67,7 @@ export function createTaskStateNote(state: TaskStateDef, options: {noteId?: stri
 
     const labels: Record<string, string> = {
         iconClass: state.icon,
-        stateName: state.name,
+        stateId: state.name,
         markdownSymbol: state.markdownSymbol,
         isCompleted: String(state.isCompleted),
         color: state.color

@@ -2663,9 +2663,9 @@
     "unknown-task-state": "Undefined custom task state",
     "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",
     "validation-errors": {
-      "undefined-name": "undefined stateName",
-      "invalid-name": "invalid stateName",
-      "duplicate-name": "duplicate stateName",
+      "undefined-name": "undefined identifier",
+      "invalid-name": "invalid identifier",
+      "duplicate-name": "duplicate identifier",
       "missing-title": "missing title",
       "missing-icon": "missing icon",
       "invalid-symbol": "the markdown symbol should be one character, excepting \"[\", \" \", \"X\", and \"]\"",

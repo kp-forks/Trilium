@@ -9,7 +9,7 @@
 export interface TaskStateDef {
     /** The state note's id (used in validation messages; absent on hardcoded fallbacks). */
     id?: string;
-    /** The `stateName` label value — used verbatim as the `data-trilium-task-state` attribute. */
+    /** The `stateId` label value — used verbatim as the `data-trilium-task-state` attribute. */
     name: string;
     /** Human-readable display name (the state note's title). */
     title: string;
@@ -101,7 +101,7 @@ export interface TaskStateValidationResult {
     errors: TaskStateValidationError[];
 }
 
-/** `stateName` is embedded in HTML attributes, CSS selectors and JSON — keep it strictly safe. */
+/** The `stateId` is embedded in HTML attributes, CSS selectors and JSON — keep it strictly safe. */
 const VALID_STATE_NAME_PATTERN = /^[A-Za-z0-9_-]+$/;
 /** Symbols reserved by the markdown task-list syntax `- [ ]` / `- [x]`. */
 const FORBIDDEN_MARKDOWN_SYMBOLS = new Set(["[", "]", " ", "x", "X"]);

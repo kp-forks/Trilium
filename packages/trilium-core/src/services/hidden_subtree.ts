@@ -92,11 +92,11 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 icon: "bx-list-check",
                 isExpanded: true,
                 attributes: [
-                    { type: "label", name: "child:label:stateName", value: "promoted,single,text" },
-                    { type: "label", name: "child:label:markdownSymbol", value: "promoted,single,text" },
-                    { type: "label", name: "child:label:isCompleted", value: "promoted,single,boolean" },
-                    { type: "label", name: "child:label:color", value: "promoted,single,color" },
-                    { type: "label", name: "child:label:isHidden", value: "promoted,single,boolean" }
+                    { type: "label", name: "child:label:stateId", value: `promoted,single,text,alias=${t("hidden-subtree.task-state-attr-state-id")}` },
+                    { type: "label", name: "child:label:markdownSymbol", value: `promoted,single,text,alias=${t("hidden-subtree.task-state-attr-markdown-symbol")}` },
+                    { type: "label", name: "child:label:isCompleted", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-completed")}` },
+                    { type: "label", name: "child:label:color", value: `promoted,single,color,alias=${t("hidden-subtree.task-state-attr-color")}` },
+                    { type: "label", name: "child:label:isHidden", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-hidden")}` }
                 ],
                 // Non-customizable anchor states — recreated if missing; they only
                 // determine where `none`/`done` sit in the toolbar/cycling order.

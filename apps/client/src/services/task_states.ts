@@ -54,7 +54,7 @@ export async function getTaskStateDefinitions(): Promise<TaskStateDef[]> {
             }
             return {
                 id: note.noteId,
-                name: note.getLabelValue("stateName") ?? "",
+                name: note.getLabelValue("stateId") ?? "",
                 title: note.title,
                 markdownSymbol: note.getLabelValue("markdownSymbol") ?? "",
                 isCompleted: note.getLabelValue("isCompleted") === "true",
