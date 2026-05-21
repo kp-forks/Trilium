@@ -136,6 +136,10 @@
     color: var(--danger-text-color, #c00);
 }
 
+.llm-chat-message-error .llm-chat-error-actions {
+    margin-top: 0.5rem;
+}
+
 .llm-chat-thinking-card.expandable-card {
     width: 100%;
     max-width: 100%;

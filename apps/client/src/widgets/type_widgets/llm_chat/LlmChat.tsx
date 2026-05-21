@@ -62,8 +62,16 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
                         text={t("llm_chat.empty_state")}
                     />
                 )}
-                {chat.messages.map(msg => (
-                    <ChatMessage key={msg.id} message={msg} />
+                {chat.messages.map((msg, idx) => (
+                    <ChatMessage
+                        key={msg.id}
+                        message={msg}
+                        onRetry={
+                            idx === chat.messages.length - 1 && msg.type === "error" && !chat.isStreaming
+                                ? chat.retryLast
+                                : undefined
+                        }
+                    />
                 ))}
                 {chat.isStreaming && chat.streamingThinking && (
                     <ChatMessage

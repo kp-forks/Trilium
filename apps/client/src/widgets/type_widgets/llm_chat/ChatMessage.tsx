@@ -6,6 +6,7 @@ import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
+import Button from "../../react/Button.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import { type ContentBlock, getMessageText, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
@@ -39,6 +40,8 @@ function MarkdownContent({ html, isStreaming }: { html: string; isStreaming?: bo
 interface Props {
     message: StoredMessage;
     isStreaming?: boolean;
+    /** When set on an error message, renders a Retry button that re-runs the failed turn. */
+    onRetry?: () => void;
 }
 
 type ContentGroup =
@@ -104,7 +107,7 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
     );
 }
 
-export default function ChatMessage({ message, isStreaming }: Props) {
+export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
     const isError = message.type === "error";
     const isThinking = message.type === "thinking";
     const textContent = typeof message.content === "string" ? message.content : getMessageText(message.content);
@@ -159,6 +162,16 @@ export default function ChatMessage({ message, isStreaming }: Props) {
                 </div>
                 {message.citations && message.citations.length > 0 && (
                     <CitationsSection citations={message.citations} />
+                )}
+                {isError && onRetry && (
+                    <div className="llm-chat-error-actions">
+                        <Button
+                            text={t("llm_chat.retry")}
+                            icon="bx-revision"
+                            size="small"
+                            onClick={onRetry}
+                        />
+                    </div>
                 )}
             </div>
             <div className={`llm-chat-footer llm-chat-footer-${message.role}`}>
