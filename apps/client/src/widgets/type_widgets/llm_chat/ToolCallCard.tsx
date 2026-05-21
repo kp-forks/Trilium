@@ -199,12 +199,16 @@ function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
             className={hasError ? "llm-chat-tool-call-error" : ""}
         >
             <div className="llm-chat-tool-call-input">
-                <strong>{noteContentEdits ? t("llm_chat.changes") : t("llm_chat.input")}</strong>
-                {noteContentEdits
-                    ? <EditNoteContentDiff edits={noteContentEdits} />
-                    : <KeyValueTable data={toolCall.input} />}
+                {noteContentEdits ? (
+                    <EditNoteContentDiff edits={noteContentEdits} />
+                ) : (
+                    <>
+                        <strong>{t("llm_chat.input")}</strong>
+                        <KeyValueTable data={toolCall.input} />
+                    </>
+                )}
             </div>
-            {toolCall.result && (
+            {toolCall.result && (!noteContentEdits || hasError) && (
                 <div className={`llm-chat-tool-call-result ${hasError ? "llm-chat-tool-call-result-error" : ""}`}>
                     <strong>{hasError ? t("llm_chat.error") : t("llm_chat.result")}</strong>
                     <KeyValueTable data={toolCall.result} />
