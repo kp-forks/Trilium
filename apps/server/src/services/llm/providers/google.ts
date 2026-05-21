@@ -74,7 +74,7 @@ export class GoogleProvider extends BaseProvider {
         }
 
         const systemPrompt = this.buildSystemPrompt(messages, config);
-        const chatMessages = messages.filter(m => m.role !== "system");
+        const chatMessages = this.applyNoteHint(messages.filter(m => m.role !== "system"), config);
         const coreMessages = this.buildMessages(chatMessages);
 
         const streamOptions: Parameters<typeof streamText>[0] = {

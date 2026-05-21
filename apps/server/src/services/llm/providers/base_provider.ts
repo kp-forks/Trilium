@@ -89,14 +89,6 @@ export abstract class BaseProvider implements LlmProvider {
             parts.push(basePrompt);
         }
 
-        // Context note hint
-        if (config.contextNoteId) {
-            const noteHint = buildNoteHint(config.contextNoteId);
-            if (noteHint) {
-                parts.push(noteHint);
-            }
-        }
-
         // Note tools hint
         if (config.enableNoteTools) {
             parts.push(
@@ -169,6 +161,35 @@ export abstract class BaseProvider implements LlmProvider {
     }
 
     /**
+     * Attach the current-note metadata hint to the last user message.
+     *
+     * The hint is deliberately kept OUT of the system prompt: it changes whenever
+     * the context note changes, and the system prompt carries the provider's
+     * prompt-cache breakpoint — embedding volatile content there would invalidate
+     * the cached system+tools prefix on every note edit. The last user message is
+     * regenerated every turn and never cached, so it is the right home for it.
+     */
+    protected applyNoteHint(chatMessages: LlmMessage[], config: LlmProviderConfig): LlmMessage[] {
+        if (!config.contextNoteId) {
+            return chatMessages;
+        }
+
+        const noteHint = buildNoteHint(config.contextNoteId);
+        if (!noteHint) {
+            return chatMessages;
+        }
+
+        const lastUserIndex = chatMessages.map(m => m.role).lastIndexOf("user");
+        if (lastUserIndex === -1) {
+            return chatMessages;
+        }
+
+        return chatMessages.map((m, i) =>
+            i === lastUserIndex ? { ...m, content: `${noteHint}\n\n${m.content}` } : m
+        );
+    }
+
+    /**
      * Build the value for the `system` option of `streamText`. Subclasses can
      * override to attach provider-specific metadata (e.g. cache control).
      */
@@ -202,7 +223,7 @@ export abstract class BaseProvider implements LlmProvider {
 
     chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
         const systemPrompt = this.buildSystemPrompt(messages, config);
-        const chatMessages = messages.filter(m => m.role !== "system");
+        const chatMessages = this.applyNoteHint(messages.filter(m => m.role !== "system"), config);
         const coreMessages = this.buildMessages(chatMessages);
 
         const streamOptions: Parameters<typeof streamText>[0] = {
