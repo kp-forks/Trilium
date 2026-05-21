@@ -1793,6 +1793,8 @@
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",
     "input": "Input",
+    "changes": "Changes",
+    "edit_index": "Edit {{index}} of {{total}}",
     "result": "Result",
     "error": "Error",
     "tool_error": "failed",

@@ -4,6 +4,7 @@ import { Trans } from "react-i18next";
 
 import { t } from "../../../services/i18n.js";
 import { NewNoteLink } from "../../react/NoteLink.js";
+import { EditNoteContentDiff, parseNoteContentEdits } from "./EditNoteContentDiff.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import type { ToolCall } from "./llm_chat_types.js";
 
@@ -186,6 +187,11 @@ function ToolCallLabel({ toolCall }: { toolCall: ToolCall }) {
 function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
     const hasError = toolCall.isError;
 
+    // The `edit_note_content` tool gets a fancy unified diff instead of a raw input table.
+    const noteContentEdits = toolCall.toolName === "edit_note_content"
+        ? parseNoteContentEdits(toolCall.input?.edits)
+        : null;
+
     return (
         <ExpandableSection
             icon={toolCallIcon(toolCall)}
@@ -193,8 +199,10 @@ function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
             className={hasError ? "llm-chat-tool-call-error" : ""}
         >
             <div className="llm-chat-tool-call-input">
-                <strong>{t("llm_chat.input")}</strong>
-                <KeyValueTable data={toolCall.input} />
+                <strong>{noteContentEdits ? t("llm_chat.changes") : t("llm_chat.input")}</strong>
+                {noteContentEdits
+                    ? <EditNoteContentDiff edits={noteContentEdits} />
+                    : <KeyValueTable data={toolCall.input} />}
             </div>
             {toolCall.result && (
                 <div className={`llm-chat-tool-call-result ${hasError ? "llm-chat-tool-call-result-error" : ""}`}>
