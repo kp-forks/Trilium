@@ -5,7 +5,7 @@
 
 import type { LlmMessage } from "@triliumnext/commons";
 import type { LanguageModel } from "ai";
-import { generateText, type ModelMessage, stepCountIs, streamText, type ToolSet } from "ai";
+import { generateText, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
@@ -156,22 +156,24 @@ export abstract class BaseProvider implements LlmProvider {
 
     /**
      * Build the ModelMessage array from LlmMessages (no provider-specific options).
+     *
+     * Only user/assistant turns are included here — the system prompt is passed
+     * separately via the `system` option of `streamText` (see `buildSystemMessage`),
+     * which is resilient against prompt injection.
      */
-    protected buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): ModelMessage[] {
-        const coreMessages: ModelMessage[] = [];
+    protected buildMessages(chatMessages: LlmMessage[]): ModelMessage[] {
+        return chatMessages.map(m => ({
+            role: m.role as "user" | "assistant",
+            content: m.content
+        }));
+    }
 
-        if (systemPrompt) {
-            coreMessages.push({ role: "system", content: systemPrompt });
-        }
-
-        for (const m of chatMessages) {
-            coreMessages.push({
-                role: m.role as "user" | "assistant",
-                content: m.content
-            });
-        }
-
-        return coreMessages;
+    /**
+     * Build the value for the `system` option of `streamText`. Subclasses can
+     * override to attach provider-specific metadata (e.g. cache control).
+     */
+    protected buildSystemMessage(systemPrompt: string | undefined): string | SystemModelMessage | undefined {
+        return systemPrompt;
     }
 
     /**
@@ -201,12 +203,20 @@ export abstract class BaseProvider implements LlmProvider {
     chat(messages: LlmMessage[], config: LlmProviderConfig): StreamResult {
         const systemPrompt = this.buildSystemPrompt(messages, config);
         const chatMessages = messages.filter(m => m.role !== "system");
-        const coreMessages = this.buildMessages(chatMessages, systemPrompt);
+        const coreMessages = this.buildMessages(chatMessages);
 
         const streamOptions: Parameters<typeof streamText>[0] = {
             model: this.createModel(config.model || this.defaultModel),
+            system: this.buildSystemMessage(systemPrompt),
             messages: coreMessages,
-            maxOutputTokens: config.maxTokens || DEFAULT_MAX_TOKENS
+            maxOutputTokens: config.maxTokens || DEFAULT_MAX_TOKENS,
+            // Reject any system message smuggled into `messages` (prompt injection guard).
+            allowSystemInMessages: false,
+            // The AI SDK's default onError handler dumps the raw error object straight
+            // to stdout, bypassing Trilium's logger. The error is still delivered through
+            // `fullStream`, where `streamToChunks` turns it into a detailed message that
+            // the chat route logs — so suppress the unstructured stdout dump here.
+            onError: () => {}
         };
 
         const tools = this.buildTools(config);

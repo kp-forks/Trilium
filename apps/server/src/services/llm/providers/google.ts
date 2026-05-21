@@ -75,12 +75,15 @@ export class GoogleProvider extends BaseProvider {
 
         const systemPrompt = this.buildSystemPrompt(messages, config);
         const chatMessages = messages.filter(m => m.role !== "system");
-        const coreMessages = this.buildMessages(chatMessages, systemPrompt);
+        const coreMessages = this.buildMessages(chatMessages);
 
         const streamOptions: Parameters<typeof streamText>[0] = {
             model: this.createModel(config.model || this.defaultModel),
+            system: this.buildSystemMessage(systemPrompt),
             messages: coreMessages,
             maxOutputTokens: config.maxTokens || 8096,
+            // Reject any system message smuggled into `messages` (prompt injection guard).
+            allowSystemInMessages: false,
             providerOptions: {
                 google: {
                     thinkingConfig: {
