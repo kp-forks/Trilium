@@ -519,7 +519,8 @@
     "serif-system-fonts": "خطوط النظام المزخرفة",
     "sans-serif-system-fonts": "خطوط النظام بدون زخرفة",
     "monospace-system-fonts": "خطوط النظام احادية المسافة",
-    "handwriting-system-fonts": "خطوط النظام باسلوب الكتابة اليدوية"
+    "handwriting-system-fonts": "خطوط النظام باسلوب الكتابة اليدوية",
+    "preview": "معاينة"
   },
   "confirm": {
     "confirmation": "تأكيد",
@@ -738,7 +739,14 @@
     "dark_theme": "النسق القديم (داكن)",
     "triliumnext-light": "تريليوم (فاتح)",
     "triliumnext-dark": "داكن",
-    "override_theme_fonts_label": "تجاوز خطوط النسق"
+    "override_theme_fonts_label": "تجاوز خطوط النسق",
+    "modern_themes": "حديث",
+    "legacy_themes": "قديم",
+    "custom_themes": "مخصص",
+    "recommended": "موصى به",
+    "color_scheme_system": "نظام",
+    "color_scheme_light": "فاتح",
+    "color_scheme_dark": "داكن"
   },
   "ui-performance": {
     "title": "أداء",
@@ -751,7 +759,8 @@
     "title": "الحجم التلقائي للقراءه فقط"
   },
   "code-editor-options": {
-    "title": "محرر"
+    "title": "محرر",
+    "tab_width_unit": "المسافات"
   },
   "images": {
     "images_section_title": "صور",
@@ -808,7 +817,8 @@
     "no_backup_yet": "لايوجد نسخة احتياطية لحد الان",
     "enable_daily_backup": "تمكين النسخ الاحتياطي اليومي",
     "backup_database_now": "نسخ اختياطي لقاعدة البيانات الان",
-    "download": "تنزيل"
+    "download": "تنزيل",
+    "title": "نسخة احتياطية"
   },
   "etapi": {
     "created": "تم الأنشاء",
@@ -835,7 +845,8 @@
     "for_more_info": "لمزيد من المعلومات.",
     "protected_session_timeout_label": "انتهت مدة الجلسة المحمية:",
     "protected_session_timeout": "انتهاء مهلة الجلسة المحمية",
-    "new_password_confirmation": "تاكيد كلمة المرور الجديدة"
+    "new_password_confirmation": "تاكيد كلمة المرور الجديدة",
+    "cancel": "الغاء"
   },
   "shortcuts": {
     "shortcuts": "أختصارات",
@@ -987,7 +998,8 @@
     "mind-map": "خريطة ذهنية",
     "geo-map": "خريطة جغرافية",
     "task-list": "قائمة المهام",
-    "spreadsheet": "جدول البيانات"
+    "spreadsheet": "جدول البيانات",
+    "markdown": "ماركداون"
   },
   "shared_switch": {
     "shared": "مشترك",
@@ -1205,7 +1217,10 @@
     "open_note_custom": "فتح ملاحظة مخصص",
     "print_pdf": "تصدير كملف PDF...",
     "convert_into_attachment_failed": "فشل تحويل الملاحظة {{title}}.",
-    "advanced": "متقدم"
+    "advanced": "متقدم",
+    "word_wrap_auto": "تلقائي",
+    "word_wrap_on": "تشغيل",
+    "word_wrap_off": "ايقاف"
   },
   "update_available": {
     "update_available": "تحديث متوفر"
@@ -1378,7 +1393,8 @@
     "theme_group_light": "الثيمات الفاتحة",
     "theme_group_dark": "الثيمات الغامقة",
     "copy_title": "نسخ الى الحافظة",
-    "theme_none": "بدون تمييز الصياغة"
+    "theme_none": "بدون تمييز الصياغة",
+    "tab_width_unit": "المسافات"
   },
   "link_context_menu": {
     "open_note_in_popup": "تحرير سريع"
@@ -1730,7 +1746,8 @@
     "sample_treemap": "خريطة شجرية",
     "sample_xy": "XY",
     "sample_venn": "مخطط فن (Venn)",
-    "sample_ishikawa": "مخطط إيشيكاوا (Ishikawa)"
+    "sample_ishikawa": "مخطط إيشيكاوا (Ishikawa)",
+    "sample_treeview": "عرض الشجرة"
   },
   "llm_chat": {
     "send": "ارسال",
@@ -1741,12 +1758,15 @@
     "result": "نتيجة",
     "error": "خطأ",
     "tool_error": "فشل",
-    "tokens": "رموز"
+    "tokens": "رموز",
+    "stop": "إيقاف"
   },
   "llm": {
     "provider_name": "اسم",
     "provider_type": "المجهز",
-    "actions": "الإجراءات"
+    "actions": "الإجراءات",
+    "delete_provider": "حذف",
+    "cancel": "الغاء"
   },
   "markdown_editor": {
     "image_upload_failed": "لا يمكن رفع الصورة \"{{name}}\"."
@@ -1767,5 +1787,65 @@
   "file": {
     "file_preview_not_available": "معاينة الملف غير متاحة لهذا النوع من الصيغ.",
     "too_big": "تُعرض المعاينة فقط أول {{maxNumChars}} حرفًا من الملف لأسباب تتعلق بالأداء. قم بتنزيل الملف وفتحه خارجيًا لعرض المحتوى بالكامل."
+  },
+  "mind-map": {
+    "summary": "الملخص",
+    "link": "رابط"
+  },
+  "ocr": {
+    "processing": "جارٍ المعالجة..."
+  },
+  "search": {
+    "title": "بحث"
+  },
+  "database": {
+    "title": "قاعدة بيانات"
+  },
+  "text_editor": {
+    "title": "محرر"
+  },
+  "status_bar": {
+    "tab_width_style_spaces": "المسافات",
+    "tab_width_style_tabs": "علامات التبويب"
+  },
+  "print_preview": {
+    "close": "اغلاق",
+    "orientation": "الاتجاه",
+    "portrait": "وضع عمودي",
+    "landscape": "وضع افقي",
+    "scale": "المقياس",
+    "margins": "الهوامش",
+    "margins_default": "افتراضي",
+    "margins_none": "لاشيء",
+    "margins_minimum": "الحد الأدنى",
+    "margins_custom": "مخصص",
+    "margin_top": "اعلى",
+    "margin_right": "يمين",
+    "margin_bottom": "اسفل",
+    "margin_left": "يسار",
+    "page_ranges": "صفحات",
+    "print": "طباعة",
+    "destination": "الوجهة",
+    "destination_printers": "الطابعات",
+    "destination_default": "افتراضي"
+  },
+  "display_mode": {
+    "preview": "معاينة"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "الغاء"
+  },
+  "mobile_note_navigator": {
+    "loading": "جار التحميل..."
+  },
+  "setup": {
+    "next": "التالي",
+    "title": "الاعداد",
+    "button-back": "رجوع",
+    "create-new-document-options-empty": "فارغ",
+    "server-password": "كلمة المرور",
+    "language": "لغة",
+    "continue": "استمر"
   }
 }
