@@ -1793,6 +1793,7 @@
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",
     "input": "Input",
+    "edit_index": "Edit {{index}} of {{total}}",
     "result": "Result",
     "error": "Error",
     "tool_error": "failed",
@@ -1808,7 +1809,8 @@
     "note_context_disabled": "Click to include current note in context",
     "no_provider_message": "No AI provider configured. Add one to start chatting.",
     "add_provider": "Add AI Provider",
-    "stop": "Stop"
+    "stop": "Stop",
+    "retry": "Retry"
   },
   "sidebar_chat": {
     "title": "AI Chat",
@@ -2634,7 +2636,9 @@
       "search_notes": "Search notes",
       "get_note": "Get note",
       "get_note_content": "Get note content",
-      "update_note_content": "Update note content",
+      "set_note_content": "Rewrite note",
+      "update_note_content": "Rewrite note",
+      "edit_note_content": "Edit note",
       "append_to_note": "Append to note",
       "create_note": "Create note",
       "get_attributes": "Get attributes",
