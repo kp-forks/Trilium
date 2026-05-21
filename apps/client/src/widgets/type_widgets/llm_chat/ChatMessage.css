@@ -34,11 +34,6 @@
     background: var(--accented-background-color);
 }
 
-.llm-chat-message-assistant {
-    background: var(--main-background-color);
-    border: 1px solid var(--main-border-color);
-}
-
 .llm-chat-message-content {
     word-wrap: break-word;
     line-height: 1.5;
