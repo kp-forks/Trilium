@@ -2757,14 +2757,15 @@ iframe.print-iframe {
     --task-checkbox-done-color: green;
     --task-checkbox-color: white;
     --task-checkbox-border-radius: 4px;
-    --task-checkbox-padding: 2.5px;
+    --task-checkbox-glyph-ratio: .8;
 }
 
 :root .tn-task-checkbox {
+    --_checkbox-size: 18px;
+
     position: relative;
-    width: 18px;
-    height: 18px;
-    font-size: 18px;
+    width: var(--_checkbox-size);
+    height: var(--_checkbox-size);
 }
 
 /* Prevent variables from bleeding into nested items */
@@ -2791,6 +2792,10 @@ iframe.print-iframe {
     --_task-checkbox-background: var(--task-checkbox-done-color);
 }
 
+:root .ck-content.ck-content ul.todo-list li .todo-list__label input[type="checkbox"] {
+    --_checkbox-size: var(--ck-content-todo-list-checkmark-size);
+}
+
 /* Checkbox */
 :root .ck-content.ck-content ul.todo-list li .todo-list__label input[type="checkbox"],
 .tn-task-checkbox {
@@ -2808,16 +2813,16 @@ iframe.print-iframe {
     /* Checkbox tick */
     &::after {
         all: unset;
-
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         position: absolute;
-        inset: var(--task-checkbox-padding);
+        inset: 0;
         content: var(--task-state-glyph);
         font-family: var(--task-state-glyph-font-family, inherit);
-        font-size: calc(100% - var(--task-checkbox-padding) * 2);
+        font-size: calc(var(--_checkbox-size) * var(--task-checkbox-glyph-ratio));
         color: var(--task-checkbox-color);
+        text-box-trim: trim-both;
     }
 
     &:disabled {
