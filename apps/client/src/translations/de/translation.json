@@ -2383,7 +2383,9 @@
     "tokens_used": "{{prompt}} Prompt + {{completion}} Completion = {{total}} Token",
     "tokens_used_with_cost": "{{prompt}} Prompt + {{completion}} Completion = {{total}} Token (~${{cost}})",
     "tokens_used_with_model": "{{model}}: {{prompt}} Prompt + {{completion}} Completion = {{total}} Token",
-    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} Prompt + {{completion}} Completion = {{total}} Token (~${{cost}})"
+    "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} Prompt + {{completion}} Completion = {{total}} Token (~${{cost}})",
+    "edit_index": "Bearbeitung {{index}} von {{total}}",
+    "retry": "Erneut versuchen"
   },
   "sidebar_chat": {
     "title": "KI-Chat",
@@ -2407,7 +2409,7 @@
       "get_note": "Notiz beziehen",
       "search_notes": "Notizen durchsuchen",
       "get_note_content": "Notizinhalt abrufen",
-      "update_note_content": "Notizinhalt aktualisieren",
+      "update_note_content": "Notiz neu schreiben",
       "get_attributes": "Attribute abrufen",
       "get_attribute": "Attribut abrufen",
       "set_attribute": "Attribut setzen",
@@ -2417,7 +2419,9 @@
       "load_skill": "Skill laden",
       "note_in_parent": "<Note/> in <Parent/>",
       "get_attachment": "Anhang abrufen",
-      "get_attachment_content": "Anhangsinhalt lesen"
+      "get_attachment_content": "Anhangsinhalt lesen",
+      "set_note_content": "Notiz neu schreiben",
+      "edit_note_content": "Notiz bearbeiten"
     },
     "cancel": "Abbrechen",
     "api_key": "API Schlüssel",
@@ -2438,7 +2442,10 @@
     "mcp_enabled": "MCP-Server",
     "mcp_enabled_description": "Einen Model-Context-Protocol-(MCP)-Endpunkt bereitstellen, sodass KI-Coding-Assistenten (z. B. Claude Code, GitHub Copilot) Ihre Notizen lesen und ändern können. Der Endpunkt ist nur über localhost erreichbar.",
     "mcp_endpoint_title": "Endpunkt-URL",
-    "mcp_endpoint_description": "Fügen Sie diese URL zur MCP-Konfiguration Ihres KI-Assistenten hinzu"
+    "mcp_endpoint_description": "Fügen Sie diese URL zur MCP-Konfiguration Ihres KI-Assistenten hinzu",
+    "base_url": "Basis-URL",
+    "base_url_description": "Optional. Überschreibt den Standard-API-Endpunkt – nützlich für selbst gehostete Modelle (Ollama, LM Studio, vLLM) oder Proxys.",
+    "base_url_invalid": "Die Basis-URL muss eine gültige http://- oder https://-URL sein"
   },
   "mind-map": {
     "summary": "Zusammenfassung",
