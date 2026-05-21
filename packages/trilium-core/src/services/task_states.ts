@@ -1,4 +1,5 @@
 import { DEFAULT_CUSTOM_TASK_STATES, DEFAULT_TASK_STATES, DONE_STATE_ID, DONE_TASK_STATE, isAnchorState, NONE_STATE_ID, NONE_TASK_STATE, TASK_STATES_CONTAINER_ID, type TaskStateDef, validateTaskStates } from "@triliumnext/commons";
+import Color from "color";
 import { t } from "i18next";
 
 import becca from "../becca/becca.js";
@@ -144,6 +145,21 @@ function resolveIconGlyph(iconClass: string): {glyph: string; fontFamily: string
 }
 
 /**
+ * Returns the HSL hue (0–360) of a color, or `undefined` for grayscale colors
+ * (zero saturation) — mirrors `getHue` in the client's `css_class_manager`.
+ * Accepts any CSS color the `color` library understands (hex, `rgb()`, names…).
+ */
+function computeHue(color: string): number | undefined {
+    try {
+        const hsl = Color(color).hsl();
+        return hsl.saturationl() > 0 ? hsl.hue() : undefined;
+    } catch {
+        // Not a valid color — no hue.
+        return undefined;
+    }
+}
+
+/**
  * Generates the CSS that renders each task state's icon on its `data-trilium-task-state`
  * checkbox. Resolution is a plain manifest lookup, so this works server-side and
  * the same stylesheet can be served to both the app and shared notes.
@@ -158,12 +174,13 @@ export function generateTaskStateCss(): string {
         if (!resolved) {
             continue;
         }
-        const selector = `li[data-trilium-task-state="${escapeCssString(state.name)}"], .tn-task-checkbox[data-trilium-task-state="${escapeCssString(state.name)}"]`;
-        rules.push(`${selector} {
+        const name = escapeCssString(state.name);
+        const hue = computeHue(state.color);
+        rules.push(`[data-trilium-task-state="${name}"], .tn-task-checkbox[data-trilium-task-state="${name}"] {
             --task-state-glyph: "${resolved.glyph}";
             --task-state-glyph-font-family: "${resolved.fontFamily}";
             --task-state-color: ${state.color || "inherit"};
-            --task-state-hue: 0;
+            --task-state-hue: ${hue ?? "unset"};
         }`);
     }
     return rules.join("\n");
