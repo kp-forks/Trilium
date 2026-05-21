@@ -53,6 +53,9 @@ function getToolCallContext(toolCall: ToolCall): ToolCallContext {
 
 function toolNameIcon(toolName: string): string {
     if (toolName.includes("search")) return "bx bx-search";
+    // Specific note-content tools, checked before the generic "note" match below.
+    if (toolName === "set_note_content" || toolName === "update_note_content") return "bx bx-sync";
+    if (toolName === "edit_note_content") return "bx bx-pencil";
     if (toolName.includes("note")) return "bx bx-note";
     if (toolName.includes("attribute")) return "bx bx-purchase-tag";
     if (toolName.includes("attachment")) return "bx bx-paperclip";
