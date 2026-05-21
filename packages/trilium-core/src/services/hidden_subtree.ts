@@ -97,10 +97,9 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { type: "label", name: "child:label:isCompleted", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-completed")}` },
                     { type: "label", name: "child:label:color", value: `promoted,single,color,alias=${t("hidden-subtree.task-state-attr-color")}` },
                     { type: "label", name: "child:label:isHidden", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-hidden")}` },
-                    // Documentation: `docName` for this container, `child:docName` is
-                    // copied onto every state note (anchors, seeded and user-created).
-                    { type: "label", name: "docName", value: "task_states" },
-                    { type: "label", name: "child:docName", value: "task_state" }
+                    // Documentation page for this container. The anchor states use
+                    // `system_state`, custom states use `task_state` (see createTaskStateNote).
+                    { type: "label", name: "docName", value: "task_states" }
                 ],
                 // Non-customizable anchor states — recreated if missing; they only
                 // determine where `none`/`done` sit in the toolbar/cycling order.
@@ -110,7 +109,10 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                         title: t("hidden-subtree.task-state-none"),
                         type: "doc",
                         icon: "bx-checkbox",
-                        attributes: [{ type: "label", name: "hidePromotedAttributes" }]
+                        attributes: [
+                            { type: "label", name: "hidePromotedAttributes" },
+                            { type: "label", name: "docName", value: "system_state" }
+                        ]
                     },
                     {
                         id: "_taskStateDone",
@@ -119,7 +121,8 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                         icon: "bx-check",
                         attributes: [
                             { type: "label", name: "hidePromotedAttributes" },
-                            { type: "label", name: "color", value: "#4de64d" }
+                            { type: "label", name: "color", value: "#4de64d" },
+                            { type: "label", name: "docName", value: "system_state" }
                         ]
                     }
                 ]

@@ -70,7 +70,8 @@ export function createTaskStateNote(state: TaskStateDef, options: {noteId?: stri
         stateId: state.name,
         markdownSymbol: state.markdownSymbol,
         isCompleted: String(state.isCompleted),
-        color: state.color
+        color: state.color,
+        docName: "task_state"
     };
 
     for (const [name, value] of Object.entries(labels)) {
