@@ -667,7 +667,7 @@
     "toggle-zen-mode": "Zen Mode",
     "new-version-available": "Nouvelle mise à jour disponible",
     "download-update": "Obtenir la version {{latestVersion}}",
-    "search_notes": "Rechercher notes"
+    "search_notes": "Rechercher des notes"
   },
   "zen_mode": {
     "button_exit": "Sortir du Zen mode"
@@ -1192,7 +1192,7 @@
     "title": "Interface utilisateur",
     "theme_label": "Thème de l'application",
     "override_theme_fonts_label": "Remplacer les polices du thème",
-    "triliumnext": "Suit le thème du système",
+    "triliumnext": "Suit le schéma de couleurs du système",
     "triliumnext-light": "Clair",
     "triliumnext-dark": "Sombre",
     "layout": "Disposition",
@@ -1200,18 +1200,18 @@
     "layout-horizontal-title": "Horizontal",
     "layout-vertical-description": "la barre de raccourcis est à gauche (défaut)",
     "layout-horizontal-description": "la barre de raccourcis est sous la barre des onglets, cette-dernière est s'affiche en pleine largeur.",
-    "auto_theme": "Suit le thème du système",
+    "auto_theme": "Suit le schéma de couleurs du système",
     "light_theme": "Clair",
     "dark_theme": "Sombre",
     "modern_themes": "Moderne",
     "legacy_themes": "Historique",
     "custom_themes": "Personnalisé",
     "recommended": "Recommandé",
-    "color_scheme": "Thème de couleurs",
+    "color_scheme": "Schéma de couleurs",
     "color_scheme_system": "Système",
     "color_scheme_light": "Clair",
     "color_scheme_dark": "Sombre",
-    "color_scheme_custom_disabled": "Le thème de couleurs ne peut pas être modifié avec un thème personnalisé"
+    "color_scheme_custom_disabled": "Le schéma de couleurs est non modifiable sur les thèmes personnalisés"
   },
   "zoom_factor": {
     "title": "Facteur de zoom (version bureau uniquement)",
@@ -1778,7 +1778,7 @@
   },
   "highlighting": {
     "description": "Contrôle la coloration syntaxique des blocs de code à l'intérieur des notes texte, les notes de code ne seront pas affectées.",
-    "color-scheme": "Thème de couleurs",
+    "color-scheme": "Schéma de couleurs",
     "title": "Blocs de code"
   },
   "code_block": {
@@ -2034,8 +2034,8 @@
     "related_settings": "Paramètres associés"
   },
   "settings_appearance": {
-    "related_code_blocks": "Thème de couleurs des blocs de code dans les notes de texte",
-    "related_code_notes": "Thème de couleurs pour les notes de code",
+    "related_code_blocks": "Schéma de couleurs des blocs de code dans les notes de texte",
+    "related_code_notes": "Schéma de couleurs pour les notes de code",
     "ui": "Interface utilisateur",
     "ui_old_layout": "Ancien",
     "ui_new_layout": "Nouveau",
@@ -2094,12 +2094,13 @@
   },
   "code_theme": {
     "title": "Apparence",
-    "word_wrapping": "Retour à la ligne automatique",
-    "color-scheme": "Thème de couleurs",
+    "word_wrapping": "Retour à la ligne",
+    "color-scheme": "Schéma de couleurs",
     "light_theme": "Clair",
     "theme_mode": "Thème",
     "dark_theme": "Sombre",
-    "match_app_appearance": "Suit le thème de l'application"
+    "match_app_appearance": "Suivre l'apparence de l'application",
+    "always_use_one_theme": "Thème unique"
   },
   "cpu_arch_warning": {
     "title": "Veuillez télécharger la version ARM64",
@@ -2412,10 +2413,13 @@
     },
     "feature_not_enabled": "Activez la fonctionnalité expérimentale LLM dans Paramètres → Avancé → Fonctionnalités expérimentales pour utiliser les intégrations d’IA.",
     "mcp_title": "MCP (Model Context Protocol)",
-    "mcp_enabled": "serveur MCP",
-    "mcp_enabled_description": "Active un point de terminaison Model Context Protocol (MCP) pour que les assistants de codage IA (par ex. Claude Code, GitHub Copilot) puissent lire et modifier vos notes. Ce point de terminaison n’est accessible que depuis le localhost.",
+    "mcp_enabled": "Serveur MCP",
+    "mcp_enabled_description": "Expose un point de terminaison MCP (Model Context Protocol) afin que les assistants IA (ex : Claude Code, GitHub Copilot) puissent lire et modifier vos notes. Ce point n'est accessible qu'en local.",
     "mcp_endpoint_title": "URL du point de terminaison",
-    "mcp_endpoint_description": "Ajoutez cette URL à la configuration MCP de votre assistant IA"
+    "mcp_endpoint_description": "Ajoutez cette URL à la configuration MCP de votre assistant IA",
+    "base_url": "URL de base",
+    "base_url_description": "Optionnel. Permet de remplacer l'endpoint API par défaut (utile pour les modèles auto-hébergés comme Ollama, LM Studio, vLLM ou proxies).",
+    "base_url_invalid": "L'URL de base doit être une adresse valide (commençant par http:// ou https://)"
   },
   "status_bar": {
     "language_title": "Changer de langue",
@@ -2511,7 +2515,8 @@
     "mime": "MIME : ",
     "source_etapi": "ETAPI",
     "source_llm": "LLM",
-    "source_unknown": "Instantané"
+    "source_unknown": "Instantané",
+    "diff_identical": "Cette révision est identique au contenu actuel de la note."
   },
   "database": {
     "title": "Base de données"

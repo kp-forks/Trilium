@@ -265,7 +265,7 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+بدلاً من ذلك، إذا كان لديك Nix مثبتًا:
 ```shell
 # Run directly
 nix run .#edit-docs
@@ -296,7 +296,7 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 لمزيد من التفاصيل. إذا كانت لديكم أي استفسارات أخرى، فلا تترددوا في التواصل معنا
 عبر الروابط الموضحة في قسم "ناقش معنا" أعلاه.
 
-## 💖 Sponsors
+## 💖 الرعاة
 
 <table>
   <tr>
