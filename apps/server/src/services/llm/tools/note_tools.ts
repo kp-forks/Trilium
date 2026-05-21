@@ -97,7 +97,7 @@ export const noteTools = defineTools({
         }
     },
 
-    update_note_content: {
+    set_note_content: {
         description: "Replace the ENTIRE content of a note. Only use this for a full rewrite or for rich-text ('text') notes. For small or localized changes to a non-text note, prefer edit_note_content — resending the whole note wastes tokens. For text notes, provide Markdown content.",
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to update"),
@@ -171,11 +171,11 @@ export const noteTools = defineTools({
     edit_note_content: {
         description: [
             "Make targeted edits to a note by replacing exact text snippets, without",
-            "resending the whole note. Prefer this over update_note_content for small",
+            "resending the whole note. Prefer this over set_note_content for small",
             "changes to large notes — it is far cheaper. Each edit's oldText must appear",
             "exactly once in the note; include surrounding context to make it unique.",
             "Multiple edits are applied in order. Does not support rich-text ('text')",
-            "notes — use update_note_content for those."
+            "notes — use set_note_content for those."
         ].join(" "),
         inputSchema: z.object({
             noteId: z.string().describe("The ID of the note to edit"),
@@ -202,7 +202,7 @@ export const noteTools = defineTools({
                 return { error: `Cannot edit content for note type: ${note.type}` };
             }
             if (note.type === "text") {
-                return { error: "edit_note_content does not support rich-text notes. Use update_note_content instead." };
+                return { error: "edit_note_content does not support rich-text notes. Use set_note_content instead." };
             }
 
             const existingContent = note.getContent();
