@@ -55,6 +55,21 @@ body[data-note-type="text"] .ck-content {
 
 /* Checkboxes */
 @supports selector(.todo-list__label__description:has(*)) and (height: 1lh) {
+    /* Registering these as <length> resolves the `lh` unit to an absolute
+       length at the .todo-list__label__description element. The pseudo-elements
+       then inherit that frozen value, so changing the glyph's font-size on
+       ::after no longer feeds back into the box dimensions. */
+    @property --box-size {
+        syntax: "<length>";
+        inherits: true;
+        initial-value: 0px;
+    }
+    @property --box-vert-offset {
+        syntax: "<length>";
+        inherits: true;
+        initial-value: 0px;
+    }
+
     /* Prevent variables from bleeding into nested items */
     .ck-content .todo-list .todo-list {
         --task-state-glyph: initial;
@@ -72,10 +87,12 @@ body[data-note-type="text"] .ck-content {
         --box-ratio: 0.75;
         /* The size of the gap between the check box and the caption */
         --box-text-gap: 0.25em;
+        
+        /* The percentage of the box size that the glyph occupies. */
+        --glyph-ratio: .70;
 
         --box-size: calc(1lh * var(--box-ratio));
         --box-vert-offset: calc((1lh - var(--box-size)) / 2);
-        --glyph-padding: 2pt;
 
         display: inline-block;
         padding-inline-start: calc(var(--box-size) + var(--box-text-gap));
@@ -93,17 +110,19 @@ body[data-note-type="text"] .ck-content {
     }
 
     .ck-content .todo-list__label__description::before {
-        --_border-tickness: 0.75pt;
+        --_border-tickness: 1pt;
         outline: var(--_border-tickness) solid black;
         outline-offset: calc(0pt - var(--_border-tickness));
+        border-radius: 2pt;
     }
 
     .ck-content .todo-list__label__description::after {
-        display: flex;
-        justify-content: center;
-        align-items: center;
         content: var(--task-state-glyph);
+        line-height: var(--box-size);
+        vertical-align: middle;
+        text-align: center;
         font-family: var(--task-state-glyph-font-family);
+        font-size: calc(var(--box-size) * var(--glyph-ratio));
         color: var(--task-state-color);
     }
 
