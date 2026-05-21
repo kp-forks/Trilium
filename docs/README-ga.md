@@ -277,12 +277,12 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+Nó, má tá Nix suiteáilte agat:
 ```shell
-# Run directly
+# Rith go díreach
 nix run .#edit-docs
 
-# Or install to your profile
+# Nó suiteáil chuig do phróifíl
 nix profile install .#edit-docs
 trilium-edit-docs
 ```
@@ -309,7 +309,7 @@ le haghaidh tuilleadh sonraí. Má tá tuilleadh ceisteanna agat, bíodh leisce 
 teagmháil a dhéanamh linn trí na naisc a bhfuil cur síos orthu sa chuid "Pléigh
 Linn" thuas.
 
-## 💖 Sponsors
+## 💖 Urraitheoirí
 
 <table>
   <tr>
@@ -351,8 +351,8 @@ Linn" thuas.
 
 Ní bheadh Trilium indéanta gan na teicneolaíochtaí atá taobh thiar de:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - an t-eagarthóir amhairc
+  atá taobh thiar de nótaí téacs.
 * [CodeMirror](https://github.com/codemirror/CodeMirror) - eagarthóir cóid le
   tacaíocht do líon ollmhór teangacha.
 * [Excalidraw](https://github.com/excalidraw/excalidraw) - an clár bán gan
