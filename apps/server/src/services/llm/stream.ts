@@ -3,7 +3,7 @@
  */
 
 import type { LlmStreamChunk } from "@triliumnext/commons";
-import type { LanguageModelUsage } from "ai";
+import { APICallError, type LanguageModelUsage } from "ai";
 
 import type { ModelPricing, StreamResult } from "./types.js";
 
@@ -42,6 +42,39 @@ export interface StreamOptions {
     model?: string;
     /** Model pricing for cost calculation (from provider) */
     pricing?: ModelPricing;
+}
+
+/**
+ * Build a detailed, single-line description of an error coming out of the AI SDK.
+ *
+ * AI SDK `APICallError`s carry the HTTP status, the URL that was called and the raw
+ * response body. Surfacing those turns an opaque "Not Found" into something
+ * actionable — e.g. a `404` against `http://localhost:8080/messages` immediately
+ * reveals a misconfigured provider base URL. Plain errors fall back to name + message.
+ */
+export function describeStreamError(error: unknown): string {
+    if (APICallError.isInstance(error)) {
+        const detail: string[] = [];
+        if (typeof error.statusCode === "number") {
+            detail.push(`HTTP ${error.statusCode}`);
+        }
+        if (error.url) {
+            detail.push(`URL ${error.url}`);
+        }
+        if (error.responseBody) {
+            // Response bodies for errors are normally tiny JSON payloads; cap defensively.
+            const body = error.responseBody.length > 500
+                ? `${error.responseBody.slice(0, 500)}…`
+                : error.responseBody;
+            detail.push(`response: ${body}`);
+        }
+        const suffix = detail.length > 0 ? ` (${detail.join(", ")})` : "";
+        return `${error.name}: ${error.message}${suffix}`;
+    }
+    if (error instanceof Error) {
+        return `${error.name}: ${error.message}`;
+    }
+    return String(error);
 }
 
 /**
@@ -98,7 +131,7 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
 
                 case "error":
                     errorEmitted = true;
-                    yield { type: "error", error: String(part.error) };
+                    yield { type: "error", error: describeStreamError(part.error) };
                     break;
             }
         }
@@ -113,7 +146,7 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
             usage = await result.usage;
         } catch (error) {
             if (!errorEmitted) {
-                yield { type: "error", error: error instanceof Error ? error.message : "Unknown error" };
+                yield { type: "error", error: describeStreamError(error) };
             }
             return;
         }
@@ -135,8 +168,7 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
         yield { type: "done" };
     } catch (error) {
         if (!errorEmitted) {
-            const message = error instanceof Error ? error.message : "Unknown error";
-            yield { type: "error", error: message };
+            yield { type: "error", error: describeStreamError(error) };
         }
     }
 }
