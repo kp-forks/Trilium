@@ -251,7 +251,7 @@ function groupByToolName(toolCalls: ToolCall[]): Array<ToolCall | ToolCall[]> {
 export default function ToolCallCard({ toolCalls }: { toolCalls: ToolCall[] }) {
     const groups = groupByToolName(toolCalls);
     return (
-        <ExpandableCard>
+        <ExpandableCard className="llm-chat-tool-call-card">
             {groups.map((group, idx) => (
                 Array.isArray(group)
                     ? <ToolCallGroupSection key={idx} toolCalls={group} />
