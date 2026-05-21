@@ -1463,7 +1463,8 @@
     "enable_tray_description": "Trilium needs to be restarted for this change to take effect."
   },
   "text_editor": {
-    "title": "Editor"
+    "title": "Editor",
+    "related_task_states": "Custom checkbox states for to-do lists"
   },
   "heading_style": {
     "title": "Heading style",
@@ -2664,5 +2665,20 @@
   },
   "spreadsheet": {
     "read-only": "This note is read-only."
+  },
+  "text-editor": {
+    "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
+    "edit-states-tooltip": "Edit task states",
+    "unknown-task-state": "Undefined custom task state",
+    "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",
+    "validation-errors": {
+      "undefined-name": "undefined identifier",
+      "invalid-name": "invalid identifier",
+      "duplicate-name": "duplicate identifier",
+      "missing-title": "missing title",
+      "missing-icon": "missing icon",
+      "invalid-symbol": "the markdown symbol should be one character, excepting \"[\", \" \", \"X\", and \"]\"",
+      "duplicate-symbol": "duplicate markdown symbol"
+    }
   }
 }

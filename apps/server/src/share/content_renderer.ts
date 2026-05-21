@@ -1,5 +1,5 @@
 import { renderSpreadsheetToHtml, renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons";
-import { icon_packs as iconPackService, sanitize, utils } from "@triliumnext/core";
+import { icon_packs as iconPackService, sanitize, task_states, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
@@ -95,7 +95,10 @@ export function renderNoteForExport(note: BNote, parentBranch: BBranch, basePath
         faviconUrl: `${basePath}favicon.ico`,
         ancestors,
         isStatic: true,
-        iconPackCss: iconPacks.map(p => iconPackService.generateCss(p, `${basePath}assets/icon-pack-${p.prefix.toLowerCase()}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`))
+        iconPackCss: [
+            ...iconPacks.map(p => iconPackService.generateCss(p, `${basePath}assets/icon-pack-${p.prefix.toLowerCase()}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`)),
+            task_states.generateTaskStateCss()
+        ]
             .filter(Boolean)
             .join("\n\n"),
         iconPackSupportedPrefixes: iconPacks.map(p => p.prefix)
@@ -147,10 +150,13 @@ export function renderNoteContent(note: SNote) {
         ancestors,
         isStatic: false,
         faviconUrl: note.hasRelation("shareFavicon") ? `api/notes/${note.getRelationValue("shareFavicon")}/download` : `../favicon.ico`,
-        iconPackCss: iconPacks.map(p => iconPackService.generateCss(p, p.builtin
-            ? `assets/fonts/${p.fontAttachmentId}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
-            : `api/attachments/${p.fontAttachmentId}/download`
-        ))
+        iconPackCss: [
+            ...iconPacks.map(p => iconPackService.generateCss(p, p.builtin
+                ? `assets/fonts/${p.fontAttachmentId}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
+                : `api/attachments/${p.fontAttachmentId}/download`
+            )),
+            task_states.generateTaskStateCss()
+        ]
             .filter(Boolean)
             .join("\n\n"),
         iconPackSupportedPrefixes: iconPacks.map(p => p.prefix)
