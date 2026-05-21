@@ -1077,10 +1077,10 @@ importers:
         version: 10.29.1
       preact-iso:
         specifier: 2.12.0
-        version: 2.12.0(preact-render-to-string@6.6.7(preact@10.29.1))(preact@10.29.1)
+        version: 2.12.0(preact-render-to-string@6.7.0(preact@10.29.1))(preact@10.29.1)
       preact-render-to-string:
-        specifier: 6.6.7
-        version: 6.6.7(preact@10.29.1)
+        specifier: 6.7.0
+        version: 6.7.0(preact@10.29.1)
       react-i18next:
         specifier: 17.0.8
         version: 17.0.8(i18next@26.2.0(typescript@6.0.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -2496,7 +2496,7 @@ packages:
     engines: {node: '>=14'}
 
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
-    resolution: {gitHosted: true, integrity: sha512-MXgzlTDEEndJB3TBbvd5uFQO/8gaINo1Hfen8vef5rq/VHVPeB63uuv/uO5+8GFsAJ/rauu6XB79S6K4+aXc+w==, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
     version: 10.2.0-electron.1
     engines: {node: '>=12.13.0'}
     hasBin: true
@@ -11103,8 +11103,8 @@ packages:
       preact: 10.29.1
       preact-render-to-string: '>=6.4.0'
 
-  preact-render-to-string@6.6.7:
-    resolution: {integrity: sha512-3XdbsX3+vn9dQW+jJI/FsI9rlkgl6dbeUpqLsChak6jp3j3auFqBCkno7VChbMFs5Q8ylBj6DrUkKRwtVN3nvw==}
+  preact-render-to-string@6.7.0:
+    resolution: {integrity: sha512-Z4WR8fmLMRpdYqJ9i7vrlXSsSrxVJydwrkEXHapexfARbWfGb7vGcnvNQnIzN0cXciMVOlz/XLoiMCi9gUsy9Q==}
     peerDependencies:
       preact: 10.29.1
 
@@ -25799,12 +25799,12 @@ snapshots:
 
   powershell-utils@0.1.0: {}
 
-  preact-iso@2.12.0(preact-render-to-string@6.6.7(preact@10.29.1))(preact@10.29.1):
+  preact-iso@2.12.0(preact-render-to-string@6.7.0(preact@10.29.1))(preact@10.29.1):
     dependencies:
       preact: 10.29.1
-      preact-render-to-string: 6.6.7(preact@10.29.1)
+      preact-render-to-string: 6.7.0(preact@10.29.1)
 
-  preact-render-to-string@6.6.7(preact@10.29.1):
+  preact-render-to-string@6.7.0(preact@10.29.1):
     dependencies:
       preact: 10.29.1
 
