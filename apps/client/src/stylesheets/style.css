@@ -2747,10 +2747,13 @@ iframe.print-iframe {
     tab-size: var(--code-block-tab-width, 4);
 }
 
-/* Task states in CK Editor */
+/*
+ * TASK STATES
+ */
 
 :root {
-    --task-checkbox-background: rgb(213, 213, 213);
+    --task-checkbox-without-state-background: #d5d5d5;
+    --task-checkbox-with-state-background: gray;
     --task-checkbox-done-color: green;
     --task-checkbox-color: white;
     --task-checkbox-border-radius: 4px;
@@ -2764,17 +2767,33 @@ iframe.print-iframe {
     font-size: 18px;
 }
 
-/* Default checked state */
-.ck-content li input[type="checkbox"]:checked,
-.tn-task-checkbox[data-trilium-task-state="done"] {
-    --task-state-color: var(--task-checkbox-done-color);
-    --task-state-glyph: "";
-    --task-state-glyph-font-family: boxicons;
+/* Prevent variables from bleeding into nested items */
+.ck-content .todo-list .todo-list {
+    --task-state-glyph: initial;
+    --task-state-glyph-font-family: initial;
+    --task-state-color: initial;
+    --task-state-hue: initial;
+    --_task-checkbox-background: initial;
 }
 
-:root .ck.ck.ck-content li span.todo-list__label input[type="checkbox"],
-:root .note-detail-readonly-text-content.ck-content ul.todo-list li .todo-list__label input[type="checkbox"],
-.tn-task-checkbox {    
+/* All tasks with a state */
+:where(.ck-content .todo-list li[data-trilium-task-state]:not([data-trilium-task-state="none"])),
+.tn-task-checkbox:not([data-trilium-task-state="none"]) {
+    --_task-checkbox-background: var(--task-state-color, var(--task-checkbox-with-state-background));
+}
+
+/* Default checked state */
+:where(.ck-content .todo-list li:where(:not([data-trilium-task-state]), [data-trilium-task-state="done"]):has(> .todo-list__label input[type="checkbox"]:checked)),
+.tn-task-checkbox[data-trilium-task-state="done"] {
+    --task-state-glyph: "";
+    --task-state-glyph-font-family: boxicons;
+    --task-state-hue: var(--task-checkbox-done-hue);
+    --_task-checkbox-background: var(--task-checkbox-done-color);
+}
+
+/* Checkbox */
+:root .ck-content.ck-content ul.todo-list li .todo-list__label input[type="checkbox"],
+.tn-task-checkbox {
     /* Checkbox body */
     &::before {
         all: unset;
@@ -2783,7 +2802,7 @@ iframe.print-iframe {
         position: absolute;
         inset: 0;
         border-radius: var(--task-checkbox-border-radius);
-        background: var(--task-state-color, var(--task-checkbox-background));
+        background: var(--_task-checkbox-background, var(--task-checkbox-without-state-background));
     }
 
     /* Checkbox tick */
@@ -2805,4 +2824,9 @@ iframe.print-iframe {
         opacity: 1;
         cursor: not-allowed;
     }
+}
+
+/* Unknown state: orange outline */
+.tn-unknown-task-state .todo-list__label input[type="checkbox"] {
+    outline: 3px solid orange;
 }
