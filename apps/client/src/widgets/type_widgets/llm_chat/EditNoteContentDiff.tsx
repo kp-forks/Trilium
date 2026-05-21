@@ -1,5 +1,7 @@
 import "./EditNoteContentDiff.css";
 
+import { diffLines as jsDiffLines } from "diff";
+
 import { t } from "../../../services/i18n.js";
 
 /** A single find-and-replace edit performed by the `edit_note_content` tool. */
@@ -16,44 +18,26 @@ export interface DiffLine {
 }
 
 /**
- * Compute a line-based diff between two text blocks using the classic
- * longest-common-subsequence algorithm. Returns the lines in display order,
- * each tagged as added, removed or unchanged context.
+ * Compute a line-based diff between two text blocks via the `diff` (jsdiff)
+ * library, flattening its grouped change list into one entry per line — each
+ * tagged as added, removed or unchanged context — for row-by-row rendering.
  */
 export function diffLines(oldText: string, newText: string): DiffLine[] {
-    const a = oldText.split("\n");
-    const b = newText.split("\n");
-    const m = a.length;
-    const n = b.length;
-
-    // dp[i][j] = length of the LCS of a[i:] and b[j:].
-    const dp: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
-    for (let i = m - 1; i >= 0; i--) {
-        for (let j = n - 1; j >= 0; j--) {
-            dp[i][j] = a[i] === b[j]
-                ? dp[i + 1][j + 1] + 1
-                : Math.max(dp[i + 1][j], dp[i][j + 1]);
-        }
-    }
-
     const result: DiffLine[] = [];
-    let i = 0;
-    let j = 0;
-    while (i < m && j < n) {
-        if (a[i] === b[j]) {
-            result.push({ type: "context", text: a[i] });
-            i++;
-            j++;
-        } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-            result.push({ type: "remove", text: a[i] });
-            i++;
-        } else {
-            result.push({ type: "add", text: b[j] });
-            j++;
+    // `ignoreNewlineAtEof` keeps a trailing-newline-only difference from
+    // showing up as a spurious changed line.
+    for (const part of jsDiffLines(oldText, newText, { ignoreNewlineAtEof: true })) {
+        const type: DiffLineType = part.added ? "add" : part.removed ? "remove" : "context";
+        const lines = part.value.split("\n");
+        // jsdiff keeps each line's trailing newline, so a split yields an empty
+        // tail element — drop it rather than rendering a blank line.
+        if (lines.length > 1 && lines[lines.length - 1] === "") {
+            lines.pop();
+        }
+        for (const line of lines) {
+            result.push({ type, text: line });
         }
     }
-    while (i < m) result.push({ type: "remove", text: a[i++] });
-    while (j < n) result.push({ type: "add", text: b[j++] });
     return result;
 }
 
