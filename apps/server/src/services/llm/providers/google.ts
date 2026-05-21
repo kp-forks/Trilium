@@ -48,12 +48,12 @@ export class GoogleProvider extends BaseProvider {
 
     private google: GoogleGenerativeAIProvider;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, baseURL?: string) {
         super();
         if (!apiKey) {
             throw new Error("API key is required for Google provider");
         }
-        this.google = createGoogleGenerativeAI({ apiKey });
+        this.google = createGoogleGenerativeAI({ apiKey, ...(baseURL && { baseURL }) });
     }
 
     protected createModel(modelId: string) {
