@@ -1462,7 +1462,8 @@
     "enable_tray_description": "Trilium needs to be restarted for this change to take effect."
   },
   "text_editor": {
-    "title": "Editor"
+    "title": "Editor",
+    "related_task_states": "Custom checkbox states for to-do lists"
   },
   "heading_style": {
     "title": "Heading style",
