@@ -62,6 +62,25 @@ function DiffHunk({ edit }: { edit: NoteContentEdit }) {
     );
 }
 
+/** Maximum number of changed (added + removed) lines for an edit to count as "small". */
+export const SMALL_EDIT_LINE_LIMIT = 10;
+
+/**
+ * Whether the combined diff of all edits is small enough that the section
+ * should be expanded by default — i.e. the user can take it in at a glance.
+ */
+export function isSmallEdit(edits: NoteContentEdit[]): boolean {
+    let changedLines = 0;
+    for (const edit of edits) {
+        for (const line of diffLines(edit.oldText, edit.newText)) {
+            if (line.type !== "context") {
+                changedLines++;
+            }
+        }
+    }
+    return changedLines <= SMALL_EDIT_LINE_LIMIT;
+}
+
 /** Validate that an unknown value is a usable list of note-content edits. */
 export function parseNoteContentEdits(value: unknown): NoteContentEdit[] | null {
     if (!Array.isArray(value) || value.length === 0) return null;

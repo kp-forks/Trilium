@@ -4,7 +4,7 @@ import { Trans } from "react-i18next";
 
 import { t } from "../../../services/i18n.js";
 import { NewNoteLink } from "../../react/NoteLink.js";
-import { EditNoteContentDiff, parseNoteContentEdits } from "./EditNoteContentDiff.js";
+import { EditNoteContentDiff, isSmallEdit, parseNoteContentEdits } from "./EditNoteContentDiff.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import type { ToolCall } from "./llm_chat_types.js";
 
@@ -197,6 +197,7 @@ function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
             icon={toolCallIcon(toolCall)}
             label={<ToolCallLabel toolCall={toolCall} />}
             className={hasError ? "llm-chat-tool-call-error" : ""}
+            open={noteContentEdits ? isSmallEdit(noteContentEdits) : undefined}
         >
             <div className="llm-chat-tool-call-input">
                 {noteContentEdits ? (

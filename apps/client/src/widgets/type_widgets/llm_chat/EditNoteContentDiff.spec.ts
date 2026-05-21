@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { diffLines, parseNoteContentEdits } from "./EditNoteContentDiff.js";
+import { diffLines, isSmallEdit, parseNoteContentEdits } from "./EditNoteContentDiff.js";
 
 describe("diffLines", () => {
     it("marks a replaced line as remove then add, keeping surrounding context", () => {
@@ -32,6 +32,24 @@ describe("diffLines", () => {
             { type: "context", text: "a" },
             { type: "context", text: "b" }
         ]);
+    });
+});
+
+describe("isSmallEdit", () => {
+    it("treats a few changed lines as small", () => {
+        expect(isSmallEdit([{ oldText: "a\nb\nc", newText: "a\nB\nc" }])).toBe(true);
+    });
+
+    it("treats a large rewrite as not small", () => {
+        const oldText = Array.from({ length: 20 }, (_, i) => `old ${i}`).join("\n");
+        const newText = Array.from({ length: 20 }, (_, i) => `new ${i}`).join("\n");
+        expect(isSmallEdit([{ oldText, newText }])).toBe(false);
+    });
+
+    it("sums changed lines across multiple edits", () => {
+        const edit = { oldText: "x", newText: "y" };
+        expect(isSmallEdit(Array.from({ length: 4 }, () => edit))).toBe(true);
+        expect(isSmallEdit(Array.from({ length: 6 }, () => edit))).toBe(false);
     });
 });
 
