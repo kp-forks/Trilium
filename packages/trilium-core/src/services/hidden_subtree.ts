@@ -96,7 +96,11 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { type: "label", name: "child:label:markdownSymbol", value: `promoted,single,text,alias=${t("hidden-subtree.task-state-attr-markdown-symbol")}` },
                     { type: "label", name: "child:label:isCompleted", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-completed")}` },
                     { type: "label", name: "child:label:color", value: `promoted,single,color,alias=${t("hidden-subtree.task-state-attr-color")}` },
-                    { type: "label", name: "child:label:isHidden", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-hidden")}` }
+                    { type: "label", name: "child:label:isHidden", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-hidden")}` },
+                    // Documentation: `docName` for this container, `child:docName` is
+                    // copied onto every state note (anchors, seeded and user-created).
+                    { type: "label", name: "docName", value: "task_states" },
+                    { type: "label", name: "child:docName", value: "task_state" }
                 ],
                 // Non-customizable anchor states — recreated if missing; they only
                 // determine where `none`/`done` sit in the toolbar/cycling order.

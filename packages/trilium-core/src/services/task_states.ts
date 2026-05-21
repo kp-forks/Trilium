@@ -59,7 +59,7 @@ export function createTaskStateNote(state: TaskStateDef, options: {noteId?: stri
     const {note} = noteService.createNewNote({
         noteId: options.noteId,
         title: options.title ?? state.title,
-        type: "text",
+        type: "doc",
         parentNoteId: TASK_STATES_CONTAINER_ID,
         content: "",
         ignoreForbiddenParents: true
