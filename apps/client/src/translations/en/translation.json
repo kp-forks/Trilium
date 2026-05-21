@@ -2636,6 +2636,7 @@
       "get_note": "Get note",
       "get_note_content": "Get note content",
       "update_note_content": "Update note content",
+      "edit_note_content": "Edit note content",
       "append_to_note": "Append to note",
       "create_note": "Create note",
       "get_attributes": "Get attributes",

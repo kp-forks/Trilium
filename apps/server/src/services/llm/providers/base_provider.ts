@@ -4,8 +4,7 @@
  */
 
 import type { LlmMessage } from "@triliumnext/commons";
-import type { LanguageModel } from "ai";
-import { generateText, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type ToolSet } from "ai";
+import { generateText, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
