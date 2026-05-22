@@ -1,5 +1,4 @@
 import { ButtonView, Command, Plugin, toWidget, Widget, type Observable } from 'ckeditor5';
-import type { Position } from 'ckeditor5';
 import linkEmbedIcon from '../icons/link-embed.svg?raw';
 import { preventCKEditorHandling } from './widget_utils.js';
 
@@ -7,13 +6,9 @@ export const LINK_EMBED_COMMAND = 'insertLinkEmbed';
 
 const EMBEDDABLE_URL_REGEX = /^https?:\/\/\S+$/;
 
-function isEmbeddableUrl(text: string): boolean {
-    return EMBEDDABLE_URL_REGEX.test(text.trim());
-}
-
 export default class LinkEmbed extends Plugin {
     static get requires() {
-        return [LinkEmbedEditing, LinkEmbedUI, LinkEmbedPasteHandler];
+        return [LinkEmbedEditing, LinkEmbedUI, AutoLinkToMention];
     }
 }
 
@@ -226,274 +221,109 @@ class InsertLinkEmbedCommand extends Command {
 }
 
 // ---------------------------------------------------------------------------
-// Paste handler: URL is pasted normally, then a popup offers conversion
+// Auto-convert pasted URLs to linkMention widgets.
+// Piggybacks on CKEditor's AutoLink plugin: when AutoLink sets `linkHref` on
+// text whose content matches the href (i.e. a raw pasted URL, not
+// "[label](url)"), we fetch metadata and replace it with a linkMention.
+// The user can Ctrl+Z to revert back to a plain link.
 // ---------------------------------------------------------------------------
 
-interface PasteLocation {
-    parentPath: number[];
-    childOffset: number;
-}
-
-class LinkEmbedPasteHandler extends Plugin {
-    private _popup: HTMLElement | null = null;
-    private _keyHandler: ((e: KeyboardEvent) => void) | null = null;
-    private _clickOutside: ((e: MouseEvent) => void) | null = null;
+class AutoLinkToMention extends Plugin {
+    /** Guard against re-entrant changes triggered by our own model writes. */
+    private _converting = false;
+    /** URLs that were undone — don't re-convert these. */
+    private _dismissed = new Set<string>();
 
     init() {
         const editor = this.editor;
 
-        editor.model.document.on('change:data', () => {
-            const changes = editor.model.document.differ.getChanges();
-            if (changes.length === 0) return;
+        editor.model.document.on('change:data', (_evt, batch) => {
+            if (this._converting) return;
 
-            for (const change of changes) {
-                if (change.type !== 'insert' || change.name !== '$text') continue;
-
-                const pos: Position = change.position;
-                const parent = pos.parent;
-                if (!parent || !parent.is('element')) continue;
-
-                const textNode = parent.getChild(pos.offset);
-                if (!textNode || !textNode.is('$text')) continue;
-
-                const trimmed = textNode.data.trim();
-                if (!isEmbeddableUrl(trimmed) || trimmed.includes('\n')) continue;
-
-                const location: PasteLocation = {
-                    parentPath: parent.getPath(),
-                    childOffset: pos.offset
-                };
-
-                // Show popup after the current batch finishes and DOM stabilizes
-                Promise.resolve().then(() => this._showPastePopup(trimmed, location));
+            // When the user undoes our conversion, the undo batch re-inserts
+            // the original linked text. Record its URL so we don't re-convert.
+            if (batch.isUndo) {
+                for (const change of editor.model.document.differ.getChanges()) {
+                    if (change.type !== 'attribute' || change.attributeKey !== 'linkHref') continue;
+                    if (typeof change.attributeNewValue === 'string') {
+                        this._dismissed.add(change.attributeNewValue);
+                    }
+                }
                 return;
             }
+
+            // Detect AutoLink setting `linkHref` on existing text (paste + Space).
+            // AutoLink calls writer.setAttribute('linkHref', url, range) which
+            // shows up as an attribute change, not a text insertion.
+            for (const change of editor.model.document.differ.getChanges()) {
+                if (change.type !== 'attribute' || change.attributeKey !== 'linkHref') continue;
+                // Only react to newly added links (null → url), not modifications.
+                if (change.attributeOldValue !== null) continue;
+
+                const href = change.attributeNewValue as string;
+                if (!EMBEDDABLE_URL_REGEX.test(href)) continue;
+                if (this._dismissed.has(href)) continue;
+
+                // Walk the affected range to verify the text IS the URL
+                // (raw pasted URL, not a labeled link like "click here").
+                for (const item of change.range.getWalker()) {
+                    if (!item.item.is('$textProxy')) continue;
+                    if (item.item.data.trim() !== href) continue;
+
+                    const parent = item.item.parent;
+                    if (!parent?.is('element')) continue;
+
+                    this._replaceWithMention(href, parent.getPath());
+                    return;
+                }
+            }
         });
     }
 
-    private _showPastePopup(url: string, location: PasteLocation) {
-        this._removePopup();
-
-        const rect = this._getCaretRect();
-        if (!rect) return;
-
-        const MODES = [
-            { mode: 'mention', icon: '@', label: 'Mention' },
-            { mode: 'url', icon: '\u{1F517}', label: 'URL' },
-            { mode: 'embed', icon: '\u25B6', label: 'Embed' }
-        ] as const;
-
-        const popup = document.createElement('div');
-        popup.className = 'link-paste-popup';
-
-        const header = document.createElement('div');
-        header.className = 'link-paste-popup-header';
-        header.textContent = 'Convert to';
-        popup.appendChild(header);
-
-        for (const { mode, icon, label } of MODES) {
-            const btn = document.createElement('button');
-            btn.className = 'link-paste-option';
-            btn.dataset.mode = mode;
-            btn.innerHTML = `<span class="link-paste-option-icon">${icon}</span><span class="link-paste-option-label">${label}</span>`;
-            popup.appendChild(btn);
-        }
-
-        popup.style.position = 'fixed';
-        popup.style.left = `${rect.left}px`;
-        popup.style.top = `${rect.bottom + 6}px`;
-        popup.style.zIndex = '10000';
-        document.body.appendChild(popup);
-
-        let activeIndex = 0;
-        const options = popup.querySelectorAll<HTMLElement>('.link-paste-option');
-        options[0].classList.add('link-paste-option-active');
-
-        requestAnimationFrame(() => popup.classList.add('link-paste-popup-visible'));
-
-        const setActive = (index: number) => {
-            options[activeIndex].classList.remove('link-paste-option-active');
-            activeIndex = ((index % options.length) + options.length) % options.length;
-            options[activeIndex].classList.add('link-paste-option-active');
-        };
-
-        for (let i = 0; i < options.length; i++) {
-            options[i].addEventListener('mouseenter', () => setActive(i));
-        }
-
-        const confirm = () => {
-            const mode = options[activeIndex].dataset.mode as typeof MODES[number]['mode'];
-            this._removePopup();
-            if (mode !== 'url') {
-                this._convertPastedUrl(url, mode, location);
-            }
-        };
-
-        popup.addEventListener('click', (e: Event) => {
-            if ((e.target as HTMLElement).closest('.link-paste-option')) confirm();
-        });
-
-        const keyHandler = (e: KeyboardEvent) => {
-            switch (e.key) {
-                case 'ArrowDown':
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setActive(activeIndex + 1);
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setActive(activeIndex - 1);
-                    break;
-                case 'Enter':
-                    e.preventDefault();
-                    e.stopPropagation();
-                    confirm();
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this._removePopup();
-                    break;
-            }
-        };
-
-        const clickOutside = (e: MouseEvent) => {
-            if (!popup.contains(e.target as Node)) {
-                this._removePopup();
-            }
-        };
-
-        setTimeout(() => {
-            document.addEventListener('keydown', keyHandler, true);
-            document.addEventListener('mousedown', clickOutside);
-        }, 0);
-
-        this._popup = popup;
-        this._keyHandler = keyHandler;
-        this._clickOutside = clickOutside;
-    }
-
-    /** Measures caret position via a temporary zero-width marker. */
-    private _getCaretRect(): DOMRect | null {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-            const range = sel.getRangeAt(0).cloneRange();
-            range.collapse(false);
-
-            const marker = document.createElement('span');
-            marker.textContent = '\u200B';
-            range.insertNode(marker);
-
-            const rect = marker.getBoundingClientRect();
-            const result = new DOMRect(rect.left, rect.top, rect.width, rect.height);
-
-            marker.remove();
-            sel.removeAllRanges();
-            sel.addRange(range);
-
-            if (result.top > 0 || result.left > 0) return result;
-        }
-
-        const editorEl = this.editor.editing.view.getDomRoot();
-        if (editorEl) {
-            const elRect = editorEl.getBoundingClientRect();
-            return new DOMRect(elRect.left + 16, elRect.top + 16, 0, 20);
-        }
-
-        return null;
-    }
-
-    private _removePopup() {
-        if (this._popup) {
-            this._popup.remove();
-            this._popup = null;
-        }
-        if (this._keyHandler) {
-            document.removeEventListener('keydown', this._keyHandler, true);
-            this._keyHandler = null;
-        }
-        if (this._clickOutside) {
-            document.removeEventListener('mousedown', this._clickOutside);
-            this._clickOutside = null;
-        }
-    }
-
-    /**
-     * Replaces the pasted URL at the captured position with the chosen format.
-     * Fetches metadata from the server first, then inserts with all attributes.
-     */
-    private _convertPastedUrl(url: string, mode: 'mention' | 'embed', location: PasteLocation) {
+    private _replaceWithMention(url: string, parentPath: number[]) {
         const editor = this.editor;
         const editorEl = editor.editing.view.getDomRoot();
         const component = glob.getComponentByEl<EditorComponent>(editorEl);
 
-        // Fetch metadata asynchronously, then insert into the model
         component.fetchLinkMetadata(url).then((metadata: LinkEmbedMetadata) => {
+            this._converting = true;
+
             editor.model.change((writer) => {
                 const root = editor.model.document.getRoot();
                 if (!root) return;
 
-                // Resolve the parent element from the captured path
-                let parentEl = root as ReturnType<typeof root.getChild>;
-                for (const idx of location.parentPath) {
-                    if (!parentEl || typeof (parentEl as any).getChild !== 'function') return;
-                    parentEl = (parentEl as any).getChild(idx);
+                // Re-resolve the parent from the stored path.
+                let parentEl: any = root;
+                for (const idx of parentPath) {
+                    if (!parentEl || typeof parentEl.getChild !== 'function') return;
+                    parentEl = parentEl.getChild(idx);
                 }
                 if (!parentEl || !parentEl.is('element')) return;
 
-                // Find the URL text closest to the recorded offset
-                const parentRange = writer.createRangeIn(parentEl);
-                let bestStart: Position | null = null;
-                let bestEnd: Position | null = null;
-                let bestDistance = Infinity;
-
-                for (const item of parentRange.getWalker()) {
+                // Find the text node that still contains the URL.
+                const range = writer.createRangeIn(parentEl);
+                for (const item of range.getWalker()) {
                     if (!item.item.is('$textProxy')) continue;
+                    if (item.item.data.trim() !== url) continue;
+                    if (item.item.getAttribute('linkHref') !== url) continue;
 
-                    const text = item.item.data;
-                    const idx = text.indexOf(url);
-                    if (idx === -1) continue;
+                    const start = writer.createPositionAt(parentEl, item.item.startOffset!);
+                    const end = writer.createPositionAt(parentEl, item.item.startOffset! + item.item.data.length);
 
-                    const startOff = item.item.startOffset! + idx;
-                    const distance = Math.abs(startOff - location.childOffset);
+                    const urlRange = writer.createRange(start, end);
+                    writer.setSelection(urlRange);
+                    editor.model.deleteContent(editor.model.document.selection);
 
-                    if (distance < bestDistance) {
-                        bestDistance = distance;
-                        bestStart = writer.createPositionAt(parentEl, startOff);
-                        bestEnd = writer.createPositionAt(parentEl, startOff + url.length);
-                    }
-                }
-
-                if (!bestStart || !bestEnd) return;
-
-                const urlRange = writer.createRange(bestStart, bestEnd);
-                writer.setSelection(urlRange);
-                editor.model.deleteContent(editor.model.document.selection);
-
-                if (mode === 'mention') {
                     editor.model.insertContent(writer.createElement('linkMention', {
                         url: metadata.url,
                         title: metadata.title,
                         favicon: metadata.favicon
                     }));
-                } else {
-                    editor.model.insertContent(writer.createElement('linkEmbed', {
-                        url: metadata.url,
-                        embedType: metadata.embedType,
-                        title: metadata.title,
-                        description: metadata.description,
-                        favicon: metadata.favicon,
-                        siteName: metadata.siteName,
-                        image: metadata.image
-                    }));
+                    return;
                 }
             });
-        });
-    }
 
-    override destroy() {
-        this._removePopup();
-        super.destroy();
+            this._converting = false;
+        });
     }
 }

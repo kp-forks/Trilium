@@ -21,7 +21,7 @@ declare global {
         loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>): void;
         fetchLinkMetadata(url: string): Promise<LinkEmbedMetadata>;
         renderLinkEmbed(container: HTMLElement, metadata: LinkEmbedMetadata): void;
-        renderLinkMention(container: HTMLElement, metadata: LinkEmbedMetadata): void;
+        renderLinkMention(container: HTMLElement, metadata: Pick<LinkEmbedMetadata, "url" | "title" | "favicon">): void;
     }
 
     var glob: {
