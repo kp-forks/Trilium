@@ -19,15 +19,15 @@ if (isDev) {
     plugins = [
         viteStaticCopy({
             targets: assets.map((asset) => ({
-                src: `src/${asset}/*`,
-                dest: asset
+                src: `src/${asset}/**/*`,
+                dest: asset,
+                rename: { stripBase: 2 }
             }))
         }),
         viteStaticCopy({
-            structured: true,
             targets: [
                 {
-                    src: "../../node_modules/@excalidraw/excalidraw/dist/prod/fonts/*",
+                    src: "../../node_modules/@excalidraw/excalidraw/dist/prod/fonts/**/*",
                     dest: "",
                 }
             ]
@@ -87,7 +87,6 @@ export default defineConfig(() => ({
             input: {
                 index: join(__dirname, "index.html"),
                 login: join(__dirname, "src", "login.ts"),
-                setup: join(__dirname, "src", "setup.ts"),
                 set_password: join(__dirname, "src", "set_password.ts"),
                 runtime: join(__dirname, "src", "runtime.ts"),
                 print: join(__dirname, "src", "print.tsx")

@@ -1,18 +1,20 @@
 {
   "about": {
-    "title": "Tentang Trilium Notes",
-    "homepage": "Halaman utama:",
-    "app_version": "Versi Aplikasi:",
-    "db_version": "Versi DB:",
-    "sync_version": "Versi sinkronisasi:",
-    "build_date": "Tanggal pembuatan:",
-    "build_revision": "Revisi pembuatan:",
-    "data_directory": "Direktori data:"
+    "data_directory": "Direktori data:",
+    "version_label": "Versi:",
+    "role_brief_history": {
+      "lead-dev": "Elian Doran menemukan TriliumNext pada tahun 2024, sebuah fork komunitas yang tercipta setelah Zadam mengundurkan diri dari proyek tersebut. Zadam kemudian memindahtangankan repository asli kepada tim TriliumNext, menggabungkan kedua proyek menjadi satu."
+    },
+    "contributor_full_list": "Lihat keseluruhan komunitas",
+    "github_tooltip": "Laporkan bugs, usulkan fitur, atau berkontribusi di GitHub",
+    "license_tooltip": "Lihat lisensi",
+    "donate": "Donasi",
+    "donate_tooltip": "Donasi untuk mendukung proyek ini"
   },
   "toast": {
     "critical-error": {
-      "title": "Eror kritikal",
-      "message": "Telah terjadi eror kritikal yang mencegah aplikasi klien untuk memulai:\n\n{{message}}\n\nHal ini kemungkinan besar disebabkan oleh skrip yang gagal secara tidak terduga. Coba jalankan aplikasi dalam mode aman dan atasi masalahnya."
+      "title": "Kesalahan kritis",
+      "message": "Telah terjadi kesalahan kritis yang mencegah aplikasi klien untuk memulai:\n\n{{message}}\n\nHal ini kemungkinan besar disebabkan oleh skrip yang gagal secara tidak terduga. Coba jalankan aplikasi dalam mode aman dan atasi masalahnya."
     },
     "widget-error": {
       "title": "Gagal menginisialisasi widget",
@@ -21,7 +23,7 @@
     },
     "bundle-error": {
       "title": "Gagal memuat skrip kustom",
-      "message": "Skrip tidak dapat dijalankan:\n\n{{message}}"
+      "message": "Skrip tidak dapat dijalankan karena:\n\n{{message}}"
     },
     "widget-list-error": {
       "title": "Gagal mendapatkan daftar widget dari server"
@@ -76,7 +78,6 @@
     "confirmation": "Konfirmasi"
   },
   "delete_notes": {
-    "delete_notes_preview": "Hapus pratinjau catatan",
     "close": "Tutup",
     "delete_all_clones_description": "Hapus seluruh duplikat (bisa dikembalikan di menu revisi)",
     "erase_notes_description": "Penghapusan normal hanya menandai catatan sebagai dihapus dan dapat dipulihkan (melalui dialog versi revisi) dalam jangka waktu tertentu. Mencentang opsi ini akan menghapus catatan secara permanen seketika dan catatan tidak akan bisa dipulihkan kembali.",
@@ -84,9 +85,7 @@
     "notes_to_be_deleted": "Catatan-catatan berikut akan dihapuskan ({{notesCount}})",
     "no_note_to_delete": "Tidak ada Catatan yang akan dihapus (hanya duplikat).",
     "broken_relations_to_be_deleted": "Hubungan berikut akan diputus dan dihapus ({{ relationCount}})",
-    "cancel": "Batalkan",
-    "ok": "Setuju",
-    "deleted_relation_text": "Catatan {{- note}} (yang akan dihapus) dirujuk oleh relasi {{- relation}} yang berasal dari {{- source}}."
+    "cancel": "Batalkan"
   },
   "clone_to": {
     "clone_notes_to": "Duplikat catatan ke…",

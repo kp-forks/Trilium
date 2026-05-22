@@ -20,6 +20,7 @@ type Labels = {
     language: string;
     originalFileName: string;
     pageUrl: string;
+    docUrl: string;
     dateNote: string;
 
     // Scripting
@@ -60,10 +61,20 @@ type Labels = {
     "presentation:theme": string;
     "slide:background": string;
 
+    // Print/export
+    printLandscape: boolean;
+    printPageSize: string;
+    printScale: string;
+    printMargins: string;
+
     // Note-type specific
     webViewSrc: string;
     "disabled:webViewSrc": string;
     readOnly: boolean;
+    displayMode: string;
+    tabWidth: number;
+    indentWithTabs: boolean;
+    wrapLines: boolean;
     mapType: string;
     mapRootNoteId: string;
 

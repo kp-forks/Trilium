@@ -19,7 +19,6 @@ import toast from "../../services/toast";
 import utils from "../../services/utils";
 import ws from "../../services/ws";
 import Admonition from "../react/Admonition";
-import Alert from "../react/Alert";
 import Button from "../react/Button";
 import Dropdown from "../react/Dropdown";
 import FormFileUpload from "../react/FormFileUpload";
@@ -27,8 +26,10 @@ import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import HelpButton from "../react/HelpButton";
 import { useTriliumEvent } from "../react/hooks";
 import Icon from "../react/Icon";
+import NoItems from "../react/NoItems";
 import NoteLink from "../react/NoteLink";
 import { ParentComponent, refToJQuerySelector } from "../react/react_utils";
+import { TextPreview } from "./File";
 import { TypeWidgetProps } from "./type_widget";
 
 /**
@@ -42,16 +43,13 @@ export function AttachmentList({ note }: TypeWidgetProps) {
         <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
             <AttachmentListHeader noteId={note.noteId} />
             <div style={{overflow: "auto", flexGrow: 1}}>
-
-                <div className="attachment-list-wrapper">
-                    {attachments.length ? (
-                        attachments.map(attachment => <AttachmentInfo key={attachment.attachmentId} attachment={attachment} />)
-                    ) : (
-                        <Alert type="info">
-                            {t("attachment_list.no_attachments")}
-                        </Alert>
-                    )}
-                </div>
+                {attachments.length ? (
+                    <div className="attachment-list-wrapper">
+                        {attachments.map(attachment => <AttachmentInfo key={attachment.attachmentId} attachment={attachment} />)}
+                    </div>
+                ) : (
+                    <NoItems icon="bx bx-unlink" text={t("attachment_list.no_attachments")} />
+                )}
             </div>
         </div>
     );
@@ -141,12 +139,21 @@ export function AttachmentDetail({ note, viewScope }: TypeWidgetProps) {
 
 function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment, isFullDetail?: boolean }) {
     const contentWrapper = useRef<HTMLDivElement>(null);
+    const [ title, setTitle ] = useState(attachment.title);
+    const [ textContent, setTextContent ] = useState<string | null>(null);
+    const supportsOcr = attachment.role === "image" || attachment.role === "file";
 
     function refresh() {
         content_renderer.getRenderedContent(attachment, { imageHasZoom: isFullDetail })
             .then(({ $renderedContent }) => {
                 contentWrapper.current?.replaceChildren(...$renderedContent);
             });
+
+        if (attachment.role === "file") {
+            attachment.getBlob().then(blob => setTextContent(blob?.content ?? null));
+        }
+
+        setTitle(attachment.title);
     }
 
     useEffect(refresh, [ attachment ]);
@@ -181,18 +188,25 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
         <div className="attachment-detail-widget">
             <div className={`attachment-detail-wrapper ${isFullDetail ? "full-detail" : "list-view"} ${attachment.utcDateScheduledForErasureSince ? "scheduled-for-deletion" : ""}`}>
                 <div className="attachment-title-line">
-                    <AttachmentActions attachment={attachment} copyAttachmentLinkToClipboard={copyAttachmentLinkToClipboard} />
+                    <AttachmentActions
+                        attachment={attachment}
+                        copyAttachmentLinkToClipboard={copyAttachmentLinkToClipboard}
+                        onShowOcr={supportsOcr ? () => appContext.triggerCommand("showOcrTextDialog", {
+                            textUrl: `ocr/attachments/${attachment.attachmentId}/text`,
+                            processUrl: `ocr/process-attachment/${attachment.attachmentId}`
+                        }) : undefined}
+                    />
                     <h4 className="attachment-title">
                         {!isFullDetail ? (
                             <NoteLink
                                 notePath={attachment.ownerId}
-                                title={attachment.title}
+                                title={title}
                                 viewScope={{
                                     viewMode: "attachments",
                                     attachmentId: attachment.attachmentId
                                 }}
                             />
-                        ) : (attachment.title)}
+                        ) : title}
                     </h4>
                     <div className="attachment-details">
                         {t("attachment_detail_2.role_and_size", {
@@ -205,8 +219,10 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                 </div>
 
                 {attachment.utcDateScheduledForErasureSince && <DeletionAlert utcDateScheduledForErasureSince={attachment.utcDateScheduledForErasureSince} />}
+                {textContent && <TextPreview content={textContent} />}
                 <div ref={contentWrapper} className="attachment-content-wrapper" />
             </div>
+
         </div>
     );
 }
@@ -228,7 +244,7 @@ function DeletionAlert({ utcDateScheduledForErasureSince }: { utcDateScheduledFo
     );
 }
 
-function AttachmentActions({ attachment, copyAttachmentLinkToClipboard }: { attachment: FAttachment, copyAttachmentLinkToClipboard: () => void }) {
+function AttachmentActions({ attachment, copyAttachmentLinkToClipboard, onShowOcr }: { attachment: FAttachment, copyAttachmentLinkToClipboard: () => void, onShowOcr?: () => void }) {
     const isElectron = utils.isElectron();
     const fileUploadRef = useRef<HTMLInputElement>(null);
 
@@ -262,6 +278,12 @@ function AttachmentActions({ attachment, copyAttachmentLinkToClipboard }: { atta
                     icon="bx bx-link"
                     onClick={copyAttachmentLinkToClipboard}
                 >{t("attachments_actions.copy_link_to_clipboard")}</FormListItem>
+                {onShowOcr && (
+                    <FormListItem
+                        icon="bx bx-text"
+                        onClick={onShowOcr}
+                    >{t("ocr.view_extracted_text")}</FormListItem>
+                )}
                 <FormDropdownDivider />
 
                 <FormListItem

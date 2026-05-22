@@ -24,13 +24,14 @@ const supportedNoteTypes = new Set<NoteType>([
 export default function InlineTitle() {
     const { note, parentComponent, viewScope } = useNoteContext();
     const type = useNoteProperty(note, "type");
+    const mime = useNoteProperty(note, "mime");
     const [ shown, setShown ] = useState(shouldShow(note, type, viewScope));
     const containerRef = useRef<HTMLDivElement>(null);
     const [ titleHidden, setTitleHidden ] = useState(false);
 
     useLayoutEffect(() => {
         setShown(shouldShow(note, type, viewScope));
-    }, [ note, type, viewScope ]);
+    }, [ note, type, mime, viewScope ]);
 
     useLayoutEffect(() => {
         if (!shown) return;
@@ -75,6 +76,7 @@ function shouldShow(note: FNote | null | undefined, type: NoteType | undefined, 
     if (viewScope?.viewMode !== "default") return false;
     if (note?.noteId?.startsWith("_options")) return true;
     if (note?.isTriliumSqlite()) return false;
+    if (note?.isMarkdown()) return false;
     return type && supportedNoteTypes.has(type);
 }
 

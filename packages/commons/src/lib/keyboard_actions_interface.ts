@@ -10,6 +10,7 @@ const enum KeyboardActionNamesEnum {
     collapseTree,
     collapseSubtree,
     sortChildNotes,
+    toggleArchivedNotes,
     createNoteAfter,
     createNoteInto,
     createNoteIntoInbox,
@@ -94,7 +95,8 @@ const enum KeyboardActionNamesEnum {
     zoomIn,
     zoomReset,
     copyWithoutFormatting,
-    forceSaveRevision
+    forceSaveRevision,
+    saveNamedRevision
 }
 
 export type KeyboardActionNames = keyof typeof KeyboardActionNamesEnum;

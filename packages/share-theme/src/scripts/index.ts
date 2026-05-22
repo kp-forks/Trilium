@@ -37,7 +37,7 @@ document.addEventListener(
     () => {
         const noteType = determineNoteType();
 
-        if (noteType === "text") {
+        if (noteType === "text" || document.querySelector("#content.ck-content")) {
             setupTextNote();
         }
 
@@ -46,6 +46,14 @@ document.addEventListener(
 
         if (toggleMenuButton && layout) {
             toggleMenuButton.addEventListener("click", () => layout.classList.toggle("showMenu"));
+        }
+
+        // Format <time> elements using the browser's locale.
+        for (const el of document.querySelectorAll<HTMLTimeElement>("time[datetime]")) {
+            const date = new Date(el.dateTime);
+            if (!isNaN(date.getTime())) {
+                el.textContent = date.toLocaleDateString();
+            }
         }
     },
     false

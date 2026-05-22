@@ -61,7 +61,7 @@ jobs:
     runs-on: ${{ matrix.os.image }}
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
       - name: Set up node & dependencies
         uses: actions/setup-node@v6
         with:
@@ -69,6 +69,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          npm_config_package_import_method: copy
       - name: Update nightly version
         run: pnpm run chore:ci-update-nightly-version
       - name: Run the build
@@ -91,7 +93,7 @@ jobs:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGN_KEY }}
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2.6.1
+        uses: softprops/action-gh-release@v3.0.0
         if: ${{ github.event_name != 'pull_request' }}
         with:
           make_latest: false
@@ -108,6 +110,26 @@ jobs:
         with:
           name: TriliumNotes ${{ matrix.os.name }} ${{ matrix.arch }}
           path: apps/desktop/upload
+
+  nightly-mobile:
+    if: ${{ github.repository == vars.REPO_MAIN && github.event_name != 'pull_request' }}
+    name: Build mobile nightly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build mobile APK
+        uses: ./.github/actions/build-mobile
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v3.0.0
+        with:
+          make_latest: false
+          prerelease: true
+          draft: false
+          files: apps/mobile/android/app/build/outputs/apk/debug/*.apk
+          tag_name: nightly
+          name: Mobile Nightly
 
   nightly-server:
     if: ${{ github.repository == vars.REPO_MAIN }}
@@ -132,7 +154,7 @@ jobs:
           arch: ${{ matrix.arch }}
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2.6.1
+        uses: softprops/action-gh-release@v3.0.0
         if: ${{ github.event_name != 'pull_request' }}
         with:
           make_latest: false

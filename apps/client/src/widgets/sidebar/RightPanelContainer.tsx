@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import { WidgetsByParent } from "../../services/bundle";
+import { isExperimentalFeatureEnabled } from "../../services/experimental_features";
 import { t } from "../../services/i18n";
 import options from "../../services/options";
 import { DEFAULT_GUTTER_SIZE } from "../../services/resizer";
@@ -15,10 +16,12 @@ import { useActiveNoteContext, useLegacyWidget, useNoteProperty, useTriliumEvent
 import NoItems from "../react/NoItems";
 import LegacyRightPanelWidget from "../right_panel_widget";
 import HighlightsList from "./HighlightsList";
+import PdfAnnotations from "./pdf/PdfAnnotations";
 import PdfAttachments from "./pdf/PdfAttachments";
 import PdfLayers from "./pdf/PdfLayers";
 import PdfPages from "./pdf/PdfPages";
 import RightPanelWidget from "./RightPanelWidget";
+import SidebarChat from "./SidebarChat";
 import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
@@ -73,7 +76,7 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
     const definitions: RightPanelWidgetDefinition[] = [
         {
             el: <TableOfContents />,
-            enabled: (noteType === "text" || noteType === "doc" || isPdf),
+            enabled: (noteType === "text" || noteType === "doc" || isPdf || !!note?.isMarkdown()),
         },
         {
             el: <PdfPages />,
@@ -88,8 +91,17 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
             enabled: isPdf,
         },
         {
+            el: <PdfAnnotations />,
+            enabled: isPdf,
+        },
+        {
             el: <HighlightsList />,
             enabled: noteType === "text" && highlightsList.length > 0,
+        },
+        {
+            el: <SidebarChat />,
+            enabled: noteType !== "llmChat" && isExperimentalFeatureEnabled("llm"),
+            position: 1000
         },
         ...widgetsByParent.getLegacyWidgets("right-pane").map((widget) => ({
             el: <CustomLegacyWidget key={widget._noteId} originalWidget={widget as LegacyRightPanelWidget} />,

@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     pnpm2nix = {
-      url = "github:TriliumNext/pnpm2nix-nzbr/fix/optional_dependencies_filtering";
+      url = "github:TriliumNext/pnpm2nix-nzbr/main";
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
@@ -30,9 +30,9 @@
         # This patch deduplicates entries in PATH, which results in an equivalent but shorter entry.
         # https://github.com/pnpm/pnpm/issues/6106
         # https://github.com/pnpm/pnpm/issues/8552
-        pnpm = (pkgs.pnpm_10.overrideAttrs (prev: {
+        pnpm = (pkgs.pnpm_11.overrideAttrs (prev: {
           postInstall = prev.postInstall + ''
-            patch $out/libexec/pnpm/dist/pnpm.cjs ${./patches/pnpm-PATH-reduction.patch}
+            patch $out/libexec/pnpm/dist/pnpm.mjs ${./patches/pnpm-PATH-reduction.patch}
           '';
         }));
         inherit (pkgs)
@@ -67,6 +67,31 @@
             filter = fullCleanSourceFilter;
             src = src;
           };
+
+        # Minimal source used for pnpm2nix's dependency-fetching derivation.
+        # Only the files pnpm actually needs to resolve and fetch dependencies
+        # are included, so unrelated source changes don't bust the deps cache.
+        workspaceSourceFilter =
+          name: type:
+          let
+            baseName = baseNameOf (toString name);
+            rootStr = toString ./.;
+            relPath = lib.removePrefix "${rootStr}/" (toString name);
+            inPatches = relPath == "patches" || lib.hasPrefix "patches/" relPath;
+          in
+          (lib.cleanSourceFilter name type)
+          && baseName != "node_modules"
+          && (
+            type == "directory"
+            || baseName == "package.json"
+            || baseName == "pnpm-workspace.yaml"
+            || baseName == "pnpm-lock.yaml"
+            || inPatches
+          );
+        workspaceSource = lib.cleanSourceWith {
+          filter = workspaceSourceFilter;
+          src = ./.;
+        };
         packageJson = builtins.fromJSON (builtins.readFile ./package.json);
         packageJsonDesktop = builtins.fromJSON (builtins.readFile ./apps/desktop/package.json);
 
@@ -86,7 +111,7 @@
             packageJSON = ./package.json;
             pnpmLockYaml = ./pnpm-lock.yaml;
 
-            workspace = fullCleanSource ./.;
+            workspace = workspaceSource;
             pnpmWorkspaceYaml = ./pnpm-workspace.yaml;
 
             inherit nodejs pnpm;
@@ -151,9 +176,10 @@
               runHook postInstall
             '';
 
-            # This file is a symlink into /build which is not allowed.
+            # Symlinks pointing to /build directory are not allowed in the Nix store.
+            # This removes all dangling symlinks that point to the temporary build directory.
             postFixup = ''
-              find $out/opt -name prebuild-install -path "*/better-sqlite3/node_modules/.bin/*" -delete || true
+              find $out/opt -type l -lname '/build/*' -delete || true
             '';
 
             components = [
@@ -176,7 +202,7 @@
               "apps/dump-db"
               "apps/edit-docs"
               "apps/server"
-              "apps/server-e2e"
+              "packages/trilium-e2e"
             ];
 
             desktopItems = lib.optionals (app == "desktop") [
@@ -199,11 +225,8 @@
 
         desktop = makeApp {
           app = "desktop";
-          # pnpm throws an error at the end of `pnpm postinstall`, but it doesn't seem to matter:
-          # ENOENT: no such file or directory, lstat
-          # '/build/source/apps/desktop/node_modules/better-sqlite3/build/node_gyp_bins'
           preBuildCommands = ''
-            export npm_config_nodedir=${electron.headers}
+            export ELECTRON_NODEDIR=${electron.headers}
             pnpm postinstall
           '';
           buildTask = "desktop:build";
@@ -260,7 +283,7 @@
         edit-docs = makeApp {
           app = "edit-docs";
           preBuildCommands = ''
-            export npm_config_nodedir=${electron.headers}
+            export ELECTRON_NODEDIR=${electron.headers}
             pnpm postinstall
           '';
           buildTask = "edit-docs:build";

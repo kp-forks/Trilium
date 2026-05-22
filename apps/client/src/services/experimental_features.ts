@@ -1,6 +1,6 @@
 import { t } from "./i18n";
 import options from "./options";
-import { isMobile } from "./utils";
+import { isMobile, isStandalone } from "./utils";
 
 export interface ExperimentalFeature {
     id: string;
@@ -13,10 +13,20 @@ export const experimentalFeatures = [
         id: "new-layout",
         name: t("experimental_features.new_layout_name"),
         description: t("experimental_features.new_layout_description"),
+    },
+    {
+        id: "llm",
+        name: t("experimental_features.llm_name"),
+        description: t("experimental_features.llm_description"),
     }
 ] as const satisfies ExperimentalFeature[];
 
 export type ExperimentalFeatureId = typeof experimentalFeatures[number]["id"];
+
+/** Returns experimental features available for the current platform (excludes LLM in standalone mode). */
+export function getAvailableExperimentalFeatures() {
+    return experimentalFeatures.filter(f => !(f.id === "llm" && isStandalone));
+}
 
 let enabledFeatures: Set<ExperimentalFeatureId> | null = null;
 
@@ -25,13 +35,23 @@ export function isExperimentalFeatureEnabled(featureId: ExperimentalFeatureId): 
         return (isMobile() || options.is("newLayout"));
     }
 
+    // LLM features require server-side API calls that don't work in standalone mode
+    // due to CORS restrictions from LLM providers (OpenAI, Google don't allow browser requests)
+    if (featureId === "llm" && isStandalone) {
+        return false;
+    }
+
     return getEnabledFeatures().has(featureId);
 }
 
 export function getEnabledExperimentalFeatureIds() {
-    const values = [ ...getEnabledFeatures().values() ];
+    let values = [ ...getEnabledFeatures().values() ];
     if (isMobile() || options.is("newLayout")) {
         values.push("new-layout");
+    }
+    // LLM is not available in standalone mode
+    if (isStandalone) {
+        values = values.filter(v => v !== "llm");
     }
     return values;
 }

@@ -1,9 +1,11 @@
+import { renderSpreadsheetToHtml } from "@triliumnext/commons";
 import { render } from "preact";
 import { useCallback, useLayoutEffect, useRef } from "preact/hooks";
 
 import FNote from "./entities/fnote";
 import content_renderer from "./services/content_renderer";
 import { applyInlineMermaid } from "./services/content_renderer_text";
+import froca from "./services/froca";
 import { dynamicRequire, isElectron } from "./services/utils";
 import { CustomNoteList, useNoteViewType } from "./widgets/collections/NoteList";
 
@@ -30,7 +32,21 @@ async function main() {
     if (!noteId) return;
 
     await import("./print.css");
-    const froca = (await import("./services/froca")).default;
+
+    // Browser printing relies on @page margins since there's no programmatic control.
+    // Electron uses printToPDF() margins instead, so we only inject this for the browser path.
+    if (!isElectron()) {
+        const style = document.createElement("style");
+        style.textContent = "@page { margin: 2cm; }";
+        document.head.appendChild(style);
+    }
+
+    // Load the user's font preferences so that --detail-font-family is available.
+    const fontLink = document.createElement("link");
+    fontLink.rel = "stylesheet";
+    fontLink.href = "api/fonts";
+    document.head.appendChild(fontLink);
+
     const note = await froca.getNote(noteId);
 
     const bodyWrapper = document.createElement("div");
@@ -79,32 +95,43 @@ function SingleNoteRenderer({ note, onReady }: RendererProps) {
 
     useLayoutEffect(() => {
         async function load() {
-            if (note.type === "text") {
-                await import("@triliumnext/ckeditor5/src/theme/ck-content.css");
-            }
-            const { $renderedContent } = await content_renderer.getRenderedContent(note, { noChildrenList: true });
             const container = containerRef.current!;
-            container.replaceChildren(...$renderedContent);
 
-            // Wait for all images to load.
-            const images = Array.from(container.querySelectorAll("img"));
-            await Promise.all(
-                images.map(img => {
-                    if (img.complete) return Promise.resolve();
-                    return new Promise<void>(resolve => {
-                        img.addEventListener("load", () => resolve(), { once: true });
-                        img.addEventListener("error", () => resolve(), { once: true });
-                    });
-                })
-            );
+            if (note.type === "spreadsheet") {
+                // Render spreadsheet as HTML tables instead of an image.
+                const blob = await note.getBlob();
+                const html = renderSpreadsheetToHtml(blob?.content ?? "");
+                container.innerHTML = html;
+            } else {
+                if (note.type === "text") {
+                    await import("@triliumnext/ckeditor5/src/theme/ck-content.css");
+                }
+                const { $renderedContent } = await content_renderer.getRenderedContent(note, { noChildrenList: true });
+                container.replaceChildren(...$renderedContent);
 
-            // Initialize mermaid.
-            if (note.type === "text") {
-                await applyInlineMermaid(container);
+                // Wait for all images to load.
+                const images = Array.from(container.querySelectorAll("img"));
+                await Promise.all(
+                    images.map(img => {
+                        if (img.complete) return Promise.resolve();
+                        return new Promise<void>(resolve => {
+                            img.addEventListener("load", () => resolve(), { once: true });
+                            img.addEventListener("error", () => resolve(), { once: true });
+                        });
+                    })
+                );
+
+                // Initialize mermaid.
+                if (note.type === "text") {
+                    await applyInlineMermaid(container);
+                }
             }
 
             // Check custom CSS.
             await loadCustomCss(note);
+
+            // Wait for all fonts (including those from custom CSS) to finish loading.
+            await document.fonts.ready;
         }
 
         load().then(() => requestAnimationFrame(() => onReady({
@@ -130,6 +157,7 @@ function CollectionRenderer({ note, onReady, onProgressChanged }: RendererProps)
         media="print"
         onReady={async (data: PrintReport) => {
             await loadCustomCss(note);
+            await document.fonts.ready;
             onReady(data);
         }}
         onProgressChanged={onProgressChanged}

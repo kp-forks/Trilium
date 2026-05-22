@@ -13,12 +13,14 @@
     "prHourlyLimit": 0,
     "prConcurrentLimit": 0,
     "branchConcurrentLimit": 0,
+    "minimumReleaseAge": "3 days",
     "ignorePaths": [
         "**/node_modules/**",
         "apps/edit-docs/demo/**",
         "apps/server/src/assets/doc_notes/**",
         "docs/**",
-        "apps/server/Dockerfile.legacy"
+        "apps/server/Dockerfile.legacy",
+        "apps/mobile/android/**"
     ],
     "html": {
         "enabled": false
@@ -49,6 +51,13 @@
         {
             "matchPackageNames": "@univerjs/**",
             "groupName": "univer monorepo"
+        },
+        {
+            "matchPackageNames": [
+                "ai",
+                "@ai-sdk/**"
+            ],
+            "groupName": "ai sdk"
         }
     ]
 }

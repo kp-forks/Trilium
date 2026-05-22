@@ -103,7 +103,9 @@
     "add-include-note-to-text": "ノートを埋め込むダイアログを開く",
     "toggle-promoted-attributes": "プロモート属性切り替え",
     "force-save-revision": "アクティブノートの新しいノートリヴィジョンを強制する",
-    "toggle-classic-editor-toolbar": "固定ツールバーエディターの書式設定タブ切り替え"
+    "toggle-classic-editor-toolbar": "固定ツールバーエディターの書式設定タブ切り替え",
+    "save-named-revision": "アクティブなノートの変更履歴を名前を付けて保存",
+    "toggle-archived-notes": "ノートツリーでアーカイブされたノートを表示 / 非表示にする"
   },
   "keyboard_action_names": {
     "back-in-note-history": "ノートの履歴を戻る",
@@ -200,7 +202,9 @@
     "force-save-revision": "強制保存リビジョン",
     "add-include-note-to-text": "埋め込みノートを追加",
     "toggle-ribbon-tab-classic-editor": "リボンタブのクラシックエディターに切り替える",
-    "toggle-ribbon-tab-promoted-attributes": "リボンタブ切り替え：プロモート属性"
+    "toggle-ribbon-tab-promoted-attributes": "リボンタブ切り替え：プロモート属性",
+    "save-named-revision": "変更履歴を名前を付けて保存",
+    "toggle-archived-notes": "アーカイブ済みノートの表示の切り替え"
   },
   "login": {
     "title": "ログイン",
@@ -219,47 +223,6 @@
     "password": "パスワード",
     "button": "パスワードの設定",
     "password-confirmation": "パスワードの再入力"
-  },
-  "setup": {
-    "heading": "Trilium Notes セットアップ",
-    "new-document": "私は新しいユーザーで、ノートを取るために新しいTriliumドキュメントを作成したい",
-    "sync-from-desktop": "すでにデスクトップ版のインスタンスがあり、同期を設定したい",
-    "sync-from-server": "すでにサーバー版のインスタンスがあり、同期を設定したい",
-    "init-in-progress": "ドキュメントの初期化処理を実行中",
-    "redirecting": "まもなくアプリケーションにリダイレクトされます。",
-    "next": "次へ",
-    "title": "セットアップ"
-  },
-  "setup_sync-from-desktop": {
-    "heading": "デスクトップから同期",
-    "description": "このセットアップはデスクトップインスタンスから開始する必要があります:",
-    "step1": "Trilium Notes のデスクトップインスタンスを開きます。",
-    "step2": "Triliumメニューから、設定をクリックします。",
-    "step3": "同期をクリックします。",
-    "step4": "サーバーインスタンスアドレスを {{- host}} に変更し、保存をクリックします。",
-    "step5": "「同期テスト」をクリックして、接続が成功したか確認してください。",
-    "step6": "これらのステップを完了したら、{{- link}} をクリックしてください。",
-    "step6-here": "ここ"
-  },
-  "setup_sync-from-server": {
-    "heading": "サーバーから同期",
-    "instructions": "Triliumサーバーのアドレスと認証情報を下記に入力してください。これにより、Triliumドキュメント全体がサーバーからダウンロードされ、同期が設定されます。ドキュメントのサイズと接続速度によっては、時間がかかる場合があります。",
-    "server-host": "Triliumサーバーのアドレス",
-    "server-host-placeholder": "https://<hostname>:<port>",
-    "proxy-server": "プロキシサーバー（オプション）",
-    "proxy-server-placeholder": "https://<hostname>:<port>",
-    "proxy-instruction": "プロキシ設定を空欄にすると、システムプロキシが使用されます（デスクトップアプリケーションにのみ適用されます）",
-    "password": "パスワード",
-    "password-placeholder": "パスワード",
-    "finish-setup": "セットアップ完了",
-    "back": "戻る",
-    "note": "ノート:"
-  },
-  "setup_sync-in-progress": {
-    "heading": "同期中",
-    "successful": "同期が正しく設定されました。最初の同期が完了するまでしばらく時間がかかります。完了すると、ログインページにリダイレクトされます。",
-    "outstanding-items": "同期が未完了のアイテム:",
-    "outstanding-items-default": "N/A"
   },
   "weekdays": {
     "monday": "月曜日",
@@ -285,7 +248,8 @@
     "december": "12月"
   },
   "special_notes": {
-    "search_prefix": "検索:"
+    "search_prefix": "検索:",
+    "llm_chat_prefix": "チャット:"
   },
   "test_sync": {
     "not-configured": "同期サーバーホストが設定されていません。最初に同期を設定してください。",
@@ -298,7 +262,7 @@
     "shortcuts-title": "ショートカット",
     "text-notes": "テキストノート",
     "code-notes-title": "コードノート",
-    "images-title": "画像",
+    "images-title": "メディア",
     "spellcheck-title": "スペルチェック",
     "password-title": "パスワード",
     "backup-title": "バックアップ",
@@ -343,7 +307,11 @@
     "base-abstract-launcher-title": "ベース アブストラクトランチャー",
     "command-palette": "コマンドパレットを開く",
     "zen-mode": "禅モード",
-    "tab-switcher-title": "タブ切り替え"
+    "tab-switcher-title": "タブ切り替え",
+    "llm-chat-history-title": "AI チャット履歴",
+    "llm-title": "AI / LLM",
+    "sidebar-chat-title": "AI チャット",
+    "custom-dictionary-title": "カスタム辞書"
   },
   "notes": {
     "new-note": "新しいノート",
@@ -377,7 +345,8 @@
   "migration": {
     "old_version": "現在のバージョンからの直接的な移行はサポートされていません。まず最新のv0.60.4にアップグレードしてから、このバージョンにアップグレードしてください。",
     "error_message": "バージョン {{version}} への移行中にエラーが発生しました: {{stack}}",
-    "wrong_db_version": "データベースのバージョン（{{version}}）は、アプリケーションが想定しているバージョン（{{targetVersion}}）よりも新しく、互換性のないバージョンによって作成された可能性があります。この問題を解決するには、Triliumを最新バージョンにアップグレードしてください。"
+    "wrong_db_version": "データベースのバージョン（{{version}}）は、アプリケーションが想定しているバージョン（{{targetVersion}}）よりも新しく、互換性のないバージョンによって作成された可能性があります。この問題を解決するには、Triliumを最新バージョンにアップグレードしてください。",
+    "invalid_db_version": "データベースのバージョン番号が無効です。これは通常、データベース内の 'dbVersion' オプションが破損していることを示しています。バックアップから復元してください。"
   },
   "modals": {
     "error_title": "エラー"
@@ -389,7 +358,10 @@
     "subpages": "サブページ:",
     "image_alt": "記事画像",
     "on-this-page": "このページの内容",
-    "expand": "展開"
+    "expand": "展開",
+    "toggle-navigation": "ナビゲーションの切り替え",
+    "toggle-toc": "目次の切り替え",
+    "logo-alt": "ロゴ"
   },
   "hidden_subtree_templates": {
     "text-snippet": "テキストスニペット",
@@ -437,5 +409,21 @@
   },
   "desktop": {
     "instance_already_running": "すでにインスタンスが実行されているので、代わりにそのインスタンスにフォーカスします。"
+  },
+  "search": {
+    "error": {
+      "in-context": "{{- context}} でエラーが発生しました: {{- message}}",
+      "reserved-keyword": "\"{{- token}}\" は予約語です。リテラル値を検索するには、引用符を使用してください: \"{{- token}}\"",
+      "cannot-compare-with": "\"{{- token}}\" と比較できません。リテラル値を検索するには、引用符を使用してください: \"{{- token}}\"",
+      "misplaced-expression": "\"{{- token}}\" という式が不適切または不完全です",
+      "fulltext-after-expression": "\"{{- token}}\" は有効な式ではありません。テキストを検索するには、属性フィルターの前に記述してください（例: \"#label {{- token}}\" ではなく \"{{- token}} #label\"）。",
+      "unrecognized-expression": "認識されない式 \"{{- token}}\""
+    }
+  },
+  "script": {
+    "wrong-environment": "ノート \"{{- noteTitle}}\" ({{- noteId}}) を実行できません。これは {{- actualEnv}} スクリプトですが、{{- expectedEnv}} で実行しようとしました。"
+  },
+  "password": {
+    "incorrect": "入力されたパスワードが間違っています。"
   }
 }

@@ -40,9 +40,11 @@ async function main() {
     }
     build.writeJson("web/locale/locale.json", localeMappings);
 
-    // Copy pdfjs-dist files.
+    // Copy pdfjs-dist files. Resolve from the package's own node_modules so we
+    // pick up the version declared in this package.json — the hoisted root
+    // node_modules may hold a different version pulled in by another dependency.
     for (const file of [ "pdf.mjs", "pdf.worker.mjs", "pdf.sandbox.mjs" ]) {
-        build.copy(join("/node_modules/pdfjs-dist/build", file), join("build", file));
+        build.copy(join("node_modules/pdfjs-dist/build", file), join("build", file));
     }
 
     if (watchMode) {
@@ -76,7 +78,7 @@ function patchCacheBuster(htmlFilePath: string) {
             `<link rel="stylesheet" href="${file}" />`,
             `<link rel="stylesheet" href="${file}?v=${version}" />`);
     }
-    for (const file of [ "viewer.mjs", "custom.mjs" ]) {
+    for (const file of [ "viewer.mjs", "custom.mjs", "../build/pdf.mjs" ]) {
         html = html.replace(
             `<script src="${file}" type="module"></script>`,
             `<script src="${file}?v=${version}" type="module"></script>`
@@ -84,6 +86,15 @@ function patchCacheBuster(htmlFilePath: string) {
     }
 
     writeFileSync(htmlFilePath, html);
+
+    // Also patch the worker source in viewer.mjs
+    const viewerMjsPath = htmlFilePath.replace("viewer.html", "viewer.mjs");
+    let viewerMjs = readFileSync(viewerMjsPath, "utf-8");
+    viewerMjs = viewerMjs.replace(
+        `value: "../build/pdf.worker.mjs"`,
+        `value: "../build/pdf.worker.mjs?v=${version}"`
+    );
+    writeFileSync(viewerMjsPath, viewerMjs);
 }
 
 function watchForChanges() {

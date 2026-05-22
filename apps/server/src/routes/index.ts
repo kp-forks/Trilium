@@ -1,25 +1,19 @@
+import { BootstrapDefinition } from "@triliumnext/commons";
+import { attributes, BNote, getSharedBootstrapItems, icon_packs as iconPackService, sql_init, task_states } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import packageJson from "../../package.json" with { type: "json" };
-import type BNote from "../becca/entities/bnote.js";
 import appPath from "../services/app_path.js";
 import assetPath from "../services/asset_path.js";
-import attributeService from "../services/attributes.js";
 import config from "../services/config.js";
-import { getCurrentLocale } from "../services/i18n.js";
-import { generateCss, generateIconRegistry, getIconPacks, MIME_TO_EXTENSION_MAPPINGS } from "../services/icon_packs.js";
 import log from "../services/log.js";
 import optionService from "../services/options.js";
-import protectedSessionService from "../services/protected_session.js";
-import { generateCsrfToken } from "./csrf_protection.js";
-import sql from "../services/sql.js";
 import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
+import { generateCsrfToken } from "./csrf_protection.js";
 
 type View = "desktop" | "mobile" | "print";
 
 export function bootstrap(req: Request, res: Response) {
-    const options = optionService.getOptionMap();
-
     // csrf-csrf v4 binds CSRF tokens to the session ID via HMAC. With saveUninitialized: false,
     // a brand-new session is never persisted unless explicitly modified, so its cookie is never
     // sent to the browser — meaning every request gets a different ephemeral session ID, and
@@ -29,55 +23,63 @@ export function bootstrap(req: Request, res: Response) {
         req.session.csrfInitialized = true;
     }
 
+    const view = getView(req);
+    const isDbInitialized = sql_init.isDbInitialized();
+    const commonItems = {
+        ...getSharedBootstrapItems(assetPath, isDbInitialized),
+        baseApiUrl: "api/",
+        appPath,
+        isStandalone: false,
+        isElectron,
+        isDev,
+        triliumVersion: packageJson.version,
+        device: view,
+        TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE,
+        instanceName: config.General ? config.General.instanceName : null
+    };
+    if (!isDbInitialized) {
+        res.send({
+            ...commonItems,
+            hasNativeTitleBar: false,
+            hasBackgroundEffects: isElectron && (isWindows11 || isMac),
+            isMainWindow: true,
+            appCssNoteIds: []
+        } satisfies BootstrapDefinition);
+        return;
+    }
+
+
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
         validateOnReuse: false      // if validation fails, generate a new token instead of throwing an error
     });
     log.info(`CSRF token generation: ${csrfToken ? "Successful" : "Failed"}`);
 
-    const view = getView(req);
-    const theme = options.theme;
-    const themeNote = attributeService.getNoteWithLabel("appTheme", theme);
+    const options = optionService.getOptionMap();
     const nativeTitleBarVisible = options.nativeTitleBarVisible === "true";
-    const iconPacks = getIconPacks();
-    const currentLocale = getCurrentLocale();
+    const iconPacks = iconPackService.getIconPacks();
 
     res.send({
-        device: view,
+        ...commonItems,
+        dbInitialized: true,
         csrfToken,
-        themeCssUrl: getThemeCssUrl(theme, themeNote),
-        themeUseNextAsBase: themeNote?.getAttributeValue("label", "appThemeBase"),
-        headingStyle: options.headingStyle,
-        layoutOrientation: options.layoutOrientation,
         platform: process.platform,
-        isElectron,
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
             && isElectron
             && (isWindows11 || isMac)
             && !nativeTitleBarVisible,
-        maxEntityChangeIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes"),
-        maxEntityChangeSyncIdAtLoad: sql.getValue("SELECT COALESCE(MAX(id), 0) FROM entity_changes WHERE isSynced = 1"),
-        instanceName: config.General ? config.General.instanceName : null,
-        appCssNoteIds: getAppCssNoteIds(),
-        isDev,
         isMainWindow: view === "mobile" ? true : !req.query.extraWindow,
-        isProtectedSessionAvailable: protectedSessionService.isProtectedSessionAvailable(),
-        triliumVersion: packageJson.version,
-        assetPath,
-        appPath,
-        baseApiUrl: 'api/',
-        currentLocale,
-        isRtl: !!currentLocale.rtl,
-        iconPackCss: iconPacks
-            .map(p => generateCss(p, p.builtin
-                ? `${assetPath}/fonts/${p.fontAttachmentId}.${MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
-                : `api/attachments/download/${p.fontAttachmentId}`))
+        iconPackCss: [
+            ...iconPacks
+                .map((p: iconPackService.ProcessedIconPack) => iconPackService.generateCss(p, p.builtin
+                    ? `${assetPath}/fonts/${p.fontAttachmentId}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
+                    : `api/attachments/download/${p.fontAttachmentId}`)),
+            task_states.generateTaskStateCss()
+        ]
             .filter(Boolean)
             .join("\n\n"),
-        iconRegistry: generateIconRegistry(iconPacks),
-        TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE
-    });
+    } satisfies BootstrapDefinition);
 }
 
 function getView(req: Request): View {
@@ -115,29 +117,4 @@ function getView(req: Request): View {
     }
 
     return "desktop";
-}
-
-function getThemeCssUrl(theme: string, themeNote: BNote | null) {
-    if (theme === "auto") {
-        return `${assetPath}/stylesheets/theme.css`;
-    } else if (theme === "light") {
-        // light theme is always loaded as baseline
-        return false;
-    } else if (theme === "dark") {
-        return `${assetPath}/stylesheets/theme-dark.css`;
-    } else if (theme === "next") {
-        return `${assetPath}/stylesheets/theme-next.css`;
-    } else if (theme === "next-light") {
-        return `${assetPath}/stylesheets/theme-next-light.css`;
-    } else if (theme === "next-dark") {
-        return `${assetPath}/stylesheets/theme-next-dark.css`;
-    } else if (!process.env.TRILIUM_SAFE_MODE && themeNote) {
-        return `api/notes/download/${themeNote.noteId}`;
-    }
-    // baseline light theme
-    return false;
-}
-
-function getAppCssNoteIds() {
-    return attributeService.getNotesWithLabel("appCss").map((note) => note.noteId);
 }

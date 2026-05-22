@@ -1,15 +1,11 @@
+import { type ExportFormat, NoteParams, SearchParams, zipExportService, zipImportService } from "@triliumnext/core";
 import type { Request, Router } from "express";
 import type { ParsedQs } from "qs";
 
 import becca from "../becca/becca.js";
-import zipExportService from "../services/export/zip.js";
-import type { ExportFormat } from "../services/export/zip/abstract_provider.js";
-import zipImportService from "../services/import/zip.js";
-import type { NoteParams } from "../services/note-interface.js";
 import noteService from "../services/notes.js";
 import SearchContext from "../services/search/search_context.js";
 import searchService from "../services/search/services/search.js";
-import type { SearchParams } from "../services/search/services/types.js";
 import TaskContext from "../services/task_context.js";
 import utils from "../services/utils.js";
 import eu from "./etapi_utils.js";
@@ -67,6 +63,11 @@ function register(router: Router) {
         eu.validateAndPatch(_params, req.body, ALLOWED_PROPERTIES_FOR_CREATE_NOTE);
         const params = _params as NoteParams;
 
+        // Validate MIME type for image notes
+        if (params.type === "image" && params.mime && !params.mime.toLowerCase().startsWith("image/")) {
+            throw new eu.EtapiError(400, "INVALID_MIME_FOR_IMAGE", `MIME type '${params.mime}' is not allowed for image notes. MIME must start with 'image/'.`);
+        }
+
         try {
             const resp = noteService.createNewNote(params);
 
@@ -92,6 +93,14 @@ function register(router: Router) {
 
         if (note.isProtected) {
             throw new eu.EtapiError(400, "NOTE_IS_PROTECTED", `Note '${req.params.noteId}' is protected and cannot be modified through ETAPI.`);
+        }
+
+        // Validate MIME type for image notes (check both current and new type/mime)
+        const effectiveType = req.body.type ?? note.type;
+        const effectiveMime = req.body.mime ?? note.mime;
+        const normalizedEffectiveMime = typeof effectiveMime === "string" ? effectiveMime.toLowerCase() : effectiveMime;
+        if (effectiveType === "image" && normalizedEffectiveMime && !normalizedEffectiveMime.startsWith("image/")) {
+            throw new eu.EtapiError(400, "INVALID_MIME_FOR_IMAGE", `MIME type '${effectiveMime}' is not allowed for image notes. MIME must start with 'image/'.`);
         }
 
         noteService.saveRevisionIfNeeded(note);
@@ -179,7 +188,8 @@ function register(router: Router) {
     eu.route<{ noteId: string }>(router, "post", "/etapi/notes/:noteId/revision", (req, res, next) => {
         const note = eu.getAndCheckNote(req.params.noteId);
 
-        note.saveRevision();
+        const description = typeof req.body?.description === "string" ? req.body.description : "";
+        note.saveRevision({ description, source: "etapi" });
 
         return res.sendStatus(204);
     });

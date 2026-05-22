@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { isValidElement, VNode } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
+import appContext from "../components/app_context";
 import NoteContext from "../components/note_context";
 import FNote from "../entities/fnote";
 import type { PrintReport } from "../print";
@@ -152,7 +153,7 @@ export default function NoteDetail() {
             ipcRenderer.off("print-progress", onPrintProgress);
             ipcRenderer.off("print-done", onPrintDone);
         };
-    }, []);
+    }, [note]);
 
     useTriliumEvent("executeInActiveNoteDetailWidget", ({ callback }) => {
         if (!noteContext?.isActive()) return;
@@ -173,54 +174,42 @@ export default function NoteDetail() {
     useTriliumEvent("printActiveNote", () => {
         if (!noteContext?.isActive() || !note) return;
 
-        showToast("printing");
+        // PDF printing is handled by the PDF viewer's own print mechanism.
+        if (note.type === "file" && note.mime === "application/pdf") return;
 
-        if (isElectron()) {
-            const { ipcRenderer } = dynamicRequire("electron");
-            ipcRenderer.send("print-note", {
-                notePath: noteContext.notePath
+        if (isElectron() && noteContext.notePath) {
+            appContext.triggerCommand("showPrintPreview", { note, notePath: noteContext.notePath });
+            return;
+        }
+
+        // Browser fallback: render the print page in a hidden iframe and use window.print().
+        showToast("printing");
+        const iframe = document.createElement('iframe');
+        iframe.src = `?print#${noteContext.notePath}`;
+        iframe.className = "print-iframe";
+        document.body.appendChild(iframe);
+        iframe.onload = () => {
+            if (!iframe.contentWindow) {
+                toast.closePersistent("printing");
+                document.body.removeChild(iframe);
+                return;
+            }
+
+            iframe.contentWindow.addEventListener("note-load-progress", (e) => {
+                showToast("printing", e.detail.progress);
             });
-        } else {
-            const iframe = document.createElement('iframe');
-            iframe.src = `?print#${noteContext.notePath}`;
-            iframe.className = "print-iframe";
-            document.body.appendChild(iframe);
-            iframe.onload = () => {
-                if (!iframe.contentWindow) {
-                    toast.closePersistent("printing");
-                    document.body.removeChild(iframe);
-                    return;
+
+            iframe.contentWindow.addEventListener("note-ready", (e) => {
+                toast.closePersistent("printing");
+
+                if ("detail" in e) {
+                    handlePrintReport(e.detail as PrintReport);
                 }
 
-                iframe.contentWindow.addEventListener("note-load-progress", (e) => {
-                    showToast("printing", e.detail.progress);
-                });
-
-                iframe.contentWindow.addEventListener("note-ready", (e) => {
-                    toast.closePersistent("printing");
-
-                    if ("detail" in e) {
-                        handlePrintReport(e.detail as PrintReport);
-                    }
-
-                    iframe.contentWindow?.print();
-                    document.body.removeChild(iframe);
-                });
-            };
-        }
-    });
-
-    useTriliumEvent("exportAsPdf", () => {
-        if (!noteContext?.isActive() || !note) return;
-        showToast("exporting_pdf");
-
-        const { ipcRenderer } = dynamicRequire("electron");
-        ipcRenderer.send("export-as-pdf", {
-            title: note.title,
-            notePath: noteContext.notePath,
-            pageSize: note.getAttributeValue("label", "printPageSize") ?? "Letter",
-            landscape: note.hasAttribute("label", "printLandscape")
-        });
+                iframe.contentWindow?.print();
+                document.body.removeChild(iframe);
+            });
+        };
     });
 
     return (
@@ -344,7 +333,9 @@ export async function getExtendedWidgetType(note: FNote | null | undefined, note
         resultingType = "readOnlyText";
     } else if (note.isTriliumSqlite()) {
         resultingType = "sqlConsole";
-    } else if ((type === "code" || type === "mermaid") && (await noteContext?.isReadOnly())) {
+    } else if (note.isMarkdown()) {
+        resultingType = "markdown";
+    } else if (type === "code" && (await noteContext?.isReadOnly())) {
         resultingType = "readOnlyCode";
     } else if (type === "text") {
         resultingType = "editableText";

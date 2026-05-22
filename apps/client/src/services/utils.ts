@@ -135,6 +135,8 @@ export function isElectron() {
     return !!(window && window.process && window.process.type);
 }
 
+export const isStandalone = window.glob.isStandalone;
+
 /**
  * Returns `true` if the client is running as a PWA, otherwise `false`.
  */
@@ -145,6 +147,14 @@ export function isPWA() {
         || window.navigator.standalone
         || window.navigator.windowControlsOverlay
     );
+}
+
+/**
+ * Returns `true` when running inside the native Capacitor mobile app wrapper.
+ * PWAs and regular browsers return `false`.
+ */
+export function isMobileApp() {
+    return !!window.Capacitor?.isNativePlatform?.();
 }
 
 export function isMac() {
@@ -361,7 +371,8 @@ function copySelectionToClipboard() {
 type dynamicRequireMappings = {
     "@electron/remote": typeof import("@electron/remote"),
     "electron": typeof import("electron"),
-    "child_process": typeof import("child_process")
+    "child_process": typeof import("child_process"),
+    "url": typeof import("url")
 };
 
 export function dynamicRequire<T extends keyof dynamicRequireMappings>(moduleName: T): Awaited<dynamicRequireMappings[T]>{
@@ -404,36 +415,6 @@ function initHelpDropdown($el: JQuery<HTMLElement>) {
     // stop inside clicks from closing the menu
     const $dropdownMenu = $el.find(".help-dropdown .dropdown-menu");
     $dropdownMenu.on("click", (e) => e.stopPropagation());
-
-    // previous propagation stop will also block help buttons from being opened, so we need to re-init for this element
-    initHelpButtons($dropdownMenu);
-}
-
-const wikiBaseUrl = "https://triliumnext.github.io/Docs/Wiki/";
-
-function openHelp($button: JQuery<HTMLElement>) {
-    if ($button.length === 0) {
-        return;
-    }
-
-    const helpPage = $button.attr("data-help-page");
-
-    if (helpPage) {
-        const url = wikiBaseUrl + helpPage;
-
-        window.open(url, "_blank");
-    }
-}
-
-async function openInAppHelp($button: JQuery<HTMLElement>) {
-    if ($button.length === 0) {
-        return;
-    }
-
-    const inAppHelpPage = $button.attr("data-in-app-help");
-    if (inAppHelpPage) {
-        openInAppHelpFromUrl(inAppHelpPage);
-    }
 }
 
 /**
@@ -456,9 +437,7 @@ export function openInAppHelpFromUrl(inAppHelpPage: string) {
 export async function openInReusableSplit(targetNoteId: string, targetViewMode: ViewMode, openOpts: {
     hoistedNoteId?: string;
 } = {}) {
-    // Dynamic import to avoid import issues in tests.
-    const appContext = (await import("../components/app_context.js")).default;
-    const activeContext = appContext.tabManager.getActiveContext();
+    const activeContext = glob.appContext?.tabManager?.getActiveContext();
     if (!activeContext) {
         return;
     }
@@ -468,7 +447,7 @@ export async function openInReusableSplit(targetNoteId: string, targetViewMode: 
     if (!existingSubcontext) {
         // The target split is not already open, open a new split with it.
         const { ntxId } = subContexts[subContexts.length - 1];
-        appContext.triggerCommand("openNewNoteSplit", {
+        glob.appContext?.triggerCommand("openNewNoteSplit", {
             ntxId,
             notePath: targetNoteId,
             hoistedNoteId: openOpts.hoistedNoteId,
@@ -478,15 +457,6 @@ export async function openInReusableSplit(targetNoteId: string, targetViewMode: 
         // There is already a target split open, make sure it opens on the right note.
         existingSubcontext.setNote(targetNoteId, { viewScope });
     }
-}
-
-function initHelpButtons($el: JQuery<HTMLElement> | JQuery<Window>) {
-    // for some reason, the .on(event, listener, handler) does not work here (e.g. Options -> Sync -> Help button)
-    // so we do it manually
-    $el.on("click", (e) => {
-        openHelp($(e.target).closest("[data-help-page]"));
-        openInAppHelp($(e.target).closest("[data-in-app-help]"));
-    });
 }
 
 function filterAttributeName(name: string) {
@@ -817,7 +787,7 @@ function compareVersions(v1: string, v2: string): number {
 /**
  * Compares two semantic version strings and returns `true` if the latest version is greater than the current version.
  */
-function isUpdateAvailable(latestVersion: string | null | undefined, currentVersion: string): boolean {
+export function isUpdateAvailable(latestVersion: string | null | undefined, currentVersion: string): boolean {
     if (!latestVersion) {
         return false;
     }
@@ -904,6 +874,10 @@ export function getErrorMessage(e: unknown) {
 
 }
 
+export function replaceHtmlEscapedSlashes(str: string) {
+    return str.replace(/&#x2F;/g, "/");
+}
+
 /**
  * Handles left or right placement of e.g. tooltips in case of right-to-left languages. If the current language is a RTL one, then left and right are swapped. Other directions are unaffected.
  * @param placement a string optionally containing a "left" or "right" value.
@@ -923,6 +897,7 @@ export default {
     parseDate,
     formatDateISO,
     formatDateTime,
+    formatTime,
     formatTimeInterval,
     formatSize,
     localNowDateTime,
@@ -947,8 +922,6 @@ export default {
     dynamicRequire,
     timeLimit,
     initHelpDropdown,
-    initHelpButtons,
-    openHelp,
     filterAttributeName,
     isValidAttributeName,
     sleep,
@@ -958,6 +931,7 @@ export default {
     createImageSrcUrl,
     downloadAsSvg,
     downloadAsPng,
+    triggerDownload,
     compareVersions,
     isUpdateAvailable,
     isLaunchBarConfig

@@ -2,11 +2,13 @@ on:
   push:
     branches:
       - "main"
-      - "feature/update**"
-      - "feature/server_esm**"
-    paths-ignore:
-      - "docs/**"
-      - "bin/**"
+    paths:
+      - "apps/server/**"
+      - "apps/client/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - ".github/workflows/main-docker.yml"
     tags:
       - "v*"
   workflow_dispatch:
@@ -42,7 +44,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
       - name: Set up node & dependencies
         uses: actions/setup-node@v6
         with:
@@ -82,7 +84,7 @@ jobs:
           require-healthy: true
 
       - name: Run Playwright tests
-        run: TRILIUM_DOCKER=1 TRILIUM_PORT=8082 pnpm --filter=server-e2e e2e
+        run: TRILIUM_DOCKER=1 TRILIUM_PORT=8082 pnpm --filter=server e2e
 
       - name: Upload Playwright trace
         if: failure()
@@ -142,7 +144,7 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
       - name: Set up node & dependencies
         uses: actions/setup-node@v6
         with:

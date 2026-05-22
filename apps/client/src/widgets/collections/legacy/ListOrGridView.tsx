@@ -23,7 +23,7 @@ import { ComponentChildren, TargetedMouseEvent } from "preact";
 
 const contentSizeObserver = new ResizeObserver(onContentResized);
 
-export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
+export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens, showTextRepresentation }: ViewModeProps<{}>) {
     const expandDepth = useExpansionDepth(note);
     const noteIds = useFilteredNoteIds(note, unfilteredNoteIds);
     const { pageNotes, ...pagination } = usePagination(note, noteIds);
@@ -37,13 +37,14 @@ export function ListView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
                     key={childNote.noteId}
                     note={childNote} parentNote={note}
                     expandDepth={expandDepth} highlightedTokens={highlightedTokens}
-                    currentLevel={1} includeArchived={includeArchived} />
+                    currentLevel={1} includeArchived={includeArchived}
+                    showTextRepresentation={showTextRepresentation} />
             ))}
         </Card>
     </NoteList>;
 }
 
-export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }: ViewModeProps<{}>) {
+export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens, showTextRepresentation }: ViewModeProps<{}>) {
     const noteIds = useFilteredNoteIds(note, unfilteredNoteIds);
     const { pageNotes, ...pagination } = usePagination(note, noteIds);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
@@ -56,7 +57,8 @@ export function GridView({ note, noteIds: unfilteredNoteIds, highlightedTokens }
                                 note={childNote}
                                 parentNote={note}
                                 highlightedTokens={highlightedTokens}
-                                includeArchived={includeArchived} />
+                                includeArchived={includeArchived}
+                                showTextRepresentation={showTextRepresentation} />
             ))}
         </div>
     </NoteList>
@@ -91,13 +93,14 @@ function NoteList(props: NoteListProps) {
     </div>
 }
 
-function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expandDepth, includeArchived }: {
+function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expandDepth, includeArchived, showTextRepresentation }: {
     note: FNote,
     parentNote: FNote,
     currentLevel: number,
     expandDepth: number,
     highlightedTokens: string[] | null | undefined;
     includeArchived: boolean;
+    showTextRepresentation?: boolean;
 }) {
 
     const [ isExpanded, setExpanded ] = useState(currentLevel <= expandDepth);
@@ -113,7 +116,8 @@ function ListNoteCard({ note, parentNote, highlightedTokens, currentLevel, expan
                 <NoteContent note={note}
                              highlightedTokens={highlightedTokens}
                              noChildrenList
-                             includeArchivedNotes={includeArchived} />
+                             includeArchivedNotes={includeArchived}
+                             showTextRepresentation={showTextRepresentation} />
             </CardSection>
 
             <NoteChildren note={note}
@@ -157,6 +161,7 @@ interface GridNoteCardProps {
     parentNote: FNote;
     highlightedTokens: string[] | null | undefined;
     includeArchived: boolean;
+    showTextRepresentation?: boolean;
 }
 
 function GridNoteCard(props: GridNoteCardProps) {
@@ -185,6 +190,7 @@ function GridNoteCard(props: GridNoteCardProps) {
                          trim
                          highlightedTokens={props.highlightedTokens}
                          includeArchivedNotes={props.includeArchived}
+                         showTextRepresentation={props.showTextRepresentation}
             />
         </CardFrame>
     );
@@ -201,18 +207,22 @@ function NoteAttributes({ note }: { note: FNote }) {
     return <span className="note-list-attributes" ref={ref} />;
 }
 
-export function NoteContent({ note, trim, noChildrenList, highlightedTokens, includeArchivedNotes }: {
+export function NoteContent({ note, trim, noChildrenList, highlightedTokens, includeArchivedNotes, showTextRepresentation, onReady }: {
     note: FNote;
     trim?: boolean;
     noChildrenList?: boolean;
     highlightedTokens: string[] | null | undefined;
     includeArchivedNotes: boolean;
+    showTextRepresentation?: boolean;
+    onReady?: () => void;
 }) {
     const contentRef = useRef<HTMLDivElement>(null);
     const highlightSearch = useImperativeSearchHighlighlighting(highlightedTokens);
 
     const [ready, setReady] = useState(false);
     const [noteType, setNoteType] = useState<string>("none");
+    const onReadyRef = useRef(onReady);
+    onReadyRef.current = onReady;
 
     useEffect(() => {
         const contentElement = contentRef.current;
@@ -226,11 +236,13 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
     }, []);
 
     useEffect(() => {
+        setReady(false);
         content_renderer.getRenderedContent(note, {
             trim,
             noChildrenList,
             noIncludedNotes: true,
-            includeArchivedNotes
+            includeArchivedNotes,
+            showTextRepresentation
         })
             .then(({ $renderedContent, type }) => {
                 if (!contentRef.current) return;
@@ -242,12 +254,14 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
                 highlightSearch(contentRef.current);
                 setNoteType(type);
                 setReady(true);
+                onReadyRef.current?.();
             })
             .catch(e => {
                 console.warn(`Caught error while rendering note '${note.noteId}' of type '${note.type}'`);
                 console.error(e);
                 contentRef.current?.replaceChildren(t("collections.rendering_error"));
                 setReady(true);
+                onReadyRef.current?.();
             });
     }, [ note, highlightedTokens ]);
 

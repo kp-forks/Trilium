@@ -1,23 +1,24 @@
-"use strict";
+import { BackupDatabaseNowResponse, DatabaseCheckIntegrityResponse } from "@triliumnext/commons";
+import { becca_loader, getBackup, ValidationError } from "@triliumnext/core";
+import type { Request, Response } from "express";
+import fs, { readFileSync } from "fs";
+import path from "path";
 
-import sql from "../../services/sql.js";
-import log from "../../services/log.js";
-import backupService from "../../services/backup.js";
+import { getIntegrationTestDbPath } from "../../core_assets.js";
 import anonymizationService from "../../services/anonymization.js";
 import consistencyChecksService from "../../services/consistency_checks.js";
-import type { Request } from "express";
-import ValidationError from "../../errors/validation_error.js";
+import dataDir from "../../services/data_dir.js";
+import log from "../../services/log.js";
+import sql from "../../services/sql.js";
 import sql_init from "../../services/sql_init.js";
-import becca_loader from "../../becca/becca_loader.js";
-import { BackupDatabaseNowResponse, DatabaseCheckIntegrityResponse } from "@triliumnext/commons";
 
 function getExistingBackups() {
-    return backupService.getExistingBackups();
+    return getBackup().getExistingBackups();
 }
 
 async function backupDatabase() {
     return {
-        backupFile: await backupService.backupNow("now")
+        backupFile: await getBackup().backupNow("now")
     } satisfies BackupDatabaseNowResponse;
 }
 
@@ -32,7 +33,13 @@ function findAndFixConsistencyIssues() {
 }
 
 async function rebuildIntegrationTestDatabase() {
-    sql.rebuildIntegrationTestDatabase();
+    // Reload the integration test database fixture into the in-memory SQL
+    // backend, then re-init schema-dependent state and the becca cache.
+    // Test-mode only — registered in routes.ts under the same env-var guard.
+    // getIntegrationTestDbPath() handles the bundled-vs-source path
+    // resolution; see core_assets.ts.
+    const fixtureBytes = readFileSync(getIntegrationTestDbPath());
+    sql.rebuildFromBuffer(fixtureBytes);
     sql_init.initializeDb();
     becca_loader.load();
 }
@@ -58,6 +65,33 @@ function checkIntegrity() {
     } satisfies DatabaseCheckIntegrityResponse;
 }
 
+function downloadBackup(req: Request, res: Response) {
+    const filePath = req.query.filePath as string;
+    if (!filePath) {
+        res.status(400).send("Missing filePath");
+        return;
+    }
+
+    const resolvedPath = path.resolve(filePath);
+    if (!resolvedPath.startsWith(path.resolve(dataDir.BACKUP_DIR) + path.sep)) {
+        res.status(403).send("Access denied");
+        return;
+    }
+
+    if (!fs.existsSync(resolvedPath)) {
+        res.status(404).send("Backup file not found");
+        return;
+    }
+
+    const mtime = fs.statSync(resolvedPath).mtime;
+    const dateStr = mtime.toISOString().slice(0, 19)
+        .replaceAll(":", "-")
+        .replace("T", "_");
+    const ext = path.extname(resolvedPath);
+    const baseName = path.basename(resolvedPath, ext);
+    res.download(resolvedPath, `${baseName}_${dateStr}${ext}`);
+}
+
 export default {
     getExistingBackups,
     backupDatabase,
@@ -66,5 +100,6 @@ export default {
     rebuildIntegrationTestDatabase,
     getExistingAnonymizedDatabases,
     anonymize,
-    checkIntegrity
+    checkIntegrity,
+    downloadBackup
 };

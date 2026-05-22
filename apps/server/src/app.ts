@@ -1,6 +1,6 @@
-import "./services/handlers.js";
-import "./becca/becca_loader.js";
+import("@triliumnext/core");
 
+import { erase } from "@triliumnext/core";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import ejs from "ejs";
@@ -10,24 +10,24 @@ import helmet from "helmet";
 import { t } from "i18next";
 import path from "path";
 import favicon from "serve-favicon";
+import type serveStatic from "serve-static";
 
 import assets from "./routes/assets.js";
 import custom from "./routes/custom.js";
 import error_handlers from "./routes/error_handlers.js";
+import mcpRoutes from "./routes/mcp.js";
 import routes from "./routes/routes.js";
 import config from "./services/config.js";
-import { startScheduledCleanup } from "./services/erase.js";
 import log from "./services/log.js";
 import openID from "./services/open_id.js";
 import { RESOURCE_DIR } from "./services/resource_dir.js";
-import sql_init from "./services/sql_init.js";
 import utils, { getResourceDir, isDev } from "./services/utils.js";
+
+// Allow serving assets even if the installation path contains a hidden (dot-prefixed) directory.
+const STATIC_OPTIONS: serveStatic.ServeStaticOptions = { dotfiles: "allow" };
 
 export default async function buildApp() {
     const app = express();
-
-    // Initialize DB
-    sql_init.initializeDb();
 
     const publicDir = isDev ? path.join(getResourceDir(), "../dist/public") : path.join(getResourceDir(), "public");
     const publicAssetsDir = path.join(publicDir, "assets");
@@ -39,9 +39,10 @@ export default async function buildApp() {
     app.set("view engine", "ejs");
 
     app.use((req, res, next) => {
-        // set CORS header
+        // set CORS headers
         if (config["Network"]["corsAllowOrigin"]) {
             res.header("Access-Control-Allow-Origin", config["Network"]["corsAllowOrigin"]);
+            res.header("Access-Control-Allow-Credentials", "true");
         }
         if (config["Network"]["corsAllowMethods"]) {
             res.header("Access-Control-Allow-Methods", config["Network"]["corsAllowMethods"]);
@@ -50,12 +51,27 @@ export default async function buildApp() {
             res.header("Access-Control-Allow-Headers", config["Network"]["corsAllowHeaders"]);
         }
 
+        // Handle preflight OPTIONS requests
+        if (req.method === "OPTIONS" && config["Network"]["corsAllowOrigin"]) {
+            res.sendStatus(204);
+            return;
+        }
+
         res.locals.t = t;
         return next();
     });
 
     if (!utils.isElectron) {
-        app.use(compression()); // HTTP compression
+        app.use(compression({
+            // Skip compression for SSE endpoints to enable real-time streaming
+            filter: (req, res) => {
+                // Skip compression for SSE-capable endpoints
+                if (req.path === "/api/llm-chat/stream" || req.path === "/mcp") {
+                    return false;
+                }
+                return compression.filter(req, res);
+            }
+        }));
     }
 
     let resourcePolicy = config["Network"]["corsResourcePolicy"] as 'same-origin' | 'same-site' | 'cross-origin' | undefined;
@@ -81,10 +97,14 @@ export default async function buildApp() {
     app.use(express.urlencoded({ extended: false }));
     app.use(cookieParser());
 
-    app.use(express.static(path.join(publicDir, "root")));
-    app.use(`/manifest.webmanifest`, express.static(path.join(publicAssetsDir, "manifest.webmanifest")));
-    app.use(`/robots.txt`, express.static(path.join(publicAssetsDir, "robots.txt")));
-    app.use(`/icon.png`, express.static(path.join(publicAssetsDir, "icon.png")));
+    // MCP is registered before session/auth middleware — it uses its own
+    // localhost-only guard and does not require Trilium authentication.
+    mcpRoutes.register(app);
+
+    app.use(express.static(path.join(publicDir, "root"), STATIC_OPTIONS));
+    app.use(`/manifest.webmanifest`, express.static(path.join(publicAssetsDir, "manifest.webmanifest"), STATIC_OPTIONS));
+    app.use(`/robots.txt`, express.static(path.join(publicAssetsDir, "robots.txt"), STATIC_OPTIONS));
+    app.use(`/icon.png`, express.static(path.join(publicAssetsDir, "icon.png"), STATIC_OPTIONS));
 
     const { default: sessionParser, startSessionCleanup } = await import("./routes/session_parser.js");
     app.use(sessionParser);
@@ -99,18 +119,13 @@ export default async function buildApp() {
     custom.register(app);
     error_handlers.register(app);
 
-    const { startSyncTimer } = await import("./services/sync.js");
-    startSyncTimer();
+    const { sync, consistency_checks, scheduler } = await import("@triliumnext/core");
+    sync.startSyncTimer();
 
-    await import("./services/backup.js");
+    consistency_checks.startConsistencyChecks();
+    scheduler.startScheduler();
 
-    const { startConsistencyChecks } = await import("./services/consistency_checks.js");
-    startConsistencyChecks();
-
-    const { startScheduler } = await import("./services/scheduler.js");
-    startScheduler();
-
-    startScheduledCleanup();
+    erase.startScheduledCleanup();
 
     if (utils.isElectron) {
         (await import("@electron/remote/main/index.js")).initialize();

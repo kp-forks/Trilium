@@ -22,6 +22,7 @@ import { Mermaid } from "@triliumnext/ckeditor5-mermaid";
 import { Admonition } from "@triliumnext/ckeditor5-admonition";
 import { Footnotes } from "@triliumnext/ckeditor5-footnotes";
 import { Math, AutoformatMath } from "@triliumnext/ckeditor5-math";
+import CopyAnchorLinkButton from "./plugins/copy_anchor_link.js";
 
 // import "@triliumnext/ckeditor5-mermaid/index.css";
 // import "@triliumnext/ckeditor5-admonition/index.css";
@@ -32,6 +33,12 @@ import CodeBlockLanguageDropdown from "./plugins/code_block_language_dropdown.js
 import MoveBlockUpDownPlugin from "./plugins/move_block_updown.js";
 import ScrollOnUndoRedoPlugin from "./plugins/scroll_on_undo_redo.js"
 import InlineCodeNoSpellcheck from "./plugins/inline_code_no_spellcheck.js";
+import InlineCodeToolbar from "./plugins/inline_code_toolbar.js";
+import AdmonitionTypeDropdown from "./plugins/admonition_type_dropdown.js";
+import AdmonitionToolbar from "./plugins/admonition_toolbar.js";
+import IncludeNoteBoxSizeDropdown from "./plugins/include_note_box_size_dropdown.js";
+import IncludeNoteToolbar from "./plugins/include_note_toolbar.js";
+import TodoListMultistate from "./plugins/todo_list_multistate/todo_list_multistate.js";
 
 /**
  * Plugins that are specific to Trilium and not part of the CKEditor 5 core, included in both text editors but not in the attribute editor.
@@ -55,6 +62,13 @@ const TRILIUM_PLUGINS: typeof Plugin[] = [
     MoveBlockUpDownPlugin,
     ScrollOnUndoRedoPlugin,
     InlineCodeNoSpellcheck,
+    InlineCodeToolbar,
+    AdmonitionTypeDropdown,
+    AdmonitionToolbar,
+    IncludeNoteBoxSizeDropdown,
+    IncludeNoteToolbar,
+    TodoListMultistate,
+    CopyAnchorLinkButton,
 ];
 
 /**

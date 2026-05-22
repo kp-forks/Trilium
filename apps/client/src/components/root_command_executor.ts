@@ -148,6 +148,16 @@ export default class RootCommandExecutor extends Component {
         }
     }
 
+    showNoteOCRTextCommand() {
+        const noteId = appContext.tabManager.getActiveContextNoteId();
+        if (noteId) {
+            appContext.triggerCommand("showOcrTextDialog", {
+                textUrl: `ocr/notes/${noteId}/text`,
+                processUrl: `ocr/process-note/${noteId}`
+            });
+        }
+    }
+
     async showAttachmentsCommand() {
         const notePath = appContext.tabManager.getActiveContextNotePath();
 
