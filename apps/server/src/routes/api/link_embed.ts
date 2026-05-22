@@ -1,4 +1,7 @@
 import type { Request } from "express";
+import dns from "node:dns";
+import net from "node:net";
+import isIpPrivate from "private-ip";
 import { parse } from "node-html-parser";
 import type { LinkEmbedMetadata } from "@triliumnext/commons";
 import log from "../../services/log.js";
@@ -7,26 +10,39 @@ import { ValidationError } from "@triliumnext/core";
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_RESPONSE_SIZE = 512 * 1024; // 512KB
 const MAX_FAVICON_SIZE = 64 * 1024; // 64KB
+const MAX_REDIRECTS = 5;
 
 const YOUTUBE_REGEX = /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
-
-const BLOCKED_HOSTNAME_PATTERNS = [
-    /^localhost$/i,
-    /^127\./,
-    /^10\./,
-    /^172\.(1[6-9]|2\d|3[01])\./,
-    /^192\.168\./,
-    /^0\./,
-    /^169\.254\./,
-    /^\[::1\]$/,
-    /^\[fc/i,
-    /^\[fd/i,
-    /^\[fe80:/i
-];
 
 function extractYouTubeVideoId(url: string): string | null {
     const match = url.match(YOUTUBE_REGEX);
     return match ? match[1] : null;
+}
+
+/**
+ * Resolves the hostname to IP addresses and verifies none are private/reserved.
+ */
+async function validateHostResolution(hostname: string): Promise<void> {
+    // If the hostname is already an IP literal, check it directly
+    if (net.isIP(hostname)) {
+        if (isIpPrivate(hostname) !== false) {
+            throw new ValidationError("URLs pointing to private/internal networks are not allowed");
+        }
+        return;
+    }
+
+    let addresses: dns.LookupAddress[];
+    try {
+        addresses = await dns.promises.lookup(hostname, { all: true });
+    } catch {
+        throw new ValidationError("Could not resolve hostname");
+    }
+
+    for (const addr of addresses) {
+        if (isIpPrivate(addr.address) !== false) {
+            throw new ValidationError("URLs pointing to private/internal networks are not allowed");
+        }
+    }
 }
 
 function validateUrl(urlString: string): URL {
@@ -41,13 +57,38 @@ function validateUrl(urlString: string): URL {
         throw new ValidationError("Only http and https URLs are supported");
     }
 
-    for (const pattern of BLOCKED_HOSTNAME_PATTERNS) {
-        if (pattern.test(parsed.hostname)) {
-            throw new ValidationError("URLs pointing to private/internal networks are not allowed");
+    return parsed;
+}
+
+/**
+ * Fetches a URL with SSRF protection: resolves the hostname and validates
+ * the resulting IP before each request, including on redirects.
+ */
+async function safeFetch(url: string, options: RequestInit = {}): Promise<Response> {
+    let currentUrl = url;
+
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+        const parsed = validateUrl(currentUrl);
+        await validateHostResolution(parsed.hostname);
+
+        const response = await fetch(currentUrl, {
+            ...options,
+            redirect: "manual",
+            signal: options.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS)
+        });
+
+        if (response.status >= 300 && response.status < 400) {
+            const location = response.headers.get("location");
+            if (!location) throw new Error("Redirect without Location header");
+            // Resolve relative redirects against the current URL
+            currentUrl = new URL(location, currentUrl).toString();
+            continue;
         }
+
+        return response;
     }
 
-    return parsed;
+    throw new Error("Too many redirects");
 }
 
 /**
@@ -56,10 +97,7 @@ function validateUrl(urlString: string): URL {
  */
 async function downloadFaviconAsDataUri(faviconUrl: string): Promise<string | undefined> {
     try {
-        const response = await fetch(faviconUrl, {
-            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-            redirect: "follow"
-        });
+        const response = await safeFetch(faviconUrl);
 
         if (!response.ok) return undefined;
 
@@ -133,9 +171,7 @@ async function fetchYouTubeMetadata(url: string, videoId: string): Promise<LinkE
 }
 
 async function fetchOpenGraphData(url: string) {
-    const response = await fetch(url, {
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        redirect: "follow",
+    const response = await safeFetch(url, {
         headers: {
             "User-Agent": "TriliumBot/1.0 (Link Preview)",
             "Accept": "text/html"
