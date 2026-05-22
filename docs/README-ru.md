@@ -267,12 +267,12 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+Или если у вас установлен Nix:
 ```shell
-# Run directly
+# Запуск напрямую
 nix run .#edit-docs
 
-# Or install to your profile
+# Или запуск в профиле
 nix profile install .#edit-docs
 trilium-edit-docs
 ```
@@ -299,7 +299,7 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 вы можете связаться с нами, используя ссылки, указанные в разделе «Обсудите с
 нами» выше.
 
-## 💖 Sponsors
+## 💖 Спонсоры
 
 <table>
   <tr>
@@ -342,8 +342,8 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 
 Trilium не существовал бы без технологий, лежащих в его основе:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - основной текстовый
+  редактор.
 * [CodeMirror](https://github.com/codemirror/CodeMirror) - редактор кода с
   поддержкой огромного количества языков.
 * [Excalidraw](https://github.com/excalidraw/excalidraw) - бесконечная белая
