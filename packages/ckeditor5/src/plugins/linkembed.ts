@@ -6,7 +6,6 @@ import { preventCKEditorHandling } from './widget_utils.js';
 export const LINK_EMBED_COMMAND = 'insertLinkEmbed';
 
 const EMBEDDABLE_URL_REGEX = /^https?:\/\/\S+$/;
-const YOUTUBE_URL_REGEX = /(?:youtube\.com|youtu\.be)/;
 
 function isEmbeddableUrl(text: string): boolean {
     return EMBEDDABLE_URL_REGEX.test(text.trim());
@@ -139,7 +138,9 @@ class LinkEmbedEditing extends Plugin {
                     'data-cke-ignore-events': 'true'
                 }, function (domDocument) {
                     const domElement = this.toDomElement(domDocument);
-                    renderEmbedPreview(domElement, { url, embedType, title, description, favicon, siteName, image });
+                    const editorEl = editor.editing.view.getDomRoot();
+                    const component = glob.getComponentByEl<EditorComponent>(editorEl);
+                    component.renderLinkEmbed(domElement, { url, embedType, title, description, favicon, siteName, image });
                     preventCKEditorHandling(domElement, editor);
                     return domElement;
                 });
@@ -194,7 +195,9 @@ class LinkEmbedEditing extends Plugin {
                     'data-cke-ignore-events': 'true'
                 }, function (domDocument) {
                     const domElement = this.toDomElement(domDocument);
-                    renderMentionPreview(domElement, { url, title, favicon });
+                    const editorEl = editor.editing.view.getDomRoot();
+                    const component = glob.getComponentByEl<EditorComponent>(editorEl);
+                    component.renderLinkMention(domElement, { url, title, favicon });
                     preventCKEditorHandling(domElement, editor);
                     return domElement;
                 });
@@ -205,128 +208,6 @@ class LinkEmbedEditing extends Plugin {
         });
     }
 }
-
-// ---------------------------------------------------------------------------
-// DOM renderers — render previews from stored metadata, no network requests
-// ---------------------------------------------------------------------------
-
-interface EmbedMetadata {
-    url: string;
-    embedType: string;
-    title?: string;
-    description?: string;
-    favicon?: string;
-    siteName?: string;
-    image?: string;
-}
-
-function safeHostname(url: string): string {
-    try { return new URL(url).hostname; } catch { return url; }
-}
-
-function renderEmbedPreview(container: HTMLElement, meta: EmbedMetadata) {
-    const videoId = YOUTUBE_URL_REGEX.test(meta.url)
-        ? meta.url.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/)?.[1]
-        : null;
-
-    if (videoId) {
-        const origin = window.location.origin;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'link-embed-video';
-        const iframe = document.createElement('iframe');
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?origin=${encodeURIComponent(origin)}&rel=0`;
-        iframe.setAttribute('frameborder', '0');
-        iframe.setAttribute('allowfullscreen', 'true');
-        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
-        iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-        iframe.loading = 'lazy';
-        wrapper.appendChild(iframe);
-        container.appendChild(wrapper);
-        return;
-    }
-
-    // Card preview
-    const card = document.createElement('a');
-    card.className = 'link-embed-card';
-    card.href = meta.url;
-    card.target = '_blank';
-    card.rel = 'noopener noreferrer';
-
-    const imgWrap = document.createElement('div');
-    imgWrap.className = 'link-embed-card-image-wrapper';
-    if (meta.image) {
-        const img = document.createElement('img');
-        img.className = 'link-embed-card-image';
-        img.src = meta.image;
-        img.alt = '';
-        img.loading = 'lazy';
-        img.onerror = () => {
-            imgWrap.innerHTML = '<div class="link-embed-card-image-placeholder">&#128279;</div>';
-        };
-        imgWrap.appendChild(img);
-    } else {
-        imgWrap.innerHTML = '<div class="link-embed-card-image-placeholder">&#128279;</div>';
-    }
-    card.appendChild(imgWrap);
-
-    const content = document.createElement('div');
-    content.className = 'link-embed-card-content';
-    if (meta.title) {
-        const titleEl = document.createElement('div');
-        titleEl.className = 'link-embed-card-title';
-        titleEl.textContent = meta.title;
-        content.appendChild(titleEl);
-    }
-    if (meta.description) {
-        const descEl = document.createElement('div');
-        descEl.className = 'link-embed-card-description';
-        descEl.textContent = meta.description;
-        content.appendChild(descEl);
-    }
-    const urlEl = document.createElement('div');
-    urlEl.className = 'link-embed-card-url';
-    urlEl.textContent = meta.siteName || safeHostname(meta.url);
-    content.appendChild(urlEl);
-
-    card.appendChild(content);
-    container.appendChild(card);
-}
-
-function renderMentionPreview(container: HTMLElement, meta: { url: string; title?: string; favicon?: string }) {
-    const link = document.createElement('a');
-    link.className = 'link-embed-mention';
-    link.href = meta.url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-
-    if (meta.favicon) {
-        const img = document.createElement('img');
-        img.className = 'link-embed-mention-favicon';
-        img.src = meta.favicon;
-        img.width = 16;
-        img.height = 16;
-        img.onerror = () => {
-            const dot = document.createElement('span');
-            dot.className = 'link-embed-mention-dot';
-            img.replaceWith(dot);
-        };
-        link.appendChild(img);
-    } else {
-        const dot = document.createElement('span');
-        dot.className = 'link-embed-mention-dot';
-        link.appendChild(dot);
-    }
-
-    const titleSpan = document.createElement('span');
-    titleSpan.className = 'link-embed-mention-title';
-    titleSpan.textContent = meta.title || safeHostname(meta.url);
-    link.appendChild(titleSpan);
-
-    container.appendChild(link);
-}
-
-// These are exported so the read-only renderer can reuse them.
-export { renderEmbedPreview, renderMentionPreview, type EmbedMetadata };
 
 class InsertLinkEmbedCommand extends Command {
     override execute() {
@@ -548,7 +429,7 @@ class LinkEmbedPasteHandler extends Plugin {
         const component = glob.getComponentByEl<EditorComponent>(editorEl);
 
         // Fetch metadata asynchronously, then insert into the model
-        component.fetchLinkMetadata(url).then((metadata: EmbedMetadata) => {
+        component.fetchLinkMetadata(url).then((metadata: LinkEmbedMetadata) => {
             editor.model.change((writer) => {
                 const root = editor.model.document.getRoot();
                 if (!root) return;

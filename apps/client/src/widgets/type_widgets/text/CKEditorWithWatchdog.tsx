@@ -1,10 +1,10 @@
-import { CKTextEditor, ClassicEditor, EditorWatchdog, PopupEditor, TemplateDefinition, type EmbedMetadata, type WatchdogConfig } from "@triliumnext/ckeditor5";
+import { CKTextEditor, ClassicEditor, EditorWatchdog, PopupEditor, TemplateDefinition, type WatchdogConfig } from "@triliumnext/ckeditor5";
 import { DISPLAYABLE_LOCALE_IDS } from "@triliumnext/commons";
 import { HTMLProps, RefObject, useEffect, useImperativeHandle, useRef, useState } from "preact/compat";
 
 import froca from "../../../services/froca";
 import link from "../../../services/link";
-import linkEmbedService from "../../../services/link_embed";
+import linkEmbedService, { type EmbedMetadata } from "../../../services/link_embed";
 import { useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteContext, useSyncedRef, useTriliumOption } from "../../react/hooks";
 import { buildConfig, BuildEditorOptions } from "./config";
 
@@ -183,6 +183,12 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
         },
         async fetchLinkMetadata(url: string) {
             return await linkEmbedService.fetchMetadata(url);
+        },
+        renderLinkEmbed(container: HTMLElement, metadata: EmbedMetadata) {
+            linkEmbedService.renderEmbedPreview(container, metadata);
+        },
+        renderLinkMention(container: HTMLElement, metadata: EmbedMetadata) {
+            linkEmbedService.renderMentionPreview(container, metadata);
         }
     });
 

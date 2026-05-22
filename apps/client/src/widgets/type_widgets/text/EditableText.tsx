@@ -145,6 +145,12 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
         async fetchLinkMetadata(url: string) {
             return await linkEmbedService.fetchMetadata(url);
         },
+        renderLinkEmbed(container: HTMLElement, metadata: Parameters<typeof linkEmbedService.renderEmbedPreview>[1]) {
+            linkEmbedService.renderEmbedPreview(container, metadata);
+        },
+        renderLinkMention(container: HTMLElement, metadata: Parameters<typeof linkEmbedService.renderMentionPreview>[1]) {
+            linkEmbedService.renderMentionPreview(container, metadata);
+        },
         // Creating notes in @-completion
         async createNoteForReferenceLink(title: string) {
             const notePath = noteContext?.notePath;

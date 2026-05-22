@@ -5,11 +5,23 @@ declare global {
         triggerCommand(command: string): void;
     }
 
+    interface LinkEmbedMetadata {
+        url: string;
+        embedType: string;
+        title?: string;
+        description?: string;
+        favicon?: string;
+        siteName?: string;
+        image?: string;
+    }
+
     interface EditorComponent extends Component {
         loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string): Promise<void>;
         createNoteForReferenceLink(title: string): Promise<string>;
         loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>): void;
-        fetchLinkMetadata(url: string): Promise<import("./plugins/linkembed.js").EmbedMetadata>;
+        fetchLinkMetadata(url: string): Promise<LinkEmbedMetadata>;
+        renderLinkEmbed(container: HTMLElement, metadata: LinkEmbedMetadata): void;
+        renderLinkMention(container: HTMLElement, metadata: LinkEmbedMetadata): void;
     }
 
     var glob: {
