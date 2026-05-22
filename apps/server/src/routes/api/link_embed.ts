@@ -110,7 +110,9 @@ async function safeFetch(url: string, options: RequestInit = {}): Promise<Respon
         const parsed = validateUrl(currentUrl);
         await validateHostResolution(parsed.hostname);
 
-        const response = await fetch(currentUrl, {
+        // URL and resolved IPs are validated above by validateUrl() and
+        // validateHostResolution() before every request, including redirects.
+        const response = await fetch(currentUrl, { // codeql[js/request-forgery]
             ...options,
             redirect: "manual",
             signal: options.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS)
