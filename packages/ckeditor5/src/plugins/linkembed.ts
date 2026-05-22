@@ -244,6 +244,14 @@ const META_KEYS = ['url', 'embedType', 'title', 'description', 'favicon', 'siteN
 
 class ChangeLinkDisplayCommand extends Command {
     declare value: LinkDisplayMode | null;
+    /** Whether the selected link supports embed mode (e.g. YouTube). */
+    declare embedAvailable: boolean;
+
+    constructor(editor: any) {
+        super(editor);
+        // Register as observable so CKEditor's bind().to() works.
+        this.set('embedAvailable', false);
+    }
 
     override execute(options: { value: LinkDisplayMode }) {
         const model = this.editor.model;
@@ -261,21 +269,17 @@ class ChangeLinkDisplayCommand extends Command {
             if (val != null) attrs[key] = val;
         }
 
+        // Detect the actual embed type from the URL via the client service.
+        const url = attrs.url as string;
+        const detectedType = this._detectEmbedType(url);
+
         model.change(writer => {
             if (targetMode === 'inline') {
-                // Switch to linkMention (inline widget).
                 const mention = writer.createElement('linkMention', attrs);
                 model.insertContent(mention, writer.createRangeOn(selected));
             } else {
-                // Switch to linkEmbed (block widget).
-                // 'card' forces opengraph; 'embed' detects from URL.
-                const url = attrs.url as string;
-                if (targetMode === 'card') {
-                    attrs.embedType = 'opengraph';
-                } else {
-                    attrs.embedType = EMBEDDABLE_URL_REGEX.test(url) && /(?:youtube\.com|youtu\.be)/.test(url)
-                        ? 'youtube' : 'opengraph';
-                }
+                // 'card' forces opengraph; 'embed' uses detected type.
+                attrs.embedType = targetMode === 'card' ? 'opengraph' : detectedType;
                 const embed = writer.createElement('linkEmbed', attrs);
                 model.insertContent(embed, writer.createRangeOn(selected));
             }
@@ -286,12 +290,26 @@ class ChangeLinkDisplayCommand extends Command {
         const selected = this._getSelectedLinkWidget();
         this.isEnabled = !!selected;
         this.value = selected ? this._getMode(selected) : null;
+
+        if (selected) {
+            const url = selected.getAttribute('url') as string;
+            this.embedAvailable = this._detectEmbedType(url) !== 'opengraph';
+        } else {
+            this.embedAvailable = false;
+        }
     }
 
     private _getMode(element: any): LinkDisplayMode {
         if (element.name === 'linkMention') return 'inline';
         const embedType = element.getAttribute('embedType') as string;
         return embedType === 'opengraph' ? 'card' : 'embed';
+    }
+
+    /** Delegates to the client service to avoid duplicating URL detection logic. */
+    private _detectEmbedType(url: string): string {
+        const editorEl = this.editor.editing.view.getDomRoot();
+        const component = glob.getComponentByEl<EditorComponent>(editorEl);
+        return component.detectEmbedType(url);
     }
 
     private _getSelectedLinkWidget() {

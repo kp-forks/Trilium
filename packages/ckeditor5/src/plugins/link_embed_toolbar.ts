@@ -66,7 +66,7 @@ class LinkEmbedDisplayDropdown extends Plugin {
     public init() {
         const editor = this.editor;
         const componentFactory = editor.ui.componentFactory;
-        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as Command & { value: LinkDisplayMode | null };
+        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as Command & { value: LinkDisplayMode | null; embedAvailable: boolean };
 
         componentFactory.add("linkEmbedDisplayDropdown", _locale => {
             const dropdownView = createDropdown(editor.locale, DropdownButtonView);
@@ -98,7 +98,7 @@ class LinkEmbedDisplayDropdown extends Plugin {
         });
     }
 
-    private _getItemDefinitions(command: Command & { value: LinkDisplayMode | null }): Collection<ListDropdownButtonDefinition> {
+    private _getItemDefinitions(command: Command & { value: LinkDisplayMode | null; embedAvailable: boolean }): Collection<ListDropdownButtonDefinition> {
         const items = new Collection<ListDropdownButtonDefinition>();
 
         for (const modeDef of LINK_DISPLAY_MODES) {
@@ -115,6 +115,11 @@ class LinkEmbedDisplayDropdown extends Plugin {
             definition.model.bind("isOn").to(command, "value", value => {
                 return value === modeDef.value;
             });
+
+            // Hide "Embed" when the URL doesn't support it.
+            if (modeDef.value === "embed") {
+                definition.model.bind("isVisible").to(command, "embedAvailable");
+            }
 
             items.add(definition);
         }

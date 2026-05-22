@@ -145,6 +145,9 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
         async fetchLinkMetadata(url: string) {
             return await linkEmbedService.fetchMetadata(url);
         },
+        detectEmbedType(url: string) {
+            return linkEmbedService.detectEmbedType(url);
+        },
         renderLinkEmbed(container, metadata, editable) {
             linkEmbedService.renderEmbedPreview(container, metadata, editable);
         },
