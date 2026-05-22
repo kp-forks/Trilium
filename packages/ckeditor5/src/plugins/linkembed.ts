@@ -3,6 +3,15 @@ import linkEmbedIcon from '../icons/link-embed.svg?raw';
 import { preventCKEditorHandling } from './widget_utils.js';
 
 export const LINK_EMBED_COMMAND = 'insertLinkEmbed';
+export const CHANGE_LINK_DISPLAY_COMMAND = 'changeLinkDisplay';
+
+export const LINK_DISPLAY_MODES = [
+    { value: 'inline', label: 'Inline' },
+    { value: 'card', label: 'Card' },
+    { value: 'embed', label: 'Embed' }
+] as const;
+
+export type LinkDisplayMode = typeof LINK_DISPLAY_MODES[number]['value'];
 
 const EMBEDDABLE_URL_REGEX = /^https?:\/\/\S+$/;
 
@@ -52,6 +61,7 @@ class LinkEmbedEditing extends Plugin {
         this._defineSchema();
         this._defineConverters();
         this.editor.commands.add(LINK_EMBED_COMMAND, new InsertLinkEmbedCommand(this.editor));
+        this.editor.commands.add(CHANGE_LINK_DISPLAY_COMMAND, new ChangeLinkDisplayCommand(this.editor));
     }
 
     _defineSchema() {
@@ -66,7 +76,8 @@ class LinkEmbedEditing extends Plugin {
         schema.register('linkMention', {
             isInline: true,
             isObject: true,
-            allowAttributes: ['url', 'title', 'favicon'],
+            // Stores all metadata so we can switch to card/embed without re-fetching.
+            allowAttributes: ['url', 'embedType', 'title', 'description', 'favicon', 'siteName', 'image'],
             allowWhere: '$text'
         });
     }
@@ -151,8 +162,12 @@ class LinkEmbedEditing extends Plugin {
             model: (viewElement, { writer }) => {
                 return writer.createElement('linkMention', {
                     url: viewElement.getAttribute('data-url'),
+                    embedType: viewElement.getAttribute('data-embed-type'),
                     title: viewElement.getAttribute('data-title'),
-                    favicon: viewElement.getAttribute('data-favicon')
+                    description: viewElement.getAttribute('data-description'),
+                    favicon: viewElement.getAttribute('data-favicon'),
+                    siteName: viewElement.getAttribute('data-site-name'),
+                    image: viewElement.getAttribute('data-image')
                 });
             },
             view: { name: 'span', classes: 'link-mention' }
@@ -165,10 +180,15 @@ class LinkEmbedEditing extends Plugin {
                     class: 'link-mention',
                     'data-url': modelElement.getAttribute('url') as string
                 };
-                const title = modelElement.getAttribute('title') as string | undefined;
-                const favicon = modelElement.getAttribute('favicon') as string | undefined;
-                if (title) attrs['data-title'] = title;
-                if (favicon) attrs['data-favicon'] = favicon;
+                for (const key of ['embedType', 'title', 'description', 'favicon', 'siteName', 'image'] as const) {
+                    const val = modelElement.getAttribute(key) as string | undefined;
+                    if (val) {
+                        const attrName = key === 'embedType' ? 'data-embed-type'
+                            : key === 'siteName' ? 'data-site-name'
+                            : `data-${key}`;
+                        attrs[attrName] = val;
+                    }
+                }
                 return writer.createContainerElement('span', attrs);
             }
         });
@@ -217,6 +237,66 @@ class InsertLinkEmbedCommand extends Command {
         const firstPosition = selection.getFirstPosition();
         const allowedIn = firstPosition && model.schema.findAllowedParent(firstPosition, 'linkEmbed');
         this.isEnabled = allowedIn !== null;
+    }
+}
+
+const META_KEYS = ['url', 'embedType', 'title', 'description', 'favicon', 'siteName', 'image'] as const;
+
+class ChangeLinkDisplayCommand extends Command {
+    declare value: LinkDisplayMode | null;
+
+    override execute(options: { value: LinkDisplayMode }) {
+        const model = this.editor.model;
+        const selected = this._getSelectedLinkWidget();
+        if (!selected) return;
+
+        const targetMode = options.value;
+        const currentMode = this._getMode(selected);
+        if (targetMode === currentMode) return;
+
+        // Collect all metadata from the current element.
+        const attrs: Record<string, unknown> = {};
+        for (const key of META_KEYS) {
+            const val = selected.getAttribute(key);
+            if (val != null) attrs[key] = val;
+        }
+
+        model.change(writer => {
+            if (targetMode === 'inline') {
+                // Switch to linkMention (inline widget).
+                const mention = writer.createElement('linkMention', attrs);
+                model.insertContent(mention, writer.createRangeOn(selected));
+            } else {
+                // Switch to linkEmbed (block widget).
+                // 'card' uses opengraph embedType, 'embed' keeps original.
+                if (targetMode === 'card') {
+                    attrs.embedType = 'opengraph';
+                }
+                const embed = writer.createElement('linkEmbed', attrs);
+                model.insertContent(embed, writer.createRangeOn(selected));
+            }
+        });
+    }
+
+    override refresh() {
+        const selected = this._getSelectedLinkWidget();
+        this.isEnabled = !!selected;
+        this.value = selected ? this._getMode(selected) : null;
+    }
+
+    private _getMode(element: any): LinkDisplayMode {
+        if (element.name === 'linkMention') return 'inline';
+        const embedType = element.getAttribute('embedType') as string;
+        return embedType === 'opengraph' ? 'card' : 'embed';
+    }
+
+    private _getSelectedLinkWidget() {
+        const selection = this.editor.model.document.selection;
+        const selected = selection.getSelectedElement();
+        if (selected && (selected.name === 'linkMention' || selected.name === 'linkEmbed')) {
+            return selected;
+        }
+        return null;
     }
 }
 
@@ -316,8 +396,12 @@ class AutoLinkToMention extends Plugin {
 
                     editor.model.insertContent(writer.createElement('linkMention', {
                         url: metadata.url,
+                        embedType: metadata.embedType,
                         title: metadata.title,
-                        favicon: metadata.favicon
+                        description: metadata.description,
+                        favicon: metadata.favicon,
+                        siteName: metadata.siteName,
+                        image: metadata.image
                     }));
                     return;
                 }

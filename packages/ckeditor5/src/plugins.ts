@@ -38,6 +38,7 @@ import AdmonitionTypeDropdown from "./plugins/admonition_type_dropdown.js";
 import AdmonitionToolbar from "./plugins/admonition_toolbar.js";
 import IncludeNoteBoxSizeDropdown from "./plugins/include_note_box_size_dropdown.js";
 import IncludeNoteToolbar from "./plugins/include_note_toolbar.js";
+import LinkEmbedToolbar from "./plugins/link_embed_toolbar.js";
 import TodoListMultistate from "./plugins/todo_list_multistate/todo_list_multistate.js";
 
 /**
@@ -67,6 +68,7 @@ const TRILIUM_PLUGINS: typeof Plugin[] = [
     AdmonitionToolbar,
     IncludeNoteBoxSizeDropdown,
     IncludeNoteToolbar,
+    LinkEmbedToolbar,
     TodoListMultistate,
     CopyAnchorLinkButton,
 ];
