@@ -268,9 +268,13 @@ class ChangeLinkDisplayCommand extends Command {
                 model.insertContent(mention, writer.createRangeOn(selected));
             } else {
                 // Switch to linkEmbed (block widget).
-                // 'card' uses opengraph embedType, 'embed' keeps original.
+                // 'card' forces opengraph; 'embed' detects from URL.
+                const url = attrs.url as string;
                 if (targetMode === 'card') {
                     attrs.embedType = 'opengraph';
+                } else {
+                    attrs.embedType = EMBEDDABLE_URL_REGEX.test(url) && /(?:youtube\.com|youtu\.be)/.test(url)
+                        ? 'youtube' : 'opengraph';
                 }
                 const embed = writer.createElement('linkEmbed', attrs);
                 model.insertContent(embed, writer.createRangeOn(selected));

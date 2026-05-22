@@ -102,7 +102,10 @@ function CardImage({ src }: { src?: string }) {
 }
 
 function EmbedPreview({ meta, editable }: { meta: EmbedMetadata; editable?: boolean }) {
-    const videoId = YOUTUBE_REGEX.test(meta.url)
+    // Only show the YouTube iframe embed when embedType is not explicitly
+    // set to 'opengraph' (Card mode). This lets the user choose between
+    // an embedded player and a static card preview for YouTube links.
+    const videoId = meta.embedType !== "opengraph" && YOUTUBE_REGEX.test(meta.url)
         ? meta.url.match(YOUTUBE_REGEX)?.[1]
         : null;
 
