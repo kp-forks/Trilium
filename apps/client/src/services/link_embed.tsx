@@ -1,6 +1,6 @@
 import "../widgets/type_widgets/text/LinkEmbed.css";
 
-import type { LinkEmbedMetadata } from "@triliumnext/commons";
+import { type LinkEmbedMetadata, YOUTUBE_REGEX, extractYouTubeVideoId } from "@triliumnext/commons";
 import { render } from "preact";
 import { useState } from "preact/hooks";
 
@@ -19,7 +19,6 @@ export interface EmbedMetadata {
     image?: string;
 }
 
-const YOUTUBE_REGEX = /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
 
 export function detectEmbedType(url: string): "youtube" | "opengraph" {
     return YOUTUBE_REGEX.test(url) ? "youtube" : "opengraph";
@@ -105,8 +104,8 @@ function EmbedPreview({ meta, editable }: { meta: EmbedMetadata; editable?: bool
     // Only show the YouTube iframe embed when embedType is not explicitly
     // set to 'opengraph' (Card mode). This lets the user choose between
     // an embedded player and a static card preview for YouTube links.
-    const videoId = meta.embedType !== "opengraph" && YOUTUBE_REGEX.test(meta.url)
-        ? meta.url.match(YOUTUBE_REGEX)?.[1]
+    const videoId = meta.embedType !== "opengraph"
+        ? extractYouTubeVideoId(meta.url)
         : null;
 
     if (videoId) {

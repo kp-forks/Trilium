@@ -1,4 +1,4 @@
-import { renderSpreadsheetToHtml, renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons";
+import { extractYouTubeVideoId, renderSpreadsheetToHtml, renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons";
 import { icon_packs as iconPackService, sanitize, task_states, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
@@ -347,7 +347,7 @@ function renderText(result: Result, note: SNote | BNote) {
         if (!url) continue;
 
         if (embedType === "youtube") {
-            const videoId = extractYouTubeVideoIdForShare(url);
+            const videoId = extractYouTubeVideoId(url);
             if (videoId) {
                 embedEl.innerHTML = `<div class="link-embed-video"><iframe src="https://www.youtube-nocookie.com/embed/${escapeHtml(videoId)}?rel=0" frameborder="0" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;aspect-ratio:16/9;border:none;"></iframe></div>`;
             }
@@ -588,10 +588,7 @@ function renderWebView(note: SNote | BNote, result: Result) {
     result.content = `<iframe class="webview" src="${sanitize.sanitizeUrl(url)}" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>`;
 }
 
-function extractYouTubeVideoIdForShare(url: string): string | null {
-    const match = url.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/);
-    return match ? match[1] : null;
-}
+
 
 function safeHostnameForShare(url: string): string {
     try { return new URL(url).hostname; } catch { return url; }

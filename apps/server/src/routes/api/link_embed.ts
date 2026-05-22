@@ -1,22 +1,37 @@
-import type { Request } from "express";
 import dns from "node:dns";
 import net from "node:net";
-import isIpPrivate from "private-ip";
-import { parse } from "node-html-parser";
-import type { LinkEmbedMetadata } from "@triliumnext/commons";
-import log from "../../services/log.js";
+
+import { type LinkEmbedMetadata, extractYouTubeVideoId } from "@triliumnext/commons";
 import { ValidationError } from "@triliumnext/core";
+import type { Request } from "express";
+import { parse } from "node-html-parser";
+import ipaddr from "ipaddr.js";
+
+import log from "../../services/log.js";
 
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_RESPONSE_SIZE = 512 * 1024; // 512KB
 const MAX_FAVICON_SIZE = 64 * 1024; // 64KB
 const MAX_REDIRECTS = 5;
 
-const YOUTUBE_REGEX = /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
 
-function extractYouTubeVideoId(url: string): string | null {
-    const match = url.match(YOUTUBE_REGEX);
-    return match ? match[1] : null;
+const ALLOWED_IP_RANGES = new Set(["unicast"]);
+
+/**
+ * Checks whether an IP address is private/reserved using ipaddr.js.
+ * Returns true if the IP should be blocked.
+ */
+function isBlockedIP(ip: string): boolean {
+    try {
+        let parsed = ipaddr.parse(ip);
+        // For IPv4-mapped IPv6 addresses, extract and check the IPv4 part
+        if (parsed.kind() === "ipv6" && (parsed as ipaddr.IPv6).isIPv4MappedAddress()) {
+            parsed = (parsed as ipaddr.IPv6).toIPv4Address();
+        }
+        return !ALLOWED_IP_RANGES.has(parsed.range());
+    } catch {
+        return true; // unparseable → treat as blocked
+    }
 }
 
 /**
@@ -25,7 +40,7 @@ function extractYouTubeVideoId(url: string): string | null {
 async function validateHostResolution(hostname: string): Promise<void> {
     // If the hostname is already an IP literal, check it directly
     if (net.isIP(hostname)) {
-        if (isIpPrivate(hostname) !== false) {
+        if (isBlockedIP(hostname)) {
             throw new ValidationError("URLs pointing to private/internal networks are not allowed");
         }
         return;
@@ -39,7 +54,7 @@ async function validateHostResolution(hostname: string): Promise<void> {
     }
 
     for (const addr of addresses) {
-        if (isIpPrivate(addr.address) !== false) {
+        if (isBlockedIP(addr.address)) {
             throw new ValidationError("URLs pointing to private/internal networks are not allowed");
         }
     }
@@ -58,6 +73,30 @@ function validateUrl(urlString: string): URL {
     }
 
     return parsed;
+}
+
+/**
+ * Reads the response body as text, stopping after maxBytes to avoid
+ * buffering arbitrarily large responses into memory.
+ */
+async function readResponseText(response: Response, maxBytes: number): Promise<string> {
+    const reader = response.body?.getReader();
+    if (!reader) return "";
+
+    const decoder = new TextDecoder();
+    let result = "";
+    let bytesRead = 0;
+
+    while (bytesRead < maxBytes) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        bytesRead += value.byteLength;
+        result += decoder.decode(value, { stream: true });
+    }
+
+    reader.cancel();
+    return result.slice(0, maxBytes);
 }
 
 /**
@@ -173,14 +212,19 @@ async function fetchYouTubeMetadata(url: string, videoId: string): Promise<LinkE
 async function fetchOpenGraphData(url: string) {
     const response = await safeFetch(url, {
         headers: {
-            "User-Agent": "TriliumBot/1.0 (Link Preview)",
+            "User-Agent": "TriliumNotes/1.0 (Link Preview; +https://triliumnotes.org/)",
             "Accept": "text/html"
         }
     });
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-    const html = (await response.text()).slice(0, MAX_RESPONSE_SIZE);
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("text/html") && !contentType.includes("application/xhtml+xml")) {
+        throw new Error(`Unexpected Content-Type: ${contentType}`);
+    }
+
+    const html = await readResponseText(response, MAX_RESPONSE_SIZE);
     const document = parse(html);
 
     const getMeta = (property: string): string | undefined => {
@@ -241,3 +285,4 @@ async function getMetadata(req: Request) {
 }
 
 export default { getMetadata };
+export { validateHostResolution, validateUrl };
