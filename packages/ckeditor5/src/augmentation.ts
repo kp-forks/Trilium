@@ -20,8 +20,8 @@ declare global {
         createNoteForReferenceLink(title: string): Promise<string>;
         loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>): void;
         fetchLinkMetadata(url: string): Promise<LinkEmbedMetadata>;
-        renderLinkEmbed(container: HTMLElement, metadata: LinkEmbedMetadata): void;
-        renderLinkMention(container: HTMLElement, metadata: Pick<LinkEmbedMetadata, "url" | "title" | "favicon">): void;
+        renderLinkEmbed(container: HTMLElement, metadata: LinkEmbedMetadata, editable?: boolean): void;
+        renderLinkMention(container: HTMLElement, metadata: Pick<LinkEmbedMetadata, "url" | "title" | "favicon">, editable?: boolean): void;
     }
 
     var glob: {

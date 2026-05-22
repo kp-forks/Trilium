@@ -9,6 +9,22 @@ export function preventCKEditorHandling(domElement: HTMLElement, editor: Editor)
     domElement.addEventListener("focus", stopEventPropagationAndHackRendererFocus, { capture: true });
     domElement.addEventListener("keydown", stopEventPropagationAndHackRendererFocus, { capture: true });
 
+    // Prevent links from navigating on single click in the editor.
+    // Double-click opens the link in a new tab.
+    domElement.addEventListener("click", (evt: Event) => {
+        const anchor = (evt.target as HTMLElement).closest("a");
+        if (anchor) {
+            evt.preventDefault();
+        }
+    }, { capture: true });
+
+    domElement.addEventListener("dblclick", (evt: Event) => {
+        const anchor = (evt.target as HTMLElement).closest("a");
+        if (anchor?.href) {
+            window.open(anchor.href, "_blank", "noopener,noreferrer");
+        }
+    });
+
     function stopEventPropagationAndHackRendererFocus(evt: Event) {
         evt.stopPropagation();
         // This prevents rendering changed view selection thus preventing to changing DOM selection while inside a widget.

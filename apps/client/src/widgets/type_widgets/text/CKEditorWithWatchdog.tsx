@@ -185,10 +185,10 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
             return await linkEmbedService.fetchMetadata(url);
         },
         renderLinkEmbed(container: HTMLElement, metadata: EmbedMetadata) {
-            linkEmbedService.renderEmbedPreview(container, metadata);
+            linkEmbedService.renderEmbedPreview(container, metadata, true);
         },
         renderLinkMention(container: HTMLElement, metadata: EmbedMetadata) {
-            linkEmbedService.renderMentionPreview(container, metadata);
+            linkEmbedService.renderMentionPreview(container, metadata, true);
         }
     });
 

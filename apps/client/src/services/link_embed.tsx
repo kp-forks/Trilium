@@ -101,7 +101,7 @@ function CardImage({ src }: { src?: string }) {
     );
 }
 
-function EmbedPreview({ meta }: { meta: EmbedMetadata }) {
+function EmbedPreview({ meta, editable }: { meta: EmbedMetadata; editable?: boolean }) {
     const videoId = YOUTUBE_REGEX.test(meta.url)
         ? meta.url.match(YOUTUBE_REGEX)?.[1]
         : null;
@@ -121,8 +121,13 @@ function EmbedPreview({ meta }: { meta: EmbedMetadata }) {
         );
     }
 
+    // In editing mode, omit target="_blank" so Trilium's global link handler
+    // (link.ts goToLinkExt) treats the <a> as inside [contenteditable] and
+    // only opens it on double-click or Ctrl+click.
+    const target = editable ? undefined : "_blank";
+
     return (
-        <a className="link-embed-card" href={meta.url} target="_blank" rel="noopener noreferrer">
+        <a className="link-embed-card" href={meta.url} target={target} rel="noopener noreferrer">
             <div className="link-embed-card-image-wrapper">
                 <CardImage src={meta.image} />
             </div>
@@ -135,9 +140,11 @@ function EmbedPreview({ meta }: { meta: EmbedMetadata }) {
     );
 }
 
-function MentionPreview({ meta }: { meta: { url: string; title?: string; favicon?: string } }) {
+function MentionPreview({ meta, editable }: { meta: { url: string; title?: string; favicon?: string }; editable?: boolean }) {
+    const target = editable ? undefined : "_blank";
+
     return (
-        <a className="link-embed-mention" href={meta.url} target="_blank" rel="noopener noreferrer">
+        <a className="link-embed-mention" href={meta.url} target={target} rel="noopener noreferrer">
             <Favicon src={meta.favicon} />
             <span className="link-embed-mention-title">{meta.title || safeHostname(meta.url)}</span>
         </a>
@@ -148,12 +155,12 @@ function MentionPreview({ meta }: { meta: { url: string; title?: string; favicon
 // Imperative API — renders Preact components into DOM containers.
 // ---------------------------------------------------------------------------
 
-export function renderEmbedPreview(container: HTMLElement, meta: EmbedMetadata) {
-    render(<EmbedPreview meta={meta} />, container);
+export function renderEmbedPreview(container: HTMLElement, meta: EmbedMetadata, editable?: boolean) {
+    render(<EmbedPreview meta={meta} editable={editable} />, container);
 }
 
-export function renderMentionPreview(container: HTMLElement, meta: { url: string; title?: string; favicon?: string }) {
-    render(<MentionPreview meta={meta} />, container);
+export function renderMentionPreview(container: HTMLElement, meta: { url: string; title?: string; favicon?: string }, editable?: boolean) {
+    render(<MentionPreview meta={meta} editable={editable} />, container);
 }
 
 /**

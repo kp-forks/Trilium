@@ -145,11 +145,11 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
         async fetchLinkMetadata(url: string) {
             return await linkEmbedService.fetchMetadata(url);
         },
-        renderLinkEmbed(container: HTMLElement, metadata: Parameters<typeof linkEmbedService.renderEmbedPreview>[1]) {
-            linkEmbedService.renderEmbedPreview(container, metadata);
+        renderLinkEmbed(container, metadata, editable) {
+            linkEmbedService.renderEmbedPreview(container, metadata, editable);
         },
-        renderLinkMention(container: HTMLElement, metadata: Parameters<typeof linkEmbedService.renderMentionPreview>[1]) {
-            linkEmbedService.renderMentionPreview(container, metadata);
+        renderLinkMention(container, metadata, editable) {
+            linkEmbedService.renderMentionPreview(container, metadata, editable);
         },
         // Creating notes in @-completion
         async createNoteForReferenceLink(title: string) {

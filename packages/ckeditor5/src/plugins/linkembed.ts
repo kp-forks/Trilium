@@ -146,7 +146,7 @@ class LinkEmbedEditing extends Plugin {
                     const domElement = this.toDomElement(domDocument);
                     const editorEl = editor.editing.view.getDomRoot();
                     const component = glob.getComponentByEl<EditorComponent>(editorEl);
-                    component.renderLinkEmbed(domElement, { url, embedType, title, description, favicon, siteName, image });
+                    component.renderLinkEmbed(domElement, { url, embedType, title, description, favicon, siteName, image }, true);
                     preventCKEditorHandling(domElement, editor);
                     return domElement;
                 });
@@ -212,7 +212,7 @@ class LinkEmbedEditing extends Plugin {
                     const domElement = this.toDomElement(domDocument);
                     const editorEl = editor.editing.view.getDomRoot();
                     const component = glob.getComponentByEl<EditorComponent>(editorEl);
-                    component.renderLinkMention(domElement, { url, title, favicon });
+                    component.renderLinkMention(domElement, { url, title, favicon }, true);
                     preventCKEditorHandling(domElement, editor);
                     return domElement;
                 });
