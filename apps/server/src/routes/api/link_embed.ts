@@ -240,7 +240,7 @@ async function fetchOpenGraphData(url: string) {
     const favicon = await resolveFavicon(document, url);
 
     return {
-        title: getMeta("og:title") || document.querySelector("title")?.textContent || undefined,
+        title: getMeta("og:title") || document.querySelector("title")?.textContent?.trim() || undefined,
         description: getMeta("og:description") || getMeta("description") || undefined,
         image: getMeta("og:image") || undefined,
         siteName: getMeta("og:site_name") || undefined,
