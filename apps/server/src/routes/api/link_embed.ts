@@ -1,9 +1,8 @@
 import type { Request } from "express";
-import axios from "axios";
 import { parse } from "node-html-parser";
 import type { LinkEmbedMetadata } from "@triliumnext/commons";
 import log from "../../services/log.js";
-import ValidationError from "../../errors/validation_error.js";
+import { ValidationError } from "@triliumnext/core";
 
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_RESPONSE_SIZE = 512 * 1024; // 512KB
@@ -65,13 +64,13 @@ async function fetchYouTubeMetadata(url: string, videoId: string): Promise<LinkE
 
     try {
         const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
-        const response = await axios.get(oembedUrl, {
-            timeout: FETCH_TIMEOUT_MS,
-            responseType: "json",
-            validateStatus: (status) => status >= 200 && status < 300
+        const response = await fetch(oembedUrl, {
+            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
         });
 
-        const data = response.data;
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
         if (data.title) metadata.title = data.title;
         if (data.author_name) metadata.description = data.author_name;
         if (data.thumbnail_url) metadata.image = data.thumbnail_url;
@@ -83,20 +82,18 @@ async function fetchYouTubeMetadata(url: string, videoId: string): Promise<LinkE
 }
 
 async function fetchOpenGraphData(url: string) {
-    const response = await axios.get(url, {
-        timeout: FETCH_TIMEOUT_MS,
-        maxContentLength: MAX_RESPONSE_SIZE,
-        maxBodyLength: MAX_RESPONSE_SIZE,
-        maxRedirects: 3,
-        responseType: "text",
+    const response = await fetch(url, {
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        redirect: "follow",
         headers: {
             "User-Agent": "TriliumBot/1.0 (Link Preview)",
             "Accept": "text/html"
-        },
-        validateStatus: (status) => status >= 200 && status < 300
+        }
     });
 
-    const html = typeof response.data === "string" ? response.data : String(response.data);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const html = (await response.text()).slice(0, MAX_RESPONSE_SIZE);
     const document = parse(html);
 
     const getMeta = (property: string): string | undefined => {
