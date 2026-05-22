@@ -140,12 +140,33 @@ async function downloadFaviconAsDataUri(faviconUrl: string): Promise<string | un
 
         if (!response.ok) return undefined;
 
+        // Bail early if the server advertises a size over the limit
+        const contentLength = response.headers.get("content-length");
+        if (contentLength && parseInt(contentLength, 10) > MAX_FAVICON_SIZE) return undefined;
+
         const contentType = response.headers.get("content-type") || "image/x-icon";
-        const buffer = await response.arrayBuffer();
 
-        if (buffer.byteLength > MAX_FAVICON_SIZE) return undefined;
+        // Stream the body and enforce the size limit during download
+        const reader = response.body?.getReader();
+        if (!reader) return undefined;
 
-        const base64 = Buffer.from(buffer).toString("base64");
+        const chunks: Uint8Array[] = [];
+        let bytesRead = 0;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            bytesRead += value.byteLength;
+            if (bytesRead > MAX_FAVICON_SIZE) {
+                reader.cancel();
+                return undefined;
+            }
+            chunks.push(value);
+        }
+
+        const buffer = Buffer.concat(chunks);
+        const base64 = buffer.toString("base64");
         return `data:${contentType.split(";")[0]};base64,${base64}`;
     } catch {
         return undefined;
@@ -192,9 +213,7 @@ async function fetchYouTubeMetadata(url: string, videoId: string): Promise<LinkE
 
     try {
         const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
-        const response = await fetch(oembedUrl, {
-            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
-        });
+        const response = await safeFetch(oembedUrl);
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
