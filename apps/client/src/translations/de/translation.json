@@ -2420,7 +2420,7 @@
       "note_in_parent": "<Note/> in <Parent/>",
       "get_attachment": "Anhang abrufen",
       "get_attachment_content": "Anhangsinhalt lesen",
-      "set_note_content": "Notiz neu schreiben",
+      "set_note_content": "Notizinhalt ersetzen",
       "edit_note_content": "Notiz bearbeiten"
     },
     "cancel": "Abbrechen",
