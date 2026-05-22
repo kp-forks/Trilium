@@ -275,7 +275,7 @@
   "password_not_set": {
     "title": "Le mot de passe n'est pas défini",
     "body1": "Les notes protégées sont cryptées à l'aide d'un mot de passe utilisateur, mais le mot de passe n'a pas encore été défini.",
-    "body2": "Pour pouvoir protéger les notes, cliquez sur le bouton ci-dessous pour ouvrir la boîte de dialogue Options et définir votre mot de passe.",
+    "body2": "Pour pouvoir protéger les notes, cliquez sur le bouton ci-dessous pour ouvrir la boîte de dialogue Paramètres et définir votre mot de passe.",
     "go_to_password_options": "Accéder aux options de mot de passe"
   },
   "prompt": {
@@ -511,7 +511,7 @@
     "delete_matched_notes": "Supprimer les notes correspondantes",
     "delete_matched_notes_description": "Cela supprimera les notes correspondantes.",
     "undelete_notes_instruction": "Après la suppression, il est possible de les restaurer à partir de la boîte de dialogue Modifications récentes.",
-    "erase_notes_instruction": "Pour effacer définitivement les notes, après leur suppression, allez dans Options → Autres et cliquez sur le bouton \"Effacer immédiatement les notes supprimées\"."
+    "erase_notes_instruction": "Pour effacer définitivement les notes, après leur suppression, allez dans Paramètres → Autres et cliquez sur le bouton \"Effacer immédiatement les notes supprimées\"."
   },
   "delete_revisions": {
     "delete_note_revisions": "Supprimer les versions de notes",
@@ -640,7 +640,7 @@
   },
   "global_menu": {
     "menu": "Menu",
-    "options": "Options",
+    "options": "Paramètres",
     "open_new_window": "Ouvrir une nouvelle fenêtre",
     "switch_to_mobile_version": "Passer à la version mobile",
     "switch_to_desktop_version": "Passer à la version de bureau",
@@ -1338,13 +1338,13 @@
     "bg_color": "Texte avec couleur de fond",
     "visibility_title": "Visibilité de la Liste des Mises en évidence",
     "visibility_description": "Vous pouvez masquer le widget des mises en évidence par note en ajoutant un label #hideHighlightWidget.",
-    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour basculer rapidement vers le volet droit (comprenant les Mises en évidence) dans Options -> Raccourcis (nom « toggleRightPane »)."
+    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour basculer rapidement vers le volet droit (comprenant les Mises en évidence) dans Paramètres -> Raccourcis (nom « toggleRightPane »)."
   },
   "table_of_contents": {
     "title": "Table des matières",
     "description": "La table des matières apparaîtra dans les notes textuelles lorsque la note comporte plus d'un nombre défini de titres. Vous pouvez personnaliser ce nombre :",
     "disable_info": "Vous pouvez également utiliser cette option pour désactiver la table des matières en définissant un nombre très élevé.",
-    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour afficher/masquer le volet de droite (y compris la table des matières) dans Options -> Raccourcis (nom « toggleRightPane »).",
+    "shortcut_info": "Vous pouvez configurer un raccourci clavier pour afficher/masquer le volet de droite (y compris la table des matières) dans Paramètres -> Raccourcis (nom « toggleRightPane »).",
     "unit": "titres"
   },
   "text_auto_read_only_size": {
@@ -2027,7 +2027,7 @@
     "background_effects_button": "Activer les effets d'arrière-plan",
     "dismiss": "Rejeter",
     "new_layout_title": "Nouvelle mise en page",
-    "new_layout_message": "Nous avons introduit une mise en page modernisée pour Trilium. Le ruban a été supprimé et intégré de manière transparente dans l'interface principale, avec une nouvelle barre d'état et des sections extensibles (telles que les attributs promus) reprenant les fonctions clés.\n\nLa nouvelle mise en page est activée par défaut et peut être temporairement désactivée via Options → Apparence.",
+    "new_layout_message": "Nous avons introduit une mise en page modernisée pour Trilium. Le ruban a été supprimé et intégré de manière transparente dans l'interface principale, avec une nouvelle barre d'état et des sections extensibles (telles que les attributs promus) reprenant les fonctions clés.\n\nLa nouvelle mise en page est activée par défaut et peut être temporairement désactivée via Paramètres → Apparence.",
     "new_layout_button": "Plus d'infos"
   },
   "settings": {
@@ -2376,8 +2376,8 @@
     "summary": "Résumé"
   },
   "llm": {
-    "settings_title": "AI / LLM",
-    "settings_description": "Configurer les intégrations AI et les LLM (Large Language Model).",
+    "settings_title": "IA / LLM",
+    "settings_description": "Configurer les intégrations IA et les LLM (Large Language Model).",
     "add_provider": "Ajouter le fournisseur",
     "add_provider_title": "Ajouter le fournisseur d'IA",
     "configured_providers": "Fournisseurs configurés",
@@ -2552,7 +2552,8 @@
     "autocomplete_fuzzy_description": "Affecte l’accès rapide aux notes et les sélecteurs de notes. Plus lent, mais tolère les fautes de frappe."
   },
   "text_editor": {
-    "title": "Éditeur"
+    "title": "Éditeur",
+    "related_task_states": "États personnalisés des cases à cocher (To-do)"
   },
   "mobile_note_navigator": {
     "back": "Remonter d’un niveau",
@@ -2654,7 +2655,7 @@
     "sync-illustration-desktop-app": "Votre application de bureau",
     "sync-illustration-server": "Votre serveur",
     "sync-from-desktop-step1": "Ouvrez votre application Trilium Notes.",
-    "sync-from-desktop-step2": "Dans le menu, cliquez sur Options.",
+    "sync-from-desktop-step2": "Dans le menu, cliquez sur Paramètres.",
     "sync-from-desktop-step3": "Cliquez sur la catégorie Synchronisation.",
     "sync-from-desktop-step4": "Modifiez l’adresse de l’instance du serveur dans le champ de droite.",
     "sync-from-desktop-step5": "Cliquez sur le bouton « Tester la synchronisation » pour vérifier que la connexion fonctionne.",
@@ -2681,5 +2682,20 @@
   },
   "spreadsheet": {
     "read-only": "Cette note est en lecture seule."
+  },
+  "text-editor": {
+    "checkbox-tooltip": "Clic droit pour plus d'états.\nAppuyez sur {{shortcut}} pour changer d'état.",
+    "edit-states-tooltip": "Modifier les états des tâches",
+    "unknown-task-state": "État personnalisé non défini",
+    "task-state-dropped": "L'état \"{{title}}\" {{id}} a été supprimé pour la raison suivante : {{reason}}",
+    "validation-errors": {
+      "undefined-name": "identifiant non défini",
+      "invalid-name": "identifiant invalide",
+      "duplicate-name": "identifiant en double",
+      "missing-title": "titre manquant",
+      "missing-icon": "icône manquante",
+      "invalid-symbol": "le symbole Markdown doit être un seul caractère (sauf \"[\", \"X\" et \"]\")",
+      "duplicate-symbol": "symbole Markdown en double"
+    }
   }
 }
