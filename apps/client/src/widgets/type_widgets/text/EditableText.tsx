@@ -1,4 +1,5 @@
 import "./EditableText.css";
+import "./LinkEmbed.css";
 
 import { CKTextEditor, EditorWatchdog, TemplateDefinition } from "@triliumnext/ckeditor5";
 import { deferred } from "@triliumnext/commons";
@@ -141,11 +142,8 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
                 editorApi: editorApiRef.current,
             });
         },
-        loadLinkEmbedPreview(url: string, embedType: string, $el: JQuery<HTMLElement>) {
-            linkEmbedService.renderPreview(url, embedType, $el);
-        },
-        loadLinkMentionPreview(url: string, $el: JQuery<HTMLElement>) {
-            linkEmbedService.renderMention(url, $el);
+        async fetchLinkMetadata(url: string) {
+            return await linkEmbedService.fetchMetadata(url);
         },
         // Creating notes in @-completion
         async createNoteForReferenceLink(title: string) {

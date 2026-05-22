@@ -65,14 +65,14 @@ class LinkEmbedEditing extends Plugin {
 
         schema.register('linkEmbed', {
             isObject: true,
-            allowAttributes: ['url', 'embedType'],
+            allowAttributes: ['url', 'embedType', 'title', 'description', 'favicon', 'siteName', 'image'],
             allowWhere: '$block'
         });
 
         schema.register('linkMention', {
             isInline: true,
             isObject: true,
-            allowAttributes: ['url'],
+            allowAttributes: ['url', 'title', 'favicon'],
             allowWhere: '$text'
         });
     }
@@ -87,7 +87,12 @@ class LinkEmbedEditing extends Plugin {
             model: (viewElement, { writer }) => {
                 return writer.createElement('linkEmbed', {
                     url: viewElement.getAttribute('data-url'),
-                    embedType: viewElement.getAttribute('data-embed-type')
+                    embedType: viewElement.getAttribute('data-embed-type'),
+                    title: viewElement.getAttribute('data-title'),
+                    description: viewElement.getAttribute('data-description'),
+                    favicon: viewElement.getAttribute('data-favicon'),
+                    siteName: viewElement.getAttribute('data-site-name'),
+                    image: viewElement.getAttribute('data-image')
                 });
             },
             view: { name: 'section', classes: 'link-embed' }
@@ -96,11 +101,19 @@ class LinkEmbedEditing extends Plugin {
         conversion.for('dataDowncast').elementToElement({
             model: 'linkEmbed',
             view: (modelElement, { writer }) => {
-                return writer.createContainerElement('section', {
+                const attrs: Record<string, string> = {
                     class: 'link-embed',
-                    'data-url': modelElement.getAttribute('url'),
-                    'data-embed-type': modelElement.getAttribute('embedType')
-                });
+                    'data-url': modelElement.getAttribute('url') as string,
+                    'data-embed-type': modelElement.getAttribute('embedType') as string
+                };
+                for (const key of ['title', 'description', 'favicon', 'siteName', 'image'] as const) {
+                    const val = modelElement.getAttribute(key) as string | undefined;
+                    if (val) {
+                        const attrName = key === 'siteName' ? 'data-site-name' : `data-${key}`;
+                        attrs[attrName] = val;
+                    }
+                }
+                return writer.createContainerElement('section', attrs);
             }
         });
 
@@ -109,6 +122,11 @@ class LinkEmbedEditing extends Plugin {
             view: (modelElement, { writer }) => {
                 const url = modelElement.getAttribute('url') as string;
                 const embedType = modelElement.getAttribute('embedType') as string;
+                const title = modelElement.getAttribute('title') as string | undefined;
+                const description = modelElement.getAttribute('description') as string | undefined;
+                const favicon = modelElement.getAttribute('favicon') as string | undefined;
+                const siteName = modelElement.getAttribute('siteName') as string | undefined;
+                const image = modelElement.getAttribute('image') as string | undefined;
 
                 const section = writer.createContainerElement('section', {
                     class: 'link-embed',
@@ -121,9 +139,7 @@ class LinkEmbedEditing extends Plugin {
                     'data-cke-ignore-events': 'true'
                 }, function (domDocument) {
                     const domElement = this.toDomElement(domDocument);
-                    const editorEl = editor.editing.view.getDomRoot();
-                    const component = glob.getComponentByEl<EditorComponent>(editorEl);
-                    component.loadLinkEmbedPreview(url, embedType, $(domElement));
+                    renderEmbedPreview(domElement, { url, embedType, title, description, favicon, siteName, image });
                     preventCKEditorHandling(domElement, editor);
                     return domElement;
                 });
@@ -138,7 +154,9 @@ class LinkEmbedEditing extends Plugin {
         conversion.for('upcast').elementToElement({
             model: (viewElement, { writer }) => {
                 return writer.createElement('linkMention', {
-                    url: viewElement.getAttribute('data-url')
+                    url: viewElement.getAttribute('data-url'),
+                    title: viewElement.getAttribute('data-title'),
+                    favicon: viewElement.getAttribute('data-favicon')
                 });
             },
             view: { name: 'span', classes: 'link-mention' }
@@ -147,10 +165,15 @@ class LinkEmbedEditing extends Plugin {
         conversion.for('dataDowncast').elementToElement({
             model: 'linkMention',
             view: (modelElement, { writer }) => {
-                return writer.createContainerElement('span', {
+                const attrs: Record<string, string> = {
                     class: 'link-mention',
-                    'data-url': modelElement.getAttribute('url')
-                });
+                    'data-url': modelElement.getAttribute('url') as string
+                };
+                const title = modelElement.getAttribute('title') as string | undefined;
+                const favicon = modelElement.getAttribute('favicon') as string | undefined;
+                if (title) attrs['data-title'] = title;
+                if (favicon) attrs['data-favicon'] = favicon;
+                return writer.createContainerElement('span', attrs);
             }
         });
 
@@ -158,6 +181,8 @@ class LinkEmbedEditing extends Plugin {
             model: 'linkMention',
             view: (modelElement, { writer }) => {
                 const url = modelElement.getAttribute('url') as string;
+                const title = modelElement.getAttribute('title') as string | undefined;
+                const favicon = modelElement.getAttribute('favicon') as string | undefined;
 
                 const span = writer.createContainerElement('span', {
                     class: 'link-mention',
@@ -169,9 +194,7 @@ class LinkEmbedEditing extends Plugin {
                     'data-cke-ignore-events': 'true'
                 }, function (domDocument) {
                     const domElement = this.toDomElement(domDocument);
-                    const editorEl = editor.editing.view.getDomRoot();
-                    const component = glob.getComponentByEl<EditorComponent>(editorEl);
-                    component.loadLinkMentionPreview(url, $(domElement));
+                    renderMentionPreview(domElement, { url, title, favicon });
                     preventCKEditorHandling(domElement, editor);
                     return domElement;
                 });
@@ -182,6 +205,128 @@ class LinkEmbedEditing extends Plugin {
         });
     }
 }
+
+// ---------------------------------------------------------------------------
+// DOM renderers — render previews from stored metadata, no network requests
+// ---------------------------------------------------------------------------
+
+interface EmbedMetadata {
+    url: string;
+    embedType: string;
+    title?: string;
+    description?: string;
+    favicon?: string;
+    siteName?: string;
+    image?: string;
+}
+
+function safeHostname(url: string): string {
+    try { return new URL(url).hostname; } catch { return url; }
+}
+
+function renderEmbedPreview(container: HTMLElement, meta: EmbedMetadata) {
+    const videoId = YOUTUBE_URL_REGEX.test(meta.url)
+        ? meta.url.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/)?.[1]
+        : null;
+
+    if (videoId) {
+        const origin = window.location.origin;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'link-embed-video';
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?origin=${encodeURIComponent(origin)}&rel=0`;
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+        iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+        iframe.loading = 'lazy';
+        wrapper.appendChild(iframe);
+        container.appendChild(wrapper);
+        return;
+    }
+
+    // Card preview
+    const card = document.createElement('a');
+    card.className = 'link-embed-card';
+    card.href = meta.url;
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
+
+    const imgWrap = document.createElement('div');
+    imgWrap.className = 'link-embed-card-image-wrapper';
+    if (meta.image) {
+        const img = document.createElement('img');
+        img.className = 'link-embed-card-image';
+        img.src = meta.image;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.onerror = () => {
+            imgWrap.innerHTML = '<div class="link-embed-card-image-placeholder">&#128279;</div>';
+        };
+        imgWrap.appendChild(img);
+    } else {
+        imgWrap.innerHTML = '<div class="link-embed-card-image-placeholder">&#128279;</div>';
+    }
+    card.appendChild(imgWrap);
+
+    const content = document.createElement('div');
+    content.className = 'link-embed-card-content';
+    if (meta.title) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'link-embed-card-title';
+        titleEl.textContent = meta.title;
+        content.appendChild(titleEl);
+    }
+    if (meta.description) {
+        const descEl = document.createElement('div');
+        descEl.className = 'link-embed-card-description';
+        descEl.textContent = meta.description;
+        content.appendChild(descEl);
+    }
+    const urlEl = document.createElement('div');
+    urlEl.className = 'link-embed-card-url';
+    urlEl.textContent = meta.siteName || safeHostname(meta.url);
+    content.appendChild(urlEl);
+
+    card.appendChild(content);
+    container.appendChild(card);
+}
+
+function renderMentionPreview(container: HTMLElement, meta: { url: string; title?: string; favicon?: string }) {
+    const link = document.createElement('a');
+    link.className = 'link-embed-mention';
+    link.href = meta.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+
+    if (meta.favicon) {
+        const img = document.createElement('img');
+        img.className = 'link-embed-mention-favicon';
+        img.src = meta.favicon;
+        img.width = 16;
+        img.height = 16;
+        img.onerror = () => {
+            const dot = document.createElement('span');
+            dot.className = 'link-embed-mention-dot';
+            img.replaceWith(dot);
+        };
+        link.appendChild(img);
+    } else {
+        const dot = document.createElement('span');
+        dot.className = 'link-embed-mention-dot';
+        link.appendChild(dot);
+    }
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'link-embed-mention-title';
+    titleSpan.textContent = meta.title || safeHostname(meta.url);
+    link.appendChild(titleSpan);
+
+    container.appendChild(link);
+}
+
+// These are exported so the read-only renderer can reuse them.
+export { renderEmbedPreview, renderMentionPreview, type EmbedMetadata };
 
 class InsertLinkEmbedCommand extends Command {
     override execute() {
@@ -395,59 +540,74 @@ class LinkEmbedPasteHandler extends Plugin {
 
     /**
      * Replaces the pasted URL at the captured position with the chosen format.
-     * Searches only within the specific parent element and picks the match
-     * closest to the recorded child offset.
+     * Fetches metadata from the server first, then inserts with all attributes.
      */
     private _convertPastedUrl(url: string, mode: 'mention' | 'embed', location: PasteLocation) {
         const editor = this.editor;
+        const editorEl = editor.editing.view.getDomRoot();
+        const component = glob.getComponentByEl<EditorComponent>(editorEl);
 
-        editor.model.change((writer) => {
-            const root = editor.model.document.getRoot();
-            if (!root) return;
+        // Fetch metadata asynchronously, then insert into the model
+        component.fetchLinkMetadata(url).then((metadata: EmbedMetadata) => {
+            editor.model.change((writer) => {
+                const root = editor.model.document.getRoot();
+                if (!root) return;
 
-            // Resolve the parent element from the captured path
-            let parentEl = root as ReturnType<typeof root.getChild>;
-            for (const idx of location.parentPath) {
-                if (!parentEl || typeof (parentEl as any).getChild !== 'function') return;
-                parentEl = (parentEl as any).getChild(idx);
-            }
-            if (!parentEl || !parentEl.is('element')) return;
-
-            // Find the URL text closest to the recorded offset
-            const parentRange = writer.createRangeIn(parentEl);
-            let bestStart: Position | null = null;
-            let bestEnd: Position | null = null;
-            let bestDistance = Infinity;
-
-            for (const item of parentRange.getWalker()) {
-                if (!item.item.is('$textProxy')) continue;
-
-                const text = item.item.data;
-                const idx = text.indexOf(url);
-                if (idx === -1) continue;
-
-                const startOff = item.item.startOffset! + idx;
-                const distance = Math.abs(startOff - location.childOffset);
-
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    bestStart = writer.createPositionAt(parentEl, startOff);
-                    bestEnd = writer.createPositionAt(parentEl, startOff + url.length);
+                // Resolve the parent element from the captured path
+                let parentEl = root as ReturnType<typeof root.getChild>;
+                for (const idx of location.parentPath) {
+                    if (!parentEl || typeof (parentEl as any).getChild !== 'function') return;
+                    parentEl = (parentEl as any).getChild(idx);
                 }
-            }
+                if (!parentEl || !parentEl.is('element')) return;
 
-            if (!bestStart || !bestEnd) return;
+                // Find the URL text closest to the recorded offset
+                const parentRange = writer.createRangeIn(parentEl);
+                let bestStart: Position | null = null;
+                let bestEnd: Position | null = null;
+                let bestDistance = Infinity;
 
-            const urlRange = writer.createRange(bestStart, bestEnd);
-            writer.setSelection(urlRange);
-            editor.model.deleteContent(editor.model.document.selection);
+                for (const item of parentRange.getWalker()) {
+                    if (!item.item.is('$textProxy')) continue;
 
-            if (mode === 'mention') {
-                editor.model.insertContent(writer.createElement('linkMention', { url }));
-            } else {
-                const embedType = YOUTUBE_URL_REGEX.test(url) ? 'youtube' : 'opengraph';
-                editor.model.insertContent(writer.createElement('linkEmbed', { url, embedType }));
-            }
+                    const text = item.item.data;
+                    const idx = text.indexOf(url);
+                    if (idx === -1) continue;
+
+                    const startOff = item.item.startOffset! + idx;
+                    const distance = Math.abs(startOff - location.childOffset);
+
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        bestStart = writer.createPositionAt(parentEl, startOff);
+                        bestEnd = writer.createPositionAt(parentEl, startOff + url.length);
+                    }
+                }
+
+                if (!bestStart || !bestEnd) return;
+
+                const urlRange = writer.createRange(bestStart, bestEnd);
+                writer.setSelection(urlRange);
+                editor.model.deleteContent(editor.model.document.selection);
+
+                if (mode === 'mention') {
+                    editor.model.insertContent(writer.createElement('linkMention', {
+                        url: metadata.url,
+                        title: metadata.title,
+                        favicon: metadata.favicon
+                    }));
+                } else {
+                    editor.model.insertContent(writer.createElement('linkEmbed', {
+                        url: metadata.url,
+                        embedType: metadata.embedType,
+                        title: metadata.title,
+                        description: metadata.description,
+                        favicon: metadata.favicon,
+                        siteName: metadata.siteName,
+                        image: metadata.image
+                    }));
+                }
+            });
         });
     }
 

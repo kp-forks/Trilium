@@ -1,4 +1,5 @@
 import "./ReadOnlyText.css";
+import "./LinkEmbed.css";
 // we load CKEditor also for read only notes because they contain content styles required for correct rendering of even read only notes
 // we could load just ckeditor-content.css but that causes CSS conflicts when both build CSS and this content CSS is loaded at the same time
 // (see https://github.com/zadam/trilium/issues/1590 for example of such conflict)
@@ -18,7 +19,7 @@ import { useNoteBlob, useNoteLabel, useSyncedRef, useTriliumEvent, useTriliumOpt
 import { RawHtmlBlock } from "../../react/RawHtml";
 import TouchBar, { TouchBarButton, TouchBarSpacer } from "../../react/TouchBar";
 import { TypeWidgetProps } from "../type_widget";
-import linkEmbedService from "../../../services/link_embed";
+import { renderEmbedPreview, renderMentionPreview } from "@triliumnext/ckeditor5";
 import { applyReferenceLinks } from "./read_only_helper";
 import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./utils";
 
@@ -155,15 +156,28 @@ function applyIncludedNotes(container: HTMLDivElement) {
 function applyLinkEmbeds(container: HTMLDivElement) {
     for (const embed of container.querySelectorAll<HTMLElement>("section.link-embed")) {
         const url = embed.dataset.url;
-        const embedType = embed.dataset.embedType;
         if (!url) continue;
-        linkEmbedService.renderPreview(url, embedType || "opengraph", $(embed));
+        embed.innerHTML = "";
+        renderEmbedPreview(embed, {
+            url,
+            embedType: embed.dataset.embedType || "opengraph",
+            title: embed.dataset.title,
+            description: embed.dataset.description,
+            favicon: embed.dataset.favicon,
+            siteName: embed.dataset.siteName,
+            image: embed.dataset.image
+        });
     }
 
     for (const mention of container.querySelectorAll<HTMLElement>("span.link-mention")) {
         const url = mention.dataset.url;
         if (!url) continue;
-        linkEmbedService.renderMention(url, $(mention));
+        mention.innerHTML = "";
+        renderMentionPreview(mention, {
+            url,
+            title: mention.dataset.title,
+            favicon: mention.dataset.favicon
+        });
     }
 }
 

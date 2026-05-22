@@ -326,18 +326,21 @@ function renderText(result: Result, note: SNote | BNote) {
     };
     const document = parse(result.content || "", parseOpts);
 
-    // Process link mentions (inline).
+    // Process link mentions (inline) — metadata is stored in data attributes.
     for (const mentionEl of document.querySelectorAll("span.link-mention")) {
         const url = mentionEl.getAttribute("data-url");
         if (!url) continue;
-        const hostname = safeHostnameForShare(url);
-        const favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`;
+        const title = mentionEl.getAttribute("data-title") || safeHostnameForShare(url);
+        const favicon = mentionEl.getAttribute("data-favicon");
+        const faviconHtml = favicon
+            ? `<img class="link-embed-mention-favicon" src="${escapeHtml(favicon)}" width="16" height="16">`
+            : `<span class="link-embed-mention-dot"></span>`;
         mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
-            `<img class="link-embed-mention-favicon" src="${escapeHtml(favicon)}" width="16" height="16">` +
-            `<span class="link-embed-mention-title">${escapeHtml(hostname)}</span></a>`;
+            faviconHtml +
+            `<span class="link-embed-mention-title">${escapeHtml(title)}</span></a>`;
     }
 
-    // Process link embeds (block).
+    // Process link embeds (block) — metadata is stored in data attributes.
     for (const embedEl of document.querySelectorAll("section.link-embed")) {
         const url = embedEl.getAttribute("data-url");
         const embedType = embedEl.getAttribute("data-embed-type");
@@ -349,10 +352,19 @@ function renderText(result: Result, note: SNote | BNote) {
                 embedEl.innerHTML = `<div class="link-embed-video"><iframe src="https://www.youtube-nocookie.com/embed/${escapeHtml(videoId)}?rel=0" frameborder="0" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;aspect-ratio:16/9;border:none;"></iframe></div>`;
             }
         } else {
-            const hostname = safeHostnameForShare(url);
+            const title = embedEl.getAttribute("data-title") || safeHostnameForShare(url);
+            const description = embedEl.getAttribute("data-description");
+            const image = embedEl.getAttribute("data-image");
+            const siteName = embedEl.getAttribute("data-site-name") || safeHostnameForShare(url);
+
+            const imageHtml = image
+                ? `<div class="link-embed-card-image-wrapper"><img class="link-embed-card-image" src="${escapeHtml(image)}" alt="" loading="lazy"></div>`
+                : `<div class="link-embed-card-image-wrapper"><div class="link-embed-card-image-placeholder">&#128279;</div></div>`;
+            const descHtml = description ? `<div class="link-embed-card-description">${escapeHtml(description)}</div>` : "";
+
             embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
-                `<div class="link-embed-card-image-wrapper"><div class="link-embed-card-image-placeholder">&#128279;</div></div>` +
-                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(hostname)}</div><div class="link-embed-card-url">${escapeHtml(url)}</div></div></a>`;
+                imageHtml +
+                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(title)}</div>${descHtml}<div class="link-embed-card-url">${escapeHtml(siteName)}</div></div></a>`;
         }
     }
 

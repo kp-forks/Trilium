@@ -25,17 +25,19 @@ export default function LinkEmbedDialog() {
         setShown(true);
     });
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const trimmedUrl = url.trim();
         if (!trimmedUrl || !editorApiRef.current) return;
 
-        if (mode === "mention") {
-            editorApiRef.current.addLinkMention(trimmedUrl);
-        } else if (mode === "url") {
+        if (mode === "url") {
             editorApiRef.current.addLinkToEditor(trimmedUrl, trimmedUrl);
         } else {
-            const embedType = linkEmbedService.detectEmbedType(trimmedUrl);
-            editorApiRef.current.addLinkEmbed(trimmedUrl, embedType);
+            const metadata = await linkEmbedService.fetchMetadata(trimmedUrl);
+            if (mode === "mention") {
+                editorApiRef.current.addLinkMention(metadata);
+            } else {
+                editorApiRef.current.addLinkEmbed(metadata);
+            }
         }
         setShown(false);
     };

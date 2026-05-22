@@ -6,6 +6,7 @@ import { ValidationError } from "@triliumnext/core";
 
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_RESPONSE_SIZE = 512 * 1024; // 512KB
+const MAX_FAVICON_SIZE = 64 * 1024; // 64KB
 
 const YOUTUBE_REGEX = /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
 
@@ -50,6 +51,54 @@ function validateUrl(urlString: string): URL {
 }
 
 /**
+ * Downloads a favicon and returns it as a base64 data URI.
+ * Returns undefined if the download fails or the image is too large.
+ */
+async function downloadFaviconAsDataUri(faviconUrl: string): Promise<string | undefined> {
+    try {
+        const response = await fetch(faviconUrl, {
+            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+            redirect: "follow"
+        });
+
+        if (!response.ok) return undefined;
+
+        const contentType = response.headers.get("content-type") || "image/x-icon";
+        const buffer = await response.arrayBuffer();
+
+        if (buffer.byteLength > MAX_FAVICON_SIZE) return undefined;
+
+        const base64 = Buffer.from(buffer).toString("base64");
+        return `data:${contentType.split(";")[0]};base64,${base64}`;
+    } catch {
+        return undefined;
+    }
+}
+
+/**
+ * Resolves a favicon URL from the parsed HTML, then downloads it as a data URI.
+ */
+async function resolveFavicon(document: ReturnType<typeof parse>, pageUrl: string): Promise<string | undefined> {
+    const faviconEl = document.querySelector('link[rel="icon"]')
+        || document.querySelector('link[rel="shortcut icon"]')
+        || document.querySelector('link[rel="apple-touch-icon"]');
+
+    let faviconUrl: string | undefined;
+    if (faviconEl) {
+        const href = faviconEl.getAttribute("href");
+        if (href) {
+            try { faviconUrl = new URL(href, pageUrl).toString(); } catch { /* ignore */ }
+        }
+    }
+    if (!faviconUrl) {
+        try { faviconUrl = `${new URL(pageUrl).origin}/favicon.ico`; } catch { /* ignore */ }
+    }
+
+    if (!faviconUrl) return undefined;
+    return await downloadFaviconAsDataUri(faviconUrl);
+}
+
+/**
  * Fetches YouTube metadata via the public oEmbed endpoint.
  * This works reliably unlike scraping youtube.com (which blocks bots).
  */
@@ -57,10 +106,12 @@ async function fetchYouTubeMetadata(url: string, videoId: string): Promise<LinkE
     const metadata: LinkEmbedMetadata = {
         url,
         image: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-        favicon: "https://www.youtube.com/favicon.ico",
         siteName: "YouTube",
         embedType: "youtube"
     };
+
+    // Download YouTube favicon as data URI
+    metadata.favicon = await downloadFaviconAsDataUri("https://www.youtube.com/favicon.ico");
 
     try {
         const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
@@ -106,19 +157,7 @@ async function fetchOpenGraphData(url: string) {
         return undefined;
     };
 
-    const faviconEl = document.querySelector('link[rel="icon"]')
-        || document.querySelector('link[rel="shortcut icon"]')
-        || document.querySelector('link[rel="apple-touch-icon"]');
-    let favicon: string | undefined;
-    if (faviconEl) {
-        const href = faviconEl.getAttribute("href");
-        if (href) {
-            try { favicon = new URL(href, url).toString(); } catch { /* ignore */ }
-        }
-    }
-    if (!favicon) {
-        try { favicon = `${new URL(url).origin}/favicon.ico`; } catch { /* ignore */ }
-    }
+    const favicon = await resolveFavicon(document, url);
 
     return {
         title: getMeta("og:title") || document.querySelector("title")?.textContent || undefined,
