@@ -126,9 +126,16 @@ To use TriliumNext on a mobile device, you can use a mobile web browser to acces
 
 See issue https://github.com/TriliumNext/Trilium/issues/4962 for more information on mobile app support.
 
+#### TriliumDroid
+
 If you prefer a native Android app, you can use [TriliumDroid](https://apt.izzysoft.de/fdroid/index/apk/eu.fliegendewurst.triliumdroid).
 Report bugs and missing features at [their repository](https://github.com/FliegendeWurst/TriliumDroid).
 Note: It is best to disable automatic updates on your server installation (see below) when using TriliumDroid since the sync version must match between Trilium and TriliumDroid.
+
+#### Pocket Trilium
+
+If you want a full-featured native Android app, check out [Pocket Trilium](https://github.com/Nriver/pocket-trilium).
+It runs a complete Trilium instance on your phone, supports full offline use, and allows you to sync with your server.
 
 ### Server
 
