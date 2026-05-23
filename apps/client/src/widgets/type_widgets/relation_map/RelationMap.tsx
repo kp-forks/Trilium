@@ -402,6 +402,18 @@ function useNoteDragging({ containerRef, mapApiRef }: {
     return dragProps;
 }
 
+export function setupAnswerEventHandlers($answer: JQuery<HTMLElement>) {
+    $answer.on("keydown", (e) => {
+        if (e.key === "Enter") {
+            $answer[0].dispatchEvent(new Event("input", { bubbles: true }));
+        }
+    });
+
+    $answer.on("blur", () => {
+        $answer[0].dispatchEvent(new Event("input", { bubbles: true }));
+    });
+}
+
 function useRelationCreation({ mapApiRef, jsPlumbApiRef }: { mapApiRef: RefObject<RelationMapApi>, jsPlumbApiRef: RefObject<jsPlumbInstance> }) {
     const connectionCallback = useCallback(async (info: OnConnectionBindInfo, originalEvent: Event) => {
         const connection = info.connection;

@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     pnpm2nix = {
-      url = "github:TriliumNext/pnpm2nix-nzbr/fix/optional_dependencies_filtering";
+      url = "github:TriliumNext/pnpm2nix-nzbr/main";
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs.follows = "nixpkgs";
@@ -30,9 +30,9 @@
         # This patch deduplicates entries in PATH, which results in an equivalent but shorter entry.
         # https://github.com/pnpm/pnpm/issues/6106
         # https://github.com/pnpm/pnpm/issues/8552
-        pnpm = (pkgs.pnpm_10.overrideAttrs (prev: {
+        pnpm = (pkgs.pnpm_11.overrideAttrs (prev: {
           postInstall = prev.postInstall + ''
-            patch $out/libexec/pnpm/dist/pnpm.cjs ${./patches/pnpm-PATH-reduction.patch}
+            patch $out/libexec/pnpm/dist/pnpm.mjs ${./patches/pnpm-PATH-reduction.patch}
           '';
         }));
         inherit (pkgs)
@@ -202,7 +202,7 @@
               "apps/dump-db"
               "apps/edit-docs"
               "apps/server"
-              "apps/server-e2e"
+              "packages/trilium-e2e"
             ];
 
             desktopItems = lib.optionals (app == "desktop") [
@@ -225,11 +225,8 @@
 
         desktop = makeApp {
           app = "desktop";
-          # pnpm throws an error at the end of `pnpm postinstall`, but it doesn't seem to matter:
-          # ENOENT: no such file or directory, lstat
-          # '/build/source/apps/desktop/node_modules/better-sqlite3/build/node_gyp_bins'
           preBuildCommands = ''
-            export npm_config_nodedir=${electron.headers}
+            export ELECTRON_NODEDIR=${electron.headers}
             pnpm postinstall
           '';
           buildTask = "desktop:build";
@@ -286,7 +283,7 @@
         edit-docs = makeApp {
           app = "edit-docs";
           preBuildCommands = ''
-            export npm_config_nodedir=${electron.headers}
+            export ELECTRON_NODEDIR=${electron.headers}
             pnpm postinstall
           '';
           buildTask = "edit-docs:build";

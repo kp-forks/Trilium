@@ -53,7 +53,7 @@ function ProviderSettings() {
     }, [providers, setProviders]);
 
     return (
-        <OptionsSection title={t("llm.settings_title")}>
+        <OptionsSection title={t("llm.settings_title")} helpUrl="GBBMSlVSOIGP">
             <p className="form-text">{t("llm.settings_description")}</p>
 
             <Button
