@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import $ from "jquery";
+import { beforeEach,describe, expect, it, vi } from "vitest";
+
 import dialog from "../../../services/dialog";
 
 vi.mock("../../../services/utils", async (importOriginal) => {
@@ -8,7 +9,7 @@ vi.mock("../../../services/utils", async (importOriginal) => {
         ...actual,
         default: {
             ...actual.default,
-            filterAttributeName: vi.fn((val: string) => val.replace(/[^a-z0-9]/gi, ""))
+            filterAttributeName: vi.fn((val: string) => val.replace(/[^\p{L}\p{N}_:]/gu, ""))
         }
     };
 });
@@ -74,7 +75,7 @@ describe("IME composition handling - Chinese input (promptForRelationName)", () 
         expect(input.value).toBe("ning");
     });
 
-    it("filters invalid characters from input after IME composition ends", () => {
+    it("preserves valid Unicode characters after IME composition ends", () => {
         input.dispatchEvent(new Event("compositionstart"));
 
         // intermediate pinyin
@@ -87,7 +88,7 @@ describe("IME composition handling - Chinese input (promptForRelationName)", () 
         input.value = "你";
         input.dispatchEvent(new Event("compositionend"));
 
-        expect(input.value).toBe("");
+        expect(input.value).toBe("你");
     });
 
     it("allows normal latin input after Chinese composition ends", () => {
@@ -114,6 +115,6 @@ describe("IME composition handling - Chinese input (promptForRelationName)", () 
         input.value = "好";
         input.dispatchEvent(new Event("compositionend"));
 
-        expect(input.value).toBe("");
+        expect(input.value).toBe("好");
     });
 });
