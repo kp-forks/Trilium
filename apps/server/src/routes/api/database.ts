@@ -4,7 +4,6 @@ import type { Request, Response } from "express";
 import fs, { readFileSync } from "fs";
 import path from "path";
 
-import { getIntegrationTestDbPath } from "../../core_assets.js";
 import anonymizationService from "../../services/anonymization.js";
 import consistencyChecksService from "../../services/consistency_checks.js";
 import dataDir from "../../services/data_dir.js";
@@ -33,12 +32,7 @@ function findAndFixConsistencyIssues() {
 }
 
 async function rebuildIntegrationTestDatabase() {
-    // Reload the integration test database fixture into the in-memory SQL
-    // backend, then re-init schema-dependent state and the becca cache.
-    // Test-mode only — registered in routes.ts under the same env-var guard.
-    // getIntegrationTestDbPath() handles the bundled-vs-source path
-    // resolution; see core_assets.ts.
-    const fixtureBytes = readFileSync(getIntegrationTestDbPath());
+    const fixtureBytes = readFileSync(dataDir.DOCUMENT_PATH);
     sql.rebuildFromBuffer(fixtureBytes);
     sql_init.initializeDb();
     becca_loader.load();
