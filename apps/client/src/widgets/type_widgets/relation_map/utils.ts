@@ -50,6 +50,16 @@ export function promptForRelationName(defaultValue?: string): Promise<string | n
                 $answer.val(attrName);
             });
 
+            $answer.on("keydown", (e) => {
+                if (e.key === "Enter") {
+                    $answer[0].dispatchEvent(new Event("input", { bubbles: true }));
+                }
+            });
+
+            $answer.on("blur", () => {
+                $answer[0].dispatchEvent(new Event("input", { bubbles: true }));
+            });
+
             attribute_autocomplete.initAttributeNameAutocomplete({
                 $el: $answer,
                 attributeType: "relation",
