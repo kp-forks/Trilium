@@ -178,8 +178,8 @@ importers:
         version: link:../server
     devDependencies:
       '@redocly/cli':
-        specifier: 2.31.1
-        version: 2.31.1(@opentelemetry/api@1.9.1)(core-js@3.49.0)(encoding@0.1.13)
+        specifier: 2.31.2
+        version: 2.31.2(@opentelemetry/api@1.9.1)(core-js@3.49.0)(encoding@0.1.13)
       archiver:
         specifier: 8.0.0
         version: 8.0.0
@@ -2502,7 +2502,7 @@ packages:
     engines: {node: '>=14'}
 
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
+    resolution: {gitHosted: true, integrity: sha512-MXgzlTDEEndJB3TBbvd5uFQO/8gaINo1Hfen8vef5rq/VHVPeB63uuv/uO5+8GFsAJ/rauu6XB79S6K4+aXc+w==, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
     version: 10.2.0-electron.1
     engines: {node: '>=12.13.0'}
     hasBin: true
@@ -4812,8 +4812,8 @@ packages:
   '@redocly/cli-otel@0.3.1':
     resolution: {integrity: sha512-TbC4bK2zLtU/O9I2pszHPP0rtJOvFhQmEwQ/FHxERPu71fgKG8POUDP2jSiGmsXE7NdGSHBKqnf+y9Acn2jq5g==}
 
-  '@redocly/cli@2.31.1':
-    resolution: {integrity: sha512-eOyKMW3udQwIH2TvgRNeNtgzenNR8PHbvON4oYbr7uAQ2XGJnq9X24fsSgiZIuSFTm+XqMDmf888B5yMnFaxgQ==}
+  '@redocly/cli@2.31.2':
+    resolution: {integrity: sha512-MqO0I6UvB4d7VOTOrYAbVwS+AgUZ4Bxp7d2vCbUseiEYGxArvkzXtwWNLfNKryXvUrVB8kfmvLuRp7LLHFvvDA==}
     engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
     hasBin: true
 
@@ -4827,12 +4827,12 @@ packages:
     resolution: {integrity: sha512-y+xFx+Zz54Xhr8jUdnLENYnt7Y7GEDL6Q03ga7rTtX8DVwefX9H+hQEPgJp1nda7vdH+wJ9/HBVvyfBuW9x6rA==}
     engines: {node: '>=18.17.0', npm: '>=9.5.0'}
 
-  '@redocly/openapi-core@2.31.1':
-    resolution: {integrity: sha512-sPf5eS8oh4EYFAzha/JWSZ0eInhFaGoO4MaF8wkZEiL4lTpZPLN7D9RABWcXn/9xTljIQsX+bEBY3rhN44UhGg==}
+  '@redocly/openapi-core@2.31.2':
+    resolution: {integrity: sha512-qKXAdKTRKqWArIWbMOHOELJGgfISMFD5pK0w5CaklH8LAn5M6BbyCocqz52IqMMUIiEyAsqb46a4vtuqPhLZwg==}
     engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
 
-  '@redocly/respect-core@2.31.1':
-    resolution: {integrity: sha512-KW/ismQ6/v95GPWTKhWTO0Lp7UIhPKJU7Gc1GFTpRJRxbM3Ail2eJ/I0jpPlMr4geze+O2zQV0h9jI4co6hhIQ==}
+  '@redocly/respect-core@2.31.2':
+    resolution: {integrity: sha512-M5zQV9M8uazCl46EVKKjWPo7M8EFNHFQOdovhqH+IfdAop5kHPi1fR1xSwrckak84XON0a+CqPU7z7+YCON0Bg==}
     engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
 
   '@replit/codemirror-indentation-markers@6.5.3':
@@ -17622,15 +17622,15 @@ snapshots:
     dependencies:
       ulid: 2.4.0
 
-  '@redocly/cli@2.31.1(@opentelemetry/api@1.9.1)(core-js@3.49.0)(encoding@0.1.13)':
+  '@redocly/cli@2.31.2(@opentelemetry/api@1.9.1)(core-js@3.49.0)(encoding@0.1.13)':
     dependencies:
       '@opentelemetry/exporter-trace-otlp-http': 0.214.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources': 2.6.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-node': 2.6.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/semantic-conventions': 1.40.0
       '@redocly/cli-otel': 0.3.1
-      '@redocly/openapi-core': 2.31.1
-      '@redocly/respect-core': 2.31.1
+      '@redocly/openapi-core': 2.31.2
+      '@redocly/respect-core': 2.31.2
       ajv: '@redocly/ajv@8.18.1'
       ajv-formats: 3.0.1(@redocly/ajv@8.18.1)
       colorette: 1.4.0
@@ -17682,7 +17682,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@redocly/openapi-core@2.31.1':
+  '@redocly/openapi-core@2.31.2':
     dependencies:
       '@redocly/ajv': 8.18.1
       '@redocly/config': 0.48.2
@@ -17695,12 +17695,12 @@ snapshots:
       pluralize: 8.0.0
       yaml-ast-parser: 0.0.43
 
-  '@redocly/respect-core@2.31.1':
+  '@redocly/respect-core@2.31.2':
     dependencies:
       '@faker-js/faker': 7.6.0
       '@noble/hashes': 1.8.0
       '@redocly/ajv': 8.18.1
-      '@redocly/openapi-core': 2.31.1
+      '@redocly/openapi-core': 2.31.2
       ajv: '@redocly/ajv@8.18.1'
       better-ajv-errors: 2.0.3(@redocly/ajv@8.18.1)
       colorette: 2.0.20
@@ -26194,7 +26194,7 @@ snapshots:
       classnames: 2.5.1
       core-js: 3.49.0
       decko: 1.2.0
-      dompurify: 3.4.3
+      dompurify: 3.4.5
       eventemitter3: 5.0.4
       json-pointer: 0.6.2
       lunr: 2.3.9
