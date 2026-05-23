@@ -190,7 +190,13 @@
     "zen-mode": "وضع التركيز (Zen Mode)",
     "llm-title": "الذكاء الاصطناعي / نموذج اللغة الكبير (LLM)",
     "tab-switcher-title": "مبدّل علامات التبويب (Tab Switcher)",
-    "sidebar-chat-title": "محادثة الذكاء الاصطناعي"
+    "sidebar-chat-title": "محادثة الذكاء الاصطناعي",
+    "task-state-none": "لاشيء",
+    "task-state-doing": "قيد التنفيذ",
+    "task-state-done": "تم",
+    "task-state-maybe": "ربما",
+    "task-state-cancelled": "تم الالغاء",
+    "task-state-attr-color": "لون"
   },
   "tray": {
     "bookmarks": "العلامات المرجعية",

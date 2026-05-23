@@ -336,7 +336,8 @@
     "switch_to_mobile_version": "التبديل الى اصدار الهاتف المحمول",
     "switch_to_desktop_version": "التبديل الى اصدار سطح المكتب",
     "show_shared_notes_subtree": "عرض شجرة الملاحظات المشتركة",
-    "open_sql_console_history": "فتح سجل لوحة تحكم SQL"
+    "open_sql_console_history": "فتح سجل لوحة تحكم SQL",
+    "search_notes": "بحث في الملاحظات"
   },
   "zpetne_odkazy": {
     "relation": "العلاقة",
@@ -351,7 +352,9 @@
     "search": "بحث:",
     "change_note_icon": "تغيير ايقونة الملاحظة",
     "reset-default": "اعادة تعيين الى الايقونة الافتراضية",
-    "filter": "تصفية"
+    "filter": "تصفية",
+    "filter-none": "جميع الأيقونات",
+    "filter-default": "الأيقونات الافتراضية"
   },
   "basic_properties": {
     "language": "اللغة",
@@ -403,7 +406,8 @@
     "calculate": "حساب",
     "note_id": "معرف الملاحظة",
     "note_size": "حجم الملاحظة",
-    "title": "معلومات الملاحظة"
+    "title": "معلومات الملاحظة",
+    "mime": "نوع MIME"
   },
   "note_paths": {
     "search": "بحث",
@@ -765,11 +769,14 @@
   "images": {
     "images_section_title": "صور",
     "max_image_dimensions_unit": "بكسل",
-    "enable_image_compression": "تمكين ضغط الصورة"
+    "enable_image_compression": "تمكين ضغط الصورة",
+    "jpeg_quality": "جودة JPEG",
+    "ocr_min_confidence": "الحد الأدنى من الثقة"
   },
   "revisions_snapshot_limit": {
     "snapshot_number_limit_unit": "لقطات",
-    "note_revisions_snapshot_limit_title": "الحد الاقصى لنسخ الملاحظات الاحتياطية"
+    "note_revisions_snapshot_limit_title": "الحد الاقصى لنسخ الملاحظات الاحتياطية",
+    "snapshot_number_limit_label": "الحد الأقصى للإصدارات"
   },
   "search_engine": {
     "bing": "Bing",
@@ -888,7 +895,8 @@
   },
   "toc": {
     "options": "خيارات",
-    "table_of_contents": "جدول المحتويات"
+    "table_of_contents": "جدول المحتويات",
+    "no_headings": "بدون عناوين."
   },
   "tasks": {
     "due": {
@@ -925,7 +933,9 @@
   "call_to_action": {
     "dismiss": "تجاهل",
     "background_effects_button": "تفعيل مؤثرات الخلفية",
-    "next_theme_button": "جرب النسق الجديد"
+    "next_theme_button": "جرب النسق الجديد",
+    "new_layout_title": "تخطيط جديد",
+    "new_layout_button": "مزيد من المعلومات"
   },
   "units": {
     "percentage": "%"
@@ -974,7 +984,9 @@
     "edit-branch-prefix": "تعديل بادئة الفرع",
     "convert-to-attachment": "التحويل الى مرفق",
     "apply-bulk-actions": "‌تطبيق الاجراءات الجماعية",
-    "recent-changes-in-subtree": "التغييرات الاخيرة في الشجرة الفرعية"
+    "recent-changes-in-subtree": "التغييرات الاخيرة في الشجرة الفرعية",
+    "hide-subtree": "إخفاء الشجرة الفرعية",
+    "show-subtree": "إظهار الشجرة الفرعية"
   },
   "note_types": {
     "text": "نص",
@@ -999,7 +1011,9 @@
     "geo-map": "خريطة جغرافية",
     "task-list": "قائمة المهام",
     "spreadsheet": "جدول البيانات",
-    "markdown": "ماركداون"
+    "markdown": "ماركداون",
+    "ai-chat": "محادثة الذكاء الاصطناعي",
+    "llm-chat": "دردشة الذكاء الاصطناعي"
   },
   "shared_switch": {
     "shared": "مشترك",
@@ -1220,7 +1234,11 @@
     "advanced": "متقدم",
     "word_wrap_auto": "تلقائي",
     "word_wrap_on": "تشغيل",
-    "word_wrap_off": "ايقاف"
+    "word_wrap_off": "ايقاف",
+    "view_revisions": "إصدارات الملاحظة...",
+    "note_map": "خريطة الملاحظة",
+    "export_as_image_png": "PNG (صورة نقطية)",
+    "export_as_image_svg": "SVG (صورة متجهية)"
   },
   "update_available": {
     "update_available": "تحديث متوفر"
@@ -1341,7 +1359,8 @@
     "check_for_updates": "‪التحقق من وجود تحديثات تلقائية"
   },
   "tray": {
-    "title": "شريط النظام"
+    "title": "شريط النظام",
+    "enable_tray": "أيقونة شريط النظام"
   },
   "highlights_list": {
     "title": "قائمة النقاط المميزة",
@@ -1469,7 +1488,9 @@
     "related_settings": "اعدادات متعلقة"
   },
   "pagination": {
-    "total_notes": "{{count}} ملاحظات"
+    "total_notes": "{{count}} ملاحظات",
+    "prev_page": "الصفحة السابقة",
+    "next_page": "الصفحة التالية"
   },
   "mobile_detail_menu": {
     "note_revisions": "مراجعات الملاحظة",
@@ -1593,10 +1614,15 @@
     "failed_rendering": "فشل عرض خيار البحث: {{dto}} مع خطأ: {{error}} {{stack}}"
   },
   "revisions_snapshot_interval": {
-    "note_revisions_snapshot_interval_title": "الفاصل الزمني لنسخ الملاحظات الاحتياطية"
+    "note_revisions_snapshot_interval_title": "الفاصل الزمني لنسخ الملاحظات الاحتياطية",
+    "snapshot_time_interval_label": "الفاصل الزمني للّقطات"
   },
   "note_detail": {
-    "printing": "جار الطباعة ..."
+    "printing": "جار الطباعة ...",
+    "print_report_title": "طباعة التقرير",
+    "print_report_collection_details_button": "عرض التفاصيل",
+    "print_report_collection_details_ignored_notes": "الملاحظات المُتجاهلة",
+    "print_report_stack_trace": "تتبّع المكدس"
   },
   "attachment_detail_2": {
     "role_and_size": "الدور: {{role}}، الحجم: {{size}}",
@@ -1608,14 +1634,16 @@
   "note_title": {
     "placeholder": "اكتب عنوان الملاحظة هنا...",
     "note_type_switcher_templates": "قالب",
-    "note_type_switcher_collection": "مجموعة"
+    "note_type_switcher_collection": "مجموعة",
+    "promoted_attributes": "الخصائص المُروَّجة"
   },
   "image_context_menu": {
     "copy_reference_to_clipboard": "نسخ المرجع الى الحافظة",
     "copy_image_to_clipboard": "نسخ الصورة الى الحافظة"
   },
   "geo-map": {
-    "unable-to-load-map": "تعذر تحميل الخريطة."
+    "unable-to-load-map": "تعذر تحميل الخريطة.",
+    "create-child-note-text": "إضافة علامة"
   },
   "content_widget": {
     "unknown_widget": "عنصر واجهة غير معروف للمعرف \"{{id}}\"."
@@ -1687,7 +1715,16 @@
     "read_only_explicit": "قراءة فقط",
     "save_status_saved": "تم الحفظ",
     "save_status_saving": "جار الحفظ...",
-    "save_status_unsaved": "غير محفوظ"
+    "save_status_unsaved": "غير محفوظ",
+    "read_only_auto": "وضع القراءة فقط التلقائي",
+    "shared_publicly": "تمت مشاركته بشكل عام",
+    "shared_locally": "تمت مشاركته محليًا",
+    "read_only_temporarily_disabled": "قابل للتعديل مؤقتًا",
+    "clipped_note": "قصاصة ويب",
+    "execute_script": "تشغيل السكربت",
+    "execute_sql": "تشغيل SQL",
+    "shared_unshare": "إزالة المشاركة",
+    "save_status_error": "فشل الحفظ"
   },
   "breadcrumb": {
     "hoisted_badge": "مُفعَّل عليه التركيز",
@@ -1695,7 +1732,8 @@
     "workspace_badge": "مساحة العمل"
   },
   "pdf": {
-    "pages_loading": "تحميل..."
+    "pages_loading": "تحميل...",
+    "pages_alt": "صفحة{{pageNumber}}"
   },
   "bookmark_buttons": {
     "bookmarks": "الإشارات المرجعية"
@@ -1704,7 +1742,17 @@
     "type_widget": "عنصر واجهة",
     "menu_run_disabled": "يدويا",
     "menu_run_hourly": "ساعة",
-    "menu_run_daily": "يومي"
+    "menu_run_daily": "يومي",
+    "type_icon_pack": "حزمة الأيقونات",
+    "type_backend_script": "سكربت الخلفية",
+    "type_frontend_script": "سكربت الواجهة الأمامية",
+    "type_app_css": "CSS مخصص",
+    "type_render_note": "عرض الملاحظة",
+    "type_web_view": "عرض الويب",
+    "type_app_theme": "سِمة مخصصة",
+    "menu_docs": "فتح التوثيق",
+    "menu_run": "تشغيل تلقائي",
+    "menu_theme_base": "قاعدة السِمة"
   },
   "media": {
     "loop": "حلقة",
@@ -1747,7 +1795,10 @@
     "sample_xy": "XY",
     "sample_venn": "مخطط فن (Venn)",
     "sample_ishikawa": "مخطط إيشيكاوا (Ishikawa)",
-    "sample_treeview": "عرض الشجرة"
+    "sample_treeview": "عرض الشجرة",
+    "sample_diagrams": "نماذج مخططات:",
+    "sample_entity_relationship": "علاقة الكيانات",
+    "sample_user_journey": "رحلة المستخدم"
   },
   "llm_chat": {
     "send": "ارسال",
@@ -1759,14 +1810,28 @@
     "error": "خطأ",
     "tool_error": "فشل",
     "tokens": "رموز",
-    "stop": "إيقاف"
+    "stop": "إيقاف",
+    "retry": "إعادة المحاولة",
+    "web_search": "بحث الويب",
+    "note_tools": "وصول الملاحظة",
+    "extended_thinking": "تفكير موسّع",
+    "legacy_models": "النماذج القديمة",
+    "thought_process": "عملية التفكير"
   },
   "llm": {
     "provider_name": "اسم",
     "provider_type": "المجهز",
     "actions": "الإجراءات",
     "delete_provider": "حذف",
-    "cancel": "الغاء"
+    "cancel": "الغاء",
+    "add_provider": "إضافة مزود",
+    "configured_providers": "المزوّدون المُهيّؤون",
+    "api_key": "مفتاح API",
+    "mcp_enabled": "خادم MCP",
+    "mcp_endpoint_title": "رابط نقطة النهاية",
+    "tools": {
+      "search_notes": "بحث في الملاحظات"
+    }
   },
   "markdown_editor": {
     "image_upload_failed": "لا يمكن رفع الصورة \"{{name}}\"."
@@ -1790,10 +1855,19 @@
   },
   "mind-map": {
     "summary": "الملخص",
-    "link": "رابط"
+    "link": "رابط",
+    "addChild": "إضافة عنصر فرعي",
+    "addParent": "إضافة عنصر رئيسي",
+    "addSibling": "إضافة عنصر شقيق",
+    "removeNode": "ازالة العقدة",
+    "focus": "وضع التركيز",
+    "moveUp": "تحريك للأعلى",
+    "moveDown": "تحريك للاسفل",
+    "linkBidirectional": "رابط ثنائي الاتجاه"
   },
   "ocr": {
-    "processing": "جارٍ المعالجة..."
+    "processing": "جارٍ المعالجة...",
+    "process_now": "معالجة التعرف الضوئي على النص (OCR)"
   },
   "search": {
     "title": "بحث"
@@ -1806,7 +1880,8 @@
   },
   "status_bar": {
     "tab_width_style_spaces": "المسافات",
-    "tab_width_style_tabs": "علامات التبويب"
+    "tab_width_style_tabs": "علامات التبويب",
+    "note_paths_title": "مسارات الملاحظة"
   },
   "print_preview": {
     "close": "اغلاق",
@@ -1846,6 +1921,51 @@
     "create-new-document-options-empty": "فارغ",
     "server-password": "كلمة المرور",
     "language": "لغة",
-    "continue": "استمر"
+    "continue": "استمر",
+    "server-host-placeholder": "https://<hostname>:<port>",
+    "proxy-server-placeholder": "https://<hostname>:<port>"
+  },
+  "calendar_view": {
+    "delete_note": "جار حذف الملاحظة..."
+  },
+  "read-only-info": {
+    "edit-note": "تحرير الملاحظة"
+  },
+  "code_mime_types": {
+    "tooltip_syntax_highlighting": "تلوين بناء الجمل",
+    "tooltip_code_note_syntax": "ملاحظات الكود"
+  },
+  "experimental_features": {
+    "title": "الخيارات التجريبية",
+    "new_layout_name": "تخطيط جديد"
+  },
+  "settings_appearance": {
+    "ui": "واجهة المستخدم",
+    "ui_old_layout": "التخطيط القديم",
+    "ui_new_layout": "التخطيط الجديد"
+  },
+  "attributes_panel": {
+    "title": "خصائص الملاحظة"
+  },
+  "sql_result": {
+    "statement_result": "نتيجة الاستعلام",
+    "execute_now": "تنفيذ الآن"
+  },
+  "mobile_tab_switcher": {
+    "more_options": "مزيد من الخيارات"
+  },
+  "web_view_setup": {
+    "invalid_url_title": "عنوان غير صالح"
+  },
+  "setup_form": {
+    "more_info": "تعرف على المزيد"
+  },
+  "search_result": {
+    "search_now": "ابحث الآن"
+  },
+  "sidebar_chat": {
+    "title": "دردشة الذكاء الاصطناعي",
+    "history": "سجل المحادثة",
+    "recent_chats": "المحادثات الأخيرة"
   }
 }
