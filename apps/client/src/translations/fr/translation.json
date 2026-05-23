@@ -1094,7 +1094,7 @@
     "finding_and_fixing_message": "Recherche et résolution des problèmes de cohérence...",
     "issues_fixed_message": "Les problèmes de cohérence devraient être résolus.",
     "find_and_fix_label": "Identifier et corriger les problèmes de cohérence",
-    "find_and_fix_description": "Rechercher et corriger automatiquement tout problème de cohérence des données dans la base de données."
+    "find_and_fix_description": "Recherche et corrige automatiquement tout problème de cohérence des données dans la base."
   },
   "database_anonymization": {
     "title": "Anonymisation de la base de données",
@@ -2215,7 +2215,8 @@
     "empty_state": "Démarrer une conversation",
     "history": "Historique des discussions",
     "recent_chats": "Discussions récentes",
-    "no_chats": "Pas de discussions précédentes"
+    "no_chats": "Pas de discussions précédentes",
+    "view_all_chats": "Voir toutes les discussions"
   },
   "note-color": {
     "clear-color": "Retirer la couleur de la note",
