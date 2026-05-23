@@ -1,4 +1,5 @@
 import "./Markdown.css";
+import "./MarkdownCommons.css";
 
 import { autocompletion } from "@codemirror/autocomplete";
 import { syntaxTree } from "@codemirror/language";
