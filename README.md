@@ -137,6 +137,12 @@ Note: It is best to disable automatic updates on your server installation (see b
 If you want a full-featured native Android app, check out [Pocket Trilium](https://github.com/Nriver/pocket-trilium).
 It runs a complete Trilium instance on your phone, supports full offline use, and allows you to sync with your server.
 
+#### Trinote
+
+If you want a native iOS app, you can use [Trinote](https://apps.apple.com/us/app/trinote/id6761228249), an open-source client for your self-hosted Trilium / TriliumNext server.
+It lets you browse and organize your note tree, search for notes on the server, read and edit all note types (text, code, mindmap, spreadsheet, geomap, canvas, etc.), and keeps notes available and editable offline.
+Here's the [repo](https://github.com/StephenArg/Trinote) if you're interested in contributing and here's the [discord](https://discord.com/invite/ghjJG56EUS) server if you have any feedback or suggestions you want to discuss.
+
 ### Server
 
 To install TriliumNext on your own server (including via Docker from [Dockerhub](https://hub.docker.com/r/triliumnext/trilium)) follow [the server installation docs](https://docs.triliumnotes.org/user-guide/setup/server).
