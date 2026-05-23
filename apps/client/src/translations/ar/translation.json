@@ -354,7 +354,8 @@
     "reset-default": "اعادة تعيين الى الايقونة الافتراضية",
     "filter": "تصفية",
     "filter-none": "جميع الأيقونات",
-    "filter-default": "الأيقونات الافتراضية"
+    "filter-default": "الأيقونات الافتراضية",
+    "no_results": "لا توجد أيقونات."
   },
   "basic_properties": {
     "language": "اللغة",
@@ -377,7 +378,11 @@
     "collapse_all_notes": "طي كل الملاحظات",
     "include_archived_notes": "عرض الملاحظات المؤرشفة",
     "presentation": "عرض تقديمي",
-    "invalid_view_type": "نوع العرض {{type}} غير صالح"
+    "invalid_view_type": "نوع العرض {{type}} غير صالح",
+    "open_all_in_tabs": "فتح الكل",
+    "expand_first_level": "توسيع العناصر الفرعية المباشرة",
+    "expand_nth_level": "توسيع {{depth}} مستويات",
+    "expand_all_levels": "توسيع كل المستويات"
   },
   "file_properties": {
     "download": "تنزيل",
@@ -407,7 +412,8 @@
     "note_id": "معرف الملاحظة",
     "note_size": "حجم الملاحظة",
     "title": "معلومات الملاحظة",
-    "mime": "نوع MIME"
+    "mime": "نوع MIME",
+    "show_similar_notes": "عرض ملاحظات مشابهة"
   },
   "note_paths": {
     "search": "بحث",
@@ -731,7 +737,8 @@
   "max_content_width": {
     "max_width_unit": "بكسل",
     "title": "عرض المحتوى",
-    "max_width_label": "اقصى عرض للمحتوى"
+    "max_width_label": "اقصى عرض للمحتوى",
+    "centerContent": "إبقاء المحتوى في المنتصف"
   },
   "native_title_bar": {
     "enabled": "مفعل",
@@ -756,21 +763,25 @@
     "color_scheme_light": "فاتح",
     "color_scheme_dark": "داكن",
     "auto_theme": "اتباع مخطط ألوان النظام",
-    "triliumnext": "اتباع مخطط ألوان النظام"
+    "triliumnext": "اتباع مخطط ألوان النظام",
+    "color_scheme": "نظام الألوان"
   },
   "ui-performance": {
     "title": "أداء",
     "enable-shadows": "الضلال",
     "enable-smooth-scroll": "تمكين التمرير السلس",
-    "enable-motion": "تمكين الانتقالات والرسوم المتحركة"
+    "enable-motion": "تمكين الانتقالات والرسوم المتحركة",
+    "app-restart-required": "يتطلب إعادة تشغيل التطبيق"
   },
   "code_auto_read_only_size": {
     "unit": "حروف",
-    "title": "الحجم التلقائي للقراءه فقط"
+    "title": "الحجم التلقائي للقراءه فقط",
+    "label": "حجم القراءة فقط التلقائي"
   },
   "code-editor-options": {
     "title": "محرر",
-    "tab_width_unit": "المسافات"
+    "tab_width_unit": "المسافات",
+    "tab_width": "عرض التبويب"
   },
   "images": {
     "images_section_title": "صور",
@@ -782,7 +793,9 @@
     "ocr_auto_process": "معالجة الملفات الجديدة تلقائيًا",
     "batch_ocr_title": "معالجة الملفات الموجودة",
     "batch_ocr_start": "بدء المعالجة الدفعية",
-    "batch_ocr_starting": "جارٍ بدء المعالجة الدفعية..."
+    "batch_ocr_starting": "جارٍ بدء المعالجة الدفعية...",
+    "download_images_automatically": "تنزيل الصور تلقائيًا",
+    "max_image_dimensions": "الحد الأقصى لأبعاد الصور"
   },
   "revisions_snapshot_limit": {
     "snapshot_number_limit_unit": "لقطات",
@@ -810,7 +823,8 @@
   },
   "text_auto_read_only_size": {
     "unit": "حروف",
-    "title": "الحجم التلقائي للقراءة فقط"
+    "title": "الحجم التلقائي للقراءة فقط",
+    "label": "حجم القراءة فقط التلقائي"
   },
   "i18n": {
     "language": "لغة",
@@ -865,7 +879,8 @@
     "protected_session_timeout": "انتهاء مهلة الجلسة المحمية",
     "new_password_confirmation": "تاكيد كلمة المرور الجديدة",
     "cancel": "الغاء",
-    "change_password_description": "تحديث كلمة المرور الحالية الخاصة بك"
+    "change_password_description": "تحديث كلمة المرور الحالية الخاصة بك",
+    "reset_password": "إعادة تعيين كلمة المرور"
   },
   "shortcuts": {
     "shortcuts": "أختصارات",
@@ -922,7 +937,10 @@
     "word_wrapping": "التفاف النص",
     "color-scheme": "نظام الالوان",
     "match_app_appearance": "مطابقة مظهر التطبيق",
-    "always_use_one_theme": "استخدام سمة واحدة دائمًا"
+    "always_use_one_theme": "استخدام سمة واحدة دائمًا",
+    "theme_mode": "وضع السمة",
+    "light_theme": "السمة الفاتحة",
+    "dark_theme": "السمة الداكنة"
   },
   "table_view": {
     "sort-column-ascending": "تصاعدي",
@@ -1047,7 +1065,10 @@
   },
   "highlights_list_2": {
     "options": "خيارات",
-    "title": "قائمة التضليلات"
+    "title": "قائمة التضليلات",
+    "modal_title": "تهيئة قائمة التمييزات",
+    "menu_configure": "تهيئة قائمة التمييزات...",
+    "no_highlights": "لا توجد عناصر مميزة."
   },
   "quick-search": {
     "searching": "جار البحث...",
@@ -1067,7 +1088,8 @@
     "save-changes": "حفظ وتطبيق التغييرات",
     "saved-search-note-refreshed": "تم تحديث ملاحظة البحث المحفوظة.",
     "hoist-this-note-workspace": "تثبيت هذه الملاحظة (مساحة العمل)",
-    "refresh-saved-search-results": "تحديث نتائج البحث المحفوظة"
+    "refresh-saved-search-results": "تحديث نتائج البحث المحفوظة",
+    "subtree-hidden-moved-title": "تمت الإضافة إلى {{title}}"
   },
   "sql_table_schemas": {
     "tables": "جداول"
@@ -1107,7 +1129,8 @@
       "fixed": {
         "title": "مثبت"
       },
-      "label": "شريط ادوات التنسيق"
+      "label": "شريط ادوات التنسيق",
+      "toolbar_style": "نمط شريط الأدوات"
     }
   },
   "electron_context_menu": {
@@ -1150,7 +1173,8 @@
     "vector_dark": "متجه (داكن)",
     "show-scale": "اظهار المقياس",
     "display-week-numbers": "اظهار ارقام الاسابيع",
-    "max-nesting-depth": "العمق الاقصى للتداخل:"
+    "max-nesting-depth": "العمق الاقصى للتداخل:",
+    "show-labels": "إظهار أسماء العلامات"
   },
   "multi_factor_authentication": {
     "oauth_title": "OAuth/OpenID",
@@ -1257,7 +1281,9 @@
     "save_named_revision": "حفظ نسخة باسم...",
     "print_or_export_to_pdf": "طباعة / تصدير إلى PDF...",
     "open_note_on_server": "فتح الملاحظة على الخادم",
-    "word_wrap_auto_description": "اتباع الإعداد العام"
+    "word_wrap_auto_description": "اتباع الإعداد العام",
+    "word_wrap": "التفاف النص",
+    "export_as_image": "تصدير كصورة"
   },
   "update_available": {
     "update_available": "تحديث متوفر"
@@ -1288,7 +1314,8 @@
     "fix-nodes": "اصلاح العقد",
     "link-distance": "مسافة الرابط",
     "open_full": "توسيع للعرض الكامل",
-    "collapse": "طي الى الحجم الطبيعي"
+    "collapse": "طي الى الحجم الطبيعي",
+    "show-anyway": "عرض الخريطة"
   },
   "owned_attribute_list": {
     "owned_attributes": "السمات المملوكة"
@@ -1366,7 +1393,8 @@
     "title": "تحرير مساحة قاعدة البيانات",
     "button_text": "تحرير مساحة قاعدة البيانات",
     "vacuuming_database": "جار تحرير مساحة قاعدة الييانات...",
-    "database_vacuumed": "تم تنظيف قاعدة البيانات"
+    "database_vacuumed": "تم تنظيف قاعدة البيانات",
+    "vacuum_label": "تنظيف قاعدة البيانات"
   },
   "ribbon": {
     "widgets": "ادوات الشريط"
@@ -1397,7 +1425,8 @@
   "custom_date_time_format": {
     "format_string": "سلسلة التنسيق:",
     "formatted_time": "التاريخ/الوقت المنسق:",
-    "title": "تنسيق تاريخ/وقت مخصص"
+    "title": "تنسيق تاريخ/وقت مخصص",
+    "preview": "معاينة: {{preview}}"
   },
   "options_widget": {
     "options_status": "حالة الخيارات"
@@ -1405,7 +1434,10 @@
   "spellcheck": {
     "title": "التدقيق الاملائي",
     "enable": "تفعيل التدقيق الاملائي",
-    "language_code_label": "رمز اللغة او رموز اللغات"
+    "language_code_label": "رمز اللغة او رموز اللغات",
+    "custom_dictionary_title": "قاموس مخصص",
+    "custom_dictionary_edit": "كلمات مخصصة",
+    "custom_dictionary_open": "تعديل القاموس"
   },
   "note-map": {
     "button-link-map": "خريطة الروابط",
@@ -1435,7 +1467,8 @@
     "copy_title": "نسخ الى الحافظة",
     "theme_none": "بدون تمييز الصياغة",
     "tab_width_unit": "المسافات",
-    "click_to_copy": "انقر للنسخ"
+    "click_to_copy": "انقر للنسخ",
+    "tab_width": "عرض التبويب"
   },
   "link_context_menu": {
     "open_note_in_popup": "تحرير سريع"
@@ -1443,7 +1476,8 @@
   "electron_integration": {
     "desktop-application": "تطبيقات سطح المكتب",
     "zoom-factor": "عامل التكبير",
-    "native-title-bar": "شريط العنوان الاصلي"
+    "native-title-bar": "شريط العنوان الاصلي",
+    "background-effects": "تفعيل تأثيرات الخلفية"
   },
   "note_tooltip": {
     "quick-edit": "التحرير السريع",
@@ -1520,7 +1554,8 @@
     "insert_child_note": "ادراج ملاحظة فرعية",
     "delete_this_note": "حذف هذه الملاحظة",
     "error_unrecognized_command": "امر غير معروف {{command}}",
-    "backlinks": "الروابط الخلفية"
+    "backlinks": "الروابط الخلفية",
+    "content_language_switcher": "لغة المحتوى: {{language}}"
   },
   "move_to": {
     "notes_to_move": "الملاحظات المراد نقلها",
@@ -1648,7 +1683,9 @@
     "print_report_title": "طباعة التقرير",
     "print_report_collection_details_button": "عرض التفاصيل",
     "print_report_collection_details_ignored_notes": "الملاحظات المُتجاهلة",
-    "print_report_stack_trace": "تتبّع المكدس"
+    "print_report_stack_trace": "تتبّع المكدس",
+    "printing_pdf": "جارٍ إعداد معاينة الطباعة...",
+    "print_report_error_title": "فشل في الطباعة"
   },
   "attachment_detail_2": {
     "role_and_size": "الدور: {{role}}، الحجم: {{size}}",
@@ -1664,7 +1701,8 @@
     "promoted_attributes": "الخصائص المُروَّجة",
     "created_on": "تم الإنشاء في <Value />",
     "last_modified": "تم التعديل في <Value />",
-    "note_type_switcher_label": "التبديل من {{type}} إلى:"
+    "note_type_switcher_label": "التبديل من {{type}} إلى:",
+    "note_type_switcher_others": "نوع ملاحظة آخر"
   },
   "image_context_menu": {
     "copy_reference_to_clipboard": "نسخ المرجع الى الحافظة",
@@ -1756,13 +1794,15 @@
     "save_status_error": "فشل الحفظ",
     "shared_copy_to_clipboard": "نسخ الرابط إلى الحافظة",
     "shared_open_in_browser": "فتح الرابط في المتصفح",
-    "save_status_saving_tooltip": "جارٍ حفظ التغييرات."
+    "save_status_saving_tooltip": "جارٍ حفظ التغييرات.",
+    "doc_url": "التوثيق عبر الإنترنت"
   },
   "breadcrumb": {
     "hoisted_badge": "مُفعَّل عليه التركيز",
     "hoisted_badge_title": "إلغاء التركيز",
     "workspace_badge": "مساحة العمل",
-    "create_new_note": "إنشاء ملاحظة فرعية جديدة"
+    "create_new_note": "إنشاء ملاحظة فرعية جديدة",
+    "empty_hide_archived_notes": "إخفاء الملاحظات المؤرشفة"
   },
   "pdf": {
     "pages_loading": "تحميل...",
@@ -1786,7 +1826,9 @@
     "menu_docs": "فتح التوثيق",
     "menu_run": "تشغيل تلقائي",
     "menu_theme_base": "قاعدة السِمة",
-    "menu_change_to_frontend_script": "التبديل إلى سكربت الواجهة الأمامية"
+    "menu_change_to_frontend_script": "التبديل إلى سكربت الواجهة الأمامية",
+    "menu_execute_now": "تنفيذ السكربت الآن",
+    "menu_change_to_widget": "التبديل إلى الودجت"
   },
   "media": {
     "loop": "حلقة",
@@ -1832,7 +1874,8 @@
     "sample_treeview": "عرض الشجرة",
     "sample_diagrams": "نماذج مخططات:",
     "sample_entity_relationship": "علاقة الكيانات",
-    "sample_user_journey": "رحلة المستخدم"
+    "sample_user_journey": "رحلة المستخدم",
+    "sample_wardley": "خريطة واردلي"
   },
   "llm_chat": {
     "send": "ارسال",
@@ -1854,7 +1897,8 @@
     "placeholder": "اكتب رسالة...",
     "searching_web": "جارٍ البحث في الويب...",
     "add_provider": "إضافة مزوّد ذكاء اصطناعي",
-    "edit_index": "تحرير {{index}} من {{total}}"
+    "edit_index": "تحرير {{index}} من {{total}}",
+    "tool_calls": "{{count}} استدعاء/استدعاءات أداة"
   },
   "llm": {
     "provider_name": "اسم",
@@ -1872,13 +1916,28 @@
       "get_note_content": "الحصول على محتوى الملاحظة",
       "append_to_note": "إضافة إلى الملاحظة",
       "get_child_notes": "الحصول على الملاحظات الفرعية",
-      "get_attachment_content": "قراءة محتوى المرفق"
+      "get_attachment_content": "قراءة محتوى المرفق",
+      "get_attributes": "الحصول على السمات",
+      "get_attribute": "الحصول على السمة",
+      "set_attribute": "تعيين سمة",
+      "delete_attribute": "حذف السمة",
+      "get_subtree": "الحصول على الشجرة الفرعية",
+      "load_skill": "تحميل المهارة",
+      "web_search": "بحث الويب",
+      "get_attachment": "الحصول على المرفق",
+      "rename_note": "إعادة تسمية الملاحظة",
+      "delete_note": "حذف الملاحظة",
+      "move_note": "نقل الملاحظة",
+      "clone_note": "استنساخ الملاحظة",
+      "set_note_content": "إعادة كتابة الملاحظة",
+      "edit_note_content": "تحرير الملاحظة"
     },
     "settings_title": "الذكاء الاصطناعي / نموذج اللغة الكبير",
     "add_provider_title": "إضافة مزوّد ذكاء اصطناعي",
     "no_providers_configured": "لم يتم إعداد أي مزوّدين بعد.",
     "api_key_placeholder": "أدخل مفتاح API الخاص بك",
-    "mcp_title": "بروتوكول سياق النموذج (MCP)"
+    "mcp_title": "بروتوكول سياق النموذج (MCP)",
+    "base_url": "عنوان URL الأساسي"
   },
   "markdown_editor": {
     "image_upload_failed": "لا يمكن رفع الصورة \"{{name}}\"."
@@ -1921,7 +1980,8 @@
     "loading_text": "جارٍ تحميل نص OCR...",
     "processing_complete": "اكتمل معالجة OCR.",
     "no_text_available": "لا يوجد نص OCR متاح",
-    "view_extracted_text": "عرض النص المستخرج (OCR)"
+    "view_extracted_text": "عرض النص المستخرج (OCR)",
+    "open_media_settings": "فتح الإعدادات"
   },
   "search": {
     "title": "بحث",
@@ -1947,7 +2007,15 @@
     "backlinks_title_two": "عرض الرابطان الخلفيان",
     "backlinks_title_few": "عرض الروابط الخلفية",
     "backlinks_title_many": "عرض رابط الخلفي",
-    "backlinks_title_other": "عرض رابط خلفي"
+    "backlinks_title_other": "عرض رابط خلفي",
+    "tab_width_spaces": "{{count}} مسافات",
+    "tab_width_spaces_short": "مسافات: {{width}}",
+    "tab_width_tabs": "تبويبات: {{width}}",
+    "tab_width_display_header": "عرض العرض",
+    "tab_width_style_header": "استخدام المسافة البادئة بواسطة",
+    "language_title": "تغيير لغة المحتوى",
+    "code_note_switcher": "تغيير وضع اللغة",
+    "tab_width": "عرض التبويب: {{width}}"
   },
   "print_preview": {
     "close": "اغلاق",
@@ -1973,10 +2041,14 @@
     "export_pdf": "تصدير كملف PDF",
     "destination_pdf": "حفظ كملف PDF",
     "page_ranges_placeholder": "مثال: 1-5، 8، 11-13",
-    "system_print": "الطباعة باستخدام مربع حوار النظام"
+    "system_print": "الطباعة باستخدام مربع حوار النظام",
+    "title": "معاينة الطباعة",
+    "page_size": "حجم الصفحة"
   },
   "display_mode": {
-    "preview": "معاينة"
+    "preview": "معاينة",
+    "source": "عرض المصدر",
+    "split": "عرض مقسوم"
   },
   "common": {
     "save": "حفظ",
@@ -1985,7 +2057,8 @@
   "mobile_note_navigator": {
     "loading": "جار التحميل...",
     "add_child": "إضافة ملاحظة فرعية",
-    "back": "الانتقال مستوى واحد للأعلى"
+    "back": "الانتقال مستوى واحد للأعلى",
+    "more_actions": "إجراءات إضافية"
   },
   "setup": {
     "next": "التالي",
@@ -2011,7 +2084,13 @@
     "init-in-progress": "جارٍ تهيئة المستند",
     "create-new-document-title": "جارٍ تجهيز قاعدة المعرفة الخاصة بك",
     "sync-failed": "فشل المزامنة: {{message}}",
-    "your-ip-addresses": "عناوين هذا الجهاز"
+    "your-ip-addresses": "عناوين هذا الجهاز",
+    "button-finish-setup": "إنهاء الإعداد",
+    "sync-step-syncing": "جارٍ مزامنة البيانات",
+    "sync-illustration-this-device": "هذا الجهاز",
+    "sync-illustration-server": "الخادم الخاص بك",
+    "advanced-options": "خيارات متقدمة",
+    "dismiss-error": "تجاهل الخطأ"
   },
   "calendar_view": {
     "delete_note": "جار حذف الملاحظة..."
@@ -2032,7 +2111,8 @@
     "ui": "واجهة المستخدم",
     "ui_old_layout": "التخطيط القديم",
     "ui_new_layout": "التخطيط الجديد",
-    "ui_layout_orientation": "اتجاه شريط الإطلاق"
+    "ui_layout_orientation": "اتجاه شريط الإطلاق",
+    "ui_layout_style": "نمط التخطيط"
   },
   "attributes_panel": {
     "title": "خصائص الملاحظة"
@@ -2045,7 +2125,9 @@
     "more_options": "مزيد من الخيارات"
   },
   "web_view_setup": {
-    "invalid_url_title": "عنوان غير صالح"
+    "invalid_url_title": "عنوان غير صالح",
+    "create_button": "إنشاء عرض ويب",
+    "disabled_button_enable": "تفعيل عرض الويب"
   },
   "setup_form": {
     "more_info": "تعرف على المزيد"
@@ -2061,28 +2143,50 @@
     "new_chat": "بدء محادثة جديدة",
     "empty_state": "بدء محادثة",
     "no_chats": "لا توجد محادثات سابقة",
-    "save_chat": "حفظ المحادثة في الملاحظات"
+    "save_chat": "حفظ المحادثة في الملاحظات",
+    "view_all_chats": "عرض جميع المحادثات"
   },
   "text-editor": {
     "edit-states-tooltip": "تعديل حالات المهام",
     "validation-errors": {
-      "duplicate-symbol": "رمز Markdown مكرر"
+      "duplicate-symbol": "رمز Markdown مكرر",
+      "undefined-name": "معرّف غير مُعرّف",
+      "invalid-name": "معرّف غير صالح",
+      "duplicate-name": "معرّف مكرر",
+      "missing-title": "العنوان مفقود",
+      "missing-icon": "الأيقونة مفقودة"
     },
     "unknown-task-state": "حالة مهمة مخصصة غير مُعرّفة"
   },
   "note-color": {
-    "set-custom-color": "تعيين لون مخصص للملاحظة"
+    "set-custom-color": "تعيين لون مخصص للملاحظة",
+    "clear-color": "مسح لون الملاحظة",
+    "set-color": "تعيين لون الملاحظة"
   },
   "popup-editor": {
     "maximize": "التبديل إلى المحرر الكامل"
   },
   "right_pane": {
-    "custom_widget_go_to_source": "الانتقال إلى الشيفرة المصدرية"
+    "custom_widget_go_to_source": "الانتقال إلى الشيفرة المصدرية",
+    "empty_button": "إخفاء اللوحة",
+    "toggle": "تبديل اللوحة اليمنى"
   },
   "launcher_button_context_menu": {
     "remove_from_launch_bar": "إزالة من شريط التشغيل"
   },
   "spreadsheet": {
     "read-only": "هذه الملاحظة للقراءة فقط."
+  },
+  "revisions_snapshot": {
+    "title": "إصدارات الملاحظة"
+  },
+  "auto_link_attribute_list": {
+    "title": "سمات النظام"
+  },
+  "platform_indicator": {
+    "available_on": "متاح على {{platform}}"
+  },
+  "render": {
+    "disabled_button_enable": "تفعيل عرض الملاحظة"
   }
 }
