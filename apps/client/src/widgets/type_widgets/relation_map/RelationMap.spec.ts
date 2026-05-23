@@ -37,10 +37,15 @@ async function getAnswerFromPrompt(): Promise<JQuery<HTMLInputElement>> {
     let $answer!: JQuery<HTMLInputElement>;
 
     vi.mocked(dialog.prompt).mockImplementation(({ shown }) => {
-        document.body.innerHTML = '<input type="text" />';
+        document.body.innerHTML = '<div><form><label /><input type="text" /></form></div>';
         const input = document.querySelector("input") as HTMLInputElement;
         $answer = $(input) as JQuery<HTMLInputElement>;
-        shown?.({ $answer });
+        shown?.({
+            $dialog: $(document.querySelector("div")!) as JQuery<HTMLDivElement>,
+            $question: $(document.querySelector("label")!) as JQuery<HTMLLabelElement>,
+            $answer,
+            $form: $(document.querySelector("form")!) as JQuery<HTMLFormElement>
+        });
         return Promise.resolve(null);
     });
 
