@@ -52,7 +52,7 @@
     "add-link-to-text": "Ouvrir la boîte de dialogue pour ajouter un lien dans le texte",
     "follow-link-under-cursor": "Suivre le lien sous le curseur",
     "insert-date-and-time-to-text": "Insérer la date et l'heure dans le texte",
-    "paste-markdown-into-text": "Colle le Markdown depuis le presse-papiers dans la note de texte",
+    "paste-markdown-into-text": "Coller le Markdown depuis le presse-papiers dans la note de texte",
     "cut-into-note": "Coupe la sélection depuis la note actuelle et crée une note enfant avec le texte sélectionné",
     "add-include-note-to-text": "Ouvrir la boîte de dialogue pour Inclure une note",
     "edit-readonly-note": "Éditer une note en lecture seule",
