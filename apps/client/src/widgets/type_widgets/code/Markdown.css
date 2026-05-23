@@ -13,6 +13,14 @@
         overflow: auto;
         padding: 0.5em 1em;
         user-select: text;
+
+        table {
+            margin: 1em 0;
+        }
+
+        figure table {
+            margin: 0;
+        }
     }
 
     .markdown-preview [data-source-line] {
@@ -28,7 +36,7 @@
 }
 
 /* Markdown preview content blocks in split-view */
-.note-detail-split.split-horizontal .note-detail-split-preview > .note-detail-readonly-text-content > div {     
+.note-detail-split.split-horizontal .note-detail-split-preview > .note-detail-readonly-text-content > div {
     max-width: var(--preferred-max-content-width);
 
     body.prefers-centered-content & {
