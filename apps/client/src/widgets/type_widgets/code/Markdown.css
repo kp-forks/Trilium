@@ -13,14 +13,6 @@
         overflow: auto;
         padding: 0.5em 1em;
         user-select: text;
-
-        table {
-            margin: 1em 0;
-        }
-
-        figure table {
-            margin: 0;
-        }
     }
 
     .markdown-preview [data-source-line] {
