@@ -21,7 +21,6 @@ import Dropdown from "../../react/Dropdown";
 import { FormListItem } from "../../react/FormList";
 import { useNoteLabel, useNoteLabelBoolean, useResizeObserver, useSpacedUpdate, useTriliumEvent, useTriliumOption, useTriliumOptionInt } from "../../react/hooks";
 import { ParentComponent } from "../../react/react_utils";
-import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSegmentedControl, TouchBarSpacer } from "../../react/TouchBar";
 import { ViewModeProps } from "../interface";
 import { changeEvent, newEvent } from "./api";
 import Calendar from "./calendar";
@@ -179,7 +178,6 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
                     }
                 }}
             />
-            <CalendarTouchBar calendarRef={calendarRef} />
         </div>
     );
 }
@@ -403,40 +401,6 @@ function useEventDisplayCustomization(parentNote: FNote, componentId: string | u
         }
     }, []);
     return { eventDidMount };
-}
-
-function CalendarTouchBar({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
-    const { title, viewType } = useOnDatesSet(calendarRef);
-
-    return (
-        <TouchBar>
-            <TouchBarSegmentedControl
-                mode="single"
-                segments={CALENDAR_VIEWS.map(({ name }) => ({
-                    label: name,
-                }))}
-                selectedIndex={CALENDAR_VIEWS.findIndex(v => v.type === viewType) ?? 0}
-                onChange={(selectedIndex) => calendarRef.current?.changeView(CALENDAR_VIEWS[selectedIndex].type)}
-            />
-
-            <TouchBarSpacer size="flexible" />
-            <TouchBarLabel label={title ?? ""} />
-            <TouchBarSpacer size="flexible" />
-
-            <TouchBarButton
-                label={t("calendar.today")}
-                click={() => calendarRef.current?.today()}
-            />
-            <TouchBarButton
-                icon="NSImageNameTouchBarGoBackTemplate"
-                click={() => calendarRef.current?.prev()}
-            />
-            <TouchBarButton
-                icon="NSImageNameTouchBarGoForwardTemplate"
-                click={() => calendarRef.current?.next()}
-            />
-        </TouchBar>
-    );
 }
 
 function useOnDatesSet(calendarRef: RefObject<FullCalendar>) {

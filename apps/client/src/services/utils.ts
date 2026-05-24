@@ -161,8 +161,6 @@ export function isMac() {
     return navigator.platform.indexOf("Mac") > -1;
 }
 
-export const hasTouchBar = (isMac() && isElectron());
-
 export function isCtrlKey(evt: KeyboardEvent | MouseEvent | JQuery.ClickEvent | JQuery.ContextMenuEvent | JQuery.TriggeredEvent | React.PointerEvent<HTMLCanvasElement> | JQueryEventObject) {
     return (!isMac() && evt.ctrlKey) || (isMac() && evt.metaKey);
 }
