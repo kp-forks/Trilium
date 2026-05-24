@@ -132,7 +132,7 @@ function now() {
  * Returns `true` if the client is currently running under Electron, or `false` if running in a web browser.
  */
 export function isElectron() {
-    return !!(window && window.process && window.process.type);
+    return "electronApi" in window;
 }
 
 export const isStandalone = window.glob.isStandalone;

@@ -13,6 +13,8 @@ import { RESOURCE_DIR } from "./resource_dir.js";
 import sqlInit from "./sql_init.js";
 import { isDev, isMac, isWindows } from "./utils.js";
 
+const PRELOAD_SCRIPT = path.resolve(RESOURCE_DIR, "preload.js");
+
 // In dev mode, disable Chromium's HTTP cache so stale assets cached from a
 // previous production run (which served `max-age: 1y` headers) don't shadow
 // freshly built dev output. Must be set before the app's `ready` event.
@@ -57,6 +59,7 @@ async function createExtraWindow(extraWindowHash: string) {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            preload: PRELOAD_SCRIPT,
             spellcheck: spellcheckEnabled,
             webviewTag: true
         },
@@ -120,6 +123,7 @@ async function createMainWindow(app: App) {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            preload: PRELOAD_SCRIPT,
             spellcheck: spellcheckEnabled,
             webviewTag: true
         },
@@ -243,7 +247,8 @@ async function createSetupWindow() {
         ...(isMac && { transparent: true, visualEffectState: "active" as const, vibrancy: "under-window" as const, titleBarStyle: "hiddenInset" as const }),
         webPreferences: {
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            preload: PRELOAD_SCRIPT
         }
     });
     setupWindow.removeMenu();
