@@ -48,8 +48,7 @@ async function main() {
                 standard: true,
                 secure: true,
                 supportFetchAPI: true,
-                corsEnabled: true,
-                stream: true
+                corsEnabled: true
             }
         }
     ]);
