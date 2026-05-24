@@ -56,6 +56,13 @@ declare global {
             isNativePlatform?: () => boolean;
             getPlatform?: () => string;
         };
+
+        electronApi?: ElectronApi;
+    }
+
+    interface ElectronApi {
+        setZoomFactor(factor: number): void;
+        getZoomFactor(): number;
     }
 
     interface WindowEventMap {
