@@ -498,7 +498,7 @@ function cleanUpReferenceLinks(linkEl: HTMLElement, getNote: GetNoteFunction) {
     } else if (note.isProtected) {
         linkEl.innerHTML = "[protected]";
     } else {
-        linkEl.innerHTML = `<span><span class="${note.getIcon()}"></span>${utils.escapeHtml(note.title)}</span>`;
+        linkEl.innerHTML = `<span><span class="${escapeHtml(note.getIcon())}"></span>${utils.escapeHtml(note.title)}</span>`;
     }
 }
 

@@ -13,7 +13,7 @@ import date_notes from "../../../services/date_notes";
 import dialog from "../../../services/dialog";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
-import { isMobile } from "../../../services/utils";
+import { escapeHtml, isMobile } from "../../../services/utils";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import Button, { ButtonGroup } from "../../react/Button";
@@ -356,7 +356,7 @@ function useEventDisplayCustomization(parentNote: FNote, componentId: string | u
             }
 
             if (titleContainer) {
-                const icon = /*html*/`<span class="${iconClass}"></span> `;
+                const icon = /*html*/`<span class="${escapeHtml(iconClass)}"></span> `;
                 titleContainer.insertAdjacentHTML("afterbegin", icon);
             }
         }
