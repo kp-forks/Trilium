@@ -10,6 +10,7 @@ import dataDirs from "./data_dir.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import { validateOpenCustomPath } from "./open_custom.js";
+import { validateOpenExternalUrl } from "./open_external.js";
 import optionService from "./options.js";
 import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
@@ -215,7 +216,8 @@ electron.ipcMain.on("web-contents-action", (event, action: string, text?: string
 });
 
 electron.ipcMain.on("open-external", (_event, url: string) => {
-    electron.shell.openExternal(url);
+    const validated = validateOpenExternalUrl(url);
+    electron.shell.openExternal(validated.toString());
 });
 
 electron.ipcMain.handle("open-path", (_event, filePath: string) => {
