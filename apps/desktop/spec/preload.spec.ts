@@ -179,6 +179,21 @@ describe("preload script", () => {
             expect(ipcRendererSent).toContainEqual({ channel: "toggle-dev-tools", args: [] });
         });
 
+        it("reloadAllWindows sends correct IPC message", () => {
+            win().reloadAllWindows();
+            expect(ipcRendererSent).toContainEqual({ channel: "reload-all-windows", args: [] });
+        });
+
+        it("restartApp sends correct IPC message", () => {
+            win().restartApp();
+            expect(ipcRendererSent).toContainEqual({ channel: "restart-app", args: [] });
+        });
+
+        it("toggleAllWindows sends correct IPC message", () => {
+            win().toggleAllWindows();
+            expect(ipcRendererSent).toContainEqual({ channel: "toggle-all-windows", args: [] });
+        });
+
         it("setBackgroundMaterial sends correct IPC message", () => {
             win().setBackgroundMaterial("mica");
             expect(ipcRendererSent).toContainEqual({ channel: "set-background-material", args: ["mica"] });

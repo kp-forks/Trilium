@@ -83,6 +83,26 @@ electron.ipcMain.on("create-extra-window", (event, arg) => {
     createExtraWindow(arg.extraWindowHash);
 });
 
+electron.ipcMain.on("reload-all-windows", () => {
+    for (const win of electron.BrowserWindow.getAllWindows()) {
+        win.reload();
+    }
+});
+
+electron.ipcMain.on("restart-app", () => {
+    electron.app.relaunch();
+    electron.app.exit();
+});
+
+electron.ipcMain.on("toggle-all-windows", () => {
+    const windows = electron.BrowserWindow.getAllWindows();
+    const isVisible = windows.every((w) => w.isVisible());
+    const action = isVisible ? "hide" : "show";
+    for (const win of windows) {
+        win[action]();
+    }
+});
+
 electron.ipcMain.on("add-word-to-dictionary", (event, word: string) => {
     event.sender.session.addWordToSpellCheckerDictionary(word);
     customDictionary.addWord(word);

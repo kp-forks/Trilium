@@ -67,6 +67,17 @@ contextBridge.exposeInMainWorld("electronApi", {
             ipcRenderer.send("toggle-dev-tools");
         },
 
+        // App lifecycle
+        reloadAllWindows() {
+            ipcRenderer.send("reload-all-windows");
+        },
+        restartApp() {
+            ipcRenderer.send("restart-app");
+        },
+        toggleAllWindows() {
+            ipcRenderer.send("toggle-all-windows");
+        },
+
         // Background effects
         setBackgroundMaterial(material: string) {
             ipcRenderer.send("set-background-material", material);

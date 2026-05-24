@@ -48,6 +48,11 @@ export interface ElectronWindowApi {
     setBackgroundMaterial(material: string): void;
     setVibrancy(vibrancy: string): void;
 
+    // App lifecycle
+    reloadAllWindows(): void;
+    restartApp(): void;
+    toggleAllWindows(): void;
+
     // Main → renderer events
     onGlobalShortcut(callback: (actionName: string) => void): void;
     onOpenInSameTab(callback: (noteId: string) => void): void;

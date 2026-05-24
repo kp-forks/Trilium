@@ -13,24 +13,19 @@ export function reloadFrontendApp(reason?: string) {
         logInfo(`Frontend app reload: ${reason}`);
     }
 
-    if (isElectron()) {
-        for (const window of dynamicRequire("@electron/remote").BrowserWindow.getAllWindows()) {
-            window.reload();
-        }
+    if (window.electronApi) {
+        window.electronApi.window.reloadAllWindows();
     } else {
         window.location.reload();
     }
 }
 
 export function restartDesktopApp() {
-    if (!isElectron()) {
+    if (window.electronApi) {
+        window.electronApi.window.restartApp();
+    } else {
         reloadFrontendApp();
-        return;
     }
-
-    const app = dynamicRequire("@electron/remote").app;
-    app.relaunch();
-    app.exit();
 }
 
 /**
