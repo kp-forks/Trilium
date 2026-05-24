@@ -11,9 +11,7 @@ import {
     validateOpenPath
 } from "./shell_validators.js";
 
-// ============================================================================
-// validateOpenCustomPath
-// ============================================================================
+//#region validateOpenCustomPath
 
 describe("validateOpenCustomPath", () => {
     let tmpDir: string;
@@ -87,9 +85,9 @@ describe("validateOpenCustomPath", () => {
     );
 });
 
-// ============================================================================
-// validateOpenPath
-// ============================================================================
+//#endregion
+
+//#region validateOpenPath
 
 describe("validateOpenPath", () => {
     let dataDir: string;
@@ -189,9 +187,9 @@ describe("validateOpenPath", () => {
     );
 });
 
-// ============================================================================
-// validateOpenExternalUrl
-// ============================================================================
+//#endregion
+
+//#region validateOpenExternalUrl
 
 describe("validateOpenExternalUrl", () => {
     it("rejects malformed input", () => {
@@ -262,9 +260,9 @@ describe("validateOpenExternalUrl", () => {
     });
 });
 
-// ============================================================================
-// validateOpenFileUrl
-// ============================================================================
+//#endregion
+
+//#region validateOpenFileUrl
 
 describe("validateOpenFileUrl", () => {
     it("rejects malformed input", () => {
@@ -312,9 +310,9 @@ describe("validateOpenFileUrl", () => {
     );
 });
 
-// ============================================================================
-// validateDownloadUrl
-// ============================================================================
+//#endregion
+
+//#region validateDownloadUrl
 
 // Trilium's desktop renderer is served via a custom protocol whose origin is
 // opaque per the WHATWG URL spec; this is the realistic page URL in production.
@@ -388,3 +386,5 @@ describe("validateDownloadUrl", () => {
             .toBe("http://localhost:8080/api/notes/abc/download");
     });
 });
+
+//#endregion

@@ -13,9 +13,7 @@ import { SHELL_OPEN_EXTERNAL_PROTOCOLS } from "@triliumnext/commons";
  * functions before invoking the underlying electron.shell / WebContents APIs.
  */
 
-// ============================================================================
-// Shared helpers
-// ============================================================================
+//#region Shared helpers
 
 /** Windows filesystems are case-insensitive, POSIX are case-sensitive. */
 function normalizeForCompare(p: string): string {
@@ -34,9 +32,9 @@ function isUnderOrEquals(resolved: string, root: string): boolean {
         || isStrictlyUnder(resolved, root);
 }
 
-// ============================================================================
-// open-custom — sandbox to Trilium's tmp dir + existence check
-// ============================================================================
+//#endregion
+
+//#region open-custom — sandbox to Trilium's tmp dir + existence check
 
 /**
  * Validates a path for the "open-custom" IPC channel (renderer asks the main
@@ -61,9 +59,9 @@ export function validateOpenCustomPath(filePath: unknown, tmpDir: string): strin
     return resolved;
 }
 
-// ============================================================================
-// open-path — sandbox to Trilium's data dir ∪ tmp dir + existence check
-// ============================================================================
+//#endregion
+
+//#region open-path — sandbox to Trilium's data dir ∪ tmp dir + existence check
 
 /**
  * Validates a path for the "open-path" IPC channel (Open Note Externally,
@@ -92,9 +90,9 @@ export function validateOpenPath(input: unknown, dataDir: string, tmpDir: string
     return resolved;
 }
 
-// ============================================================================
-// open-external — scheme allowlist
-// ============================================================================
+//#endregion
+
+//#region open-external — scheme allowlist
 
 /**
  * Validates a URL for the "open-external" IPC channel (electron.shell.openExternal,
@@ -124,9 +122,9 @@ export function validateOpenExternalUrl(input: unknown): URL {
     return parsed;
 }
 
-// ============================================================================
-// open-file-url — block UNC paths
-// ============================================================================
+//#endregion
+
+//#region open-file-url — block UNC paths
 
 /**
  * Validates a URL for the "open-file-url" IPC channel and returns the
@@ -163,9 +161,9 @@ export function validateOpenFileUrl(input: unknown): string {
     return url.fileURLToPath(parsed);
 }
 
-// ============================================================================
-// download-url — same-origin lock
-// ============================================================================
+//#endregion
+
+//#region download-url — same-origin lock
 
 /**
  * Validates a URL for the "download-url" IPC channel (WebContents.downloadURL,
@@ -217,3 +215,5 @@ export function validateDownloadUrl(input: unknown, allowedOrigin: string): URL 
 
     return parsed;
 }
+
+//#endregion
