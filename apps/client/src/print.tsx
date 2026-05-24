@@ -58,7 +58,7 @@ function App({ note, noteId }: { note: FNote | null | undefined, noteId: string 
     const sentReadyEvent = useRef(false);
     const onProgressChanged = useCallback((progress: number) => {
         if (window.electronApi) {
-            window.electronApi.sendPrintProgress(progress);
+            window.electronApi.printing.sendPrintProgress(progress);
         } else {
             window.dispatchEvent(new CustomEvent("note-load-progress", { detail: { progress } }));
         }

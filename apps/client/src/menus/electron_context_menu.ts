@@ -9,8 +9,9 @@ import utils from "../services/utils.js";
 import contextMenu, { type MenuItem } from "./context_menu.js";
 
 function setupContextMenu() {
-    const api = window.electronApi;
-    if (!api) return;
+    const eApi = window.electronApi;
+    if (!eApi) return;
+    const api = eApi.contextMenu;
     const isMac = window.glob.platform === "darwin";
     const platformModifier = isMac ? "Meta" : "Ctrl";
 
@@ -33,7 +34,7 @@ function setupContextMenu() {
             items.push({
                 title: t("electron_context_menu.add-term-to-dictionary", { term: params.misspelledWord }),
                 uiIcon: "bx bx-plus",
-                handler: () => api.addWordToDictionary(params.misspelledWord)
+                handler: () => eApi.spellcheck.addWordToDictionary(params.misspelledWord)
             });
 
             items.push({ kind: "separator" });
@@ -145,7 +146,7 @@ function setupContextMenu() {
             items.push({
                 title: t("electron_context_menu.search_online", { term: shortenedSelection, searchEngine: searchEngineName }),
                 uiIcon: "bx bx-search-alt",
-                handler: () => api.openExternal(searchUrl)
+                handler: () => eApi.shell.openExternal(searchUrl)
             });
 
             items.push({

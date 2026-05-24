@@ -231,7 +231,7 @@ function ZoomControls({ parentComponent }: { parentComponent?: Component | null 
 }
 
 function ToggleWindowOnTop() {
-    const api = window.electronApi;
+    const api = window.electronApi?.window;
     const [ isOnTop, setIsOnTop ] = useState(() => api?.isAlwaysOnTop() ?? false);
 
     return (api &&

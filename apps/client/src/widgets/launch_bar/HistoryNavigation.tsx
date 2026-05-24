@@ -32,7 +32,7 @@ export default function HistoryNavigationButton({ launcherNote, command }: Histo
                     extraItems: items,
                     onCommand: (cmd) => {
                         if (cmd && hasApi) {
-                            window.electronApi?.navigationGoToIndex(parseInt(cmd, 10));
+                            window.electronApi?.navigation.navigationGoToIndex(parseInt(cmd, 10));
                         }
                     }
                 });
@@ -42,7 +42,7 @@ export default function HistoryNavigationButton({ launcherNote, command }: Histo
 }
 
 async function getHistoryItems(): Promise<MenuCommandItem<string>[]> {
-    const api = window.electronApi;
+    const api = window.electronApi?.navigation;
     if (!api || api.navigationLength() < 2) return [];
 
     let items: MenuCommandItem<string>[] = [];
@@ -90,7 +90,7 @@ export function handleHistoryContextMenu() {
             selectMenuItemHandler: (item: MenuCommandItem<string>) => {
                 if (item && item.command) {
                     const idx = parseInt(item.command, 10);
-                    window.electronApi?.navigationGoToIndex(idx);
+                    window.electronApi?.navigation.navigationGoToIndex(idx);
                 }
             }
         });

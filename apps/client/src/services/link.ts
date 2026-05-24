@@ -349,11 +349,11 @@ export function goToLinkExt(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDo
                     if (hrefLink.toLowerCase().startsWith("file:")) {
                         // shell.openExternal mishandles Unicode file:// URLs on Windows;
                         // convert to a filesystem path and use shell.openPath instead.
-                        window.electronApi.openFileUrl(hrefLink).then((err: string) => {
+                        window.electronApi.shell.openFileUrl(hrefLink).then((err: string) => {
                             if (err) reportLinkError(new Error(err));
                         }).catch(reportLinkError);
                     } else {
-                        window.electronApi.openExternal(hrefLink);
+                        window.electronApi.shell.openExternal(hrefLink);
                     }
                 } else {
                     window.open(hrefLink, "_blank");

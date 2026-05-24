@@ -19,14 +19,14 @@ export default function TitleBarButtons() {
                     <TitleBarButton
                         className="minimize-btn"
                         icon="bx bx-minus"
-                        onClick={() => window.electronApi?.minimizeWindow()}
+                        onClick={() => window.electronApi?.window.minimizeWindow()}
                     />
 
                     <TitleBarButton
                         className="maximize-btn"
                         icon="bx bx-checkbox"
                         onClick={() => {
-                            const api = window.electronApi;
+                            const api = window.electronApi?.window;
                             if (!api) return;
                             if (api.isMaximized()) {
                                 api.unmaximizeWindow();
@@ -39,7 +39,7 @@ export default function TitleBarButtons() {
                     <TitleBarButton
                         className="close-btn"
                         icon="bx bx-x"
-                        onClick={() => window.electronApi?.closeWindow()}
+                        onClick={() => window.electronApi?.window.closeWindow()}
                     />
                 </>
             )}

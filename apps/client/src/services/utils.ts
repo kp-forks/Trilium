@@ -39,7 +39,7 @@ export function restartDesktopApp() {
  * On any other platform than Electron, nothing happens.
  */
 function reloadTray() {
-    window.electronApi?.reloadTray();
+    window.electronApi?.tray.reloadTray();
 }
 
 function parseDate(str: string) {

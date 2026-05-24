@@ -70,7 +70,7 @@ function SpellcheckLanguages() {
     }, [setSpellCheckLanguageCode]);
 
     const availableLanguages = useMemo<SpellcheckLanguage[]>(() => {
-        const api = window.electronApi;
+        const api = window.electronApi?.spellcheck;
         if (!api) {
             return [];
         }

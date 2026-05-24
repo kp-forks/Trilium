@@ -101,7 +101,7 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
                     const webViewSrc = entity.getLabelValue("webViewSrc");
                     if (webViewSrc) {
                         if (window.electronApi) {
-                            window.electronApi.openExternal(webViewSrc);
+                            window.electronApi.shell.openExternal(webViewSrc);
                         } else {
                             window.open(webViewSrc, '_blank', 'noopener,noreferrer');
                         }

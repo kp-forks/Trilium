@@ -20,7 +20,7 @@ export default class Entrypoints extends Component {
     }
 
     openDevToolsCommand() {
-        window.electronApi?.toggleDevTools();
+        window.electronApi?.window.toggleDevTools();
     }
 
     async createNoteIntoInboxCommand() {
@@ -85,7 +85,7 @@ export default class Entrypoints extends Component {
     }
 
     toggleFullscreenCommand() {
-        const api = window.electronApi;
+        const api = window.electronApi?.window;
         if (api) {
             api.setFullScreen(!api.isFullScreen());
         } else {
@@ -103,7 +103,7 @@ export default class Entrypoints extends Component {
     }
 
     backInNoteHistoryCommand() {
-        const api = window.electronApi;
+        const api = window.electronApi?.navigation;
         if (api) {
             const activeIndex = api.navigationGetActiveIndex();
             api.navigationGoToIndex(activeIndex - 1);
@@ -113,7 +113,7 @@ export default class Entrypoints extends Component {
     }
 
     forwardInNoteHistoryCommand() {
-        const api = window.electronApi;
+        const api = window.electronApi?.navigation;
         if (api) {
             const activeIndex = api.navigationGetActiveIndex();
             api.navigationGoToIndex(activeIndex + 1);
@@ -138,7 +138,7 @@ export default class Entrypoints extends Component {
         const extraWindowHash = linkService.calculateHash({ notePath, hoistedNoteId, viewScope });
 
         if (window.electronApi) {
-            window.electronApi.createExtraWindow(extraWindowHash);
+            window.electronApi.window.createExtraWindow(extraWindowHash);
         } else {
             const url = `${window.location.protocol}//${window.location.host}${window.location.pathname}?extraWindow=1${extraWindowHash}`;
 

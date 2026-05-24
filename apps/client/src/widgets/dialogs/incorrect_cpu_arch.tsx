@@ -26,7 +26,7 @@ export default function IncorrectCpuArchDialogComponent() {
                     onClick={() => {
                         // Open the releases page where users can download the correct version
                         if (window.electronApi) {
-                            window.electronApi.openExternal("https://github.com/TriliumNext/Trilium/releases/latest");
+                            window.electronApi.shell.openExternal("https://github.com/TriliumNext/Trilium/releases/latest");
                         } else {
                             window.open("https://github.com/TriliumNext/Trilium/releases/latest", "_blank");
                         }

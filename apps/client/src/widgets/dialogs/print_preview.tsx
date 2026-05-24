@@ -115,7 +115,7 @@ export default function PrintPreviewDialog() {
     const [destination, setDestination] = useState<string>(DESTINATION_PDF);
 
     useEffect(() => {
-        const api = window.electronApi;
+        const api = window.electronApi?.printing;
         if (!shown || !api) return;
         api.getPrinters().then((list) => {
             const printerList = (list ?? []) as PrinterInfo[];
@@ -152,7 +152,7 @@ export default function PrintPreviewDialog() {
     // dialog's lifecycle. A generation counter discards stale results when
     // multiple requests overlap.
     useEffect(() => {
-        const api = window.electronApi;
+        const api = window.electronApi?.printing;
         if (!shown || !api) return;
 
         api.onExportAsPdfPreviewResult(({ buffer, error }) => {
@@ -182,7 +182,7 @@ export default function PrintPreviewDialog() {
     }, [shown, updatePreview]);
 
     const regeneratePreview = useCallback((opts: PreviewOpts) => {
-        const api = window.electronApi;
+        const api = window.electronApi?.printing;
         if (!api) return;
 
         setLoading(true);
@@ -226,7 +226,7 @@ export default function PrintPreviewDialog() {
     function handleExportPdf() {
         if (!bufferRef.current) return;
 
-        window.electronApi?.savePdf({
+        window.electronApi?.printing.savePdf({
             title: note?.title ?? "",
             buffer: bufferRef.current
         });
@@ -234,7 +234,7 @@ export default function PrintPreviewDialog() {
     }
 
     function handlePrint(silent: boolean, deviceName?: string) {
-        window.electronApi?.printFromPreview({
+        window.electronApi?.printing.printFromPreview({
             notePath: notePathRef.current,
             pageSize,
             landscape,
