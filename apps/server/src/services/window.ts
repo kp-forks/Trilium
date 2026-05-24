@@ -12,6 +12,7 @@ import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import { validateOpenCustomPath } from "./open_custom.js";
 import { validateOpenExternalUrl } from "./open_external.js";
+import { validateOpenFileUrl } from "./open_file_url.js";
 import optionService from "./options.js";
 import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
@@ -226,8 +227,8 @@ electron.ipcMain.handle("open-path", (_event, filePath: string) => {
 });
 
 electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
-    const normalized = fileUrl.replace(/^file:\/\/(?=[a-zA-Z]:)/i, "file:///");
-    return electron.shell.openPath(url.fileURLToPath(normalized));
+    const filePath = validateOpenFileUrl(fileUrl);
+    return electron.shell.openPath(filePath);
 });
 
 electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
