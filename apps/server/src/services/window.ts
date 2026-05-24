@@ -13,6 +13,7 @@ import log from "./log.js";
 import { validateOpenCustomPath } from "./open_custom.js";
 import { validateOpenExternalUrl } from "./open_external.js";
 import { validateOpenFileUrl } from "./open_file_url.js";
+import { validateOpenPath } from "./open_path.js";
 import optionService from "./options.js";
 import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
@@ -223,7 +224,8 @@ electron.ipcMain.on("open-external", (_event, url: string) => {
 });
 
 electron.ipcMain.handle("open-path", (_event, filePath: string) => {
-    return electron.shell.openPath(filePath);
+    const resolved = validateOpenPath(filePath, dataDirs.TRILIUM_DATA_DIR, dataDirs.TMP_DIR);
+    return electron.shell.openPath(resolved);
 });
 
 electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
