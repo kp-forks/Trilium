@@ -157,8 +157,7 @@ async function openExternally(type: string, entityId: string, mime: string) {
     if (utils.isElectron()) {
         const resp = await server.post<TmpResponse>(`${type}/${entityId}/save-to-tmp-dir`);
 
-        const electron = utils.dynamicRequire("electron");
-        const res = await electron.shell.openPath(resp.tmpFilePath);
+        const res = await window.electronApi?.openPath(resp.tmpFilePath);
 
         if (res) {
             // fallback in case there's no default application for this file
@@ -200,8 +199,7 @@ async function openNoteOnServer(noteId: string) {
 async function openDirectory(directory: string) {
     try {
         if (utils.isElectron()) {
-            const electron = utils.dynamicRequire("electron");
-            const res = await electron.shell.openPath(directory);
+            const res = await window.electronApi?.openPath(directory);
             if (res) {
                 console.error("Failed to open directory:", res);
             }

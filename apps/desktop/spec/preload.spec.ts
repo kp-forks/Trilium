@@ -4,6 +4,7 @@ let exposedApi: Record<string, Record<string, unknown>> = {};
 let mockZoomFactor = 1.0;
 const ipcRendererListeners = new Map<string, Function[]>();
 const ipcRendererSent: Array<{ channel: string; args: unknown[] }> = [];
+const ipcRendererInvoked: Array<{ channel: string; args: unknown[] }> = [];
 const ipcRendererSyncResults = new Map<string, unknown>();
 
 vi.mock("electron", () => ({
@@ -29,6 +30,10 @@ vi.mock("electron", () => ({
         send(channel: string, ...args: unknown[]) {
             ipcRendererSent.push({ channel, args });
         },
+        invoke(channel: string, ...args: unknown[]) {
+            ipcRendererInvoked.push({ channel, args });
+            return Promise.resolve("");
+        },
         sendSync(channel: string, ...args: unknown[]) {
             return ipcRendererSyncResults.get(`${channel}:${args[0]}`);
         },
@@ -48,6 +53,7 @@ describe("preload script", () => {
         mockZoomFactor = 1.0;
         ipcRendererListeners.clear();
         ipcRendererSent.length = 0;
+        ipcRendererInvoked.length = 0;
         ipcRendererSyncResults.clear();
         vi.resetModules();
         await import("../src/preload.js");
@@ -179,6 +185,22 @@ describe("preload script", () => {
             expect(ipcRendererSent).toContainEqual({
                 channel: "open-external",
                 args: ["https://example.com"]
+            });
+        });
+
+        it("openPath invokes correct IPC channel", async () => {
+            await getApi().openPath("/tmp/test.txt");
+            expect(ipcRendererInvoked).toContainEqual({
+                channel: "open-path",
+                args: ["/tmp/test.txt"]
+            });
+        });
+
+        it("openFileUrl invokes correct IPC channel", async () => {
+            await getApi().openFileUrl("file:///tmp/test.txt");
+            expect(ipcRendererInvoked).toContainEqual({
+                channel: "open-file-url",
+                args: ["file:///tmp/test.txt"]
             });
         });
 

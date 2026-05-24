@@ -130,6 +130,15 @@ electron.ipcMain.on("open-external", (_event, url: string) => {
     electron.shell.openExternal(url);
 });
 
+electron.ipcMain.handle("open-path", (_event, filePath: string) => {
+    return electron.shell.openPath(filePath);
+});
+
+electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
+    const normalized = fileUrl.replace(/^file:\/\/(?=[a-zA-Z]:)/i, "file:///");
+    return electron.shell.openPath(url.fileURLToPath(normalized));
+});
+
 electron.ipcMain.on("navigation-history", (event, method: string) => {
     const wc = event.sender;
     switch (method) {

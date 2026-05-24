@@ -57,6 +57,12 @@ contextBridge.exposeInMainWorld("electronApi", {
     openExternal(url: string) {
         ipcRenderer.send("open-external", url);
     },
+    openPath(path: string): Promise<string> {
+        return ipcRenderer.invoke("open-path", path);
+    },
+    openFileUrl(fileUrl: string): Promise<string> {
+        return ipcRenderer.invoke("open-file-url", fileUrl);
+    },
 
     // Tray
     reloadTray() {
