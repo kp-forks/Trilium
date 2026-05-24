@@ -1,124 +1,101 @@
 import electron from "electron";
-import type { Application } from "express";
-import type { ParamsDictionary, Request, Response } from "express-serve-static-core";
-import type QueryString from "qs";
-import { Session, SessionData } from "express-session";
-import { parse as parseQuery } from "qs";
 import EventEmitter from "events";
+import type { Application } from "express";
+import { createRequest, createResponse } from "node-mocks-http";
 
-type MockedResponse = Response<any, Record<string, any>, number>;
-
+/**
+ * Bridges renderer-process requests on the `trilium-app://app/...` custom
+ * protocol into the Express application running in the main process.
+ *
+ * The renderer loads the entire UI from this scheme (see
+ * `apps/server/src/services/window.ts` and `apps/desktop/src/main.ts`), so
+ * every request the page makes — page load, bootstrap, API calls, static
+ * assets — arrives here as a Web Fetch `Request`. We convert it into an
+ * Express `req`/`res` pair via `node-mocks-http` and dispatch through
+ * `app.handle`, giving us the real session, CSRF, body-parser and error
+ * middleware without any FakeRequest workaround.
+ */
 function init(app: Application) {
-    electron.ipcMain.on("server-request", (event, arg) => {
-        const req = new FakeRequest(arg);
-        const res = new FakeResponse(event, arg);
-
-        return app.router(req as any, res as any, () => {});
+    electron.app.whenReady().then(() => {
+        electron.protocol.handle("trilium-app", (request) => dispatch(app, request));
     });
 }
 
-const fakeSession: Session & Partial<SessionData> = {
-    id: "session-id", // Placeholder for session ID
-    cookie: {
-        originalMaxAge: 3600000, // 1 hour
-    },
-    loggedIn: true,
-    regenerate(callback) {
-        callback?.(null);
-        return fakeSession;
-    },
-    destroy(callback) {
-        callback?.(null);
-        return fakeSession;
-    },
-    reload(callback) {
-        callback?.(null);
-        return fakeSession;
-    },
-    save(callback) {
-        callback?.(null);
-        return fakeSession;
-    },
-    resetMaxAge: () => fakeSession,
-    touch: () => fakeSession
-};
+async function dispatch(app: Application, request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const headers: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+        headers[key] = value;
+    });
 
-interface Arg {
-    url: string;
-    method: string;
-    data: any;
-    headers: Record<string, string>
-}
+    const body = await readBody(request);
 
-class FakeRequest extends EventEmitter implements Pick<Request<ParamsDictionary, any, any, QueryString.ParsedQs, Record<string, any>>, "url" | "method" | "body" | "headers" | "session" | "query"> {
-    url: string;
-    method: string;
-    body: any;
-    headers: Record<string, string>;
-    session: Session & Partial<SessionData>;
-    query: Record<string, any>;
-
-    constructor(arg: Arg) {
-        super();
-        this.url = arg.url;
-        this.method = arg.method;
-        this.body = arg.data;
-        this.headers = arg.headers;
-        this.session = fakeSession;
-        this.query = parseQuery(arg.url.split("?")[1] || "", { ignoreQueryPrefix: true });
-    }
-}
-
-class FakeResponse extends EventEmitter implements Pick<Response<any, Record<string, any>, number>, "status" | "send" | "json" | "setHeader"> {
-    private respHeaders: Record<string, string | string[]> = {};
-    private event: Electron.IpcMainEvent;
-    private arg: Arg & { requestId: string; };
-    statusCode: number = 200;
-    headers: Record<string, string> = {};
-    locals: Record<string, any> = {};
-
-    constructor(event: Electron.IpcMainEvent, arg: Arg & { requestId: string; }) {
-        super();
-        this.event = event;
-        this.arg = arg;
-    }
-
-    getHeader(name) {
-        return this.respHeaders[name];
-    }
-
-    setHeader(name, value) {
-        this.respHeaders[name] = value.toString();
-        return this as unknown as MockedResponse;
-    }
-
-    header(name: string, value?: string | string[]) {
-        this.respHeaders[name] = value ?? "";
-        return this as unknown as MockedResponse;
-    }
-
-    status(statusCode) {
-        this.statusCode = statusCode;
-        return this as unknown as MockedResponse;
-    }
-
-    send(obj) {
-        this.event.sender.send("server-response", {
-            url: this.arg.url,
-            method: this.arg.method,
-            requestId: this.arg.requestId,
-            statusCode: this.statusCode,
-            headers: this.respHeaders,
-            body: obj
+    return new Promise<Response>((resolve, reject) => {
+        const req = createRequest({
+            method: request.method as any,
+            url: url.pathname + url.search,
+            headers,
+            body: body as any
         });
-        return this as unknown as MockedResponse;
+
+        // body-parser short-circuits when `_body` is already set, so pre-parsed
+        // JSON / buffers above won't be re-read from an empty mock stream and
+        // clobbered.
+        if (body !== undefined) {
+            (req as any)._body = true;
+        }
+
+        const res = createResponse({
+            req,
+            eventEmitter: EventEmitter
+        });
+
+        res.on("end", () => {
+            const payload = res._getBuffer().length > 0 ? res._getBuffer() : res._getData();
+            resolve(new Response(payload ?? null, {
+                status: res.statusCode,
+                headers: normalizeResponseHeaders(res.getHeaders())
+            }));
+        });
+
+        try {
+            app(req as any, res as any, (err: unknown) => {
+                if (err) reject(err);
+            });
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+async function readBody(request: Request): Promise<unknown> {
+    if (request.method === "GET" || request.method === "HEAD" || !request.body) {
+        return undefined;
     }
 
-    json(obj) {
-        this.respHeaders["Content-Type"] = "application/json";
-        this.send(JSON.stringify(obj));
-        return this as unknown as MockedResponse;
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+        const text = await request.text();
+        return text ? JSON.parse(text) : undefined;
     }
+
+    // For form uploads and binary payloads, hand Express a Buffer; multer
+    // / body-parser will treat it as the raw request body via the
+    // content-type header.
+    return Buffer.from(await request.arrayBuffer());
+}
+
+function normalizeResponseHeaders(headers: Record<string, number | string | string[] | undefined>): HeadersInit {
+    const out: [string, string][] = [];
+    for (const [name, value] of Object.entries(headers)) {
+        if (value === undefined) continue;
+        if (Array.isArray(value)) {
+            for (const v of value) out.push([name, v]);
+        } else {
+            out.push([name, String(value)]);
+        }
+    }
+    return out;
 }
 
 export default init;

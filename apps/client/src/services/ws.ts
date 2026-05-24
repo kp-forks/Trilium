@@ -236,8 +236,13 @@ async function consumeFrontendUpdateData() {
 }
 
 function connectWebSocket() {
+    // In Electron, the page lives on `trilium-app://app/`, so deriving the
+    // WS URL from window.location would point at an unreachable host. The
+    // server injects an absolute `wsBaseUrl` (ws://127.0.0.1:<port>/) for
+    // that case; everywhere else we still derive it from the page origin.
     const loc = window.location;
-    const webSocketUri = `${loc.protocol === "https:" ? "wss:" : "ws:"}//${loc.host}${loc.pathname}`;
+    const webSocketUri = window.glob.wsBaseUrl
+        ?? `${loc.protocol === "https:" ? "wss:" : "ws:"}//${loc.host}${loc.pathname}`;
 
     // use wss for secure messaging
     const ws = new WebSocket(webSocketUri);

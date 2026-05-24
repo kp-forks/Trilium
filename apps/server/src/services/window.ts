@@ -8,7 +8,6 @@ import customDictionary from "./custom_dictionary.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import optionService from "./options.js";
-import port from "./port.js";
 import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
 import sqlInit from "./sql_init.js";
@@ -66,7 +65,7 @@ async function createExtraWindow(extraWindowHash: string) {
     });
 
     win.setMenuBarVisibility(false);
-    win.loadURL(`http://127.0.0.1:${port}/?extraWindow=1${extraWindowHash}`);
+    win.loadURL(`trilium-app://app/?extraWindow=1${extraWindowHash}`);
 
     configureWebContents(win.webContents, spellcheckEnabled);
 
@@ -131,7 +130,7 @@ async function createMainWindow(app: App) {
     mainWindowState.manage(mainWindow);
 
     mainWindow.setMenuBarVisibility(false);
-    mainWindow.loadURL(`http://127.0.0.1:${port}`);
+    mainWindow.loadURL("trilium-app://app/");
     mainWindow.on("closed", () => (mainWindow = null));
 
     configureWebContents(mainWindow.webContents, spellcheckEnabled);
@@ -189,7 +188,9 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
         const parsedUrl = url.parse(targetUrl);
 
         // we still need to allow internal redirects from setup and migration pages
-        if (!["localhost", "127.0.0.1"].includes(parsedUrl.hostname || "") || (parsedUrl.path && parsedUrl.path !== "/" && parsedUrl.path !== "/?")) {
+        const isInternal = parsedUrl.protocol === "trilium-app:"
+            || ["localhost", "127.0.0.1"].includes(parsedUrl.hostname || "");
+        if (!isInternal || (parsedUrl.path && parsedUrl.path !== "/" && parsedUrl.path !== "/?")) {
             ev.preventDefault();
         }
     });
@@ -246,7 +247,7 @@ async function createSetupWindow() {
         }
     });
     setupWindow.removeMenu();
-    setupWindow.loadURL(`http://127.0.0.1:${port}`);
+    setupWindow.loadURL("trilium-app://app/");
     setupWindow.on("closed", () => (setupWindow = null));
 }
 
