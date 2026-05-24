@@ -68,8 +68,12 @@ async function dispatch(app: Application, request: Request): Promise<Response> {
             const buf = typeof (res as any)._getBuffer === "function" ? (res as any)._getBuffer() : null;
             const data = res._getData();
             const rawPayload = buf && buf.length > 0 ? buf : data;
+            // The Fetch `Response` constructor rejects a non-null body for
+            // null-body status codes (101 / 204 / 205 / 304). Express is
+            // happy to call `res.status(204).send()` so we must filter here.
+            const body = NULL_BODY_STATUSES.has(res.statusCode) ? null : toUint8Array(rawPayload);
             try {
-                resolve(new Response(toUint8Array(rawPayload) as BodyInit | null, {
+                resolve(new Response(body as BodyInit | null, {
                     status: res.statusCode,
                     headers: normalizeResponseHeaders(res.getHeaders())
                 }));
@@ -115,6 +119,9 @@ async function readBody(request: Request): Promise<unknown> {
 // setup and trip internal asserts when the scheme isn't http(s).
 // Content-Length / Transfer-Encoding from Express also don't match what
 // the renderer ends up reading, since we hand it a buffered body.
+// Status codes for which the Fetch `Response` constructor refuses any body.
+const NULL_BODY_STATUSES = new Set([101, 204, 205, 304]);
+
 const STRIPPED_HEADERS = new Set([
     "content-length",
     "transfer-encoding",
