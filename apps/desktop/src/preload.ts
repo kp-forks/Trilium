@@ -1,3 +1,4 @@
+import type { ElectronApi, ElectronContextMenuParams } from "@triliumnext/commons";
 import { contextBridge, ipcRenderer, webFrame } from "electron";
 
 contextBridge.exposeInMainWorld("electronApi", {
@@ -46,8 +47,8 @@ contextBridge.exposeInMainWorld("electronApi", {
     },
 
     // Context menu
-    onContextMenu(callback: (params: ContextMenuParams) => void) {
-        ipcRenderer.on("context-menu", (_event, params: ContextMenuParams) => callback(params));
+    onContextMenu(callback: (params: ElectronContextMenuParams) => void) {
+        ipcRenderer.on("context-menu", (_event, params: ElectronContextMenuParams) => callback(params));
     },
     webContentsAction(action: "cut" | "copy" | "paste" | "pasteAndMatchStyle" | "insertText", text?: string) {
         ipcRenderer.send("web-contents-action", action, text);
@@ -174,21 +175,4 @@ contextBridge.exposeInMainWorld("electronApi", {
         ipcRenderer.removeAllListeners("did-navigate");
         ipcRenderer.removeAllListeners("did-navigate-in-page");
     }
-});
-
-interface ContextMenuParams {
-    x: number;
-    y: number;
-    linkURL: string;
-    linkText: string;
-    mediaType: string;
-    isEditable: boolean;
-    selectionText: string;
-    misspelledWord: string;
-    dictionarySuggestions: string[];
-    editFlags: {
-        canCut: boolean;
-        canCopy: boolean;
-        canPaste: boolean;
-    };
-}
+} satisfies ElectronApi);
