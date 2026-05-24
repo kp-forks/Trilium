@@ -1,5 +1,6 @@
 import { execFile } from "child_process";
 import { type App, type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
+import fs from "fs";
 import path from "path";
 import url from "url";
 
@@ -245,6 +246,10 @@ electron.ipcMain.on("open-custom", (_event, filePath: string) => {
         : resolved.startsWith(tmpRoot);
     if (!inTmp) {
         throw new Error(`open-custom: refusing path outside tmpdir: ${resolved}`);
+    }
+
+    if (!fs.existsSync(resolved)) {
+        throw new Error(`open-custom: file does not exist: ${resolved}`);
     }
 
     const platform = process.platform;
