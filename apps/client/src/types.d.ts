@@ -63,6 +63,16 @@ declare global {
     interface ElectronApi {
         setZoomFactor(factor: number): void;
         getZoomFactor(): number;
+        onGlobalShortcut(callback: (actionName: string) => void): void;
+        onOpenInSameTab(callback: (noteId: string) => void): void;
+        setTitleBarOverlay(options: { color: string; symbolColor: string }): void;
+        setWindowButtonPosition(position: { x: number; y: number }): void;
+        onEnterFullScreen(callback: () => void): void;
+        onLeaveFullScreen(callback: () => void): void;
+        setBackgroundMaterial(material: string): void;
+        setVibrancy(vibrancy: string): void;
+        clearNavigationHistory(): void;
+        setNativeThemeSource(source: "system" | "light" | "dark"): void;
     }
 
     interface WindowEventMap {

@@ -88,6 +88,33 @@ electron.ipcMain.on("add-word-to-dictionary", (event, word: string) => {
     customDictionary.addWord(word);
 });
 
+// Window management IPC handlers (replacing @electron/remote for renderer access)
+electron.ipcMain.on("set-title-bar-overlay", (event, options: { color: string; symbolColor: string }) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(options);
+});
+
+electron.ipcMain.on("set-window-button-position", (event, position: { x: number; y: number }) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.setWindowButtonPosition(position);
+});
+
+electron.ipcMain.on("set-background-material", (event, material: string) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
+    win?.setBackgroundMaterial(material as Parameters<typeof win.setBackgroundMaterial>[0]);
+});
+
+electron.ipcMain.on("set-vibrancy", (event, vibrancy: string) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
+    win?.setVibrancy(vibrancy as Parameters<typeof win.setVibrancy>[0]);
+});
+
+electron.ipcMain.on("clear-navigation-history", (event) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.webContents.navigationHistory.clear();
+});
+
+electron.ipcMain.on("set-native-theme-source", (_event, source: "system" | "light" | "dark") => {
+    electron.nativeTheme.themeSource = source;
+});
+
 initPrintingHandlers();
 
 async function createMainWindow(app: App) {
@@ -205,6 +232,13 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
 
     if (spellcheckEnabled) {
         setupSpellcheckForSession(webContents.session);
+    }
+
+    // Forward full-screen events to the renderer via IPC.
+    const win = electron.BrowserWindow.fromWebContents(webContents);
+    if (win) {
+        win.on("enter-full-screen", () => webContents.send("enter-full-screen"));
+        win.on("leave-full-screen", () => webContents.send("leave-full-screen"));
     }
 }
 

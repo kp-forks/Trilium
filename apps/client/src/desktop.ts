@@ -1,8 +1,5 @@
 import "autocomplete.js/index_jquery.js";
 
-import type ElectronRemote from "@electron/remote";
-import type Electron from "electron";
-
 import appContext from "./components/app_context.js";
 import electronContextMenu from "./menus/electron_context_menu.js";
 import bundleService from "./services/bundle.js";
@@ -47,32 +44,32 @@ if (utils.isElectron()) {
 }
 
 function initOnElectron() {
-    const electron: typeof Electron = utils.dynamicRequire("electron");
-    electron.ipcRenderer.on("globalShortcut", async (event, actionName) => appContext.triggerCommand(actionName));
-    electron.ipcRenderer.on("openInSameTab", async (event, noteId) => appContext.tabManager.openInSameTab(noteId));
-    const electronRemote: typeof ElectronRemote = utils.dynamicRequire("@electron/remote");
-    const currentWindow = electronRemote.getCurrentWindow();
+    const api = window.electronApi!;
+
+    api.onGlobalShortcut(async (actionName) => appContext.triggerCommand(actionName));
+    api.onOpenInSameTab(async (noteId) => appContext.tabManager.openInSameTab(noteId));
+
     const style = window.getComputedStyle(document.body);
 
     initDarkOrLightMode();
-    initTransparencyEffects(style, currentWindow);
-    initFullScreenDetection(currentWindow);
+    initTransparencyEffects(style);
+    initFullScreenDetection();
 
     if (options.get("nativeTitleBarVisible") !== "true") {
-        initTitleBarButtons(style, currentWindow);
+        initTitleBarButtons(style);
     }
 
     // Clear navigation history on frontend refresh.
-    currentWindow.webContents.navigationHistory.clear();
+    api.clearNavigationHistory();
 }
 
-function initTitleBarButtons(style: CSSStyleDeclaration, currentWindow: Electron.BrowserWindow) {
+function initTitleBarButtons(style: CSSStyleDeclaration) {
     if (window.glob.platform === "win32") {
         const applyWindowsOverlay = () => {
             const color = style.getPropertyValue("--native-titlebar-background");
             const symbolColor = style.getPropertyValue("--native-titlebar-foreground");
             if (color && symbolColor) {
-                currentWindow.setTitleBarOverlay({ color, symbolColor });
+                window.electronApi!.setTitleBarOverlay({ color, symbolColor });
             }
         };
 
@@ -85,22 +82,22 @@ function initTitleBarButtons(style: CSSStyleDeclaration, currentWindow: Electron
     if (window.glob.platform === "darwin") {
         const xOffset = parseInt(style.getPropertyValue("--native-titlebar-darwin-x-offset"), 10);
         const yOffset = parseInt(style.getPropertyValue("--native-titlebar-darwin-y-offset"), 10);
-        currentWindow.setWindowButtonPosition({ x: xOffset, y: yOffset });
+        window.electronApi!.setWindowButtonPosition({ x: xOffset, y: yOffset });
     }
 }
 
-function initFullScreenDetection(currentWindow: Electron.BrowserWindow) {
-    currentWindow.on("enter-full-screen", () => document.body.classList.add("full-screen"));
-    currentWindow.on("leave-full-screen", () => document.body.classList.remove("full-screen"));
+function initFullScreenDetection() {
+    window.electronApi!.onEnterFullScreen(() => document.body.classList.add("full-screen"));
+    window.electronApi!.onLeaveFullScreen(() => document.body.classList.remove("full-screen"));
 }
 
-function initTransparencyEffects(style: CSSStyleDeclaration, currentWindow: Electron.BrowserWindow) {
+function initTransparencyEffects(style: CSSStyleDeclaration) {
     const material = style.getPropertyValue("--background-material").trim();
     if (window.glob.platform === "win32") {
         const bgMaterialOptions = ["auto", "none", "mica", "acrylic", "tabbed"] as const;
         const foundBgMaterialOption = bgMaterialOptions.find((bgMaterialOption) => material === bgMaterialOption);
         if (foundBgMaterialOption) {
-            currentWindow.setBackgroundMaterial(foundBgMaterialOption);
+            window.electronApi!.setBackgroundMaterial(foundBgMaterialOption);
         }
     }
 
@@ -108,7 +105,7 @@ function initTransparencyEffects(style: CSSStyleDeclaration, currentWindow: Elec
         const bgMaterialOptions = [ "popover", "tooltip", "titlebar", "selection", "menu", "sidebar", "header", "sheet", "window", "hud", "fullscreen-ui", "content", "under-window", "under-page" ] as const;
         const foundBgMaterialOption = bgMaterialOptions.find((bgMaterialOption) => material === bgMaterialOption);
         if (foundBgMaterialOption) {
-            currentWindow.setVibrancy(foundBgMaterialOption);
+            window.electronApi!.setVibrancy(foundBgMaterialOption);
         }
     }
 }
@@ -116,17 +113,14 @@ function initTransparencyEffects(style: CSSStyleDeclaration, currentWindow: Elec
 /**
  * Informs Electron that we prefer a dark or light theme. Apart from changing prefers-color-scheme at CSS level which is a side effect,
  * this fixes color issues with background effects or native title bars.
- *
- * @param style the root CSS element to read variables from.
  */
 function initDarkOrLightMode() {
-    let themeSource: typeof nativeTheme.themeSource = "system";
+    let themeSource: "system" | "light" | "dark" = "system";
 
     const themeStyle = window.glob.getThemeStyle();
     if (themeStyle !== "auto") {
         themeSource = themeStyle;
     }
 
-    const { nativeTheme } = utils.dynamicRequire("@electron/remote") as typeof ElectronRemote;
-    nativeTheme.themeSource = themeSource;
+    window.electronApi!.setNativeThemeSource(themeSource);
 }
