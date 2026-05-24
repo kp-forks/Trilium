@@ -138,6 +138,49 @@ async function readResponseText(response: Response, maxBytes: number): Promise<s
 }
 
 /**
+ * Wraps a Response so that reading/cancelling the body automatically
+ * closes the associated undici dispatcher afterwards.
+ */
+function withDispatcherCleanup(response: Response, dispatcher: Agent): Response {
+    const originalBody = response.body;
+    if (!originalBody) {
+        dispatcher.close();
+        return response;
+    }
+
+    let closed = false;
+    const cleanup = () => {
+        if (!closed) {
+            closed = true;
+            dispatcher.close();
+        }
+    };
+
+    const reader = originalBody.getReader();
+    const wrappedBody = new ReadableStream({
+        async pull(controller) {
+            const { done, value } = await reader.read();
+            if (done) {
+                controller.close();
+                cleanup();
+            } else {
+                controller.enqueue(value);
+            }
+        },
+        cancel() {
+            reader.cancel();
+            cleanup();
+        }
+    });
+
+    return new Response(wrappedBody, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+    });
+}
+
+/**
  * Fetches a URL with SSRF protection: resolves the hostname, validates
  * the resulting IP, and pins the connection to that IP to prevent DNS rebinding.
  */
@@ -171,10 +214,11 @@ async function safeFetch(url: string, options: RequestInit = {}): Promise<Respon
             if (!location) throw new Error("Redirect without Location header");
             // Resolve relative redirects against the current URL
             currentUrl = new URL(location, currentUrl).toString();
+            dispatcher.close();
             continue;
         }
 
-        return response;
+        return withDispatcherCleanup(response, dispatcher);
     }
 
     throw new Error("Too many redirects");
