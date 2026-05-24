@@ -7,7 +7,7 @@ import originalPackageJson from "../package.json" with { type: "json" };
 const build = new BuildHelper("apps/desktop");
 
 async function main() {
-    await build.buildBackend([ "src/main.ts"]);
+    await build.buildBackend([ "src/main.ts", "src/preload.ts"]);
 
     // Copy assets.
     build.copy("src/assets", "assets/");

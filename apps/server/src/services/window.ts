@@ -13,7 +13,11 @@ import { RESOURCE_DIR } from "./resource_dir.js";
 import sqlInit from "./sql_init.js";
 import { isDev, isMac, isWindows } from "./utils.js";
 
-const PRELOAD_SCRIPT = path.resolve(RESOURCE_DIR, "preload.js");
+const PRELOAD_SCRIPT = path.resolve(
+    isDev
+        ? path.join(__dirname, "..", "..", "..", "desktop", "src", "preload.compiled.cjs")
+        : path.join(__dirname, "preload.cjs")
+);
 
 // In dev mode, disable Chromium's HTTP cache so stale assets cached from a
 // previous production run (which served `max-age: 1y` headers) don't shadow
@@ -25,7 +29,7 @@ if (isDev) {
 // Prevent the window being garbage collected
 let mainWindow: BrowserWindow | null;
 let setupWindow: BrowserWindow | null;
-let allWindows: BrowserWindow[] = []; // // Used to store all windows, sorted by the order of focus.
+let allWindows: BrowserWindow[] = []; // Used to store all windows, sorted by the order of focus.
 const loadedSpellcheckSessions = new WeakSet<Session>();
 
 function trackWindowFocus(win: BrowserWindow) {
