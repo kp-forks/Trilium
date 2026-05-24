@@ -71,6 +71,18 @@ contextBridge.exposeInMainWorld("electronApi", {
     setAlwaysOnTop(enabled: boolean) {
         ipcRenderer.send("set-always-on-top", enabled);
     },
+    toggleDevTools() {
+        ipcRenderer.send("toggle-dev-tools");
+    },
+    isFullScreen(): boolean {
+        return ipcRenderer.sendSync("is-full-screen");
+    },
+    setFullScreen(enabled: boolean) {
+        ipcRenderer.send("set-full-screen", enabled);
+    },
+    createExtraWindow(extraWindowHash: string) {
+        ipcRenderer.send("create-extra-window", { extraWindowHash });
+    },
 
     // Tray
     reloadTray() {

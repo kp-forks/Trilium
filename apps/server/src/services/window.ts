@@ -115,6 +115,18 @@ electron.ipcMain.on("set-native-theme-source", (_event, source: "system" | "ligh
     electron.nativeTheme.themeSource = source;
 });
 
+electron.ipcMain.on("toggle-dev-tools", (event) => {
+    event.sender.toggleDevTools();
+});
+
+electron.ipcMain.on("is-full-screen", (event) => {
+    event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isFullScreen() ?? false;
+});
+
+electron.ipcMain.on("set-full-screen", (event, enabled: boolean) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.setFullScreen(enabled);
+});
+
 electron.ipcMain.on("is-always-on-top", (event) => {
     event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isAlwaysOnTop() ?? false;
 });

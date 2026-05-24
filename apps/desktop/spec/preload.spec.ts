@@ -204,6 +204,35 @@ describe("preload script", () => {
             });
         });
 
+        it("toggleDevTools sends correct IPC message", () => {
+            getApi().toggleDevTools();
+            expect(ipcRendererSent).toContainEqual({
+                channel: "toggle-dev-tools",
+                args: []
+            });
+        });
+
+        it("isFullScreen uses sendSync", () => {
+            ipcRendererSyncResults.set("is-full-screen:undefined", true);
+            expect(getApi().isFullScreen()).toBe(true);
+        });
+
+        it("setFullScreen sends correct IPC message", () => {
+            getApi().setFullScreen(true);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "set-full-screen",
+                args: [true]
+            });
+        });
+
+        it("createExtraWindow sends correct IPC message", () => {
+            getApi().createExtraWindow("#root/abc123");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "create-extra-window",
+                args: [{ extraWindowHash: "#root/abc123" }]
+            });
+        });
+
         it("isAlwaysOnTop uses sendSync", () => {
             ipcRendererSyncResults.set("is-always-on-top:undefined", true);
             expect(getApi().isAlwaysOnTop()).toBe(true);
