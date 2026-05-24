@@ -1,12 +1,12 @@
 import { execFile } from "child_process";
 import { type App, type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
-import os from "os";
 import path from "path";
 import url from "url";
 
 import app_info from "./app_info.js";
 import cls from "./cls.js";
 import customDictionary from "./custom_dictionary.js";
+import dataDirs from "./data_dir.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import optionService from "./options.js";
@@ -235,11 +235,11 @@ electron.ipcMain.on("open-custom", (_event, filePath: string) => {
         throw new Error("open-custom: invalid filePath");
     }
 
-    // Defense in depth: only allow paths the server itself wrote into the OS
-    // temp dir via /api/.../save-to-tmp-dir. Without this, a compromised
+    // Defense in depth: only allow paths the server itself wrote into Trilium's
+    // tmp dir via /api/.../save-to-tmp-dir. Without this, a compromised
     // renderer (e.g. via XSS) could ask us to launch arbitrary local files.
     const resolved = path.resolve(filePath);
-    const tmpRoot = path.resolve(os.tmpdir()) + path.sep;
+    const tmpRoot = path.resolve(dataDirs.TMP_DIR) + path.sep;
     const inTmp = process.platform === "win32"
         ? resolved.toLowerCase().startsWith(tmpRoot.toLowerCase())
         : resolved.startsWith(tmpRoot);
