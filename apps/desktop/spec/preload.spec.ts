@@ -272,6 +272,22 @@ describe("preload script", () => {
                 args: ["file:///tmp/test.txt"]
             });
         });
+
+        it("downloadURL sends correct IPC message", () => {
+            shell().downloadURL("https://example.com/file.zip");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "download-url",
+                args: ["https://example.com/file.zip"]
+            });
+        });
+
+        it("openCustom sends correct IPC message", () => {
+            shell().openCustom("/tmp/test.txt");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "open-custom",
+                args: ["/tmp/test.txt"]
+            });
+        });
     });
 
     describe("contextMenu", () => {

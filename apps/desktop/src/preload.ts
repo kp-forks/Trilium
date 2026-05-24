@@ -116,6 +116,12 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         openFileUrl(fileUrl: string): Promise<string> {
             return ipcRenderer.invoke("open-file-url", fileUrl);
+        },
+        downloadURL(url: string) {
+            ipcRenderer.send("download-url", url);
+        },
+        openCustom(filePath: string) {
+            ipcRenderer.send("open-custom", filePath);
         }
     },
 

@@ -224,6 +224,56 @@ electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
     return electron.shell.openPath(url.fileURLToPath(normalized));
 });
 
+electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
+    event.sender.downloadURL(downloadUrl);
+});
+
+electron.ipcMain.on("open-custom", (_event, filePath: string) => {
+    const platform = process.platform;
+
+    if (platform === "linux") {
+        const { exec } = require("child_process");
+        const terminals = ["x-terminal-emulator", "gnome-terminal", "konsole", "xterm", "xfce4-terminal", "mate-terminal", "rxvt", "terminator", "terminology"];
+
+        const openFileWithTerminal = (terminal: string) => {
+            const command = `${terminal} -e 'mimeopen -d "${filePath}"'`;
+            exec(command, (error: Error | null) => {
+                if (error) {
+                    console.error(`Open custom: Failed with ${terminal}: ${error}`);
+                    searchTerminal(terminals.indexOf(terminal) + 1);
+                }
+            });
+        };
+
+        const searchTerminal = (index: number) => {
+            if (index >= terminals.length) {
+                console.error("Open custom: No terminal found!");
+                electron.shell.openPath(filePath);
+                return;
+            }
+            exec(`which ${terminals[index]}`, (error: Error | null, stdout: string) => {
+                if (stdout.trim()) {
+                    openFileWithTerminal(terminals[index]);
+                } else {
+                    searchTerminal(index + 1);
+                }
+            });
+        };
+        searchTerminal(0);
+    } else if (platform === "win32") {
+        const { exec } = require("child_process");
+        const winPath = filePath.replace(/\//g, "\\");
+        exec(`rundll32.exe shell32.dll,OpenAs_RunDLL ${winPath}`, (err: Error | null) => {
+            if (err) {
+                console.error("Open custom:", err);
+                electron.shell.openPath(filePath);
+            }
+        });
+    } else {
+        electron.shell.openPath(filePath);
+    }
+});
+
 electron.ipcMain.on("navigation-history", (event, method: string) => {
     const wc = event.sender;
     switch (method) {

@@ -68,6 +68,8 @@ export interface ElectronShellApi {
     openExternal(url: string): void;
     openPath(path: string): Promise<string>;
     openFileUrl(fileUrl: string): Promise<string>;
+    downloadURL(url: string): void;
+    openCustom(filePath: string): void;
 }
 
 export interface ElectronContextMenuApi {
