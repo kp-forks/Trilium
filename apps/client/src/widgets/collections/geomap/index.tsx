@@ -12,6 +12,7 @@ import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
+import { escapeHtml } from "../../../services/utils";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import { ButtonOrActionButton } from "../../react/Button";
@@ -301,11 +302,11 @@ function buildIcon(bxIconClass: string, colorClass?: string, title?: string, not
     let html = /*html*/`\
         <img class="icon" src="${markerIcon}" />
         <img class="icon-shadow" src="${markerIconShadow}" />
-        <span class="bx ${bxIconClass} ${colorClass ?? ""}"></span>
-        <span class="title-label">${title ?? ""}</span>`;
+        <span class="bx ${escapeHtml(bxIconClass)} ${escapeHtml(colorClass ?? "")}"></span>
+        <span class="title-label">${escapeHtml(title ?? "")}</span>`;
 
     if (noteIdLink) {
-        html = `<div data-href="#root/${noteIdLink}" class="${archived ? "archived" : ""}">${html}</div>`;
+        html = `<div data-href="#root/${escapeHtml(noteIdLink)}" class="${archived ? "archived" : ""}">${html}</div>`;
     }
 
     return divIcon({
