@@ -47,7 +47,6 @@
   },
   "devDependencies": {
     "@braintree/sanitize-url": "7.1.2",
-    "@electron/remote": "2.1.3",
     "@triliumnext/commons": "workspace:*",
     "@triliumnext/core": "workspace:*",
     "@triliumnext/express-partial-content": "workspace:*",
