@@ -95,6 +95,9 @@ contextBridge.exposeInMainWorld("electronApi", {
     },
 
     // Printing
+    sendPrintProgress(progress: number) {
+        ipcRenderer.send("print-progress", progress);
+    },
     onPrintProgress(callback: (data: { progress: number; action: string }) => void) {
         ipcRenderer.on("print-progress", (_event, data) => callback(data));
     },
@@ -104,6 +107,24 @@ contextBridge.exposeInMainWorld("electronApi", {
     removePrintListeners() {
         ipcRenderer.removeAllListeners("print-progress");
         ipcRenderer.removeAllListeners("print-done");
+    },
+    getPrinters(): Promise<unknown[]> {
+        return ipcRenderer.invoke("get-printers");
+    },
+    exportAsPdfPreview(opts: Record<string, unknown>) {
+        ipcRenderer.send("export-as-pdf-preview", opts);
+    },
+    onExportAsPdfPreviewResult(callback: (result: { buffer?: Uint8Array; error?: string }) => void) {
+        ipcRenderer.on("export-as-pdf-preview-result", (_event, result) => callback(result));
+    },
+    removeExportAsPdfPreviewResultListener() {
+        ipcRenderer.removeAllListeners("export-as-pdf-preview-result");
+    },
+    savePdf(data: { title: string; buffer: Uint8Array }) {
+        ipcRenderer.send("save-pdf", data);
+    },
+    printFromPreview(opts: Record<string, unknown>) {
+        ipcRenderer.send("print-from-preview", opts);
     },
 
     // Navigation history

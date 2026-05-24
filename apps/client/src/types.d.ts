@@ -86,9 +86,16 @@ declare global {
         openFileUrl(fileUrl: string): Promise<string>;
         reloadTray(): void;
         addWordToDictionary(word: string): void;
+        sendPrintProgress(progress: number): void;
         onPrintProgress(callback: (data: { progress: number; action: string }) => void): void;
         onPrintDone(callback: (printReport: unknown) => void): void;
         removePrintListeners(): void;
+        getPrinters(): Promise<unknown[]>;
+        exportAsPdfPreview(opts: Record<string, unknown>): void;
+        onExportAsPdfPreviewResult(callback: (result: { buffer?: Uint8Array; error?: string }) => void): void;
+        removeExportAsPdfPreviewResultListener(): void;
+        savePdf(data: { title: string; buffer: Uint8Array }): void;
+        printFromPreview(opts: Record<string, unknown>): void;
         navigationCanGoBack(): boolean;
         navigationCanGoForward(): boolean;
         navigationGetAllEntries(): Array<{ url: string; title: string }>;

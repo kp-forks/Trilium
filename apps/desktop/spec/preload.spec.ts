@@ -298,6 +298,14 @@ describe("preload script", () => {
             expect(callback).toHaveBeenCalledWith({ success: true });
         });
 
+        it("sendPrintProgress sends correct IPC message", () => {
+            getApi().sendPrintProgress(50);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "print-progress",
+                args: [50]
+            });
+        });
+
         it("removePrintListeners clears both print listeners", () => {
             getApi().onPrintProgress(vi.fn());
             getApi().onPrintDone(vi.fn());
@@ -307,6 +315,61 @@ describe("preload script", () => {
             getApi().removePrintListeners();
             expect(ipcRendererListeners.has("print-progress")).toBe(false);
             expect(ipcRendererListeners.has("print-done")).toBe(false);
+        });
+    });
+
+    describe("print preview", () => {
+        it("getPrinters invokes correct IPC channel", async () => {
+            await getApi().getPrinters();
+            expect(ipcRendererInvoked).toContainEqual({
+                channel: "get-printers",
+                args: []
+            });
+        });
+
+        it("exportAsPdfPreview sends correct IPC message", () => {
+            const opts = { notePath: "root/abc", pageSize: "A4" };
+            getApi().exportAsPdfPreview(opts);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "export-as-pdf-preview",
+                args: [opts]
+            });
+        });
+
+        it("onExportAsPdfPreviewResult registers and forwards channel", () => {
+            const callback = vi.fn();
+            getApi().onExportAsPdfPreviewResult(callback);
+
+            const listeners = ipcRendererListeners.get("export-as-pdf-preview-result")!;
+            expect(listeners).toHaveLength(1);
+            const result = { buffer: new Uint8Array([1, 2, 3]) };
+            listeners[0]({}, result);
+            expect(callback).toHaveBeenCalledWith(result);
+        });
+
+        it("removeExportAsPdfPreviewResultListener clears listener", () => {
+            getApi().onExportAsPdfPreviewResult(vi.fn());
+            expect(ipcRendererListeners.has("export-as-pdf-preview-result")).toBe(true);
+            getApi().removeExportAsPdfPreviewResultListener();
+            expect(ipcRendererListeners.has("export-as-pdf-preview-result")).toBe(false);
+        });
+
+        it("savePdf sends correct IPC message", () => {
+            const data = { title: "Test", buffer: new Uint8Array([1]) };
+            getApi().savePdf(data);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "save-pdf",
+                args: [data]
+            });
+        });
+
+        it("printFromPreview sends correct IPC message", () => {
+            const opts = { notePath: "root/abc", silent: true };
+            getApi().printFromPreview(opts);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "print-from-preview",
+                args: [opts]
+            });
         });
     });
 
