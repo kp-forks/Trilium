@@ -225,6 +225,43 @@ describe("preload script", () => {
             });
         });
 
+        it("minimizeWindow sends correct IPC message", () => {
+            getApi().minimizeWindow();
+            expect(ipcRendererSent).toContainEqual({
+                channel: "minimize-window",
+                args: []
+            });
+        });
+
+        it("maximizeWindow sends correct IPC message", () => {
+            getApi().maximizeWindow();
+            expect(ipcRendererSent).toContainEqual({
+                channel: "maximize-window",
+                args: []
+            });
+        });
+
+        it("unmaximizeWindow sends correct IPC message", () => {
+            getApi().unmaximizeWindow();
+            expect(ipcRendererSent).toContainEqual({
+                channel: "unmaximize-window",
+                args: []
+            });
+        });
+
+        it("isMaximized uses sendSync", () => {
+            ipcRendererSyncResults.set("is-maximized:undefined", true);
+            expect(getApi().isMaximized()).toBe(true);
+        });
+
+        it("closeWindow sends correct IPC message", () => {
+            getApi().closeWindow();
+            expect(ipcRendererSent).toContainEqual({
+                channel: "close-window",
+                args: []
+            });
+        });
+
         it("createExtraWindow sends correct IPC message", () => {
             getApi().createExtraWindow("#root/abc123");
             expect(ipcRendererSent).toContainEqual({

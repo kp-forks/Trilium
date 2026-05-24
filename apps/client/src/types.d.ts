@@ -74,6 +74,11 @@ declare global {
         setFullScreen(enabled: boolean): void;
         isAlwaysOnTop(): boolean;
         setAlwaysOnTop(enabled: boolean): void;
+        minimizeWindow(): void;
+        maximizeWindow(): void;
+        unmaximizeWindow(): void;
+        isMaximized(): boolean;
+        closeWindow(): void;
         createExtraWindow(extraWindowHash: string): void;
         setBackgroundMaterial(material: string): void;
         setVibrancy(vibrancy: string): void;

@@ -131,6 +131,26 @@ electron.ipcMain.on("set-full-screen", (event, enabled: boolean) => {
     electron.BrowserWindow.fromWebContents(event.sender)?.setFullScreen(enabled);
 });
 
+electron.ipcMain.on("minimize-window", (event) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.minimize();
+});
+
+electron.ipcMain.on("maximize-window", (event) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.maximize();
+});
+
+electron.ipcMain.on("unmaximize-window", (event) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.unmaximize();
+});
+
+electron.ipcMain.on("is-maximized", (event) => {
+    event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
+});
+
+electron.ipcMain.on("close-window", (event) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.close();
+});
+
 electron.ipcMain.on("is-always-on-top", (event) => {
     event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isAlwaysOnTop() ?? false;
 });

@@ -80,6 +80,21 @@ contextBridge.exposeInMainWorld("electronApi", {
     setFullScreen(enabled: boolean) {
         ipcRenderer.send("set-full-screen", enabled);
     },
+    minimizeWindow() {
+        ipcRenderer.send("minimize-window");
+    },
+    maximizeWindow() {
+        ipcRenderer.send("maximize-window");
+    },
+    unmaximizeWindow() {
+        ipcRenderer.send("unmaximize-window");
+    },
+    isMaximized(): boolean {
+        return ipcRenderer.sendSync("is-maximized");
+    },
+    closeWindow() {
+        ipcRenderer.send("close-window");
+    },
     createExtraWindow(extraWindowHash: string) {
         ipcRenderer.send("create-extra-window", { extraWindowHash });
     },
