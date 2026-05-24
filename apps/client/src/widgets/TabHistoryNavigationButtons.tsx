@@ -1,5 +1,6 @@
 import "./TabHistoryNavigationButtons.css";
 
+import type { ElectronApi } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../services/i18n";

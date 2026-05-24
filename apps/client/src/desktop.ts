@@ -2,7 +2,7 @@ import "autocomplete.js/index_jquery.js";
 
 import type { ElectronWindowApi } from "@triliumnext/commons";
 
-import appContext from "./components/app_context.js";
+import appContext, { type CommandNames } from "./components/app_context.js";
 import electronContextMenu from "./menus/electron_context_menu.js";
 import bundleService from "./services/bundle.js";
 import glob from "./services/glob.js";
@@ -50,7 +50,9 @@ function initOnElectron() {
     if (!api) return;
 
     const win = api.window;
-    win.onGlobalShortcut(async (actionName) => appContext.triggerCommand(actionName));
+    // The action name comes from the keyboard-actions registry in the main
+    // process; runtime contract is that it's always a valid CommandNames key.
+    win.onGlobalShortcut(async (actionName) => appContext.triggerCommand(actionName as CommandNames));
     win.onOpenInSameTab(async (noteId) => appContext.tabManager.openInSameTab(noteId));
 
     const style = window.getComputedStyle(document.body);
