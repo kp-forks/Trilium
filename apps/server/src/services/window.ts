@@ -1,6 +1,5 @@
 import { execFile } from "child_process";
 import { type App, type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
-import fs from "fs";
 import path from "path";
 import url from "url";
 
@@ -10,6 +9,7 @@ import customDictionary from "./custom_dictionary.js";
 import dataDirs from "./data_dir.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
+import { validateOpenCustomPath } from "./open_custom.js";
 import optionService from "./options.js";
 import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
@@ -232,25 +232,11 @@ electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
 });
 
 electron.ipcMain.on("open-custom", (_event, filePath: string) => {
-    if (typeof filePath !== "string" || filePath.length === 0 || filePath.includes("\0")) {
-        throw new Error("open-custom: invalid filePath");
-    }
-
-    // Defense in depth: only allow paths the server itself wrote into Trilium's
-    // tmp dir via /api/.../save-to-tmp-dir. Without this, a compromised
-    // renderer (e.g. via XSS) could ask us to launch arbitrary local files.
-    const resolved = path.resolve(filePath);
-    const tmpRoot = path.resolve(dataDirs.TMP_DIR) + path.sep;
-    const inTmp = process.platform === "win32"
-        ? resolved.toLowerCase().startsWith(tmpRoot.toLowerCase())
-        : resolved.startsWith(tmpRoot);
-    if (!inTmp) {
-        throw new Error(`open-custom: refusing path outside tmpdir: ${resolved}`);
-    }
-
-    if (!fs.existsSync(resolved)) {
-        throw new Error(`open-custom: file does not exist: ${resolved}`);
-    }
+    // Defense in depth: validate the path is one the server itself wrote into
+    // Trilium's tmp dir via /api/.../save-to-tmp-dir, and that it exists.
+    // Without this, a compromised renderer (e.g. via XSS) could ask us to
+    // launch arbitrary local files.
+    const resolved = validateOpenCustomPath(filePath, dataDirs.TMP_DIR);
 
     const platform = process.platform;
 
