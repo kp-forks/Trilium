@@ -274,7 +274,13 @@ electron.ipcMain.on("open-custom", (_event, filePath: string) => {
         tryTerminal(0);
     } else if (platform === "win32") {
         const winPath = resolved.replace(/\//g, "\\");
-        execFile("rundll32.exe", ["shell32.dll,OpenAs_RunDLL", winPath], (err) => {
+        // OpenAs_RunDLL doesn't strip surrounding quotes from its arg, so we
+        // must NOT let Node quote the path on our behalf. windowsVerbatimArguments
+        // is safe here: CreateProcess passes the command line to rundll32 without
+        // any shell interpretation (so `&` is inert), and the path is validated
+        // above to live inside dataDirs.TMP_DIR with a sanitize-filename'd basename
+        // (so it cannot contain quotes or other rundll32-confusing characters).
+        execFile("rundll32.exe", ["shell32.dll,OpenAs_RunDLL", winPath], { windowsVerbatimArguments: true }, (err) => {
             if (err) {
                 log.error(`open-custom: rundll32 failed: ${err.message}`);
                 electron.shell.openPath(resolved);
