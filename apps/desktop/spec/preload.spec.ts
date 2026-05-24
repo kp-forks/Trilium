@@ -194,6 +194,11 @@ describe("preload script", () => {
             expect(ipcRendererSent).toContainEqual({ channel: "toggle-all-windows", args: [] });
         });
 
+        it("clearCache invokes correct IPC channel", async () => {
+            await win().clearCache();
+            expect(ipcRendererInvoked).toContainEqual({ channel: "clear-cache", args: [] });
+        });
+
         it("setBackgroundMaterial sends correct IPC message", () => {
             win().setBackgroundMaterial("mica");
             expect(ipcRendererSent).toContainEqual({ channel: "set-background-material", args: ["mica"] });

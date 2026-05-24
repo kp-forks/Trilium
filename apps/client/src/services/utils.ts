@@ -343,10 +343,7 @@ function formatHtml(html: string) {
 }
 
 export async function clearBrowserCache() {
-    if (isElectron()) {
-        const win = dynamicRequire("@electron/remote").getCurrentWindow();
-        await win.webContents.session.clearCache();
-    }
+    await window.electronApi?.window.clearCache();
 }
 
 function copySelectionToClipboard() {

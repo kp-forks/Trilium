@@ -94,6 +94,10 @@ electron.ipcMain.on("restart-app", () => {
     electron.app.exit();
 });
 
+electron.ipcMain.handle("clear-cache", async (event) => {
+    await event.sender.session.clearCache();
+});
+
 electron.ipcMain.on("toggle-all-windows", () => {
     const windows = electron.BrowserWindow.getAllWindows();
     const isVisible = windows.every((w) => w.isVisible());

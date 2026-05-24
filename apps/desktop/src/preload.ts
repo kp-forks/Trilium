@@ -77,6 +77,9 @@ contextBridge.exposeInMainWorld("electronApi", {
         toggleAllWindows() {
             ipcRenderer.send("toggle-all-windows");
         },
+        clearCache(): Promise<void> {
+            return ipcRenderer.invoke("clear-cache");
+        },
 
         // Background effects
         setBackgroundMaterial(material: string) {
