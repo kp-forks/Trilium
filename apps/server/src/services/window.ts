@@ -7,6 +7,7 @@ import app_info from "./app_info.js";
 import cls from "./cls.js";
 import customDictionary from "./custom_dictionary.js";
 import dataDirs from "./data_dir.js";
+import { validateDownloadUrl } from "./download_url.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import { validateOpenCustomPath } from "./open_custom.js";
@@ -230,7 +231,8 @@ electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
 });
 
 electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
-    event.sender.downloadURL(downloadUrl);
+    const validated = validateDownloadUrl(downloadUrl, event.sender.getURL());
+    event.sender.downloadURL(validated.toString());
 });
 
 electron.ipcMain.on("open-custom", (_event, filePath: string) => {
