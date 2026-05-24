@@ -94,6 +94,10 @@ electron.ipcMain.on("restart-app", () => {
     electron.app.exit();
 });
 
+electron.ipcMain.on("show-window", (event) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.show();
+});
+
 electron.ipcMain.handle("clear-cache", async (event) => {
     await event.sender.session.clearCache();
 });

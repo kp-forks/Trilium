@@ -53,6 +53,7 @@ export interface ElectronWindowApi {
     restartApp(): void;
     toggleAllWindows(): void;
     clearCache(): Promise<void>;
+    showWindow(): void;
 
     // Main → renderer events
     onGlobalShortcut(callback: (actionName: string) => void): void;

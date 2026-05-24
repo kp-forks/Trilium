@@ -80,6 +80,9 @@ contextBridge.exposeInMainWorld("electronApi", {
         clearCache(): Promise<void> {
             return ipcRenderer.invoke("clear-cache");
         },
+        showWindow() {
+            ipcRenderer.send("show-window");
+        },
 
         // Background effects
         setBackgroundMaterial(material: string) {

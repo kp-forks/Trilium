@@ -194,6 +194,11 @@ describe("preload script", () => {
             expect(ipcRendererSent).toContainEqual({ channel: "toggle-all-windows", args: [] });
         });
 
+        it("showWindow sends correct IPC message", () => {
+            win().showWindow();
+            expect(ipcRendererSent).toContainEqual({ channel: "show-window", args: [] });
+        });
+
         it("clearCache invokes correct IPC channel", async () => {
             await win().clearCache();
             expect(ipcRendererInvoked).toContainEqual({ channel: "clear-cache", args: [] });
