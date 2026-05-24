@@ -92,7 +92,14 @@ function checkApiAuth(req: Request, res: Response, next: NextFunction) {
         return next();
     }
 
-    if (!req.session.loggedIn && !noAuthentication) {
+    // The desktop renderer is trusted (it's our own UI). API requests come in
+    // via the `trilium-app://` custom protocol where Express sessions don't
+    // round-trip, so we bypass auth here the same way `checkAuth` does.
+    if (isElectron || noAuthentication) {
+        return next();
+    }
+
+    if (!req.session.loggedIn) {
         console.warn(`Missing session with ID '${req.sessionID}'.`);
         reject(req, res, "Logged in session not found");
     } else {
