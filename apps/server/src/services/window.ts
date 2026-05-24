@@ -56,8 +56,8 @@ async function createExtraWindow(extraWindowHash: string) {
         height: 800,
         title: "Trilium Notes",
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
+            nodeIntegration: false,
+            contextIsolation: true,
             spellcheck: spellcheckEnabled,
             webviewTag: true
         },
@@ -119,8 +119,8 @@ async function createMainWindow(app: App) {
         minHeight: 400,
         title: "Trilium Notes",
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
+            nodeIntegration: false,
+            contextIsolation: true,
             spellcheck: spellcheckEnabled,
             webviewTag: true
         },
@@ -241,9 +241,8 @@ async function createSetupWindow() {
         ...(isWindows && { backgroundMaterial: "mica" as const }),
         ...(isMac && { transparent: true, visualEffectState: "active" as const, vibrancy: "under-window" as const, titleBarStyle: "hiddenInset" as const }),
         webPreferences: {
-            // necessary for e.g. utils.isElectron()
-            nodeIntegration: true,
-            contextIsolation: false
+            nodeIntegration: false,
+            contextIsolation: true
         }
     });
     setupWindow.removeMenu();
