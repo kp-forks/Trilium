@@ -290,7 +290,7 @@ electron.ipcMain.on("navigation-history-go-to-index", (event, index: number) => 
     event.sender.navigationHistory.goToIndex(index);
 });
 
-initPrintingHandlers();
+initPrintingHandlers(PRELOAD_SCRIPT);
 
 async function createMainWindow(app: App) {
     if ("setUserTasks" in app) {
