@@ -7,14 +7,16 @@ import app_info from "./app_info.js";
 import cls from "./cls.js";
 import customDictionary from "./custom_dictionary.js";
 import dataDirs from "./data_dir.js";
-import { validateDownloadUrl } from "./download_url.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
-import { validateOpenCustomPath } from "./open_custom.js";
-import { validateOpenExternalUrl } from "./open_external.js";
-import { validateOpenFileUrl } from "./open_file_url.js";
-import { validateOpenPath } from "./open_path.js";
 import optionService from "./options.js";
+import {
+    validateDownloadUrl,
+    validateOpenCustomPath,
+    validateOpenExternalUrl,
+    validateOpenFileUrl,
+    validateOpenPath
+} from "./shell_validators.js";
 import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
 import sqlInit from "./sql_init.js";
