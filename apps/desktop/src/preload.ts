@@ -61,6 +61,36 @@ contextBridge.exposeInMainWorld("electronApi", {
     // Dictionary
     addWordToDictionary(word: string) {
         ipcRenderer.send("add-word-to-dictionary", word);
+    },
+
+    // Navigation history
+    navigationCanGoBack(): boolean {
+        return ipcRenderer.sendSync("navigation-history", "canGoBack");
+    },
+    navigationCanGoForward(): boolean {
+        return ipcRenderer.sendSync("navigation-history", "canGoForward");
+    },
+    navigationGetAllEntries(): Array<{ url: string; title: string }> {
+        return ipcRenderer.sendSync("navigation-history", "getAllEntries");
+    },
+    navigationGetActiveIndex(): number {
+        return ipcRenderer.sendSync("navigation-history", "getActiveIndex");
+    },
+    navigationLength(): number {
+        return ipcRenderer.sendSync("navigation-history", "length");
+    },
+    navigationGoToIndex(index: number) {
+        ipcRenderer.send("navigation-history-go-to-index", index);
+    },
+    onDidNavigate(callback: () => void) {
+        ipcRenderer.on("did-navigate", () => callback());
+    },
+    onDidNavigateInPage(callback: () => void) {
+        ipcRenderer.on("did-navigate-in-page", () => callback());
+    },
+    removeDidNavigateListeners() {
+        ipcRenderer.removeAllListeners("did-navigate");
+        ipcRenderer.removeAllListeners("did-navigate-in-page");
     }
 });
 

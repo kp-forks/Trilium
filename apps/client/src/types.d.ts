@@ -77,6 +77,15 @@ declare global {
         webContentsAction(action: "cut" | "copy" | "paste" | "pasteAndMatchStyle" | "insertText", text?: string): void;
         openExternal(url: string): void;
         addWordToDictionary(word: string): void;
+        navigationCanGoBack(): boolean;
+        navigationCanGoForward(): boolean;
+        navigationGetAllEntries(): Array<{ url: string; title: string }>;
+        navigationGetActiveIndex(): number;
+        navigationLength(): number;
+        navigationGoToIndex(index: number): void;
+        onDidNavigate(callback: () => void): void;
+        onDidNavigateInPage(callback: () => void): void;
+        removeDidNavigateListeners(): void;
     }
 
     interface ElectronContextMenuParams {

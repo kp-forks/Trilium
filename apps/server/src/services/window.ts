@@ -130,6 +130,22 @@ electron.ipcMain.on("open-external", (_event, url: string) => {
     electron.shell.openExternal(url);
 });
 
+electron.ipcMain.on("navigation-history", (event, method: string) => {
+    const wc = event.sender;
+    switch (method) {
+        case "canGoBack": event.returnValue = wc.navigationHistory.canGoBack(); break;
+        case "canGoForward": event.returnValue = wc.navigationHistory.canGoForward(); break;
+        case "getAllEntries": event.returnValue = wc.navigationHistory.getAllEntries(); break;
+        case "getActiveIndex": event.returnValue = wc.navigationHistory.getActiveIndex(); break;
+        case "length": event.returnValue = wc.navigationHistory.length(); break;
+        default: event.returnValue = null;
+    }
+});
+
+electron.ipcMain.on("navigation-history-go-to-index", (event, index: number) => {
+    event.sender.navigationHistory.goToIndex(index);
+});
+
 initPrintingHandlers();
 
 async function createMainWindow(app: App) {
@@ -255,6 +271,10 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
         win.on("enter-full-screen", () => webContents.send("enter-full-screen"));
         win.on("leave-full-screen", () => webContents.send("leave-full-screen"));
     }
+
+    // Forward navigation events to the renderer for back/forward button state.
+    webContents.on("did-navigate", () => webContents.send("did-navigate"));
+    webContents.on("did-navigate-in-page", () => webContents.send("did-navigate-in-page"));
 
     // Forward context-menu event to the renderer with only the fields we need.
     webContents.on("context-menu", (_event, params) => {

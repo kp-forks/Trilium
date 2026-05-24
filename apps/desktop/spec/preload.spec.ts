@@ -4,6 +4,7 @@ let exposedApi: Record<string, Record<string, unknown>> = {};
 let mockZoomFactor = 1.0;
 const ipcRendererListeners = new Map<string, Function[]>();
 const ipcRendererSent: Array<{ channel: string; args: unknown[] }> = [];
+const ipcRendererSyncResults = new Map<string, unknown>();
 
 vi.mock("electron", () => ({
     contextBridge: {
@@ -27,6 +28,12 @@ vi.mock("electron", () => ({
         },
         send(channel: string, ...args: unknown[]) {
             ipcRendererSent.push({ channel, args });
+        },
+        sendSync(channel: string, ...args: unknown[]) {
+            return ipcRendererSyncResults.get(`${channel}:${args[0]}`);
+        },
+        removeAllListeners(channel: string) {
+            ipcRendererListeners.delete(channel);
         }
     }
 }));
@@ -41,6 +48,7 @@ describe("preload script", () => {
         mockZoomFactor = 1.0;
         ipcRendererListeners.clear();
         ipcRendererSent.length = 0;
+        ipcRendererSyncResults.clear();
         vi.resetModules();
         await import("../src/preload.js");
     });
@@ -194,6 +202,63 @@ describe("preload script", () => {
             const params = { x: 100, y: 200, selectionText: "test" };
             listeners[0]({}, params);
             expect(callback).toHaveBeenCalledWith(params);
+        });
+    });
+
+    describe("navigation history", () => {
+        it("navigationCanGoBack uses sendSync", () => {
+            ipcRendererSyncResults.set("navigation-history:canGoBack", true);
+            expect(getApi().navigationCanGoBack()).toBe(true);
+        });
+
+        it("navigationCanGoForward uses sendSync", () => {
+            ipcRendererSyncResults.set("navigation-history:canGoForward", false);
+            expect(getApi().navigationCanGoForward()).toBe(false);
+        });
+
+        it("navigationGetAllEntries uses sendSync", () => {
+            const entries = [{ url: "trilium-app://app/?#abc", title: "Note" }];
+            ipcRendererSyncResults.set("navigation-history:getAllEntries", entries);
+            expect(getApi().navigationGetAllEntries()).toEqual(entries);
+        });
+
+        it("navigationGetActiveIndex uses sendSync", () => {
+            ipcRendererSyncResults.set("navigation-history:getActiveIndex", 3);
+            expect(getApi().navigationGetActiveIndex()).toBe(3);
+        });
+
+        it("navigationLength uses sendSync", () => {
+            ipcRendererSyncResults.set("navigation-history:length", 5);
+            expect(getApi().navigationLength()).toBe(5);
+        });
+
+        it("navigationGoToIndex sends correct IPC message", () => {
+            getApi().navigationGoToIndex(2);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "navigation-history-go-to-index",
+                args: [2]
+            });
+        });
+
+        it("onDidNavigate registers and forwards did-navigate channel", () => {
+            const callback = vi.fn();
+            getApi().onDidNavigate(callback);
+
+            const listeners = ipcRendererListeners.get("did-navigate")!;
+            expect(listeners).toHaveLength(1);
+            listeners[0]();
+            expect(callback).toHaveBeenCalled();
+        });
+
+        it("removeDidNavigateListeners clears both navigation listeners", () => {
+            getApi().onDidNavigate(vi.fn());
+            getApi().onDidNavigateInPage(vi.fn());
+            expect(ipcRendererListeners.has("did-navigate")).toBe(true);
+            expect(ipcRendererListeners.has("did-navigate-in-page")).toBe(true);
+
+            getApi().removeDidNavigateListeners();
+            expect(ipcRendererListeners.has("did-navigate")).toBe(false);
+            expect(ipcRendererListeners.has("did-navigate-in-page")).toBe(false);
         });
     });
 });
