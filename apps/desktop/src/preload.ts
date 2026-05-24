@@ -63,6 +63,18 @@ contextBridge.exposeInMainWorld("electronApi", {
         ipcRenderer.send("add-word-to-dictionary", word);
     },
 
+    // Printing
+    onPrintProgress(callback: (data: { progress: number; action: string }) => void) {
+        ipcRenderer.on("print-progress", (_event, data) => callback(data));
+    },
+    onPrintDone(callback: (printReport: unknown) => void) {
+        ipcRenderer.on("print-done", (_event, printReport) => callback(printReport));
+    },
+    removePrintListeners() {
+        ipcRenderer.removeAllListeners("print-progress");
+        ipcRenderer.removeAllListeners("print-done");
+    },
+
     // Navigation history
     navigationCanGoBack(): boolean {
         return ipcRenderer.sendSync("navigation-history", "canGoBack");

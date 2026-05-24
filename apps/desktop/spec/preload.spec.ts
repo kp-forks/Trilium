@@ -205,6 +205,39 @@ describe("preload script", () => {
         });
     });
 
+    describe("printing", () => {
+        it("onPrintProgress registers and forwards print-progress channel", () => {
+            const callback = vi.fn();
+            getApi().onPrintProgress(callback);
+
+            const listeners = ipcRendererListeners.get("print-progress")!;
+            expect(listeners).toHaveLength(1);
+            listeners[0]({}, { progress: 50, action: "printing" });
+            expect(callback).toHaveBeenCalledWith({ progress: 50, action: "printing" });
+        });
+
+        it("onPrintDone registers and forwards print-done channel", () => {
+            const callback = vi.fn();
+            getApi().onPrintDone(callback);
+
+            const listeners = ipcRendererListeners.get("print-done")!;
+            expect(listeners).toHaveLength(1);
+            listeners[0]({}, { success: true });
+            expect(callback).toHaveBeenCalledWith({ success: true });
+        });
+
+        it("removePrintListeners clears both print listeners", () => {
+            getApi().onPrintProgress(vi.fn());
+            getApi().onPrintDone(vi.fn());
+            expect(ipcRendererListeners.has("print-progress")).toBe(true);
+            expect(ipcRendererListeners.has("print-done")).toBe(true);
+
+            getApi().removePrintListeners();
+            expect(ipcRendererListeners.has("print-progress")).toBe(false);
+            expect(ipcRendererListeners.has("print-done")).toBe(false);
+        });
+    });
+
     describe("navigation history", () => {
         it("navigationCanGoBack uses sendSync", () => {
             ipcRendererSyncResults.set("navigation-history:canGoBack", true);

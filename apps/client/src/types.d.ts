@@ -77,6 +77,9 @@ declare global {
         webContentsAction(action: "cut" | "copy" | "paste" | "pasteAndMatchStyle" | "insertText", text?: string): void;
         openExternal(url: string): void;
         addWordToDictionary(word: string): void;
+        onPrintProgress(callback: (data: { progress: number; action: string }) => void): void;
+        onPrintDone(callback: (printReport: unknown) => void): void;
+        removePrintListeners(): void;
         navigationCanGoBack(): boolean;
         navigationCanGoForward(): boolean;
         navigationGetAllEntries(): Array<{ url: string; title: string }>;
