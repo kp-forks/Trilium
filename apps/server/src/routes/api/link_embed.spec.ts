@@ -47,9 +47,9 @@ describe("validateHostResolution", () => {
         await expect(validateHostResolution("fe80::1")).rejects.toThrow("private/internal");
     });
 
-    it("allows public IP literals", async () => {
-        await expect(validateHostResolution("8.8.8.8")).resolves.toBeUndefined();
-        await expect(validateHostResolution("1.1.1.1")).resolves.toBeUndefined();
+    it("allows public IP literals and returns validated addresses", async () => {
+        await expect(validateHostResolution("8.8.8.8")).resolves.toEqual([{ address: "8.8.8.8", family: 4 }]);
+        await expect(validateHostResolution("1.1.1.1")).resolves.toEqual([{ address: "1.1.1.1", family: 4 }]);
     });
 
     it("rejects hostnames that resolve to private IPs (DNS rebinding)", async () => {
@@ -69,12 +69,14 @@ describe("validateHostResolution", () => {
         await expect(validateHostResolution("dual.example.com")).rejects.toThrow("private/internal");
     });
 
-    it("allows hostnames that resolve to public IPs", async () => {
+    it("allows hostnames that resolve to public IPs and returns addresses", async () => {
         vi.spyOn(dns.promises, "lookup").mockResolvedValueOnce([
             { address: "93.184.216.34", family: 4 }
         ] as unknown as dns.LookupAddress);
 
-        await expect(validateHostResolution("example.com")).resolves.toBeUndefined();
+        await expect(validateHostResolution("example.com")).resolves.toEqual([
+            { address: "93.184.216.34", family: 4 }
+        ]);
     });
 
     it("rejects hostnames that fail to resolve", async () => {

@@ -6,6 +6,7 @@ import { ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import { parse } from "node-html-parser";
 import ipaddr from "ipaddr.js";
+import { Agent } from "undici";
 
 import log from "../../services/log.js";
 
@@ -36,14 +37,15 @@ function isBlockedIP(ip: string): boolean {
 
 /**
  * Resolves the hostname to IP addresses and verifies none are private/reserved.
+ * Returns the validated addresses so they can be pinned for the actual connection.
  */
-async function validateHostResolution(hostname: string): Promise<void> {
+async function validateHostResolution(hostname: string): Promise<dns.LookupAddress[]> {
     // If the hostname is already an IP literal, check it directly
     if (net.isIP(hostname)) {
         if (isBlockedIP(hostname)) {
             throw new ValidationError("URLs pointing to private/internal networks are not allowed");
         }
-        return;
+        return [{ address: hostname, family: net.isIP(hostname) as 4 | 6 }];
     }
 
     let addresses: dns.LookupAddress[];
@@ -58,6 +60,8 @@ async function validateHostResolution(hostname: string): Promise<void> {
             throw new ValidationError("URLs pointing to private/internal networks are not allowed");
         }
     }
+
+    return addresses;
 }
 
 function validateUrl(urlString: string): URL {
@@ -73,6 +77,40 @@ function validateUrl(urlString: string): URL {
     }
 
     return parsed;
+}
+
+/**
+ * Creates a custom DNS lookup function that only returns pre-validated IP addresses,
+ * preventing DNS rebinding attacks by ensuring the TCP connection uses the same IPs
+ * that were checked during SSRF validation.
+ */
+function createPinnedLookup(validatedAddresses: dns.LookupAddress[]) {
+    // Node's net.connect calls lookup with { all: true, hints } and expects
+    // the callback signature (err, addresses[]).  Handle both the all and
+    // single-address forms so this works across Node versions.
+    return (
+        _hostname: string,
+        options: { family?: number; all?: boolean } | number,
+        callback: (...args: unknown[]) => void
+    ) => {
+        const opts = typeof options === "number" ? { family: options } : options;
+
+        let filtered = validatedAddresses;
+        if (opts.family === 4 || opts.family === 6) {
+            filtered = validatedAddresses.filter((a) => a.family === opts.family);
+        }
+
+        if (filtered.length === 0) {
+            callback(new Error("No validated addresses available for the requested address family"));
+            return;
+        }
+
+        if (opts.all) {
+            callback(null, filtered);
+        } else {
+            callback(null, filtered[0].address, filtered[0].family);
+        }
+    };
 }
 
 /**
@@ -100,23 +138,33 @@ async function readResponseText(response: Response, maxBytes: number): Promise<s
 }
 
 /**
- * Fetches a URL with SSRF protection: resolves the hostname and validates
- * the resulting IP before each request, including on redirects.
+ * Fetches a URL with SSRF protection: resolves the hostname, validates
+ * the resulting IP, and pins the connection to that IP to prevent DNS rebinding.
  */
 async function safeFetch(url: string, options: RequestInit = {}): Promise<Response> {
     let currentUrl = url;
 
     for (let i = 0; i <= MAX_REDIRECTS; i++) {
         const parsed = validateUrl(currentUrl);
-        await validateHostResolution(parsed.hostname);
+        const validatedAddresses = await validateHostResolution(parsed.hostname);
 
-        // URL and resolved IPs are validated above by validateUrl() and
-        // validateHostResolution() before every request, including redirects.
-        const response = await fetch(currentUrl, { // codeql[js/request-forgery]
-            ...options,
-            redirect: "manual",
-            signal: options.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS)
+        // Use a custom dispatcher that pins DNS to the validated IPs,
+        // preventing a second DNS lookup from resolving to a different (private) IP.
+        const dispatcher = new Agent({
+            connect: {
+                lookup: createPinnedLookup(validatedAddresses) as never
+            }
         });
+
+        // URL and resolved IPs are validated above and pinned via the custom dispatcher.
+        // Node.js fetch supports `dispatcher` at runtime (undici), but the type isn't in RequestInit.
+        const fetchOptions = {
+            ...options,
+            redirect: "manual" as const,
+            signal: options.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS),
+            dispatcher
+        };
+        const response = await fetch(currentUrl, fetchOptions as RequestInit); // codeql[js/request-forgery]
 
         if (response.status >= 300 && response.status < 400) {
             const location = response.headers.get("location");
