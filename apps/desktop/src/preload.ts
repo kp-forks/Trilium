@@ -58,6 +58,11 @@ contextBridge.exposeInMainWorld("electronApi", {
         ipcRenderer.send("open-external", url);
     },
 
+    // Tray
+    reloadTray() {
+        ipcRenderer.send("reload-tray");
+    },
+
     // Dictionary
     addWordToDictionary(word: string) {
         ipcRenderer.send("add-word-to-dictionary", word);

@@ -76,6 +76,7 @@ declare global {
         onContextMenu(callback: (params: ElectronContextMenuParams) => void): void;
         webContentsAction(action: "cut" | "copy" | "paste" | "pasteAndMatchStyle" | "insertText", text?: string): void;
         openExternal(url: string): void;
+        reloadTray(): void;
         addWordToDictionary(word: string): void;
         onPrintProgress(callback: (data: { progress: number; action: string }) => void): void;
         onPrintDone(callback: (printReport: unknown) => void): void;

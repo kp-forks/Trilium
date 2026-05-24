@@ -182,6 +182,14 @@ describe("preload script", () => {
             });
         });
 
+        it("reloadTray sends correct IPC message", () => {
+            getApi().reloadTray();
+            expect(ipcRendererSent).toContainEqual({
+                channel: "reload-tray",
+                args: []
+            });
+        });
+
         it("addWordToDictionary sends correct IPC message", () => {
             getApi().addWordToDictionary("trilium");
             expect(ipcRendererSent).toContainEqual({
