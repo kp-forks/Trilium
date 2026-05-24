@@ -73,6 +73,27 @@ declare global {
         setVibrancy(vibrancy: string): void;
         clearNavigationHistory(): void;
         setNativeThemeSource(source: "system" | "light" | "dark"): void;
+        onContextMenu(callback: (params: ElectronContextMenuParams) => void): void;
+        webContentsAction(action: "cut" | "copy" | "paste" | "pasteAndMatchStyle" | "insertText", text?: string): void;
+        openExternal(url: string): void;
+        addWordToDictionary(word: string): void;
+    }
+
+    interface ElectronContextMenuParams {
+        x: number;
+        y: number;
+        linkURL: string;
+        linkText: string;
+        mediaType: string;
+        isEditable: boolean;
+        selectionText: string;
+        misspelledWord: string;
+        dictionarySuggestions: string[];
+        editFlags: {
+            canCut: boolean;
+            canCopy: boolean;
+            canPaste: boolean;
+        };
     }
 
     interface WindowEventMap {

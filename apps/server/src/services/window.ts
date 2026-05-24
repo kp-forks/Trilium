@@ -115,6 +115,21 @@ electron.ipcMain.on("set-native-theme-source", (_event, source: "system" | "ligh
     electron.nativeTheme.themeSource = source;
 });
 
+electron.ipcMain.on("web-contents-action", (event, action: string, text?: string) => {
+    const wc = event.sender;
+    switch (action) {
+        case "cut": wc.cut(); break;
+        case "copy": wc.copy(); break;
+        case "paste": wc.paste(); break;
+        case "pasteAndMatchStyle": wc.pasteAndMatchStyle(); break;
+        case "insertText": if (text) wc.insertText(text); break;
+    }
+});
+
+electron.ipcMain.on("open-external", (_event, url: string) => {
+    electron.shell.openExternal(url);
+});
+
 initPrintingHandlers();
 
 async function createMainWindow(app: App) {
@@ -240,6 +255,26 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
         win.on("enter-full-screen", () => webContents.send("enter-full-screen"));
         win.on("leave-full-screen", () => webContents.send("leave-full-screen"));
     }
+
+    // Forward context-menu event to the renderer with only the fields we need.
+    webContents.on("context-menu", (_event, params) => {
+        webContents.send("context-menu", {
+            x: params.x,
+            y: params.y,
+            linkURL: params.linkURL,
+            linkText: params.linkText,
+            mediaType: params.mediaType,
+            isEditable: params.isEditable,
+            selectionText: params.selectionText,
+            misspelledWord: params.misspelledWord,
+            dictionarySuggestions: params.dictionarySuggestions,
+            editFlags: {
+                canCut: params.editFlags.canCut,
+                canCopy: params.editFlags.canCopy,
+                canPaste: params.editFlags.canPaste
+            }
+        });
+    });
 }
 
 function setupSpellcheckForSession(session: Session) {

@@ -151,5 +151,49 @@ describe("preload script", () => {
                 args: ["dark"]
             });
         });
+
+        it("webContentsAction sends action and optional text", () => {
+            getApi().webContentsAction("cut");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "web-contents-action",
+                args: ["cut", undefined]
+            });
+
+            getApi().webContentsAction("insertText", "hello");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "web-contents-action",
+                args: ["insertText", "hello"]
+            });
+        });
+
+        it("openExternal sends correct IPC message", () => {
+            getApi().openExternal("https://example.com");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "open-external",
+                args: ["https://example.com"]
+            });
+        });
+
+        it("addWordToDictionary sends correct IPC message", () => {
+            getApi().addWordToDictionary("trilium");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "add-word-to-dictionary",
+                args: ["trilium"]
+            });
+        });
+    });
+
+    describe("context menu listener", () => {
+        it("onContextMenu registers and forwards context-menu channel", () => {
+            const callback = vi.fn();
+            getApi().onContextMenu(callback);
+
+            const listeners = ipcRendererListeners.get("context-menu")!;
+            expect(listeners).toHaveLength(1);
+
+            const params = { x: 100, y: 200, selectionText: "test" };
+            listeners[0]({}, params);
+            expect(callback).toHaveBeenCalledWith(params);
+        });
     });
 });
