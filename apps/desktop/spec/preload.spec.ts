@@ -233,6 +233,19 @@ describe("preload script", () => {
         });
     });
 
+    describe("clipboard", () => {
+        const clip = () => getGroup("clipboard");
+
+        it("copyImageToClipboard sends correct IPC message", () => {
+            const buffer = new Uint8Array([1, 2, 3]);
+            clip().copyImageToClipboard(buffer);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "copy-image-to-clipboard",
+                args: [buffer]
+            });
+        });
+    });
+
     describe("shell", () => {
         const shell = () => getGroup("shell");
 

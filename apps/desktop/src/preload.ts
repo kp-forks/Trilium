@@ -101,6 +101,12 @@ contextBridge.exposeInMainWorld("electronApi", {
         }
     },
 
+    clipboard: {
+        copyImageToClipboard(buffer: Uint8Array) {
+            ipcRenderer.send("copy-image-to-clipboard", buffer);
+        }
+    },
+
     shell: {
         openExternal(url: string) {
             ipcRenderer.send("open-external", url);

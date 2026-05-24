@@ -94,6 +94,19 @@ electron.ipcMain.on("restart-app", () => {
     electron.app.exit();
 });
 
+electron.ipcMain.on("copy-image-to-clipboard", (_event, buffer: Uint8Array) => {
+    try {
+        const image = electron.nativeImage.createFromBuffer(Buffer.from(buffer));
+        if (image.isEmpty()) {
+            console.error("copy-image-to-clipboard: nativeImage is empty, unsupported format?");
+            return;
+        }
+        electron.clipboard.writeImage(image);
+    } catch (e) {
+        console.error("copy-image-to-clipboard failed:", e);
+    }
+});
+
 electron.ipcMain.on("show-window", (event) => {
     electron.BrowserWindow.fromWebContents(event.sender)?.show();
 });

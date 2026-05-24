@@ -60,6 +60,10 @@ export interface ElectronWindowApi {
     onOpenInSameTab(callback: (noteId: string) => void): void;
 }
 
+export interface ElectronClipboardApi {
+    copyImageToClipboard(buffer: Uint8Array): void;
+}
+
 export interface ElectronShellApi {
     openExternal(url: string): void;
     openPath(path: string): Promise<string>;
@@ -108,6 +112,7 @@ export interface ElectronNavigationApi {
 
 export interface ElectronApi {
     window: ElectronWindowApi;
+    clipboard: ElectronClipboardApi;
     shell: ElectronShellApi;
     contextMenu: ElectronContextMenuApi;
     spellcheck: ElectronSpellcheckApi;
