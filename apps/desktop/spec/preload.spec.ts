@@ -261,6 +261,12 @@ describe("preload script", () => {
                 args: ["trilium"]
             });
         });
+
+        it("getAvailableSpellCheckerLanguages uses sendSync", () => {
+            ipcRendererSyncResults.set("get-available-spellchecker-languages:undefined", ["en-US", "de-DE"]);
+            const result = getApi().getAvailableSpellCheckerLanguages();
+            expect(result).toEqual(["en-US", "de-DE"]);
+        });
     });
 
     describe("context menu listener", () => {

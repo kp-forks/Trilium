@@ -89,9 +89,12 @@ contextBridge.exposeInMainWorld("electronApi", {
         ipcRenderer.send("reload-tray");
     },
 
-    // Dictionary
+    // Dictionary / Spellcheck
     addWordToDictionary(word: string) {
         ipcRenderer.send("add-word-to-dictionary", word);
+    },
+    getAvailableSpellCheckerLanguages(): string[] {
+        return ipcRenderer.sendSync("get-available-spellchecker-languages");
     },
 
     // Printing

@@ -88,6 +88,10 @@ electron.ipcMain.on("add-word-to-dictionary", (event, word: string) => {
     customDictionary.addWord(word);
 });
 
+electron.ipcMain.on("get-available-spellchecker-languages", (event) => {
+    event.returnValue = event.sender.session.availableSpellCheckerLanguages;
+});
+
 // Window management IPC handlers (replacing @electron/remote for renderer access)
 electron.ipcMain.on("set-title-bar-overlay", (event, options: { color: string; symbolColor: string }) => {
     electron.BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(options);

@@ -86,6 +86,7 @@ declare global {
         openFileUrl(fileUrl: string): Promise<string>;
         reloadTray(): void;
         addWordToDictionary(word: string): void;
+        getAvailableSpellCheckerLanguages(): string[];
         sendPrintProgress(progress: number): void;
         onPrintProgress(callback: (data: { progress: number; action: string }) => void): void;
         onPrintDone(callback: (printReport: unknown) => void): void;
