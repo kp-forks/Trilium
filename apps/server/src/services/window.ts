@@ -1,4 +1,6 @@
+import { execFile } from "child_process";
 import { type App, type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
+import os from "os";
 import path from "path";
 import url from "url";
 
@@ -229,48 +231,57 @@ electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
 });
 
 electron.ipcMain.on("open-custom", (_event, filePath: string) => {
+    if (typeof filePath !== "string" || filePath.length === 0 || filePath.includes("\0")) {
+        throw new Error("open-custom: invalid filePath");
+    }
+
+    // Defense in depth: only allow paths the server itself wrote into the OS
+    // temp dir via /api/.../save-to-tmp-dir. Without this, a compromised
+    // renderer (e.g. via XSS) could ask us to launch arbitrary local files.
+    const resolved = path.resolve(filePath);
+    const tmpRoot = path.resolve(os.tmpdir()) + path.sep;
+    const inTmp = process.platform === "win32"
+        ? resolved.toLowerCase().startsWith(tmpRoot.toLowerCase())
+        : resolved.startsWith(tmpRoot);
+    if (!inTmp) {
+        throw new Error(`open-custom: refusing path outside tmpdir: ${resolved}`);
+    }
+
     const platform = process.platform;
 
     if (platform === "linux") {
-        const { exec } = require("child_process");
         const terminals = ["x-terminal-emulator", "gnome-terminal", "konsole", "xterm", "xfce4-terminal", "mate-terminal", "rxvt", "terminator", "terminology"];
 
-        const openFileWithTerminal = (terminal: string) => {
-            const command = `${terminal} -e 'mimeopen -d "${filePath}"'`;
-            exec(command, (error: Error | null) => {
-                if (error) {
-                    console.error(`Open custom: Failed with ${terminal}: ${error}`);
-                    searchTerminal(terminals.indexOf(terminal) + 1);
-                }
-            });
-        };
+        // The terminal's `-e` argument is reparsed by the terminal's own shell,
+        // so the path must be POSIX single-quoted before interpolation.
+        const sqQuote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
+        const innerCommand = `mimeopen -d ${sqQuote(resolved)}`;
 
-        const searchTerminal = (index: number) => {
+        const tryTerminal = (index: number) => {
             if (index >= terminals.length) {
-                console.error("Open custom: No terminal found!");
-                electron.shell.openPath(filePath);
+                log.error("open-custom: no terminal emulator found");
+                electron.shell.openPath(resolved);
                 return;
             }
-            exec(`which ${terminals[index]}`, (error: Error | null, stdout: string) => {
-                if (stdout.trim()) {
-                    openFileWithTerminal(terminals[index]);
-                } else {
-                    searchTerminal(index + 1);
+            const terminal = terminals[index];
+            execFile(terminal, ["-e", innerCommand], (err) => {
+                if (err) {
+                    log.info(`open-custom: ${terminal} failed: ${err.message}`);
+                    tryTerminal(index + 1);
                 }
             });
         };
-        searchTerminal(0);
+        tryTerminal(0);
     } else if (platform === "win32") {
-        const { exec } = require("child_process");
-        const winPath = filePath.replace(/\//g, "\\");
-        exec(`rundll32.exe shell32.dll,OpenAs_RunDLL ${winPath}`, (err: Error | null) => {
+        const winPath = resolved.replace(/\//g, "\\");
+        execFile("rundll32.exe", ["shell32.dll,OpenAs_RunDLL", winPath], (err) => {
             if (err) {
-                console.error("Open custom:", err);
-                electron.shell.openPath(filePath);
+                log.error(`open-custom: rundll32 failed: ${err.message}`);
+                electron.shell.openPath(resolved);
             }
         });
     } else {
-        electron.shell.openPath(filePath);
+        electron.shell.openPath(resolved);
     }
 });
 
