@@ -140,8 +140,8 @@ export default function NoteDetail() {
 
     // Handle toast notifications.
     useEffect(() => {
-        if (!isElectron()) return;
-        const api = window.electronApi!;
+        const api = window.electronApi;
+        if (!api) return;
         api.onPrintProgress(({ progress, action }) => showToast(action as "printing" | "exporting_pdf", progress));
         api.onPrintDone((printReport) => {
             toast.closePersistent("printing");

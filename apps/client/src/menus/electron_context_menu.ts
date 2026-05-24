@@ -9,7 +9,8 @@ import utils from "../services/utils.js";
 import contextMenu, { type MenuItem } from "./context_menu.js";
 
 function setupContextMenu() {
-    const api = window.electronApi!;
+    const api = window.electronApi;
+    if (!api) return;
     const isMac = window.glob.platform === "darwin";
     const platformModifier = isMac ? "Meta" : "Ctrl";
 

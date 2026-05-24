@@ -44,32 +44,33 @@ if (utils.isElectron()) {
 }
 
 function initOnElectron() {
-    const api = window.electronApi!;
+    const api = window.electronApi;
+    if (!api) return;
 
     api.onGlobalShortcut(async (actionName) => appContext.triggerCommand(actionName));
     api.onOpenInSameTab(async (noteId) => appContext.tabManager.openInSameTab(noteId));
 
     const style = window.getComputedStyle(document.body);
 
-    initDarkOrLightMode();
-    initTransparencyEffects(style);
-    initFullScreenDetection();
+    initDarkOrLightMode(api);
+    initTransparencyEffects(api, style);
+    initFullScreenDetection(api);
 
     if (options.get("nativeTitleBarVisible") !== "true") {
-        initTitleBarButtons(style);
+        initTitleBarButtons(api, style);
     }
 
     // Clear navigation history on frontend refresh.
     api.clearNavigationHistory();
 }
 
-function initTitleBarButtons(style: CSSStyleDeclaration) {
+function initTitleBarButtons(api: ElectronApi, style: CSSStyleDeclaration) {
     if (window.glob.platform === "win32") {
         const applyWindowsOverlay = () => {
             const color = style.getPropertyValue("--native-titlebar-background");
             const symbolColor = style.getPropertyValue("--native-titlebar-foreground");
             if (color && symbolColor) {
-                window.electronApi!.setTitleBarOverlay({ color, symbolColor });
+                api.setTitleBarOverlay({ color, symbolColor });
             }
         };
 
@@ -82,22 +83,22 @@ function initTitleBarButtons(style: CSSStyleDeclaration) {
     if (window.glob.platform === "darwin") {
         const xOffset = parseInt(style.getPropertyValue("--native-titlebar-darwin-x-offset"), 10);
         const yOffset = parseInt(style.getPropertyValue("--native-titlebar-darwin-y-offset"), 10);
-        window.electronApi!.setWindowButtonPosition({ x: xOffset, y: yOffset });
+        api.setWindowButtonPosition({ x: xOffset, y: yOffset });
     }
 }
 
-function initFullScreenDetection() {
-    window.electronApi!.onEnterFullScreen(() => document.body.classList.add("full-screen"));
-    window.electronApi!.onLeaveFullScreen(() => document.body.classList.remove("full-screen"));
+function initFullScreenDetection(api: ElectronApi) {
+    api.onEnterFullScreen(() => document.body.classList.add("full-screen"));
+    api.onLeaveFullScreen(() => document.body.classList.remove("full-screen"));
 }
 
-function initTransparencyEffects(style: CSSStyleDeclaration) {
+function initTransparencyEffects(api: ElectronApi, style: CSSStyleDeclaration) {
     const material = style.getPropertyValue("--background-material").trim();
     if (window.glob.platform === "win32") {
         const bgMaterialOptions = ["auto", "none", "mica", "acrylic", "tabbed"] as const;
         const foundBgMaterialOption = bgMaterialOptions.find((bgMaterialOption) => material === bgMaterialOption);
         if (foundBgMaterialOption) {
-            window.electronApi!.setBackgroundMaterial(foundBgMaterialOption);
+            api.setBackgroundMaterial(foundBgMaterialOption);
         }
     }
 
@@ -105,7 +106,7 @@ function initTransparencyEffects(style: CSSStyleDeclaration) {
         const bgMaterialOptions = [ "popover", "tooltip", "titlebar", "selection", "menu", "sidebar", "header", "sheet", "window", "hud", "fullscreen-ui", "content", "under-window", "under-page" ] as const;
         const foundBgMaterialOption = bgMaterialOptions.find((bgMaterialOption) => material === bgMaterialOption);
         if (foundBgMaterialOption) {
-            window.electronApi!.setVibrancy(foundBgMaterialOption);
+            api.setVibrancy(foundBgMaterialOption);
         }
     }
 }
@@ -114,7 +115,7 @@ function initTransparencyEffects(style: CSSStyleDeclaration) {
  * Informs Electron that we prefer a dark or light theme. Apart from changing prefers-color-scheme at CSS level which is a side effect,
  * this fixes color issues with background effects or native title bars.
  */
-function initDarkOrLightMode() {
+function initDarkOrLightMode(api: ElectronApi) {
     let themeSource: "system" | "light" | "dark" = "system";
 
     const themeStyle = window.glob.getThemeStyle();
@@ -122,5 +123,5 @@ function initDarkOrLightMode() {
         themeSource = themeStyle;
     }
 
-    window.electronApi!.setNativeThemeSource(themeSource);
+    api.setNativeThemeSource(themeSource);
 }

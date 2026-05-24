@@ -27,7 +27,7 @@ class ZoomComponent extends Component {
 
     setZoomFactor(zoomFactor: string | number) {
         const parsedZoomFactor = typeof zoomFactor !== "number" ? parseFloat(zoomFactor) : zoomFactor;
-        window.electronApi!.setZoomFactor(parsedZoomFactor);
+        window.electronApi?.setZoomFactor(parsedZoomFactor);
     }
 
     async setZoomFactorAndSave(zoomFactor: number) {
@@ -43,7 +43,7 @@ class ZoomComponent extends Component {
     }
 
     getCurrentZoom() {
-        return window.electronApi!.getZoomFactor();
+        return window.electronApi?.getZoomFactor() ?? 1.0;
     }
 
     zoomOutEvent() {

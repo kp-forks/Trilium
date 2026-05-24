@@ -36,13 +36,12 @@ export default function TabHistoryNavigationButtons() {
 }
 
 function useBackForwardState(hasApi: boolean | ElectronApi | undefined) {
-    const [ canGoBack, setCanGoBack ] = useState(() => hasApi ? window.electronApi!.navigationCanGoBack() : true);
-    const [ canGoForward, setCanGoForward ] = useState(() => hasApi ? window.electronApi!.navigationCanGoForward() : true);
+    const [ canGoBack, setCanGoBack ] = useState(() => hasApi ? window.electronApi?.navigationCanGoBack() ?? true : true);
+    const [ canGoForward, setCanGoForward ] = useState(() => hasApi ? window.electronApi?.navigationCanGoForward() ?? true : true);
 
     useEffect(() => {
-        if (!hasApi) return;
-
-        const api = window.electronApi!;
+        const api = window.electronApi;
+        if (!api) return;
         const updateNavigationState = () => {
             setCanGoBack(api.navigationCanGoBack());
             setCanGoForward(api.navigationCanGoForward());
