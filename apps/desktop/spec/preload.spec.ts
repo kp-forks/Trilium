@@ -204,6 +204,19 @@ describe("preload script", () => {
             });
         });
 
+        it("isAlwaysOnTop uses sendSync", () => {
+            ipcRendererSyncResults.set("is-always-on-top:undefined", true);
+            expect(getApi().isAlwaysOnTop()).toBe(true);
+        });
+
+        it("setAlwaysOnTop sends correct IPC message", () => {
+            getApi().setAlwaysOnTop(true);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "set-always-on-top",
+                args: [true]
+            });
+        });
+
         it("reloadTray sends correct IPC message", () => {
             getApi().reloadTray();
             expect(ipcRendererSent).toContainEqual({

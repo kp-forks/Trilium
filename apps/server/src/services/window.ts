@@ -115,6 +115,14 @@ electron.ipcMain.on("set-native-theme-source", (_event, source: "system" | "ligh
     electron.nativeTheme.themeSource = source;
 });
 
+electron.ipcMain.on("is-always-on-top", (event) => {
+    event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isAlwaysOnTop() ?? false;
+});
+
+electron.ipcMain.on("set-always-on-top", (event, enabled: boolean) => {
+    electron.BrowserWindow.fromWebContents(event.sender)?.setAlwaysOnTop(enabled);
+});
+
 electron.ipcMain.on("web-contents-action", (event, action: string, text?: string) => {
     const wc = event.sender;
     switch (action) {

@@ -64,6 +64,14 @@ contextBridge.exposeInMainWorld("electronApi", {
         return ipcRenderer.invoke("open-file-url", fileUrl);
     },
 
+    // Window state
+    isAlwaysOnTop(): boolean {
+        return ipcRenderer.sendSync("is-always-on-top");
+    },
+    setAlwaysOnTop(enabled: boolean) {
+        ipcRenderer.send("set-always-on-top", enabled);
+    },
+
     // Tray
     reloadTray() {
         ipcRenderer.send("reload-tray");

@@ -69,6 +69,8 @@ declare global {
         setWindowButtonPosition(position: { x: number; y: number }): void;
         onEnterFullScreen(callback: () => void): void;
         onLeaveFullScreen(callback: () => void): void;
+        isAlwaysOnTop(): boolean;
+        setAlwaysOnTop(enabled: boolean): void;
         setBackgroundMaterial(material: string): void;
         setVibrancy(vibrancy: string): void;
         clearNavigationHistory(): void;
