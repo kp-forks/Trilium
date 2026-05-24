@@ -107,7 +107,6 @@ declare global {
     var glob: CustomGlobals;
     //@ts-ignore
     var require: RequireMethod;
-    var __non_webpack_require__: RequireMethod | undefined;
 
     /*
      * Panzoom

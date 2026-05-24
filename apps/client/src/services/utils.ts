@@ -353,22 +353,6 @@ function copySelectionToClipboard() {
     }
 }
 
-type dynamicRequireMappings = {
-    "@electron/remote": typeof import("@electron/remote"),
-    "electron": typeof import("electron"),
-    "child_process": typeof import("child_process"),
-    "url": typeof import("url")
-};
-
-export function dynamicRequire<T extends keyof dynamicRequireMappings>(moduleName: T): Awaited<dynamicRequireMappings[T]>{
-    if (typeof __non_webpack_require__ !== "undefined") {
-        return __non_webpack_require__(moduleName);
-    }
-    // explicitly pass as string and not as expression to suppress webpack warning
-    // 'Critical dependency: the request of a dependency is an expression'
-    return require(`${moduleName}`);
-
-}
 
 function timeLimit<T>(promise: Promise<T>, limitMs: number, errorMessage?: string) {
     if (!promise || !promise.then) {
@@ -904,7 +888,6 @@ export default {
     formatHtml,
     clearBrowserCache,
     copySelectionToClipboard,
-    dynamicRequire,
     timeLimit,
     initHelpDropdown,
     filterAttributeName,
