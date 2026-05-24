@@ -594,8 +594,8 @@ importers:
         specifier: 3.0.78
         version: 3.0.78(zod@4.4.3)
       '@ai-sdk/google':
-        specifier: 3.0.75
-        version: 3.0.75(zod@4.4.3)
+        specifier: 3.0.78
+        version: 3.0.78(zod@4.4.3)
       '@ai-sdk/openai':
         specifier: 3.0.64
         version: 3.0.64(zod@4.4.3)
@@ -603,8 +603,8 @@ importers:
         specifier: ^1.12.1
         version: 1.29.0(zod@4.4.3)
       ai:
-        specifier: 6.0.185
-        version: 6.0.185(zod@4.4.3)
+        specifier: 6.0.188
+        version: 6.0.188(zod@4.4.3)
       better-sqlite3:
         specifier: 12.10.0
         version: 12.10.0
@@ -1728,14 +1728,14 @@ packages:
     peerDependencies:
       zod: '>=4.0.0'
 
-  '@ai-sdk/gateway@3.0.116':
-    resolution: {integrity: sha512-k8P17w7Eho5Y4l3tZrYxqQdffkI4xwtl8GCxkZs+JdMWZhyrLLlozqWkKLaWrCSlEYQOeIhEnQLhqQgYYU86Rw==}
+  '@ai-sdk/gateway@3.0.118':
+    resolution: {integrity: sha512-XYPbVoDo1TDMVLe5Eg42gIjdOyxaizh9H0kiSSnTXr+AdrqZvutk/ypLOiqBXPV3D1K3+BSm/sbFeomZJlM64A==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: '>=4.0.0'
 
-  '@ai-sdk/google@3.0.75':
-    resolution: {integrity: sha512-XAm31ftiOrzlb8NjDzT7kw0xw+4lmgFdGFn1QKM73nXFFKyN1kWLESBV75UGNfjXP8X1YJ0YydnMVqO0jaPghw==}
+  '@ai-sdk/google@3.0.78':
+    resolution: {integrity: sha512-iPkZHiaaBNreaVX2fLpc+SAa7OJPV6f7pZRK98lWTI4vf0D546+9eEQ6T2FagJAHO0K0gEyzx5zogCoHbJnhQg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: '>=4.0.0'
@@ -6358,8 +6358,8 @@ packages:
     resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
     engines: {node: '>=8'}
 
-  ai@6.0.185:
-    resolution: {integrity: sha512-oGsqscREaTlo75KHZLtwZxRyI+ZBwHV2wRX9B8smHjgOs13WwoCvUyr5aPUWpIBRz406wmIKy1RzoUEq0/WKJw==}
+  ai@6.0.188:
+    resolution: {integrity: sha512-kNwIl1MM4ESzeOPDYuN+FidJ2QY5kGWHLtTMru6HHPW/JJ6nPuvHRhJ8tMX/Y2Tijx9DCiv2W7y5IBouuB712g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: '>=4.0.0'
@@ -13474,14 +13474,14 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.27(zod@4.4.3)
       zod: 4.4.3
 
-  '@ai-sdk/gateway@3.0.116(zod@4.4.3)':
+  '@ai-sdk/gateway@3.0.118(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
       '@ai-sdk/provider-utils': 4.0.27(zod@4.4.3)
       '@vercel/oidc': 3.2.0
       zod: 4.4.3
 
-  '@ai-sdk/google@3.0.75(zod@4.4.3)':
+  '@ai-sdk/google@3.0.78(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
       '@ai-sdk/provider-utils': 4.0.27(zod@4.4.3)
@@ -20260,9 +20260,9 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ai@6.0.185(zod@4.4.3):
+  ai@6.0.188(zod@4.4.3):
     dependencies:
-      '@ai-sdk/gateway': 3.0.116(zod@4.4.3)
+      '@ai-sdk/gateway': 3.0.118(zod@4.4.3)
       '@ai-sdk/provider': 3.0.10
       '@ai-sdk/provider-utils': 4.0.27(zod@4.4.3)
       '@opentelemetry/api': 1.9.1
