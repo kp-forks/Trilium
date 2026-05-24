@@ -2350,7 +2350,8 @@
     "autocomplete_fuzzy_description": "Betrifft „Zu Notiz springen“ und Notizauswahlen. Langsamer, toleriert aber Tippfehler."
   },
   "text_editor": {
-    "title": "Editor"
+    "title": "Editor",
+    "related_task_states": "Benutzerdefinierte Kontrollkästchen-Zustände für Aufgabenlisten"
   },
   "llm_chat": {
     "placeholder": "Schreibe eine Nachricht...",
@@ -2395,7 +2396,8 @@
     "empty_state": "Starte Unterhaltung",
     "history": "Chathistorie",
     "recent_chats": "Kürzliche Chats",
-    "no_chats": "Keine vorherigen Chats"
+    "no_chats": "Keine vorherigen Chats",
+    "view_all_chats": "Alle Chats anzeigen"
   },
   "llm": {
     "tools": {
@@ -2663,5 +2665,20 @@
     "create-new-document-options-empty-description": "Mit einer leeren Wissensbasis starten. Demo-Notizen können später importiert werden.",
     "create-new-document-title": "Wissensbasis wird vorbereitet",
     "dismiss-error": "Fehler schließen"
+  },
+  "text-editor": {
+    "checkbox-tooltip": "Rechtsklick für weitere Aufgabenzustände.\n{{shortcut}} drücken, um zwischen den Zuständen zu wechseln.",
+    "edit-states-tooltip": "Aufgabenzustände bearbeiten",
+    "unknown-task-state": "Unbekannter benutzerdefinierter Aufgabenzustand",
+    "task-state-dropped": "Benutzerdefinierte Aufgabenzustand-Definition \"{{title}}\" ({{id}}) wurde verworfen: {{reason}}",
+    "validation-errors": {
+      "undefined-name": "undefinierter Bezeichner",
+      "invalid-name": "ungültiger Bezeichner",
+      "duplicate-name": "doppelter Bezeichner",
+      "missing-title": "fehlender Titel",
+      "missing-icon": "fehlendes Symbol",
+      "invalid-symbol": "das Markdown-Symbol muss ein einzelnes Zeichen sein, ausgenommen \"[\", \" \", \"X\" und \"]\"",
+      "duplicate-symbol": "doppeltes Markdown-Symbol"
+    }
   }
 }
