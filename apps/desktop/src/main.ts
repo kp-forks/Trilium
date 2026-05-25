@@ -14,7 +14,7 @@ import windowService from "@triliumnext/server/src/services/window.js";
 import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
-import { app, BrowserWindow,globalShortcut, protocol } from "electron";
+import { app, BrowserWindow,globalShortcut } from "electron";
 import electronDebug from "electron-debug";
 import electronDl from "electron-dl";
 import fs from "fs";
@@ -24,6 +24,7 @@ import path, { join, resolve } from "path";
 import { deferred, LOCALES } from "../../../packages/commons/src";
 import { PRODUCT_NAME } from "./app-info";
 import DesktopPlatformProvider from "./platform_provider";
+import { registerTriliumAppScheme } from "./protocol";
 
 async function main() {
     // Ignore EPIPE errors on stdout/stderr — these occur when the parent process
@@ -36,22 +37,7 @@ async function main() {
         });
     }
 
-    // The renderer loads the entire UI from `trilium-app://app/` instead of the
-    // HTTP origin. Registering the scheme as privileged (must happen before
-    // `app.ready`) gives it a proper origin & cookie jar, fetch support, and
-    // CORS, which lets the session + CSRF middleware on the Express side work
-    // without any of the FakeRequest/cookie-injection workarounds.
-    protocol.registerSchemesAsPrivileged([
-        {
-            scheme: "trilium-app",
-            privileges: {
-                standard: true,
-                secure: true,
-                supportFetchAPI: true,
-                corsEnabled: true
-            }
-        }
-    ]);
+    registerTriliumAppScheme();
 
     const userDataPath = getUserData();
     app.setPath("userData", userDataPath);

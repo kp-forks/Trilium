@@ -1,4 +1,5 @@
 import { BackupService, type ImageProvider,initializeCore } from "@triliumnext/core";
+import { registerTriliumAppScheme } from "@triliumnext/desktop/src/protocol.js";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import ServerPlatformProvider from "@triliumnext/server/src/platform_provider.js";
@@ -14,24 +15,10 @@ import path from "path";
 
 import { deferred, type DeferredPromise } from "../../../packages/commons/src/index.js";
 
-// The renderer loads the entire UI from `trilium-app://app/` (see
-// apps/server/src/services/window.ts). The scheme has to be registered as
-// privileged before `app.ready` fires; otherwise Chromium treats it as a
-// non-standard scheme with an opaque origin and blocks the navigation with
-// `(blocked:origin)`. Desktop does the same in apps/desktop/src/main.ts. This
-// runs at module top-level so it executes during the import phase of
-// edit-docs.ts / edit-demo.ts, before either entry point's first `await`.
-electron.protocol.registerSchemesAsPrivileged([
-    {
-        scheme: "trilium-app",
-        privileges: {
-            standard: true,
-            secure: true,
-            supportFetchAPI: true,
-            corsEnabled: true
-        }
-    }
-]);
+// Register the `trilium-app://` scheme synchronously at module load (before any
+// `await` in edit-docs.ts / edit-demo.ts) so it lands before `app.ready` fires
+// — otherwise Chromium blocks the navigation with `(blocked:origin)`.
+registerTriliumAppScheme();
 
 // Stub backup service (not used in edit-docs, but required by initializeCore)
 class StubBackupService extends BackupService {
