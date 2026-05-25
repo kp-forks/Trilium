@@ -220,6 +220,7 @@ SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/servi
 - **IPC handlers**: Use `electron.ipcMain.on(channel, handler)` for fire-and-forget, `electron.ipcMain.handle(channel, handler)` for async request/response, `ipcMain.on` + `event.returnValue` for synchronous queries.
 - Electron-only features should check `isElectron()` from `apps/client/src/services/utils.ts` (client) or `utils.isElectron` (server)
 - **`@electron/remote` is removed** — do not use it. All renderer↔main communication goes through the preload bridge.
+- **Spurious `electron.app is undefined` error** — when running Electron-based apps (`pnpm desktop:start`, `pnpm edit-docs:edit-docs`, etc.), the console may print `TypeError: Cannot read properties of undefined (reading 'commandLine')` from `apps/server/src/services/window.ts` (the `electron.app.commandLine.appendSwitch("disable-http-cache")` line). This is **not a real failure** — the app runs correctly. Do not try to fix it, guard it, or investigate electron initialization order unless the user explicitly raises it as a bug.
 
 Three inheritance mechanisms:
 1. **Standard**: `note.getInheritableAttributes()` walks parent tree
