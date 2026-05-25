@@ -198,7 +198,10 @@
     "task-state-cancelled": "تم الالغاء",
     "task-state-attr-color": "لون",
     "task-state-attr-is-completed": "يُحسب كمكتمل",
-    "task-state-attr-is-hidden": "مخفي من القائمة"
+    "task-state-attr-is-hidden": "مخفي من القائمة",
+    "task-states-title": "حالات المهام",
+    "task-state-attr-state-id": "المعرّف (إجباري)",
+    "task-state-attr-markdown-symbol": "رمز Markdown"
   },
   "tray": {
     "bookmarks": "العلامات المرجعية",

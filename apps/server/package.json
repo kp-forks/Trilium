@@ -32,10 +32,10 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "3.0.78",
-    "@ai-sdk/google": "3.0.78",
-    "@ai-sdk/openai": "3.0.64",
+    "@ai-sdk/google": "3.0.79",
+    "@ai-sdk/openai": "3.0.65",
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "ai": "6.0.188",
+    "ai": "6.0.190",
     "better-sqlite3": "12.10.0",
     "html-to-text": "10.0.0",
     "i18next": "26.2.0",
@@ -114,8 +114,8 @@
     "time2fa": "1.4.2",
     "tmp": "0.2.5",
     "turnish": "1.12.2",
-    "vite": "8.0.13",
+    "vite": "8.0.14",
     "xml2js": "0.6.2",
-    "yauzl": "3.3.0"
+    "yauzl": "3.3.1"
   }
 }
