@@ -58,7 +58,7 @@ vi.mock("@triliumnext/server/src/services/log.js", () => ({
     }
 }));
 
-const { default: IpcMessagingProvider } = await import("../src/ipc_messaging_provider.js");
+const { default: IpcMessagingProvider } = await import("./ipc_messaging_provider.js");
 
 function newWindow(): FakeBrowserWindow {
     return new FakeBrowserWindow(nextWindowId++);

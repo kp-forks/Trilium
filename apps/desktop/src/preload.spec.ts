@@ -66,7 +66,7 @@ describe("preload script", () => {
         ipcRendererInvoked.length = 0;
         ipcRendererSyncResults.clear();
         vi.resetModules();
-        await import("../src/preload.js");
+        await import("./preload.js");
     });
 
     it("exposes electronApi on the window", () => {

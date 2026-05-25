@@ -8,7 +8,7 @@ export default defineConfig(() => ({
         watch: false,
         globals: true,
         environment: "node",
-        include: ["spec/**/*.spec.ts", "!spec/build-checks/**"],
+        include: ["src/**/*.spec.ts"],
         reporters: ["verbose"]
     }
 }));
