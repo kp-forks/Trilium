@@ -39,7 +39,12 @@ export function bootstrap(req: Request, res: Response) {
         instanceName: config.General ? config.General.instanceName : null,
         // The desktop renderer loads from trilium-app://, so location-based
         // ws:// URL derivation no longer works there. Send an absolute URL.
-        wsBaseUrl: isElectron ? `ws://127.0.0.1:${port}/` : undefined
+        wsBaseUrl: isElectron ? `ws://127.0.0.1:${port}/` : undefined,
+        // Same reason for HTTP-origin-dependent UI (e.g. the MCP URL shown
+        // in Options) — give the renderer a real loopback origin to display.
+        httpBaseUrl: isElectron
+            ? `${config["Network"]["https"] ? "https" : "http"}://127.0.0.1:${port}`
+            : undefined
     };
     if (!isDbInitialized) {
         res.send({
