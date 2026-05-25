@@ -14,10 +14,14 @@
  * interface below is the contract both the preload script
  * (`satisfies ElectronApi`) and the client (`window.electronApi`) share.
  *
- * Entry point: {@link ElectronApi}
+ * The entire API is exposed as a single global: {@link electronApi}
  *
  * @module Electron API
  */
+
+import type {
+    ElectronApi
+} from "../../../packages/commons/src/lib/electron_api_interface.js";
 
 export type {
     ElectronApi,
@@ -31,3 +35,16 @@ export type {
     ElectronTrayApi,
     ElectronWindowApi
 } from "../../../packages/commons/src/lib/electron_api_interface.js";
+
+/**
+ * The `window.electronApi` global gives the renderer access to Electron-only
+ * functionality through the preload bridge. See {@link ElectronApi} for the
+ * full surface.
+ *
+ * Only available in the Electron desktop build — `window.electronApi` is
+ * `undefined` in the browser/server build and in the standalone (WASM) build,
+ * so always guard calls with `if (window.electronApi)` from frontend scripts.
+ */
+// @ts-expect-error - ElectronApi is exposed at runtime by the preload script;
+// no constructable class exists here, so we simulate the value for TypeDoc.
+export const electronApi: ElectronApi = {};
