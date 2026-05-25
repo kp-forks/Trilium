@@ -10,6 +10,8 @@ import dataDirs from "./data_dir.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import optionService from "./options.js";
+import { initPrintingHandlers } from "./printing.js";
+import { RESOURCE_DIR } from "./resource_dir.js";
 import {
     validateDownloadUrl,
     validateOpenCustomPath,
@@ -17,10 +19,8 @@ import {
     validateOpenFileUrl,
     validateOpenPath
 } from "./shell_validators.js";
-import { initPrintingHandlers } from "./printing.js";
-import { RESOURCE_DIR } from "./resource_dir.js";
 import sqlInit from "./sql_init.js";
-import { isDev, isMac, isWindows } from "./utils.js";
+import utils, { isDev, isMac, isWindows } from "./utils.js";
 
 const PRELOAD_SCRIPT = path.resolve(
     isDev
@@ -221,23 +221,41 @@ electron.ipcMain.on("web-contents-action", (event, action: string, text?: string
 });
 
 electron.ipcMain.on("open-external", (_event, url: string) => {
-    const validated = validateOpenExternalUrl(url);
-    electron.shell.openExternal(validated.toString());
+    try {
+        const validated = validateOpenExternalUrl(url);
+        electron.shell.openExternal(validated.toString());
+    } catch (e) {
+        log.error(`open-external failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
+    }
 });
 
 electron.ipcMain.handle("open-path", (_event, filePath: string) => {
-    const resolved = validateOpenPath(filePath, dataDirs.TRILIUM_DATA_DIR, dataDirs.TMP_DIR);
-    return electron.shell.openPath(resolved);
+    try {
+        const resolved = validateOpenPath(filePath, dataDirs.TRILIUM_DATA_DIR, dataDirs.TMP_DIR);
+        return electron.shell.openPath(resolved);
+    } catch (e) {
+        log.error(`open-path failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
+        return utils.safeExtractMessageAndStackFromError(e);
+    }
 });
 
 electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
-    const filePath = validateOpenFileUrl(fileUrl);
-    return electron.shell.openPath(filePath);
+    try {
+        const filePath = validateOpenFileUrl(fileUrl);
+        return electron.shell.openPath(filePath);
+    } catch (e) {
+        log.error(`open-file-url failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
+        return utils.safeExtractMessageAndStackFromError(e);
+    }
 });
 
 electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
-    const validated = validateDownloadUrl(downloadUrl, event.sender.getURL());
-    event.sender.downloadURL(validated.toString());
+    try {
+        const validated = validateDownloadUrl(downloadUrl, event.sender.getURL());
+        event.sender.downloadURL(validated.toString());
+    } catch (e) {
+        log.error(`download-url failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
+    }
 });
 
 electron.ipcMain.on("open-custom", (_event, filePath: string) => {

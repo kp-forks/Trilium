@@ -127,12 +127,17 @@ function withDispatcherCleanup(response: Response, dispatcher: Agent): Response 
     const reader = originalBody.getReader();
     const wrappedBody = new ReadableStream({
         async pull(controller) {
-            const { done, value } = await reader.read();
-            if (done) {
-                controller.close();
+            try {
+                const { done, value } = await reader.read();
+                if (done) {
+                    controller.close();
+                    cleanup();
+                } else {
+                    controller.enqueue(value);
+                }
+            } catch (err) {
+                controller.error(err);
                 cleanup();
-            } else {
-                controller.enqueue(value);
             }
         },
         cancel() {
