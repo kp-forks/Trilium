@@ -2382,7 +2382,9 @@
     "no_provider_message": "Non è stato configurato alcun fornitore di IA. Aggiungine uno per iniziare a chattare.",
     "add_provider": "Aggiungi un fornitore di IA",
     "sources_summary": "{{count}} fonti provenienti da {{sites}} siti",
-    "stop": "Stop"
+    "stop": "Stop",
+    "edit_index": "Modifica {{index}} di {{total}}",
+    "retry": "Riprova"
   },
   "sidebar_chat": {
     "title": "Chat AI",
@@ -2392,7 +2394,8 @@
     "empty_state": "Avvia una conversazione",
     "history": "Cronologia delle chat",
     "recent_chats": "Conversazioni recenti",
-    "no_chats": "Nessuna conversazione precedente"
+    "no_chats": "Nessuna conversazione precedente",
+    "view_all_chats": "Visualizza tutte le chat"
   },
   "llm": {
     "settings_title": "AI / LLM",
@@ -2437,7 +2440,8 @@
       "delete_note": "Elimina nota",
       "move_note": "Sposta nota",
       "clone_note": "Clona nota"
-    }
+    },
+    "base_url": "URL di base"
   },
   "ocr": {
     "extracted_text": "Testo estratto (OCR)",
@@ -2531,7 +2535,8 @@
     "source_description_etapi": "Creato tramite l'API esterna di Trilium",
     "source_description_llm": "Creato dall'assistente AI",
     "source_description_restore": "Salvato prima di ripristinare una revisione precedente",
-    "source_description_unknown": "Fonte non disponibile"
+    "source_description_unknown": "Fonte non disponibile",
+    "diff_identical": "Questa revisione è identica al contenuto dell'attuale."
   },
   "auto_link_attribute_list": {
     "title": "Attributi di sistema"
@@ -2543,7 +2548,8 @@
     "title": "Note sulle revisioni"
   },
   "text_editor": {
-    "title": "Redattore"
+    "title": "Redattore",
+    "related_task_states": "Personalizza le caselle di selezione per le liste delle cose da fare"
   },
   "launcher_button_context_menu": {
     "remove_from_launch_bar": "Rimuovi dalla barra di avvio"
