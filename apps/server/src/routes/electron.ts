@@ -1,7 +1,8 @@
 import electron from "electron";
 import EventEmitter from "events";
 import type { Application } from "express";
-import { createRequest, createResponse } from "node-mocks-http";
+import { createResponse } from "node-mocks-http";
+import { Readable } from "node:stream";
 
 /**
  * Bridges renderer-process requests on the `trilium-app://app/...` custom
@@ -10,10 +11,10 @@ import { createRequest, createResponse } from "node-mocks-http";
  * The renderer loads the entire UI from this scheme (see
  * `apps/server/src/services/window.ts` and `apps/desktop/src/main.ts`), so
  * every request the page makes — page load, bootstrap, API calls, static
- * assets — arrives here as a Web Fetch `Request`. We convert it into an
- * Express `req`/`res` pair via `node-mocks-http` and dispatch through the
- * app, giving us the real session, CSRF, body-parser and error middleware
- * without any FakeRequest workaround.
+ * assets — arrives here as a Web Fetch `Request`. We synthesise an
+ * IncomingMessage-shaped `Readable` for the request and a node-mocks-http
+ * response, then dispatch through the Express app so the real session, CSRF,
+ * body-parser, multer and error middleware all run.
  */
 function init(app: Application) {
     electron.app.whenReady().then(() => {
@@ -28,36 +29,31 @@ function init(app: Application) {
     });
 }
 
-async function dispatch(app: Application, request: Request): Promise<Response> {
+export async function dispatch(app: Application, request: Request): Promise<Response> {
     const url = new URL(request.url);
     const headers: Record<string, string> = {};
     request.headers.forEach((value, key) => {
         headers[key] = value;
     });
 
-    const body = await readBody(request);
+    const bodyBuffer = await readBody(request);
+
+    // body-parser / multer call `type-is`'s `hasBody`, which requires either a
+    // `content-length` or `transfer-encoding` header. Programmatically built
+    // `Request` objects don't carry content-length, so without this the body
+    // would be parsed as empty and JSON / multipart middleware would silently
+    // skip.
+    if (bodyBuffer && headers["content-length"] === undefined) {
+        headers["content-length"] = String(bodyBuffer.length);
+    }
 
     return new Promise<Response>((resolve, reject) => {
-        const req = createRequest({
-            method: request.method as any,
+        const req = buildIncomingRequest({
+            method: request.method,
             url: url.pathname + url.search,
             headers,
-            body: body as any,
-            // Give express-rate-limit and any other IP-based middleware
-            // something to key on; the bare mock would have `req.ip` undefined.
-            ...({
-                connection: { remoteAddress: "127.0.0.1" },
-                socket: { remoteAddress: "127.0.0.1" },
-                ip: "127.0.0.1"
-            } as object)
+            bodyBuffer
         });
-
-        // body-parser short-circuits when `_body` is already set, so the
-        // pre-parsed JSON / buffer above won't be re-read from an empty mock
-        // stream and clobbered.
-        if (body !== undefined) {
-            (req as any)._body = true;
-        }
 
         const res = createResponse({
             req,
@@ -96,20 +92,71 @@ async function dispatch(app: Application, request: Request): Promise<Response> {
     });
 }
 
-async function readBody(request: Request): Promise<unknown> {
+async function readBody(request: Request): Promise<Buffer | null> {
     if (request.method === "GET" || request.method === "HEAD" || !request.body) {
-        return undefined;
+        return null;
     }
-
-    const contentType = request.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
-        const text = await request.text();
-        return text ? JSON.parse(text) : undefined;
-    }
-
-    // For form uploads and binary payloads, hand Express a Buffer; multer
-    // / body-parser will read it via the content-type header.
     return Buffer.from(await request.arrayBuffer());
+}
+
+/**
+ * Builds an IncomingMessage-shaped `Readable` for the request side.
+ *
+ * Express rewrites the prototype chain of the request it receives so that
+ * `req.on` resolves to `Readable.prototype.on`, which dereferences internal
+ * Readable state. So a plain `EventEmitter`-based mock breaks the moment
+ * body-parser or multer touches the stream. Subclassing `Readable` here means
+ * the state is initialised before Express ever sees it.
+ *
+ * We expose only the IncomingMessage surface Express middleware actually
+ * reads (`method`, `url`, `headers`, `socket`, `ip`, ...); session, cookies,
+ * `req.params` and so on are populated by middleware as usual.
+ */
+interface BuildRequestOpts {
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    bodyBuffer: Buffer | null;
+}
+
+function buildIncomingRequest(opts: BuildRequestOpts): object {
+    const buffer = opts.bodyBuffer;
+    const stream = new Readable({
+        read() {
+            if (buffer && buffer.length > 0) {
+                this.push(buffer);
+            }
+            this.push(null);
+        }
+    }) as Readable & { complete: boolean };
+
+    // Express swaps in `app.request` (IncomingMessage subclass) as the
+    // prototype. IncomingMessage._destroy emits 'aborted' whenever the message
+    // wasn't marked complete and then tries to tear down a real socket. Mark
+    // complete on natural end (so multer/busboy don't think the request was
+    // aborted) and short-circuit the destroy path that touches the socket.
+    stream.on("end", () => { stream.complete = true; });
+    (stream as unknown as Record<string, unknown>)._destroy = (_err: Error | null, cb: (err?: Error | null) => void) => cb();
+
+    const socket = { remoteAddress: "127.0.0.1", encrypted: false, readable: true, destroy() {}, end() {}, on() {}, removeListener() {} };
+
+    return Object.assign(stream, {
+        method: opts.method,
+        url: opts.url,
+        headers: opts.headers,
+        httpVersion: "1.1",
+        httpVersionMajor: 1,
+        httpVersionMinor: 1,
+        complete: false,
+        aborted: false,
+        // express-rate-limit and any IP-based middleware key off `req.ip`.
+        // socket / connection are read by Express's `req.ip` derivation and
+        // by `on-finished`: it treats the request as already finished when
+        // `socket.readable` is falsy, which makes body-parser skip the body.
+        socket,
+        connection: socket,
+        ip: "127.0.0.1"
+    });
 }
 
 // Headers that either describe HTTP transport framing or assume an https
