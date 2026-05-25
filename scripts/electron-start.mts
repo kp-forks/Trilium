@@ -1,11 +1,16 @@
 import { execSync } from "child_process";
 import { buildSync } from "esbuild";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { getElectronPath, isNixOS } from "./utils.mjs";
 
 // Compile the preload script to CJS so Electron's sandboxed renderer can load it.
+// Always build from apps/desktop/ regardless of CWD — window.ts resolves the
+// compiled preload there for every Electron-based app (desktop, edit-docs, ...).
+const DESKTOP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "apps", "desktop");
 buildSync({
-    entryPoints: ["src/preload.ts"],
-    outfile: "src/preload.compiled.cjs",
+    entryPoints: [join(DESKTOP_DIR, "src", "preload.ts")],
+    outfile: join(DESKTOP_DIR, "src", "preload.compiled.cjs"),
     platform: "node",
     format: "cjs",
     bundle: true,
