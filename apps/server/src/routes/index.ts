@@ -8,6 +8,7 @@ import assetPath from "../services/asset_path.js";
 import config from "../services/config.js";
 import log from "../services/log.js";
 import optionService from "../services/options.js";
+import port from "../services/port.js";
 import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
 import { generateCsrfToken } from "./csrf_protection.js";
 
@@ -35,7 +36,15 @@ export function bootstrap(req: Request, res: Response) {
         triliumVersion: packageJson.version,
         device: view,
         TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE,
-        instanceName: config.General ? config.General.instanceName : null
+        instanceName: config.General ? config.General.instanceName : null,
+        // The desktop renderer loads from trilium-app://, so location-based
+        // ws:// URL derivation no longer works there. Send an absolute URL.
+        wsBaseUrl: isElectron ? `ws://127.0.0.1:${port}/` : undefined,
+        // Same reason for HTTP-origin-dependent UI (e.g. the MCP URL shown
+        // in Options) — give the renderer a real loopback origin to display.
+        httpBaseUrl: isElectron
+            ? `${config["Network"]["https"] ? "https" : "http"}://127.0.0.1:${port}`
+            : undefined
     };
     if (!isDbInitialized) {
         res.send({
