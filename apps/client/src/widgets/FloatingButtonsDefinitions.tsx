@@ -220,7 +220,7 @@ function OpenElectronApiDocsButton({ note }: FloatingButtonContext) {
     return isEnabled && <FloatingButton
         icon="bx bx-window-alt"
         text={t("code_buttons.electron_api_docs_button_title")}
-        onClick={() => openInAppHelpFromUrl("GLks18SNjxmC")}
+        onClick={() => openInAppHelpFromUrl("GFXVHyblVN3d")}
     />;
 }
 
