@@ -231,17 +231,24 @@ export interface ElectronShellApi {
     openPath(path: string): Promise<string>;
 
     /**
-     * Opens a `file://` URL with its default OS handler. Convenience wrapper
-     * that decodes the URL before delegating to {@link openPath}.
+     * Opens a `file://` URL with its default OS handler. Exists as a separate
+     * channel from {@link openExternal} because Electron's `shell.openExternal`
+     * mishandles Unicode characters in `file:` URLs on Windows; converting to
+     * a filesystem path and calling `shell.openPath` works correctly.
      *
      * **Security:** the URL must use the `file:` scheme and must have an
      * empty hostname. UNC paths (`file://attacker.example/share/x`) are
      * explicitly blocked because Windows would otherwise resolve them to
      * `\\attacker.example\share\x` and leak the user's NTLM hash via SMB
      * authentication. Drive-letter-as-host malformations like `file://C:/path`
-     * are normalized to `file:///C:/path` before parsing. After resolution
-     * the path is subject to the same data-dir / tmp-dir sandbox as
-     * {@link openPath}.
+     * are normalized to `file:///C:/path` before parsing.
+     *
+     * Note: unlike {@link openPath}, the resolved path is NOT confined to the
+     * Trilium data / tmp directories — this channel handles user-clicked
+     * `file://` links inside note content, which routinely reference arbitrary
+     * locations on disk (`file:///C:/Users/me/Documents/contract.pdf` and
+     * similar). Equivalent to a browser following a `file:` link the user
+     * clicked. Treat clicks on attacker-influenced note content accordingly.
      *
      * @returns An empty string on success, or an error message on failure.
      */

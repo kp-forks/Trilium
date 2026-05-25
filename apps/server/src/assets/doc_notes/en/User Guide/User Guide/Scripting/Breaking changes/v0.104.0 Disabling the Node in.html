@@ -37,10 +37,9 @@ class="admonition note">
       <code
       spellcheck="false">openExternal</code>is restricted to an allowlisted set of URL schemes
         (blocking <code spellcheck="false">file:</code>, <code spellcheck="false">smb:</code>,
-        Follina-class schemes, etc.), <code spellcheck="false">openPath</code> /
+        Follina-class schemes, etc.), <code spellcheck="false">openPath</code> must
+        resolve under the Trilium data directory or temporary directory, and
         <code
-        spellcheck="false">openFileUrl</code>must resolve under the Trilium data directory or temporary
-          directory, and <code spellcheck="false">downloadURL</code> is locked to the
-          app's own origin. Invalid input throws on the main side rather than being
-          silently passed through.</p>
+        spellcheck="false">downloadURL</code>is locked to the app's own origin. Invalid input throws
+          on the main side rather than being silently passed through.</p>
   </div>

@@ -262,7 +262,8 @@ window.electronApi?.clipboard.copyImageToClipboard(bytes);
 Every `shell.*` call is validated in the main process and will throw on invalid input — the renderer is treated as untrusted:
 
 - `openExternal(url)`: scheme is allowlisted. `file:`, `data:`, `smb:`, `ldap:`/`ldaps:`, `jar:`, `view-source:`, and Follina-class schemes are blocked.
-- `openPath(path)` / `openFileUrl(fileUrl)`: must resolve under the Trilium data dir or tmp dir. Returns an empty string on success, an error message on failure. UNC `file://host/share` URLs are blocked (NTLM-leak prevention).
+- `openPath(path)`: must resolve under the Trilium data dir or tmp dir. Returns an empty string on success, an error message on failure.
+- `openFileUrl(fileUrl)`: handles user-clicked `file:` links inside notes; resolves to any local path (no data/tmp sandbox — these links routinely point at arbitrary user documents). UNC `file://host/share` URLs are blocked (NTLM-leak prevention). Returns an empty string on success, an error message on failure.
 - `downloadURL(url)`: pinned to the app's own origin — cross-origin downloads are rejected.
 - `openCustom(filePath)`: must be a descendant of the tmp dir and the file must exist.
 
