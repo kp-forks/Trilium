@@ -7,11 +7,11 @@ import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provide
 import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import port from "@triliumnext/server/src/services/port.js";
+import IpcMessagingProvider from "@triliumnext/server/src/services/ipc_messaging_provider.js";
 import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import tray from "@triliumnext/server/src/services/tray.js";
 import windowService from "@triliumnext/server/src/services/window.js";
-import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { app, BrowserWindow,globalShortcut } from "electron";
@@ -155,7 +155,7 @@ async function main() {
         zipExportProviderFactory: (await import("@triliumnext/server/src/services/export/zip/factory.js")).serverZipExportProviderFactory,
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
-        messaging: new WebSocketMessagingProvider(),
+        messaging: new IpcMessagingProvider(),
         schema: loadCoreSchema(),
         platform: new DesktopPlatformProvider(),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,

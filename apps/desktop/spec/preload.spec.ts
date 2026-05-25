@@ -39,6 +39,16 @@ vi.mock("electron", () => ({
         },
         removeAllListeners(channel: string) {
             ipcRendererListeners.delete(channel);
+        },
+        removeListener(channel: string, listener: Function) {
+            const listeners = ipcRendererListeners.get(channel);
+            if (!listeners) return;
+            const filtered = listeners.filter(l => l !== listener);
+            if (filtered.length === 0) {
+                ipcRendererListeners.delete(channel);
+            } else {
+                ipcRendererListeners.set(channel, filtered);
+            }
         }
     }
 }));
@@ -479,6 +489,43 @@ describe("preload script", () => {
             nav().removeDidNavigateListeners();
             expect(ipcRendererListeners.has("did-navigate")).toBe(false);
             expect(ipcRendererListeners.has("did-navigate-in-page")).toBe(false);
+        });
+    });
+
+    describe("ws", () => {
+        const ws = () => getGroup("ws");
+
+        it("send forwards the message on the trilium-ws-from-renderer channel", () => {
+            ws().send({ type: "ping", lastEntityChangeId: 42 });
+            expect(ipcRendererSent).toContainEqual({
+                channel: "trilium-ws-from-renderer",
+                args: [{ type: "ping", lastEntityChangeId: 42 }]
+            });
+        });
+
+        it("onMessage subscribes to trilium-ws-message and forwards payloads", () => {
+            const callback = vi.fn();
+            ws().onMessage(callback);
+            const listeners = ipcRendererListeners.get("trilium-ws-message")!;
+            expect(listeners).toHaveLength(1);
+            listeners[0]({}, { type: "frontend-update", data: { entityChanges: [] } });
+            expect(callback).toHaveBeenCalledWith({ type: "frontend-update", data: { entityChanges: [] } });
+        });
+
+        it("onMessage returns an unsubscribe that detaches only its own listener", () => {
+            const first = vi.fn();
+            const second = vi.fn();
+            const unsubFirst = ws().onMessage(first);
+            ws().onMessage(second);
+            expect(ipcRendererListeners.get("trilium-ws-message")).toHaveLength(2);
+
+            unsubFirst();
+
+            const remaining = ipcRendererListeners.get("trilium-ws-message")!;
+            expect(remaining).toHaveLength(1);
+            remaining[0]({}, { type: "toast", message: "hi" });
+            expect(first).not.toHaveBeenCalled();
+            expect(second).toHaveBeenCalledWith({ type: "toast", message: "hi" });
         });
     });
 });

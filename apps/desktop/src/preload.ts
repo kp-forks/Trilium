@@ -183,6 +183,19 @@ contextBridge.exposeInMainWorld("electronApi", {
         }
     },
 
+    ws: {
+        // Renderer → main process. Mirror channel name with the server-side
+        // IpcMessagingProvider constants.
+        send(message: unknown) {
+            ipcRenderer.send("trilium-ws-from-renderer", message);
+        },
+        onMessage(callback: (message: unknown) => void) {
+            const listener = (_event: unknown, message: unknown) => callback(message);
+            ipcRenderer.on("trilium-ws-message", listener);
+            return () => ipcRenderer.removeListener("trilium-ws-message", listener);
+        }
+    },
+
     navigation: {
         clearNavigationHistory() {
             ipcRenderer.send("clear-navigation-history");

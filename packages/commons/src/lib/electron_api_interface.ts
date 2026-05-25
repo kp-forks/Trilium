@@ -357,6 +357,25 @@ export interface ElectronPrintingApi {
 }
 
 /**
+ * In-process replacement for the renderer↔server WebSocket. Backed by
+ * Chromium IPC instead of a TCP socket — no port is bound and no auth check
+ * is needed because the channel is only reachable from the renderer the
+ * BrowserWindow owns. Wire format is whatever the server's `MessagingProvider`
+ * accepts (currently `WebSocketMessage` / log-error / log-info / ping).
+ */
+export interface ElectronWsApi {
+    /** Sends a message from the renderer to the main-process messaging hub. */
+    send(message: unknown): void;
+
+    /**
+     * Subscribes to messages pushed from the main process. Returns an
+     * unsubscribe function — call it when the listener is no longer needed
+     * (e.g. when a BrowserWindow is unloaded) to avoid leaking handlers.
+     */
+    onMessage(callback: (message: unknown) => void): () => void;
+}
+
+/**
  * Accessors for the underlying Chromium navigation history of the current
  * web contents (back/forward stack), exposed so the renderer can mirror it
  * in custom UI such as the breadcrumb / tab back button.
@@ -421,4 +440,6 @@ export interface ElectronApi {
     printing: ElectronPrintingApi;
     /** Read/write access to Chromium's back/forward navigation history. */
     navigation: ElectronNavigationApi;
+    /** In-process bridge that replaces the renderer↔server WebSocket. */
+    ws: ElectronWsApi;
 }
