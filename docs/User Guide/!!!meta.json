@@ -12638,16 +12638,37 @@
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "tAassRL4RSQL",
+                                            "value": "8YBEPzcpUgxw",
                                             "isInheritable": false,
                                             "position": 20
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "Gzjqa934BdH4",
+                                            "value": "IjZS7iK5EXtb",
                                             "isInheritable": false,
                                             "position": 30
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "6f9hih2hXXZk",
+                                            "isInheritable": false,
+                                            "position": 40
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "tAassRL4RSQL",
+                                            "isInheritable": false,
+                                            "position": 50
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "Gzjqa934BdH4",
+                                            "isInheritable": false,
+                                            "position": 60
                                         },
                                         {
                                             "type": "label",
@@ -12662,27 +12683,6 @@
                                             "value": "backend-logs",
                                             "isInheritable": false,
                                             "position": 50
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "8YBEPzcpUgxw",
-                                            "isInheritable": false,
-                                            "position": 60
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "IjZS7iK5EXtb",
-                                            "isInheritable": false,
-                                            "position": 70
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "6f9hih2hXXZk",
-                                            "isInheritable": false,
-                                            "position": 80
                                         }
                                     ],
                                     "format": "markdown",
@@ -18340,6 +18340,47 @@
                                 },
                                 {
                                     "isClone": false,
+                                    "noteId": "GFXVHyblVN3d",
+                                    "notePath": [
+                                        "pOsGYCXsbNQG",
+                                        "CdNpE2pqjmI6",
+                                        "GLks18SNjxmC",
+                                        "GFXVHyblVN3d"
+                                    ],
+                                    "title": "Electron API",
+                                    "notePosition": 30,
+                                    "prefix": null,
+                                    "isExpanded": false,
+                                    "type": "webView",
+                                    "mime": "",
+                                    "attributes": [
+                                        {
+                                            "type": "label",
+                                            "name": "webViewSrc",
+                                            "value": "/script-api/electron",
+                                            "isInheritable": false,
+                                            "position": 10
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "shareAlias",
+                                            "value": "electron-api",
+                                            "isInheritable": false,
+                                            "position": 20
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "iconClass",
+                                            "value": "bx bx-window-alt",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        }
+                                    ],
+                                    "dataFileName": "Electron API.dat",
+                                    "attachments": []
+                                },
+                                {
+                                    "isClone": false,
                                     "noteId": "ApVHZ8JY5ofC",
                                     "notePath": [
                                         "pOsGYCXsbNQG",
@@ -18348,7 +18389,7 @@
                                         "ApVHZ8JY5ofC"
                                     ],
                                     "title": "Day.js",
-                                    "notePosition": 30,
+                                    "notePosition": 40,
                                     "prefix": null,
                                     "isExpanded": false,
                                     "type": "text",
