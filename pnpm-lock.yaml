@@ -231,7 +231,7 @@ importers:
         version: 0.2.1(mermaid@11.15.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.11.0)
+        version: 5.0.1(mind-elixir@5.11.3)
       '@preact/signals':
         specifier: 2.9.0
         version: 2.9.0(preact@10.29.2)
@@ -347,8 +347,8 @@ importers:
         specifier: 11.15.0
         version: 11.15.0
       mind-elixir:
-        specifier: 5.11.0
-        version: 5.11.0
+        specifier: 5.11.3
+        version: 5.11.3
       panzoom:
         specifier: 9.4.4
         version: 9.4.4
@@ -872,7 +872,7 @@ importers:
         version: 0.2.1(mermaid@11.15.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.11.0)
+        version: 5.0.1(mind-elixir@5.11.3)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
@@ -985,8 +985,8 @@ importers:
         specifier: 11.15.0
         version: 11.15.0
       mind-elixir:
-        specifier: 5.11.0
-        version: 5.11.0
+        specifier: 5.11.3
+        version: 5.11.3
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -2506,7 +2506,7 @@ packages:
     engines: {node: '>=14'}
 
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
+    resolution: {gitHosted: true, integrity: sha512-MXgzlTDEEndJB3TBbvd5uFQO/8gaINo1Hfen8vef5rq/VHVPeB63uuv/uO5+8GFsAJ/rauu6XB79S6K4+aXc+w==, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
     version: 10.2.0-electron.1
     engines: {node: '>=12.13.0'}
     hasBin: true
@@ -10382,8 +10382,8 @@ packages:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
 
-  mind-elixir@5.11.0:
-    resolution: {integrity: sha512-KaTi6/rwFEV1deDSjXF1z7PfvjTXSpul+viGuu6LT4SD6ATLBzkkBmsz5HOmpDj/bAyFP9oGlqzScSXsiOOXUA==}
+  mind-elixir@5.11.3:
+    resolution: {integrity: sha512-VFAM8T9DJizhnloHfzU9vOpqATEYKX23ZoiIpVHZCGIfdYyB9F7aK5mow4vad8s6O4/bFaBpAZIa+dcopAx4gQ==}
 
   minimatch@10.2.5:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
@@ -16935,9 +16935,9 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
-  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.11.0)':
+  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.11.3)':
     dependencies:
-      mind-elixir: 5.11.0
+      mind-elixir: 5.11.3
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -25159,7 +25159,7 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  mind-elixir@5.11.0: {}
+  mind-elixir@5.11.3: {}
 
   minimatch@10.2.5:
     dependencies:
