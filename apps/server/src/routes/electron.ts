@@ -25,7 +25,7 @@ function init(app: Application) {
                 return await dispatch(app, request);
             } catch (err) {
                 console.error(`[trilium-app] dispatch failed for ${request.method} ${request.url}:`, err);
-                return new Response(String((err as Error)?.stack ?? err), { status: 500 });
+                return new Response("Internal Server Error", { status: 500 });
             }
         });
     });
