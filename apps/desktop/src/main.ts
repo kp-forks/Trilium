@@ -7,7 +7,6 @@ import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provide
 import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import port from "@triliumnext/server/src/services/port.js";
-import IpcMessagingProvider from "@triliumnext/server/src/services/ipc_messaging_provider.js";
 import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import tray from "@triliumnext/server/src/services/tray.js";
@@ -23,6 +22,7 @@ import path, { join, resolve } from "path";
 
 import { deferred, LOCALES } from "../../../packages/commons/src";
 import { PRODUCT_NAME } from "./app-info";
+import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
 import { registerTriliumAppScheme } from "./protocol";
 
@@ -124,6 +124,13 @@ async function main() {
     const dbProvider = new BetterSqlite3Provider();
     dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
 
+    // The IPC provider just registers an `ipcMain.on` listener; no TCP socket
+    // or session parser needed, so we can init it here (before startTriliumServer)
+    // instead of going through www.ts. www.ts then only knows about the
+    // socket-bound WebSocket provider.
+    const ipcMessaging = new IpcMessagingProvider();
+    ipcMessaging.init();
+
     await initializeCore({
         dbConfig: {
             provider: dbProvider,
@@ -155,7 +162,7 @@ async function main() {
         zipExportProviderFactory: (await import("@triliumnext/server/src/services/export/zip/factory.js")).serverZipExportProviderFactory,
         request: new NodeRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
-        messaging: new IpcMessagingProvider(),
+        messaging: ipcMessaging,
         schema: loadCoreSchema(),
         platform: new DesktopPlatformProvider(),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,

@@ -1,17 +1,17 @@
 import type { WebSocketMessage } from "@triliumnext/commons";
 import type { ClientMessageHandler, MessagingProvider } from "@triliumnext/core";
+import log from "@triliumnext/server/src/services/log.js";
 import electron from "electron";
-
-import log from "./log.js";
 
 /**
  * Electron-IPC-backed implementation of MessagingProvider — the desktop
- * replacement for {@link WebSocketMessagingProvider}.
+ * replacement for the WebSocket-based provider used by the standalone server
+ * build.
  *
  * The traditional WebSocket transport opens a TCP socket on the desktop's
- * HTTP listener and relied on the process-wide `isElectron` flag to skip the
- * session-cookie check, which made the endpoint accessible to anything that
- * could reach the port (LAN, DNS-rebound browser, co-resident process).
+ * HTTP listener and used to rely on a process-wide `isElectron` flag to skip
+ * the session-cookie check, which made the endpoint accessible to anything
+ * that could reach the port (LAN, DNS-rebound browser, co-resident process).
  *
  * This provider replaces that channel with `webContents.send` /
  * `ipcMain.on`, which are inherently scoped to the BrowserWindow's renderer

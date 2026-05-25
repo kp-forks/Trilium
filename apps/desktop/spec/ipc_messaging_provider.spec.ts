@@ -48,7 +48,17 @@ vi.mock("electron", () => ({
     }
 }));
 
-const { default: IpcMessagingProvider } = await import("./ipc_messaging_provider.js");
+// `log` reads RESOURCE_DIR / data-dir state at module-load time, which is not
+// available in the test process — stub it out so importing the provider
+// doesn't transitively initialise the server log subsystem.
+vi.mock("@triliumnext/server/src/services/log.js", () => ({
+    default: {
+        info: vi.fn(),
+        error: vi.fn()
+    }
+}));
+
+const { default: IpcMessagingProvider } = await import("../src/ipc_messaging_provider.js");
 
 function newWindow(): FakeBrowserWindow {
     return new FakeBrowserWindow(nextWindowId++);

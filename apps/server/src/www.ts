@@ -10,7 +10,6 @@ import appInfo from "./services/app_info.js";
 import config from "./services/config.js";
 import { registerOcrHandlers } from "./services/handlers.js";
 import host from "./services/host.js";
-import IpcMessagingProvider from "./services/ipc_messaging_provider.js";
 import log from "./services/log.js";
 import port from "./services/port.js";
 import { getDbSize } from "./services/sql_init.js";
@@ -60,16 +59,14 @@ export default async function startTriliumServer() {
     const app = await buildApp();
     const httpServer = startHttpServer(app);
 
+    // Only the WS provider needs the HTTP server and session parser; other
+    // providers (e.g. the Electron-IPC provider from apps/desktop) are
+    // initialised by their owning app before startup. Gating on the concrete
+    // type keeps www.ts platform-agnostic.
     const messaging = getMessagingProvider();
-    if (utils.isElectron()) {
-        // Electron: messaging goes over Chromium IPC instead of a WebSocket
-        // (see IpcMessagingProvider). No port is bound for the channel and no
-        // session-cookie check is needed because the bridge is only reachable
-        // from the BrowserWindow's own renderer process.
-        (messaging as IpcMessagingProvider).init();
-    } else {
+    if (messaging instanceof WebSocketMessagingProvider) {
         const sessionParser = (await import("./routes/session_parser.js")).default;
-        (messaging as WebSocketMessagingProvider).init(httpServer, sessionParser);
+        messaging.init(httpServer, sessionParser);
     }
 
     const ws = (await import("./services/ws.js")).default;
