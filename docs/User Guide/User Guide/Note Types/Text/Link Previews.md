@@ -5,9 +5,13 @@ Link previews turn a pasted URL into a rich, metadata-aware widget that can be d
 
 A link preview can be displayed in one of three modes:
 
-*   **Mention** — an inline pill showing the site's favicon and page title. Use this when you want the link to flow with the surrounding paragraph.
-*   **Card** — a block-level preview with thumbnail, title, description, and site name. Use this when the link is the focus of a paragraph.
-*   **Embed** — a block-level interactive embed. Currently supported for YouTube videos, which render as a playable iframe. For URLs that don't support an embedded view, this mode falls back to the Card layout.
+*   <img class="image_resized" style="aspect-ratio:251/42;width:25%;" src="Link Previews_image.png" width="251" height="42">**Inline** — a pill showing the site's favicon and page title. Use this when you want the link to flow with the surrounding paragraph.
+*   <img class="image_resized" style="aspect-ratio:1217/196;width:61.28%;" src="2_Link Previews_image.png" width="1217" height="196">
+    
+    **Card** — a block-level preview with thumbnail, title, description, and site name. Use this when the link is the focus of a paragraph.
+*   <img class="image_resized" style="aspect-ratio:994/563;width:49.28%;" src="1_Link Previews_image.png" width="994" height="563">
+    
+    **Embed** — a block-level interactive embed. Currently supported for YouTube videos, which render as a playable iframe. For URLs that don't support an embedded view, this mode falls back to the Card layout.
 
 ## Inserting a link preview
 
