@@ -196,33 +196,81 @@ export interface ElectronClipboardApi {
 /**
  * Wrappers around Electron's `shell` module for interacting with the OS
  * (default browser, default file handler, downloads, etc.).
+ *
+ * Every method here is validated in the main process before dispatch — see
+ * `apps/server/src/services/shell_validators.ts`. The renderer is treated as
+ * untrusted: invalid input throws on the main side rather than being silently
+ * passed through to `electron.shell` / `WebContents`.
  */
 export interface ElectronShellApi {
-    /** Opens a URL in the user's default external browser. */
+    /**
+     * Opens a URL in the user's default external browser via
+     * `electron.shell.openExternal`.
+     *
+     * **Security:** the scheme is matched against the allowlist in
+     * `SHELL_OPEN_EXTERNAL_PROTOCOLS` (commons). Blocked schemes include
+     * `file:`, `data:`, `smb:`, `ldap:`, `ldaps:`, `jar:`, and `view-source:` —
+     * they cover Follina-class RCE primitives (`ms-msdt:`, `search-ms:`),
+     * NTLM credential theft, and Java loader vectors. URLs that fail to parse
+     * are rejected outright.
+     */
     openExternal(url: string): void;
 
     /**
      * Opens a local path with its default OS handler.
+     *
+     * **Security:** the path is canonicalized and must resolve to either the
+     * Trilium data directory (or a descendant) or the Trilium tmp directory
+     * (or a descendant). Anything else — absolute paths elsewhere on disk,
+     * traversal attempts, UNC paths that don't normalize under those roots —
+     * is rejected. Null bytes, empty strings, and non-existent files are also
+     * rejected.
+     *
      * @returns An empty string on success, or an error message on failure.
      */
     openPath(path: string): Promise<string>;
 
     /**
-     * Opens a `file://` URL with its default OS handler. Convenience wrapper that
-     * decodes the URL before delegating to {@link openPath}.
+     * Opens a `file://` URL with its default OS handler. Convenience wrapper
+     * that decodes the URL before delegating to {@link openPath}.
+     *
+     * **Security:** the URL must use the `file:` scheme and must have an
+     * empty hostname. UNC paths (`file://attacker.example/share/x`) are
+     * explicitly blocked because Windows would otherwise resolve them to
+     * `\\attacker.example\share\x` and leak the user's NTLM hash via SMB
+     * authentication. Drive-letter-as-host malformations like `file://C:/path`
+     * are normalized to `file:///C:/path` before parsing. After resolution
+     * the path is subject to the same data-dir / tmp-dir sandbox as
+     * {@link openPath}.
+     *
      * @returns An empty string on success, or an error message on failure.
      */
     openFileUrl(fileUrl: string): Promise<string>;
 
     /**
-     * Triggers a Chromium download for the given URL — the file is saved through
-     * the normal "Save As" flow instead of being opened in the renderer.
+     * Triggers a Chromium download for the given URL — the file is saved
+     * through the normal "Save As" flow instead of being opened in the
+     * renderer.
+     *
+     * **Security:** locked to the renderer's own origin. The scheme, hostname,
+     * and port must all match the running app's origin (`http://localhost:PORT`
+     * for the dev server, or the custom `trilium-app://app/` protocol for
+     * packaged Electron). Cross-origin downloads, hostless URLs (`data:`,
+     * `blob:`, `about:`, plain `file:///`), and unparseable URLs are
+     * rejected. This stops a compromised renderer from pre-positioning a
+     * remote payload in the user's Downloads folder under a familiar name.
      */
     downloadURL(url: string): void;
 
     /**
      * Opens a file with a Trilium-specific custom handler (configured via the
      * "Open With" option), falling back to the OS default if none is set.
+     *
+     * **Security:** the path must resolve to a strict descendant of Trilium's
+     * tmp directory and the file must exist on disk. The legitimate caller
+     * always passes a path that was just written by `saveToTmpDir`; anything
+     * else (the data dir itself, paths elsewhere on disk, null bytes, empty
+     * strings) is rejected.
      */
     openCustom(filePath: string): void;
 }
