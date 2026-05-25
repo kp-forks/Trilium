@@ -4,6 +4,8 @@ import type { Application } from "express";
 import { createResponse } from "node-mocks-http";
 import { Readable } from "node:stream";
 
+import { markAsInternalElectronRequest } from "../services/electron_request.js";
+
 /**
  * Bridges renderer-process requests on the `trilium-app://app/...` custom
  * protocol into the Express application running in the main process.
@@ -140,7 +142,7 @@ function buildIncomingRequest(opts: BuildRequestOpts): object {
 
     const socket = { remoteAddress: "127.0.0.1", encrypted: false, readable: true, destroy() {}, end() {}, on() {}, removeListener() {} };
 
-    return Object.assign(stream, {
+    const req = Object.assign(stream, {
         method: opts.method,
         url: opts.url,
         headers: opts.headers,
@@ -157,6 +159,15 @@ function buildIncomingRequest(opts: BuildRequestOpts): object {
         connection: socket,
         ip: "127.0.0.1"
     });
+
+    // Tag the request so auth/CSRF middleware can distinguish a renderer→main
+    // protocol dispatch from a public-HTTP request. Without this they would
+    // have to fall back to the process-wide `isElectron` flag, which would
+    // also bypass the bypass for LAN-reachable TCP requests on the desktop's
+    // HTTP listener.
+    markAsInternalElectronRequest(req);
+
+    return req;
 }
 
 // Headers that either describe HTTP transport framing or assume an https
