@@ -1,9 +1,10 @@
-import { BackupService, type ImageProvider,initializeCore } from "@triliumnext/core";
+import { BackupService, initializeCore } from "@triliumnext/core";
 import IpcMessagingProvider from "@triliumnext/desktop/src/ipc_messaging_provider.js";
 import { registerTriliumAppScheme } from "@triliumnext/desktop/src/protocol.js";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import ServerPlatformProvider from "@triliumnext/server/src/platform_provider.js";
+import { serverImageProvider } from "@triliumnext/server/src/services/image_provider.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
@@ -36,14 +37,6 @@ class StubBackupService extends BackupService {
         return null;
     }
 }
-
-// Stub image provider (not used in edit-docs, but required by initializeCore)
-const stubImageProvider: ImageProvider = {
-    getImageType: () => null,
-    processImage: async () => {
-        throw new Error("Image processing not supported in edit-docs");
-    }
-};
 
 export async function initializeEditDocsCore() {
     const dbProvider = new BetterSqlite3Provider();
@@ -79,7 +72,7 @@ export async function initializeEditDocsCore() {
         messaging,
         getDemoArchive: async () => null,
         backup: new StubBackupService(),
-        image: stubImageProvider
+        image: serverImageProvider
     });
 }
 
