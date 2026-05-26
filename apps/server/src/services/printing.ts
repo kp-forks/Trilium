@@ -3,7 +3,6 @@ import fs from "fs/promises";
 import { t } from "i18next";
 
 import log from "./log.js";
-import port from "./port.js";
 import { formatDownloadTitle } from "./utils.js";
 
 interface PrintOpts {
@@ -114,7 +113,12 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
     });
 
     try {
-        await browserWindow.loadURL(`http://127.0.0.1:${port}/?print#${notePath}`);
+        // Load through the custom protocol so the print window is same-origin
+        // with the main renderer (`trilium-app://app/`). Loading over HTTP
+        // would split origins — the main window's session cookie wouldn't
+        // reach the print window, auth would redirect to /login, and the
+        // print page would never render.
+        await browserWindow.loadURL(`trilium-app://app/?print#${notePath}`);
     } catch (err) {
         log.error(`Failed to load print window: ${err}`);
         ipcMain.off("print-progress", progressCallback);
