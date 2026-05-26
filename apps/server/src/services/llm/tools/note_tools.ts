@@ -121,7 +121,8 @@ export const noteTools = defineTools({
             return {
                 success: true,
                 noteId: note.noteId,
-                title: note.getTitleOrProtected()
+                title: note.getTitleOrProtected(),
+                content: getNoteContentForLlm(note)
             };
         }
     },
@@ -163,7 +164,8 @@ export const noteTools = defineTools({
             return {
                 success: true,
                 noteId: note.noteId,
-                title: note.getTitleOrProtected()
+                title: note.getTitleOrProtected(),
+                content: getNoteContentForLlm(note)
             };
         }
     },
@@ -220,7 +222,8 @@ export const noteTools = defineTools({
             return {
                 success: true,
                 noteId: note.noteId,
-                title: note.getTitleOrProtected()
+                title: note.getTitleOrProtected(),
+                content: getNoteContentForLlm(note)
             };
         }
     },
@@ -283,7 +286,8 @@ export const noteTools = defineTools({
                     success: true,
                     noteId: note.noteId,
                     title: note.getTitleOrProtected(),
-                    type: note.type
+                    type: note.type,
+                    content: getNoteContentForLlm(note)
                 };
             } catch (err) {
                 return { error: err instanceof Error ? err.message : "Failed to create note" };
