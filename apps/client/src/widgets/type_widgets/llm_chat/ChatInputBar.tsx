@@ -128,6 +128,7 @@ export default function ChatInputBar({
         baseSubmit(e);
         if (willSubmit) {
             editorApiRef.current?.setText("");
+            editorApiRef.current?.focus();
         }
     }, [baseSubmit, chat.input, chat.isStreaming]);
     submitRef.current = handleSubmit;
