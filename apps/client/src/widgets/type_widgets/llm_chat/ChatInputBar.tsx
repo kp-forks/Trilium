@@ -211,6 +211,10 @@ export default function ChatInputBar({
     const fileInputRef = useRef<HTMLInputElement>(null);
     // Always-fresh submit handler for the editor's enter listener.
     const submitRef = useRef<(e: Event) => void>(() => {});
+    // Always-fresh paste handler for the DOM listener registered once in
+    // `onInitialized` — the listener calls through this ref so it picks up
+    // dependency changes (e.g. `chat.chatNoteId` being set after first render).
+    const pasteHandlerRef = useRef<(e: ClipboardEvent) => void>(() => {});
 
     /** Upload an image, PDF, or text file to the chat note and add the result to pending attachments. */
     const uploadFile = useCallback(async (file: File) => {
@@ -257,6 +261,7 @@ export default function ChatInputBar({
             await uploadFile(file);
         }
     }, [uploadFile]);
+    pasteHandlerRef.current = handlePaste;
 
     const handleDrop = useCallback(async (e: DragEvent) => {
         const files = e.dataTransfer?.files;
@@ -445,8 +450,15 @@ export default function ChatInputBar({
                     );
                     // Capture pasted images at the DOM layer so CKEditor doesn't
                     // try to embed them as base64 data URLs inside the editor.
+                    // Go through `pasteHandlerRef` so this one-time registration
+                    // always sees the latest closure (chatNoteId arrives via a
+                    // useEffect in the parent, after first render).
                     const editable = editor.editing.view.getDomRoot();
-                    editable?.addEventListener("paste", handlePaste as unknown as EventListener, { capture: true });
+                    editable?.addEventListener(
+                        "paste",
+                        (e) => pasteHandlerRef.current(e as ClipboardEvent),
+                        { capture: true }
+                    );
                 }}
             />
             <input
