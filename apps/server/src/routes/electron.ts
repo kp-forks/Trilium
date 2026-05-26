@@ -1,7 +1,7 @@
 import electron from "electron";
 import EventEmitter from "events";
-import type { Application } from "express";
-import { createResponse } from "node-mocks-http";
+import type { Application, Response as ExpressResponse } from "express";
+import { createResponse, type MockResponse } from "node-mocks-http";
 import { Readable } from "node:stream";
 
 import { markAsInternalElectronRequest } from "../services/electron_request.js";
@@ -62,93 +62,10 @@ export async function dispatch(app: Application, request: Request): Promise<Resp
             eventEmitter: EventEmitter
         });
 
-        // Streaming bridge. When the handler calls `res.flushHeaders()` — the
-        // standard signal for "send headers now, body coming later" used by SSE
-        // endpoints like the LLM chat stream — switch into streaming mode:
-        // resolve the Fetch `Response` immediately with a `ReadableStream` body,
-        // and forward subsequent `res.write(chunk)` calls into the stream
-        // controller so the renderer receives chunks in real time instead of
-        // waiting for the whole response to buffer.
-        //
-        // Also fixes a crash: Express rewires `res.__proto__` to `app.response`,
-        // which extends Node's real `http.ServerResponse`. Without a shadowing
-        // own-property, `res.flushHeaders()` dereferences ServerResponse internals
-        // (`outputData`) that were never initialised on the mock object.
-        let streamingMode = false;
-        let streamController: ReadableStreamDefaultController<Uint8Array> | null = null;
-        const origWrite = res.write.bind(res);
-        const origEnd = res.end.bind(res);
-
-        function startStreaming() {
-            if (streamingMode) return;
-            streamingMode = true;
-            const streamBody = new ReadableStream<Uint8Array>({
-                start(controller) {
-                    streamController = controller;
-                }
-            });
-            try {
-                resolve(new Response(streamBody, {
-                    status: res.statusCode || 200,
-                    headers: normalizeResponseHeaders(res.getHeaders())
-                }));
-            } catch (err) {
-                reject(err);
-            }
-        }
-
-        (res as unknown as { flushHeaders: () => void }).flushHeaders = startStreaming;
-        // Express compression / response-time wrappers and some handlers
-        // probe for `res.flush()` to force-flush their buffer. In streaming
-        // mode the stream controller delivers each enqueue eagerly, so this
-        // is a safe no-op; without the shim it would fall through to the
-        // ServerResponse prototype and crash the same way `flushHeaders`
-        // does.
-        (res as unknown as { flush: () => void }).flush = () => {};
-
-        (res as unknown as { write: typeof res.write }).write = function write(
-            this: typeof res,
-            chunk: unknown,
-            ...rest: unknown[]
-        ): boolean {
-            if (streamingMode) {
-                const buf = toUint8Array(chunk);
-                if (buf && streamController) {
-                    streamController.enqueue(buf);
-                }
-                return true;
-            }
-            return (origWrite as (...a: unknown[]) => boolean)(chunk, ...rest);
-        } as typeof res.write;
-
-        (res as unknown as { end: typeof res.end }).end = function end(
-            this: typeof res,
-            ...args: unknown[]
-        ) {
-            if (streamingMode) {
-                if (args.length > 0 && args[0] != null && typeof args[0] !== "function") {
-                    const buf = toUint8Array(args[0]);
-                    if (buf && streamController) {
-                        streamController.enqueue(buf);
-                    }
-                }
-                if (streamController) {
-                    try {
-                        streamController.close();
-                    } catch {
-                        // Already closed (e.g. renderer aborted) — fine.
-                    }
-                    streamController = null;
-                }
-                // Keep mock state coherent for `on-finished` & friends, but
-                // drop any payload args since we already drained them.
-                return (origEnd as (...a: unknown[]) => unknown)();
-            }
-            return (origEnd as (...a: unknown[]) => unknown)(...args);
-        } as typeof res.end;
+        const bridge = installStreamingBridge(res, resolve, reject, request.signal);
 
         res.on("end", () => {
-            if (streamingMode) return; // streaming path already resolved
+            if (bridge.isStreaming) return; // streaming path already resolved
             const buf = typeof (res as any)._getBuffer === "function" ? (res as any)._getBuffer() : null;
             const data = res._getData();
             const rawPayload = buf && buf.length > 0 ? buf : data;
@@ -166,34 +83,13 @@ export async function dispatch(app: Application, request: Request): Promise<Resp
             }
         });
 
-        // Renderer cancelled the fetch (e.g. user hit stop, tab navigated).
-        // Tear the stream down so the upstream handler stops writing into a
-        // closed channel.
-        request.signal?.addEventListener("abort", () => {
-            if (streamingMode && streamController) {
-                try {
-                    streamController.error(new Error("Renderer cancelled request"));
-                } catch {
-                    // Already closed.
-                }
-                streamController = null;
-            }
-        });
-
         try {
             (app as unknown as (req: object, res: object, next: (err?: unknown) => void) => void)(
                 req,
                 res,
                 (err) => {
                     if (err) {
-                        if (streamingMode && streamController) {
-                            try {
-                                streamController.error(err instanceof Error ? err : new Error(String(err)));
-                            } catch {
-                                // Already closed.
-                            }
-                            streamController = null;
-                        }
+                        bridge.abort(err instanceof Error ? err : new Error(String(err)));
                         reject(err);
                     }
                 }
@@ -202,6 +98,115 @@ export async function dispatch(app: Application, request: Request): Promise<Resp
             reject(err);
         }
     });
+}
+
+interface StreamingBridge {
+    /** True once `res.flushHeaders()` has been called and we've committed a streaming `Response`. */
+    readonly isStreaming: boolean;
+    /** Force-fail the streaming body (e.g. when Express's `next(err)` fires mid-stream). */
+    abort(reason: Error): void;
+}
+
+/**
+ * Patches a node-mocks-http response so SSE / chunked handlers (e.g. the LLM
+ * chat stream) deliver chunks to the renderer in real time instead of buffering
+ * until `res.end()`.
+ *
+ * When the handler calls `res.flushHeaders()` — the standard "headers now,
+ * body coming later" signal — the bridge resolves the Fetch `Response` with a
+ * `ReadableStream` body and forwards subsequent `res.write(chunk)` calls into
+ * the stream controller. Non-streaming handlers never call `flushHeaders`; for
+ * them the original `write` / `end` run unchanged and the caller's existing
+ * buffered `res.on("end")` path resolves the Response.
+ *
+ * The bridge also fixes a crash: Express rewires `res.__proto__` to
+ * `app.response` (extends `http.ServerResponse`), so any method not shadowed
+ * as an own property falls through to Node's real ServerResponse — whose
+ * internals (`outputData`, …) were never initialised on the mock object.
+ * `flushHeaders` and `flush` both trigger this and need own-property shims.
+ */
+function installStreamingBridge(
+    res: MockResponse<ExpressResponse>,
+    onCommit: (response: Response) => void,
+    onCommitError: (err: unknown) => void,
+    abortSignal: AbortSignal | null | undefined
+): StreamingBridge {
+    let streaming = false;
+    let controller: ReadableStreamDefaultController<Uint8Array> | null = null;
+    const origWrite = res.write.bind(res);
+    const origEnd = res.end.bind(res);
+
+    function commit() {
+        if (streaming) return;
+        streaming = true;
+        const body = new ReadableStream<Uint8Array>({
+            start(c) { controller = c; }
+        });
+        try {
+            onCommit(new Response(body, {
+                status: res.statusCode || 200,
+                headers: normalizeResponseHeaders(res.getHeaders())
+            }));
+        } catch (err) {
+            onCommitError(err);
+        }
+    }
+
+    function enqueue(chunk: unknown) {
+        const buf = toUint8Array(chunk);
+        if (buf && controller) controller.enqueue(buf);
+    }
+
+    function closeStream() {
+        if (!controller) return;
+        try { controller.close(); } catch { /* already closed */ }
+        controller = null;
+    }
+
+    function errorStream(reason: Error) {
+        if (!controller) return;
+        try { controller.error(reason); } catch { /* already closed */ }
+        controller = null;
+    }
+
+    // Install as own properties so Express's prototype swap can't reveal the
+    // broken inherited ServerResponse methods underneath.
+    Object.assign(res, {
+        flushHeaders: commit,
+        // Some handlers / compression middleware probe `res.flush()` to
+        // force-flush. Stream controllers deliver each enqueue eagerly, so
+        // this is a safe no-op — and prevents the same prototype-swap crash.
+        flush: () => {},
+        write(chunk: unknown, ...rest: unknown[]): boolean {
+            if (streaming) {
+                enqueue(chunk);
+                return true;
+            }
+            return (origWrite as (...a: unknown[]) => boolean)(chunk, ...rest);
+        },
+        end(...args: unknown[]) {
+            if (!streaming) {
+                return (origEnd as (...a: unknown[]) => unknown)(...args);
+            }
+            if (args.length > 0 && args[0] != null && typeof args[0] !== "function") {
+                enqueue(args[0]);
+            }
+            closeStream();
+            // Keep mock state coherent for `on-finished` etc., but drop any
+            // payload args since we already drained them.
+            return (origEnd as (...a: unknown[]) => unknown)();
+        }
+    });
+
+    // Renderer cancelled the fetch (e.g. user hit stop, tab navigated).
+    abortSignal?.addEventListener("abort", () => {
+        if (streaming) errorStream(new Error("Renderer cancelled request"));
+    });
+
+    return {
+        get isStreaming() { return streaming; },
+        abort: errorStream
+    };
 }
 
 async function readBody(request: Request): Promise<Buffer | null> {

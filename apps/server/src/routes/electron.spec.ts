@@ -125,6 +125,86 @@ describe("electron protocol dispatcher", () => {
         expect(rest).toBe("second\n");
     });
 
+    // `res.flush()` is the second crash vector from Express's prototype swap:
+    // some compression / response-time middleware probes it to force-flush,
+    // which would otherwise dereference uninitialised ServerResponse internals.
+    it("does not crash when handlers probe res.flush()", async () => {
+        const app = express();
+        app.get("/probe", (_req, res) => {
+            (res as unknown as { flush: () => void }).flush();
+            res.send("ok");
+        });
+
+        const response = await dispatch(app, new Request("trilium-app://app/probe"));
+        expect(response.status).toBe(200);
+        expect(await response.text()).toBe("ok");
+    });
+
+    it("delivers a final chunk passed to res.end() in streaming mode", async () => {
+        const app = express();
+        app.get("/stream", (_req, res) => {
+            res.setHeader("Content-Type", "text/event-stream");
+            res.flushHeaders();
+            res.write("part1\n");
+            res.end("part2\n");
+        });
+
+        const response = await dispatch(app, new Request("trilium-app://app/stream"));
+        expect(await response.text()).toBe("part1\npart2\n");
+    });
+
+    it("captures the status code at flushHeaders time for streaming responses", async () => {
+        const app = express();
+        app.get("/stream", (_req, res) => {
+            res.status(202);
+            res.flushHeaders();
+            res.end("body");
+        });
+
+        const response = await dispatch(app, new Request("trilium-app://app/stream"));
+        expect(response.status).toBe(202);
+        expect(await response.text()).toBe("body");
+    });
+
+    it("treats repeated flushHeaders() calls as idempotent", async () => {
+        const app = express();
+        app.get("/stream", (_req, res) => {
+            res.setHeader("Content-Type", "text/event-stream");
+            res.flushHeaders();
+            res.flushHeaders(); // no-op
+            res.write("hi");
+            res.end();
+        });
+
+        const response = await dispatch(app, new Request("trilium-app://app/stream"));
+        expect(response.status).toBe(200);
+        expect(await response.text()).toBe("hi");
+    });
+
+    // When the renderer aborts the fetch (user hits stop, tab navigates, ...),
+    // the bridge must error the stream so reads reject. Otherwise the upstream
+    // handler keeps writing into a closed channel and the renderer hangs.
+    it("errors the streaming body when the renderer aborts the fetch", async () => {
+        const app = express();
+        app.get("/stream", (_req, res) => {
+            res.setHeader("Content-Type", "text/event-stream");
+            res.flushHeaders();
+            res.write("first\n");
+            // Intentionally do not call res.end — the abort must tear down.
+        });
+
+        const abortController = new AbortController();
+        const request = new Request("trilium-app://app/stream", { signal: abortController.signal });
+        const response = await dispatch(app, request);
+
+        const reader = response.body!.getReader();
+        const first = await reader.read();
+        expect(new TextDecoder().decode(first.value)).toBe("first\n");
+
+        abortController.abort();
+        await expect(reader.read()).rejects.toThrow();
+    });
+
     it("does NOT tag plain Express requests with the internal-electron marker", () => {
         // Anything that didn't come through `dispatch()` — i.e. a real HTTP
         // request to the TCP listener, or an arbitrary attacker-controlled
