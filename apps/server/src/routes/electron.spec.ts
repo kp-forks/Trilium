@@ -82,6 +82,49 @@ describe("electron protocol dispatcher", () => {
         expect(markedOnHandler).toBe(true);
     });
 
+    // SSE / streaming endpoints (e.g. LLM chat) commit headers up front with
+    // `res.flushHeaders()` and then write chunks over time. The bridge must
+    // (a) not crash on flushHeaders — Express rewires `res.__proto__` to the
+    // real ServerResponse, whose internal `outputData` was never initialised
+    // on the mock — and (b) deliver subsequent `res.write` chunks to the
+    // renderer in real time instead of buffering until `res.end`.
+    it("streams chunks to the renderer as soon as flushHeaders is called", async () => {
+        const app = express();
+        let resolveWriteGate: (() => void) | undefined;
+        const writeGate = new Promise<void>((r) => { resolveWriteGate = r; });
+
+        app.get("/stream", async (_req, res) => {
+            res.setHeader("Content-Type", "text/event-stream");
+            res.flushHeaders();
+            res.write("first\n");
+            // Hold the second chunk until the test confirms the first was
+            // already readable from the Response body — proving real-time
+            // delivery instead of buffer-then-flush.
+            await writeGate;
+            res.write("second\n");
+            res.end();
+        });
+
+        const dispatched = dispatch(app, new Request("trilium-app://app/stream"));
+        const response = await dispatched;
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type")).toBe("text/event-stream");
+
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        const first = await reader.read();
+        expect(decoder.decode(first.value)).toBe("first\n");
+
+        resolveWriteGate!();
+        let rest = "";
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            rest += decoder.decode(value);
+        }
+        expect(rest).toBe("second\n");
+    });
+
     it("does NOT tag plain Express requests with the internal-electron marker", () => {
         // Anything that didn't come through `dispatch()` — i.e. a real HTTP
         // request to the TCP listener, or an arbitrary attacker-controlled
