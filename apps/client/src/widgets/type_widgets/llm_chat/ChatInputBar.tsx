@@ -106,12 +106,8 @@ export default function ChatInputBar({
     const [showAddProviderModal, setShowAddProviderModal] = useState(false);
     const editorApiRef = useRef<CKEditorApi>();
     const editorInstanceRef = useRef<CKTextEditor>();
-    const editorHtmlRef = useRef<string>("");
     // Always-fresh submit handler for the editor's enter listener.
     const submitRef = useRef<(e: Event) => void>(() => {});
-
-    const handleSubmit = onSubmit ?? chat.handleSubmit;
-    submitRef.current = handleSubmit;
 
     // CKEditor's ReferenceLink plugin calls back into the parent component to
     // resolve a note's title from its href.
@@ -121,13 +117,20 @@ export default function ChatInputBar({
         }
     });
 
-    // Clear the editor when external code resets the prompt (e.g. after submit).
-    useEffect(() => {
-        if (chat.input === "" && editorHtmlRef.current !== "") {
+    const baseSubmit = onSubmit ?? chat.handleSubmit;
+    // Clear the editor immediately when a submit fires with non-empty, non-streaming
+    // input — mirrors the rejection check inside chat.handleSubmit so we don't wipe
+    // text that won't actually be sent. Doing it here (instead of as a useEffect on
+    // chat.input) avoids the React-render / CKEditor-change-event race that left the
+    // editor visually populated after submit.
+    const handleSubmit = useCallback((e: Event) => {
+        const willSubmit = chat.input.trim() && !chat.isStreaming;
+        baseSubmit(e);
+        if (willSubmit) {
             editorApiRef.current?.setText("");
-            editorHtmlRef.current = "";
         }
-    }, [chat.input]);
+    }, [baseSubmit, chat.input, chat.isStreaming]);
+    submitRef.current = handleSubmit;
 
     // Reflect streaming state into CKEditor's read-only lock.
     useEffect(() => {
@@ -224,7 +227,6 @@ export default function ChatInputBar({
                     language: "en"
                 }}
                 onChange={(html) => {
-                    editorHtmlRef.current = html ?? "";
                     chat.setInput(htmlToPlainText(html ?? ""));
                 }}
                 onInitialized={(editor) => {
