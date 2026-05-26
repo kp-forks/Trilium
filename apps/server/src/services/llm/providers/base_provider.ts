@@ -29,20 +29,26 @@ function effectiveCost(pricing: ModelPricing): number {
 /**
  * Build a context hint about the current note with full metadata (same as get_note / ETAPI).
  */
-function buildNoteHint(noteId: string): string | null {
+function buildNoteHint(noteId: string, hasAttachments: boolean): string | null {
     const note = becca.getNote(noteId);
     if (!note) {
         return null;
     }
 
     const metadata = yaml.dump(getNoteMeta(note, SYSTEM_PROMPT_LIMITS), { lineWidth: -1 });
-    return [
+    const lines = [
         "The user is currently viewing the following note.",
         "Use this metadata (including contentPreview) to answer questions about the note without calling tools when possible.",
-        "Use get_note_content only if the preview is insufficient.",
-        "",
-        metadata
-    ].join("\n");
+        "Use get_note_content only if the preview is insufficient."
+    ];
+    if (hasAttachments) {
+        // When the user has attached files alongside this turn, those are
+        // almost always the actual subject of the question — the note context
+        // is just ambient information about where they happen to be in the app.
+        lines.push("The user has attached files in this message. Treat those attachments as the primary subject of their question; refer to this note only for background context if relevant.");
+    }
+    lines.push("", metadata);
+    return lines.join("\n");
 }
 
 /**
@@ -246,13 +252,17 @@ export abstract class BaseProvider implements LlmProvider {
             return chatMessages;
         }
 
-        const noteHint = buildNoteHint(config.contextNoteId);
-        if (!noteHint) {
+        const lastUserIndex = chatMessages.map(m => m.role).lastIndexOf("user");
+        if (lastUserIndex === -1) {
             return chatMessages;
         }
 
-        const lastUserIndex = chatMessages.map(m => m.role).lastIndexOf("user");
-        if (lastUserIndex === -1) {
+        const lastUserContent = chatMessages[lastUserIndex].content;
+        const hasAttachments = Array.isArray(lastUserContent)
+            && lastUserContent.some(p => p.type !== "text");
+
+        const noteHint = buildNoteHint(config.contextNoteId, hasAttachments);
+        if (!noteHint) {
             return chatMessages;
         }
 
