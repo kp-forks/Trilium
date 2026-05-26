@@ -396,10 +396,25 @@ export function useLlmChat(
             // AbortError is expected when user stops generation
             if (e instanceof DOMException && e.name === "AbortError") {
                 finalizeStream();
-            } else {
-                // Re-throw other errors so they are not swallowed
-                throw e;
+                return;
             }
+            // Unexpected error — streamChatCompletion normally routes failures
+            // through onError, so reaching here is a bug. Surface it in the chat
+            // and reset state instead of leaving the UI stuck on the stop button.
+            console.error("Unexpected error in chat stream:", e);
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            setMessages([...conversation, {
+                id: randomString(),
+                role: "assistant",
+                content: errorMsg,
+                createdAt: new Date().toISOString(),
+                type: "error"
+            }]);
+            setStreamingContent("");
+            setStreamingBlocks([]);
+            setStreamingThinking("");
+            setIsStreaming(false);
+            abortControllerRef.current = null;
         });
     }, [selectedModel, availableModels, enableWebSearch, enableNoteTools, enableExtendedThinking, contextNoteId, supportsExtendedThinking, setMessages]);
 
