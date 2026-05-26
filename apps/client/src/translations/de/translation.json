@@ -739,7 +739,8 @@
     "trilium_api_docs_button_title": "Öffne die Trilium-API-Dokumentation",
     "save_to_note_button_title": "In die Notiz speichern",
     "opening_api_docs_message": "API-Dokumentation wird geöffnet...",
-    "sql_console_saved_message": "SQL-Konsolennotiz wurde in {{note_path}} gespeichert"
+    "sql_console_saved_message": "SQL-Konsolennotiz wurde in {{note_path}} gespeichert",
+    "electron_api_docs_button_title": "Öffne die Electron-API-Dokumentation"
   },
   "copy_image_reference_button": {
     "button_title": "Bildreferenz in die Zwischenablage kopieren, kann in eine Textnotiz eingefügt werden."

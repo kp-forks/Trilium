@@ -745,7 +745,8 @@
     "trilium_api_docs_button_title": "Oscail doiciméid API Trilium",
     "save_to_note_button_title": "Sábháil chuig nóta",
     "opening_api_docs_message": "Ag oscailt doiciméid API...",
-    "sql_console_saved_message": "Tá nóta Consól SQL sábháilte i {{note_path}}"
+    "sql_console_saved_message": "Tá nóta Consól SQL sábháilte i {{note_path}}",
+    "electron_api_docs_button_title": "Doiciméid API Open Electron"
   },
   "copy_image_reference_button": {
     "button_title": "Cóipeáil tagairt íomhá chuig an ghearrthaisce, is féidir é a ghreamú i nóta téacs."
