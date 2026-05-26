@@ -24,7 +24,20 @@ export interface LlmImagePart {
     mime: string;
 }
 
-export type LlmMessagePart = LlmTextPart | LlmImagePart;
+/**
+ * File segment of a multimodal message (e.g. a PDF). Like image parts, the
+ * file is referenced by its Trilium attachment ID and resolved to bytes
+ * server-side. Provider support varies by MIME type — PDFs (`application/pdf`)
+ * are handled natively by Anthropic, OpenAI, and Google.
+ */
+export interface LlmFilePart {
+    type: "file";
+    attachmentId: string;
+    mime: string;
+    filename: string;
+}
+
+export type LlmMessagePart = LlmTextPart | LlmImagePart | LlmFilePart;
 
 /**
  * A chat message in the conversation. `content` may be a plain string (the

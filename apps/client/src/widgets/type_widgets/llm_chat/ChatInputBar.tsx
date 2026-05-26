@@ -16,11 +16,14 @@ import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
 import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
-import type { ImageBlock } from "./llm_chat_types.js";
-import type { UseLlmChatReturn } from "./useLlmChat.js";
+import type { FileBlock, ImageBlock } from "./llm_chat_types.js";
+import type { AttachmentBlock, UseLlmChatReturn } from "./useLlmChat.js";
 
 /** MIME types we accept for image upload — must match what the providers support as vision input. */
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+/** Non-image MIME types we accept. PDFs are supported natively by Anthropic, OpenAI, and Google. */
+const ACCEPTED_FILE_TYPES = ["application/pdf"];
+const ACCEPTED_UPLOAD_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_FILE_TYPES];
 
 const READ_ONLY_LOCK = "llm-chat-streaming";
 
@@ -56,12 +59,25 @@ function formatTokenCount(tokens: number): string {
 }
 
 /**
- * Upload an image file as an attachment to the chat note and return a block
- * describing it. The server's `notes/{id}/attachments/upload` endpoint already
- * handles image-role classification and returns a stable URL we can render
- * inline; we just feed it back as an `ImageBlock`.
+ * Extract the Trilium attachment ID from one of the URLs returned by
+ * `notes/{id}/attachments/upload`. Image roles return `api/attachments/<id>/image/<title>`;
+ * file roles return `#root/<noteId>?viewMode=attachments&attachmentId=<id>`.
  */
-async function uploadImageAsAttachment(noteId: string, file: File): Promise<ImageBlock | null> {
+function parseAttachmentIdFromUploadUrl(url: string): string | null {
+    const imageMatch = url.match(/attachments\/([^/]+)\/image\//);
+    if (imageMatch) return imageMatch[1];
+    const fileMatch = url.match(/attachmentId=([^&]+)/);
+    if (fileMatch) return fileMatch[1];
+    return null;
+}
+
+/**
+ * Upload a file as an attachment to the chat note and return a block describing
+ * it. The server's `notes/{id}/attachments/upload` endpoint sorts images and
+ * non-images into different attachment roles and returns different URL shapes;
+ * we unify them back into a typed block here.
+ */
+async function uploadFileAsAttachment(noteId: string, file: File): Promise<AttachmentBlock | null> {
     let detail: string | undefined;
     try {
         const result = await server.upload(
@@ -69,17 +85,24 @@ async function uploadImageAsAttachment(noteId: string, file: File): Promise<Imag
             file, undefined, "POST"
         ) as { uploaded?: boolean; url?: string; message?: string };
         if (result?.uploaded && result.url) {
-            // The upload endpoint returns the URL as `api/attachments/<id>/image/<title>`.
-            // Pull the attachment ID back out so we can pass it to the server.
-            const match = result.url.match(/attachments\/([^/]+)\/image\//);
-            if (match) {
+            const attachmentId = parseAttachmentIdFromUploadUrl(result.url);
+            if (attachmentId) {
+                if (ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+                    return {
+                        type: "image",
+                        attachmentId,
+                        mime: file.type,
+                        title: file.name,
+                        url: result.url
+                    } satisfies ImageBlock;
+                }
                 return {
-                    type: "image",
-                    attachmentId: match[1],
+                    type: "file",
+                    attachmentId,
                     mime: file.type,
                     title: file.name,
                     url: result.url
-                };
+                } satisfies FileBlock;
             }
         }
         detail = result?.message;
@@ -87,7 +110,7 @@ async function uploadImageAsAttachment(noteId: string, file: File): Promise<Imag
         detail = e instanceof Error ? e.message : undefined;
     }
 
-    const base = t("llm_chat.image_upload_failed", { name: file.name });
+    const base = t("llm_chat.attachment_upload_failed", { name: file.name });
     toast.showError(detail ? `${base} ${detail}` : base);
     return null;
 }
@@ -153,14 +176,14 @@ export default function ChatInputBar({
     // Always-fresh submit handler for the editor's enter listener.
     const submitRef = useRef<(e: Event) => void>(() => {});
 
-    /** Upload an image file to the chat note and add the result to pending attachments. */
+    /** Upload an image or PDF to the chat note and add the result to pending attachments. */
     const uploadFile = useCallback(async (file: File) => {
         if (!chat.chatNoteId) return;
-        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-            toast.showError(t("llm_chat.image_unsupported_type", { name: file.name }));
+        if (!ACCEPTED_UPLOAD_TYPES.includes(file.type)) {
+            toast.showError(t("llm_chat.attachment_unsupported_type", { name: file.name }));
             return;
         }
-        const block = await uploadImageAsAttachment(chat.chatNoteId, file);
+        const block = await uploadFileAsAttachment(chat.chatNoteId, file);
         if (block) {
             chat.addPendingAttachment(block);
         }
@@ -180,19 +203,19 @@ export default function ChatInputBar({
     const handlePaste = useCallback(async (e: ClipboardEvent) => {
         const items = e.clipboardData?.items;
         if (!items) return;
-        const imageFiles: File[] = [];
+        const pastedFiles: File[] = [];
         for (const item of Array.from(items)) {
-            if (item.kind === "file" && item.type.startsWith("image/")) {
+            if (item.kind === "file" && ACCEPTED_UPLOAD_TYPES.includes(item.type)) {
                 const file = item.getAsFile();
-                if (file) imageFiles.push(file);
+                if (file) pastedFiles.push(file);
             }
         }
-        if (imageFiles.length === 0) return;
-        // Stop CKEditor from also pasting the image as an inline data URL — we
-        // want it as an attachment, not embedded markup.
+        if (pastedFiles.length === 0) return;
+        // Stop CKEditor from also pasting the file (e.g. an image as a base64
+        // data URL) — we want it as an attachment, not embedded markup.
         e.preventDefault();
         e.stopPropagation();
-        for (const file of imageFiles) {
+        for (const file of pastedFiles) {
             await uploadFile(file);
         }
     }, [uploadFile]);
@@ -329,8 +352,19 @@ export default function ChatInputBar({
             {chat.pendingAttachments.length > 0 && (
                 <div className="llm-chat-attachments">
                     {chat.pendingAttachments.map((att) => (
-                        <div key={att.attachmentId} className="llm-chat-attachment-chip">
-                            <img src={att.url} alt={att.title} />
+                        <div
+                            key={att.attachmentId}
+                            className={`llm-chat-attachment-chip llm-chat-attachment-chip-${att.type}`}
+                            title={att.title}
+                        >
+                            {att.type === "image" ? (
+                                <img src={att.url} alt={att.title} />
+                            ) : (
+                                <div className="llm-chat-attachment-file">
+                                    <span className="bx bxs-file-pdf llm-chat-attachment-file-icon" />
+                                    <span className="llm-chat-attachment-file-name">{att.title}</span>
+                                </div>
+                            )}
                             <button
                                 type="button"
                                 className="llm-chat-attachment-remove"
@@ -380,7 +414,7 @@ export default function ChatInputBar({
             <input
                 ref={fileInputRef}
                 type="file"
-                accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                accept={ACCEPTED_UPLOAD_TYPES.join(",")}
                 multiple
                 onChange={handleFilePickerChange}
                 style={{ display: "none" }}
@@ -474,8 +508,8 @@ export default function ChatInputBar({
                     )}
                 </div>
                 <ActionButton
-                    icon="bx bx-image-add"
-                    text={t("llm_chat.attach_image")}
+                    icon="bx bx-paperclip"
+                    text={t("llm_chat.attach_file")}
                     onClick={() => fileInputRef.current?.click()}
                     disabled={chat.isStreaming || !chat.chatNoteId}
                     className="llm-chat-attach-btn"

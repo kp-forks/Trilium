@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
-import type { ContentBlock, ImageBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
+import type { ContentBlock, FileBlock, ImageBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
+
+/** A user-supplied attachment waiting to be sent with the next message. */
+export type AttachmentBlock = ImageBlock | FileBlock;
 
 /**
  * Flatten a stored message's content into the wire format the server expects.
@@ -21,6 +24,8 @@ function flattenToApiContent(content: string | ContentBlock[]): string | LlmMess
             if (block.content) parts.push({ type: "text", text: block.content });
         } else if (block.type === "image") {
             parts.push({ type: "image", attachmentId: block.attachmentId, mime: block.mime });
+        } else if (block.type === "file") {
+            parts.push({ type: "file", attachmentId: block.attachmentId, mime: block.mime, filename: block.title });
         }
         // tool_call blocks belong to assistant history rendering only — they
         // are reconstructed from the model's own tool-use turns and must not
@@ -57,8 +62,8 @@ export interface UseLlmChatReturn {
     streamingBlocks: ContentBlock[];
     streamingThinking: string;
     pendingCitations: LlmCitation[];
-    /** Images the user has attached but not yet sent. */
-    pendingAttachments: ImageBlock[];
+    /** Images or files the user has attached but not yet sent. */
+    pendingAttachments: AttachmentBlock[];
     availableModels: ModelOption[];
     selectedModel: string;
     enableWebSearch: boolean;
@@ -84,8 +89,8 @@ export interface UseLlmChatReturn {
     setEnableExtendedThinking: (value: boolean) => void;
     setContextNoteId: (noteId: string | undefined) => void;
     setChatNoteId: (noteId: string | undefined) => void;
-    /** Append a freshly uploaded image to the pending-attachments list. */
-    addPendingAttachment: (attachment: ImageBlock) => void;
+    /** Append a freshly uploaded image or file to the pending-attachments list. */
+    addPendingAttachment: (attachment: AttachmentBlock) => void;
     /** Remove a pending attachment by its attachment ID. */
     removePendingAttachment: (attachmentId: string) => void;
 
@@ -116,7 +121,7 @@ export function useLlmChat(
     const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
     const [streamingThinking, setStreamingThinking] = useState("");
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
-    const [pendingAttachments, setPendingAttachments] = useState<ImageBlock[]>([]);
+    const [pendingAttachments, setPendingAttachments] = useState<AttachmentBlock[]>([]);
     const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
     const [selectedModel, setSelectedModel] = useState<string>("");
     const [enableWebSearch, setEnableWebSearch] = useState(true);
@@ -154,7 +159,7 @@ export function useLlmChat(
     const pendingAttachmentsRef = useRef(pendingAttachments);
     pendingAttachmentsRef.current = pendingAttachments;
 
-    const addPendingAttachment = useCallback((attachment: ImageBlock) => {
+    const addPendingAttachment = useCallback((attachment: AttachmentBlock) => {
         setPendingAttachments(prev => [...prev, attachment]);
     }, []);
     const removePendingAttachment = useCallback((attachmentId: string) => {

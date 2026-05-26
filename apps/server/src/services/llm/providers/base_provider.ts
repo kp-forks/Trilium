@@ -4,7 +4,7 @@
  */
 
 import type { LlmMessage, LlmMessagePart } from "@triliumnext/commons";
-import { generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
+import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
@@ -46,14 +46,14 @@ function buildNoteHint(noteId: string): string | null {
 
 /**
  * Resolve a single LlmMessagePart to its AI SDK ModelMessage part form.
- * For image parts, this reads the attachment bytes out of Becca; failures are
- * logged and the part is dropped so the rest of the message still goes through.
+ * For image/file parts, this reads the attachment bytes out of Becca; failures
+ * are logged and the part is dropped so the rest of the message still goes
+ * through.
  */
-function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | null {
+function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePart | null {
     if (part.type === "text") {
         return { type: "text", text: part.text };
     }
-    // type === "image"
     const attachment = becca.getAttachment(part.attachmentId);
     if (!attachment) {
         log.error(`LLM message references missing attachment ${part.attachmentId}`);
@@ -63,16 +63,25 @@ function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | null {
         log.error(`LLM message references protected attachment ${part.attachmentId} without an unlocked session`);
         return null;
     }
+    if (part.type === "image") {
+        return {
+            type: "image",
+            image: attachment.getContent(),
+            mediaType: part.mime || attachment.mime
+        };
+    }
+    // type === "file"
     return {
-        type: "image",
-        image: attachment.getContent(),
-        mediaType: part.mime || attachment.mime
+        type: "file",
+        data: attachment.getContent(),
+        mediaType: part.mime || attachment.mime,
+        filename: part.filename || attachment.title
     };
 }
 
 /**
  * Build a single ModelMessage from an LlmMessage. Plain string content stays
- * as-is; multimodal content is resolved into AI SDK text/image parts.
+ * as-is; multimodal content is resolved into AI SDK text/image/file parts.
  */
 export function buildModelMessage(m: LlmMessage): ModelMessage {
     const role = m.role as "user" | "assistant";
@@ -81,9 +90,9 @@ export function buildModelMessage(m: LlmMessage): ModelMessage {
     }
     const resolved = m.content
         .map(resolveMessagePart)
-        .filter((p): p is TextPart | ImagePart => p !== null);
+        .filter((p): p is TextPart | ImagePart | FilePart => p !== null);
     // Assistant turns can only carry TextParts (per the AI SDK type), so
-    // strip any stray images — they only make sense on user turns anyway.
+    // strip any stray attachments — they only make sense on user turns anyway.
     if (role === "assistant") {
         const textOnly: TextPart[] = resolved.filter((p): p is TextPart => p.type === "text");
         return { role: "assistant", content: textOnly };

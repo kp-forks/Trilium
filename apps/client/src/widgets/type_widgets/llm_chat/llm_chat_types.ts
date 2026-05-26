@@ -41,8 +41,22 @@ export interface ImageBlock {
     url: string;
 }
 
+/**
+ * A non-image file attached to a user message (e.g. a PDF). Stored as a
+ * reference to a Trilium attachment; the server resolves the bytes before
+ * forwarding to the provider as an AI SDK `FilePart`.
+ */
+export interface FileBlock {
+    type: "file";
+    attachmentId: string;
+    mime: string;
+    title: string;
+    /** URL pointing back at the attachment's note view. */
+    url: string;
+}
+
 /** An ordered content block in a chat message. */
-export type ContentBlock = TextBlock | ToolCallBlock | ImageBlock;
+export type ContentBlock = TextBlock | ToolCallBlock | ImageBlock | FileBlock;
 
 /**
  * Extract the plain text from message content (works for both legacy string and block formats).

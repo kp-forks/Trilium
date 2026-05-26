@@ -16,7 +16,6 @@
 
 .llm-chat-attachment-chip {
     position: relative;
-    width: 56px;
     height: 56px;
     border-radius: 6px;
     overflow: hidden;
@@ -24,11 +23,40 @@
     background: var(--accented-background-color);
 }
 
-.llm-chat-attachment-chip img {
+.llm-chat-attachment-chip-image {
+    width: 56px;
+}
+
+.llm-chat-attachment-chip-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+.llm-chat-attachment-chip-file {
+    max-width: 180px;
+}
+
+.llm-chat-attachment-file {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 100%;
+    padding: 0 1.75rem 0 0.5rem;
+}
+
+.llm-chat-attachment-file-icon {
+    font-size: 1.5rem;
+    color: var(--muted-text-color);
+    flex-shrink: 0;
+}
+
+.llm-chat-attachment-file-name {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .llm-chat-attachment-remove {

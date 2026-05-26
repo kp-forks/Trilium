@@ -52,6 +52,37 @@
     border: 1px solid var(--main-border-color);
 }
 
+.llm-chat-message-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--main-border-color);
+    background: var(--accented-background-color);
+    color: var(--main-text-color);
+    text-decoration: none;
+    max-width: 100%;
+}
+
+.llm-chat-message-file:hover {
+    background: var(--more-accented-background-color, var(--accented-background-color));
+    text-decoration: none;
+}
+
+.llm-chat-message-file .bx {
+    font-size: 1.5rem;
+    color: var(--muted-text-color);
+    flex-shrink: 0;
+}
+
+.llm-chat-message-file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .llm-chat-cursor {
     display: inline-block;
     width: 8px;

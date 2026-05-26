@@ -11,7 +11,7 @@ import utils from "../../../services/utils.js";
 import Button from "../../react/Button.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
-import { type ContentBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
+import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import ToolCallCard from "./ToolCallCard.js";
 
 function shortenNumber(n: number): string {
@@ -66,7 +66,8 @@ interface Props {
 type ContentGroup =
     | { type: "text"; block: TextBlock; index: number }
     | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number }
-    | { type: "image"; block: ImageBlock; index: number };
+    | { type: "image"; block: ImageBlock; index: number }
+    | { type: "file"; block: FileBlock; index: number };
 
 /** Extract domain + TLD from a hostname (e.g. "www.example.co.uk" → "example.co.uk"). */
 function extractDomain(hostname: string): string {
@@ -256,6 +257,8 @@ function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
             }
         } else if (block.type === "image") {
             groups.push({ type: "image", block, index: i });
+        } else if (block.type === "file") {
+            groups.push({ type: "file", block, index: i });
         } else {
             groups.push({ type: "text", block, index: i });
         }
@@ -287,6 +290,22 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
                     title={group.block.title}
                 >
                     <img src={group.block.url} alt={group.block.title} />
+                </a>
+            );
+        }
+
+        if (group.type === "file") {
+            return (
+                <a
+                    key={group.index}
+                    href={group.block.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="llm-chat-message-file"
+                    title={group.block.title}
+                >
+                    <span className="bx bxs-file-pdf" />
+                    <span className="llm-chat-message-file-name">{group.block.title}</span>
                 </a>
             );
         }
