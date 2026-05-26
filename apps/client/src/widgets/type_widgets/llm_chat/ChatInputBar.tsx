@@ -65,12 +65,13 @@ function htmlToPlainText(html: string): string {
         const title = (a.textContent ?? "").trim();
         a.replaceWith(`[${title}](${href})`);
     });
-    container.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+    // Two-space + newline = markdown hard line break (preserves shift+Enter).
+    container.querySelectorAll("br").forEach((br) => br.replaceWith("  \n"));
     const blocks = Array.from(container.children) as HTMLElement[];
     if (blocks.length === 0) {
         return (container.textContent ?? "").trim();
     }
-    return blocks.map((b) => b.textContent ?? "").join("\n").trim();
+    return blocks.map((b) => b.textContent ?? "").join("\n\n").trim();
 }
 
 interface ChatInputBarProps {

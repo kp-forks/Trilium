@@ -1,8 +1,9 @@
 import "./ChatMessage.css";
 import "../code/MarkdownCommons.css";
 
-import { type LlmCitation, renderToHtml } from "@triliumnext/commons";
+import { CustomMarkdownRenderer, type LlmCitation, renderToHtml } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
+import type { Tokens } from "marked";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -19,12 +20,29 @@ function shortenNumber(n: number): string {
     return n.toString();
 }
 
+/**
+ * Renderer that tags `#root/...` markdown links with the `reference-link` class
+ * so ReadOnlyTextContent's applyReferenceLinks pass decorates them with the
+ * note icon, color, and title — same shape as the `[[noteId]]` wiki-link
+ * extension's output, but for chat's `[Title](#root/noteId)` references.
+ */
+class ChatMarkdownRenderer extends CustomMarkdownRenderer {
+    override link(token: Tokens.Link): string {
+        const html = super.link(token);
+        if (token.href.startsWith("#root/")) {
+            return html.replace(/^<a\b/, '<a class="reference-link"');
+        }
+        return html;
+    }
+}
+
 /** Parse markdown to HTML using the shared rendering pipeline. */
 function renderMarkdown(markdown: string): string {
     return renderToHtml(markdown, "", {
         sanitize: (h) => DOMPurify.sanitize(h),
         wikiLink: { formatHref: (id) => `#root/${id}` },
-        demoteH1: false
+        demoteH1: false,
+        renderer: new ChatMarkdownRenderer({ async: false })
     });
 }
 
@@ -113,13 +131,15 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
     const isThinking = message.type === "thinking";
     const textContent = typeof message.content === "string" ? message.content : getMessageText(message.content);
 
-    // Render markdown for assistant messages with legacy string content
+    // Render markdown for plain-string content (assistant legacy content and user prompts).
+    // User prompts may contain `[Title](#root/noteId)` reference links produced by the
+    // chat input's @-mention feature, which markdown renders as proper clickable links.
     const renderedContent = useMemo(() => {
-        if (message.role === "assistant" && !isThinking && typeof message.content === "string") {
+        if (!isThinking && typeof message.content === "string") {
             return renderMarkdown(message.content);
         }
         return null;
-    }, [message.content, message.role, isThinking]);
+    }, [message.content, isThinking]);
 
     const messageClasses = [
         "llm-chat-message",
@@ -171,14 +191,10 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
         <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`}>
             <div className={messageClasses}>
                 <div className="llm-chat-message-content">
-                    {message.role === "assistant" ? (
-                        hasBlockContent ? (
-                            renderContentBlocks(message.content as ContentBlock[], isStreaming)
-                        ) : (
-                            <MarkdownContent html={renderedContent || ""} isStreaming={isStreaming} />
-                        )
+                    {message.role === "assistant" && hasBlockContent ? (
+                        renderContentBlocks(message.content as ContentBlock[], isStreaming)
                     ) : (
-                        textContent
+                        <MarkdownContent html={renderedContent || ""} isStreaming={isStreaming && message.role === "assistant"} />
                     )}
                 </div>
                 {message.citations && message.citations.length > 0 && (
