@@ -37,7 +37,19 @@ export interface LlmFilePart {
     filename: string;
 }
 
-export type LlmMessagePart = LlmTextPart | LlmImagePart | LlmFilePart;
+/**
+ * Text-file segment of a multimodal message (e.g. a `.md`, `.json`, source
+ * code). Unlike `LlmFilePart`, the server inlines the decoded UTF-8 content
+ * as a plain `TextPart` so it works with every provider regardless of file
+ * upload support — the trade-off is that large files inflate token usage.
+ */
+export interface LlmTextAttachmentPart {
+    type: "text_attachment";
+    attachmentId: string;
+    filename: string;
+}
+
+export type LlmMessagePart = LlmTextPart | LlmImagePart | LlmFilePart | LlmTextAttachmentPart;
 
 /**
  * A chat message in the conversation. `content` may be a plain string (the

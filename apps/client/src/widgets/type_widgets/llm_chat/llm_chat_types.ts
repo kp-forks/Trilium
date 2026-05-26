@@ -55,8 +55,23 @@ export interface FileBlock {
     url: string;
 }
 
+/**
+ * A text-based file attached to a user message (e.g. `.md`, `.json`, source
+ * code). The server decodes the UTF-8 content and inlines it as a text part,
+ * so the LLM sees the file contents directly — works on every provider but
+ * inflates the prompt by the file size in tokens.
+ */
+export interface TextFileBlock {
+    type: "text_file";
+    attachmentId: string;
+    mime: string;
+    title: string;
+    /** URL pointing back at the attachment's note view. */
+    url: string;
+}
+
 /** An ordered content block in a chat message. */
-export type ContentBlock = TextBlock | ToolCallBlock | ImageBlock | FileBlock;
+export type ContentBlock = TextBlock | ToolCallBlock | ImageBlock | FileBlock | TextFileBlock;
 
 /**
  * Extract the plain text from message content (works for both legacy string and block formats).

@@ -1814,10 +1814,10 @@
     "add_provider": "Add AI Provider",
     "stop": "Stop",
     "retry": "Retry",
-    "attach_file": "Attach image or PDF",
+    "attach_file": "Attach image, PDF, or text file",
     "remove_attachment": "Remove attachment",
     "attachment_upload_failed": "Failed to upload \"{{name}}\".",
-    "attachment_unsupported_type": "\"{{name}}\" isn't a supported attachment type. Use PNG, JPEG, GIF, WebP, or PDF."
+    "attachment_unsupported_type": "\"{{name}}\" isn't a supported attachment type. Use an image (PNG, JPEG, GIF, WebP), a PDF, or a text/source file."
   },
   "sidebar_chat": {
     "title": "AI Chat",

@@ -4,10 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
-import type { ContentBlock, FileBlock, ImageBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
+import type { ContentBlock, FileBlock, ImageBlock, LlmChatContent, StoredMessage, TextFileBlock } from "./llm_chat_types.js";
 
 /** A user-supplied attachment waiting to be sent with the next message. */
-export type AttachmentBlock = ImageBlock | FileBlock;
+export type AttachmentBlock = ImageBlock | FileBlock | TextFileBlock;
 
 /**
  * Flatten a stored message's content into the wire format the server expects.
@@ -26,6 +26,8 @@ function flattenToApiContent(content: string | ContentBlock[]): string | LlmMess
             parts.push({ type: "image", attachmentId: block.attachmentId, mime: block.mime });
         } else if (block.type === "file") {
             parts.push({ type: "file", attachmentId: block.attachmentId, mime: block.mime, filename: block.title });
+        } else if (block.type === "text_file") {
+            parts.push({ type: "text_attachment", attachmentId: block.attachmentId, filename: block.title });
         }
         // tool_call blocks belong to assistant history rendering only — they
         // are reconstructed from the model's own tool-use turns and must not

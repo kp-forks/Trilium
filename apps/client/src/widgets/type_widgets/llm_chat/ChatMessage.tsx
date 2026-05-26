@@ -11,7 +11,7 @@ import utils from "../../../services/utils.js";
 import Button from "../../react/Button.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
-import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
+import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type TextFileBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import ToolCallCard from "./ToolCallCard.js";
 
 function shortenNumber(n: number): string {
@@ -67,7 +67,8 @@ type ContentGroup =
     | { type: "text"; block: TextBlock; index: number }
     | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number }
     | { type: "image"; block: ImageBlock; index: number }
-    | { type: "file"; block: FileBlock; index: number };
+    | { type: "file"; block: FileBlock; index: number }
+    | { type: "text_file"; block: TextFileBlock; index: number };
 
 /** Extract domain + TLD from a hostname (e.g. "www.example.co.uk" → "example.co.uk"). */
 function extractDomain(hostname: string): string {
@@ -259,6 +260,8 @@ function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
             groups.push({ type: "image", block, index: i });
         } else if (block.type === "file") {
             groups.push({ type: "file", block, index: i });
+        } else if (block.type === "text_file") {
+            groups.push({ type: "text_file", block, index: i });
         } else {
             groups.push({ type: "text", block, index: i });
         }
@@ -294,7 +297,8 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
             );
         }
 
-        if (group.type === "file") {
+        if (group.type === "file" || group.type === "text_file") {
+            const icon = group.type === "file" ? "bxs-file-pdf" : "bxs-file-blank";
             return (
                 <a
                     key={group.index}
@@ -304,7 +308,7 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
                     className="llm-chat-message-file"
                     title={group.block.title}
                 >
-                    <span className="bx bxs-file-pdf" />
+                    <span className={`bx ${icon}`} />
                     <span className="llm-chat-message-file-name">{group.block.title}</span>
                 </a>
             );

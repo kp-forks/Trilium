@@ -16,14 +16,39 @@ import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
 import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
-import type { FileBlock, ImageBlock } from "./llm_chat_types.js";
+import type { FileBlock, ImageBlock, TextFileBlock } from "./llm_chat_types.js";
 import type { AttachmentBlock, UseLlmChatReturn } from "./useLlmChat.js";
 
 /** MIME types we accept for image upload — must match what the providers support as vision input. */
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
-/** Non-image MIME types we accept. PDFs are supported natively by Anthropic, OpenAI, and Google. */
-const ACCEPTED_FILE_TYPES = ["application/pdf"];
-const ACCEPTED_UPLOAD_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_FILE_TYPES];
+/** Binary file MIME types we accept (provider-side handling). PDFs are supported by Anthropic, OpenAI, Google. */
+const ACCEPTED_BINARY_FILE_TYPES = ["application/pdf"];
+/**
+ * File extensions we treat as text. The browser often reports an empty or
+ * generic MIME for source code, so extension-based detection is the practical
+ * approach. The server decodes the bytes as UTF-8 and inlines them as text.
+ */
+const ACCEPTED_TEXT_EXTENSIONS = [
+    ".txt", ".md", ".markdown", ".rst", ".log",
+    ".csv", ".tsv",
+    ".json", ".yaml", ".yml", ".xml", ".toml", ".ini", ".env",
+    ".js", ".ts", ".jsx", ".tsx", ".mjs", ".cjs",
+    ".py", ".rb", ".go", ".rs", ".c", ".cc", ".cpp", ".h", ".hpp",
+    ".java", ".kt", ".swift", ".php", ".lua", ".pl", ".scala",
+    ".sh", ".bash", ".zsh", ".sql",
+    ".html", ".htm", ".css", ".scss", ".vue", ".svelte"
+];
+
+/** Best-effort classification of an uploaded file. */
+type UploadKind = "image" | "binary_file" | "text_file" | null;
+function classifyUpload(file: File): UploadKind {
+    if (ACCEPTED_IMAGE_TYPES.includes(file.type)) return "image";
+    if (ACCEPTED_BINARY_FILE_TYPES.includes(file.type)) return "binary_file";
+    if (file.type.startsWith("text/")) return "text_file";
+    const lowerName = file.name.toLowerCase();
+    if (ACCEPTED_TEXT_EXTENSIONS.some(ext => lowerName.endsWith(ext))) return "text_file";
+    return null;
+}
 
 const READ_ONLY_LOCK = "llm-chat-streaming";
 
@@ -75,9 +100,10 @@ function parseAttachmentIdFromUploadUrl(url: string): string | null {
  * Upload a file as an attachment to the chat note and return a block describing
  * it. The server's `notes/{id}/attachments/upload` endpoint sorts images and
  * non-images into different attachment roles and returns different URL shapes;
- * we unify them back into a typed block here.
+ * we unify them back into a typed block here based on the client's
+ * pre-classification.
  */
-async function uploadFileAsAttachment(noteId: string, file: File): Promise<AttachmentBlock | null> {
+async function uploadFileAsAttachment(noteId: string, file: File, kind: UploadKind): Promise<AttachmentBlock | null> {
     let detail: string | undefined;
     try {
         const result = await server.upload(
@@ -87,7 +113,7 @@ async function uploadFileAsAttachment(noteId: string, file: File): Promise<Attac
         if (result?.uploaded && result.url) {
             const attachmentId = parseAttachmentIdFromUploadUrl(result.url);
             if (attachmentId) {
-                if (ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+                if (kind === "image") {
                     return {
                         type: "image",
                         attachmentId,
@@ -95,6 +121,15 @@ async function uploadFileAsAttachment(noteId: string, file: File): Promise<Attac
                         title: file.name,
                         url: result.url
                     } satisfies ImageBlock;
+                }
+                if (kind === "text_file") {
+                    return {
+                        type: "text_file",
+                        attachmentId,
+                        mime: file.type || "text/plain",
+                        title: file.name,
+                        url: result.url
+                    } satisfies TextFileBlock;
                 }
                 return {
                     type: "file",
@@ -176,14 +211,15 @@ export default function ChatInputBar({
     // Always-fresh submit handler for the editor's enter listener.
     const submitRef = useRef<(e: Event) => void>(() => {});
 
-    /** Upload an image or PDF to the chat note and add the result to pending attachments. */
+    /** Upload an image, PDF, or text file to the chat note and add the result to pending attachments. */
     const uploadFile = useCallback(async (file: File) => {
         if (!chat.chatNoteId) return;
-        if (!ACCEPTED_UPLOAD_TYPES.includes(file.type)) {
+        const kind = classifyUpload(file);
+        if (!kind) {
             toast.showError(t("llm_chat.attachment_unsupported_type", { name: file.name }));
             return;
         }
-        const block = await uploadFileAsAttachment(chat.chatNoteId, file);
+        const block = await uploadFileAsAttachment(chat.chatNoteId, file, kind);
         if (block) {
             chat.addPendingAttachment(block);
         }
@@ -205,9 +241,10 @@ export default function ChatInputBar({
         if (!items) return;
         const pastedFiles: File[] = [];
         for (const item of Array.from(items)) {
-            if (item.kind === "file" && ACCEPTED_UPLOAD_TYPES.includes(item.type)) {
-                const file = item.getAsFile();
-                if (file) pastedFiles.push(file);
+            if (item.kind !== "file") continue;
+            const file = item.getAsFile();
+            if (file && classifyUpload(file)) {
+                pastedFiles.push(file);
             }
         }
         if (pastedFiles.length === 0) return;
@@ -361,7 +398,7 @@ export default function ChatInputBar({
                                 <img src={att.url} alt={att.title} />
                             ) : (
                                 <div className="llm-chat-attachment-file">
-                                    <span className="bx bxs-file-pdf llm-chat-attachment-file-icon" />
+                                    <span className={`bx ${att.type === "file" ? "bxs-file-pdf" : "bxs-file-blank"} llm-chat-attachment-file-icon`} />
                                     <span className="llm-chat-attachment-file-name">{att.title}</span>
                                 </div>
                             )}
@@ -414,7 +451,7 @@ export default function ChatInputBar({
             <input
                 ref={fileInputRef}
                 type="file"
-                accept={ACCEPTED_UPLOAD_TYPES.join(",")}
+                accept={[...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_BINARY_FILE_TYPES, ...ACCEPTED_TEXT_EXTENSIONS].join(",")}
                 multiple
                 onChange={handleFilePickerChange}
                 style={{ display: "none" }}

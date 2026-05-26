@@ -4,6 +4,7 @@
  */
 
 import type { LlmMessage, LlmMessagePart } from "@triliumnext/commons";
+import { decodeUtf8 } from "@triliumnext/core/src/services/utils/binary.js";
 import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
@@ -46,9 +47,10 @@ function buildNoteHint(noteId: string): string | null {
 
 /**
  * Resolve a single LlmMessagePart to its AI SDK ModelMessage part form.
- * For image/file parts, this reads the attachment bytes out of Becca; failures
- * are logged and the part is dropped so the rest of the message still goes
- * through.
+ * For image/file parts, this reads the attachment bytes out of Becca. Text
+ * attachments are decoded as UTF-8 and emitted as a labelled TextPart so the
+ * file's content travels inline (works across all providers). Failures are
+ * logged and the part is dropped so the rest of the message still goes through.
  */
 function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePart | null {
     if (part.type === "text") {
@@ -70,12 +72,23 @@ function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePa
             mediaType: part.mime || attachment.mime
         };
     }
-    // type === "file"
+    if (part.type === "file") {
+        return {
+            type: "file",
+            data: attachment.getContent(),
+            mediaType: part.mime || attachment.mime,
+            filename: part.filename || attachment.title
+        };
+    }
+    // type === "text_attachment" — decode the bytes and wrap in a labelled
+    // XML-style block. Anthropic recommends this shape and other providers
+    // handle it fine; the filename gives the model context about what it's
+    // reading without needing provider-specific file APIs.
+    const filename = part.filename || attachment.title;
+    const text = decodeUtf8(attachment.getContent());
     return {
-        type: "file",
-        data: attachment.getContent(),
-        mediaType: part.mime || attachment.mime,
-        filename: part.filename || attachment.title
+        type: "text",
+        text: `<file name="${filename}">\n${text}\n</file>`
     };
 }
 
