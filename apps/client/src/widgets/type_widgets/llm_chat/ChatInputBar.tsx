@@ -17,6 +17,7 @@ import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListTogglea
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
 import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
 import type { FileBlock, ImageBlock, TextFileBlock } from "./llm_chat_types.js";
+import { retryImageOnError } from "./retry_image.js";
 import type { AttachmentBlock, UseLlmChatReturn } from "./useLlmChat.js";
 
 /** MIME types we accept for image upload — must match what the providers support as vision input. */
@@ -395,7 +396,7 @@ export default function ChatInputBar({
                             title={att.title}
                         >
                             {att.type === "image" ? (
-                                <img src={att.url} alt={att.title} />
+                                <img src={att.url} alt={att.title} onError={retryImageOnError} />
                             ) : (
                                 <div className="llm-chat-attachment-file">
                                     <span className={`bx ${att.type === "file" ? "bxs-file-pdf" : "bxs-file-blank"} llm-chat-attachment-file-icon`} />

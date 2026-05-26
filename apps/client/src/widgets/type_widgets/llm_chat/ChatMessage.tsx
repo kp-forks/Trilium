@@ -12,6 +12,7 @@ import Button from "../../react/Button.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type TextFileBlock, type ToolCallBlock } from "./llm_chat_types.js";
+import { retryImageOnError } from "./retry_image.js";
 import ToolCallCard from "./ToolCallCard.js";
 
 function shortenNumber(n: number): string {
@@ -292,7 +293,7 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
                     className="llm-chat-message-image"
                     title={group.block.title}
                 >
-                    <img src={group.block.url} alt={group.block.title} />
+                    <img src={group.block.url} alt={group.block.title} onError={retryImageOnError} />
                 </a>
             );
         }
