@@ -39,7 +39,6 @@ export interface UseLlmChatReturn {
     lastPromptTokens: number;
     messagesEndRef: RefObject<HTMLDivElement>;
     scrollContainerRef: RefObject<HTMLDivElement>;
-    textareaRef: RefObject<HTMLTextAreaElement>;
     /** Whether a provider is configured and available */
     hasProvider: boolean;
     /** Whether we're still checking for providers */
@@ -94,7 +93,6 @@ export function useLlmChat(
     const [isCheckingProvider, setIsCheckingProvider] = useState<boolean>(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const isNearBottomRef = useRef(true);
 
@@ -519,7 +517,6 @@ export function useLlmChat(
         lastPromptTokens,
         messagesEndRef,
         scrollContainerRef,
-        textareaRef,
         hasProvider,
         isCheckingProvider,
 

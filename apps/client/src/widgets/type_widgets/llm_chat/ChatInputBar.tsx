@@ -1,35 +1,87 @@
 import "./ChatInputBar.css";
 
-import type { RefObject } from "preact";
-import { useState, useCallback } from "preact/hooks";
+import { AttributeEditor as CKEditorAttributeEditor, type CKTextEditor, type MentionFeed } from "@triliumnext/ckeditor5";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
+import link from "../../../services/link.js";
+import note_autocomplete, { type Suggestion } from "../../../services/note_autocomplete.js";
+import options from "../../../services/options.js";
 import ActionButton from "../../react/ActionButton.js";
 import Button from "../../react/Button.js";
+import CKEditor, { type CKEditorApi } from "../../react/CKEditor.js";
 import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
-import type { UseLlmChatReturn } from "./useLlmChat.js";
+import { useLegacyImperativeHandlers } from "../../react/hooks.js";
 import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
-import options from "../../../services/options.js";
+import type { UseLlmChatReturn } from "./useLlmChat.js";
+
+const READ_ONLY_LOCK = "llm-chat-streaming";
+
+const mentionFeeds: MentionFeed[] = [
+    {
+        marker: "@",
+        feed: (queryText) => note_autocomplete.autocompleteSourceForCKEditor(queryText),
+        itemRenderer: (rawItem) => {
+            const item = rawItem as Suggestion;
+            const itemElement = document.createElement("button");
+
+            const iconElement = document.createElement("span");
+            let iconClass = item.icon ?? "bx bx-note";
+            if (item.action === "create-note") {
+                iconClass = "bx bx-plus";
+            }
+            iconElement.className = iconClass;
+
+            itemElement.append(iconElement, document.createTextNode(" "));
+            const titleContainer = document.createElement("span");
+            titleContainer.innerHTML = item.highlightedNotePathTitle ?? "";
+            itemElement.append(...titleContainer.childNodes, document.createTextNode(" "));
+
+            return itemElement;
+        },
+        minimumCharacters: 0
+    }
+];
 
 /** Format token count with thousands separators */
 function formatTokenCount(tokens: number): string {
     return tokens.toLocaleString();
 }
 
+/**
+ * Convert CKEditor HTML into plain text suitable for an LLM prompt.
+ *
+ * Paragraphs and <br> become newlines. Note reference links (anchors with a
+ * `#root/...` href) are rendered as markdown-style `[Title](#root/noteId)` so
+ * the LLM sees both the human-readable title and the addressable note path it
+ * can feed into note tools.
+ */
+function htmlToPlainText(html: string): string {
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    container.querySelectorAll<HTMLAnchorElement>("a[href^='#']").forEach((a) => {
+        const href = a.getAttribute("href") ?? "";
+        const title = (a.textContent ?? "").trim();
+        a.replaceWith(`[${title}](${href})`);
+    });
+    container.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+    const blocks = Array.from(container.children) as HTMLElement[];
+    if (blocks.length === 0) {
+        return (container.textContent ?? "").trim();
+    }
+    return blocks.map((b) => b.textContent ?? "").join("\n").trim();
+}
+
 interface ChatInputBarProps {
     /** The chat hook result */
     chat: UseLlmChatReturn;
-    /** Number of rows for the textarea (default: 3) */
-    rows?: number;
     /** Current active note ID (for note context toggle) */
     activeNoteId?: string;
     /** Current active note title (for note context toggle) */
     activeNoteTitle?: string;
     /** Custom submit handler (overrides chat.handleSubmit) */
     onSubmit?: (e: Event) => void;
-    /** Custom key down handler (overrides chat.handleKeyDown) */
-    onKeyDown?: (e: KeyboardEvent) => void;
     /** Callback when web search toggle changes */
     onWebSearchChange?: () => void;
     /** Callback when note tools toggle changes */
@@ -42,20 +94,50 @@ interface ChatInputBarProps {
 
 export default function ChatInputBar({
     chat,
-    rows = 3,
     activeNoteId,
     activeNoteTitle,
     onSubmit,
-    onKeyDown,
     onWebSearchChange,
     onNoteToolsChange,
     onExtendedThinkingChange,
     onModelChange
 }: ChatInputBarProps) {
     const [showAddProviderModal, setShowAddProviderModal] = useState(false);
+    const editorApiRef = useRef<CKEditorApi>();
+    const editorInstanceRef = useRef<CKTextEditor>();
+    const editorHtmlRef = useRef<string>("");
+    // Always-fresh submit handler for the editor's enter listener.
+    const submitRef = useRef<(e: Event) => void>(() => {});
 
     const handleSubmit = onSubmit ?? chat.handleSubmit;
-    const handleKeyDown = onKeyDown ?? chat.handleKeyDown;
+    submitRef.current = handleSubmit;
+
+    // CKEditor's ReferenceLink plugin calls back into the parent component to
+    // resolve a note's title from its href.
+    useLegacyImperativeHandlers({
+        async loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string | null = null) {
+            await link.loadReferenceLinkTitle($el, href);
+        }
+    });
+
+    // Clear the editor when external code resets the prompt (e.g. after submit).
+    useEffect(() => {
+        if (chat.input === "" && editorHtmlRef.current !== "") {
+            editorApiRef.current?.setText("");
+            editorHtmlRef.current = "";
+        }
+    }, [chat.input]);
+
+    // Reflect streaming state into CKEditor's read-only lock.
+    useEffect(() => {
+        const editor = editorInstanceRef.current;
+        if (!editor) return;
+        if (chat.isStreaming) {
+            editor.enableReadOnlyMode(READ_ONLY_LOCK);
+        } else {
+            editor.disableReadOnlyMode(READ_ONLY_LOCK);
+        }
+    }, [chat.isStreaming]);
 
     const handleWebSearchToggle = (newValue: boolean) => {
         chat.setEnableWebSearch(newValue);
@@ -129,15 +211,35 @@ export default function ChatInputBar({
 
     return (
         <form className="llm-chat-input-form" onSubmit={handleSubmit}>
-            <textarea
-                ref={chat.textareaRef as RefObject<HTMLTextAreaElement>}
+            <CKEditor
+                apiRef={editorApiRef}
                 className="llm-chat-input"
-                value={chat.input}
-                onInput={(e) => chat.setInput((e.target as HTMLTextAreaElement).value)}
-                placeholder={t("llm_chat.placeholder")}
-                disabled={chat.isStreaming}
-                onKeyDown={handleKeyDown}
-                rows={rows}
+                editor={CKEditorAttributeEditor}
+                config={{
+                    toolbar: { items: [] },
+                    placeholder: t("llm_chat.placeholder"),
+                    mention: { feeds: mentionFeeds },
+                    licenseKey: "GPL",
+                    language: "en"
+                }}
+                onChange={(html) => {
+                    editorHtmlRef.current = html ?? "";
+                    chat.setInput(htmlToPlainText(html ?? ""));
+                }}
+                onInitialized={(editor) => {
+                    editorInstanceRef.current = editor;
+                    // Enter submits, Shift+Enter falls through to ShiftEnter (soft break).
+                    editor.editing.view.document.on(
+                        "enter",
+                        (event, data) => {
+                            if (data.isSoft) return;
+                            event.stop();
+                            data.preventDefault();
+                            submitRef.current(new Event("submit"));
+                        },
+                        { priority: "high" }
+                    );
+                }}
             />
             <div className="llm-chat-options">
                 <div className="llm-chat-model-selector">
