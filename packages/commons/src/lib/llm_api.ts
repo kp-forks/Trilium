@@ -97,8 +97,10 @@ export interface LlmUsage {
 export type LlmStreamChunk =
     | { type: "text"; content: string }
     | { type: "thinking"; content: string }
-    | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
-    | { type: "tool_result"; toolName: string; result: string; isError?: boolean }
+    | { type: "tool_input_start"; toolCallId: string; toolName: string }
+    | { type: "tool_input_delta"; toolCallId: string; delta: string }
+    | { type: "tool_use"; toolCallId: string; toolName: string; toolInput: Record<string, unknown> }
+    | { type: "tool_result"; toolCallId: string; toolName: string; result: string; isError?: boolean }
     | { type: "citation"; citation: LlmCitation }
     | { type: "usage"; usage: LlmUsage }
     | { type: "error"; error: string }

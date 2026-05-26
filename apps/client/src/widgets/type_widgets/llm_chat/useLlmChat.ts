@@ -274,12 +274,18 @@ export function useLlmChat(
 
         /** Shared cleanup: finalize collected content and reset streaming state. */
         function finalizeStream() {
-            // Mark any in-progress tool calls as stopped so they don't show infinite spinners
+            // Mark any in-progress tool calls as stopped so they don't show infinite spinners.
+            // Also clear `inputStreaming` so a half-streamed JSON arg list doesn't render.
             for (const [i, block] of contentBlocks.entries()) {
                 if (block.type === "tool_call" && !block.toolCall.result) {
                     contentBlocks[i] = {
                         type: "tool_call",
-                        toolCall: { ...block.toolCall, result: "[Stopped]", isError: true }
+                        toolCall: {
+                            ...block.toolCall,
+                            inputStreaming: undefined,
+                            result: "[Stopped]",
+                            isError: true
+                        }
                     };
                 }
             }
@@ -335,22 +341,64 @@ export function useLlmChat(
                     thinkingContent += text;
                     setStreamingThinking(thinkingContent);
                 },
-                onToolUse: (toolName, toolInput) => {
+                onToolInputStart: (toolCallId, toolName) => {
                     contentBlocks.push({
                         type: "tool_call",
                         toolCall: {
-                            id: randomString(),
+                            id: toolCallId,
                             toolName,
-                            input: toolInput
+                            input: {},
+                            inputStreaming: ""
                         }
                     });
                     setStreamingBlocks([...contentBlocks]);
                 },
-                onToolResult: (toolName, result, isError) => {
+                onToolInputDelta: (toolCallId, delta) => {
+                    for (let i = contentBlocks.length - 1; i >= 0; i--) {
+                        const block = contentBlocks[i];
+                        if (block.type === "tool_call" && block.toolCall.id === toolCallId) {
+                            contentBlocks[i] = {
+                                type: "tool_call",
+                                toolCall: {
+                                    ...block.toolCall,
+                                    inputStreaming: (block.toolCall.inputStreaming ?? "") + delta
+                                }
+                            };
+                            break;
+                        }
+                    }
+                    setStreamingBlocks([...contentBlocks]);
+                },
+                onToolUse: (toolCallId, toolName, toolInput) => {
+                    // Some providers skip tool-input-start/delta entirely and only emit
+                    // the final tool-call. In that case there's no pending block to update,
+                    // so push a fresh one.
+                    for (let i = contentBlocks.length - 1; i >= 0; i--) {
+                        const block = contentBlocks[i];
+                        if (block.type === "tool_call" && block.toolCall.id === toolCallId) {
+                            contentBlocks[i] = {
+                                type: "tool_call",
+                                toolCall: {
+                                    ...block.toolCall,
+                                    input: toolInput,
+                                    inputStreaming: undefined
+                                }
+                            };
+                            setStreamingBlocks([...contentBlocks]);
+                            return;
+                        }
+                    }
+                    contentBlocks.push({
+                        type: "tool_call",
+                        toolCall: { id: toolCallId, toolName, input: toolInput }
+                    });
+                    setStreamingBlocks([...contentBlocks]);
+                },
+                onToolResult: (toolCallId, _toolName, result, isError) => {
                     // Replace the matching block with a new object so Preact sees the change.
                     for (let i = contentBlocks.length - 1; i >= 0; i--) {
                         const block = contentBlocks[i];
-                        if (block.type === "tool_call" && block.toolCall.toolName === toolName && !block.toolCall.result) {
+                        if (block.type === "tool_call" && block.toolCall.id === toolCallId) {
                             contentBlocks[i] = {
                                 type: "tool_call",
                                 toolCall: { ...block.toolCall, result, isError }

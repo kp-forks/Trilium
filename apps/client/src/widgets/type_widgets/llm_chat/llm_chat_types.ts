@@ -6,6 +6,11 @@ export interface ToolCall {
     id: string;
     toolName: string;
     input: Record<string, unknown>;
+    /**
+     * Raw JSON arguments accumulated from `tool_input_delta` chunks while the call's input
+     * is still streaming. Cleared once the parsed `input` arrives via the `tool_use` chunk.
+     */
+    inputStreaming?: string;
     result?: string;
     isError?: boolean;
 }

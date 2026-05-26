@@ -1795,6 +1795,7 @@
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",
     "input": "Input",
+    "input_streaming": "Input (streaming…)",
     "edit_index": "Edit {{index}} of {{total}}",
     "result": "Result",
     "error": "Error",
