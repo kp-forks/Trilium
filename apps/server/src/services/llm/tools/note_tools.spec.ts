@@ -127,8 +127,8 @@ describe("note_tools — write tools return post-write content", () => {
             const newNote = buildNote({ id: "new1", type: "code", mime: "text/plain", content: "hello" });
             withMutableContent(newNote, "hello");
 
-            const noteService = (await import("../../notes.js")).default as { createNewNote: ReturnType<typeof vi.fn> };
-            noteService.createNewNote.mockReturnValue({ note: newNote });
+            const noteService = (await import("../../notes.js")).default;
+            vi.mocked(noteService.createNewNote).mockReturnValue({ note: newNote } as ReturnType<typeof noteService.createNewNote>);
 
             const result = getTool("create_note").execute({
                 parentNoteId: "parent1",

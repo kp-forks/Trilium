@@ -1,10 +1,37 @@
-import type { LlmCitation, LlmMessage, LlmModelInfo, LlmUsage } from "@triliumnext/commons";
+import type { LlmCitation, LlmMessage, LlmMessagePart, LlmModelInfo, LlmUsage } from "@triliumnext/commons";
 import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
-import type { ContentBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
+import type { ContentBlock, ImageBlock, LlmChatContent, StoredMessage } from "./llm_chat_types.js";
+
+/**
+ * Flatten a stored message's content into the wire format the server expects.
+ * Plain string content stays as-is; block-shaped content (with images) becomes
+ * an ordered array of text/image parts, with tool-call blocks stripped.
+ */
+function flattenToApiContent(content: string | ContentBlock[]): string | LlmMessagePart[] {
+    if (typeof content === "string") {
+        return content;
+    }
+    const parts: LlmMessagePart[] = [];
+    for (const block of content) {
+        if (block.type === "text") {
+            if (block.content) parts.push({ type: "text", text: block.content });
+        } else if (block.type === "image") {
+            parts.push({ type: "image", attachmentId: block.attachmentId, mime: block.mime });
+        }
+        // tool_call blocks belong to assistant history rendering only — they
+        // are reconstructed from the model's own tool-use turns and must not
+        // be re-sent as user/assistant content.
+    }
+    // Collapse to a string if there is no multimodal content — keeps backwards
+    // compatibility with providers/paths that haven't been touched.
+    if (parts.length === 0) return "";
+    if (parts.length === 1 && parts[0].type === "text") return parts[0].text;
+    return parts;
+}
 
 export interface ModelOption extends LlmModelInfo {
     costDescription?: string;
@@ -30,12 +57,16 @@ export interface UseLlmChatReturn {
     streamingBlocks: ContentBlock[];
     streamingThinking: string;
     pendingCitations: LlmCitation[];
+    /** Images the user has attached but not yet sent. */
+    pendingAttachments: ImageBlock[];
     availableModels: ModelOption[];
     selectedModel: string;
     enableWebSearch: boolean;
     enableNoteTools: boolean;
     enableExtendedThinking: boolean;
     contextNoteId: string | undefined;
+    /** The chat note's ID — used as the upload target for attachments. */
+    chatNoteId: string | undefined;
     lastPromptTokens: number;
     messagesEndRef: RefObject<HTMLDivElement>;
     scrollContainerRef: RefObject<HTMLDivElement>;
@@ -53,6 +84,10 @@ export interface UseLlmChatReturn {
     setEnableExtendedThinking: (value: boolean) => void;
     setContextNoteId: (noteId: string | undefined) => void;
     setChatNoteId: (noteId: string | undefined) => void;
+    /** Append a freshly uploaded image to the pending-attachments list. */
+    addPendingAttachment: (attachment: ImageBlock) => void;
+    /** Remove a pending attachment by its attachment ID. */
+    removePendingAttachment: (attachmentId: string) => void;
 
     // Actions
     handleSubmit: (e: Event) => Promise<void>;
@@ -81,6 +116,7 @@ export function useLlmChat(
     const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
     const [streamingThinking, setStreamingThinking] = useState("");
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
+    const [pendingAttachments, setPendingAttachments] = useState<ImageBlock[]>([]);
     const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
     const [selectedModel, setSelectedModel] = useState<string>("");
     const [enableWebSearch, setEnableWebSearch] = useState(true);
@@ -115,6 +151,15 @@ export function useLlmChat(
     }, []);
     const contextNoteIdRef = useRef(contextNoteId);
     contextNoteIdRef.current = contextNoteId;
+    const pendingAttachmentsRef = useRef(pendingAttachments);
+    pendingAttachmentsRef.current = pendingAttachments;
+
+    const addPendingAttachment = useCallback((attachment: ImageBlock) => {
+        setPendingAttachments(prev => [...prev, attachment]);
+    }, []);
+    const removePendingAttachment = useCallback((attachmentId: string) => {
+        setPendingAttachments(prev => prev.filter(a => a.attachmentId !== attachmentId));
+    }, []);
 
     // Wrapper to call onMessagesChange when messages update
     const setMessages = useCallback((newMessages: StoredMessage[]) => {
@@ -248,10 +293,7 @@ export function useLlmChat(
 
         const apiMessages: LlmMessage[] = conversation.map(m => ({
             role: m.role,
-            content: typeof m.content === "string" ? m.content : m.content
-                .filter((b): b is ContentBlock & { type: "text" } => b.type === "text")
-                .map(b => b.content)
-                .join("")
+            content: flattenToApiContent(m.content)
         }));
 
         const selectedModelProvider = availableModels.find(m => m.id === selectedModel)?.provider;
@@ -466,15 +508,36 @@ export function useLlmChat(
 
     const handleSubmit = useCallback(async (e: Event) => {
         e.preventDefault();
-        if (!input.trim() || isStreaming) return;
+        if (isStreaming) return;
+        const trimmedInput = input.trim();
+        const attachments = pendingAttachmentsRef.current;
+        if (!trimmedInput && attachments.length === 0) return;
+
+        // If there are attachments, build a block-shaped content array so the
+        // images travel alongside the text. Otherwise stay with the simple
+        // string form so existing chat history remains byte-identical.
+        let content: StoredMessage["content"];
+        if (attachments.length === 0) {
+            content = trimmedInput;
+        } else {
+            const blocks: ContentBlock[] = [];
+            if (trimmedInput) {
+                blocks.push({ type: "text", content: trimmedInput });
+            }
+            for (const att of attachments) {
+                blocks.push(att);
+            }
+            content = blocks;
+        }
 
         const userMessage: StoredMessage = {
             id: randomString(),
             role: "user",
-            content: input.trim(),
+            content,
             createdAt: new Date().toISOString()
         };
         setInput("");
+        setPendingAttachments([]);
         await runStream([...messages, userMessage]);
     }, [input, isStreaming, messages, runStream]);
 
@@ -508,12 +571,14 @@ export function useLlmChat(
         streamingBlocks,
         streamingThinking,
         pendingCitations,
+        pendingAttachments,
         availableModels,
         selectedModel,
         enableWebSearch,
         enableNoteTools,
         enableExtendedThinking,
         contextNoteId,
+        chatNoteId,
         lastPromptTokens,
         messagesEndRef,
         scrollContainerRef,
@@ -529,6 +594,8 @@ export function useLlmChat(
         setEnableExtendedThinking,
         setContextNoteId,
         setChatNoteId,
+        addPendingAttachment,
+        removePendingAttachment,
 
         // Actions
         handleSubmit,

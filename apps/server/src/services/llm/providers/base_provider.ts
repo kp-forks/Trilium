@@ -3,11 +3,12 @@
  * tool assembly, model pricing, and title generation.
  */
 
-import type { LlmMessage } from "@triliumnext/commons";
-import { generateText, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type ToolSet } from "ai";
+import type { LlmMessage, LlmMessagePart } from "@triliumnext/commons";
+import { generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
+import log from "../../log.js";
 import { getSkillsSummary } from "../skills/index.js";
 import { getNoteMeta,SYSTEM_PROMPT_LIMITS } from "../tools/helpers.js";
 import { allToolRegistries } from "../tools/index.js";
@@ -41,6 +42,53 @@ function buildNoteHint(noteId: string): string | null {
         "",
         metadata
     ].join("\n");
+}
+
+/**
+ * Resolve a single LlmMessagePart to its AI SDK ModelMessage part form.
+ * For image parts, this reads the attachment bytes out of Becca; failures are
+ * logged and the part is dropped so the rest of the message still goes through.
+ */
+function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | null {
+    if (part.type === "text") {
+        return { type: "text", text: part.text };
+    }
+    // type === "image"
+    const attachment = becca.getAttachment(part.attachmentId);
+    if (!attachment) {
+        log.error(`LLM message references missing attachment ${part.attachmentId}`);
+        return null;
+    }
+    if (!attachment.isContentAvailable()) {
+        log.error(`LLM message references protected attachment ${part.attachmentId} without an unlocked session`);
+        return null;
+    }
+    return {
+        type: "image",
+        image: attachment.getContent(),
+        mediaType: part.mime || attachment.mime
+    };
+}
+
+/**
+ * Build a single ModelMessage from an LlmMessage. Plain string content stays
+ * as-is; multimodal content is resolved into AI SDK text/image parts.
+ */
+export function buildModelMessage(m: LlmMessage): ModelMessage {
+    const role = m.role as "user" | "assistant";
+    if (typeof m.content === "string") {
+        return { role, content: m.content };
+    }
+    const resolved = m.content
+        .map(resolveMessagePart)
+        .filter((p): p is TextPart | ImagePart => p !== null);
+    // Assistant turns can only carry TextParts (per the AI SDK type), so
+    // strip any stray images — they only make sense on user turns anyway.
+    if (role === "assistant") {
+        const textOnly: TextPart[] = resolved.filter((p): p is TextPart => p.type === "text");
+        return { role: "assistant", content: textOnly };
+    }
+    return { role: "user", content: resolved };
 }
 
 /**
@@ -82,8 +130,11 @@ export abstract class BaseProvider implements LlmProvider {
     protected buildSystemPrompt(messages: LlmMessage[], config: LlmProviderConfig): string | undefined {
         const parts: string[] = [];
 
-        // Base system prompt from config or messages
-        const basePrompt = config.systemPrompt || messages.find(m => m.role === "system")?.content;
+        // Base system prompt from config or messages. System messages only ever
+        // carry string content — multimodal parts apply to user/assistant turns.
+        const systemMessage = messages.find(m => m.role === "system");
+        const messageSystemPrompt = typeof systemMessage?.content === "string" ? systemMessage.content : undefined;
+        const basePrompt = config.systemPrompt || messageSystemPrompt;
         if (basePrompt) {
             parts.push(basePrompt);
         }
@@ -156,10 +207,7 @@ export abstract class BaseProvider implements LlmProvider {
      * which is resilient against prompt injection.
      */
     protected buildMessages(chatMessages: LlmMessage[]): ModelMessage[] {
-        return chatMessages.map(m => ({
-            role: m.role as "user" | "assistant",
-            content: m.content
-        }));
+        return chatMessages.map(m => buildModelMessage(m));
     }
 
     /**
@@ -186,9 +234,18 @@ export abstract class BaseProvider implements LlmProvider {
             return chatMessages;
         }
 
-        return chatMessages.map((m, i) =>
-            i === lastUserIndex ? { ...m, content: `${noteHint}\n\n${m.content}` } : m
-        );
+        return chatMessages.map((m, i) => {
+            if (i !== lastUserIndex) return m;
+            if (typeof m.content === "string") {
+                return { ...m, content: `${noteHint}\n\n${m.content}` };
+            }
+            // For multimodal content, prepend the hint as a leading text part so
+            // any attached images still travel with the message.
+            return {
+                ...m,
+                content: [{ type: "text" as const, text: noteHint }, ...m.content]
+            };
+        });
     }
 
     /**

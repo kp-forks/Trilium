@@ -1813,7 +1813,11 @@
     "no_provider_message": "No AI provider configured. Add one to start chatting.",
     "add_provider": "Add AI Provider",
     "stop": "Stop",
-    "retry": "Retry"
+    "retry": "Retry",
+    "attach_image": "Attach image",
+    "remove_attachment": "Remove attachment",
+    "image_upload_failed": "Failed to upload image \"{{name}}\".",
+    "image_unsupported_type": "\"{{name}}\" isn't a supported image type. Use PNG, JPEG, GIF, or WebP."
   },
   "sidebar_chat": {
     "title": "AI Chat",

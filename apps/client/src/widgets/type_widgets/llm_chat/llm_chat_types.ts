@@ -27,8 +27,22 @@ export interface ToolCallBlock {
     toolCall: ToolCall;
 }
 
-/** An ordered content block in an assistant message. */
-export type ContentBlock = TextBlock | ToolCallBlock;
+/**
+ * An image attached to a user message, stored as a reference to a Trilium
+ * attachment (uploaded to the chat note). The server resolves the bytes from
+ * Becca before forwarding to the LLM provider.
+ */
+export interface ImageBlock {
+    type: "image";
+    attachmentId: string;
+    mime: string;
+    title: string;
+    /** URL for inline display in the UI (e.g. `api/attachments/<id>/image/<title>`). */
+    url: string;
+}
+
+/** An ordered content block in a chat message. */
+export type ContentBlock = TextBlock | ToolCallBlock | ImageBlock;
 
 /**
  * Extract the plain text from message content (works for both legacy string and block formats).

@@ -11,7 +11,7 @@ import utils from "../../../services/utils.js";
 import Button from "../../react/Button.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
-import { type ContentBlock, getMessageText, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
+import { type ContentBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import ToolCallCard from "./ToolCallCard.js";
 
 function shortenNumber(n: number): string {
@@ -65,7 +65,8 @@ interface Props {
 
 type ContentGroup =
     | { type: "text"; block: TextBlock; index: number }
-    | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number };
+    | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number }
+    | { type: "image"; block: ImageBlock; index: number };
 
 /** Extract domain + TLD from a hostname (e.g. "www.example.co.uk" → "example.co.uk"). */
 function extractDomain(hostname: string): string {
@@ -191,7 +192,7 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
         <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`}>
             <div className={messageClasses}>
                 <div className="llm-chat-message-content">
-                    {message.role === "assistant" && hasBlockContent ? (
+                    {hasBlockContent ? (
                         renderContentBlocks(message.content as ContentBlock[], isStreaming)
                     ) : (
                         <MarkdownContent html={renderedContent || ""} isStreaming={isStreaming && message.role === "assistant"} />
@@ -253,6 +254,8 @@ function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
             } else {
                 groups.push({ type: "tool_calls", blocks: [block], index: i });
             }
+        } else if (block.type === "image") {
+            groups.push({ type: "image", block, index: i });
         } else {
             groups.push({ type: "text", block, index: i });
         }
@@ -270,6 +273,21 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
                 <div key={group.index}>
                     <MarkdownContent html={html} isStreaming={isStreaming && isLastBlock} />
                 </div>
+            );
+        }
+
+        if (group.type === "image") {
+            return (
+                <a
+                    key={group.index}
+                    href={group.block.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="llm-chat-message-image"
+                    title={group.block.title}
+                >
+                    <img src={group.block.url} alt={group.block.title} />
+                </a>
             );
         }
 

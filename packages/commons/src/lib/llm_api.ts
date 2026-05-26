@@ -4,11 +4,35 @@
  */
 
 /**
- * A chat message in the conversation.
+ * Plain-text segment of a multimodal message.
+ */
+export interface LlmTextPart {
+    type: "text";
+    text: string;
+}
+
+/**
+ * Image segment of a multimodal message. The image is referenced by its
+ * Trilium attachment ID — the server loads the bytes from Becca before
+ * forwarding to the provider, so the wire stays small and we don't store
+ * base64 in chat history.
+ */
+export interface LlmImagePart {
+    type: "image";
+    attachmentId: string;
+    /** IANA media type (e.g. "image/png"). */
+    mime: string;
+}
+
+export type LlmMessagePart = LlmTextPart | LlmImagePart;
+
+/**
+ * A chat message in the conversation. `content` may be a plain string (the
+ * common case) or an ordered array of parts when the message includes images.
  */
 export interface LlmMessage {
     role: "user" | "assistant" | "system";
-    content: string;
+    content: string | LlmMessagePart[];
 }
 
 /**

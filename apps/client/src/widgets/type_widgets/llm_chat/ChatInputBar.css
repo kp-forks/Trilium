@@ -7,6 +7,62 @@
     border-top: 1px solid var(--main-border-color);
 }
 
+/* Attachment preview row above the editor */
+.llm-chat-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.llm-chat-attachment-chip {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--main-border-color);
+    background: var(--accented-background-color);
+}
+
+.llm-chat-attachment-chip img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.llm-chat-attachment-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.llm-chat-attachment-remove:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.llm-chat-attachment-remove:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.llm-chat-attach-btn {
+    font-size: 1.1rem;
+}
+
 .llm-chat-input {
     flex: 1;
     min-height: 60px;
