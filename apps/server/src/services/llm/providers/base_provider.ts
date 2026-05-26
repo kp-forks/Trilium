@@ -72,10 +72,22 @@ function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePa
         return null;
     }
     if (part.type === "image") {
+        const mime = part.mime || attachment.mime;
+        // SVG isn't accepted by any major provider's vision input, but every
+        // LLM is fluent in SVG markup — send the XML source as a text part so
+        // the model can actually read and reason about it.
+        if (mime === "image/svg+xml") {
+            const filename = attachment.title || "image.svg";
+            const text = decodeUtf8(attachment.getContent());
+            return {
+                type: "text",
+                text: `<file name="${filename}">\n${text}\n</file>`
+            };
+        }
         return {
             type: "image",
             image: attachment.getContent(),
-            mediaType: part.mime || attachment.mime
+            mediaType: mime
         };
     }
     if (part.type === "file") {

@@ -7,8 +7,14 @@ import toast from "../../../services/toast.js";
 import type { FileBlock, ImageBlock, TextFileBlock } from "./llm_chat_types.js";
 import type { AttachmentBlock, UseLlmChatReturn } from "./useLlmChat.js";
 
-/** MIME types we accept for image upload — must match what the providers support as vision input. */
-const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+/**
+ * MIME types we accept as image attachments. The first four are what every
+ * major provider supports natively as vision input. SVG is treated as an image
+ * here — the chip and message bubble render it inline — but the server detects
+ * the SVG mime and sends the XML source as a text part, since no provider
+ * accepts SVG as a vision input.
+ */
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/svg+xml"];
 /** Binary file MIME types we accept (provider-side handling). PDFs are supported by Anthropic, OpenAI, Google. */
 const ACCEPTED_BINARY_FILE_TYPES = ["application/pdf"];
 /**
