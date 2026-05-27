@@ -1,4 +1,4 @@
-import { Plugin, Enter, Delete, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent } from "ckeditor5";
+import { Plugin, Enter, Delete, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
 import CollapsibleCommand from "./collapsiblecommand.js";
 
 /**
@@ -75,7 +75,7 @@ export default class CollapsibleEditing extends Plugin {
         conversion.for("downcast").elementToElement({ model: "summary", view: "summary" });
 
         // UX: allow up-arrow to move cursor into the last block of a collapsible from below.
-        this.listenTo<ViewDocumentEnterEvent>(viewDocument, "arrowKey", (evt, data) => {
+        this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey", (evt, data) => {
             if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) {
                 return;
             }
@@ -125,16 +125,22 @@ export default class CollapsibleEditing extends Plugin {
                 return;
             }
 
+            // Titles are single-line: always swallow Enter so it never inserts a newline
+            // or splits the summary.
+            data.preventDefault();
+            evt.stop();
+
+            // Only jump into the body when Enter is pressed at the very end of the title.
+            // At the start or middle, do nothing — moving the cursor would surprise the user.
+            if (!position!.isAtEnd) {
+                return;
+            }
+
             const details = summary.parent;
             if (!details || !details.is("element", "details")) {
                 return;
             }
 
-            // Always: stop the default Enter behavior inside <summary> (no newlines in titles).
-            data.preventDefault();
-            evt.stop();
-
-            // Move the cursor to the start of the first body block.
             const firstBodyBlock = summary.nextSibling;
             if (firstBodyBlock && firstBodyBlock.is("element")) {
                 editor.model.change(writer => {
