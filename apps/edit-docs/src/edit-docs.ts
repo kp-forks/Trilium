@@ -1,8 +1,6 @@
 import debounce from "@triliumnext/client/src/services/debounce.js";
-import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/core";
+import type { AdvancedExportOptions, ExportFormat, NoteMeta, NoteMetaFile } from "@triliumnext/core";
 import cls from "@triliumnext/server/src/services/cls.js";
-import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
-import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
 
 import { parseNoteMetaFile, serverTextNoteHandler, standaloneTextNoteHandler } from "./help_meta_generator.js";
 import fs from "fs/promises";
