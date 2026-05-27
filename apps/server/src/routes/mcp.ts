@@ -5,13 +5,12 @@
  * No authentication is required — access is restricted to loopback addresses.
  */
 
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { options as optionService } from "@triliumnext/core";
 import type express from "express";
 
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-
-import { createMcpServer } from "../services/mcp/mcp_server.js";
 import log from "../services/log.js";
-import optionService from "../services/options.js";
+import { createMcpServer } from "../services/mcp/mcp_server.js";
 
 function isLoopback(addr: string | undefined): boolean {
     if (!addr) return false;

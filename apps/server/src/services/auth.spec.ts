@@ -1,3 +1,4 @@
+import { options } from "@triliumnext/core";
 import { Application } from "express";
 import supertest from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -5,7 +6,6 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { refreshAuth } from "./auth";
 import cls from "./cls";
 import config from "./config";
-import options from "./options";
 
 let app: Application;
 

@@ -8,9 +8,9 @@ import isAnimated from "is-animated";
 import isSvg from "is-svg";
 import { Jimp } from "jimp";
 
+import { options as optionService } from "@triliumnext/core";
 import type { ImageProvider, ImageFormat, ProcessedImage } from "@triliumnext/core/src/services/image_provider.js";
 import log from "./log.js";
-import optionService from "./options.js";
 
 async function getImageTypeFromBuffer(buffer: Uint8Array): Promise<ImageFormat | null> {
     // Check for SVG first (text-based)

@@ -1,5 +1,5 @@
 import { BootstrapDefinition } from "@triliumnext/commons";
-import { attributes, BNote, getSharedBootstrapItems, icon_packs as iconPackService, sql_init, task_states } from "@triliumnext/core";
+import { attributes, BNote, getSharedBootstrapItems, icon_packs as iconPackService, options as optionService, sql_init, task_states } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import packageJson from "../../package.json" with { type: "json" };
@@ -7,7 +7,6 @@ import appPath from "../services/app_path.js";
 import assetPath from "../services/asset_path.js";
 import config from "../services/config.js";
 import log from "../services/log.js";
-import optionService from "../services/options.js";
 import port from "../services/port.js";
 import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
 import { generateCsrfToken } from "./csrf_protection.js";

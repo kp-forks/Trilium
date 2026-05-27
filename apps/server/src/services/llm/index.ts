@@ -1,9 +1,10 @@
-import type { LlmProvider, ModelInfo } from "./types.js";
+import { options as optionService } from "@triliumnext/core";
+
+import log from "../log.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { GoogleProvider } from "./providers/google.js";
 import { OpenAiProvider } from "./providers/openai.js";
-import optionService from "../options.js";
-import log from "../log.js";
+import type { LlmProvider, ModelInfo } from "./types.js";
 
 /**
  * Configuration for a single LLM provider instance.

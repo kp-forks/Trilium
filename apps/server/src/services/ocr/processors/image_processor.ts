@@ -1,9 +1,9 @@
+import { options } from '@triliumnext/core';
 import fs from 'fs';
 import Tesseract from 'tesseract.js';
 
 import dataDirs from '../../data_dir.js';
 import log from '../../log.js';
-import options from '../../options.js';
 import { OCRProcessingOptions,OCRResult } from '../ocr_service.js';
 import { FileProcessor } from './file_processor.js';
 

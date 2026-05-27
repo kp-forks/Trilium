@@ -1,4 +1,4 @@
-import { attributes, password as passwordService, password_encryption as passwordEncryptionService } from "@triliumnext/core";
+import { attributes, options, password as passwordService, password_encryption as passwordEncryptionService } from "@triliumnext/core";
 import type { NextFunction, Request, Response } from "express";
 
 import config from "./config.js";
@@ -6,7 +6,6 @@ import { isInternalElectronRequest } from "./electron_request.js";
 import etapiTokenService from "./etapi_tokens.js";
 import log from "./log.js";
 import openID from "./open_id.js";
-import options from "./options.js";
 import sqlInit from "./sql_init.js";
 import totp from "./totp.js";
 import { isElectron } from "./utils.js";

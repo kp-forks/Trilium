@@ -3,10 +3,9 @@
  * Re-exports core image service and adds OCR scheduling.
  */
 
-import { imageService } from "@triliumnext/core";
+import { imageService, options as optionService } from "@triliumnext/core";
 import log from "./log.js";
 import ocrService from "./ocr/ocr_service.js";
-import optionService from "./options.js";
 
 function scheduleOcrForNote(noteId: string) {
     if (optionService.getOptionBool("ocrAutoProcessImages")) {
