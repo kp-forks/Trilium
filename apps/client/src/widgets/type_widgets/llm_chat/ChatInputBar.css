@@ -96,9 +96,9 @@
     min-height: 60px;
     max-height: 200px;
     overflow-y: auto;
-    padding: 0.75rem;
+    padding: 0.5rem !important;
     border: 1px solid var(--main-border-color) !important;
-    border-radius: 8px;
+    border-radius: 4px !important;
     font-family: inherit;
     font-size: inherit;
     background: var(--main-background-color);
