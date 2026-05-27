@@ -265,7 +265,7 @@ pnpm install
 pnpm edit-docs:edit-docs
 ```
 
-Alternatively, if you have Nix installed:
+بدلاً من ذلك، إذا كان لديك Nix مثبتًا:
 ```shell
 # Run directly
 nix run .#edit-docs
@@ -296,7 +296,7 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 لمزيد من التفاصيل. إذا كانت لديكم أي استفسارات أخرى، فلا تترددوا في التواصل معنا
 عبر الروابط الموضحة في قسم "ناقش معنا" أعلاه.
 
-## 💖 Sponsors
+## 💖 الرعاة
 
 <table>
   <tr>
@@ -338,8 +338,8 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 
 لم يكن لـ Trilium أن يرى النور لولا التقنيات التي تقف خلفه:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - المحرر المرئي وراء
+  الملاحظات النصية.
 * محرر [CodeMirror](https://github.com/codemirror/CodeMirror): - محرر أكواد يدعم
   عدداً هائلاً من اللغات.
 * برنامج [Excalidraw](https://github.com/excalidraw/excalidraw): - السبورة

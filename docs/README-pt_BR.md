@@ -77,29 +77,30 @@ Nossa documentação está disponível em vários formatos:
 * As notas podem ser organizadas em árvores de profundidade arbitrária. Uma
   única nota pode ser colocada em vários lugares na árvore (veja
   [cloning](https://docs.triliumnotes.org/user-guide/concepts/notes/cloning))
-* Rich WYSIWYG note editor including e.g. tables, images and
-  [math](https://docs.triliumnotes.org/user-guide/note-types/text) with markdown
+* Editor de nostas WTSIWYG avançados, incluindo e.g. tabelas,imagens e [math]
+  (https://docs.triliumnotes.org/user-guide/note-types/text) com
   [autoformat](https://docs.triliumnotes.org/user-guide/note-types/text/markdown-formatting)
-* Support for editing [notes with source
-  code](https://docs.triliumnotes.org/user-guide/note-types/code), including
-  syntax highlighting
-* Fast and easy [navigation between
-  notes](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-navigation),
-  full text search and [note
-  hoisting](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting)
-* Seamless [note
-  versioning](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
-* Note
-  [attributes](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
-  can be used for note organization, querying and advanced
-  [scripting](https://docs.triliumnotes.org/user-guide/scripts)
-* UI available in English, German, Spanish, French, Romanian, and Chinese
-  (simplified and traditional)
-* Direct [OpenID and TOTP
-  integration](https://docs.triliumnotes.org/user-guide/setup/server/mfa) for
-  more secure login
-* [Synchronization](https://docs.triliumnotes.org/user-guide/setup/synchronization)
-  with self-hosted sync server
+  para markdown
+* Suporte para edição de [notas com o
+  código-fonte](https://docs.triliumnotes.org/user-guide/note-types/code),
+  incluindo realce de sintaxe
+* Rapido e facil para [navegação entre as
+  notas](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-navigation),
+  pesquise textos completos e [elevação de
+  notas](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting)
+* Sem interrupções [controlo de versões das
+  notas](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
+* As Notas
+  [atributos](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
+  pode ser usado para organizar as notas, relizar pesquisa e
+  [script](https://docs.triliumnotes.org/user-guide/scripts) avançada
+* A interface está disponível em Ingês, Alemão, Espanhol, Fances, Romeno, e
+  Chinês (simplificado e tradicional)
+* Direta [ integração com OpenID e
+  TOTP](https://docs.triliumnotes.org/user-guide/setup/server/mfa) para melhor
+  segurança ao conecte-se
+* [Sincronização](https://docs.triliumnotes.org/user-guide/setup/synchronization)
+  com um servidor de sync auto-hospedado
   * there are [3rd party services for hosting synchronisation
     server](https://docs.triliumnotes.org/user-guide/setup/server/cloud-hosting)
 * [Sharing](https://docs.triliumnotes.org/user-guide/advanced-usage/sharing)

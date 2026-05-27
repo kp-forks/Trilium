@@ -21,6 +21,7 @@ import CheckboxList from "./components/CheckboxList";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import RadioWithIllustration from "./components/RadioWithIllustration";
+import RelatedSettings from "./components/RelatedSettings";
 import ThemeModeSelector from "./components/ThemeModeSelector";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
@@ -34,6 +35,12 @@ export default function TextNoteSettings() {
             <CodeBlockStyle />
             <TableOfContent />
             <HighlightsList />
+            <RelatedSettings items={[
+                {
+                    title: t("text_editor.related_task_states"),
+                    targetNoteId: "_taskStates"
+                }
+            ]} />
         </>
     );
 }

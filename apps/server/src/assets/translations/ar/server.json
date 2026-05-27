@@ -79,7 +79,7 @@
     "toggle-book-properties": "اظهار/اخفاء خصائص المجموعة",
     "show-note-source": "عرض مربع حوار \"مصدر الملاحظات\"",
     "show-revisions": "عرض مربع حوار \" مراجعات الملاحظة\"",
-    "show-recent-changes": "عرض مربع حوار \" التغيرات الاخيرة\"",
+    "show-recent-changes": "عرض مربع حوار \" التغيرات الأخيرة\"",
     "show-sql-console": "فتح صفحة \" وحدة تحكم SQL\"",
     "show-backend-log": "فتح صفحة \"سجل الخلفية\"",
     "edit-readonly-note": "تعديل ملاحظة القراءة فقط",
@@ -190,7 +190,18 @@
     "zen-mode": "وضع التركيز (Zen Mode)",
     "llm-title": "الذكاء الاصطناعي / نموذج اللغة الكبير (LLM)",
     "tab-switcher-title": "مبدّل علامات التبويب (Tab Switcher)",
-    "sidebar-chat-title": "محادثة الذكاء الاصطناعي"
+    "sidebar-chat-title": "محادثة الذكاء الاصطناعي",
+    "task-state-none": "لاشيء",
+    "task-state-doing": "قيد التنفيذ",
+    "task-state-done": "تم",
+    "task-state-maybe": "ربما",
+    "task-state-cancelled": "تم الالغاء",
+    "task-state-attr-color": "لون",
+    "task-state-attr-is-completed": "يُحسب كمكتمل",
+    "task-state-attr-is-hidden": "مخفي من القائمة",
+    "task-states-title": "حالات المهام",
+    "task-state-attr-state-id": "المعرّف (إجباري)",
+    "task-state-attr-markdown-symbol": "رمز Markdown"
   },
   "tray": {
     "bookmarks": "العلامات المرجعية",
@@ -250,14 +261,18 @@
     "password": "كلمة المرور",
     "button": "تسجيل الدخول",
     "heading": "تسجيل الدخول الى تريليوم",
-    "remember-me": "تذكرني"
+    "remember-me": "تذكرني",
+    "incorrect-totp": "رمز TOTP غير صحيح. يرجى المحاولة مرة أخرى.",
+    "incorrect-password": "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.",
+    "sign_in_with_sso": "تسجيل الدخول باستخدام {{ssoIssuerName}}"
   },
   "set_password": {
     "password": "كلمة المرور",
     "title": "تعين كلمة المرور",
     "heading": "تعين كلمة المرور",
     "password-confirmation": "تاكيد كلمة المرور",
-    "button": "تعين كلمة المرور"
+    "button": "تعين كلمة المرور",
+    "description": "قبل أن تتمكن من البدء باستخدام Trilium من الويب، يجب عليك تعيين كلمة مرور أولاً. بعد ذلك ستستخدم هذه كلمة المرور لتسجيل الدخول."
   },
   "share_page": {
     "parent": "الأصل:",
@@ -366,7 +381,8 @@
     "toggle-archived-notes": "تبديل عرض الملاحظات المؤرشفة",
     "insert-date-and-time-to-text": "إدراج التاريخ والوقت في النص",
     "toggle-ribbon-tab-note-info": "تبديل تبويب الشريط: معلومات الملاحظة",
-    "toggle-ribbon-tab-note-paths": "تبديل تبويب الشريط: مسارات الملاحظة"
+    "toggle-ribbon-tab-note-paths": "تبديل تبويب الشريط: مسارات الملاحظة",
+    "save-named-revision": "حفظ نسخة مُسمّاة"
   },
   "share_404": {
     "title": "غير موجود",
@@ -396,7 +412,8 @@
     "old_version": "لا يتم دعم الترقية المباشرة من الإصدار الحالي. يرجى الترقية أولًا إلى أحدث إصدار v0.60.4 ثم الترقية إلى هذا الإصدار.",
     "error_message": "حدث خطأ أثناء الترحيل إلى الإصدار {{version}}: {{stack}}",
     "wrong_db_version": "إصدار قاعدة البيانات ({{version}}) أحدث من الإصدار الذي يتوقعه التطبيق ({{targetVersion}})، مما يعني أنه تم إنشاؤه بواسطة إصدار أحدث وغير متوافق من Trilium. يرجى الترقية إلى أحدث إصدار من Trilium لحل هذه المشكلة.",
-    "invalid_db_version": "إصدار قاعدة البيانات ليس رقمًا صالحًا. يشير هذا عادةً إلى تلف في خيار 'dbVersion' داخل قاعدة البيانات. يرجى الاستعادة من نسخة احتياطية."
+    "invalid_db_version": "إصدار قاعدة البيانات ليس رقمًا صالحًا. يشير هذا عادةً إلى تلف في خيار 'dbVersion' داخل قاعدة البيانات. يرجى الاستعادة من نسخة احتياطية.",
+    "automatic_migrations_disabled": "تم تعطيل الترحيل التلقائي لقاعدة البيانات عبر متغير البيئة TRILIUM_MANUAL_DB_MIGRATION = {{envVarValue}}"
   },
   "sql_init": {
     "db_not_initialized_desktop": "لم تتم تهيئة قاعدة البيانات، يرجى اتباع التعليمات الظاهرة على الشاشة.",
@@ -417,5 +434,8 @@
       "fulltext-after-expression": "\"{{- token}}\" ليس تعبيرًا صالحًا. للبحث عن نص، ضع النص قبل فلاتر الخصائص (مثل: \"{{- token}} #label\" بدلًا من \"#label {{- token}}\").",
       "unrecognized-expression": "التعبير \"{{- token}}\" غير معروف"
     }
+  },
+  "password": {
+    "incorrect": "كلمة المرور التي أدخلتها غير صحيحة."
   }
 }

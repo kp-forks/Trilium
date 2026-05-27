@@ -69,6 +69,7 @@ export async function initNotSyncedOptions(initialized: boolean, opts: NotSynced
     optionService.createOption("syncServerHost", opts.syncServerHost || "", false);
     optionService.createOption("syncServerTimeout", "120", false); // 120 seconds (2 minutes)
     optionService.createOption("syncProxy", opts.syncProxy || "", false);
+    optionService.createOption("syncIncomplete", "false", false);
 }
 
 /**
