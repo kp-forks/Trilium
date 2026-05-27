@@ -18,11 +18,9 @@ export default class CollapsibleUI extends Plugin {
             button.set({
                 label: t("Collapsible block"),
                 icon: collapsibleIcon,
-                tooltip: true,
-                isToggleable: true
+                tooltip: true
             });
 
-            button.bind("isOn").to(command, "value");
             button.bind("isEnabled").to(command, "isEnabled");
 
             this.listenTo(button, "execute", () => {

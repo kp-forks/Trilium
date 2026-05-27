@@ -12,9 +12,11 @@ export default class CollapsibleCommand extends Command {
     declare public value: boolean;
 
     public override refresh(): void {
-        const selection = this.editor.model.document.selection;
-        const block = selection.getFirstPosition()?.findAncestor("details");
-        this.value = !!block;
+        // This command is a pure insert, not a toggle — running it again inside an
+        // existing collapsible would create a nested one (and re-running to "remove"
+        // would lose formatting). Keep `value` false so the toolbar button never
+        // shows as active.
+        this.value = false;
         this.isEnabled = this._checkEnabled();
     }
 
