@@ -356,8 +356,12 @@ export default class CollapsibleEditing extends Plugin {
             }, true);
         });
 
-        // UX: pressing Enter inside an empty summary moves the cursor into the body.
-
+        // Enter inside a <summary>:
+        //   - at start of title  → insert a blank paragraph before the collapsible
+        //   - at end of title    → expanded: new empty paragraph at start of body
+        //                          collapsed: blank paragraph after the collapsible
+        //   - anywhere else      → split the title, right side becomes a new paragraph
+        //                          at the start of the body, expand the block if needed
         this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter", (evt, data) => {
             if (!selection.isCollapsed) {
                 return;
@@ -369,45 +373,67 @@ export default class CollapsibleEditing extends Plugin {
                 return;
             }
 
-            // Titles are single-line: always swallow Enter so it never inserts a newline
-            // or splits the summary.
+            // Titles are single-line: always swallow Enter so it never inserts a newline.
             data.preventDefault();
             evt.stop();
-
-            // Only jump into the body when Enter is pressed at the very end of the title.
-            // At the start or middle, do nothing — moving the cursor would surprise the user.
-            if (!position!.isAtEnd) {
-                return;
-            }
 
             const details = summary.parent;
             if (!details || !details.is("element", "details")) {
                 return;
             }
 
-            // Collapsed: drop a new paragraph after the whole block (or reuse one if
-            // there's already an empty paragraph there) — entering the hidden body
-            // would silently lose the caret.
-            if (!isDetailsOpen(details)) {
+            const insertBlankBeforeBlock = () => {
                 editor.model.change(writer => {
-                    const next = details.nextSibling;
-                    if (next?.is("element", "paragraph") && next.isEmpty) {
-                        writer.setSelection(next, 0);
-                    } else {
-                        const newParagraph = writer.createElement("paragraph");
-                        writer.insert(newParagraph, writer.createPositionAfter(details));
-                        writer.setSelection(newParagraph, 0);
-                    }
+                    const newParagraph = writer.createElement("paragraph");
+                    writer.insert(newParagraph, writer.createPositionBefore(details));
+                    writer.setSelection(newParagraph, 0);
                 });
+            };
+
+            if (position!.isAtStart) {
+                insertBlankBeforeBlock();
                 return;
             }
 
-            const firstBodyBlock = summary.nextSibling;
-            if (firstBodyBlock && firstBodyBlock.is("element")) {
-                editor.model.change(writer => {
-                    writer.setSelection(firstBodyBlock, 0);
-                });
+            if (position!.isAtEnd) {
+                if (!isDetailsOpen(details)) {
+                    editor.model.change(writer => {
+                        const newParagraph = writer.createElement("paragraph");
+                        writer.insert(newParagraph, writer.createPositionAfter(details));
+                        writer.setSelection(newParagraph, 0);
+                    });
+                } else {
+                    editor.model.change(writer => {
+                        const newParagraph = writer.createElement("paragraph");
+                        writer.insert(newParagraph, summary, "after");
+                        writer.setSelection(newParagraph, 0);
+                    });
+                }
+                return;
             }
+
+            // Middle of title: split the text, right portion becomes a new paragraph
+            // at the start of the body. Expand the block first if it was collapsed —
+            // doing so up front keeps the hidden-body post-fixer from snapping the
+            // caret away when we set it inside the new paragraph.
+            if (!isDetailsOpen(details)) {
+                const detailsView = editor.editing.mapper.toViewElement(details);
+                const detailsDom = detailsView ? editor.editing.view.domConverter.viewToDom(detailsView) : null;
+                if (detailsDom instanceof HTMLDetailsElement) {
+                    detailsDom.open = true;
+                }
+            }
+
+            editor.model.change(writer => {
+                const rightRange = writer.createRange(
+                    writer.createPositionAt(summary, position!.offset),
+                    writer.createPositionAt(summary, "end")
+                );
+                const newParagraph = writer.createElement("paragraph");
+                writer.insert(newParagraph, summary, "after");
+                writer.move(rightRange, writer.createPositionAt(newParagraph, 0));
+                writer.setSelection(newParagraph, 0);
+            });
         }, { context: "summary" });
 
         // UX: pressing Enter inside an empty trailing paragraph of the body exits the
