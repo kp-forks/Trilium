@@ -514,12 +514,15 @@ export default class CollapsibleEditing extends Plugin {
 
     /**
      * Every <details> must start with exactly one <summary> child. Defends against:
-     *   - pasted HTML with no <summary>, multiple <summary>, or summary not first
+     *   - pasted/imported HTML with no <summary>, multiple <summary>, or summary
+     *     not as the first child
+     *   - the user dragging the <summary> out of its <details>
      *   - block-level commands (heading, etc.) renaming the summary to something
-     *     else (we rename it back, preserving its text content)
+     *     else
      *
-     * The structural post-fixer above removes empty <details> created as
-     * side-effects of these fixes — they run iteratively until the tree stabilises.
+     * When a summary is missing we insert a blank one rather than re-using the
+     * first existing child — the other content stays put as body, and the user
+     * sees a fresh empty title to fill in.
      */
     private _summaryInvariantPostFixer(writer: any): boolean {
         const changes = this.editor.model.document.differ.getChanges();
@@ -529,26 +532,17 @@ export default class CollapsibleEditing extends Plugin {
             if (visited.has(details)) return false;
             visited.add(details);
 
-            // Collect all <summary> children and ensure the first child is one.
             const summaries: any[] = [];
             for (const child of details.getChildren()) {
                 if (child.is("element", "summary")) summaries.push(child);
             }
 
-            // Missing summary: rename the first block-level child back to summary
-            // (handles "heading dropdown converted our summary" recovery). Falls
-            // back to inserting an empty one if nothing block-like is there.
             if (summaries.length === 0) {
-                const first = details.getChild(0);
-                if (first?.is("element") && first.name !== "summary") {
-                    writer.rename(first, "summary");
-                } else {
-                    writer.insert(writer.createElement("summary"), details, 0);
-                }
+                writer.insert(writer.createElement("summary"), details, 0);
                 return true;
             }
 
-            // Extra <summary>s: demote them to paragraphs.
+            // Extra <summary>s: demote them to paragraphs (text content preserved).
             if (summaries.length > 1) {
                 for (let i = 1; i < summaries.length; i++) {
                     writer.rename(summaries[i], "paragraph");
@@ -568,10 +562,15 @@ export default class CollapsibleEditing extends Plugin {
         for (const entry of changes) {
             if (entry.type === "insert") {
                 const node = (entry as any).position.nodeAfter;
-                if (!node || !node.is("element")) continue;
-                for (const item of writer.createRangeOn(node).getItems()) {
-                    if (item.is("element", "details") && ensureValid(item)) return true;
+                if (node?.is("element")) {
+                    for (const item of writer.createRangeOn(node).getItems()) {
+                        if (item.is("element", "details") && ensureValid(item)) return true;
+                    }
                 }
+                // Also validate the receiving parent — e.g. dragging a <summary>
+                // into a <details> that already has one gives us two summaries.
+                const parent = (entry as any).position?.parent;
+                if (parent?.is("element", "details") && ensureValid(parent)) return true;
             } else if (entry.type === "remove" || entry.type === "attribute") {
                 const parent = (entry as any).position?.parent;
                 if (parent?.is("element", "details") && ensureValid(parent)) return true;
