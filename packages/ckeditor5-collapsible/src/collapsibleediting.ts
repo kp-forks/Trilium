@@ -1,4 +1,4 @@
-import { Plugin, Enter, Delete, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
+import { Plugin, Enter, Delete, enableViewPlaceholder, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
 import CollapsibleCommand from "./collapsiblecommand.js";
 
 /**
@@ -88,6 +88,14 @@ export default class CollapsibleEditing extends Plugin {
             return span;
         });
         writer.insert(writer.createPositionAt(summary, 0), arrow);
+        // "Title" placeholder shown while the summary is empty. UIElements like the
+        // arrow above don't count as content for placeholder purposes.
+        enableViewPlaceholder({
+            view: this.editor.editing.view,
+            element: summary,
+            text: "Title",
+            keepOnFocus: true
+        });
         return summary;
     }
 
