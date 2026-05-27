@@ -1,10 +1,8 @@
-import type { Session } from "electron";
-
-import becca from "../becca/becca.js";
-import cls from "./cls.js";
-import log from "./log.js";
+import { becca, cls, getLog, options as optionService, sql_init } from "@triliumnext/core";
+import electron, { type Session } from "electron";
 
 const DICTIONARY_NOTE_ID = "_customDictionary";
+const loadedSessions = new WeakSet<Session>();
 
 /**
  * Reads the custom dictionary words from the hidden note.
@@ -31,10 +29,10 @@ function getWords(): Set<string> {
  * Saves the given words to the custom dictionary note, one per line.
  */
 function saveWords(words: Set<string>) {
-    cls.init(() => {
+    cls.getContext().init(() => {
         const note = becca.getNote(DICTIONARY_NOTE_ID);
         if (!note) {
-            log.error("Custom dictionary note not found.");
+            getLog().error("Custom dictionary note not found.");
             return;
         }
 
@@ -60,17 +58,17 @@ function clearFromLocalDictionary(session: Session, localWords: string[]) {
     for (const word of localWords) {
         session.removeWordFromSpellCheckerDictionary(word);
     }
-    log.info(`Cleared ${localWords.length} words from local spellchecker dictionary.`);
+    getLog().info(`Cleared ${localWords.length} words from local spellchecker dictionary.`);
 }
 
 /**
  * Loads the custom dictionary into Electron's spellchecker session,
  * performing a one-time import of locally stored words on first use.
  */
-async function loadForSession(session: Session) {
+export async function loadForSession(session: Session) {
     const note = becca.getNote(DICTIONARY_NOTE_ID);
     if (!note) {
-        log.error("Custom dictionary note not found.");
+        getLog().error("Custom dictionary note not found.");
         return;
     }
 
@@ -81,7 +79,7 @@ async function loadForSession(session: Session) {
 
     // One-time import: if the note is empty but there are local words, import them.
     if (noteWords.size === 0 && localWords.length > 0) {
-        log.info(`Importing ${localWords.length} words from local spellchecker dictionary.`);
+        getLog().info(`Importing ${localWords.length} words from local spellchecker dictionary.`);
         merged = new Set(localWords);
         saveWords(merged);
     }
@@ -101,13 +99,41 @@ async function loadForSession(session: Session) {
     }
 
     if (merged.size > 0) {
-        log.info(`Loaded ${merged.size} custom dictionary words into spellchecker.`);
+        getLog().info(`Loaded ${merged.size} custom dictionary words into spellchecker.`);
     }
 }
 
-export default {
-    getWords,
-    saveWords,
-    addWord,
-    loadForSession
-};
+/**
+ * Arms the custom dictionary to sync into every spellcheck-enabled renderer
+ * session as it comes online, and to persist words the user accepts via the
+ * renderer's context menu.
+ *
+ * Skipping while the DB is uninitialised avoids touching options/becca during
+ * the setup wizard. The per-session WeakSet guard plus the shared session for
+ * print windows mean repeated `web-contents-created` events (extra windows,
+ * print preview) don't re-sync.
+ */
+export function setupCustomDictionary() {
+    electron.app.on("web-contents-created", (_event, webContents) => {
+        if (!sql_init.isDbInitialized()) return;
+        if (!optionService.getOptionBool("spellCheckEnabled")) return;
+        const session = webContents.session;
+        if (loadedSessions.has(session)) return;
+        loadedSessions.add(session);
+        loadForSession(session).catch(err =>
+            getLog().error(`Failed to load custom dictionary for spellcheck: ${err}`)
+        );
+    });
+
+    electron.ipcMain.on("add-word-to-dictionary", (event, word: unknown) => {
+        // Defensive: ipcMain accepts any structured-clonable payload, so a
+        // compromised renderer could send a non-string. Reject without doing
+        // anything observable.
+        if (typeof word !== "string" || word.length === 0) {
+            getLog().error("add-word-to-dictionary: invalid word payload received");
+            return;
+        }
+        event.sender.session.addWordToSpellCheckerDictionary(word);
+        addWord(word);
+    });
+}

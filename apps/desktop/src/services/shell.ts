@@ -1,16 +1,18 @@
+import { SHELL_OPEN_EXTERNAL_PROTOCOLS } from "@triliumnext/commons";
+import { getLog, utils as coreUtils } from "@triliumnext/core";
+import dataDirs from "@triliumnext/server/src/services/data_dir.js";
+import { execFile } from "child_process";
+import electron from "electron";
 import fs from "fs";
 import path from "path";
 import url from "url";
 
-import { SHELL_OPEN_EXTERNAL_PROTOCOLS } from "@triliumnext/commons";
-
 /**
- * Input validators for every IPC channel under window.electronApi.shell.
+ * Handlers for `window.electronApi.shell.*` IPC channels.
  *
- * Each validator throws on any invariant violation so a hostile or buggy
- * caller surfaces loudly in the main-process log rather than silently
- * triggering an OS-level action. The handlers in window.ts delegate to these
- * functions before invoking the underlying electron.shell / WebContents APIs.
+ * Each call is gated by an input validator that throws on any invariant
+ * violation, so a hostile or buggy caller surfaces loudly in the main-process
+ * log rather than silently triggering an OS-level action.
  */
 
 //#region Shared helpers
@@ -214,6 +216,115 @@ export function validateDownloadUrl(input: unknown, allowedOrigin: string): URL 
     }
 
     return parsed;
+}
+
+//#endregion
+
+//#region IPC wiring
+
+/**
+ * Registers the IPC handlers that back `window.electronApi.shell.*`.
+ *
+ * Every channel validates its input (see the per-region docstrings) before
+ * calling into `electron.shell` / `WebContents` / `execFile`, so a compromised
+ * renderer cannot trick the main process into launching arbitrary paths or
+ * URLs.
+ */
+export function setupShellHandlers() {
+    electron.ipcMain.on("open-external", (_event, externalUrl: string) => {
+        try {
+            const validated = validateOpenExternalUrl(externalUrl);
+            electron.shell.openExternal(validated.toString());
+        } catch (e) {
+            getLog().error(`open-external failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+        }
+    });
+
+    electron.ipcMain.handle("open-path", (_event, filePath: string) => {
+        try {
+            const resolved = validateOpenPath(filePath, dataDirs.TRILIUM_DATA_DIR, dataDirs.TMP_DIR);
+            return electron.shell.openPath(resolved);
+        } catch (e) {
+            getLog().error(`open-path failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+            return coreUtils.safeExtractMessageAndStackFromError(e);
+        }
+    });
+
+    electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
+        try {
+            const filePath = validateOpenFileUrl(fileUrl);
+            return electron.shell.openPath(filePath);
+        } catch (e) {
+            getLog().error(`open-file-url failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+            return coreUtils.safeExtractMessageAndStackFromError(e);
+        }
+    });
+
+    electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
+        try {
+            const validated = validateDownloadUrl(downloadUrl, event.sender.getURL());
+            event.sender.downloadURL(validated.toString());
+        } catch (e) {
+            getLog().error(`download-url failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+        }
+    });
+
+    electron.ipcMain.on("open-custom", (_event, filePath: string) => {
+        // Defense in depth: validate the path is one the server itself wrote into
+        // Trilium's tmp dir via /api/.../save-to-tmp-dir, and that it exists.
+        // Without this, a compromised renderer (e.g. via XSS) could ask us to
+        // launch arbitrary local files. The try/catch is essential — the
+        // validator throws on hostile input, and an unhandled throw inside an
+        // ipcMain.on handler would crash the main process.
+        try {
+            const resolved = validateOpenCustomPath(filePath, dataDirs.TMP_DIR);
+
+            const platform = process.platform;
+
+            if (platform === "linux") {
+                const terminals = ["x-terminal-emulator", "gnome-terminal", "konsole", "xterm", "xfce4-terminal", "mate-terminal", "rxvt", "terminator", "terminology"];
+
+                // The terminal's `-e` argument is reparsed by the terminal's own shell,
+                // so the path must be POSIX single-quoted before interpolation.
+                const sqQuote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
+                const innerCommand = `mimeopen -d ${sqQuote(resolved)}`;
+
+                const tryTerminal = (index: number) => {
+                    if (index >= terminals.length) {
+                        getLog().error("open-custom: no terminal emulator found");
+                        electron.shell.openPath(resolved);
+                        return;
+                    }
+                    const terminal = terminals[index];
+                    execFile(terminal, ["-e", innerCommand], (err) => {
+                        if (err) {
+                            getLog().info(`open-custom: ${terminal} failed: ${err.message}`);
+                            tryTerminal(index + 1);
+                        }
+                    });
+                };
+                tryTerminal(0);
+            } else if (platform === "win32") {
+                const winPath = resolved.replace(/\//g, "\\");
+                // OpenAs_RunDLL doesn't strip surrounding quotes from its arg, so we
+                // must NOT let Node quote the path on our behalf. windowsVerbatimArguments
+                // is safe here: CreateProcess passes the command line to rundll32 without
+                // any shell interpretation (so `&` is inert), and the path is validated
+                // above to live inside dataDirs.TMP_DIR with a sanitize-filename'd basename
+                // (so it cannot contain quotes or other rundll32-confusing characters).
+                execFile("rundll32.exe", ["shell32.dll,OpenAs_RunDLL", winPath], { windowsVerbatimArguments: true }, (err) => {
+                    if (err) {
+                        getLog().error(`open-custom: rundll32 failed: ${err.message}`);
+                        electron.shell.openPath(resolved);
+                    }
+                });
+            } else {
+                electron.shell.openPath(resolved);
+            }
+        } catch (e) {
+            getLog().error(`open-custom failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+        }
+    });
 }
 
 //#endregion
