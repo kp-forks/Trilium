@@ -7,7 +7,6 @@ import cls from "./cls.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import optionService from "./options.js";
-import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
 import sqlInit from "./sql_init.js";
 import { isDev, isMac, isWindows } from "./utils.js";
@@ -220,8 +219,6 @@ electron.ipcMain.on("navigation-history", (event, method: string) => {
 electron.ipcMain.on("navigation-history-go-to-index", (event, index: number) => {
     event.sender.navigationHistory.goToIndex(index);
 });
-
-initPrintingHandlers(PRELOAD_SCRIPT);
 
 async function createMainWindow(app: App) {
     if ("setUserTasks" in app) {

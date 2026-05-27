@@ -25,6 +25,7 @@ import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
 import { registerTriliumAppScheme } from "./protocol";
 import { setupCustomDictionary } from "./services/custom_dictionary";
+import { setupPrintingHandlers } from "./services/printing";
 import { setupShellHandlers } from "./services/shell";
 import { setupSystemTray } from "./services/tray";
 
@@ -95,6 +96,7 @@ async function main() {
     setupSystemTray();
     setupCustomDictionary();
     setupShellHandlers();
+    setupPrintingHandlers();
 
     app.on("will-quit", () => {
         globalShortcut.unregisterAll();

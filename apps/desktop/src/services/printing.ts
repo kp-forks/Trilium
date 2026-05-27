@@ -1,9 +1,30 @@
+import { utils as coreUtils } from "@triliumnext/core";
+import log from "@triliumnext/server/src/services/log.js";
 import { default as electron, ipcMain, type IpcMainEvent } from "electron";
 import fs from "fs/promises";
 import { t } from "i18next";
+import path from "path";
 
-import log from "./log.js";
-import { formatDownloadTitle } from "./utils.js";
+// Preload bundle path — built next to main.cjs in production by
+// apps/desktop/scripts/build.ts, or compiled in-place by the dev runner
+// (scripts/electron-start.mts) into apps/desktop/src/preload.compiled.cjs.
+// Print windows share the same preload as the main window so the renderer
+// has access to `window.electronApi.printing.sendPrintProgress`.
+//
+// Lazy: `coreUtils.isDev()` calls `getPlatform()` which throws until
+// `initializeCore()` has run. Module load happens before that, so we defer
+// resolution to the first print invocation.
+let preloadScriptCache: string | undefined;
+function getPreloadScript(): string {
+    if (preloadScriptCache === undefined) {
+        preloadScriptCache = path.resolve(
+            coreUtils.isDev()
+                ? path.join(__dirname, "..", "preload.compiled.cjs")
+                : path.join(__dirname, "..", "preload.cjs")
+        );
+    }
+    return preloadScriptCache;
+}
 
 interface PrintOpts {
     notePath: string;
@@ -72,8 +93,6 @@ function parsePageRangesForPrint(pageRanges: string): { from: number; to: number
     return ranges.length ? ranges : undefined;
 }
 
-let preloadScriptPath: string | undefined;
-
 async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, action: "printing" | "exporting_pdf") {
     // Offscreen rendering crashes on Wayland due to a Chromium bug where the OSR surface
     // lacks a valid xdg_toplevel role, causing a fatal zxdg_exporter_v2 protocol error.
@@ -92,7 +111,7 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: preloadScriptPath,
+            preload: getPreloadScript(),
             offscreen: useOffscreen,
             devTools: false,
             session: e.sender.session
@@ -183,12 +202,8 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
     return { browserWindow, printReport };
 }
 
-/** Registers all printing-related IPC handlers. Call once on Electron startup.
- *  `preloadPath` is the same preload bundle used by the main window — the print
- *  window needs it to expose `window.electronApi.printing.sendPrintProgress`. */
-export function initPrintingHandlers(preloadPath: string) {
-    preloadScriptPath = preloadPath;
-
+/** Registers all printing-related IPC handlers. Call once on Electron startup. */
+export function setupPrintingHandlers() {
     electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
         try {
             const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "printing");
@@ -214,7 +229,7 @@ export function initPrintingHandlers(preloadPath: string) {
 
             async function print() {
                 const filePath = electron.dialog.showSaveDialogSync(browserWindow, {
-                    defaultPath: formatDownloadTitle(title, "file", "application/pdf"),
+                    defaultPath: coreUtils.formatDownloadTitle(title, "file", "application/pdf"),
                     filters: [
                         {
                             name: t("pdf.export_filter"),
@@ -318,7 +333,7 @@ export function initPrintingHandlers(preloadPath: string) {
         if (!focusedWindow) return;
 
         const filePath = electron.dialog.showSaveDialogSync(focusedWindow, {
-            defaultPath: formatDownloadTitle(title, "file", "application/pdf"),
+            defaultPath: coreUtils.formatDownloadTitle(title, "file", "application/pdf"),
             filters: [
                 {
                     name: t("pdf.export_filter"),
