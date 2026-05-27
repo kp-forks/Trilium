@@ -112,10 +112,12 @@ export default class CollapsibleEditing extends Plugin {
         writer.insert(writer.createPositionAt(summary, 0), arrow);
         // "Title" placeholder shown while the summary is empty. UIElements like the
         // arrow above don't count as content for placeholder purposes.
+        const translate = (this.editor.config.get("translate") as ((key: string, params?: Record<string, unknown>) => string) | undefined)
+            ?? ((key: string) => key);
         enableViewPlaceholder({
             view: this.editor.editing.view,
             element: summary,
-            text: this.editor.locale.t("Title"),
+            text: translate("text-editor.collapsible-title-placeholder"),
             keepOnFocus: true
         });
         return summary;

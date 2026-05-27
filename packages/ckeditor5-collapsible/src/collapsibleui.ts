@@ -9,14 +9,15 @@ export default class CollapsibleUI extends Plugin {
 
     public init(): void {
         const editor = this.editor;
-        const t = editor.locale.t;
+        const translate = (editor.config.get("translate") as ((key: string, params?: Record<string, unknown>) => string) | undefined)
+            ?? ((key: string) => key);
 
         editor.ui.componentFactory.add("collapsible", locale => {
             const command = editor.commands.get("collapsible")!;
             const button = new ButtonView(locale);
 
             button.set({
-                label: t("Collapsible block"),
+                label: translate("text-editor.collapsible-button-label"),
                 icon: collapsibleIcon,
                 tooltip: true
             });
