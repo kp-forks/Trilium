@@ -338,8 +338,8 @@ pnpm run --filter desktop electron-forge:make --arch=x64 --platform=win32
 
 لم يكن لـ Trilium أن يرى النور لولا التقنيات التي تقف خلفه:
 
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - the visual editor behind
-  text notes.
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5) - المحرر المرئي وراء
+  الملاحظات النصية.
 * محرر [CodeMirror](https://github.com/codemirror/CodeMirror): - محرر أكواد يدعم
   عدداً هائلاً من اللغات.
 * برنامج [Excalidraw](https://github.com/excalidraw/excalidraw): - السبورة
