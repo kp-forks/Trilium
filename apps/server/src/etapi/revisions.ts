@@ -1,10 +1,9 @@
 import type { NoteRow, RecentChangeRow } from "@triliumnext/commons";
 import type { Router } from "express";
 
-import { protected_session, TaskContext } from "@triliumnext/core";
+import { note_service as noteService, protected_session, TaskContext } from "@triliumnext/core";
 
 import becca from "../becca/becca.js";
-import noteService from "../services/notes.js";
 import sql from "../services/sql.js";
 import utils from "../services/utils.js";
 

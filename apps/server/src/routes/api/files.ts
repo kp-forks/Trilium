@@ -1,4 +1,4 @@
-import { ValidationError, ws } from "@triliumnext/core";
+import { note_service as noteService, ValidationError, ws } from "@triliumnext/core";
 import chokidar from "chokidar";
 import type { Request } from "express";
 import fs from "fs";
@@ -8,7 +8,6 @@ import tmp from "tmp";
 import becca from "../../becca/becca.js";
 import dataDirs from "../../services/data_dir.js";
 import log from "../../services/log.js";
-import noteService from "../../services/notes.js";
 import utils from "../../services/utils.js";
 
 function updateFile(req: Request<{ noteId: string }>) {

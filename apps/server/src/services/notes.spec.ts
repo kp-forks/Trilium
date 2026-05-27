@@ -1,8 +1,7 @@
-import { BAttribute, becca_easy_mocking } from "@triliumnext/core";
+import { BAttribute, becca_easy_mocking, checkImageAttachments, findBookmarks, findLlmChatLinks, saveLinks } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import becca from "../becca/becca.js";
 import { randomString } from "./utils.js";
-import { checkImageAttachments, findBookmarks, findLlmChatLinks, saveLinks } from "./notes.js";
 
 const { buildNote } = becca_easy_mocking;
 
