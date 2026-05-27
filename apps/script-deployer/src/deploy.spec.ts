@@ -1,5 +1,5 @@
 import { BBranch, becca, becca_easy_mocking } from "@triliumnext/core";
-import cls from "@triliumnext/server/src/services/cls";
+import { cls } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { buildNote } = becca_easy_mocking;

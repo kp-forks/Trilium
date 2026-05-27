@@ -1,7 +1,7 @@
 import { becca_easy_mocking, BNote } from "@triliumnext/core";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
-import cls from "../../services/cls";
+import { cls } from "@triliumnext/core";
 import { processContent } from "./clipper";
 
 const { buildNote } = becca_easy_mocking;

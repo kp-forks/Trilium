@@ -38,7 +38,7 @@ async function ensureDatabase() {
 
     console.log("No database found — creating a fresh instance…");
 
-    const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+    const cls = (await import("@triliumnext/core")).cls;
     const sqlInit = (await import("@triliumnext/server/src/services/sql_init.js")).default;
 
     // createInitialDatabase must run inside CLS (it touches becca).
@@ -56,7 +56,7 @@ async function ensureEtapiToken() {
         return;
     }
 
-    const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+    const cls = (await import("@triliumnext/core")).cls;
     const etapiTokens = (await import("@triliumnext/server/src/services/etapi_tokens.js")).default;
 
     const authToken: string = cls.init(() => {
@@ -70,10 +70,10 @@ async function ensureEtapiToken() {
 }
 
 async function ensureScriptsFolder() {
-    const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
+    const becca = (await import("@triliumnext/core")).becca;
     if (becca.notes[SCRIPTS_NOTE_ID]) return;
 
-    const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+    const cls = (await import("@triliumnext/core")).cls;
     const { note_service: notesService } = await import("@triliumnext/core");
 
     cls.init(() => {
@@ -96,8 +96,8 @@ async function deployScripts() {
         return;
     }
 
-    const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
-    const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+    const becca = (await import("@triliumnext/core")).becca;
+    const cls = (await import("@triliumnext/core")).cls;
     const { note_service: notesService } = await import("@triliumnext/core");
 
     console.log(`Deploying ${files.length} script(s)…`);
@@ -142,8 +142,8 @@ function watchScripts() {
 
         const noteId = codeNoteId(meta.id);
 
-        const becca = (await import("@triliumnext/server/src/becca/becca.js")).default;
-        const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
+        const becca = (await import("@triliumnext/core")).becca;
+        const cls = (await import("@triliumnext/core")).cls;
 
         const note = becca.notes[noteId];
         if (!note) {

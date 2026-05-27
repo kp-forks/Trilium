@@ -3,7 +3,7 @@ import type { Request, Response, Router } from "express";
 
 import { becca } from "@triliumnext/core";
 import { namespace } from "../cls_provider.js";
-import cls from "../services/cls.js";
+import { cls } from "@triliumnext/core";
 import { getLog } from "@triliumnext/core";
 import sql from "../services/sql.js";
 

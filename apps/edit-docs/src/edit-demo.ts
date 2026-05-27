@@ -1,7 +1,7 @@
 import { createZipFromDirectory, extractZip, importData, initializeEditDocsCore, startElectron } from "./utils.js";
 import debounce from "@triliumnext/client/src/services/debounce.js";
 import type { NoteMeta, NoteMetaFile } from "@triliumnext/core";
-import cls from "@triliumnext/server/src/services/cls.js";
+import { cls } from "@triliumnext/core";
 import fs from "fs/promises";
 import { join } from "path";
 

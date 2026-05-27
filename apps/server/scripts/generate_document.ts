@@ -7,7 +7,7 @@ import { attributes as attributeService, cloning as cloningService, note_service
 import { loremIpsum } from "lorem-ipsum";
 
 import "../src/becca/entity_constructor.js";
-import cls from "../src/services/cls.js";
+import { cls } from "@triliumnext/core";
 import { initializeTranslations } from "../src/services/i18n.js";
 import sqlInit from "../src/services/sql_init.js";
 

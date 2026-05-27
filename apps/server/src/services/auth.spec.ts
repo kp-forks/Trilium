@@ -4,7 +4,7 @@ import supertest from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { refreshAuth } from "./auth";
-import cls from "./cls";
+import { cls } from "@triliumnext/core";
 import config from "./config";
 
 let app: Application;

@@ -4,7 +4,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 import { becca } from "@triliumnext/core";
 import { namespace } from "../cls_provider.js";
 import type { ApiRequestHandler, SyncRouteRequestHandler } from "../routes/route_api.js";
-import cls from "../services/cls.js";
+import { cls } from "@triliumnext/core";
 import config from "../services/config.js";
 import etapiTokenService from "../services/etapi_tokens.js";
 import { getLog } from "@triliumnext/core";

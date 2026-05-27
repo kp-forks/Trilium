@@ -5,7 +5,7 @@ import { createNote, login } from "./utils.js";
 import config from "../../src/services/config.js";
 import { becca } from "@triliumnext/core";
 import optionService from "../../src/services/options.js";
-import cls from "../../src/services/cls.js";
+import { cls } from "@triliumnext/core";
 
 let app: Application;
 let token: string;

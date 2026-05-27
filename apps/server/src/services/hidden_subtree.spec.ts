@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { becca } from "@triliumnext/core";
 import branches from "./branches.js";
-import cls from "./cls.js";
+import { cls } from "@triliumnext/core";
 import sql_init from "./sql_init.js";
 
 describe("Hidden Subtree", () => {

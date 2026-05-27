@@ -5,7 +5,7 @@ import multer from "multer";
 
 import { namespace } from "../cls_provider.js";
 import auth from "../services/auth.js";
-import cls from "../services/cls.js";
+import { cls } from "@triliumnext/core";
 import { getLog } from "@triliumnext/core";
 import sql from "../services/sql.js";
 import { safeExtractMessageAndStackFromError } from "../services/utils.js";
