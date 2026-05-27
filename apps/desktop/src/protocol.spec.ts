@@ -9,8 +9,8 @@ vi.mock("electron", () => ({
     }
 }));
 
-const { dispatch } = await import("./electron.js");
-const { isInternalElectronRequest } = await import("../services/electron_request.js");
+const { dispatch } = await import("./protocol.js");
+const { isInternalElectronRequest } = await import("@triliumnext/server/src/services/electron_request.js");
 
 function buildTestApp() {
     const app = express();
@@ -33,7 +33,7 @@ function buildTestApp() {
     return app;
 }
 
-describe("electron protocol dispatcher", () => {
+describe("trilium-app protocol dispatcher", () => {
     it("forwards multipart/form-data through multer so handlers see req.file", async () => {
         const app = buildTestApp();
         const formData = new FormData();

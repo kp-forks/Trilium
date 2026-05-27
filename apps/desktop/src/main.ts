@@ -23,7 +23,7 @@ import { deferred, LOCALES } from "../../../packages/commons/src";
 import { PRODUCT_NAME } from "./app-info";
 import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
-import { registerTriliumAppScheme } from "./protocol";
+import { registerTriliumAppScheme, setupTriliumAppProtocol } from "./protocol";
 import { setupCustomDictionary } from "./services/custom_dictionary";
 import { setupPrintingHandlers } from "./services/printing";
 import { setupShellHandlers } from "./services/shell";
@@ -190,8 +190,10 @@ async function main() {
     });
 
     const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
-    await startTriliumServer();
+    const expressApp = await startTriliumServer();
     console.log("Server loaded");
+
+    setupTriliumAppProtocol(expressApp);
 
     serverInitializedPromise.resolve();
 }

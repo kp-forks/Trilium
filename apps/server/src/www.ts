@@ -25,7 +25,7 @@ const LOGO = `\
   |_||_|  |_|_|_|\\__,_|_| |_| |_| |_| \\_|\\___/ \\__\\___||___/ [version]
 `;
 
-export default async function startTriliumServer() {
+export default async function startTriliumServer(): Promise<Express> {
     await displayStartupMessage();
 
     // setup basic error handling even before requiring dependencies, since those can produce errors as well
@@ -72,12 +72,9 @@ export default async function startTriliumServer() {
     const ws = (await import("./services/ws.js")).default;
     ws.init();
 
-    if (utils.isElectron()) {
-        const electronRouting = await import("./routes/electron.js");
-        electronRouting.default(app);
-    }
-
     registerOcrHandlers();
+
+    return app;
 }
 
 async function displayStartupMessage() {
