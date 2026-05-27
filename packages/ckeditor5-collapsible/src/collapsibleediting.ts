@@ -105,7 +105,7 @@ export default class CollapsibleEditing extends Plugin {
         enableViewPlaceholder({
             view: this.editor.editing.view,
             element: summary,
-            text: "Title",
+            text: this.editor.locale.t("Title"),
             keepOnFocus: true
         });
         return summary;
@@ -182,44 +182,58 @@ export default class CollapsibleEditing extends Plugin {
      */
     private _onEnterInSummary(evt: any, data: any) {
         const editor = this.editor;
-        const selection = editor.model.document.selection;
-        if (!selection.isCollapsed) return;
+        const model = editor.model;
+        const selection = model.document.selection;
 
-        const position = selection.getLastPosition();
-        const summary = position?.findAncestor("summary");
+        const summary = selection.getFirstPosition()?.findAncestor("summary");
         if (!summary) return;
 
-        // Titles are single-line: always swallow Enter so it never inserts a newline.
+        // Titles are single-line: always swallow Enter so it never inserts a newline
+        // — even when there's an active selection inside the summary (native Enter
+        // would otherwise split the summary and produce an invalid structure).
         data.preventDefault();
         evt.stop();
 
         const details = summary.parent;
         if (!details || !details.is("element", "details")) return;
 
-        if (position!.isAtStart) {
-            editor.model.change(writer =>
-                this._insertParagraphAt(writer, writer.createPositionBefore(details)));
-            return;
+        // If the title is currently collapsed and we'll need to expand it (middle-
+        // of-title split), do it now — before model.change runs and the hidden-body
+        // post-fixer gets a chance to snap the caret out of the new body paragraph.
+        const willSplit = !selection.isCollapsed
+            ? false  // selection will be deleted first, then the new collapsed position determines branch
+            : !selection.getLastPosition()!.isAtStart && !selection.getLastPosition()!.isAtEnd;
+        if (willSplit && !this._isDetailsOpen(details)) {
+            this._setDetailsOpen(details, true);
         }
 
-        if (position!.isAtEnd) {
-            editor.model.change(writer => {
+        model.change(writer => {
+            // Drop any non-collapsed selection so we operate on a single position.
+            if (!selection.isCollapsed) {
+                model.deleteContent(selection);
+            }
+            const position = selection.getLastPosition()!;
+
+            if (position.isAtStart) {
+                this._insertParagraphAt(writer, writer.createPositionBefore(details));
+                return;
+            }
+
+            if (position.isAtEnd) {
                 const pos = this._isDetailsOpen(details)
                     ? writer.createPositionAfter(summary)
                     : writer.createPositionAfter(details);
                 this._insertParagraphAt(writer, pos);
-            });
-            return;
-        }
+                return;
+            }
 
-        // Middle of title: split. Expand first so the hidden-body post-fixer doesn't
-        // snap the caret out when we drop it into the new body paragraph.
-        if (!this._isDetailsOpen(details)) {
-            this._setDetailsOpen(details, true);
-        }
-        editor.model.change(writer => {
+            // Middle of title: split. If we entered this branch via the selection-
+            // delete path (rather than `willSplit` above), expand now too.
+            if (!this._isDetailsOpen(details)) {
+                this._setDetailsOpen(details, true);
+            }
             const rightRange = writer.createRange(
-                writer.createPositionAt(summary, position!.offset),
+                writer.createPositionAt(summary, position.offset),
                 writer.createPositionAt(summary, "end")
             );
             const p = writer.createElement("paragraph");
@@ -305,15 +319,24 @@ export default class CollapsibleEditing extends Plugin {
         evt.stop();
     }
 
-    /** Forward/backward delete next to a <details> removes the whole block. */
+    /**
+     * Two-step delete next to a <details> (matches CKEditor's widget/object pattern):
+     *   1st press: select the whole <details> so the user sees what's about to go.
+     *   2nd press: with the details selected, default delete removes it.
+     */
     private _onDeleteAdjacentDetails(evt: any, data: any) {
         const selection = this.editor.model.document.selection;
+        // 2nd press: a <details> is already selected; let CKEditor's default delete
+        // remove it (more reliable than us calling writer.remove here).
+        if (selection.getSelectedElement()?.is("element", "details")) return;
+
         if (!selection.isCollapsed) return;
         const position = selection.getFirstPosition();
         if (!position) return;
         const adjacent = data.direction === "forward" ? position.nodeAfter : position.nodeBefore;
         if (!adjacent || !adjacent.is("element", "details")) return;
-        this.editor.model.change(writer => writer.remove(adjacent));
+
+        this.editor.model.change(writer => writer.setSelection(adjacent, "on"));
         data.preventDefault();
         evt.stop();
     }
@@ -339,9 +362,14 @@ export default class CollapsibleEditing extends Plugin {
      * Suppress the native click-to-toggle on <summary> in the editor — only the
      * custom arrow may change the open state. The data/published view keeps the
      * native marker and click-to-toggle behavior.
+     *
+     * Modifier-clicks (Ctrl/Cmd/Shift/Alt) pass through so Ctrl+click on a link
+     * inside the title still opens it in a new tab, etc.
      */
     private _registerClickHandler() {
         this.listenTo(this.editor.editing.view.document, "click", (_evt, data: any) => {
+            const domEvent = data.domEvent as MouseEvent | undefined;
+            if (domEvent?.ctrlKey || domEvent?.metaKey || domEvent?.shiftKey || domEvent?.altKey) return;
             for (let node = data.target; node; node = node.parent) {
                 if (node.is?.("element", "summary") && node.parent?.is("element", "details")) {
                     data.preventDefault();
@@ -407,7 +435,9 @@ export default class CollapsibleEditing extends Plugin {
     private _onDetailsToggle(event: Event) {
         const editor = this.editor;
         const detailsDom = event.target as HTMLDetailsElement;
-        if (detailsDom.tagName?.toLowerCase() !== "details" || detailsDom.open) return;
+        if (detailsDom.tagName?.toLowerCase() !== "details") return;
+        if (!detailsDom.classList.contains("trilium-collapsible")) return;
+        if (detailsDom.open) return;
 
         const detailsView = editor.editing.view.domConverter.mapDomToView(detailsDom);
         const detailsModel = detailsView ? editor.editing.mapper.toModelElement(detailsView as any) : null;
@@ -441,6 +471,7 @@ export default class CollapsibleEditing extends Plugin {
     private _registerPostFixers() {
         const document = this.editor.model.document;
         document.registerPostFixer(writer => this._structuralPostFixer(writer));
+        document.registerPostFixer(writer => this._summaryInvariantPostFixer(writer));
         document.registerPostFixer(writer => this._gapPostFixer(writer));
         document.registerPostFixer(writer => this._hiddenBodyPostFixer(writer));
     }
@@ -482,6 +513,74 @@ export default class CollapsibleEditing extends Plugin {
     }
 
     /**
+     * Every <details> must start with exactly one <summary> child. Defends against:
+     *   - pasted HTML with no <summary>, multiple <summary>, or summary not first
+     *   - block-level commands (heading, etc.) renaming the summary to something
+     *     else (we rename it back, preserving its text content)
+     *
+     * The structural post-fixer above removes empty <details> created as
+     * side-effects of these fixes — they run iteratively until the tree stabilises.
+     */
+    private _summaryInvariantPostFixer(writer: any): boolean {
+        const changes = this.editor.model.document.differ.getChanges();
+        const visited = new Set<any>();
+
+        const ensureValid = (details: any): boolean => {
+            if (visited.has(details)) return false;
+            visited.add(details);
+
+            // Collect all <summary> children and ensure the first child is one.
+            const summaries: any[] = [];
+            for (const child of details.getChildren()) {
+                if (child.is("element", "summary")) summaries.push(child);
+            }
+
+            // Missing summary: rename the first block-level child back to summary
+            // (handles "heading dropdown converted our summary" recovery). Falls
+            // back to inserting an empty one if nothing block-like is there.
+            if (summaries.length === 0) {
+                const first = details.getChild(0);
+                if (first?.is("element") && first.name !== "summary") {
+                    writer.rename(first, "summary");
+                } else {
+                    writer.insert(writer.createElement("summary"), details, 0);
+                }
+                return true;
+            }
+
+            // Extra <summary>s: demote them to paragraphs.
+            if (summaries.length > 1) {
+                for (let i = 1; i < summaries.length; i++) {
+                    writer.rename(summaries[i], "paragraph");
+                }
+                return true;
+            }
+
+            // Single summary but not at position 0: move it.
+            if (details.getChild(0) !== summaries[0]) {
+                writer.move(writer.createRangeOn(summaries[0]), writer.createPositionAt(details, 0));
+                return true;
+            }
+
+            return false;
+        };
+
+        for (const entry of changes) {
+            if (entry.type === "insert") {
+                const node = (entry as any).position.nodeAfter;
+                if (!node || !node.is("element")) continue;
+                for (const item of writer.createRangeOn(node).getItems()) {
+                    if (item.is("element", "details") && ensureValid(item)) return true;
+                }
+            } else if (entry.type === "remove" || entry.type === "attribute") {
+                const parent = (entry as any).position?.parent;
+                if (parent?.is("element", "details") && ensureValid(parent)) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Prevent the caret from sitting in the "gap" position directly inside a
      * <details> (between summary and a body block). Prefer the previous sibling
      * so the caret stays on the summary line when the block is collapsed.
@@ -492,6 +591,16 @@ export default class CollapsibleEditing extends Plugin {
         const details = position.parent;
         const before = position.offset > 0 ? details.getChild(position.offset - 1) : null;
         const after = details.getChild(position.offset);
+
+        // If `before` is a nested <details>, landing at its "end" would just put us
+        // in another gap (childCount). Dig one level deeper to its last child block.
+        if (before?.is("element", "details") && before.childCount > 0) {
+            const last = before.getChild(before.childCount - 1);
+            if (last?.is("element")) {
+                writer.setSelection(last, "end");
+                return true;
+            }
+        }
         if (before?.is("element")) {
             writer.setSelection(before, "end");
             return true;
