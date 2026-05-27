@@ -1,4 +1,5 @@
-import { Plugin, Enter, Delete, enableViewPlaceholder, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
+import { Plugin, Enter, Delete, enableViewPlaceholder, getEnvKeystrokeText, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
+import { Tooltip } from "bootstrap";
 import CollapsibleCommand from "./collapsiblecommand.js";
 
 /**
@@ -23,6 +24,10 @@ export default class CollapsibleEditing extends Plugin {
 
     private _keydownListener?: (event: KeyboardEvent) => void;
     private _toggleListener?: (event: Event) => void;
+    /** Summary DOM elements that currently have a Bootstrap tooltip attached. */
+    private readonly _summaryTooltips = new Set<HTMLElement>();
+    /** The summary tooltip we currently have force-shown because the caret is inside it. */
+    private _caretShownTooltip?: HTMLElement;
 
     public init(): void {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
@@ -32,6 +37,7 @@ export default class CollapsibleEditing extends Plugin {
         this._registerClickHandler();
         this._registerDomListeners();
         this._registerPostFixers();
+        this._registerSummaryTooltips();
     }
 
     public override destroy(): void {
@@ -40,6 +46,10 @@ export default class CollapsibleEditing extends Plugin {
             if (this._keydownListener) domRoot.removeEventListener("keydown", this._keydownListener, true);
             if (this._toggleListener) domRoot.removeEventListener("toggle", this._toggleListener, true);
         }
+        for (const summary of this._summaryTooltips) {
+            Tooltip.getInstance(summary)?.dispose();
+        }
+        this._summaryTooltips.clear();
         super.destroy();
     }
 
@@ -462,6 +472,66 @@ export default class CollapsibleEditing extends Plugin {
         if (!isInside) return;
 
         editor.model.change(writer => writer.setSelection(summary, "end"));
+    }
+
+    // -----------------------------------------------------------------
+    // Summary tooltip (Bootstrap, screen-corner hint)
+    // -----------------------------------------------------------------
+
+    /**
+     * Attach a Bootstrap tooltip to every <summary> DOM element so hovering or
+     * focusing the title pops up a "click the arrow or press Ctrl+Enter" hint
+     * in the screen corner (the same UX as the todo-list multistate plugin).
+     */
+    private _registerSummaryTooltips() {
+        const editor = this.editor;
+        const translate = (editor.config.get("translate") as ((key: string, params?: Record<string, unknown>) => string) | undefined)
+            ?? ((key: string) => key);
+
+        this.listenTo(editor.editing.view, "render", () => {
+            const domRoot = editor.editing.view.getDomRoot();
+            if (!domRoot) return;
+
+            // Drop tooltips on summaries that CKEditor re-rendered out of the DOM.
+            for (const summary of this._summaryTooltips) {
+                if (!summary.isConnected) {
+                    Tooltip.getInstance(summary)?.dispose();
+                    this._summaryTooltips.delete(summary);
+                    if (this._caretShownTooltip === summary) this._caretShownTooltip = undefined;
+                }
+            }
+
+            for (const summary of domRoot.querySelectorAll<HTMLElement>("details.trilium-collapsible > summary")) {
+                if (Tooltip.getInstance(summary)) continue;
+                const title = translate("text-editor.collapsible-tooltip", {
+                    shortcut: getEnvKeystrokeText("Ctrl+Enter")
+                });
+                new Tooltip(summary, { title, customClass: "text-editor-content-tooltip" });
+                this._summaryTooltips.add(summary);
+            }
+        });
+
+        // The caret moving into a <summary> doesn't fire DOM focus (the editable
+        // root keeps focus), so Bootstrap's focus trigger won't notice. Manually
+        // show/hide the tooltip on model-selection changes so the hint also
+        // appears when the user navigates into the title via keyboard or click.
+        this.listenTo(editor.model.document.selection, "change:range", () => {
+            const summaryModel = editor.model.document.selection.getFirstPosition()?.findAncestor("summary");
+            const targetDom = summaryModel ? this._getDom<HTMLElement>(summaryModel) : null;
+
+            // No-op when the target hasn't changed (selection moves on every keystroke
+            // while typing in the summary; re-calling show() retriggers the animation).
+            if (this._caretShownTooltip === targetDom) return;
+
+            if (this._caretShownTooltip) {
+                Tooltip.getInstance(this._caretShownTooltip)?.hide();
+                this._caretShownTooltip = undefined;
+            }
+            if (targetDom) {
+                Tooltip.getInstance(targetDom)?.show();
+                this._caretShownTooltip = targetDom;
+            }
+        });
     }
 
     // -----------------------------------------------------------------
