@@ -1,15 +1,28 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-import {
+// `shell.ts` does `import electron from "electron"` at module load to register
+// IPC handlers. On CI the `electron` package's entry point throws ("Electron
+// failed to install correctly") because the binary isn't materialized. The
+// tests below only exercise pure validators, so stub electron with empty
+// surface to skip the binary lookup entirely.
+vi.mock("electron", () => ({
+    default: {
+        ipcMain: { on: () => {}, handle: () => {} },
+        shell: {},
+        app: {}
+    }
+}));
+
+const {
     validateDownloadUrl,
     validateOpenCustomPath,
     validateOpenExternalUrl,
     validateOpenFileUrl,
     validateOpenPath
-} from "./shell.js";
+} = await import("./shell.js");
 
 //#region validateOpenCustomPath
 

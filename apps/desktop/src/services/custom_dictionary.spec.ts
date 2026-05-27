@@ -15,6 +15,18 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
     };
 });
 
+// `custom_dictionary.ts` does `import electron from "electron"` at module load
+// to register IPC handlers. On CI the `electron` package's entry point throws
+// ("Electron failed to install correctly") because the binary isn't materialized.
+// `loadForSession` (the only thing exercised below) doesn't touch electron at
+// runtime, so empty stubs are enough.
+vi.mock("electron", () => ({
+    default: {
+        ipcMain: { on: () => {} },
+        app: { on: () => {} }
+    }
+}));
+
 const customDictionary = await import("./custom_dictionary.js");
 
 function mockSession(localWords: string[] = []) {
