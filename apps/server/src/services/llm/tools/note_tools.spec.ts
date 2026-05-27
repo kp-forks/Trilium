@@ -1,7 +1,7 @@
 import { becca_easy_mocking } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import becca from "../../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import { noteTools } from "./note_tools.js";
 import type { ToolDefinition } from "./tool_registry.js";
 

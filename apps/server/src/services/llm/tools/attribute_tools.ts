@@ -5,7 +5,7 @@
 import { attributes as attributeService } from "@triliumnext/core";
 import { z } from "zod";
 
-import becca from "../../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import { flag } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
 

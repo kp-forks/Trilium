@@ -5,7 +5,7 @@
 import { type BAttachment, type BNote, markdownExportService as markdownExport,markdownImportService as markdownImport } from "@triliumnext/core";
 import { unwrapStringOrBuffer } from "@triliumnext/core/src/services/utils/binary.js";
 
-import becca from "../../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 
 const CONTENT_PREVIEW_MAX_LENGTH = 500;
 const ATTACHMENT_PREVIEW_MAX_LENGTH = 200;

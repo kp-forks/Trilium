@@ -3,7 +3,7 @@ import type { Router } from "express";
 
 import { BBranch, entity_changes as entityChangesService } from "@triliumnext/core";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import eu from "./etapi_utils.js";
 import mappers from "./mappers.js";
 import v from "./validators.js";

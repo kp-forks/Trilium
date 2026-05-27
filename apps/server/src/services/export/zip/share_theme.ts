@@ -5,7 +5,7 @@ import { convert as convertToText } from "html-to-text";
 import { t } from "i18next";
 import { join } from "path";
 
-import becca from "../../../becca/becca";
+import { becca } from "@triliumnext/core";
 import { getClientDir, getShareThemeAssetDir } from "../../../routes/assets";
 import { getDefaultTemplatePath, readTemplate, renderNoteForExport } from "../../../share/content_renderer";
 import log from "../../log";

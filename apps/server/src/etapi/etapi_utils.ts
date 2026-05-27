@@ -1,7 +1,7 @@
 import type { NextFunction, Request, RequestHandler, Response, Router } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import { namespace } from "../cls_provider.js";
 import type { ApiRequestHandler, SyncRouteRequestHandler } from "../routes/route_api.js";
 import cls from "../services/cls.js";

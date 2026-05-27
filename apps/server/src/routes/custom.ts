@@ -1,7 +1,7 @@
 import { routeHelpers, scriptService, utils } from "@triliumnext/core";
 import type { Request, Response, Router } from "express";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import { namespace } from "../cls_provider.js";
 import cls from "../services/cls.js";
 import log from "../services/log.js";

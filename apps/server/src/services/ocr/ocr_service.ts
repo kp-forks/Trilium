@@ -1,7 +1,6 @@
 import { getTesseractCode } from '@triliumnext/commons';
-import { blob as blobService, entity_changes as entityChangesService, options } from '@triliumnext/core';
+import { becca, blob as blobService, entity_changes as entityChangesService, options } from '@triliumnext/core';
 
-import becca from '../../becca/becca.js';
 import log from '../log.js';
 import sql from '../sql.js';
 import { FileProcessor } from './processors/file_processor.js';

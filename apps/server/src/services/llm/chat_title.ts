@@ -1,4 +1,4 @@
-import becca from "../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import { getProvider } from "./index.js";
 import log from "../log.js";
 import { t } from "i18next";

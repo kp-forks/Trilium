@@ -5,7 +5,7 @@
 import { markdownImportService as markdownImport, note_service as noteService, search as searchService, SearchContext, TaskContext } from "@triliumnext/core";
 import { z } from "zod";
 
-import becca from "../../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import { applyTextEdits, getContentPreview, getNoteContentForLlm, getNoteMeta, PROTECTED_SYSTEM_NOTES, setNoteContentFromLlm,TOOL_LIMITS } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
 

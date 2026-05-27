@@ -1,6 +1,6 @@
 import { date_utils as dateUtils, note_types as noteTypeService } from "@triliumnext/core";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 
 function mandatory(obj: unknown) {
     if (obj === undefined) {

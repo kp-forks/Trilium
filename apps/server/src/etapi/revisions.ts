@@ -3,7 +3,7 @@ import type { Router } from "express";
 
 import { note_service as noteService, protected_session, TaskContext } from "@triliumnext/core";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import sql from "../services/sql.js";
 import utils from "../services/utils.js";
 

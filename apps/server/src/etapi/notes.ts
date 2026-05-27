@@ -2,7 +2,7 @@ import { type ExportFormat, note_service as noteService, NoteParams, search as s
 import type { Request, Router } from "express";
 import type { ParsedQs } from "qs";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import utils from "../services/utils.js";
 import eu from "./etapi_utils.js";
 import type { ValidatorMap } from "./etapi-interface.js";

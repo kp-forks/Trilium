@@ -14,7 +14,7 @@
  */
 import { BBranch, becca_mocking, BNote, search as searchService, SearchContext } from "@triliumnext/core";
 import { describe, it, expect, afterEach } from "vitest";
-import becca from "../../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 
 const { NoteBuilder, note } = becca_mocking;
 

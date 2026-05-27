@@ -8,7 +8,7 @@ import { t } from "i18next";
 import { HTMLElement, Options, parse, TextNode } from "node-html-parser";
 import { join } from "path";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import assetPath, { assetUrlFragment } from "../services/asset_path.js";
 import log from "../services/log.js";
 import { getResourceDir, isDev } from "../services/utils.js";

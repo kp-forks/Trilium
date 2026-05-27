@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import supertest from "supertest";
 import { createNote, login } from "./utils.js";
 import config from "../../src/services/config.js";
-import becca from "../../src/becca/becca.js";
+import { becca } from "@triliumnext/core";
 import optionService from "../../src/services/options.js";
 import cls from "../../src/services/cls.js";
 

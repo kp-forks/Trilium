@@ -5,7 +5,7 @@ import fs from "fs";
 import { Readable } from "stream";
 import tmp from "tmp";
 
-import becca from "../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import dataDirs from "../../services/data_dir.js";
 import log from "../../services/log.js";
 import utils from "../../services/utils.js";

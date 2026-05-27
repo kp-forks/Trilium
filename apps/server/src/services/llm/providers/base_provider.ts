@@ -8,7 +8,7 @@ import { decodeUtf8 } from "@triliumnext/core/src/services/utils/binary.js";
 import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
-import becca from "../../../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import log from "../../log.js";
 import { getNoteMeta,SYSTEM_PROMPT_LIMITS } from "../tools/helpers.js";
 import { allToolRegistries } from "../tools/index.js";

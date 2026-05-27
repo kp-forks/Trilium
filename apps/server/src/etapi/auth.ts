@@ -1,7 +1,7 @@
 import { password_encryption as passwordEncryptionService } from "@triliumnext/core";
 import type { RequestHandler, Router } from "express";
 
-import becca from "../becca/becca.js";
+import { becca } from "@triliumnext/core";
 import etapiTokenService from "../services/etapi_tokens.js";
 import eu from "./etapi_utils.js";
 
