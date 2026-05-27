@@ -26,10 +26,17 @@ type SafeImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "onError
 export function SafeImage({ src, ...rest }: SafeImageProps) {
     const [currentSrc, setCurrentSrc] = useState(src);
     const retriesRef = useRef(0);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         retriesRef.current = 0;
         setCurrentSrc(src);
+        return () => {
+            if (timeoutRef.current !== null) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+        };
     }, [src]);
 
     const handleError = useCallback(() => {
@@ -37,7 +44,8 @@ export function SafeImage({ src, ...rest }: SafeImageProps) {
         const next = retriesRef.current + 1;
         retriesRef.current = next;
         const separator = src.includes("?") ? "&" : "?";
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
+            timeoutRef.current = null;
             setCurrentSrc(`${src}${separator}_retry=${next}`);
         }, 300 * next);
     }, [src]);
