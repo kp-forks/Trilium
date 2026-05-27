@@ -101,14 +101,17 @@ export default class CollapsibleEditing extends Plugin {
             }
         });
 
-        // Keyboard shortcut: Ctrl+Enter (Cmd+Enter on Mac) inside a <summary> toggles
-        // the enclosing <details>. Attaching directly to the editing root's DOM keydown
-        // in capture phase ensures we run before any CKEditor observer can swallow it.
+        // DOM-level keydown listeners (capture phase) for shortcuts that need to run
+        // before any CKEditor observer can swallow the key. View-event listeners on
+        // arrowKey/keystrokes are unreliable when the caret is inside attribute
+        // elements (links, formatted text, etc.), so we listen to the raw DOM.
         editor.on("ready", () => {
             const domRoot = editor.editing.view.getDomRoot();
             if (!domRoot) {
                 return;
             }
+
+            // Ctrl+Enter (Cmd+Enter on Mac) inside a <summary> toggles the enclosing <details>.
             domRoot.addEventListener("keydown", (event: KeyboardEvent) => {
                 if (event.key !== "Enter" || event.shiftKey || event.altKey) {
                     return;
@@ -131,6 +134,40 @@ export default class CollapsibleEditing extends Plugin {
                     event.preventDefault();
                     event.stopPropagation();
                 }
+            }, true);
+
+            // Down-arrow inside a <summary> jumps the caret into the first body block
+            // (or skips past the whole <details> if it's collapsed). The native browser
+            // behaviour is flaky when the caret is inside formatted text — this DOM-level
+            // handler in capture phase fires regardless.
+            domRoot.addEventListener("keydown", (event: KeyboardEvent) => {
+                if (event.key !== "ArrowDown" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) {
+                    return;
+                }
+                const summaryModel = selection.getFirstPosition()?.findAncestor("summary");
+                if (!summaryModel) {
+                    return;
+                }
+                const detailsModel = summaryModel.parent;
+                if (!detailsModel?.is("element", "details")) {
+                    return;
+                }
+
+                let target: any;
+                if (!isDetailsOpen(detailsModel)) {
+                    target = detailsModel.nextSibling;
+                } else {
+                    target = summaryModel.nextSibling;
+                }
+                if (!target?.is("element")) {
+                    return;
+                }
+
+                editor.model.change(writer => {
+                    writer.setSelection(target, 0);
+                });
+                event.preventDefault();
+                event.stopPropagation();
             }, true);
         });
 
@@ -234,51 +271,6 @@ export default class CollapsibleEditing extends Plugin {
 
             editor.model.change(writer => {
                 writer.setSelection(target, "end");
-            });
-
-            data.preventDefault();
-            evt.stop();
-        });
-
-        // UX: down-arrow inside a <summary> moves the caret into the first body block.
-        // (Native browser arrow navigation in <summary> is unreliable.)
-        this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey", (evt, data) => {
-            if (data.keyCode !== 40 || data.shiftKey || !selection.isCollapsed) {
-                return;
-            }
-
-            const summary = selection.getFirstPosition()?.findAncestor("summary");
-            if (!summary) {
-                return;
-            }
-
-            const details = summary.parent;
-            if (!details?.is("element", "details")) {
-                return;
-            }
-
-            // If the details is collapsed, skip past it to the block after — landing in
-            // the hidden body would silently hide the caret (and trigger spurious widget
-            // toolbars for anything inside).
-            if (!isDetailsOpen(details)) {
-                const next = details.nextSibling;
-                if (next?.is("element")) {
-                    editor.model.change(writer => {
-                        writer.setSelection(next, 0);
-                    });
-                    data.preventDefault();
-                    evt.stop();
-                }
-                return;
-            }
-
-            const firstBodyBlock = summary.nextSibling;
-            if (!firstBodyBlock || !firstBodyBlock.is("element")) {
-                return;
-            }
-
-            editor.model.change(writer => {
-                writer.setSelection(firstBodyBlock, 0);
             });
 
             data.preventDefault();
