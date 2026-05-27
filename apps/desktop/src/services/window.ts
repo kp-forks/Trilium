@@ -169,7 +169,9 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
             (await import("electron")).shell.openExternal(details.url);
         }
 
-        openExternal();
+        openExternal().catch(err => {
+            getLog().error(`Failed to open external URL ${details.url}: ${err}`);
+        });
         return { action: "deny" };
     });
 
@@ -228,7 +230,8 @@ function setupSpellcheckForSession(session: Session) {
         const languageCodes = optionService
             .getOption("spellCheckLanguageCode")
             .split(",")
-            .map((code) => code.trim());
+            .map((code) => code.trim())
+            .filter(Boolean);
 
         session.setSpellCheckerLanguages(languageCodes);
     }
@@ -370,12 +373,12 @@ export function setupWindowing() {
         try {
             const image = electron.nativeImage.createFromBuffer(Buffer.from(buffer));
             if (image.isEmpty()) {
-                console.error("copy-image-to-clipboard: nativeImage is empty, unsupported format?");
+                getLog().error("copy-image-to-clipboard: nativeImage is empty, unsupported format?");
                 return;
             }
             electron.clipboard.writeImage(image);
         } catch (e) {
-            console.error("copy-image-to-clipboard failed:", e);
+            getLog().error(`copy-image-to-clipboard failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
         }
     });
 

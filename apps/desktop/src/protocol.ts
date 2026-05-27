@@ -345,7 +345,7 @@ function normalizeResponseHeaders(headers: Record<string, number | string | stri
         if (value === undefined) continue;
         if (STRIPPED_HEADERS.has(name.toLowerCase())) continue;
         if (Array.isArray(value)) {
-            for (const v of value) out.push([name, v]);
+            for (const v of value) out.push([name, String(v)]);
         } else {
             out.push([name, String(value)]);
         }

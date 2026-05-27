@@ -125,7 +125,14 @@ export function setupCustomDictionary() {
         );
     });
 
-    electron.ipcMain.on("add-word-to-dictionary", (event, word: string) => {
+    electron.ipcMain.on("add-word-to-dictionary", (event, word: unknown) => {
+        // Defensive: ipcMain accepts any structured-clonable payload, so a
+        // compromised renderer could send a non-string. Reject without doing
+        // anything observable.
+        if (typeof word !== "string" || word.length === 0) {
+            getLog().error("add-word-to-dictionary: invalid word payload received");
+            return;
+        }
         event.sender.session.addWordToSpellCheckerDictionary(word);
         addWord(word);
     });

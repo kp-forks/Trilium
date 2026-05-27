@@ -14,6 +14,14 @@ import electron from "electron";
 export default class ElectronRequestProvider extends NodeRequestProvider {
     protected async getClient(opts: ClientOpts): Promise<Client> {
         if (!opts.proxy) {
+            // `electron.net` can only be used after `app.ready` has fired.
+            // The sync timer is scheduled inside `buildApp()` and could in
+            // principle fire before the renderer's `ready` event, so wait
+            // defensively. After ready, `whenReady()` resolves synchronously
+            // and adds no overhead.
+            if (!electron.app.isReady()) {
+                await electron.app.whenReady();
+            }
             return electron.net as unknown as Client;
         }
         return super.getClient(opts);
