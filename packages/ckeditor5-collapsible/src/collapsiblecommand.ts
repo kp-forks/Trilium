@@ -2,9 +2,10 @@ import { Command } from "ckeditor5";
 
 /**
  * Inserts a new collapsible block (<details><summary>…</summary>…</details>) at the
- * current selection. The summary becomes the editable title; the body holds a single
- * empty paragraph by default and may contain any block content (including nested
- * collapsibles).
+ * current selection. The summary becomes the editable title; the body holds whatever
+ * was selected (wrapped into block-level children) or a single empty paragraph if
+ * the selection is collapsed. May contain any block content (including nested
+ * collapsibles). After insertion the caret is placed in the empty title.
  */
 export default class CollapsibleCommand extends Command {
 
@@ -20,21 +21,53 @@ export default class CollapsibleCommand extends Command {
     public override execute(): void {
         const editor = this.editor;
         const model = editor.model;
+        const selection = model.document.selection;
         let newDetails: any;
 
         model.change(writer => {
-            const detailsEl = writer.createElement("details");
-            const summaryEl = writer.createElement("summary");
-            const paragraphEl = writer.createElement("paragraph");
+            // Clone the selected content up front (does not modify the document).
+            const fragment = !selection.isCollapsed ? model.getSelectedContent(selection) : null;
 
-            writer.append(summaryEl, detailsEl);
-            writer.append(paragraphEl, detailsEl);
+            const details = writer.createElement("details");
+            const summary = writer.createElement("summary");
+            writer.append(summary, details);
 
-            model.insertContent(detailsEl);
-            newDetails = detailsEl;
+            if (fragment) {
+                // Append fragment children as body content. Inline runs (e.g. text from
+                // an intra-block selection) get wrapped in a paragraph so the body only
+                // contains block-level children, as the schema requires.
+                let pending: any[] = [];
+                const flushPending = () => {
+                    if (!pending.length) return;
+                    const p = writer.createElement("paragraph");
+                    for (const n of pending) writer.append(n, p);
+                    writer.append(p, details);
+                    pending = [];
+                };
+                for (const child of [...fragment.getChildren()]) {
+                    if (child.is("element")) {
+                        flushPending();
+                        writer.append(child, details);
+                    } else {
+                        pending.push(child);
+                    }
+                }
+                flushPending();
+            }
+
+            // Ensure the body has at least one block.
+            if (details.childCount === 1) {
+                writer.append(writer.createElement("paragraph"), details);
+            }
+
+            if (fragment) {
+                model.deleteContent(selection);
+            }
+            model.insertContent(details);
+            newDetails = details;
 
             // Place the cursor inside the summary so the user can immediately type a title.
-            writer.setSelection(summaryEl, 0);
+            writer.setSelection(summary, 0);
         });
 
         // The editing downcast renders <details> closed by default so loaded documents
