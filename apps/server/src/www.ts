@@ -1,4 +1,4 @@
-import { getMessagingProvider, getPlatform, utils } from "@triliumnext/core";
+import { app_info as appInfo, getMessagingProvider, getPlatform, utils } from "@triliumnext/core";
 import type { Express } from "express";
 import fs from "fs";
 import http from "http";
@@ -6,7 +6,6 @@ import https from "https";
 import tmp from "tmp";
 
 import buildApp from "./app.js";
-import appInfo from "./services/app_info.js";
 import config from "./services/config.js";
 import { registerOcrHandlers } from "./services/handlers.js";
 import host from "./services/host.js";

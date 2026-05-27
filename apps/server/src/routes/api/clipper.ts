@@ -1,10 +1,9 @@
-import { attribute_formatter as attributeFormatter, attributes as attributeService, cloning as cloneService, date_notes as dateNoteService, date_utils as dateUtils, sanitize, ValidationError, ws } from "@triliumnext/core";
+import { app_info as appInfo, attribute_formatter as attributeFormatter, attributes as attributeService, cloning as cloneService, date_notes as dateNoteService, date_utils as dateUtils, sanitize, ValidationError, ws } from "@triliumnext/core";
 import type { Request } from "express";
 import { parse } from "node-html-parser";
 import path from "path";
 
 import type BNote from "../../becca/entities/bnote.js";
-import appInfo from "../../services/app_info.js";
 import imageService from "../../services/image.js";
 import log from "../../services/log.js";
 import noteService from "../../services/notes.js";
