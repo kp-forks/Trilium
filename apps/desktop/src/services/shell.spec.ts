@@ -9,7 +9,7 @@ import {
     validateOpenExternalUrl,
     validateOpenFileUrl,
     validateOpenPath
-} from "./shell_validators.js";
+} from "./shell.js";
 
 //#region validateOpenCustomPath
 

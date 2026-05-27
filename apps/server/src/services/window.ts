@@ -1,25 +1,16 @@
-import { execFile } from "child_process";
 import { type App, type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
 import url from "url";
 
 import app_info from "./app_info.js";
 import cls from "./cls.js";
-import dataDirs from "./data_dir.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
 import optionService from "./options.js";
 import { initPrintingHandlers } from "./printing.js";
 import { RESOURCE_DIR } from "./resource_dir.js";
-import {
-    validateDownloadUrl,
-    validateOpenCustomPath,
-    validateOpenExternalUrl,
-    validateOpenFileUrl,
-    validateOpenPath
-} from "./shell_validators.js";
 import sqlInit from "./sql_init.js";
-import utils, { isDev, isMac, isWindows } from "./utils.js";
+import { isDev, isMac, isWindows } from "./utils.js";
 
 const PRELOAD_SCRIPT = path.resolve(
     isDev
@@ -211,95 +202,6 @@ electron.ipcMain.on("web-contents-action", (event, action: string, text?: string
         case "paste": wc.paste(); break;
         case "pasteAndMatchStyle": wc.pasteAndMatchStyle(); break;
         case "insertText": if (text) wc.insertText(text); break;
-    }
-});
-
-electron.ipcMain.on("open-external", (_event, url: string) => {
-    try {
-        const validated = validateOpenExternalUrl(url);
-        electron.shell.openExternal(validated.toString());
-    } catch (e) {
-        log.error(`open-external failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
-    }
-});
-
-electron.ipcMain.handle("open-path", (_event, filePath: string) => {
-    try {
-        const resolved = validateOpenPath(filePath, dataDirs.TRILIUM_DATA_DIR, dataDirs.TMP_DIR);
-        return electron.shell.openPath(resolved);
-    } catch (e) {
-        log.error(`open-path failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
-        return utils.safeExtractMessageAndStackFromError(e);
-    }
-});
-
-electron.ipcMain.handle("open-file-url", (_event, fileUrl: string) => {
-    try {
-        const filePath = validateOpenFileUrl(fileUrl);
-        return electron.shell.openPath(filePath);
-    } catch (e) {
-        log.error(`open-file-url failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
-        return utils.safeExtractMessageAndStackFromError(e);
-    }
-});
-
-electron.ipcMain.on("download-url", (event, downloadUrl: string) => {
-    try {
-        const validated = validateDownloadUrl(downloadUrl, event.sender.getURL());
-        event.sender.downloadURL(validated.toString());
-    } catch (e) {
-        log.error(`download-url failed: ${utils.safeExtractMessageAndStackFromError(e)}`);
-    }
-});
-
-electron.ipcMain.on("open-custom", (_event, filePath: string) => {
-    // Defense in depth: validate the path is one the server itself wrote into
-    // Trilium's tmp dir via /api/.../save-to-tmp-dir, and that it exists.
-    // Without this, a compromised renderer (e.g. via XSS) could ask us to
-    // launch arbitrary local files.
-    const resolved = validateOpenCustomPath(filePath, dataDirs.TMP_DIR);
-
-    const platform = process.platform;
-
-    if (platform === "linux") {
-        const terminals = ["x-terminal-emulator", "gnome-terminal", "konsole", "xterm", "xfce4-terminal", "mate-terminal", "rxvt", "terminator", "terminology"];
-
-        // The terminal's `-e` argument is reparsed by the terminal's own shell,
-        // so the path must be POSIX single-quoted before interpolation.
-        const sqQuote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
-        const innerCommand = `mimeopen -d ${sqQuote(resolved)}`;
-
-        const tryTerminal = (index: number) => {
-            if (index >= terminals.length) {
-                log.error("open-custom: no terminal emulator found");
-                electron.shell.openPath(resolved);
-                return;
-            }
-            const terminal = terminals[index];
-            execFile(terminal, ["-e", innerCommand], (err) => {
-                if (err) {
-                    log.info(`open-custom: ${terminal} failed: ${err.message}`);
-                    tryTerminal(index + 1);
-                }
-            });
-        };
-        tryTerminal(0);
-    } else if (platform === "win32") {
-        const winPath = resolved.replace(/\//g, "\\");
-        // OpenAs_RunDLL doesn't strip surrounding quotes from its arg, so we
-        // must NOT let Node quote the path on our behalf. windowsVerbatimArguments
-        // is safe here: CreateProcess passes the command line to rundll32 without
-        // any shell interpretation (so `&` is inert), and the path is validated
-        // above to live inside dataDirs.TMP_DIR with a sanitize-filename'd basename
-        // (so it cannot contain quotes or other rundll32-confusing characters).
-        execFile("rundll32.exe", ["shell32.dll,OpenAs_RunDLL", winPath], { windowsVerbatimArguments: true }, (err) => {
-            if (err) {
-                log.error(`open-custom: rundll32 failed: ${err.message}`);
-                electron.shell.openPath(resolved);
-            }
-        });
-    } else {
-        electron.shell.openPath(resolved);
     }
 });
 
