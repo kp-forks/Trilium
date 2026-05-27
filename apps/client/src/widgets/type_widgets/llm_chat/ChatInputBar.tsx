@@ -14,7 +14,7 @@ import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
 import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
-import { retryImageOnError } from "./retry_image.js";
+import { SafeImage } from "./retry_image.js";
 import { useChatAttachments } from "./useChatAttachments.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
 
@@ -69,11 +69,16 @@ function htmlToPlainText(html: string): string {
     });
     // Two-space + newline = markdown hard line break (preserves shift+Enter).
     container.querySelectorAll("br").forEach((br) => br.replaceWith("  \n"));
-    const blocks = Array.from(container.children) as HTMLElement[];
-    if (blocks.length === 0) {
-        return (container.textContent ?? "").trim();
-    }
-    return blocks.map((b) => b.textContent ?? "").join("\n\n").trim();
+    // Iterate over all child nodes (not just element children) so top-level
+    // text nodes — text not wrapped in a block element — aren't silently dropped.
+    const parts: string[] = [];
+    container.childNodes.forEach((node) => {
+        const text = (node.textContent ?? "").trim();
+        if (text) {
+            parts.push(text);
+        }
+    });
+    return parts.join("\n\n");
 }
 
 interface ChatInputBarProps {
@@ -240,7 +245,7 @@ export default function ChatInputBar({
                             title={att.title}
                         >
                             {att.type === "image" ? (
-                                <img src={att.url} alt={att.title} onError={retryImageOnError} />
+                                <SafeImage src={att.url} alt={att.title} />
                             ) : (
                                 <div className="llm-chat-attachment-file">
                                     <span className={`bx ${att.type === "file" ? "bxs-file-pdf" : "bxs-file-blank"} llm-chat-attachment-file-icon`} />

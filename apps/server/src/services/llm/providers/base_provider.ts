@@ -61,52 +61,63 @@ function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePa
     if (part.type === "text") {
         return { type: "text", text: part.text };
     }
-    const attachment = becca.getAttachment(part.attachmentId);
-    if (!attachment) {
-        log.error(`LLM message references missing attachment ${part.attachmentId}`);
-        return null;
-    }
-    if (!attachment.isContentAvailable()) {
-        log.error(`LLM message references protected attachment ${part.attachmentId} without an unlocked session`);
-        return null;
-    }
-    if (part.type === "image") {
-        const mime = part.mime || attachment.mime;
-        // SVG isn't accepted by any major provider's vision input, but every
-        // LLM is fluent in SVG markup — send the XML source as a text part so
-        // the model can actually read and reason about it.
-        if (mime === "image/svg+xml") {
-            const filename = attachment.title || "image.svg";
-            const text = decodeUtf8(attachment.getContent());
+    try {
+        const attachment = becca.getAttachment(part.attachmentId);
+        if (!attachment) {
+            log.error(`LLM message references missing attachment ${part.attachmentId}`);
+            return null;
+        }
+        if (!attachment.isContentAvailable()) {
+            log.error(`LLM message references protected attachment ${part.attachmentId} without an unlocked session`);
+            return null;
+        }
+        // Read attachment bytes once — `getContent()` hits the blob store and
+        // (for protected attachments) decrypts, so callers shouldn't repeat it.
+        const content = attachment.getContent();
+        if (part.type === "image") {
+            const mime = part.mime || attachment.mime;
+            // SVG isn't accepted by any major provider's vision input, but every
+            // LLM is fluent in SVG markup — send the XML source as a text part so
+            // the model can actually read and reason about it.
+            if (mime === "image/svg+xml") {
+                const filename = attachment.title || "image.svg";
+                const text = decodeUtf8(content);
+                return {
+                    type: "text",
+                    text: `<file name="${filename}">\n${text}\n</file>`
+                };
+            }
             return {
-                type: "text",
-                text: `<file name="${filename}">\n${text}\n</file>`
+                type: "image",
+                image: content,
+                mediaType: mime
             };
         }
+        if (part.type === "file") {
+            return {
+                type: "file",
+                data: content,
+                mediaType: part.mime || attachment.mime,
+                filename: part.filename || attachment.title
+            };
+        }
+        // type === "text_attachment" — decode the bytes and wrap in a labelled
+        // XML-style block. Anthropic recommends this shape and other providers
+        // handle it fine; the filename gives the model context about what it's
+        // reading without needing provider-specific file APIs.
+        const filename = part.filename || attachment.title;
+        const text = decodeUtf8(content);
         return {
-            type: "image",
-            image: attachment.getContent(),
-            mediaType: mime
+            type: "text",
+            text: `<file name="${filename}">\n${text}\n</file>`
         };
+    } catch (err) {
+        // A single unreadable attachment (corrupt blob, decryption failure,
+        // invalid UTF-8) shouldn't crash the whole chat turn — drop the part
+        // and log so the rest of the message still reaches the model.
+        log.error(`Failed to resolve message part for attachment ${part.attachmentId}: ${err}`);
+        return null;
     }
-    if (part.type === "file") {
-        return {
-            type: "file",
-            data: attachment.getContent(),
-            mediaType: part.mime || attachment.mime,
-            filename: part.filename || attachment.title
-        };
-    }
-    // type === "text_attachment" — decode the bytes and wrap in a labelled
-    // XML-style block. Anthropic recommends this shape and other providers
-    // handle it fine; the filename gives the model context about what it's
-    // reading without needing provider-specific file APIs.
-    const filename = part.filename || attachment.title;
-    const text = decodeUtf8(attachment.getContent());
-    return {
-        type: "text",
-        text: `<file name="${filename}">\n${text}\n</file>`
-    };
 }
 
 /**
