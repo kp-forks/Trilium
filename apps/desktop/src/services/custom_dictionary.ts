@@ -1,10 +1,9 @@
-import type { Session } from "electron";
-
-import becca from "../becca/becca.js";
-import cls from "./cls.js";
-import log from "./log.js";
+import { becca, cls, options as optionService, sql_init } from "@triliumnext/core";
+import log from "@triliumnext/server/src/services/log.js";
+import electron, { type Session } from "electron";
 
 const DICTIONARY_NOTE_ID = "_customDictionary";
+const loadedSessions = new WeakSet<Session>();
 
 /**
  * Reads the custom dictionary words from the hidden note.
@@ -31,7 +30,7 @@ function getWords(): Set<string> {
  * Saves the given words to the custom dictionary note, one per line.
  */
 function saveWords(words: Set<string>) {
-    cls.init(() => {
+    cls.getContext().init(() => {
         const note = becca.getNote(DICTIONARY_NOTE_ID);
         if (!note) {
             log.error("Custom dictionary note not found.");
@@ -67,7 +66,7 @@ function clearFromLocalDictionary(session: Session, localWords: string[]) {
  * Loads the custom dictionary into Electron's spellchecker session,
  * performing a one-time import of locally stored words on first use.
  */
-async function loadForSession(session: Session) {
+export async function loadForSession(session: Session) {
     const note = becca.getNote(DICTIONARY_NOTE_ID);
     if (!note) {
         log.error("Custom dictionary note not found.");
@@ -105,9 +104,30 @@ async function loadForSession(session: Session) {
     }
 }
 
-export default {
-    getWords,
-    saveWords,
-    addWord,
-    loadForSession
-};
+/**
+ * Arms the custom dictionary to sync into every spellcheck-enabled renderer
+ * session as it comes online, and to persist words the user accepts via the
+ * renderer's context menu.
+ *
+ * Skipping while the DB is uninitialised avoids touching options/becca during
+ * the setup wizard. The per-session WeakSet guard plus the shared session for
+ * print windows mean repeated `web-contents-created` events (extra windows,
+ * print preview) don't re-sync.
+ */
+export function setupCustomDictionary() {
+    electron.app.on("web-contents-created", (_event, webContents) => {
+        if (!sql_init.isDbInitialized()) return;
+        if (!optionService.getOptionBool("spellCheckEnabled")) return;
+        const session = webContents.session;
+        if (loadedSessions.has(session)) return;
+        loadedSessions.add(session);
+        loadForSession(session).catch(err =>
+            log.error(`Failed to load custom dictionary for spellcheck: ${err}`)
+        );
+    });
+
+    electron.ipcMain.on("add-word-to-dictionary", (event, word: string) => {
+        event.sender.session.addWordToSpellCheckerDictionary(word);
+        addWord(word);
+    });
+}

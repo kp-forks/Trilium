@@ -5,7 +5,6 @@ import url from "url";
 
 import app_info from "./app_info.js";
 import cls from "./cls.js";
-import customDictionary from "./custom_dictionary.js";
 import dataDirs from "./data_dir.js";
 import keyboardActionsService from "./keyboard_actions.js";
 import log from "./log.js";
@@ -131,11 +130,6 @@ electron.ipcMain.on("toggle-all-windows", () => {
     for (const win of windows) {
         win[action]();
     }
-});
-
-electron.ipcMain.on("add-word-to-dictionary", (event, word: string) => {
-    event.sender.session.addWordToSpellCheckerDictionary(word);
-    customDictionary.addWord(word);
 });
 
 electron.ipcMain.on("get-available-spellchecker-languages", (event) => {
@@ -483,8 +477,6 @@ function setupSpellcheckForSession(session: Session) {
             .map((code) => code.trim());
 
         session.setSpellCheckerLanguages(languageCodes);
-        customDictionary.loadForSession(session)
-            .catch(err => log.error(`Failed to load custom dictionary for spellcheck: ${err}`));
     }
 }
 

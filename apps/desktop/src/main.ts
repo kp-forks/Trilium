@@ -24,6 +24,7 @@ import { PRODUCT_NAME } from "./app-info";
 import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
 import { registerTriliumAppScheme } from "./protocol";
+import { setupCustomDictionary } from "./services/custom_dictionary";
 import { setupSystemTray } from "./services/tray";
 
 async function main() {
@@ -91,6 +92,7 @@ async function main() {
     });
 
     setupSystemTray();
+    setupCustomDictionary();
 
     app.on("will-quit", () => {
         globalShortcut.unregisterAll();

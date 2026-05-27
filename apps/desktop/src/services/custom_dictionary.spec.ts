@@ -1,23 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import becca from "../becca/becca.js";
-import { buildNote } from "../test/becca_easy_mocking.js";
-import customDictionary from "./custom_dictionary.js";
+import { becca, becca_easy_mocking } from "@triliumnext/core";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./log.js", () => ({
+import * as customDictionary from "./custom_dictionary.js";
+
+const { buildNote } = becca_easy_mocking;
+
+vi.mock("@triliumnext/server/src/services/log.js", () => ({
     default: {
         info: vi.fn(),
         error: vi.fn()
-    }
-}));
-
-vi.mock("./sql.js", () => ({
-    default: {
-        transactional: (cb: Function) => cb(),
-        execute: () => {},
-        replace: () => {},
-        getMap: () => {},
-        getValue: () => null,
-        upsert: () => {}
     }
 }));
 
