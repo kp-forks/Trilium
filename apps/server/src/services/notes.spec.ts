@@ -1,9 +1,10 @@
-import { BAttribute } from "@triliumnext/core";
+import { BAttribute, becca_easy_mocking } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import becca from "../becca/becca.js";
-import { buildNote } from "../test/becca_easy_mocking.js";
 import { randomString } from "./utils.js";
 import { checkImageAttachments, findBookmarks, findLlmChatLinks, saveLinks } from "./notes.js";
+
+const { buildNote } = becca_easy_mocking;
 
 vi.mock("./sql.js", () => ({
     default: {

@@ -4,11 +4,10 @@
  * Protected session routes (loginToProtectedSession, logoutFromProtectedSession,
  * touchProtectedSession) are now in core and registered via buildSharedApiRoutes.
  */
-import { date_utils as dateUtils, getInstanceId } from "@triliumnext/core";
+import { date_utils as dateUtils, getInstanceId, password_encryption as passwordEncryptionService } from "@triliumnext/core";
 import type { Request } from "express";
 
 import appInfo from "../../services/app_info.js";
-import passwordEncryptionService from "../../services/encryption/password_encryption.js";
 import recoveryCodeService from "../../services/encryption/recovery_codes";
 import etapiTokenService from "../../services/etapi_tokens.js";
 import options from "../../services/options.js";
