@@ -1,4 +1,4 @@
-import { NotFoundError, routes, ValidationError } from "@triliumnext/core";
+import { entity_changes as entityChangesService, NotFoundError, routes, ValidationError } from "@triliumnext/core";
 import express, { type RequestHandler } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 import multer from "multer";
@@ -6,7 +6,6 @@ import multer from "multer";
 import { namespace } from "../cls_provider.js";
 import auth from "../services/auth.js";
 import cls from "../services/cls.js";
-import entityChangesService from "../services/entity_changes.js";
 import log from "../services/log.js";
 import sql from "../services/sql.js";
 import { safeExtractMessageAndStackFromError } from "../services/utils.js";

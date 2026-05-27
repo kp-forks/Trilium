@@ -69,7 +69,7 @@ export default async function startTriliumServer(): Promise<Express> {
         messaging.init(httpServer, sessionParser);
     }
 
-    const ws = (await import("./services/ws.js")).default;
+    const { ws } = await import("@triliumnext/core");
     ws.init();
 
     registerOcrHandlers();

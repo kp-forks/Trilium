@@ -1,5 +1,5 @@
-import noteTypeService from "../services/note_types.js";
-import dateUtils from "../services/date_utils.js";
+import { date_utils as dateUtils, note_types as noteTypeService } from "@triliumnext/core";
+
 import becca from "../becca/becca.js";
 
 function mandatory(obj: unknown) {

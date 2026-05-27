@@ -1,20 +1,14 @@
-import { sanitize, ValidationError } from "@triliumnext/core";
+import { attribute_formatter as attributeFormatter, attributes as attributeService, cloning as cloneService, date_notes as dateNoteService, date_utils as dateUtils, sanitize, ValidationError, ws } from "@triliumnext/core";
 import type { Request } from "express";
 import { parse } from "node-html-parser";
 import path from "path";
 
 import type BNote from "../../becca/entities/bnote.js";
 import appInfo from "../../services/app_info.js";
-import attributeFormatter from "../../services/attribute_formatter.js";
-import attributeService from "../../services/attributes.js";
-import cloneService from "../../services/cloning.js";
-import dateNoteService from "../../services/date_notes.js";
-import dateUtils from "../../services/date_utils.js";
 import imageService from "../../services/image.js";
 import log from "../../services/log.js";
 import noteService from "../../services/notes.js";
 import utils from "../../services/utils.js";
-import ws from "../../services/ws.js";
 
 interface Image {
     src: string;

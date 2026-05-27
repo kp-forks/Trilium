@@ -62,7 +62,7 @@ describe('WebSocket Service', () => {
         log = (await import('./log.js')).default;
 
         // Import service after mocks are set up
-        wsService = (await import('./ws.js')).default;
+        wsService = (await import('@triliumnext/core')).ws;
     });
 
     afterEach(() => {

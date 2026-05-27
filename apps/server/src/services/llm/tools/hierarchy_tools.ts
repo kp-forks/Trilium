@@ -2,12 +2,12 @@
  * LLM tools for navigating the note hierarchy (tree structure, branches).
  */
 
+import { cloning as cloningService } from "@triliumnext/core";
 import { z } from "zod";
 
 import becca from "../../../becca/becca.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import branchService from "../../branches.js";
-import cloningService from "../../cloning.js";
 import { PROTECTED_SYSTEM_NOTES } from "./helpers.js";
 import { defineTools } from "./tool_registry.js";
 

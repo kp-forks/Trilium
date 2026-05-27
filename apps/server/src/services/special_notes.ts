@@ -1,9 +1,8 @@
 import { SaveLlmChatResponse } from "@triliumnext/commons";
+import { date_notes as dateNoteService, date_utils as dateUtils } from "@triliumnext/core";
 import { t } from "i18next";
 
 import becca from "../becca/becca.js";
-import dateNoteService from "./date_notes.js";
-import dateUtils from "./date_utils.js";
 import hoistedNoteService from "./hoisted_note.js";
 import noteService from "./notes.js";
 import SearchContext from "./search/search_context.js";

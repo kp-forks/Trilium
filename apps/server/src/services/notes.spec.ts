@@ -1,8 +1,8 @@
+import { BAttribute } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import becca from "../becca/becca.js";
 import { buildNote } from "../test/becca_easy_mocking.js";
 import { randomString } from "./utils.js";
-import BAttribute from "../becca/entities/battribute.js";
 import { checkImageAttachments, findBookmarks, findLlmChatLinks, saveLinks } from "./notes.js";
 
 vi.mock("./sql.js", () => ({

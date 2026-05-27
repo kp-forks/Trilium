@@ -1,5 +1,5 @@
 import { extractYouTubeVideoId, renderSpreadsheetToHtml, renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons";
-import { icon_packs as iconPackService, sanitize, task_states, utils } from "@triliumnext/core";
+import { type BAttachment, icon_packs as iconPackService, sanitize, task_states, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
@@ -9,7 +9,6 @@ import { HTMLElement, Options, parse, TextNode } from "node-html-parser";
 import { join } from "path";
 
 import becca from "../becca/becca.js";
-import BAttachment from '../becca/entities/battachment.js';
 import type BBranch from "../becca/entities/bbranch.js";
 import BNote from "../becca/entities/bnote.js";
 import assetPath, { assetUrlFragment } from "../services/asset_path.js";

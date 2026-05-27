@@ -9,7 +9,7 @@ import passwordService from "./encryption/password.js";
 import totp from "./totp.js";
 import openID from "./open_id.js";
 import options from "./options.js";
-import attributes from "./attributes.js";
+import { attributes } from "@triliumnext/core";
 import type { NextFunction, Request, Response } from "express";
 
 let noAuthentication = false;

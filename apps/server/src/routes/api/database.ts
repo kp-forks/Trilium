@@ -1,12 +1,11 @@
 import { BackupDatabaseNowResponse, DatabaseCheckIntegrityResponse } from "@triliumnext/commons";
-import { becca_loader, getBackup, ValidationError } from "@triliumnext/core";
+import { becca_loader, consistency_checks as consistencyChecksService, getBackup, ValidationError } from "@triliumnext/core";
 import type { Request, Response } from "express";
 import fs, { readFileSync } from "fs";
 import path from "path";
 
 import { getIntegrationTestDbPath } from "../../core_assets.js";
 import anonymizationService from "../../services/anonymization.js";
-import consistencyChecksService from "../../services/consistency_checks.js";
 import dataDir from "../../services/data_dir.js";
 import log from "../../services/log.js";
 import sql from "../../services/sql.js";

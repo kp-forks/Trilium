@@ -1,10 +1,9 @@
 "use strict";
 
-import type { ExecOpts, RequestProvider } from "@triliumnext/core";
+import { type ExecOpts, type RequestProvider, sync_options as syncOptions } from "@triliumnext/core";
 import url from "url";
 
 import log from "./log.js";
-import syncOptions from "./sync_options.js";
 
 // this service provides abstraction over node's HTTP/HTTPS modules.
 // Subclasses (e.g. apps/desktop's ElectronRequestProvider) can override
