@@ -32,6 +32,8 @@
 
 .llm-chat-message-user {
     background: var(--accented-background-color);
+    max-width: 85%;
+    margin-left: auto;
 }
 
 .llm-chat-message-content {
