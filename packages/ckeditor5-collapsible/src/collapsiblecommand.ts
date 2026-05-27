@@ -76,6 +76,9 @@ export default class CollapsibleCommand extends Command {
         // start collapsed. Open the freshly-inserted one so the user can type into its
         // body without an extra click. Deferred so the view has had a chance to render.
         setTimeout(() => {
+            // Editor may have been torn down between execute and this tick (e.g. tab
+            // switch in Trilium); accessing `editor.editing` after destroy throws.
+            if ((editor as any).state === "destroyed") return;
             const view = editor.editing.mapper.toViewElement(newDetails);
             const dom = view ? editor.editing.view.domConverter.viewToDom(view) : null;
             if (dom instanceof HTMLDetailsElement) {

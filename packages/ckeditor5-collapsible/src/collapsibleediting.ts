@@ -21,6 +21,9 @@ export default class CollapsibleEditing extends Plugin {
         return [Enter, Delete] as const;
     }
 
+    private _keydownListener?: (event: KeyboardEvent) => void;
+    private _toggleListener?: (event: Event) => void;
+
     public init(): void {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
         this._registerSchema();
@@ -29,6 +32,15 @@ export default class CollapsibleEditing extends Plugin {
         this._registerClickHandler();
         this._registerDomListeners();
         this._registerPostFixers();
+    }
+
+    public override destroy(): void {
+        const domRoot = this.editor.editing.view.getDomRoot();
+        if (domRoot) {
+            if (this._keydownListener) domRoot.removeEventListener("keydown", this._keydownListener, true);
+            if (this._toggleListener) domRoot.removeEventListener("toggle", this._toggleListener, true);
+        }
+        super.destroy();
     }
 
     // -----------------------------------------------------------------
@@ -351,10 +363,12 @@ export default class CollapsibleEditing extends Plugin {
             // DOM-level keydown for Ctrl+Enter and ArrowDown. View-event listeners
             // are unreliable when the caret is inside attribute elements (links,
             // formatted text, …); DOM capture phase always fires.
-            domRoot.addEventListener("keydown", (event: KeyboardEvent) => this._onDomKeydown(event), true);
+            this._keydownListener = (event: KeyboardEvent) => this._onDomKeydown(event);
             // Move the caret out of a body that's about to be hidden by collapse.
             // (toggle does not bubble — capture phase.)
-            domRoot.addEventListener("toggle", (event: Event) => this._onDetailsToggle(event), true);
+            this._toggleListener = (event: Event) => this._onDetailsToggle(event);
+            domRoot.addEventListener("keydown", this._keydownListener, true);
+            domRoot.addEventListener("toggle", this._toggleListener, true);
         });
     }
 
@@ -399,14 +413,25 @@ export default class CollapsibleEditing extends Plugin {
         const detailsModel = detailsView ? editor.editing.mapper.toModelElement(detailsView as any) : null;
         if (!detailsModel) return;
 
-        const position = editor.model.document.selection.getFirstPosition();
-        if (!position || position.findAncestor("summary")) return; // not inside body
-        if (position.findAncestor("details") !== detailsModel) return;
-
         const summary = detailsModel.getChild(0);
-        if (summary?.is("element", "summary")) {
-            editor.model.change(writer => writer.setSelection(summary, "end"));
+        if (!summary?.is("element", "summary")) return;
+
+        const position = editor.model.document.selection.getFirstPosition();
+        if (!position) return;
+
+        // Already in the toggled block's own summary — caret is still visible.
+        if (position.findAncestor("summary") === summary) return;
+
+        // The caret only needs to move if it's inside the toggled details
+        // (could be many levels deep — e.g. a nested collapsible's body or its
+        // summary; both get hidden when the outer one collapses).
+        let isInside = false;
+        for (let node: any = position.parent; node; node = node.parent) {
+            if (node === detailsModel) { isInside = true; break; }
         }
+        if (!isInside) return;
+
+        editor.model.change(writer => writer.setSelection(summary, "end"));
     }
 
     // -----------------------------------------------------------------
@@ -420,34 +445,40 @@ export default class CollapsibleEditing extends Plugin {
         document.registerPostFixer(writer => this._hiddenBodyPostFixer(writer));
     }
 
-    /** Cleanup: remove orphaned <summary>, empty <details>, and empty list items. */
+    /**
+     * Cleanup invariants after every change:
+     *  - <summary> not inside <details> → remove it
+     *  - <details> with no children → remove it
+     * For inserts we walk the inserted subtree to catch orphans nested inside it.
+     * For removes we check whether the removal emptied a <details> (the removed
+     * node itself is gone; `entry.position.nodeAfter` is the node that took its
+     * place, not the removed one — never inspect it directly).
+     */
     private _structuralPostFixer(writer: any): boolean {
         const changes = this.editor.model.document.differ.getChanges();
-        let changed = false;
         for (const entry of changes) {
-            if (entry.type !== "remove" && entry.type !== "insert") continue;
-            const node: any = (entry as any).position.nodeAfter || (entry as any).position.nodeBefore;
-            if (!node?.is("element")) continue;
-
-            // Orphaned <summary> (not inside <details>) → remove.
-            for (let current: any = node; current; current = current.parent) {
-                if (!current.is("element", "summary")) continue;
-                if (!current.parent?.is("element", "details")) {
-                    writer.remove(current);
-                    changed = true;
+            if (entry.type === "insert") {
+                const node = (entry as any).position.nodeAfter;
+                if (!node || !node.is("element")) continue;
+                for (const item of writer.createRangeOn(node).getItems()) {
+                    if (item.is("element", "summary") && !item.parent?.is("element", "details")) {
+                        writer.remove(item);
+                        return true;
+                    }
+                    if (item.is("element", "details") && item.isEmpty) {
+                        writer.remove(item);
+                        return true;
+                    }
                 }
-                break;
-            }
-
-            if (node.is("element", "details") && node.isEmpty) {
-                writer.remove(node);
-                changed = true;
-            } else if (node.is("element", "listItem") && node.isEmpty) {
-                writer.remove(node);
-                changed = true;
+            } else if (entry.type === "remove") {
+                const parent = (entry as any).position.parent;
+                if (parent?.is("element", "details") && parent.isEmpty) {
+                    writer.remove(parent);
+                    return true;
+                }
             }
         }
-        return changed;
+        return false;
     }
 
     /**
