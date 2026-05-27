@@ -1786,6 +1786,7 @@
     "empty_state": "Start a conversation by typing a message below.",
     "searching_web": "Searching the web...",
     "web_search": "Web search",
+    "web_search_unavailable_gemini": "Not available on Gemini models while note access is on — Google's API does not allow combining both. Disable note access or switch to a different provider to use web search.",
     "note_tools": "Note access",
     "sources": "Sources",
     "sources_summary": "{{count}} sources from {{sites}} sites",

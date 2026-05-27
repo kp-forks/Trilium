@@ -191,6 +191,11 @@ export default function ChatInputBar({
     const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
     const currentModels = chat.availableModels.filter(m => !m.isLegacy);
     const legacyModels = chat.availableModels.filter(m => m.isLegacy);
+    // Gemini 2.x cannot combine googleSearch with function tools in a single
+    // request. When note tools are enabled on a Gemini model we silently drop
+    // web search server-side; reflect that here by disabling the toggle so the
+    // user understands the trade-off instead of seeing it mysteriously ignored.
+    const webSearchUnavailable = currentModel?.provider === "google" && chat.enableNoteTools;
     const contextWindow = currentModel?.contextWindow || 200000;
     const percentage = Math.min((chat.lastPromptTokens / contextWindow) * 100, 100);
     const isWarning = percentage > 75;
@@ -343,9 +348,10 @@ export default function ChatInputBar({
                         <FormListToggleableItem
                             icon="bx bx-globe"
                             title={t("llm_chat.web_search")}
-                            currentValue={chat.enableWebSearch}
+                            currentValue={chat.enableWebSearch && !webSearchUnavailable}
                             onChange={handleWebSearchToggle}
-                            disabled={chat.isStreaming}
+                            disabled={chat.isStreaming || webSearchUnavailable}
+                            disabledTooltip={webSearchUnavailable ? t("llm_chat.web_search_unavailable_gemini") : undefined}
                         />
                         <FormListToggleableItem
                             icon="bx bx-note"
