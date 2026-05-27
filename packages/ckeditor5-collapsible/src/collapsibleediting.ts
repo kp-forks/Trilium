@@ -101,6 +101,39 @@ export default class CollapsibleEditing extends Plugin {
             }
         });
 
+        // Keyboard shortcut: Ctrl+Enter (Cmd+Enter on Mac) inside a <summary> toggles
+        // the enclosing <details>. Attaching directly to the editing root's DOM keydown
+        // in capture phase ensures we run before any CKEditor observer can swallow it.
+        editor.on("ready", () => {
+            const domRoot = editor.editing.view.getDomRoot();
+            if (!domRoot) {
+                return;
+            }
+            domRoot.addEventListener("keydown", (event: KeyboardEvent) => {
+                if (event.key !== "Enter" || event.shiftKey || event.altKey) {
+                    return;
+                }
+                if (!event.ctrlKey && !event.metaKey) {
+                    return;
+                }
+                const summaryModel = selection.getFirstPosition()?.findAncestor("summary");
+                if (!summaryModel) {
+                    return;
+                }
+                const detailsModel = summaryModel.parent;
+                if (!detailsModel?.is("element", "details")) {
+                    return;
+                }
+                const detailsView = editor.editing.mapper.toViewElement(detailsModel);
+                const detailsDom = detailsView ? editor.editing.view.domConverter.viewToDom(detailsView) : null;
+                if (detailsDom instanceof HTMLDetailsElement) {
+                    detailsDom.open = !detailsDom.open;
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            }, true);
+        });
+
         // Suppress the native click-to-toggle on <summary> in the editor — only the
         // custom arrow above is allowed to change the open state. (The data/published
         // view keeps the native marker and click-to-toggle behavior.)
