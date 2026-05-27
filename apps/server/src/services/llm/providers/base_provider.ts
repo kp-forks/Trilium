@@ -10,7 +10,6 @@ import yaml from "js-yaml";
 
 import becca from "../../../becca/becca.js";
 import log from "../../log.js";
-import { getSkillsSummary } from "../skills/index.js";
 import { getNoteMeta,SYSTEM_PROMPT_LIMITS } from "../tools/helpers.js";
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
@@ -182,7 +181,13 @@ export abstract class BaseProvider implements LlmProvider {
         // Note tools hint
         if (config.enableNoteTools) {
             parts.push(
-                `You have access to skills that provide specialized instructions. Load a skill with the load_skill tool before performing complex operations.\n\nAvailable skills:\n${getSkillsSummary()}`
+                [
+                    `Before calling create_note (or any write tool) for Trilium-specific code or queries, you MUST call load_skill first — guessing the API produces broken code that doesn't run:`,
+                    `- Frontend code notes (mime "text/jsx" or "application/javascript;env=frontend") or render notes (type "render") → load_skill with name "frontend_scripting". Trilium uses Preact, NOT React, with imports from "trilium:preact".`,
+                    `- Backend code notes (mime "application/javascript;env=backend") → load_skill with name "backend_scripting".`,
+                    `- Search queries using boolean logic, attribute filters, relations, ordering, or regex → load_skill with name "search_syntax".`,
+                    `Loading is one cheap tool call. Skipping it wastes the user's time.`
+                ].join("\n")
             );
             parts.push(
                 `When referring to notes in your responses, use the wiki-link format [[noteId]] to create clickable internal links. Use the note ID (not the title) from tool results. The link will automatically display the note's title and icon, so don't repeat the title in your text. For example: "You can find more details in [[ZjSfLhzlqNY6]]" instead of "You can find more details in the Meeting Notes note ([[ZjSfLhzlqNY6]])".`
