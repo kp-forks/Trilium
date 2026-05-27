@@ -1,5 +1,5 @@
 import type { KeyboardActionNames } from "@triliumnext/commons";
-import { becca, becca_service, type BNote, type BRecentNote, cls, date_notes, options as optionService, utils as coreUtils } from "@triliumnext/core";
+import { becca, becca_service, type BNote, type BRecentNote, cls, date_notes, options as optionService, sql_init, utils as coreUtils } from "@triliumnext/core";
 import { getResourceDir } from "@triliumnext/server/src/services/utils.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import type { BrowserWindow, Tray } from "electron";
@@ -285,7 +285,7 @@ function changeVisibility() {
 }
 
 function createTray() {
-    if (optionService.getOptionBool("disableTray")) {
+    if (tray || optionService.getOptionBool("disableTray")) {
         return;
     }
 
@@ -303,6 +303,18 @@ function createTray() {
     i18next.on("languageChanged", updateTrayMenu);
 }
 
-export default {
-    createTray
-};
+/**
+ * Arms the system tray to appear as soon as a real (post-setup) window exists.
+ *
+ * Skipping while the DB is uninitialised avoids attaching a tray to the setup
+ * wizard, where it would block the app from quitting via "close last window".
+ * `createTray` is idempotent so subsequent windows (extra windows, the macOS
+ * "activate" re-creation path) are no-ops.
+ */
+export function setupSystemTray() {
+    electron.app.on("browser-window-created", () => {
+        if (sql_init.isDbInitialized()) {
+            createTray();
+        }
+    });
+}

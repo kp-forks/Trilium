@@ -9,7 +9,6 @@ import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import port from "@triliumnext/server/src/services/port.js";
 import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
-import { registerPostSetupRedirectHook } from "@triliumnext/server/src/routes/setup.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
@@ -25,10 +24,7 @@ import { PRODUCT_NAME } from "./app-info";
 import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
 import { registerTriliumAppScheme } from "./protocol";
-import tray from "./services/tray";
-
-// Create the tray when the setup flow completes and swaps to the main window.
-registerPostSetupRedirectHook(() => tray.createTray());
+import { setupSystemTray } from "./services/tray";
 
 async function main() {
     // Ignore EPIPE errors on stdout/stderr — these occur when the parent process
@@ -93,6 +89,8 @@ async function main() {
         console.log("Starting Electron...");
         await onReady();
     });
+
+    setupSystemTray();
 
     app.on("will-quit", () => {
         globalShortcut.unregisterAll();
@@ -223,8 +221,6 @@ async function onReady() {
                 }
             });
         }
-
-        tray.createTray();
     } else {
         getLog().banner(t("sql_init.db_not_initialized_desktop"));
         await windowService.createSetupWindow();

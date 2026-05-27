@@ -34,20 +34,6 @@ function setupPage(req: Request, res: Response) {
     });
 }
 
-type PostSetupRedirectHook = () => void | Promise<void>;
-let postSetupRedirectHook: PostSetupRedirectHook | undefined;
-
-/**
- * Lets a platform-specific layer (currently the Electron desktop app) hook in
- * after `handleElectronRedirect` has created the main window and closed the
- * setup window, e.g. to create the system tray. Lives here because setup.ts
- * is the only entry point that observes setup-completion server-side; the
- * desktop app registers the hook on startup.
- */
-export function registerPostSetupRedirectHook(hook: PostSetupRedirectHook) {
-    postSetupRedirectHook = hook;
-}
-
 async function handleElectronRedirect() {
     const windowService = (await import("../services/window.js")).default;
     const { app } = await import("electron");
@@ -55,10 +41,6 @@ async function handleElectronRedirect() {
     // Wait for the main window to be created before closing the setup window to prevent triggering `window-all-closed`.
     await windowService.createMainWindow(app);
     windowService.closeSetupWindow();
-
-    if (postSetupRedirectHook) {
-        await postSetupRedirectHook();
-    }
 }
 
 export default {
