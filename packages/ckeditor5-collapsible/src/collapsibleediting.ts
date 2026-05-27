@@ -74,6 +74,17 @@ export default class CollapsibleEditing extends Plugin {
         conversion.for("upcast").elementToElement({ view: "summary", model: "summary" });
         conversion.for("downcast").elementToElement({ model: "summary", view: "summary" });
 
+        // Helper: is this <details> currently expanded in the DOM? Defaults to true
+        // when no DOM mapping exists yet (e.g. during early renders).
+        const isDetailsOpen = (detailsModel: any): boolean => {
+            const viewEl = editor.editing.mapper.toViewElement(detailsModel);
+            if (!viewEl) {
+                return true;
+            }
+            const domEl = editor.editing.view.domConverter.viewToDom(viewEl);
+            return !(domEl instanceof HTMLDetailsElement) || domEl.open;
+        };
+
         // UX: allow up-arrow to move cursor into the last block of a collapsible from below.
         this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey", (evt, data) => {
             if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) {
@@ -90,7 +101,6 @@ export default class CollapsibleEditing extends Plugin {
                 return;
             }
 
-            // If we're at the start of a block, check if the previous sibling is a <details>.
             if (!position.isAtStart) {
                 return;
             }
@@ -100,12 +110,17 @@ export default class CollapsibleEditing extends Plugin {
                 return;
             }
 
-            // Move cursor to the last child of the details.
+            // If the target details is collapsed, land on its summary (visible) instead
+            // of inside the hidden body.
+            const target = isDetailsOpen(prevSibling)
+                ? prevSibling.getChild(prevSibling.childCount - 1)
+                : prevSibling.getChild(0);
+            if (!target?.is("element")) {
+                return;
+            }
+
             editor.model.change(writer => {
-                const lastChild = prevSibling.getChild(prevSibling.childCount - 1);
-                if (lastChild && lastChild.is("element")) {
-                    writer.setSelection(lastChild, 0);
-                }
+                writer.setSelection(target, isDetailsOpen(prevSibling) ? 0 : "end");
             });
 
             data.preventDefault();
@@ -135,13 +150,16 @@ export default class CollapsibleEditing extends Plugin {
                 return;
             }
 
-            const lastBlock = prevSibling.getChild(prevSibling.childCount - 1);
-            if (!lastBlock?.is("element")) {
+            // If the previous details is collapsed, land on its summary (visible).
+            const target = isDetailsOpen(prevSibling)
+                ? prevSibling.getChild(prevSibling.childCount - 1)
+                : prevSibling.getChild(0);
+            if (!target?.is("element")) {
                 return;
             }
 
             editor.model.change(writer => {
-                writer.setSelection(lastBlock, "end");
+                writer.setSelection(target, "end");
             });
 
             data.preventDefault();
@@ -157,6 +175,26 @@ export default class CollapsibleEditing extends Plugin {
 
             const summary = selection.getFirstPosition()?.findAncestor("summary");
             if (!summary) {
+                return;
+            }
+
+            const details = summary.parent;
+            if (!details?.is("element", "details")) {
+                return;
+            }
+
+            // If the details is collapsed, skip past it to the block after — landing in
+            // the hidden body would silently hide the caret (and trigger spurious widget
+            // toolbars for anything inside).
+            if (!isDetailsOpen(details)) {
+                const next = details.nextSibling;
+                if (next?.is("element")) {
+                    editor.model.change(writer => {
+                        writer.setSelection(next, 0);
+                    });
+                    data.preventDefault();
+                    evt.stop();
+                }
                 return;
             }
 
@@ -411,6 +449,45 @@ export default class CollapsibleEditing extends Plugin {
             } else {
                 return false;
             }
+            return true;
+        });
+
+        // Selection postfixer: never let the caret rest inside a body whose enclosing
+        // <details> is currently collapsed. Walk up to find the outermost closed details
+        // containing the position; redirect to its summary. This catches every entry path
+        // (left/right arrows, click, paste, restored selection on load, ...).
+        editor.model.document.registerPostFixer(writer => {
+            const position = editor.model.document.selection.getFirstPosition();
+            if (!position) {
+                return false;
+            }
+
+            let outermostClosed: any = null;
+            for (let node: any = position.parent; node; node = node.parent) {
+                if (!node.is?.("element", "details")) {
+                    continue;
+                }
+                const viewEl = editor.editing.mapper.toViewElement(node);
+                const domEl = viewEl ? editor.editing.view.domConverter.viewToDom(viewEl) : null;
+                if (domEl instanceof HTMLDetailsElement && !domEl.open) {
+                    outermostClosed = node;
+                }
+            }
+
+            if (!outermostClosed) {
+                return false;
+            }
+
+            const summary = outermostClosed.getChild(0);
+            if (!summary?.is("element", "summary")) {
+                return false;
+            }
+            // Already in this details' (visible) summary — nothing to do.
+            if (position.findAncestor("summary") === summary) {
+                return false;
+            }
+
+            writer.setSelection(summary, "end");
             return true;
         });
     }
