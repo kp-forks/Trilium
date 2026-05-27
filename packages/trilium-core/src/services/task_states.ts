@@ -65,7 +65,7 @@ export function createTaskStateNote(state: TaskStateDef, options: {noteId?: stri
         ignoreForbiddenParents: true
     });
 
-    const labels: Record<string, string> = {
+    const labels: Record<string, string | undefined> = {
         iconClass: state.icon,
         stateId: state.name,
         markdownSymbol: state.markdownSymbol,
@@ -168,7 +168,7 @@ function computeHue(color: string): number | undefined {
 export function generateTaskStateCss(): string {
     const rules: string[] = [];
     for (const state of getTaskStates()) {
-        if (isAnchorState(state.name) || !state.icon) {
+        if (isAnchorState(state.name) || !state.icon || !state.color) {
             continue;
         }
         const resolved = resolveIconGlyph(state.icon);
