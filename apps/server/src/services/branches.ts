@@ -1,6 +1,7 @@
-import treeService from "./tree.js";
-import sql from "./sql.js";
+import { tree as treeService } from "@triliumnext/core";
+
 import type BBranch from "../becca/entities/bbranch.js";
+import sql from "./sql.js";
 
 function moveBranchToNote(branchToMove: BBranch, targetParentNoteId: string) {
     if (branchToMove.parentNoteId === targetParentNoteId) {
