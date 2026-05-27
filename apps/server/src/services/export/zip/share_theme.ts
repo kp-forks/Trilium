@@ -1,4 +1,4 @@
-import { ExportFormat, icon_packs as iconPackService, ZipExportProvider } from "@triliumnext/core";
+import { type BNote, ExportFormat, icon_packs as iconPackService, ZipExportProvider } from "@triliumnext/core";
 import ejs from "ejs";
 import fs, { readdirSync, readFileSync } from "fs";
 import { convert as convertToText } from "html-to-text";
@@ -7,7 +7,6 @@ import { join } from "path";
 
 import becca from "../../../becca/becca";
 import type BBranch from "../../../becca/entities/bbranch.js";
-import type BNote from "../../../becca/entities/bnote.js";
 import { getClientDir, getShareThemeAssetDir } from "../../../routes/assets";
 import { getDefaultTemplatePath, readTemplate, renderNoteForExport } from "../../../share/content_renderer";
 import log from "../../log";

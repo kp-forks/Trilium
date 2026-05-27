@@ -32,7 +32,7 @@ async function main() {
 }
 
 async function setOptions() {
-    const optionsService = (await import("@triliumnext/server/src/services/options.js")).default;
+    const { options: optionsService } = await import("@triliumnext/core");
     const sql = (await import("@triliumnext/server/src/services/sql.js")).default;
 
     optionsService.setOption("eraseUnusedAttachmentsAfterSeconds", 10);

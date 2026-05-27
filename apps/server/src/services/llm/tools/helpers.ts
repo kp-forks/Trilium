@@ -2,11 +2,10 @@
  * Shared helpers for LLM tools — content conversion, metadata building, and previews.
  */
 
-import { type BAttachment, markdownExportService as markdownExport,markdownImportService as markdownImport } from "@triliumnext/core";
+import { type BAttachment, type BNote, markdownExportService as markdownExport,markdownImportService as markdownImport } from "@triliumnext/core";
 import { unwrapStringOrBuffer } from "@triliumnext/core/src/services/utils/binary.js";
 
 import becca from "../../../becca/becca.js";
-import type BNote from "../../../becca/entities/bnote.js";
 
 const CONTENT_PREVIEW_MAX_LENGTH = 500;
 const ATTACHMENT_PREVIEW_MAX_LENGTH = 200;

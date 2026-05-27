@@ -12,9 +12,8 @@
  *
  * All times are in-memory (monkeypatched getContent, no real SQL).
  */
-import { becca_mocking, search as searchService, SearchContext } from "@triliumnext/core";
+import { becca_mocking, BNote, search as searchService, SearchContext } from "@triliumnext/core";
 import { describe, it, expect, afterEach } from "vitest";
-import BNote from "../../../becca/entities/bnote.js";
 import BBranch from "../../../becca/entities/bbranch.js";
 import becca from "../../../becca/becca.js";
 
