@@ -1,7 +1,7 @@
-import { becca } from "@triliumnext/core";
-import { getProvider } from "./index.js";
-import { getLog } from "@triliumnext/core";
+import { becca, getLog } from "@triliumnext/core";
 import { t } from "i18next";
+
+import { getProvider } from "./index.js";
 
 /** Default title prefixes that indicate the note hasn't been manually renamed. */
 function hasDefaultTitle(title: string): boolean {

@@ -1,8 +1,6 @@
 import { SaveLlmChatResponse } from "@triliumnext/commons";
-import { type BNote, date_notes as dateNoteService, date_utils as dateUtils, hoisted_note as hoistedNoteService, note_service as noteService, search as searchService, SearchContext } from "@triliumnext/core";
+import { becca, type BNote, date_notes as dateNoteService, date_utils as dateUtils, hoisted_note as hoistedNoteService, note_service as noteService, search as searchService, SearchContext } from "@triliumnext/core";
 import { t } from "i18next";
-
-import { becca } from "@triliumnext/core";
 
 function createLlmChat() {
     const { note } = noteService.createNewNote({

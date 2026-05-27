@@ -50,8 +50,7 @@ async function startApplication() {
                 ws.sendTransactionEntityChangesToAllClients();
             },
             async onTransactionRollback() {
-                const cls = (await import("@triliumnext/core")).cls;
-                const { becca_loader, entity_changes } = await import("@triliumnext/core");
+                const { cls, becca_loader, entity_changes } = await import("@triliumnext/core");
 
                 const entityChangeIds = cls.getAndClearEntityChangeIds();
 

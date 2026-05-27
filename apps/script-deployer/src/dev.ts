@@ -96,9 +96,7 @@ async function deployScripts() {
         return;
     }
 
-    const becca = (await import("@triliumnext/core")).becca;
-    const cls = (await import("@triliumnext/core")).cls;
-    const { note_service: notesService } = await import("@triliumnext/core");
+    const { becca, cls, note_service: notesService } = await import("@triliumnext/core");
 
     console.log(`Deploying ${files.length} script(s)…`);
 

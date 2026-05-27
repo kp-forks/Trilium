@@ -1,6 +1,5 @@
-import { options as optionService } from "@triliumnext/core";
+import { getLog, options as optionService } from "@triliumnext/core";
 
-import { getLog } from "@triliumnext/core";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { GoogleProvider } from "./providers/google.js";
 import { OpenAiProvider } from "./providers/openai.js";
