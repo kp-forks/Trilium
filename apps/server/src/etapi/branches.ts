@@ -1,10 +1,9 @@
 import type { BranchRow } from "@triliumnext/commons";
 import type { Router } from "express";
 
-import { entity_changes as entityChangesService } from "@triliumnext/core";
+import { BBranch, entity_changes as entityChangesService } from "@triliumnext/core";
 
 import becca from "../becca/becca.js";
-import BBranch from "../becca/entities/bbranch.js";
 import eu from "./etapi_utils.js";
 import mappers from "./mappers.js";
 import v from "./validators.js";

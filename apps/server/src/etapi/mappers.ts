@@ -1,6 +1,4 @@
-import type { BAttachment, BAttribute, BNote, BRevision } from "@triliumnext/core";
-
-import type BBranch from "../becca/entities/bbranch.js";
+import type { BAttachment, BAttribute, BBranch, BNote, BRevision } from "@triliumnext/core";
 
 function mapNoteToPojo(note: BNote) {
     return {
