@@ -1,18 +1,11 @@
 import type { KeyboardActionNames } from "@triliumnext/commons";
-import { becca_service } from "@triliumnext/core";
+import { becca, becca_service, type BNote, type BRecentNote, cls, date_notes, options as optionService, utils as coreUtils } from "@triliumnext/core";
+import { getResourceDir } from "@triliumnext/server/src/services/utils.js";
+import windowService from "@triliumnext/server/src/services/window.js";
 import type { BrowserWindow, Tray } from "electron";
 import electron from "electron";
 import { default as i18next, t } from "i18next";
 import path from "path";
-
-import becca from "../becca/becca.js";
-import type BNote from "../becca/entities/bnote.js";
-import type BRecentNote from "../becca/entities/brecent_note.js";
-import cls from "./cls.js";
-import date_notes from "./date_notes.js";
-import optionService from "./options.js";
-import { getResourceDir, isDev, isMac } from "./utils.js";
-import windowService from "./window.js";
 
 let tray: Tray;
 // `mainWindow.isVisible` doesn't work with `mainWindow.show` and `mainWindow.hide` - it returns `false` when the window
@@ -21,29 +14,29 @@ const windowVisibilityMap: Record<number, boolean> = {};; // Dictionary for stor
 
 function getTrayIconPath() {
     let name: string;
-    if (isMac) {
+    if (coreUtils.isMac()) {
         name = "icon-blackTemplate";
-    } else if (isDev) {
+    } else if (coreUtils.isDev()) {
         name = "icon-purple";
     } else {
         name = "icon-color";
     }
 
     if (process.env.NODE_ENV === "development") {
-        return path.join(__dirname, "../../../desktop/src/assets/images/tray", `${name}.png`);
-    } 
+        return path.join(__dirname, "..", "assets", "images", "tray", `${name}.png`);
+    }
     return path.resolve(path.join(getResourceDir(), "assets", "images", "tray", `${name}.png`));
-    
+
 }
 
 function getIconPath(name: string) {
-    const suffix = !isMac && electron.nativeTheme.shouldUseDarkColors ? "-inverted" : "";
+    const suffix = !coreUtils.isMac() && electron.nativeTheme.shouldUseDarkColors ? "-inverted" : "";
 
     if (process.env.NODE_ENV === "development") {
-        return path.join(__dirname, "../../../desktop/src/assets/images/tray", `${name}Template${suffix}.png`);
-    } 
+        return path.join(__dirname, "..", "assets", "images", "tray", `${name}Template${suffix}.png`);
+    }
     return path.resolve(path.join(getResourceDir(), "assets", "images", "tray", `${name}Template${suffix}.png`));
-    
+
 }
 
 function registerVisibilityListener(window: BrowserWindow) {
@@ -302,7 +295,7 @@ function createTray() {
     tray.on("click", changeVisibility);
     updateTrayMenu();
 
-    if (!isMac) {
+    if (!coreUtils.isMac()) {
         // macOS uses template icons which work great on dark & light themes.
         electron.nativeTheme.on("updated", updateTrayMenu);
     }
