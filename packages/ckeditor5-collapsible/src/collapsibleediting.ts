@@ -343,6 +343,23 @@ export default class CollapsibleEditing extends Plugin {
                 return;
             }
 
+            // Collapsed: drop a new paragraph after the whole block (or reuse one if
+            // there's already an empty paragraph there) — entering the hidden body
+            // would silently lose the caret.
+            if (!isDetailsOpen(details)) {
+                editor.model.change(writer => {
+                    const next = details.nextSibling;
+                    if (next?.is("element", "paragraph") && next.isEmpty) {
+                        writer.setSelection(next, 0);
+                    } else {
+                        const newParagraph = writer.createElement("paragraph");
+                        writer.insert(newParagraph, writer.createPositionAfter(details));
+                        writer.setSelection(newParagraph, 0);
+                    }
+                });
+                return;
+            }
+
             const firstBodyBlock = summary.nextSibling;
             if (firstBodyBlock && firstBodyBlock.is("element")) {
                 editor.model.change(writer => {
