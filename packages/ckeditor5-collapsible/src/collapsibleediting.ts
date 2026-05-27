@@ -157,6 +157,13 @@ export default class CollapsibleEditing extends Plugin {
                     return;
                 }
 
+                // If the title wraps onto multiple visual lines and the caret isn't on
+                // the last one yet, let native arrow navigation move within the summary.
+                const dom = summaryDom(summaryModel);
+                if (dom && !isCaretOnLastVisualLine(dom)) {
+                    return;
+                }
+
                 let target: any;
                 if (!isDetailsOpen(detailsModel)) {
                     target = detailsModel.nextSibling;
@@ -199,6 +206,29 @@ export default class CollapsibleEditing extends Plugin {
             }
             const domEl = editor.editing.view.domConverter.viewToDom(viewEl);
             return !(domEl instanceof HTMLDetailsElement) || domEl.open;
+        };
+
+        // Helpers: detect whether the caret is on the first/last *visual* line of a
+        // wrapped element. Used to avoid hijacking up/down arrows when the cursor
+        // still has somewhere to go within a multi-line summary.
+        const isCaretOnFirstVisualLine = (dom: HTMLElement): boolean => {
+            const sel = dom.ownerDocument.defaultView?.getSelection();
+            if (!sel || sel.rangeCount === 0) return true;
+            const caretRect = sel.getRangeAt(0).getBoundingClientRect();
+            const lineHeight = parseFloat(dom.ownerDocument.defaultView!.getComputedStyle(dom).lineHeight) || 16;
+            return caretRect.top < dom.getBoundingClientRect().top + lineHeight / 2;
+        };
+        const isCaretOnLastVisualLine = (dom: HTMLElement): boolean => {
+            const sel = dom.ownerDocument.defaultView?.getSelection();
+            if (!sel || sel.rangeCount === 0) return true;
+            const caretRect = sel.getRangeAt(0).getBoundingClientRect();
+            const lineHeight = parseFloat(dom.ownerDocument.defaultView!.getComputedStyle(dom).lineHeight) || 16;
+            return caretRect.bottom > dom.getBoundingClientRect().bottom - lineHeight / 2;
+        };
+        const summaryDom = (summaryModel: any): HTMLElement | null => {
+            const view = editor.editing.mapper.toViewElement(summaryModel);
+            const dom = view ? editor.editing.view.domConverter.viewToDom(view) : null;
+            return dom instanceof HTMLElement ? dom : null;
         };
 
         // UX: allow up-arrow to move cursor into the last block of a collapsible from below.
@@ -258,6 +288,13 @@ export default class CollapsibleEditing extends Plugin {
 
             const details = summary.parent;
             if (!details?.is("element", "details")) {
+                return;
+            }
+
+            // Multi-line title: if the caret isn't on the first visual line yet, let
+            // native arrow navigation move within the summary.
+            const dom = summaryDom(summary);
+            if (dom && !isCaretOnFirstVisualLine(dom)) {
                 return;
             }
 
