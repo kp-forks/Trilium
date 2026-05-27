@@ -70,9 +70,50 @@ export default class CollapsibleEditing extends Plugin {
             }
         });
 
-        // <summary> conversion (same in both pipelines).
+        // <summary> upcast and data downcast: plain <summary>.
         conversion.for("upcast").elementToElement({ view: "summary", model: "summary" });
-        conversion.for("downcast").elementToElement({ model: "summary", view: "summary" });
+        conversion.for("dataDowncast").elementToElement({ model: "summary", view: "summary" });
+
+        // <summary> editing downcast: prepend a custom arrow (CKEditor UIElement, so it's
+        // excluded from the data view and not editable). Clicking it manually toggles the
+        // native <details> open attribute — the only way to collapse/expand in the editor.
+        conversion.for("editingDowncast").elementToElement({
+            model: "summary",
+            view: (_modelEl, { writer }) => {
+                const summaryEl = writer.createContainerElement("summary");
+                const arrowEl = writer.createUIElement("span", { class: "trilium-collapsible-arrow" }, function (domDocument) {
+                    const span = this.toDomElement(domDocument);
+                    // mousedown preventDefault keeps the browser from placing a caret
+                    // inside the non-editable UI element.
+                    span.addEventListener("mousedown", e => e.preventDefault());
+                    span.addEventListener("click", e => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const details = span.closest("details");
+                        if (details) {
+                            details.open = !details.open;
+                        }
+                    });
+                    return span;
+                });
+                writer.insert(writer.createPositionAt(summaryEl, 0), arrowEl);
+                return summaryEl;
+            }
+        });
+
+        // Suppress the native click-to-toggle on <summary> in the editor — only the
+        // custom arrow above is allowed to change the open state. (The data/published
+        // view keeps the native marker and click-to-toggle behavior.)
+        this.listenTo(viewDocument, "click", (_evt, data: any) => {
+            let node = data.target;
+            while (node) {
+                if (node.is?.("element", "summary") && node.parent?.is("element", "details")) {
+                    data.preventDefault();
+                    return;
+                }
+                node = node.parent;
+            }
+        });
 
         // Helper: is this <details> currently expanded in the DOM? Defaults to true
         // when no DOM mapping exists yet (e.g. during early renders).

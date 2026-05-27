@@ -23,11 +23,42 @@
 }
 
 /*
- * Editing-only tweaks: while the user is editing we keep the block expanded
- * (the `open` attribute is forced by the editing downcast) and we make the
- * summary behave like a regular editable text block instead of a toggle.
+ * Editor-only tweaks: summary acts like a regular editable text block, the
+ * native disclosure marker is hidden, and the custom arrow (a CKEditor UI
+ * element inserted by the editing downcast) is the only collapse affordance.
+ * The data/published view is untouched.
  */
 
 .ck-editor__editable details.trilium-collapsible > summary {
     cursor: text;
+    list-style: none;
+    position: relative;
+    padding-left: 1.5em;
+}
+
+.ck-editor__editable details.trilium-collapsible > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* The arrow lands wherever in DOM the conversion mapper ends up putting it, but
+ * we pin it visually to the left edge of the summary with absolute positioning
+ * so the title text always reads left-to-right with the arrow first. */
+.ck-editor__editable details.trilium-collapsible > summary > .trilium-collapsible-arrow {
+    position: absolute;
+    left: 0;
+    top: 0.25em;
+    cursor: pointer;
+    user-select: none;
+    color: var(--muted-text-color, currentColor);
+    transition: transform 0.15s ease;
+    line-height: 1;
+}
+
+.ck-editor__editable details.trilium-collapsible > summary > .trilium-collapsible-arrow::before {
+    content: "▶";
+    font-size: 0.8em;
+}
+
+.ck-editor__editable details.trilium-collapsible[open] > summary > .trilium-collapsible-arrow {
+    transform: rotate(90deg);
 }
