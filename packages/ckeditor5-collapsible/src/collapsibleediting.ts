@@ -402,10 +402,12 @@ export default class CollapsibleEditing extends Plugin {
             const details = position.parent;
             const after = details.getChild(position.offset);
             const before = position.offset > 0 ? details.getChild(position.offset - 1) : null;
-            if (after && after.is("element")) {
-                writer.setSelection(after, 0);
-            } else if (before && before.is("element")) {
+            // Prefer the previous block — when the details is collapsed, the body is
+            // hidden, so landing at end-of-summary keeps the caret visible.
+            if (before && before.is("element")) {
                 writer.setSelection(before, "end");
+            } else if (after && after.is("element")) {
+                writer.setSelection(after, 0);
             } else {
                 return false;
             }
