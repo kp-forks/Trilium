@@ -112,6 +112,104 @@ export default class CollapsibleEditing extends Plugin {
             evt.stop();
         });
 
+        // UX: up-arrow inside a <summary> when the previous sibling is also a <details>
+        // jumps into the last body block of the previous one. (Native arrow nav skips
+        // over stacked <details> blocks.)
+        this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey", (evt, data) => {
+            if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) {
+                return;
+            }
+
+            const summary = selection.getFirstPosition()?.findAncestor("summary");
+            if (!summary) {
+                return;
+            }
+
+            const details = summary.parent;
+            if (!details?.is("element", "details")) {
+                return;
+            }
+
+            const prevSibling = details.previousSibling;
+            if (!prevSibling?.is("element", "details")) {
+                return;
+            }
+
+            const lastBlock = prevSibling.getChild(prevSibling.childCount - 1);
+            if (!lastBlock?.is("element")) {
+                return;
+            }
+
+            editor.model.change(writer => {
+                writer.setSelection(lastBlock, "end");
+            });
+
+            data.preventDefault();
+            evt.stop();
+        });
+
+        // UX: down-arrow inside a <summary> moves the caret into the first body block.
+        // (Native browser arrow navigation in <summary> is unreliable.)
+        this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey", (evt, data) => {
+            if (data.keyCode !== 40 || data.shiftKey || !selection.isCollapsed) {
+                return;
+            }
+
+            const summary = selection.getFirstPosition()?.findAncestor("summary");
+            if (!summary) {
+                return;
+            }
+
+            const firstBodyBlock = summary.nextSibling;
+            if (!firstBodyBlock || !firstBodyBlock.is("element")) {
+                return;
+            }
+
+            editor.model.change(writer => {
+                writer.setSelection(firstBodyBlock, 0);
+            });
+
+            data.preventDefault();
+            evt.stop();
+        });
+
+        // When the user collapses a <details> in the editor, make sure the caret isn't
+        // left stranded inside the now-hidden body — move it to the summary instead.
+        // (toggle does not bubble, so attach in capture phase.)
+        editor.on("ready", () => {
+            const domRoot = editor.editing.view.getDomRoot();
+            if (!domRoot) {
+                return;
+            }
+            domRoot.addEventListener("toggle", (event: Event) => {
+                const detailsDom = event.target as HTMLDetailsElement;
+                if (detailsDom.tagName?.toLowerCase() !== "details" || detailsDom.open) {
+                    return;
+                }
+                const detailsView = editor.editing.view.domConverter.mapDomToView(detailsDom);
+                if (!detailsView) {
+                    return;
+                }
+                const detailsModel = editor.editing.mapper.toModelElement(detailsView as any);
+                if (!detailsModel) {
+                    return;
+                }
+                const position = editor.model.document.selection.getFirstPosition();
+                if (!position || position.findAncestor("summary") || !position.findAncestor("details")) {
+                    return;
+                }
+                if (position.findAncestor("details") !== detailsModel) {
+                    return;
+                }
+                const summary = detailsModel.getChild(0);
+                if (summary?.is("element", "summary")) {
+                    editor.model.change(writer => {
+                        writer.setSelection(summary, "end");
+                    });
+                }
+            }, true);
+        });
+
         // UX: pressing Enter inside an empty summary moves the cursor into the body.
 
         this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter", (evt, data) => {
@@ -292,6 +390,26 @@ export default class CollapsibleEditing extends Plugin {
             }
 
             return changed;
+        });
+
+        // Selection postfixer: don't let the caret sit in the "gap" between <summary>
+        // and a body block — push it into the nearest block instead.
+        editor.model.document.registerPostFixer(writer => {
+            const position = editor.model.document.selection.getFirstPosition();
+            if (!position || !position.parent.is("element", "details")) {
+                return false;
+            }
+            const details = position.parent;
+            const after = details.getChild(position.offset);
+            const before = position.offset > 0 ? details.getChild(position.offset - 1) : null;
+            if (after && after.is("element")) {
+                writer.setSelection(after, 0);
+            } else if (before && before.is("element")) {
+                writer.setSelection(before, "end");
+            } else {
+                return false;
+            }
+            return true;
         });
     }
 }
