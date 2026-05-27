@@ -76,7 +76,15 @@ async function streamChat(req: Request, res: Response) {
         const userMessages = messages.filter(m => m.role === "user");
         if (userMessages.length === 1 && config.chatNoteId) {
             try {
-                await generateChatTitle(config.chatNoteId, userMessages[0].content);
+                const firstContent = userMessages[0].content;
+                // Multimodal content: title from the text parts only — image
+                // bytes are useless to the title model.
+                const firstText = typeof firstContent === "string"
+                    ? firstContent
+                    : firstContent.filter(p => p.type === "text").map(p => p.text).join("\n").trim();
+                if (firstText) {
+                    await generateChatTitle(config.chatNoteId, firstText);
+                }
             } catch (err) {
                 // Title generation is best-effort; don't fail the chat
                 log.error(`Failed to generate chat title: ${safeExtractMessageAndStackFromError(err)}`);

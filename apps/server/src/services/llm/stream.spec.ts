@@ -112,6 +112,70 @@ describe("streamToChunks", () => {
         expect(errorsOf(chunks)[0].error).toContain("No output generated");
         expect(chunks.some(c => c.type === "done")).toBe(false);
     });
+
+    it("streams tool input deltas with the same id used by the final tool-call", async () => {
+        // The AI SDK emits the JSON arguments incrementally as `tool-input-delta` chunks
+        // before the parsed `tool-call` arrives — clients use the shared id to attach
+        // each delta to the right pending tool block.
+        const chunks = await collect(fakeResult(
+            [
+                { type: "tool-input-start", id: "call_42", toolName: "search_notes" },
+                { type: "tool-input-delta", id: "call_42", delta: "{\"query\":\"" },
+                { type: "tool-input-delta", id: "call_42", delta: "trilium\"}" },
+                { type: "tool-call", toolCallId: "call_42", toolName: "search_notes", input: { query: "trilium" } },
+                { type: "tool-result", toolCallId: "call_42", toolName: "search_notes", output: "[]" }
+            ],
+            Promise.resolve({ inputTokens: 1, outputTokens: 1 })
+        ));
+
+        expect(chunks).toEqual([
+            { type: "tool_input_start", toolCallId: "call_42", toolName: "search_notes" },
+            { type: "tool_input_delta", toolCallId: "call_42", delta: "{\"query\":\"" },
+            { type: "tool_input_delta", toolCallId: "call_42", delta: "trilium\"}" },
+            {
+                type: "tool_use",
+                toolCallId: "call_42",
+                toolName: "search_notes",
+                toolInput: { query: "trilium" }
+            },
+            {
+                type: "tool_result",
+                toolCallId: "call_42",
+                toolName: "search_notes",
+                result: "[]",
+                isError: false
+            },
+            {
+                type: "usage",
+                usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2, cost: undefined, model: undefined }
+            },
+            { type: "done" }
+        ]);
+    });
+
+    it("interleaves input deltas for parallel tool calls and forwards distinct ids", async () => {
+        // Two parallel tool calls with the same name; without per-call ids the client
+        // couldn't tell whose delta belonged to whom.
+        const chunks = await collect(fakeResult(
+            [
+                { type: "tool-input-start", id: "a", toolName: "search_notes" },
+                { type: "tool-input-start", id: "b", toolName: "search_notes" },
+                { type: "tool-input-delta", id: "a", delta: "{\"query\":\"x\"}" },
+                { type: "tool-input-delta", id: "b", delta: "{\"query\":\"y\"}" },
+                { type: "tool-call", toolCallId: "a", toolName: "search_notes", input: { query: "x" } },
+                { type: "tool-call", toolCallId: "b", toolName: "search_notes", input: { query: "y" } }
+            ],
+            Promise.resolve({ inputTokens: 1, outputTokens: 1 })
+        ));
+
+        const idsByType = chunks.reduce<Record<string, string[]>>((acc, c) => {
+            if ("toolCallId" in c) (acc[c.type] ??= []).push(c.toolCallId);
+            return acc;
+        }, {});
+        expect(idsByType.tool_input_start).toEqual(["a", "b"]);
+        expect(idsByType.tool_input_delta).toEqual(["a", "b"]);
+        expect(idsByType.tool_use).toEqual(["a", "b"]);
+    });
 });
 
 describe("describeStreamError", () => {
