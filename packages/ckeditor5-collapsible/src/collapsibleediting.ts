@@ -2,16 +2,14 @@ import { Plugin, Enter, Delete, type ViewDocumentEnterEvent, type ViewDocumentDe
 import CollapsibleCommand from "./collapsiblecommand.js";
 
 /**
- * Defines the schema, conversion and basic key handling for collapsible blocks.
+ * Schema, conversion and key handling for collapsible blocks.
  *
- * Model:
- *   <details>
- *       <summary>title text</summary>
- *       …any block content (including nested <details>)…
- *   </details>
- *
- * Data view (output HTML):  <details class="trilium-collapsible"><summary>…</summary>…</details>
- * Editing view: same, but with `open` attribute so the body is always visible while editing.
+ * Model:        <details><summary>title</summary>…blocks…</details>
+ * Data view:    <details class="trilium-collapsible"><summary>…</summary>…</details>
+ * Editing view: same, plus a custom arrow UIElement in the summary for toggling.
+ *               The DOM `open` attribute is the source of truth for collapsed state
+ *               and is intentionally not persisted in the model — everything loads
+ *               collapsed; the insert command opens new blocks explicitly.
  */
 export default class CollapsibleEditing extends Plugin {
 
@@ -24,622 +22,470 @@ export default class CollapsibleEditing extends Plugin {
     }
 
     public init(): void {
-        const editor = this.editor;
-        const schema = editor.model.schema;
-        const conversion = editor.conversion;
-        const viewDocument = editor.editing.view.document;
-        const selection = editor.model.document.selection;
+        this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
+        this._registerSchema();
+        this._registerConversion();
+        this._registerKeyHandlers();
+        this._registerClickHandler();
+        this._registerDomListeners();
+        this._registerPostFixers();
+    }
 
-        editor.commands.add("collapsible", new CollapsibleCommand(editor));
+    // -----------------------------------------------------------------
+    // Schema & conversion
+    // -----------------------------------------------------------------
 
-        // Schema --------------------------------------------------------------
-
-        schema.register("details", {
-            inheritAllFrom: "$container"
-        });
-
+    private _registerSchema() {
+        const schema = this.editor.model.schema;
+        schema.register("details", { inheritAllFrom: "$container" });
         schema.register("summary", {
             allowIn: "details",
             allowContentOf: "$block",
-            // Marking as a block lets MoveBlockUpDownPlugin (and any other block-level
-            // command) resolve the caret-in-summary case to the enclosing <details>
-            // via its walk-up-to-top-level-block logic.
+            // isBlock lets MoveBlockUpDownPlugin (and other block-level commands)
+            // resolve a caret-in-summary to the enclosing <details> via its
+            // walk-up-to-top-level-block logic.
             isBlock: true
         });
+    }
 
-        // Conversion ----------------------------------------------------------
+    private _registerConversion() {
+        const conversion = this.editor.conversion;
+        const detailsView = (_m: any, { writer }: any) =>
+            writer.createContainerElement("details", { class: "trilium-collapsible" });
 
-        // <details> upcast: accept any <details>, ignore the `open` attribute.
-        conversion.for("upcast").elementToElement({
-            view: "details",
-            model: "details"
-        });
+        // <details>
+        conversion.for("upcast").elementToElement({ view: "details", model: "details" });
+        conversion.for("dataDowncast").elementToElement({ model: "details", view: detailsView });
+        conversion.for("editingDowncast").elementToElement({ model: "details", view: detailsView });
 
-        // <details> data downcast: emit a plain <details class="trilium-collapsible">.
-        conversion.for("dataDowncast").elementToElement({
-            model: "details",
-            view: (_modelElement, { writer }) => {
-                return writer.createContainerElement("details", { class: "trilium-collapsible" });
-            }
-        });
-
-        // <details> editing downcast: emit a plain <details class="trilium-collapsible">.
-        // Same as data downcast — collapsibles start collapsed on load. The insert
-        // command explicitly opens the new one after insertion so the user can edit
-        // the body immediately.
-        conversion.for("editingDowncast").elementToElement({
-            model: "details",
-            view: (_modelElement, { writer }) => {
-                return writer.createContainerElement("details", { class: "trilium-collapsible" });
-            }
-        });
-
-        // <summary> upcast and data downcast: plain <summary>.
+        // <summary>
         conversion.for("upcast").elementToElement({ view: "summary", model: "summary" });
         conversion.for("dataDowncast").elementToElement({ model: "summary", view: "summary" });
-
-        // <summary> editing downcast: prepend a custom arrow (CKEditor UIElement, so it's
-        // excluded from the data view and not editable). Clicking it manually toggles the
-        // native <details> open attribute — the only way to collapse/expand in the editor.
         conversion.for("editingDowncast").elementToElement({
             model: "summary",
-            view: (_modelEl, { writer }) => {
-                const summaryEl = writer.createContainerElement("summary");
-                const arrowEl = writer.createUIElement("span", { class: "trilium-collapsible-arrow" }, function (domDocument) {
-                    const span = this.toDomElement(domDocument);
-                    // mousedown preventDefault keeps the browser from placing a caret
-                    // inside the non-editable UI element.
-                    span.addEventListener("mousedown", e => e.preventDefault());
-                    span.addEventListener("click", e => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        const details = span.closest("details");
-                        if (details) {
-                            details.open = !details.open;
-                        }
-                    });
-                    return span;
-                });
-                writer.insert(writer.createPositionAt(summaryEl, 0), arrowEl);
-                return summaryEl;
+            view: (_m: any, { writer }: any) => this._createEditingSummary(writer)
+        });
+    }
+
+    /**
+     * Editing-view summary: a normal <summary> with a non-editable arrow UIElement
+     * prepended. Clicking the arrow toggles the native <details>; the data view
+     * doesn't include the arrow so it doesn't pollute saved HTML.
+     */
+    private _createEditingSummary(writer: any): any {
+        const summary = writer.createContainerElement("summary");
+        const arrow = writer.createUIElement("span", { class: "trilium-collapsible-arrow" }, function(this: any, domDocument: any) {
+            const span: HTMLElement = this.toDomElement(domDocument);
+            // mousedown preventDefault keeps the browser from placing a caret
+            // inside the non-editable UI element.
+            span.addEventListener("mousedown", (e: Event) => e.preventDefault());
+            span.addEventListener("click", (e: Event) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const details = span.closest("details");
+                if (details) details.open = !details.open;
+            });
+            return span;
+        });
+        writer.insert(writer.createPositionAt(summary, 0), arrow);
+        return summary;
+    }
+
+    // -----------------------------------------------------------------
+    // DOM/model bridge helpers
+    // -----------------------------------------------------------------
+
+    private _getDom<T extends Element = HTMLElement>(model: any): T | null {
+        const view = this.editor.editing.mapper.toViewElement(model);
+        const dom = view ? this.editor.editing.view.domConverter.viewToDom(view) : null;
+        return dom instanceof Element ? (dom as unknown as T) : null;
+    }
+
+    /** True if the <details> is currently expanded (or no DOM mapping yet). */
+    private _isDetailsOpen(model: any): boolean {
+        const dom = this._getDom<HTMLDetailsElement>(model);
+        return !dom || dom.open;
+    }
+
+    /** Toggle the DOM `open` attribute directly (the source of truth in this plugin). */
+    private _setDetailsOpen(model: any, open: boolean) {
+        const dom = this._getDom<HTMLDetailsElement>(model);
+        if (dom) dom.open = open;
+    }
+
+    /** Is the caret on the first ("top") or last ("bottom") visual line of `dom`? */
+    private _caretAtVisualEdge(dom: HTMLElement, edge: "top" | "bottom"): boolean {
+        const win = dom.ownerDocument.defaultView;
+        const sel = win?.getSelection();
+        if (!sel || sel.rangeCount === 0) return true;
+        const caret = sel.getRangeAt(0).getBoundingClientRect();
+        const box = dom.getBoundingClientRect();
+        const lineHeight = parseFloat(win!.getComputedStyle(dom).lineHeight) || 16;
+        return edge === "top"
+            ? caret.top < box.top + lineHeight / 2
+            : caret.bottom > box.bottom - lineHeight / 2;
+    }
+
+    /** Insert a new empty paragraph at `position` and place the caret in it. */
+    private _insertParagraphAt(writer: any, position: any): any {
+        const p = writer.createElement("paragraph");
+        writer.insert(p, position);
+        writer.setSelection(p, 0);
+        return p;
+    }
+
+    // -----------------------------------------------------------------
+    // View-event key handlers (Enter, Delete, ArrowUp)
+    // -----------------------------------------------------------------
+
+    private _registerKeyHandlers() {
+        const viewDocument = this.editor.editing.view.document;
+        this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter",
+            (evt, data) => this._onEnterInSummary(evt, data), { context: "summary" });
+        this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter",
+            (evt, data) => this._onEnterInBody(evt, data));
+        this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey",
+            (evt, data) => this._onUpArrow(evt, data));
+        this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete",
+            (evt, data) => this._onDeleteAdjacentDetails(evt, data));
+        this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete",
+            (evt, data) => this._onBackspaceInEmptySummary(evt, data), { context: "summary" });
+    }
+
+    /**
+     * Enter inside a summary:
+     *   - at start of title  → blank paragraph before the collapsible
+     *   - at end of title    → expanded: empty paragraph at start of body
+     *                          collapsed: blank paragraph after the collapsible
+     *   - anywhere else      → split the title, right side becomes the first body
+     *                          block (expand if collapsed)
+     */
+    private _onEnterInSummary(evt: any, data: any) {
+        const editor = this.editor;
+        const selection = editor.model.document.selection;
+        if (!selection.isCollapsed) return;
+
+        const position = selection.getLastPosition();
+        const summary = position?.findAncestor("summary");
+        if (!summary) return;
+
+        // Titles are single-line: always swallow Enter so it never inserts a newline.
+        data.preventDefault();
+        evt.stop();
+
+        const details = summary.parent;
+        if (!details || !details.is("element", "details")) return;
+
+        if (position!.isAtStart) {
+            editor.model.change(writer =>
+                this._insertParagraphAt(writer, writer.createPositionBefore(details)));
+            return;
+        }
+
+        if (position!.isAtEnd) {
+            editor.model.change(writer => {
+                const pos = this._isDetailsOpen(details)
+                    ? writer.createPositionAfter(summary)
+                    : writer.createPositionAfter(details);
+                this._insertParagraphAt(writer, pos);
+            });
+            return;
+        }
+
+        // Middle of title: split. Expand first so the hidden-body post-fixer doesn't
+        // snap the caret out when we drop it into the new body paragraph.
+        if (!this._isDetailsOpen(details)) {
+            this._setDetailsOpen(details, true);
+        }
+        editor.model.change(writer => {
+            const rightRange = writer.createRange(
+                writer.createPositionAt(summary, position!.offset),
+                writer.createPositionAt(summary, "end")
+            );
+            const p = writer.createElement("paragraph");
+            writer.insert(p, summary, "after");
+            writer.move(rightRange, writer.createPositionAt(p, 0));
+            writer.setSelection(p, 0);
+        });
+    }
+
+    /**
+     * Enter in an empty trailing paragraph of the body exits the collapsible
+     * (text + Enter + Enter → out — same convention as blockquote).
+     */
+    private _onEnterInBody(evt: any, data: any) {
+        const editor = this.editor;
+        const selection = editor.model.document.selection;
+        if (!selection.isCollapsed) return;
+
+        const parent = selection.getLastPosition()?.parent;
+        if (!parent || !parent.is("element") || parent.is("element", "summary")) return;
+        if (!parent.isEmpty || parent.nextSibling) return;
+
+        const details = parent.parent;
+        if (!details || !details.is("element", "details")) return;
+
+        data.preventDefault();
+        evt.stop();
+
+        editor.model.change(writer => {
+            writer.remove(parent);
+            const after = details.nextSibling;
+            if (after?.is("element", "paragraph")) {
+                writer.setSelection(after, 0);
+            } else {
+                this._insertParagraphAt(writer, writer.createPositionAfter(details));
             }
         });
+    }
 
-        // DOM-level keydown listeners (capture phase) for shortcuts that need to run
-        // before any CKEditor observer can swallow the key. View-event listeners on
-        // arrowKey/keystrokes are unreliable when the caret is inside attribute
-        // elements (links, formatted text, etc.), so we listen to the raw DOM.
-        editor.on("ready", () => {
-            const domRoot = editor.editing.view.getDomRoot();
-            if (!domRoot) {
-                return;
-            }
+    /**
+     * Up arrow:
+     *   - from inside a summary whose details has a previous-sibling details
+     *     → jump into the previous details (its last block if open, summary if closed)
+     *   - from the start of any other block whose previous sibling is a details
+     *     → jump into the previous details (same rules)
+     * Multi-line summary navigation is left to the browser via the visual-edge guard.
+     */
+    private _onUpArrow(evt: any, data: any) {
+        const selection = this.editor.model.document.selection;
+        if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) return;
 
-            // Ctrl+Enter (Cmd+Enter on Mac) inside a <summary> toggles the enclosing <details>.
-            domRoot.addEventListener("keydown", (event: KeyboardEvent) => {
-                if (event.key !== "Enter" || event.shiftKey || event.altKey) {
-                    return;
-                }
-                if (!event.ctrlKey && !event.metaKey) {
-                    return;
-                }
-                const summaryModel = selection.getFirstPosition()?.findAncestor("summary");
-                if (!summaryModel) {
-                    return;
-                }
-                const detailsModel = summaryModel.parent;
-                if (!detailsModel?.is("element", "details")) {
-                    return;
-                }
-                const detailsView = editor.editing.mapper.toViewElement(detailsModel);
-                const detailsDom = detailsView ? editor.editing.view.domConverter.viewToDom(detailsView) : null;
-                if (detailsDom instanceof HTMLDetailsElement) {
-                    detailsDom.open = !detailsDom.open;
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-            }, true);
+        const position = selection.getFirstPosition();
+        if (!position) return;
 
-            // Down-arrow inside a <summary> jumps the caret into the first body block
-            // (or skips past the whole <details> if it's collapsed). The native browser
-            // behaviour is flaky when the caret is inside formatted text — this DOM-level
-            // handler in capture phase fires regardless.
-            domRoot.addEventListener("keydown", (event: KeyboardEvent) => {
-                if (event.key !== "ArrowDown" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) {
-                    return;
-                }
-                const summaryModel = selection.getFirstPosition()?.findAncestor("summary");
-                if (!summaryModel) {
-                    return;
-                }
-                const detailsModel = summaryModel.parent;
-                if (!detailsModel?.is("element", "details")) {
-                    return;
-                }
+        const summary = position.findAncestor("summary");
+        if (summary) {
+            const details = summary.parent;
+            if (!details?.is("element", "details")) return;
+            const dom = this._getDom<HTMLElement>(summary);
+            if (dom && !this._caretAtVisualEdge(dom, "top")) return;
+            const prev = details.previousSibling;
+            if (!prev?.is("element", "details")) return;
+            this._jumpUpInto(prev, /* atOffsetZeroIfOpen */ false, evt, data);
+            return;
+        }
 
-                // If the title wraps onto multiple visual lines and the caret isn't on
-                // the last one yet, let native arrow navigation move within the summary.
-                const dom = summaryDom(summaryModel);
-                if (dom && !isCaretOnLastVisualLine(dom)) {
-                    return;
-                }
+        const block = position.parent;
+        if (!block || !block.is("element") || !position.isAtStart) return;
+        const prev = block.previousSibling;
+        if (!prev?.is("element", "details")) return;
+        this._jumpUpInto(prev, /* atOffsetZeroIfOpen */ true, evt, data);
+    }
 
-                let target: any;
-                if (!isDetailsOpen(detailsModel)) {
-                    target = detailsModel.nextSibling;
-                } else {
-                    target = summaryModel.nextSibling;
-                }
-                if (!target?.is("element")) {
-                    return;
-                }
+    private _jumpUpInto(details: any, atOffsetZeroIfOpen: boolean, evt: any, data: any) {
+        const open = this._isDetailsOpen(details);
+        const target = open
+            ? details.getChild(details.childCount - 1)
+            : details.getChild(0);
+        if (!target?.is("element")) return;
+        const offset: number | "end" = open && atOffsetZeroIfOpen ? 0 : "end";
+        this.editor.model.change(writer => writer.setSelection(target, offset));
+        data.preventDefault();
+        evt.stop();
+    }
 
-                editor.model.change(writer => {
-                    writer.setSelection(target, 0);
-                });
-                event.preventDefault();
-                event.stopPropagation();
-            }, true);
+    /** Forward/backward delete next to a <details> removes the whole block. */
+    private _onDeleteAdjacentDetails(evt: any, data: any) {
+        const selection = this.editor.model.document.selection;
+        if (!selection.isCollapsed) return;
+        const position = selection.getFirstPosition();
+        if (!position) return;
+        const adjacent = data.direction === "forward" ? position.nodeAfter : position.nodeBefore;
+        if (!adjacent || !adjacent.is("element", "details")) return;
+        this.editor.model.change(writer => writer.remove(adjacent));
+        data.preventDefault();
+        evt.stop();
+    }
 
-        });
+    /** Backspace at start of an empty summary unwraps the collapsible. */
+    private _onBackspaceInEmptySummary(evt: any, data: any) {
+        const selection = this.editor.model.document.selection;
+        if (data.direction !== "backward" || !selection.isCollapsed) return;
+        const summary = selection.getLastPosition()?.findAncestor("summary");
+        if (!summary || !summary.isEmpty) return;
+        const details = summary.parent;
+        if (!details || !details.is("element", "details")) return;
+        data.preventDefault();
+        evt.stop();
+        this.editor.model.change(writer => writer.unwrap(details));
+    }
 
-        // Suppress the native click-to-toggle on <summary> in the editor — only the
-        // custom arrow above is allowed to change the open state. (The data/published
-        // view keeps the native marker and click-to-toggle behavior.)
-        this.listenTo(viewDocument, "click", (_evt, data: any) => {
-            let node = data.target;
-            while (node) {
+    // -----------------------------------------------------------------
+    // Click handler
+    // -----------------------------------------------------------------
+
+    /**
+     * Suppress the native click-to-toggle on <summary> in the editor — only the
+     * custom arrow may change the open state. The data/published view keeps the
+     * native marker and click-to-toggle behavior.
+     */
+    private _registerClickHandler() {
+        this.listenTo(this.editor.editing.view.document, "click", (_evt, data: any) => {
+            for (let node = data.target; node; node = node.parent) {
                 if (node.is?.("element", "summary") && node.parent?.is("element", "details")) {
                     data.preventDefault();
                     return;
                 }
-                node = node.parent;
             }
         });
+    }
 
-        // Helper: is this <details> currently expanded in the DOM? Defaults to true
-        // when no DOM mapping exists yet (e.g. during early renders).
-        const isDetailsOpen = (detailsModel: any): boolean => {
-            const viewEl = editor.editing.mapper.toViewElement(detailsModel);
-            if (!viewEl) {
-                return true;
-            }
-            const domEl = editor.editing.view.domConverter.viewToDom(viewEl);
-            return !(domEl instanceof HTMLDetailsElement) || domEl.open;
-        };
+    // -----------------------------------------------------------------
+    // DOM listeners (need DOM root; registered once the editor is ready)
+    // -----------------------------------------------------------------
 
-        // Helpers: detect whether the caret is on the first/last *visual* line of a
-        // wrapped element. Used to avoid hijacking up/down arrows when the cursor
-        // still has somewhere to go within a multi-line summary.
-        const isCaretOnFirstVisualLine = (dom: HTMLElement): boolean => {
-            const sel = dom.ownerDocument.defaultView?.getSelection();
-            if (!sel || sel.rangeCount === 0) return true;
-            const caretRect = sel.getRangeAt(0).getBoundingClientRect();
-            const lineHeight = parseFloat(dom.ownerDocument.defaultView!.getComputedStyle(dom).lineHeight) || 16;
-            return caretRect.top < dom.getBoundingClientRect().top + lineHeight / 2;
-        };
-        const isCaretOnLastVisualLine = (dom: HTMLElement): boolean => {
-            const sel = dom.ownerDocument.defaultView?.getSelection();
-            if (!sel || sel.rangeCount === 0) return true;
-            const caretRect = sel.getRangeAt(0).getBoundingClientRect();
-            const lineHeight = parseFloat(dom.ownerDocument.defaultView!.getComputedStyle(dom).lineHeight) || 16;
-            return caretRect.bottom > dom.getBoundingClientRect().bottom - lineHeight / 2;
-        };
-        const summaryDom = (summaryModel: any): HTMLElement | null => {
-            const view = editor.editing.mapper.toViewElement(summaryModel);
-            const dom = view ? editor.editing.view.domConverter.viewToDom(view) : null;
-            return dom instanceof HTMLElement ? dom : null;
-        };
-
-        // UX: allow up-arrow to move cursor into the last block of a collapsible from below.
-        this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey", (evt, data) => {
-            if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) {
-                return;
-            }
-
-            const position = selection.getFirstPosition();
-            if (!position) {
-                return;
-            }
-
-            const block = position.parent;
-            if (!block || !block.is("element")) {
-                return;
-            }
-
-            if (!position.isAtStart) {
-                return;
-            }
-
-            const prevSibling = block.previousSibling;
-            if (!prevSibling || !prevSibling.is("element", "details")) {
-                return;
-            }
-
-            // If the target details is collapsed, land on its summary (visible) instead
-            // of inside the hidden body.
-            const target = isDetailsOpen(prevSibling)
-                ? prevSibling.getChild(prevSibling.childCount - 1)
-                : prevSibling.getChild(0);
-            if (!target?.is("element")) {
-                return;
-            }
-
-            editor.model.change(writer => {
-                writer.setSelection(target, isDetailsOpen(prevSibling) ? 0 : "end");
-            });
-
-            data.preventDefault();
-            evt.stop();
-        });
-
-        // UX: up-arrow inside a <summary> when the previous sibling is also a <details>
-        // jumps into the last body block of the previous one. (Native arrow nav skips
-        // over stacked <details> blocks.)
-        this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey", (evt, data) => {
-            if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) {
-                return;
-            }
-
-            const summary = selection.getFirstPosition()?.findAncestor("summary");
-            if (!summary) {
-                return;
-            }
-
-            const details = summary.parent;
-            if (!details?.is("element", "details")) {
-                return;
-            }
-
-            // Multi-line title: if the caret isn't on the first visual line yet, let
-            // native arrow navigation move within the summary.
-            const dom = summaryDom(summary);
-            if (dom && !isCaretOnFirstVisualLine(dom)) {
-                return;
-            }
-
-            const prevSibling = details.previousSibling;
-            if (!prevSibling?.is("element", "details")) {
-                return;
-            }
-
-            // If the previous details is collapsed, land on its summary (visible).
-            const target = isDetailsOpen(prevSibling)
-                ? prevSibling.getChild(prevSibling.childCount - 1)
-                : prevSibling.getChild(0);
-            if (!target?.is("element")) {
-                return;
-            }
-
-            editor.model.change(writer => {
-                writer.setSelection(target, "end");
-            });
-
-            data.preventDefault();
-            evt.stop();
-        });
-
-        // When the user collapses a <details> in the editor, make sure the caret isn't
-        // left stranded inside the now-hidden body — move it to the summary instead.
-        // (toggle does not bubble, so attach in capture phase.)
+    private _registerDomListeners() {
+        const editor = this.editor;
         editor.on("ready", () => {
             const domRoot = editor.editing.view.getDomRoot();
-            if (!domRoot) {
-                return;
-            }
-            domRoot.addEventListener("toggle", (event: Event) => {
-                const detailsDom = event.target as HTMLDetailsElement;
-                if (detailsDom.tagName?.toLowerCase() !== "details" || detailsDom.open) {
-                    return;
-                }
-                const detailsView = editor.editing.view.domConverter.mapDomToView(detailsDom);
-                if (!detailsView) {
-                    return;
-                }
-                const detailsModel = editor.editing.mapper.toModelElement(detailsView as any);
-                if (!detailsModel) {
-                    return;
-                }
-                const position = editor.model.document.selection.getFirstPosition();
-                if (!position || position.findAncestor("summary") || !position.findAncestor("details")) {
-                    return;
-                }
-                if (position.findAncestor("details") !== detailsModel) {
-                    return;
-                }
-                const summary = detailsModel.getChild(0);
-                if (summary?.is("element", "summary")) {
-                    editor.model.change(writer => {
-                        writer.setSelection(summary, "end");
-                    });
-                }
-            }, true);
+            if (!domRoot) return;
+            // DOM-level keydown for Ctrl+Enter and ArrowDown. View-event listeners
+            // are unreliable when the caret is inside attribute elements (links,
+            // formatted text, …); DOM capture phase always fires.
+            domRoot.addEventListener("keydown", (event: KeyboardEvent) => this._onDomKeydown(event), true);
+            // Move the caret out of a body that's about to be hidden by collapse.
+            // (toggle does not bubble — capture phase.)
+            domRoot.addEventListener("toggle", (event: Event) => this._onDetailsToggle(event), true);
         });
+    }
 
-        // Enter inside a <summary>:
-        //   - at start of title  → insert a blank paragraph before the collapsible
-        //   - at end of title    → expanded: new empty paragraph at start of body
-        //                          collapsed: blank paragraph after the collapsible
-        //   - anywhere else      → split the title, right side becomes a new paragraph
-        //                          at the start of the body, expand the block if needed
-        this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter", (evt, data) => {
-            if (!selection.isCollapsed) {
-                return;
-            }
+    private _onDomKeydown(event: KeyboardEvent) {
+        const selection = this.editor.model.document.selection;
 
-            const position = selection.getLastPosition();
-            const summary = position?.findAncestor("summary");
-            if (!summary) {
-                return;
-            }
+        // Ctrl+Enter (Cmd+Enter on Mac) inside a summary toggles the enclosing details.
+        if (event.key === "Enter" && !event.shiftKey && !event.altKey && (event.ctrlKey || event.metaKey)) {
+            const summary = selection.getFirstPosition()?.findAncestor("summary");
+            const details = summary?.parent;
+            if (!details?.is("element", "details")) return;
+            const dom = this._getDom<HTMLDetailsElement>(details);
+            if (!dom) return;
+            dom.open = !dom.open;
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
 
-            // Titles are single-line: always swallow Enter so it never inserts a newline.
-            data.preventDefault();
-            evt.stop();
-
+        // ArrowDown in a summary jumps into the body (or skips past a collapsed block).
+        if (event.key === "ArrowDown" && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
+            const summary = selection.getFirstPosition()?.findAncestor("summary");
+            if (!summary) return;
             const details = summary.parent;
-            if (!details || !details.is("element", "details")) {
-                return;
-            }
+            if (!details?.is("element", "details")) return;
+            const dom = this._getDom<HTMLElement>(summary);
+            if (dom && !this._caretAtVisualEdge(dom, "bottom")) return;
+            const target = this._isDetailsOpen(details) ? summary.nextSibling : details.nextSibling;
+            if (!target?.is("element")) return;
+            this.editor.model.change(writer => writer.setSelection(target, 0));
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
 
-            const insertBlankBeforeBlock = () => {
-                editor.model.change(writer => {
-                    const newParagraph = writer.createElement("paragraph");
-                    writer.insert(newParagraph, writer.createPositionBefore(details));
-                    writer.setSelection(newParagraph, 0);
-                });
-            };
+    private _onDetailsToggle(event: Event) {
+        const editor = this.editor;
+        const detailsDom = event.target as HTMLDetailsElement;
+        if (detailsDom.tagName?.toLowerCase() !== "details" || detailsDom.open) return;
 
-            if (position!.isAtStart) {
-                insertBlankBeforeBlock();
-                return;
-            }
+        const detailsView = editor.editing.view.domConverter.mapDomToView(detailsDom);
+        const detailsModel = detailsView ? editor.editing.mapper.toModelElement(detailsView as any) : null;
+        if (!detailsModel) return;
 
-            if (position!.isAtEnd) {
-                if (!isDetailsOpen(details)) {
-                    editor.model.change(writer => {
-                        const newParagraph = writer.createElement("paragraph");
-                        writer.insert(newParagraph, writer.createPositionAfter(details));
-                        writer.setSelection(newParagraph, 0);
-                    });
-                } else {
-                    editor.model.change(writer => {
-                        const newParagraph = writer.createElement("paragraph");
-                        writer.insert(newParagraph, summary, "after");
-                        writer.setSelection(newParagraph, 0);
-                    });
-                }
-                return;
-            }
+        const position = editor.model.document.selection.getFirstPosition();
+        if (!position || position.findAncestor("summary")) return; // not inside body
+        if (position.findAncestor("details") !== detailsModel) return;
 
-            // Middle of title: split the text, right portion becomes a new paragraph
-            // at the start of the body. Expand the block first if it was collapsed —
-            // doing so up front keeps the hidden-body post-fixer from snapping the
-            // caret away when we set it inside the new paragraph.
-            if (!isDetailsOpen(details)) {
-                const detailsView = editor.editing.mapper.toViewElement(details);
-                const detailsDom = detailsView ? editor.editing.view.domConverter.viewToDom(detailsView) : null;
-                if (detailsDom instanceof HTMLDetailsElement) {
-                    detailsDom.open = true;
-                }
-            }
+        const summary = detailsModel.getChild(0);
+        if (summary?.is("element", "summary")) {
+            editor.model.change(writer => writer.setSelection(summary, "end"));
+        }
+    }
 
-            editor.model.change(writer => {
-                const rightRange = writer.createRange(
-                    writer.createPositionAt(summary, position!.offset),
-                    writer.createPositionAt(summary, "end")
-                );
-                const newParagraph = writer.createElement("paragraph");
-                writer.insert(newParagraph, summary, "after");
-                writer.move(rightRange, writer.createPositionAt(newParagraph, 0));
-                writer.setSelection(newParagraph, 0);
-            });
-        }, { context: "summary" });
+    // -----------------------------------------------------------------
+    // Model post-fixers
+    // -----------------------------------------------------------------
 
-        // UX: pressing Enter inside an empty trailing paragraph of the body exits the
-        // collapsible (text + Enter + Enter → out — same convention as blockquote).
-        this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter", (evt, data) => {
-            if (!selection.isCollapsed) {
-                return;
-            }
+    private _registerPostFixers() {
+        const document = this.editor.model.document;
+        document.registerPostFixer(writer => this._structuralPostFixer(writer));
+        document.registerPostFixer(writer => this._gapPostFixer(writer));
+        document.registerPostFixer(writer => this._hiddenBodyPostFixer(writer));
+    }
 
-            const positionParent = selection.getLastPosition()?.parent;
-            if (!positionParent || !positionParent.is("element") || positionParent.is("element", "summary")) {
-                return;
-            }
-            if (!positionParent.isEmpty || positionParent.nextSibling) {
-                return;
-            }
+    /** Cleanup: remove orphaned <summary>, empty <details>, and empty list items. */
+    private _structuralPostFixer(writer: any): boolean {
+        const changes = this.editor.model.document.differ.getChanges();
+        let changed = false;
+        for (const entry of changes) {
+            if (entry.type !== "remove" && entry.type !== "insert") continue;
+            const node: any = (entry as any).position.nodeAfter || (entry as any).position.nodeBefore;
+            if (!node?.is("element")) continue;
 
-            const details = positionParent.parent;
-            if (!details || !details.is("element", "details")) {
-                return;
-            }
-
-            data.preventDefault();
-            evt.stop();
-
-            editor.model.change(writer => {
-                writer.remove(positionParent);
-                const after = details.nextSibling;
-                if (after && after.is("element", "paragraph")) {
-                    writer.setSelection(after, 0);
-                } else {
-                    const newParagraph = writer.createElement("paragraph");
-                    writer.insert(newParagraph, writer.createPositionAfter(details));
-                    writer.setSelection(newParagraph, 0);
-                }
-            });
-        });
-
-        // UX: explicitly handle deletion of <details> blocks to prevent orphaned structure.
-        this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete", (evt, data) => {
-            if (!selection.isCollapsed) {
-                return;
-            }
-
-            const position = selection.getFirstPosition();
-            if (!position) {
-                return;
-            }
-
-            // Deleting forward: check if we're about to delete a <details> block.
-            if (data.direction === "forward") {
-                const nextNode = position.nodeAfter;
-                if (nextNode && nextNode.is("element", "details")) {
-                    editor.model.change(writer => {
-                        writer.remove(nextNode);
-                    });
-                    data.preventDefault();
-                    evt.stop();
-                    return;
-                }
-            }
-
-            // Deleting backward: check if we're right after a <details> block.
-            if (data.direction === "backward") {
-                const prevNode = position.nodeBefore;
-                if (prevNode && prevNode.is("element", "details")) {
-                    editor.model.change(writer => {
-                        writer.remove(prevNode);
-                    });
-                    data.preventDefault();
-                    evt.stop();
-                    return;
-                }
-            }
-        });
-
-        // UX: backspace at the start of an empty summary unwraps the collapsible.
-        this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete", (evt, data) => {
-            if (data.direction !== "backward" || !selection.isCollapsed) {
-                return;
-            }
-
-            const position = selection.getLastPosition();
-            const summary = position?.findAncestor("summary");
-            if (!summary || !summary.isEmpty) {
-                return;
-            }
-
-            const details = summary.parent;
-            if (!details || !details.is("element", "details")) {
-                return;
-            }
-
-            data.preventDefault();
-            evt.stop();
-
-            editor.model.change(writer => {
-                writer.unwrap(details);
-            });
-        }, { context: "summary" });
-
-        // Postfixer: remove orphaned elements and clean up invalid structure.
-        editor.model.document.registerPostFixer(writer => {
-            const changes = editor.model.document.differ.getChanges();
-            let changed = false;
-
-            for (const entry of changes) {
-                if (entry.type !== "remove" && entry.type !== "insert") {
-                    continue;
-                }
-
-                const node = entry.position.nodeAfter || entry.position.nodeBefore;
-                if (!node || !node.is("element")) {
-                    continue;
-                }
-
-                // Walk up and check: if this is a summary not inside details, remove it.
-                let current: any = node;
-                while (current) {
-                    if (current.is("element", "summary")) {
-                        const parent = current.parent;
-                        if (!parent || !parent.is("element", "details")) {
-                            writer.remove(current);
-                            changed = true;
-                        }
-                        break;
-                    }
-                    current = current.parent;
-                }
-
-                // Remove empty <details> elements.
-                if (node.is("element", "details") && node.isEmpty) {
-                    writer.remove(node);
-                    changed = true;
-                    continue;
-                }
-
-                // Clean up empty list items.
-                if (node.is("element", "listItem") && node.isEmpty) {
-                    writer.remove(node);
+            // Orphaned <summary> (not inside <details>) → remove.
+            for (let current: any = node; current; current = current.parent) {
+                if (!current.is("element", "summary")) continue;
+                if (!current.parent?.is("element", "details")) {
+                    writer.remove(current);
                     changed = true;
                 }
+                break;
             }
 
-            return changed;
-        });
+            if (node.is("element", "details") && node.isEmpty) {
+                writer.remove(node);
+                changed = true;
+            } else if (node.is("element", "listItem") && node.isEmpty) {
+                writer.remove(node);
+                changed = true;
+            }
+        }
+        return changed;
+    }
 
-        // Selection postfixer: don't let the caret sit in the "gap" between <summary>
-        // and a body block — push it into the nearest block instead.
-        editor.model.document.registerPostFixer(writer => {
-            const position = editor.model.document.selection.getFirstPosition();
-            if (!position || !position.parent.is("element", "details")) {
-                return false;
-            }
-            const details = position.parent;
-            const after = details.getChild(position.offset);
-            const before = position.offset > 0 ? details.getChild(position.offset - 1) : null;
-            // Prefer the previous block — when the details is collapsed, the body is
-            // hidden, so landing at end-of-summary keeps the caret visible.
-            if (before && before.is("element")) {
-                writer.setSelection(before, "end");
-            } else if (after && after.is("element")) {
-                writer.setSelection(after, 0);
-            } else {
-                return false;
-            }
+    /**
+     * Prevent the caret from sitting in the "gap" position directly inside a
+     * <details> (between summary and a body block). Prefer the previous sibling
+     * so the caret stays on the summary line when the block is collapsed.
+     */
+    private _gapPostFixer(writer: any): boolean {
+        const position = this.editor.model.document.selection.getFirstPosition();
+        if (!position || !position.parent.is("element", "details")) return false;
+        const details = position.parent;
+        const before = position.offset > 0 ? details.getChild(position.offset - 1) : null;
+        const after = details.getChild(position.offset);
+        if (before?.is("element")) {
+            writer.setSelection(before, "end");
             return true;
-        });
-
-        // Selection postfixer: never let the caret rest inside a body whose enclosing
-        // <details> is currently collapsed. Walk up to find the outermost closed details
-        // containing the position; redirect to its summary. This catches every entry path
-        // (left/right arrows, click, paste, restored selection on load, ...).
-        editor.model.document.registerPostFixer(writer => {
-            const position = editor.model.document.selection.getFirstPosition();
-            if (!position) {
-                return false;
-            }
-
-            let outermostClosed: any = null;
-            for (let node: any = position.parent; node; node = node.parent) {
-                if (!node.is?.("element", "details")) {
-                    continue;
-                }
-                const viewEl = editor.editing.mapper.toViewElement(node);
-                const domEl = viewEl ? editor.editing.view.domConverter.viewToDom(viewEl) : null;
-                if (domEl instanceof HTMLDetailsElement && !domEl.open) {
-                    outermostClosed = node;
-                }
-            }
-
-            if (!outermostClosed) {
-                return false;
-            }
-
-            const summary = outermostClosed.getChild(0);
-            if (!summary?.is("element", "summary")) {
-                return false;
-            }
-            // Already in this details' (visible) summary — nothing to do.
-            if (position.findAncestor("summary") === summary) {
-                return false;
-            }
-
-            writer.setSelection(summary, "end");
+        }
+        if (after?.is("element")) {
+            writer.setSelection(after, 0);
             return true;
-        });
+        }
+        return false;
+    }
+
+    /**
+     * Never let the caret rest inside a body whose enclosing <details> is
+     * collapsed (so it doesn't disappear into hidden content, and so widget
+     * toolbars don't trigger for invisible elements).
+     */
+    private _hiddenBodyPostFixer(writer: any): boolean {
+        const position = this.editor.model.document.selection.getFirstPosition();
+        if (!position) return false;
+
+        let outermostClosed: any = null;
+        for (let node: any = position.parent; node; node = node.parent) {
+            if (!node.is?.("element", "details")) continue;
+            const dom = this._getDom<HTMLDetailsElement>(node);
+            if (dom && !dom.open) outermostClosed = node;
+        }
+        if (!outermostClosed) return false;
+
+        const summary = outermostClosed.getChild(0);
+        if (!summary?.is("element", "summary")) return false;
+        if (position.findAncestor("summary") === summary) return false;
+
+        writer.setSelection(summary, "end");
+        return true;
     }
 }
