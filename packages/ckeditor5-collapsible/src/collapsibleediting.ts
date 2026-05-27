@@ -59,14 +59,14 @@ export default class CollapsibleEditing extends Plugin {
             }
         });
 
-        // <details> editing downcast: force `open` so the user can edit the body.
+        // <details> editing downcast: emit a plain <details class="trilium-collapsible">.
+        // Same as data downcast — collapsibles start collapsed on load. The insert
+        // command explicitly opens the new one after insertion so the user can edit
+        // the body immediately.
         conversion.for("editingDowncast").elementToElement({
             model: "details",
             view: (_modelElement, { writer }) => {
-                return writer.createContainerElement("details", {
-                    class: "trilium-collapsible",
-                    open: "open"
-                });
+                return writer.createContainerElement("details", { class: "trilium-collapsible" });
             }
         });
 
