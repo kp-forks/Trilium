@@ -62,3 +62,9 @@
 .ck-editor__editable details.trilium-collapsible[open] > summary > .trilium-collapsible-arrow {
     transform: rotate(90deg);
 }
+
+/* CKEditor's placeholder ::before is positioned absolute left:0 by default —
+ * push it past the arrow so it aligns with where the typed title will appear. */
+.ck-editor__editable details.trilium-collapsible > summary.ck-placeholder::before {
+    left: 1.5em;
+}
