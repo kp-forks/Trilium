@@ -164,16 +164,11 @@ function startHttpServer(app: Express) {
             }
         }
 
-        if (utils.isElectron()) {
-            import("electron").then(({ app }) => {
-                if ("code" in error && error.code === "EADDRINUSE" && (process.argv.includes("--new-window") || !app.requestSingleInstanceLock())) {
-                    console.error(message);
-                } else {
-                    getPlatform().crash(`Error while initializing the server: ${message}`);
-                }
-            });
+        const platform = getPlatform();
+        if (platform.shouldIgnoreStartupError?.(error)) {
+            console.error(message);
         } else {
-            getPlatform().crash(message);
+            platform.crash(`Error while initializing the server: ${message}`);
         }
     });
 

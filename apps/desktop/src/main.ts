@@ -7,7 +7,7 @@ import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provide
 import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import port from "@triliumnext/server/src/services/port.js";
-import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
+import ElectronRequestProvider from "./services/request";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import windowService, { setupWindowing } from "./services/window";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
@@ -176,7 +176,7 @@ async function main() {
         crypto: new NodejsCryptoProvider(),
         zip: new NodejsZipProvider(),
         zipExportProviderFactory: (await import("@triliumnext/server/src/services/export/zip/factory.js")).serverZipExportProviderFactory,
-        request: new NodeRequestProvider(),
+        request: new ElectronRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
         messaging: ipcMessaging,
         schema: loadCoreSchema(),
