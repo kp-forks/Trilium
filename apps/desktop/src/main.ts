@@ -1,4 +1,4 @@
-import { getLog, initializeCore, options, sql_init } from "@triliumnext/core";
+import { becca_loader, cls, entity_changes, getLog, initializeCore, options, sql_init, ws } from "@triliumnext/core";
 import ServerBackupService from "@triliumnext/server/src/backup_provider.js";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import { loadCoreSchema } from "@triliumnext/server/src/core_assets.js";
@@ -152,19 +152,13 @@ async function main() {
             provider: dbProvider,
             isReadOnly: config.General.readOnly,
             async onTransactionCommit() {
-                const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
                 ws.sendTransactionEntityChangesToAllClients();
             },
             async onTransactionRollback() {
-                const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
-                const becca_loader = (await import("@triliumnext/core")).becca_loader;
-                const entity_changes = (await import("@triliumnext/server/src/services/entity_changes.js")).default;
-                const log = (await import("@triliumnext/server/src/services/log")).default;
-
                 const entityChangeIds = cls.getAndClearEntityChangeIds();
 
                 if (entityChangeIds.length > 0) {
-                    log.info("Transaction rollback dirtied the becca, forcing reload.");
+                    getLog().info("Transaction rollback dirtied the becca, forcing reload.");
 
                     becca_loader.load();
                 }

@@ -1,16 +1,21 @@
 import { becca, becca_easy_mocking } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as customDictionary from "./custom_dictionary.js";
-
 const { buildNote } = becca_easy_mocking;
 
-vi.mock("@triliumnext/server/src/services/log.js", () => ({
-    default: {
-        info: vi.fn(),
-        error: vi.fn()
-    }
-}));
+// `getLog()` throws when the log service hasn't been initialised via
+// `initializeCore` — and we don't want to spin up core in unit tests just to
+// satisfy a logger. Partial-mock core so `getLog` returns no-op stubs while
+// every other core export keeps its real implementation.
+vi.mock("@triliumnext/core", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@triliumnext/core")>();
+    return {
+        ...actual,
+        getLog: () => ({ info: vi.fn(), error: vi.fn() })
+    };
+});
+
+const customDictionary = await import("./custom_dictionary.js");
 
 function mockSession(localWords: string[] = []) {
     return {

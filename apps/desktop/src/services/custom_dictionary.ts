@@ -1,5 +1,4 @@
-import { becca, cls, options as optionService, sql_init } from "@triliumnext/core";
-import log from "@triliumnext/server/src/services/log.js";
+import { becca, cls, getLog, options as optionService, sql_init } from "@triliumnext/core";
 import electron, { type Session } from "electron";
 
 const DICTIONARY_NOTE_ID = "_customDictionary";
@@ -33,7 +32,7 @@ function saveWords(words: Set<string>) {
     cls.getContext().init(() => {
         const note = becca.getNote(DICTIONARY_NOTE_ID);
         if (!note) {
-            log.error("Custom dictionary note not found.");
+            getLog().error("Custom dictionary note not found.");
             return;
         }
 
@@ -59,7 +58,7 @@ function clearFromLocalDictionary(session: Session, localWords: string[]) {
     for (const word of localWords) {
         session.removeWordFromSpellCheckerDictionary(word);
     }
-    log.info(`Cleared ${localWords.length} words from local spellchecker dictionary.`);
+    getLog().info(`Cleared ${localWords.length} words from local spellchecker dictionary.`);
 }
 
 /**
@@ -69,7 +68,7 @@ function clearFromLocalDictionary(session: Session, localWords: string[]) {
 export async function loadForSession(session: Session) {
     const note = becca.getNote(DICTIONARY_NOTE_ID);
     if (!note) {
-        log.error("Custom dictionary note not found.");
+        getLog().error("Custom dictionary note not found.");
         return;
     }
 
@@ -80,7 +79,7 @@ export async function loadForSession(session: Session) {
 
     // One-time import: if the note is empty but there are local words, import them.
     if (noteWords.size === 0 && localWords.length > 0) {
-        log.info(`Importing ${localWords.length} words from local spellchecker dictionary.`);
+        getLog().info(`Importing ${localWords.length} words from local spellchecker dictionary.`);
         merged = new Set(localWords);
         saveWords(merged);
     }
@@ -100,7 +99,7 @@ export async function loadForSession(session: Session) {
     }
 
     if (merged.size > 0) {
-        log.info(`Loaded ${merged.size} custom dictionary words into spellchecker.`);
+        getLog().info(`Loaded ${merged.size} custom dictionary words into spellchecker.`);
     }
 }
 
@@ -122,7 +121,7 @@ export function setupCustomDictionary() {
         if (loadedSessions.has(session)) return;
         loadedSessions.add(session);
         loadForSession(session).catch(err =>
-            log.error(`Failed to load custom dictionary for spellcheck: ${err}`)
+            getLog().error(`Failed to load custom dictionary for spellcheck: ${err}`)
         );
     });
 

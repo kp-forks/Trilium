@@ -1,7 +1,6 @@
 import { SHELL_OPEN_EXTERNAL_PROTOCOLS } from "@triliumnext/commons";
-import { utils as coreUtils } from "@triliumnext/core";
+import { getLog, utils as coreUtils } from "@triliumnext/core";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
-import log from "@triliumnext/server/src/services/log.js";
 import { execFile } from "child_process";
 import electron from "electron";
 import fs from "fs";
@@ -237,7 +236,7 @@ export function setupShellHandlers() {
             const validated = validateOpenExternalUrl(externalUrl);
             electron.shell.openExternal(validated.toString());
         } catch (e) {
-            log.error(`open-external failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+            getLog().error(`open-external failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
         }
     });
 
@@ -246,7 +245,7 @@ export function setupShellHandlers() {
             const resolved = validateOpenPath(filePath, dataDirs.TRILIUM_DATA_DIR, dataDirs.TMP_DIR);
             return electron.shell.openPath(resolved);
         } catch (e) {
-            log.error(`open-path failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+            getLog().error(`open-path failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
             return coreUtils.safeExtractMessageAndStackFromError(e);
         }
     });
@@ -256,7 +255,7 @@ export function setupShellHandlers() {
             const filePath = validateOpenFileUrl(fileUrl);
             return electron.shell.openPath(filePath);
         } catch (e) {
-            log.error(`open-file-url failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+            getLog().error(`open-file-url failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
             return coreUtils.safeExtractMessageAndStackFromError(e);
         }
     });
@@ -266,7 +265,7 @@ export function setupShellHandlers() {
             const validated = validateDownloadUrl(downloadUrl, event.sender.getURL());
             event.sender.downloadURL(validated.toString());
         } catch (e) {
-            log.error(`download-url failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+            getLog().error(`download-url failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
         }
     });
 
@@ -289,14 +288,14 @@ export function setupShellHandlers() {
 
             const tryTerminal = (index: number) => {
                 if (index >= terminals.length) {
-                    log.error("open-custom: no terminal emulator found");
+                    getLog().error("open-custom: no terminal emulator found");
                     electron.shell.openPath(resolved);
                     return;
                 }
                 const terminal = terminals[index];
                 execFile(terminal, ["-e", innerCommand], (err) => {
                     if (err) {
-                        log.info(`open-custom: ${terminal} failed: ${err.message}`);
+                        getLog().info(`open-custom: ${terminal} failed: ${err.message}`);
                         tryTerminal(index + 1);
                     }
                 });
@@ -312,7 +311,7 @@ export function setupShellHandlers() {
             // (so it cannot contain quotes or other rundll32-confusing characters).
             execFile("rundll32.exe", ["shell32.dll,OpenAs_RunDLL", winPath], { windowsVerbatimArguments: true }, (err) => {
                 if (err) {
-                    log.error(`open-custom: rundll32 failed: ${err.message}`);
+                    getLog().error(`open-custom: rundll32 failed: ${err.message}`);
                     electron.shell.openPath(resolved);
                 }
             });

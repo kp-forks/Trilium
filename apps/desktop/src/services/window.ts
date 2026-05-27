@@ -1,5 +1,4 @@
-import { app_info, cls, events, keyboard_actions as keyboardActionsService, options as optionService, sql_init, utils as coreUtils } from "@triliumnext/core";
-import log from "@triliumnext/server/src/services/log.js";
+import { app_info, cls, events, getLog, keyboard_actions as keyboardActionsService, options as optionService, sql_init, utils as coreUtils } from "@triliumnext/core";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
@@ -312,9 +311,9 @@ async function registerGlobalShortcuts() {
                 );
 
                 if (result) {
-                    log.info(`Registered global shortcut ${translatedShortcut} for action ${action.actionName}`);
+                    getLog().info(`Registered global shortcut ${translatedShortcut} for action ${action.actionName}`);
                 } else {
-                    log.info(`Could not register global shortcut ${translatedShortcut}`);
+                    getLog().info(`Could not register global shortcut ${translatedShortcut}`);
                 }
             }
         }
@@ -505,7 +504,7 @@ export function setupWindowing() {
             await createMainWindow();
             closeSetupWindow();
         } catch (err) {
-            log.error(`Failed to swap setup window for main window: ${err}`);
+            getLog().error(`Failed to swap setup window for main window: ${err}`);
         }
     });
 }

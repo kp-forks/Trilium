@@ -1,5 +1,4 @@
-import { utils as coreUtils } from "@triliumnext/core";
-import log from "@triliumnext/server/src/services/log.js";
+import { getLog, utils as coreUtils } from "@triliumnext/core";
 import { default as electron, ipcMain, type IpcMainEvent } from "electron";
 import fs from "fs/promises";
 import { t } from "i18next";
@@ -125,10 +124,10 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
     browserWindow.webContents.on("console-message", (event, message, line, sourceId) => {
         if (event.level === "debug") return;
         if (event.level === "error") {
-            log.error(`[Print Window ${sourceId}:${line}] ${message}`);
+            getLog().error(`[Print Window ${sourceId}:${line}] ${message}`);
             return;
         }
-        log.info(`[Print Window ${sourceId}:${line}] ${message}`);
+        getLog().info(`[Print Window ${sourceId}:${line}] ${message}`);
     });
 
     try {
@@ -139,7 +138,7 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
         // print page would never render.
         await browserWindow.loadURL(`trilium-app://app/?print#${notePath}`);
     } catch (err) {
-        log.error(`Failed to load print window: ${err}`);
+        getLog().error(`Failed to load print window: ${err}`);
         ipcMain.off("print-progress", progressCallback);
         throw err;
     }
@@ -169,7 +168,7 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
                 });
             });
         })();
-    `).catch(err => log.error(`Failed to set up error handlers in print window: ${err}`));
+    `).catch(err => getLog().error(`Failed to set up error handlers in print window: ${err}`));
 
     let printReport;
     try {
@@ -193,7 +192,7 @@ async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, ac
             });
         `);
     } catch (err) {
-        log.error(`Print window promise failed for ${notePath}: ${err}`);
+        getLog().error(`Print window promise failed for ${notePath}: ${err}`);
         ipcMain.off("print-progress", progressCallback);
         throw err;
     }
