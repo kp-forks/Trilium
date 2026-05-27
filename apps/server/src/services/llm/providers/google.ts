@@ -2,7 +2,7 @@ import { createGoogleGenerativeAI, type GoogleGenerativeAIProvider } from "@ai-s
 import { streamText, stepCountIs, type ToolSet } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
 
-import log from "../../log.js";
+import { getLog } from "@triliumnext/core";
 import type { LlmProviderConfig, StreamResult } from "../types.js";
 import { BaseProvider, buildModelList } from "./base_provider.js";
 
@@ -79,7 +79,7 @@ export class GoogleProvider extends BaseProvider {
 
     protected override buildTools(config: LlmProviderConfig): ToolSet {
         if (geminiHasToolConflict(config)) {
-            log.info("Gemini: dropping google_search because note tools are enabled (Google API does not allow combining provider-defined tools with function declarations)");
+            getLog().info("Gemini: dropping google_search because note tools are enabled (Google API does not allow combining provider-defined tools with function declarations)");
             return super.buildTools({ ...config, enableWebSearch: false });
         }
         return super.buildTools(config);

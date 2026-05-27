@@ -4,7 +4,7 @@
  */
 
 import { imageService, options as optionService } from "@triliumnext/core";
-import log from "./log.js";
+import { getLog } from "@triliumnext/core";
 import ocrService from "./ocr/ocr_service.js";
 
 function scheduleOcrForNote(noteId: string) {
@@ -13,7 +13,7 @@ function scheduleOcrForNote(noteId: string) {
             try {
                 await ocrService.processNoteOCR(noteId);
             } catch (error) {
-                log.error(`Failed to process OCR for note ${noteId}: ${error}`);
+                getLog().error(`Failed to process OCR for note ${noteId}: ${error}`);
             }
         });
     }
@@ -25,7 +25,7 @@ function scheduleOcrForAttachment(attachmentId: string | undefined) {
             try {
                 await ocrService.processAttachmentOCR(attachmentId);
             } catch (error) {
-                log.error(`Failed to process OCR for attachment ${attachmentId}: ${error}`);
+                getLog().error(`Failed to process OCR for attachment ${attachmentId}: ${error}`);
             }
         });
     }

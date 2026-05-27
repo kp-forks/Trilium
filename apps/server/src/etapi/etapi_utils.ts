@@ -7,7 +7,7 @@ import type { ApiRequestHandler, SyncRouteRequestHandler } from "../routes/route
 import cls from "../services/cls.js";
 import config from "../services/config.js";
 import etapiTokenService from "../services/etapi_tokens.js";
-import log from "../services/log.js";
+import { getLog } from "@triliumnext/core";
 import sql from "../services/sql.js";
 import type { ValidatorMap } from "./etapi-interface.js";
 const GENERIC_CODE = "GENERIC";
@@ -66,7 +66,7 @@ function processRequest<P extends ParamsDictionary>(req: Request<P>, res: Respon
             return sql.transactional(cb);
         });
     } catch (e: any) {
-        log.error(`${method} ${path} threw exception ${e.message} with stacktrace: ${e.stack}`);
+        getLog().error(`${method} ${path} threw exception ${e.message} with stacktrace: ${e.stack}`);
 
         if (e instanceof EtapiError) {
             sendError(res, e.statusCode, e.code, e.message);

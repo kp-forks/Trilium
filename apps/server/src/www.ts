@@ -9,7 +9,7 @@ import buildApp from "./app.js";
 import config from "./services/config.js";
 import { registerOcrHandlers } from "./services/handlers.js";
 import host from "./services/host.js";
-import log from "./services/log.js";
+import { getLog } from "@triliumnext/core";
 import port from "./services/port.js";
 import { getDbSize } from "./services/sql_init.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
@@ -33,7 +33,7 @@ export default async function startTriliumServer(): Promise<Express> {
         console.log(error);
 
         // but also try to log it into file
-        log.info(error);
+        getLog().info(error);
     });
 
     function exit() {
@@ -77,21 +77,21 @@ export default async function startTriliumServer(): Promise<Express> {
 }
 
 async function displayStartupMessage() {
-    log.info(`\n${LOGO.replace("[version]", appInfo.appVersion)}`);
-    log.info(`📦 Versions:    app=${appInfo.appVersion} db=${appInfo.dbVersion} sync=${appInfo.syncVersion} clipper=${appInfo.clipperProtocolVersion}`);
-    log.info(`🔧 Build:       ${utils.formatUtcTime(appInfo.buildDate)} (${appInfo.buildRevision.substring(0, 10)})`);
-    log.info(`📂 Data dir:    ${appInfo.dataDirectory}`);
-    log.info(`⏰ UTC time:    ${utils.formatUtcTime(appInfo.utcDateTime)}`);
+    getLog().info(`\n${LOGO.replace("[version]", appInfo.appVersion)}`);
+    getLog().info(`📦 Versions:    app=${appInfo.appVersion} db=${appInfo.dbVersion} sync=${appInfo.syncVersion} clipper=${appInfo.clipperProtocolVersion}`);
+    getLog().info(`🔧 Build:       ${utils.formatUtcTime(appInfo.buildDate)} (${appInfo.buildRevision.substring(0, 10)})`);
+    getLog().info(`📂 Data dir:    ${appInfo.dataDirectory}`);
+    getLog().info(`⏰ UTC time:    ${utils.formatUtcTime(appInfo.utcDateTime)}`);
 
     // for perf. issues it's good to know the rough configuration
     const cpuInfos = (await import("os")).cpus();
     if (cpuInfos && cpuInfos[0] !== undefined) {
         // https://github.com/zadam/trilium/pull/3957
         const cpuModel = (cpuInfos[0].model || "").trimEnd();
-        log.info(`💻 CPU:         ${cpuModel} (${cpuInfos.length}-core @ ${cpuInfos[0].speed} Mhz)`);
+        getLog().info(`💻 CPU:         ${cpuModel} (${cpuInfos.length}-core @ ${cpuInfos[0].speed} Mhz)`);
     }
-    log.info(`💾 DB size:     ${utils.formatSize(getDbSize() * 1024)}`);
-    log.info("");
+    getLog().info(`💾 DB size:     ${utils.formatSize(getDbSize() * 1024)}`);
+    getLog().info("");
 }
 
 function startHttpServer(app: Express) {
@@ -105,7 +105,7 @@ function startHttpServer(app: Express) {
         }
     }
 
-    log.info(`Trusted reverse proxy: ${app.get("trust proxy")}`);
+    getLog().info(`Trusted reverse proxy: ${app.get("trust proxy")}`);
 
     let httpServer: http.Server | https.Server;
 
@@ -125,11 +125,11 @@ function startHttpServer(app: Express) {
 
         httpServer = https.createServer(options, app);
 
-        log.info(`App HTTPS server starting up at port ${port}`);
+        getLog().info(`App HTTPS server starting up at port ${port}`);
     } else {
         httpServer = http.createServer(app);
 
-        log.info(`App HTTP server starting up at port ${port}`);
+        getLog().info(`App HTTP server starting up at port ${port}`);
     }
 
     /**
@@ -173,9 +173,9 @@ function startHttpServer(app: Express) {
 
     httpServer.on("listening", () => {
         if (listenOnTcp) {
-            log.info(`Listening on port ${port}`);
+            getLog().info(`Listening on port ${port}`);
         } else {
-            log.info(`Listening on unix socket ${host}`);
+            getLog().info(`Listening on unix socket ${host}`);
         }
     });
 

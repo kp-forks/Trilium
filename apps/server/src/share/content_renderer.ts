@@ -10,7 +10,7 @@ import { join } from "path";
 
 import { becca } from "@triliumnext/core";
 import assetPath, { assetUrlFragment } from "../services/asset_path.js";
-import log from "../services/log.js";
+import { getLog } from "@triliumnext/core";
 import { getResourceDir, isDev } from "../services/utils.js";
 import SAttachment from "./shaca/entities/sattachment.js";
 import SBranch from "./shaca/entities/sbranch.js";
@@ -226,7 +226,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
                 }
             } catch (e: unknown) {
                 const [errMessage, errStack] = utils.safeExtractMessageAndStackFromError(e);
-                log.error(`Rendering user provided share template (${templateId}) threw exception ${errMessage} with stacktrace: ${errStack}`);
+                getLog().error(`Rendering user provided share template (${templateId}) threw exception ${errMessage} with stacktrace: ${errStack}`);
             }
         }
     }
@@ -444,7 +444,7 @@ function handleAttachmentLink(linkEl: HTMLElement, href: string, getNote: GetNot
             linkEl.appendChild(new TextNode(attachment.title));
         } else {
             linkEl.removeAttribute("href");
-            log.error(`Broken attachment link detected in shared note: unable to find attachment with ID ${attachmentId}`);
+            getLog().error(`Broken attachment link detected in shared note: unable to find attachment with ID ${attachmentId}`);
         }
     } else {
         const [notePath] = href.split("?");
@@ -464,7 +464,7 @@ function handleAttachmentLink(linkEl: HTMLElement, href: string, getNote: GetNot
             }
             linkEl.classList.add(`type-${linkedNote.type}`);
         } else {
-            log.error(`Broken link detected in shared note: unable to find note with ID ${noteId}`);
+            getLog().error(`Broken link detected in shared note: unable to find note with ID ${noteId}`);
             linkEl.removeAttribute("href");
         }
     }

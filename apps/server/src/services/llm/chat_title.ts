@@ -1,6 +1,6 @@
 import { becca } from "@triliumnext/core";
 import { getProvider } from "./index.js";
-import log from "../log.js";
+import { getLog } from "@triliumnext/core";
 import { t } from "i18next";
 
 /** Default title prefixes that indicate the note hasn't been manually renamed. */
@@ -32,6 +32,6 @@ export async function generateChatTitle(chatNoteId: string, firstMessage: string
     if (title) {
         note.title = title;
         note.save();
-        log.info(`Auto-renamed chat note ${chatNoteId} to "${title}"`);
+        getLog().info(`Auto-renamed chat note ${chatNoteId} to "${title}"`);
     }
 }

@@ -9,7 +9,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { options as optionService } from "@triliumnext/core";
 import type express from "express";
 
-import log from "../services/log.js";
+import { getLog } from "@triliumnext/core";
 import { createMcpServer } from "../services/mcp/mcp_server.js";
 
 function isLoopback(addr: string | undefined): boolean {
@@ -54,7 +54,7 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
         await server.connect(transport);
         await transport.handleRequest(req, res, req.body);
     } catch (err) {
-        log.error(`MCP request error: ${err}`);
+        getLog().error(`MCP request error: ${err}`);
         if (!res.headersSent) {
             res.status(500).json({ error: "Internal MCP error" });
         }
@@ -66,7 +66,7 @@ export function register(app: express.Application) {
     app.get("/mcp", mcpGuard, handleMcpRequest);
     app.delete("/mcp", mcpGuard, handleMcpRequest);
 
-    log.info("MCP server registered at /mcp (localhost only)");
+    getLog().info("MCP server registered at /mcp (localhost only)");
 }
 
 export default { register };

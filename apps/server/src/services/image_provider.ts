@@ -10,7 +10,7 @@ import { Jimp } from "jimp";
 
 import { options as optionService } from "@triliumnext/core";
 import type { ImageProvider, ImageFormat, ProcessedImage } from "@triliumnext/core/src/services/image_provider.js";
-import log from "./log.js";
+import { getLog } from "@triliumnext/core";
 
 async function getImageTypeFromBuffer(buffer: Uint8Array): Promise<ImageFormat | null> {
     // Check for SVG first (text-based)
@@ -38,7 +38,7 @@ async function shrinkImage(buffer: Uint8Array, originalName: string): Promise<Ui
         finalImageBuffer = await resize(buffer, jpegQuality);
     } catch (e: unknown) {
         const error = e as Error;
-        log.error(`Failed to resize image '${originalName}', stack: ${error.stack}`);
+        getLog().error(`Failed to resize image '${originalName}', stack: ${error.stack}`);
         finalImageBuffer = buffer;
     }
 
@@ -68,7 +68,7 @@ async function resize(buffer: Uint8Array, quality: number): Promise<Uint8Array> 
 
     const resultBuffer = await image.getBuffer("image/jpeg", { quality });
 
-    log.info(`Resizing image of ${resultBuffer.byteLength} took ${Date.now() - start}ms`);
+    getLog().info(`Resizing image of ${resultBuffer.byteLength} took ${Date.now() - start}ms`);
 
     return resultBuffer;
 }

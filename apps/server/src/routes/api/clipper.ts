@@ -4,7 +4,7 @@ import { parse } from "node-html-parser";
 import path from "path";
 
 import imageService from "../../services/image.js";
-import log from "../../services/log.js";
+import { getLog } from "@triliumnext/core";
 import utils from "../../services/utils.js";
 
 interface Image {
@@ -146,7 +146,7 @@ export function processContent(images: Image[], note: BNote, content: string) {
             if (!dataUrl || !dataUrl.startsWith("data:image")) {
                 const excerpt = dataUrl ? dataUrl.substr(0, Math.min(100, dataUrl.length)) : "null";
 
-                log.info(`Image could not be recognized as data URL: ${excerpt}`);
+                getLog().info(`Image could not be recognized as data URL: ${excerpt}`);
                 continue;
             }
 
@@ -157,7 +157,7 @@ export function processContent(images: Image[], note: BNote, content: string) {
             const encodedTitle = encodeURIComponent(attachment.title);
             const url = `api/attachments/${attachment.attachmentId}/image/${encodedTitle}`;
 
-            log.info(`Replacing '${imageId}' with '${url}' in note '${note.noteId}'`);
+            getLog().info(`Replacing '${imageId}' with '${url}' in note '${note.noteId}'`);
 
             rewrittenContent = utils.replaceAll(rewrittenContent, imageId, url);
         }

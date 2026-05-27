@@ -3,7 +3,7 @@
 import { type ExecOpts, type RequestProvider, sync_options as syncOptions } from "@triliumnext/core";
 import url from "url";
 
-import log from "./log.js";
+import { getLog } from "@triliumnext/core";
 
 // this service provides abstraction over node's HTTP/HTTPS modules.
 // Subclasses (e.g. apps/desktop's ElectronRequestProvider) can override
@@ -148,7 +148,7 @@ export default class NodeRequestProvider implements RequestProvider {
 
                                 resolve(jsonObj);
                             } catch (e: any) {
-                                log.error(`Failed to deserialize sync response: ${responseStr}`);
+                                getLog().error(`Failed to deserialize sync response: ${responseStr}`);
 
                                 reject(generateError(opts, e.message));
                             }
