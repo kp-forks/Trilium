@@ -449,6 +449,9 @@ importers:
       electron-squirrel-startup:
         specifier: 1.0.1
         version: 1.0.1
+      electron-window-state:
+        specifier: 5.0.3
+        version: 5.0.3
     devDependencies:
       '@electron-forge/cli':
         specifier: 7.11.2
@@ -729,9 +732,6 @@ importers:
       electron:
         specifier: 41.7.0
         version: 41.7.0
-      electron-window-state:
-        specifier: 5.0.3
-        version: 5.0.3
       express:
         specifier: 5.2.1
         version: 5.2.1
@@ -2503,7 +2503,7 @@ packages:
     engines: {node: '>=14'}
 
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
-    resolution: {gitHosted: true, integrity: sha512-MXgzlTDEEndJB3TBbvd5uFQO/8gaINo1Hfen8vef5rq/VHVPeB63uuv/uO5+8GFsAJ/rauu6XB79S6K4+aXc+w==, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
     version: 10.2.0-electron.1
     engines: {node: '>=12.13.0'}
     hasBin: true

@@ -9,7 +9,7 @@ import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import port from "@triliumnext/server/src/services/port.js";
 import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
-import windowService from "@triliumnext/server/src/services/window.js";
+import windowService, { setupWindowing } from "./services/window";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { app, BrowserWindow,globalShortcut } from "electron";
@@ -60,6 +60,13 @@ async function main() {
     app.commandLine.appendSwitch("enable-experimental-web-platform-features");
     app.commandLine.appendSwitch("lang", getElectronLocale());
 
+    // In dev mode, disable Chromium's HTTP cache so stale assets cached from a
+    // previous production run (which served `max-age: 1y` headers) don't shadow
+    // freshly built dev output. Must be set before the app's `ready` event.
+    if (process.env.TRILIUM_ENV === "dev") {
+        app.commandLine.appendSwitch("disable-http-cache");
+    }
+
     // Disable smooth scroll if the option is set
     const smoothScrollEnabled = options.getOptionOrNull("smoothScrollEnabled");
     if (smoothScrollEnabled === "false") {
@@ -93,6 +100,7 @@ async function main() {
         await onReady();
     });
 
+    setupWindowing();
     setupSystemTray();
     setupCustomDictionary();
     setupShellHandlers();
@@ -220,12 +228,12 @@ async function onReady() {
     if (sql_init.isDbInitialized()) {
         await sql_init.dbReady;
 
-        await windowService.createMainWindow(app);
+        await windowService.createMainWindow();
 
         if (process.platform === "darwin") {
             app.on("activate", async () => {
                 if (BrowserWindow.getAllWindows().length === 0) {
-                    await windowService.createMainWindow(app);
+                    await windowService.createMainWindow();
                 }
             });
         }

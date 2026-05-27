@@ -1,27 +1,26 @@
-import { type App, type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
+import { app_info, cls, events, keyboard_actions as keyboardActionsService, options as optionService, sql_init, utils as coreUtils } from "@triliumnext/core";
+import log from "@triliumnext/server/src/services/log.js";
+import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
+import { type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
 import url from "url";
 
-import app_info from "./app_info.js";
-import cls from "./cls.js";
-import keyboardActionsService from "./keyboard_actions.js";
-import log from "./log.js";
-import optionService from "./options.js";
-import { RESOURCE_DIR } from "./resource_dir.js";
-import sqlInit from "./sql_init.js";
-import { isDev, isMac, isWindows } from "./utils.js";
-
-const PRELOAD_SCRIPT = path.resolve(
-    isDev
-        ? path.join(__dirname, "..", "..", "..", "desktop", "src", "preload.compiled.cjs")
-        : path.join(__dirname, "preload.cjs")
-);
-
-// In dev mode, disable Chromium's HTTP cache so stale assets cached from a
-// previous production run (which served `max-age: 1y` headers) don't shadow
-// freshly built dev output. Must be set before the app's `ready` event.
-if (isDev) {
-    electron.app.commandLine.appendSwitch("disable-http-cache");
+// Preload bundle path — built next to main.cjs in production by
+// apps/desktop/scripts/build.ts, or compiled in-place by the dev runner
+// (scripts/electron-start.mts) into apps/desktop/src/preload.compiled.cjs.
+//
+// Lazy: `coreUtils.isDev()` calls `getPlatform()` which throws until
+// `initializeCore()` has run; module load happens before that.
+let preloadScriptCache: string | undefined;
+function getPreloadScript(): string {
+    if (preloadScriptCache === undefined) {
+        preloadScriptCache = path.resolve(
+            coreUtils.isDev()
+                ? path.join(__dirname, "..", "preload.compiled.cjs")
+                : path.join(__dirname, "..", "preload.cjs")
+        );
+    }
+    return preloadScriptCache;
 }
 
 // Prevent the window being garbage collected
@@ -61,7 +60,7 @@ async function createExtraWindow(extraWindowHash: string) {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: PRELOAD_SCRIPT,
+            preload: getPreloadScript(),
             spellcheck: spellcheckEnabled,
             webviewTag: true
         },
@@ -77,152 +76,9 @@ async function createExtraWindow(extraWindowHash: string) {
     trackWindowFocus(win);
 }
 
-electron.ipcMain.on("create-extra-window", (event, arg) => {
-    createExtraWindow(arg.extraWindowHash);
-});
-
-electron.ipcMain.on("reload-all-windows", () => {
-    for (const win of electron.BrowserWindow.getAllWindows()) {
-        win.reload();
-    }
-});
-
-electron.ipcMain.on("restart-app", () => {
-    electron.app.relaunch();
-    electron.app.exit();
-});
-
-electron.ipcMain.on("copy-image-to-clipboard", (_event, buffer: Uint8Array) => {
-    try {
-        const image = electron.nativeImage.createFromBuffer(Buffer.from(buffer));
-        if (image.isEmpty()) {
-            console.error("copy-image-to-clipboard: nativeImage is empty, unsupported format?");
-            return;
-        }
-        electron.clipboard.writeImage(image);
-    } catch (e) {
-        console.error("copy-image-to-clipboard failed:", e);
-    }
-});
-
-electron.ipcMain.on("show-window", (event) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.show();
-});
-
-electron.ipcMain.handle("clear-cache", async (event) => {
-    await event.sender.session.clearCache();
-});
-
-electron.ipcMain.on("toggle-all-windows", () => {
-    const windows = electron.BrowserWindow.getAllWindows();
-    const isVisible = windows.every((w) => w.isVisible());
-    const action = isVisible ? "hide" : "show";
-    for (const win of windows) {
-        win[action]();
-    }
-});
-
-electron.ipcMain.on("get-available-spellchecker-languages", (event) => {
-    event.returnValue = event.sender.session.availableSpellCheckerLanguages;
-});
-
-// Window management IPC handlers (replacing @electron/remote for renderer access)
-electron.ipcMain.on("set-title-bar-overlay", (event, options: { color: string; symbolColor: string }) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(options);
-});
-
-electron.ipcMain.on("set-window-button-position", (event, position: { x: number; y: number }) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.setWindowButtonPosition(position);
-});
-
-electron.ipcMain.on("set-background-material", (event, material: string) => {
-    const win = electron.BrowserWindow.fromWebContents(event.sender);
-    win?.setBackgroundMaterial(material as Parameters<typeof win.setBackgroundMaterial>[0]);
-});
-
-electron.ipcMain.on("set-vibrancy", (event, vibrancy: string) => {
-    const win = electron.BrowserWindow.fromWebContents(event.sender);
-    win?.setVibrancy(vibrancy as Parameters<typeof win.setVibrancy>[0]);
-});
-
-electron.ipcMain.on("clear-navigation-history", (event) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.webContents.navigationHistory.clear();
-});
-
-electron.ipcMain.on("set-native-theme-source", (_event, source: "system" | "light" | "dark") => {
-    electron.nativeTheme.themeSource = source;
-});
-
-electron.ipcMain.on("toggle-dev-tools", (event) => {
-    event.sender.toggleDevTools();
-});
-
-electron.ipcMain.on("is-full-screen", (event) => {
-    event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isFullScreen() ?? false;
-});
-
-electron.ipcMain.on("set-full-screen", (event, enabled: boolean) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.setFullScreen(enabled);
-});
-
-electron.ipcMain.on("minimize-window", (event) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.minimize();
-});
-
-electron.ipcMain.on("maximize-window", (event) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.maximize();
-});
-
-electron.ipcMain.on("unmaximize-window", (event) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.unmaximize();
-});
-
-electron.ipcMain.on("is-maximized", (event) => {
-    event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
-});
-
-electron.ipcMain.on("close-window", (event) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.close();
-});
-
-electron.ipcMain.on("is-always-on-top", (event) => {
-    event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isAlwaysOnTop() ?? false;
-});
-
-electron.ipcMain.on("set-always-on-top", (event, enabled: boolean) => {
-    electron.BrowserWindow.fromWebContents(event.sender)?.setAlwaysOnTop(enabled);
-});
-
-electron.ipcMain.on("web-contents-action", (event, action: string, text?: string) => {
-    const wc = event.sender;
-    switch (action) {
-        case "cut": wc.cut(); break;
-        case "copy": wc.copy(); break;
-        case "paste": wc.paste(); break;
-        case "pasteAndMatchStyle": wc.pasteAndMatchStyle(); break;
-        case "insertText": if (text) wc.insertText(text); break;
-    }
-});
-
-electron.ipcMain.on("navigation-history", (event, method: string) => {
-    const wc = event.sender;
-    switch (method) {
-        case "canGoBack": event.returnValue = wc.navigationHistory.canGoBack(); break;
-        case "canGoForward": event.returnValue = wc.navigationHistory.canGoForward(); break;
-        case "getAllEntries": event.returnValue = wc.navigationHistory.getAllEntries(); break;
-        case "getActiveIndex": event.returnValue = wc.navigationHistory.getActiveIndex(); break;
-        case "length": event.returnValue = wc.navigationHistory.length(); break;
-        default: event.returnValue = null;
-    }
-});
-
-electron.ipcMain.on("navigation-history-go-to-index", (event, index: number) => {
-    event.sender.navigationHistory.goToIndex(index);
-});
-
-async function createMainWindow(app: App) {
-    if ("setUserTasks" in app) {
-        app.setUserTasks([
+async function createMainWindow() {
+    if ("setUserTasks" in electron.app) {
+        electron.app.setUserTasks([
             {
                 program: process.execPath,
                 arguments: "--new-window",
@@ -257,7 +113,7 @@ async function createMainWindow(app: App) {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: PRELOAD_SCRIPT,
+            preload: getPreloadScript(),
             spellcheck: spellcheckEnabled,
             webviewTag: true
         },
@@ -279,10 +135,10 @@ function getWindowExtraOpts() {
     const extraOpts: Partial<BrowserWindowConstructorOptions> = {};
 
     if (!optionService.getOptionBool("nativeTitleBarVisible")) {
-        if (isMac) {
+        if (coreUtils.isMac()) {
             extraOpts.titleBarStyle = "hiddenInset";
             extraOpts.titleBarOverlay = true;
-        } else if (isWindows) {
+        } else if (coreUtils.isWindows()) {
             extraOpts.titleBarStyle = "hidden";
             extraOpts.titleBarOverlay = true;
         } else {
@@ -293,10 +149,10 @@ function getWindowExtraOpts() {
         // Window effects (Mica on Windows and Vibrancy on macOS)
         // These only work if native title bar is not enabled.
         if (optionService.getOptionBool("backgroundEffects")) {
-            if (isMac) {
+            if (coreUtils.isMac()) {
                 extraOpts.transparent = true;
                 extraOpts.visualEffectState = "active";
-            } else if (isWindows) {
+            } else if (coreUtils.isWindows()) {
                 extraOpts.backgroundMaterial = "auto";
             } else {
                 // Linux or other platforms.
@@ -381,13 +237,12 @@ function setupSpellcheckForSession(session: Session) {
 
 function getIcon() {
     if (process.env.NODE_ENV === "development") {
-        return path.join(__dirname, "../../../desktop/electron-forge/app-icon/png/256x256-dev.png");
+        return path.join(__dirname, "../../electron-forge/app-icon/png/256x256-dev.png");
     }
     if (app_info.appVersion.includes("test")) {
         return path.join(RESOURCE_DIR, "../public/assets/icon-dev.png");
     }
     return path.join(RESOURCE_DIR, "../public/assets/icon.png");
-
 }
 
 async function createSetupWindow() {
@@ -403,12 +258,12 @@ async function createSetupWindow() {
         title: "Trilium Notes Setup",
         icon: getIcon(),
         // Background effects (Mica on Windows, vibrancy on macOS)
-        ...(isWindows && { backgroundMaterial: "mica" as const }),
-        ...(isMac && { transparent: true, visualEffectState: "active" as const, vibrancy: "under-window" as const, titleBarStyle: "hiddenInset" as const }),
+        ...(coreUtils.isWindows() && { backgroundMaterial: "mica" as const }),
+        ...(coreUtils.isMac() && { transparent: true, visualEffectState: "active" as const, vibrancy: "under-window" as const, titleBarStyle: "hiddenInset" as const }),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: PRELOAD_SCRIPT
+            preload: getPreloadScript()
         }
     });
     setupWindow.removeMenu();
@@ -425,7 +280,7 @@ function closeSetupWindow() {
 async function registerGlobalShortcuts() {
     const { globalShortcut } = await import("electron");
 
-    await sqlInit.dbReady;
+    await sql_init.dbReady;
 
     const allActions = keyboardActionsService.getKeyboardActions();
 
@@ -487,6 +342,172 @@ function getLastFocusedWindow() {
 
 function getAllWindows() {
     return allWindows;
+}
+
+/**
+ * Registers the renderer↔main IPC handlers backing `window.electronApi.window.*`
+ * and the setup→main window swap that fires when the DB transitions to
+ * initialized mid-session.
+ *
+ * Call once during desktop startup, before `app.ready` fires.
+ */
+export function setupWindowing() {
+    electron.ipcMain.on("create-extra-window", (_event, arg) => {
+        createExtraWindow(arg.extraWindowHash);
+    });
+
+    electron.ipcMain.on("reload-all-windows", () => {
+        for (const win of electron.BrowserWindow.getAllWindows()) {
+            win.reload();
+        }
+    });
+
+    electron.ipcMain.on("restart-app", () => {
+        electron.app.relaunch();
+        electron.app.exit();
+    });
+
+    electron.ipcMain.on("copy-image-to-clipboard", (_event, buffer: Uint8Array) => {
+        try {
+            const image = electron.nativeImage.createFromBuffer(Buffer.from(buffer));
+            if (image.isEmpty()) {
+                console.error("copy-image-to-clipboard: nativeImage is empty, unsupported format?");
+                return;
+            }
+            electron.clipboard.writeImage(image);
+        } catch (e) {
+            console.error("copy-image-to-clipboard failed:", e);
+        }
+    });
+
+    electron.ipcMain.on("show-window", (event) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.show();
+    });
+
+    electron.ipcMain.handle("clear-cache", async (event) => {
+        await event.sender.session.clearCache();
+    });
+
+    electron.ipcMain.on("toggle-all-windows", () => {
+        const windows = electron.BrowserWindow.getAllWindows();
+        const isVisible = windows.every((w) => w.isVisible());
+        const action = isVisible ? "hide" : "show";
+        for (const win of windows) {
+            win[action]();
+        }
+    });
+
+    electron.ipcMain.on("get-available-spellchecker-languages", (event) => {
+        event.returnValue = event.sender.session.availableSpellCheckerLanguages;
+    });
+
+    // Window management IPC handlers (replacing @electron/remote for renderer access)
+    electron.ipcMain.on("set-title-bar-overlay", (event, options: { color: string; symbolColor: string }) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(options);
+    });
+
+    electron.ipcMain.on("set-window-button-position", (event, position: { x: number; y: number }) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.setWindowButtonPosition(position);
+    });
+
+    electron.ipcMain.on("set-background-material", (event, material: string) => {
+        const win = electron.BrowserWindow.fromWebContents(event.sender);
+        win?.setBackgroundMaterial(material as Parameters<typeof win.setBackgroundMaterial>[0]);
+    });
+
+    electron.ipcMain.on("set-vibrancy", (event, vibrancy: string) => {
+        const win = electron.BrowserWindow.fromWebContents(event.sender);
+        win?.setVibrancy(vibrancy as Parameters<typeof win.setVibrancy>[0]);
+    });
+
+    electron.ipcMain.on("clear-navigation-history", (event) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.webContents.navigationHistory.clear();
+    });
+
+    electron.ipcMain.on("set-native-theme-source", (_event, source: "system" | "light" | "dark") => {
+        electron.nativeTheme.themeSource = source;
+    });
+
+    electron.ipcMain.on("toggle-dev-tools", (event) => {
+        event.sender.toggleDevTools();
+    });
+
+    electron.ipcMain.on("is-full-screen", (event) => {
+        event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isFullScreen() ?? false;
+    });
+
+    electron.ipcMain.on("set-full-screen", (event, enabled: boolean) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.setFullScreen(enabled);
+    });
+
+    electron.ipcMain.on("minimize-window", (event) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.minimize();
+    });
+
+    electron.ipcMain.on("maximize-window", (event) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.maximize();
+    });
+
+    electron.ipcMain.on("unmaximize-window", (event) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.unmaximize();
+    });
+
+    electron.ipcMain.on("is-maximized", (event) => {
+        event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
+    });
+
+    electron.ipcMain.on("close-window", (event) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.close();
+    });
+
+    electron.ipcMain.on("is-always-on-top", (event) => {
+        event.returnValue = electron.BrowserWindow.fromWebContents(event.sender)?.isAlwaysOnTop() ?? false;
+    });
+
+    electron.ipcMain.on("set-always-on-top", (event, enabled: boolean) => {
+        electron.BrowserWindow.fromWebContents(event.sender)?.setAlwaysOnTop(enabled);
+    });
+
+    electron.ipcMain.on("web-contents-action", (event, action: string, text?: string) => {
+        const wc = event.sender;
+        switch (action) {
+            case "cut": wc.cut(); break;
+            case "copy": wc.copy(); break;
+            case "paste": wc.paste(); break;
+            case "pasteAndMatchStyle": wc.pasteAndMatchStyle(); break;
+            case "insertText": if (text) wc.insertText(text); break;
+        }
+    });
+
+    electron.ipcMain.on("navigation-history", (event, method: string) => {
+        const wc = event.sender;
+        switch (method) {
+            case "canGoBack": event.returnValue = wc.navigationHistory.canGoBack(); break;
+            case "canGoForward": event.returnValue = wc.navigationHistory.canGoForward(); break;
+            case "getAllEntries": event.returnValue = wc.navigationHistory.getAllEntries(); break;
+            case "getActiveIndex": event.returnValue = wc.navigationHistory.getActiveIndex(); break;
+            case "length": event.returnValue = wc.navigationHistory.length(); break;
+            default: event.returnValue = null;
+        }
+    });
+
+    electron.ipcMain.on("navigation-history-go-to-index", (event, index: number) => {
+        event.sender.navigationHistory.goToIndex(index);
+    });
+
+    // Swap the setup wizard window for the main app window once the DB
+    // transitions to initialized mid-session (fresh install / sync-from-server
+    // flow). Idempotent: if no setup window exists (e.g., DB was already
+    // initialized at startup and main was created in onReady), this is a no-op.
+    events.subscribe(events.DB_INITIALIZED, async () => {
+        if (!setupWindow) return;
+        try {
+            await createMainWindow();
+            closeSetupWindow();
+        } catch (err) {
+            log.error(`Failed to swap setup window for main window: ${err}`);
+        }
+    });
 }
 
 export default {
