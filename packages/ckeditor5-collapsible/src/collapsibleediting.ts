@@ -40,7 +40,11 @@ export default class CollapsibleEditing extends Plugin {
 
         schema.register("summary", {
             allowIn: "details",
-            allowContentOf: "$block"
+            allowContentOf: "$block",
+            // Marking as a block lets MoveBlockUpDownPlugin (and any other block-level
+            // command) resolve the caret-in-summary case to the enclosing <details>
+            // via its walk-up-to-top-level-block logic.
+            isBlock: true
         });
 
         // Conversion ----------------------------------------------------------
@@ -169,6 +173,7 @@ export default class CollapsibleEditing extends Plugin {
                 event.preventDefault();
                 event.stopPropagation();
             }, true);
+
         });
 
         // Suppress the native click-to-toggle on <summary> in the editor — only the
