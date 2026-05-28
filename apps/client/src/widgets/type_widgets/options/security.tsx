@@ -20,6 +20,7 @@ function BackendScriptingSettings() {
         <OptionsSection
             title={t("security.backend_scripting_title")}
             description={t("security.backend_scripting_section_description")}
+            helpUrl="SPirpZypehBG"
         >
             <OptionsRowWithToggle
                 name="backend-scripting-enabled"
@@ -40,6 +41,7 @@ function SqlConsoleSettings() {
         <OptionsSection
             title={t("security.sql_console_title")}
             description={t("security.sql_console_section_description")}
+            helpUrl="YKWqdJhzi2VY"
         >
             <OptionsRowWithToggle
                 name="sql-console-enabled"
