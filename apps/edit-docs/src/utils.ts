@@ -57,7 +57,7 @@ export async function initializeEditDocsCore() {
             provider: dbProvider,
             isReadOnly: false,
             async onTransactionCommit() {
-                const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
+                const { ws } = await import("@triliumnext/core");
                 ws.sendTransactionEntityChangesToAllClients();
             },
             onTransactionRollback: () => {}

@@ -403,7 +403,7 @@ importers:
         version: 6.3.3
       copy-webpack-plugin:
         specifier: 14.0.0
-        version: 14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15))
+        version: 14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0))
       happy-dom:
         specifier: 20.9.0
         version: 20.9.0
@@ -586,7 +586,11 @@ importers:
         specifier: 8.3.4
         version: 8.3.4
 
-  apps/script-deployer: {}
+  apps/script-deployer:
+    devDependencies:
+      '@triliumnext/core':
+        specifier: workspace:*
+        version: link:../../packages/trilium-core
 
   apps/server:
     dependencies:
@@ -21575,14 +21579,14 @@ snapshots:
 
   cookiejar@2.1.4: {}
 
-  copy-webpack-plugin@14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)):
+  copy-webpack-plugin@14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)):
     dependencies:
       glob-parent: 6.0.2
       normalize-path: 3.0.0
       schema-utils: 4.3.3
       serialize-javascript: 7.0.5
       tinyglobby: 0.2.16
-      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)
+      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)
 
   copy-webpack-plugin@14.0.0(webpack@5.106.2(esbuild@0.28.0)):
     dependencies:
@@ -27663,17 +27667,16 @@ snapshots:
       rimraf: 2.6.3
     optional: true
 
-  terser-webpack-plugin@5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)):
+  terser-webpack-plugin@5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       terser: 5.47.1
-      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)
+      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)
     optionalDependencies:
       esbuild: 0.28.0
       lightningcss: 1.32.0
-      postcss: 8.5.15
 
   terser-webpack-plugin@5.6.0(esbuild@0.28.0)(webpack@5.106.2(esbuild@0.28.0)):
     dependencies:
@@ -28512,7 +28515,7 @@ snapshots:
       - postcss
       - uglify-js
 
-  webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15):
+  webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.9
@@ -28535,7 +28538,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.3
-      terser-webpack-plugin: 5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15))
+      terser-webpack-plugin: 5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0))
       watchpack: 2.5.1
       webpack-sources: 3.4.1
     transitivePeerDependencies:
