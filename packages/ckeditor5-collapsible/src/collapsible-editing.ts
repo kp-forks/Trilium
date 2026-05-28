@@ -216,11 +216,11 @@ export default class CollapsibleEditing extends Plugin {
     // -----------------------------------------------------------------
 
     /**
-     * Show a "Content" placeholder on empty body paragraphs of a <details>.
-     * Applied per paragraph via an editing-downcast event listener, so each
-     * body paragraph manages its own emptiness independently — the placeholder
-     * appears on whichever body paragraphs happen to be empty (typically just
-     * the single empty one in a freshly-inserted collapsible).
+     * Show a "Content" placeholder on the *first* body paragraph of a <details>
+     * (only the one immediately after the summary). For a freshly-inserted
+     * collapsible that's the single empty paragraph the user sees. Subsequent
+     * body paragraphs the user adds don't get their own placeholder — keeps
+     * the hint visible only where it's useful.
      */
     private bodyPlaceholdersApplied = new WeakSet<any>();
 
@@ -230,7 +230,10 @@ export default class CollapsibleEditing extends Plugin {
         editor.conversion.for("editingDowncast").add((dispatcher: any) => {
             dispatcher.on("insert:paragraph", (_evt: any, data: any, conversionApi: any) => {
                 const paragraph = data.item;
-                if (!paragraph.parent?.is("element", "details")) return;
+                const parent = paragraph.parent;
+                if (!parent?.is("element", "details")) return;
+                // Only the first body block (index 1; index 0 is the summary).
+                if (parent.getChild(1) !== paragraph) return;
                 const view = conversionApi.mapper.toViewElement(paragraph);
                 if (!view || this.bodyPlaceholdersApplied.has(view)) return;
                 enableViewPlaceholder({
