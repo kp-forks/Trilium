@@ -20,7 +20,7 @@ export interface CoreConfig {
         syncProxy: string;
     };
     Scripting: {
-        enabled: boolean;
+        backendScriptingEnabled: boolean;
         sqlConsoleEnabled: boolean;
     };
 }
@@ -36,7 +36,7 @@ const EMPTY_CONFIG: CoreConfig = {
         syncProxy: ""
     },
     Scripting: {
-        enabled: false,
+        backendScriptingEnabled: false,
         sqlConsoleEnabled: false
     }
 };

@@ -141,7 +141,7 @@ export interface TriliumConfig {
     /** Scripting and code execution configuration */
     Scripting: {
         /** Whether backend script execution is enabled (default: false for server, true for desktop) */
-        enabled: boolean;
+        backendScriptingEnabled: boolean;
         /** Whether the SQL console is accessible (default: false) */
         sqlConsoleEnabled: boolean;
     };
@@ -472,9 +472,9 @@ const configMapping = {
         }
     },
     Scripting: {
-        enabled: {
-            standardEnvVar: 'TRILIUM_SCRIPTING_ENABLED',
-            iniGetter: () => getIniSection("Scripting")?.enabled,
+        backendScriptingEnabled: {
+            standardEnvVar: 'TRILIUM_SCRIPTING_BACKEND_ENABLED',
+            iniGetter: () => getIniSection("Scripting")?.backendScriptingEnabled,
             defaultValue: false,
             transformer: transformBoolean
         },
@@ -540,14 +540,14 @@ const config: TriliumConfig = {
         retentionDays: getConfigValue(configMapping.Logging.retentionDays)
     },
     Scripting: {
-        enabled: getConfigValue(configMapping.Scripting.enabled),
+        backendScriptingEnabled: getConfigValue(configMapping.Scripting.backendScriptingEnabled),
         sqlConsoleEnabled: getConfigValue(configMapping.Scripting.sqlConsoleEnabled)
     }
 };
 
 // Desktop builds always have scripting enabled (single-user trusted environment)
 if (process.versions["electron"]) {
-    config.Scripting.enabled = true;
+    config.Scripting.backendScriptingEnabled = true;
     config.Scripting.sqlConsoleEnabled = true;
 }
 
