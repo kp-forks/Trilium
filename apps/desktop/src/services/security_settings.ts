@@ -34,18 +34,29 @@ export function getSecuritySettings(): SecuritySettings {
     return readSettings();
 }
 
-async function confirmToggle(settingLabel: string, enabled: boolean): Promise<boolean> {
-    const message = enabled
-        ? `Are you sure you want to enable ${settingLabel}?\n\nThis change requires a restart to take effect.`
-        : `${settingLabel} will be disabled.\n\nThis change requires a restart to take effect.`;
-
+async function confirmEnable(settingLabel: string, warning: string): Promise<boolean> {
     const result = await electron.dialog.showMessageBox({
-        type: enabled ? "warning" : "question",
-        buttons: ["Cancel", enabled ? "Enable" : "Disable"],
+        type: "warning",
+        buttons: ["Cancel", "Enable"],
         defaultId: 0,
         cancelId: 0,
-        title: `${enabled ? "Enable" : "Disable"} ${settingLabel}`,
-        message
+        title: `Enable ${settingLabel}`,
+        message: `Are you sure you want to enable ${settingLabel}?`,
+        detail: `${warning}\n\nOnly enable this if you explicitly intend to use this feature. Do not enable it if prompted by a script or an unfamiliar note.\n\nThis change requires a restart to take effect.`
+    });
+
+    return result.response === 1;
+}
+
+async function confirmDisable(settingLabel: string): Promise<boolean> {
+    const result = await electron.dialog.showMessageBox({
+        type: "info",
+        buttons: ["Cancel", "Disable"],
+        defaultId: 1,
+        cancelId: 0,
+        title: `Disable ${settingLabel}`,
+        message: `${settingLabel} will be disabled.`,
+        detail: "This change requires a restart to take effect."
     });
 
     return result.response === 1;
@@ -53,7 +64,10 @@ async function confirmToggle(settingLabel: string, enabled: boolean): Promise<bo
 
 export function registerSecurityIpcHandlers(): void {
     electron.ipcMain.handle("security-set-backend-scripting", async (_event, enabled: boolean) => {
-        const confirmed = await confirmToggle("backend script execution", enabled);
+        const confirmed = enabled
+            ? await confirmEnable("Backend script execution",
+                "Backend scripts have full access to the server, including the file system and network.")
+            : await confirmDisable("Backend script execution");
         if (!confirmed) {
             return false;
         }
@@ -65,7 +79,10 @@ export function registerSecurityIpcHandlers(): void {
     });
 
     electron.ipcMain.handle("security-set-sql-console", async (_event, enabled: boolean) => {
-        const confirmed = await confirmToggle("SQL console", enabled);
+        const confirmed = enabled
+            ? await confirmEnable("SQL console",
+                "The SQL console allows executing arbitrary SQL queries against the database.")
+            : await confirmDisable("SQL console");
         if (!confirmed) {
             return false;
         }

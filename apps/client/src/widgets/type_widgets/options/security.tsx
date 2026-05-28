@@ -1,7 +1,6 @@
 import { useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
-import toast from "../../../services/toast";
 import { isElectron, restartDesktopApp } from "../../../services/utils";
 import Button from "../../react/Button";
 import Collapsible from "../../react/Collapsible";
@@ -10,13 +9,31 @@ import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function SecuritySettings() {
-    const [pendingRestart, setPendingRestart] = useState(false);
+    // Local state tracks what's been written to security.json (pending restart).
+    // null = no change made yet, use the live config value.
+    const [pendingBackendScripting, setPendingBackendScripting] = useState<boolean | null>(null);
+    const [pendingSqlConsole, setPendingSqlConsole] = useState<boolean | null>(null);
+
+    const [liveBackendScripting] = useTriliumOptionBool("backendScriptingEnabled");
+    const [liveSqlConsole] = useTriliumOptionBool("sqlConsoleEnabled");
+
+    const hasPendingChanges =
+        (pendingBackendScripting !== null && pendingBackendScripting !== liveBackendScripting) ||
+        (pendingSqlConsole !== null && pendingSqlConsole !== liveSqlConsole);
 
     return (
         <>
-            <BackendScriptingSettings pendingRestart={pendingRestart} setPendingRestart={setPendingRestart} />
-            <SqlConsoleSettings pendingRestart={pendingRestart} setPendingRestart={setPendingRestart} />
-            {pendingRestart && isElectron() && (
+            <BackendScriptingSettings
+                liveValue={liveBackendScripting}
+                pendingValue={pendingBackendScripting}
+                setPendingValue={setPendingBackendScripting}
+            />
+            <SqlConsoleSettings
+                liveValue={liveSqlConsole}
+                pendingValue={pendingSqlConsole}
+                setPendingValue={setPendingSqlConsole}
+            />
+            {hasPendingChanges && isElectron() && (
                 <OptionsSection noCard>
                     <OptionsRow name="restart" centered>
                         <Button
@@ -49,19 +66,21 @@ function ServerConfigHint({ configKey, envVar }: { configKey: string; envVar: st
 }
 
 interface ToggleSectionProps {
-    pendingRestart: boolean;
-    setPendingRestart: (value: boolean) => void;
+    liveValue: boolean;
+    pendingValue: boolean | null;
+    setPendingValue: (value: boolean | null) => void;
 }
 
-function BackendScriptingSettings({ pendingRestart, setPendingRestart }: ToggleSectionProps) {
-    const [backendScriptingEnabled] = useTriliumOptionBool("backendScriptingEnabled");
+function BackendScriptingSettings({ liveValue, pendingValue, setPendingValue }: ToggleSectionProps) {
     const isDesktop = isElectron();
+    const displayValue = pendingValue ?? liveValue;
+    const hasPendingChange = pendingValue !== null && pendingValue !== liveValue;
 
     async function handleToggle(enabled: boolean) {
         const confirmed = await window.electronApi!.security.setBackendScriptingEnabled(enabled);
         if (confirmed) {
-            setPendingRestart(true);
-            toast.showMessage(t("security.restart_required"));
+            // If toggling back to the live value, clear pending state
+            setPendingValue(enabled === liveValue ? null : enabled);
         }
     }
 
@@ -74,12 +93,12 @@ function BackendScriptingSettings({ pendingRestart, setPendingRestart }: ToggleS
             <OptionsRowWithToggle
                 name="backend-scripting-enabled"
                 label={t("security.backend_scripting_label")}
-                description={pendingRestart
+                description={hasPendingChange
                     ? t("security.restart_required")
                     : t("security.backend_scripting_description")}
-                currentValue={pendingRestart ? !backendScriptingEnabled : backendScriptingEnabled}
+                currentValue={displayValue}
                 onChange={handleToggle}
-                disabled={!isDesktop || pendingRestart}
+                disabled={!isDesktop}
             />
             <ServerConfigHint
                 configKey="backendScriptingEnabled"
@@ -89,15 +108,15 @@ function BackendScriptingSettings({ pendingRestart, setPendingRestart }: ToggleS
     );
 }
 
-function SqlConsoleSettings({ pendingRestart, setPendingRestart }: ToggleSectionProps) {
-    const [sqlConsoleEnabled] = useTriliumOptionBool("sqlConsoleEnabled");
+function SqlConsoleSettings({ liveValue, pendingValue, setPendingValue }: ToggleSectionProps) {
     const isDesktop = isElectron();
+    const displayValue = pendingValue ?? liveValue;
+    const hasPendingChange = pendingValue !== null && pendingValue !== liveValue;
 
     async function handleToggle(enabled: boolean) {
         const confirmed = await window.electronApi!.security.setSqlConsoleEnabled(enabled);
         if (confirmed) {
-            setPendingRestart(true);
-            toast.showMessage(t("security.restart_required"));
+            setPendingValue(enabled === liveValue ? null : enabled);
         }
     }
 
@@ -110,12 +129,12 @@ function SqlConsoleSettings({ pendingRestart, setPendingRestart }: ToggleSection
             <OptionsRowWithToggle
                 name="sql-console-enabled"
                 label={t("security.sql_console_label")}
-                description={pendingRestart
+                description={hasPendingChange
                     ? t("security.restart_required")
                     : t("security.sql_console_description")}
-                currentValue={pendingRestart ? !sqlConsoleEnabled : sqlConsoleEnabled}
+                currentValue={displayValue}
                 onChange={handleToggle}
-                disabled={!isDesktop || pendingRestart}
+                disabled={!isDesktop}
             />
             <ServerConfigHint
                 configKey="sqlConsoleEnabled"
