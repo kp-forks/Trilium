@@ -133,7 +133,7 @@ export function buildFloatingToolbar() {
             {
                 label: "Insert",
                 icon: "plus",
-                items: ["link", "bookmark", "internallink", "includeNote",, "linkEmbed", "|", "collapsible", "math", "mermaid", "horizontalLine", "pageBreak", "dateTime"]
+                items: ["link", "bookmark", "internallink", "includeNote", "linkEmbed", "|", "collapsible", "math", "mermaid", "horizontalLine", "pageBreak", "dateTime"]
             },
             "|",
             buildAlignmentToolbar(),
