@@ -24,7 +24,6 @@ export default class CollapsibleCommand extends Command {
         const editor = this.editor;
         const model = editor.model;
         const selection = model.document.selection;
-        let newDetails: any;
 
         model.change(writer => {
             // Clone the selected content up front (does not modify the document).
@@ -44,6 +43,12 @@ export default class CollapsibleCommand extends Command {
                 let pending: any[] = [];
                 const flushPending = () => {
                     if (!pending.length) return;
+                    // Skip whitespace-only runs — wrapping invisible whitespace in a
+                    // paragraph just litters the body.
+                    const hasContent = pending.some(n =>
+                        n.is?.("element") || (n.is?.("$text") && /\S/.test(n.data ?? ""))
+                    );
+                    if (!hasContent) { pending = []; return; }
                     const p = writer.createElement("paragraph");
                     for (const n of pending) writer.append(n, p);
                     writer.append(p, details);
@@ -79,25 +84,12 @@ export default class CollapsibleCommand extends Command {
                 model.deleteContent(selection);
             }
             model.insertContent(details);
-            newDetails = details;
 
             // Place the cursor inside the summary so the user can immediately type a title.
+            // The CollapsibleEditing plugin's auto-open listener will expand the new
+            // <details> on the next render (and again on redo).
             writer.setSelection(summary, 0);
         });
-
-        // The editing downcast renders <details> closed by default so loaded documents
-        // start collapsed. Open the freshly-inserted one so the user can type into its
-        // body without an extra click. Deferred so the view has had a chance to render.
-        setTimeout(() => {
-            // Editor may have been torn down between execute and this tick (e.g. tab
-            // switch in Trilium); accessing `editor.editing` after destroy throws.
-            if ((editor as any).state === "destroyed") return;
-            const view = editor.editing.mapper.toViewElement(newDetails);
-            const dom = view ? editor.editing.view.domConverter.viewToDom(view) : null;
-            if (dom instanceof HTMLDetailsElement) {
-                dom.open = true;
-            }
-        }, 0);
     }
 
     private checkEnabled(): boolean {

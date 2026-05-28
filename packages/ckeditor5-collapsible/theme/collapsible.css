@@ -55,7 +55,8 @@
 }
 
 .ck-editor__editable details.trilium-collapsible > summary > .trilium-collapsible-arrow::before {
-    content: "▶";
+    /* U+25B6 BLACK RIGHT-POINTING TRIANGLE; CSS escape avoids encoding pitfalls. */
+    content: "\25B6";
     font-size: 0.8em;
 }
 
