@@ -20,7 +20,7 @@
     "donate_tooltip": "Faites un don pour soutenir ce projet",
     "channel": {
       "nightly": "Nightly",
-      "standalone": "Web autonome"
+      "standalone": "Standalone"
     }
   },
   "toast": {
@@ -210,8 +210,8 @@
     "safeImport": "Importation sécurisée",
     "explodeArchivesTooltip": "Si cette case est cochée, Trilium lira les fichiers <code>.zip</code>, <code>.enex</code> et <code>.opml</code> et créera des notes à partir des fichiers contenus dans ces archives. Si cette case n'est pas cochée, Trilium joindra les archives elles-mêmes à la note.",
     "explodeArchives": "Lire le contenu des archives <code>.zip</code>, <code>.enex</code> et <code>.opml</code>.",
-    "shrinkImagesTooltip": "<p>Si vous cochez cette option, Trilium tentera de réduire les images importées par mise à l'échelle et optimisation, ce qui peut affecter la qualité de l'image perçue. Si cette case n'est pas cochée, les images seront importées sans modifications.</p><p>Cela ne s'applique pas aux importations <code>.zip</code> avec des métadonnées, car on suppose que ces fichiers sont déjà optimisés.</p>",
-    "shrinkImages": "Réduire les images",
+    "shrinkImagesTooltip": "<p>Si vous cochez cette option, Trilium tentera de réduire la taille des images importées, ce qui peut affecter la qualité perçue des images. Si cette option est décochée, les images seront importées sans modification..</p><p>Cela ne s'applique pas aux importations de fichiers <code>.zip</code> contenant des métadonnées, car il est supposé que ces fichiers sont déjà optimisés..</p>",
+    "shrinkImages": "Réduire la taille des images",
     "textImportedAsText": "Importez HTML, Markdown et TXT sous forme de notes de texte si les métadonnées ne sont pas claires",
     "codeImportedAsCode": "Importez des fichiers de code reconnus (par exemple <code>.json</code>) en tant que notes de code si cela n'est pas clair à partir des métadonnées",
     "replaceUnderscoresWithSpaces": "Remplacez les tirets bas par des espaces dans les noms de notes importées",
@@ -320,9 +320,9 @@
     "choose_files": "Choisir des fichiers",
     "files_will_be_uploaded": "Les fichiers seront téléversés sous forme de pièces jointes dans {{noteTitle}}",
     "options": "Options",
-    "shrink_images": "Réduire les images",
+    "shrink_images": "Réduire la taille des images",
     "upload": "Téléverser",
-    "tooltip": "Si vous cochez cette option, Trilium tentera de réduire les images téléversées par mise à l'échelle et optimisation, ce qui peut affecter la qualité de l'image perçue. Si cette case n'est pas cochée, les images seront téléversées sans modifications."
+    "tooltip": "Si vous cochez cette option, Trilium tentera de réduire la taille des images importées, ce qui peut affecter la qualité perçue des images. Si cette option est décochée, les images seront importées sans modification."
   },
   "attribute_detail": {
     "attr_detail_title": "Titre détaillé de l'attribut",
@@ -581,7 +581,7 @@
     "delete_attachment": "Supprimer la pièce jointe",
     "upload_success": "Une nouvelle version de pièce jointe a été téléversée.",
     "upload_failed": "Le téléversement d'une nouvelle version de pièce jointe a échoué.",
-    "open_externally_detail_page": "L'ouverture externe d'une pièce jointe n''est disponible qu'à partir de la page de détails. Veuillez d'abord cliquer sur les détails de la pièce jointe et répéter l'opération.",
+    "open_externally_detail_page": "L'ouverture externe d'une pièce jointe n'est disponible qu'à partir de la page de détails. Cliquez d'abord sur les détails de la pièce jointe puis réessayez.",
     "open_custom_client_only": "L'option \"Ouvrir avec\" des pièces jointes n'est disponible que dans la version bureau de Trilium.",
     "delete_confirm": "Êtes-vous sûr de vouloir supprimer la pièce jointe « {{title}} » ?",
     "delete_success": "La pièce jointe « {{title}} » a été supprimée.",
@@ -743,7 +743,8 @@
     "trilium_api_docs_button_title": "Ouvrir la documentation de l'API Trilium",
     "save_to_note_button_title": "Enregistrer dans la note",
     "opening_api_docs_message": "Ouverture de la documentation de l'API...",
-    "sql_console_saved_message": "La note de la console SQL a été enregistrée dans {{note_path}}"
+    "sql_console_saved_message": "La note de la console SQL a été enregistrée dans {{note_path}}",
+    "electron_api_docs_button_title": "Ouvrir la documentation de l'API Electron"
   },
   "copy_image_reference_button": {
     "button_title": "Copier la référence de l'image dans le presse-papiers, peut être collée dans une note textuelle."
@@ -2205,7 +2206,13 @@
     "sources_summary": "{{count}} sources provenant de {{sites}} sites",
     "stop": "Arrêter",
     "retry": "Réessayer",
-    "edit_index": "Modification {{index}} sur {{total}}"
+    "edit_index": "Modification {{index}} sur {{total}}",
+    "web_search_unavailable_gemini": "Non disponible sur les modèles Gemini lorsque l'accès aux notes est activé — l'API de Google ne permet pas de combiner les deux. Désactivez l'accès aux notes ou changez de fournisseur pour utiliser la recherche web.",
+    "input_streaming": "Entrée (streaming…)",
+    "attach_file": "Joindre une image, un PDF ou un fichier texte",
+    "remove_attachment": "Supprimer la pièce jointe",
+    "attachment_upload_failed": "Impossible de téléverser \"{{name}}\".",
+    "attachment_unsupported_type": "\"{{name}}\" n'est pas un type de pièce jointe pris en charge. Utilisez une image (PNG, JPEG, GIF, WebP), un PDF, ou un fichier texte/source."
   },
   "sidebar_chat": {
     "title": "discussion IA",
@@ -2256,7 +2263,7 @@
     "shared_open_in_browser": "Ouvrir le lien dans le navigateur",
     "shared_unshare": "Supprimer le partage",
     "clipped_note": "Clip Web",
-    "clipped_note_description": "Cette note a été initialement construite depuis l'url {{url}}.\n\nCliquez pour accéder à la page Web source.",
+    "clipped_note_description": "Cette note provient à l'origine de {{url}}.\n\nCliquez pour accéder à la page web source.",
     "execute_script": "Exécuter le script",
     "execute_script_description": "Cette note est une note de script. Cliquez pour exécuter le script.",
     "execute_sql": "Exécuter la commande SQL",
