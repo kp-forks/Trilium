@@ -28,6 +28,10 @@ flags:
     paths:
       - apps/desktop/src/
     carryforward: true
+  commons:
+    paths:
+      - packages/commons/src/
+    carryforward: true
 
 comment:
   layout: "condensed_header, condensed_files, condensed_footer"

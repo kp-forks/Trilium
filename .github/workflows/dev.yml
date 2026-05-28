@@ -114,8 +114,19 @@ jobs:
           flags: desktop
           fail_ci_if_error: false
 
+      - name: Run the commons tests
+        run: pnpm run --filter=commons test --coverage
+
+      - name: Upload commons coverage to Codecov
+        uses: codecov/codecov-action@v5
+        if: always()
+        with:
+          files: packages/commons/test-output/vitest/coverage/lcov.info
+          flags: commons
+          fail_ci_if_error: false
+
       - name: Run the rest of the tests
-        run: pnpm run --filter=\!client --filter=\!standalone --filter=\!server --filter=\!desktop --filter=\!ckeditor5-mermaid --filter=\!ckeditor5-math test
+        run: pnpm run --filter=\!client --filter=\!standalone --filter=\!server --filter=\!desktop --filter=\!commons --filter=\!ckeditor5-mermaid --filter=\!ckeditor5-math test
 
   build_docker:
     name: Build Docker image
