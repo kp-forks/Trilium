@@ -1,6 +1,7 @@
 import { t } from "../../../services/i18n";
 import { isElectron } from "../../../services/utils";
 import Collapsible from "../../react/Collapsible";
+import { useTriliumOptionBool } from "../../react/hooks";
 import { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -31,7 +32,7 @@ function ServerConfigHint({ configKey, envVar }: { configKey: string; envVar: st
 function BackendScriptingSettings() {
     // Read-only for now — the actual toggle mechanism (IPC + native
     // dialog on desktop, config.ini on server) will be implemented separately.
-    const backendScriptingEnabled = false;
+    const [backendScriptingEnabled] = useTriliumOptionBool("backendScriptingEnabled");
 
     return (
         <OptionsSection
@@ -56,7 +57,7 @@ function BackendScriptingSettings() {
 }
 
 function SqlConsoleSettings() {
-    const sqlConsoleEnabled = false;
+    const [sqlConsoleEnabled] = useTriliumOptionBool("sqlConsoleEnabled");
 
     return (
         <OptionsSection
