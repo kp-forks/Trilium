@@ -8,6 +8,24 @@ let dbConnection!: Database.Database;
 let dbConnectionReady = false;
 
 sql_init.dbReady.then(() => {
+    if (process.env.TRILIUM_INTEGRATION_TEST === "memory") {
+        // In-memory test mode loads the DB from a buffer, so there is no
+        // on-disk file at DOCUMENT_PATH. Open the original fixture file
+        // directly so share routes still work in tests.
+        try {
+            const fixturePath = require.resolve("@triliumnext/core/src/test/fixtures/document.db");
+            dbConnection = new Database(fixturePath, {
+                readonly: true,
+                nativeBinding: process.env.BETTERSQLITE3_NATIVE_PATH || undefined
+            });
+            dbConnectionReady = true;
+        } catch {
+            // Fixture not available (e.g. bundled/standalone) — share
+            // endpoints will return 503 via the isShareDbReady() guard.
+        }
+        return;
+    }
+
     dbConnection = new Database(dataDir.DOCUMENT_PATH, {
         readonly: true,
         nativeBinding: process.env.BETTERSQLITE3_NATIVE_PATH || undefined
