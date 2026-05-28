@@ -1,5 +1,4 @@
 import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, type NoteType } from "@triliumnext/commons";
-import fs from "fs";
 import html2plaintext from "html2plaintext";
 import { t } from "i18next";
 import url from "url";
@@ -700,24 +699,20 @@ const imageUrlToAttachmentIdMapping: Record<string, string> = {};
 async function downloadImage(noteId: string, imageUrl: string) {
     const unescapedUrl = unescapeHtml(imageUrl);
 
+    // SSRF protection: only allow http(s) URLs and block file:// and other schemes.
     try {
-        let imageBuffer: Uint8Array;
-
-        if (imageUrl.toLowerCase().startsWith("file://")) {
-            imageBuffer = await new Promise((res, rej) => {
-                const localFilePath = imageUrl.substring("file://".length);
-
-                return fs.readFile(localFilePath, (err, data) => {
-                    if (err) {
-                        rej(err);
-                    } else {
-                        res(data);
-                    }
-                });
-            });
-        } else {
-            imageBuffer = new Uint8Array(await request.getImage(unescapedUrl));
+        const parsed = new URL(unescapedUrl);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            getLog().error(`Download of '${imageUrl}' for note '${noteId}' rejected: only http/https URLs are allowed.`);
+            return;
         }
+    } catch {
+        getLog().error(`Download of '${imageUrl}' for note '${noteId}' rejected: invalid URL.`);
+        return;
+    }
+
+    try {
+        const imageBuffer = new Uint8Array(await request.getImage(unescapedUrl));
 
         const parsedUrl = url.parse(unescapedUrl);
         const title = basename(parsedUrl.pathname || "");
