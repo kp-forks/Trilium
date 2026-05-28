@@ -1580,7 +1580,8 @@
     "sql_console_description": "Allow execution of queries in the SQL console.",
     "how_to_enable": "How to enable",
     "server_config_hint": "Add the following to your config.ini file:",
-    "server_env_hint": "Or set the following environment variable:"
+    "server_env_hint": "Or set the following environment variable:",
+    "restart_required": "Restart required for this change to take effect."
   },
   "password": {
     "heading": "Password",

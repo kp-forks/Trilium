@@ -1,4 +1,7 @@
+import { useState } from "preact/hooks";
+
 import { t } from "../../../services/i18n";
+import toast from "../../../services/toast";
 import { isElectron } from "../../../services/utils";
 import Collapsible from "../../react/Collapsible";
 import { useTriliumOptionBool } from "../../react/hooks";
@@ -30,9 +33,17 @@ function ServerConfigHint({ configKey, envVar }: { configKey: string; envVar: st
 }
 
 function BackendScriptingSettings() {
-    // Read-only for now — the actual toggle mechanism (IPC + native
-    // dialog on desktop, config.ini on server) will be implemented separately.
     const [backendScriptingEnabled] = useTriliumOptionBool("backendScriptingEnabled");
+    const [pendingRestart, setPendingRestart] = useState(false);
+    const isDesktop = isElectron();
+
+    async function handleToggle(enabled: boolean) {
+        const confirmed = await window.electronApi!.security.setBackendScriptingEnabled(enabled);
+        if (confirmed) {
+            setPendingRestart(true);
+            toast.showMessage(t("security.restart_required"));
+        }
+    }
 
     return (
         <OptionsSection
@@ -43,10 +54,12 @@ function BackendScriptingSettings() {
             <OptionsRowWithToggle
                 name="backend-scripting-enabled"
                 label={t("security.backend_scripting_label")}
-                description={t("security.backend_scripting_description")}
-                currentValue={backendScriptingEnabled}
-                onChange={() => {}}
-                disabled={true}
+                description={pendingRestart
+                    ? t("security.restart_required")
+                    : t("security.backend_scripting_description")}
+                currentValue={pendingRestart ? !backendScriptingEnabled : backendScriptingEnabled}
+                onChange={handleToggle}
+                disabled={!isDesktop || pendingRestart}
             />
             <ServerConfigHint
                 configKey="backendScriptingEnabled"
@@ -58,6 +71,16 @@ function BackendScriptingSettings() {
 
 function SqlConsoleSettings() {
     const [sqlConsoleEnabled] = useTriliumOptionBool("sqlConsoleEnabled");
+    const [pendingRestart, setPendingRestart] = useState(false);
+    const isDesktop = isElectron();
+
+    async function handleToggle(enabled: boolean) {
+        const confirmed = await window.electronApi!.security.setSqlConsoleEnabled(enabled);
+        if (confirmed) {
+            setPendingRestart(true);
+            toast.showMessage(t("security.restart_required"));
+        }
+    }
 
     return (
         <OptionsSection
@@ -68,10 +91,12 @@ function SqlConsoleSettings() {
             <OptionsRowWithToggle
                 name="sql-console-enabled"
                 label={t("security.sql_console_label")}
-                description={t("security.sql_console_description")}
-                currentValue={sqlConsoleEnabled}
-                onChange={() => {}}
-                disabled={true}
+                description={pendingRestart
+                    ? t("security.restart_required")
+                    : t("security.sql_console_description")}
+                currentValue={pendingRestart ? !sqlConsoleEnabled : sqlConsoleEnabled}
+                onChange={handleToggle}
+                disabled={!isDesktop || pendingRestart}
             />
             <ServerConfigHint
                 configKey="sqlConsoleEnabled"

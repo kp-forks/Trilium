@@ -26,6 +26,7 @@ import DesktopPlatformProvider from "./platform_provider";
 import { registerTriliumAppScheme, setupTriliumAppProtocol } from "./protocol";
 import { setupCustomDictionary } from "./services/custom_dictionary";
 import { setupPrintingHandlers } from "./services/printing";
+import { getSecuritySettings, registerSecurityIpcHandlers } from "./services/security_settings";
 import { setupShellHandlers } from "./services/shell";
 import { setupSystemTray } from "./services/tray";
 
@@ -105,6 +106,7 @@ async function main() {
     setupCustomDictionary();
     setupShellHandlers();
     setupPrintingHandlers();
+    registerSecurityIpcHandlers();
 
     app.on("will-quit", () => {
         globalShortcut.unregisterAll();
@@ -136,6 +138,15 @@ async function main() {
 
     const { DOCUMENT_PATH } = (await import("@triliumnext/server/src/services/data_dir.js")).default;
     const config = (await import("@triliumnext/server/src/services/config.js")).default;
+
+    // Override scripting config from security.json (lives outside the DB for tamper resistance)
+    const securitySettings = getSecuritySettings();
+    if (securitySettings.backendScriptingEnabled !== undefined) {
+        config.Scripting.backendScriptingEnabled = securitySettings.backendScriptingEnabled;
+    }
+    if (securitySettings.sqlConsoleEnabled !== undefined) {
+        config.Scripting.sqlConsoleEnabled = securitySettings.sqlConsoleEnabled;
+    }
 
     const dbProvider = new BetterSqlite3Provider();
     dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
