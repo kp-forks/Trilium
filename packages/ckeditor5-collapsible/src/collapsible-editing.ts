@@ -435,7 +435,9 @@ export default class CollapsibleEditing extends Plugin {
         if (!selection.isCollapsed) return;
 
         const parent = selection.getLastPosition()?.parent;
-        if (!parent || !parent.is("element") || parent.is("element", "summary")) return;
+        // Restrict to <paragraph> so we don't hijack the native Enter behaviour
+        // of list items (outdent), headings (convert to paragraph), etc.
+        if (!parent || !parent.is("element", "paragraph")) return;
         if (!parent.isEmpty || parent.nextSibling) return;
 
         const details = parent.parent;
@@ -548,6 +550,10 @@ export default class CollapsibleEditing extends Plugin {
             const firstBody = details.getChild(1);
             if (firstBody?.is("element")) {
                 writer.setSelection(firstBody, 0);
+                // Remove the empty summary first so unwrap doesn't briefly leave
+                // an orphan <summary> in the parent (which would otherwise
+                // require the summary-invariant post-fixer to clean up).
+                writer.remove(summary);
                 writer.unwrap(details);
             } else {
                 const p = writer.createElement("paragraph");
@@ -720,8 +726,15 @@ export default class CollapsibleEditing extends Plugin {
             if (!ready) return;
             for (const entry of editor.model.document.differ.getChanges()) {
                 if (entry.type !== "insert") continue;
-                const node = (entry as any).position?.nodeAfter;
-                if (node?.is?.("element", "details")) pendingOpen.add(node);
+                // A single insert entry can cover multiple top-level nodes (e.g. a
+                // multi-block paste). Walk via nextSibling up to entry.length so
+                // every inserted <details> gets queued for auto-open, not just the
+                // first one at the entry's position.
+                let node = (entry as any).position?.nodeAfter;
+                for (let i = 0; i < (entry as any).length && node; i++) {
+                    if (node.is?.("element", "details")) pendingOpen.add(node);
+                    node = node.nextSibling;
+                }
             }
             if (pendingOpen.size === 0) return;
 
@@ -854,18 +867,24 @@ export default class CollapsibleEditing extends Plugin {
         const visited = new Set<any>();
         for (const entry of changes) {
             if (entry.type === "insert") {
-                const node = (entry as any).position.nodeAfter;
-                if (!node || !node.is("element") || visited.has(node)) continue;
-                visited.add(node);
-                for (const item of writer.createRangeOn(node).getItems()) {
-                    if (item.is("element", "summary") && !item.parent?.is("element", "details")) {
-                        writer.remove(item);
-                        return true;
+                // Walk via nextSibling up to entry.length — a multi-block insert
+                // covers entry.length top-level nodes at this position.
+                let node = (entry as any).position.nodeAfter;
+                for (let i = 0; i < (entry as any).length && node; i++) {
+                    if (node.is("element") && !visited.has(node)) {
+                        visited.add(node);
+                        for (const item of writer.createRangeOn(node).getItems()) {
+                            if (item.is("element", "summary") && !item.parent?.is("element", "details")) {
+                                writer.remove(item);
+                                return true;
+                            }
+                            if (item.is("element", "details") && item.isEmpty) {
+                                writer.remove(item);
+                                return true;
+                            }
+                        }
                     }
-                    if (item.is("element", "details") && item.isEmpty) {
-                        writer.remove(item);
-                        return true;
-                    }
+                    node = node.nextSibling;
                 }
             } else if (entry.type === "remove") {
                 const parent = (entry as any).position.parent;
@@ -928,11 +947,16 @@ export default class CollapsibleEditing extends Plugin {
 
         for (const entry of changes) {
             if (entry.type === "insert") {
-                const node = (entry as any).position.nodeAfter;
-                if (node?.is("element")) {
-                    for (const item of writer.createRangeOn(node).getItems()) {
-                        if (item.is("element", "details") && ensureValid(item)) return true;
+                // Walk via nextSibling up to entry.length — a multi-block insert
+                // covers entry.length top-level nodes at this position.
+                let node = (entry as any).position.nodeAfter;
+                for (let i = 0; i < (entry as any).length && node; i++) {
+                    if (node.is("element")) {
+                        for (const item of writer.createRangeOn(node).getItems()) {
+                            if (item.is("element", "details") && ensureValid(item)) return true;
+                        }
                     }
+                    node = node.nextSibling;
                 }
                 // Also validate the receiving parent — e.g. dragging a <summary>
                 // into a <details> that already has one gives us two summaries.
