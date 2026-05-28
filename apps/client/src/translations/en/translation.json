@@ -2676,8 +2676,9 @@
   },
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
+    "collapsible-body-placeholder": "Type the content here...",
     "collapsible-button-label": "Collapsible block",
-    "collapsible-title-placeholder": "Title",
+    "collapsible-title-placeholder": "Summary",
     "collapsible-toggle-label": "Toggle collapsible block",
     "collapsible-tooltip": "Click on the arrow or press {{shortcut}} to collapse/expand.",
     "edit-states-tooltip": "Edit task states",

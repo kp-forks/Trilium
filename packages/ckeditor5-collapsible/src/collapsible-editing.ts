@@ -37,6 +37,7 @@ export default class CollapsibleEditing extends Plugin {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
         this.registerSchema();
         this.registerConversion();
+        this.registerBodyPlaceholder();
         this.registerKeyHandlers();
         this.registerClickHandler();
         this.registerDomListeners();
@@ -208,6 +209,39 @@ export default class CollapsibleEditing extends Plugin {
             const dom = view.getDomRoot(viewRoot.rootName);
             if (dom instanceof HTMLElement) fn(dom);
         }
+    }
+
+    // -----------------------------------------------------------------
+    // Body placeholder
+    // -----------------------------------------------------------------
+
+    /**
+     * Show a "Content" placeholder on empty body paragraphs of a <details>.
+     * Applied per paragraph via an editing-downcast event listener, so each
+     * body paragraph manages its own emptiness independently — the placeholder
+     * appears on whichever body paragraphs happen to be empty (typically just
+     * the single empty one in a freshly-inserted collapsible).
+     */
+    private bodyPlaceholdersApplied = new WeakSet<any>();
+
+    private registerBodyPlaceholder() {
+        const editor = this.editor;
+        const t = this.translate();
+        editor.conversion.for("editingDowncast").add((dispatcher: any) => {
+            dispatcher.on("insert:paragraph", (_evt: any, data: any, conversionApi: any) => {
+                const paragraph = data.item;
+                if (!paragraph.parent?.is("element", "details")) return;
+                const view = conversionApi.mapper.toViewElement(paragraph);
+                if (!view || this.bodyPlaceholdersApplied.has(view)) return;
+                enableViewPlaceholder({
+                    view: editor.editing.view,
+                    element: view,
+                    text: t("text-editor.collapsible-body-placeholder"),
+                    keepOnFocus: true
+                });
+                this.bodyPlaceholdersApplied.add(view);
+            }, { priority: "low" });
+        });
     }
 
     // -----------------------------------------------------------------
