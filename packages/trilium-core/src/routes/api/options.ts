@@ -3,6 +3,7 @@
 import type { OptionNames } from "@triliumnext/commons";
 import type { Request } from "express";
 
+import attributeService from "../../services/attributes.js";
 import config from "../../services/config.js";
 import { changeLanguage } from "../../services/i18n.js";
 import { getLog } from "../../services/log.js";
@@ -156,6 +157,12 @@ function getOptions() {
     // Expose scripting config (read-only, from config.ini / env vars)
     resultMap["backendScriptingEnabled"] = config.Security.backendScriptingEnabled ? "true" : "false";
     resultMap["sqlConsoleEnabled"] = config.Security.sqlConsoleEnabled ? "true" : "false";
+
+    // Detect if the user has any backend scripts with #run labels (backendStartup, hourly, daily).
+    // Filter by MIME type since #run can also appear on frontend scripts.
+    const hasUserBackendScripts = attributeService.getNotesWithLabel("run")
+        .some((note) => note.mime === "application/javascript;env=backend");
+    resultMap["hasUserBackendScripts"] = hasUserBackendScripts ? "true" : "false";
 
     // if database is read-only, disable editing in UI by setting 0 here
     if (config.General.readOnly) {
