@@ -6,7 +6,7 @@ import becca from "../../becca/becca.js";
 import attributeService from "../../services/attributes.js";
 import scriptService, { type Bundle } from "../../services/script.js";
 import syncService from "../../services/sync.js";
-import { assertScriptingEnabled, isScriptingEnabled } from "../../services/scripting_guard.js";
+import { assertScriptingEnabled } from "../../services/scripting_guard.js";
 import { getSql } from "../../services/sql/index.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils/index.js";
 
@@ -72,10 +72,6 @@ function getBundlesWithLabel(label: string, value?: string) {
 }
 
 function getStartupBundles(req: Request) {
-    if (!isScriptingEnabled()) {
-        return [];
-    }
-
     if (!process.env.TRILIUM_SAFE_MODE) {
         if (req.query.mobile === "true") {
             return getBundlesWithLabel("run", "mobileStartup");
@@ -87,10 +83,6 @@ function getStartupBundles(req: Request) {
 }
 
 function getWidgetBundles() {
-    if (!isScriptingEnabled()) {
-        return [];
-    }
-
     if (!process.env.TRILIUM_SAFE_MODE) {
         return getBundlesWithLabel("widget");
     }
@@ -98,10 +90,6 @@ function getWidgetBundles() {
 }
 
 function getRelationBundles(req: Request<{ noteId: string, relationName: string }>) {
-    if (!isScriptingEnabled()) {
-        return [];
-    }
-
     const noteId = req.params.noteId;
     const note = becca.getNoteOrThrow(noteId);
     const relationName = req.params.relationName;
@@ -131,8 +119,6 @@ function getRelationBundles(req: Request<{ noteId: string, relationName: string 
 }
 
 function getBundle(req: Request<{ noteId: string }>) {
-    assertScriptingEnabled();
-
     const note = becca.getNoteOrThrow(req.params.noteId);
     const { script, params } = req.body ?? {};
 
