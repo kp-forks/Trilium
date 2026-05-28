@@ -37,7 +37,10 @@ export default class CollapsibleCommand extends Command {
             if (fragment) {
                 // Append fragment children as body content. Inline runs (e.g. text from
                 // an intra-block selection) get wrapped in a paragraph so the body only
-                // contains block-level children, as the schema requires.
+                // contains block-level children, as the schema requires. A <details>
+                // captured by the selection range is unwrapped — taking only its body
+                // content — so the new collapsible doesn't gain an unintended extra
+                // level of nesting around what the user actually selected.
                 let pending: any[] = [];
                 const flushPending = () => {
                     if (!pending.length) return;
@@ -46,10 +49,20 @@ export default class CollapsibleCommand extends Command {
                     writer.append(p, details);
                     pending = [];
                 };
+                const appendToBody = (element: any) => {
+                    if (element.is("element", "details")) {
+                        for (const grandchild of [...element.getChildren()]) {
+                            if (grandchild.is("element", "summary")) continue;
+                            appendToBody(grandchild);
+                        }
+                    } else {
+                        writer.append(element, details);
+                    }
+                };
                 for (const child of [...fragment.getChildren()]) {
                     if (child.is("element")) {
                         flushPending();
-                        writer.append(child, details);
+                        appendToBody(child);
                     } else {
                         pending.push(child);
                     }
