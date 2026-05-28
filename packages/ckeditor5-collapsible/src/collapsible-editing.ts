@@ -563,9 +563,16 @@ export default class CollapsibleEditing extends Plugin {
     private registerAutoOpenNewDetails() {
         const editor = this.editor;
         let ready = false;
+        // Trilium loads note content via `editor.setData(...)` after the editor
+        // is ready, so the change:data that follows is a wholesale data load —
+        // not user-initiated insertions. Mark it so we don't auto-open every
+        // existing collapsible in the loaded note.
+        let suppressNextChange = false;
         this.listenTo(editor, "ready", () => { ready = true; });
+        this.listenTo(editor.data, "set", () => { suppressNextChange = true; }, { priority: "high" });
 
         this.listenTo(editor.model.document, "change:data", () => {
+            if (suppressNextChange) { suppressNextChange = false; return; }
             if (!ready) return;
             const newNodes: any[] = [];
             for (const entry of editor.model.document.differ.getChanges()) {
