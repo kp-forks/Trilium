@@ -47,29 +47,25 @@ const mockEntityChangesService = {
     putEntityChange: vi.fn()
 };
 
-vi.mock('../options.js', () => ({
-    default: mockOptions
-}));
-
-vi.mock('../log.js', () => ({
-    default: mockLog
-}));
-
 vi.mock('../sql.js', () => ({
     default: mockSql
 }));
 
-vi.mock('../../becca/becca.js', () => ({
-    default: mockBecca
-}));
-
-vi.mock('../blob.js', () => ({
-    default: mockBlobService
-}));
-
-vi.mock('../entity_changes.js', () => ({
-    default: mockEntityChangesService
-}));
+// Production code now imports becca/blob/entity_changes/options/getLog from
+// @triliumnext/core directly (the apps/server/src/services/* wrappers were
+// removed). Partial-mock core so each piece routes back to our stub while
+// the rest of core keeps its real implementation.
+vi.mock('@triliumnext/core', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@triliumnext/core')>();
+    return {
+        ...actual,
+        becca: mockBecca,
+        blob: mockBlobService,
+        entity_changes: mockEntityChangesService,
+        options: mockOptions,
+        getLog: () => mockLog
+    };
+});
 
 // Import the service after mocking
 let ocrService: typeof import('./ocr_service.js').default;

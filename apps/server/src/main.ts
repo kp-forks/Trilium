@@ -44,13 +44,11 @@ async function startApplication() {
             provider: dbProvider,
             isReadOnly: config.General.readOnly,
             async onTransactionCommit() {
-                const ws = (await import("./services/ws.js")).default;
+                const { ws } = await import("@triliumnext/core");
                 ws.sendTransactionEntityChangesToAllClients();
             },
             async onTransactionRollback() {
-                const cls = (await import("./services/cls.js")).default;
-                const becca_loader = (await import("@triliumnext/core")).becca_loader;
-                const entity_changes = (await import("./services/entity_changes.js")).default;
+                const { cls, becca_loader, entity_changes } = await import("@triliumnext/core");
 
                 const entityChangeIds = cls.getAndClearEntityChangeIds();
 

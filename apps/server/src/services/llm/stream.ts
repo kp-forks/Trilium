@@ -94,9 +94,26 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
                     yield { type: "thinking", content: part.text };
                     break;
 
+                case "tool-input-start":
+                    yield {
+                        type: "tool_input_start",
+                        toolCallId: part.id,
+                        toolName: part.toolName
+                    };
+                    break;
+
+                case "tool-input-delta":
+                    yield {
+                        type: "tool_input_delta",
+                        toolCallId: part.id,
+                        delta: part.delta
+                    };
+                    break;
+
                 case "tool-call":
                     yield {
                         type: "tool_use",
+                        toolCallId: part.toolCallId,
                         toolName: part.toolName,
                         toolInput: part.input as Record<string, unknown>
                     };
@@ -107,6 +124,7 @@ export async function* streamToChunks(result: StreamResult, options: StreamOptio
                     const isError = typeof output === "object" && output !== null && "error" in output;
                     yield {
                         type: "tool_result",
+                        toolCallId: part.toolCallId,
                         toolName: part.toolName,
                         result: typeof output === "string"
                             ? output

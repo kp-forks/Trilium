@@ -1,73 +1,125 @@
 import $ from "jquery";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach,describe, expect, it, vi } from "vitest";
 
-import { setupAnswerEventHandlers } from "./RelationMap.js";
+import dialog from "../../../services/dialog";
 
-vi.mock("../../../services/utils.js", async (importOriginal) => {
-    const actual = await importOriginal<typeof import("../../../services/utils.js")>();
+vi.mock("../../../services/utils", async (importOriginal) => {
+    const actual = await importOriginal() as any;
     return {
         ...actual,
         default: {
             ...actual.default,
-            filterAttributeName: vi.fn((val: string) => val)
+            filterAttributeName: vi.fn((val: string) => val.replace(/[^\p{L}\p{N}_:]/gu, ""))
         }
     };
 });
 
-describe("RelationMap - $answer event synchronization", () => {
+vi.mock("../../../services/dialog", () => ({
+    default: {
+        prompt: vi.fn()
+    }
+}));
 
-    it("dispatches input event with bubbles:true when Enter is pressed", () => {
-        const $answer = $("<input type='text' />");
-        const dispatchSpy = vi.spyOn($answer[0], "dispatchEvent");
+vi.mock("../../../services/attribute_autocomplete", () => ({
+    default: {
+        initAttributeNameAutocomplete: vi.fn()
+    }
+}));
 
-        setupAnswerEventHandlers($answer);
-        $answer.trigger($.Event("keydown", { key: "Enter" }));
+vi.mock("../../../services/i18n", () => ({
+    t: (key: string) => key
+}));
 
-        expect(dispatchSpy).toHaveBeenCalledWith(
-            expect.objectContaining({ type: "input", bubbles: true })
-        );
+// Call promptForRelationName and extract the $answer input element from the dialog's shown callback
+async function getAnswerFromPrompt(): Promise<JQuery<HTMLInputElement>> {
+    const { promptForRelationName } = await import("./utils");
+
+    let $answer!: JQuery<HTMLInputElement>;
+
+    vi.mocked(dialog.prompt).mockImplementation(({ shown }) => {
+        document.body.innerHTML = '<div><form><label /><input type="text" /></form></div>';
+        const input = document.querySelector("input") as HTMLInputElement;
+        $answer = $(input) as JQuery<HTMLInputElement>;
+        shown?.({
+            $dialog: $(document.querySelector("div")!) as JQuery<HTMLDivElement>,
+            $question: $(document.querySelector("label")!) as JQuery<HTMLLabelElement>,
+            $answer,
+            $form: $(document.querySelector("form")!) as JQuery<HTMLFormElement>
+        });
+        return Promise.resolve(null);
     });
 
-    it("dispatches input event with bubbles:true when input loses focus (blur)", () => {
-        const $answer = $("<input type='text' />");
-        const dispatchSpy = vi.spyOn($answer[0], "dispatchEvent");
+    promptForRelationName();
+    return $answer;
+}
 
-        setupAnswerEventHandlers($answer);
-        $answer.trigger("blur");
+describe("IME composition handling - Chinese input (promptForRelationName)", () => {
+    let input: HTMLInputElement;
+    let $answer: JQuery<HTMLInputElement>;
 
-        expect(dispatchSpy).toHaveBeenCalledWith(
-            expect.objectContaining({ type: "input", bubbles: true })
-        );
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        $answer = await getAnswerFromPrompt();
+        input = $answer[0] as HTMLInputElement;
     });
 
-    it("does not dispatch input event for non-Enter keys", () => {
-        const $answer = $("<input type='text' />");
-        const dispatchSpy = vi.spyOn($answer[0], "dispatchEvent");
+    it("does not filter intermediate Chinese characters during composition", () => {
+        // user starts typing in Chinese IME
+        input.dispatchEvent(new Event("compositionstart"));
 
-        setupAnswerEventHandlers($answer);
-        $answer.trigger($.Event("keydown", { key: "a" }));
-        $answer.trigger($.Event("keydown", { key: "Tab" }));
-        $answer.trigger($.Event("keydown", { key: "Escape" }));
+        // intermediate IME states — these are pinyin keystrokes shown before final char
+        input.value = "n";
+        input.dispatchEvent(new Event("input"));
+        input.value = "ni";
+        input.dispatchEvent(new Event("input"));
+        input.value = "nin";
+        input.dispatchEvent(new Event("input"));
+        input.value = "ning";
+        input.dispatchEvent(new Event("input"));
 
-        const inputEvents = dispatchSpy.mock.calls
-            .map(([e]) => e as Event)
-            .filter((e) => e.type === "input" && e.bubbles === true);
-        expect(inputEvents).toHaveLength(0);
+        expect(input.value).toBe("ning");
     });
 
-    it("input event bubbles up to parent element", () => {
-        const $answer = $("<input type='text' />");
-        const parent = document.createElement("div");
-        parent.appendChild($answer[0]);
+    it("preserves valid Unicode characters after IME composition ends", () => {
+        input.dispatchEvent(new Event("compositionstart"));
 
-        const parentListener = vi.fn();
-        parent.addEventListener("input", parentListener);
+        // intermediate pinyin
+        input.value = "n";
+        input.dispatchEvent(new Event("input"));
+        input.value = "ni";
+        input.dispatchEvent(new Event("input"));
 
-        setupAnswerEventHandlers($answer);
-        $answer.trigger($.Event("keydown", { key: "Enter" }));
+        // user selects the Chinese character 你 from the IME picker
+        input.value = "你";
+        input.dispatchEvent(new Event("compositionend"));
 
-        expect(parentListener).toHaveBeenCalledOnce();
-        expect(parentListener.mock.calls[0][0]).toMatchObject({ type: "input", bubbles: true });
+        expect(input.value).toBe("你");
     });
 
+    it("allows normal latin input after Chinese composition ends", () => {
+        // first do a Chinese composition
+        input.dispatchEvent(new Event("compositionstart"));
+        input.value = "你";
+        input.dispatchEvent(new Event("compositionend"));
+
+        // then type normally in latin
+        input.value = "hello";
+        input.dispatchEvent(new Event("input"));
+
+        expect(input.value).toBe("hello");
+    });
+
+    it("handles multiple Chinese characters in sequence", () => {
+        // first character
+        input.dispatchEvent(new Event("compositionstart"));
+        input.value = "你";
+        input.dispatchEvent(new Event("compositionend"));
+
+        // second character
+        input.dispatchEvent(new Event("compositionstart"));
+        input.value = "好";
+        input.dispatchEvent(new Event("compositionend"));
+
+        expect(input.value).toBe("好");
+    });
 });

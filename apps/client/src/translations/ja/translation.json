@@ -565,7 +565,8 @@
     "trilium_api_docs_button_title": "Trilium APIのドキュメントを開く",
     "save_to_note_button_title": "ノートに保存",
     "opening_api_docs_message": "APIドキュメントを開いています...",
-    "sql_console_saved_message": "SQLコンソールが {{note_path}} に保存されました"
+    "sql_console_saved_message": "SQLコンソールが {{note_path}} に保存されました",
+    "electron_api_docs_button_title": "Electron API ドキュメントを開く"
   },
   "execute_script": {
     "execute_script": "スクリプトを実行",
@@ -2365,7 +2366,8 @@
     "empty_state": "会話を開始",
     "history": "チャット履歴",
     "recent_chats": "最近のチャット",
-    "no_chats": "過去のチャットはありません"
+    "no_chats": "過去のチャットはありません",
+    "view_all_chats": "すべてのチャットを表示"
   },
   "mind-map": {
     "addChild": "子ノードを追加",

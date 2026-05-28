@@ -745,7 +745,8 @@
     "trilium_api_docs_button_title": "Oscail doiciméid API Trilium",
     "save_to_note_button_title": "Sábháil chuig nóta",
     "opening_api_docs_message": "Ag oscailt doiciméid API...",
-    "sql_console_saved_message": "Tá nóta Consól SQL sábháilte i {{note_path}}"
+    "sql_console_saved_message": "Tá nóta Consól SQL sábháilte i {{note_path}}",
+    "electron_api_docs_button_title": "Doiciméid API Open Electron"
   },
   "copy_image_reference_button": {
     "button_title": "Cóipeáil tagairt íomhá chuig an ghearrthaisce, is féidir é a ghreamú i nóta téacs."
@@ -2421,7 +2422,9 @@
     "no_provider_message": "Níl aon soláthraí AI cumraithe. Cuir ceann leis chun comhrá a thosú.",
     "add_provider": "Cuir Soláthraí AI leis",
     "sources_summary": "{{count}} foinsí ó {{sites}} suíomhanna",
-    "stop": "Stop"
+    "stop": "Stop",
+    "edit_index": "Cuir in eagar {{index}} de {{total}}",
+    "retry": "Déan iarracht eile"
   },
   "sidebar_chat": {
     "title": "Comhrá AI",
@@ -2431,7 +2434,8 @@
     "empty_state": "Tosaigh comhrá",
     "history": "Stair chomhrá",
     "recent_chats": "Comhráite le déanaí",
-    "no_chats": "Gan aon chomhráite roimhe seo"
+    "no_chats": "Gan aon chomhráite roimhe seo",
+    "view_all_chats": "Féach ar na comhráite go léir"
   },
   "mind-map": {
     "addChild": "Cuir páiste leis",
@@ -2472,7 +2476,7 @@
       "search_notes": "Cuardaigh nótaí",
       "get_note": "Faigh nóta",
       "get_note_content": "Faigh ábhar nótaí",
-      "update_note_content": "Nuashonraigh ábhar an nóta",
+      "update_note_content": "Athscríobh nóta",
       "append_to_note": "Cuir leis an nóta",
       "create_note": "Cruthaigh nóta",
       "get_attributes": "Faigh tréithe",
@@ -2489,7 +2493,9 @@
       "rename_note": "Athainmnigh an nóta",
       "delete_note": "Scrios nóta",
       "move_note": "Bog nóta",
-      "clone_note": "Clónáil nóta"
+      "clone_note": "Clónáil nóta",
+      "set_note_content": "Athscríobh nóta",
+      "edit_note_content": "Cuir nóta in eagar"
     },
     "base_url": "Bun-URL",
     "base_url_description": "Roghnach. Sáraigh an pointe deiridh réamhshocraithe API — úsáideach do mhúnlaí féinóstáilte (Ollama, LM Studio, vLLM) nó do sheachfhreastalaithe.",
@@ -2523,7 +2529,8 @@
     "autocomplete_fuzzy_description": "Bíonn tionchar aige ar léim-go-nóta agus ar roghnóirí nótaí. Níos moille ach glactar le clóscríobh."
   },
   "text_editor": {
-    "title": "Eagarthóir"
+    "title": "Eagarthóir",
+    "related_task_states": "Stádas bosca seiceála saincheaptha le haghaidh liostaí le déanamh"
   },
   "link": {
     "failed_to_open": "Theip ar oscailt an nasc '{{- href}}': {{- message}}"
@@ -2713,5 +2720,20 @@
     "language": "Teanga",
     "continue": "Lean ar aghaidh",
     "your-ip-addresses": "Seoltaí don fheiste seo"
+  },
+  "text-editor": {
+    "checkbox-tooltip": "Cliceáil ar dheis le haghaidh tuilleadh staideanna tascanna.\nBrúigh {{shortcut}} chun dul idir staideanna.",
+    "edit-states-tooltip": "Cuir stáit tascanna in eagar",
+    "unknown-task-state": "Stádas tasc saincheaptha neamhshainithe",
+    "task-state-dropped": "Sainmhíniú stádais tasc saincheaptha \"{{title}}\" ({{id}}) curtha ar leataobh mar gheall ar: {{reason}}",
+    "validation-errors": {
+      "undefined-name": "aitheantóir neamhshainithe",
+      "invalid-name": "aitheantóir neamhbhailí",
+      "duplicate-name": "aitheantóir dúblach",
+      "missing-title": "teideal ar iarraidh",
+      "missing-icon": "deilbhín ar iarraidh",
+      "invalid-symbol": "Ba chóir go mbeadh an tsiombail markdown ina carachtar amháin, seachas \"[\", \" \", \"X\", agus \"]\"",
+      "duplicate-symbol": "siombail markdown dúblach"
+    }
   }
 }
