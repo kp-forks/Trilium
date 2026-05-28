@@ -452,13 +452,20 @@ export default class CollapsibleEditing extends Plugin {
         evt.stop();
 
         // Move the caret out of the (about-to-be-removed) empty summary so the
-        // structural post-fixer doesn't strand it after unwrap.
+        // structural post-fixer doesn't strand it after unwrap. If the body is
+        // also empty, there's nothing left in the collapsible to drop the caret
+        // into — replace the whole block with a fresh empty paragraph instead.
         this.editor.model.change(writer => {
             const firstBody = details.getChild(1);
             if (firstBody?.is("element")) {
                 writer.setSelection(firstBody, 0);
+                writer.unwrap(details);
+            } else {
+                const p = writer.createElement("paragraph");
+                writer.insert(p, writer.createPositionBefore(details));
+                writer.setSelection(p, 0);
+                writer.remove(details);
             }
-            writer.unwrap(details);
         });
     }
 
@@ -611,30 +618,36 @@ export default class CollapsibleEditing extends Plugin {
         // not user-initiated insertions. Mark it so we don't auto-open every
         // existing collapsible in the loaded note.
         let suppressNextChange = false;
+        // Accumulate across `change:data` events: if two events fire in the
+        // same tick (separate model transactions), each restarting the timer
+        // would otherwise drop the previous batch on the floor.
+        const pendingOpen = new Set<any>();
+
         this.listenTo(editor, "ready", () => { ready = true; });
         this.listenTo(editor.data, "set", () => { suppressNextChange = true; }, { priority: "high" });
 
         this.listenTo(editor.model.document, "change:data", () => {
             if (suppressNextChange) { suppressNextChange = false; return; }
             if (!ready) return;
-            const newNodes: any[] = [];
             for (const entry of editor.model.document.differ.getChanges()) {
                 if (entry.type !== "insert") continue;
                 const node = (entry as any).position?.nodeAfter;
-                if (node?.is?.("element", "details")) newNodes.push(node);
+                if (node?.is?.("element", "details")) pendingOpen.add(node);
             }
-            if (newNodes.length === 0) return;
+            if (pendingOpen.size === 0) return;
 
             // Defer to the next tick so the editing view has rendered the new
             // DOM elements. Replace any in-flight timer so destroy can cancel.
+            // The accumulated `pendingOpen` survives the restart.
             if (this.autoOpenTimer !== undefined) clearTimeout(this.autoOpenTimer);
             this.autoOpenTimer = setTimeout(() => {
                 this.autoOpenTimer = undefined;
-                if ((editor as any).state === "destroyed") return;
-                for (const node of newNodes) {
+                if ((editor as any).state === "destroyed") { pendingOpen.clear(); return; }
+                for (const node of pendingOpen) {
                     const dom = this.getDom<HTMLDetailsElement>(node);
                     if (dom) dom.open = true;
                 }
+                pendingOpen.clear();
             }, 0);
         });
     }
@@ -653,33 +666,41 @@ export default class CollapsibleEditing extends Plugin {
         const t = this.translate();
 
         this.listenTo(editor.editing.view, "render", () => {
-            // Cheap fast-path: if no summaries have been added/removed since last
-            // render, skip the DOM walk entirely. Render fires on every keystroke.
-            let actualCount = 0;
-            this.forEachDomRoot(root => {
-                actualCount += root.querySelectorAll("details.trilium-collapsible > summary").length;
-            });
-            if (actualCount === this.summaryTooltips.size) return;
-
-            // Drop tooltips on summaries that CKEditor re-rendered out of the DOM.
+            // 1. Reap tooltips whose summaries CKEditor has detached. Doing this
+            //    FIRST (a) frees the references so GC can collect them and
+            //    (b) keeps `summaryTooltips.size` honest for the fast-path below.
+            let cleaned = false;
             for (const summary of this.summaryTooltips) {
                 if (!summary.isConnected) {
                     Tooltip.getInstance(summary)?.dispose();
                     this.summaryTooltips.delete(summary);
                     if (this.caretShownTooltip === summary) this.caretShownTooltip = undefined;
+                    cleaned = true;
                 }
             }
 
+            // 2. Collect current summaries from the DOM.
+            const currentSummaries: HTMLElement[] = [];
             this.forEachDomRoot(root => {
-                for (const summary of root.querySelectorAll<HTMLElement>("details.trilium-collapsible > summary")) {
-                    if (Tooltip.getInstance(summary)) continue;
-                    const title = t("text-editor.collapsible-tooltip", {
-                        shortcut: getEnvKeystrokeText("Ctrl+Enter")
-                    });
-                    new Tooltip(summary, { title, customClass: "text-editor-content-tooltip" });
-                    this.summaryTooltips.add(summary);
+                for (const s of root.querySelectorAll<HTMLElement>("details.trilium-collapsible > summary")) {
+                    currentSummaries.push(s);
                 }
             });
+
+            // 3. Fast-path: nothing was reaped AND the count still matches the
+            //    tracked set — no work to do. This covers the typical keystroke
+            //    render where nothing about the summary set has changed.
+            if (!cleaned && currentSummaries.length === this.summaryTooltips.size) return;
+
+            // 4. Wire up tooltips on newly-appeared summaries.
+            for (const summary of currentSummaries) {
+                if (this.summaryTooltips.has(summary)) continue;
+                const title = t("text-editor.collapsible-tooltip", {
+                    shortcut: getEnvKeystrokeText("Ctrl+Enter")
+                });
+                new Tooltip(summary, { title, customClass: "text-editor-content-tooltip" });
+                this.summaryTooltips.add(summary);
+            }
         });
 
         // The caret moving into a <summary> doesn't fire DOM focus (the editable
