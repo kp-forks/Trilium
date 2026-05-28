@@ -1569,6 +1569,14 @@
     "options_status": "Options status",
     "options_change_saved": "Options change have been saved."
   },
+  "security": {
+    "scripting_title": "Scripting",
+    "scripting_warning": "Backend scripts have full server access including filesystem, network, and OS commands. Only enable if you trust all sync peers and imported content.",
+    "backend_scripting_label": "Backend script execution",
+    "backend_scripting_description": "Allow execution of backend scripts (startup scripts, custom request handlers, event handlers, etc.).",
+    "sql_console_label": "SQL console",
+    "sql_console_description": "Allow execution of queries in the SQL console."
+  },
   "password": {
     "heading": "Password",
     "alert_message": "Please take care to remember your new password. Password is used for logging into the web interface and to encrypt protected notes. If you forget your password, then all your protected notes are forever lost.",
