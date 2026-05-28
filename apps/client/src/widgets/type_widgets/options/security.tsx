@@ -25,7 +25,7 @@ function ServerConfigHint({ configKey, envVar }: { configKey: string; envVar: st
     return (
         <Collapsible title={t("security.how_to_enable")}>
             <p>{t("security.server_config_hint")}</p>
-            <pre><code>{`[Scripting]\n${configKey}=true`}</code></pre>
+            <pre><code>{`[Security]\n${configKey}=true`}</code></pre>
             <p>{t("security.server_env_hint")}</p>
             <pre><code>{envVar}=true</code></pre>
         </Collapsible>
@@ -63,7 +63,7 @@ function BackendScriptingSettings() {
             />
             <ServerConfigHint
                 configKey="backendScriptingEnabled"
-                envVar="TRILIUM_SCRIPTING_BACKEND_ENABLED"
+                envVar="TRILIUM_SECURITY_BACKEND_SCRIPTING_ENABLED"
             />
         </OptionsSection>
     );
@@ -100,7 +100,7 @@ function SqlConsoleSettings() {
             />
             <ServerConfigHint
                 configKey="sqlConsoleEnabled"
-                envVar="TRILIUM_SCRIPTING_SQLCONSOLEENABLED"
+                envVar="TRILIUM_SECURITY_SQL_CONSOLE_ENABLED"
             />
         </OptionsSection>
     );

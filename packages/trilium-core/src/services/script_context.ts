@@ -7,8 +7,8 @@ import { toObject } from "./utils/index.js";
  * IMPORTANT: This module allowlist/blocklist is a defense-in-depth measure only.
  * It is NOT a security sandbox. Scripts execute via eval() in the main Node.js
  * process and can bypass these restrictions through globalThis, process, etc.
- * The actual security boundary is the [Scripting] enabled=false config toggle,
- * which prevents script execution entirely.
+ * The actual security boundary is the [Security] backendScriptingEnabled=false config toggle,
+ * which prevents backend script execution entirely.
  *
  * Modules that are safe for user scripts to require.
  * Note-based modules (resolved via note title matching) are handled separately

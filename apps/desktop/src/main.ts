@@ -142,10 +142,10 @@ async function main() {
     // Override scripting config from security.json (lives outside the DB for tamper resistance)
     const securitySettings = getSecuritySettings();
     if (securitySettings.backendScriptingEnabled !== undefined) {
-        config.Scripting.backendScriptingEnabled = securitySettings.backendScriptingEnabled;
+        config.Security.backendScriptingEnabled = securitySettings.backendScriptingEnabled;
     }
     if (securitySettings.sqlConsoleEnabled !== undefined) {
-        config.Scripting.sqlConsoleEnabled = securitySettings.sqlConsoleEnabled;
+        config.Security.sqlConsoleEnabled = securitySettings.sqlConsoleEnabled;
     }
 
     const dbProvider = new BetterSqlite3Provider();

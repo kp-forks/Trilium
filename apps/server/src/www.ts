@@ -97,7 +97,7 @@ async function displayStartupMessage() {
         getLog().info("WARNING: Backend script execution is ENABLED. Backend scripts have full server access including " +
                  "filesystem, network, and OS commands. Only enable in trusted environments.");
     } else {
-        getLog().info("Backend script execution is DISABLED. Set [Scripting] backendScriptingEnabled=true in config.ini to enable.");
+        getLog().info("Backend script execution is DISABLED. Set [Security] backendScriptingEnabled=true in config.ini to enable.");
     }
 
     getLog().info("");

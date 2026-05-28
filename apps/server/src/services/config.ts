@@ -138,8 +138,8 @@ export interface TriliumConfig {
          */
         retentionDays: number;
     };
-    /** Scripting and code execution configuration */
-    Scripting: {
+    /** Security and code execution configuration */
+    Security: {
         /** Whether backend script execution is enabled (default: false for server, true for desktop) */
         backendScriptingEnabled: boolean;
         /** Whether the SQL console is accessible (default: false) */
@@ -471,17 +471,17 @@ const configMapping = {
             transformer: (value: unknown) => utils.stringToInt(String(value)) ?? LOGGING_DEFAULT_RETENTION_DAYS
         }
     },
-    Scripting: {
+    Security: {
         backendScriptingEnabled: {
-            standardEnvVar: 'TRILIUM_SCRIPTING_BACKEND_ENABLED',
-            iniGetter: () => getIniSection("Scripting")?.backendScriptingEnabled,
+            standardEnvVar: 'TRILIUM_SECURITY_BACKEND_SCRIPTING_ENABLED',
+            iniGetter: () => getIniSection("Security")?.backendScriptingEnabled,
             defaultValue: false,
             transformer: transformBoolean
         },
         sqlConsoleEnabled: {
-            standardEnvVar: 'TRILIUM_SCRIPTING_SQLCONSOLEENABLED',
-            aliasEnvVars: ['TRILIUM_SCRIPTING_SQL_CONSOLE_ENABLED'],
-            iniGetter: () => getIniSection("Scripting")?.sqlConsoleEnabled,
+            standardEnvVar: 'TRILIUM_SECURITY_SQL_CONSOLE_ENABLED',
+            aliasEnvVars: ['TRILIUM_SECURITY_SQLCONSOLEENABLED'],
+            iniGetter: () => getIniSection("Security")?.sqlConsoleEnabled,
             defaultValue: false,
             transformer: transformBoolean
         }
@@ -539,9 +539,9 @@ const config: TriliumConfig = {
     Logging: {
         retentionDays: getConfigValue(configMapping.Logging.retentionDays)
     },
-    Scripting: {
-        backendScriptingEnabled: getConfigValue(configMapping.Scripting.backendScriptingEnabled),
-        sqlConsoleEnabled: getConfigValue(configMapping.Scripting.sqlConsoleEnabled)
+    Security: {
+        backendScriptingEnabled: getConfigValue(configMapping.Security.backendScriptingEnabled),
+        sqlConsoleEnabled: getConfigValue(configMapping.Security.sqlConsoleEnabled)
     }
 };
 

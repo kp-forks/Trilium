@@ -154,8 +154,8 @@ function getOptions() {
             optionMap[secretOption] ? "true" : "false";
     }
     // Expose scripting config (read-only, from config.ini / env vars)
-    resultMap["backendScriptingEnabled"] = config.Scripting.backendScriptingEnabled ? "true" : "false";
-    resultMap["sqlConsoleEnabled"] = config.Scripting.sqlConsoleEnabled ? "true" : "false";
+    resultMap["backendScriptingEnabled"] = config.Security.backendScriptingEnabled ? "true" : "false";
+    resultMap["sqlConsoleEnabled"] = config.Security.sqlConsoleEnabled ? "true" : "false";
 
     // if database is read-only, disable editing in UI by setting 0 here
     if (config.General.readOnly) {

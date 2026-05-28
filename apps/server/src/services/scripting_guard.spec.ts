@@ -6,10 +6,10 @@ const mockState = {
     sqlConsoleEnabled: false
 };
 
-// Mock config module so Scripting section can be controlled per test
+// Mock config module so Security section can be controlled per test
 vi.mock("./config.js", () => ({
     default: {
-        Scripting: {
+        Security: {
             get backendScriptingEnabled() {
                 return mockState.scriptingEnabled;
             },

@@ -42,8 +42,8 @@ describe("Share API test", () => {
 
     it("renders custom share template", async () => {
         // Custom EJS templates require scripting to be enabled
-        const originalEnabled = config.Scripting.backendScriptingEnabled;
-        config.Scripting.backendScriptingEnabled = true;
+        const originalEnabled = config.Security.backendScriptingEnabled;
+        config.Security.backendScriptingEnabled = true;
         try {
             const response = await supertest(app)
                 .get("/share/pQvNLLoHcMwH")
@@ -52,7 +52,7 @@ describe("Share API test", () => {
             expect(response.text).toContain("Content Start");
             expect(response.text).toContain("Content End");
         } finally {
-            config.Scripting.backendScriptingEnabled = originalEnabled;
+            config.Security.backendScriptingEnabled = originalEnabled;
         }
     });
 

@@ -19,7 +19,7 @@ export interface CoreConfig {
         syncServerTimeout: string;
         syncProxy: string;
     };
-    Scripting: {
+    Security: {
         backendScriptingEnabled: boolean;
         sqlConsoleEnabled: boolean;
     };
@@ -35,7 +35,7 @@ const EMPTY_CONFIG: CoreConfig = {
         syncServerTimeout: "",
         syncProxy: ""
     },
-    Scripting: {
+    Security: {
         backendScriptingEnabled: false,
         sqlConsoleEnabled: false
     }
