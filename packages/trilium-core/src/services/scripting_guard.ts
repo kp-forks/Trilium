@@ -2,15 +2,15 @@ import config from "./config.js";
 import { isElectron } from "./utils/index.js";
 
 /**
- * Throws if scripting is disabled. Desktop (Electron) always allows scripting.
+ * Throws if backend scripting is disabled. Desktop (Electron) always allows scripting.
  */
 export function assertScriptingEnabled(): void {
     if (isElectron() || config.Scripting.enabled) {
         return;
     }
     throw new Error(
-        "Script execution is disabled. Set [Scripting] enabled=true in config.ini or " +
-        "TRILIUM_SCRIPTING_ENABLED=true to enable. WARNING: Scripts have full server access."
+        "Backend script execution is disabled. Set [Scripting] enabled=true in config.ini or " +
+        "TRILIUM_SCRIPTING_ENABLED=true to enable. WARNING: Backend scripts have full server access."
     );
 }
 

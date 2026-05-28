@@ -95,14 +95,14 @@ function updateNormalEntity(remoteEC: EntityChange, remoteEntityRow: EntityRow |
 
             preProcessContent(remoteEC, remoteEntityRow);
 
-            // When scripting is disabled, prefix dangerous attributes with 'disabled:'
+            // When backend scripting is disabled, prefix dangerous attributes with 'disabled:'
             // Same pattern as safeImport in attributes.ts
             if (remoteEC.entityName === "attributes" && !isScriptingEnabled()) {
                 const attrRow = remoteEntityRow as Record<string, unknown>;
                 if (typeof attrRow.type === "string" && typeof attrRow.name === "string"
                     && !attrRow.isDeleted
                     && attributeService.isAttributeDangerous(attrRow.type, attrRow.name)) {
-                    getLog().info(`Sync: disabling dangerous attribute '${attrRow.name}' (scripting is disabled)`);
+                    getLog().info(`Sync: disabling dangerous attribute '${attrRow.name}' (backend scripting is disabled)`);
                     attrRow.name = `disabled:${attrRow.name}`;
                 }
             }

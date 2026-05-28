@@ -81,7 +81,7 @@ function searchFromRelation(note: BNote, relationName: string) {
     }
 
     if (!isScriptingEnabled()) {
-        log.info("Script-based search is disabled (scripting is not enabled).");
+        log.info("Script-based search is disabled (backend scripting is not enabled).");
         return [];
     }
 

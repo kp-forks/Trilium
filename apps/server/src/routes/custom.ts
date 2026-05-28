@@ -8,7 +8,7 @@ import sql from "../services/sql.js";
 function handleRequest(req: Request, res: Response) {
 
     if (!isScriptingEnabled()) {
-        res.status(403).send("Script execution is disabled on this server.");
+        res.status(403).send("Backend script execution is disabled on this server.");
         return;
     }
 

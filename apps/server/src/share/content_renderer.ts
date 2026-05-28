@@ -199,7 +199,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
     };
 
     // Check if the user has their own template.
-    // Skip user-provided EJS templates when scripting is disabled since EJS can execute arbitrary JS.
+    // Skip user-provided EJS templates when backend scripting is disabled since EJS can execute arbitrary JS.
     if (note.hasRelation("shareTemplate") && isScriptingEnabled()) {
         // Get the template note and content
         const templateId = note.getRelation("shareTemplate")?.value;

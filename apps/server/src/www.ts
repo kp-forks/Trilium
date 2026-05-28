@@ -94,10 +94,10 @@ async function displayStartupMessage() {
     getLog().info(`💾 DB size:     ${utils.formatSize(getDbSize() * 1024)}`);
 
     if (isScriptingEnabled()) {
-        getLog().info("WARNING: Script execution is ENABLED. Scripts have full server access including " +
+        getLog().info("WARNING: Backend script execution is ENABLED. Backend scripts have full server access including " +
                  "filesystem, network, and OS commands. Only enable in trusted environments.");
     } else {
-        getLog().info("Script execution is DISABLED. Set [Scripting] enabled=true in config.ini to enable.");
+        getLog().info("Backend script execution is DISABLED. Set [Scripting] enabled=true in config.ini to enable.");
     }
 
     getLog().info("");

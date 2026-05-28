@@ -51,7 +51,7 @@ describe("scripting_guard", () => {
 
             const { assertScriptingEnabled } = await import("./scripting_guard.js");
             expect(() => assertScriptingEnabled()).toThrowError(
-                /Script execution is disabled/
+                /Backend script execution is disabled/
             );
         });
 

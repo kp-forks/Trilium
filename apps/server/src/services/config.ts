@@ -140,7 +140,7 @@ export interface TriliumConfig {
     };
     /** Scripting and code execution configuration */
     Scripting: {
-        /** Whether backend/frontend script execution is enabled (default: false for server, true for desktop) */
+        /** Whether backend script execution is enabled (default: false for server, true for desktop) */
         enabled: boolean;
         /** Whether the SQL console is accessible (default: false) */
         sqlConsoleEnabled: boolean;
