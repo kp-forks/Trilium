@@ -1570,10 +1570,12 @@
     "options_change_saved": "Options change have been saved."
   },
   "security": {
-    "scripting_title": "Scripting",
-    "scripting_warning": "Backend scripts have full server access including filesystem, network, and OS commands. Only enable if you trust all sync peers and imported content.",
+    "backend_scripting_title": "Backend scripting",
+    "backend_scripting_section_description": "Backend scripts have full server access including filesystem, network, and OS commands. They can be triggered via sync, import, or any content that includes executable attributes. Frontend scripts are always enabled as they run in a sandboxed browser context.",
     "backend_scripting_label": "Backend script execution",
-    "backend_scripting_description": "Allow execution of backend scripts (startup scripts, custom request handlers, event handlers, etc.).",
+    "backend_scripting_description": "Allow execution of backend scripts (startup scripts, custom request handlers, event handlers, scheduled scripts, etc.).",
+    "sql_console_title": "SQL console",
+    "sql_console_section_description": "The SQL console allows running raw SQL queries against the database. This can be used to read sensitive data (e.g. sync secrets, API keys) and alter or delete any data. A malicious frontend script could also access the SQL console API programmatically.",
     "sql_console_label": "SQL console",
     "sql_console_description": "Allow execution of queries in the SQL console."
   },

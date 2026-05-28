@@ -1,29 +1,26 @@
 import { t } from "../../../services/i18n";
-import Admonition from "../../react/Admonition";
 import { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function SecuritySettings() {
     return (
         <>
-            <ScriptingSettings />
+            <BackendScriptingSettings />
+            <SqlConsoleSettings />
         </>
     );
 }
 
-function ScriptingSettings() {
-    // These are read-only for now — the actual toggle mechanism (IPC + native
+function BackendScriptingSettings() {
+    // Read-only for now — the actual toggle mechanism (IPC + native
     // dialog on desktop, config.ini on server) will be implemented separately.
-    // For now we display the current state from the server config.
     const backendScriptingEnabled = false;
-    const sqlConsoleEnabled = false;
 
     return (
-        <OptionsSection title={t("security.scripting_title")}>
-            <Admonition type="warning">
-                {t("security.scripting_warning")}
-            </Admonition>
-
+        <OptionsSection
+            title={t("security.backend_scripting_title")}
+            description={t("security.backend_scripting_section_description")}
+        >
             <OptionsRowWithToggle
                 name="backend-scripting-enabled"
                 label={t("security.backend_scripting_label")}
@@ -32,7 +29,18 @@ function ScriptingSettings() {
                 onChange={() => {}}
                 disabled={true}
             />
+        </OptionsSection>
+    );
+}
 
+function SqlConsoleSettings() {
+    const sqlConsoleEnabled = false;
+
+    return (
+        <OptionsSection
+            title={t("security.sql_console_title")}
+            description={t("security.sql_console_section_description")}
+        >
             <OptionsRowWithToggle
                 name="sql-console-enabled"
                 label={t("security.sql_console_label")}
