@@ -4,9 +4,13 @@ import { type BrowserWindow, type BrowserWindowConstructorOptions, default as el
 import path from "path";
 import url from "url";
 
-// Preload bundle path — built next to main.cjs in production by
-// apps/desktop/scripts/build.ts, or compiled in-place by the dev runner
-// (scripts/electron-start.mts) into apps/desktop/src/preload.compiled.cjs.
+// Preload bundle path. Two layouts:
+//   - Dev: this file lives at apps/desktop/src/services/window.ts, and the
+//     preload bundle is one level up at apps/desktop/src/preload.compiled.cjs
+//     (built in place by scripts/electron-start.mts).
+//   - Prod: this file is bundled into apps/desktop/dist/main.cjs, with
+//     preload.cjs sitting next to it in dist/ (NOT one level up — getting
+//     this wrong leaves the renderer without `window.electronApi`).
 //
 // Lazy: `coreUtils.isDev()` calls `getPlatform()` which throws until
 // `initializeCore()` has run; module load happens before that.
@@ -16,7 +20,7 @@ function getPreloadScript(): string {
         preloadScriptCache = path.resolve(
             coreUtils.isDev()
                 ? path.join(__dirname, "..", "preload.compiled.cjs")
-                : path.join(__dirname, "..", "preload.cjs")
+                : path.join(__dirname, "preload.cjs")
         );
     }
     return preloadScriptCache;

@@ -16,10 +16,13 @@ import path from "path";
 let preloadScriptCache: string | undefined;
 function getPreloadScript(): string {
     if (preloadScriptCache === undefined) {
+        // Dev: this file lives one directory below the preload bundle.
+        // Prod: this file is bundled into dist/main.cjs alongside preload.cjs
+        //   (no `..` — keep this synced with apps/desktop/src/services/window.ts).
         preloadScriptCache = path.resolve(
             coreUtils.isDev()
                 ? path.join(__dirname, "..", "preload.compiled.cjs")
-                : path.join(__dirname, "..", "preload.cjs")
+                : path.join(__dirname, "preload.cjs")
         );
     }
     return preloadScriptCache;
