@@ -6,6 +6,7 @@
 .ck-content details.trilium-collapsible {
     --collapsible-block-background: var(--card-background-color);
     --collapsible-block-summary-background: var(--card-background-color);
+    --collapsible-block-summary-delimiter-color: var(--main-background-color);
     
     --_border-radius: 8px;
     --_block-padding: .75rem;
@@ -72,7 +73,7 @@
         margin-bottom: calc(var(--_block-padding) * 2);
         
         &::after {
-            border-bottom: 2px solid white;            
+            border-bottom: 2px solid var(--collapsible-block-summary-delimiter-color);            
         }
     }
 
@@ -92,6 +93,13 @@
 
     .ck-placeholder::before {
         opacity: 0.5;
+    }
+
+    /* Body-paragraph placeholder ("Content") is registered on the first body
+     * block. Hide it whenever the body has more than one block — the hint is
+     * only useful when the collapsible's body is genuinely empty. */
+    > p.ck-placeholder:not(:last-child)::before {
+        display: none;
     }
 
     > summary {
