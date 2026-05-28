@@ -74,6 +74,8 @@ jobs:
 
       - name: Run CKEditor e2e tests
         run: |
+          export CHROMEDRIVER_PATH=$(which chromedriver || find /usr/local/share -name chromedriver -type f 2>/dev/null | head -1)
+          echo "Using chromedriver at: $CHROMEDRIVER_PATH"
           pnpm run --filter=ckeditor5-mermaid test
           pnpm run --filter=ckeditor5-math test
 
