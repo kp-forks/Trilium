@@ -1,5 +1,6 @@
 import electron from "electron";
 import fs from "fs";
+import { t } from "i18next";
 import path from "path";
 
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
@@ -37,12 +38,12 @@ export function getSecuritySettings(): SecuritySettings {
 async function confirmEnable(settingLabel: string, warning: string): Promise<boolean> {
     const result = await electron.dialog.showMessageBox({
         type: "warning",
-        buttons: ["Cancel", "Enable"],
+        buttons: [t("security-dialog.cancel"), t("security-dialog.enable")],
         defaultId: 0,
         cancelId: 0,
-        title: `Enable ${settingLabel}`,
-        message: `Are you sure you want to enable ${settingLabel}?`,
-        detail: `${warning}\n\nOnly enable this if you explicitly intend to use this feature. Do not enable it if prompted by a script or an unfamiliar note.\n\nThis change requires a restart to take effect.`
+        title: t("security-dialog.enable-title", { settingLabel }),
+        message: t("security-dialog.enable-message", { settingLabel }),
+        detail: t("security-dialog.enable-detail", { warning })
     });
 
     return result.response === 1;
@@ -51,12 +52,12 @@ async function confirmEnable(settingLabel: string, warning: string): Promise<boo
 async function confirmDisable(settingLabel: string): Promise<boolean> {
     const result = await electron.dialog.showMessageBox({
         type: "info",
-        buttons: ["Cancel", "Disable"],
+        buttons: [t("security-dialog.cancel"), t("security-dialog.disable")],
         defaultId: 1,
         cancelId: 0,
-        title: `Disable ${settingLabel}`,
-        message: `${settingLabel} will be disabled.`,
-        detail: "This change requires a restart to take effect."
+        title: t("security-dialog.disable-title", { settingLabel }),
+        message: t("security-dialog.disable-message", { settingLabel }),
+        detail: t("security-dialog.disable-detail")
     });
 
     return result.response === 1;
@@ -65,9 +66,8 @@ async function confirmDisable(settingLabel: string): Promise<boolean> {
 export function registerSecurityIpcHandlers(): void {
     electron.ipcMain.handle("security-set-backend-scripting", async (_event, enabled: boolean) => {
         const confirmed = enabled
-            ? await confirmEnable("Backend script execution",
-                "Backend scripts have full access to the server, including the file system and network.")
-            : await confirmDisable("Backend script execution");
+            ? await confirmEnable(t("security-dialog.backend-scripting"), t("security-dialog.backend-scripting-warning"))
+            : await confirmDisable(t("security-dialog.backend-scripting"));
         if (!confirmed) {
             return false;
         }
@@ -80,9 +80,8 @@ export function registerSecurityIpcHandlers(): void {
 
     electron.ipcMain.handle("security-set-sql-console", async (_event, enabled: boolean) => {
         const confirmed = enabled
-            ? await confirmEnable("SQL console",
-                "The SQL console allows executing arbitrary SQL queries against the database.")
-            : await confirmDisable("SQL console");
+            ? await confirmEnable(t("security-dialog.sql-console"), t("security-dialog.sql-console-warning"))
+            : await confirmDisable(t("security-dialog.sql-console"));
         if (!confirmed) {
             return false;
         }
