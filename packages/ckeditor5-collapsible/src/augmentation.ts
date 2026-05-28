@@ -1,6 +1,6 @@
-import CollapsibleCommand from "./collapsiblecommand.js";
-import CollapsibleEditing from "./collapsibleediting.js";
-import CollapsibleUI from "./collapsibleui.js";
+import CollapsibleCommand from "./collapsible-command.js";
+import CollapsibleEditing from "./collapsible-editing.js";
+import CollapsibleUI from "./collapsible-ui.js";
 import type { Collapsible } from "./index.js";
 
 declare module "ckeditor5" {

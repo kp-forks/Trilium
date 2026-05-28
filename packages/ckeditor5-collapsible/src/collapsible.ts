@@ -1,12 +1,12 @@
-import { Plugin } from 'ckeditor5';
+import { Plugin } from "ckeditor5";
 
-import CollapsibleEditing from './collapsibleediting.js';
-import CollapsibleUI from './collapsibleui.js';
+import CollapsibleEditing from "./collapsible-editing.js";
+import CollapsibleUI from "./collapsible-ui.js";
 
 export default class Collapsible extends Plugin {
 
     public static get requires() {
-        return [ CollapsibleEditing, CollapsibleUI ] as const;
+        return [CollapsibleEditing, CollapsibleUI] as const;
     }
 
     public static get pluginName() {

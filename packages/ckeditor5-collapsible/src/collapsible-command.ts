@@ -17,7 +17,7 @@ export default class CollapsibleCommand extends Command {
         // would lose formatting). Keep `value` false so the toolbar button never
         // shows as active.
         this.value = false;
-        this.isEnabled = this._checkEnabled();
+        this.isEnabled = this.checkEnabled();
     }
 
     public override execute(): void {
@@ -87,7 +87,7 @@ export default class CollapsibleCommand extends Command {
         }, 0);
     }
 
-    private _checkEnabled(): boolean {
+    private checkEnabled(): boolean {
         const model = this.editor.model;
         const firstPosition = model.document.selection.getFirstPosition();
         if (!firstPosition) {

@@ -1,15 +1,15 @@
 import { Plugin, Enter, Delete, enableViewPlaceholder, getEnvKeystrokeText, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
 import { Tooltip } from "bootstrap";
-import CollapsibleCommand from "./collapsiblecommand.js";
+import CollapsibleCommand from "./collapsible-command.js";
 
 /**
  * Schema, conversion and key handling for collapsible blocks.
  *
- * Model:        <details><summary>title</summary>…blocks…</details>
- * Data view:    <details class="trilium-collapsible"><summary>…</summary>…</details>
+ * Model:        <details><summary>title</summary>â€¦blocksâ€¦</details>
+ * Data view:    <details class="trilium-collapsible"><summary>â€¦</summary>â€¦</details>
  * Editing view: same, plus a custom arrow UIElement in the summary for toggling.
  *               The DOM `open` attribute is the source of truth for collapsed state
- *               and is intentionally not persisted in the model — everything loads
+ *               and is intentionally not persisted in the model â€” everything loads
  *               collapsed; the insert command opens new blocks explicitly.
  */
 export default class CollapsibleEditing extends Plugin {
@@ -22,34 +22,34 @@ export default class CollapsibleEditing extends Plugin {
         return [Enter, Delete] as const;
     }
 
-    private _keydownListener?: (event: KeyboardEvent) => void;
-    private _toggleListener?: (event: Event) => void;
+    private keydownListener?: (event: KeyboardEvent) => void;
+    private toggleListener?: (event: Event) => void;
     /** Summary DOM elements that currently have a Bootstrap tooltip attached. */
-    private readonly _summaryTooltips = new Set<HTMLElement>();
+    private readonly summaryTooltips = new Set<HTMLElement>();
     /** The summary tooltip we currently have force-shown because the caret is inside it. */
-    private _caretShownTooltip?: HTMLElement;
+    private caretShownTooltip?: HTMLElement;
 
     public init(): void {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
-        this._registerSchema();
-        this._registerConversion();
-        this._registerKeyHandlers();
-        this._registerClickHandler();
-        this._registerDomListeners();
-        this._registerPostFixers();
-        this._registerSummaryTooltips();
+        this.registerSchema();
+        this.registerConversion();
+        this.registerKeyHandlers();
+        this.registerClickHandler();
+        this.registerDomListeners();
+        this.registerPostFixers();
+        this.registerSummaryTooltips();
     }
 
     public override destroy(): void {
         const domRoot = this.editor.editing.view.getDomRoot();
         if (domRoot) {
-            if (this._keydownListener) domRoot.removeEventListener("keydown", this._keydownListener, true);
-            if (this._toggleListener) domRoot.removeEventListener("toggle", this._toggleListener, true);
+            if (this.keydownListener) domRoot.removeEventListener("keydown", this.keydownListener, true);
+            if (this.toggleListener) domRoot.removeEventListener("toggle", this.toggleListener, true);
         }
-        for (const summary of this._summaryTooltips) {
+        for (const summary of this.summaryTooltips) {
             Tooltip.getInstance(summary)?.dispose();
         }
-        this._summaryTooltips.clear();
+        this.summaryTooltips.clear();
         super.destroy();
     }
 
@@ -57,7 +57,7 @@ export default class CollapsibleEditing extends Plugin {
     // Schema & conversion
     // -----------------------------------------------------------------
 
-    private _registerSchema() {
+    private registerSchema() {
         const schema = this.editor.model.schema;
         schema.register("details", { inheritAllFrom: "$container" });
         schema.register("summary", {
@@ -70,7 +70,7 @@ export default class CollapsibleEditing extends Plugin {
         });
     }
 
-    private _registerConversion() {
+    private registerConversion() {
         const conversion = this.editor.conversion;
         const detailsView = (_m: any, { writer }: any) =>
             writer.createContainerElement("details", { class: "trilium-collapsible" });
@@ -85,7 +85,7 @@ export default class CollapsibleEditing extends Plugin {
         conversion.for("dataDowncast").elementToElement({ model: "summary", view: "summary" });
         conversion.for("editingDowncast").elementToElement({
             model: "summary",
-            view: (_m: any, { writer }: any) => this._createEditingSummary(writer)
+            view: (_m: any, { writer }: any) => this.createEditingSummary(writer)
         });
     }
 
@@ -94,7 +94,7 @@ export default class CollapsibleEditing extends Plugin {
      * prepended. Clicking the arrow toggles the native <details>; the data view
      * doesn't include the arrow so it doesn't pollute saved HTML.
      */
-    private _createEditingSummary(writer: any): any {
+    private createEditingSummary(writer: any): any {
         const summary = writer.createContainerElement("summary");
         const arrow = writer.createUIElement("span", { class: "trilium-collapsible-arrow" }, function(this: any, domDocument: any) {
             const span: HTMLElement = this.toDomElement(domDocument);
@@ -127,26 +127,26 @@ export default class CollapsibleEditing extends Plugin {
     // DOM/model bridge helpers
     // -----------------------------------------------------------------
 
-    private _getDom<T extends Element = HTMLElement>(model: any): T | null {
+    private getDom<T extends Element = HTMLElement>(model: any): T | null {
         const view = this.editor.editing.mapper.toViewElement(model);
         const dom = view ? this.editor.editing.view.domConverter.viewToDom(view) : null;
         return dom instanceof Element ? (dom as unknown as T) : null;
     }
 
     /** True if the <details> is currently expanded (or no DOM mapping yet). */
-    private _isDetailsOpen(model: any): boolean {
-        const dom = this._getDom<HTMLDetailsElement>(model);
+    private isDetailsOpen(model: any): boolean {
+        const dom = this.getDom<HTMLDetailsElement>(model);
         return !dom || dom.open;
     }
 
     /** Toggle the DOM `open` attribute directly (the source of truth in this plugin). */
-    private _setDetailsOpen(model: any, open: boolean) {
-        const dom = this._getDom<HTMLDetailsElement>(model);
+    private setDetailsOpen(model: any, open: boolean) {
+        const dom = this.getDom<HTMLDetailsElement>(model);
         if (dom) dom.open = open;
     }
 
     /** Is the caret on the first ("top") or last ("bottom") visual line of `dom`? */
-    private _caretAtVisualEdge(dom: HTMLElement, edge: "top" | "bottom"): boolean {
+    private caretAtVisualEdge(dom: HTMLElement, edge: "top" | "bottom"): boolean {
         const win = dom.ownerDocument.defaultView;
         const sel = win?.getSelection();
         if (!sel || sel.rangeCount === 0) return true;
@@ -159,7 +159,7 @@ export default class CollapsibleEditing extends Plugin {
     }
 
     /** Insert a new empty paragraph at `position` and place the caret in it. */
-    private _insertParagraphAt(writer: any, position: any): any {
+    private insertParagraphAt(writer: any, position: any): any {
         const p = writer.createElement("paragraph");
         writer.insert(p, position);
         writer.setSelection(p, 0);
@@ -170,29 +170,29 @@ export default class CollapsibleEditing extends Plugin {
     // View-event key handlers (Enter, Delete, ArrowUp)
     // -----------------------------------------------------------------
 
-    private _registerKeyHandlers() {
+    private registerKeyHandlers() {
         const viewDocument = this.editor.editing.view.document;
         this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter",
-            (evt, data) => this._onEnterInSummary(evt, data), { context: "summary" });
+            (evt, data) => this.onEnterInSummary(evt, data), { context: "summary" });
         this.listenTo<ViewDocumentEnterEvent>(viewDocument, "enter",
-            (evt, data) => this._onEnterInBody(evt, data));
+            (evt, data) => this.onEnterInBody(evt, data));
         this.listenTo<ViewDocumentArrowKeyEvent>(viewDocument, "arrowKey",
-            (evt, data) => this._onUpArrow(evt, data));
+            (evt, data) => this.onUpArrow(evt, data));
         this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete",
-            (evt, data) => this._onDeleteAdjacentDetails(evt, data));
+            (evt, data) => this.onDeleteAdjacentDetails(evt, data));
         this.listenTo<ViewDocumentDeleteEvent>(viewDocument, "delete",
-            (evt, data) => this._onBackspaceInEmptySummary(evt, data), { context: "summary" });
+            (evt, data) => this.onBackspaceInEmptySummary(evt, data), { context: "summary" });
     }
 
     /**
      * Enter inside a summary:
-     *   - at start of title  → blank paragraph before the collapsible
-     *   - at end of title    → expanded: empty paragraph at start of body
+     *   - at start of title  â†’ blank paragraph before the collapsible
+     *   - at end of title    â†’ expanded: empty paragraph at start of body
      *                          collapsed: blank paragraph after the collapsible
-     *   - anywhere else      → split the title, right side becomes the first body
+     *   - anywhere else      â†’ split the title, right side becomes the first body
      *                          block (expand if collapsed)
      */
-    private _onEnterInSummary(evt: any, data: any) {
+    private onEnterInSummary(evt: any, data: any) {
         const editor = this.editor;
         const model = editor.model;
         const selection = model.document.selection;
@@ -201,7 +201,7 @@ export default class CollapsibleEditing extends Plugin {
         if (!summary) return;
 
         // Titles are single-line: always swallow Enter so it never inserts a newline
-        // — even when there's an active selection inside the summary (native Enter
+        // â€” even when there's an active selection inside the summary (native Enter
         // would otherwise split the summary and produce an invalid structure).
         data.preventDefault();
         evt.stop();
@@ -210,13 +210,13 @@ export default class CollapsibleEditing extends Plugin {
         if (!details || !details.is("element", "details")) return;
 
         // If the title is currently collapsed and we'll need to expand it (middle-
-        // of-title split), do it now — before model.change runs and the hidden-body
+        // of-title split), do it now â€” before model.change runs and the hidden-body
         // post-fixer gets a chance to snap the caret out of the new body paragraph.
         const willSplit = !selection.isCollapsed
             ? false  // selection will be deleted first, then the new collapsed position determines branch
             : !selection.getLastPosition()!.isAtStart && !selection.getLastPosition()!.isAtEnd;
-        if (willSplit && !this._isDetailsOpen(details)) {
-            this._setDetailsOpen(details, true);
+        if (willSplit && !this.isDetailsOpen(details)) {
+            this.setDetailsOpen(details, true);
         }
 
         model.change(writer => {
@@ -227,22 +227,22 @@ export default class CollapsibleEditing extends Plugin {
             const position = selection.getLastPosition()!;
 
             if (position.isAtStart) {
-                this._insertParagraphAt(writer, writer.createPositionBefore(details));
+                this.insertParagraphAt(writer, writer.createPositionBefore(details));
                 return;
             }
 
             if (position.isAtEnd) {
-                const pos = this._isDetailsOpen(details)
+                const pos = this.isDetailsOpen(details)
                     ? writer.createPositionAfter(summary)
                     : writer.createPositionAfter(details);
-                this._insertParagraphAt(writer, pos);
+                this.insertParagraphAt(writer, pos);
                 return;
             }
 
             // Middle of title: split. If we entered this branch via the selection-
             // delete path (rather than `willSplit` above), expand now too.
-            if (!this._isDetailsOpen(details)) {
-                this._setDetailsOpen(details, true);
+            if (!this.isDetailsOpen(details)) {
+                this.setDetailsOpen(details, true);
             }
             const rightRange = writer.createRange(
                 writer.createPositionAt(summary, position.offset),
@@ -257,9 +257,9 @@ export default class CollapsibleEditing extends Plugin {
 
     /**
      * Enter in an empty trailing paragraph of the body exits the collapsible
-     * (text + Enter + Enter → out — same convention as blockquote).
+     * (text + Enter + Enter â†’ out â€” same convention as blockquote).
      */
-    private _onEnterInBody(evt: any, data: any) {
+    private onEnterInBody(evt: any, data: any) {
         const editor = this.editor;
         const selection = editor.model.document.selection;
         if (!selection.isCollapsed) return;
@@ -280,7 +280,7 @@ export default class CollapsibleEditing extends Plugin {
             if (after?.is("element", "paragraph")) {
                 writer.setSelection(after, 0);
             } else {
-                this._insertParagraphAt(writer, writer.createPositionAfter(details));
+                this.insertParagraphAt(writer, writer.createPositionAfter(details));
             }
         });
     }
@@ -288,12 +288,12 @@ export default class CollapsibleEditing extends Plugin {
     /**
      * Up arrow:
      *   - from inside a summary whose details has a previous-sibling details
-     *     → jump into the previous details (its last block if open, summary if closed)
+     *     â†’ jump into the previous details (its last block if open, summary if closed)
      *   - from the start of any other block whose previous sibling is a details
-     *     → jump into the previous details (same rules)
+     *     â†’ jump into the previous details (same rules)
      * Multi-line summary navigation is left to the browser via the visual-edge guard.
      */
-    private _onUpArrow(evt: any, data: any) {
+    private onUpArrow(evt: any, data: any) {
         const selection = this.editor.model.document.selection;
         if (data.keyCode !== 38 || data.shiftKey || !selection.isCollapsed) return;
 
@@ -304,11 +304,11 @@ export default class CollapsibleEditing extends Plugin {
         if (summary) {
             const details = summary.parent;
             if (!details?.is("element", "details")) return;
-            const dom = this._getDom<HTMLElement>(summary);
-            if (dom && !this._caretAtVisualEdge(dom, "top")) return;
+            const dom = this.getDom<HTMLElement>(summary);
+            if (dom && !this.caretAtVisualEdge(dom, "top")) return;
             const prev = details.previousSibling;
             if (!prev?.is("element", "details")) return;
-            this._jumpUpInto(prev, /* atOffsetZeroIfOpen */ false, evt, data);
+            this.jumpUpInto(prev, /* atOffsetZeroIfOpen */ false, evt, data);
             return;
         }
 
@@ -316,11 +316,11 @@ export default class CollapsibleEditing extends Plugin {
         if (!block || !block.is("element") || !position.isAtStart) return;
         const prev = block.previousSibling;
         if (!prev?.is("element", "details")) return;
-        this._jumpUpInto(prev, /* atOffsetZeroIfOpen */ true, evt, data);
+        this.jumpUpInto(prev, /* atOffsetZeroIfOpen */ true, evt, data);
     }
 
-    private _jumpUpInto(details: any, atOffsetZeroIfOpen: boolean, evt: any, data: any) {
-        const open = this._isDetailsOpen(details);
+    private jumpUpInto(details: any, atOffsetZeroIfOpen: boolean, evt: any, data: any) {
+        const open = this.isDetailsOpen(details);
         const target = open
             ? details.getChild(details.childCount - 1)
             : details.getChild(0);
@@ -336,7 +336,7 @@ export default class CollapsibleEditing extends Plugin {
      *   1st press: select the whole <details> so the user sees what's about to go.
      *   2nd press: with the details selected, default delete removes it.
      */
-    private _onDeleteAdjacentDetails(evt: any, data: any) {
+    private onDeleteAdjacentDetails(evt: any, data: any) {
         const selection = this.editor.model.document.selection;
         // 2nd press: a <details> is already selected; let CKEditor's default delete
         // remove it (more reliable than us calling writer.remove here).
@@ -354,7 +354,7 @@ export default class CollapsibleEditing extends Plugin {
     }
 
     /** Backspace at start of an empty summary unwraps the collapsible. */
-    private _onBackspaceInEmptySummary(evt: any, data: any) {
+    private onBackspaceInEmptySummary(evt: any, data: any) {
         const selection = this.editor.model.document.selection;
         if (data.direction !== "backward" || !selection.isCollapsed) return;
         const summary = selection.getLastPosition()?.findAncestor("summary");
@@ -371,14 +371,14 @@ export default class CollapsibleEditing extends Plugin {
     // -----------------------------------------------------------------
 
     /**
-     * Suppress the native click-to-toggle on <summary> in the editor — only the
+     * Suppress the native click-to-toggle on <summary> in the editor â€” only the
      * custom arrow may change the open state. The data/published view keeps the
      * native marker and click-to-toggle behavior.
      *
      * Modifier-clicks (Ctrl/Cmd/Shift/Alt) pass through so Ctrl+click on a link
      * inside the title still opens it in a new tab, etc.
      */
-    private _registerClickHandler() {
+    private registerClickHandler() {
         this.listenTo(this.editor.editing.view.document, "click", (_evt, data: any) => {
             const domEvent = data.domEvent as MouseEvent | undefined;
             if (domEvent?.ctrlKey || domEvent?.metaKey || domEvent?.shiftKey || domEvent?.altKey) return;
@@ -395,24 +395,24 @@ export default class CollapsibleEditing extends Plugin {
     // DOM listeners (need DOM root; registered once the editor is ready)
     // -----------------------------------------------------------------
 
-    private _registerDomListeners() {
+    private registerDomListeners() {
         const editor = this.editor;
         editor.on("ready", () => {
             const domRoot = editor.editing.view.getDomRoot();
             if (!domRoot) return;
             // DOM-level keydown for Ctrl+Enter and ArrowDown. View-event listeners
             // are unreliable when the caret is inside attribute elements (links,
-            // formatted text, …); DOM capture phase always fires.
-            this._keydownListener = (event: KeyboardEvent) => this._onDomKeydown(event);
+            // formatted text, â€¦); DOM capture phase always fires.
+            this.keydownListener = (event: KeyboardEvent) => this.onDomKeydown(event);
             // Move the caret out of a body that's about to be hidden by collapse.
-            // (toggle does not bubble — capture phase.)
-            this._toggleListener = (event: Event) => this._onDetailsToggle(event);
-            domRoot.addEventListener("keydown", this._keydownListener, true);
-            domRoot.addEventListener("toggle", this._toggleListener, true);
+            // (toggle does not bubble â€” capture phase.)
+            this.toggleListener = (event: Event) => this.onDetailsToggle(event);
+            domRoot.addEventListener("keydown", this.keydownListener, true);
+            domRoot.addEventListener("toggle", this.toggleListener, true);
         });
     }
 
-    private _onDomKeydown(event: KeyboardEvent) {
+    private onDomKeydown(event: KeyboardEvent) {
         const selection = this.editor.model.document.selection;
 
         // Ctrl+Enter (Cmd+Enter on Mac) inside a summary toggles the enclosing details.
@@ -420,7 +420,7 @@ export default class CollapsibleEditing extends Plugin {
             const summary = selection.getFirstPosition()?.findAncestor("summary");
             const details = summary?.parent;
             if (!details?.is("element", "details")) return;
-            const dom = this._getDom<HTMLDetailsElement>(details);
+            const dom = this.getDom<HTMLDetailsElement>(details);
             if (!dom) return;
             dom.open = !dom.open;
             event.preventDefault();
@@ -434,9 +434,9 @@ export default class CollapsibleEditing extends Plugin {
             if (!summary) return;
             const details = summary.parent;
             if (!details?.is("element", "details")) return;
-            const dom = this._getDom<HTMLElement>(summary);
-            if (dom && !this._caretAtVisualEdge(dom, "bottom")) return;
-            const target = this._isDetailsOpen(details) ? summary.nextSibling : details.nextSibling;
+            const dom = this.getDom<HTMLElement>(summary);
+            if (dom && !this.caretAtVisualEdge(dom, "bottom")) return;
+            const target = this.isDetailsOpen(details) ? summary.nextSibling : details.nextSibling;
             if (!target?.is("element")) return;
             this.editor.model.change(writer => writer.setSelection(target, 0));
             event.preventDefault();
@@ -444,7 +444,7 @@ export default class CollapsibleEditing extends Plugin {
         }
     }
 
-    private _onDetailsToggle(event: Event) {
+    private onDetailsToggle(event: Event) {
         const editor = this.editor;
         const detailsDom = event.target as HTMLDetailsElement;
         if (detailsDom.tagName?.toLowerCase() !== "details") return;
@@ -461,11 +461,11 @@ export default class CollapsibleEditing extends Plugin {
         const position = editor.model.document.selection.getFirstPosition();
         if (!position) return;
 
-        // Already in the toggled block's own summary — caret is still visible.
+        // Already in the toggled block's own summary â€” caret is still visible.
         if (position.findAncestor("summary") === summary) return;
 
         // The caret only needs to move if it's inside the toggled details
-        // (could be many levels deep — e.g. a nested collapsible's body or its
+        // (could be many levels deep â€” e.g. a nested collapsible's body or its
         // summary; both get hidden when the outer one collapses).
         let isInside = false;
         for (let node: any = position.parent; node; node = node.parent) {
@@ -485,7 +485,7 @@ export default class CollapsibleEditing extends Plugin {
      * focusing the title pops up a "click the arrow or press Ctrl+Enter" hint
      * in the screen corner (the same UX as the todo-list multistate plugin).
      */
-    private _registerSummaryTooltips() {
+    private registerSummaryTooltips() {
         const editor = this.editor;
         const translate = (editor.config.get("translate") as ((key: string, params?: Record<string, unknown>) => string) | undefined)
             ?? ((key: string) => key);
@@ -495,11 +495,11 @@ export default class CollapsibleEditing extends Plugin {
             if (!domRoot) return;
 
             // Drop tooltips on summaries that CKEditor re-rendered out of the DOM.
-            for (const summary of this._summaryTooltips) {
+            for (const summary of this.summaryTooltips) {
                 if (!summary.isConnected) {
                     Tooltip.getInstance(summary)?.dispose();
-                    this._summaryTooltips.delete(summary);
-                    if (this._caretShownTooltip === summary) this._caretShownTooltip = undefined;
+                    this.summaryTooltips.delete(summary);
+                    if (this.caretShownTooltip === summary) this.caretShownTooltip = undefined;
                 }
             }
 
@@ -509,7 +509,7 @@ export default class CollapsibleEditing extends Plugin {
                     shortcut: getEnvKeystrokeText("Ctrl+Enter")
                 });
                 new Tooltip(summary, { title, customClass: "text-editor-content-tooltip" });
-                this._summaryTooltips.add(summary);
+                this.summaryTooltips.add(summary);
             }
         });
 
@@ -519,19 +519,19 @@ export default class CollapsibleEditing extends Plugin {
         // appears when the user navigates into the title via keyboard or click.
         this.listenTo(editor.model.document.selection, "change:range", () => {
             const summaryModel = editor.model.document.selection.getFirstPosition()?.findAncestor("summary");
-            const targetDom = summaryModel ? this._getDom<HTMLElement>(summaryModel) : null;
+            const targetDom = summaryModel ? this.getDom<HTMLElement>(summaryModel) : null;
 
             // No-op when the target hasn't changed (selection moves on every keystroke
             // while typing in the summary; re-calling show() retriggers the animation).
-            if (this._caretShownTooltip === targetDom) return;
+            if (this.caretShownTooltip === targetDom) return;
 
-            if (this._caretShownTooltip) {
-                Tooltip.getInstance(this._caretShownTooltip)?.hide();
-                this._caretShownTooltip = undefined;
+            if (this.caretShownTooltip) {
+                Tooltip.getInstance(this.caretShownTooltip)?.hide();
+                this.caretShownTooltip = undefined;
             }
             if (targetDom) {
                 Tooltip.getInstance(targetDom)?.show();
-                this._caretShownTooltip = targetDom;
+                this.caretShownTooltip = targetDom;
             }
         });
     }
@@ -540,24 +540,24 @@ export default class CollapsibleEditing extends Plugin {
     // Model post-fixers
     // -----------------------------------------------------------------
 
-    private _registerPostFixers() {
+    private registerPostFixers() {
         const document = this.editor.model.document;
-        document.registerPostFixer(writer => this._structuralPostFixer(writer));
-        document.registerPostFixer(writer => this._summaryInvariantPostFixer(writer));
-        document.registerPostFixer(writer => this._gapPostFixer(writer));
-        document.registerPostFixer(writer => this._hiddenBodyPostFixer(writer));
+        document.registerPostFixer(writer => this.structuralPostFixer(writer));
+        document.registerPostFixer(writer => this.summaryInvariantPostFixer(writer));
+        document.registerPostFixer(writer => this.gapPostFixer(writer));
+        document.registerPostFixer(writer => this.hiddenBodyPostFixer(writer));
     }
 
     /**
      * Cleanup invariants after every change:
-     *  - <summary> not inside <details> → remove it
-     *  - <details> with no children → remove it
+     *  - <summary> not inside <details> â†’ remove it
+     *  - <details> with no children â†’ remove it
      * For inserts we walk the inserted subtree to catch orphans nested inside it.
      * For removes we check whether the removal emptied a <details> (the removed
      * node itself is gone; `entry.position.nodeAfter` is the node that took its
-     * place, not the removed one — never inspect it directly).
+     * place, not the removed one â€” never inspect it directly).
      */
-    private _structuralPostFixer(writer: any): boolean {
+    private structuralPostFixer(writer: any): boolean {
         const changes = this.editor.model.document.differ.getChanges();
         for (const entry of changes) {
             if (entry.type === "insert") {
@@ -593,10 +593,10 @@ export default class CollapsibleEditing extends Plugin {
      *     else
      *
      * When a summary is missing we insert a blank one rather than re-using the
-     * first existing child — the other content stays put as body, and the user
+     * first existing child â€” the other content stays put as body, and the user
      * sees a fresh empty title to fill in.
      */
-    private _summaryInvariantPostFixer(writer: any): boolean {
+    private summaryInvariantPostFixer(writer: any): boolean {
         const changes = this.editor.model.document.differ.getChanges();
         const visited = new Set<any>();
 
@@ -639,7 +639,7 @@ export default class CollapsibleEditing extends Plugin {
                         if (item.is("element", "details") && ensureValid(item)) return true;
                     }
                 }
-                // Also validate the receiving parent — e.g. dragging a <summary>
+                // Also validate the receiving parent â€” e.g. dragging a <summary>
                 // into a <details> that already has one gives us two summaries.
                 const parent = (entry as any).position?.parent;
                 if (parent?.is("element", "details") && ensureValid(parent)) return true;
@@ -656,7 +656,7 @@ export default class CollapsibleEditing extends Plugin {
      * <details> (between summary and a body block). Prefer the previous sibling
      * so the caret stays on the summary line when the block is collapsed.
      */
-    private _gapPostFixer(writer: any): boolean {
+    private gapPostFixer(writer: any): boolean {
         const position = this.editor.model.document.selection.getFirstPosition();
         if (!position || !position.parent.is("element", "details")) return false;
         const details = position.parent;
@@ -688,14 +688,14 @@ export default class CollapsibleEditing extends Plugin {
      * collapsed (so it doesn't disappear into hidden content, and so widget
      * toolbars don't trigger for invisible elements).
      */
-    private _hiddenBodyPostFixer(writer: any): boolean {
+    private hiddenBodyPostFixer(writer: any): boolean {
         const position = this.editor.model.document.selection.getFirstPosition();
         if (!position) return false;
 
         let outermostClosed: any = null;
         for (let node: any = position.parent; node; node = node.parent) {
             if (!node.is?.("element", "details")) continue;
-            const dom = this._getDom<HTMLDetailsElement>(node);
+            const dom = this.getDom<HTMLDetailsElement>(node);
             if (dom && !dom.open) outermostClosed = node;
         }
         if (!outermostClosed) return false;
