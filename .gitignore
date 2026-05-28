@@ -51,3 +51,7 @@ upload
 site/
 apps/*/coverage
 scripts/translation/.language*.json
+
+.claude
+.pnpm-store
+apps/edit-docs/output.zip

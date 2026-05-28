@@ -15,7 +15,7 @@
  * - ${note.dateCreatedObj.format('MM-DD')}
  */
 
-import log from "./log.js";
+import { getLog } from "@triliumnext/core";
 
 /** Allowed method names that can be called on template variables. */
 const ALLOWED_METHODS = new Set([
@@ -182,7 +182,7 @@ export function evaluateTemplateSafe(
     try {
         return evaluateTemplate(template, variables);
     } catch (e: any) {
-        log.error(`Template evaluation for ${contextDescription} failed with: ${e.message}`);
+        getLog().error(`Template evaluation for ${contextDescription} failed with: ${e.message}`);
         return fallback;
     }
 }

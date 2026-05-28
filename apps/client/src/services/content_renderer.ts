@@ -1,6 +1,7 @@
 import "./content_renderer.css";
 
-import { normalizeMimeTypeForCKEditor, type TextRepresentationResponse } from "@triliumnext/commons";
+import { normalizeMimeTypeForCKEditor, renderToHtml, type TextRepresentationResponse } from "@triliumnext/commons";
+import DOMPurify from "dompurify";
 import { h, render } from "preact";
 import WheelZoom from 'vanilla-js-wheel-zoom';
 
@@ -8,7 +9,7 @@ import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
 import imageContextMenuService from "../menus/image_context_menu.js";
 import { t } from "../services/i18n.js";
-import renderText from "./content_renderer_text.js";
+import renderText, { postProcessRichContent, renderChildrenList } from "./content_renderer_text.js";
 import renderDoc from "./doc_renderer.js";
 import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
 import openService from "./open.js";
@@ -17,7 +18,7 @@ import protectedSessionHolder from "./protected_session_holder.js";
 import renderService from "./render.js";
 import server from "./server.js";
 import { applySingleBlockSyntaxHighlight } from "./syntax_highlight.js";
-import utils, { getErrorMessage } from "./utils.js";
+import { getErrorMessage } from "./utils.js";
 
 let idCounter = 1;
 
@@ -54,6 +55,8 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
 
     if (type === "text" || type === "book") {
         await renderText(entity, $renderedContent, options);
+    } else if (type === "markdown") {
+        await renderMarkdown(entity, $renderedContent, options);
     } else if (type === "code") {
         await renderCode(entity, $renderedContent);
     } else if (["image", "canvas", "mindMap", "spreadsheet"].includes(type)) {
@@ -75,7 +78,7 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         const $content = await renderDoc(entity);
         $renderedContent.html($content.html());
     } else if (!options.tooltip && type === "protectedSession") {
-        const $button = $(`<button class="btn btn-sm"><span class="bx bx-log-in"></span> Enter protected session</button>`).on("click", protectedSessionService.enterProtectedSession);
+        const $button = $(`<button class="btn btn-sm"><span class="tn-icon bx bx-log-in"></span> Enter protected session</button>`).on("click", protectedSessionService.enterProtectedSession);
 
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
     } else if (entity instanceof FNote) {
@@ -89,7 +92,7 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
                 .addClass("webview-footer");
             const $openButton = $(`
                 <button class="file-open btn btn-primary" type="button">
-                    <span class="bx bx-link-external"></span>
+                    <span class="tn-icon bx bx-link-external"></span>
                     ${t("content_renderer.open_externally")}
                 </button>
             `)
@@ -97,9 +100,8 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
                 .on("click", () => {
                     const webViewSrc = entity.getLabelValue("webViewSrc");
                     if (webViewSrc) {
-                        if (utils.isElectron()) {
-                            const electron = utils.dynamicRequire("electron");
-                            electron.shell.openExternal(webViewSrc);
+                        if (window.electronApi) {
+                            window.electronApi.shell.openExternal(webViewSrc);
                         } else {
                             window.open(webViewSrc, '_blank', 'noopener,noreferrer');
                         }
@@ -117,6 +119,31 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         $renderedContent,
         type
     };
+}
+
+/**
+ * Renders a markdown note by converting its source to CKEditor-compatible HTML,
+ * then running the same post-render pipeline as text notes (included notes,
+ * math, reference links, Mermaid, code highlight) so the preview matches what
+ * the user sees in the Markdown note type's preview pane.
+ */
+async function renderMarkdown(note: FNote | FAttachment, $renderedContent: JQuery<HTMLElement>, options: RenderOptions) {
+    const blob = await note.getBlob();
+    const source = blob?.content ?? "";
+
+    if (!source.trim()) {
+        if (note instanceof FNote && !options.noChildrenList) {
+            await renderChildrenList($renderedContent, note, options.includeArchivedNotes ?? false);
+        }
+        return;
+    }
+
+    const html = renderToHtml(source, note.title, {
+        sanitize: (dirty) => DOMPurify.sanitize(dirty),
+        wikiLink: { formatHref: (id) => `#root/${id}` }
+    });
+    $renderedContent.append($('<div class="ck-content">').html(html));
+    await postProcessRichContent(note, $renderedContent, options);
 }
 
 /**
@@ -194,7 +221,7 @@ async function addOCRTextIfAvailable(note: FNote, $content: JQuery<HTMLElement>)
             const $ocrSection = $(`
                 <div class="ocr-text-section">
                     <div class="ocr-header">
-                        <span class="bx bx-text"></span> ${t("ocr.extracted_text")}
+                        <span class="tn-icon bx bx-text"></span> ${t("ocr.extracted_text")}
                     </div>
                     <div class="ocr-content"></div>
                 </div>
@@ -228,7 +255,7 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
         const url = `../../api/${entityType}/${entityId}/open`;
         const $viewer = $(`<div style="height: 100%">`);
         const PdfViewer = (await import("../widgets/type_widgets/file/PdfViewer")).default;
-        render(h(PdfViewer, {pdfUrl: url, editable: false}), $viewer.get(0)!);
+        render(h(PdfViewer, {pdfUrl: url, editable: false, toolbar: false}), $viewer.get(0)!);
 
         $content.append($viewer);
 
@@ -330,6 +357,8 @@ function getRenderingType(entity: FNote | FAttachment) {
 
     if (type === "file" && mime === "application/pdf") {
         type = "pdf";
+    } else if (type === "code" && entity instanceof FNote && entity.isMarkdown()) {
+        type = "markdown";
     } else if ((type === "file" || type === "viewConfig") && mime && CODE_MIME_TYPES.has(mime) && !isIconPack) {
         type = "code";
     } else if (type === "file" && mime && mime.startsWith("audio/")) {

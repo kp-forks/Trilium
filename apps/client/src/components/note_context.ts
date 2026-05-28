@@ -19,11 +19,22 @@ import Component from "./component.js";
 export interface SetNoteOpts {
     triggerSwitchEvent?: unknown;
     viewScope?: ViewScope;
+    /** If true, skip closing the currently active dialog. Used when opening a note into a stackable popup (e.g. quick-edit) that must not dismiss the dialog it was launched from. */
+    keepActiveDialog?: boolean;
 }
 
 export type GetTextEditorCallback = (editor: CKTextEditor) => void;
 
 export type SaveState = "saved" | "saving" | "unsaved" | "error";
+
+const READ_ONLY_CAPABLE_TYPES: string[] = [
+    "text",
+    "code",
+    "mermaid",
+    "canvas",
+    "mindMap",
+    "spreadsheet"
+];
 
 export interface NoteContextDataMap {
     toc: HeadingContext;
@@ -40,6 +51,10 @@ export interface NoteContextDataMap {
     pdfLayers: {
         layers: PdfLayer[];
         toggleLayer(layerId: string, visible: boolean): void;
+    };
+    pdfAnnotations: {
+        annotations: PdfAnnotationInfo[];
+        scrollToAnnotation(annotationId: string, pageNumber: number): void;
     };
     saveState: {
         state: SaveState;
@@ -118,26 +133,29 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
 
         await this.triggerEvent("beforeNoteSwitch", { noteContext: this });
 
-        closeActiveDialog();
+        if (!opts.keepActiveDialog) {
+            closeActiveDialog();
+        }
+
+        const previousNoteId = this.noteId;
 
         this.notePath = resolvedNotePath;
         this.viewScope = opts.viewScope;
         ({ noteId: this.noteId, parentNoteId: this.parentNoteId } = treeService.getNoteIdAndParentIdFromUrl(resolvedNotePath));
 
-        // Clear context data when switching notes and notify subscribers
-        const oldKeys = Array.from(this.contextData.keys());
-        this.contextData.clear();
-        if (oldKeys.length > 0) {
-            // Notify subscribers asynchronously to avoid blocking navigation
-            window.setTimeout(() => {
-                for (const key of oldKeys) {
-                    this.triggerEvent("contextDataChanged", {
-                        noteContext: this,
-                        key,
-                        value: undefined
-                    });
-                }
-            }, 0);
+        // Clear context data only when actually switching to a different note.
+        // Context data (e.g. ToC headings) is tied to the note content, so it
+        // remains valid when only the viewScope changes for the same note.
+        if (this.noteId !== previousNoteId) {
+            const oldKeys = Array.from(this.contextData.keys());
+            this.contextData.clear();
+            for (const key of oldKeys) {
+                this.triggerEvent("contextDataChanged", {
+                    noteContext: this,
+                    key,
+                    value: undefined
+                });
+            }
         }
 
         this.saveToRecentNotes(resolvedNotePath);
@@ -303,8 +321,13 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
             return false;
         }
 
-        // "readOnly" is a state valid only for text/code notes
-        if (!this.note || (this.note.type !== "text" && this.note.type !== "code")) {
+        if (!this.note) {
+            return false;
+        }
+
+        // Note types that support a read-only state (via the #readOnly label, source view, or auto-readonly).
+        const isPdf = this.note.type === "file" && this.note.mime === "application/pdf";
+        if (!isPdf && !READ_ONLY_CAPABLE_TYPES.includes(this.note.type)) {
             return false;
         }
 
@@ -318,6 +341,11 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
 
         if (this.viewScope?.viewMode === "source") {
             return true;
+        }
+
+        // Auto read-only based on content size is only configurable for text/code.
+        if (this.note.type !== "text" && this.note.type !== "code") {
+            return false;
         }
 
         // Store the initial decision about read-only status in the viewScope

@@ -1,14 +1,12 @@
+import { entity_changes as entityChangesService, NotFoundError, routes, ValidationError } from "@triliumnext/core";
 import express, { type RequestHandler } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 import multer from "multer";
 
-import AbstractBeccaEntity from "../becca/entities/abstract_becca_entity.js";
-import NotFoundError from "../errors/not_found_error.js";
-import ValidationError from "../errors/validation_error.js";
+import { namespace } from "../cls_provider.js";
 import auth from "../services/auth.js";
-import cls from "../services/cls.js";
-import entityChangesService from "../services/entity_changes.js";
-import log from "../services/log.js";
+import { cls } from "@triliumnext/core";
+import { getLog } from "@triliumnext/core";
 import sql from "../services/sql.js";
 import { safeExtractMessageAndStackFromError } from "../services/utils.js";
 import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
@@ -25,45 +23,17 @@ type NotAPromise<T> = T & { then?: void };
 export type ApiRequestHandler<P extends ParamsDictionary> = (req: express.Request<P>, res: express.Response, next: express.NextFunction) => unknown;
 export type SyncRouteRequestHandler<P extends ParamsDictionary> = (req: express.Request<P>, res: express.Response, next: express.NextFunction) => NotAPromise<object> | number | string | void | null;
 
-/** Handling common patterns. If entity is not caught, serialization to JSON will fail */
-function convertEntitiesToPojo(result: unknown) {
-    if (result instanceof AbstractBeccaEntity) {
-        result = result.getPojo();
-    } else if (Array.isArray(result)) {
-        for (const idx in result) {
-            if (result[idx] instanceof AbstractBeccaEntity) {
-                result[idx] = result[idx].getPojo();
-            }
-        }
-    } else if (result && typeof result === "object") {
-        if ("note" in result && result.note instanceof AbstractBeccaEntity) {
-            result.note = result.note.getPojo();
-        }
-
-        if ("branch" in result && result.branch instanceof AbstractBeccaEntity) {
-            result.branch = result.branch.getPojo();
-        }
-    }
-
-    if (result && typeof result === "object" && "executionResult" in result) {
-        // from runOnBackend()
-        result.executionResult = convertEntitiesToPojo(result.executionResult);
-    }
-
-    return result;
-}
-
 export function apiResultHandler(req: express.Request, res: express.Response, result: unknown) {
     res.setHeader("trilium-max-entity-change-id", entityChangesService.getMaxEntityChangeId());
 
-    result = convertEntitiesToPojo(result);
+    result = routes.convertEntitiesToPojo(result);
 
     // if it's an array and the first element is integer, then we consider this to be [statusCode, response] format
     if (Array.isArray(result) && result.length > 0 && Number.isInteger(result[0])) {
         const [statusCode, response] = result;
 
         if (statusCode !== 200 && statusCode !== 201 && statusCode !== 204) {
-            log.info(`${req.method} ${req.originalUrl} returned ${statusCode} with response ${JSON.stringify(response)}`);
+            getLog().info(`${req.method} ${req.originalUrl} returned ${statusCode} with response ${JSON.stringify(response)}`);
         }
 
         return send(res, statusCode, response);
@@ -114,8 +84,8 @@ function internalRoute<P extends ParamsDictionary>(method: HttpMethod, path: str
         const start = Date.now();
 
         try {
-            cls.namespace.bindEmitter(req);
-            cls.namespace.bindEmitter(res);
+            namespace.bindEmitter(req);
+            namespace.bindEmitter(res);
 
             const result = cls.init(() => {
                 cls.set("componentId", req.headers["trilium-component-id"]);
@@ -131,8 +101,7 @@ function internalRoute<P extends ParamsDictionary>(method: HttpMethod, path: str
                 return;
             }
 
-            if (result?.then) {
-                // promise
+            if (result instanceof Promise) {
                 result.then((promiseResult: unknown) => handleResponse(resultHandler, req, res, promiseResult, start)).catch((e: unknown) => handleException(e, method, path, res));
             } else {
                 handleResponse(resultHandler, req, res, result, start);
@@ -147,18 +116,18 @@ function handleResponse(resultHandler: ApiResultHandler, req: express.Request, r
     // Skip result handling if the response has already been handled
     if (res.triliumResponseHandled) {
         // Just log the request without additional processing
-        log.request(req, res, Date.now() - start, 0);
+        getLog().request(req, res, Date.now() - start, 0);
         return;
     }
 
     const responseLength = resultHandler(req, res, result);
-    log.request(req, res, Date.now() - start, responseLength);
+    getLog().request(req, res, Date.now() - start, responseLength);
 }
 
 function handleException(e: unknown | Error, method: HttpMethod, path: string, res: express.Response) {
     const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
 
-    log.error(`${method} ${path} threw exception: '${errMessage}', stack: ${errStack}`);
+    getLog().error(`${method} ${path} threw exception: '${errMessage}', stack: ${errStack}`);
 
     // Skip sending response if it's already been handled by the route handler
     if (res.triliumResponseHandled || res.headersSent) {

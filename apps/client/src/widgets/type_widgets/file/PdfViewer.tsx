@@ -22,23 +22,27 @@ interface PdfViewerProps extends Pick<HTMLAttributes<HTMLIFrameElement>, "tabInd
      * If set, enables editable mode which includes persistence of user settings, annotations as well as specific features such as sending table of contents data for the sidebar.
      */
     editable?: boolean;
+    /** If set, hides the toolbar. Defaults to `true` (visible). */
+    toolbar?: boolean;
+    /** If set, disables text selection in the rendered PDF. */
+    disableSelection?: boolean;
 }
 
 /**
  * Reusable component displaying a PDF. The PDF needs to be provided via a URL.
  */
-export default function PdfViewer({ iframeRef: externalIframeRef, pdfUrl, onLoad, editable }: PdfViewerProps) {
+export default function PdfViewer({ iframeRef: externalIframeRef, pdfUrl, onLoad, editable, toolbar = true, disableSelection }: PdfViewerProps) {
     const iframeRef = useSyncedRef(externalIframeRef, null);
     const [ locale ] = useTriliumOption("locale");
     const [ newLayout ] = useTriliumOptionBool("newLayout");
-    const injectStyles = useStyleInjection(iframeRef);
+    const injectStyles = useStyleInjection(iframeRef, disableSelection);
 
     return (
         <iframe
             ref={iframeRef}
             class="pdf-preview"
             style={{width: "100%", height: "100%"}}
-            src={`pdfjs/web/viewer.html?v=${glob.triliumVersion}&file=${pdfUrl}&lang=${locale}&sidebar=${newLayout ? "0" : "1"}&editable=${editable ? "1" : "0"}`}
+            src={`pdfjs/web/viewer.html?v=${glob.triliumVersion}&file=${pdfUrl}&locale=${locale}&sidebar=${newLayout ? "0" : "1"}&editable=${editable ? "1" : "0"}&toolbar=${toolbar ? "1" : "0"}`}
             onLoad={() => {
                 injectStyles();
                 onLoad?.();
@@ -47,7 +51,7 @@ export default function PdfViewer({ iframeRef: externalIframeRef, pdfUrl, onLoad
     );
 }
 
-function useStyleInjection(iframeRef: RefObject<HTMLIFrameElement>) {
+function useStyleInjection(iframeRef: RefObject<HTMLIFrameElement>, disableSelection?: boolean) {
     const styleRef = useRef<HTMLStyleElement | null>(null);
 
     // First load.
@@ -65,7 +69,13 @@ function useStyleInjection(iframeRef: RefObject<HTMLIFrameElement>) {
         fontStyles.textContent = FONTS.map(injectFont).join("\n");
         doc.head.appendChild(fontStyles);
 
-    }, [ iframeRef ]);
+        if (disableSelection) {
+            const selectionStyles = doc.createElement("style");
+            selectionStyles.textContent = `.textLayer, .textLayer * { user-select: none !important; cursor: default !important; }`;
+            doc.head.appendChild(selectionStyles);
+        }
+
+    }, [ iframeRef, disableSelection ]);
 
     // React to changes.
     useEffect(() => {

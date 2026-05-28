@@ -77,10 +77,12 @@ async function mouseEnterHandler<T>(this: HTMLElement, e: JQuery.TriggeredEvent<
     }
 
     let renderPromise;
+    let note: FNote | null = null;
     if (url && url.startsWith("#") && !url.startsWith("#root/")) {
         renderPromise = renderFootnoteOrAnchor($link, url);
     } else {
-        renderPromise = renderTooltip(await froca.getNote(noteId));
+        note = await froca.getNote(noteId);
+        renderPromise = renderTooltip(note);
     }
 
     const [content] = await Promise.all([
@@ -95,7 +97,7 @@ async function mouseEnterHandler<T>(this: HTMLElement, e: JQuery.TriggeredEvent<
 
     const sanitizedContent = sanitizeNoteContentHtml(content);
     const html = `<div class="note-tooltip-content">${sanitizedContent}</div>`;
-    const tooltipClass = `tooltip-${Math.floor(Math.random() * 999_999_999)}`;
+    const tooltipClass = `tooltip-${Math.floor(Math.random() * 999_999_999)}${note ? ` ${note.getColorClass()}` : ""}`;
 
     // we need to check if we're still hovering over the element
     // since the operation to get tooltip content was async, it is possible that

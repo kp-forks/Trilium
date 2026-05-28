@@ -7,7 +7,7 @@
  */
 
 import { URL } from "url";
-import log from "./log.js";
+import { getLog } from "@triliumnext/core";
 
 /**
  * IPv4 private and reserved ranges that should not be reachable from
@@ -96,18 +96,18 @@ export function isSafeUrlForFetch(urlStr: string): boolean {
         const parsed = new URL(urlStr);
 
         if (!ALLOWED_HTTP_SCHEMES.has(parsed.protocol)) {
-            log.info(`URL rejected - disallowed scheme '${parsed.protocol}': ${urlStr}`);
+            getLog().info(`URL rejected - disallowed scheme '${parsed.protocol}': ${urlStr}`);
             return false;
         }
 
         if (isPrivateIP(parsed.hostname)) {
-            log.info(`URL rejected - private/internal IP '${parsed.hostname}': ${urlStr}`);
+            getLog().info(`URL rejected - private/internal IP '${parsed.hostname}': ${urlStr}`);
             return false;
         }
 
         return true;
     } catch {
-        log.info(`URL rejected - failed to parse: ${urlStr}`);
+        getLog().info(`URL rejected - failed to parse: ${urlStr}`);
         return false;
     }
 }
@@ -128,13 +128,13 @@ export function isSafeProviderBaseUrl(urlStr: string): boolean {
         const parsed = new URL(urlStr);
 
         if (!ALLOWED_HTTP_SCHEMES.has(parsed.protocol)) {
-            log.info(`LLM provider base URL rejected - disallowed scheme '${parsed.protocol}': ${urlStr}`);
+            getLog().info(`LLM provider base URL rejected - disallowed scheme '${parsed.protocol}': ${urlStr}`);
             return false;
         }
 
         return true;
     } catch {
-        log.info(`LLM provider base URL rejected - failed to parse: ${urlStr}`);
+        getLog().info(`LLM provider base URL rejected - failed to parse: ${urlStr}`);
         return false;
     }
 }

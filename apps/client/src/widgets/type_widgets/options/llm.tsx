@@ -5,9 +5,8 @@ import { isExperimentalFeatureEnabled } from "../../../services/experimental_fea
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
-import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
-import OptionsRow from "./components/OptionsRow";
+import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
 
@@ -54,7 +53,7 @@ function ProviderSettings() {
     }, [providers, setProviders]);
 
     return (
-        <OptionsSection title={t("llm.settings_title")}>
+        <OptionsSection title={t("llm.settings_title")} helpUrl="GBBMSlVSOIGP">
             <p className="form-text">{t("llm.settings_description")}</p>
 
             <Button
@@ -82,6 +81,12 @@ function ProviderSettings() {
 }
 
 function getMcpEndpointUrl() {
+    // On desktop the renderer lives on `trilium-app://app/`, so window.location
+    // does not point at a reachable HTTP origin. The server injects an absolute
+    // httpBaseUrl in that case; in the browser we derive it from the page.
+    if (window.glob.httpBaseUrl) {
+        return `${window.glob.httpBaseUrl}/mcp`;
+    }
     const port = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
     return `${window.location.protocol}//localhost:${port}/mcp`;
 }
@@ -92,13 +97,13 @@ function McpSettings() {
 
     return (
         <OptionsSection title={t("llm.mcp_title")}>
-            <OptionsRow name="mcp-enabled" label={t("llm.mcp_enabled")} description={t("llm.mcp_enabled_description")}>
-                <FormToggle
-                    switchOnName="" switchOffName=""
-                    currentValue={mcpEnabled}
-                    onChange={setMcpEnabled}
-                />
-            </OptionsRow>
+            <OptionsRowWithToggle
+                name="mcp-enabled"
+                label={t("llm.mcp_enabled")}
+                description={t("llm.mcp_enabled_description")}
+                currentValue={mcpEnabled}
+                onChange={setMcpEnabled}
+            />
 
             {mcpEnabled && (
                 <OptionsRow name="mcp-endpoint" label={t("llm.mcp_endpoint_title")} description={t("llm.mcp_endpoint_description")}>

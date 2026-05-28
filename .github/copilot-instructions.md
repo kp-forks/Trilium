@@ -118,13 +118,22 @@ class MyNoteWidget extends NoteContextAwareWidget {
 **Important**: Widgets use jQuery (`this.$widget`) for DOM manipulation. Don't mix React patterns here.
 
 ### Reusable Preact Components
-Common UI components are available in `apps/client/src/widgets/react/` — prefer reusing these over creating custom implementations:
+Common UI components are available in `apps/client/src/widgets/react/` — **always** reuse these instead of writing raw HTML elements or custom implementations:
 - `NoItems` - Empty state placeholder with icon and message (use for "no results", "too many items", error states)
 - `ActionButton` - Consistent button styling with icon support
-- `FormTextBox` - Text input with validation and controlled input handling
+- `FormTextBox` - Text input with validation and controlled input handling; `FormTextBoxWithUnit` for inputs with a unit suffix (e.g. "mm", "px")
+- `FormSelect` - Dropdown/combobox taking an object array as data
 - `Slider` - Range slider with label
 - `Checkbox`, `RadioButton` - Form controls
 - `CollapsibleSection` - Expandable content sections
+
+**Do not use Bootstrap utility classes** (e.g. `form-control-sm`, `form-select-sm`, `input-group`) on these components — they manage their own styling internally. If you need to adjust sizing or layout, use props provided by the component or CSS custom properties, not Bootstrap overrides.
+
+#### Component Styling
+- **Avoid inline styles** — do not use the `style` attribute/prop on JSX elements unless absolutely necessary (e.g. a truly dynamic, computed value that cannot be expressed in CSS). Static layout, sizing, spacing, and visual properties must go in CSS.
+- **Per-component CSS files**: each component should have a matching `.css` file (e.g. `my_dialog.tsx` → `my_dialog.css`), imported at the top of the component file.
+- **CSS nesting for scoping**: since CSS modules are not available, scope styles using a root class and native CSS nesting. For example, a dialog with `className="my-dialog"` should have its styles nested under `.modal.my-dialog { … }`.
+- **Reuse existing components** instead of building custom markup — prefer `FormTextBox`, `FormTextBoxWithUnit`, `FormSelect`, `Slider`, `Button`, etc. over hand-rolled `<input>`, `<select>`, or `<button>` elements.
 
 ## Development Workflow
 
@@ -154,7 +163,7 @@ pnpm desktop:build                              # Build desktop application
 ### Test Organization
 - **Server tests** (`apps/server/spec/`): Must run sequentially (shared database state)
 - **Client tests** (`apps/client/src/`): Can run in parallel
-- **E2E tests** (`apps/server-e2e/`): Use Playwright for integration testing
+- **E2E tests** (`packages/trilium-e2e/`): Shared Playwright tests, run via `pnpm --filter server e2e` or `pnpm --filter standalone e2e`
 - **ETAPI tests** (`apps/server/spec/etapi/`): External API contract tests
 
 **Pattern**: When adding new API endpoints, add tests in `spec/etapi/` following existing patterns (see `search.spec.ts`).

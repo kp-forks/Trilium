@@ -83,9 +83,17 @@ export default [
     { type: "label", name: "hideHighlightWidget" },
     { type: "label", name: "iconPack", isDangerous: true },
     { type: "label", name: "docName", isDangerous: true },
+    { type: "label", name: "docUrl", isDangerous: true },
+
+    { type: "label", name: "tabWidth" },
+    { type: "label", name: "indentWithTabs" },
+    { type: "label", name: "wrapLines" },
 
     { type: "label", name: "printLandscape" },
     { type: "label", name: "printPageSize" },
+    { type: "label", name: "printScale" },
+    { type: "label", name: "printMargins" },
+    { type: "label", name: "internalBookmark" },
 
     // relation names
     { type: "relation", name: "internalLink" },
@@ -109,7 +117,7 @@ export default [
     { type: "relation", name: "renderNote", isDangerous: true },
     { type: "relation", name: "shareCss" },
     { type: "relation", name: "shareJs", isDangerous: true },
-    { type: "relation", name: "shareHtml" },
+    { type: "relation", name: "shareHtml", isDangerous: true },
     { type: "relation", name: "shareTemplate", isDangerous: true },
     { type: "relation", name: "shareFavicon" }
 ];

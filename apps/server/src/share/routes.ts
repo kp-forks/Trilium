@@ -1,10 +1,7 @@
+import { search as searchService, SearchContext, utils } from "@triliumnext/core";
 import type { NextFunction, Request, Response, Router } from "express";
 import safeCompare from "safe-compare";
 
-import SearchContext from "../services/search/search_context.js";
-import searchService from "../services/search/services/search.js";
-import utils, { sanitizeSvg } from "../services/utils.js";
-import { setSvgHeaders } from "../services/svg_sanitizer.js";
 import { getDefaultTemplatePath, renderNoteContent } from "./content_renderer.js";
 import type SAttachment from "./shaca/entities/sattachment.js";
 import type SNote from "./shaca/entities/snote.js";
@@ -112,7 +109,7 @@ function renderImageAttachment(image: SNote, res: Response, attachmentName: stri
         }
     }
 
-    const svg = sanitizeSvg(svgString);
+    const svg = utils.sanitizeSvg(svgString);
     res.set("Content-Type", "image/svg+xml");
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     res.set("Content-Security-Policy", "script-src 'none'");
@@ -236,8 +233,11 @@ function register(router: Router) {
             if (image.mime === "image/svg+xml") {
                 // SVG images require sanitization to prevent stored XSS
                 const content = image.getContent();
-                const sanitized = sanitizeSvg(typeof content === "string" ? content : content?.toString("utf-8") ?? "");
-                setSvgHeaders(res);
+                const svgContent = typeof content === "string" ? content : new TextDecoder().decode(content ?? new Uint8Array());
+                const sanitized = utils.sanitizeSvg(svgContent);
+                res.set("Content-Type", "image/svg+xml");
+                res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+                res.set("Content-Security-Policy", "script-src 'none'");
                 res.send(sanitized);
             } else {
                 res.set("Content-Type", image.mime);
@@ -269,8 +269,11 @@ function register(router: Router) {
             if (attachment.mime === "image/svg+xml") {
                 // SVG attachments require sanitization to prevent stored XSS
                 const content = attachment.getContent();
-                const sanitized = sanitizeSvg(typeof content === "string" ? content : content?.toString("utf-8") ?? "");
-                setSvgHeaders(res);
+                const svgContent = typeof content === "string" ? content : new TextDecoder().decode(content ?? new Uint8Array());
+                const sanitized = utils.sanitizeSvg(svgContent);
+                res.set("Content-Type", "image/svg+xml");
+                res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+                res.set("Content-Security-Policy", "script-src 'none'");
                 res.send(sanitized);
             } else {
                 res.set("Content-Type", attachment.mime);

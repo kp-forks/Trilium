@@ -2,7 +2,7 @@ import { CKTextEditor } from "@triliumnext/ckeditor5";
 import { FilterLabelsByType, KeyboardActionNames, NoteType, OptionNames, RelationNames } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
 import Mark from "mark.js";
-import { RefObject, VNode } from "preact";
+import { Ref, RefObject, VNode } from "preact";
 import { CSSProperties, useSyncExternalStore } from "preact/compat";
 import { MutableRef, useCallback, useContext, useDebugValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -664,13 +664,28 @@ export function useNoteLabelBoolean(note: FNote | undefined | null, labelName: F
     return [ labelValue, setter ] as const;
 }
 
-export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number) => void] {
-    //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
+/**
+ * Like {@link useNoteLabelBoolean} but returns `undefined` when the label is absent, allowing the caller
+ * to distinguish between "explicitly false" and "not set" (for inheriting from a global default).
+ */
+export function useNoteLabelOptionalBool(note: FNote | undefined | null, labelName: FilterLabelsByType<boolean>): [ boolean | undefined, (newValue: boolean | null) => void] {
+    //@ts-expect-error `useNoteLabel` only accepts string labels but we need to be able to read boolean ones.
     const [ value, setValue ] = useNoteLabel(note, labelName);
     useDebugValue(labelName);
     return [
-        (value ? parseInt(value, 10) : undefined),
-        (newValue) => setValue(String(newValue))
+        (value == null ? undefined : value !== "false"),
+        (newValue) => setValue(newValue === null ? null : String(newValue))
+    ];
+}
+
+export function useNoteLabelInt(note: FNote | undefined | null, labelName: FilterLabelsByType<number>): [ number | undefined, (newValue: number | null) => void] {
+    //@ts-expect-error `useNoteLabel` only accepts string properties but we need to be able to read number ones.
+    const [ value, setValue ] = useNoteLabel(note, labelName);
+    useDebugValue(labelName);
+    const parsed = value ? parseInt(value, 10) : undefined;
+    return [
+        (Number.isFinite(parsed) ? parsed : undefined),
+        (newValue) => setValue(newValue === null ? null : String(newValue))
     ];
 }
 
@@ -949,11 +964,13 @@ export function useLegacyImperativeHandlers(handlers: Record<string, Function>) 
     }, [ handlers ]);
 }
 
-export function useSyncedRef<T>(externalRef?: RefObject<T>, initialValue: T | null = null): RefObject<T> {
+export function useSyncedRef<T>(externalRef?: Ref<T>, initialValue: T | null = null): RefObject<T> {
     const ref = useRef<T>(initialValue);
 
     useEffect(() => {
-        if (externalRef) {
+        if (typeof externalRef === "function") {
+            externalRef(ref.current);
+        } else if (externalRef) {
             externalRef.current = ref.current;
         }
     }, [ ref, externalRef ]);
@@ -1044,6 +1061,74 @@ export function useNoteTreeDrag(containerRef: MutableRef<HTMLElement | null | un
     }, [ containerRef, callback ]);
 }
 
+/**
+ * Long-press + contextmenu handler bundle. `contextmenu` covers desktop right-click and
+ * Android Chrome long-press; explicit touch handlers cover iOS/WKWebView where
+ * `contextmenu` doesn't fire on long-press.
+ *
+ * Returns props to spread onto the target element: `onContextMenu`, `onTouchStart`,
+ * `onTouchMove`, `onTouchEnd`, `onTouchCancel`. When a long-press fires, the
+ * follow-up synthesized click is suppressed via `preventDefault` on `touchend`.
+ */
+export function useLongPressContextMenu(handler: (e: MouseEvent) => void, holdMs = 400) {
+    const timerRef = useRef<number | null>(null);
+    const firedRef = useRef(false);
+
+    const clear = useCallback(() => {
+        if (timerRef.current !== null) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+    }, []);
+
+    useEffect(() => clear, [clear]);
+
+    const onTouchStart = useCallback(
+        (e: TouchEvent) => {
+            firedRef.current = false;
+            clear();
+            const touch = e.touches[0];
+            if (!touch) return;
+            const pageX = touch.pageX;
+            const pageY = touch.pageY;
+            const target = e.target;
+            timerRef.current = window.setTimeout(() => {
+                firedRef.current = true;
+                handler({
+                    pageX,
+                    pageY,
+                    target,
+                    preventDefault: () => {},
+                    stopPropagation: () => {}
+                } as unknown as MouseEvent);
+            }, holdMs);
+        },
+        [handler, holdMs, clear]
+    );
+
+    const onTouchMove = useCallback(() => clear(), [clear]);
+
+    const onTouchEnd = useCallback(
+        (e: TouchEvent) => {
+            clear();
+            if (firedRef.current) {
+                // Suppress the synthesized click that would otherwise follow touchend.
+                e.preventDefault();
+                firedRef.current = false;
+            }
+        },
+        [clear]
+    );
+
+    return {
+        onContextMenu: handler,
+        onTouchStart,
+        onTouchMove,
+        onTouchEnd,
+        onTouchCancel: clear
+    };
+}
+
 export function useResizeObserver(ref: RefObject<HTMLElement>, callback: () => void) {
     const resizeObserver = useRef<ResizeObserver>(null);
     useEffect(() => {
@@ -1125,6 +1210,29 @@ export function useIsNoteReadOnly(note: FNote | null | undefined, noteContext: N
     return { isReadOnly, enableEditing, temporarilyEditable };
 }
 
+/**
+ * Synchronous effective read-only state for widgets that honor the `#readOnly` label
+ * (mermaid, canvas, mind map, spreadsheet). Combines the label with the temporary
+ * "enable editing" toggle (driven by `readOnlyTemporarilyDisabled`) so clicking the
+ * read-only badge unlocks the widget.
+ */
+export function useEffectiveReadOnly(note: FNote | null | undefined, noteContext: NoteContext | undefined) {
+    const [ readOnlyLabel ] = useNoteLabelBoolean(note, "readOnly");
+    const [ tempDisabled, setTempDisabled ] = useState<boolean>(!!noteContext?.viewScope?.readOnlyTemporarilyDisabled);
+
+    useEffect(() => {
+        setTempDisabled(!!noteContext?.viewScope?.readOnlyTemporarilyDisabled);
+    }, [ note, noteContext, noteContext?.viewScope ]);
+
+    useTriliumEvent("readOnlyTemporarilyDisabled", ({ noteContext: eventNoteContext }) => {
+        if (noteContext?.ntxId === eventNoteContext?.ntxId) {
+            setTempDisabled(!!eventNoteContext?.viewScope?.readOnlyTemporarilyDisabled);
+        }
+    });
+
+    return readOnlyLabel && !tempDisabled;
+}
+
 async function isNoteReadOnly(note: FNote, noteContext: NoteContext) {
 
     if (note.isProtected && !protected_session_holder.isProtectedSessionAvailable()) {
@@ -1157,6 +1265,12 @@ export function useChildNotes(parentNoteId: string | undefined) {
     useEffect(() => {
         refresh();
     }, [ refresh ]);
+
+    // Swap to fresh FNote refs after a full froca reload (e.g. entering a protected session
+    // clears the cache and creates new instances — old refs are orphaned with stale titles).
+    useTriliumEvent("frocaReloaded", () => {
+        refresh();
+    });
 
     // Refresh on branch changes.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
@@ -1447,24 +1561,29 @@ export function useColorScheme() {
 export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unknown[]) {
     useEffect(() => {
         if (!containerRef.current) return;
-        // Support both read-only (.math-tex) and CKEditor editing view (.ck-math-tex) classes
-        const mathElements = containerRef.current.querySelectorAll(".math-tex, .ck-math-tex");
+        const mathElements = containerRef.current.querySelectorAll(".math-tex");
 
         for (const mathEl of mathElements) {
             // Skip if already rendered by KaTeX
             if (mathEl.querySelector(".katex")) continue;
 
             try {
-                let equation = mathEl.textContent || "";
+                // CKEditor's data format wraps the equation with \(...\) or \[...\]
+                // delimiters. katex.render() expects raw LaTeX without them.
+                const raw = mathEl.textContent?.trim() ?? "";
+                let equation: string;
+                let displayMode = false;
 
-                // CKEditor widgets store equation without delimiters, add them for KaTeX
-                if (mathEl.classList.contains("ck-math-tex")) {
-                    // Check if it's display mode or inline
-                    const isDisplay = mathEl.classList.contains("ck-math-tex-display");
-                    equation = isDisplay ? `\\[${equation}\\]` : `\\(${equation}\\)`;
+                if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
+                    equation = raw.slice(2, -2);
+                } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
+                    equation = raw.slice(2, -2);
+                    displayMode = true;
+                } else {
+                    equation = raw;
                 }
 
-                math.render(equation, mathEl as HTMLElement);
+                math.render(equation, mathEl as HTMLElement, { displayMode });
             } catch (e) {
                 console.warn("Failed to render math:", e);
             }

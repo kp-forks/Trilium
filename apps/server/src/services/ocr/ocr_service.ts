@@ -1,10 +1,6 @@
 import { getTesseractCode } from '@triliumnext/commons';
+import { becca, blob as blobService, entity_changes as entityChangesService, getLog, options } from '@triliumnext/core';
 
-import becca from '../../becca/becca.js';
-import blobService from '../blob.js';
-import entityChangesService from '../entity_changes.js';
-import log from '../log.js';
-import options from '../options.js';
 import sql from '../sql.js';
 import { FileProcessor } from './processors/file_processor.js';
 import { ImageProcessor } from './processors/image_processor.js';
@@ -17,6 +13,7 @@ export interface OCRResult {
     extractedAt: string;
     language?: string;
     pageCount?: number;
+    processingType?: string;
 }
 
 export interface OCRProcessingOptions {
@@ -108,7 +105,7 @@ class OCRService {
      * Extract text from file buffer using appropriate processor
      */
     async extractTextFromFile(fileBuffer: Buffer, mimeType: string, options: OCRProcessingOptions = {}): Promise<OCRResult> {
-        log.info(`Starting OCR text extraction for MIME type: ${mimeType} with language: ${options.language || "eng"}`);
+        getLog().info(`Starting OCR text extraction for MIME type: ${mimeType} with language: ${options.language || "eng"}`);
 
         const processor = this.getProcessorForMimeType(mimeType);
         if (!processor) {
@@ -116,8 +113,9 @@ class OCRService {
         }
 
         const result = await processor.extractText(fileBuffer, { ...options, mimeType });
+        result.processingType = processor.getProcessingType();
 
-        log.info(`OCR extraction completed. Confidence: ${Math.round(result.confidence * 100)}%, Text length: ${result.text.length}`);
+        getLog().info(`OCR extraction completed. Confidence: ${Math.round(result.confidence * 100)}%, Text length: ${result.text.length}`);
         return result;
     }
 
@@ -127,7 +125,7 @@ class OCRService {
     async processNoteOCR(noteId: string, options: OCRProcessingOptions = {}): Promise<OCRResult | null> {
         const note = becca.getNote(noteId);
         if (!note) {
-            log.error(`Note ${noteId} not found`);
+            getLog().error(`Note ${noteId} not found`);
             return null;
         }
 
@@ -148,7 +146,7 @@ class OCRService {
     async processAttachmentOCR(attachmentId: string, options: OCRProcessingOptions = {}): Promise<OCRResult | null> {
         const attachment = becca.getAttachment(attachmentId);
         if (!attachment) {
-            log.error(`Attachment ${attachmentId} not found`);
+            getLog().error(`Attachment ${attachmentId} not found`);
             return null;
         }
 
@@ -173,22 +171,22 @@ class OCRService {
         mime: string;
         blobId: string | undefined;
         languageNoteId: string;
-        getContent: () => string | Buffer;
+        getContent: () => string | Uint8Array;
     }, options: OCRProcessingOptions = {}): Promise<OCRResult | null> {
         const { entityId, entityType, category, mime, blobId, languageNoteId } = entity;
 
         if (!['image', 'file'].includes(category)) {
-            log.info(`${entityType} ${entityId} is not an image or file, skipping OCR`);
+            getLog().info(`${entityType} ${entityId} is not an image or file, skipping OCR`);
             return null;
         }
 
         if (!this.getProcessorForMimeType(mime)) {
-            log.info(`${entityType} ${entityId} has unsupported MIME type ${mime} for text extraction, skipping`);
+            getLog().info(`${entityType} ${entityId} has unsupported MIME type ${mime} for text extraction, skipping`);
             return null;
         }
 
         if (!options.forceReprocess && this.hasStoredOCRResult(blobId)) {
-            log.info(`OCR already exists for ${entityType} ${entityId}, skipping`);
+            getLog().info(`OCR already exists for ${entityType} ${entityId}, skipping`);
             return null;
         }
 
@@ -205,7 +203,7 @@ class OCRService {
 
             return ocrResult;
         } catch (error) {
-            log.error(`Failed to process OCR for ${entityType} ${entityId}: ${error}`);
+            getLog().error(`Failed to process OCR for ${entityType} ${entityId}: ${error}`);
             throw error;
         }
     }
@@ -215,7 +213,7 @@ class OCRService {
      */
     storeOCRResult(blobId: string | undefined, ocrResult: OCRResult): void {
         if (!blobId) {
-            log.error('Cannot store OCR result: blobId is undefined');
+            getLog().error('Cannot store OCR result: blobId is undefined');
             return;
         }
 
@@ -227,9 +225,9 @@ class OCRService {
 
             this.putBlobEntityChange(blobId);
 
-            log.info(`Stored OCR result for blob ${blobId}`);
+            getLog().info(`Stored OCR result for blob ${blobId}`);
         } catch (error) {
-            log.error(`Failed to store OCR result for blob ${blobId}: ${error}`);
+            getLog().error(`Failed to store OCR result for blob ${blobId}: ${error}`);
             throw error;
         }
     }
@@ -286,14 +284,14 @@ class OCRService {
 
             // Start processing in background
             this.processBlobs(blobsNeedingOCR).catch(error => {
-                log.error(`Batch processing failed: ${error instanceof Error ? error.message : String(error)}`);
+                getLog().error(`Batch processing failed: ${error instanceof Error ? error.message : String(error)}`);
             }).finally(() => {
                 this.batchProcessingState.inProgress = false;
             });
 
             return { success: true };
         } catch (error) {
-            log.error(`Failed to start batch processing: ${error instanceof Error ? error.message : String(error)}`);
+            getLog().error(`Failed to start batch processing: ${error instanceof Error ? error.message : String(error)}`);
             return { success: false, message: error instanceof Error ? error.message : String(error) };
         }
     }
@@ -315,7 +313,7 @@ class OCRService {
     cancelBatchProcessing(): void {
         if (this.batchProcessingState.inProgress) {
             this.batchProcessingState.inProgress = false;
-            log.info('Batch OCR processing cancelled');
+            getLog().info('Batch OCR processing cancelled');
         }
     }
 
@@ -323,7 +321,7 @@ class OCRService {
      * Process a list of blobs sequentially, updating batch progress.
      */
     private async processBlobs(blobs: Array<{ entityType: 'note' | 'attachment'; entityId: string }>): Promise<void> {
-        log.info(`Starting batch OCR processing of ${blobs.length} items...`);
+        getLog().info(`Starting batch OCR processing of ${blobs.length} items...`);
 
         for (const blob of blobs) {
             if (!this.batchProcessingState.inProgress) {
@@ -333,7 +331,7 @@ class OCRService {
             try {
                 await this.processOcrEntity(blob);
             } catch (error) {
-                log.error(`Failed to process OCR for ${blob.entityType} ${blob.entityId}: ${error}`);
+                getLog().error(`Failed to process OCR for ${blob.entityType} ${blob.entityId}: ${error}`);
             }
 
             this.batchProcessingState.processed++;
@@ -342,7 +340,7 @@ class OCRService {
             await new Promise(resolve => setTimeout(resolve, 500));
         }
 
-        log.info(`Batch OCR processing completed. Processed ${this.batchProcessingState.processed} files.`);
+        getLog().info(`Batch OCR processing completed. Processed ${this.batchProcessingState.processed} files.`);
     }
 
     /**
@@ -369,8 +367,7 @@ class OCRService {
         const hash = blobService.calculateContentHash({
             blobId: blob.blobId,
             content: blob.content,
-            textRepresentation: blob.textRepresentation,
-            utcDateModified: blob.utcDateModified!
+            textRepresentation: blob.textRepresentation
         });
         entityChangesService.putEntityChange({
             entityName: "blobs",
@@ -452,7 +449,7 @@ class OCRService {
             // Return all results (no need to filter by MIME type as we already did in the query)
             return result;
         } catch (error) {
-            log.error(`Failed to get blobs needing OCR: ${error}`);
+            getLog().error(`Failed to get blobs needing OCR: ${error}`);
             return [];
         }
     }
