@@ -545,11 +545,6 @@ const config: TriliumConfig = {
     }
 };
 
-// Desktop builds always have scripting enabled (single-user trusted environment)
-if (process.versions["electron"]) {
-    config.Scripting.backendScriptingEnabled = true;
-    config.Scripting.sqlConsoleEnabled = true;
-}
 
 /**
  * =====================================================================

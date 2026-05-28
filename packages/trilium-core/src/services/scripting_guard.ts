@@ -1,11 +1,10 @@
 import config from "./config.js";
-import { isElectron } from "./utils/index.js";
 
 /**
- * Throws if backend scripting is disabled. Desktop (Electron) always allows scripting.
+ * Throws if backend scripting is disabled.
  */
 export function assertScriptingEnabled(): void {
-    if (isElectron() || config.Scripting.backendScriptingEnabled) {
+    if (config.Scripting.backendScriptingEnabled) {
         return;
     }
     throw new Error(
@@ -15,7 +14,7 @@ export function assertScriptingEnabled(): void {
 }
 
 export function assertSqlConsoleEnabled(): void {
-    if (isElectron() || config.Scripting.sqlConsoleEnabled) {
+    if (config.Scripting.sqlConsoleEnabled) {
         return;
     }
     throw new Error(
@@ -24,5 +23,5 @@ export function assertSqlConsoleEnabled(): void {
 }
 
 export function isScriptingEnabled(): boolean {
-    return isElectron() || config.Scripting.backendScriptingEnabled;
+    return config.Scripting.backendScriptingEnabled;
 }
