@@ -392,6 +392,12 @@ export default class CollapsibleEditing extends Plugin {
         const adjacent = data.direction === "forward" ? position.nodeAfter : position.nodeBefore;
         if (!adjacent || !adjacent.is("element", "details")) return;
 
+        // Don't hijack a delete when the current block is empty — the user is
+        // removing the empty block, not the details next to it. Default behaviour
+        // collapses the empty paragraph naturally.
+        const currentBlock = position.parent;
+        if (currentBlock?.is("element") && currentBlock.isEmpty) return;
+
         this.editor.model.change(writer => writer.setSelection(adjacent, "on"));
         data.preventDefault();
         evt.stop();
