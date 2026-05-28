@@ -1577,7 +1577,10 @@
     "sql_console_title": "SQL console",
     "sql_console_section_description": "The SQL console allows running raw SQL queries against the database. This can be used to read sensitive data (e.g. sync secrets, API keys) and alter or delete any data. A malicious frontend script could also access the SQL console API programmatically.",
     "sql_console_label": "SQL console",
-    "sql_console_description": "Allow execution of queries in the SQL console."
+    "sql_console_description": "Allow execution of queries in the SQL console.",
+    "how_to_enable": "How to enable",
+    "server_config_hint": "Add the following to your config.ini file:",
+    "server_env_hint": "Or set the following environment variable:"
   },
   "password": {
     "heading": "Password",

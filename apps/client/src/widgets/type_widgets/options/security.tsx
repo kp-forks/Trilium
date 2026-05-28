@@ -1,4 +1,6 @@
 import { t } from "../../../services/i18n";
+import { isElectron } from "../../../services/utils";
+import Collapsible from "../../react/Collapsible";
 import { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -8,6 +10,21 @@ export default function SecuritySettings() {
             <BackendScriptingSettings />
             <SqlConsoleSettings />
         </>
+    );
+}
+
+function ServerConfigHint({ configKey, envVar }: { configKey: string; envVar: string }) {
+    if (isElectron()) {
+        return null;
+    }
+
+    return (
+        <Collapsible title={t("security.how_to_enable")}>
+            <p>{t("security.server_config_hint")}</p>
+            <pre><code>{`[Scripting]\n${configKey}=true`}</code></pre>
+            <p>{t("security.server_env_hint")}</p>
+            <pre><code>{envVar}=true</code></pre>
+        </Collapsible>
     );
 }
 
@@ -30,6 +47,10 @@ function BackendScriptingSettings() {
                 onChange={() => {}}
                 disabled={true}
             />
+            <ServerConfigHint
+                configKey="backendScriptingEnabled"
+                envVar="TRILIUM_SCRIPTING_BACKEND_ENABLED"
+            />
         </OptionsSection>
     );
 }
@@ -50,6 +71,10 @@ function SqlConsoleSettings() {
                 currentValue={sqlConsoleEnabled}
                 onChange={() => {}}
                 disabled={true}
+            />
+            <ServerConfigHint
+                configKey="sqlConsoleEnabled"
+                envVar="TRILIUM_SCRIPTING_SQLCONSOLEENABLED"
             />
         </OptionsSection>
     );
