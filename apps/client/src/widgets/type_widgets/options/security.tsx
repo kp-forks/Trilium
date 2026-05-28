@@ -2,17 +2,33 @@ import { useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import toast from "../../../services/toast";
-import { isElectron } from "../../../services/utils";
+import { isElectron, restartDesktopApp } from "../../../services/utils";
+import Button from "../../react/Button";
 import Collapsible from "../../react/Collapsible";
 import { useTriliumOptionBool } from "../../react/hooks";
-import { OptionsRowWithToggle } from "./components/OptionsRow";
+import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function SecuritySettings() {
+    const [pendingRestart, setPendingRestart] = useState(false);
+
     return (
         <>
-            <BackendScriptingSettings />
-            <SqlConsoleSettings />
+            <BackendScriptingSettings pendingRestart={pendingRestart} setPendingRestart={setPendingRestart} />
+            <SqlConsoleSettings pendingRestart={pendingRestart} setPendingRestart={setPendingRestart} />
+            {pendingRestart && isElectron() && (
+                <OptionsSection noCard>
+                    <OptionsRow name="restart" centered>
+                        <Button
+                            name="restart-app-button"
+                            text={t("security.restart_now")}
+                            icon="bx bx-refresh"
+                            size="micro"
+                            onClick={restartDesktopApp}
+                        />
+                    </OptionsRow>
+                </OptionsSection>
+            )}
         </>
     );
 }
@@ -32,9 +48,13 @@ function ServerConfigHint({ configKey, envVar }: { configKey: string; envVar: st
     );
 }
 
-function BackendScriptingSettings() {
+interface ToggleSectionProps {
+    pendingRestart: boolean;
+    setPendingRestart: (value: boolean) => void;
+}
+
+function BackendScriptingSettings({ pendingRestart, setPendingRestart }: ToggleSectionProps) {
     const [backendScriptingEnabled] = useTriliumOptionBool("backendScriptingEnabled");
-    const [pendingRestart, setPendingRestart] = useState(false);
     const isDesktop = isElectron();
 
     async function handleToggle(enabled: boolean) {
@@ -69,9 +89,8 @@ function BackendScriptingSettings() {
     );
 }
 
-function SqlConsoleSettings() {
+function SqlConsoleSettings({ pendingRestart, setPendingRestart }: ToggleSectionProps) {
     const [sqlConsoleEnabled] = useTriliumOptionBool("sqlConsoleEnabled");
-    const [pendingRestart, setPendingRestart] = useState(false);
     const isDesktop = isElectron();
 
     async function handleToggle(enabled: boolean) {
