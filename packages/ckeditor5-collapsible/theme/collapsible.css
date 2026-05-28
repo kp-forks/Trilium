@@ -112,6 +112,33 @@
             display: none;
         }
 
+        /* Block selection handle (mirror of the table widget's drag handle).
+         * Click selects the whole <details>; movement uses Alt+↑/↓ from there.
+         * Sits in the details' top-left padding area, visible on hover. */
+        > .trilium-collapsible-handle {
+            position: absolute;
+            top: calc(0px - var(--_block-padding) / 2);
+            right: 20px;
+            z-index: 1000;
+            width: 1lh;
+            height: 1lh;
+            cursor: default;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+
+            &::before {
+                position: absolute;
+                inset: 0;
+                content: "\ec6c";  /* U+205E VERTICAL FOUR DOTS — drag-handle glyph */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 1em;
+                font-family: boxicons;
+                color: var(--muted-text-color, currentColor);
+            }
+        }
+
         /* CKEditor's placeholder ::before is positioned absolute left:0 by default —
          * push it past the arrow so it aligns with where the typed title will appear. */
         &.ck-placeholder::before {
@@ -148,4 +175,23 @@
     &[open] > summary > .trilium-collapsible-arrow {
         transform: rotate(90deg);
     }
+
+    &:hover > summary > .trilium-collapsible-handle,
+    &:focus-within > summary > .trilium-collapsible-handle {
+        opacity: 1;
+    }
+}
+
+/*
+ * Drop indicator drawn while the user drags a collapsible by its handle.
+ * Position is set inline (viewport-relative, from getBoundingClientRect),
+ * so it uses position: fixed to align with those coords.
+ */
+.trilium-collapsible-drop-indicator {
+    position: fixed;
+    height: 2px;
+    background: var(--ck-document-outline-item-active-color);
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 10000;
 }

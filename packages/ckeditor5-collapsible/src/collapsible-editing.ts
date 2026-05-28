@@ -1,5 +1,6 @@
 import { Plugin, Enter, Delete, enableViewPlaceholder, getEnvKeystrokeText, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
 import { Tooltip } from "bootstrap";
+import BlockDragHandle from "./block-drag-handle.js";
 import CollapsibleCommand from "./collapsible-command.js";
 
 type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
@@ -28,6 +29,7 @@ export default class CollapsibleEditing extends Plugin {
     private keydownListeners: Array<{ root: HTMLElement, handler: (e: KeyboardEvent) => void }> = [];
     private toggleListeners: Array<{ root: HTMLElement, handler: (e: Event) => void }> = [];
     private autoOpenTimer?: ReturnType<typeof setTimeout>;
+    private dragHandle!: BlockDragHandle;
     /** Summary DOM elements that currently have a Bootstrap tooltip attached. */
     private readonly summaryTooltips = new Set<HTMLElement>();
     /** The summary tooltip we currently have force-shown because the caret is inside it. */
@@ -35,6 +37,23 @@ export default class CollapsibleEditing extends Plugin {
 
     public init(): void {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
+        this.dragHandle = new BlockDragHandle({
+            editor: this.editor,
+            indicatorClass: "trilium-collapsible-drop-indicator",
+            // A drop on another collapsible's <summary> should reorder relative
+            // to the whole <details>, not nest inside the body (which the
+            // summary-invariant post-fixer would then have to fight).
+            refineTarget: (model) => {
+                if (model?.is?.("element", "summary") && model.parent?.is("element", "details")) {
+                    return model.parent;
+                }
+                return model;
+            },
+            onClick: (model) => {
+                this.editor.model.change(w => w.setSelection(model, "on"));
+                this.editor.editing.view.focus();
+            }
+        });
         this.registerSchema();
         this.registerConversion();
         this.registerBodyPlaceholder();
@@ -64,6 +83,7 @@ export default class CollapsibleEditing extends Plugin {
         }
         this.summaryTooltips.clear();
         this.caretShownTooltip = undefined;
+        this.dragHandle?.cancel();
         super.destroy();
     }
 
@@ -114,8 +134,63 @@ export default class CollapsibleEditing extends Plugin {
      * doesn't include the arrow so it doesn't pollute saved HTML.
      */
     private createEditingSummary(writer: any): any {
+        const editor = this.editor;
+        const plugin = this;
         const t = this.translate();
         const summary = writer.createContainerElement("summary");
+
+        // Selection / drag handle — non-editable affordance for selecting and
+        // moving the whole <details> as a block (mirrors the table widget's
+        // handle, but works without making the collapsible a widget).
+        const handle = writer.createUIElement("span", {
+            class: "trilium-collapsible-handle",
+            role: "button",
+            tabindex: "0",
+            "aria-label": t("text-editor.collapsible-select-label")
+        }, function(this: any, domDocument: any) {
+            const span: HTMLElement = this.toDomElement(domDocument);
+            const resolveDetails = () => {
+                const detailsDom = span.closest("details");
+                if (!detailsDom) return null;
+                const view = editor.editing.view.domConverter.mapDomToView(detailsDom);
+                return view ? editor.editing.mapper.toModelElement(view as any) : null;
+            };
+            const selectBlock = () => {
+                const model = resolveDetails();
+                if (!model) return;
+                editor.model.change(w => w.setSelection(model, "on"));
+                editor.editing.view.focus();
+            };
+            // Custom drag: mousedown starts tracking, document mousemove/mouseup
+            // (registered by startMouseDrag) decide whether it's a click or a drag.
+            // preventDefault stops the editor from placing a caret on the handle
+            // and from initiating a native text selection drag.
+            span.addEventListener("mousedown", (e: MouseEvent) => {
+                if (e.button !== 0) return;
+                const model = resolveDetails();
+                if (!model) return;
+                const root = span.closest(".ck-editor__editable") as HTMLElement | null;
+                if (!root) return;
+                e.preventDefault();
+                e.stopPropagation();
+                plugin.dragHandle.start(e.clientX, e.clientY, model, root);
+            });
+            // Suppress the trailing click so CKEditor's click handler doesn't
+            // reposition the caret after our mouseup has set the selection.
+            span.addEventListener("click", (e: Event) => {
+                e.stopPropagation();
+                e.preventDefault();
+            });
+            span.addEventListener("keydown", (e: KeyboardEvent) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    selectBlock();
+                }
+            });
+            return span;
+        });
+
         const arrow = writer.createUIElement("span", {
             class: "trilium-collapsible-arrow",
             role: "button",
@@ -148,6 +223,7 @@ export default class CollapsibleEditing extends Plugin {
             return span;
         });
         writer.insert(writer.createPositionAt(summary, 0), arrow);
+        writer.insert(writer.createPositionAt(summary, 0), handle);
         // "Title" placeholder shown while the summary is empty. UIElements like the
         // arrow above don't count as content for placeholder purposes.
         enableViewPlaceholder({
