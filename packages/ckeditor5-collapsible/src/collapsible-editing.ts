@@ -30,6 +30,13 @@ export default class CollapsibleEditing extends Plugin {
     private toggleListeners: Array<{ root: HTMLElement, handler: (e: Event) => void }> = [];
     private autoOpenTimer?: ReturnType<typeof setTimeout>;
     private dragHandle!: BlockDragHandle;
+    /**
+     * Pre-move open state for details that are about to be re-inserted via
+     * drag. Consulted by the auto-open differ listener so a collapsed block
+     * stays collapsed after being moved (instead of being unconditionally
+     * opened like a freshly-inserted one).
+     */
+    private readonly preserveOpenOnNextInsert = new Map<any, boolean>();
     /** Summary DOM elements that currently have a Bootstrap tooltip attached. */
     private readonly summaryTooltips = new Set<HTMLElement>();
     /** The summary tooltip we currently have force-shown because the caret is inside it. */
@@ -52,6 +59,11 @@ export default class CollapsibleEditing extends Plugin {
             onClick: (model) => {
                 this.editor.model.change(w => w.setSelection(model, "on"));
                 this.editor.editing.view.focus();
+            },
+            beforeMove: (model) => {
+                if (model?.is?.("element", "details")) {
+                    this.preserveOpenOnNextInsert.set(model, this.isDetailsOpen(model));
+                }
             }
         });
         this.registerSchema();
@@ -84,6 +96,7 @@ export default class CollapsibleEditing extends Plugin {
         this.summaryTooltips.clear();
         this.caretShownTooltip = undefined;
         this.dragHandle?.cancel();
+        this.preserveOpenOnNextInsert.clear();
         super.destroy();
     }
 
@@ -718,10 +731,23 @@ export default class CollapsibleEditing extends Plugin {
             if (this.autoOpenTimer !== undefined) clearTimeout(this.autoOpenTimer);
             this.autoOpenTimer = setTimeout(() => {
                 this.autoOpenTimer = undefined;
-                if ((editor as any).state === "destroyed") { pendingOpen.clear(); return; }
+                if ((editor as any).state === "destroyed") {
+                    pendingOpen.clear();
+                    this.preserveOpenOnNextInsert.clear();
+                    return;
+                }
                 for (const node of pendingOpen) {
                     const dom = this.getDom<HTMLDetailsElement>(node);
-                    if (dom) dom.open = true;
+                    if (!dom) continue;
+                    // A move (drag-and-drop) records as remove + insert; restore the
+                    // pre-move open state so a collapsed block stays collapsed.
+                    // Fresh inserts have no entry here and default to open.
+                    if (this.preserveOpenOnNextInsert.has(node)) {
+                        dom.open = this.preserveOpenOnNextInsert.get(node)!;
+                        this.preserveOpenOnNextInsert.delete(node);
+                    } else {
+                        dom.open = true;
+                    }
                 }
                 pendingOpen.clear();
             }, 0);
