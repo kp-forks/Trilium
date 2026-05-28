@@ -8,8 +8,7 @@ import { decodeUtf8 } from "@triliumnext/core/src/services/utils/binary.js";
 import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 import yaml from "js-yaml";
 
-import becca from "../../../becca/becca.js";
-import log from "../../log.js";
+import { becca, getLog } from "@triliumnext/core";
 import { getNoteMeta,SYSTEM_PROMPT_LIMITS } from "../tools/helpers.js";
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
@@ -64,11 +63,11 @@ function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePa
     try {
         const attachment = becca.getAttachment(part.attachmentId);
         if (!attachment) {
-            log.error(`LLM message references missing attachment ${part.attachmentId}`);
+            getLog().error(`LLM message references missing attachment ${part.attachmentId}`);
             return null;
         }
         if (!attachment.isContentAvailable()) {
-            log.error(`LLM message references protected attachment ${part.attachmentId} without an unlocked session`);
+            getLog().error(`LLM message references protected attachment ${part.attachmentId} without an unlocked session`);
             return null;
         }
         // Read attachment bytes once — `getContent()` hits the blob store and
@@ -115,7 +114,7 @@ function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePa
         // A single unreadable attachment (corrupt blob, decryption failure,
         // invalid UTF-8) shouldn't crash the whole chat turn — drop the part
         // and log so the rest of the message still reaches the model.
-        log.error(`Failed to resolve message part for attachment ${part.attachmentId}: ${err}`);
+        getLog().error(`Failed to resolve message part for attachment ${part.attachmentId}: ${err}`);
         return null;
     }
 }

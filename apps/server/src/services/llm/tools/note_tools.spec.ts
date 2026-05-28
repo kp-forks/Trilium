@@ -1,15 +1,21 @@
+import { becca_easy_mocking } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import becca from "../../../becca/becca.js";
-import { buildNote } from "../../../test/becca_easy_mocking.js";
+import { becca } from "@triliumnext/core";
 import { noteTools } from "./note_tools.js";
 import type { ToolDefinition } from "./tool_registry.js";
 
-vi.mock("../../notes.js", () => ({
-    default: {
-        createNewNote: vi.fn()
-    }
-}));
+const { buildNote } = becca_easy_mocking;
+
+vi.mock("@triliumnext/core", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@triliumnext/core")>();
+    return {
+        ...actual,
+        note_service: {
+            createNewNote: vi.fn()
+        }
+    };
+});
 
 function getTool(name: string): ToolDefinition {
     for (const [n, def] of noteTools) {
@@ -127,7 +133,7 @@ describe("note_tools — write tools return post-write content", () => {
             const newNote = buildNote({ id: "new1", type: "code", mime: "text/plain", content: "hello" });
             withMutableContent(newNote, "hello");
 
-            const noteService = (await import("../../notes.js")).default;
+            const { note_service: noteService } = await import("@triliumnext/core");
             vi.mocked(noteService.createNewNote).mockReturnValue({ note: newNote } as ReturnType<typeof noteService.createNewNote>);
 
             const result = getTool("create_note").execute({
