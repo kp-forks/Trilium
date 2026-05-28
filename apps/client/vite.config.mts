@@ -121,6 +121,11 @@ export default defineConfig(() => ({
             "verbose",
             ["html", { outputFile: "./test-output/vitest/html/index.html" }]
         ],
+        coverage: {
+            reportsDirectory: "./test-output/vitest/coverage",
+            provider: "v8" as const,
+            reporter: ["text", "html", "lcov"]
+        },
     },
     commonjsOptions: {
         transformMixedEsModules: true,

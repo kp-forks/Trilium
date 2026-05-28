@@ -1,0 +1,34 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+
+flags:
+  client:
+    paths:
+      - apps/client/src/
+    carryforward: true
+  server:
+    paths:
+      - apps/server/src/
+      - packages/trilium-core/src/
+    carryforward: true
+  standalone:
+    paths:
+      - apps/standalone/src/
+      - packages/trilium-core/src/
+    carryforward: true
+  desktop:
+    paths:
+      - apps/desktop/src/
+    carryforward: true
+
+comment:
+  layout: "condensed_header, condensed_files, condensed_footer"
+  require_changes: true
