@@ -449,6 +449,7 @@
     "cancel": "Cancel",
     "enable": "Enable",
     "disable": "Disable",
+    "dont-ask-again": "Don't ask again until restart",
     "backend-scripting": "Backend script execution",
     "backend-scripting-warning": "Backend scripts have full access to the server, including the file system and network.",
     "sql-console": "SQL console",
