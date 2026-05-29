@@ -231,7 +231,7 @@ importers:
         version: 0.2.1(mermaid@11.15.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.12.1)
+        version: 5.0.1(mind-elixir@5.12.2)
       '@preact/signals':
         specifier: 2.9.0
         version: 2.9.0(preact@10.29.2)
@@ -347,8 +347,8 @@ importers:
         specifier: 11.15.0
         version: 11.15.0
       mind-elixir:
-        specifier: 5.12.1
-        version: 5.12.1
+        specifier: 5.12.2
+        version: 5.12.2
       panzoom:
         specifier: 9.4.4
         version: 9.4.4
@@ -403,7 +403,7 @@ importers:
         version: 6.3.3
       copy-webpack-plugin:
         specifier: 14.0.0
-        version: 14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0))
+        version: 14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15))
       happy-dom:
         specifier: 20.9.0
         version: 20.9.0
@@ -870,7 +870,7 @@ importers:
         version: 0.2.1(mermaid@11.15.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.12.1)
+        version: 5.0.1(mind-elixir@5.12.2)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
@@ -983,8 +983,8 @@ importers:
         specifier: 11.15.0
         version: 11.15.0
       mind-elixir:
-        specifier: 5.12.1
-        version: 5.12.1
+        specifier: 5.12.2
+        version: 5.12.2
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -10390,8 +10390,8 @@ packages:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
 
-  mind-elixir@5.12.1:
-    resolution: {integrity: sha512-87oGi4Y6O+EbpE5dY97OBm9UmChCfz59o5LdTmry9IrEWXE5Dfcuf7p0MHhGfQE3yBcZ4+Sad9bwB3totQOSoQ==}
+  mind-elixir@5.12.2:
+    resolution: {integrity: sha512-G9eyrmjp6Ot+Llf5oPZPj2N5ivzDVwiQpiJEaX7uTUvIRkUwkyoTW1vSKKayl6ZzRoEWE87zupEdlEJWwtqqVg==}
 
   minimatch@10.2.5:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
@@ -16959,9 +16959,9 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
-  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.12.1)':
+  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.12.2)':
     dependencies:
-      mind-elixir: 5.12.1
+      mind-elixir: 5.12.2
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -21579,14 +21579,14 @@ snapshots:
 
   cookiejar@2.1.4: {}
 
-  copy-webpack-plugin@14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)):
+  copy-webpack-plugin@14.0.0(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)):
     dependencies:
       glob-parent: 6.0.2
       normalize-path: 3.0.0
       schema-utils: 4.3.3
       serialize-javascript: 7.0.5
       tinyglobby: 0.2.16
-      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)
+      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)
 
   copy-webpack-plugin@14.0.0(webpack@5.106.2(esbuild@0.28.0)):
     dependencies:
@@ -25196,7 +25196,7 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  mind-elixir@5.12.1: {}
+  mind-elixir@5.12.2: {}
 
   minimatch@10.2.5:
     dependencies:
@@ -27667,16 +27667,17 @@ snapshots:
       rimraf: 2.6.3
     optional: true
 
-  terser-webpack-plugin@5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)):
+  terser-webpack-plugin@5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       terser: 5.47.1
-      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)
+      webpack: 5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)
     optionalDependencies:
       esbuild: 0.28.0
       lightningcss: 1.32.0
+      postcss: 8.5.15
 
   terser-webpack-plugin@5.6.0(esbuild@0.28.0)(webpack@5.106.2(esbuild@0.28.0)):
     dependencies:
@@ -28515,7 +28516,7 @@ snapshots:
       - postcss
       - uglify-js
 
-  webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0):
+  webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.9
@@ -28538,7 +28539,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.3
-      terser-webpack-plugin: 5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0))
+      terser-webpack-plugin: 5.6.0(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack@5.106.2(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15))
       watchpack: 2.5.1
       webpack-sources: 3.4.1
     transitivePeerDependencies:
