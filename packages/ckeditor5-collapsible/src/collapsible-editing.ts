@@ -412,6 +412,16 @@ export default class CollapsibleEditing extends Plugin {
                 const pos = this.isDetailsOpen(details)
                     ? writer.createPositionAfter(summary)
                     : writer.createPositionAfter(details);
+                // If the spot already holds an empty paragraph (the body's
+                // placeholder paragraph, or a blank line the user left after
+                // the collapsible), just park the caret in it — stacking a
+                // second identical empty paragraph on top would surprise the
+                // user and require an extra Backspace to clean up.
+                const existing = pos.nodeAfter;
+                if (existing?.is?.("element", "paragraph") && existing.isEmpty) {
+                    writer.setSelection(existing, 0);
+                    return;
+                }
                 this.insertParagraphAt(writer, pos);
                 return;
             }
