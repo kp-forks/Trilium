@@ -73,9 +73,10 @@ describe("loadElkIfNeeded", () => {
     }
 
     // NOTE: the module-level `elkLoaded` flag flips to true the first time an
-    // elk diagram is parsed, so the order of these tests matters: the
-    // "does not register" cases run first (while the flag is still false),
-    // the "registers" case flips it, and the "already loaded" case relies on it.
+    // elk diagram is parsed, and the source exposes no way to reset it. The
+    // "does not register" cases must therefore run while the flag is still false.
+    // The "already loaded" early-exit test flips the flag itself (so it does not
+    // depend on a sibling test having run first) before asserting the early exit.
 
     it("does not register loaders when parsing yields nothing", async () => {
         const mermaid = fakeMermaid(null);
@@ -104,6 +105,12 @@ describe("loadElkIfNeeded", () => {
     });
 
     it("exits immediately without parsing once elk has already been loaded", async () => {
+        // Make this test self-contained rather than relying on a sibling test having
+        // already flipped the module-level `elkLoaded` flag: first flip it ourselves by
+        // parsing an elk diagram, then assert the early-exit on a fresh mermaid instance.
+        const firstMermaid = fakeMermaid({ config: { layout: "elk" } });
+        await loadElkIfNeeded(firstMermaid, "---\nconfig:\n  layout: elk\n---\ngraph TD; A-->B");
+
         const mermaid = fakeMermaid({ config: { layout: "elk" } });
         await loadElkIfNeeded(mermaid, "---\nconfig:\n  layout: elk\n---\ngraph TD; A-->B");
         expect(mermaid.parse).not.toHaveBeenCalled();

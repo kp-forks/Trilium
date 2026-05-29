@@ -151,6 +151,48 @@ describe("SpacedUpdate", () => {
             expect(spacedUpdate.isAllSavedAndTriggerUpdate()).toBe(true);
             expect(updater).not.toHaveBeenCalled();
         });
+
+        it("returns the pre-flush saved state synchronously and kicks off the un-awaited flush", () => {
+            const updater = vi.fn(async () => {});
+            const spacedUpdate = new SpacedUpdate(updater, 50);
+
+            spacedUpdate.scheduleUpdate(); // pending change
+
+            // `allSaved` is computed from `changed` BEFORE the (un-awaited) updateNowIfNecessary()
+            // flush runs, so the call returns false for a pending change and never throws.
+            let result: boolean;
+            expect(() => {
+                result = spacedUpdate.isAllSavedAndTriggerUpdate();
+            }).not.toThrow();
+            expect(result!).toBe(false);
+
+            // The flush was started synchronously (updater invoked) rather than awaited.
+            expect(updater).toHaveBeenCalledTimes(1);
+        });
+
+        it("restores the changed flag when an update fails so a later flush retries", async () => {
+            const states: string[] = [];
+            let shouldFail = true;
+            const updater = vi.fn(async () => {
+                if (shouldFail) {
+                    throw new Error("flush boom");
+                }
+            });
+            const spacedUpdate = new SpacedUpdate(updater, 50, (s) => states.push(s));
+
+            spacedUpdate.scheduleUpdate();
+
+            // Await the flush directly (the same code path isAllSavedAndTriggerUpdate fires
+            // and forgets) so the rejection is observed here instead of floating.
+            await expect(spacedUpdate.updateNowIfNecessary()).rejects.toThrow("flush boom");
+            expect(states).toContain("error");
+
+            // The catch restored `changed`, so a subsequent flush retries the updater and saves.
+            shouldFail = false;
+            await spacedUpdate.updateNowIfNecessary();
+            expect(updater).toHaveBeenCalledTimes(2);
+            expect(states).toContain("saved");
+        });
     });
 
     describe("resetUpdateTimer / setUpdateInterval", () => {

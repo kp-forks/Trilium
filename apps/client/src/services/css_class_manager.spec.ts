@@ -74,7 +74,11 @@ describe("createClassForColor", () => {
         const html = $("head").find("style").last().html() ?? "";
         expect(html).toContain(".color-123456");
         expect(html).toContain("--original-custom-color: #123456");
-        expect(html).toContain("--custom-color-hue:");
+        // The emitted hue must be the actual numeric value (not "unset"), since #123456 is saturated.
+        const expectedHue = getHue(Color("#123456"));
+        expect(expectedHue).toBe(210);
+        expect(html).toContain(`--custom-color-hue: ${expectedHue};`);
+        expect(html).not.toContain("--custom-color-hue: unset");
     });
 
     it("does not re-inject a <style> for an already-registered color", () => {
@@ -104,20 +108,39 @@ describe("createClassForColor", () => {
     });
 
     it("adjusts lightness for both a very light and a very dark color", () => {
-        // Very light color: dark-theme min-lightness clamp kicks in (Math.max picks the min).
+        // Helper to read the registered style block for a given class fragment.
+        function styleFor(classFragment: string) {
+            return $("head")
+                .find("style")
+                .filter((_, el) => ($(el).html() ?? "").includes(classFragment))
+                .first()
+                .html() ?? "";
+        }
+
+        // Very light color (lab L ~= 99.65). Under happy-dom the theme CSS vars are unset, so
+        // the source falls back to lightThemeColorMaxLightness=70 / darkThemeColorMinLightness=50.
+        // The light-theme color is clamped down to L=70 (a mid-gray, distinct from the original),
+        // while the dark-theme color stays at the original (Math.max keeps the higher lightness).
         const light = cssClassManager.createClassForColor("#fefefe");
         expect(light).toContain("color-FEFEFE");
 
-        // Very dark color: light-theme max-lightness clamp kicks in (Math.min picks the max).
+        const lightHtml = styleFor(".color-FEFEFE");
+        expect(lightHtml).toContain("--original-custom-color: #FEFEFE");
+        expect(lightHtml).toContain("--light-theme-custom-color: #ABABAB");
+        expect(lightHtml).toContain("--dark-theme-custom-color: #FEFEFE");
+        // The clamp actually moved the light-theme color away from the original.
+        expect(lightHtml).not.toContain("--light-theme-custom-color: #FEFEFE");
+
+        // Very dark color (lab L ~= 0.27). The dark-theme color is clamped up to L=50 (a mid-gray),
+        // while the light-theme color stays at the original (Math.min keeps the lower lightness).
         const dark = cssClassManager.createClassForColor("#010101");
         expect(dark).toContain("color-010101");
 
-        const darkHtml = $("head")
-            .find("style")
-            .filter((_, el) => ($(el).html() ?? "").includes(".color-010101"))
-            .first()
-            .html() ?? "";
-        expect(darkHtml).toContain("--light-theme-custom-color:");
-        expect(darkHtml).toContain("--dark-theme-custom-color:");
+        const darkHtml = styleFor(".color-010101");
+        expect(darkHtml).toContain("--original-custom-color: #010101");
+        expect(darkHtml).toContain("--light-theme-custom-color: #010101");
+        expect(darkHtml).toContain("--dark-theme-custom-color: #777777");
+        // The clamp actually moved the dark-theme color away from the original.
+        expect(darkHtml).not.toContain("--dark-theme-custom-color: #010101");
     });
 });

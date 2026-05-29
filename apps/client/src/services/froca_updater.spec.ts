@@ -7,6 +7,7 @@ import FBranch from "../entities/fbranch.js";
 import type { EntityChange } from "../server_types.js";
 import froca from "./froca.js";
 import frocaUpdater from "./froca_updater.js";
+import type LoadResults from "./load_results.js";
 import noteAttributeCache from "./note_attribute_cache.js";
 import options from "./options.js";
 import utils from "./utils.js";
@@ -105,6 +106,12 @@ describe("froca_updater - note changes", () => {
         expect(`${note.noteId}-content` in froca.blobPromises).toBe(false);
         expect("unrelated-key" in froca.blobPromises).toBe(true);
         expect(triggerSpy).toHaveBeenCalledTimes(1);
+
+        // The named behaviour: a content change is actually REGISTERED in the load results
+        // (addNoteContent branch). Inspect the payload delivered to triggerEvent.
+        expect(triggerSpy).toHaveBeenCalledWith("entitiesReloaded", expect.anything());
+        const loadResults = triggerSpy.mock.calls[0][1].loadResults as LoadResults;
+        expect(loadResults.isNoteContentReloaded(note.noteId)).toBeTruthy();
     });
 
     it("does not register content change when protection status changed", async () => {
@@ -122,6 +129,15 @@ describe("froca_updater - note changes", () => {
         await process([ec({ entityName: "notes", entityId: note.noteId, componentId: "comp-y", entity: row as any })]);
         expect(note.isProtected).toBe(true);
         expect(note.blobId).toBe("newBlob2");
+
+        // The defining behaviour: despite the blobId change, NO content change is registered
+        // because the protection status flipped. Inspect the load results payload to confirm
+        // addNoteContent was skipped (the note is still tracked, but not as a content reload).
+        expect(triggerSpy).toHaveBeenCalledWith("entitiesReloaded", expect.anything());
+        const loadResults = triggerSpy.mock.calls[0][1].loadResults as LoadResults;
+        expect(loadResults.isNoteContentReloaded(note.noteId)).toBeFalsy();
+        // ...but the note itself is still recorded as reloaded (addNote ran regardless).
+        expect(loadResults.isNoteReloaded(note.noteId)).toBe(true);
     });
 
     it("updates a note without componentId (no content registration branch)", async () => {
@@ -305,6 +321,12 @@ describe("froca_updater - revisions / options / etapi_tokens", () => {
     it("adds a revision and fires the event", async () => {
         await process([ec({ entityName: "revisions", entityId: "rev1", noteId: "n1", componentId: "c" })]);
         expect(triggerSpy).toHaveBeenCalledTimes(1);
+        // The product of processEntityChanges is the LoadResults payload: assert the revision
+        // was actually recorded for the right note, not merely that the event fired.
+        expect(triggerSpy).toHaveBeenCalledWith("entitiesReloaded", expect.anything());
+        const loadResults = triggerSpy.mock.calls[0][1].loadResults as LoadResults;
+        expect(loadResults.hasRevisionForNote("n1")).toBe(true);
+        expect(loadResults.hasRevisionForNote("other-note")).toBe(false);
     });
 
     it("sets an option and records it, but skips openNoteContexts noise", async () => {
@@ -321,6 +343,10 @@ describe("froca_updater - revisions / options / etapi_tokens", () => {
     it("marks etapi token changes", async () => {
         await process([ec({ entityName: "etapi_tokens", entityId: "tok1", entity: { isDeleted: false } as any })]);
         expect(triggerSpy).toHaveBeenCalledTimes(1);
+        // Assert the recorded state, not just that the event fired.
+        expect(triggerSpy).toHaveBeenCalledWith("entitiesReloaded", expect.anything());
+        const loadResults = triggerSpy.mock.calls[0][1].loadResults as LoadResults;
+        expect(loadResults.hasEtapiTokenChanges).toBe(true);
     });
 });
 
@@ -465,9 +491,23 @@ describe("froca_updater - attribute changes", () => {
         const note = buildNote({ title: "ErasedAttrHost", "~inherit": "target-loaded" });
         const attrId = note.attributes[0];
         await process([ec({ entityName: "attributes", entityId: attrId, isErased: true, entity: undefined })]);
-        // erased + not in froca attributes? It IS in froca via buildNote, so reload triggered.
-        // But entity is undefined => ancestor scan 'continue' branch is exercised.
+        // The attribute IS in froca via buildNote and is erased => the early reloadFrontendApp()
+        // path is taken (this is the code path actually hit by this fixture).
+        expect(reloadSpy).toHaveBeenCalledTimes(1);
+        // And because the ancestor scan sees entity === undefined it must NOT reload the target note.
         expect(reloadNotesSpy).not.toHaveBeenCalled();
+    });
+
+    it("ancestor scan 'continue' branch: an erased attribute absent from froca reloads nothing", async () => {
+        // An erased attribute that is NOT in froca.attributes: the early reload short-circuit is
+        // skipped (attribute not loaded), so the ancestor scan runs and hits `if (!entity) continue`.
+        await process([ec({ entityName: "attributes", entityId: "never-loaded-attr", isErased: true, entity: undefined })]);
+        // No early full reload (attribute was not in froca) ...
+        expect(reloadSpy).not.toHaveBeenCalled();
+        // ... no per-note reload (the scan's continue branch skipped the missing-note push) ...
+        expect(reloadNotesSpy).not.toHaveBeenCalled();
+        // ... and the load results stay empty, so no event fires.
+        expect(triggerSpy).not.toHaveBeenCalled();
     });
 });
 
@@ -598,6 +638,10 @@ describe("froca_updater - attachment changes", () => {
             } as any
         })]);
         expect(triggerSpy).toHaveBeenCalledTimes(1);
+        // The attachment row is still recorded even though the owner note is absent.
+        expect(triggerSpy).toHaveBeenCalledWith("entitiesReloaded", expect.anything());
+        const loadResults = triggerSpy.mock.calls[0][1].loadResults as LoadResults;
+        expect(loadResults.getAttachmentRows().some((a) => a.attachmentId === "att-noowner")).toBe(true);
     });
 });
 
@@ -701,6 +745,11 @@ describe("froca_updater - branch coverage edge cases", () => {
         // not erased, not deleted, attachment not loaded, and ec.entity is undefined
         await process([ec({ entityName: "attachments", entityId: "att-noentity" })]);
         expect(triggerSpy).toHaveBeenCalledTimes(1);
+        // Even with no entity payload, the source still pushes a row (the undefined attachmentEntity)
+        // into the load results, which is what makes the event non-empty and fire.
+        expect(triggerSpy).toHaveBeenCalledWith("entitiesReloaded", expect.anything());
+        const loadResults = triggerSpy.mock.calls[0][1].loadResults as LoadResults;
+        expect(loadResults.getAttachmentRows().length).toBe(1);
     });
 });
 

@@ -86,6 +86,15 @@ describe("open service", () => {
             downloadFileNote(note, null, undefined);
             expect(window.location.href).toContain(`api/notes/${note.noteId}/download?`);
         });
+
+        it("downloads via URL (not customDownload) for an ordinary file even when a parent component is present", () => {
+            const note = buildNote({ title: "Plain", type: "file" });
+            (note as any).mime = "image/png";
+            const parent = { triggerEvent: vi.fn() } as any;
+            downloadFileNote(note, parent, "ntx-2");
+            expect(parent.triggerEvent).not.toHaveBeenCalled();
+            expect(window.location.href).toContain(`api/notes/${note.noteId}/download?`);
+        });
     });
 
     describe("downloadAttachment", () => {
@@ -180,17 +189,32 @@ describe("open service", () => {
     });
 
     describe("openNoteOnServer", () => {
-        it("logs an error when no sync server host is configured", async () => {
+        // options is a process-wide singleton with no reset between spec files; capture the
+        // original value and restore it so these tests do not leak into other specs.
+        let originalSyncServerHost: string | undefined;
+
+        beforeEach(async () => {
             await options.initializedPromise;
+            originalSyncServerHost = options.get("syncServerHost");
+        });
+
+        afterEach(() => {
+            if (originalSyncServerHost === undefined) {
+                options.set("syncServerHost", "");
+            } else {
+                options.set("syncServerHost", originalSyncServerHost);
+            }
+        });
+
+        it("logs an error when no sync server host is configured", async () => {
             options.set("syncServerHost", "");
             const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
             await open.openNoteOnServer("n5");
-            expect(errSpy).toHaveBeenCalled();
+            expect(errSpy).toHaveBeenCalledWith("No sync server host configured");
             expect(window.open).not.toHaveBeenCalled();
         });
 
         it("opens the note URL in a new browser tab when a sync server host is set", async () => {
-            await options.initializedPromise;
             options.set("syncServerHost", "https://sync.example.com");
             await open.openNoteOnServer("n6");
             expect(window.open).toHaveBeenCalledWith(

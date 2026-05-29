@@ -363,6 +363,12 @@ describe("CommandRegistry executeCommand", () => {
             keyboardAction: action({ scope: "text-detail" })
         });
         await registry.executeCommand("textCmd");
+        // executeCommand does NOT await executeWithTextDetail (source line 248), and
+        // executeWithTextDetail internally awaits getTypeWidget(). Flush the
+        // microtask/macrotask queue so the fire-and-forget widgetTrigger call has
+        // definitely run before we assert, rather than relying on incidental
+        // microtask ordering of a single await hop.
+        await new Promise((r) => setTimeout(r, 0));
         expect(widgetTrigger).toHaveBeenCalledWith("addLinkToText", { ntxId: "ntx-1" });
     });
 

@@ -45,6 +45,17 @@ vi.mock("@triliumnext/highlightjs", () => {
     };
 });
 
+// Spy on the clipboard helpers so we can assert which copy path the click handlers take
+// (copyTextWithToast in-app vs copyText in share mode). Persists across vi.resetModules().
+const clip = vi.hoisted(() => ({
+    copyText: vi.fn(),
+    copyTextWithToast: vi.fn()
+}));
+vi.mock("./clipboard_ext.js", () => ({
+    copyText: (t: string) => clip.copyText(t),
+    copyTextWithToast: (t: string) => clip.copyTextWithToast(t)
+}));
+
 // Imports AFTER the vi.mock calls (which are hoisted above imports anyway).
 import type OptionsType from "./options.js";
 
@@ -251,34 +262,49 @@ describe("syntax_highlight", () => {
 
     describe("copy buttons", () => {
         it("appends a copy button that copies via toast when not in share mode", async () => {
+            clip.copyText.mockClear();
+            clip.copyTextWithToast.mockClear();
             const mod = await freshModule();
             const $code = $codeBlock("copy me");
             mod.applyCopyToClipboardButton($code);
             const $btn = $code.parent().find("button.copy-button");
             expect($btn.length).toBe(1);
-            // exercise the click handler (non-share path)
+
+            // Non-share path: the click copies the code block's text via the toast helper.
             $btn.trigger("click");
+            expect(clip.copyTextWithToast).toHaveBeenCalledWith("copy me");
+            expect(clip.copyText).not.toHaveBeenCalled();
         });
 
         it("copy button uses the plain copy path in share mode", async () => {
+            clip.copyText.mockClear();
+            clip.copyTextWithToast.mockClear();
             const mod = await freshModule();
             ctrl.isShare = true;
             const $code = $codeBlock("share copy");
             mod.applyCopyToClipboardButton($code);
             $code.parent().find("button.copy-button").trigger("click");
+
+            // Share path: plain copyText, no toast.
+            expect(clip.copyText).toHaveBeenCalledWith("share copy");
+            expect(clip.copyTextWithToast).not.toHaveBeenCalled();
         });
 
         it("inline code copy adds class + handler for both share and non-share", async () => {
+            clip.copyText.mockClear();
+            clip.copyTextWithToast.mockClear();
             const mod = await freshModule();
             const $inline = $("<code>").text("inline");
             mod.applyInlineCodeCopy($inline);
             expect($inline.hasClass("copyable-inline-code")).toBe(true);
             $inline.trigger("click"); // non-share path
+            expect(clip.copyTextWithToast).toHaveBeenCalledWith("inline");
 
             ctrl.isShare = true;
             const $inline2 = $("<code>").text("inline share");
             mod.applyInlineCodeCopy($inline2);
             $inline2.trigger("click"); // share path
+            expect(clip.copyText).toHaveBeenCalledWith("inline share");
         });
     });
 

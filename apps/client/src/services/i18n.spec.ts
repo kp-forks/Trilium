@@ -1,4 +1,4 @@
-import { findDuplicateJsonKeys, LOCALES } from "@triliumnext/commons";
+import { dayjs, findDuplicateJsonKeys, LOCALES } from "@triliumnext/commons";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { describe, expect, it, vi } from "vitest";
@@ -75,6 +75,10 @@ describe("i18n", () => {
             await initLocale("de");
 
             expect(getCurrentLanguage()).toBe("de");
+            // The second responsibility of initLocale is `await setDayjsLocale(locale)`, which
+            // switches the global dayjs locale. Assert the observable side effect so removing or
+            // mis-passing the locale to setDayjsLocale would be caught.
+            expect(dayjs.locale()).toBe("de");
             // The deferred resolves once translations are ready.
             await expect(translationsInitializedPromise).resolves.toBeUndefined();
         });

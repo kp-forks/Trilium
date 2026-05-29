@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildNote } from "../test/easy-froca";
+import { ReactWrappedWidget } from "../widgets/basic_widget.js";
 import bundleService, { Bundle, executeBundle, executeBundleWithoutErrorHandling, WidgetsByParent } from "./bundle";
 import server from "./server.js";
 import * as toast from "./toast";
@@ -85,8 +86,11 @@ describe("executeStartupBundles (default export)", () => {
 
     it("requests non-mobile startup scripts and executes each bundle", async () => {
         const id = buildNote({ title: "Startup note" }).noteId;
+        // The script runs inside the eval'd bundle body, so a write to `window` is an observable
+        // side effect proving the bundle was actually executed (not merely fetched).
+        delete (window as any).__startupRan;
         const bundles: Bundle[] = [{
-            script: `api.__startupRan = true;`,
+            script: `window.__startupRan = true;`,
             html: "",
             noteId: id,
             allNoteIds: [id]
@@ -98,6 +102,9 @@ describe("executeStartupBundles (default export)", () => {
 
         await bundleService.executeStartupBundles();
         expect(getSpy).toHaveBeenCalledWith("script/startup");
+        // The for-loop that calls executeBundle(bundle) actually ran the seeded script.
+        expect((window as any).__startupRan).toBe(true);
+        delete (window as any).__startupRan;
     });
 
     it("requests mobile startup scripts when on mobile", async () => {
@@ -208,7 +215,13 @@ describe("WidgetsByParent", () => {
         } as any);
 
         const widgets = w.get("right-pane");
-        expect(widgets.length).toBeGreaterThanOrEqual(1);
+        expect(widgets).toHaveLength(1);
+        // No position was supplied, so the `if (preactWidget.position)` branch is skipped and the
+        // wrapped widget keeps the ReactWrappedWidget default `_position` (undefined) rather than
+        // being overridden to a falsy value.
+        const wrapped = widgets[0] as any;
+        expect(wrapped).toBeInstanceOf(ReactWrappedWidget);
+        expect(wrapped.position).toBeUndefined();
     });
 });
 

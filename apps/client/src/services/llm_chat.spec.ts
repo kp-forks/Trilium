@@ -142,8 +142,9 @@ describe("streamChatCompletion", () => {
             { type: "done" },
             { type: "unknown_ignored" }
         ];
-        // Split a "data: " line across two chunks to exercise the buffer carry-over,
-        // and include a blank/non-data line which must be ignored.
+        // Each event is a complete `data: ...\n` line; include a non-data line which must be
+        // ignored, plus a trailing partial line left in the buffer (never flushed). The
+        // cross-read buffer carry-over is exercised separately in its own test above.
         const chunks = [
             ...events.map((e) => `data: ${JSON.stringify(e)}\n`),
             "ignored non-data line\n",
@@ -163,6 +164,33 @@ describe("streamChatCompletion", () => {
         expect(cb.onCitation).toHaveBeenCalledWith({ id: "cit1" });
         expect(cb.onUsage).toHaveBeenCalledWith({ totalTokens: 10 });
         expect(cb.onDone).toHaveBeenCalledTimes(1);
+    });
+
+    it("reassembles a single SSE data line split across two read() boundaries", async () => {
+        // The first chunk ends with a partial JSON line; the second chunk completes it.
+        // This exercises the `buffer += decode(...)` / `lines.pop()` carry-over (source 78-80):
+        // the partial line at the end of the first read must be completed by the next read.
+        const chunks = [`data: {"type":"text",`, `"content":"hi"}\n`];
+        vi.stubGlobal("fetch", vi.fn(async () => makeStreamResponse(chunks)));
+
+        const cb = makeCallbacks();
+        await streamChatCompletion(messages, config, cb);
+
+        expect(cb.onChunk).toHaveBeenCalledTimes(1);
+        expect(cb.onChunk).toHaveBeenCalledWith("hi");
+    });
+
+    it("does not invoke onDone when the stream ends without an explicit done event", async () => {
+        // onDone() fires only for a `{type:"done"}` SSE event (source 126-128), NOT when the
+        // reader simply returns {done:true}. Lock in that a clean stream end leaves onDone uncalled.
+        const chunks = [`data: ${JSON.stringify({ type: "text", content: "only" })}\n`];
+        vi.stubGlobal("fetch", vi.fn(async () => makeStreamResponse(chunks)));
+
+        const cb = makeCallbacks();
+        await streamChatCompletion(messages, config, cb);
+
+        expect(cb.onChunk).toHaveBeenCalledWith("only");
+        expect(cb.onDone).not.toHaveBeenCalled();
     });
 
     it("ignores citation/usage events that carry no payload", async () => {

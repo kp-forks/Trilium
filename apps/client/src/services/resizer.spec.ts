@@ -38,6 +38,21 @@ function setRightPaneVisible(visible: boolean) {
 }
 
 /**
+ * Force `$("#launcher-pane").outerWidth()` to a chosen pixel value (happy-dom has
+ * no layout, so it otherwise returns 0). Used to exercise the vertical-layout
+ * reserved-width math, which is invisible when the reserved width collapses to 0.
+ */
+function setLauncherPaneWidth(px: number) {
+    const origOuterWidth = ($ as any).fn.outerWidth;
+    return vi.spyOn(($ as any).fn, "outerWidth").mockImplementation(function (this: any, ...args: any[]) {
+        if (this[0]?.id === "launcher-pane") {
+            return px;
+        }
+        return origOuterWidth.apply(this, args);
+    });
+}
+
+/**
  * Load a fresh copy of resizer.ts (its module-level state is otherwise a
  * singleton that never resets) with options.get/getInt stubbed to the supplied
  * values.
@@ -97,11 +112,39 @@ describe("setupLeftPaneResizer", () => {
     });
 
     it("when left pane is hidden in vertical layout, reserves launcher-pane width", async () => {
+        // Give the launcher pane a real width so the vertical reservation math
+        // produces a value distinguishable from the horizontal 100% case.
+        setLauncherPaneWidth(120);
         const { resizer } = await loadResizer({ layoutOrientation: "vertical" });
 
         resizer.setupLeftPaneResizer(false);
 
-        // launcher-pane outerWidth() is 0 in happy-dom (no layout) -> reservedWidth 0 -> 100%.
+        // reservedWidth = 120 / window.innerWidth * 100; rest-pane = (100 - reservedWidth)%.
+        const reservedWidth = (120 / window.innerWidth) * 100;
+        expect(reservedWidth).toBeGreaterThan(0);
+        expect($("#rest-pane").css("width")).toBe(`${100 - reservedWidth}%`);
+        // Must be strictly less than the horizontal 100% so a broken reservation is caught.
+        const restPaneWidthValue = parseFloat($("#rest-pane").css("width"));
+        expect(restPaneWidthValue).toBeLessThan(100);
+    });
+
+    it("when left pane is hidden in vertical layout with no launcher width, falls back to 100%", async () => {
+        // launcher-pane outerWidth() is 0 in happy-dom (no layout) -> the `|| 0`
+        // fallback yields reservedWidth 0 -> rest-pane 100%.
+        const { resizer } = await loadResizer({ layoutOrientation: "vertical" });
+
+        resizer.setupLeftPaneResizer(false);
+
+        expect($("#rest-pane").css("width")).toBe("100%");
+    });
+
+    it("when left pane is hidden in horizontal layout, does NOT reserve launcher-pane width", async () => {
+        // Even with a non-zero launcher width, the horizontal branch ignores it.
+        setLauncherPaneWidth(120);
+        const { resizer } = await loadResizer({ layoutOrientation: "horizontal" });
+
+        resizer.setupLeftPaneResizer(false);
+
         expect($("#rest-pane").css("width")).toBe("100%");
     });
 
@@ -125,6 +168,13 @@ describe("setupLeftPaneResizer", () => {
         // onDragEnd rounds and saves the new left pane width.
         config.onDragEnd([42.6, 57.4]);
         expect(options.save).toHaveBeenCalledWith("leftPaneWidth", 43);
+
+        // onDragEnd also mutates the module-level cache: a subsequent rebuild must use
+        // the NEW (dragged + rounded) width 43, not the original 30 -> sizes [43, 57].
+        resizer.setupLeftPaneResizer(true);
+        flushRaf();
+        expect(SplitMock).toHaveBeenCalledTimes(2);
+        expect(SplitMock.mock.calls[1][1].sizes).toEqual([43, 57]);
     });
 
     it("clamps a missing stored width (getInt -> null) up to the minimum of 5", async () => {
@@ -205,6 +255,12 @@ describe("setupRightPaneResizer", () => {
 
         config.onDragEnd([60.2, 39.8]);
         expect(options.save).toHaveBeenCalledWith("rightPaneWidth", 40);
+
+        // onDragEnd also mutates the module-level cache: a subsequent rebuild must use
+        // the NEW (dragged + rounded) width 40, not the original 25 -> sizes [60, 40].
+        resizer.setupRightPaneResizer();
+        expect(SplitMock).toHaveBeenCalledTimes(2);
+        expect(SplitMock.mock.calls[1][1].sizes).toEqual([60, 40]);
         isSpy.mockRestore();
     });
 

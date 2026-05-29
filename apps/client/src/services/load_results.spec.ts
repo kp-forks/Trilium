@@ -20,17 +20,17 @@ describe("LoadResults", () => {
         expect(lr.getEntityRow("attributes", "missing")).toBeUndefined();
     });
 
-    it("tracks note <-> component associations, deduplicating component ids", () => {
+    it("tracks note <-> component associations across multiple component ids", () => {
         const lr = new LoadResults([]);
 
         lr.addNote("n1"); // no component id
         lr.addNote("n1", "comp1");
-        lr.addNote("n1", "comp1"); // duplicate component id is ignored
+        lr.addNote("n1", "comp1"); // adding the same component id again is a no-op (see dedup test below)
         lr.addNote("n1", "comp2");
 
         expect(lr.getNoteIds()).toEqual(["n1"]);
         expect(lr.isNoteReloaded("n1")).toBe(true);
-        // reloaded only counts components other than the one passed in
+        // reloaded only counts components other than the one passed in; comp2 is still present
         expect(lr.isNoteReloaded("n1", "comp1")).toBe(true);
         expect(lr.isNoteReloaded("n2")).toBeFalsy(); // unknown note -> undefined (short-circuit)
         expect(lr.isNoteReloaded(undefined)).toBe(false);
@@ -40,6 +40,37 @@ describe("LoadResults", () => {
         const lr = new LoadResults([]);
         lr.addNote("solo", "comp1");
         expect(lr.isNoteReloaded("solo", "comp1")).toBe(false);
+    });
+
+    it("ignores a duplicate component id for the same note", () => {
+        // The source guards against pushing the same component id twice
+        // (noteIdToComponentId[noteId] only ever contains comp once).
+        // LoadResults exposes no getter for the per-note component-id array, so the
+        // dedup cannot be observed directly: with the only component excluded,
+        // isNoteReloaded returns false whether the array is ["comp"] or ["comp","comp"].
+        // We still pin the observable contract that the duplicate add changes nothing.
+        const dedup = new LoadResults([]);
+        dedup.addNote("dup", "compX");
+        dedup.addNote("dup", "compX"); // duplicate add
+
+        // excluding the only (deduped) component => not reloaded for that component
+        expect(dedup.isNoteReloaded("dup", "compX")).toBe(false);
+        // but reloaded when no component is excluded, and the note id is tracked exactly once
+        expect(dedup.isNoteReloaded("dup")).toBe(true);
+        expect(dedup.getNoteIds()).toEqual(["dup"]);
+
+        // a result that has only the (single) duplicated component association is non-empty,
+        // matching the same observable behaviour as a single add (no phantom extra entries)
+        expect(dedup.isEmpty()).toBe(false);
+
+        // adding a *different* component for the same note is reflected (excluding compX
+        // still leaves compY visible), confirming the dedup is per-component, not global
+        const reload = new LoadResults([]);
+        reload.addNote("dup2", "compX");
+        reload.addNote("dup2", "compX");
+        reload.addNote("dup2", "compY");
+        expect(reload.isNoteReloaded("dup2", "compX")).toBe(true);
+        expect(reload.isNoteReloaded("dup2", "compY")).toBe(true);
     });
 
     it("merges branch rows with their tracked component id and drops unknown branches", () => {

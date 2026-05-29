@@ -281,6 +281,7 @@ describe("loadSearchNote", () => {
         const search = buildNote({ id: "ls-bad", title: "Search", type: "search" });
         server.get = vi.fn(async () => ({ searchResultNoteIds: "boom", highlightedTokens: [], error: null })) as typeof server.get;
         await expect(froca.loadSearchNote(search.noteId)).rejects.toThrow(/failed/);
+        expect(server.get).toHaveBeenCalledWith(`search-note/${search.noteId}`);
     });
 
     it("populates virtual child branches from search results", async () => {
@@ -298,6 +299,7 @@ describe("loadSearchNote", () => {
 
         const out = await froca.loadSearchNote(search.noteId);
 
+        expect(server.get).toHaveBeenCalledWith(`search-note/${search.noteId}`);
         expect(out).toEqual({ error: null });
         expect(search.searchResultsLoaded).toBe(true);
         expect(search.highlightedTokens).toEqual(["token"]);
@@ -316,6 +318,7 @@ describe("loadSearchNote", () => {
         }) as typeof server.get;
 
         const out = await froca.loadSearchNote(search.noteId);
+        expect(server.get).toHaveBeenCalledWith(`search-note/${search.noteId}`);
         expect(out).toEqual({ error: "oops" });
         expect(froca.notes["ls-gone"].searchResultsLoaded).toBe(true);
     });

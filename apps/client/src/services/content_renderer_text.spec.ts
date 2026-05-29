@@ -17,6 +17,19 @@ vi.mock("mermaid", () => ({
     }
 }));
 
+// Spy on the KaTeX auto-render entry point so we can assert that
+// `postProcessRichContent` only invokes it when a `span.math-tex` is present.
+// The original module is kept intact (default export, CSS side-effects) so the
+// rest of the render pipeline behaves normally.
+const renderMathInElementSpy = vi.hoisted(() => vi.fn());
+vi.mock("./math.js", async (importOriginal) => {
+    const original = await importOriginal<typeof import("./math.js")>();
+    return {
+        ...original,
+        renderMathInElement: renderMathInElementSpy
+    };
+});
+
 import renderText, {
     applyInlineMermaid,
     postProcessRichContent,
@@ -158,17 +171,32 @@ describe("Text content renderer", () => {
     });
 
     it("invokes KaTeX inline rendering when math-tex spans are present", async () => {
+        renderMathInElementSpy.mockClear();
         const contentEl = document.createElement("div");
         const note = buildNote({
             title: "Math note",
             content: `<p>Formula: <span class="math-tex">\\(a^2 + b^2\\)</span></p>`
         });
-        // happy-dom runs in quirks mode, so KaTeX may surface a parse error rather
-        // than a full .katex tree; either way, auto-render touches the span. We only
-        // assert that the math span survives the rendering pass (line is exercised).
         await expect(renderText(note, $(contentEl))).resolves.toBeUndefined();
-        // The math span is preserved through the KaTeX auto-render pass.
+        // The math span is preserved through the rendering pass.
         expect(contentEl.querySelector("span.math-tex")).not.toBeNull();
+        // The conditional KaTeX auto-render branch ran: it was invoked exactly once
+        // with the rendered content element ($renderedContent[0]) and the trust flag.
+        expect(renderMathInElementSpy).toHaveBeenCalledTimes(1);
+        expect(renderMathInElementSpy).toHaveBeenCalledWith(contentEl, { trust: true });
+    });
+
+    it("does not invoke KaTeX inline rendering when no math-tex spans are present", async () => {
+        renderMathInElementSpy.mockClear();
+        const contentEl = document.createElement("div");
+        const note = buildNote({
+            title: "Plain note",
+            content: `<p>No formulas here.</p>`
+        });
+        await expect(renderText(note, $(contentEl))).resolves.toBeUndefined();
+        // The math branch is gated on the presence of a span.math-tex; with none
+        // present the auto-render entry point must be left untouched.
+        expect(renderMathInElementSpy).not.toHaveBeenCalled();
     });
 
     it("rewrites reference-link titles using the note title", async () => {

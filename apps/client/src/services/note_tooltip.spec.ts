@@ -307,21 +307,41 @@ describe("mouseEnterHandler", () => {
         expect($link.attr("data-link-id")).toBe("existing");
     });
 
-    it("returns without showing a tooltip when rendered content is empty", async () => {
+    it("assigns a fresh random link id and skips the tooltip on the not-hovering branch", async () => {
         vi.useFakeTimers();
         const $link = makeLink('<a href="#root/abc">x</a>');
         parseNavigationStateFromUrl.mockReturnValue({ notePath: "root/abc", noteId: "abc", viewScope: { viewMode: "default" } });
+        // null note renders the deleted placeholder which isHtmlEmpty treats as non-empty,
+        // so the suppression here comes from the not-hovering branch (hoverActive is false),
+        // NOT the empty-content guard (which is covered separately below while hovering).
         froca.getNote = vi.fn(async () => null) as any;
 
         const promise = mouseEnterHandler.call($link[0], eventFor($link));
         await vi.advanceTimersByTimeAsync(600);
         await promise;
 
-        // null note renders the deleted placeholder which isHtmlEmpty treats as non-empty,
-        // but we are not hovering, so no tooltip is created.
+        // not hovering -> no tooltip is created.
         expect(($.fn as any).tooltip).not.toHaveBeenCalled();
         // a fresh random link id was assigned
         expect($link.attr("data-link-id")).toMatch(/^link-\d+$/);
+    });
+
+    it("returns without showing a tooltip when the rendered note content is empty while hovering", async () => {
+        vi.useFakeTimers();
+        const $link = makeLink('<a href="#root/abc">x</a>');
+        parseNavigationStateFromUrl.mockReturnValue({ notePath: "root/abc", noteId: "abc", viewScope: { viewMode: "default" } });
+        // A note with no best note path makes renderTooltip resolve to `undefined`,
+        // so the empty-content guard (`!content`) fires even though we ARE hovering.
+        const note = fakeNote({ noteId: "abc", bestPath: undefined });
+        froca.getNote = vi.fn(async () => note) as any;
+        hoverActive = true;
+
+        const promise = mouseEnterHandler.call($link[0], eventFor($link));
+        await vi.advanceTimersByTimeAsync(600);
+        await promise;
+
+        // hovering, but empty content -> early return before the tooltip is created.
+        expect(($.fn as any).tooltip).not.toHaveBeenCalled();
     });
 
     it("returns without showing a tooltip when the footnote target yields empty content", async () => {
@@ -404,8 +424,19 @@ describe("mouseEnterHandler", () => {
         await promise;
 
         expect(froca.getNote).not.toHaveBeenCalled();
-        // hovered -> tooltip shown (init call + "show" call)
-        expect(($.fn as any).tooltip).toHaveBeenCalled();
+        // hovered -> tooltip was both initialised and explicitly shown.
+        const tooltipMock = ($.fn as any).tooltip as ReturnType<typeof vi.fn>;
+        expect(tooltipMock).toHaveBeenCalledWith("show");
+
+        // The init call carries the rendered footnote body in its title and the
+        // note-tooltip class in its template.
+        const initCall = tooltipMock.mock.calls.find((c) => typeof c[0] === "object");
+        expect(initCall?.[0].title).toContain("footnote body");
+        expect(initCall?.[0].template).toContain("note-tooltip");
+        // note is null on the footnote path, so the template carries only the random
+        // tooltip-<n> class with no trailing color class.
+        expect(initCall?.[0].template).toMatch(/tooltip note-tooltip tooltip-\d+"/);
+        expect(initCall?.[0].template).not.toContain("color-");
     });
 
     it("creates, shows and tracks a tooltip while hovering, then dismisses on click and via the watchdog", async () => {

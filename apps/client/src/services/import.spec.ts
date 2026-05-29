@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { WebSocketMessage } from "@triliumnext/commons";
 import appContext from "../components/app_context.js";
+import * as i18n from "./i18n.js";
 import server from "./server.js";
 import toastService from "./toast.js";
 import ws from "./ws.js";
@@ -96,12 +97,24 @@ describe("uploadFiles", () => {
     });
 
     it("surfaces an upload error through the toast service via the ajax error callback", async () => {
-        ($ as any).ajax = vi.fn(async (opts: any) => {
-            opts.error({ responseText: "boom" });
-            return {};
-        });
-        await uploadFiles("notes", "p1", ["a"], { shrinkImages: false });
-        expect(toastService.showError).toHaveBeenCalledTimes(1);
+        // Spy on the i18n binding so we can verify xhr.responseText is forwarded
+        // without depending on i18next interpolation (i18next is uninitialised in
+        // the test env, so t() returns the key and never interpolates). We assert
+        // the call args/structure rather than a human-readable translated string.
+        const tSpy = vi.spyOn(i18n, "t");
+        try {
+            ($ as any).ajax = vi.fn(async (opts: any) => {
+                opts.error({ responseText: "boom" });
+                return {};
+            });
+            await uploadFiles("notes", "p1", ["a"], { shrinkImages: false });
+            expect(toastService.showError).toHaveBeenCalledTimes(1);
+            // The xhr.responseText ("boom") must be forwarded into the message
+            // interpolation, not dropped or replaced with the whole xhr object.
+            expect(tSpy).toHaveBeenCalledWith("import.failed", { message: "boom" });
+        } finally {
+            tSpy.mockRestore();
+        }
     });
 
     it("is also reachable through the default export", async () => {
@@ -226,6 +239,21 @@ describe("importAttachments ws handler", () => {
         } as any);
         expect(toastService.showPersistent).toHaveBeenCalledTimes(1);
         expect(setNote).not.toHaveBeenCalled();
+    });
+
+    it("navigates with an undefined note id when the parent gates but the imported note id is missing", async () => {
+        // The source gates navigation on result.parentNoteId but passes
+        // result.importedNoteId to setNote. With a parent present and no
+        // imported id, setNote is still called with the (undefined) id.
+        await handler()({
+            type: "taskSucceeded",
+            taskType: "importAttachments",
+            taskId: "a4b",
+            result: { parentNoteId: "par2" }
+        } as any);
+        expect(toastService.showPersistent).toHaveBeenCalledTimes(1);
+        expect(setNote).toHaveBeenCalledTimes(1);
+        expect(setNote).toHaveBeenCalledWith(undefined, { viewScope: { viewMode: "attachments" } });
     });
 
     it("tolerates a missing active context on success navigation", async () => {

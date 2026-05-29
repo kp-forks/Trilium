@@ -20,6 +20,7 @@ import glob from "./glob.js";
 import { requireCss } from "./glob.js";
 import linkService from "./link.js";
 import server from "./server.js";
+import utils from "./utils.js";
 import ws from "./ws.js";
 
 const getComponentByEl = appContext.getComponentByEl as ReturnType<typeof vi.fn>;
@@ -55,9 +56,10 @@ describe("setupGlobs", () => {
     it("wires up the glob object with values and delegating helpers", () => {
         glob.setupGlobs();
 
-        // direct value assignments
-        expect(window.glob.isDesktop).toBeTypeOf("function");
-        expect(window.glob.isMobile).toBeTypeOf("function");
+        // direct value assignments: assert identity, not just that they are functions,
+        // so a swapped/wrong reference (e.g. both set to utils.isMobile) is caught.
+        expect(window.glob.isDesktop).toBe(utils.isDesktop);
+        expect(window.glob.isMobile).toBe(utils.isMobile);
         expect(window.glob.getHeaders).toBe(server.getHeaders);
         expect(window.glob.froca).toBe(froca);
         expect(window.glob.treeCache).toBe(froca);

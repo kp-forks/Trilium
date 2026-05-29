@@ -44,6 +44,9 @@ describe("syncNow", () => {
 
         expect(server.post).toHaveBeenCalledWith("sync/now");
         expect(showMessage).toHaveBeenCalledTimes(1);
+        // Pin the exact success key so a typo'd or swapped key (e.g. the failure key) is caught.
+        expect(translate).toHaveBeenCalledWith("sync.finished-successfully");
+        expect(showMessage).toHaveBeenCalledWith({ key: "sync.finished-successfully", opts: undefined });
         expect(showError).not.toHaveBeenCalled();
     });
 

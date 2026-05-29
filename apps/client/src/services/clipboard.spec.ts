@@ -83,7 +83,7 @@ describe("copy", () => {
     });
 
     it("writes reference links to the system clipboard on Electron", async () => {
-        const { childBranchId } = buildParentWithChild();
+        const { parent, childBranchId, childNoteId } = buildParentWithChild();
 
         (window as any).electronApi = {};
         const writeSpy = vi.fn(async (..._args: any[]) => {});
@@ -101,12 +101,24 @@ describe("copy", () => {
 
         await clipboard.copy([childBranchId]);
 
+        // The link key is `${branch.parentNoteId}/${branch.noteId}` with the reference-link option.
         expect(linkService.createLink).toHaveBeenCalledTimes(1);
+        expect(linkService.createLink).toHaveBeenCalledWith(`${parent.noteId}/${childNoteId}`, { referenceLink: true });
+
         expect(writeSpy).toHaveBeenCalledTimes(1);
         const items = writeSpy.mock.calls[0][0] as any[];
         expect(items).toHaveLength(1);
-        expect(items[0].data["text/html"]).toBeInstanceOf(Blob);
-        expect(items[0].data["text/plain"]).toBeInstanceOf(Blob);
+
+        // The html slot carries the link's outerHTML; the plain slot carries its text.
+        const htmlBlob = items[0].data["text/html"] as Blob;
+        const plainBlob = items[0].data["text/plain"] as Blob;
+        expect(htmlBlob).toBeInstanceOf(Blob);
+        expect(plainBlob).toBeInstanceOf(Blob);
+        expect(htmlBlob.type).toBe("text/html");
+        expect(plainBlob.type).toBe("text/plain");
+        expect(await htmlBlob.text()).toBe(link[0].outerHTML);
+        expect(await plainBlob.text()).toBe("Child link");
+
         expect(toastService.showMessage).toHaveBeenCalledTimes(1);
     });
 });

@@ -329,6 +329,11 @@ describe("toggleDangerousAttribute", () => {
             isInheritable: false
         }, undefined);
         expect(server.remove).toHaveBeenCalledWith(`notes/${note.noteId}/attributes/${attrId}`);
+        // The renamed attribute must be PUT before the original is removed, to avoid a flicker
+        // where there would momentarily be no active content attribute.
+        const putMock = server.put as unknown as ReturnType<typeof vi.fn>;
+        const removeMock = server.remove as unknown as ReturnType<typeof vi.fn>;
+        expect(putMock.mock.invocationCallOrder[0]).toBeLessThan(removeMock.mock.invocationCallOrder[0]);
     });
 
     it("enables a disabled relation by stripping the prefix", async () => {
@@ -342,6 +347,11 @@ describe("toggleDangerousAttribute", () => {
             isInheritable: false
         });
         expect(server.remove).toHaveBeenCalledWith(`notes/${note.noteId}/attributes/${attrId}`);
+        // The renamed attribute must be PUT before the original is removed, to avoid a flicker
+        // where there would momentarily be no active content attribute.
+        const putMock = server.put as unknown as ReturnType<typeof vi.fn>;
+        const removeMock = server.remove as unknown as ReturnType<typeof vi.fn>;
+        expect(putMock.mock.invocationCallOrder[0]).toBeLessThan(removeMock.mock.invocationCallOrder[0]);
     });
 
     it("skips attributes whose name already matches the desired state", async () => {

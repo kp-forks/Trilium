@@ -17,6 +17,12 @@ describe("Options service", () => {
         // The constructor (non-share branch) issues server.get("options"); the global
         // mock returns {}. Awaiting the promise exercises load() and leaves arr = {}.
         await options.initializedPromise;
+
+        // Establish the empty-record state explicitly via load({}) so this assertion does
+        // not silently depend on this test running BEFORE the load()/set() tests that
+        // mutate the shared singleton's backing record (the singleton is never reset
+        // between tests). This makes the empty-names check order-independent.
+        options.load({});
         expect(options.getNames()).toEqual([]);
     });
 
@@ -128,6 +134,21 @@ describe("Options service", () => {
         expect(fresh.getInt(k("anything"))).toBeNull();
         expect(warn).toHaveBeenCalledTimes(1);
         expect(fresh.getFloat(k("anything"))).toBeNull();
+
+        // Asymmetry: get/getNames/getJson/getInt/getFloat all read `this.arr?.[key]`
+        // and tolerate the uninitialized (undefined) record, but the remaining
+        // accessors do NOT use optional chaining and therefore THROW on a fresh
+        // share-branch instance where `arr` was never assigned:
+        //   is()   -> `this.arr[key]`        (source line 64)
+        //   set()  -> `this.arr[key] = ...`  (source line 68)
+        //   save() -> calls set()            (source line 72)
+        //   toggle() -> calls is() then save (source line 89)
+        // Pin this real behavioral difference so a regression that added/removed the
+        // optional chaining on either group would be caught.
+        expect(() => fresh.is(k("anything"))).toThrow();
+        expect(() => fresh.set(k("anything"), "v")).toThrow();
+        await expect(fresh.save(k("anything"), "v")).rejects.toThrow();
+        await expect(fresh.toggle(k("anything"))).rejects.toThrow();
 
         vi.doUnmock("./utils.js");
         vi.resetModules();

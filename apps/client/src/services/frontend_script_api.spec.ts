@@ -211,18 +211,24 @@ describe("runOnBackend / __runOnBackendInner", () => {
     });
 
     it("warns and still runs when passed an async function reference", async () => {
-        vi.spyOn(server, "post").mockResolvedValue({ success: true, executionResult: 1 } as never);
+        const post = vi.spyOn(server, "post").mockResolvedValue({ success: true, executionResult: 1 } as never);
         const showError = vi.spyOn(toastService, "showError").mockImplementation(() => undefined as never);
         const asyncFn = async () => {};
-        await makeApi().runOnBackend(asyncFn, []);
+        const result = await makeApi().runOnBackend(asyncFn, []);
         expect(showError).toHaveBeenCalled();
+        // "still runs": the warning does not short-circuit; it proceeds to the backend and returns the result.
+        expect(post).toHaveBeenCalledWith("script/exec", expect.any(Object), "script");
+        expect(result).toBe(1);
     });
 
     it("warns when passed an async function as a string", async () => {
-        vi.spyOn(server, "post").mockResolvedValue({ success: true, executionResult: 1 } as never);
+        const post = vi.spyOn(server, "post").mockResolvedValue({ success: true, executionResult: 1 } as never);
         const showError = vi.spyOn(toastService, "showError").mockImplementation(() => undefined as never);
-        await makeApi().runOnBackend("async function f(){}", []);
+        const result = await makeApi().runOnBackend("async function f(){}", []);
         expect(showError).toHaveBeenCalled();
+        // "still runs": the warning does not short-circuit; it proceeds to the backend and returns the result.
+        expect(post).toHaveBeenCalledWith("script/exec", expect.any(Object), "script");
+        expect(result).toBe(1);
     });
 
     it("does not warn for a plain sync function and defaults params to an empty array", async () => {

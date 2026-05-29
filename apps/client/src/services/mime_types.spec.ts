@@ -1,6 +1,20 @@
 import { MIME_TYPE_AUTO, MIME_TYPES_DICT, normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 import { describe, expect, it, vi } from "vitest";
 
+// Wrap the real `normalizeMimeTypeForCKEditor` in a spy so we can observe how many
+// times the highlight.js mapping build loop invokes it. It is called once per MIME
+// type while the map is being built and not at all on cached lookups, which is how
+// we prove the map is constructed exactly once.
+const normalizeSpy = vi.hoisted(() => vi.fn());
+vi.mock("@triliumnext/commons", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@triliumnext/commons")>();
+    normalizeSpy.mockImplementation(actual.normalizeMimeTypeForCKEditor);
+    return {
+        ...actual,
+        normalizeMimeTypeForCKEditor: (...args: Parameters<typeof actual.normalizeMimeTypeForCKEditor>) => normalizeSpy(...args)
+    };
+});
+
 import options from "./options.js";
 import mimeTypesService, { getHighlightJsNameForMime } from "./mime_types.js";
 
@@ -59,14 +73,32 @@ describe("mime_types service", () => {
     });
 
     it("getHighlightJsNameForMime maps CKEditor-normalized mimes to highlight.js codes and caches the mapping", () => {
-        // text/x-csrc -> text-x-csrc -> "c"
-        expect(getHighlightJsNameForMime(normalizeMimeTypeForCKEditor("text/x-csrc"))).toBe("c");
+        // Pre-normalize all argument MIME types so the only remaining `normalizeMimeTypeForCKEditor`
+        // calls are the ones the build loop makes internally. This lets us count build-loop
+        // invocations without the test's own argument-prep calls polluting the spy.
+        const cMime = normalizeMimeTypeForCKEditor("text/x-csrc"); // text-x-csrc
+        const cssMime = normalizeMimeTypeForCKEditor("text/css"); // text-css
+        const aplMime = normalizeMimeTypeForCKEditor("text/apl");
+
+        // The first lookup builds the mapping: the loop normalizes every MIME type once.
+        normalizeSpy.mockClear();
+        expect(getHighlightJsNameForMime(cMime)).toBe("c");
+        const buildCalls = normalizeSpy.mock.calls.length;
+        // The build ran and touched every MIME type (one normalize call per dictionary entry).
+        expect(buildCalls).toBe(MIME_TYPES_DICT.length);
+        expect(buildCalls).toBeGreaterThan(1);
+
+        // Every subsequent lookup must hit the cached map and NOT rebuild it,
+        // i.e. `normalizeMimeTypeForCKEditor` is not invoked again.
+        normalizeSpy.mockClear();
         // text/css -> text-css -> "css" (exercises the cached path on the second call)
-        expect(getHighlightJsNameForMime(normalizeMimeTypeForCKEditor("text/css"))).toBe("css");
+        expect(getHighlightJsNameForMime(cssMime)).toBe("css");
         // A mime that exists but has no mdLanguageCode is omitted from the mapping.
-        expect(getHighlightJsNameForMime(normalizeMimeTypeForCKEditor("text/apl"))).toBeUndefined();
+        expect(getHighlightJsNameForMime(aplMime)).toBeUndefined();
         // An entirely unknown mime resolves to undefined.
         expect(getHighlightJsNameForMime("totally-unknown")).toBeUndefined();
+        // No rebuild happened across these three cached lookups.
+        expect(normalizeSpy).not.toHaveBeenCalled();
     });
 
     it("re-exports MIME_TYPE_AUTO and the public helpers", () => {

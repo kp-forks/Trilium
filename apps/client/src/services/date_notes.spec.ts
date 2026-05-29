@@ -24,6 +24,9 @@ describe("date_notes", () => {
             expect.stringMatching(/^special-notes\/inbox\/\d{4}-\d{2}-\d{2}$/),
             "date-note"
         );
+        // getInboxNote is the only day-note-style helper that intentionally skips the
+        // change-id wait, unlike every sibling which awaits it.
+        expect(ws.waitForMaxKnownEntityChangeId).not.toHaveBeenCalled();
         expect(result).toBe(note);
     });
 
@@ -82,6 +85,18 @@ describe("date_notes", () => {
 
         expect(server.get).toHaveBeenCalledWith("special-notes/weeks/2025-W22", "date-note");
         expect(result).toBe(note);
+    });
+
+    it("getWeekNote tolerates a missing server response via optional chaining", async () => {
+        // getWeekNote is the only helper using froca.getNote(note?.noteId); a null server
+        // response must resolve to null (froca.getNote(undefined) returns null) instead of throwing.
+        server.get = vi.fn(async () => null) as typeof server.get;
+
+        const result = await dateNotes.getWeekNote("2025-W22");
+
+        expect(server.get).toHaveBeenCalledWith("special-notes/weeks/2025-W22", "date-note");
+        expect(ws.waitForMaxKnownEntityChangeId).toHaveBeenCalled();
+        expect(result).toBeNull();
     });
 
     it("getMonthNote queries months endpoint", async () => {

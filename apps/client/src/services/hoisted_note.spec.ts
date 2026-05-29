@@ -195,5 +195,49 @@ describe("hoisted_note service", () => {
             expect(confirm).not.toHaveBeenCalled();
             expect(unhoistSpy).toHaveBeenCalledTimes(1);
         });
+
+        it("still prompts for a bookmark path even when the hoisted note is inside _hidden", async () => {
+            // A bookmark target (`_lbBookmarks`) re-enables the guard on BOTH decision points:
+            //  - line 52: the path includes `_hidden` (would normally skip) but the
+            //    `|| includes("_lbBookmarks")` clause forces entry into the guard block.
+            //  - line 61: the hoisted note IS under `_hidden` (so `!hasAncestor("_hidden")`
+            //    is false), but the `|| includes("_lbBookmarks")` clause forces confirm().
+            // This is the exact inverse of the previous (non-bookmark) test, which skips confirm.
+            buildNote({ id: "_hidden", title: "Hidden" });
+            const hoisted = buildNote({ title: "HoistedHidden" });
+            hoisted.parents.push("_hidden");
+            const requested = buildNote({ title: "Bookmark target" });
+
+            resolveNotePath.mockResolvedValue("_hidden/_lbBookmarks/target");
+            getNoteIdFromUrl.mockReturnValue(requested.noteId);
+            confirm.mockResolvedValue(false);
+            setActiveContext(hoisted.noteId);
+
+            const result = await hoistedNoteService.checkNoteAccess("p", ctx(hoisted.noteId));
+            // confirm was declined -> access denied, no unhoist.
+            expect(result).toBe(false);
+            expect(confirm).toHaveBeenCalledTimes(1);
+            expect(unhoistSpy).not.toHaveBeenCalled();
+        });
+
+        it("unhoists for a confirmed bookmark path when the hoisted note is inside _hidden", async () => {
+            // Same bookmark-path branch as above, but the user confirms: access is granted
+            // and unhoist runs, proving the `_lbBookmarks` clause at line 61 reaches confirm()
+            // and the post-confirm unhoist on this otherwise-skipped (_hidden) path.
+            buildNote({ id: "_hidden", title: "Hidden" });
+            const hoisted = buildNote({ title: "HoistedHidden2" });
+            hoisted.parents.push("_hidden");
+            const requested = buildNote({ title: "Bookmark target 2" });
+
+            resolveNotePath.mockResolvedValue("_hidden/_lbBookmarks/target");
+            getNoteIdFromUrl.mockReturnValue(requested.noteId);
+            confirm.mockResolvedValue(true);
+            setActiveContext(hoisted.noteId);
+
+            const result = await hoistedNoteService.checkNoteAccess("p", ctx(hoisted.noteId));
+            expect(result).toBe(true);
+            expect(confirm).toHaveBeenCalledTimes(1);
+            expect(unhoistSpy).toHaveBeenCalledTimes(1);
+        });
     });
 });

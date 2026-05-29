@@ -98,13 +98,24 @@ describe("getBlankNoteTypes (via getNoteTypeItems)", () => {
                 expect(item.uiIcon.startsWith("bx ")).toBe(true);
             }
 
-            // isNew -> NEW badge, isBeta -> BETA badge. spreadsheet is both new+beta.
+            // the per-type `mime` is mapped through verbatim (note creation depends on it)
+            const text = cmdItems.find((i: any) => i.type === "text");
+            expect(text.mime).toBe("text/html");
             const spreadsheet = cmdItems.find((i: any) => i.type === "spreadsheet");
+            expect(spreadsheet.mime).toBe("application/json");
+
+            // isNew -> NEW badge, isBeta -> BETA badge. spreadsheet is both new+beta.
             expect(spreadsheet.badges).toHaveLength(2);
-            expect(spreadsheet.badges.some((b: any) => b.className === "new-note-type-badge")).toBe(true);
+            // exactly one NEW badge (has the className) ...
+            const newBadges = spreadsheet.badges.filter((b: any) => b.className === "new-note-type-badge");
+            expect(newBadges).toHaveLength(1);
+            // ... and exactly one BETA badge (the badge with only a title, no className).
+            const betaBadges = spreadsheet.badges.filter((b: any) => b.className === undefined);
+            expect(betaBadges).toHaveLength(1);
+            expect(typeof betaBadges[0].title).toBe("string");
+            expect(betaBadges[0].title.length).toBeGreaterThan(0);
 
             // text has no badges
-            const text = cmdItems.find((i: any) => i.type === "text");
             expect(text.badges).toEqual([]);
         } finally {
             restore();
@@ -116,8 +127,16 @@ describe("getBlankNoteTypes (via getNoteTypeItems)", () => {
         const restore = withTemplatesRoot([]);
         try {
             const items = await noteTypesService.getNoteTypeItems();
-            const types = items.filter((i: any) => i.type).map((i: any) => i.type);
+            const cmdItems: any[] = items.filter((i: any) => i.type);
+            const types = cmdItems.map((i: any) => i.type);
             expect(types).toContain("llmChat");
+
+            // llmChat is isBeta only -> exactly one BETA badge (title, no className).
+            const llmChat = cmdItems.find((i: any) => i.type === "llmChat");
+            expect(llmChat.badges).toHaveLength(1);
+            expect(llmChat.badges[0].className).toBeUndefined();
+            expect(typeof llmChat.badges[0].title).toBe("string");
+            expect(llmChat.badges[0].title.length).toBeGreaterThan(0);
         } finally {
             restore();
         }
@@ -185,11 +204,26 @@ describe("getBuiltInTemplates", () => {
 
             // Collections pass (filterCollections=true, title set) pushes a header then
             // the collection template.
-            expect(items.some((i) => i.kind === "header")).toBe(true);
+            const headerIdx = items.findIndex((i) => i.kind === "header");
+            expect(headerIdx).toBeGreaterThanOrEqual(0);
             expect(items.some((i) => i.templateNoteId === "tpl-coll")).toBe(true);
 
             // The note missing the "template" label is never included.
             expect(items.some((i) => i.templateNoteId === "tpl-skip")).toBe(false);
+
+            // Each template is emitted in EXACTLY ONE pass — the label filter must keep
+            // tpl-plain out of the collections pass and tpl-coll out of the non-collection
+            // pass. An inverted/broken filter would emit a template in both passes (a
+            // duplicate), which `.some(...)` above would not catch.
+            const plainIdx = items.findIndex((i) => i.templateNoteId === "tpl-plain");
+            const collIdx = items.findIndex((i) => i.templateNoteId === "tpl-coll");
+            expect(items.filter((i) => i.templateNoteId === "tpl-plain")).toHaveLength(1);
+            expect(items.filter((i) => i.templateNoteId === "tpl-coll")).toHaveLength(1);
+
+            // ...and the placement reflects which pass emitted them: tpl-plain (non-collection
+            // pass) precedes the collections header; tpl-coll (collections pass) follows it.
+            expect(plainIdx).toBeLessThan(headerIdx);
+            expect(collIdx).toBeGreaterThan(headerIdx);
 
             // built-in template items carry command/type/icon/title.
             const plainItem = items.find((i) => i.templateNoteId === "tpl-plain");

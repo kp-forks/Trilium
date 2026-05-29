@@ -2,11 +2,14 @@ import $ from "jquery";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import imageService, { copyImageReferenceToClipboard } from "./image.js";
+import * as toastModule from "./toast.js";
 import toastService from "./toast.js";
 
 describe("copyImageReferenceToClipboard", () => {
     let execCommandSpy: ReturnType<typeof vi.fn>;
     let removeAllRangesSpy: ReturnType<typeof vi.fn>;
+    let addRangeSpy: ReturnType<typeof vi.fn>;
+    let showErrorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
         // image.ts calls the bare global `logError`, normally installed by ws.ts (which setup.ts mocks).
@@ -16,15 +19,17 @@ describe("copyImageReferenceToClipboard", () => {
         execCommandSpy = vi.fn(() => true);
         (document as any).execCommand = execCommandSpy;
 
-        // Track range clean-up performed in the finally block.
+        // Track range clean-up performed in the finally block, and range addition done by selectImage's happy path.
         removeAllRangesSpy = vi.fn();
+        addRangeSpy = vi.fn();
         const selection = {
             removeAllRanges: removeAllRangesSpy,
-            addRange: vi.fn()
+            addRange: addRangeSpy
         };
         vi.spyOn(window, "getSelection").mockReturnValue(selection as unknown as Selection);
 
         vi.spyOn(toastService, "showMessage").mockImplementation(() => {});
+        showErrorSpy = vi.spyOn(toastModule, "showError").mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -42,8 +47,13 @@ describe("copyImageReferenceToClipboard", () => {
         expect($wrapper.attr("contenteditable")).toBeUndefined();
         expect(execCommandSpy).toHaveBeenCalledWith("copy");
         expect(toastService.showMessage).toHaveBeenCalledTimes(1);
-        // Selection was created on the element (selectImage took the happy path) and cleaned up.
+        // The happy path adds the element's range to the selection -> proves selectImage actually
+        // selected the image (removeAllRanges alone is also fired by the finally block, so it proves nothing).
+        expect(addRangeSpy).toHaveBeenCalledTimes(1);
+        // Selection was cleaned up in the finally block.
         expect(removeAllRangesSpy).toHaveBeenCalled();
+        // No error feedback on the success path.
+        expect(showErrorSpy).not.toHaveBeenCalled();
 
         element.remove();
     });
@@ -55,6 +65,9 @@ describe("copyImageReferenceToClipboard", () => {
         copyImageReferenceToClipboard($wrapper);
 
         expect(toastService.showMessage).not.toHaveBeenCalled();
+        // The user-facing failure feedback is the named showError export from toast.ts (message is an
+        // i18n string, so we only assert it was invoked once on the failure path).
+        expect(showErrorSpy).toHaveBeenCalledTimes(1);
         expect((window as any).logError).toHaveBeenCalledTimes(1);
         expect($wrapper.attr("contenteditable")).toBeUndefined();
     });

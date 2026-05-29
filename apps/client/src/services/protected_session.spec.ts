@@ -19,12 +19,23 @@ vi.mock("./ws.js", () => ({
     }
 }));
 
+// i18next is never `.init()`ed in this unit-test environment, so the real
+// `t()` returns `undefined`, erasing the toast text/title. Mock `t` with a
+// deterministic key-based serializer so we can assert which translation KEY
+// (and the `count` interpolation) the source selected for each branch -- the
+// structure/args, never a human-readable translated string.
+vi.mock("./i18n.js", () => ({
+    t: (key: string, opts?: Record<string, unknown>) =>
+        opts && "count" in opts ? `${key}:count=${opts.count}` : key
+}));
+
 import appContext from "../components/app_context.js";
 import froca from "./froca.js";
 import options from "./options.js";
 import protectedSessionHolder from "./protected_session_holder.js";
 import server from "./server.js";
 import toastService from "./toast.js";
+import type { ToastOptionsWithRequiredId } from "./toast.js";
 import utils from "./utils.js";
 
 let protectedSession: typeof import("./protected_session.js").default;
@@ -52,7 +63,11 @@ describe("enterProtectedSession", () => {
 
         expect(options.is).toHaveBeenCalledWith("isPasswordSet");
         expect(triggerCommand).toHaveBeenCalledWith("showPasswordNotSet");
-        // returns the raw deferred (not the promise) in this branch
+        // returns the RAW deferred (not dfd.promise()) in this branch: a jQuery
+        // Deferred is externally resolvable, so it exposes `.resolve`, whereas a
+        // `.promise()` object does not. `.promise` exists on both, so it cannot
+        // distinguish the two branches.
+        expect(typeof (result as any).resolve).toBe("function");
         expect(typeof (result as any).promise).toBe("function");
     });
 
@@ -239,9 +254,21 @@ describe("protectNotes task ws handler", () => {
             data: { protect: true }
         });
 
+        // Beyond id/icon, the toast must carry the interpolated progress text
+        // (protecting key + the progressCount) and the protecting title. The
+        // mocked `t` serializes the selected KEY and `count`, so we assert
+        // structure/args, never a translated string.
+        const toast = showPersistent.mock.calls[0][0] as ToastOptionsWithRequiredId;
         expect(showPersistent).toHaveBeenCalledWith(
-            expect.objectContaining({ id: "task-prot", icon: "check-shield" })
+            expect.objectContaining({
+                id: "task-prot",
+                icon: "check-shield",
+                message: "protected_session.protecting-in-progress:count=5",
+                title: "protected_session.protecting-title"
+            })
         );
+        // The progressCount must be interpolated into the message.
+        expect(toast.message).toContain("count=5");
     });
 
     it("shows a persistent progress toast while unprotecting", async () => {
@@ -255,9 +282,45 @@ describe("protectNotes task ws handler", () => {
             data: { protect: false }
         });
 
+        const toast = showPersistent.mock.calls[0][0] as ToastOptionsWithRequiredId;
         expect(showPersistent).toHaveBeenCalledWith(
-            expect.objectContaining({ id: "task-unprot", icon: "shield" })
+            expect.objectContaining({
+                id: "task-unprot",
+                icon: "shield",
+                message: "protected_session.unprotecting-in-progress-count:count=2",
+                title: "protected_session.unprotecting-title"
+            })
         );
+        expect(toast.message).toContain("count=2");
+    });
+
+    it("uses distinct progress text for the protecting vs unprotecting branch", async () => {
+        // Drive both branches within one test so the assertion is self-contained
+        // and not dependent on sibling-test ordering. The protect/unprotect ternary
+        // (source line 122) must select different text for each.
+        const showPersistent = vi.spyOn(toastService, "showPersistent").mockReturnValue(undefined as any);
+
+        await dispatch({
+            type: "taskProgressCount",
+            taskType: "protectNotes",
+            taskId: "task-prot-text",
+            progressCount: 5,
+            data: { protect: true }
+        });
+        await dispatch({
+            type: "taskProgressCount",
+            taskType: "protectNotes",
+            taskId: "task-unprot-text",
+            progressCount: 5,
+            data: { protect: false }
+        });
+
+        const protectingToast = showPersistent.mock.calls[0][0] as ToastOptionsWithRequiredId;
+        const unprotectingToast = showPersistent.mock.calls[1][0] as ToastOptionsWithRequiredId;
+        // Same progressCount, opposite protect flag => the message/title text must
+        // diverge (different translation keys are selected per branch).
+        expect(protectingToast.message).not.toBe(unprotectingToast.message);
+        expect(protectingToast.title).not.toBe(unprotectingToast.title);
     });
 
     it("shows a timed success toast on taskSucceeded for both protecting and unprotecting", async () => {

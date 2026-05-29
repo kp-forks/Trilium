@@ -610,6 +610,17 @@ describe("loadReferenceLinkTitle", () => {
         // the title becomes the note title, and the bookmark small is appended
         expect($el.text()).toContain("Loaded");
         expect($el.find("small").length).toBe(1);
+        // the bookmark <small> carries the bookmark glyph and the bookmark text
+        expect($el.find("small span.bx.bx-bookmark").length).toBe(1);
+        expect($el.find("small").text()).toContain("Sec");
+        // the color class produced by note.getColorClass() is applied to $el (source line 431)
+        const colorClass = note.getColorClass();
+        expect(colorClass).not.toBe("");
+        expect($el.hasClass(colorClass)).toBe(true);
+        // an icon span is prepended (source lines 444-449); getIcon() yields the iconClass labels
+        const $iconSpan = $el.children("span").first();
+        expect($iconSpan.length).toBe(1);
+        expect($iconSpan.hasClass("bx-star")).toBe(true);
     });
 
     it("uses the element's own href and finds the inner anchor when none is passed", async () => {

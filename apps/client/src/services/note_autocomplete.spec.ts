@@ -200,12 +200,39 @@ describe("autocompleteSource (via dataset)", () => {
 
     it("resets searchDelay back to the computed value after it was zeroed", async () => {
         server.get = vi.fn(async () => []) as typeof server.get;
-        const { $el, dataset } = initAndGetSource();
-        // showRecentNotes zeroes the shared searchDelay...
-        noteAutocomplete.showRecentNotes($el);
-        // ...and the next source invocation runs immediately and restores it.
-        await runSource(dataset, "x");
-        expect(server.get).toHaveBeenCalled();
+        // Capture the delay arg the source's debounce schedules with, so we can
+        // observe that the zeroed searchDelay is restored to the computed value.
+        const scheduledDelays: number[] = [];
+        const originalSetTimeout = globalThis.setTimeout;
+        const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout").mockImplementation(((fn: any, delay?: number, ...rest: any[]) => {
+            scheduledDelays.push(delay as number);
+            // call through to the real timer so runSource's cb still resolves
+            return originalSetTimeout(fn, delay as number, ...rest);
+        }) as unknown as typeof setTimeout);
+        try {
+            const { $el, dataset } = initAndGetSource();
+            // showRecentNotes zeroes the shared module-level searchDelay...
+            noteAutocomplete.showRecentNotes($el);
+            // ...so the FIRST source invocation debounces with delay 0 (immediate)
+            // and, because searchDelay === 0, restores it to getSearchDelay(notesCount).
+            await runSource(dataset, "x");
+            // ...and the SECOND source invocation now sees the restored (non-zero)
+            // delay rather than 0 — this is the reset behaviour the test name claims.
+            await runSource(dataset, "y");
+            expect(server.get).toHaveBeenCalled();
+
+            // The source-callback delays we captured (filtering out any unrelated
+            // timers froca/setup may schedule): the run after zeroing uses 0, the
+            // following run uses the restored computed delay (which is NOT 0).
+            // notesCount resolves to undefined in this mocked environment, so
+            // getSearchDelay(undefined) === NaN — still distinct from the zeroed 0.
+            expect(scheduledDelays).toContain(0); // the immediate run after zeroing
+            const restored = scheduledDelays[scheduledDelays.length - 1];
+            expect(restored).not.toBe(0); // searchDelay was restored away from 0
+            expect(Number.isNaN(restored)).toBe(true); // == getSearchDelay(undefined)
+        } finally {
+            setTimeoutSpy.mockRestore();
+        }
     });
 
     it("queries the server and returns plain results", async () => {
@@ -547,10 +574,23 @@ describe("initNoteAutocomplete wiring", () => {
         const $el = makeEl();
         noteAutocomplete.initNoteAutocomplete($el);
         $el.autocomplete("val", "some text");
+        const callsBefore = autocompleteCalls.length;
         const ev = $.Event("keydown", { shiftKey: true, key: "Enter" });
         $el.trigger(ev);
-        // fullTextSearch toggles options.fastSearch and re-sets val
-        expect(lastCommandWith("val")).toBe(true);
+        // fullTextSearch re-runs the search: it clears val ("val", "") and then
+        // re-sets it to the captured search string ("val", "some text"). Assert
+        // BOTH setter calls happened after the Shift+Enter, proving the body after
+        // the blank-string guard actually ran (not merely the getter read).
+        const setterCallsAfter = autocompleteCalls
+            .slice(callsBefore)
+            .filter((c) => c[0] === "val" && c[1] !== undefined)
+            .map((c) => c[1]);
+        expect(setterCallsAfter).toContain("");
+        expect(setterCallsAfter).toContain("some text");
+        // the clear ("val", "") must precede the re-set ("val", "some text")
+        expect(setterCallsAfter.indexOf("")).toBeLessThan(setterCallsAfter.indexOf("some text"));
+        // and the input ends up re-populated with the search string
+        expect($el.autocomplete("val")).toBe("some text");
     });
 
     it("ignores keydowns that are not Ctrl+Enter / Shift+Enter", () => {
@@ -679,9 +719,17 @@ describe("autocomplete:selected handler", () => {
         chooseNoteType.mockResolvedValue({ success: true, noteType: "text", notePath: "chosen/path" });
         createNote.mockResolvedValue({ note: undefined });
         getActiveContext.mockReturnValue(undefined);
-        const { $el } = initWithSelected();
+        const { $el, handlers } = initWithSelected();
         await fireSelected($el, { action: "create-note", noteTitle: "X", parentNoteId: "p" });
         expect(createNote).toHaveBeenCalledWith("chosen/path", expect.any(Object));
+        // The missing-note branch must be tolerated end to end: note?.getBestNotePathString
+        // and getActiveContext()?.hoistedNoteId are both undefined and must not throw.
+        // The flow still falls through to fire autocomplete:noteselected with an
+        // undefined notePath (rather than crashing inside the async handler).
+        expect(handlers["autocomplete:noteselected"]).toBeDefined();
+        expect(handlers["autocomplete:noteselected"].notePath).toBeUndefined();
+        // the selection was written back as a cleared path (setSelectedNotePath(undefined))
+        expect($el.attr("data-note-path") ?? "").toBe("");
     });
 
     it("handles a plain note selection", async () => {
@@ -749,10 +797,18 @@ describe("fullTextSearch guards", () => {
         const callsBefore = autocompleteCalls.length;
         const ev = $.Event("keydown", { shiftKey: true, key: "Enter" });
         $el.trigger(ev);
-        // fullTextSearch bailed out before re-setting val/focus
-        // the only thing that may have run is the val getter inside the guard
-        expect(autocompleteCalls.length).toBeGreaterThanOrEqual(callsBefore);
-        // setSelectedNotePath would have written the path; it was not called
+        // fullTextSearch bailed out at the blank-string guard before re-setting
+        // val / focus. The ONLY autocomplete call it may make is the single getter
+        // read ("val" with datasets === undefined) at its first line. Assert that
+        // NO setter call ("val", <non-undefined>) was added afterwards, which is
+        // what would distinguish the early-return path from the full execution
+        // (which would have written ["val", ""] then ["val", "   "]).
+        const callsAfter = autocompleteCalls.slice(callsBefore);
+        const setterCalls = callsAfter.filter((c) => c[0] === "val" && c[1] !== undefined);
+        expect(setterCalls).toEqual([]);
+        // every autocomplete call after Shift+Enter is at most the guard's getter read
+        expect(callsAfter.every((c) => c[0] === "val" && c[1] === undefined)).toBe(true);
+        // setSelectedNotePath (which runs only on the non-early path) was not called
         expect($el.attr("data-note-path") ?? "").toBe("");
     });
 });

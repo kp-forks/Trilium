@@ -13,12 +13,34 @@ vi.mock("../widgets/react/react_utils.jsx", () => ({
     renderReactWidgetAtElement: (...args: unknown[]) => renderAtElementMock(...args)
 }));
 
+import FAttribute from "../entities/fattribute.js";
+import type FNote from "../entities/fnote.js";
+import noteAttributeCache from "../services/note_attribute_cache.js";
+import utils from "../services/utils.js";
 import { buildNote } from "../test/easy-froca";
 import froca from "./froca.js";
 import renderDefault, { render, renderIfJsx } from "./render.js";
 import server from "./server.js";
 
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+// Adds an extra `~renderNote` relation to an already-built note (buildNote's
+// object-literal API can only express one relation per key).
+function addRenderNoteRelation(note: FNote, targetNoteId: string) {
+    const attributeId = utils.randomString(12);
+    const attribute = new FAttribute(froca, {
+        noteId: note.noteId,
+        attributeId,
+        type: "relation",
+        name: "renderNote",
+        value: targetNoteId,
+        position: note.attributes.length,
+        isInheritable: false
+    });
+    froca.attributes[attributeId] = attribute;
+    note.attributes.push(attributeId);
+    (noteAttributeCache.attributes[note.noteId] ??= []).push(attribute);
+}
 
 describe("render", () => {
     beforeEach(() => {
@@ -78,6 +100,44 @@ describe("render", () => {
         expect($container.length).toBe(1);
         expect($container.html()).toContain("hi");
         expect(executeMock).toHaveBeenCalledOnce();
+        // The bundle is executed with the resolved bundle object, the HOST note
+        // (not the target render note), and the appended $scriptContainer element.
+        const [bundleArg, noteArg, containerArg] = executeMock.mock.calls[0];
+        expect(bundleArg).toEqual(
+            expect.objectContaining({ html: "<p>hi</p>", noteId: "scriptNote" })
+        );
+        expect(noteArg).toBe(note);
+        expect(noteArg).not.toBe(target);
+        // Third arg is the jQuery-wrapped container that was appended to $el.
+        expect((containerArg as JQuery<HTMLElement>)[0]).toBe($container[0]);
+    });
+
+    it("loops over every renderNote relation: one container + bundle fetch + execution per target", async () => {
+        const target1 = buildNote({ title: "Target A" });
+        const target2 = buildNote({ title: "Target B" });
+        const note = buildNote({ title: "Multi host", "~renderNote": target1.noteId });
+        addRenderNoteRelation(note, target2.noteId);
+        const $el = $("<div>");
+
+        const result = await render(note, $el);
+
+        expect(result).toBe(true);
+        // A separate script container is appended per render-note relation.
+        expect($el.children().length).toBe(2);
+        // The bundle endpoint is requested once per target id.
+        expect(server.postWithSilentInternalServerError).toHaveBeenCalledTimes(2);
+        expect(server.postWithSilentInternalServerError).toHaveBeenCalledWith(`script/bundle/${target1.noteId}`);
+        expect(server.postWithSilentInternalServerError).toHaveBeenCalledWith(`script/bundle/${target2.noteId}`);
+        // The bundle is executed once per target, each into its own container.
+        expect(executeMock).toHaveBeenCalledTimes(2);
+        const firstContainer = executeMock.mock.calls[0][2] as JQuery<HTMLElement>;
+        const secondContainer = executeMock.mock.calls[1][2] as JQuery<HTMLElement>;
+        expect(firstContainer[0]).toBe($el.children()[0]);
+        expect(secondContainer[0]).toBe($el.children()[1]);
+        expect(firstContainer[0]).not.toBe(secondContainer[0]);
+        // Both executions are wired to the host note, not the targets.
+        expect(executeMock.mock.calls[0][1]).toBe(note);
+        expect(executeMock.mock.calls[1][1]).toBe(note);
     });
 
     it("invokes onError when the bundle could not be loaded", async () => {

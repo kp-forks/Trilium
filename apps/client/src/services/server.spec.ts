@@ -210,7 +210,9 @@ describe("ajax error handling", () => {
         (window as any).$.ajax = (opts: AjaxOptions) => {
             opts.error({ status: 400, responseText: JSON.stringify({ message: "Bad input" }) });
         };
-        await expect(server.post("url", {})).rejects.toBeDefined();
+        // The ValidationError thrown inside reportError is swallowed by the catch in ajax();
+        // the request must still reject with the raw responseText, NOT the ValidationError instance.
+        await expect(server.post("url", {})).rejects.toBe(JSON.stringify({ message: "Bad input" }));
         expect(toastMock.showError).toHaveBeenCalledWith("Bad input");
     });
 

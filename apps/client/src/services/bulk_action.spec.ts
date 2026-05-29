@@ -6,6 +6,18 @@ import noteAttributeCache from "./note_attribute_cache.js";
 import { buildNote } from "../test/easy-froca";
 import bulkActionService, { executeBulkActions } from "./bulk_action";
 import AddLabelBulkAction from "../widgets/bulk_actions/label/add_label";
+import UpdateLabelValueBulkAction from "../widgets/bulk_actions/label/update_label_value";
+import RenameLabelBulkAction from "../widgets/bulk_actions/label/rename_label";
+import DeleteLabelBulkAction from "../widgets/bulk_actions/label/delete_label";
+import AddRelationBulkAction from "../widgets/bulk_actions/relation/add_relation";
+import UpdateRelationTargetBulkAction from "../widgets/bulk_actions/relation/update_relation_target";
+import RenameRelationBulkAction from "../widgets/bulk_actions/relation/rename_relation";
+import DeleteRelationBulkAction from "../widgets/bulk_actions/relation/delete_relation";
+import RenameNoteBulkAction from "../widgets/bulk_actions/note/rename_note";
+import MoveNoteBulkAction from "../widgets/bulk_actions/note/move_note";
+import DeleteNoteBulkAction from "../widgets/bulk_actions/note/delete_note";
+import DeleteRevisionsBulkAction from "../widgets/bulk_actions/note/delete_revisions";
+import ExecuteScriptBulkAction from "../widgets/bulk_actions/execute_script";
 import server from "./server.js";
 import ws from "./ws.js";
 import toast from "./toast.js";
@@ -43,9 +55,27 @@ describe("bulk_action service", () => {
         expect(bulkActionService.ACTION_CLASSES).toContain(AddLabelBulkAction);
         // Four groups: labels, relations, notes, other.
         expect(bulkActionService.ACTION_GROUPS).toHaveLength(4);
-        expect(bulkActionService.ACTION_GROUPS[3].actions).toEqual([
-            bulkActionService.ACTION_GROUPS[3].actions[0]
+        // Each group contains exactly its concrete action classes, in order.
+        expect(bulkActionService.ACTION_GROUPS[0].actions).toEqual([
+            AddLabelBulkAction,
+            UpdateLabelValueBulkAction,
+            RenameLabelBulkAction,
+            DeleteLabelBulkAction
         ]);
+        expect(bulkActionService.ACTION_GROUPS[1].actions).toEqual([
+            AddRelationBulkAction,
+            UpdateRelationTargetBulkAction,
+            RenameRelationBulkAction,
+            DeleteRelationBulkAction
+        ]);
+        expect(bulkActionService.ACTION_GROUPS[2].actions).toEqual([
+            RenameNoteBulkAction,
+            MoveNoteBulkAction,
+            DeleteNoteBulkAction,
+            DeleteRevisionsBulkAction
+        ]);
+        // The "other" group contains exactly ExecuteScriptBulkAction.
+        expect(bulkActionService.ACTION_GROUPS[3].actions).toEqual([ExecuteScriptBulkAction]);
     });
 
     it("addAction posts an action attribute and waits for sync", async () => {
@@ -68,7 +98,7 @@ describe("bulk_action service", () => {
 
         const note = buildNote({ title: "Note with actions" });
         // Valid known action.
-        addActionLabel(note.noteId, JSON.stringify({ name: "addLabel", labelName: "foo" }));
+        const validAttr = addActionLabel(note.noteId, JSON.stringify({ name: "addLabel", labelName: "foo" }));
         // Invalid JSON -> JSON.parse throws -> catch branch -> null.
         addActionLabel(note.noteId, "{not-valid-json");
         // Valid JSON but unknown action name -> no ActionClass -> null.
@@ -80,6 +110,11 @@ describe("bulk_action service", () => {
         expect(actions).toHaveLength(1);
         expect(actions[0]).toBeInstanceOf(AddLabelBulkAction);
         expect(actions[0].actionDef).toEqual({ name: "addLabel", labelName: "foo" });
+        // The constructor threads the producing "action" label into this.attribute,
+        // which saveAction/deleteAction later use to PUT/DELETE against the server.
+        expect(actions[0].attribute).toBe(validAttr);
+        expect(actions[0].attribute.attributeId).toBe(validAttr.attributeId);
+        expect(actions[0].attribute.value).toBe(JSON.stringify({ name: "addLabel", labelName: "foo" }));
         // Both failures were logged.
         expect(logError).toHaveBeenCalledTimes(2);
         expect(logError.mock.calls[0][0]).toContain("failed with error");

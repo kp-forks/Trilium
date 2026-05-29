@@ -117,6 +117,29 @@ describe("renderAttributes", () => {
         const $empty = await attributeRenderer.renderAttributes([], false);
         expect($empty.text()).toBe("");
     });
+
+    it("strips the per-attribute wrapping span but keeps the relation reference link", async () => {
+        const target = buildNote({ title: "Target Note" });
+        const $container = await attributeRenderer.renderAttributes(
+            [attr({ type: "relation", name: "myrel", value: target.noteId })],
+            false
+        );
+
+        expect($container.text()).toBe("~myrel=Target Note");
+
+        // The reference link <a> survives the .html() inner-HTML extraction...
+        const $link = $container.find("a.reference-link");
+        expect($link.length).toBe(1);
+        expect($link.attr("href")).toBe(`#root/${target.noteId}`);
+        expect($link.text()).toBe("Target Note");
+
+        // ...but the per-attribute wrapping <span> emitted by renderAttribute is stripped:
+        // the only span is $container itself (rendered-note-attributes), with no nested spans.
+        expect($container.is("span.rendered-note-attributes")).toBe(true);
+        expect($container.find("span").length).toBe(0);
+        // The reference link is a direct child of the container, not nested in a span.
+        expect($container.children("a.reference-link").length).toBe(1);
+    });
 });
 
 describe("renderNormalAttributes", () => {
