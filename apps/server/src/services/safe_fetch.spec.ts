@@ -233,6 +233,19 @@ describe("safeFetch", () => {
         expect(text).toBe("final");
     });
 
+    it("re-validates redirect targets and blocks a redirect to a private host", async () => {
+        // A public host that 302s to an internal IP — the classic SSRF redirect.
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(null, { status: 302, headers: { location: "http://10.0.0.1/evil" } })
+        );
+
+        await expect(safeFetch("http://8.8.8.8/start")).rejects.toThrow("private/internal");
+        // The private redirect target must never be fetched (validation runs first).
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        // The first (public) dispatcher was closed before following the redirect.
+        expect(agentInstances[0].closed).toBe(true);
+    });
+
     it("throws when a redirect response has no Location header", async () => {
         fetchMock.mockResolvedValueOnce(makeResponse(null, { status: 301 }));
 

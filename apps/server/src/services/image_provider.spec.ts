@@ -112,10 +112,14 @@ describe('serverImageProvider.processImage', () => {
         expect(result.format).toEqual({ ext: 'gif', mime: 'image/gif' });
     });
 
-    it('does not shrink animated images', async () => {
+    it('leaves an animated GIF untouched (skipped at the non-jpg/png format gate)', async () => {
+        // image-type classifies an animated GIF as { ext: "gif" }, so it is excluded
+        // by the format check BEFORE the isAnimated() guard is ever consulted — the
+        // buffer and detected format must be returned unchanged.
         const result = await serverImageProvider.processImage(animatedGif, 'a.gif', true);
 
         expect(result.buffer).toBe(animatedGif);
+        expect(result.format).toEqual({ ext: 'gif', mime: 'image/gif' });
     });
 
     it('does not shrink when shrink is not requested', async () => {

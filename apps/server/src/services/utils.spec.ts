@@ -1,5 +1,6 @@
 import { utils as coreUtils } from "@triliumnext/core";
 import { EventEmitter } from "events";
+import path from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import utils from "./utils";
@@ -141,19 +142,20 @@ describe("getResourceDir", () => {
         return (await import("./utils.js")).getResourceDir;
     }
 
-    it("uses __dirname in dev mode", async () => {
+    it("returns the module dir under Electron prod and its parent in dev", async () => {
+        // Electron production → returns the module's own __dirname, NOT the
+        // argv-derived executable dir used by the non-electron prod branch.
+        delete process.env.TRILIUM_ENV;
+        process.argv[1] = "/opt/trilium/bin/server.js";
+        Object.defineProperty(process.versions, "electron", { value: "30.0.0", configurable: true });
+        const electronDir = (await loadFresh())();
+        expect(electronDir).not.toBe("/opt/trilium/bin");
+
+        // Dev → returns the parent of that same module dir.
         process.env.TRILIUM_ENV = "dev";
         delete (process.versions as { electron?: string }).electron;
-        const getResourceDir = await loadFresh();
-        expect(getResourceDir().endsWith("..") || getResourceDir().length > 0).toBe(true);
-    });
-
-    it("uses __dirname under Electron in production", async () => {
-        delete process.env.TRILIUM_ENV;
-        Object.defineProperty(process.versions, "electron", { value: "30.0.0", configurable: true });
-        const getResourceDir = await loadFresh();
-        // The electron prod branch returns __dirname of the loaded module.
-        expect(getResourceDir()).toBeTypeOf("string");
+        const devDir = (await loadFresh())();
+        expect(devDir).toBe(path.join(electronDir, ".."));
     });
 
     it("uses the executable directory in non-electron production", async () => {
