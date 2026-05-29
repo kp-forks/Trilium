@@ -205,7 +205,7 @@ if (!isDev) {
     plugins = [
         ...plugins,
         codecovVitePlugin({
-            enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+            enableBundleAnalysis: !!process.env.CODECOV_TOKEN,
             bundleName: "standalone",
             uploadToken: process.env.CODECOV_TOKEN
         })
