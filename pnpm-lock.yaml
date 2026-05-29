@@ -230,8 +230,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1(mind-elixir@5.12.2)
       '@preact/signals':
-        specifier: 2.9.0
-        version: 2.9.0(preact@10.29.2)
+        specifier: 2.9.1
+        version: 2.9.1(preact@10.29.2)
       '@triliumnext/ckeditor5':
         specifier: workspace:*
         version: link:../../packages/ckeditor5
@@ -875,8 +875,8 @@ importers:
         specifier: 2.11.8
         version: 2.11.8
       '@preact/signals':
-        specifier: 2.9.0
-        version: 2.9.0(preact@10.29.2)
+        specifier: 2.9.1
+        version: 2.9.1(preact@10.29.2)
       '@sqlite.org/sqlite-wasm':
         specifier: 3.51.1-build2
         version: 3.51.1-build2
@@ -2532,7 +2532,7 @@ packages:
     engines: {node: '>=14'}
 
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
+    resolution: {gitHosted: true, integrity: sha512-MXgzlTDEEndJB3TBbvd5uFQO/8gaINo1Hfen8vef5rq/VHVPeB63uuv/uO5+8GFsAJ/rauu6XB79S6K4+aXc+w==, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
     version: 10.2.0-electron.1
     engines: {node: '>=12.13.0'}
     hasBin: true
@@ -4176,8 +4176,8 @@ packages:
   '@preact/signals-core@1.14.2':
     resolution: {integrity: sha512-RZHdBj9ZF4n40Rp4jS052EHHjBWf96P9oNdXPfhQTovCuWY9iQn3Gq+gOTJSgBO9A/JBuPfMOWsSX/lIU9Pc/A==}
 
-  '@preact/signals@2.9.0':
-    resolution: {integrity: sha512-hYrY0KyUqkDgOl1qba/JGn6y81pXnurn21PMaxfcMwdncdZ3M/oVdmpTvEnsGjh48dIwDVc7bjWHqIsngSjYug==}
+  '@preact/signals@2.9.1':
+    resolution: {integrity: sha512-xVqN8mJjbSN5IB/8Ubmd9NN+Ew6zJswoRxrjZbH3YsgkMshFeO6d8zxEFpHRTq9GJZx7cnPs2CnCpFqtGXGNsw==}
     peerDependencies:
       preact: 10.29.2
 
@@ -17362,7 +17362,7 @@ snapshots:
 
   '@preact/signals-core@1.14.2': {}
 
-  '@preact/signals@2.9.0(preact@10.29.2)':
+  '@preact/signals@2.9.1(preact@10.29.2)':
     dependencies:
       '@preact/signals-core': 1.14.2
       preact: 10.29.2
