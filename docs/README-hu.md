@@ -16,7 +16,6 @@
 ![Docker pull-ok](https://img.shields.io/docker/pulls/triliumnext/trilium)
 ![GitHub letöltések (összes tartalom, összes
 kiadás)](https://img.shields.io/github/downloads/triliumnext/trilium/total)\
-[![RelativeCI](https://badges.relative-ci.com/badges/Di5q7dz9daNDZ9UXi0Bp?branch=develop)](https://app.relative-ci.com/projects/Di5q7dz9daNDZ9UXi0Bp)
 [![Fordítás
 állapota](https://hosted.weblate.org/widget/trilium/svg-badge.svg)](https://hosted.weblate.org/engage/trilium/)
 

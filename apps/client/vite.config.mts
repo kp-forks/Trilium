@@ -1,7 +1,7 @@
 /// <reference types='vitest' />
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 import prefresh from '@prefresh/vite';
 import { join } from 'path';
-import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
@@ -32,7 +32,12 @@ if (isDev) {
                 }
             ]
         }),
-        webpackStatsPlugin()
+        // Put the Codecov vite plugin after all other plugins
+        codecovVitePlugin({
+            enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+            bundleName: "client",
+            uploadToken: process.env.CODECOV_TOKEN
+        })
     ]
 }
 
@@ -121,6 +126,11 @@ export default defineConfig(() => ({
             "verbose",
             ["html", { outputFile: "./test-output/vitest/html/index.html" }]
         ],
+        coverage: {
+            reportsDirectory: "./test-output/vitest/coverage",
+            provider: "v8" as const,
+            reporter: ["text", "html", "lcov"]
+        },
     },
     commonjsOptions: {
         transformMixedEsModules: true,

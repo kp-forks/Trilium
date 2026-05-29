@@ -16,7 +16,6 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/triliumnext/trilium)
 ![Завантаження GitHub (всі ресурси, всі
 релізи)](https://img.shields.io/github/downloads/triliumnext/trilium/total)\
-[![RelativeCI](https://badges.relative-ci.com/badges/Di5q7dz9daNDZ9UXi0Bp?branch=develop)](https://app.relative-ci.com/projects/Di5q7dz9daNDZ9UXi0Bp)
 [![Статус
 перекладу](https://hosted.weblate.org/widget/trilium/svg-badge.svg)](https://hosted.weblate.org/engage/trilium/)
 

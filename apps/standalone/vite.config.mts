@@ -307,6 +307,11 @@ export default defineConfig(() => ({
             "src/**/*.{test,spec}.{ts,tsx}",
             "../../packages/trilium-core/src/**/*.{test,spec}.{ts,tsx}"
         ],
+        coverage: {
+            reportsDirectory: "./test-output/vitest/coverage",
+            provider: "v8" as const,
+            reporter: ["text", "html", "lcov"]
+        },
         server: {
             deps: {
                 inline: ["@sqlite.org/sqlite-wasm"]
