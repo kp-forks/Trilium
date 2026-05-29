@@ -45,4 +45,21 @@ describe("onEnterInSummary", () => {
             "<details><summary>Title</summary><paragraph>[]</paragraph></details>"
         );
     });
+
+    it("at the end of a title (collapsed) parks the caret in the existing empty paragraph after the details instead of stacking a second one", () => {
+        setModelData(model,
+            "<details><summary>Title[]</summary><paragraph>body</paragraph></details>" +
+            "<paragraph></paragraph>"
+        );
+        // dom.open stays false in happy-dom, exercising the collapsed branch.
+
+        fireEnter();
+
+        // Caret moved into the existing empty paragraph after the details; no
+        // second one was inserted between them.
+        expect(getModelData(model)).toBe(
+            "<details><summary>Title</summary><paragraph>body</paragraph></details>" +
+            "<paragraph>[]</paragraph>"
+        );
+    });
 });
