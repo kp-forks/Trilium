@@ -133,23 +133,41 @@ describe("special_notes (LLM chat, real DB)", () => {
                 .toThrow(/workspace note/);
         });
 
-        // A real workspace note (under root, labelled #workspace) used as the clone target.
+        // A real workspace note (under root, labelled #workspace) plus two DISTINCT
+        // child notes used as the clone targets, so each short-circuit operand of
+        // `#workspaceLlmChatHome || #llmChatHome || workspaceNote` resolves to a
+        // different note and the chosen target can be asserted unambiguously.
         let workspaceId: string;
+        let workspaceHomeId: string;
+        let genericHomeId: string;
         beforeAll(() => {
-            workspaceId = cls.init(() => {
+            cls.init(() => {
                 const workspace = noteService.createNewNote({
                     parentNoteId: "root", title: "Workspace", content: "", type: "book"
                 }).note;
                 workspace.addLabel("workspace");
-                return workspace.noteId;
+                workspaceId = workspace.noteId;
+                workspaceHomeId = noteService.createNewNote({
+                    parentNoteId: workspaceId, title: "Workspace LLM Home", content: "", type: "book"
+                }).note.noteId;
+                genericHomeId = noteService.createNewNote({
+                    parentNoteId: workspaceId, title: "Generic LLM Home", content: "", type: "book"
+                }).note.noteId;
             });
         });
 
-        function expectClonedOutOfHidden(branchId: string | undefined, chat: ReturnType<typeof specialNotes.createLlmChat>) {
+        function expectClonedUnder(
+            result: ReturnType<typeof specialNotes.saveLlmChat>,
+            chat: ReturnType<typeof specialNotes.createLlmChat>,
+            expectedParentId: string
+        ) {
+            expect(result.success).toBe(true);
+            // The chat was cloned to the chosen target and detached from _hidden.
+            const branch = becca.getBranch(result.branchId!);
+            expect(branch).toBeTruthy();
+            expect(branch!.parentNoteId).toBe(expectedParentId);
             const liveParents = chat.getParentBranches().filter((b) => !b.isDeleted);
-            expect(liveParents.length).toBeGreaterThan(0);
             expect(liveParents.some((b) => b.parentNote?.hasAncestor("_hidden"))).toBe(false);
-            expect(becca.getBranch(branchId!)).toBeTruthy();
         }
 
         /**
@@ -172,25 +190,24 @@ describe("special_notes (LLM chat, real DB)", () => {
         }
 
         it("uses the #workspaceLlmChatHome target when present", () => {
-            const home = becca.getNoteOrThrow(workspaceId);
-            vi.spyOn(hoistedNoteService, "getWorkspaceNote")
-                .mockReturnValue(workspaceStub({ "#workspaceLlmChatHome": home }) as any);
+            vi.spyOn(hoistedNoteService, "getWorkspaceNote").mockReturnValue(
+                workspaceStub({ "#workspaceLlmChatHome": becca.getNoteOrThrow(workspaceHomeId) }) as any
+            );
 
             const chat = cls.init(() => specialNotes.createLlmChat());
             const result = cls.init(() => specialNotes.saveLlmChat(chat.noteId));
-            expect(result.success).toBe(true);
-            expectClonedOutOfHidden(result.branchId, chat);
+            expectClonedUnder(result, chat, workspaceHomeId);
         });
 
         it("falls back to #llmChatHome when #workspaceLlmChatHome is absent", () => {
-            const home = becca.getNoteOrThrow(workspaceId);
-            vi.spyOn(hoistedNoteService, "getWorkspaceNote")
-                .mockReturnValue(workspaceStub({ "#llmChatHome": home }) as any);
+            vi.spyOn(hoistedNoteService, "getWorkspaceNote").mockReturnValue(
+                workspaceStub({ "#llmChatHome": becca.getNoteOrThrow(genericHomeId) }) as any
+            );
 
             const chat = cls.init(() => specialNotes.createLlmChat());
             const result = cls.init(() => specialNotes.saveLlmChat(chat.noteId));
-            expect(result.success).toBe(true);
-            expectClonedOutOfHidden(result.branchId, chat);
+            // Distinct from the #workspaceLlmChatHome target above.
+            expectClonedUnder(result, chat, genericHomeId);
         });
 
         it("falls back to the workspace note itself when no chat-home label exists", () => {
@@ -199,8 +216,7 @@ describe("special_notes (LLM chat, real DB)", () => {
 
             const chat = cls.init(() => specialNotes.createLlmChat());
             const result = cls.init(() => specialNotes.saveLlmChat(chat.noteId));
-            expect(result.success).toBe(true);
-            expectClonedOutOfHidden(result.branchId, chat);
+            expectClonedUnder(result, chat, workspaceId);
         });
     });
 

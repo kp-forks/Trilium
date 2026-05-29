@@ -104,6 +104,9 @@ describe("open_id_encryption", () => {
                 sql.upsert("user_data", "tmpID", { tmpID: 0, isSetup: "false" });
             });
             expect(openIDEncryption.verifyOpenIDSubjectIdentifier("subject")).toBeUndefined();
+            // Disambiguate from the other undefined-returning branch (hash undefined):
+            // this must be the missing-salt branch.
+            expect(logSpy).toHaveBeenCalledWith("Salt undefined");
             logSpy.mockRestore();
         });
 

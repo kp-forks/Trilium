@@ -169,17 +169,24 @@ describe('serverImageProvider.processImage', () => {
         expect(result.format).toEqual({ ext: 'png', mime: 'image/png' });
     });
 
-    it('clamps an out-of-range (too low) JPEG quality to the default', async () => {
-        setOptions({ imageMaxWidthHeight: '100', imageJpegQuality: '5' });
-
+    async function shrunkSize(jpegQuality: string): Promise<number> {
+        setOptions({ imageMaxWidthHeight: '100', imageJpegQuality: jpegQuality });
         const result = await serverImageProvider.processImage(noisyPng, 'wide.png', true);
         expect(result.format).toEqual({ ext: 'jpg', mime: 'image/jpeg' });
-    });
+        return result.buffer.byteLength;
+    }
 
-    it('clamps an out-of-range (too high) JPEG quality to the default', async () => {
-        setOptions({ imageMaxWidthHeight: '100', imageJpegQuality: '150' });
+    it('clamps out-of-range JPEG quality to the default (75)', async () => {
+        // An out-of-range quality must produce byte-identical output to an explicit
+        // quality of 75, and differ from a valid in-range quality — proving the clamp
+        // actually ran (and the bad value was not passed through).
+        const at75 = await shrunkSize('75');
+        const valid = await shrunkSize('30');
+        const tooLow = await shrunkSize('5');
+        const tooHigh = await shrunkSize('150');
 
-        const result = await serverImageProvider.processImage(noisyPng, 'wide.png', true);
-        expect(result.format).toEqual({ ext: 'jpg', mime: 'image/jpeg' });
+        expect(tooLow).toBe(at75);
+        expect(tooHigh).toBe(at75);
+        expect(valid).not.toBe(at75);
     });
 });

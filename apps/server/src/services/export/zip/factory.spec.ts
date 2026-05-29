@@ -67,7 +67,9 @@ describe("serverZipExportProviderFactory", () => {
 
         const readPath = readFileSyncSpy.mock.calls[0][0] as string;
         expect(readPath).toContain("ckeditor5-content.css");
-        expect(readPath).toContain("ckeditor5");
+        // dev resolves the file from the ckeditor5 package (under node_modules),
+        // unlike the production path which reads from the resource dir.
+        expect(readPath).toContain("node_modules");
     });
 
     it("builds a Markdown provider without reading any CSS", async () => {

@@ -278,7 +278,7 @@ describe("note_tools — write tools return post-write content", () => {
     });
 
     describe("search_notes", () => {
-        it("maps results to note summaries, applies the limit, and skips stale ids", () => {
+        it("maps results to note summaries and skips stale ids", () => {
             const parent = buildNote({ id: "sp", title: "Search parent" });
             const a = buildNote({ id: "sa", title: "Alpha", type: "code", mime: "text/plain", content: "body" });
             withMutableContent(a, "body");
@@ -297,6 +297,25 @@ describe("note_tools — write tools return post-write content", () => {
             expect(result.totalResults).toBe(2);
             expect(result.results).toHaveLength(1); // stale id dropped
             expect(result.results[0]).toMatchObject({ noteId: "sa", title: "Alpha", parentTitle: "Search parent" });
+        });
+
+        it("truncates the mapped results to the limit", () => {
+            for (const id of ["t1", "t2", "t3"]) {
+                const n = buildNote({ id, title: id, type: "code", mime: "text/plain", content: "c" });
+                withMutableContent(n, "c");
+                n.getParentNotes = () => [];
+            }
+            // More results than the limit: slice(0, limit) must drop the rest,
+            // while totalResults still reflects the full result count.
+            findResultsMock.mockReturnValue([{ noteId: "t1" }, { noteId: "t2" }, { noteId: "t3" }]);
+
+            const result = getTool("search_notes").execute({ query: "x", limit: 2 }) as {
+                totalResults: number;
+                results: any[];
+            };
+            expect(result.totalResults).toBe(3);
+            expect(result.results).toHaveLength(2);
+            expect(result.results.map((r) => r.noteId)).toEqual(["t1", "t2"]);
         });
 
         it("defaults the limit to 10 and tolerates results with no parent", () => {

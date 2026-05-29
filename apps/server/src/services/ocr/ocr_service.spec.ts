@@ -131,6 +131,10 @@ describe('OCRService', () => {
             expect(result).toBeDefined();
             expect(result.text).toBe('Extracted text from image');
             expect(result.extractedAt).toEqual(expect.any(String));
+            // Tesseract's 0-100 confidence is normalized to 0-1, and the processor
+            // tags the result with its processing type.
+            expect(result.confidence).toBeCloseTo(0.95, 2);
+            expect(result.processingType).toBe('image');
         });
 
         it('should handle OCR recognition errors', async () => {

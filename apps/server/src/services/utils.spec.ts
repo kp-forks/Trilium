@@ -1,4 +1,3 @@
-import { utils as coreUtils } from "@triliumnext/core";
 import { EventEmitter } from "events";
 import path from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -65,21 +64,26 @@ describe("hmac", () => {
 });
 
 describe("deprecated core delegations", () => {
+    // Assert concrete outputs (not equality with the core fn they delegate to,
+    // which would pass even if the wrapper were wired to the wrong function).
     it("forward to the equivalent core utility", () => {
         expect(newEntityId()).toBeTypeOf("string");
         expect(randomString(10)).toHaveLength(10);
-        expect(hashedBlobId("content")).toBe(coreUtils.hashedBlobId("content"));
-        expect(getContentDisposition("file.txt")).toBe(coreUtils.getContentDisposition("file.txt"));
-        expect(isStringNote("text", "text/html")).toBe(coreUtils.isStringNote("text", "text/html"));
-        expect(quoteRegex("a.b")).toBe(coreUtils.quoteRegex("a.b"));
-        expect(replaceAll("a-b-c", "-", "+")).toBe(coreUtils.replaceAll("a-b-c", "-", "+"));
-        expect(formatDownloadTitle("name", "text", "text/html"))
-            .toBe(coreUtils.formatDownloadTitle("name", "text", "text/html"));
-        expect(removeDiacritic("café")).toBe(coreUtils.removeDiacritic("café"));
-        expect(normalize("ABC")).toBe(coreUtils.normalize("ABC"));
+        expect(hashedBlobId("content")).toBe("stHShbUZnIX5iNA2ScNX");
+        expect(getContentDisposition("file.txt"))
+            .toBe("file; filename=\"file.txt\"; filename*=UTF-8''file.txt");
+        expect(isStringNote("text", "text/html")).toBe(true);
+        expect(quoteRegex("a.b")).toBe("a\\.b");
+        expect(replaceAll("a-b-c", "-", "+")).toBe("a+b+c");
+        expect(formatDownloadTitle("name", "text", "text/html")).toBe("name.html");
+        expect(removeDiacritic("café")).toBe("cafe");
+        expect(normalize("ABC")).toBe("abc");
 
         const list = [{ id: "a", v: 1 }, { id: "b", v: 2 }];
-        expect(toMap(list, "id")).toEqual(coreUtils.toMap(list, "id"));
+        expect(toMap(list, "id")).toEqual(new Map([
+            ["a", { id: "a", v: 1 }],
+            ["b", { id: "b", v: 2 }]
+        ]));
     });
 });
 
