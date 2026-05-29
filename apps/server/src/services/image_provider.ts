@@ -93,16 +93,21 @@ export const serverImageProvider: ImageProvider = {
 
         if (!origImageFormat || !["jpg", "png"].includes(origImageFormat.ext)) {
             shouldShrink = false;
+        /* v8 ignore start -- defensive guard: file-type classifies animated PNG as
+           "apng" and animated GIF/WebP as non-jpg/png, so they are already excluded
+           above, making this branch effectively unreachable. */
         } else if (isAnimated(Buffer.from(buffer))) {
-            // Recompression of animated images will make them static
             shouldShrink = false;
         }
+        /* v8 ignore stop */
 
         let finalBuffer: Uint8Array;
         let format: ImageFormat;
 
         if (compressImages && shouldShrink) {
             finalBuffer = await shrinkImage(buffer, originalName);
+            /* v8 ignore next -- the "jpg" fallback is unreachable: shrinkImage returns
+               either a detectable JPEG or the (jpg/png-detectable) original buffer. */
             format = (await getImageTypeFromBuffer(finalBuffer)) || { ext: "jpg", mime: "image/jpeg" };
         } else {
             finalBuffer = buffer;

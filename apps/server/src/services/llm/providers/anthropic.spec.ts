@@ -2,12 +2,13 @@ import type { LlmMessage } from "@triliumnext/commons";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const createAnthropicMock = vi.fn();
+const webSearchMock = vi.fn(() => ({ kind: "anthropic_web_search" }));
 
 vi.mock("@ai-sdk/anthropic", () => ({
     createAnthropic: (opts: unknown) => {
         createAnthropicMock(opts);
         const fn: any = () => ({});
-        fn.tools = { webSearch_20250305: () => ({}) };
+        fn.tools = { webSearch_20250305: webSearchMock };
         return fn;
     }
 }));
@@ -139,6 +140,54 @@ describe("AnthropicProvider message building", () => {
         expect(opts.messages.every((m: any) => m.role !== "system")).toBe(true);
         expect(opts.system.role).toBe("system");
         expect(opts.system.content).toContain("BASE PROMPT");
+    });
+});
+
+describe("AnthropicProvider tool handling", () => {
+    beforeEach(() => {
+        streamTextMock.mockClear();
+        webSearchMock.mockClear();
+    });
+
+    it("registers the Anthropic web search tool with a maxUses cap", () => {
+        const provider = new AnthropicProvider("sk-ant-test");
+        provider.chat([{ role: "user", content: "hi" }], { enableWebSearch: true });
+
+        expect(webSearchMock).toHaveBeenCalledWith({ maxUses: 5 });
+        const opts = streamTextMock.mock.calls[0][0] as any;
+        expect(opts.tools.web_search).toEqual({ kind: "anthropic_web_search" });
+        expect(opts.toolChoice).toBe("auto");
+        expect(opts.stopWhen).toBeDefined();
+    });
+
+    it("sets the thinking budget and agentic options on the extended-thinking path with tools", () => {
+        const provider = new AnthropicProvider("sk-ant-test");
+        provider.chat([{ role: "user", content: "hi" }], {
+            enableExtendedThinking: true,
+            enableNoteTools: true,
+            thinkingBudget: 12000,
+            maxTokens: 8096
+        });
+
+        const opts = streamTextMock.mock.calls[0][0] as any;
+        expect(opts.providerOptions.anthropic.thinking).toEqual({
+            type: "enabled",
+            budgetTokens: 12000
+        });
+        // maxOutputTokens is raised to at least thinkingBudget + 4000.
+        expect(opts.maxOutputTokens).toBe(16000);
+        expect(opts.toolChoice).toBe("auto");
+        expect(opts.stopWhen).toBeDefined();
+    });
+
+    it("defaults the thinking budget and floors maxOutputTokens when unset", () => {
+        const provider = new AnthropicProvider("sk-ant-test");
+        provider.chat([{ role: "user", content: "hi" }], { enableExtendedThinking: true });
+
+        const opts = streamTextMock.mock.calls[0][0] as any;
+        expect(opts.providerOptions.anthropic.thinking.budgetTokens).toBe(10000);
+        // max(8096, 10000 + 4000) = 14000
+        expect(opts.maxOutputTokens).toBe(14000);
     });
 });
 
