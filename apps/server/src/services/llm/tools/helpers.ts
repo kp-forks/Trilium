@@ -2,12 +2,10 @@
  * Shared helpers for LLM tools — content conversion, metadata building, and previews.
  */
 
-import { markdownExportService as markdownExport,markdownImportService as markdownImport } from "@triliumnext/core";
+import { type BAttachment, type BNote, markdownExportService as markdownExport,markdownImportService as markdownImport } from "@triliumnext/core";
 import { unwrapStringOrBuffer } from "@triliumnext/core/src/services/utils/binary.js";
 
-import becca from "../../../becca/becca.js";
-import type BAttachment from "../../../becca/entities/battachment.js";
-import type BNote from "../../../becca/entities/bnote.js";
+import { becca } from "@triliumnext/core";
 
 const CONTENT_PREVIEW_MAX_LENGTH = 500;
 const ATTACHMENT_PREVIEW_MAX_LENGTH = 200;
@@ -57,6 +55,56 @@ export function setNoteContentFromLlm(note: BNote, content: string) {
     } else {
         note.setContent(content);
     }
+}
+
+/** A single find-and-replace edit applied to note content. */
+export interface TextEdit {
+    oldText: string;
+    newText: string;
+}
+
+export type TextEditResult =
+    | { ok: true; content: string }
+    | { ok: false; error: string };
+
+/**
+ * Apply a sequence of find-and-replace edits to a string, all-or-nothing.
+ *
+ * Each edit's `oldText` must occur exactly once in the content at the moment it
+ * is applied. Edits are applied in order, so a later edit may target text that an
+ * earlier edit introduced. If any edit fails to match (or matches ambiguously),
+ * no edit is committed and an error describing the offending edit is returned.
+ */
+export function applyTextEdits(content: string, edits: TextEdit[]): TextEditResult {
+    let result = content;
+
+    for (let i = 0; i < edits.length; i++) {
+        const { oldText, newText } = edits[i];
+        const label = edits.length > 1 ? ` (edit ${i + 1} of ${edits.length})` : "";
+
+        if (oldText === "") {
+            return { ok: false, error: `oldText must not be empty${label}.` };
+        }
+        if (oldText === newText) {
+            return { ok: false, error: `oldText and newText are identical${label} — nothing to change.` };
+        }
+
+        const firstIndex = result.indexOf(oldText);
+        if (firstIndex === -1) {
+            return { ok: false, error: `oldText not found in the note content${label}.` };
+        }
+        if (result.indexOf(oldText, firstIndex + oldText.length) !== -1) {
+            return {
+                ok: false,
+                error: `oldText is not unique${label} — it matches more than once. `
+                    + "Include more surrounding context so it identifies a single location."
+            };
+        }
+
+        result = result.slice(0, firstIndex) + newText + result.slice(firstIndex + oldText.length);
+    }
+
+    return { ok: true, content: result };
 }
 
 /**

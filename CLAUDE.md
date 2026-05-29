@@ -48,7 +48,7 @@ The four main apps share `packages/trilium-core/` for business logic but differ 
 - **client** (`apps/client/`): Preact frontend with jQuery widget system. Shared UI layer used by both server and desktop.
 - **server** (`apps/server/`): Node.js backend (Express, better-sqlite3). Serves the client and provides REST/WebSocket APIs.
 - **desktop** (`apps/desktop/`): Electron wrapper around server + client, running both in a single process.
-- **standalone** (`apps/client-standalone/` + `apps/standalone-desktop/`): Runs the entire stack in the browser — server logic compiled to WASM via sql.js, executed in a service worker. No Node.js dependency at runtime.
+- **standalone** (`apps/standalone/` + `apps/standalone-desktop/`): Runs the entire stack in the browser — server logic compiled to WASM via sql.js, executed in a service worker. No Node.js dependency at runtime.
 
 ## Monorepo Structure
 
@@ -57,7 +57,7 @@ apps/
   client/               # Preact frontend (shared by server, desktop, standalone)
   server/               # Node.js backend (Express, better-sqlite3)
   desktop/              # Electron (bundles server + client)
-  client-standalone/    # Standalone client (WASM + service workers, no Node.js)
+  standalone/           # Standalone client (WASM + service workers, no Node.js)
   standalone-desktop/   # Standalone desktop variant
   web-clipper/          # Browser extension
   website/              # Project website
@@ -155,7 +155,7 @@ Fluent builder pattern: `.child()`, `.class()`, `.css()` chaining with position-
 
 ### Platform Abstraction
 
-`packages/trilium-core/src/services/platform.ts` defines `PlatformProvider` interface with implementations in `apps/desktop/`, `apps/server/`, and `apps/client-standalone/`. Singleton via `initPlatform()`/`getPlatform()`.
+`packages/trilium-core/src/services/platform.ts` defines `PlatformProvider` interface with implementations in `apps/desktop/`, `apps/server/`, and `apps/standalone/`. Singleton via `initPlatform()`/`getPlatform()`.
 
 **PlatformProvider** provides:
 - `crash(message)` — Platform-specific fatal error handling
@@ -212,8 +212,15 @@ SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/servi
 
 ### Electron Desktop App
 - Desktop entry point: `apps/desktop/src/main.ts`, window management: `apps/server/src/services/window.ts`
-- IPC communication: use `electron.ipcMain.on(channel, handler)` on server side, `electron.ipcRenderer.send(channel, data)` on client side
+- **Security**: `nodeIntegration` is **disabled** and `contextIsolation` is **enabled**. The renderer has no access to Node.js APIs or Electron internals.
+- **Preload script** (`apps/desktop/src/preload.ts`): Uses `contextBridge.exposeInMainWorld("electronApi", ...)` to expose a whitelisted API to the renderer. Compiled to CJS via esbuild (dev: `scripts/electron-start.mts`, prod: `apps/desktop/scripts/build.ts`).
+- **ElectronApi interface** (`packages/commons/src/lib/electron_api_interface.ts`): Shared type definition used by both the preload script (`satisfies ElectronApi`) and the client (`window.electronApi`). Grouped into sub-objects: `window`, `clipboard`, `shell`, `contextMenu`, `spellcheck`, `tray`, `printing`, `navigation`.
+- **Client-side access**: Use `window.electronApi?.group.method()` — never use `require("electron")` or `dynamicRequire()` in client code.
+- **Adding new Electron APIs**: Add the method to the interface in commons, implement it in `preload.ts`, add the IPC handler in `apps/server/src/services/window.ts`, and add a test in `apps/desktop/spec/preload.spec.ts`.
+- **IPC handlers**: Use `electron.ipcMain.on(channel, handler)` for fire-and-forget, `electron.ipcMain.handle(channel, handler)` for async request/response, `ipcMain.on` + `event.returnValue` for synchronous queries.
 - Electron-only features should check `isElectron()` from `apps/client/src/services/utils.ts` (client) or `utils.isElectron` (server)
+- **`@electron/remote` is removed** — do not use it. All renderer↔main communication goes through the preload bridge.
+- **Spurious `electron.app is undefined` error** — when running Electron-based apps (`pnpm desktop:start`, `pnpm edit-docs:edit-docs`, etc.), the console may print `TypeError: Cannot read properties of undefined (reading 'commandLine')` from `apps/server/src/services/window.ts` (the `electron.app.commandLine.appendSwitch("disable-http-cache")` line). This is **not a real failure** — the app runs correctly. Do not try to fix it, guard it, or investigate electron initialization order unless the user explicitly raises it as a bug.
 
 Three inheritance mechanisms:
 1. **Standard**: `note.getInheritableAttributes()` walks parent tree
@@ -263,7 +270,7 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 
 - **Server tests** (`apps/server/spec/`): Vitest, must run sequentially (shared DB), forks pool, max 6 workers
 - **Client tests** (`apps/client/src/`): Vitest with happy-dom environment, can run in parallel
-- **E2E tests** (`packages/trilium-e2e/`): Shared Playwright tests, run via `pnpm --filter server e2e` or `pnpm --filter client-standalone e2e`
+- **E2E tests** (`packages/trilium-e2e/`): Shared Playwright tests, run via `pnpm --filter server e2e` or `pnpm --filter standalone e2e`
 - **ETAPI tests** (`apps/server/spec/etapi/`): External API contract tests
 
 ## Documentation

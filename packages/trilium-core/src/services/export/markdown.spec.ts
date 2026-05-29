@@ -283,6 +283,12 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
+    it("preserves collapsible details blocks as raw HTML", () => {
+        const html = /*html*/`<details class="trilium-collapsible"><summary>Click to expand</summary><p>Body content</p></details>`;
+        // Passthrough — round-trips losslessly through the markdown importer.
+        expect(markdownExportService.toMarkdown(html)).toBe(html);
+    });
+
     it("converts inline math expressions into proper Markdown syntax", () => {
         const html = /*html*/String.raw`<span class="math-tex">\(H(X, Y) = \sum_{i=1}^{M} \sum_{j=1}^{L} p(x_i, y_j) \log_2 \frac{1}{p(x_i, y_j)} = - \sum_{i=1}^{M} \sum_{j=1}^{L} p(x_i, y_j) \log_2 p(x_i, y_j) \frac{\text{bits}}{\text{symbol}}\)</span></span>`;
         const expected = String.raw`$H(X, Y) = \sum_{i=1}^{M} \sum_{j=1}^{L} p(x_i, y_j) \log_2 \frac{1}{p(x_i, y_j)} = - \sum_{i=1}^{M} \sum_{j=1}^{L} p(x_i, y_j) \log_2 p(x_i, y_j) \frac{\text{bits}}{\text{symbol}}$`;
@@ -345,6 +351,39 @@ describe("Markdown export", () => {
         const expected = trimIndentation`\
             - [x] Hello
             - [ ] World`;
+        expect(markdownExportService.toMarkdown(html)).toBe(expected);
+    });
+
+    it("exports todo list multistate markers from data-trilium-task-state", () => {
+        const html = trimIndentation/*html*/`\
+            <ul class="todo-list">
+                <li data-trilium-task-state="doing">
+                    <label class="todo-list__label">
+                        <input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Doing</span>
+                    </label>
+                </li>
+                <li data-trilium-task-state="done">
+                    <label class="todo-list__label">
+                        <input type="checkbox" checked="checked" disabled="disabled"><span class="todo-list__label__description">Done</span>
+                    </label>
+                </li>
+                <li data-trilium-task-state="cancelled">
+                    <label class="todo-list__label">
+                        <input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Cancelled</span>
+                    </label>
+                </li>
+                <li data-trilium-task-state="maybe">
+                    <label class="todo-list__label">
+                        <input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Maybe</span>
+                    </label>
+                </li>
+            </ul>
+        `;
+        const expected = trimIndentation`\
+            - [/] Doing
+            - [x] Done
+            - [-] Cancelled
+            - [?] Maybe`;
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 

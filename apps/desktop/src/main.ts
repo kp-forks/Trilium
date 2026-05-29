@@ -1,4 +1,4 @@
-import { getLog, initializeCore, options, sql_init } from "@triliumnext/core";
+import { becca_loader, cls, entity_changes, getLog, initializeCore, options, sql_init, ws } from "@triliumnext/core";
 import ServerBackupService from "@triliumnext/server/src/backup_provider.js";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import { loadCoreSchema } from "@triliumnext/server/src/core_assets.js";
@@ -7,11 +7,9 @@ import NodejsInAppHelpProvider from "@triliumnext/server/src/in_app_help_provide
 import ServerLogService from "@triliumnext/server/src/log_provider.js";
 import dataDirs from "@triliumnext/server/src/services/data_dir.js";
 import port from "@triliumnext/server/src/services/port.js";
-import NodeRequestProvider from "@triliumnext/server/src/services/request.js";
+import ElectronRequestProvider from "./services/request";
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
-import tray from "@triliumnext/server/src/services/tray.js";
-import windowService from "@triliumnext/server/src/services/window.js";
-import WebSocketMessagingProvider from "@triliumnext/server/src/services/ws_messaging_provider.js";
+import windowService, { setupWindowing } from "./services/window";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { app, BrowserWindow,globalShortcut } from "electron";
@@ -23,7 +21,13 @@ import path, { join, resolve } from "path";
 
 import { deferred, LOCALES } from "../../../packages/commons/src";
 import { PRODUCT_NAME } from "./app-info";
+import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
+import { registerTriliumAppScheme, setupTriliumAppProtocol } from "./protocol";
+import { setupCustomDictionary } from "./services/custom_dictionary";
+import { setupPrintingHandlers } from "./services/printing";
+import { setupShellHandlers } from "./services/shell";
+import { setupSystemTray } from "./services/tray";
 
 async function main() {
     // Ignore EPIPE errors on stdout/stderr — these occur when the parent process
@@ -35,6 +39,8 @@ async function main() {
             }
         });
     }
+
+    registerTriliumAppScheme();
 
     const userDataPath = getUserData();
     app.setPath("userData", userDataPath);
@@ -53,6 +59,13 @@ async function main() {
     // needed for excalidraw export https://github.com/zadam/trilium/issues/4271
     app.commandLine.appendSwitch("enable-experimental-web-platform-features");
     app.commandLine.appendSwitch("lang", getElectronLocale());
+
+    // In dev mode, disable Chromium's HTTP cache so stale assets cached from a
+    // previous production run (which served `max-age: 1y` headers) don't shadow
+    // freshly built dev output. Must be set before the app's `ready` event.
+    if (process.env.TRILIUM_ENV === "dev") {
+        app.commandLine.appendSwitch("disable-http-cache");
+    }
 
     // Disable smooth scroll if the option is set
     const smoothScrollEnabled = options.getOptionOrNull("smoothScrollEnabled");
@@ -86,6 +99,12 @@ async function main() {
         console.log("Starting Electron...");
         await onReady();
     });
+
+    setupWindowing();
+    setupSystemTray();
+    setupCustomDictionary();
+    setupShellHandlers();
+    setupPrintingHandlers();
 
     app.on("will-quit", () => {
         globalShortcut.unregisterAll();
@@ -121,24 +140,25 @@ async function main() {
     const dbProvider = new BetterSqlite3Provider();
     dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
 
+    // The IPC provider just registers an `ipcMain.on` listener; no TCP socket
+    // or session parser needed, so we can init it here (before startTriliumServer)
+    // instead of going through www.ts. www.ts then only knows about the
+    // socket-bound WebSocket provider.
+    const ipcMessaging = new IpcMessagingProvider();
+    ipcMessaging.init();
+
     await initializeCore({
         dbConfig: {
             provider: dbProvider,
             isReadOnly: config.General.readOnly,
             async onTransactionCommit() {
-                const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
                 ws.sendTransactionEntityChangesToAllClients();
             },
             async onTransactionRollback() {
-                const cls = (await import("@triliumnext/server/src/services/cls.js")).default;
-                const becca_loader = (await import("@triliumnext/core")).becca_loader;
-                const entity_changes = (await import("@triliumnext/server/src/services/entity_changes.js")).default;
-                const log = (await import("@triliumnext/server/src/services/log")).default;
-
                 const entityChangeIds = cls.getAndClearEntityChangeIds();
 
                 if (entityChangeIds.length > 0) {
-                    log.info("Transaction rollback dirtied the becca, forcing reload.");
+                    getLog().info("Transaction rollback dirtied the becca, forcing reload.");
 
                     becca_loader.load();
                 }
@@ -150,9 +170,9 @@ async function main() {
         crypto: new NodejsCryptoProvider(),
         zip: new NodejsZipProvider(),
         zipExportProviderFactory: (await import("@triliumnext/server/src/services/export/zip/factory.js")).serverZipExportProviderFactory,
-        request: new NodeRequestProvider(),
+        request: new ElectronRequestProvider(),
         executionContext: new ClsHookedExecutionContext(),
-        messaging: new WebSocketMessagingProvider(),
+        messaging: ipcMessaging,
         schema: loadCoreSchema(),
         platform: new DesktopPlatformProvider(),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslations,
@@ -164,6 +184,7 @@ async function main() {
         log: new ServerLogService(),
         backup: new ServerBackupService(options),
         image: (await import("@triliumnext/server/src/services/image_provider.js")).serverImageProvider,
+        config,
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)
@@ -171,8 +192,10 @@ async function main() {
     });
 
     const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
-    await startTriliumServer();
+    const expressApp = await startTriliumServer();
     console.log("Server loaded");
+
+    setupTriliumAppProtocol(expressApp);
 
     serverInitializedPromise.resolve();
 }
@@ -199,17 +222,15 @@ async function onReady() {
     if (sql_init.isDbInitialized()) {
         await sql_init.dbReady;
 
-        await windowService.createMainWindow(app);
+        await windowService.createMainWindow();
 
         if (process.platform === "darwin") {
             app.on("activate", async () => {
                 if (BrowserWindow.getAllWindows().length === 0) {
-                    await windowService.createMainWindow(app);
+                    await windowService.createMainWindow();
                 }
             });
         }
-
-        tray.createTray();
     } else {
         getLog().banner(t("sql_init.db_not_initialized_desktop"));
         await windowService.createSetupWindow();

@@ -1,12 +1,4 @@
 {
-  "standalone": {
-    "badge_label": "Standalone",
-    "warning_tooltip": "You are running Trilium in standalone mode. Some features are not available, and you may experience issues or data loss. Use the desktop application or self-hosted server for the best experience."
-  },
-  "mobile": {
-    "badge_label": "Mobile",
-    "warning_tooltip": "You are running Trilium in mobile mode. Some features are not available. Use the desktop application or desktop layout for the best experience."
-  },
   "about": {
     "version_label": "Version:",
     "version": "{{appVersion}} (database: {{dbVersion}}, sync protocol: {{syncVersion}})",
@@ -21,6 +13,10 @@
       "original-dev": "On 25th December 2017, Zadam released the first beta of Trilium (written with a single \"l\", unlike the flower). Dissatisfied with existing note organizers, he built a powerful self-hosted hierarchical knowledge base that gathered over 22,000 GitHub stars. In 2024, as life got busier, he placed the project into maintenance mode."
     },
     "contributor_full_list": "See the entire community",
+    "channel": {
+      "nightly": "Nightly",
+      "standalone": "Standalone"
+    },
     "data_directory": "Data directory:",
     "github_tooltip": "Report bugs, suggest features, or contribute on GitHub",
     "license_tooltip": "View license",
@@ -67,11 +63,14 @@
     "edit_branch_prefix": "Edit branch prefix",
     "edit_branch_prefix_multiple": "Edit branch prefix for {{count}} branches",
     "help_on_tree_prefix": "Help on Tree prefix",
-    "prefix": "Prefix: ",
+    "prefix": "Prefix",
     "save": "Save",
     "branch_prefix_saved": "Branch prefix has been saved.",
     "branch_prefix_saved_multiple": "Branch prefix has been saved for {{count}} branches.",
-    "affected_branches": "Affected branches ({{count}}):"
+    "affected_branches": "Affected branches ({{count}}):",
+    "preview_in_tree": "Preview in tree",
+    "description": "Prepended to the note title in this branch only. Other branches keep the original title.",
+    "cancel": "Cancel"
   },
   "bulk_actions": {
     "bulk_actions": "Bulk actions",
@@ -325,6 +324,7 @@
     "diff_on_hint": "Click to show note source diff",
     "diff_off_hint": "Click to show note content",
     "diff_not_available": "Diff isn't available.",
+    "diff_identical": "This revision is identical to the current note content.",
     "confirm_restore": "Do you want to restore this revision? This will overwrite the current title and content of the note with this revision.",
     "delete_button": "Delete",
     "confirm_delete": "Do you want to delete this revision?",
@@ -810,6 +810,7 @@
   "code_buttons": {
     "execute_button_title": "Execute script",
     "trilium_api_docs_button_title": "Open Trilium API docs",
+    "electron_api_docs_button_title": "Open Electron API docs",
     "save_to_note_button_title": "Save to note",
     "opening_api_docs_message": "Opening API docs...",
     "sql_console_saved_message": "SQL Console note has been saved into {{note_path}}"
@@ -1463,7 +1464,8 @@
     "enable_tray_description": "Trilium needs to be restarted for this change to take effect."
   },
   "text_editor": {
-    "title": "Editor"
+    "title": "Editor",
+    "related_task_states": "Custom checkbox states for to-do lists"
   },
   "heading_style": {
     "title": "Heading style",
@@ -1784,6 +1786,7 @@
     "empty_state": "Start a conversation by typing a message below.",
     "searching_web": "Searching the web...",
     "web_search": "Web search",
+    "web_search_unavailable_gemini": "Not available on Gemini models while note access is on — Google's API does not allow combining both. Disable note access or switch to a different provider to use web search.",
     "note_tools": "Note access",
     "sources": "Sources",
     "sources_summary": "{{count}} sources from {{sites}} sites",
@@ -1793,6 +1796,8 @@
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",
     "input": "Input",
+    "input_streaming": "Input (streaming…)",
+    "edit_index": "Edit {{index}} of {{total}}",
     "result": "Result",
     "error": "Error",
     "tool_error": "failed",
@@ -1808,7 +1813,12 @@
     "note_context_disabled": "Click to include current note in context",
     "no_provider_message": "No AI provider configured. Add one to start chatting.",
     "add_provider": "Add AI Provider",
-    "stop": "Stop"
+    "stop": "Stop",
+    "retry": "Retry",
+    "attach_file": "Attach image, PDF, or text file",
+    "remove_attachment": "Remove attachment",
+    "attachment_upload_failed": "Failed to upload \"{{name}}\".",
+    "attachment_unsupported_type": "\"{{name}}\" isn't a supported attachment type. Use an image (PNG, JPEG, GIF, WebP), a PDF, or a text/source file."
   },
   "sidebar_chat": {
     "title": "AI Chat",
@@ -1818,7 +1828,8 @@
     "empty_state": "Start a conversation",
     "history": "Chat history",
     "recent_chats": "Recent chats",
-    "no_chats": "No previous chats"
+    "no_chats": "No previous chats",
+    "view_all_chats": "View all chats"
   },
   "shared_switch": {
     "shared": "Shared",
@@ -2177,7 +2188,12 @@
   "code_theme": {
     "title": "Appearance",
     "word_wrapping": "Word wrapping",
-    "color-scheme": "Color scheme"
+    "color-scheme": "Color scheme",
+    "theme_mode": "Theme mode",
+    "match_app_appearance": "Match app appearance",
+    "always_use_one_theme": "Always use one theme",
+    "light_theme": "Light theme",
+    "dark_theme": "Dark theme"
   },
   "cpu_arch_warning": {
     "title": "Please download the ARM64 version",
@@ -2370,6 +2386,8 @@
     "shared_unshare": "Remove share",
     "clipped_note": "Web clip",
     "clipped_note_description": "This note was originally taken from {{url}}.\n\nClick to navigate to the source webpage.",
+    "doc_url": "Online docs",
+    "doc_url_description": "Click to view this page on the online documentation website.",
     "execute_script": "Run script",
     "execute_script_description": "This note is a script note. Click to execute the script.",
     "execute_sql": "Run SQL",
@@ -2548,6 +2566,7 @@
     "sync-from-server-page-description": "Enter your server details below to connect your existing workspace.",
     "sync-in-progress-title": "Sync in progress",
     "sync-in-progress-description": "Your device is now connected and items are being synchronized.",
+    "sync-in-progress-banner": "This may take a while depending on the size of your notes. Please do not switch to another application until the sync is complete.",
     "button-back": "Back",
     "button-finish-setup": "Finish setup",
     "sync-step-connecting": "Connecting to server",
@@ -2613,6 +2632,9 @@
     "delete_provider_confirmation": "Are you sure you want to delete the provider \"{{name}}\"?",
     "api_key": "API Key",
     "api_key_placeholder": "Enter your API key",
+    "base_url": "Base URL",
+    "base_url_description": "Optional. Override the default API endpoint — useful for self-hosted models (Ollama, LM Studio, vLLM) or proxies.",
+    "base_url_invalid": "Base URL must be a valid http:// or https:// URL",
     "cancel": "Cancel",
     "mcp_title": "MCP (Model Context Protocol)",
     "mcp_enabled": "MCP server",
@@ -2623,7 +2645,9 @@
       "search_notes": "Search notes",
       "get_note": "Get note",
       "get_note_content": "Get note content",
-      "update_note_content": "Update note content",
+      "set_note_content": "Rewrite note",
+      "update_note_content": "Rewrite note",
+      "edit_note_content": "Edit note",
       "append_to_note": "Append to note",
       "create_note": "Create note",
       "get_attributes": "Get attributes",
@@ -2649,5 +2673,27 @@
   },
   "spreadsheet": {
     "read-only": "This note is read-only."
+  },
+  "text-editor": {
+    "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
+    "collapsible-body-placeholder": "Type the content here...",
+    "collapsible-button-label": "Collapsible block",
+    "collapsible-handle-tooltip": "Drag to reposition the collapsible block",
+    "collapsible-select-label": "Select collapsible block",
+    "collapsible-title-placeholder": "Summary",
+    "collapsible-toggle-label": "Toggle collapsible block",
+    "collapsible-tooltip": "Click on the arrow or press {{shortcut}} to collapse/expand.",
+    "edit-states-tooltip": "Edit task states",
+    "unknown-task-state": "Undefined custom task state",
+    "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",
+    "validation-errors": {
+      "undefined-name": "undefined identifier",
+      "invalid-name": "invalid identifier",
+      "duplicate-name": "duplicate identifier",
+      "missing-title": "missing title",
+      "missing-icon": "missing icon",
+      "invalid-symbol": "the markdown symbol should be one character, excepting \"[\", \" \", \"X\", and \"]\"",
+      "duplicate-symbol": "duplicate markdown symbol"
+    }
   }
 }

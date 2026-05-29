@@ -3,6 +3,7 @@ import FNote from "../entities/fnote.js";
 import { default as content_renderer, type RenderOptions } from "./content_renderer.js";
 import froca from "./froca.js";
 import link from "./link.js";
+import { applyLinkEmbeds } from "./link_embed.js";
 import { renderMathInElement } from "./math.js";
 import { getMermaidConfig } from "./mermaid.js";
 import { formatCodeBlocks } from "./syntax_highlight.js";
@@ -52,6 +53,7 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
         el.replaceChildren(innerSpan);
     }));
 
+    applyLinkEmbeds($renderedContent[0]);
     await rewriteMermaidDiagramsInContainer($renderedContent[0] as HTMLDivElement);
     await formatCodeBlocks($renderedContent);
 }
@@ -105,6 +107,7 @@ export async function rewriteMermaidDiagramsInContainer(container: HTMLDivElemen
     for (const mermaidBlock of mermaidBlocks) {
         const div = document.createElement("div");
         div.classList.add("mermaid-diagram");
+        /* v8 ignore next -- defensive fallback: the `:has(code[...])` selector guarantees a `<code>` child whose innerHTML is always a string */
         div.innerHTML = mermaidBlock.querySelector("code")?.innerHTML ?? "";
         mermaidBlock.replaceWith(div);
         nodes.push(div);
@@ -148,6 +151,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
     const pending: Array<{ visible: HTMLElement; source: string }> = [];
     const seenSources = new Set<string>();
     for (const [ index, node ] of nodes.entries()) {
+        /* v8 ignore next -- defensive fallback: textContent on an HTMLElement is always a string */
         const source = (node.textContent ?? "").trim();
         seenSources.add(source);
 

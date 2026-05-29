@@ -10,7 +10,7 @@ import smartIndentWithTab from "./extensions/custom_tab.js";
 import type { ThemeDefinition } from "./color_themes.js";
 import { createSearchHighlighter, SearchHighlighter, searchMatchHighlightTheme } from "./find_replace.js";
 
-export { default as ColorThemes, type ThemeDefinition, getThemeById } from "./color_themes.js";
+export { default as ColorThemes, type ThemeDefinition, type ThemeVariant, getThemeById } from "./color_themes.js";
 
 // Custom keymap to prevent Ctrl+Enter from inserting a newline
 // This allows the parent application to handle the shortcut (e.g., for "Run Active Note")
@@ -79,6 +79,9 @@ export default class CodeMirror extends EditorView {
             searchHighlightCompartment.of([]),
             highlightActiveLine(),
             lineNumbers(),
+            themeCompartment.of([
+                syntaxHighlighting(defaultHighlightStyle, { fallback: true })
+            ]),
             indentUnitCompartment.of([
                 indentUnit.of(buildIndentUnit(config.indentSize ?? 4, !!config.useTabs)),
                 EditorState.tabSize.of(config.indentSize ?? 4)
@@ -94,9 +97,6 @@ export default class CodeMirror extends EditorView {
         if (!config.preferPerformance) {
             extensions = [
                 ...extensions,
-                themeCompartment.of([
-                    syntaxHighlighting(defaultHighlightStyle, { fallback: true })
-                ]),
                 highlightSelectionMatches(),
                 bracketMatching(),
                 codeFolding(),

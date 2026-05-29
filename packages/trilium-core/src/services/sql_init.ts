@@ -107,11 +107,7 @@ function initializeDb() {
     getContext().init(initDbConnection);
 
     dbReady.then(() => {
-        // Run regular backups every 4 hours
-        setInterval(() => getBackup().regularBackup(), 4 * 60 * 60 * 1000);
-
-        // Kickoff first backup soon after start up
-        setTimeout(() => getBackup().regularBackup(), 5 * 60 * 1000);
+        getBackup().scheduleBackups();
 
         // Optimize is usually inexpensive no-op, so running it semi-frequently is not a big deal
         setTimeout(() => optimize(), 60 * 60 * 1000);
@@ -210,6 +206,15 @@ async function createInitialDatabase(skipDemoDb?: boolean) {
     log.info("Schema and initial content generated.");
 
     initDbConnection();
+
+    // `initNotSyncedOptions(true, ...)` above already set the "initialized"
+    // option, so `setDbAsInitialized` would short-circuit on its
+    // `!isDbInitialized()` guard. Emit the event here directly so downstream
+    // listeners (e.g. the desktop's setup→main window swap) still fire on the
+    // "create new document" path, matching the behaviour of the sync flow
+    // which goes through `setDbAsInitialized` via `syncFinished`.
+    eventService.emit(eventService.DB_INITIALIZED);
+    log.info("Database initialization completed, emitted DB_INITIALIZED event");
 }
 
 async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", syncProxy = "") {

@@ -76,8 +76,10 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
     const [viewType] = useNoteLabel(note, "viewType");
     const canBeConvertedToAttachment = note?.isEligibleForConversionToAttachment();
     const isSourceView = noteContext?.viewScope?.viewMode === "source";
-    const isSearchable = isSourceView || ["text", "code", "book", "mindMap", "doc", "spreadsheet"].includes(noteType)
-        || (noteType === "file" && note.mime === "application/pdf");
+    const isSearchable = isSourceView
+        || ["text", "code", "book", "mindMap", "doc", "spreadsheet"].includes(noteType)
+        || (noteType === "file" && note.mime === "application/pdf")
+        || (note.noteId === "_backendLog");
     const isInOptionsOrHelp = note?.noteId.startsWith("_options") || note?.noteId.startsWith("_help");
     const isExportableToImage = ["mermaid", "mindMap"].includes(noteType);
     const isContentAvailable = note.isContentAvailable();
@@ -118,7 +120,7 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
             >
                 {itemsAtStart}
 
-                {note.type === "code" && <CodeProperties note={note} />}
+                {(note.type === "code" || note.noteId === "_backendLog") && <CodeProperties note={note} />}
 
                 {isReadOnly && <>
                     <CommandItem icon="bx bx-pencil" text={t("read-only-info.edit-note")}

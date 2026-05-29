@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 
 import dataDir from "./services/data_dir.js";
-import log from "./services/log.js";
+import { getLog } from "@triliumnext/core";
 import sql from "./services/sql.js";
 
 export default class ServerBackupService extends BackupService {
@@ -28,7 +28,13 @@ export default class ServerBackupService extends BackupService {
             });
     }
 
-    // regularBackup() inherited from BackupService - uses getContext().init()
+    override scheduleBackups(): void {
+        // Run regular backups every 4 hours
+        setInterval(() => this.regularBackup(), 4 * 60 * 60 * 1000);
+
+        // Kickoff first backup soon after startup
+        setTimeout(() => this.regularBackup(), 5 * 60 * 1000);
+    }
 
     override async backupNow(name: string): Promise<string> {
         // we don't want to back up DB in the middle of sync with potentially inconsistent DB state
@@ -39,9 +45,9 @@ export default class ServerBackupService extends BackupService {
                 fs.mkdirSync(dataDir.BACKUP_DIR, 0o700);
             }
 
-            log.info("Creating backup...");
+            getLog().info("Creating backup...");
             await sql.copyDatabase(backupFile);
-            log.info(`Created backup at ${backupFile}`);
+            getLog().info(`Created backup at ${backupFile}`);
 
             return backupFile;
         });
