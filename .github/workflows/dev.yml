@@ -66,7 +66,7 @@ jobs:
           retention-days: 30
 
       - name: Upload client coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: always()
         with:
           files: apps/client/test-output/vitest/coverage/lcov.info
@@ -74,7 +74,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload server coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: always()
         with:
           files: apps/server/test-output/vitest/coverage/lcov.info
@@ -89,7 +89,7 @@ jobs:
         run: pnpm run --filter=standalone test --coverage
 
       - name: Upload standalone coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: always()
         with:
           files: apps/standalone/test-output/vitest/coverage/lcov.info
@@ -107,7 +107,7 @@ jobs:
         run: pnpm run --filter=desktop test --coverage
 
       - name: Upload desktop coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: always()
         with:
           files: apps/desktop/test-output/vitest/coverage/lcov.info
@@ -118,7 +118,7 @@ jobs:
         run: pnpm run --filter=commons test --coverage
 
       - name: Upload commons coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: always()
         with:
           files: packages/commons/test-output/vitest/coverage/lcov.info
