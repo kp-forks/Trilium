@@ -388,9 +388,11 @@ describe("BaseProvider chat / pricing / models / title", () => {
 
     it("invokes the no-op base addWebSearchTool when web search is enabled (adds nothing)", () => {
         const provider = new TestProvider();
-        // Base addWebSearchTool is a no-op, so the tool set stays empty and no
-        // agentic options are attached.
+        // Spy through to the real no-op: it MUST be invoked (the claim of the test),
+        // and because it adds nothing the tool set stays empty.
+        const addWebSearchSpy = vi.spyOn(provider as unknown as { addWebSearchTool: () => void }, "addWebSearchTool");
         provider.chat([{ role: "user", content: "hi" }], { enableWebSearch: true });
+        expect(addWebSearchSpy).toHaveBeenCalledOnce();
         const opts = streamTextMock.mock.calls[0][0] as any;
         expect(opts.tools).toBeUndefined();
         expect(opts.toolChoice).toBeUndefined();

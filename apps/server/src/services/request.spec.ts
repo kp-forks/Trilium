@@ -396,11 +396,14 @@ describe("NodeRequestProvider.getImage", () => {
         expect(state.requests[0].opts.agent).toBeNull();
     });
 
-    it("rejects non-2xx image responses", async () => {
+    it("rejects non-2xx image responses, and a late body does not override the rejection", async () => {
         state.onEnd = (req) => {
             const res = makeResponse(404, "Not Found");
             req.triggerResponse(res);
-            // Still resolves end after rejecting on the status code.
+            // getImage rejects on the status code but does not `return`, so it still
+            // wires up data/end handlers. A body arriving afterwards must NOT cause a
+            // late resolve that masks the rejection.
+            res.emitData(Buffer.from([1, 2, 3]));
             res.emitEnd();
         };
         await expect(provider.getImage("http://img.example.com/missing.png")).rejects.toThrow(

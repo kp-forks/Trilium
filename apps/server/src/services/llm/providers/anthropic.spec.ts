@@ -195,11 +195,10 @@ describe("AnthropicProvider tool handling", () => {
  * The system prompt carries the ephemeral cache breakpoint, so Anthropic can only
  * reuse the cached system+tools prefix when that string is byte-stable across turns.
  *
- * These tests assert the *desired* invariant: editing the context note must not
- * disturb the cached system prompt. They currently FAIL because the live note
- * metadata is embedded directly into the cache-controlled system string — that
- * red state is the confirmation that the note hint busts the prompt cache. Once
- * the hint is moved out of the cached prefix, they turn green.
+ * These tests assert the enforced invariant: editing the context note must not
+ * disturb the cache-controlled system prompt. The volatile note metadata is
+ * delivered on the last user message instead of being embedded in the cached
+ * system prefix (verified by the last test in this block).
  */
 describe("AnthropicProvider prompt cache stability", () => {
     beforeEach(() => {

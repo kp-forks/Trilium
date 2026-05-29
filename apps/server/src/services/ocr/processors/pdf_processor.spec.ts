@@ -56,8 +56,10 @@ describe('PDFProcessor', () => {
             { proxy: true },
             { mergePages: true }
         );
-        // buffer is wrapped into a Uint8Array before being passed to unpdf
-        expect(mockGetDocumentProxy).toHaveBeenCalledWith(expect.any(Uint8Array));
+        // buffer is wrapped into a Uint8Array carrying the SAME bytes before being passed to unpdf
+        const [docArg] = mockGetDocumentProxy.mock.calls[0];
+        expect(docArg).toBeInstanceOf(Uint8Array);
+        expect(Buffer.from(docArg as Uint8Array).toString()).toBe('%PDF-1.4 fake');
     });
 
     it('reports zero confidence and defaults language when no text is extracted', async () => {

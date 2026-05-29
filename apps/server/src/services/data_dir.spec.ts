@@ -393,8 +393,11 @@ describe("data_dir.ts unit tests", () => {
 
             try {
                 expect(() => getTriliumDataDir("trilium-data")).toThrow(err);
-                expect(console.error).toHaveBeenCalled();
                 expect(mockFn.statSyncMock).toHaveBeenCalledTimes(1);
+                // Confirm the owner/permissions diagnostics branch actually ran.
+                expect(console.error).toHaveBeenCalledWith("Process running as UID:GID = 1000:1000");
+                expect(console.error).toHaveBeenCalledWith("  Owner UID:GID = 1000:1000");
+                expect(console.error).toHaveBeenCalledWith("  Permissions = 755 (octal)");
             } finally {
                 if (!hadGetuid) {
                     delete proc.getuid;
@@ -408,7 +411,10 @@ describe("data_dir.ts unit tests", () => {
             mockFn.statSyncMock.mockImplementation(() => { throw new Error("no access"); });
 
             expect(() => getTriliumDataDir("trilium-data")).toThrow(err);
-            expect(console.error).toHaveBeenCalled();
+            // The inaccessible-parent branch (not the owner/permissions one) ran.
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining("is not accessible")
+            );
         });
 
         it("EEXIST but target is not a directory – rethrows", () => {

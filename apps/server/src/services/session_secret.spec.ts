@@ -20,7 +20,9 @@ describe("session_secret", () => {
         }));
         vi.doMock("./data_dir.js", () => ({ default: { TRILIUM_DATA_DIR: "/test/data" } }));
         vi.doMock("./utils.js", () => ({
-            randomSecureToken: (len: number) => "g".repeat(len)
+            // Return MORE than `len` chars so the source's `.slice(0, 64)` is
+            // actually exercised (real randomSecureToken returns a longer hex string).
+            randomSecureToken: (len: number) => "g".repeat(len * 2)
         }));
         vi.doMock("@triliumnext/core", () => ({ getLog: () => ({ info }) }));
 
@@ -30,6 +32,7 @@ describe("session_secret", () => {
 
     it("generates, logs and persists a 64-char secret when none exists", async () => {
         const { secret, writeFileSync, info } = await loadSecret({ exists: false });
+        // Truncated from the longer token to exactly 64 chars by the slice.
         expect(secret).toHaveLength(64);
         expect(info).toHaveBeenCalledOnce();
         expect(writeFileSync).toHaveBeenCalledWith(

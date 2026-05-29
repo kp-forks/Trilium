@@ -1,4 +1,5 @@
 import { BUILTIN_ATTRIBUTES } from "@triliumnext/commons";
+import path from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks (hoisted above the module-under-test import) ---
@@ -139,7 +140,9 @@ describe("getExistingAnonymizedDatabases", () => {
             "anonymized-light-y.db"
         ]);
         for (const entry of result) {
-            expect(entry.filePath).toContain(entry.fileName);
+            // filePath must be the fully-resolved path under the anonymized-db dir,
+            // not merely a string that happens to contain the file name.
+            expect(entry.filePath).toBe(path.resolve(dataDir.ANONYMIZED_DB_DIR, entry.fileName));
         }
     });
 });

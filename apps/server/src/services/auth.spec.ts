@@ -368,6 +368,8 @@ describe("Auth", () => {
             const res4 = makeRes();
             auth.checkCredentials(makeReq({ headers: { "trilium-cred": cred } }), res4 as never, vi.fn());
             expect(res4.statusCode).toBe(401);
+            // The username before the colon is stripped; only the password is verified.
+            expect(verifySpy).toHaveBeenLastCalledWith("wrongpass");
 
             // correct password (no colon in decoded cred path also exercised) -> next
             verifySpy.mockReturnValue(true as never);
@@ -375,6 +377,8 @@ describe("Auth", () => {
             const next = vi.fn();
             auth.checkCredentials(makeReq({ headers: { "trilium-cred": credNoColon } }), makeRes() as never, next);
             expect(next).toHaveBeenCalled();
+            // No colon → the whole cred is treated as username and the password is "".
+            expect(verifySpy).toHaveBeenLastCalledWith("");
 
             // missing trilium-cred header -> falls back to "" -> next (with verify mocked true)
             const nextNoHeader = vi.fn();

@@ -45,6 +45,12 @@ describe("special_notes (LLM chat, real DB)", () => {
     });
 
     describe("getMostRecentLlmChat / getRecentLlmChats", () => {
+        // Self-contained: don't rely on chats created by a sibling describe block
+        // (the in-memory DB is shared per file, so test order must not matter).
+        beforeAll(() => {
+            cls.init(() => specialNotes.createLlmChat());
+        });
+
         it("returns the most recently modified chat and a mapped recent list", () => {
             const recent = specialNotes.getRecentLlmChats(5);
             expect(Array.isArray(recent)).toBe(true);

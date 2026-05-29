@@ -55,7 +55,12 @@ describe('OfficeProcessor', () => {
         expect(result.confidence).toBe(0.99);
         expect(result.pageCount).toBe(1);
         expect(result.language).toBe('deu');
-        expect(mockParseOffice).toHaveBeenCalledWith(buffer, expect.any(Object));
+        expect(mockParseOffice).toHaveBeenCalledWith(buffer, {
+            outputErrorToConsole: false,
+            newlineDelimiter: '\n',
+            ignoreNotes: false,
+            putNotesAtLast: false
+        });
     });
 
     it('reports zero confidence and defaults language when no text is extracted', async () => {
