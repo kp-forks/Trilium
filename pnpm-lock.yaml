@@ -1123,6 +1123,9 @@ importers:
       '@triliumnext/ckeditor5-admonition':
         specifier: workspace:*
         version: link:../ckeditor5-admonition
+      '@triliumnext/ckeditor5-collapsible':
+        specifier: workspace:*
+        version: link:../ckeditor5-collapsible
       '@triliumnext/ckeditor5-footnotes':
         specifier: workspace:*
         version: link:../ckeditor5-footnotes
@@ -1189,6 +1192,28 @@ importers:
       webdriverio:
         specifier: 9.27.1
         version: 9.27.1
+
+  packages/ckeditor5-collapsible:
+    dependencies:
+      bootstrap:
+        specifier: ^5.3.0
+        version: 5.3.8(@popperjs/core@2.11.8)
+    devDependencies:
+      ckeditor5:
+        specifier: 48.1.1
+        version: 48.1.1
+      happy-dom:
+        specifier: 20.9.0
+        version: 20.9.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vite-plugin-svgo:
+        specifier: 2.0.0
+        version: 2.0.0(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
+      vitest:
+        specifier: 4.1.7
+        version: 4.1.7(@opentelemetry/api@1.9.1)(@types/node@24.12.4)(@vitest/browser-webdriverio@4.1.7)(@vitest/coverage-istanbul@4.1.7)(@vitest/coverage-v8@4.1.7)(@vitest/ui@4.1.7)(happy-dom@20.9.0)(vite@8.0.14(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
 
   packages/ckeditor5-footnotes:
     devDependencies:
