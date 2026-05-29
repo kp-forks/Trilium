@@ -16,7 +16,6 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/triliumnext/trilium)
 ![GitHub Downloads
 (所有资产，所有历史版本)](https://img.shields.io/github/downloads/triliumnext/trilium/total)\
-[![RelativeCI](https://badges.relative-ci.com/badges/Di5q7dz9daNDZ9UXi0Bp?branch=develop)](https://app.relative-ci.com/projects/Di5q7dz9daNDZ9UXi0Bp)
 [![翻译状态](https://hosted.weblate.org/widget/trilium/svg-badge.svg)](https://hosted.weblate.org/engage/trilium/)
 
 <!-- translate:off -->

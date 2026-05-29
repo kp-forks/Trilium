@@ -2,7 +2,6 @@
 import { codecovVitePlugin } from '@codecov/vite-plugin';
 import prefresh from '@prefresh/vite';
 import { join } from 'path';
-import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
@@ -33,7 +32,6 @@ if (isDev) {
                 }
             ]
         }),
-        webpackStatsPlugin(),
         // Put the Codecov vite plugin after all other plugins
         codecovVitePlugin({
             enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,

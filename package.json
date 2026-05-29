@@ -76,7 +76,6 @@
     "jiti": "2.7.0",
     "js-yaml": "4.1.1",
     "jsonc-eslint-parser": "3.1.0",
-    "rollup-plugin-webpack-stats": "3.1.2",
     "tslib": "2.8.1",
     "tsx": "4.21.0",
     "typescript": "6.0.3",

@@ -17,7 +17,6 @@ LiberaPay](https://img.shields.io/liberapay/patrons/ElianDoran)\
 ![Descargas en Docker](https://img.shields.io/docker/pulls/triliumnext/trilium)
 ![Descargas en GitHub (todos los recursos, todas las
 versiones)](https://img.shields.io/github/downloads/triliumnext/trilium/total)\
-[![RelativeCI](https://badges.relative-ci.com/badges/Di5q7dz9daNDZ9UXi0Bp?branch=develop)](https://app.relative-ci.com/projects/Di5q7dz9daNDZ9UXi0Bp)
 [![Estado de la
 traducción](https://hosted.weblate.org/widget/trilium/svg-badge.svg)](https://hosted.weblate.org/engage/trilium/)
 

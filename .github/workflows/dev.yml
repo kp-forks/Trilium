@@ -144,12 +144,6 @@ jobs:
         run: pnpm client:build
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Send client bundle stats to RelativeCI
-        if: false
-        uses: relative-ci/agent-action@v3
-        with:
-          webpackStatsFile: ./apps/client/dist/webpack-stats.json
-          key: ${{ secrets.RELATIVE_CI_CLIENT_KEY }}
       - name: Trigger server build
         run: pnpm run server:build
       - uses: docker/setup-buildx-action@v4
