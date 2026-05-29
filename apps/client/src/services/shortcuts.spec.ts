@@ -323,9 +323,14 @@ describe("shortcuts", () => {
             const handler = vi.fn();
             shortcuts.bindGlobalShortcut("ctrl+a", handler, "test-namespace");
 
+            // Capture the exact listener that was tracked for this namespace's binding.
+            const [, boundListener] = mockElement.addEventListener.mock.calls[0];
+
             shortcuts.removeGlobalShortcut("test-namespace");
 
-            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
+            // Tearing down the namespace detaches that same tracked listener, proving the
+            // binding was actually registered in activeBindings (not merely attached to the DOM).
+            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", boundListener);
         });
     });
 
@@ -496,6 +501,27 @@ describe("shortcuts", () => {
             removeIndividualBinding(binding);
 
             expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", binding.listener);
+        });
+
+        it("removes only the targeted binding and leaves the rest of the namespace tracked", () => {
+            // Two bindings with DISTINCT handlers in the same namespace. Removing one must
+            // drop only that binding from activeBindings and keep the other tracked. The map
+            // is private, so we observe it indirectly: tearing the namespace down afterwards
+            // must still detach the surviving binding's listener (and must not touch the
+            // already-removed one). This fails if the filter drops the wrong bindings.
+            const a = bind("ctrl+a", vi.fn(), "ns-multi");
+            const b = bind("ctrl+b", vi.fn(), "ns-multi");
+
+            removeIndividualBinding(a);
+            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", a.listener);
+
+            mockElement.removeEventListener.mockClear();
+            shortcuts.removeGlobalShortcut("ns-multi");
+
+            // b survived in the namespace and is cleaned up; a was already dropped, so it is
+            // not detached a second time.
+            expect(mockElement.removeEventListener).toHaveBeenCalledWith("keydown", b.listener);
+            expect(mockElement.removeEventListener).not.toHaveBeenCalledWith("keydown", a.listener);
         });
 
         it("should default to the 'global' namespace when binding has no namespace", () => {
