@@ -1,4 +1,5 @@
 /// <reference types='vitest' />
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 import prefresh from '@prefresh/vite';
 import { join } from 'path';
 import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
@@ -32,7 +33,13 @@ if (isDev) {
                 }
             ]
         }),
-        webpackStatsPlugin()
+        webpackStatsPlugin(),
+        // Put the Codecov vite plugin after all other plugins
+        codecovVitePlugin({
+            enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+            bundleName: "client",
+            uploadToken: process.env.CODECOV_TOKEN
+        })
     ]
 }
 

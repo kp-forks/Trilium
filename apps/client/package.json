@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@ckeditor/ckeditor5-inspector": "5.0.0",
+    "@codecov/vite-plugin": "2.0.1",
     "@prefresh/vite": "3.0.1",
     "@types/bootstrap": "5.2.10",
     "@types/jquery": "4.0.0",

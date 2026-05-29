@@ -142,6 +142,8 @@ jobs:
         run: pnpm run chore:update-build-info
       - name: Trigger client build
         run: pnpm client:build
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Send client bundle stats to RelativeCI
         if: false
         uses: relative-ci/agent-action@v3
