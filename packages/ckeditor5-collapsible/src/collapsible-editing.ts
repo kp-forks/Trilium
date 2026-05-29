@@ -717,19 +717,24 @@ export default class CollapsibleEditing extends Plugin {
         let ready = false;
         // Trilium loads note content via `editor.setData(...)` after the editor
         // is ready, so the change:data that follows is a wholesale data load —
-        // not user-initiated insertions. Mark it so we don't auto-open every
-        // existing collapsible in the loaded note.
-        let suppressNextChange = false;
+        // not user-initiated insertions. Bracket the entire setData call with
+        // `loading=true/false` (highest fires before the data is written,
+        // lowest after everything setData triggered synchronously) so every
+        // change:data that fires inside is covered — not just the first one.
+        // The CKEditor public API doesn't guarantee setData emits exactly one
+        // change:data, so a single-shot flag would leak follow-ups.
+        let loading = false;
         // Accumulate across `change:data` events: if two events fire in the
         // same tick (separate model transactions), each restarting the timer
         // would otherwise drop the previous batch on the floor.
         const pendingOpen = new Set<any>();
 
         this.listenTo(editor, "ready", () => { ready = true; });
-        this.listenTo(editor.data, "set", () => { suppressNextChange = true; }, { priority: "high" });
+        this.listenTo(editor.data, "set", () => { loading = true; }, { priority: "highest" });
+        this.listenTo(editor.data, "set", () => { loading = false; }, { priority: "lowest" });
 
         this.listenTo(editor.model.document, "change:data", () => {
-            if (suppressNextChange) { suppressNextChange = false; return; }
+            if (loading) return;
             if (!ready) return;
             for (const entry of editor.model.document.differ.getChanges()) {
                 if (entry.type !== "insert") continue;
