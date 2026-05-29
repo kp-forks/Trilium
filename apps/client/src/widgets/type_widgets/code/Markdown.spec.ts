@@ -84,6 +84,23 @@ describe("renderWithSourceLines", () => {
         expect(html("Energy: $e=mc^2$.")).toContain('<span class="math-tex">');
     });
 
+    it("renders the /collapsible template as a details block", () => {
+        // Mirrors the markdown the `/collapsible` slash command inserts.
+        const src = [
+            '<details class="trilium-collapsible">',
+            "<summary>Summary</summary>",
+            "",
+            "Details",
+            "",
+            "</details>"
+        ].join("\n");
+
+        const result = html(src);
+        expect(result).toContain("<details");
+        expect(result).toContain("<summary>Summary</summary>");
+        expect(result).toContain("Details");
+    });
+
     it("renders [[wikilinks]] with hash-router hrefs so the preview navigates correctly", () => {
         const result = html("See [[abc123]] for details.");
         expect(result).toContain('class="reference-link"');

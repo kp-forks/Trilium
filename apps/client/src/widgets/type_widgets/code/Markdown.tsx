@@ -600,6 +600,22 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 });
                             }
                         },
+                        {
+                            label: "/collapsible",
+                            detail: t("markdown_slash_commands.collapsible"),
+                            apply(view, _completion, from, to) {
+                                // No native markdown syntax — round-trips through the
+                                // importer as raw <details>/<summary> HTML (see markdown.ts).
+                                const placeholder = "Summary";
+                                const open = `<details class="trilium-collapsible">\n<summary>`;
+                                const close = `</summary>\n\nDetails\n\n</details>`;
+                                const anchor = from + open.length;
+                                view.dispatch({
+                                    changes: { from, to, insert: open + placeholder + close },
+                                    selection: { anchor, head: anchor + placeholder.length }
+                                });
+                            }
+                        },
                         ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
                             label: `/${admonitionType}`,
                             detail: t("markdown_slash_commands.admonition", { type: admonitionType }),
