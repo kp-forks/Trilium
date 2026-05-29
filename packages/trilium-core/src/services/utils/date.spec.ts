@@ -145,7 +145,11 @@ describe("date utils", () => {
 
     describe("localNowDateTime", () => {
         it("falls back to the current local time when no CLS value is set", () => {
-            const result = date.localNowDateTime();
+            // Run inside a fresh context that does NOT set "localNowDateTime" so the fallback
+            // path runs deterministically. Relying on the absence of any active context is fragile:
+            // the standalone provider defers context cleanup ~1s, so a value set by a preceding
+            // test would otherwise leak in and be returned verbatim instead of the live fallback.
+            const result = cls.init(() => date.localNowDateTime());
             expect(result).toMatch(
                 /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}[+-][0-9]{4}$/
             );
@@ -163,7 +167,11 @@ describe("date utils", () => {
 
     describe("localNowDate", () => {
         it("derives today's date in YYYY-MM-DD form when no CLS value is set", () => {
-            const result = date.localNowDate();
+            // Run inside a fresh context that does NOT set "localNowDateTime" so the fallback
+            // path runs deterministically. Relying on the absence of any active context is fragile:
+            // the standalone provider defers context cleanup ~1s, so a value set by a preceding
+            // test would otherwise leak in and yield a stale date instead of today's date.
+            const result = cls.init(() => date.localNowDate());
             expect(result).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
 
             const now = new Date();

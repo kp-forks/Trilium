@@ -13,6 +13,25 @@ import hiddenSubtreeService, {
     LBTPL_SPACER,
     LBTPL_WIDGET
 } from "./hidden_subtree.js";
+import noteService from "./notes.js";
+
+/**
+ * Re-create a deprecated hidden-subtree note under its declared parent so the
+ * enforceDeleted branch in checkHiddenSubtree has something to delete. Both
+ * deprecated entries live directly under "_options" in the definition.
+ */
+function materialiseDeprecatedNote(noteId: string) {
+    withContext(() =>
+        noteService.createNewNote({
+            noteId,
+            title: `deprecated-${noteId}`,
+            type: "contentWidget",
+            parentNoteId: "_options",
+            content: "",
+            ignoreForbiddenParents: true
+        })
+    );
+}
 
 /**
  * Entity mutations performed by checkHiddenSubtree (createNewNote, save,
@@ -139,8 +158,19 @@ describe("hidden_subtree (real DB)", () => {
 
     describe("enforceDeleted", () => {
         it("removes deprecated notes marked enforceDeleted", () => {
-            // _optionsImages and _optionsAi are declared with enforceDeleted: true,
-            // so they must never survive an integrity check.
+            // _optionsImages and _optionsAi are declared with enforceDeleted: true.
+            // Materialise them first so checkHiddenSubtree actually has a note to
+            // delete — otherwise the assertion would pass vacuously even if the
+            // enforceDeleted branch were removed.
+            for (const deprecatedId of ["_optionsImages", "_optionsAi"]) {
+                materialiseDeprecatedNote(deprecatedId);
+                const note = becca.notes[deprecatedId] as BNote | undefined;
+                expect(note, `${deprecatedId} should have been created`).toBeDefined();
+            }
+
+            checkHiddenSubtree();
+
+            // The enforceDeleted branch must purge each materialised note.
             for (const deprecatedId of ["_optionsImages", "_optionsAi"]) {
                 const note = becca.notes[deprecatedId] as BNote | undefined;
                 expect(note, `${deprecatedId} should have been deleted`).toBeUndefined();
@@ -149,10 +179,19 @@ describe("hidden_subtree (real DB)", () => {
 
         it("re-deletes a deprecated note if it reappears", () => {
             const deprecatedId = "_optionsImages";
+
+            // First reappearance: recreate the note and confirm a check deletes it.
+            materialiseDeprecatedNote(deprecatedId);
+            expect(becca.notes[deprecatedId]).toBeDefined();
+
+            checkHiddenSubtree();
             expect(becca.notes[deprecatedId]).toBeUndefined();
 
-            // The recursion still visits the deprecated entry and calls deleteNote
-            // even on a fresh run, so a second check stays stable.
+            // Second reappearance: the deletion path must run again, not just rely
+            // on the note already being absent.
+            materialiseDeprecatedNote(deprecatedId);
+            expect(becca.notes[deprecatedId]).toBeDefined();
+
             checkHiddenSubtree();
             expect(becca.notes[deprecatedId]).toBeUndefined();
         });

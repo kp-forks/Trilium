@@ -50,13 +50,14 @@ describe("ScriptContext", () => {
     it("require() only considers note ids passed in moduleNoteIds", () => {
         const included = buildNote({ title: "shared" });
         const excluded = buildNote({ title: "shared" });
-        const ctx = new ScriptContext([included, excluded], { startNote: included });
+        // `excluded` is placed first in allNotes so that, if the whitelist
+        // filter were dropped, find() would match it first. Only `included`
+        // is whitelisted, so its exports must still be returned.
+        const ctx = new ScriptContext([excluded, included], { startNote: included });
 
         ctx.modules[included.noteId] = { exports: ["included-exports"] };
         ctx.modules[excluded.noteId] = { exports: ["excluded-exports"] };
 
-        // Only `included` is whitelisted, so its exports must be returned even
-        // though both notes share the same title.
         const resolved = ctx.require([included.noteId])("shared");
         expect(resolved).toEqual(["included-exports"]);
     });

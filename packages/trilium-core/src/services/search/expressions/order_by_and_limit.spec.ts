@@ -94,10 +94,14 @@ describe("OrderByAndLimitExp", () => {
     it("parses numeric strings for numerical (not lexicographic) comparison", () => {
         const a = note("A").note;
         const b = note("B").note;
-        // Lexicographically "10" < "9", but numerically 9 < 10.
-        const exp = new OrderByAndLimitExp([{ direction: "asc", valueExtractor: { extract: (n) => (n.title === "A" ? "10" : "9") } }]);
+        // "20" and "123.45" are both rejected by isDate() but accepted by isNumber(), so the
+        // comparator genuinely takes the parseFloat numeric branch (unlike "10"/"9", which
+        // new Date() accepts and would route through the date branch instead). Numerically
+        // 20 < 123.45, but lexicographically "123.45" < "20" — so a string sort would yield
+        // ["B", "A"] and only a numeric sort yields ["A", "B"].
+        const exp = new OrderByAndLimitExp([{ direction: "asc", valueExtractor: { extract: (n) => (n.title === "A" ? "20" : "123.45") } }]);
 
-        expect(run(exp, [a, b]).notes.map((n) => n.title)).toEqual(["B", "A"]);
+        expect(run(exp, [a, b]).notes.map((n) => n.title)).toEqual(["A", "B"]);
     });
 
     it("parses date strings for chronological comparison", () => {

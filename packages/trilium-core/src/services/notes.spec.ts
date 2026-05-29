@@ -1,10 +1,11 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import becca from "../becca/becca.js";
 import type BBranch from "../becca/entities/bbranch.js";
 import type BNote from "../becca/entities/bnote.js";
 import { getContext } from "./context.js";
 import noteService, { saveLinks } from "./notes.js";
+import optionService from "./options.js";
 import { getSql } from "./sql/index.js";
 
 /**
@@ -279,6 +280,40 @@ describe("notes service (real DB)", () => {
     });
 
     describe("saveRevisionIfNeeded", () => {
+        // saveRevisionIfNeeded only creates a revision once the note is at least
+        // `revisionSnapshotTimeInterval` seconds old (default 600s). A freshly
+        // created note is ~0s old, so with the default interval the revision
+        // branch is unreachable and the `disableVersioning` guard would never be
+        // exercised. Force the interval to 0 so the branch becomes reachable, and
+        // restore the original value afterwards so sibling tests are unaffected.
+        let originalInterval: string;
+
+        beforeAll(() => {
+            originalInterval = optionService.getOption("revisionSnapshotTimeInterval");
+            withContext(() => optionService.setOption("revisionSnapshotTimeInterval", "0"));
+        });
+
+        afterAll(() => {
+            withContext(() => optionService.setOption("revisionSnapshotTimeInterval", originalInterval));
+        });
+
+        function revisionCount(note: BNote): number {
+            return getSql().getValue<number>("SELECT COUNT(*) FROM revisions WHERE noteId = ?", [note.noteId]);
+        }
+
+        it("creates a revision for an eligible note without disableVersioning", () => {
+            const note = createNote("root", {
+                title: "spec-revision-eligible",
+                content: "<p>x</p>"
+            }).note;
+
+            const before = revisionCount(note);
+            withContext(() => noteService.saveRevisionIfNeeded(note));
+            const after = revisionCount(note);
+
+            expect(after).toBe(before + 1);
+        });
+
         it("does nothing for notes with disableVersioning", () => {
             const note = createNote("root", {
                 title: "spec-no-revision",
@@ -288,13 +323,9 @@ describe("notes service (real DB)", () => {
                 ]
             }).note;
 
-            const before = getSql().getValue<number>("SELECT COUNT(*) FROM revisions WHERE noteId = ?", [
-                note.noteId
-            ]);
+            const before = revisionCount(note);
             withContext(() => noteService.saveRevisionIfNeeded(note));
-            const after = getSql().getValue<number>("SELECT COUNT(*) FROM revisions WHERE noteId = ?", [
-                note.noteId
-            ]);
+            const after = revisionCount(note);
 
             expect(after).toBe(before);
         });

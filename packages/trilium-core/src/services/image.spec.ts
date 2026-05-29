@@ -194,11 +194,11 @@ describe("image service (real DB)", () => {
         });
 
         it("saves a revision, sets the originalFileName label, and updates mime/content on resolve", async () => {
-            // The persisted content is the provider's *processed* output, so drive
-            // it with a distinct buffer. Stub before creating so the note-creation's
-            // own async branch also resolves to png and doesn't clobber the mime.
-            const processedBuffer = new Uint8Array([1, 2, 3]);
-            stubProcessImage({ ext: "png" }, processedBuffer);
+            // The persisted content is the provider's *processed* output. Drive the
+            // initial saveImage with a PNG so the note settles into a known state we
+            // can later prove updateImage moves away from.
+            const createdBuffer = new Uint8Array([1, 2, 3]);
+            stubProcessImage({ ext: "png" }, createdBuffer);
 
             // Start from a freshly created image note we can mutate.
             counter++;
@@ -206,6 +206,18 @@ describe("image service (real DB)", () => {
                 imageService.saveImage("root", fakeBuffer, `update-${counter}.png`, false)
             );
             await flushAsync();
+
+            // Sanity-check the pre-update state so the post-update assertions below
+            // genuinely discriminate updateImage's effect (and aren't already true).
+            const beforeUpdate = becca.getNote(noteId)!;
+            expect(beforeUpdate.mime).toBe("image/png");
+            expect(bytesOf(beforeUpdate.getContent())).toEqual(Array.from(createdBuffer));
+
+            // Re-point the provider so updateImage resolves to a DIFFERENT mime and
+            // buffer than saveImage left behind; otherwise the assertions would pass
+            // on the saveImage state regardless of whether updateImage ran.
+            const updatedBuffer = new Uint8Array([9, 8, 7, 6]);
+            stubProcessImage({ ext: "jpg" }, updatedBuffer);
 
             const revisionSpy = vi.spyOn(becca.getNote(noteId)!, "saveRevision");
 
@@ -215,25 +227,57 @@ describe("image service (real DB)", () => {
             const note = becca.getNote(noteId)!;
             expect(revisionSpy).toHaveBeenCalledTimes(1);
             expect(note.getOwnedLabelValue("originalFileName")).toBe("renamed.png");
-            expect(note.mime).toBe("image/png");
-            // Content is the processed buffer the provider returned, not the raw upload.
-            expect(bytesOf(note.getContent())).toEqual(Array.from(processedBuffer));
+            // Mime/content now reflect updateImage's distinct provider output, which
+            // differs from the PNG/[1,2,3] state saveImage produced.
+            expect(note.mime).toBe("image/jpg");
+            expect(bytesOf(note.getContent())).toEqual(Array.from(updatedBuffer));
         });
     });
 
     describe("protected note handling in saveImage", () => {
-        it("creates a protected image note only when a protected session is available", () => {
-            // Build a protected parent so the protection inheritance branch is taken.
-            vi.spyOn(protectedSessionService, "isProtectedSessionAvailable").mockReturnValue(false);
-            counter++;
+        it("creates a protected image note only when a protected session is available", async () => {
+            // The child inherits protection only via
+            // `parentNote.isProtected && isProtectedSessionAvailable()`, so the
+            // parent MUST be protected for the session flag to matter at all.
+            const root = becca.getNote("root")!;
+            const originalRootProtected = root.isProtected;
+            root.isProtected = true;
 
-            const result = withContext(() =>
-                imageService.saveImage("root", fakeBuffer, `prot-${counter}.png`, false)
-            );
+            // Keep async image processing deterministic; saving a protected note's
+            // content requires encryption, so return a fake ciphertext instead of
+            // standing up a real protected session/data key.
+            stubProcessImage({ ext: "png" });
+            vi.spyOn(protectedSessionService, "encrypt").mockReturnValue("fake-ciphertext");
 
-            // Parent (root) is not protected and no session is available, so the
-            // child must not be protected either.
-            expect(becca.getNote(result.noteId)!.isProtected).toBe(false);
+            const sessionSpy = vi.spyOn(protectedSessionService, "isProtectedSessionAvailable");
+
+            try {
+                // Session available -> protected parent yields a protected child.
+                sessionSpy.mockReturnValue(true);
+                counter++;
+                const whenAvailable = withContext(() =>
+                    imageService.saveImage("root", fakeBuffer, `prot-on-${counter}.png`, false)
+                );
+                expect(becca.getNote(whenAvailable.noteId)!.isProtected).toBe(true);
+                // Let the protected note's fire-and-forget content save settle while
+                // the session is still "available", so its encryption branch doesn't
+                // run after we flip the mock below.
+                await flushAsync();
+
+                // Session unavailable -> even a protected parent yields an
+                // unprotected child, proving the result tracks the session mock.
+                sessionSpy.mockReturnValue(false);
+                counter++;
+                const whenUnavailable = withContext(() =>
+                    imageService.saveImage("root", fakeBuffer, `prot-off-${counter}.png`, false)
+                );
+                expect(becca.getNote(whenUnavailable.noteId)!.isProtected).toBe(false);
+                await flushAsync();
+            } finally {
+                // Restore the shared fixture's root so sibling tests still attach
+                // under an unprotected parent.
+                root.isProtected = originalRootProtected;
+            }
         });
     });
 });
