@@ -11,13 +11,13 @@
 
 # Trilium Notes
 
-![Sponsor GitHub](https://img.shields.io/github/sponsors/eliandoran)
-![Sostenitori LiberaPay](https://img.shields.io/liberapay/patrons/ElianDoran)\
-![Pull Docker](https://img.shields.io/docker/pulls/triliumnext/trilium)
-![Download GitHub (tutte le risorse, tutte le
-versioni)](https://img.shields.io/github/downloads/triliumnext/trilium/total)\
-[![Stato della
-traduzione](https://hosted.weblate.org/widget/trilium/svg-badge.svg)](https://hosted.weblate.org/engage/trilium/)
+![GitHub Sponsors](https://img.shields.io/github/sponsors/eliandoran)
+![LiberaPay patrons](https://img.shields.io/liberapay/patrons/ElianDoran)\
+![Docker Pulls](https://img.shields.io/docker/pulls/triliumnext/trilium)
+![GitHub Downloads (all assets, all
+releases)](https://img.shields.io/github/downloads/triliumnext/trilium/total)\
+[![Translation
+status](https://hosted.weblate.org/widget/trilium/svg-badge.svg)](https://hosted.weblate.org/engage/trilium/)
 
 <!-- translate:off -->
 <!-- LANGUAGE SWITCHER -->
