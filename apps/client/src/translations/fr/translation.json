@@ -1242,7 +1242,7 @@
     "images_section_title": "Images",
     "download_images_automatically": "Télécharger automatiquement les images",
     "download_images_description": "Télécharge les images externes du HTML collé pour les rendre disponibles hors connexion.",
-    "enable_image_compression": "Compression des images",
+    "enable_image_compression": "Compresser les images",
     "max_image_dimensions": "Dimensions maximales d'une image",
     "jpeg_quality_description": "La plage recommandée est entre 50 et 85. Des valeurs plus faibles réduisent la taille du fichier, des valeurs plus élevées préservent les détails.",
     "max_image_dimensions_unit": "pixels",
@@ -1296,10 +1296,10 @@
     "note_revisions_snapshot_limit_title": "Nombre maximal d’instantanés de révision de note",
     "note_revisions_snapshot_limit_description": "La limite du nombre de révision de note désigne le nombre maximum de révisions pouvant être enregistrées pour chaque note. -1 signifie aucune limite, 0 signifie supprimer toutes les révisions. Vous pouvez définir le nombre maximal de révisions pour une seule note avec le label #versioningLimit.",
     "snapshot_number_limit_label": "Nombre maximal de révisions",
-    "erase_excess_revision_snapshots": "Effacer immédiatement les instantanés de révisions excédentaires",
+    "erase_excess_revision_snapshots": "Effacer les instantanés de révisions excédentaires",
     "erase_excess_revision_snapshots_prompt": "Les révisions en excès ont été effacées.",
     "snapshot_number_limit_unit": "instantanés",
-    "erase_excess_revision_snapshots_description": "Supprimer les révisions excédant la limite pour toutes les notes.",
+    "erase_excess_revision_snapshots_description": "Supprime immediatement les révisions excédant la limite pour toutes les notes.",
     "note_revisions_snapshot_limit_description_short": "Nombre maximal de révisions par note. Utilisez -1 pour aucune limite, 0 pour désactiver."
   },
   "search_engine": {
@@ -1879,9 +1879,9 @@
   "share": {
     "title": "Partage",
     "redirect_bare_domain": "Rediriger le domaine principal vers la page de partage",
-    "redirect_bare_domain_description": "Rediriger les utilisateurs anonymes vers la page de partage au lieu d'afficher la connexion",
+    "redirect_bare_domain_description": "Redirige les utilisateurs anonymes vers la page de partage au lieu d'afficher la connexion",
     "show_login_link": "Afficher le lien de connexion dans le thème de partage",
-    "show_login_link_description": "Ajouter un lien de connexion dans le pied de page de la page de partage",
+    "show_login_link_description": "Ajoute un lien de connexion dans le pied de page de la page de partage",
     "check_share_root": "Vérifier l'état du partage de la racine",
     "share_root_found": "La note racine du partage '{{noteTitle}}' est prête",
     "share_root_not_found": "Aucune note avec le label #shareRoot trouvée",
@@ -2554,9 +2554,9 @@
   },
   "search": {
     "title": "Rechercher",
-    "fuzzy_matching_label": "Tolérance aux fautes de frappe dans la recherche",
+    "fuzzy_matching_label": "Accepter les fautes de frappe dans la recherche",
     "fuzzy_matching_description": "Affecte la recherche rapide et la recherche complète. Trouve des mots similaires lorsque les correspondances exactes ne suffisent pas.",
-    "autocomplete_fuzzy_label": "Tolérance aux fautes de frappe dans l’autocomplétion",
+    "autocomplete_fuzzy_label": "Accepter les fautes de frappe dans l'autocomplétion",
     "autocomplete_fuzzy_description": "Affecte l’accès rapide aux notes et les sélecteurs de notes. Plus lent, mais tolère les fautes de frappe."
   },
   "text_editor": {
