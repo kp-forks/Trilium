@@ -73,11 +73,29 @@ jobs:
           flags: client
           fail_ci_if_error: false
 
+      - name: Upload client test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: apps/client/test-output/vitest/junit.xml
+          flags: client
+          fail_ci_if_error: false
+
       - name: Upload server coverage to Codecov
         uses: codecov/codecov-action@v6
         if: always()
         with:
           files: apps/server/test-output/vitest/coverage/lcov.info
+          flags: server
+          fail_ci_if_error: false
+
+      - name: Upload server test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: apps/server/test-output/vitest/junit.xml
           flags: server
           fail_ci_if_error: false
 
@@ -93,6 +111,15 @@ jobs:
         if: always()
         with:
           files: apps/standalone/test-output/vitest/coverage/lcov.info
+          flags: standalone
+          fail_ci_if_error: false
+
+      - name: Upload standalone test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: apps/standalone/test-output/vitest/junit.xml
           flags: standalone
           fail_ci_if_error: false
 
@@ -114,6 +141,15 @@ jobs:
           flags: desktop
           fail_ci_if_error: false
 
+      - name: Upload desktop test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: apps/desktop/test-output/vitest/junit.xml
+          flags: desktop
+          fail_ci_if_error: false
+
       - name: Run the commons tests
         run: pnpm run --filter=commons test --coverage
 
@@ -122,6 +158,15 @@ jobs:
         if: always()
         with:
           files: packages/commons/test-output/vitest/coverage/lcov.info
+          flags: commons
+          fail_ci_if_error: false
+
+      - name: Upload commons test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/commons/test-output/vitest/junit.xml
           flags: commons
           fail_ci_if_error: false
 

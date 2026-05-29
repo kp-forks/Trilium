@@ -303,6 +303,13 @@ export default defineConfig(() => ({
         environment: "happy-dom",
         setupFiles: [join(__dirname, "src/test_setup.ts")],
         dir: join(__dirname),
+        reporters: [
+            "default",
+            // Absolute path on purpose: the Vite `root` above is `src`, so a
+            // relative outputFile would land in `src/test-output`. Anchor to the
+            // package dir to match the other apps and the CI upload path.
+            ["junit", { outputFile: join(__dirname, "test-output/vitest/junit.xml"), addFileAttribute: true }]
+        ],
         include: [
             "src/**/*.{test,spec}.{ts,tsx}",
             "../../packages/trilium-core/src/**/*.{test,spec}.{ts,tsx}"

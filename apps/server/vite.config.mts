@@ -33,7 +33,8 @@ export default defineConfig(() => ({
     testTimeout: 40_000,
     reporters: [
       "verbose",
-      ["html", { outputFile: "./test-output/vitest/html/index.html" }]
+      ["html", { outputFile: "./test-output/vitest/html/index.html" }],
+      ["junit", { outputFile: "./test-output/vitest/junit.xml", addFileAttribute: true }]
     ],
     coverage: {
       reportsDirectory: './test-output/vitest/coverage',

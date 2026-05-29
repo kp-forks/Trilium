@@ -18,7 +18,10 @@ export default defineConfig(() => ({
             TRILIUM_ENV: "dev"
         },
         include: ["src/**/*.spec.ts"],
-        reporters: ["verbose"],
+        reporters: [
+            "verbose",
+            ["junit", { outputFile: "./test-output/vitest/junit.xml", addFileAttribute: true }]
+        ],
         coverage: {
             reportsDirectory: "./test-output/vitest/coverage",
             provider: "v8" as const,
