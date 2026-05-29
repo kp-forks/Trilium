@@ -41,6 +41,8 @@ export default class CollapsibleEditing extends Plugin {
     private readonly summaryTooltips = new Set<HTMLElement>();
     /** The summary tooltip we currently have force-shown because the caret is inside it. */
     private caretShownTooltip?: HTMLElement;
+    /** Drag-handle DOM elements that currently have a Bootstrap tooltip attached. */
+    private readonly handleTooltips = new Set<HTMLElement>();
 
     public init(): void {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
@@ -75,6 +77,7 @@ export default class CollapsibleEditing extends Plugin {
         this.registerAutoOpenNewDetails();
         this.registerPostFixers();
         this.registerSummaryTooltips();
+        this.registerHandleTooltips();
     }
 
     public override destroy(): void {
@@ -95,6 +98,10 @@ export default class CollapsibleEditing extends Plugin {
         }
         this.summaryTooltips.clear();
         this.caretShownTooltip = undefined;
+        for (const handle of this.handleTooltips) {
+            Tooltip.getInstance(handle)?.dispose();
+        }
+        this.handleTooltips.clear();
         this.dragHandle?.cancel();
         this.preserveOpenOnNextInsert.clear();
         super.destroy();
@@ -841,6 +848,45 @@ export default class CollapsibleEditing extends Plugin {
         });
     }
 
+    /**
+     * Attach a plain Bootstrap tooltip (default near-element placement, no
+     * screen-corner styling) to each drag handle so hover/focus surfaces the
+     * "Drag to reposition" hint. Tracked in a Set and reaped on view render
+     * the same way summary tooltips are.
+     */
+    private registerHandleTooltips() {
+        const editor = this.editor;
+        const t = this.translate();
+
+        this.listenTo(editor.editing.view, "render", () => {
+            let cleaned = false;
+            for (const handle of this.handleTooltips) {
+                if (!handle.isConnected) {
+                    Tooltip.getInstance(handle)?.dispose();
+                    this.handleTooltips.delete(handle);
+                    cleaned = true;
+                }
+            }
+
+            const current: HTMLElement[] = [];
+            this.forEachDomRoot(root => {
+                for (const h of root.querySelectorAll<HTMLElement>(".trilium-collapsible-handle")) {
+                    current.push(h);
+                }
+            });
+
+            if (!cleaned && current.length === this.handleTooltips.size) return;
+
+            for (const handle of current) {
+                if (this.handleTooltips.has(handle)) continue;
+                new Tooltip(handle, {
+                    title: t("text-editor.collapsible-handle-tooltip")
+                });
+                this.handleTooltips.add(handle);
+            }
+        });
+    }
+
     // -----------------------------------------------------------------
     // Model post-fixers
     // -----------------------------------------------------------------
@@ -849,8 +895,39 @@ export default class CollapsibleEditing extends Plugin {
         const document = this.editor.model.document;
         document.registerPostFixer(writer => this.structuralPostFixer(writer));
         document.registerPostFixer(writer => this.summaryInvariantPostFixer(writer));
+        document.registerPostFixer(writer => this.bodyExistsPostFixer(writer));
         document.registerPostFixer(writer => this.gapPostFixer(writer));
         document.registerPostFixer(writer => this.hiddenBodyPostFixer(writer));
+    }
+
+    /**
+     * Every <details> must have at least one body block after its <summary>.
+     * Without one the placeholder vanishes and the collapsible looks broken —
+     * this happens after Backspace at the start of an empty body, or after
+     * onEnterInBody removes the only body paragraph to exit the block. Runs
+     * after summaryInvariantPostFixer so the summary is guaranteed to exist
+     * before we count children.
+     */
+    private bodyExistsPostFixer(writer: any): boolean {
+        const changes = this.editor.model.document.differ.getChanges();
+        const visited = new Set<any>();
+
+        const ensure = (details: any): boolean => {
+            if (visited.has(details)) return false;
+            visited.add(details);
+            if (details.childCount > 1) return false;
+            const summary = details.getChild(0);
+            if (!summary?.is("element", "summary")) return false;
+            writer.insert(writer.createElement("paragraph"), details, "end");
+            return true;
+        };
+
+        for (const entry of changes) {
+            if (entry.type !== "remove") continue;
+            const parent = (entry as any).position?.parent;
+            if (parent?.is("element", "details") && ensure(parent)) return true;
+        }
+        return false;
     }
 
     /**

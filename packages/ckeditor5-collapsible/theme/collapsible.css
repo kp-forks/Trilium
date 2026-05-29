@@ -97,8 +97,11 @@
 
     /* Body-paragraph placeholder ("Content") is registered on the first body
      * block. Hide it whenever the body has more than one block — the hint is
-     * only useful when the collapsible's body is genuinely empty. */
-    > p.ck-placeholder:not(:last-child)::before {
+     * only useful when the body is a single empty <p>. `:has(> :nth-child(3))`
+     * matches a <details> with summary + 2+ body children; `:not(:last-child)`
+     * would only hide the placeholder on non-last paragraphs, leaving the last
+     * one (e.g. the original empty body after Enter-in-summary) still visible. */
+    &:has(> :nth-child(3)) > p.ck-placeholder::before {
         display: none;
     }
 

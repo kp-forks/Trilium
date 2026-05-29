@@ -2678,6 +2678,7 @@
     "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
     "collapsible-body-placeholder": "Type the content here...",
     "collapsible-button-label": "Collapsible block",
+    "collapsible-handle-tooltip": "Drag to reposition the collapsible block",
     "collapsible-select-label": "Select collapsible block",
     "collapsible-title-placeholder": "Summary",
     "collapsible-toggle-label": "Toggle collapsible block",
