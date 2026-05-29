@@ -109,7 +109,7 @@ describe("cloning service (real DB)", () => {
             targetParent.branch.isExpanded = false;
 
             const res = withContext(() =>
-                cloningService.cloneNoteToBranch(source.note.noteId, targetParent.branch.branchId, "px")
+                cloningService.cloneNoteToBranch(source.note.noteId, targetParent.branch.branchId!, "px")
             ) as { success: boolean; branchId?: string };
 
             expect(res.success).toBe(true);
@@ -263,7 +263,7 @@ describe("cloning service (real DB)", () => {
             const afterPos = first.branch.notePosition;
 
             const res = withContext(() =>
-                cloningService.cloneNoteAfter(source.note.noteId, first.branch.branchId)
+                cloningService.cloneNoteAfter(source.note.noteId, first.branch.branchId!)
             ) as { success: boolean; branchId?: string };
 
             expect(res.success).toBe(true);
@@ -286,7 +286,7 @@ describe("cloning service (real DB)", () => {
         it("forbids cloning protected structural notes", () => {
             const target = createNote("root");
 
-            const res = cloningService.cloneNoteAfter("root", target.branch.branchId);
+            const res = cloningService.cloneNoteAfter("root", target.branch.branchId!);
 
             expect(res.success).toBe(false);
             expect(res.message).toBe("Cloning the note 'root' is forbidden.");
@@ -308,7 +308,7 @@ describe("cloning service (real DB)", () => {
 
             // `existing` already lives under `parent`; cloning it after `reference`
             // (same parent) is rejected by validateParentChild.
-            const res = cloningService.cloneNoteAfter(existing.note.noteId, reference.branch.branchId);
+            const res = cloningService.cloneNoteAfter(existing.note.noteId, reference.branch.branchId!);
 
             expect(res.success).toBe(false);
             expect(typeof res.message).toBe("string");

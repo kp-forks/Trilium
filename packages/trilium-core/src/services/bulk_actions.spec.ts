@@ -199,14 +199,14 @@ describe("bulk_actions service (real DB)", () => {
 
         it("is a no-op for an empty / whitespace-only script", () => {
             const note = createNote("root");
-            const labelsBefore = note.note.getOwnedLabels().length;
+            const labelsBefore = note.note.getOwnedAttributes().length;
 
             expect(() =>
                 withContext(() =>
                     bulkActionService.executeActions([{ name: "executeScript", script: "   " }], [note.note.noteId])
                 )
             ).not.toThrow();
-            expect(note.note.getOwnedLabels().length).toBe(labelsBefore);
+            expect(note.note.getOwnedAttributes().length).toBe(labelsBefore);
         });
     });
 

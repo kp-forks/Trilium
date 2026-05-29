@@ -52,7 +52,7 @@ describe("erase service (real DB)", () => {
             const note = createNote();
             const noteId = note.noteId;
             const branch = note.getParentBranches()[0];
-            const branchId = branch.branchId;
+            const branchId = branch.branchId!;
             const attribute = withContext(() => note.addLabel("eraseMe", "v"));
             const attributeId = attribute.attributeId;
 
@@ -113,7 +113,7 @@ describe("erase service (real DB)", () => {
         it("erases entities deleted in the past (cutoff 0 seconds)", () => {
             const note = createNote();
             const noteId = note.noteId;
-            const branchId = note.getParentBranches()[0].branchId;
+            const branchId = note.getParentBranches()[0].branchId!;
 
             // deleteNote soft-deletes the note, its branch and attributes.
             withContext(() => note.deleteNote());

@@ -114,10 +114,11 @@ describe("MarkdownExportProvider", () => {
             const metaFile: NoteMetaFile = { formatVersion: 1, appVersion: "1.0.0", files: [] };
             const rootMeta: NoteMeta = { noteId: "root", title: "Root", children: [] };
 
-            expect(() => provider.prepareMeta(metaFile)).not.toThrow();
-            expect(() => provider.afterDone(rootMeta)).not.toThrow();
+            expect(() => provider.prepareMeta()).not.toThrow();
+            expect(() => provider.afterDone()).not.toThrow();
 
             expect(metaFile.files).toHaveLength(0);
+            expect(rootMeta.children).toHaveLength(0);
             expect(provider.archive.append).not.toHaveBeenCalled();
         });
     });

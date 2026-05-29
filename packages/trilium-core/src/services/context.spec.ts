@@ -36,7 +36,7 @@ function makeEntityChange(id: string): EntityChange {
         isErased: false,
         utcDateChanged: "2026-01-01 00:00:00Z",
         isSynced: true
-    } as EntityChange;
+    } as unknown as EntityChange;
 }
 
 describe("context", () => {
