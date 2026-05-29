@@ -115,6 +115,7 @@ export function buildFloatingToolbar() {
                 "bookmark",
                 "internallink",
                 "collapsible",
+                "|",
                 "removeFormat",
                 "cuttonote"
             ]
