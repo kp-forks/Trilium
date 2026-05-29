@@ -59,9 +59,13 @@ function debounce<T>(func: (...args: any[]) => T, waitMs: number, immediate: boo
 
     debounced.flush = function () {
         if (timeout) {
-            /* v8 ignore next -- `|| []` is a defensive fallback: a live `timeout` implies `debounced` set `args` and no fire has nulled it yet */
-            result = func.apply(context, args || []);
-            context = args = null;
+            // In immediate mode the leading-edge fire nulls `args` while leaving the
+            // trailing timer live, so only invoke when there is actually a pending
+            // trailing call to flush — otherwise this would re-fire `func` with no args.
+            if (args) {
+                result = func.apply(context, args);
+                context = args = null;
+            }
 
             clearTimeout(timeout);
             timeout = null;

@@ -116,6 +116,24 @@ describe("debounce", () => {
         expect(fn).toHaveBeenCalledTimes(1);
     });
 
+    it("flush() does not re-fire after a leading-edge call when `immediate` is true", () => {
+        const fn = vi.fn((x: string) => x.toUpperCase());
+        const debounced = debounce(fn, 100, true) as Debounced;
+
+        // Leading-edge call fires once and nulls `args` while the trailing timer stays live.
+        expect(debounced("hi")).toBe("HI");
+        expect(fn).toHaveBeenCalledTimes(1);
+
+        // Flushing now must NOT re-invoke func: there is no pending trailing call,
+        // and it must never call func with an empty arg list.
+        debounced.flush();
+        expect(fn).toHaveBeenCalledTimes(1);
+
+        // The pending trailing timer was cleared by flush, so advancing does nothing.
+        vi.advanceTimersByTime(100);
+        expect(fn).toHaveBeenCalledTimes(1);
+    });
+
     it("reschedules in `later` when the system clock jumps backwards (last < 0)", () => {
         const fn = vi.fn();
         const debounced = debounce(fn, 100) as Debounced;

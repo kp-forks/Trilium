@@ -93,10 +93,13 @@ export const serverImageProvider: ImageProvider = {
 
         if (!origImageFormat || !["jpg", "png"].includes(origImageFormat.ext)) {
             shouldShrink = false;
-        /* v8 ignore start -- defensive guard: file-type classifies animated PNG as
-           "apng" and animated GIF/WebP as non-jpg/png, so they are already excluded
-           above, making this branch effectively unreachable. */
+        /* v8 ignore start -- rare defensive guard: spec-compliant animated images are
+           already excluded above (file-type reports animated PNG as "apng" and animated
+           GIF/WebP as gif/webp). Only a pathological PNG with 512+ chunks before its acTL
+           chunk slips through (file-type bails to "png" at its chunk-scan limit while
+           is-animated still flags it), so this guard correctly skips recompressing it. */
         } else if (isAnimated(Buffer.from(buffer))) {
+            // Recompression of animated images would make them static.
             shouldShrink = false;
         }
         /* v8 ignore stop */

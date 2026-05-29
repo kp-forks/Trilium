@@ -121,7 +121,10 @@ export const hierarchyTools = defineTools({
 
             // Use the first (primary) parent branch for the move
             const branches = note.getParentBranches();
-            /* v8 ignore next 3 -- defensive: a non-system note always has at least one parent branch */
+            /* v8 ignore next 3 -- rare edge case, not worth simulating in a unit test:
+               an orphaned note (its last parent branch removed but the note itself not
+               yet deleted from Becca, e.g. during a sync race) can momentarily have zero
+               parent branches. The guard returns a clean error instead of crashing on branches[0]. */
             if (branches.length === 0) {
                 return { error: "Note has no parent branches" };
             }
