@@ -315,7 +315,10 @@ export default defineConfig(() => ({
             "../../packages/trilium-core/src/**/*.{test,spec}.{ts,tsx}"
         ],
         coverage: {
-            reportsDirectory: "./test-output/vitest/coverage",
+            // Absolute path for the same reason as the junit reporter above: the
+            // Vite `root` is `src`, so a relative path would land in
+            // `src/test-output`. Anchor to the package dir (matches the CI upload path).
+            reportsDirectory: join(__dirname, "test-output/vitest/coverage"),
             provider: "v8" as const,
             reporter: ["text", "html", "lcov"]
         },
