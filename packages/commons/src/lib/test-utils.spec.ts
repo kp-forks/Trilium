@@ -18,6 +18,12 @@ Hello
             <p>${value}</p>`).toBe("<p>hi</p>");
     });
 
+    it("does not cut off text on lines with less indentation than the first line", () => {
+        expect(trimIndentation`\
+            Hello
+        world`).toBe("Hello\nworld");
+    });
+
     it("treats an undefined interpolated value as empty string", () => {
         const value = undefined;
         expect(trimIndentation`\

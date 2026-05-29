@@ -6,10 +6,6 @@ describe("REVISION_SOURCES", () => {
     it("contains the expected revision source values in order", () => {
         expect(REVISION_SOURCES).toEqual(["auto", "manual", "etapi", "llm", "restore"]);
     });
-
-    it("has exactly five entries", () => {
-        expect(REVISION_SOURCES).toHaveLength(5);
-    });
 });
 
 describe("ALLOWED_NOTE_TYPES", () => {
