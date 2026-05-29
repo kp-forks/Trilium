@@ -274,9 +274,9 @@
   },
   "password_not_set": {
     "title": "Le mot de passe n'est pas défini",
-    "body1": "Les notes protégées sont cryptées à l'aide d'un mot de passe utilisateur, mais le mot de passe n'a pas encore été défini.",
+    "body1": "Les notes protégées sont chiffrées à l'aide d'un mot de passe utilisateur, mais celui-ci n'a pas encore été défini.",
     "body2": "Pour pouvoir protéger les notes, cliquez sur le bouton ci-dessous pour ouvrir la boîte de dialogue Paramètres et définir votre mot de passe.",
-    "go_to_password_options": "Accéder aux options de mot de passe"
+    "go_to_password_options": "Aller aux paramètres de mot de passe"
   },
   "prompt": {
     "title": "Prompt",
@@ -1418,7 +1418,7 @@
   },
   "password": {
     "heading": "Mot de passe",
-    "alert_message": "Prenez soin de mémoriser votre nouveau mot de passe. Le mot de passe est utilisé pour se connecter à l'interface Web et pour crypter les notes protégées. Si vous oubliez votre mot de passe, toutes vos notes protégées seront définitivement perdues.",
+    "alert_message": "Prenez soin de mémoriser votre nouveau mot de passe. Il sert à vous connecter à l'interface web et à chiffrer vos notes protégées. Si vous l'oubliez, toutes vos notes protégées seront définitivement perdues.",
     "reset_link": "Cliquez ici pour le réinitialiser.",
     "old_password": "Ancien mot de passe",
     "new_password": "Nouveau mot de passe",
