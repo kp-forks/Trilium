@@ -320,6 +320,9 @@ export default defineConfig(() => ({
             // `src/test-output`. Anchor to the package dir (matches the CI upload path).
             reportsDirectory: join(__dirname, "test-output/vitest/coverage"),
             provider: "v8" as const,
+            // Vite `root` above is `src`, so coverage include globs resolve relative to src/.
+            include: ["**/*.{ts,tsx}"],
+            exclude: ["**/*.{test,spec}.{ts,mts,cts,tsx,js,jsx}", "**/*.d.ts"],
             reporter: ["text", "html", "lcov"]
         },
         server: {
