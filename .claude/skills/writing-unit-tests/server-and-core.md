@@ -2,7 +2,7 @@
 
 `apps/server/spec/setup.ts` boots an **in-memory SQLite fixture** once per spec file: it loads `packages/trilium-core/src/test/fixtures/document.db` (password **`demo1234`**) and calls `initializeCore(...)`. With `pool: "forks"`, each spec file gets a fresh writable copy — **mutations isolate per file, not per `it()`**.
 
-`trilium-core` cannot run tests standalone (its `test` script just prints a note — it needs a host runtime's platform providers). Its specs run **through** `apps/server` (and `apps/standalone`), which already list `../../packages/trilium-core/src/**` in both their test `include` and `coverage.include`. Add core specs next to the core source or under `apps/server/spec` — both feed the same coverage number. A dedicated core vitest project is **not** needed.
+`trilium-core` cannot run tests standalone (its `test` script just prints a note — it needs a host runtime's platform providers). Its specs run **through** `apps/server` (and `apps/standalone`), which list `../../packages/trilium-core/src/**` in their test `include`. For that core code to actually count toward coverage, each host also sets `coverage.allowExternal: true` and lists core in `coverage.include` (v8 drops out-of-root files otherwise — see the coverage rules in `SKILL.md`). Add core specs next to the core source or under `apps/server/spec` — both feed the same coverage number, reported under the `server`/`standalone` Codecov flags. A dedicated core vitest project is **not** needed.
 
 There are **two distinct HTTP code paths** — testing one does not cover the other:
 - **ETAPI** (`apps/server/src/etapi/*`): basic-auth token, helpers in `spec/etapi/utils.ts`.

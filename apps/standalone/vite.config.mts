@@ -320,8 +320,12 @@ export default defineConfig(() => ({
             // `src/test-output`. Anchor to the package dir (matches the CI upload path).
             reportsDirectory: join(__dirname, "test-output/vitest/coverage"),
             provider: "v8" as const,
+            // trilium-core lives outside this project's `root` (which is `src`),
+            // so its files are only collected when `allowExternal` is enabled.
+            allowExternal: true,
             // Vite `root` above is `src`, so coverage include globs resolve relative to src/.
-            include: ["**/*.{ts,tsx}"],
+            // `../../../` walks src -> standalone -> apps -> repo root to reach the core package.
+            include: ["**/*.{ts,tsx}", "../../../packages/trilium-core/src/**/*.{ts,tsx}"],
             exclude: ["**/*.{test,spec}.{ts,mts,cts,tsx,js,jsx}", "**/*.d.ts"],
             reporter: ["text", "html", "lcov"]
         },

@@ -50,7 +50,7 @@ coverage: {
 
 - **Do NOT use `all: true`** — it was removed in Vitest 4 and is a type error; `include` already pulls in untested files.
 - If a config sets Vite `root: "src"` (e.g. `apps/standalone`), coverage `include` globs resolve **relative to `src`**, so use `["**/*.{ts,tsx}"]`, not `["src/**/…"]`.
-- v8 does **not** traverse `../../` paths outside the project root; `trilium-core` coverage is measured *through* `apps/server` (and `apps/standalone`), which already list it in their `include`.
+- **Files outside the project `root` need `coverage.allowExternal: true`.** v8 defaults it to `false`, which **silently drops** every out-of-root file — so an `include` glob alone (e.g. `../../packages/trilium-core/src/**`) is ignored and contributes nothing. `trilium-core` has no runner of its own; its coverage is measured *through* `apps/server` and `apps/standalone`, and both **must** set `allowExternal: true` **plus** a core glob in `coverage.include` whose `../` depth matches that suite's `root`: `../../packages/trilium-core/src/**` for server (root `apps/server`), `../../../packages/trilium-core/src/**` for standalone (root `apps/standalone/src`). Without `allowExternal` core never reaches the lcov or Codecov. The lcov writes these as `../…/packages/…` paths; `codecov.yml`'s `fixes:` entries strip the `../` so they map onto the repo tree.
 - For provably-unreachable defensive branches, mark them with `/* v8 ignore next */` / `/* v8 ignore start */…/* v8 ignore stop */` and a one-line reason — don't delete the guard or write a fake test.
 
 ## Universal gotchas
