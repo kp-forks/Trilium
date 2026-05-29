@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import options from "../options.js";
 import { getContext } from "../context.js";
@@ -12,6 +12,15 @@ import passwordEncryption from "./password_encryption.js";
 // mutations below isolate to this file. The `it()`s share the single fixture DB,
 // so the destructive verification-hash test is kept last.
 const FIXTURE_PASSWORD = "demo1234";
+
+// scrypt (N=16384) runs in pure JS (scrypt-js) under the browser provider, which is
+// ~10x slower under V8 coverage instrumentation than Node's native scryptSync. Give the
+// standalone (happy-dom) suite a larger timeout; the server suite keeps the strict
+// default. The derived bytes are identical across runtimes — only the speed differs.
+const isBrowserRuntime = typeof window !== "undefined";
+if (isBrowserRuntime) {
+    vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
+}
 
 /**
  * Wraps a callback in a CLS context. setDataKey calls options.setOption, which

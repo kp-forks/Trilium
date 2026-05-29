@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { decodeUtf8, encodeUtf8 } from "../utils/binary.js";
 import { type CryptoProvider, getCrypto, initCrypto } from "./crypto.js";
@@ -12,6 +12,15 @@ import { type CryptoProvider, getCrypto, initCrypto } from "./crypto.js";
 // hooks/tests (not at describe-collection time). Tests that swap the provider via
 // initCrypto() restore the original in afterEach so the rest of the file keeps
 // seeing the real provider.
+
+// scrypt (N=16384) runs in pure JS (scrypt-js) under the browser provider, which is
+// ~10x slower under V8 coverage instrumentation than Node's native scryptSync. Give the
+// standalone (happy-dom) suite a larger timeout; the server suite keeps the strict
+// default. The derived bytes are identical across runtimes — only the speed differs.
+const isBrowserRuntime = typeof window !== "undefined";
+if (isBrowserRuntime) {
+    vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
+}
 
 describe("crypto registry", () => {
     let original: CryptoProvider;

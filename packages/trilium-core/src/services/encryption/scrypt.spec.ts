@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import options from "../options.js";
 import { encodeBase64 } from "../utils/binary.js";
@@ -15,6 +15,15 @@ import scryptService, {
 // options that this module reads. These tests are read-only, so no CLS context
 // is required. Each spec file runs in its own vitest fork (pool: "forks").
 const FIXTURE_PASSWORD = "demo1234";
+
+// scrypt (N=16384) runs in pure JS (scrypt-js) under the browser provider, which is
+// ~10x slower under V8 coverage instrumentation than Node's native scryptSync. Give the
+// standalone (happy-dom) suite a larger timeout; the server suite keeps the strict
+// default. The derived bytes are identical across runtimes — only the speed differs.
+const isBrowserRuntime = typeof window !== "undefined";
+if (isBrowserRuntime) {
+    vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
+}
 
 describe("scrypt (real DB)", () => {
     describe("getScryptHash", () => {
