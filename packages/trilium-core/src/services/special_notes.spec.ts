@@ -6,6 +6,7 @@ import attributeService from "./attributes.js";
 import { getContext } from "./context.js";
 import hoistedNoteService from "./hoisted_note.js";
 import specialNotes from "./special_notes.js";
+import { unwrapStringOrBuffer } from "./utils/binary.js";
 
 /**
  * Wraps a callback in a CLS context. Entity mutations (createNewNote,
@@ -33,7 +34,7 @@ describe("special_notes (core, real DB)", () => {
 
             expect(note.type).toBe("code");
             expect(note.mime).toBe("text/x-sqlite;schema=trilium");
-            expect(note.getContent().toString()).toContain("SELECT");
+            expect(unwrapStringOrBuffer(note.getContent())).toContain("SELECT");
             expect(note.getLabelValue("iconClass")).toBe("bx bx-data");
             expect(note.hasLabel("keepCurrentHoisting")).toBe(true);
             expect(note.title).toContain("SQL Console");
@@ -320,7 +321,7 @@ describe("special_notes (core, real DB)", () => {
             expect(launcher.noteId).toBe("myLauncher1");
             expect(launcher.title).toBe("My Launcher");
             expect(launcher.mime).toBe("application/javascript;env=frontend");
-            expect(launcher.getContent().toString()).toBe("(() => console.log(1))()");
+            expect(unwrapStringOrBuffer(launcher.getContent())).toBe("(() => console.log(1))()");
             expect(launcher.hasLabel("scriptInLauncherContent")).toBe(true);
             expect(launcher.getLabelValue("keyboardShortcut")).toBe("ctrl+m");
             expect(launcher.getLabelValue("iconClass")).toBe("bx bx-rocket");
@@ -348,7 +349,7 @@ describe("special_notes (core, real DB)", () => {
 
             expect(updated.noteId).toBe("myLauncher2");
             expect(updated.title).toBe("Second");
-            expect(updated.getContent().toString()).toBe("(() => 2)()");
+            expect(unwrapStringOrBuffer(updated.getContent())).toBe("(() => 2)()");
             expect(updated.hasLabel("keyboardShortcut")).toBe(false);
             expect(updated.hasLabel("iconClass")).toBe(false);
         });

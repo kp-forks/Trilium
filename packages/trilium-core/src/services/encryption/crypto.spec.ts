@@ -163,14 +163,15 @@ describe("CryptoProvider behaviour (wired-up provider)", () => {
         });
 
         it("accepts a Uint8Array secret/value and stays deterministic", () => {
-            // The provider stringifies its inputs via toString(); a Uint8Array
-            // stringifies to its comma-joined bytes, so it deliberately does NOT
-            // collide with the same text passed as a string. It must, however,
-            // still hash deterministically.
+            // Whether Uint8Array inputs collide with their string equivalents is a
+            // provider-specific implementation detail (they differ under Node but
+            // match under the BrowserCryptoProvider), so we only assert the portable
+            // contract: equal Uint8Array inputs hash deterministically to a string.
             const a = crypto.hmac(encodeUtf8("secret"), encodeUtf8("message"));
             const b = crypto.hmac(encodeUtf8("secret"), encodeUtf8("message"));
             expect(a).toBe(b);
-            expect(a).not.toBe(crypto.hmac("secret", "message"));
+            expect(typeof a).toBe("string");
+            expect(a.length).toBeGreaterThan(0);
         });
     });
 

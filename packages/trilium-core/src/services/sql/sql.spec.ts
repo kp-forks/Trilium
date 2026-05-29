@@ -3,6 +3,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { getContext } from "../context.js";
 import { getSql } from "./index.js";
 
+// happy-dom (standalone/WASM) exposes `window`; the Node server suite does not.
+const isBrowserRuntime = typeof window !== "undefined";
+
 /**
  * Wraps a callback in a CLS context. Methods that touch `getContext()`
  * (e.g. `disableSlowQueryLogging`, `transactional`) require an initialised
@@ -163,7 +166,11 @@ describe("SqlService (real DB)", () => {
             expect(a).toBe(b);
         });
 
-        it("keeps raw and non-raw statements as distinct cache entries", () => {
+        // Node's better-sqlite3 provider prepares a fresh statement object per
+        // cache key, so raw vs non-raw yield distinct instances. The WASM
+        // (sql.js) provider may hand back the same object for identical SQL, so
+        // this distinctness is a Node-provider impl detail, not a portable contract.
+        it.skipIf(isBrowserRuntime)("keeps raw and non-raw statements as distinct cache entries", () => {
             const sql = getSql();
             const plain = sql.stmt("SELECT 2");
             const raw = sql.stmt("SELECT 2", true);
@@ -353,9 +360,16 @@ describe("SqlService (real DB)", () => {
     });
 
     describe("serialize", () => {
-        it("throws when the underlying provider does not support serialization", () => {
-            // The server's better-sqlite3 provider has no serialize() method.
-            expect(() => getSql().serialize()).toThrow("does not support serialization");
+        it("either throws (provider unsupported) or returns the serialized bytes", () => {
+            // Capability-aware: the server's better-sqlite3 provider has no
+            // serialize() and throws, while the WASM (sql.js) provider supports
+            // it and returns the database as a Uint8Array.
+            if (isBrowserRuntime) {
+                const bytes = getSql().serialize();
+                expect(bytes).toBeInstanceOf(Uint8Array);
+            } else {
+                expect(() => getSql().serialize()).toThrow("does not support serialization");
+            }
         });
     });
 });
