@@ -5,7 +5,7 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { syntaxTree } from "@codemirror/language";
 import type { SyntaxNode } from "@lezer/common";
 import VanillaCodeMirror from "@triliumnext/codemirror";
-import { CustomMarkdownRenderer, renderToHtml } from "@triliumnext/commons";
+import { CustomMarkdownRenderer, isAnchorState, renderToHtml, type TaskStateDef } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
 import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
@@ -21,6 +21,7 @@ import note_create from "../../../services/note_create";
 import options from "../../../services/options";
 import server from "../../../services/server";
 import { removeIndividualBinding } from "../../../services/shortcuts";
+import { getTaskStateDefinitions } from "../../../services/task_states";
 import toast from "../../../services/toast";
 import tree from "../../../services/tree";
 import utils, { isDesktop } from "../../../services/utils";
@@ -485,6 +486,15 @@ function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
 
 //#region Slash commands
 /**
+ * Builds the markdown a `/todo:<state>` command inserts. Omits the leading `- `
+ * bullet when the slash was typed right after an existing one (e.g. `- /todo:doing`),
+ * so the existing bullet is reused instead of producing a doubled `- - [ ] ` marker.
+ */
+export function buildTaskItemInsert(symbol: string, precededByBullet: boolean): string {
+    return `${precededByBullet ? "" : "- "}[${symbol}] `;
+}
+
+/**
  * Adds `/`-triggered autocomplete to the CodeMirror editor.
  * Typing `/` at the start of a line (or after whitespace) shows a menu of commands.
  */
@@ -494,15 +504,20 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
     // `appendConfig` would otherwise stack a duplicate extension on each switch.
     const noteRef = useRef(note);
     const parentRef = useRef(parentComponent);
+    // The user-configured todo task states (from the `_taskStates` subtree), loaded once.
+    // Read inside the autocomplete closure, so `/todo:*` commands reflect the current config.
+    const taskStatesRef = useRef<TaskStateDef[]>([]);
     useEffect(() => { noteRef.current = note; }, [note]);
     useEffect(() => { parentRef.current = parentComponent; }, [parentComponent]);
+    useEffect(() => { void getTaskStateDefinitions().then((states) => { taskStatesRef.current = states; }); }, []);
 
     useEffect(() => {
         if (!editorView) return;
 
         const ext = autocompletion({
             override: [(ctx) => {
-                const match = ctx.matchBefore(/(?:^|(?<=\s))\/\w*/);
+                // `:` and `-` are allowed so `/todo:<state>` (e.g. `/todo:in-progress`) matches as one token.
+                const match = ctx.matchBefore(/(?:^|(?<=\s))\/[\w:-]*/);
                 if (!match) return null;
 
                 // Suppress slash menu inside fenced/indented code blocks and inline code spans —
@@ -626,7 +641,27 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     selection: { anchor: from + template.length }
                                 });
                             }
-                        }))
+                        })),
+                        // One `/todo:<state>` per configured task state that has a markdown marker —
+                        // the ` ` (unchecked) and `x` (checked) anchors are markers too, so both are covered.
+                        ...taskStatesRef.current
+                            .filter((state) => state.markdownSymbol)
+                            .map((state) => {
+                                // Anchors (`none`/`done`) are the standard `[ ]`/`[x]`; custom states
+                                // use non-standard markers (e.g. `[/]`), so flag those in the description.
+                                const detailKey = isAnchorState(state.name)
+                                    ? "markdown_slash_commands.todo"
+                                    : "markdown_slash_commands.todo_nonstandard";
+                                return {
+                                    label: `/todo:${state.name}`,
+                                    detail: t(detailKey, { title: state.title }),
+                                    apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
+                                        const precededByBullet = from >= 2 && view.state.doc.sliceString(from - 2, from) === "- ";
+                                        const insert = buildTaskItemInsert(state.markdownSymbol, precededByBullet);
+                                        view.dispatch({ changes: { from, to, insert } });
+                                    }
+                                };
+                            })
                     ]
                 };
             }],

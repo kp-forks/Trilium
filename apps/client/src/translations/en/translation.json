@@ -266,7 +266,9 @@
     "footnote": "Insert a footnote",
     "mermaid": "Insert a Mermaid diagram",
     "collapsible": "Insert a collapsible block",
-    "admonition": "Insert {{type}} admonition"
+    "admonition": "Insert {{type}} admonition",
+    "todo": "Insert a \"{{title}}\" task item",
+    "todo_nonstandard": "Insert a \"{{title}}\" task item (non-standard)"
   },
   "move_to": {
     "dialog_title": "Move notes to ...",
