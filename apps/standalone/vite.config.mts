@@ -1,6 +1,7 @@
 import fs from "fs";
 import { join, resolve, sep } from "path";
 
+import { codecovVitePlugin } from "@codecov/vite-plugin";
 import prefresh from "@prefresh/vite";
 import { defineConfig, type Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -195,6 +196,20 @@ if (process.env.TRILIUM_INTEGRATION_TEST) {
             ]
         })
     ]
+}
+
+if (!isDev) {
+    // Put the Codecov vite plugin after all other plugins.
+    // Gated on CODECOV_TOKEN so it stays a no-op locally and in the
+    // integration-test build (which sets no token).
+    plugins = [
+        ...plugins,
+        codecovVitePlugin({
+            enableBundleAnalysis: !!process.env.CODECOV_TOKEN,
+            bundleName: "standalone",
+            uploadToken: process.env.CODECOV_TOKEN
+        })
+    ];
 }
 
 export default defineConfig(() => ({
