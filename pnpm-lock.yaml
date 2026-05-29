@@ -326,8 +326,8 @@ importers:
         specifier: 2.15.6
         version: 2.15.6
       katex:
-        specifier: 0.16.47
-        version: 0.16.47
+        specifier: 0.17.0
+        version: 0.17.0
       leaflet:
         specifier: 1.9.4
         version: 1.9.4
@@ -965,8 +965,8 @@ importers:
         specifier: 2.15.6
         version: 2.15.6
       katex:
-        specifier: 0.16.47
-        version: 0.16.47
+        specifier: 0.17.0
+        version: 0.17.0
       leaflet:
         specifier: 1.9.4
         version: 1.9.4
@@ -1593,8 +1593,8 @@ importers:
         specifier: 7.3.0
         version: 7.3.0
       katex:
-        specifier: 0.16.47
-        version: 0.16.47
+        specifier: 0.17.0
+        version: 0.17.0
       mermaid:
         specifier: 11.15.0
         version: 11.15.0
@@ -9808,12 +9808,12 @@ packages:
     resolution: {integrity: sha512-4+5mNNf4vZDSwPhKprKwz3330iisPrb08JyMgbsdFrimBCKNHecua/WBwvVg3n7vwx0C1ARjfhwIpbrbd9n5wg==}
     engines: {node: '>=12'}
 
-  katex@0.16.45:
-    resolution: {integrity: sha512-pQpZbdBu7wCTmQUh7ufPmLr0pFoObnGUoL/yhtwJDgmmQpbkg/0HSVti25Fu4rmd1oCR6NGWe9vqTWuWv3GcNA==}
-    hasBin: true
-
   katex@0.16.47:
     resolution: {integrity: sha512-Eeo8Ys1doU1z+x8AZsPpQu+p/QcZBI5PeOo7QGQdy2x2m0MU/hYagBbGOmXwr5KVbEfVuWv9LpnQWeehogurjg==}
+    hasBin: true
+
+  katex@0.17.0:
+    resolution: {integrity: sha512-Vdw0ATsQ9V+LuegM/BTwQqV/6cTl5lbGcIrU+BCgLxyf6bo38ybOr372tuSIxir3CN720flu1meYR6XzNMwQnw==}
     hasBin: true
 
   kdbush@4.1.0:
@@ -24545,11 +24545,11 @@ snapshots:
     dependencies:
       lodash-es: 4.18.1
 
-  katex@0.16.45:
+  katex@0.16.47:
     dependencies:
       commander: 8.3.0
 
-  katex@0.16.47:
+  katex@0.17.0:
     dependencies:
       commander: 8.3.0
 
@@ -25151,7 +25151,7 @@ snapshots:
       dayjs: 1.11.20
       dompurify: 3.4.3
       es-toolkit: 1.46.1
-      katex: 0.16.45
+      katex: 0.16.47
       khroma: 2.1.0
       marked: 16.4.2
       roughjs: 4.6.6
