@@ -141,9 +141,9 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         bookmark: {
             toolbar: [
                 "bookmarkPreview",
+                "copyAnchorLink",
                 "|",
                 "editBookmark",
-                "copyAnchorLink",
                 "removeBookmark"
             ]
         },
