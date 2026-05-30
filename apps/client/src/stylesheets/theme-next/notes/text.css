@@ -594,6 +594,13 @@ button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel).ck
     opacity: .5;
 }
 
+/* A widget that CKEditor wrongly flags as the placeholder host (see the
+   `.ck-widget.ck-placeholder` note in style.css) must not be dimmed — its
+   content is real. The overlaid placeholder text is suppressed there. */
+.note-detail-editable-text-editor > .ck-widget.ck-placeholder {
+    opacity: 1;
+}
+
 /*
  * Code Blocks
  */
