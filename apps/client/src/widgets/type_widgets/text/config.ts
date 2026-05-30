@@ -4,6 +4,7 @@ import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMim
 
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
 import { t } from "../../../services/i18n.js";
+import imageService from "../../../services/image.js";
 import { getMermaidConfig } from "../../../services/mermaid.js";
 import { default as mimeTypesService, getHighlightJsNameForMime } from "../../../services/mime_types.js";
 import noteAutocompleteService, { type Suggestion } from "../../../services/note_autocomplete.js";
@@ -186,6 +187,16 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
 
     // The app's i18n translate function, so plugins can resolve Trilium translation keys.
     (config as Record<string, unknown>).translate = (key: string, params?: Record<string, unknown>) => t(key, params);
+
+    // Image toolbar actions (copy / download), handled by the ImageActions plugin. The copy
+    // button is only added where copying the raw image is supported (Electron or a secure
+    // context); elsewhere the browser's own context menu still offers a "Copy image" entry.
+    (config as Record<string, unknown>).imageActions = {
+        copyToClipboard: (src: string) => imageService.copyImageToClipboard(src),
+        download: (src: string) => imageService.downloadImage(src)
+    };
+    const imageToolbar = (config.image as { toolbar: (string | object)[] }).toolbar;
+    imageToolbar.push("|", ...(imageService.isImageCopySupported() ? ["copyImageToClipboard"] : []), "downloadImage");
 
     // Set up content language.
     const { contentLanguage } = opts;

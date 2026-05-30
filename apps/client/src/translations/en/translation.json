@@ -2005,7 +2005,12 @@
   },
   "image": {
     "copied-to-clipboard": "A reference to the image has been copied to clipboard. This can be pasted in any text note.",
-    "cannot-copy": "Could not copy the image reference to clipboard."
+    "cannot-copy": "Could not copy the image reference to clipboard.",
+    "copy-to-clipboard": "Copy image to clipboard",
+    "download": "Download image",
+    "image-copied-to-clipboard": "The image has been copied to clipboard.",
+    "cannot-copy-image": "Could not copy the image to clipboard.",
+    "cannot-download": "Could not download the image."
   },
   "clipboard": {
     "cut": "Note(s) have been cut into clipboard.",

@@ -1,9 +1,16 @@
 import $ from "jquery";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import imageService, { copyImageReferenceToClipboard } from "./image.js";
+import imageService, { copyImageReferenceToClipboard, downloadImage, getFileNameFromSrc, getImageDownloadUrl, isImageCopySupported } from "./image.js";
+import open from "./open.js";
 import * as toastModule from "./toast.js";
 import toastService from "./toast.js";
+import utils from "./utils.js";
+
+vi.mock("./utils.js", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("./utils.js")>();
+    return { ...actual, default: { ...actual.default, isElectron: vi.fn(() => false) } };
+});
 
 describe("copyImageReferenceToClipboard", () => {
     let execCommandSpy: ReturnType<typeof vi.fn>;
@@ -90,5 +97,84 @@ describe("copyImageReferenceToClipboard", () => {
 
     it("exposes copyImageReferenceToClipboard on the default export", () => {
         expect(imageService.copyImageReferenceToClipboard).toBe(copyImageReferenceToClipboard);
+    });
+});
+
+describe("getImageDownloadUrl", () => {
+    it("maps note and attachment image URLs to their download endpoints", () => {
+        expect(getImageDownloadUrl("api/images/abc123/My%20Image.png")).toBe("api/notes/abc123/download");
+        expect(getImageDownloadUrl("api/attachments/att456/image/photo.jpg")).toBe("api/attachments/att456/download");
+    });
+
+    it("matches absolute URLs and ignores the query string", () => {
+        expect(getImageDownloadUrl("http://localhost:8080/api/images/abc123/x.png?ts=1")).toBe("api/notes/abc123/download");
+    });
+
+    it("returns null for sources that aren't note/attachment images", () => {
+        expect(getImageDownloadUrl("data:image/png;base64,AAAA")).toBeNull();
+        expect(getImageDownloadUrl("https://example.com/cat.png")).toBeNull();
+    });
+});
+
+describe("getFileNameFromSrc", () => {
+    it("uses the decoded last path segment and strips the query", () => {
+        expect(getFileNameFromSrc("api/images/abc/My%20Image.png?ts=1")).toBe("My Image.png");
+    });
+
+    it("appends an extension from the MIME type when the name has none", () => {
+        expect(getFileNameFromSrc("api/images/abc/screenshot", "image/png")).toBe("screenshot.png");
+    });
+
+    it("keeps an existing extension and falls back to 'image' for an empty segment", () => {
+        expect(getFileNameFromSrc("api/images/abc/photo.jpg", "image/jpeg")).toBe("photo.jpg");
+        expect(getFileNameFromSrc("api/images/abc/", "image/png")).toBe("image.png");
+    });
+});
+
+describe("isImageCopySupported", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("is always supported in Electron, regardless of secure context", () => {
+        vi.mocked(utils.isElectron).mockReturnValue(true);
+        vi.stubGlobal("isSecureContext", false);
+        expect(isImageCopySupported()).toBe(true);
+    });
+
+    it("is supported in a secure browser context exposing the Clipboard API", () => {
+        vi.mocked(utils.isElectron).mockReturnValue(false);
+        vi.stubGlobal("isSecureContext", true);
+        vi.stubGlobal("ClipboardItem", class {});
+        vi.stubGlobal("navigator", { clipboard: { write: vi.fn() } });
+        expect(isImageCopySupported()).toBe(true);
+    });
+
+    it("is unsupported on a non-secure origin", () => {
+        vi.mocked(utils.isElectron).mockReturnValue(false);
+        vi.stubGlobal("isSecureContext", false);
+        vi.stubGlobal("ClipboardItem", class {});
+        vi.stubGlobal("navigator", { clipboard: { write: vi.fn() } });
+        expect(isImageCopySupported()).toBe(false);
+    });
+
+    it("is unsupported when the Clipboard API is missing", () => {
+        vi.mocked(utils.isElectron).mockReturnValue(false);
+        vi.stubGlobal("isSecureContext", true);
+        vi.stubGlobal("ClipboardItem", undefined);
+        vi.stubGlobal("navigator", { clipboard: undefined });
+        expect(isImageCopySupported()).toBe(false);
+    });
+});
+
+describe("downloadImage", () => {
+    it("downloads via the resolved download endpoint instead of the inline image URL", async () => {
+        vi.mocked(utils.isElectron).mockReturnValue(false);
+        const downloadSpy = vi.spyOn(open, "download").mockImplementation(() => {});
+
+        await downloadImage("api/images/abc123/My%20Image.png");
+
+        expect(downloadSpy).toHaveBeenCalledWith("api/notes/abc123/download");
+        downloadSpy.mockRestore();
     });
 });
