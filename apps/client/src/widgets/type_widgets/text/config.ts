@@ -44,7 +44,8 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         },
         mermaid: {
             lazyLoad: async () => (await import("mermaid")).default, // FIXME
-            config: getMermaidConfig()
+            config: getMermaidConfig(),
+            samples: SAMPLE_DIAGRAMS
         },
         image: {
             styles: {

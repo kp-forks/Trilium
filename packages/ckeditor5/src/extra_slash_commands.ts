@@ -18,22 +18,12 @@ import internalLinkIcon from './icons/trilium.svg?raw';
 import noteIcon from './icons/note.svg?raw';
 import importMarkdownIcon from './icons/markdown-mark.svg?raw';
 import { icons as mathIcons, MathUI } from '@triliumnext/ckeditor5-math';
-import { INSERT_MERMAID_COMMAND } from '@triliumnext/ckeditor5-mermaid';
+import { INSERT_MERMAID_COMMAND, type MermaidSample } from '@triliumnext/ckeditor5-mermaid';
 import { BookmarkUI } from "ckeditor5";
 import bxBookmark from "boxicons/svg/regular/bx-bookmark.svg?raw";
 import bxNetworkChart from "boxicons/svg/regular/bx-network-chart.svg?raw";
 
 type SlashCommandDefinition = SlashCommandEditorConfig["extraCommands"][number];
-
-/**
- * A Mermaid sample diagram (name + source). Mirrors the client's
- * `NoteContentTemplate`; redeclared here because this package cannot import
- * from the client app.
- */
-export interface MermaidSampleTemplate {
-    name: string;
-    content: string;
-}
 
 /**
  * Localizable labels for the `/Mermaid Diagram: …` sample commands. Supplied by
@@ -50,7 +40,7 @@ const DEFAULT_MERMAID_LABELS: MermaidSampleLabels = {
 };
 
 export default function buildExtraCommands(
-    mermaidSamples: MermaidSampleTemplate[] = [],
+    mermaidSamples: MermaidSample[] = [],
     mermaidLabels: MermaidSampleLabels = DEFAULT_MERMAID_LABELS
 ): SlashCommandDefinition[] {
     return [
@@ -132,7 +122,7 @@ export default function buildExtraCommands(
     ];
 }
 
-function buildMermaidSampleCommands(samples: MermaidSampleTemplate[], labels: MermaidSampleLabels): SlashCommandDefinition[] {
+function buildMermaidSampleCommands(samples: MermaidSample[], labels: MermaidSampleLabels): SlashCommandDefinition[] {
     return samples.map((sample, index) => ({
         id: `mermaid-sample-${index}`,
         title: labels.title(sample.name),
