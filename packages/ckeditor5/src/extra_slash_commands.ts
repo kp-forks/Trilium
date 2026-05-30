@@ -26,96 +26,84 @@ import bxNetworkChart from "boxicons/svg/regular/bx-network-chart.svg?raw";
 type SlashCommandDefinition = SlashCommandEditorConfig["extraCommands"][number];
 
 /**
- * Localizable labels for the `/Mermaid diagram` slash commands — the blank
- * diagram plus the `… : <template>` samples. Supplied by the client (which owns
- * i18n); the English defaults keep this package standalone.
+ * Translation function supplied by the client (which owns i18n). Resolves the
+ * `slash_commands.*` (and `mermaid.*`) keys used for the command titles and
+ * descriptions below, so none of them are hardcoded in this package.
  */
-export interface MermaidSlashLabels {
-    blankTitle: string;
-    blankDescription: string;
-    title: (name: string) => string;
-    description: (name: string) => string;
-}
-
-const DEFAULT_MERMAID_LABELS: MermaidSlashLabels = {
-    blankTitle: "Mermaid diagram",
-    blankDescription: "Insert an empty Mermaid diagram",
-    title: (name) => `Mermaid diagram: ${name}`,
-    description: (name) => `Insert a "${name}" Mermaid diagram template`
-};
+export type SlashTranslateFn = (key: string, params?: Record<string, unknown>) => string;
 
 export default function buildExtraCommands(
-    mermaidSamples: MermaidSample[] = [],
-    mermaidLabels: MermaidSlashLabels = DEFAULT_MERMAID_LABELS
+    t: SlashTranslateFn,
+    mermaidSamples: MermaidSample[] = []
 ): SlashCommandDefinition[] {
     return [
-        ...buildListExtraCommands(),
-        ...buildAlignmentExtraCommands(),
-        ...buildAdmonitionExtraCommands(),
-        ...buildMermaidCommands(mermaidSamples, mermaidLabels),
+        ...buildListExtraCommands(t),
+        ...buildAlignmentExtraCommands(t),
+        ...buildAdmonitionExtraCommands(t),
+        ...buildMermaidCommands(t, mermaidSamples),
         {
             id: "collapsible",
-            title: "Collapsible block",
-            description: "Insert a toggleable section that hides/shows content on click.",
+            title: t("slash_commands.collapsible"),
+            description: t("slash_commands.collapsible_description"),
             aliases: [ "details", "fold", "toggle" ],
             icon: collapsibleIcons.collapsibleIcon,
             commandName: "collapsible"
         },
         {
             id: 'footnote',
-            title: 'Footnote',
-            description: 'Create a new footnote and reference it here',
+            title: t("slash_commands.footnote"),
+            description: t("slash_commands.footnote_description"),
             icon: footnoteIcons.insertFootnoteIcon,
             commandName: "InsertFootnote"
         },
         {
             id: "datetime",
-            title: "Insert date/time",
-            description: "Insert the current date and time",
+            title: t("slash_commands.datetime"),
+            description: t("slash_commands.datetime_description"),
             icon: dateTimeIcon,
             commandName: INSERT_DATE_TIME_COMMAND
         },
         {
             id: "internal-link",
-            title: "Internal Trilium link",
-            description: "Insert a link to another Trilium note",
+            title: t("slash_commands.internal_link"),
+            description: t("slash_commands.internal_link_description"),
             aliases: [ "internal link", "trilium link", "reference link" ],
             icon: internalLinkIcon,
             commandName: INTERNAL_LINK_COMMAND
         },
         {
             id: "math",
-            title: "Math equation",
-            description: "Insert a math equation",
+            title: t("slash_commands.math"),
+            description: t("slash_commands.math_description"),
             aliases: [ "latex", "equation" ],
             icon: mathIcons.ckeditor,
             execute: (editor: Editor) => editor.plugins.get(MathUI)._showUI()
         },
         {
             id: "include-note",
-            title: "Include note",
-            description: "Display the content of another note in this note",
+            title: t("slash_commands.include_note"),
+            description: t("slash_commands.include_note_description"),
             icon: noteIcon,
             commandName: INCLUDE_NOTE_COMMAND
         },
         {
             id: "page-break",
-            title: "Page break",
-            description: "Insert a page break (for printing)",
+            title: t("slash_commands.page_break"),
+            description: t("slash_commands.page_break_description"),
             icon: IconPageBreak,
             commandName: "pageBreak"
         },
         {
             id: "markdown-import",
-            title: "Markdown import",
-            description: "Import a markdown file into this note",
+            title: t("slash_commands.markdown_import"),
+            description: t("slash_commands.markdown_import_description"),
             icon: importMarkdownIcon,
             commandName: MARKDOWN_IMPORT_COMMAND
         },
         {
             id: "anchor",
-            title: "Anchor",
-            description: "Insert an anchor for internal linking",
+            title: t("slash_commands.anchor"),
+            description: t("slash_commands.anchor_description"),
             aliases: [ "bookmark" ],
             icon: bxBookmark,
             execute: (editor: Editor) => {
@@ -128,13 +116,42 @@ export default function buildExtraCommands(
     ];
 }
 
-function buildMermaidCommands(samples: MermaidSample[], labels: MermaidSlashLabels): SlashCommandDefinition[] {
+// Replaces CKEditor's built-in `bulletedList`/`numberedList`/`todoList` slash
+// commands (removed via `removeCommands`), whose titles are Title Case, with
+// sentence-case equivalents that run the same commands.
+function buildListExtraCommands(t: SlashTranslateFn): SlashCommandDefinition[] {
+    return [
+        {
+            id: "bulletedList",
+            title: t("slash_commands.bulleted_list"),
+            description: t("slash_commands.bulleted_list_description"),
+            icon: IconBulletedList,
+            commandName: "bulletedList"
+        },
+        {
+            id: "numberedList",
+            title: t("slash_commands.numbered_list"),
+            description: t("slash_commands.numbered_list_description"),
+            icon: IconNumberedList,
+            commandName: "numberedList"
+        },
+        {
+            id: "todoList",
+            title: t("slash_commands.todo_list"),
+            description: t("slash_commands.todo_list_description"),
+            icon: IconTodoList,
+            commandName: "todoList"
+        }
+    ];
+}
+
+function buildMermaidCommands(t: SlashTranslateFn, samples: MermaidSample[]): SlashCommandDefinition[] {
     // The blank diagram. Replaces CKEditor's built-in `insertMermaidCommand`
     // slash command (removed via `removeCommands`), which uses a generic icon.
     const blank: SlashCommandDefinition = {
         id: "mermaid",
-        title: labels.blankTitle,
-        description: labels.blankDescription,
+        title: t("mermaid.slash_command_blank_title"),
+        description: t("mermaid.slash_command_blank_description"),
         aliases: [ "mermaid", "diagram", "flowchart" ],
         icon: bxNetworkChart,
         commandName: INSERT_MERMAID_COMMAND
@@ -142,8 +159,8 @@ function buildMermaidCommands(samples: MermaidSample[], labels: MermaidSlashLabe
 
     const templates = samples.map((sample, index) => ({
         id: `mermaid-sample-${index}`,
-        title: labels.title(sample.name),
-        description: labels.description(sample.name),
+        title: t("mermaid.slash_command_title", { name: sample.name }),
+        description: t("mermaid.slash_command_description", { name: sample.name }),
         aliases: [ "mermaid", "diagram", sample.name ],
         icon: bxNetworkChart,
         // Inserts a mermaid block pre-filled with the sample source (see insertMermaidCommand).
@@ -153,69 +170,40 @@ function buildMermaidCommands(samples: MermaidSample[], labels: MermaidSlashLabe
     return [ blank, ...templates ];
 }
 
-// Replaces CKEditor's built-in `bulletedList`/`numberedList`/`todoList` slash
-// commands (removed via `removeCommands`), whose titles are Title Case, with
-// sentence-case equivalents that run the same commands.
-function buildListExtraCommands(): SlashCommandDefinition[] {
-    return [
-        {
-            id: "bulletedList",
-            title: "Bulleted list",
-            description: "Create a bulleted list",
-            icon: IconBulletedList,
-            commandName: "bulletedList"
-        },
-        {
-            id: "numberedList",
-            title: "Numbered list",
-            description: "Create a numbered list",
-            icon: IconNumberedList,
-            commandName: "numberedList"
-        },
-        {
-            id: "todoList",
-            title: "To-do list",
-            description: "Create a to-do list",
-            icon: IconTodoList,
-            commandName: "todoList"
-        }
-    ];
-}
-
-function buildAlignmentExtraCommands(): SlashCommandDefinition[] {
+function buildAlignmentExtraCommands(t: SlashTranslateFn): SlashCommandDefinition[] {
     return [
         {
             id: "align-left",
-            title: "Align left",
-            description: "Align text to the left",
+            title: t("slash_commands.align_left"),
+            description: t("slash_commands.align_left_description"),
             icon: IconAlignLeft,
             execute: (editor: Editor) => editor.execute("alignment", { value: "left" }),
         },
         {
             id: "align-center",
-            title: "Align center",
-            description: "Align text to the center",
+            title: t("slash_commands.align_center"),
+            description: t("slash_commands.align_center_description"),
             icon: IconAlignCenter,
             execute: (editor: Editor) => editor.execute("alignment", { value: "center" }),
         },
         {
             id: "align-right",
-            title: "Align right",
-            description: "Align text to the right",
+            title: t("slash_commands.align_right"),
+            description: t("slash_commands.align_right_description"),
             icon: IconAlignRight,
             execute: (editor: Editor) => editor.execute("alignment", { value: "right" }),
         },
         {
             id: "align-justify",
-            title: "Justify",
-            description: "Justify text alignment",
+            title: t("slash_commands.justify"),
+            description: t("slash_commands.justify_description"),
             icon: IconAlignJustify,
             execute: (editor: Editor) => editor.execute("alignment", { value: "justify" }),
         }
     ];
 }
 
-function buildAdmonitionExtraCommands(): SlashCommandDefinition[] {
+function buildAdmonitionExtraCommands(t: SlashTranslateFn): SlashCommandDefinition[] {
     const commands: SlashCommandDefinition[] = [];
     const admonitionIcons: Record<AdmonitionType, string> = {
         note: bxInfoCircle,
@@ -228,8 +216,9 @@ function buildAdmonitionExtraCommands(): SlashCommandDefinition[] {
     for (const [ keyword, definition ] of Object.entries(ADMONITION_TYPES)) {
         commands.push({
             id: keyword,
+            // The type name (Note, Tip, …) is owned by the admonition package.
             title: definition.title,
-            description: "Inserts a new admonition",
+            description: t("slash_commands.admonition_description"),
             icon: admonitionIcons[keyword as AdmonitionType],
             execute: (editor: Editor) => editor.execute("admonition", { forceValue: keyword as AdmonitionType }),
             aliases: [ "box" ]
@@ -237,4 +226,3 @@ function buildAdmonitionExtraCommands(): SlashCommandDefinition[] {
     }
     return commands;
 }
-
