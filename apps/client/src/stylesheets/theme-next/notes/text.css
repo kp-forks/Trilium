@@ -371,8 +371,11 @@ div.ck.ck-collapsible {
     color: var(--accent);
 }
 
-/* Code dropdown */
+/* Scrollable dropdown panel. Applies to our reusable `.ck-tn-dropdown`
+   (footnotes, mermaid; set via `dropdownView.class`) and to CKEditor's own code
+   block language dropdown, whose 250px default we bump up to 400px. */
 
+.ck.ck-dropdown.ck-tn-dropdown .ck-dropdown__panel,
 .ck.ck-dropdown.ck-code-block-dropdown .ck-dropdown__panel,
 .ck.ck-toolbar-container.codeblock-language-list .ck.ck-dropdown__panel {
     --_panel-height: 400px;
@@ -381,6 +384,7 @@ div.ck.ck-collapsible {
     max-height: var(--_panel-height);
 }
 
+.ck-tn-dropdown .ck-dropdown__panel .ck-list,
 .ck-code-block-dropdown .ck-dropdown__panel .ck-list,
 .ck.ck-toolbar-container.codeblock-language-list .ck.ck-dropdown__panel .ck-list {
     overflow: auto;

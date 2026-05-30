@@ -84,8 +84,11 @@ export default class MermaidUI extends Plugin {
 			splitButtonView.on( 'execute', () => this._insertDiagram() );
 
 			// Dropdown: insert a diagram pre-filled with the picked template.
+			// Reuse the shared scrollable dropdown style so the long list of
+			// templates doesn't overflow the viewport.
 			// `createDropdown` already binds the split button's `isEnabled` to the
 			// dropdown, so binding the dropdown alone disables both parts.
+			dropdownView.class = 'ck-tn-dropdown';
 			addListToDropdown( dropdownView, this._getSampleDropdownItems( samples ) );
 			dropdownView.bind( 'isEnabled' ).to( command, 'isEnabled' );
 			dropdownView.on( 'execute', evt => {
