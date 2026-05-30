@@ -74,6 +74,15 @@ describe( 'MermaidUI', () => {
 			expect( document.activeElement.tagName ).to.equal( 'TEXTAREA' );
 		} );
 
+		it( 'should insert exactly one diagram on the main action (no double insert)', () => {
+			const dropdown = editor.ui.componentFactory.create( 'mermaid' );
+
+			dropdown.buttonView.fire( 'execute' );
+
+			const data = getModelData( editor.model, { withoutSelection: true } );
+			expect( ( data.match( /<mermaid/g ) || [] ).length ).to.equal( 1 );
+		} );
+
 		it( 'should not crash if the button is fired inside model.change()', () => {
 			const dropdown = editor.ui.componentFactory.create( 'mermaid' );
 

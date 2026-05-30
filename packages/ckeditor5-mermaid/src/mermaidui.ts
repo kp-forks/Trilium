@@ -92,7 +92,7 @@ export default class MermaidUI extends Plugin {
 			addListToDropdown( dropdownView, this._getSampleDropdownItems( samples ) );
 			dropdownView.bind( 'isEnabled' ).to( command, 'isEnabled' );
 			dropdownView.on( 'execute', evt => {
-				const source = (evt.source as { commandParam?: string }).commandParam;
+				const source = (evt.source as { commandParam?: string } | undefined)?.commandParam;
 				this._insertDiagram( { source } );
 			} );
 
