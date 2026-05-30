@@ -4,12 +4,13 @@ import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMim
 
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
 import { t } from "../../../services/i18n.js";
-import { getTaskStateDefinitions, openCustomTaskStateConfig } from "../../../services/task_states.js";
 import { getMermaidConfig } from "../../../services/mermaid.js";
 import { default as mimeTypesService, getHighlightJsNameForMime } from "../../../services/mime_types.js";
 import noteAutocompleteService, { type Suggestion } from "../../../services/note_autocomplete.js";
 import options from "../../../services/options.js";
 import { ensureMimeTypesForHighlighting, isSyntaxHighlightEnabled } from "../../../services/syntax_highlight.js";
+import { getTaskStateDefinitions, openCustomTaskStateConfig } from "../../../services/task_states.js";
+import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams.js";
 import { buildToolbarConfig } from "./toolbar.js";
 
 export const OPEN_SOURCE_LICENSE_KEY = "GPL";
@@ -163,7 +164,10 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         slashCommand: {
             removeCommands: [],
             dropdownLimit: Number.MAX_SAFE_INTEGER,
-            extraCommands: buildExtraCommands()
+            extraCommands: buildExtraCommands(SAMPLE_DIAGRAMS, {
+                title: (name) => t("mermaid.slash_command_title", { name }),
+                description: (name) => t("mermaid.slash_command_description", { name })
+            })
         },
         template: {
             definitions: opts.templates

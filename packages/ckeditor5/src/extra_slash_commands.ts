@@ -18,15 +18,45 @@ import internalLinkIcon from './icons/trilium.svg?raw';
 import noteIcon from './icons/note.svg?raw';
 import importMarkdownIcon from './icons/markdown-mark.svg?raw';
 import { icons as mathIcons, MathUI } from '@triliumnext/ckeditor5-math';
+import { INSERT_MERMAID_COMMAND } from '@triliumnext/ckeditor5-mermaid';
 import { BookmarkUI } from "ckeditor5";
 import bxBookmark from "boxicons/svg/regular/bx-bookmark.svg?raw";
+import bxNetworkChart from "boxicons/svg/regular/bx-network-chart.svg?raw";
 
 type SlashCommandDefinition = SlashCommandEditorConfig["extraCommands"][number];
 
-export default function buildExtraCommands(): SlashCommandDefinition[] {
+/**
+ * A Mermaid sample diagram (name + source). Mirrors the client's
+ * `NoteContentTemplate`; redeclared here because this package cannot import
+ * from the client app.
+ */
+export interface MermaidSampleTemplate {
+    name: string;
+    content: string;
+}
+
+/**
+ * Localizable labels for the `/Mermaid Diagram: …` sample commands. Supplied by
+ * the client (which owns i18n); the English defaults keep this package standalone.
+ */
+export interface MermaidSampleLabels {
+    title: (name: string) => string;
+    description: (name: string) => string;
+}
+
+const DEFAULT_MERMAID_LABELS: MermaidSampleLabels = {
+    title: (name) => `Mermaid Diagram: ${name}`,
+    description: (name) => `Insert a "${name}" Mermaid diagram template`
+};
+
+export default function buildExtraCommands(
+    mermaidSamples: MermaidSampleTemplate[] = [],
+    mermaidLabels: MermaidSampleLabels = DEFAULT_MERMAID_LABELS
+): SlashCommandDefinition[] {
     return [
         ...buildAlignmentExtraCommands(),
         ...buildAdmonitionExtraCommands(),
+        ...buildMermaidSampleCommands(mermaidSamples, mermaidLabels),
         {
             id: "collapsible",
             title: "Collapsible block",
@@ -100,6 +130,18 @@ export default function buildExtraCommands(): SlashCommandDefinition[] {
             }
         }
     ];
+}
+
+function buildMermaidSampleCommands(samples: MermaidSampleTemplate[], labels: MermaidSampleLabels): SlashCommandDefinition[] {
+    return samples.map((sample, index) => ({
+        id: `mermaid-sample-${index}`,
+        title: labels.title(sample.name),
+        description: labels.description(sample.name),
+        aliases: [ "mermaid", "diagram", sample.name ],
+        icon: bxNetworkChart,
+        // Inserts a mermaid block pre-filled with the sample source (see insertMermaidCommand).
+        execute: (editor: Editor) => editor.execute(INSERT_MERMAID_COMMAND, { source: sample.content })
+    }));
 }
 
 function buildAlignmentExtraCommands(): SlashCommandDefinition[] {
