@@ -23,7 +23,7 @@ export function isImageCopySupported() {
 export async function copyImageToClipboard(src: string) {
     try {
         if (utils.isElectron()) {
-            const blob = await (await fetch(src)).blob();
+            const blob = await fetchImageBlob(src);
             const buffer = new Uint8Array(await blob.arrayBuffer());
             window.electronApi?.clipboard.copyImageToClipboard(buffer);
         } else {
@@ -56,7 +56,7 @@ export async function downloadImage(src: string) {
 
     // Fallback for other sources (e.g. data: URLs): fetch into a blob and save via an object URL.
     try {
-        const blob = await (await fetch(src)).blob();
+        const blob = await fetchImageBlob(src);
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -87,6 +87,15 @@ export function getImageDownloadUrl(src: string) {
     return null;
 }
 
+/** Fetches the image as a blob, throwing on a non-OK response so error pages aren't copied/saved. */
+async function fetchImageBlob(src: string) {
+    const response = await fetch(src);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+    return await response.blob();
+}
+
 async function renderImageToPng(src: string) {
     // Decode through an <img> element — the browser's full image decoder, which handles every
     // format it can display — rather than createImageBitmap, which rejects some formats (e.g. SVG).
@@ -112,11 +121,17 @@ export function getFileNameFromSrc(src: string, mimeType?: string) {
     // Image URLs look like `api/images/<noteId>/<title>` — use the last path segment as the name.
     const path = src.split("?")[0];
     const lastSegment = path.substring(path.lastIndexOf("/") + 1);
-    let name = decodeURIComponent(lastSegment) || "image";
+    let name: string;
+    try {
+        name = decodeURIComponent(lastSegment) || "image";
+    } catch {
+        // A malformed %-escape in the segment would make decodeURIComponent throw.
+        name = lastSegment || "image";
+    }
 
     // Ensure an extension, since a blob: URL carries none: derive it from the MIME type.
     if (mimeType && !name.includes(".")) {
-        const extension = mimeType.split("/")[1];
+        const extension = mimeType.split("/")[1]?.split("+")[0]; // e.g. "image/svg+xml" → "svg"
         if (extension) {
             name += `.${extension}`;
         }

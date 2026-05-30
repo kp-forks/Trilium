@@ -129,6 +129,14 @@ describe("getFileNameFromSrc", () => {
         expect(getFileNameFromSrc("api/images/abc/photo.jpg", "image/jpeg")).toBe("photo.jpg");
         expect(getFileNameFromSrc("api/images/abc/", "image/png")).toBe("image.png");
     });
+
+    it("derives a clean extension from a compound MIME type", () => {
+        expect(getFileNameFromSrc("api/images/abc/diagram", "image/svg+xml")).toBe("diagram.svg");
+    });
+
+    it("falls back to the raw segment when it is a malformed URI", () => {
+        expect(getFileNameFromSrc("api/images/abc/%E0%A4%A")).toBe("%E0%A4%A");
+    });
 });
 
 describe("isImageCopySupported", () => {
@@ -176,5 +184,18 @@ describe("downloadImage", () => {
 
         expect(downloadSpy).toHaveBeenCalledWith("api/notes/abc123/download");
         downloadSpy.mockRestore();
+    });
+
+    it("reports an error when the fallback fetch returns a non-OK response", async () => {
+        vi.mocked(utils.isElectron).mockReturnValue(false);
+        vi.stubGlobal("logError", vi.fn());
+        vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 404, statusText: "Not Found" })));
+        const showErrorSpy = vi.spyOn(toastModule, "showError").mockImplementation(() => {});
+
+        // A data: URL doesn't map to a note/attachment endpoint, so the blob fallback runs and fetches.
+        await downloadImage("data:image/png;base64,AAAA");
+
+        expect(showErrorSpy).toHaveBeenCalledTimes(1);
+        showErrorSpy.mockRestore();
     });
 });
