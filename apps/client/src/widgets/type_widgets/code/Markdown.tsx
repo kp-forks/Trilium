@@ -27,6 +27,7 @@ import tree from "../../../services/tree";
 import utils, { isDesktop } from "../../../services/utils";
 import { useLegacyImperativeHandlers, useTriliumEvent } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
+import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
 
@@ -615,6 +616,19 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 });
                             }
                         },
+                        // One `/mermaid:<type>` per sample diagram (e.g. `/mermaid:flowchart`),
+                        // pre-filling the fenced block with that template's source.
+                        ...SAMPLE_DIAGRAMS.map((sample) => ({
+                            label: `/mermaid:${sample.name.toLowerCase().replace(/\s+/g, "-")}`,
+                            detail: t("markdown_slash_commands.mermaid_template", { name: sample.name }),
+                            apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
+                                const template = `\`\`\`mermaid\n${sample.content.trimEnd()}\n\`\`\``;
+                                view.dispatch({
+                                    changes: { from, to, insert: template },
+                                    selection: { anchor: from + 11 }
+                                });
+                            }
+                        })),
                         {
                             label: "/collapsible",
                             detail: t("markdown_slash_commands.collapsible"),
