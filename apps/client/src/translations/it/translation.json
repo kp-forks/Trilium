@@ -2704,6 +2704,13 @@
       "missing-icon": "icona mancante",
       "invalid-symbol": "Il simbolo Markdown deve essere composto da un solo carattere, ad eccezione di \"[\", \" \", \"X\" e \"]\"",
       "duplicate-symbol": "simbolo markdown duplicato"
-    }
+    },
+    "collapsible-body-placeholder": "Digita qui il contenuto...",
+    "collapsible-button-label": "Blocco pieghevole",
+    "collapsible-handle-tooltip": "Trascina per riposizionare il blocco a scomparsa",
+    "collapsible-select-label": "Seleziona il blocco a scomparsa",
+    "collapsible-title-placeholder": "Sintesi",
+    "collapsible-toggle-label": "Apri/chiudi il blocco",
+    "collapsible-tooltip": "Clicca sulla freccia oppure premi {{shortcut}} per comprimere/espandere."
   }
 }
