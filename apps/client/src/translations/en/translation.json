@@ -2527,7 +2527,9 @@
   "mermaid": {
     "placeholder": "Type the content of your Mermaid diagram or use one of the sample diagrams below.",
     "sample_diagrams": "Sample diagrams:",
-    "slash_command_title": "Mermaid Diagram: {{name}}",
+    "slash_command_blank_title": "Mermaid diagram",
+    "slash_command_blank_description": "Insert an empty Mermaid diagram",
+    "slash_command_title": "Mermaid diagram: {{name}}",
     "slash_command_description": "Insert a \"{{name}}\" Mermaid diagram template",
     "sample_flowchart": "Flowchart",
     "sample_class": "Class",

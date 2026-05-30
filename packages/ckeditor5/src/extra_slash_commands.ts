@@ -1,7 +1,7 @@
 import type { Editor } from 'ckeditor5';
 import type { SlashCommandEditorConfig  } from 'ckeditor5-premium-features';
 import { icons as footnoteIcons } from '@triliumnext/ckeditor5-footnotes';
-import { IconPageBreak, IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustify } from "@ckeditor/ckeditor5-icons";
+import { IconPageBreak, IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustify, IconBulletedList, IconNumberedList, IconTodoList } from "@ckeditor/ckeditor5-icons";
 import bxInfoCircle from "boxicons/svg/regular/bx-info-circle.svg?raw";
 import bxBulb from "boxicons/svg/regular/bx-bulb.svg?raw";
 import bxCommentError from "boxicons/svg/regular/bx-comment-error.svg?raw";
@@ -26,27 +26,33 @@ import bxNetworkChart from "boxicons/svg/regular/bx-network-chart.svg?raw";
 type SlashCommandDefinition = SlashCommandEditorConfig["extraCommands"][number];
 
 /**
- * Localizable labels for the `/Mermaid Diagram: …` sample commands. Supplied by
- * the client (which owns i18n); the English defaults keep this package standalone.
+ * Localizable labels for the `/Mermaid diagram` slash commands — the blank
+ * diagram plus the `… : <template>` samples. Supplied by the client (which owns
+ * i18n); the English defaults keep this package standalone.
  */
-export interface MermaidSampleLabels {
+export interface MermaidSlashLabels {
+    blankTitle: string;
+    blankDescription: string;
     title: (name: string) => string;
     description: (name: string) => string;
 }
 
-const DEFAULT_MERMAID_LABELS: MermaidSampleLabels = {
-    title: (name) => `Mermaid Diagram: ${name}`,
+const DEFAULT_MERMAID_LABELS: MermaidSlashLabels = {
+    blankTitle: "Mermaid diagram",
+    blankDescription: "Insert an empty Mermaid diagram",
+    title: (name) => `Mermaid diagram: ${name}`,
     description: (name) => `Insert a "${name}" Mermaid diagram template`
 };
 
 export default function buildExtraCommands(
     mermaidSamples: MermaidSample[] = [],
-    mermaidLabels: MermaidSampleLabels = DEFAULT_MERMAID_LABELS
+    mermaidLabels: MermaidSlashLabels = DEFAULT_MERMAID_LABELS
 ): SlashCommandDefinition[] {
     return [
+        ...buildListExtraCommands(),
         ...buildAlignmentExtraCommands(),
         ...buildAdmonitionExtraCommands(),
-        ...buildMermaidSampleCommands(mermaidSamples, mermaidLabels),
+        ...buildMermaidCommands(mermaidSamples, mermaidLabels),
         {
             id: "collapsible",
             title: "Collapsible block",
@@ -64,7 +70,7 @@ export default function buildExtraCommands(
         },
         {
             id: "datetime",
-            title: "Insert Date/Time",
+            title: "Insert date/time",
             description: "Insert the current date and time",
             icon: dateTimeIcon,
             commandName: INSERT_DATE_TIME_COMMAND
@@ -122,8 +128,19 @@ export default function buildExtraCommands(
     ];
 }
 
-function buildMermaidSampleCommands(samples: MermaidSample[], labels: MermaidSampleLabels): SlashCommandDefinition[] {
-    return samples.map((sample, index) => ({
+function buildMermaidCommands(samples: MermaidSample[], labels: MermaidSlashLabels): SlashCommandDefinition[] {
+    // The blank diagram. Replaces CKEditor's built-in `insertMermaidCommand`
+    // slash command (removed via `removeCommands`), which uses a generic icon.
+    const blank: SlashCommandDefinition = {
+        id: "mermaid",
+        title: labels.blankTitle,
+        description: labels.blankDescription,
+        aliases: [ "mermaid", "diagram", "flowchart" ],
+        icon: bxNetworkChart,
+        commandName: INSERT_MERMAID_COMMAND
+    };
+
+    const templates = samples.map((sample, index) => ({
         id: `mermaid-sample-${index}`,
         title: labels.title(sample.name),
         description: labels.description(sample.name),
@@ -132,27 +149,58 @@ function buildMermaidSampleCommands(samples: MermaidSample[], labels: MermaidSam
         // Inserts a mermaid block pre-filled with the sample source (see insertMermaidCommand).
         execute: (editor: Editor) => editor.execute(INSERT_MERMAID_COMMAND, { source: sample.content })
     }));
+
+    return [ blank, ...templates ];
+}
+
+// Replaces CKEditor's built-in `bulletedList`/`numberedList`/`todoList` slash
+// commands (removed via `removeCommands`), whose titles are Title Case, with
+// sentence-case equivalents that run the same commands.
+function buildListExtraCommands(): SlashCommandDefinition[] {
+    return [
+        {
+            id: "bulletedList",
+            title: "Bulleted list",
+            description: "Create a bulleted list",
+            icon: IconBulletedList,
+            commandName: "bulletedList"
+        },
+        {
+            id: "numberedList",
+            title: "Numbered list",
+            description: "Create a numbered list",
+            icon: IconNumberedList,
+            commandName: "numberedList"
+        },
+        {
+            id: "todoList",
+            title: "To-do list",
+            description: "Create a to-do list",
+            icon: IconTodoList,
+            commandName: "todoList"
+        }
+    ];
 }
 
 function buildAlignmentExtraCommands(): SlashCommandDefinition[] {
     return [
         {
             id: "align-left",
-            title: "Align Left",
+            title: "Align left",
             description: "Align text to the left",
             icon: IconAlignLeft,
             execute: (editor: Editor) => editor.execute("alignment", { value: "left" }),
         },
         {
             id: "align-center",
-            title: "Align Center",
+            title: "Align center",
             description: "Align text to the center",
             icon: IconAlignCenter,
             execute: (editor: Editor) => editor.execute("alignment", { value: "center" }),
         },
         {
             id: "align-right",
-            title: "Align Right",
+            title: "Align right",
             description: "Align text to the right",
             icon: IconAlignRight,
             execute: (editor: Editor) => editor.execute("alignment", { value: "right" }),

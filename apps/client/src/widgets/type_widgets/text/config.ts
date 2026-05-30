@@ -163,9 +163,14 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
             copy: copyTextWithToast
         },
         slashCommand: {
-            removeCommands: [],
+            // Drop CKEditor's built-in slash commands whose title/icon we re-define in
+            // buildExtraCommands: the Mermaid one (generic icon) and the list ones
+            // (Title Case titles, normalized to sentence case).
+            removeCommands: ["insertMermaidCommand", "bulletedList", "numberedList", "todoList"],
             dropdownLimit: Number.MAX_SAFE_INTEGER,
             extraCommands: buildExtraCommands(SAMPLE_DIAGRAMS, {
+                blankTitle: t("mermaid.slash_command_blank_title"),
+                blankDescription: t("mermaid.slash_command_blank_description"),
                 title: (name) => t("mermaid.slash_command_title", { name }),
                 description: (name) => t("mermaid.slash_command_description", { name })
             })
