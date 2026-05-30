@@ -573,7 +573,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                             label: "/math",
                             detail: t("markdown_slash_commands.math"),
                             apply(view, _completion, from, to) {
-                                const placeholder = "\\text{equation}";
+                                const placeholder = `\\text{${t("markdown_slash_commands.placeholders.math")}}`;
                                 const template = `$$\n${placeholder}\n$$`;
                                 view.dispatch({
                                     changes: { from, to, insert: template },
@@ -635,9 +635,9 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                             apply(view, _completion, from, to) {
                                 // No native markdown syntax — round-trips through the
                                 // importer as raw <details>/<summary> HTML (see markdown.ts).
-                                const placeholder = "Summary";
+                                const placeholder = t("markdown_slash_commands.placeholders.collapsible_summary");
                                 const open = `<details class="trilium-collapsible">\n<summary>`;
-                                const close = `</summary>\n\nDetails\n\n</details>`;
+                                const close = `</summary>\n\n${t("markdown_slash_commands.placeholders.collapsible_details")}\n\n</details>`;
                                 const anchor = from + open.length;
                                 view.dispatch({
                                     changes: { from, to, insert: open + placeholder + close },

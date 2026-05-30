@@ -269,7 +269,12 @@
     "collapsible": "Insert a collapsible block",
     "admonition": "Insert {{type}} admonition",
     "todo": "Insert a \"{{title}}\" task item",
-    "todo_nonstandard": "Insert a \"{{title}}\" task item (non-standard)"
+    "todo_nonstandard": "Insert a \"{{title}}\" task item (non-standard)",
+    "placeholders": {
+      "math": "equation",
+      "collapsible_summary": "Summary",
+      "collapsible_details": "Details"
+    }
   },
   "slash_commands": {
     "bulleted_list_description": "Create a bulleted list",
