@@ -135,7 +135,8 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         },
         link: {
             defaultProtocol: "https://",
-            allowedProtocols: ALLOWED_PROTOCOLS
+            allowedProtocols: ALLOWED_PROTOCOLS,
+            toolbar: ["linkPreview", "copyLinkUrl", "|", "editLink", "linkProperties", "unlink"]
         },
         bookmark: {
             toolbar: [

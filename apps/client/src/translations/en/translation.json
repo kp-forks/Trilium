@@ -2114,7 +2114,8 @@
     "copy_image_to_clipboard": "Copy image to clipboard"
   },
   "link": {
-    "failed_to_open": "Failed to open link '{{- href}}': {{- message}}"
+    "failed_to_open": "Failed to open link '{{- href}}': {{- message}}",
+    "copy_url": "Copy URL"
   },
   "link_context_menu": {
     "open_note_in_new_tab": "Open note in a new tab",
