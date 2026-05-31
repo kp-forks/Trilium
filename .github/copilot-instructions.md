@@ -254,6 +254,7 @@ Tools are defined using `defineTools()` in `apps/server/src/services/llm/tools/`
 - **Build order**: `pnpm typecheck` builds all projects in dependency order
 - **Build system**: Uses Vite for fast development, ESBuild for production optimization
 - **Patches**: Custom patches in `patches/` directory for CKEditor and other dependencies
+- **No non-null assertions**: Never use the TypeScript non-null assertion operator (postfix `!`), including in tests. Narrow instead — optional chaining (`?.`), a `?? fallback`, an explicit null check, or an `*OrThrow` accessor (e.g. `becca.getNoteOrThrow(id)` rather than `becca.getNote(id)!`).
 
 ## Key Files for Context
 

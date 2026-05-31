@@ -121,9 +121,6 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/attachments/:attachmentId/upload-modified-file", filesRoute.uploadModifiedFileToAttachment);
     route(PUT, "/api/attachments/:attachmentId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateAttachment, apiResultHandler);
 
-    // TODO: Re-enable once we support route()
-    // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
-
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
     apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);
 
