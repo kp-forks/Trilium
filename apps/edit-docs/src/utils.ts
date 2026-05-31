@@ -1,6 +1,6 @@
 import { BackupService, initializeCore } from "@triliumnext/core";
 import IpcMessagingProvider from "@triliumnext/desktop/src/ipc_messaging_provider.js";
-import { registerTriliumAppScheme } from "@triliumnext/desktop/src/protocol.js";
+import { registerTriliumAppScheme, setupTriliumAppProtocol } from "@triliumnext/desktop/src/protocol.js";
 import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import ServerPlatformProvider from "@triliumnext/server/src/platform_provider.js";
@@ -92,7 +92,14 @@ export function startElectron(callback: () => void): DeferredPromise<void> {
 
         // Start the server.
         const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
-        await startTriliumServer();
+        const expressApp = await startTriliumServer();
+
+        // Install the `trilium-app://` request handler that bridges the
+        // renderer's page / asset / API requests into Express. Without this the
+        // main window navigates to `trilium-app://app/` but nothing answers it,
+        // leaving a blank screen with no requests. Desktop does the same in
+        // apps/desktop/src/main.ts.
+        setupTriliumAppProtocol(expressApp);
 
         // Create the main window.
         await windowService.createMainWindow();
