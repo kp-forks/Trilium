@@ -375,8 +375,8 @@ importers:
         version: 9.0.4
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
-        specifier: 5.0.0
-        version: 5.0.0
+        specifier: 5.0.1
+        version: 5.0.1
       '@codecov/vite-plugin':
         specifier: 2.0.1
         version: 2.0.1(vite@8.0.14(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
@@ -1017,8 +1017,8 @@ importers:
         version: 9.0.4
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
-        specifier: 5.0.0
-        version: 5.0.0
+        specifier: 5.0.1
+        version: 5.0.1
       '@codecov/vite-plugin':
         specifier: 2.0.1
         version: 2.0.1(vite@8.0.14(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
@@ -1152,7 +1152,7 @@ importers:
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
-        version: 5.0.0
+        version: 5.0.1
       '@typescript-eslint/eslint-plugin':
         specifier: 8.60.0
         version: 8.60.0(@typescript-eslint/parser@8.60.0(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3)
@@ -1219,7 +1219,7 @@ importers:
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
-        version: 5.0.0
+        version: 5.0.1
       '@typescript-eslint/eslint-plugin':
         specifier: 8.60.0
         version: 8.60.0(@typescript-eslint/parser@8.60.0(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3)
@@ -1264,7 +1264,7 @@ importers:
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
-        version: 5.0.0
+        version: 5.0.1
       '@typescript-eslint/eslint-plugin':
         specifier: 8.60.0
         version: 8.60.0(@typescript-eslint/parser@8.60.0(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3)
@@ -1316,7 +1316,7 @@ importers:
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
-        version: 5.0.0
+        version: 5.0.1
       '@typescript-eslint/eslint-plugin':
         specifier: 8.60.0
         version: 8.60.0(@typescript-eslint/parser@8.60.0(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3)
@@ -1361,7 +1361,7 @@ importers:
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: '>=4.1.0'
-        version: 5.0.0
+        version: 5.0.1
       '@typescript-eslint/eslint-plugin':
         specifier: 8.60.0
         version: 8.60.0(@typescript-eslint/parser@8.60.0(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.4.0(jiti@2.7.0))(typescript@6.0.3)
@@ -2139,8 +2139,18 @@ packages:
   '@ckeditor/ckeditor5-indent@48.1.1':
     resolution: {integrity: sha512-+fROI+JG0fcSFNt38fzC1/y9zvsqqGQexVEoMQPkjpHiemAG2Kmubs4IPmWYaklNGIkohUk8N1itX9yTSatDtQ==}
 
-  '@ckeditor/ckeditor5-inspector@5.0.0':
-    resolution: {integrity: sha512-WVCa1mtePJkLtI81Rn2E6orV0B2Az/+O7f+corJzYapoH5koVEe9TcVyoKRquKUWeBXMG+D1m72vmR2kuoLNhA==}
+  '@ckeditor/ckeditor5-inspector@5.0.1':
+    resolution: {integrity: sha512-O6iuP8EtDZvkkKpMJjJTY+ZZRQA/ZEpguaOmdg4J+mEXHZoI7fshNv8LA/g6cUoPO4W3eRfBZ1VPmrGWjZWdfg==}
+    bundledDependencies:
+      - copy-to-clipboard
+      - es-toolkit
+      - javascript-stringify
+      - react
+      - react-dom
+      - react-modal
+      - react-redux
+      - react-rnd
+      - redux
 
   '@ckeditor/ckeditor5-language@48.1.1':
     resolution: {integrity: sha512-H+kyAm+JhNNBKws7RjQ8K0YhkdFUPrFB7htxW7Vdl/Qw/XQcqLftVhgG2EbEhaR+x7ohABblu1BPJ5zNX5vHcg==}
@@ -14519,7 +14529,7 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 48.1.1
       '@ckeditor/ckeditor5-utils': 48.1.1
 
-  '@ckeditor/ckeditor5-inspector@5.0.0': {}
+  '@ckeditor/ckeditor5-inspector@5.0.1': {}
 
   '@ckeditor/ckeditor5-language@48.1.1':
     dependencies:
