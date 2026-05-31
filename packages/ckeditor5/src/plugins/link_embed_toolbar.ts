@@ -18,18 +18,19 @@ import LinkEmbed, {
     LINK_DISPLAY_MODES,
     type LinkDisplayMode
 } from "./linkembed.js";
+import { createCopyUrlButton } from "./copy_link_url.js";
 
 export default class LinkEmbedToolbar extends Plugin {
 
     static get requires() {
-        return [WidgetToolbarRepository, LinkEmbed, LinkEmbedLinkButton, LinkEmbedDisplayDropdown] as const;
+        return [WidgetToolbarRepository, LinkEmbed, LinkEmbedLinkButton, LinkEmbedCopyUrlButton, LinkEmbedDisplayDropdown] as const;
     }
 
     afterInit() {
         const widgetToolbarRepository = this.editor.plugins.get(WidgetToolbarRepository);
 
         widgetToolbarRepository.register("linkEmbed", {
-            items: ["linkEmbedLink", "|", "linkEmbedDisplayDropdown"],
+            items: ["linkEmbedLink", "linkEmbedCopyUrl", "|", "linkEmbedDisplayDropdown"],
             balloonClassName: "ck-toolbar-container link-embed-toolbar",
             getRelatedElement(selection) {
                 const selectedElement = selection.getSelectedElement();
@@ -155,6 +156,26 @@ class LinkEmbedLinkButton extends Plugin {
 
             return button;
         });
+    }
+}
+
+/**
+ * Registers the `linkEmbedCopyUrl` toolbar item: copies the selected widget's URL
+ * to the clipboard, mirroring the default link toolbar's copy-URL button.
+ */
+class LinkEmbedCopyUrlButton extends Plugin {
+
+    static get requires() {
+        return [LinkEmbed] as const;
+    }
+
+    public init() {
+        const editor = this.editor;
+        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as Command & { url: string | null };
+
+        editor.ui.componentFactory.add("linkEmbedCopyUrl", locale =>
+            createCopyUrlButton(editor, locale, () => command.url)
+        );
     }
 }
 
