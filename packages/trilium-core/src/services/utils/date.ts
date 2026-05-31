@@ -47,6 +47,7 @@ function parseDateTime(str: string) {
     try {
         return new Date(Date.parse(str));
     } catch (e: any) {
+        /* v8 ignore next -- Date.parse() returns NaN for bad input instead of throwing, so this catch is unreachable */
         throw new Error(`Can't parse date from '${str}': ${e.stack}`);
     }
 }
@@ -71,9 +72,11 @@ function validateLocalDateTime(str: string | null | undefined) {
         return `Invalid local date time format in '${str}'. Correct format shoud follow example: '2023-08-21 23:38:51.110+0200'`;
     }
 
+    /* v8 ignore start -- dayjs() always returns a truthy object, so this guard is unreachable */
     if (!dayjs(str, LOCAL_DATETIME_FORMAT)) {
         return `Date '${str}' appears to be in the correct format, but cannot be parsed. It likely represents an invalid date.`;
     }
+    /* v8 ignore stop */
 }
 
 function validateUtcDateTime(str: string | undefined) {
@@ -85,9 +88,11 @@ function validateUtcDateTime(str: string | undefined) {
         return `Invalid UTC date time format in '${str}'. Correct format shoud follow example: '2023-08-21 23:38:51.110Z'`;
     }
 
+    /* v8 ignore start -- dayjs() always returns a truthy object, so this guard is unreachable */
     if (!dayjs(str, UTC_DATETIME_FORMAT)) {
         return `Date '${str}' appears to be in the correct format, but cannot be parsed. It likely represents an invalid date.`;
     }
+    /* v8 ignore stop */
 }
 
 function getLocalNowDateTime() {
