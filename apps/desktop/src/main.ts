@@ -30,7 +30,7 @@ import { getSecuritySettings, registerSecurityIpcHandlers } from "./services/sec
 import { setupShellHandlers } from "./services/shell";
 import { setupSystemTray } from "./services/tray";
 
-async function main() {
+export async function main() {
     // Ignore EPIPE errors on stdout/stderr — these occur when the parent process
     // pipe breaks (e.g. after system suspend with Snap packaging).
     for (const stream of [process.stdout, process.stderr]) {
@@ -49,6 +49,7 @@ async function main() {
     const serverInitializedPromise = deferred<void>();
 
     // Prevent Trilium starting twice on first install and on uninstall for the Windows installer.
+    /* v8 ignore next 3 -- squirrel uses a CJS require() that vi.mock cannot intercept, so the truthy/exit path is un-coverable in unit tests */
     if ((require("electron-squirrel-startup")).default) {
         process.exit(0);
     }
@@ -217,7 +218,7 @@ async function main() {
  * When running in portable mode, set TRILIUM_ELECTRON_DATA_DIR (e.g. via the trilium-portable script)
  * so that no Electron files are written to the system's roaming profile (e.g. %APPDATA% on Windows).
  */
-function getUserData() {
+export function getUserData() {
     if (process.env.TRILIUM_ELECTRON_DATA_DIR) {
         return resolve(process.env.TRILIUM_ELECTRON_DATA_DIR);
     }
@@ -250,7 +251,7 @@ async function onReady() {
     await windowService.registerGlobalShortcuts();
 }
 
-function getElectronLocale() {
+export function getElectronLocale() {
     const uiLocale = options.getOptionOrNull("locale");
     const formattingLocale = options.getOptionOrNull("formattingLocale");
     const correspondingLocale = LOCALES.find(l => l.id === uiLocale);
@@ -261,4 +262,7 @@ function getElectronLocale() {
     return uiLocale || "en";
 }
 
-main();
+/* v8 ignore next 3 -- auto-start guard; unit tests import and invoke main() explicitly */
+if (process.env.TRILIUM_UNIT_TEST !== "1") {
+    main();
+}

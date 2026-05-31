@@ -17,6 +17,7 @@ import url from "url";
 let preloadScriptCache: string | undefined;
 function getPreloadScript(): string {
     if (preloadScriptCache === undefined) {
+        /* v8 ignore next 5 -- prod preload arm is cache-once (only the first ternary evaluation counts); covered by the production build, not unit tests */
         preloadScriptCache = path.resolve(
             coreUtils.isDev()
                 ? path.join(__dirname, "..", "preload.compiled.cjs")
@@ -328,6 +329,7 @@ async function registerGlobalShortcuts() {
 }
 
 function showAndFocusWindow(window: BrowserWindow) {
+    /* v8 ignore next -- defensive guard; every caller passes a non-null window narrowed beforehand */
     if (!window) return;
 
     if (window.isMinimized()) {
