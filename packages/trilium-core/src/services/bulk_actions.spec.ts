@@ -1,11 +1,12 @@
 import type { BulkAction } from "@triliumnext/commons";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import becca from "../becca/becca.js";
 import type BBranch from "../becca/entities/bbranch.js";
 import type BNote from "../becca/entities/bnote.js";
 import bulkActionService from "./bulk_actions.js";
 import cloningService from "./cloning.js";
+import config from "./config.js";
 import { getContext } from "./context.js";
 import noteService from "./notes.js";
 
@@ -37,6 +38,17 @@ function createNote(parentNoteId: string): { note: BNote; branch: BBranch } {
 }
 
 describe("bulk_actions service (real DB)", () => {
+    // The executeScript action runs a backend script, gated by the backendScriptingEnabled toggle.
+    const originalScriptingEnabled = config.Security.backendScriptingEnabled;
+
+    beforeAll(() => {
+        config.Security.backendScriptingEnabled = true;
+    });
+
+    afterAll(() => {
+        config.Security.backendScriptingEnabled = originalScriptingEnabled;
+    });
+
     describe("executeActions", () => {
         it("skips note IDs that don't resolve to a note", () => {
             // No note exists for this id, so nothing should throw and no handler runs.

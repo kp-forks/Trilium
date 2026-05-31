@@ -1,6 +1,7 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import attributeService from "../../services/attributes";
+import config from "../../services/config";
 import scriptService from "../../services/script";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
@@ -22,8 +23,16 @@ async function createCodeNote(content: string): Promise<string> {
 }
 
 describe("Script API (core)", () => {
+    // Script execution enforces the backendScriptingEnabled security toggle (default false).
+    const originalScriptingEnabled = config.Security.backendScriptingEnabled;
+
     beforeAll(() => {
+        config.Security.backendScriptingEnabled = true;
         api = CoreApiTester.build();
+    });
+
+    afterAll(() => {
+        config.Security.backendScriptingEnabled = originalScriptingEnabled;
     });
 
     afterEach(() => {

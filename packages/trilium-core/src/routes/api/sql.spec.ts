@@ -1,6 +1,7 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import becca from "../../becca/becca";
+import config from "../../services/config";
 import { getSql } from "../../services/sql/index";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
@@ -23,8 +24,16 @@ interface ExecuteResult {
 }
 
 describe("SQL API (core)", () => {
+    // The SQL routes are gated behind the sqlConsoleEnabled security toggle (default false).
+    const originalSqlConsoleEnabled = config.Security.sqlConsoleEnabled;
+
     beforeAll(() => {
+        config.Security.sqlConsoleEnabled = true;
         api = CoreApiTester.build();
+    });
+
+    afterAll(() => {
+        config.Security.sqlConsoleEnabled = originalSqlConsoleEnabled;
     });
 
     describe("schema", () => {
