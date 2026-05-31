@@ -5,6 +5,7 @@ import { preventCKEditorHandling } from './widget_utils.js';
 
 export const LINK_EMBED_COMMAND = 'insertLinkEmbed';
 export const CHANGE_LINK_DISPLAY_COMMAND = 'changeLinkDisplay';
+export const REMOVE_LINK_EMBED_COMMAND = 'removeLinkEmbed';
 
 export const LINK_DISPLAY_MODES = [
     { value: 'inline', label: 'Inline' },
@@ -63,6 +64,7 @@ class LinkEmbedEditing extends Plugin {
         this._defineConverters();
         this.editor.commands.add(LINK_EMBED_COMMAND, new InsertLinkEmbedCommand(this.editor));
         this.editor.commands.add(CHANGE_LINK_DISPLAY_COMMAND, new ChangeLinkDisplayCommand(this.editor));
+        this.editor.commands.add(REMOVE_LINK_EMBED_COMMAND, new RemoveLinkEmbedCommand(this.editor));
     }
 
     _defineSchema() {
@@ -243,6 +245,15 @@ class InsertLinkEmbedCommand extends Command {
 
 const META_KEYS = ['url', 'embedType', 'title', 'description', 'favicon', 'siteName', 'image'] as const;
 
+/** Returns the currently selected linkEmbed/linkMention element, or null. */
+function getSelectedLinkWidget(editor: any) {
+    const selected = editor.model.document.selection.getSelectedElement();
+    if (selected && (selected.name === 'linkMention' || selected.name === 'linkEmbed')) {
+        return selected;
+    }
+    return null;
+}
+
 class ChangeLinkDisplayCommand extends Command {
     declare value: LinkDisplayMode | null;
     /** Whether the selected link supports embed mode (e.g. YouTube). */
@@ -259,7 +270,7 @@ class ChangeLinkDisplayCommand extends Command {
 
     override execute(options: { value: LinkDisplayMode }) {
         const model = this.editor.model;
-        const selected = this._getSelectedLinkWidget();
+        const selected = getSelectedLinkWidget(this.editor);
         if (!selected) return;
 
         const targetMode = options.value;
@@ -291,7 +302,7 @@ class ChangeLinkDisplayCommand extends Command {
     }
 
     override refresh() {
-        const selected = this._getSelectedLinkWidget();
+        const selected = getSelectedLinkWidget(this.editor);
         this.isEnabled = !!selected;
         this.value = selected ? this._getMode(selected) : null;
 
@@ -317,14 +328,25 @@ class ChangeLinkDisplayCommand extends Command {
         const component = glob.getComponentByEl<EditorComponent>(editorEl);
         return component.detectEmbedType(url);
     }
+}
 
-    private _getSelectedLinkWidget() {
-        const selection = this.editor.model.document.selection;
-        const selected = selection.getSelectedElement();
-        if (selected && (selected.name === 'linkMention' || selected.name === 'linkEmbed')) {
-            return selected;
-        }
-        return null;
+class RemoveLinkEmbedCommand extends Command {
+    override execute() {
+        const model = this.editor.model;
+        const selected = getSelectedLinkWidget(this.editor);
+        if (!selected) return;
+
+        const url = selected.getAttribute('url') as string;
+
+        // Mirror the default link's unlink: drop the link entirely, leaving the
+        // bare URL as plain (non-linked) text.
+        model.change(writer => {
+            model.insertContent(writer.createText(url), writer.createRangeOn(selected));
+        });
+    }
+
+    override refresh() {
+        this.isEnabled = !!getSelectedLinkWidget(this.editor);
     }
 }
 

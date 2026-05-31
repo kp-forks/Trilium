@@ -9,6 +9,7 @@ import {
     addListToDropdown,
     ButtonView,
     DropdownButtonView,
+    IconUnlink,
     type ListDropdownButtonDefinition,
     type Locale,
     type Command
@@ -16,6 +17,7 @@ import {
 import LinkEmbed, {
     CHANGE_LINK_DISPLAY_COMMAND,
     LINK_DISPLAY_MODES,
+    REMOVE_LINK_EMBED_COMMAND,
     type LinkDisplayMode
 } from "./linkembed.js";
 import { createCopyUrlButton } from "./copy_link_url.js";
@@ -23,14 +25,14 @@ import { createCopyUrlButton } from "./copy_link_url.js";
 export default class LinkEmbedToolbar extends Plugin {
 
     static get requires() {
-        return [WidgetToolbarRepository, LinkEmbed, LinkEmbedLinkButton, LinkEmbedCopyUrlButton, LinkEmbedDisplayDropdown] as const;
+        return [WidgetToolbarRepository, LinkEmbed, LinkEmbedLinkButton, LinkEmbedCopyUrlButton, LinkEmbedUnlinkButton, LinkEmbedDisplayDropdown] as const;
     }
 
     afterInit() {
         const widgetToolbarRepository = this.editor.plugins.get(WidgetToolbarRepository);
 
         widgetToolbarRepository.register("linkEmbed", {
-            items: ["linkEmbedLink", "linkEmbedCopyUrl", "|", "linkEmbedDisplayDropdown"],
+            items: ["linkEmbedLink", "linkEmbedCopyUrl", "linkEmbedUnlink", "|", "linkEmbedDisplayDropdown"],
             balloonClassName: "ck-toolbar-container link-embed-toolbar",
             getRelatedElement(selection) {
                 const selectedElement = selection.getSelectedElement();
@@ -176,6 +178,43 @@ class LinkEmbedCopyUrlButton extends Plugin {
         editor.ui.componentFactory.add("linkEmbedCopyUrl", locale =>
             createCopyUrlButton(editor, locale, () => command.url)
         );
+    }
+}
+
+/**
+ * Registers the `linkEmbedUnlink` toolbar item: removes the link preview, leaving
+ * the bare URL as plain text — mirroring the default link toolbar's unlink button
+ * (same icon, same "remove the link" semantics).
+ */
+class LinkEmbedUnlinkButton extends Plugin {
+
+    static get requires() {
+        return [LinkEmbed] as const;
+    }
+
+    public init() {
+        const editor = this.editor;
+        const command = editor.commands.get(REMOVE_LINK_EMBED_COMMAND);
+
+        editor.ui.componentFactory.add("linkEmbedUnlink", locale => {
+            const button = new ButtonView(locale);
+            button.set({
+                label: locale.t("Unlink"),
+                icon: IconUnlink,
+                tooltip: true
+            });
+
+            if (command) {
+                button.bind("isEnabled").to(command, "isEnabled");
+            }
+
+            button.on("execute", () => {
+                editor.execute(REMOVE_LINK_EMBED_COMMAND);
+                editor.editing.view.focus();
+            });
+
+            return button;
+        });
     }
 }
 
