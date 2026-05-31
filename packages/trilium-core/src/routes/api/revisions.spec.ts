@@ -1,12 +1,11 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import becca from "../../becca/becca";
 import * as cls from "../../services/context";
 import { getSql } from "../../services/sql/index";
+import { unwrapStringOrBuffer } from "../../services/utils/binary";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
-
-import revisionsApiRoute from "./revisions";
 
 /**
  * Drives the shared core revision routes through {@link CoreApiTester} (no Express),
@@ -263,7 +262,7 @@ describe("Revisions API (core)", () => {
     describe("typed revisions", () => {
         /**
          * Snapshots a note after coercing it to a given type, so we can drive the
-         * type-specific branches of {@link revisionsApiRoute.getRevision}.
+         * type-specific branches of the `getRevision` handler.
          */
         async function createTypedRevision(
             type: string,
@@ -360,20 +359,8 @@ describe("Revisions API (core)", () => {
         });
     });
 
-    describe("download (unrouted helper)", () => {
-        // downloadRevision is exported but not currently wired into the shared routes,
-        // so it is exercised directly rather than through CoreApiTester.
-        function mockRes() {
-            const headers: Record<string, string> = {};
-            const state: { status: number; body: unknown } = { status: 200, body: undefined };
-            return {
-                headers,
-                state,
-                setHeader(name: string, value: string) { headers[name] = value; return this; },
-                status(code: number) { state.status = code; return this; },
-                send(body: unknown) { state.body = body; return this; }
-            };
-        }
+    describe("download (GET /api/revisions/:revisionId/download)", () => {
+        afterEach(() => vi.restoreAllMocks());
 
         it("sends revision content with a content-disposition filename", async () => {
             const { revisionId } = await createNoteWithRevision({
@@ -381,73 +368,56 @@ describe("Revisions API (core)", () => {
                 content: "<p>download me</p>"
             });
 
-            const res = mockRes();
-            cls.init(() =>
-                revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
-            );
+            const res = await api.get<Buffer>(`/api/revisions/${revisionId}/download`);
 
+            expect(res.status).toBe(200);
             expect(res.headers["Content-Disposition"]).toMatch(/Downloadable/);
             expect(res.headers["Content-Type"]).toBeTruthy();
-            expect(res.state.body).toBeTruthy();
+            expect(unwrapStringOrBuffer(res.body as never)).toContain("download me");
         });
 
         it("appends the creation date when the filename has no extension", async () => {
             // A file note with an octet-stream mime yields a download title without an
             // extension, so the date is appended to the bare filename.
-            const revisionId = await (async () => {
-                const { noteId } = await createTextNote(api, { title: "No extension title", content: "data" });
-                await api.put(`/api/notes/${noteId}/type`, {
-                    body: { type: "file", mime: "application/octet-stream" }
-                });
-                const r = await api.post<{ revisionId: string }>(`/api/notes/${noteId}/revision`, { body: {} });
-                return r.body.revisionId;
-            })();
+            const { noteId } = await createTextNote(api, { title: "No extension title", content: "data" });
+            await api.put(`/api/notes/${noteId}/type`, {
+                body: { type: "file", mime: "application/octet-stream" }
+            });
+            const { revisionId } = (await api.post<{ revisionId: string }>(
+                `/api/notes/${noteId}/revision`, { body: {} }
+            )).body;
 
-            const res = mockRes();
-            cls.init(() =>
-                revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
-            );
-            // No file extension on a text note → the date is appended to the bare filename.
+            const res = await api.get(`/api/revisions/${revisionId}/download`);
+            expect(res.status).toBe(200);
             expect(res.headers["Content-Disposition"]).toMatch(/\d{8}/);
         });
 
         it("401s when the revision content is not available", async () => {
             const { revisionId } = await createNoteWithRevision({ title: "Protected download" });
 
-            // getRevisionOrThrow builds a fresh BRevision per call, so override the
-            // lookup itself to return one reporting its content as unavailable.
+            // A real protected revision needs a protected session to set up; instead
+            // override the lookup (getRevisionOrThrow builds a fresh BRevision per call)
+            // to report its content as unavailable.
             const revision = becca.getRevisionOrThrow(revisionId);
             revision.isContentAvailable = () => false;
-            const spy = vi.spyOn(becca, "getRevisionOrThrow").mockReturnValue(revision);
-            try {
-                const res = mockRes();
-                cls.init(() =>
-                    revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
-                );
-                expect(res.state.status).toBe(401);
-                expect(res.headers["Content-Type"]).toBe("text/plain");
-            } finally {
-                spy.mockRestore();
-            }
+            vi.spyOn(becca, "getRevisionOrThrow").mockReturnValue(revision);
+
+            const res = await api.get<string>(`/api/revisions/${revisionId}/download`);
+            expect(res.status).toBe(401);
+            expect(res.headers["Content-Type"]).toBe("text/plain");
         });
 
-        it("throws when the revision is missing a creation date", async () => {
+        it("500s when the revision is missing a creation date", async () => {
             const { revisionId } = await createNoteWithRevision({ title: "No date" });
 
-            // Force the defensive "missing creation date" guard in getRevisionFilename.
+            // Force the defensive "missing creation date" guard in getRevisionFilename
+            // (real revisions always have a creation date).
             const revision = becca.getRevisionOrThrow(revisionId);
             revision.dateCreated = undefined as never;
-            const spy = vi.spyOn(becca, "getRevisionOrThrow").mockReturnValue(revision);
-            try {
-                const res = mockRes();
-                expect(() =>
-                    cls.init(() =>
-                        revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
-                    )
-                ).toThrow();
-            } finally {
-                spy.mockRestore();
-            }
+            vi.spyOn(becca, "getRevisionOrThrow").mockReturnValue(revision);
+
+            const res = await api.get(`/api/revisions/${revisionId}/download`);
+            expect(res.status).toBe(500);
         });
     });
 });
