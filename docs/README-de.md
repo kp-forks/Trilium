@@ -51,8 +51,8 @@ Wissenssammlungen.
 [docs.triliumnotes.org](https://docs.triliumnotes.org/)**
 
 Unsere Dokumentation ist verfügbar in mehreren Formaten:
-- **Online-Dokumentation**: Die vollständige Dokumentation finden man unter
-  [docs.triliumnotes.org](https://docs.triliumnotes.org/)
+- **Online-Dokumentation**: Die vollständige Dokumentation ist unter
+  [docs.triliumnotes.org](https://docs.triliumnotes.org/) verfügbar
 - **In-App-Hilfe**: drücke `F1` in Trilium, um dieselbe Dokumentation direkt in
   der Anwendung aufzurufen
 - **GitHub**: Durchsuche das [Benutzerhandbuch](./User%20Guide/User%20Guide/) in
@@ -136,7 +136,7 @@ Unsere Dokumentation ist verfügbar in mehreren Formaten:
 * Anpassbare Benutzeroberfläche (Seitenleisten-Schaltflächen, benutzerdefinierte
   Widgets, ...)
 * [Metrics](https://docs.triliumnotes.org/user-guide/advanced-usage/metrics),
-  zusätzlich mit dem Grafana Dashboard.
+  inklusive eines Grafana-Dashboards.
 
 ✨ Weitere Informationen zu TriliumNext findet man in den folgenden
 Ressourcen/Communities von Drittanbietern:
@@ -152,7 +152,7 @@ Der ursprüngliche Entwickler von Trilium ([Zadam](https://github.com/zadam)) ha
 das Trilium-Repository der Gemeinschaft übergeben, die nun unter
 https://github.com/TriliumNext agiert
 
-### Migration von Zadam/Trilium?
+### ⬆️ Migration von Zadam/Trilium?
 
 Es sind keine speziellen Migrationsschritte erforderlich, um von einer
 zadam/Trilium-Instanz auf eine TriliumNext/Trilium-Instanz umzustellen.
@@ -166,18 +166,18 @@ kompatibel mit der letzten zadam/trilium-Version
 Versionen von TriliumNext/Trilium haben ihre Sync-Versionen erhöht, was eine
 direkte Migration verhindert.
 
-## 💬 Diskussion mit uns
+## 💬 Mit uns diskutieren
 
 Nehme gerne an den offiziellen Diskussionen teil. Feedback, Funktionsvorschläge
 oder Problemberichte sind jederzeit willkommen!
 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (für
   Echtzeit-Diskussionen.)
-  - Der `allgemeine` Matrix-Raum ist zusätzlich mit
+  - Der `General` Matrix-Raum ist zusätzlich mit
     [XMPP](xmpp:discuss@trilium.thisgreat.party?join) verbunden
-- [Github Diskussionen](https://github.com/TriliumNext/Trilium/discussions) (für
+- [GitHub Diskussionen](https://github.com/TriliumNext/Trilium/discussions) (für
   asynchrone Diskussionen)
-- [Github Issues](https://github.com/TriliumNext/Trilium/issues) (für
+- [GitHub Issues](https://github.com/TriliumNext/Trilium/issues) (für
   Fehlerberichte und Funktionsanfragen)
 
 ## 🏗 Installation
@@ -206,8 +206,8 @@ veröffentlicht.
 ### Browser (beliebiges Betriebssystem)
 
 Bei Verwendung einer Server-Installation (siehe unten) kann direkt auf die
-Weboberfläche zugegriffen werden. (die nahezu identisch mit der
-Desktop-Anwendung ist).
+Weboberfläche zugegriffen werden (die nahezu identisch mit der Desktop-Anwendung
+ist).
 
 Derzeit werden ausschließlich die neuesten Versionen von Chrome und Firefox
 unterstützt (und getestet).
@@ -252,8 +252,8 @@ Hier ist die bisherige Sprachabdeckung:
 
 ### Code
 
-Lade das Repository herunter, die Abhängigkeiten mit `pnpm` installieren und
-anschließend den Server starten (verfügbar unter http://localhost:8080):
+Lade das Repository herunter, installiere die Abhängigkeiten mit `pnpm` und
+starte anschließend den Server (verfügbar unter http://localhost:8080):
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -357,7 +357,7 @@ Trilium wäre ohne die zugrundeliegenden Technologien nicht möglich:
 * [Mind Elixir](https://github.com/SSShooter/mind-elixir-core) – bietet die
   Mindmap-Funktionalität.
 * [Leaflet](https://github.com/Leaflet/Leaflet) – für die Darstellung
-  geografischen Karten.
+  geografischer Karten.
 * [Tabulator](https://github.com/olifolkerd/tabulator) - für die interaktive
   Tabelle in Kollektionen.
 * [FancyTree](https://github.com/mar10/fancytree) – funktionsreiche
@@ -376,16 +376,16 @@ entwickelt und wird auch so weitergeführt. Deine Unterstützung sorgt dafür, d
 es Open Source bleibt, verbessert die Funktionen und deckt Kosten wie das
 Hosting.
 
-Bitte unterstütze den Hauptentwickler
-([eliandoran](https://github.com/eliandoran)) der Anwendung über:
+Erwäge, den Hauptentwickler ([eliandoran](https://github.com/eliandoran)) der
+Anwendung zu unterstützen über:
 
-- [GitHub Unterstützer](https://github.com/sponsors/eliandoran)
+- [GitHub Sponsors](https://github.com/sponsors/eliandoran)
 - [PayPal](https://paypal.me/eliandoran)
 - [Kauf mir einen Kaffee](https://buymeacoffee.com/eliandoran)
 
 ## 🔑 Lizenz
 
-Copyright 2017-2025 zadam, Elian Doran, und andere Unterstützer
+Copyright 2017-2025 zadam, Elian Doran, und andere Mitwirkende
 
 Dieses Programm ist freie Software: Sie können es unter den Bedingungen der GNU
 Affero General Public License, wie von der Free Software Foundation
