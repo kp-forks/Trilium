@@ -9,9 +9,9 @@ import electron, { type Session } from "electron";
  * require a valid Referer for embeds.
  *
  * The browser/server client works because its real origin (`http://localhost:<port>`)
- * is sent as the Referer; we replicate that for the desktop app. This fixes both
- * CKEditor's MediaEmbed and Trilium's own link embeds, since both point the
- * iframe at these same provider URLs.
+ * is sent as the Referer; we replicate that for the desktop app. This fixes
+ * Trilium's link embeds (and any other embedded YouTube/Vimeo iframe), since
+ * they point the iframe at these same provider URLs.
  *
  * Add new entries here if another embed provider shows the same failure.
  */
