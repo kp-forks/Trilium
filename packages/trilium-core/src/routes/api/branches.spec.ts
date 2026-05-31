@@ -84,6 +84,60 @@ describe("Branches API (core)", () => {
             );
             expect(res.status).toBe(404);
         });
+
+        it("moves a branch before a sibling under a different parent (clone path)", async () => {
+            const parentA = await createTextNote(api, { title: "Cross before A" });
+            const parentB = await createTextNote(api, { title: "Cross before B" });
+            const moving = await createTextNote(api, { parentNoteId: parentA.noteId, title: "Crosser" });
+            const target = await createTextNote(api, { parentNoteId: parentB.noteId, title: "Before target" });
+
+            const res = await api.put<{ success: boolean }>(
+                `/api/branches/${moving.branchId}/move-before/${target.branchId}`
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            // original branch under parentA is replaced by a clone under parentB
+            expect(getBranchRow(moving.branchId)?.isDeleted).toBe(1);
+        });
+
+        it("moves a branch after a sibling under a different parent (clone path)", async () => {
+            const parentA = await createTextNote(api, { title: "Cross after A" });
+            const parentB = await createTextNote(api, { title: "Cross after B" });
+            const moving = await createTextNote(api, { parentNoteId: parentA.noteId, title: "Crosser after" });
+            const first = await createTextNote(api, { parentNoteId: parentB.noteId, title: "After first" });
+            // a second sibling after the target so the position-shift loop body runs
+            await createTextNote(api, { parentNoteId: parentB.noteId, title: "After second" });
+
+            const res = await api.put<{ success: boolean }>(
+                `/api/branches/${moving.branchId}/move-after/${first.branchId}`
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(getBranchRow(moving.branchId)?.isDeleted).toBe(1);
+        });
+
+        it("returns a 200 validation failure when the move would create a cycle (before)", async () => {
+            const parent = await createTextNote(api, { title: "Cycle before parent" });
+            const child = await createTextNote(api, { parentNoteId: parent.noteId, title: "Cycle before child" });
+
+            // moving the parent's branch before its own descendant would create a cycle
+            const res = await api.put<{ success: boolean; message: string }>(
+                `/api/branches/${parent.branchId}/move-before/${child.branchId}`
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(false);
+        });
+
+        it("returns a 200 validation failure when the move would create a cycle (after)", async () => {
+            const parent = await createTextNote(api, { title: "Cycle after parent" });
+            const child = await createTextNote(api, { parentNoteId: parent.noteId, title: "Cycle after child" });
+
+            const res = await api.put<{ success: boolean; message: string }>(
+                `/api/branches/${parent.branchId}/move-after/${child.branchId}`
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(false);
+        });
     });
 
     describe("expanding", () => {
@@ -195,6 +249,20 @@ describe("Branches API (core)", () => {
                 query: { taskId: "test-branch-delete-missing", last: "true" }
             });
             expect(res.status).toBe(404);
+        });
+
+        it("erases the note immediately when eraseNotes is set", async () => {
+            const { noteId, branchId } = await createTextNote(api, { title: "To erase" });
+
+            const res = await api.delete<{ noteDeleted: boolean }>(`/api/branches/${branchId}`, {
+                query: { taskId: "test-branch-erase", last: "true", eraseNotes: "true" }
+            });
+            expect(res.status).toBe(200);
+            expect(res.body.noteDeleted).toBe(true);
+
+            // erasing removes the note row entirely
+            const noteRow = getSql().getRowOrNull("SELECT noteId FROM notes WHERE noteId = ?", [ noteId ]);
+            expect(noteRow).toBeNull();
         });
     });
 });

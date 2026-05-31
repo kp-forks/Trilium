@@ -1,7 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { RecentChangeRow } from "@triliumnext/commons";
 
+import protectedSessionService from "../../services/protected_session";
+import { getSql } from "../../services/sql/index";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
 
@@ -89,5 +91,47 @@ describe("Recent changes API (core)", () => {
         expect(res.status).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
         expect(res.body.length).toBe(0);
+    });
+
+    describe("protected notes", () => {
+        let protectedNoteId: string;
+
+        beforeAll(async () => {
+            const created = await createTextNote(api, { title: "Secret note" });
+            protectedNoteId = created.noteId;
+            // Flag the note as protected directly in the DB so it surfaces in the
+            // recent-changes feed with current_isProtected set, without needing a
+            // real protected session for note creation.
+            getSql().execute("UPDATE notes SET isProtected = 1 WHERE noteId = ?", [ protectedNoteId ]);
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("masks protected titles when no protected session is available", async () => {
+            vi.spyOn(protectedSessionService, "isProtectedSessionAvailable").mockReturnValue(false);
+
+            const res = await api.get<RecentChangeRow[]>("/api/recent-changes/root");
+            expect(res.status).toBe(200);
+
+            const entry = res.body.find((change) => change.noteId === protectedNoteId);
+            expect(entry).toBeTruthy();
+            expect(entry?.title).toBe("[protected]");
+            expect(entry?.current_title).toBe("[protected]");
+        });
+
+        it("decrypts protected titles when a protected session is available", async () => {
+            vi.spyOn(protectedSessionService, "isProtectedSessionAvailable").mockReturnValue(true);
+            vi.spyOn(protectedSessionService, "decryptString").mockReturnValue("Decrypted secret");
+
+            const res = await api.get<RecentChangeRow[]>("/api/recent-changes/root");
+            expect(res.status).toBe(200);
+
+            const entry = res.body.find((change) => change.noteId === protectedNoteId);
+            expect(entry).toBeTruthy();
+            expect(entry?.title).toBe("Decrypted secret");
+            expect(entry?.current_title).toBe("Decrypted secret");
+        });
     });
 });

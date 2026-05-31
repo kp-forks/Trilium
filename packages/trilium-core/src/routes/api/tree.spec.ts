@@ -1,5 +1,7 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
+import becca from "../../becca/becca";
+import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
 
 /**
@@ -49,5 +51,54 @@ describe("Tree API (core)", () => {
         });
         expect(res.status).toBe(200);
         expect(res.body.notes.some((n) => n.noteId === "root")).toBe(true);
+    });
+
+    describe("edge cases", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("skips requested note ids that are not in the cache", async () => {
+            // Hits the `if (!note) continue` guard while still returning the valid ones.
+            const res = await api.post<TreeResponse>("/api/tree/load", {
+                body: { noteIds: [ "root", "doesNotExist123" ] }
+            });
+            expect(res.status).toBe(200);
+            expect(res.body.notes.some((n) => n.noteId === "root")).toBe(true);
+            expect(res.body.notes.some((n) => n.noteId === "doesNotExist123")).toBe(false);
+        });
+
+        it("skips a collected branch id that is missing from the cache", async () => {
+            // Force a dangling branchId into the collection (via the child-branch
+            // lookup in collectEntityIds) so the `becca.branches[branchId]` lookup
+            // misses and the guard runs. Use `load` so getTree's own collect()
+            // recursion (which needs a real childNote) isn't affected.
+            const original = becca.getBranchFromChildAndParent.bind(becca);
+            vi.spyOn(becca, "getBranchFromChildAndParent").mockImplementation((childNoteId, parentNoteId) => {
+                const branch = original(childNoteId, parentNoteId);
+                if (branch) {
+                    Object.defineProperty(branch, "branchId", { value: "ghostBranch123", configurable: true });
+                }
+                return branch;
+            });
+
+            const res = await api.post<TreeResponse>("/api/tree/load", { body: { noteIds: [ "root" ] } });
+            expect(res.status).toBe(200);
+            expect(res.body.branches.some((b) => b.branchId === "ghostBranch123")).toBe(false);
+        });
+
+        it("skips a collected attribute id that is missing from the cache", async () => {
+            const { noteId } = await createTextNote(api, { title: "Note with ghost attribute" });
+            const note = becca.notes[noteId];
+            // Replace the note's owned attributes with one whose id is absent from becca.attributes.
+            vi.spyOn(note, "ownedAttributes", "get").mockReturnValue([
+                { attributeId: "ghostAttr123", type: "label", name: "x", targetNote: undefined } as never
+            ]);
+
+            const res = await api.post<TreeResponse>("/api/tree/load", { body: { noteIds: [ noteId ] } });
+            expect(res.status).toBe(200);
+            const attrs = res.body.attributes as { attributeId?: string }[];
+            expect(attrs.some((a) => a.attributeId === "ghostAttr123")).toBe(false);
+        });
     });
 });

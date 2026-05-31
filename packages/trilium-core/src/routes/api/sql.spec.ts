@@ -1,5 +1,7 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
+import becca from "../../becca/becca";
+import { getSql } from "../../services/sql/index";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
 
@@ -41,6 +43,10 @@ describe("SQL API (core)", () => {
     });
 
     describe("execute", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
         it("runs a SELECT query from a note body and returns the rows", async () => {
             const { noteId } = await createTextNote(api, {
                 title: "SQL console",
@@ -79,6 +85,38 @@ describe("SQL API (core)", () => {
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(false);
             expect(typeof res.body.error).toBe("string");
+        });
+
+        it("strips leading SQL comments, skips empty queries and runs non-SELECT statements", async () => {
+            // Exercises the comment-stripping loop, the empty-query `continue`,
+            // and the non-SELECT (`else`) execution branch in one note body.
+            getSql().execute("CREATE TABLE IF NOT EXISTS sql_spec_tmp (id INTEGER)");
+            const { noteId } = await createTextNote(api, {
+                title: "SQL console comments",
+                content: [
+                    "-- a leading comment\n-- and another\nDELETE FROM sql_spec_tmp",
+                    "   ",
+                    "WITH x AS (SELECT 1 AS n) SELECT n FROM x"
+                ].join("\n---")
+            });
+
+            const res = await api.post<ExecuteResult>(`/api/sql/execute/${noteId}`);
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            // The blank middle query is skipped, so only two results are returned.
+            expect(res.body.results).toHaveLength(2);
+
+            getSql().execute("DROP TABLE sql_spec_tmp");
+        });
+
+        it("rejects a note whose content is not a string", async () => {
+            const { noteId } = await createTextNote(api, { title: "Binary content" });
+            const note = becca.getNoteOrThrow(noteId);
+            vi.spyOn(note, "getContent").mockReturnValue(new Uint8Array([ 1, 2, 3 ]));
+            vi.spyOn(becca, "getNoteOrThrow").mockReturnValue(note);
+
+            const res = await api.post<{ message: string }>(`/api/sql/execute/${noteId}`);
+            expect(res.status).toBe(400);
         });
 
         it("404s when the note does not exist", async () => {

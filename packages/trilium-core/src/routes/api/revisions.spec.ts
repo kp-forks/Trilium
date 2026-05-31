@@ -1,8 +1,12 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
+import becca from "../../becca/becca";
+import * as cls from "../../services/context";
 import { getSql } from "../../services/sql/index";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
+
+import revisionsApiRoute from "./revisions";
 
 /**
  * Drives the shared core revision routes through {@link CoreApiTester} (no Express),
@@ -217,6 +221,233 @@ describe("Revisions API (core)", () => {
             const res = await api.get<unknown[]>("/api/edited-notes/1970-01-01");
             expect(res.status).toBe(200);
             expect(res.body).toEqual([]);
+        });
+
+        it("includes the root note (none_root branch) when it matches the date", async () => {
+            const row = getSql().getRowOrNull<{ dateModified: string }>(
+                "SELECT dateModified FROM notes WHERE noteId = 'root'"
+            );
+            const date = (row?.dateModified ?? "").substring(0, 10);
+
+            const res = await api.get<Array<{ noteId: string; notePath: string[] | null }>>(
+                `/api/edited-notes/${date}`
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.some((note) => note.noteId === "root")).toBe(true);
+        });
+
+        it("narrows results to the hoisted subtree", async () => {
+            const parent = await createTextNote(api, { title: "Hoisted parent" });
+            const child = await createTextNote(api, { parentNoteId: parent.noteId, title: "Hoisted child" });
+
+            const row = getSql().getRowOrNull<{ dateModified: string }>(
+                "SELECT dateModified FROM notes WHERE noteId = ?",
+                [ child.noteId ]
+            );
+            const date = (row?.dateModified ?? "").substring(0, 10);
+
+            // Pretend the parent is hoisted so the handler filters by ancestry.
+            const spy = vi.spyOn(cls, "getHoistedNoteId").mockReturnValue(parent.noteId);
+            try {
+                const res = await api.get<Array<{ noteId: string }>>(`/api/edited-notes/${date}`);
+                expect(res.status).toBe(200);
+                expect(res.body.some((note) => note.noteId === child.noteId)).toBe(true);
+                // root was edited some other day, but even if present it is filtered out by the hoist.
+                expect(res.body.every((note) => note.noteId !== "root")).toBe(true);
+            } finally {
+                spy.mockRestore();
+            }
+        });
+    });
+
+    describe("typed revisions", () => {
+        /**
+         * Snapshots a note after coercing it to a given type, so we can drive the
+         * type-specific branches of {@link revisionsApiRoute.getRevision}.
+         */
+        async function createTypedRevision(
+            type: string,
+            mime: string,
+            content: string
+        ): Promise<string> {
+            const { noteId } = await createTextNote(api, { content });
+            const typeRes = await api.put(`/api/notes/${noteId}/type`, { body: { type, mime } });
+            expect(typeRes.status).toBe(204);
+
+            const res = await api.post<{ revisionId: string }>(`/api/notes/${noteId}/revision`, {
+                body: { description: "typed" }
+            });
+            expect(res.status).toBe(200);
+            return res.body.revisionId;
+        }
+
+        it("truncates string content of a file revision", async () => {
+            const revisionId = await createTypedRevision("file", "text/plain", "x".repeat(15000));
+
+            const res = await api.get<{ content: string; type: string }>(`/api/revisions/${revisionId}`);
+            expect(res.status).toBe(200);
+            expect(res.body.type).toBe("file");
+            expect(res.body.content.length).toBeLessThanOrEqual(10000);
+        });
+
+        it("base64-encodes the content of an image revision", async () => {
+            const revisionId = await createTypedRevision("image", "image/png", "binary-image-bytes");
+
+            const res = await api.get<{ content: string; type: string }>(`/api/revisions/${revisionId}`);
+            expect(res.status).toBe(200);
+            expect(res.body.type).toBe("image");
+            // Base64 output, decodes back to the original content.
+            expect(Buffer.from(res.body.content, "base64").toString()).toContain("binary-image-bytes");
+        });
+    });
+
+    describe("excess revisions", () => {
+        it("erases excess revision snapshots across notes", async () => {
+            const { noteId } = await createTextNote(api, { title: "Excess" });
+            await api.post(`/api/notes/${noteId}/revision`, { body: {} });
+
+            const res = await api.post("/api/revisions/erase-all-excess-revisions");
+            expect(res.status).toBe(204);
+        });
+    });
+
+    describe("description validation", () => {
+        it("400s when the description is not a string", async () => {
+            const { revisionId } = await createNoteWithRevision({ title: "Bad description" });
+
+            const res = await api.patch(`/api/revisions/${revisionId}`, {
+                body: { description: 123 }
+            });
+            expect(res.status).toBe(400);
+        });
+    });
+
+    describe("restoring with attachments", () => {
+        it("restores a revision whose snapshot referenced attachments", async () => {
+            const { noteId } = await createTextNote(api, { title: "Has attachment" });
+
+            // Attach an image to the note, then reference it from the note content.
+            const saveRes = await api.post(`/api/notes/${noteId}/attachments`, {
+                body: { role: "image", mime: "image/png", title: "pic.png", content: "image-bytes" }
+            });
+            expect(saveRes.status).toBe(204);
+
+            const attRow = getSql().getRowOrNull<{ attachmentId: string }>(
+                "SELECT attachmentId FROM attachments WHERE ownerId = ? AND isDeleted = 0",
+                [ noteId ]
+            );
+            const attachmentId = attRow?.attachmentId as string;
+            expect(attachmentId).toBeTruthy();
+
+            await api.put(`/api/notes/${noteId}/data`, {
+                body: { content: `<img src="attachments/${attachmentId}">` }
+            });
+
+            const snapshot = await api.post<{ revisionId: string }>(`/api/notes/${noteId}/revision`, {
+                body: {}
+            });
+            const revisionId = snapshot.body.revisionId;
+
+            // Move the note away from the snapshot, then restore it.
+            await api.put(`/api/notes/${noteId}/data`, { body: { content: "<p>changed</p>" } });
+
+            const restore = await api.post(`/api/revisions/${revisionId}/restore`);
+            expect(restore.status).toBe(204);
+
+            // The restored content rewrites attachment references to the new attachment ids.
+            const blob = await api.get<{ content: string }>(`/api/notes/${noteId}/blob`);
+            expect(blob.body.content).toContain("attachments/");
+        });
+    });
+
+    describe("download (unrouted helper)", () => {
+        // downloadRevision is exported but not currently wired into the shared routes,
+        // so it is exercised directly rather than through CoreApiTester.
+        function mockRes() {
+            const headers: Record<string, string> = {};
+            const state: { status: number; body: unknown } = { status: 200, body: undefined };
+            return {
+                headers,
+                state,
+                setHeader(name: string, value: string) { headers[name] = value; return this; },
+                status(code: number) { state.status = code; return this; },
+                send(body: unknown) { state.body = body; return this; }
+            };
+        }
+
+        it("sends revision content with a content-disposition filename", async () => {
+            const { revisionId } = await createNoteWithRevision({
+                title: "Downloadable",
+                content: "<p>download me</p>"
+            });
+
+            const res = mockRes();
+            cls.init(() =>
+                revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
+            );
+
+            expect(res.headers["Content-Disposition"]).toMatch(/Downloadable/);
+            expect(res.headers["Content-Type"]).toBeTruthy();
+            expect(res.state.body).toBeTruthy();
+        });
+
+        it("appends the creation date when the filename has no extension", async () => {
+            // A file note with an octet-stream mime yields a download title without an
+            // extension, so the date is appended to the bare filename.
+            const revisionId = await (async () => {
+                const { noteId } = await createTextNote(api, { title: "No extension title", content: "data" });
+                await api.put(`/api/notes/${noteId}/type`, {
+                    body: { type: "file", mime: "application/octet-stream" }
+                });
+                const r = await api.post<{ revisionId: string }>(`/api/notes/${noteId}/revision`, { body: {} });
+                return r.body.revisionId;
+            })();
+
+            const res = mockRes();
+            cls.init(() =>
+                revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
+            );
+            // No file extension on a text note → the date is appended to the bare filename.
+            expect(res.headers["Content-Disposition"]).toMatch(/\d{8}/);
+        });
+
+        it("401s when the revision content is not available", async () => {
+            const { revisionId } = await createNoteWithRevision({ title: "Protected download" });
+
+            // getRevisionOrThrow builds a fresh BRevision per call, so override the
+            // lookup itself to return one reporting its content as unavailable.
+            const revision = becca.getRevisionOrThrow(revisionId);
+            revision.isContentAvailable = () => false;
+            const spy = vi.spyOn(becca, "getRevisionOrThrow").mockReturnValue(revision);
+            try {
+                const res = mockRes();
+                cls.init(() =>
+                    revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
+                );
+                expect(res.state.status).toBe(401);
+                expect(res.headers["Content-Type"]).toBe("text/plain");
+            } finally {
+                spy.mockRestore();
+            }
+        });
+
+        it("throws when the revision is missing a creation date", async () => {
+            const { revisionId } = await createNoteWithRevision({ title: "No date" });
+
+            // Force the defensive "missing creation date" guard in getRevisionFilename.
+            const revision = becca.getRevisionOrThrow(revisionId);
+            revision.dateCreated = undefined as never;
+            const spy = vi.spyOn(becca, "getRevisionOrThrow").mockReturnValue(revision);
+            try {
+                const res = mockRes();
+                expect(() =>
+                    cls.init(() =>
+                        revisionsApiRoute.downloadRevision({ params: { revisionId } } as never, res as never)
+                    )
+                ).toThrow();
+            } finally {
+                spy.mockRestore();
+            }
         });
     });
 });

@@ -99,6 +99,58 @@ describe("Relation Map API (core)", () => {
         expect(res.body.relations).toEqual([]);
     });
 
+    it("includes inverse relation definitions of the requested notes", async () => {
+        const map = await createTextNote(api, { title: "Map" });
+        const source = await createTextNote(api, { title: "Source" });
+
+        // A promoted relation definition with an inverse relation populates the
+        // inverseRelations map for both directions.
+        const attr = await api.post(`/api/notes/${source.noteId}/attributes`, {
+            body: { type: "label", name: "relation:spouse", value: "inverse=spouse" }
+        });
+        expect(attr.status).toBe(204);
+
+        const res = await api.post<RelationMapResponse>("/api/relation-map", {
+            body: { relationMapNoteId: map.noteId, noteIds: [ source.noteId ] }
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.body.inverseRelations.spouse).toBe("spouse");
+    });
+
+    it("honours displayRelations and hideRelations labels on the map note", async () => {
+        const map = await createTextNote(api, { title: "Map" });
+        const source = await createTextNote(api, { title: "Source" });
+        const target = await createTextNote(api, { title: "Target" });
+
+        // displayRelations acts as an allow-list: only "links" is kept, "ignored" dropped.
+        for (const label of [
+            { name: "displayRelations", value: "links, other" },
+            { name: "hideRelations", value: "ignored" }
+        ]) {
+            const res = await api.post(`/api/notes/${map.noteId}/attributes`, {
+                body: { type: "label", name: label.name, value: label.value }
+            });
+            expect(res.status).toBe(204);
+        }
+
+        for (const name of [ "links", "ignored" ]) {
+            await api.put(`/api/notes/${source.noteId}/relations/${name}/to/${target.noteId}`);
+        }
+
+        const res = await api.post<RelationMapResponse>("/api/relation-map", {
+            body: {
+                relationMapNoteId: map.noteId,
+                noteIds: [ source.noteId, target.noteId ]
+            }
+        });
+
+        expect(res.status).toBe(200);
+        const names = res.body.relations.map((relation) => relation.name);
+        expect(names).toContain("links");
+        expect(names).not.toContain("ignored");
+    });
+
     it("404s when the relation map note does not exist", async () => {
         const { noteId } = await createTextNote(api, { title: "Source" });
 

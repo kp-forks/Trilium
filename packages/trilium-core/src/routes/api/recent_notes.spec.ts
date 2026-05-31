@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { getSql } from "../../services/sql/index";
 import { createTextNote } from "../../test/api_fixtures";
@@ -20,6 +20,10 @@ function getRecentNote(noteId: string): { notePath: string; utcDateCreated: stri
 describe("Recent notes API (core)", () => {
     beforeAll(() => {
         api = CoreApiTester.build();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it("records a recent note and persists it to the DB", async () => {
@@ -60,5 +64,27 @@ describe("Recent notes API (core)", () => {
             [ noteId ]
         );
         expect(count).toBe(1);
+    });
+
+    it("prunes stale recent notes when the random cutoff sweep fires", async () => {
+        // The handler only runs the cutoff DELETE when `Math.random() < 0.05`;
+        // force it deterministically so the prune branch is exercised. Insert a
+        // stale row (created over 24h ago) that the sweep should remove.
+        const staleNoteId = "staleRecentNote";
+        getSql().execute(
+            "INSERT OR REPLACE INTO recent_notes (noteId, notePath, utcDateCreated) VALUES (?, ?, ?)",
+            [ staleNoteId, `root/${staleNoteId}`, "2000-01-01 00:00:00.000Z" ]
+        );
+
+        const { noteId } = await createTextNote(api, { title: "Triggers prune" });
+        vi.spyOn(Math, "random").mockReturnValue(0);
+
+        const res = await api.post("/api/recent-notes", {
+            body: { noteId, notePath: `root/${noteId}` }
+        });
+        expect(res.status).toBe(204);
+
+        expect(getRecentNote(staleNoteId)).toBeNull();
+        expect(getRecentNote(noteId)).not.toBeNull();
     });
 });

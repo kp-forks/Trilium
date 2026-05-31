@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
+import * as cls from "../../services/context";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
 
@@ -23,6 +24,10 @@ describe("Autocomplete API (core)", () => {
     });
 
     describe("getAutocomplete", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
         it("returns matching notes for a search query", async () => {
             const title = `Autocomplete target ${Date.now()}`;
             await createTextNote(api, { title });
@@ -43,6 +48,31 @@ describe("Autocomplete API (core)", () => {
         it("returns recent notes for an empty query", async () => {
             const res = await api.get<AutocompleteResult[]>("/api/autocomplete", {
                 query: { query: "" }
+            });
+            expect(res.status).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+        });
+
+        it("filters recent notes by the hoisted note path when not hoisted to root", async () => {
+            // Exercises the `hoistedNoteId !== "root"` branch (extra LIKE condition).
+            const { noteId } = await createTextNote(api, { title: "Hoisted recent" });
+            await api.post("/api/recent-notes", { body: { noteId, notePath: `root/${noteId}` } });
+            vi.spyOn(cls, "getHoistedNoteId").mockReturnValue(noteId);
+
+            const res = await api.get<AutocompleteResult[]>("/api/autocomplete", {
+                query: { query: "" }
+            });
+            expect(res.status).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+        });
+
+        it("logs a warning when the search is slow", async () => {
+            // Force the elapsed-time threshold so the slow-autocomplete log branch runs.
+            let calls = 0;
+            vi.spyOn(Date, "now").mockImplementation(() => (calls++ === 0 ? 0 : 1000));
+
+            const res = await api.get<AutocompleteResult[]>("/api/autocomplete", {
+                query: { query: "root" }
             });
             expect(res.status).toBe(200);
             expect(Array.isArray(res.body)).toBe(true);

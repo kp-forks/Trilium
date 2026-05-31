@@ -38,6 +38,22 @@ describe("Others API (core)", () => {
             expect(res.body.iconClassToCountMap["bx-test-icon-usage"]).toBeGreaterThanOrEqual(1);
             expect(res.body.iconClassToCountMap).not.toHaveProperty("bx");
         });
+
+        it("ignores blank iconClass labels and system-note icons", async () => {
+            // A whitespace-only iconClass exercises the empty-value `continue`.
+            const { noteId } = await createTextNote(api, { title: "Blank icon note" });
+            const add = await api.post(`/api/notes/${noteId}/attributes`, {
+                body: { type: "label", name: "iconClass", value: "   " }
+            });
+            expect(add.status).toBe(204);
+
+            const res = await api.get<{ iconClassToCountMap: Record<string, number> }>(
+                "/api/other/icon-usage"
+            );
+            expect(res.status).toBe(200);
+            // The blank value is skipped, so no empty-string key is added.
+            expect(Object.keys(res.body.iconClassToCountMap)).not.toContain("");
+        });
     });
 
     describe("render markdown", () => {

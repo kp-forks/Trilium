@@ -113,6 +113,76 @@ describe("Attachments API (core)", () => {
             expect(res.body.blobId).toBeTruthy();
             expect(res.body.content).toContain("blob content here");
         });
+
+        it("returns a preview of the attachment blob", async () => {
+            const { noteId } = await createTextNote(api, { title: "Preview owner" });
+            const saved = await saveAttachment(noteId, {
+                title: "Preview attachment",
+                content: "preview body"
+            });
+
+            const res = await api.get<{ blobId: string }>(
+                `/api/attachments/${saved.attachmentId}/blob`,
+                { query: { preview: "true" } }
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.blobId).toBeTruthy();
+        });
+    });
+
+    describe("uploading", () => {
+        it("uploads a non-image file as a 'file' attachment", async () => {
+            const { noteId } = await createTextNote(api, { title: "Upload target" });
+
+            const res = await api.post<{ uploaded: boolean; url: string }>(
+                `/api/notes/${noteId}/attachments/upload`,
+                {
+                    file: {
+                        originalname: "notes.txt",
+                        mimetype: "text/plain",
+                        buffer: "file upload content"
+                    }
+                }
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.uploaded).toBe(true);
+            expect(res.body.url).toContain(`#root/${noteId}`);
+            expect(res.body.url).toContain("viewMode=attachments");
+        });
+
+        it("uploads an image file as an image attachment", async () => {
+            const { noteId } = await createTextNote(api, { title: "Image upload target" });
+            // Minimal 1x1 transparent PNG.
+            const png = Buffer.from(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC",
+                "base64"
+            );
+
+            const res = await api.post<{ uploaded: boolean; url: string }>(
+                `/api/notes/${noteId}/attachments/upload`,
+                {
+                    file: {
+                        originalname: "pixel.png",
+                        mimetype: "image/png",
+                        buffer: png
+                    }
+                }
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.uploaded).toBe(true);
+            expect(res.body.url).toContain("/image/");
+        });
+
+        it("reports a missing upload when no file is present", async () => {
+            const { noteId } = await createTextNote(api, { title: "No file target" });
+
+            const res = await api.post<{ uploaded: boolean; message: string }>(
+                `/api/notes/${noteId}/attachments/upload`
+            );
+            expect(res.status).toBe(200);
+            expect(res.body.uploaded).toBe(false);
+            expect(res.body.message).toBeTruthy();
+        });
     });
 
     describe("saving", () => {

@@ -1,3 +1,5 @@
+import { Writable } from "node:stream";
+
 import { HttpError } from "../errors";
 import * as routes from "../routes";
 import { getContext } from "../services/context";
@@ -41,6 +43,8 @@ interface ApiRequest {
     method: string;
     file?: unknown;
     originalUrl: string;
+    /** Express-style case-insensitive header accessor (used by e.g. the sync routes). */
+    get(name: string): string | undefined;
 }
 
 interface RegisteredRoute {
@@ -60,6 +64,12 @@ export interface RequestOptions {
     body?: unknown;
     query?: Record<string, string | number | boolean | undefined>;
     headers?: Record<string, string>;
+    /**
+     * A fake uploaded file, mirroring the `req.file` that the Express multipart
+     * middleware would populate. Lets handlers that read `req.file` (image
+     * update, import) be exercised in-process without a real multipart request.
+     */
+    file?: unknown;
 }
 
 function pathToRegex(path: string): { pattern: RegExp; paramNames: string[] } {
@@ -107,29 +117,68 @@ interface CaptureResponse {
     setHeader(name: string, value: string): void;
 }
 
-/** A minimal Express-like response for handlers that write directly (e.g. image routes). */
-interface MockResponse {
-    used: boolean;
-    status(code: number): MockResponse;
-    set(name: string, value: string): MockResponse;
-    setHeader(name: string, value: string): MockResponse;
-    send(body: unknown): MockResponse;
-    sendStatus(code: number): MockResponse;
+/** Preserves strings and raw bytes as-is; JSON round-trips everything else. */
+function normalizeResponseBody(body: unknown): unknown {
+    if (body === undefined || typeof body === "string") {
+        return body;
+    }
+    if (Buffer.isBuffer(body) || body instanceof Uint8Array) {
+        return Buffer.from(body as Uint8Array);
+    }
+    return jsonRoundTrip(body);
 }
 
-function createMockResponse(): MockResponse & { snapshot(): TestResponse } {
-    const headers: Record<string, string> = {};
-    const state = { status: 200, body: undefined as unknown };
-    const res: MockResponse & { snapshot(): TestResponse } = {
-        used: false,
-        status(code) { state.status = code; return res; },
-        set(name, value) { headers[name] = value; return res; },
-        setHeader(name, value) { headers[name] = value; return res; },
-        send(body) { res.used = true; state.body = body; return res; },
-        sendStatus(code) { res.used = true; state.status = code; return res; },
-        snapshot() { return { status: state.status, headers, body: jsonRoundTrip(state.body) }; }
-    };
-    return res;
+/**
+ * A faithful in-process stand-in for the Express `res` that handlers write to
+ * directly (image routes, file downloads, the streaming export). It extends a
+ * Node {@link Writable} so the **server** export path works exactly as in
+ * production — `archive.pipe(res)` with the `archiver` package needs a real
+ * writable stream — while also supporting the **browser** export path, where
+ * `BrowserZipArchive.finalize()` calls `res.send(zipBytes)` (and falls back to
+ * `res.write()`/`res.end()`). Both vitest suites (server + standalone) run on
+ * Node, so a real stream is available under either runtime.
+ *
+ * On top of the stream it exposes the small Express surface the handlers use
+ * and captures a `{ status, headers, body }` snapshot, keeping the body as raw
+ * bytes for streamed/binary responses so tests can inspect them.
+ */
+class MockResponse extends Writable {
+
+    used = false;
+    statusCode = 200;
+    headers: Record<string, string> = {};
+
+    private chunks: Buffer[] = [];
+    private sendBody: unknown;
+    private hasSendBody = false;
+
+    status(code: number) { this.statusCode = code; return this; }
+    set(name: string, value: string) { this.headers[name] = value; return this; }
+    setHeader(name: string, value: string) { this.headers[name] = value; return this; }
+    removeHeader(name: string) { delete this.headers[name]; return this; }
+    send(body: unknown) { this.used = true; this.hasSendBody = true; this.sendBody = body; return this; }
+    sendStatus(code: number) { this.used = true; this.statusCode = code; return this; }
+
+    override _write(chunk: Buffer | Uint8Array | string, _encoding: BufferEncoding, callback: (error?: Error | null) => void) {
+        this.used = true;
+        this.chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array));
+        callback();
+    }
+
+    snapshot(): TestResponse {
+        let body: unknown;
+        if (this.chunks.length > 0) {
+            body = Buffer.concat(this.chunks);
+        } else if (this.hasSendBody) {
+            body = normalizeResponseBody(this.sendBody);
+        }
+        return { status: this.statusCode, headers: this.headers, body };
+    }
+
+}
+
+function createMockResponse(): MockResponse {
+    return new MockResponse();
 }
 
 export class CoreApiTester {
@@ -241,13 +290,21 @@ export class CoreApiTester {
                 params[name] = decodeURIComponent(match[i + 1]);
             });
 
+            const headers = opts.headers ?? {};
+            const lowerHeaders: Record<string, string> = {};
+            for (const [ key, value ] of Object.entries(headers)) {
+                lowerHeaders[key.toLowerCase()] = value;
+            }
+
             const req: ApiRequest = {
                 params,
                 query,
                 body: opts.body,
-                headers: opts.headers ?? {},
+                headers,
                 method: upperMethod,
-                originalUrl: url.pathname + url.search
+                originalUrl: url.pathname + url.search,
+                file: opts.file,
+                get: (name: string) => lowerHeaders[name.toLowerCase()]
             };
 
             try {
