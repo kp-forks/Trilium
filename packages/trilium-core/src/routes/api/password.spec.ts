@@ -4,6 +4,16 @@ import passwordService from "../../services/encryption/password";
 import { getSql } from "../../services/sql/index";
 import { CoreApiTester } from "../../test/api_tester";
 
+// Changing/setting a password does real scrypt (N=16384) hashing + data-key
+// re-derivation. Under the browser provider that runs in pure JS (scrypt-js),
+// ~10x slower with V8 coverage instrumentation than Node's native scryptSync —
+// enough to blow the 5s default. Give the standalone (happy-dom) suite a larger
+// timeout; the server suite keeps the strict default.
+const isBrowserRuntime = typeof window !== "undefined";
+if (isBrowserRuntime) {
+    vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
+}
+
 /**
  * Drives the shared core password routes through {@link CoreApiTester} (no
  * Express), so this spec runs under both the node and standalone (WASM) suites.

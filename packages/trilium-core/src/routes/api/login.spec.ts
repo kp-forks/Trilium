@@ -5,6 +5,16 @@ import protectedSession from "../../services/protected_session";
 import ws from "../../services/ws";
 import { CoreApiTester } from "../../test/api_tester";
 
+// The protected-session login does real scrypt (N=16384) password verification
+// and data-key derivation. Under the browser provider that runs in pure JS
+// (scrypt-js), ~10x slower with V8 coverage instrumentation than Node's native
+// scryptSync — enough to blow the 5s default. Give the standalone (happy-dom)
+// suite a larger timeout; the server suite keeps the strict default.
+const isBrowserRuntime = typeof window !== "undefined";
+if (isBrowserRuntime) {
+    vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
+}
+
 /**
  * Drives the shared core protected-session login routes through
  * {@link CoreApiTester} (no Express), so this spec runs under both the node and
