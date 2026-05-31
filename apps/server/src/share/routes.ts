@@ -150,7 +150,7 @@ function register(router: Router) {
             // so the instance owner is deliberately opting in to serve their own scriptable
             // content. Restricting it would break legitimate self-contained HTML pages.
             if (note.mime === "image/svg+xml") {
-                res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src * data:; font-src * data:");
+                res.setHeader("Content-Security-Policy", utils.SVG_CONTENT_SECURITY_POLICY);
                 res.setHeader("X-Content-Type-Options", "nosniff");
             }
 
@@ -241,7 +241,8 @@ function register(router: Router) {
                 const sanitized = utils.sanitizeSvg(svgContent);
                 res.set("Content-Type", "image/svg+xml");
                 res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-                res.set("Content-Security-Policy", "script-src 'none'");
+                res.set("Content-Security-Policy", utils.SVG_CONTENT_SECURITY_POLICY);
+                res.set("X-Content-Type-Options", "nosniff");
                 res.send(sanitized);
             } else {
                 res.set("Content-Type", image.mime);
@@ -277,7 +278,8 @@ function register(router: Router) {
                 const sanitized = utils.sanitizeSvg(svgContent);
                 res.set("Content-Type", "image/svg+xml");
                 res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-                res.set("Content-Security-Policy", "script-src 'none'");
+                res.set("Content-Security-Policy", utils.SVG_CONTENT_SECURITY_POLICY);
+                res.set("X-Content-Type-Options", "nosniff");
                 res.send(sanitized);
             } else {
                 res.set("Content-Type", attachment.mime);
