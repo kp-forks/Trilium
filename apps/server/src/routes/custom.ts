@@ -7,11 +7,6 @@ import sql from "../services/sql.js";
 
 function handleRequest(req: Request, res: Response) {
 
-    if (!isScriptingEnabled()) {
-        res.status(403).send("Backend script execution is disabled on this server.");
-        return;
-    }
-
     // handle path from "*path" route wildcard
     // in express v4, you could just add
     // req.params.path + req.params[0], but with v5
@@ -65,6 +60,13 @@ function handleRequest(req: Request, res: Response) {
         }
 
         if (attr.name === "customRequestHandler") {
+            // Custom request handlers execute backend scripts, so they remain gated behind the
+            // scripting toggle. Resource providers only serve static note content and are not.
+            if (!isScriptingEnabled()) {
+                res.status(403).send("Backend script execution is disabled on this server.");
+                return;
+            }
+
             const note = attr.getNote();
 
             getLog().info(`Handling custom request '${path}' with note '${note.noteId}'`);
