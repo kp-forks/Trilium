@@ -16,6 +16,7 @@ import etapiSpecRoute from "../etapi/spec.js";
 import etapiSpecialNoteRoutes from "../etapi/special_notes.js";
 import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
+import { isElectron } from "../services/utils.js";
 
 import shareRoutes from "../share/routes.js";
 import clipperRoute from "./api/clipper.js";
@@ -138,10 +139,8 @@ function register(app: express.Application) {
     apiRoute(PATCH, "/api/etapi-tokens/:etapiTokenId", etapiTokensApiRoutes.patchToken);
     apiRoute(DEL, "/api/etapi-tokens/:etapiTokenId", etapiTokensApiRoutes.deleteToken);
 
-    // clipper API always requires ETAPI token authentication, regardless of environment.
-    // Previously, Electron builds skipped auth entirely, which exposed these endpoints
-    // to unauthenticated network access (content injection, information disclosure).
-    const clipperMiddleware = [auth.checkEtapiToken];
+    // in case of local electron, local calls are allowed unauthenticated, for server they need auth
+    const clipperMiddleware = isElectron ? [] : [auth.checkEtapiToken];
 
     route(GET, "/api/clipper/handshake", clipperMiddleware, clipperRoute.handshake, apiResultHandler);
     asyncRoute(PST, "/api/clipper/clippings", clipperMiddleware, clipperRoute.addClipping, apiResultHandler);
