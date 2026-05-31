@@ -112,7 +112,8 @@ function renderImageAttachment(image: SNote, res: Response, attachmentName: stri
     const svg = utils.sanitizeSvg(svgString);
     res.set("Content-Type", "image/svg+xml");
     res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.set("Content-Security-Policy", "script-src 'none'");
+    res.set("Content-Security-Policy", utils.SVG_CONTENT_SECURITY_POLICY);
+    res.set("X-Content-Type-Options", "nosniff");
     res.send(svg);
 }
 
