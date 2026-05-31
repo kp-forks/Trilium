@@ -117,10 +117,13 @@ const ACTION_HANDLERS: ActionHandlerMap = {
         // Route through the script service's executeBundle instead of raw
         // new Function() to get proper CLS context, logging, and error handling.
         // The preamble provides access to `note` and `api` as the UI documents.
+        // The user script runs inside an IIFE so that a top-level `return` (used to
+        // exit early) only exits the user code; note.save() still runs afterwards,
+        // matching the previous behavior where save() was called unconditionally.
         const noteId = note.noteId.replace(/[^a-zA-Z0-9_]/g, "");
         const preamble = `const api = apiContext.apis["${noteId}"] || {};\n` +
             `const note = apiContext.notes["${noteId}"];\n`;
-        const scriptBody = `${preamble}${action.script}\nnote.save();`;
+        const scriptBody = `${preamble}(function() {\n${action.script}\n})();\nnote.save();`;
 
         executeBundle({
             note: note,

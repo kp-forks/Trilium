@@ -9,6 +9,7 @@ import cloningService from "./cloning.js";
 import config from "./config.js";
 import { getContext } from "./context.js";
 import noteService from "./notes.js";
+import { getSql } from "./sql/index.js";
 
 /**
  * Wraps a callback in a CLS context. Entity mutations (createNewNote,
@@ -207,6 +208,24 @@ describe("bulk_actions service (real DB)", () => {
             );
 
             expect(note.note.getOwnedLabelValue("scripted")).toBe("yes");
+        });
+
+        it("persists mutations even when the script returns early", () => {
+            // A top-level `return` (used to exit early) must not skip the implicit
+            // note.save(). A title change only reaches the DB via note.save(), so we
+            // assert against the persisted row (the in-memory becca entity reflects the
+            // mutation regardless of whether save() ran).
+            const note = createNote("root");
+
+            withContext(() =>
+                bulkActionService.executeActions(
+                    [{ name: "executeScript", script: "note.title = 'renamed by script';\nreturn;" }],
+                    [note.note.noteId]
+                )
+            );
+
+            const persistedTitle = getSql().getValue<string>("SELECT title FROM notes WHERE noteId = ?", [note.note.noteId]);
+            expect(persistedTitle).toBe("renamed by script");
         });
 
         it("is a no-op for an empty / whitespace-only script", () => {
