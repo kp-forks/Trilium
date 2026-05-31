@@ -143,9 +143,13 @@ function register(router: Router) {
         addNoIndexHeader(note, res);
 
         if (note.isLabelTruthy("shareRaw") || typeof req.query.raw !== "undefined") {
-            // For HTML and SVG content, add restrictive Content-Security-Policy
-            // to prevent stored XSS via script execution (CWE-79).
-            if (note.mime === "text/html" || note.mime === "image/svg+xml") {
+            // For SVG content, add a restrictive Content-Security-Policy to prevent
+            // stored XSS via script execution (CWE-79). HTML is intentionally served
+            // unrestricted here: serving raw HTML requires the `#shareRaw` attribute (or an
+            // explicit `?raw`), and `#shareRaw` is flagged dangerous (see builtin_attributes.ts),
+            // so the instance owner is deliberately opting in to serve their own scriptable
+            // content. Restricting it would break legitimate self-contained HTML pages.
+            if (note.mime === "image/svg+xml") {
                 res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src * data:; font-src * data:");
                 res.setHeader("X-Content-Type-Options", "nosniff");
             }
