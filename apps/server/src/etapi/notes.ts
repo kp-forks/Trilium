@@ -147,7 +147,7 @@ function register(router: Router) {
         noteService.saveRevisionIfNeeded(note);
         note.setContent(req.body);
 
-        noteService.asyncPostProcessContent(note, req.body);
+        void noteService.asyncPostProcessContent(note, req.body);
 
         return res.sendStatus(204);
     });
@@ -166,14 +166,14 @@ function register(router: Router) {
         // (e.g. branchIds are not seen in UI), that we export "note export" instead.
         const branch = note.getParentBranches()[0];
 
-        zipExportService.exportToZip(taskContext, branch, format as ExportFormat, res);
+        void zipExportService.exportToZip(taskContext, branch, format as ExportFormat, res);
     });
 
     eu.route<{ noteId: string }>(router, "post", "/etapi/notes/:noteId/import", (req, res, next) => {
         const note = eu.getAndCheckNote(req.params.noteId);
         const taskContext = new TaskContext("no-progress-reporting", "importNotes", null);
 
-        zipImportService.importZip(taskContext, req.body, note).then((importedNote) => {
+        void zipImportService.importZip(taskContext, req.body, note).then((importedNote) => {
             res.status(201).json({
                 note: mappers.mapNoteToPojo(importedNote),
                 branch: mappers.mapBranchToPojo(importedNote.getParentBranches()[0])

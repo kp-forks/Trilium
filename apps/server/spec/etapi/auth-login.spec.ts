@@ -24,9 +24,8 @@ describe("etapi/auth/login", () => {
         expect(response.body.authToken).toBeTruthy();
     });
 
-    // Regression test for the auth-bypass where `verifyPassword` (async) was used
-    // without `await`, so `!verifyPassword(...)` evaluated a truthy Promise and the
-    // wrong-password branch never executed — any password yielded a full-access token.
+    // verifyPassword is async; this guards that a wrong password is rejected and the
+    // async verification result actually gates token issuance.
     it("rejects a wrong password and issues no token", async () => {
         const response = await supertest(app)
             .post(LOGIN_URL)
@@ -46,20 +45,19 @@ describe("etapi/auth/login", () => {
         expect(response.body.authToken).toBeUndefined();
     });
 
-    // A token minted from a wrong password must not grant access to data. Before the
-    // fix, the bypass returned a real, fully-privileged token here.
+    // A token must never be issued from a failed login, and even if one were, it must not
+    // grant access to data.
     it("does not grant data access from a wrong-password login attempt", async () => {
         const response = await supertest(app)
             .post(LOGIN_URL)
             .send({ password: "definitely-not-the-password", tokenName: "test" });
 
-        const leakedToken = response.body.authToken;
-        // If the bypass is present, `leakedToken` is a usable token; assert it cannot
-        // be used to read the root note.
-        if (leakedToken) {
+        const token = response.body.authToken;
+        // Defense in depth: if any token came back, assert it cannot read the root note.
+        if (token) {
             await supertest(app)
                 .get("/etapi/notes/root")
-                .auth("etapi", leakedToken, { type: "basic" })
+                .auth("etapi", token, { type: "basic" })
                 .expect(401);
         }
     });

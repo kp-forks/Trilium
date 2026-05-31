@@ -48,12 +48,14 @@ export default class WebSocketMessagingProvider implements MessagingProvider {
 
             console.log(`websocket client connected`);
 
-            ws.on("message", async (messageJson) => {
-                const message = JSON.parse(messageJson as any);
+            ws.on("message", (messageJson) => {
+                void (async () => {
+                    const message = JSON.parse(messageJson as any);
 
-                if (this.clientMessageHandler) {
-                    await this.clientMessageHandler(id, message);
-                }
+                    if (this.clientMessageHandler) {
+                        await this.clientMessageHandler(id, message);
+                    }
+                })();
             });
 
             ws.on("close", () => {

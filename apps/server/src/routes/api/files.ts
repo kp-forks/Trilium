@@ -32,7 +32,7 @@ function updateFile(req: Request<{ noteId: string }>) {
 
     note.setLabel("originalFileName", file.originalname);
 
-    noteService.asyncPostProcessContent(note, file.buffer);
+    void noteService.asyncPostProcessContent(note, file.buffer);
 
     return {
         uploaded: true
