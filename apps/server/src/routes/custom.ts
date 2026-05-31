@@ -67,14 +67,6 @@ function handleRequest(req: Request, res: Response) {
         if (attr.name === "customRequestHandler") {
             const note = attr.getNote();
 
-            // Require authentication unless note has #customRequestHandlerPublic label
-            if (!note.hasLabel("customRequestHandlerPublic")) {
-                if (!req.session?.loggedIn) {
-                    res.status(401).send("Authentication required for this endpoint.");
-                    return;
-                }
-            }
-
             getLog().info(`Handling custom request '${path}' with note '${note.noteId}'`);
 
             try {

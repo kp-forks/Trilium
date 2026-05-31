@@ -31,8 +31,6 @@ describe("Custom request/resource handlers", () => {
                 content: `api.res.status(200).send("handled:" + api.pathParams[0]);`
             }).note;
             handler.setLabel("customRequestHandler", "greet/([a-z]+)");
-            // Public so the unauthenticated supertest request isn't rejected with 401.
-            handler.setLabel("customRequestHandlerPublic");
 
             // A script note that throws, to exercise the error branch.
             const thrower = noteService.createNewNote({
@@ -43,7 +41,6 @@ describe("Custom request/resource handlers", () => {
                 content: `throw new Error("boom in handler");`
             }).note;
             thrower.setLabel("customRequestHandler", "explode");
-            thrower.setLabel("customRequestHandlerPublic");
 
             // A resource note served directly.
             const resource = noteService.createNewNote({
