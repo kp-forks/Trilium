@@ -1719,7 +1719,12 @@
   },
   "image": {
     "copied-to-clipboard": "Ein Verweis auf das Bild wurde in die Zwischenablage kopiert. Dieser kann in eine beliebige Textnotiz eingefügt werden.",
-    "cannot-copy": "Das Bild konnte nicht in die Zwischenablage kopiert werden."
+    "cannot-copy": "Das Bild konnte nicht in die Zwischenablage kopiert werden.",
+    "copy-to-clipboard": "Bild in Zwischenablage kopieren",
+    "download": "Bild herunterladen",
+    "image-copied-to-clipboard": "Das Bild wurde in die Zwischenablage kopiert.",
+    "cannot-copy-image": "Das Bild konnte nicht in die Zwischenablage kopiert werden.",
+    "cannot-download": "Das Bild konnte nicht heruntergeladen werden."
   },
   "clipboard": {
     "cut": "Notiz(en) wurden in die Zwischenablage ausgeschnitten.",
@@ -2338,7 +2343,9 @@
     "sample_venn": "Mengen",
     "sample_ishikawa": "Ursache-Wirkung",
     "sample_treeview": "Baumansicht",
-    "sample_wardley": "Wardley-Map"
+    "sample_wardley": "Wardley-Map",
+    "slash_command_blank_description": "Leeres Mermaid-Diagramm einfügen",
+    "slash_command_description": "Mermaid-Diagrammvorlage \"{{name}}\" einfügen"
   },
   "database": {
     "title": "Datenbank"
@@ -2387,7 +2394,13 @@
     "tokens_used_with_model": "{{model}}: {{prompt}} Prompt + {{completion}} Completion = {{total}} Token",
     "tokens_used_with_model_and_cost": "{{model}}: {{prompt}} Prompt + {{completion}} Completion = {{total}} Token (~${{cost}})",
     "edit_index": "Bearbeitung {{index}} von {{total}}",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "web_search_unavailable_gemini": "Bei Gemini-Modellen nicht verfügbar solange der Notizzugriff aktiv ist — Googles API erlaubt keine Kombination beider Funktionen. Notizzugriff deaktivieren oder einen anderen Anbieter wählen um die Websuche zu nutzen.",
+    "input_streaming": "Eingabe (wird gestreamt…)",
+    "attach_file": "Bild, PDF oder Textdatei anhängen",
+    "remove_attachment": "Anhang entfernen",
+    "attachment_upload_failed": "\"{{name}}\" konnte nicht hochgeladen werden.",
+    "attachment_unsupported_type": "\"{{name}}\" ist kein unterstützter Anhangstyp. Bitte ein Bild (PNG, JPEG, GIF, WebP), eine PDF oder eine Text-/Quelldatei verwenden."
   },
   "sidebar_chat": {
     "title": "KI-Chat",
@@ -2549,7 +2562,16 @@
     "math": "Mathematik-Block einfügen",
     "footnote": "Fußnote einfügen",
     "mermaid": "Mermaid-Diagramm einfügen",
-    "admonition": "{{type}}-Hinweisblock einfügen"
+    "admonition": "{{type}}-Hinweisblock einfügen",
+    "mermaid_template": "Ein Mermaid-Diagramm \"{{name}}\" einfügen",
+    "collapsible": "Einklappbaren Block einfügen",
+    "todo": "Ein Aufgabenelement \"{{title}}\" einfügen",
+    "todo_nonstandard": "Ein Aufgabenelement \"{{title}}\" einfügen (nicht standardkonform)",
+    "placeholders": {
+      "math": "Gleichung",
+      "collapsible_summary": "Zusammenfassung",
+      "collapsible_details": "Details"
+    }
   },
   "auto_link_attribute_list": {
     "title": "Systemattribute"
@@ -2577,7 +2599,8 @@
     "remove_from_launch_bar": "Aus der Startleiste entfernen"
   },
   "link": {
-    "failed_to_open": "Link '{{- href}}' konnte nicht geöffnet werden: {{- message}}"
+    "failed_to_open": "Link '{{- href}}' konnte nicht geöffnet werden: {{- message}}",
+    "copy_url": "URL kopieren"
   },
   "display_mode": {
     "source": "Quellansicht",
@@ -2680,6 +2703,32 @@
       "missing-icon": "fehlendes Symbol",
       "invalid-symbol": "das Markdown-Symbol muss ein einzelnes Zeichen sein, ausgenommen \"[\", \" \", \"X\" und \"]\"",
       "duplicate-symbol": "doppeltes Markdown-Symbol"
-    }
+    },
+    "collapsible-body-placeholder": "Inhalt hier eingeben...",
+    "collapsible-button-label": "Einklappbarer Block",
+    "collapsible-handle-tooltip": "Ziehen um den einklappbaren Block zu verschieben",
+    "collapsible-select-label": "Einklappbaren Block auswählen",
+    "collapsible-title-placeholder": "Zusammenfassung",
+    "collapsible-toggle-label": "Einklappbaren Block umschalten",
+    "collapsible-tooltip": "Auf den Pfeil klicken oder {{shortcut}} drücken um ein-/auszuklappen."
+  },
+  "slash_commands": {
+    "bulleted_list_description": "Aufzählungsliste erstellen",
+    "numbered_list_description": "Nummerierte Liste erstellen",
+    "todo_list_description": "Aufgabenliste erstellen",
+    "align_left_description": "Text linksbündig ausrichten",
+    "align_center_description": "Text zentrieren",
+    "align_right_description": "Text rechtsbündig ausrichten",
+    "justify_description": "Blocksatz",
+    "admonition_description": "Einen neuen Hinweisblock einfügen",
+    "collapsible_description": "Einen ein-/ausklappbaren Abschnitt einfügen der Inhalt per Klick verbirgt oder anzeigt.",
+    "footnote_description": "Eine neue Fußnote erstellen und hier referenzieren",
+    "datetime_description": "Aktuelles Datum und Uhrzeit einfügen",
+    "internal_link_description": "Link zu einer anderen Trilium-Notiz einfügen",
+    "math_description": "Mathematische Gleichung einfügen",
+    "include_note_description": "Inhalt einer anderen Notiz in dieser Notiz anzeigen",
+    "page_break_description": "Seitenumbruch einfügen (zum Drucken)",
+    "markdown_import_description": "Markdown-Datei in diese Notiz importieren",
+    "anchor_description": "Anker für interne Verlinkung einfügen"
   }
 }

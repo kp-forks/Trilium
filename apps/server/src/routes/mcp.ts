@@ -47,8 +47,8 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
         });
 
         res.on("close", () => {
-            transport.close();
-            server.close();
+            void transport.close();
+            void server.close();
         });
 
         await server.connect(transport);

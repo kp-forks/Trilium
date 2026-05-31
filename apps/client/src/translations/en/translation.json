@@ -265,7 +265,35 @@
     "math": "Insert a math equation block",
     "footnote": "Insert a footnote",
     "mermaid": "Insert a Mermaid diagram",
-    "admonition": "Insert {{type}} admonition"
+    "mermaid_template": "Insert a \"{{name}}\" Mermaid diagram",
+    "collapsible": "Insert a collapsible block",
+    "admonition": "Insert {{type}} admonition",
+    "todo": "Insert a \"{{title}}\" task item",
+    "todo_nonstandard": "Insert a \"{{title}}\" task item (non-standard)",
+    "placeholders": {
+      "math": "equation",
+      "collapsible_summary": "Summary",
+      "collapsible_details": "Details"
+    }
+  },
+  "slash_commands": {
+    "bulleted_list_description": "Create a bulleted list",
+    "numbered_list_description": "Create a numbered list",
+    "todo_list_description": "Create a to-do list",
+    "align_left_description": "Align text to the left",
+    "align_center_description": "Align text to the center",
+    "align_right_description": "Align text to the right",
+    "justify_description": "Justify text alignment",
+    "admonition_description": "Inserts a new admonition",
+    "collapsible_description": "Insert a toggleable section that hides/shows content on click.",
+    "footnote_description": "Create a new footnote and reference it here",
+    "datetime_description": "Insert the current date and time",
+    "internal_link_description": "Insert a link to another Trilium note",
+    "math_description": "Insert a math equation",
+    "include_note_description": "Display the content of another note in this note",
+    "page_break_description": "Insert a page break (for printing)",
+    "markdown_import_description": "Import a markdown file into this note",
+    "anchor_description": "Insert an anchor for internal linking"
   },
   "move_to": {
     "dialog_title": "Move notes to ...",
@@ -1992,7 +2020,12 @@
   },
   "image": {
     "copied-to-clipboard": "A reference to the image has been copied to clipboard. This can be pasted in any text note.",
-    "cannot-copy": "Could not copy the image reference to clipboard."
+    "cannot-copy": "Could not copy the image reference to clipboard.",
+    "copy-to-clipboard": "Copy image to clipboard",
+    "download": "Download image",
+    "image-copied-to-clipboard": "The image has been copied to clipboard.",
+    "cannot-copy-image": "Could not copy the image to clipboard.",
+    "cannot-download": "Could not download the image."
   },
   "clipboard": {
     "cut": "Note(s) have been cut into clipboard.",
@@ -2096,7 +2129,8 @@
     "copy_image_to_clipboard": "Copy image to clipboard"
   },
   "link": {
-    "failed_to_open": "Failed to open link '{{- href}}': {{- message}}"
+    "failed_to_open": "Failed to open link '{{- href}}': {{- message}}",
+    "copy_url": "Copy URL"
   },
   "link_context_menu": {
     "open_note_in_new_tab": "Open note in a new tab",
@@ -2542,6 +2576,8 @@
   "mermaid": {
     "placeholder": "Type the content of your Mermaid diagram or use one of the sample diagrams below.",
     "sample_diagrams": "Sample diagrams:",
+    "slash_command_blank_description": "Insert an empty Mermaid diagram",
+    "slash_command_description": "Insert a \"{{name}}\" Mermaid diagram template",
     "sample_flowchart": "Flowchart",
     "sample_class": "Class",
     "sample_sequence": "Sequence",
@@ -2694,6 +2730,13 @@
   },
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
+    "collapsible-body-placeholder": "Type the content here...",
+    "collapsible-button-label": "Collapsible block",
+    "collapsible-handle-tooltip": "Drag to reposition the collapsible block",
+    "collapsible-select-label": "Select collapsible block",
+    "collapsible-title-placeholder": "Summary",
+    "collapsible-toggle-label": "Toggle collapsible block",
+    "collapsible-tooltip": "Click on the arrow or press {{shortcut}} to collapse/expand.",
     "edit-states-tooltip": "Edit task states",
     "unknown-task-state": "Undefined custom task state",
     "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",

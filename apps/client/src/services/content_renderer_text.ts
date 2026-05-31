@@ -108,6 +108,7 @@ export async function rewriteMermaidDiagramsInContainer(container: HTMLDivElemen
     for (const mermaidBlock of mermaidBlocks) {
         const div = document.createElement("div");
         div.classList.add("mermaid-diagram");
+        /* v8 ignore next -- defensive fallback: the `:has(code[...])` selector guarantees a `<code>` child whose innerHTML is always a string */
         div.innerHTML = mermaidBlock.querySelector("code")?.innerHTML ?? "";
         mermaidBlock.replaceWith(div);
         nodes.push(div);
@@ -151,6 +152,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
     const pending: Array<{ visible: HTMLElement; source: string }> = [];
     const seenSources = new Set<string>();
     for (const [ index, node ] of nodes.entries()) {
+        /* v8 ignore next -- defensive fallback: textContent on an HTMLElement is always a string */
         const source = (node.textContent ?? "").trim();
         seenSources.add(source);
 
