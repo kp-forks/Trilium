@@ -80,6 +80,7 @@ describe("Database API", () => {
 
         it("streams an existing backup file via res.download", () => {
             const filePath = path.join(dataDir.BACKUP_DIR, "spec-backup.db");
+            fs.mkdirSync(dataDir.BACKUP_DIR, { recursive: true });
             fs.writeFileSync(filePath, "backup-bytes");
             try {
                 const { res, calls } = fakeRes();
