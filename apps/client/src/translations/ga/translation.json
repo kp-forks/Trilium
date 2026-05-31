@@ -1807,7 +1807,12 @@
   },
   "image": {
     "copied-to-clipboard": "Tá tagairt don íomhá cóipeáilte chuig an ghearrthaisce. Is féidir é seo a ghreamú in aon nóta téacs.",
-    "cannot-copy": "Níorbh fhéidir tagairt na híomhá a chóipeáil chuig an ghearrthaisce."
+    "cannot-copy": "Níorbh fhéidir tagairt na híomhá a chóipeáil chuig an ghearrthaisce.",
+    "copy-to-clipboard": "Cóipeáil íomhá chuig an ghearrthaisce",
+    "download": "Íoslódáil íomhá",
+    "image-copied-to-clipboard": "Tá an íomhá cóipeáilte chuig an ghearrthaisce.",
+    "cannot-copy-image": "Níorbh fhéidir an íomhá a chóipeáil chuig an ghearrthaisce.",
+    "cannot-download": "Níorbh fhéidir an íomhá a íoslódáil."
   },
   "clipboard": {
     "cut": "Gearradh nóta(í) isteach sa ghearrthaisce.",
@@ -2389,7 +2394,9 @@
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa",
     "sample_treeview": "Radharc Crann",
-    "sample_wardley": "Léarscáil Wardley"
+    "sample_wardley": "Léarscáil Wardley",
+    "slash_command_blank_description": "Cuir léaráid fholamh Maighdean Mhara isteach",
+    "slash_command_description": "Cuir teimpléad léaráid maighdean mara \"{{name}}\" isteach"
   },
   "llm_chat": {
     "placeholder": "Clóscríobh teachtaireacht...",
@@ -2424,7 +2431,13 @@
     "sources_summary": "{{count}} foinsí ó {{sites}} suíomhanna",
     "stop": "Stop",
     "edit_index": "Cuir in eagar {{index}} de {{total}}",
-    "retry": "Déan iarracht eile"
+    "retry": "Déan iarracht eile",
+    "web_search_unavailable_gemini": "Ní bheidh sé ar fáil ar mhúnlaí Gemini agus rochtain nótaí ar siúl — ní cheadaíonn API Google an dá rud a chomhcheangal. Díchumasaigh rochtain nótaí nó aistrigh chuig soláthraí difriúil chun cuardach gréasáin a úsáid.",
+    "input_streaming": "Ionchur (sruthú…)",
+    "attach_file": "Ceangail íomhá, PDF, nó comhad téacs",
+    "remove_attachment": "Bain an ceangaltán",
+    "attachment_upload_failed": "Theip ar \"{{name}}\" a uaslódáil.",
+    "attachment_unsupported_type": "Ní cineál ceangaltáin a dtacaítear leis é \"{{name}}\". Bain úsáid as íomhá (PNG, JPEG, GIF, WebP), PDF, nó comhad téacs/foinse."
   },
   "sidebar_chat": {
     "title": "Comhrá AI",
@@ -2533,7 +2546,8 @@
     "related_task_states": "Stádas bosca seiceála saincheaptha le haghaidh liostaí le déanamh"
   },
   "link": {
-    "failed_to_open": "Theip ar oscailt an nasc '{{- href}}': {{- message}}"
+    "failed_to_open": "Theip ar oscailt an nasc '{{- href}}': {{- message}}",
+    "copy_url": "Cóipeáil URL"
   },
   "print_preview": {
     "title": "Réamhamharc priontála",
@@ -2655,7 +2669,16 @@
     "math": "Cuir bloc cothromóid matamaitice isteach",
     "footnote": "Cuir nóta fonóta isteach",
     "mermaid": "Cuir léaráid Maighdean Mhara isteach",
-    "admonition": "Cuir rabhadh {{type}} isteach"
+    "admonition": "Cuir rabhadh {{type}} isteach",
+    "mermaid_template": "Cuir léaráid maighdean mhara \"{{name}}\" isteach",
+    "collapsible": "Cuir bloc infhillte isteach",
+    "todo": "Cuir mír tasc \"{{title}}\" isteach",
+    "todo_nonstandard": "Cuir mír tasc \"{{title}}\" isteach (neamhchaighdeánach)",
+    "placeholders": {
+      "math": "cothromóid",
+      "collapsible_summary": "Achoimre",
+      "collapsible_details": "Sonraí"
+    }
   },
   "mobile_note_navigator": {
     "back": "Téigh suas leibhéal amháin",
@@ -2734,6 +2757,32 @@
       "missing-icon": "deilbhín ar iarraidh",
       "invalid-symbol": "Ba chóir go mbeadh an tsiombail markdown ina carachtar amháin, seachas \"[\", \" \", \"X\", agus \"]\"",
       "duplicate-symbol": "siombail markdown dúblach"
-    }
+    },
+    "collapsible-body-placeholder": "Clóscríobh an t-ábhar anseo...",
+    "collapsible-button-label": "Bloc fillte",
+    "collapsible-handle-tooltip": "Tarraing chun an bloc infhillte a athshuíomh",
+    "collapsible-select-label": "Roghnaigh bloc infhillte",
+    "collapsible-title-placeholder": "Achoimre",
+    "collapsible-toggle-label": "Bloc infhillte a scoránaigh",
+    "collapsible-tooltip": "Cliceáil ar an tsaighead nó brúigh {{shortcut}} chun é a dhúnadh/a leathnú."
+  },
+  "slash_commands": {
+    "bulleted_list_description": "Cruthaigh liosta le hurchair",
+    "numbered_list_description": "Cruthaigh liosta uimhrithe",
+    "todo_list_description": "Cruthaigh liosta le déanamh",
+    "align_left_description": "Ailínigh an téacs ar chlé",
+    "align_center_description": "Ailínigh an téacs go dtí an lár",
+    "align_right_description": "Ailínigh an téacs ar dheis",
+    "justify_description": "Comhfhírinnigh ailíniú téacs",
+    "admonition_description": "Cuireann sé rabhadh nua isteach",
+    "collapsible_description": "Cuir isteach cuid is féidir a athrú agus a cheilt/a thaispeánann ábhar nuair a chliceálann tú.",
+    "footnote_description": "Cruthaigh fonóta nua agus déan tagairt dó anseo",
+    "datetime_description": "Cuir isteach an dáta agus an t-am reatha",
+    "internal_link_description": "Cuir nasc chuig nóta Trilium eile isteach",
+    "math_description": "Cuir cothromóid mhatamaitice isteach",
+    "include_note_description": "Taispeáin ábhar nóta eile sa nóta seo",
+    "page_break_description": "Cuir briseadh leathanaigh isteach (le haghaidh priontála)",
+    "markdown_import_description": "Iompórtáil comhad marcála síos isteach sa nóta seo",
+    "anchor_description": "Cuir ancaire isteach le haghaidh nascadh inmheánach"
   }
 }
