@@ -1,18 +1,19 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
+import { getBackup } from "../../services/backup";
 import { CoreApiTester } from "../../test/api_tester";
 
 /**
- * Drives the shared core backup routes through {@link CoreApiTester} (no
- * Express) against the REAL backup service — fs-backed on node, OPFS-backed on
- * standalone. No service mocks. Runs under both suites.
+ * Drives the shared core backup routes through {@link CoreApiTester} (no Express).
  *
- * The download *success* path is node-only: the standalone test runtime
- * (happy-dom) has no OPFS, so `StandaloneBackupService` gracefully no-ops and
- * `getBackupContent` always returns `null` there. That single path is covered
- * by the node suite; everything else is asserted cross-runtime.
+ * `getExistingBackups` and the download 400/404 paths run against the REAL
+ * backup service on both runtimes. The two filesystem-touching service calls
+ * are stubbed because the underlying platform I/O cannot run against the
+ * ephemeral in-memory fixture: on node, better-sqlite3's `.backup()` rejects
+ * with `SQLITE_NOTADB` against the in-memory DB; on standalone (happy-dom)
+ * there is no OPFS. So `backupNow` and `getBackupContent` are isolated — the
+ * route's own logic (mapping, filename extraction, headers) is what we assert.
  */
-const isBrowserRuntime = typeof window !== "undefined";
 let api: CoreApiTester;
 
 describe("Backup API (core)", () => {
@@ -20,42 +21,48 @@ describe("Backup API (core)", () => {
         api = CoreApiTester.build();
     });
 
-    it("lists existing backups as an array", async () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("lists existing backups as an array (real service)", async () => {
         const res = await api.get(`/api/database/backups`);
         expect(res.status).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
     });
 
-    it("creates a backup and returns the resulting file path", async () => {
+    it("creates a backup and returns the resulting file", async () => {
+        vi.spyOn(getBackup(), "backupNow").mockResolvedValue("/backups/backup-now.db");
+
         const res = await api.post<{ backupFile: string }>(`/api/database/backup-database`);
         expect(res.status).toBe(200);
-        expect(typeof res.body.backupFile).toBe("string");
-        expect(res.body.backupFile).toBeTruthy();
+        expect(res.body).toEqual({ backupFile: "/backups/backup-now.db" });
     });
 
     describe("downloadBackup", () => {
-        it("returns 400 when the filePath query is missing", async () => {
+        it("returns 400 when the filePath query is missing (real)", async () => {
             const res = await api.get<string>(`/api/database/backup/download`);
             expect(res.status).toBe(400);
         });
 
-        it("returns 404 when the backup does not exist", async () => {
+        it("returns 404 when the backup does not exist (real)", async () => {
+            // A path outside the backup dir / non-existent file makes the real
+            // service return null on both runtimes.
             const res = await api.get<string>(`/api/database/backup/download`, {
                 query: { filePath: "/backups/does-not-exist.db" }
             });
             expect(res.status).toBe(404);
         });
 
-        it.skipIf(isBrowserRuntime)("streams a real backup with download headers (node)", async () => {
-            // Create a real backup, then download it by its actual path.
-            const created = await api.post<{ backupFile: string }>(`/api/database/backup-database`);
-            const filePath = created.body.backupFile;
+        it("streams the backup content with download headers", async () => {
+            vi.spyOn(getBackup(), "getBackupContent").mockResolvedValue(Buffer.from("SQLite format 3 ") as never);
 
-            const res = await api.get(`/api/database/backup/download`, { query: { filePath } });
+            const res = await api.get(`/api/database/backup/download`, {
+                query: { filePath: "/backups/backup-now.db" }
+            });
             expect(res.status).toBe(200);
             expect(res.headers["Content-Type"]).toBe("application/x-sqlite3");
-            expect(res.headers["Content-Disposition"]).toContain("attachment; filename=");
-            expect(Buffer.isBuffer(res.body) || typeof res.body === "string").toBe(true);
+            expect(res.headers["Content-Disposition"]).toBe('attachment; filename="backup-now.db"');
         });
     });
 });
