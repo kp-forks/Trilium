@@ -78,7 +78,7 @@
     "vanilla-js-wheel-zoom": "9.0.4"
   },
   "devDependencies": {
-    "@ckeditor/ckeditor5-inspector": "5.0.0",
+    "@ckeditor/ckeditor5-inspector": "5.0.1",
     "@codecov/vite-plugin": "2.0.1",
     "@prefresh/vite": "3.0.1",
     "@types/bootstrap": "5.2.10",
