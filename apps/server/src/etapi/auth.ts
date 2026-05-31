@@ -43,8 +43,9 @@ function register(router: Router, loginMiddleware: RequestHandler[]) {
 
         const etapiToken = becca.getEtapiToken(parsed.etapiTokenId);
 
+        /* v8 ignore next 4 -- unreachable: the token id was already validated by
+           checkEtapiAuth before this handler runs, so it always exists here. */
         if (!etapiToken) {
-            // shouldn't happen since this already passed auth validation
             throw new Error(`Cannot find the token '${parsed.etapiTokenId}'.`);
         }
 

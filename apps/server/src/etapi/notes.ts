@@ -1,8 +1,8 @@
 import { type ExportFormat, note_service as noteService, NoteParams, search as searchService, SearchContext, SearchParams, TaskContext, zipExportService, zipImportService } from "@triliumnext/core";
+import { becca } from "@triliumnext/core";
 import type { Request, Router } from "express";
 import type { ParsedQs } from "qs";
 
-import { becca } from "@triliumnext/core";
 import utils from "../services/utils.js";
 import eu from "./etapi_utils.js";
 import type { ValidatorMap } from "./etapi-interface.js";
@@ -188,13 +188,6 @@ function register(router: Router) {
         note.saveRevision({ description, source: "etapi" });
 
         return res.sendStatus(204);
-    });
-
-    eu.route<{ noteId: string }>(router, "get", "/etapi/notes/:noteId/attachments", (req, res, next) => {
-        const note = eu.getAndCheckNote(req.params.noteId);
-        const attachments = note.getAttachments();
-
-        res.json(attachments.map((attachment) => mappers.mapAttachmentToPojo(attachment)));
     });
 }
 
