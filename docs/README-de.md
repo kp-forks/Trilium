@@ -53,10 +53,10 @@ Wissenssammlungen.
 Unsere Dokumentation ist verfügbar in mehreren Formaten:
 - **Online-Dokumentation**: Die vollständige Dokumentation ist unter
   [docs.triliumnotes.org](https://docs.triliumnotes.org/) verfügbar
-- **In-App-Hilfe**: drücke `F1` in Trilium, um dieselbe Dokumentation direkt in
-  der Anwendung aufzurufen
-- **GitHub**: Durchsuche das [Benutzerhandbuch](./User%20Guide/User%20Guide/) in
-  diesem Repository
+- **In-App-Hilfe**: Drücken Sie `F1` in Trilium, um dieselbe Dokumentation
+  direkt in der Anwendung aufzurufen
+- **GitHub**: Durchsuchen Sie das
+  [Benutzerhandbuch](./User%20Guide/User%20Guide/) in diesem Repository
 
 ### Schnellzugriff
 - [Erste Schritte](https://docs.triliumnotes.org/)
@@ -156,8 +156,8 @@ https://github.com/TriliumNext agiert
 
 Es sind keine speziellen Migrationsschritte erforderlich, um von einer
 zadam/Trilium-Instanz auf eine TriliumNext/Trilium-Instanz umzustellen.
-[Installiere TriliumNext/Trilium](#-installation) einfach wie gewohnt, und die
-vorhandene Datenbank wird verwendet.
+[Installieren Sie TriliumNext/Trilium](#-installation) einfach wie gewohnt, und
+die vorhandene Datenbank wird verwendet.
 
 Versionen bis einschließlich
 [v0.90.4](https://github.com/TriliumNext/Trilium/releases/tag/v0.90.4) sind
@@ -168,8 +168,8 @@ direkte Migration verhindert.
 
 ## 💬 Mit uns diskutieren
 
-Nehme gerne an den offiziellen Diskussionen teil. Feedback, Funktionsvorschläge
-oder Problemberichte sind jederzeit willkommen!
+Nehmen Sie gerne an den offiziellen Diskussionen teil. Feedback,
+Funktionsvorschläge oder Problemberichte sind jederzeit willkommen!
 
 - [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (für
   Echtzeit-Diskussionen.)
@@ -184,18 +184,18 @@ oder Problemberichte sind jederzeit willkommen!
 
 ### Windows / MacOS
 
-Lade die Binärversion für deine Plattform von der Seite mit der [neuesten
+Laden Sie die Binärversion für Ihre Plattform von der Seite mit der [neuesten
 Version](https://github.com/TriliumNext/Trilium/releases/latest) herunter,
-entpacke das Paket und führe die ausführbare Datei `trilium` aus.
+entpacken Sie das Paket und führen Sie die ausführbare Datei `trilium` aus.
 
 ### Linux
 
-Wenn deine Distribution in der folgenden Tabelle aufgeführt ist, verwende das
-Paket deiner Distribution.
+Wenn Ihre Distribution in der folgenden Tabelle aufgeführt ist, verwenden Sie
+das Paket Ihrer Distribution.
 
 [![Paketierungsstatus](https://repology.org/badge/vertical-allrepos/trilium.svg)](https://repology.org/project/trilium/versions)
 
-Du kannst auch die Binärversion für deine Plattform von der Seite mit der
+Sie können auch die Binärversion für Ihre Plattform von der Seite mit der
 [neuesten Version](https://github.com/TriliumNext/Trilium/releases/latest)
 herunterladen, das Paket entpacken und die ausführbare Datei `trilium`
 ausführen.
@@ -218,22 +218,22 @@ Um TriliumNext auf einem mobilen Gerät zu verwenden, kann ein mobiler Webbrowse
 genutzt werden, um die mobile Oberfläche einer Server-Installation (siehe unten)
 aufzurufen.
 
-Weitere Informationen zur Unterstützung mobiler Apps findest du unter
+Weitere Informationen zur Unterstützung mobiler Apps finden Sie unter
 https://github.com/TriliumNext/Trilium/issues/4962.
 
-Wenn du eine native Android-App bevorzugst, kannst du
+Wenn Sie eine native Android-App bevorzugen, können Sie
 [TriliumDroid](https://apt.izzysoft.de/fdroid/index/apk/eu.fliegendewurst.triliumdroid)
-verwenden. Melde Fehler und fehlende Funktionen unter [ihrem
+verwenden. Melden Sie Fehler und fehlende Funktionen unter [ihrem
 Repository](https://github.com/FliegendeWurst/TriliumDroid). Hinweis: Bei
-Verwendung von TriliumDroid solltest du die automatischen Updates auf deinem
+Verwendung von TriliumDroid sollten Sie die automatischen Updates auf Ihrem
 Server deaktivieren (siehe unten), da die Synchronisierungsversion zwischen
 Trilium und TriliumDroid übereinstimmen muss.
 
 ### Server
 
-Um TriliumNext auf deinen eigenen Server zu installieren (einschließlich über
-Docker von [Dockerhub](https://hub.docker.com/r/triliumnext/trilium)), befolge
-[die
+Um TriliumNext auf Ihrem eigenen Server zu installieren (einschließlich über
+Docker von [Dockerhub](https://hub.docker.com/r/triliumnext/trilium)), befolgen
+Sie [die
 Server-Installationsanweisungen](https://docs.triliumnotes.org/user-guide/setup/server).
 
 
@@ -241,7 +241,7 @@ Server-Installationsanweisungen](https://docs.triliumnotes.org/user-guide/setup/
 
 ### Übersetzungen
 
-Wenn du Trilium in einer weiteren Sprache unterstützen möchtest, kannst du über
+Wenn Sie Trilium in einer weiteren Sprache unterstützen möchten, können Sie über
 unsere [Weblate-Seite](https://hosted.weblate.org/engage/trilium/) an den
 Übersetzungen mitwirken.
 
@@ -252,8 +252,9 @@ Hier ist die bisherige Sprachabdeckung:
 
 ### Code
 
-Lade das Repository herunter, installiere die Abhängigkeiten mit `pnpm` und
-starte anschließend den Server (verfügbar unter http://localhost:8080):
+Laden Sie das Repository herunter, installieren Sie die Abhängigkeiten mit
+`pnpm` und starten Sie anschließend den Server (verfügbar unter
+http://localhost:8080):
 ```shell
 git clone https://github.com/TriliumNext/Trilium.git
 cd Trilium
@@ -372,7 +373,7 @@ Trilium wäre ohne die zugrundeliegenden Technologien nicht möglich:
 
 Trilium wurde mit [Hunderten von
 Arbeitsstunden](https://github.com/TriliumNext/Trilium/graphs/commit-activity)
-entwickelt und wird auch so weitergeführt. Deine Unterstützung sorgt dafür, dass
+entwickelt und wird auch so weitergeführt. Ihre Unterstützung sorgt dafür, dass
 es Open Source bleibt, verbessert die Funktionen und deckt Kosten wie das
 Hosting.
 
