@@ -81,6 +81,15 @@ describe("safe_template - evaluateTemplate", () => {
         );
     });
 
+    it("returns empty string when a no-arg method target along the chain is null", () => {
+        // `dateCreatedObj` is whitelisted but null, so the chain resolves to null
+        // and the no-arg method call short-circuits to null (rendered empty).
+        const note = fakeNote({ dateCreatedObj: null });
+        expect(evaluateTemplate("${note.dateCreatedObj.format()}", { note })).toBe(
+            ""
+        );
+    });
+
     it("renders null/undefined results as an empty string", () => {
         expect(
             evaluateTemplate("[${note.title}]", {

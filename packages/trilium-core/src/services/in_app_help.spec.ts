@@ -100,4 +100,22 @@ describe("in_app_help - cleanUpHelp", () => {
         expect(becca.getNote("_helpKeepChild")?.isDeleted).toBe(false);
         expect(becca.getNote("_help")?.isDeleted).toBe(false);
     });
+
+    it("is a no-op when the _help subtree does not exist", () => {
+        // Remove the whole _help subtree, so becca.getNote("_help") is null and
+        // the recursive flattener hits its empty-note short-circuit.
+        withContext(() => becca.getNote("_help")?.deleteNote());
+        expect(becca.getNote("_help")).toBeNull();
+
+        expect(() => withContext(() => cleanUpHelp([]))).not.toThrow();
+    });
+});
+
+describe("in_app_help - no provider registered", () => {
+    // Runs last: it clears the provider for the rest of this isolated fork.
+    it("falls back to defaults when no provider is registered", () => {
+        initInAppHelp(undefined as unknown as InAppHelpProvider);
+        expect(getHelpHiddenSubtreeData()).toEqual([]);
+        expect(() => cleanUpHelp([])).not.toThrow();
+    });
 });
