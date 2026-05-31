@@ -247,11 +247,14 @@ class ChangeLinkDisplayCommand extends Command {
     declare value: LinkDisplayMode | null;
     /** Whether the selected link supports embed mode (e.g. YouTube). */
     declare embedAvailable: boolean;
+    /** URL of the selected link widget, exposed for the toolbar's open-link button. */
+    declare url: string | null;
 
     constructor(editor: any) {
         super(editor);
-        // Register as observable so CKEditor's bind().to() works.
+        // Register as observables so CKEditor's bind().to() works.
         this.set('embedAvailable', false);
+        this.set('url', null);
     }
 
     override execute(options: { value: LinkDisplayMode }) {
@@ -295,8 +298,10 @@ class ChangeLinkDisplayCommand extends Command {
         if (selected) {
             const url = selected.getAttribute('url') as string;
             this.embedAvailable = this._detectEmbedType(url) !== 'opengraph';
+            this.url = url;
         } else {
             this.embedAvailable = false;
+            this.url = null;
         }
     }
 

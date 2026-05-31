@@ -7,8 +7,10 @@ import {
     ViewModel,
     createDropdown,
     addListToDropdown,
+    ButtonView,
     DropdownButtonView,
     type ListDropdownButtonDefinition,
+    type Locale,
     type Command
 } from "ckeditor5";
 import LinkEmbed, {
@@ -20,14 +22,14 @@ import LinkEmbed, {
 export default class LinkEmbedToolbar extends Plugin {
 
     static get requires() {
-        return [WidgetToolbarRepository, LinkEmbed, LinkEmbedDisplayDropdown] as const;
+        return [WidgetToolbarRepository, LinkEmbed, LinkEmbedLinkButton, LinkEmbedDisplayDropdown] as const;
     }
 
     afterInit() {
         const widgetToolbarRepository = this.editor.plugins.get(WidgetToolbarRepository);
 
         widgetToolbarRepository.register("linkEmbed", {
-            items: ["linkEmbedDisplayDropdown"],
+            items: ["linkEmbedLink", "|", "linkEmbedDisplayDropdown"],
             balloonClassName: "ck-toolbar-container link-embed-toolbar",
             getRelatedElement(selection) {
                 const selectedElement = selection.getSelectedElement();
@@ -125,5 +127,63 @@ class LinkEmbedDisplayDropdown extends Plugin {
         }
 
         return items;
+    }
+}
+
+/**
+ * Registers the `linkEmbedLink` toolbar item: the leading segment of the link
+ * embed balloon that shows the widget's URL and opens it in a new tab when
+ * clicked — mirroring CKEditor's own link toolbar preview button.
+ */
+class LinkEmbedLinkButton extends Plugin {
+
+    static get requires() {
+        return [LinkEmbed] as const;
+    }
+
+    public init() {
+        const editor = this.editor;
+        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as Command & { url: string | null };
+
+        editor.ui.componentFactory.add("linkEmbedLink", locale => {
+            const button = new LinkEmbedPreviewButtonView(locale);
+
+            button.set("tooltip", locale.t("Open link in new tab"));
+            button.bind("isEnabled").to(command, "url", url => !!url);
+            button.bind("label").to(command, "url", url => url ?? undefined);
+            button.bind("href").to(command, "url", url => url ?? undefined);
+
+            return button;
+        });
+    }
+}
+
+/**
+ * A {@link ButtonView} rendered as an `<a target="_blank">` so a click opens the
+ * URL in a new tab. Reuses CKEditor's `ck-link-toolbar__preview` styling for
+ * visual parity with the built-in link toolbar.
+ */
+class LinkEmbedPreviewButtonView extends ButtonView {
+    declare href: string | undefined;
+
+    constructor(locale: Locale) {
+        super(locale);
+
+        const bind = this.bindTemplate;
+        this.set("href", undefined);
+        this.set("withText", true);
+
+        this.extendTemplate({
+            attributes: {
+                class: ["ck-link-toolbar__preview"],
+                href: bind.to("href"),
+                target: "_blank",
+                rel: "noopener noreferrer"
+            }
+        });
+
+        if (this.template) {
+            this.template.tag = "a";
+        }
     }
 }
