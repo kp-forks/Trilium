@@ -1,3 +1,4 @@
+import { type BlockChildLike, chooseLinkPreviewKind, isUrlAloneInBlock } from '@triliumnext/commons';
 import { ButtonView, Command, Plugin, toWidget, Widget, type Observable } from 'ckeditor5';
 import linkEmbedIcon from '../icons/link-embed.svg?raw';
 import { preventCKEditorHandling } from './widget_utils.js';
@@ -323,10 +324,13 @@ class ChangeLinkDisplayCommand extends Command {
 }
 
 // ---------------------------------------------------------------------------
-// Auto-convert pasted URLs to linkMention widgets.
+// Auto-convert pasted URLs to link preview widgets.
 // Piggybacks on CKEditor's AutoLink plugin: when AutoLink sets `linkHref` on
 // text whose content matches the href (i.e. a raw pasted URL, not
-// "[label](url)"), we fetch metadata and replace it with a linkMention.
+// "[label](url)"), we fetch metadata and replace it with a preview widget.
+// An embeddable URL (e.g. YouTube) standing alone in its block becomes a block
+// linkEmbed (Embed mode); every other URL — including an embeddable one
+// surrounded by text — becomes an inline linkMention.
 // The user can Ctrl+Z to revert back to a plain link.
 // ---------------------------------------------------------------------------
 
@@ -375,14 +379,14 @@ class AutoLinkToMention extends Plugin {
                     const parent = item.item.parent;
                     if (!parent?.is('element')) continue;
 
-                    this._replaceWithMention(href, parent.getPath());
+                    this._replaceWithPreview(href, parent.getPath());
                     return;
                 }
             }
         });
     }
 
-    private _replaceWithMention(url: string, parentPath: number[]) {
+    private _replaceWithPreview(url: string, parentPath: number[]) {
         const editor = this.editor;
         const editorEl = editor.editing.view.getDomRoot();
         const component = glob.getComponentByEl<EditorComponent>(editorEl);
@@ -409,6 +413,14 @@ class AutoLinkToMention extends Plugin {
                     if (item.item.data.trim() !== url) continue;
                     if (item.item.getAttribute('linkHref') !== url) continue;
 
+                    // An embeddable URL (YouTube) becomes a block embed only when
+                    // it stands alone in its block; otherwise — or for any other
+                    // URL — it becomes an inline mention. Computed before deleting
+                    // (deletion would empty the block) and at insertion time, since
+                    // the metadata fetch is async and the user may have typed more.
+                    const alone = isUrlAloneInBlock(this._blockChildren(parentEl), url);
+                    const kind = chooseLinkPreviewKind(metadata.embedType, alone);
+
                     const start = writer.createPositionAt(parentEl, item.item.startOffset!);
                     const end = writer.createPositionAt(parentEl, item.item.startOffset! + item.item.data.length);
 
@@ -416,7 +428,7 @@ class AutoLinkToMention extends Plugin {
                     writer.setSelection(urlRange);
                     editor.model.deleteContent(editor.model.document.selection);
 
-                    editor.model.insertContent(writer.createElement('linkMention', {
+                    editor.model.insertContent(writer.createElement(kind === 'embed' ? 'linkEmbed' : 'linkMention', {
                         url: metadata.url,
                         embedType: metadata.embedType,
                         title: metadata.title,
@@ -431,5 +443,18 @@ class AutoLinkToMention extends Plugin {
 
             this._converting = false;
         });
+    }
+
+    /**
+     * Maps a model block's children to the runtime-neutral shape consumed by
+     * {@link isUrlAloneInBlock}, keeping the decision logic pure and testable.
+     */
+    private _blockChildren(blockEl: any): BlockChildLike[] {
+        const children: BlockChildLike[] = [];
+        for (const child of blockEl.getChildren()) {
+            const isText = child.is('$text');
+            children.push({ isText, data: isText ? child.data : undefined });
+        }
+        return children;
     }
 }
