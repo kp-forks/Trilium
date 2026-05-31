@@ -6,6 +6,7 @@ import link from "./link.js";
 import { applyLinkEmbeds } from "./link_embed.js";
 import { renderMathInElement } from "./math.js";
 import { getMermaidConfig } from "./mermaid.js";
+import { sanitizeNoteContentHtml } from "./sanitize_content.js";
 import { formatCodeBlocks } from "./syntax_highlight.js";
 import tree from "./tree.js";
 import { isHtmlEmpty } from "./utils.js";
@@ -15,7 +16,7 @@ export default async function renderText(note: FNote | FAttachment, $renderedCon
     const blob = await note.getBlob();
 
     if (blob && !isHtmlEmpty(blob.content)) {
-        $renderedContent.append($('<div class="ck-content">').html(blob.content));
+        $renderedContent.append($('<div class="ck-content">').html(sanitizeNoteContentHtml(blob.content)));
         await postProcessRichContent(note, $renderedContent, options);
     } else if (note instanceof FNote && !options.noChildrenList) {
         await renderChildrenList($renderedContent, note, options.includeArchivedNotes ?? false);

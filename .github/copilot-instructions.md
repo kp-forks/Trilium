@@ -346,6 +346,7 @@ Trilium provides powerful user scripting capabilities:
 #### Client vs Server Translation Usage
 - **Client-side**: `import { t } from "../services/i18n"` with keys in `apps/client/src/translations/en/translation.json`
 - **Server-side**: `import { t } from "i18next"` with keys in `apps/server/src/assets/translations/en/server.json`
+- **Electron main process** (e.g. `apps/desktop/src/`): `import { t } from "i18next"` — uses server-side keys from `apps/server/src/assets/translations/en/server.json` (same as server-side). **Never hardcode user-facing strings** in Electron dialogs, tray menus, or IPC handlers — always use `t()`.
 - **Interpolation**: Use `{{variable}}` for normal interpolation; use `{{- variable}}` (with hyphen) for **unescaped** interpolation when the value contains special characters like quotes that shouldn't be HTML-escaped
 
 ### Storing User Preferences

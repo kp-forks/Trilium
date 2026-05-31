@@ -113,7 +113,7 @@ describe("Image API (core)", () => {
             const res = await api.get<string>(`/api/images/${noteId}/file.svg`);
             expect(res.status).toBe(200);
             expect(res.headers["Content-Type"]).toBe("image/svg+xml");
-            expect(res.headers["Content-Security-Policy"]).toBe("script-src 'none'");
+            expect(res.headers["Content-Security-Policy"]).toContain("default-src 'none'");
             expect(res.body).not.toContain("alert(1)");
             expect(res.body).toContain("<svg");
         });
@@ -131,7 +131,7 @@ describe("Image API (core)", () => {
             const res = await api.get<string>(`/api/images/${noteId}/file.svg`);
             expect(res.status).toBe(200);
             expect(res.headers["Content-Type"]).toBe("image/svg+xml");
-            expect(res.headers["Content-Security-Policy"]).toBe("script-src 'none'");
+            expect(res.headers["Content-Security-Policy"]).toContain("default-src 'none'");
             expect(res.body).toContain(type);
             expect(res.body).toContain("<svg");
             expect(res.body).not.toContain("alert(9)");
@@ -238,7 +238,7 @@ describe("Image API (core)", () => {
             const res = await api.get<string>(`/api/attachments/${attachmentId}/image/file.svg`);
             expect(res.status).toBe(200);
             expect(res.headers["Content-Type"]).toBe("image/svg+xml");
-            expect(res.headers["Content-Security-Policy"]).toBe("script-src 'none'");
+            expect(res.headers["Content-Security-Policy"]).toContain("default-src 'none'");
             expect(unwrapStringOrBuffer(res.body as never)).not.toContain("alert(2)");
         });
     });
@@ -282,6 +282,21 @@ describe("Image API (core)", () => {
                 expect(becca.getNoteOrThrow(noteId).getOwnedLabelValue("originalFileName")).toBe("x.png");
             });
         });
+    });
+
+    it("sets Content-Security-Policy header on SVG responses", () => {
+        const parentNote = mockNote("note").note;
+        const response = new MockResponse();
+        renderSvgAttachment(parentNote, response as any, "attachment");
+        expect(response.headers["Content-Security-Policy"]).toBeDefined();
+        expect(response.headers["Content-Security-Policy"]).toContain("default-src 'none'");
+    });
+
+    it("sets X-Content-Type-Options header on SVG responses", () => {
+        const parentNote = mockNote("note").note;
+        const response = new MockResponse();
+        renderSvgAttachment(parentNote, response as any, "attachment");
+        expect(response.headers["X-Content-Type-Options"]).toBe("nosniff");
     });
 });
 

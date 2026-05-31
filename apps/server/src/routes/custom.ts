@@ -2,9 +2,15 @@ import { becca, cls, getLog, routeHelpers, scriptService, utils } from "@trilium
 import type { Request, Response, Router } from "express";
 
 import { namespace } from "../cls_provider.js";
+import { isScriptingEnabled } from "../services/scripting_guard.js";
 import sql from "../services/sql.js";
 
 function handleRequest(req: Request, res: Response) {
+
+    if (!isScriptingEnabled()) {
+        res.status(403).send("Backend script execution is disabled on this server.");
+        return;
+    }
 
     // handle path from "*path" route wildcard
     // in express v4, you could just add

@@ -1,13 +1,25 @@
 import { trimIndentation } from "@triliumnext/commons";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import becca from "../becca/becca.js";
 import { buildNote } from "../test/becca_easy_mocking.js";
+import config from "./config.js";
 import { getContext } from "./context.js";
 import scriptService, { buildJsx, executeBundle, getScriptBundle } from "./script.js";
 import ws from "./ws.js";
 
 describe("Script", () => {
+    // executeBundle enforces the backendScriptingEnabled security toggle (default false).
+    const originalScriptingEnabled = config.Security.backendScriptingEnabled;
+
+    beforeAll(() => {
+        config.Security.backendScriptingEnabled = true;
+    });
+
+    afterAll(() => {
+        config.Security.backendScriptingEnabled = originalScriptingEnabled;
+    });
+
     beforeEach(() => {
 
         becca.reset();

@@ -71,7 +71,9 @@ vi.mock("mermaid", () => ({
 const pdfViewerComponent = vi.fn(() => null);
 vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerComponent }));
 
-vi.mock("dompurify", () => ({ default: { sanitize: (s: string) => s } }));
+// `addHook` is a no-op here: sanitize_content.ts registers a DOMPurify hook at
+// module load (pulled in transitively), which would otherwise throw against this mock.
+vi.mock("dompurify", () => ({ default: { sanitize: (s: string) => s, addHook: () => {} } }));
 
 const renderToHtml = vi.fn((...args: any[]) => `<p>${args[0]}</p>`);
 vi.mock("@triliumnext/commons", async (orig) => ({

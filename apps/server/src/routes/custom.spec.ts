@@ -1,12 +1,24 @@
-import { cls, note_service as noteService } from "@triliumnext/core";
+import { cls, getConfig, note_service as noteService } from "@triliumnext/core";
 import type { Application } from "express";
 import supertest from "supertest";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import config from "../services/config.js";
 
 let app: Application;
 
 describe("Custom request/resource handlers", () => {
+    // Custom request handlers run backend scripts, gated by the backendScriptingEnabled toggle at
+    // two layers: the /custom route checks the server config, while execution (executeBundle) checks
+    // core's config. The test setup never injects the server config into core, so they are distinct
+    // objects and both must be enabled.
+    const coreConfig = getConfig();
+    const originalServerScripting = config.Security.backendScriptingEnabled;
+    const originalCoreScripting = coreConfig.Security.backendScriptingEnabled;
+
     beforeAll(async () => {
+        config.Security.backendScriptingEnabled = true;
+        coreConfig.Security.backendScriptingEnabled = true;
         app = await (await import("../app.js")).default();
 
         cls.init(() => {
@@ -46,6 +58,11 @@ describe("Custom request/resource handlers", () => {
             noteService.createNewNote({ parentNoteId: "root", title: "Bad regex handler", type: "text", content: "x" })
                 .note.setLabel("customRequestHandler", "([unclosed");
         });
+    });
+
+    afterAll(() => {
+        config.Security.backendScriptingEnabled = originalServerScripting;
+        coreConfig.Security.backendScriptingEnabled = originalCoreScripting;
     });
 
     it("runs a custom request handler with captured path params", async () => {
