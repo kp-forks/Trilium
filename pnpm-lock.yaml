@@ -824,8 +824,8 @@ importers:
         specifier: 1.4.2
         version: 1.4.2
       tmp:
-        specifier: 0.2.6
-        version: 0.2.6
+        specifier: 0.2.7
+        version: 0.2.7
       turnish:
         specifier: 1.12.2
         version: 1.12.2
@@ -12690,10 +12690,6 @@ packages:
 
   tmp@0.2.5:
     resolution: {integrity: sha512-voyz6MApa1rQGUxT3E+BK7/ROe8itEx7vD8/HEvt4xwXucvQ5G5oeEiHkmHZJuBO21RpOf+YYm9MOivj709jow==}
-    engines: {node: '>=14.14'}
-
-  tmp@0.2.6:
-    resolution: {integrity: sha512-5sJPdPjfI5Kx+qbrDesxkglRBxW//g7hCsqspEjwkewGvBMGIKMOTKzLt1hFVJzyadba3lDUN20O9qhvbQUSTA==}
     engines: {node: '>=14.14'}
 
   tmp@0.2.7:
@@ -27976,8 +27972,6 @@ snapshots:
     optional: true
 
   tmp@0.2.5: {}
-
-  tmp@0.2.6: {}
 
   tmp@0.2.7: {}
 
