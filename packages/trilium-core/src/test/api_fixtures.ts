@@ -25,6 +25,11 @@ export async function createTextNote(
         { body: { title, type: "text", content } }
     );
 
+    if (res.status !== 200) {
+        // Surface the real failure instead of a cryptic "cannot read 'noteId' of undefined".
+        throw new Error(`createTextNote failed: expected 200, got ${res.status} – ${JSON.stringify(res.body)}`);
+    }
+
     return {
         noteId: res.body.note.noteId,
         branchId: res.body.branch.branchId

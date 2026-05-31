@@ -173,12 +173,12 @@ function register(router: Router) {
         const note = eu.getAndCheckNote(req.params.noteId);
         const taskContext = new TaskContext("no-progress-reporting", "importNotes", null);
 
-        void zipImportService.importZip(taskContext, req.body, note).then((importedNote) => {
+        zipImportService.importZip(taskContext, req.body, note).then((importedNote) => {
             res.status(201).json({
                 note: mappers.mapNoteToPojo(importedNote),
                 branch: mappers.mapBranchToPojo(importedNote.getParentBranches()[0])
             });
-        }); // we need better error handling here, async errors won't be properly processed.
+        }).catch(next); // forward async import errors to the ETAPI error handler
     });
 
     eu.route<{ noteId: string }>(router, "post", "/etapi/notes/:noteId/revision", (req, res, next) => {

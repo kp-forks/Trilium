@@ -33,7 +33,7 @@ describe("Similar Notes API (core)", () => {
 
     it("finds a freshly created note that shares content with another", async () => {
         const shared = "alphabet bicycle continuous determination elephant fountain";
-        await createTextNote(api, {
+        const first = await createTextNote(api, {
             title: "Similar source",
             content: `<p>${shared}</p>`
         });
@@ -45,6 +45,8 @@ describe("Similar Notes API (core)", () => {
         const res = await api.get<SimilarNote[]>(`/api/similar-notes/${noteId}`);
         expect(res.status).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
+        // The sibling sharing the same content is actually found (not a vacuous pass).
+        expect(res.body.some((similar) => similar.noteId === first.noteId)).toBe(true);
         // The note never lists itself as similar.
         expect(res.body.every((similar) => similar.noteId !== noteId)).toBe(true);
     });

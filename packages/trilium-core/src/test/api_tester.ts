@@ -157,6 +157,7 @@ class MockResponse extends Writable {
     setHeader(name: string, value: string) { this.headers[name] = value; return this; }
     removeHeader(name: string) { delete this.headers[name]; return this; }
     send(body: unknown) { this.used = true; this.hasSendBody = true; this.sendBody = body; return this; }
+    json(body: unknown) { return this.send(body); }
     sendStatus(code: number) { this.used = true; this.statusCode = code; return this; }
 
     override _write(chunk: Buffer | Uint8Array | string, _encoding: BufferEncoding, callback: (error?: Error | null) => void) {
@@ -230,9 +231,13 @@ export class CoreApiTester {
                         return mockRes.snapshot();
                     }
                     if (resultHandler) {
-                        const capture: CaptureResponse = { setHeader() {} };
+                        const captureHeaders: Record<string, string> = {};
+                        const capture: CaptureResponse = {
+                            setHeader(name, value) { captureHeaders[name] = value; }
+                        };
                         resultHandler(req, capture, result);
-                        return capture.captured ?? formatApiResult(result);
+                        const base = capture.captured ?? formatApiResult(result);
+                        return { ...base, headers: { ...captureHeaders, ...base.headers } };
                     }
                     return formatApiResult(result);
                 });

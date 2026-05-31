@@ -96,4 +96,7 @@ async function startApplication() {
     }
 }
 
-void startApplication();
+startApplication().catch((err) => {
+    console.error("Fatal error during Trilium server startup:", err);
+    process.exit(1);
+});

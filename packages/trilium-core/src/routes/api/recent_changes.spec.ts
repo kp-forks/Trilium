@@ -36,6 +36,8 @@ describe("Recent changes API (core)", () => {
         const res = await api.get<RecentChangeRow[]>("/api/recent-changes/root");
 
         expect(res.status).toBe(200);
+        // Guard against a vacuous pass: the demo fixture has many recent changes.
+        expect(res.body.length).toBeGreaterThan(1);
         for (let i = 1; i < res.body.length; i++) {
             expect(res.body[i - 1].utcDate >= res.body[i].utcDate).toBe(true);
         }
