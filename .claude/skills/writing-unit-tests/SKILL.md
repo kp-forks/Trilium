@@ -57,6 +57,7 @@ coverage: {
 
 ## Universal gotchas
 
+- **No non-null assertions (`!`)** — never use the TypeScript postfix `!` operator, even in tests. Narrow instead: `becca.getNoteOrThrow(id)`/`getAttachmentOrThrow(id)` instead of `becca.getNote(id)!`; `value?.prop ?? fallback` then assert; or capture into a const after an `expect(x).toBeDefined()`/null check. (Project rule — see `CLAUDE.md` Code Style.)
 - **`vi.mock` is hoisted** above imports. Put component/module imports *after* the `vi.mock(...)` calls; mock factories can't reference outer non-hoisted variables. Partial-mock with `async (importOriginal) => ({ ...(await importOriginal()), onlyThis: vi.fn() })`.
 - **Don't assert on translated (i18n) strings** — assert structure/keys/behavior (classes, counts, ids), not human-readable English.
 - **happy-dom is not a browser:** `getBoundingClientRect()` returns zeros, `ResizeObserver`/layout/visibility are stubs. Anything pixel/size/scroll-based needs `@vitest/browser`, not happy-dom.

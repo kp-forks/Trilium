@@ -84,10 +84,10 @@ describe("Database API", () => {
             try {
                 const { res, calls } = fakeRes();
                 databaseRoute.downloadBackup({ query: { filePath } } as unknown as Request, res);
-                expect(calls.download).toBeDefined();
-                expect(calls.download![0]).toBe(path.resolve(filePath));
+                const downloadArgs = calls.download ?? [];
+                expect(downloadArgs[0]).toBe(path.resolve(filePath));
                 // A timestamped download filename is generated from the file mtime.
-                expect(String(calls.download![1])).toMatch(/spec-backup_.*\.db/);
+                expect(String(downloadArgs[1])).toMatch(/spec-backup_.*\.db/);
             } finally {
                 fs.rmSync(filePath, { force: true });
             }

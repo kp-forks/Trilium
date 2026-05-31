@@ -265,6 +265,7 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 - Max line length: 100 characters
 - Unix line endings
 - Import sorting via `eslint-plugin-simple-import-sort`
+- **Never use the TypeScript non-null assertion operator (postfix `!`)** — including in tests. Narrow instead: optional chaining (`?.`), a `?? fallback`, an explicit null check before use, or an `*OrThrow` accessor (e.g. `becca.getNoteOrThrow(id)` rather than `becca.getNote(id)!`).
 
 ## Testing
 

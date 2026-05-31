@@ -98,7 +98,7 @@ describe("OCR API", () => {
         });
 
         it("returns stored OCR text from the blob", async () => {
-            const blobId = becca.getNote(noteId)!.blobId;
+            const blobId = becca.getNoteOrThrow(noteId).blobId;
             cls.init(() => getSql().execute("UPDATE blobs SET textRepresentation = ? WHERE blobId = ?", ["scanned text", blobId]));
             const result = await ocrRoutes.getNoteOCRText({ params: { noteId } } as unknown as Request<{ noteId: string }>);
             expect(result).toEqual({ success: true, text: "scanned text", hasOcr: true });

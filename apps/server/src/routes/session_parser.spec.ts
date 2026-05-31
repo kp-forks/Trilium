@@ -51,10 +51,11 @@ describe("SQLiteSessionStore", () => {
 
     it("touch renews a non-persistent session but leaves a persistent one untouched", async () => {
         await set("sess-3", baseSession());
-        const before = store.getSessionExpiry("sess-3")!.getTime();
+        const before = store.getSessionExpiry("sess-3")?.getTime() ?? 0;
+        expect(before).toBeGreaterThan(0);
         // No cookie.expires → touch pushes the expiry forward.
         await touch("sess-3", baseSession());
-        expect(store.getSessionExpiry("sess-3")!.getTime()).toBeGreaterThanOrEqual(before);
+        expect(store.getSessionExpiry("sess-3")?.getTime() ?? 0).toBeGreaterThanOrEqual(before);
 
         // cookie.expires present → touch is a no-op (early return).
         await touch("sess-3", baseSession(new Date(Date.now() + 60_000)));

@@ -40,7 +40,7 @@ describe("Files API", () => {
             const file = { buffer: Buffer.from("replaced"), mimetype: "TEXT/Plain", originalname: "new.txt" };
             const result = cls.init(() => filesRoute.updateFile(fileReq({ noteId }, file, { replace: "1" })));
             expect(result).toEqual({ uploaded: true });
-            expect(becca.getNote(noteId)!.mime).toBe("text/plain");
+            expect(becca.getNoteOrThrow(noteId).mime).toBe("text/plain");
         });
 
         it("saves a revision when not replacing", () => {
@@ -64,7 +64,7 @@ describe("Files API", () => {
 
     describe("content providers", () => {
         it("streams full and ranged note content", async () => {
-            const current = becca.getNote(noteId)!.getContent() as string;
+            const current = becca.getNoteOrThrow(noteId).getContent() as string;
             const provider = await filesRoute.fileContentProvider(fileReq({ noteId }));
             expect(provider.totalSize).toBe(Buffer.byteLength(current));
             expect(await streamToString(provider.getStream(undefined as never))).toBe(current);
@@ -86,7 +86,7 @@ describe("Files API", () => {
 
             fs.writeFileSync(tmpFilePath, "edited-on-disk");
             cls.init(() => filesRoute.uploadModifiedFileToNote(fileReq({ noteId }, undefined, {}, { filePath: tmpFilePath })));
-            expect(becca.getNote(noteId)!.getContent()).toBe("edited-on-disk");
+            expect(becca.getNoteOrThrow(noteId).getContent()).toBe("edited-on-disk");
         });
 
         it("saves an attachment to a temp file then uploads it back", () => {
@@ -95,7 +95,7 @@ describe("Files API", () => {
             fs.writeFileSync(tmpFilePath, "edited-att");
             const uploadReq = fileReq({ attachmentId } as Record<string, string>, undefined, {}, { filePath: tmpFilePath }) as unknown as Request<{ attachmentId: string }>;
             cls.init(() => filesRoute.uploadModifiedFileToAttachment(uploadReq));
-            expect(becca.getAttachment(attachmentId)!.getContent()).toBe("edited-att");
+            expect(becca.getAttachmentOrThrow(attachmentId).getContent()).toBe("edited-att");
         });
 
         it("rejects uploading from an unknown temp path", () => {
