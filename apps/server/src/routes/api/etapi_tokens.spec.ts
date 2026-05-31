@@ -15,7 +15,7 @@ describe("ETAPI tokens API", () => {
 
         const etapiTokenId = cls.init(() =>
             etapiTokensRoute.getTokens().find(t => t.name === "spec-token")!.etapiTokenId
-        );
+        )!;
         expect(etapiTokenId).toBeTruthy();
 
         cls.init(() => etapiTokensRoute.patchToken(req({ name: "renamed" }, { etapiTokenId })));

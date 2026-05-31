@@ -23,7 +23,7 @@ vi.mock("../../services/llm/stream.js", () => ({
     async *streamToChunks () { for (const c of state.chunks) yield c; }
 }));
 
-const generateChatTitle = vi.fn(async () => {});
+const generateChatTitle = vi.fn(async (..._args: unknown[]) => {});
 vi.mock("../../services/llm/chat_title.js", () => ({ generateChatTitle: (...args: unknown[]) => generateChatTitle(...args) }));
 
 import llmChatRoute from "./llm_chat.js";

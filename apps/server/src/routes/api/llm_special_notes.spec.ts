@@ -7,7 +7,7 @@ import llmSpecialNotesRoute from "./llm_special_notes.js";
 describe("LLM special notes API", () => {
     it("creates an LLM chat note", () => {
         const chat = cls.init(() => llmSpecialNotesRoute.createLlmChat());
-        expect(chat.id ?? chat.noteId).toBeTruthy();
+        expect(chat.noteId).toBeTruthy();
     });
 
     it("gets or creates, then returns it as the most recent chat", () => {
@@ -33,7 +33,7 @@ describe("LLM special notes API", () => {
 
     it("saves a chat by note id", () => {
         const created = cls.init(() => llmSpecialNotesRoute.createLlmChat());
-        const noteId = (created.id ?? created.noteId) as string;
+        const noteId = created.noteId;
         const req = { body: { llmChatNoteId: noteId } } as unknown as Request<{ llmChatNoteId: string }>;
         const saved = cls.init(() => llmSpecialNotesRoute.saveLlmChat(req));
         expect(saved).toBeTruthy();
