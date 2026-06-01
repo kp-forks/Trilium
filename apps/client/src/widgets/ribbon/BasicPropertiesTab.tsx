@@ -164,15 +164,14 @@ export function NoteTypeCodeNoteList({ currentMimeType, mimeTypes, changeNoteTyp
 
 export function useMimeTypes() {
     const [ codeNotesMimeTypes ] = useTriliumOption("codeNotesMimeTypes");
-    const mimeTypes = useMemo(() => {
+    return useMemo(() => {
         mime_types.loadMimeTypes();
         const allMimeTypes = mime_types.getMimeTypes();
         return {
-            enabledMimeTypes: allMimeTypes.filter(mimeType => mimeType.enabled),
+            enabledMimeTypes: allMimeTypes.filter(mimeType => mimeType?.enabled),
             allMimeTypes
         };
     }, [ codeNotesMimeTypes ]); // eslint-disable-line react-hooks/exhaustive-deps
-    return mimeTypes;
 }
 
 export function NoteTypeOptionsModal({ modalShown, setModalShown }: { modalShown: boolean, setModalShown: (shown: boolean) => void }) {

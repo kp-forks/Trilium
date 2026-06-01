@@ -258,7 +258,7 @@ function buildListOfLanguages() {
         // The `env=frontend`/`env=backend` JavaScript variants are Trilium script environments,
         // which are meaningless inside a (display-only) code block. Plain `text/javascript`
         // already provides JavaScript highlighting, so omit the script-specific variants here.
-        .filter((mt) => !mt.mime.startsWith("application/javascript;env="))
+        .filter((mt) => mt.mime && !mt.mime.startsWith("application/javascript;env="))
         .map((mt) => ({
             language: normalizeMimeTypeForCKEditor(mt.mime),
             label: mt.title
