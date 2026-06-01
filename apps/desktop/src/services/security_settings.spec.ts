@@ -51,8 +51,8 @@ function invoke(channel: string, enabled: boolean) {
 }
 
 describe("security_settings", () => {
-    // Handlers (and the module-level "suppress for session" flag) are registered
-    // once; the suppression test runs last because it latches that flag on.
+    // Register the shared handlers once. The suppression test isolates its own
+    // module instance, so it no longer needs to run last.
     beforeAll(() => {
         securitySettings.registerSecurityIpcHandlers();
     });
@@ -113,10 +113,16 @@ describe("security_settings", () => {
         });
     });
 
-    // Must run last: ticking "don't ask again" latches the module-level
-    // suppression flag for the rest of the process.
     describe("don't-ask-again suppression", () => {
         it("suppresses all subsequent dialogs once the checkbox is ticked", async () => {
+            // Ticking "don't ask again" latches a module-level flag that never clears.
+            // Re-import a throwaway copy of the module so that latch lives only on this
+            // isolated instance — it can't leak into other tests (or other spec files
+            // sharing the Vitest worker), so this test no longer has to run last.
+            vi.resetModules();
+            const isolated = await import("./security_settings.js");
+            isolated.registerSecurityIpcHandlers();
+
             h.showMessageBox.mockResolvedValue({ response: 1, checkboxChecked: true });
             expect(await invoke("security-set-backend-scripting", true)).toBe(true);
 
@@ -124,6 +130,9 @@ describe("security_settings", () => {
             expect(await invoke("security-set-sql-console", true)).toBe(false);
             expect(await invoke("security-set-backend-scripting", false)).toBe(false);
             expect(h.showMessageBox).not.toHaveBeenCalled();
+
+            // Restore the shared, unlatched handlers so run order stays irrelevant.
+            securitySettings.registerSecurityIpcHandlers();
         });
     });
 });
