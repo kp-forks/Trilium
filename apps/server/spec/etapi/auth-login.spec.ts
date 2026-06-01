@@ -45,6 +45,14 @@ describe("etapi/auth/login", () => {
         expect(response.body.authToken).toBeUndefined();
     });
 
+    it("reports a 500 when the password is missing and cannot be verified", async () => {
+        // No password field → verifyPassword throws → caught by the middleware.
+        await supertest(app)
+            .post(LOGIN_URL)
+            .send({ tokenName: "test" })
+            .expect(500);
+    });
+
     // A token must never be issued from a failed login, and even if one were, it must not
     // grant access to data.
     it("does not grant data access from a wrong-password login attempt", async () => {
