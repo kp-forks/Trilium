@@ -319,7 +319,9 @@
     "hide_child_notes": "Ascunde subnotițele din arbore",
     "open_all_in_tabs": "Deschide tot",
     "open_all_in_tabs_tooltip": "Deschide toate rezultatele în taburi noi",
-    "open_all_confirm": "Aceasta va deschide {{count}} notițe în taburi noi. Continuați?",
+    "open_all_confirm_one": "Aceasta va deschide {{count}} notiță în taburi noi. Continuați?",
+    "open_all_confirm_few": "Aceasta va deschide {{count}} notițe în taburi noi. Continuați?",
+    "open_all_confirm_other": "Aceasta va deschide {{count}} de notițe în taburi noi. Continuați?",
     "open_all_too_many": "Prea multe rezultate ({{count}}). Maximul este {{max}}."
   },
   "bookmark_switch": {
@@ -977,7 +979,9 @@
     "note_id": "ID-ul notiței",
     "note_size": "Dimensiunea notiței",
     "note_size_info": "Dimensiunea notiței reprezintă o aproximare a cerințelor de stocare ale acestei notițe. Ia în considerare conținutul notiței dar și ale reviziilor sale.",
-    "subtree_size": "(dimensiunea sub-arborelui: {{size}} în {{count}} notițe)",
+    "subtree_size_one": "(dimensiunea sub-arborelui: {{size}} în {{count}} notiță)",
+    "subtree_size_few": "(dimensiunea sub-arborelui: {{size}} în {{count}} notițe)",
+    "subtree_size_other": "(dimensiunea sub-arborelui: {{size}} în {{count}} de notițe)",
     "title": "Informații despre notiță",
     "type": "Tip",
     "mime": "Tip MIME",
@@ -992,7 +996,9 @@
     "title": "Harta notițelor",
     "fix-nodes": "Fixează nodurile",
     "link-distance": "Distanța dintre legături",
-    "too-many-notes": "Există {{count}} notițe aici. Afișarea tuturor poate încetini aplicația.",
+    "too-many-notes_one": "Există {{count}} notiță aici. Afișarea ei poate încetini aplicația.",
+    "too-many-notes_few": "Există {{count}} notițe aici. Afișarea tuturor poate încetini aplicația.",
+    "too-many-notes_other": "Există {{count}} de notițe aici. Afișarea tuturor poate încetini aplicația.",
     "show-anyway": "Arată harta"
   },
   "note_paths": {
@@ -1497,7 +1503,9 @@
     "unprotect-subtree": "Deprotejează ierarhia",
     "hoist-note": "Focalizează notița",
     "unhoist-note": "Defocalizează notița",
-    "converted-to-attachments": "{{count}} notițe au fost convertite în atașamente.",
+    "converted-to-attachments_one": "{{count}} notiță a fost convertită în atașamente.",
+    "converted-to-attachments_few": "{{count}} notițe au fost convertite în atașamente.",
+    "converted-to-attachments_other": "{{count}} de notițe au fost convertite în atașamente.",
     "convert-to-attachment-confirm": "Doriți convertirea notițelor selectate în atașamente ale notiței părinte? Această operațiune se aplică doar notițelor de tip imagine, celelalte vor fi ignorate.",
     "open-in-popup": "Editare rapidă",
     "archive": "Arhivează",
@@ -2118,7 +2126,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} notițe",
+    "total_notes_one": "{{count}} notiță",
+    "total_notes_few": "{{count}} notițe",
+    "total_notes_other": "{{count}} de notițe",
     "prev_page": "Pagina anterioară",
     "next_page": "Pagina următoare"
   },
@@ -2225,7 +2235,9 @@
     "code_note_switcher": "Schimbă limbajul",
     "tab_width": "Lățimea tab-ului: {{width}}",
     "tab_width_title": "Modifică lățimea tab-ului",
-    "tab_width_spaces": "{{count}} spații",
+    "tab_width_spaces_one": "{{count}} spațiu",
+    "tab_width_spaces_few": "{{count}} spații",
+    "tab_width_spaces_other": "{{count}} de spații",
     "tab_width_spaces_short": "Spații: {{width}}",
     "tab_width_tabs": "Tab-uri: {{width}}",
     "tab_width_use_default": "Folosește valoarea implicită ({{width}})",
