@@ -80,6 +80,8 @@ export function buildSnippetCompletions(snippets: CodeSnippet[]): Completion[] {
  */
 export function useCodeSnippets(matches: (note: FNote) => boolean, reloadKey: string, enabled = true) {
     const snippetsRef = useRef<CodeSnippet[]>([]);
+    // Monotonic id so a slow fetch that resolves after a newer reload is discarded (avoids stale data).
+    const reloadCountRef = useRef(0);
     // Keep the latest predicate without making it a dependency (it's a fresh closure each render);
     // `reloadKey` is the stable trigger for filter changes.
     const matchesRef = useRef(matches);
@@ -90,8 +92,11 @@ export function useCodeSnippets(matches: (note: FNote) => boolean, reloadKey: st
             snippetsRef.current = [];
             return;
         }
+        const reloadId = ++reloadCountRef.current;
         void getCodeSnippets((note) => matchesRef.current(note)).then((snippets) => {
-            snippetsRef.current = snippets;
+            if (reloadId === reloadCountRef.current) {
+                snippetsRef.current = snippets;
+            }
         });
     }, [enabled]);
 
@@ -124,7 +129,10 @@ export function useSnippetSlashCommands(editorView: VanillaCodeMirror | null, ma
             override: [(context: CompletionContext) => {
                 const match = context.matchBefore(SLASH_COMMAND_REGEX);
                 if (!match) return null;
-                return { from: match.from, options: buildSnippetCompletions(snippetsRef.current) };
+                const options = buildSnippetCompletions(snippetsRef.current);
+                // No matching snippets (e.g. none for this MIME, or disabled) → no source, so an
+                // empty completion popup never appears when the user types "/".
+                return options.length ? { from: match.from, options } : null;
             }],
             activateOnTyping: true
         });

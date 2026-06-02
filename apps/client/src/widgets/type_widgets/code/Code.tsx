@@ -3,7 +3,7 @@ import "./code.css";
 import { default as VanillaCodeMirror, getThemeById } from "@triliumnext/codemirror";
 import { NoteType } from "@triliumnext/commons";
 import { Ref } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { CommandListenerData } from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
@@ -89,12 +89,12 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     const editorRef = useRef<VanillaCodeMirror>(null);
     const containerRef = useRef<HTMLPreElement>(null);
     const [ editorView, setEditorView ] = useState<VanillaCodeMirror | null>(null);
-    const combinedEditorRef = (view: VanillaCodeMirror | null) => {
+    const combinedEditorRef = useCallback((view: VanillaCodeMirror | null) => {
         editorRef.current = view;
         setEditorView(view);
         if (typeof externalEditorRef === "function") externalEditorRef(view);
         else if (externalEditorRef) externalEditorRef.current = view;
-    };
+    }, [externalEditorRef]);
     const [ vimKeymapEnabled ] = useTriliumOptionBool("vimKeymapEnabled");
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
