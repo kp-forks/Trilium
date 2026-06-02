@@ -1,6 +1,6 @@
 import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, type NoteType } from "@triliumnext/commons";
-import html2plaintext from "html2plaintext";
 import { t } from "i18next";
+import { parse as parseHtml } from "node-html-parser";
 import url from "url";
 
 import becca from "../becca/becca.js";
@@ -843,6 +843,17 @@ function downloadImages(noteId: string, content: string) {
     return content;
 }
 
+/**
+ * Derives a plain-text attachment title from the inner HTML of an inline
+ * attachment's link label: strips tags, decodes HTML entities, collapses
+ * whitespace and trims.
+ */
+export function prepareTitle(html: string): string {
+    // `.text` strips tags and decodes HTML entities (via `he`); we then collapse
+    // whitespace and trim, matching the former `html2plaintext` behavior.
+    return parseHtml(html).text.replace(/\s+/g, " ").trim();
+}
+
 function saveAttachments(note: BNote, content: string) {
     const inlineAttachmentRe = /<a[^>]*?\shref=['"]data:([^;'">]+);base64,([^'">]+)['"][^>]*>(.*?)<\/a>/gim;
     let attachmentMatch;
@@ -853,7 +864,7 @@ function saveAttachments(note: BNote, content: string) {
         const base64data = attachmentMatch[2];
         const buffer = decodeBase64(base64data);
 
-        const title = html2plaintext(attachmentMatch[3]);
+        const title = prepareTitle(attachmentMatch[3]);
 
         const attachment = note.saveAttachment({
             role: "file",

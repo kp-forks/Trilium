@@ -917,7 +917,8 @@
     "hide_child_notes": "Hide child notes in tree",
     "open_all_in_tabs": "Open all",
     "open_all_in_tabs_tooltip": "Open all results in new tabs",
-    "open_all_confirm": "This will open {{count}} notes in new tabs. Continue?",
+    "open_all_confirm_one": "This will open {{count}} note in new tabs. Continue?",
+    "open_all_confirm_other": "This will open {{count}} notes in new tabs. Continue?",
     "open_all_too_many": "Too many results ({{count}}). Maximum is {{max}}."
   },
   "edited_notes": {
@@ -966,7 +967,8 @@
     "note_size": "Note size",
     "note_size_info": "Note size provides rough estimate of storage requirements for this note. It takes into account note's content and content of its note revisions.",
     "calculate": "calculate",
-    "subtree_size": "(subtree size: {{size}} in {{count}} notes)",
+    "subtree_size_one": "(subtree size: {{size}} in {{count}} note)",
+    "subtree_size_other": "(subtree size: {{size}} in {{count}} notes)",
     "title": "Note Info",
     "show_similar_notes": "Show similar notes"
   },
@@ -976,7 +978,8 @@
     "title": "Note Map",
     "fix-nodes": "Fix nodes",
     "link-distance": "Link distance",
-    "too-many-notes": "There are {{count}} notes here. Showing them all may slow things down.",
+    "too-many-notes_one": "There is {{count}} note here. Showing it may slow things down.",
+    "too-many-notes_other": "There are {{count}} notes here. Showing them all may slow things down.",
     "show-anyway": "Show map"
   },
   "note_paths": {
@@ -1774,7 +1777,8 @@
     "export": "Export",
     "import-into-note": "Import into note",
     "apply-bulk-actions": "Apply bulk actions",
-    "converted-to-attachments": "{{count}} notes have been converted to attachments.",
+    "converted-to-attachments_one": "{{count}} note has been converted to attachments.",
+    "converted-to-attachments_other": "{{count}} notes have been converted to attachments.",
     "convert-to-attachment-confirm": "Are you sure you want to convert the selected notes into attachments of their parent notes? This operation only applies to Image notes, other notes will be skipped.",
     "open-in-popup": "Quick edit"
   },
@@ -2392,7 +2396,8 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} notes",
+    "total_notes_one": "{{count}} note",
+    "total_notes_other": "{{count}} notes",
     "prev_page": "Previous page",
     "next_page": "Next page"
   },
@@ -2472,7 +2477,8 @@
     "code_note_switcher": "Change language mode",
     "tab_width": "Tab Width: {{width}}",
     "tab_width_title": "Change tab width",
-    "tab_width_spaces": "{{count}} spaces",
+    "tab_width_spaces_one": "{{count}} space",
+    "tab_width_spaces_other": "{{count}} spaces",
     "tab_width_spaces_short": "Spaces: {{width}}",
     "tab_width_tabs": "Tabs: {{width}}",
     "tab_width_use_default": "Use default ({{width}})",
