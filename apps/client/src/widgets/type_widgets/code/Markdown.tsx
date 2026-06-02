@@ -680,7 +680,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     }
                                 };
                             }),
-                        ...buildSnippetCompletions(snippetsRef.current)
+                        ...buildSnippetCompletions(snippetsRef.current.filter((snippet) => snippet.noteId !== noteRef.current.noteId))
                     ]
                 };
             }],

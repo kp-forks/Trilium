@@ -135,7 +135,8 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
         editorView,
         (candidate) => candidate.type === "code" && candidate.mime === note.mime,
         note.mime,
-        !note.isMarkdown()
+        !note.isMarkdown(),
+        note.noteId
     );
 
     return (

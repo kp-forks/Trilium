@@ -120,8 +120,12 @@ export function useCodeSnippets(matches: (note: FNote) => boolean, reloadKey: st
  * content at the cursor. No-op when `enabled` is false (e.g. the Markdown editor, which builds its
  * own combined slash-command menu instead).
  */
-export function useSnippetSlashCommands(editorView: VanillaCodeMirror | null, matches: (note: FNote) => boolean, reloadKey: string, enabled: boolean) {
+export function useSnippetSlashCommands(editorView: VanillaCodeMirror | null, matches: (note: FNote) => boolean, reloadKey: string, enabled: boolean, currentNoteId: string) {
     const snippetsRef = useCodeSnippets(matches, reloadKey, enabled);
+    // The note being edited, kept in a ref so the once-registered completion source always excludes
+    // the current snippet from its own menu — even when the editor is reused for a different note.
+    const currentNoteIdRef = useRef(currentNoteId);
+    useEffect(() => { currentNoteIdRef.current = currentNoteId; });
 
     useEffect(() => {
         if (!editorView || !enabled) return;
@@ -130,9 +134,11 @@ export function useSnippetSlashCommands(editorView: VanillaCodeMirror | null, ma
             override: [(context: CompletionContext) => {
                 const match = context.matchBefore(SLASH_COMMAND_REGEX);
                 if (!match) return null;
-                const options = buildSnippetCompletions(snippetsRef.current);
-                // No matching snippets (e.g. none for this MIME, or disabled) → no source, so an
-                // empty completion popup never appears when the user types "/".
+                const options = buildSnippetCompletions(
+                    snippetsRef.current.filter((snippet) => snippet.noteId !== currentNoteIdRef.current)
+                );
+                // No matching snippets (e.g. none for this MIME, or only the current note) → no source,
+                // so an empty completion popup never appears when the user types "/".
                 return options.length ? { from: match.from, options } : null;
             }],
             activateOnTyping: true
