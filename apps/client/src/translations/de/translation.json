@@ -873,7 +873,8 @@
     "title": "Notizkarte",
     "fix-nodes": "Knoten fixieren",
     "link-distance": "Verbindungslänge",
-    "too-many-notes": "Dieser Bereich enthält {{count}} Notizen. Die Anzeige aller Notizen kann die Leistung beeinträchtigen.",
+    "too-many-notes_one": "Dieser Bereich enthält {{count}} Notizen. Die Anzeige aller Notizen kann die Leistung beeinträchtigen.",
+    "too-many-notes_other": "",
     "show-anyway": "Karte anzeigen"
   },
   "note_paths": {
@@ -2209,7 +2210,8 @@
     "note_paths_other": "{{count}} Pfade",
     "note_paths_title": "Notizpfade",
     "code_note_switcher": "Sprachmodus ändern",
-    "tab_width_spaces": "{{count}} Leerzeichen",
+    "tab_width_spaces_one": "{{count}} Leerzeichen",
+    "tab_width_spaces_other": "",
     "tab_width_spaces_short": "Leerzeichen: {{width}}",
     "tab_width_use_default": "Standard verwenden ({{width}})",
     "tab_width_use_default_style": "Standard verwenden ({{style}})",
