@@ -3,11 +3,6 @@
  * in its library or in `@types/*` packages.
  */
 
-declare module "unescape" {
-    function unescape(str: string, type?: string): string;
-    export default unescape;
-}
-
 declare module "normalize-strings" {
     function normalizeString(string: string): string;
     export default normalizeString;

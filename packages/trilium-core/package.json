@@ -19,8 +19,7 @@
     "sanitize-filename": "1.6.4",
     "sanitize-html": "2.17.4",
     "strip-bom": "5.0.0",
-    "sucrase": "3.35.1",
-    "unescape": "1.0.1"
+    "sucrase": "3.35.1"
   },
   "devDependencies": {
     "@types/escape-html": "1.0.4",
