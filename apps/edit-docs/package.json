@@ -12,7 +12,6 @@
     "@triliumnext/core": "workspace:*",
     "@triliumnext/commons": "workspace:*",
     "@triliumnext/desktop": "workspace:*",
-    "copy-webpack-plugin": "14.0.0",
     "electron": "41.7.1"
   },
   "scripts": {
