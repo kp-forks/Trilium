@@ -816,7 +816,7 @@
     "hide_child_notes": "隐藏树中的子笔记",
     "open_all_in_tabs": "全部打开",
     "open_all_in_tabs_tooltip": "在新标签页中打开所有结果",
-    "open_all_confirm": "这将在新标签页中打开 {{count}} 个笔记。继续吗？"
+    "open_all_confirm_other": "这将在新标签页中打开 {{count}} 个笔记。继续吗？"
   },
   "edited_notes": {
     "no_edited_notes_found": "今天还没有编辑过的笔记...",
@@ -2097,7 +2097,7 @@
     "app-restart-required": "需要重启应用"
   },
   "pagination": {
-    "total_notes": "{{count}} 篇笔记",
+    "total_notes_other": "{{count}} 篇笔记",
     "prev_page": "上一页",
     "next_page": "下一页"
   },
