@@ -142,8 +142,30 @@ describe("#escapeHtml", () => {
 });
 
 describe("#unescapeHtml", () => {
-    it("should re-export 'unescape' npm module as unescapeHtml", () => {
-        expect(utils.unescapeHtml).toBeTypeOf("function");
+    it("decodes the five default HTML entities (named and numeric short forms)", () => {
+        expect(utils.unescapeHtml("a &amp; b")).toBe("a & b");
+        expect(utils.unescapeHtml("&#38;")).toBe("&");
+        expect(utils.unescapeHtml("x &lt; y &gt; z")).toBe("x < y > z");
+        expect(utils.unescapeHtml("&#60; &#62;")).toBe("< >");
+        expect(utils.unescapeHtml("&quot;hi&quot; &#34;")).toBe("\"hi\" \"");
+        expect(utils.unescapeHtml("it&apos;s &#39;")).toBe("it's '");
+    });
+
+    it("leaves entities outside the default set untouched", () => {
+        // other numeric, hex, nbsp, unknown-named and wrong-case are NOT decoded
+        expect(utils.unescapeHtml("&copy; &#169; &#x26; &nbsp; &hellip; &AMP;"))
+            .toBe("&copy; &#169; &#x26; &nbsp; &hellip; &AMP;");
+    });
+
+    it("handles double-escaped entities and query-string URLs", () => {
+        expect(utils.unescapeHtml("&amp;amp;")).toBe("&amp;");
+        expect(utils.unescapeHtml("http://x/?a=1&amp;b=2")).toBe("http://x/?a=1&b=2");
+    });
+
+    it("returns an empty string for empty or non-string input", () => {
+        expect(utils.unescapeHtml("")).toBe("");
+        expect(utils.unescapeHtml(null as unknown as string)).toBe("");
+        expect(utils.unescapeHtml(undefined as unknown as string)).toBe("");
     });
 });
 

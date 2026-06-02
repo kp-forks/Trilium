@@ -4,6 +4,7 @@ import supertest from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { type ApiTestContext, bootLoggedInApp, createTextNote } from "../../spec/support/internal_api.js";
+import port from "../services/port.js";
 
 let ctx: ApiTestContext;
 let app: Application;
@@ -92,17 +93,35 @@ describe("Route transport & middleware", () => {
             expect(res.body.error).toContain("disabled");
         });
 
-        it("reaches the MCP transport over loopback once enabled", async () => {
+        it("reaches the MCP transport over loopback with a valid Host once enabled", async () => {
             cls.init(() => optionService.setOption("mcpEnabled", "true"));
-            // supertest connects over loopback, so the guard passes and the
-            // request is handed to the streamable transport (any status is fine —
-            // we only need the handler code to execute).
+            // supertest connects over loopback so the guard passes; a Host matching
+            // the configured port clears DNS-rebinding protection and the request
+            // is handed to the streamable transport (any status is fine — we only
+            // need the handler to execute past header validation).
             const res = await supertest(app)
                 .post("/mcp")
+                .set("Host", `localhost:${port}`)
                 .set("Content-Type", "application/json")
                 .set("Accept", "application/json, text/event-stream")
                 .send({ jsonrpc: "2.0", method: "initialize", id: 1, params: { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "spec", version: "1" } } });
             expect(res.status).toBeGreaterThanOrEqual(200);
+            expect(JSON.stringify(res.body)).not.toContain("Invalid Host header");
+        });
+
+        it("rejects a forged Host header (DNS rebinding) with 403", async () => {
+            cls.init(() => optionService.setOption("mcpEnabled", "true"));
+            // A DNS-rebinding attacker reaches the loopback listener through the
+            // victim's browser (so the IP guard passes) but carries an attacker-
+            // controlled Host. It must be rejected before any MCP tool can run.
+            const res = await supertest(app)
+                .post("/mcp")
+                .set("Host", "attacker.example.com")
+                .set("Content-Type", "application/json")
+                .set("Accept", "application/json, text/event-stream")
+                .send({ jsonrpc: "2.0", method: "initialize", id: 1, params: { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "spec", version: "1" } } })
+                .expect(403);
+            expect(res.body?.error?.message ?? "").toContain("Invalid Host header");
         });
     });
 });
