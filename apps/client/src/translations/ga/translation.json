@@ -2129,7 +2129,10 @@
     "new_layout_title": "Leagan amach nua",
     "new_layout_message": "Thugamar leagan amach nuachóirithe isteach do Trilium. Baineadh an ribín agus comhtháthaíodh go gan uaim é sa phríomh-chomhéadan, le barra stádais nua agus rannóga inleathnaithe (amhail tréithe cur chun cinn) ag glacadh seilbhe ar phríomhfheidhmeanna.\n\nTá an leagan amach nua cumasaithe de réir réamhshocraithe, agus is féidir é a dhíchumasú go sealadach trí Roghanna → Dealramh.",
     "new_layout_button": "Tuilleadh eolais",
-    "dismiss": "Díbhe"
+    "dismiss": "Díbhe",
+    "scripting_disabled_title": "Tá scriptiú cúil díchumasaithe",
+    "scripting_disabled_message": "Tá scriptiú cúil díchumasaithe anois de réir réamhshocraithe ar mhaithe le slándáil. Tá scripteanna cúil (nótaí le lipéad #run) i do nótaí nach mbeidh á bhforghníomhú go huathoibríoch a thuilleadh.\n\nMá bhraitheann tú ar na scripteanna seo, is féidir leat scriptiú cúil a athchumasú sna socruithe slándála.",
+    "scripting_disabled_button": "Oscail socruithe slándála"
   },
   "settings": {
     "related_settings": "Socruithe gaolmhara"
@@ -2784,5 +2787,20 @@
     "page_break_description": "Cuir briseadh leathanaigh isteach (le haghaidh priontála)",
     "markdown_import_description": "Iompórtáil comhad marcála síos isteach sa nóta seo",
     "anchor_description": "Cuir ancaire isteach le haghaidh nascadh inmheánach"
+  },
+  "security": {
+    "backend_scripting_title": "Scriptiú cúil",
+    "backend_scripting_section_description": "Tá rochtain iomlán ag scripteanna cúil ar an bhfreastalaí, lena n-áirítear orduithe córas comhad, líonra agus OS. Is féidir iad a spreagadh trí shioncrónú, allmhairiú nó aon ábhar ina bhfuil tréithe inrite. Bíonn scripteanna tosaigh cumasaithe i gcónaí agus iad ag rith i gcomhthéacs brabhsálaí bosca gainimh.",
+    "backend_scripting_label": "Forghníomhú script chúltaca",
+    "backend_scripting_description": "Ceadaigh forghníomhú scripteanna cúil (scripteanna tosaithe, láimhseálaithe iarratais saincheaptha, láimhseálaithe imeachtaí, scripteanna sceidealaithe, srl.).",
+    "sql_console_title": "Consól SQL",
+    "sql_console_section_description": "Ceadaíonn consól SQL fiosrúcháin SQL amha a rith i gcoinne an bhunachar sonraí. Is féidir é seo a úsáid chun sonraí íogaire (e.g. rúin sioncrónaithe, eochracha API) a léamh agus aon sonraí a athrú nó a scriosadh. D’fhéadfadh script tosaigh mailíseach rochtain a fháil ar API consól SQL go ríomhchláraitheach freisin.",
+    "sql_console_label": "Consól SQL",
+    "sql_console_description": "Ceadaigh forghníomhú fiosrúchán sa chonsól SQL.",
+    "how_to_enable": "Conas a chumasú",
+    "server_config_hint": "Cuir an méid seo a leanas le do chomhad config.ini:",
+    "server_env_hint": "Nó socraigh an athróg timpeallachta seo a leanas:",
+    "restart_required": "Tá atosú ag teastáil chun an t-athrú seo a chur i bhfeidhm.",
+    "restart_now": "Atosaigh an feidhmchlár anois"
   }
 }

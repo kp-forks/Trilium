@@ -322,7 +322,8 @@
     "task-state-attr-markdown-symbol": "マークダウン記号",
     "task-state-attr-is-completed": "完了としてカウント",
     "task-state-attr-color": "色",
-    "task-state-attr-is-hidden": "リストから非表示"
+    "task-state-attr-is-hidden": "リストから非表示",
+    "security-title": "セキュリティ"
   },
   "notes": {
     "new-note": "新しいノート",
@@ -437,5 +438,21 @@
   },
   "password": {
     "incorrect": "入力されたパスワードが間違っています。"
+  },
+  "security-dialog": {
+    "enable-title": "{{settingLabel}} を有効",
+    "enable-message": "{{settingLabel}} を有効にしますか？",
+    "enable-detail": "{{warning}}\n\nこの機能を意図的に使用する場合にのみ有効にしてください。スクリプトや見慣れないメッセージが表示された場合は有効にしないでください。\n\nこの変更を有効にするには、再起動が必要です。",
+    "disable-title": "{{settingLabel}} を無効",
+    "disable-message": "{{settingLabel}} は無効になります。",
+    "disable-detail": "この変更を有効にするには再起動が必要です。",
+    "cancel": "キャンセル",
+    "enable": "有効",
+    "disable": "無効",
+    "dont-ask-again": "再起動するまで再度表示しない",
+    "backend-scripting": "バックエンドスクリプトの実行",
+    "backend-scripting-warning": "バックエンドスクリプトは、ファイルシステムやネットワークを含むサーバーへのフルアクセス権限を持ちます。",
+    "sql-console": "SQL コンソール",
+    "sql-console-warning": "SQL コンソールを使用すると、データベースに対して任意の SQL クエリを実行できます。"
   }
 }
