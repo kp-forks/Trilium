@@ -1,8 +1,7 @@
-import "colors";
-
 import Database, { type Database as DatabaseType } from "better-sqlite3";
 import * as jsDiff from "diff";
 import path from "path";
+import pc from "picocolors";
 
 import { compareTable, COMPARISONS, type TableComparison } from "./comparator.js";
 
@@ -10,11 +9,10 @@ function printDiff(one: string, two: string) {
     const diff = jsDiff.diffChars(one, two);
 
     diff.forEach((part) => {
-        // green for additions, red for deletions
-        // grey for common parts
-        const color = part.added ? "green" :
-            part.removed ? "red" : "grey";
-        process.stderr.write(part.value[color]);
+        // green for additions, red for deletions, grey for common parts
+        const colorize = part.added ? pc.green :
+            part.removed ? pc.red : pc.gray;
+        process.stderr.write(colorize(part.value));
     });
 
     console.log("");
