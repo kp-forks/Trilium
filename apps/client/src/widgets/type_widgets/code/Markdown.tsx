@@ -30,7 +30,7 @@ import SplitEditor from "../helpers/SplitEditor";
 import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
-import { type CodeSnippet, getCodeSnippets, isCodeSnippetChange } from "./snippets";
+import { buildSnippetCompletions, SLASH_COMMAND_REGEX, useCodeSnippets } from "./snippets";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
@@ -510,23 +510,11 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
     // Read inside the autocomplete closure, so `/todo:*` commands reflect the current config.
     const taskStatesRef = useRef<TaskStateDef[]>([]);
     // Markdown snippets (#snippet code notes with a markdown MIME), inserted via `/snippet:<name>`.
-    // Held in a ref and refreshed on entity changes so the slash menu reads the latest list when it
-    // opens, without re-registering the autocomplete extension.
-    const snippetsRef = useRef<CodeSnippet[]>([]);
+    // useCodeSnippets keeps the ref fresh so the slash menu reads the latest list when it opens.
+    const snippetsRef = useCodeSnippets((candidate) => candidate.isMarkdown(), "markdown");
     useEffect(() => { noteRef.current = note; }, [note]);
     useEffect(() => { parentRef.current = parentComponent; }, [parentComponent]);
     useEffect(() => { void getTaskStateDefinitions().then((states) => { taskStatesRef.current = states; }); }, []);
-
-    const reloadSnippets = useCallback(() => {
-        void getCodeSnippets((candidate) => candidate.isMarkdown()).then((snippets) => { snippetsRef.current = snippets; });
-    }, []);
-    useEffect(() => { reloadSnippets(); }, [reloadSnippets]);
-    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
-        const knownNoteIds = new Set(snippetsRef.current.map((snippet) => snippet.noteId));
-        if (isCodeSnippetChange(loadResults, knownNoteIds)) {
-            reloadSnippets();
-        }
-    });
 
     useEffect(() => {
         if (!editorView) return;
@@ -534,7 +522,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
         const ext = autocompletion({
             override: [(ctx) => {
                 // `:` and `-` are allowed so `/todo:<state>` (e.g. `/todo:in-progress`) matches as one token.
-                const match = ctx.matchBefore(/(?:^|(?<=\s))\/[\w:-]*/);
+                const match = ctx.matchBefore(SLASH_COMMAND_REGEX);
                 if (!match) return null;
 
                 // Suppress slash menu inside fenced/indented code blocks and inline code spans —
@@ -692,17 +680,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                     }
                                 };
                             }),
-                        ...snippetsRef.current.map((snippet) => ({
-                            label: snippet.description
-                                ? `/snippet:${snippet.title} - ${snippet.description}`
-                                : `/snippet:${snippet.title}`,
-                            apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
-                                view.dispatch({
-                                    changes: { from, to, insert: snippet.content },
-                                    selection: { anchor: from + snippet.content.length }
-                                });
-                            }
-                        }))
+                        ...buildSnippetCompletions(snippetsRef.current)
                     ]
                 };
             }],

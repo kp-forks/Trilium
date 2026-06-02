@@ -14,6 +14,7 @@ import { refToJQuerySelector } from "../../react/react_utils";
 import { CODE_THEME_DEFAULT_PREFIX as DEFAULT_PREFIX } from "../constants";
 import { TypeWidgetProps } from "../type_widget";
 import CodeMirror, { CodeMirrorProps } from "./CodeMirror";
+import { useSnippetSlashCommands } from "./snippets";
 
 interface CodeEditorProps {
     /** By default, the code editor will try to match the color of the scrolling container to match the one from the theme for a full-screen experience. If the editor is embedded, it makes sense not to have this behaviour. */
@@ -87,8 +88,10 @@ function formatViewSource(note: FNote, content: string) {
 export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentComponent, updateInterval, noteType = "code", onContentChanged, dataSaved, placeholder, editorRef: externalEditorRef, ...editorProps }: EditableCodeProps) {
     const editorRef = useRef<VanillaCodeMirror>(null);
     const containerRef = useRef<HTMLPreElement>(null);
+    const [ editorView, setEditorView ] = useState<VanillaCodeMirror | null>(null);
     const combinedEditorRef = (view: VanillaCodeMirror | null) => {
         editorRef.current = view;
+        setEditorView(view);
         if (typeof externalEditorRef === "function") externalEditorRef(view);
         else if (externalEditorRef) externalEditorRef.current = view;
     };
@@ -125,6 +128,15 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     });
 
     useKeyboardShortcuts("code-detail", containerRef, parentComponent, ntxId);
+
+    // Code snippets (#snippet notes with a matching MIME) as `/snippet:<name>` slash commands.
+    // Disabled for Markdown notes, whose editor provides its own combined slash-command menu.
+    useSnippetSlashCommands(
+        editorView,
+        (candidate) => candidate.type === "code" && candidate.mime === note.mime,
+        note.mime,
+        !note.isMarkdown()
+    );
 
     return (
         <CodeEditor
