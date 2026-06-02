@@ -1974,7 +1974,9 @@
     "delete_note": "Apagar nota..."
   },
   "pagination": {
-    "total_notes": "{{count}} notas"
+    "total_notes_one": "{{count}} notas",
+    "total_notes_many": "",
+    "total_notes_other": ""
   },
   "collections": {
     "rendering_error": "Sem possíbilidade de mostrar conteúdos devido a um erro."
