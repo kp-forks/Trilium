@@ -821,7 +821,9 @@
     "expand_all_levels": "Développer tous les niveaux",
     "hide_child_notes": "Masquer les notes enfants dans l’arborescence",
     "open_all_in_tabs_tooltip": "Ouvrir tous les résultats dans de nouveaux onglets",
-    "open_all_confirm": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
+    "open_all_confirm_one": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
+    "open_all_confirm_many": "",
+    "open_all_confirm_other": "",
     "open_all_in_tabs": "Tout ouvrir"
   },
   "edited_notes": {
@@ -877,7 +879,9 @@
     "title": "Carte des notes",
     "fix-nodes": "Réparer les nœuds",
     "link-distance": "Longueur des liens",
-    "too-many-notes": "Il y a {{count}} notes ici. Les afficher toutes pourrait ralentir le chargement.",
+    "too-many-notes_one": "Il y a {{count}} notes ici. Les afficher toutes pourrait ralentir le chargement.",
+    "too-many-notes_many": "",
+    "too-many-notes_other": "",
     "show-anyway": "Afficher la carte"
   },
   "note_paths": {
@@ -2466,7 +2470,9 @@
     "code_note_switcher": "Changer de langue",
     "tab_width": "Largeur de tabulation : {{width}}",
     "tab_width_title": "Modifier la largeur de tabulation",
-    "tab_width_spaces": "{{count}} espaces",
+    "tab_width_spaces_one": "{{count}} espaces",
+    "tab_width_spaces_many": "",
+    "tab_width_spaces_other": "",
     "tab_width_spaces_short": "Espaces : {{width}}",
     "tab_width_tabs": "Tabulations : {{width}}",
     "tab_width_use_default": "Utiliser la valeur par défaut ({{width}})",
