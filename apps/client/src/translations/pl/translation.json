@@ -447,7 +447,9 @@
     "note_size": "Rozmiar notatki",
     "note_size_info": "Rozmiar notatki zapewnia przybliżone oszacowanie wymagań pamięciowych dla tej notatki. Bierze pod uwagę treść notatki i zawartość jej wersji.",
     "calculate": "oblicz",
-    "subtree_size": "(rozmiar poddrzewa: {{size}} w {{count}} notatkach)",
+    "subtree_size_one": "(rozmiar poddrzewa: {{size}} w {{count}} notatkach)",
+    "subtree_size_few": "",
+    "subtree_size_many": "",
     "title": "Info o notatce",
     "show_similar_notes": "Pokaż podobne notatki",
     "mime": "Typ MIME"
