@@ -227,6 +227,26 @@ describe("notes service (real DB)", () => {
             expect(res).toEqual({ forceFrontendReload: false, content });
             expect(code.note.getRelations().some((r) => r.name === "internalLink")).toBe(false);
         });
+
+        it("extracts an inline base64 attachment, deriving its title via prepareTitle", () => {
+            const source = createNote("root", { title: "spec-inline-attachment" });
+
+            // A 1x1 PNG embedded inline, with an HTML-entity-encoded link label.
+            const pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+            const content = `<p><a href="data:image/png;base64,${pngBase64}">my &amp; file.png</a></p>`;
+
+            const { content: newContent } = withContext(() => saveLinks(source.note, content));
+
+            const attachments = source.note.getAttachments().filter((a) => a.role === "file");
+            expect(attachments).toHaveLength(1);
+            // prepareTitle stripped the tag context and decoded the &amp; entity for the title.
+            expect(attachments[0].title).toBe("my & file.png");
+            expect(attachments[0].mime).toBe("image/png");
+
+            // The inline data URL is replaced by a reference-link to the new attachment.
+            expect(newContent).toContain(`attachmentId=${attachments[0].attachmentId}`);
+            expect(newContent).not.toContain("data:image/png;base64");
+        });
     });
 
     describe("updateNoteData", () => {
