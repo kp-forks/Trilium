@@ -10,7 +10,7 @@
       "original-dev": "dezvoltator original"
     },
     "role_brief_history": {
-      "lead-dev": "Elian Doran a fondat TriliumNext în 2024, un fork comunitar creat după ce Zadam s-a retras din proiect. Ulterior, Zadam a transferat depozitul original echipei TriliumNext, reunind ambele proiecte într-unul singur.",
+      "lead-dev": "Elian Doran a fondat TriliumNext în 2024, un fork comunitar creat după ce Zadam s-a retras din proiect. Ulterior, Zadam a transferat proiectul original echipei TriliumNext, reunind ambele proiecte într-unul singur.",
       "original-dev": "Pe 25 decembrie 2017, Zadam a lansat prima versiune beta a Trilium (scris cu un singur „l”, spre deosebire de floare). Nemulțumit de organizatoarele de notițe existente, a construit o bază de cunoștințe ierarhică, puternică și auto-găzduită, care a strâns peste 22.000 de stele pe GitHub. În 2024, pe măsură ce viața a devenit mai aglomerată, a trecut proiectul în modul de mentenanță."
     },
     "contributor_full_list": "Vezi întreaga comunitate",
@@ -502,9 +502,9 @@
     "close": "Închide",
     "title": "Șterge notițele",
     "clones_label": "Clone",
-    "delete_clones_description_one": "Șterge și {{count}} altă clonă. Poate fi anulată din modificările recente.",
-    "delete_clones_description_few": "Șterge și {{count}} alte clone. Pot fi anulate din modificările recente.",
-    "delete_clones_description_other": "Șterge și {{count}} de alte clone. Pot fi anulate din modificările recente.",
+    "delete_clones_description_one": "Șterge și {{count}} altă clonă. Poate fi recuperată din modificările recente.",
+    "delete_clones_description_few": "Șterge și {{count}} alte clone. Pot fi recuperate din modificările recente.",
+    "delete_clones_description_other": "Șterge și {{count}} de alte clone. Pot fi recuperate din modificările recente.",
     "erase_notes_label": "Șterge permanent",
     "table_note_with_relation": "Notiță cu relație",
     "table_relation": "Relație",
@@ -804,7 +804,7 @@
     "ocr_min_confidence": "Încredere minimă",
     "ocr_confidence_description": "Extrage doar textul peste acest prag de încredere. Valorile mai mici includ mai mult text, dar pot fi mai puțin precise.",
     "batch_ocr_title": "Procesează fișierele existente",
-    "batch_ocr_description": "Extrage textul din toate imaginile, fișierele PDF și documentele Office existente din notițele dvs. Acest lucru poate dura ceva timp, în funcție de numărul de fișiere.",
+    "batch_ocr_description": "Extrage textul din toate imaginile, fișierele PDF și documentele Office existente în notițele dvs. Acest lucru poate dura ceva timp, în funcție de numărul de fișiere.",
     "batch_ocr_start": "Pornește procesarea în masă",
     "batch_ocr_starting": "Se pornește procesarea în masă...",
     "batch_ocr_progress": "Se procesează {{processed}} din {{total}} fișiere...",
@@ -1503,7 +1503,7 @@
     "unprotect-subtree": "Deprotejează ierarhia",
     "hoist-note": "Focalizează notița",
     "unhoist-note": "Defocalizează notița",
-    "converted-to-attachments_one": "{{count}} notiță a fost convertită în atașamente.",
+    "converted-to-attachments_one": "{{count}} notiță a fost convertită în atașament.",
     "converted-to-attachments_few": "{{count}} notițe au fost convertite în atașamente.",
     "converted-to-attachments_other": "{{count}} de notițe au fost convertite în atașamente.",
     "convert-to-attachment-confirm": "Doriți convertirea notițelor selectate în atașamente ale notiței părinte? Această operațiune se aplică doar notițelor de tip imagine, celelalte vor fi ignorate.",
@@ -1945,7 +1945,7 @@
     "description": "Personalizați formatul de dată și timp inserat prin <shortcut /> sau din bara de unelte. Vedeți <doc>Documentația Day.js</doc> pentru câmpurile de formatare disponibile.",
     "format_string": "Șir de formatare:",
     "formatted_time": "Data și ora formatate:",
-    "description_short": "Personalizează formatul datei și orei inserate din bara de instrumente.",
+    "description_short": "Personalizează formatul datei și orei inserate din bara de unelte.",
     "preview": "Previzualizare: {{preview}}"
   },
   "multi_factor_authentication": {
@@ -2239,14 +2239,14 @@
     "tab_width_spaces_few": "{{count}} spații",
     "tab_width_spaces_other": "{{count}} de spații",
     "tab_width_spaces_short": "Spații: {{width}}",
-    "tab_width_tabs": "Tab-uri: {{width}}",
+    "tab_width_tabs": "Taburi: {{width}}",
     "tab_width_use_default": "Folosește valoarea implicită ({{width}})",
     "tab_width_use_default_style": "Folosește valoarea implicită ({{style}})",
     "tab_width_display_header": "Lățimea de afișare",
     "tab_width_reindent_header": "Reindentează conținutul la",
     "tab_width_style_header": "Indentează folosind",
     "tab_width_style_spaces": "Spații",
-    "tab_width_style_tabs": "Tab-uri"
+    "tab_width_style_tabs": "Taburi"
   },
   "attributes_panel": {
     "title": "Atributele notiței"
