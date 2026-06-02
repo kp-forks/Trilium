@@ -351,7 +351,9 @@
     "export": "Esportare",
     "import-into-note": "Importa nella nota",
     "apply-bulk-actions": "Applica azioni in blocco",
-    "converted-to-attachments": "{{count}} note sono state convertite in allegati.",
+    "converted-to-attachments_one": "{{count}} note sono state convertite in allegati.",
+    "converted-to-attachments_many": "",
+    "converted-to-attachments_other": "",
     "convert-to-attachment-confirm": "Sei sicuro di voler convertire le note selezionate in allegati delle note principali? Questa operazione si applica solo alle note immagine, le altre note verranno ignorate.",
     "open-in-popup": "Modifica rapida",
     "open-in-a-new-window": "Apri in una nuova finestra",
@@ -1274,7 +1276,9 @@
     "hide_child_notes": "Nascondi note secondarie nell'albero",
     "open_all_in_tabs": "Apri tutto",
     "open_all_in_tabs_tooltip": "Apri tutti i risultati in nuove schede",
-    "open_all_confirm": "Verranno aperte {{count}} note in nuove schede. Vuoi continuare?"
+    "open_all_confirm_one": "Verranno aperte {{count}} note in nuove schede. Vuoi continuare?",
+    "open_all_confirm_many": "",
+    "open_all_confirm_other": ""
   },
   "edited_notes": {
     "no_edited_notes_found": "Nessuna nota modificata per questo giorno...",
@@ -1318,7 +1322,9 @@
     "note_size": "Dimensione della nota",
     "note_size_info": "La dimensione della nota fornisce una stima approssimativa dei requisiti di archiviazione per questa nota. Tiene conto del contenuto della nota e del contenuto delle sue revisioni.",
     "calculate": "calcolare",
-    "subtree_size": "(dimensione del sottoalbero: {{size}} in {{count}} note)",
+    "subtree_size_one": "(dimensione del sottoalbero: {{size}} in {{count}} note)",
+    "subtree_size_many": "",
+    "subtree_size_other": "",
     "title": "Nota informativa",
     "show_similar_notes": "Mostra note simili",
     "mime": "Tipo MIME"
@@ -1329,7 +1335,9 @@
     "title": "Nota Mappa",
     "fix-nodes": "Fissare i nodi",
     "link-distance": "Distanza del collegamento",
-    "too-many-notes": "Qui ci sono {{count}} note. Visualizzarle tutte potrebbe rallentare il sistema.",
+    "too-many-notes_one": "Qui ci sono {{count}} note. Visualizzarle tutte potrebbe rallentare il sistema.",
+    "too-many-notes_many": "",
+    "too-many-notes_other": "",
     "show-anyway": "Mostra mappa"
   },
   "note_paths": {
@@ -2114,7 +2122,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} note",
+    "total_notes_one": "{{count}} note",
+    "total_notes_many": "",
+    "total_notes_other": "",
     "prev_page": "Pagina precedente",
     "next_page": "Pagina successiva"
   },
@@ -2216,7 +2226,9 @@
     "code_note_switcher": "Cambia modalità lingua",
     "tab_width": "Larghezza della scheda: {{width}}",
     "tab_width_title": "Modifica la larghezza della scheda",
-    "tab_width_spaces": "{{count}} spazi",
+    "tab_width_spaces_one": "{{count}} spazi",
+    "tab_width_spaces_many": "",
+    "tab_width_spaces_other": "",
     "tab_width_spaces_short": "Spazi: {{width}}",
     "tab_width_tabs": "Schede: {{width}}",
     "tab_width_use_default": "Usa le impostazioni predefinite ({{width}})",
