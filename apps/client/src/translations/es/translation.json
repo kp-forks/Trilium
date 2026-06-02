@@ -868,7 +868,9 @@
     "note_size": "Tamaño de nota",
     "note_size_info": "El tamaño de la nota proporciona una estimación aproximada de los requisitos de almacenamiento para esta nota. Toma en cuenta el contenido de la nota y el contenido de sus revisiones de nota.",
     "calculate": "calcular",
-    "subtree_size": "(tamaño del subárbol: {{size}} en {{count}} notas)",
+    "subtree_size_one": "(tamaño del subárbol: {{size}} en {{count}} notas)",
+    "subtree_size_many": "",
+    "subtree_size_other": "",
     "title": "Información de nota",
     "mime": "Tipo MIME",
     "show_similar_notes": "Mostrar notas similares"
@@ -879,7 +881,9 @@
     "title": "Mapa de notas",
     "fix-nodes": "Fijar nodos",
     "link-distance": "Distancia de enlace",
-    "too-many-notes": "Este subárbol contiene {{count}} notas, lo que excede el límite de {{max}} que se puede mostrar en el mapa de notas."
+    "too-many-notes_one": "Este subárbol contiene {{count}} notas, lo que excede el límite de {{max}} que se puede mostrar en el mapa de notas.",
+    "too-many-notes_many": "",
+    "too-many-notes_other": ""
   },
   "note_paths": {
     "title": "Rutas de nota",
@@ -1587,7 +1591,9 @@
     "export": "Exportar",
     "import-into-note": "Importar a nota",
     "apply-bulk-actions": "Aplicar acciones en lote",
-    "converted-to-attachments": "{{count}} notas han sido convertidas en archivos adjuntos.",
+    "converted-to-attachments_one": "{{count}} notas han sido convertidas en archivos adjuntos.",
+    "converted-to-attachments_many": "",
+    "converted-to-attachments_other": "",
     "convert-to-attachment-confirm": "¿Está seguro que desea convertir las notas seleccionadas en archivos adjuntos de sus notas padres? Esta operación solo aplica a notas de Imagen, otras notas serán omitidas.",
     "open-in-popup": "Edición rápida",
     "archive": "Archivar",
