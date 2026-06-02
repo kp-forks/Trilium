@@ -30,6 +30,7 @@ import SplitEditor from "../helpers/SplitEditor";
 import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
+import { buildSnippetCompletions, SLASH_COMMAND_REGEX, useCodeSnippets } from "./snippets";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
@@ -508,6 +509,12 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
     // The user-configured todo task states (from the `_taskStates` subtree), loaded once.
     // Read inside the autocomplete closure, so `/todo:*` commands reflect the current config.
     const taskStatesRef = useRef<TaskStateDef[]>([]);
+    // Markdown snippets (#snippet code notes with a markdown MIME) plus generic plain-text snippets,
+    // inserted via `/snippet:<name>`. useCodeSnippets keeps the ref fresh so the menu reads the latest.
+    const snippetsRef = useCodeSnippets(
+        (candidate) => candidate.isMarkdown() || (candidate.type === "code" && candidate.mime === "text/plain"),
+        "markdown"
+    );
     useEffect(() => { noteRef.current = note; }, [note]);
     useEffect(() => { parentRef.current = parentComponent; }, [parentComponent]);
     useEffect(() => { void getTaskStateDefinitions().then((states) => { taskStatesRef.current = states; }); }, []);
@@ -518,7 +525,7 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
         const ext = autocompletion({
             override: [(ctx) => {
                 // `:` and `-` are allowed so `/todo:<state>` (e.g. `/todo:in-progress`) matches as one token.
-                const match = ctx.matchBefore(/(?:^|(?<=\s))\/[\w:-]*/);
+                const match = ctx.matchBefore(SLASH_COMMAND_REGEX);
                 if (!match) return null;
 
                 // Suppress slash menu inside fenced/indented code blocks and inline code spans —
@@ -675,7 +682,8 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                         view.dispatch({ changes: { from, to, insert } });
                                     }
                                 };
-                            })
+                            }),
+                        ...buildSnippetCompletions(snippetsRef.current.filter((snippet) => snippet.noteId !== noteRef.current.noteId))
                     ]
                 };
             }],

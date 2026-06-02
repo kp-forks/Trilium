@@ -2552,6 +2552,12 @@
   "bookmark_buttons": {
     "bookmarks": "Bookmarks"
   },
+  "snippet_badge": {
+    "label": "{{type}} snippet",
+    "type_text": "Text",
+    "type_code": "Code",
+    "tooltip": "A reusable piece of text or code, meant to be inserted into the editor (from the snippet menu in the toolbar, or via a slash command)."
+  },
   "active_content_badges": {
     "type_icon_pack": "Icon pack",
     "type_backend_script": "Backend script",
