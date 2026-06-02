@@ -290,9 +290,6 @@ importers:
       color:
         specifier: 5.0.3
         version: 5.0.3
-      debounce:
-        specifier: 3.0.0
-        version: 3.0.0
       diff:
         specifier: 9.0.0
         version: 9.0.0
@@ -921,9 +918,6 @@ importers:
       color:
         specifier: 5.0.3
         version: 5.0.3
-      debounce:
-        specifier: 3.0.0
-        version: 3.0.0
       draggabilly:
         specifier: 3.0.0
         version: 3.0.0
@@ -7773,10 +7767,6 @@ packages:
 
   debounce@1.2.1:
     resolution: {integrity: sha512-XRRe6Glud4rd/ZGQfiV1ruXSfbvfJedlV9Y6zOlP+2K04vBYiJEte6stfFkCP03aMnY5tsipamumUjL14fofug==}
-
-  debounce@3.0.0:
-    resolution: {integrity: sha512-64byRbF0/AirwbuHqB3/ZpMG9/nckDa6ZA0yd6UnaQNwbbemCOwvz2sL5sjXLHhZHADyiwLm0M5qMhltUUx+TA==}
-    engines: {node: '>=20'}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -22071,8 +22061,6 @@ snapshots:
   dayjs@1.11.21: {}
 
   debounce@1.2.1: {}
-
-  debounce@3.0.0: {}
 
   debug@2.6.9:
     dependencies:
