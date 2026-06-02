@@ -2,7 +2,9 @@
  * MCP (Model Context Protocol) HTTP route handler.
  *
  * Mounts the Streamable HTTP transport at `/mcp` with a localhost-only guard.
- * No authentication is required — access is restricted to loopback addresses.
+ * No authentication is required — access is restricted to loopback addresses,
+ * with DNS-rebinding protection (Host-header allow-list) layered on top so a
+ * rebound attacker domain can't drive the transport from the victim's browser.
  */
 
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -11,6 +13,15 @@ import type express from "express";
 
 import { getLog } from "@triliumnext/core";
 import { createMcpServer } from "../services/mcp/mcp_server.js";
+import port from "../services/port.js";
+
+/**
+ * Host header values a legitimate (loopback) MCP client may target. The SDK's
+ * DNS-rebinding protection rejects any other Host before a tool can run, so a
+ * rebound attacker domain pointed at 127.0.0.1 — which the browser sends as its
+ * own Host — cannot reach the transport even though it originates from loopback.
+ */
+const MCP_ALLOWED_HOSTS = [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`];
 
 function isLoopback(addr: string | undefined): boolean {
     if (!addr) return false;
@@ -43,7 +54,9 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
     try {
         const server = createMcpServer();
         const transport = new StreamableHTTPServerTransport({
-            sessionIdGenerator: undefined // stateless
+            sessionIdGenerator: undefined, // stateless
+            enableDnsRebindingProtection: true,
+            allowedHosts: MCP_ALLOWED_HOSTS
         });
 
         res.on("close", () => {
