@@ -2000,7 +2000,10 @@
     "dismiss": "却下",
     "new_layout_title": "新しいレイアウト",
     "new_layout_message": "Trilium のレイアウトを刷新しました。リボンは廃止され、メインインターフェースにシームレスに統合されました。主要な機能は、新しいステータスバーと展開可能なセクション（プロモート属性など）に集約されています。\n\n新しいレイアウトはデフォルトで有効になっていますが、「オプション」→「外観」から一時的に無効にすることもできます。",
-    "new_layout_button": "詳細情報"
+    "new_layout_button": "詳細情報",
+    "scripting_disabled_title": "バックエンドスクリプトは無効になっています",
+    "scripting_disabled_message": "セキュリティ上の理由から、バックエンドスクリプトはデフォルトで無効になっています。ノートにはバックエンドスクリプト（#run ラベルが付いているノート）が含まれていますが、これらは自動的に実行されなくなります。\n\nこれらのスクリプトに依存している場合は、セキュリティ設定でバックエンドスクリプトを再度有効にできます。",
+    "scripting_disabled_button": "セキュリティ設定を開く"
   },
   "settings": {
     "related_settings": "関連設定"
@@ -2712,5 +2715,20 @@
     "page_break_description": "改ページを挿入（印刷用）",
     "markdown_import_description": "マークダウンファイルをこのノートにインポート",
     "anchor_description": "内部リンク用のアンカーを挿入"
+  },
+  "security": {
+    "backend_scripting_title": "バックエンドスクリプト",
+    "backend_scripting_section_description": "バックエンドスクリプトは、ファイルシステム、ネットワーク、OS コマンドを含むサーバーへのフルアクセス権限を持ちます。同期、インポート、または実行可能属性を含むあらゆるコンテンツを介してトリガーできます。フロントエンドスクリプトは、サンドボックス化されたブラウザ環境で実行されるため、常に有効になっています。",
+    "backend_scripting_label": "バックエンドスクリプトの実行",
+    "backend_scripting_description": "バックエンドスクリプト（起動スクリプト、カスタムリクエストハンドラー、イベントハンドラー、スケジュールされたスクリプトなど）の実行を許可します。",
+    "sql_console_title": "SQL コンソール",
+    "sql_console_section_description": "SQL コンソールを使用すると、データベースに対して生の SQL クエリを実行できます。これにより、機密データ（同期シークレットや API キーなど）の読み取りや、あらゆるデータの変更・削除が行われる危険性があります。また、悪意のあるフロントエンドスクリプトによって、SQL コンソール API にプログラムからアクセスされる可能性もあります。",
+    "sql_console_label": "SQL コンソール",
+    "sql_console_description": "SQL コンソールでのクエリ実行を許可する。",
+    "how_to_enable": "有効化の方法",
+    "server_config_hint": "config.ini ファイルに以下を追加してください:",
+    "server_env_hint": "または、以下の環境変数を設定してください:",
+    "restart_required": "この変更を有効にするには、再起動が必要です。",
+    "restart_now": "今すぐアプリケーションを再起動する"
   }
 }
