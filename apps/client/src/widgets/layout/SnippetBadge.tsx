@@ -49,11 +49,15 @@ function useSnippetInfo(note: FNote | null | undefined) {
             return;
         }
 
+        // A generic (plain-text) or unrecognized code snippet reads as "Code" — clearer than "Plain
+        // text" (which collides with "Text") and matching the "Code snippet" template. A recognized
+        // language keeps its own name and icon (e.g. "CSS snippet").
         const mimeType = mimeTypesService.getMimeTypes().find((mt) => mt.mime === note.mime);
-        setInfo({
-            typeName: mimeType?.title ?? note.mime,
-            icon: mimeType?.icon ?? "bx bx-code"
-        });
+        if (!mimeType || note.mime === "text/plain") {
+            setInfo({ typeName: t("snippet_badge.type_code"), icon: "bx bx-code" });
+            return;
+        }
+        setInfo({ typeName: mimeType.title, icon: mimeType.icon ?? "bx bx-code" });
     }
 
     useEffect(refresh, [ note, noteType, noteMime ]);

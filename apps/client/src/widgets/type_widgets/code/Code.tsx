@@ -133,7 +133,7 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     // Disabled for Markdown notes, whose editor provides its own combined slash-command menu.
     useSnippetSlashCommands(
         editorView,
-        (candidate) => candidate.type === "code" && candidate.mime === note.mime,
+        (candidate) => candidate.type === "code" && (candidate.mime === note.mime || candidate.mime === "text/plain"),
         note.mime,
         !note.isMarkdown(),
         note.noteId

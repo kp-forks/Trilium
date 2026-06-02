@@ -509,9 +509,12 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
     // The user-configured todo task states (from the `_taskStates` subtree), loaded once.
     // Read inside the autocomplete closure, so `/todo:*` commands reflect the current config.
     const taskStatesRef = useRef<TaskStateDef[]>([]);
-    // Markdown snippets (#snippet code notes with a markdown MIME), inserted via `/snippet:<name>`.
-    // useCodeSnippets keeps the ref fresh so the slash menu reads the latest list when it opens.
-    const snippetsRef = useCodeSnippets((candidate) => candidate.isMarkdown(), "markdown");
+    // Markdown snippets (#snippet code notes with a markdown MIME) plus generic plain-text snippets,
+    // inserted via `/snippet:<name>`. useCodeSnippets keeps the ref fresh so the menu reads the latest.
+    const snippetsRef = useCodeSnippets(
+        (candidate) => candidate.isMarkdown() || (candidate.type === "code" && candidate.mime === "text/plain"),
+        "markdown"
+    );
     useEffect(() => { noteRef.current = note; }, [note]);
     useEffect(() => { parentRef.current = parentComponent; }, [parentComponent]);
     useEffect(() => { void getTaskStateDefinitions().then((states) => { taskStatesRef.current = states; }); }, []);
