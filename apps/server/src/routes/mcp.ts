@@ -20,8 +20,20 @@ import port from "../services/port.js";
  * DNS-rebinding protection rejects any other Host before a tool can run, so a
  * rebound attacker domain pointed at 127.0.0.1 — which the browser sends as its
  * own Host — cannot reach the transport even though it originates from loopback.
+ *
+ * Both the port-qualified form (`localhost:8080`) and the bare form (`localhost`)
+ * are listed: a client reaching the server on a standard port (80/443) omits the
+ * port from the Host header. Bare loopback names still only ever resolve to
+ * loopback, so allowing them does not widen the DNS-rebinding surface.
  */
-const MCP_ALLOWED_HOSTS = [`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`];
+const MCP_ALLOWED_HOSTS = [
+    "localhost",
+    `localhost:${port}`,
+    "127.0.0.1",
+    `127.0.0.1:${port}`,
+    "[::1]",
+    `[::1]:${port}`
+];
 
 function isLoopback(addr: string | undefined): boolean {
     if (!addr) return false;
