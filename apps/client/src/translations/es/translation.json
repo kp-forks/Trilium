@@ -819,7 +819,9 @@
     "hide_child_notes": "Ocultar subnotas en el árbol",
     "open_all_in_tabs": "Abrir todo",
     "open_all_in_tabs_tooltip": "Abrir todos los resultados en nuevas pestañas",
-    "open_all_confirm": "Esto abrirá {{count}} notas en nuevas pestañas. ¿Continuar?",
+    "open_all_confirm_one": "Esto abrirá {{count}} notas en nuevas pestañas. ¿Continuar?",
+    "open_all_confirm_many": "",
+    "open_all_confirm_other": "",
     "open_all_too_one": " ",
     "open_all_too_many": " ",
     "open_all_too_other": " "
