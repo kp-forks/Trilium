@@ -4,7 +4,7 @@ import becca from "../becca/becca.js";
 import type BBranch from "../becca/entities/bbranch.js";
 import type BNote from "../becca/entities/bnote.js";
 import { getContext } from "./context.js";
-import noteService, { saveLinks } from "./notes.js";
+import noteService, { prepareTitle, saveLinks } from "./notes.js";
 import optionService from "./options.js";
 import { getSql } from "./sql/index.js";
 
@@ -329,5 +329,38 @@ describe("notes service (real DB)", () => {
 
             expect(after).toBe(before);
         });
+    });
+});
+
+/**
+ * Characterization of the attachment-title derivation used by saveAttachments
+ * (the inner label of an inline base64 `<a>` link → a plain-text title). Locks
+ * the behavior so the underlying HTML-to-text implementation can be swapped
+ * without regressing real-world inputs (filenames, entities, inline markup).
+ */
+describe("prepareTitle", () => {
+    it("decodes HTML entities (named, decimal, hex)", () => {
+        expect(prepareTitle("a &amp; b.txt")).toBe("a & b.txt");
+        expect(prepareTitle("caf&eacute;.pdf")).toBe("café.pdf");
+        expect(prepareTitle("&copy; report.docx")).toBe("© report.docx");
+        expect(prepareTitle("price &lt; 100 &gt; 50.csv")).toBe("price < 100 > 50.csv");
+        expect(prepareTitle("emoji &#x1F600; file.png")).toBe("emoji 😀 file.png");
+    });
+
+    it("strips inline tags, keeping their text", () => {
+        expect(prepareTitle("<b>bold</b> name.jpg")).toBe("bold name.jpg");
+        expect(prepareTitle('<span class="x">nested <i>tags</i></span>.svg')).toBe("nested tags.svg");
+    });
+
+    it("collapses runs of whitespace and trims", () => {
+        expect(prepareTitle("spaced    out    name.dat")).toBe("spaced out name.dat");
+        expect(prepareTitle("tab\tand\nnewline.bin")).toBe("tab and newline.bin");
+        expect(prepareTitle("  leading & trailing  ")).toBe("leading & trailing");
+    });
+
+    it("passes plain filenames through unchanged and handles empty input", () => {
+        expect(prepareTitle("document.pdf")).toBe("document.pdf");
+        expect(prepareTitle("My File (1).png")).toBe("My File (1).png");
+        expect(prepareTitle("")).toBe("");
     });
 });

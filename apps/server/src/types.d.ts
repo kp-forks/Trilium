@@ -8,11 +8,6 @@ declare module "unescape" {
     export default unescape;
 }
 
-declare module "html2plaintext" {
-    function html2plaintext(htmlText: string): string;
-    export default html2plaintext;
-}
-
 declare module "normalize-strings" {
     function normalizeString(string: string): string;
     export default normalizeString;
