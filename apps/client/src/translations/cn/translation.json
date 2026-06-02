@@ -871,7 +871,7 @@
     "title": "笔记地图",
     "fix-nodes": "固定节点",
     "link-distance": "链接距离",
-    "too-many-notes": "这里有 {{count}} 条笔记。全部显示可能会导致运行变慢。",
+    "too-many-notes_other": "这里有 {{count}} 条笔记。全部显示可能会导致运行变慢。",
     "show-anyway": "显示地图"
   },
   "note_paths": {
@@ -2184,7 +2184,7 @@
     "note_paths_other": "{{count}} 条路径",
     "tab_width": "制表符宽度：{{width}}",
     "tab_width_title": "调整制表符宽度",
-    "tab_width_spaces": "{{count}} 个空格",
+    "tab_width_spaces_other": "{{count}} 个空格",
     "tab_width_spaces_short": "空格数：{{width}}",
     "tab_width_tabs": "制表符：{{width}}",
     "tab_width_use_default": "使用默认值（{{width}}）",
