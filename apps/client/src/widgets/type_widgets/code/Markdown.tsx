@@ -30,6 +30,7 @@ import SplitEditor from "../helpers/SplitEditor";
 import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
+import { type CodeSnippet, getCodeSnippets, isCodeSnippetChange } from "./snippets";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
@@ -508,9 +509,24 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
     // The user-configured todo task states (from the `_taskStates` subtree), loaded once.
     // Read inside the autocomplete closure, so `/todo:*` commands reflect the current config.
     const taskStatesRef = useRef<TaskStateDef[]>([]);
+    // Markdown snippets (#snippet code notes with a markdown MIME), inserted via `/snippet:<name>`.
+    // Held in a ref and refreshed on entity changes so the slash menu reads the latest list when it
+    // opens, without re-registering the autocomplete extension.
+    const snippetsRef = useRef<CodeSnippet[]>([]);
     useEffect(() => { noteRef.current = note; }, [note]);
     useEffect(() => { parentRef.current = parentComponent; }, [parentComponent]);
     useEffect(() => { void getTaskStateDefinitions().then((states) => { taskStatesRef.current = states; }); }, []);
+
+    const reloadSnippets = useCallback(() => {
+        void getCodeSnippets((candidate) => candidate.isMarkdown()).then((snippets) => { snippetsRef.current = snippets; });
+    }, []);
+    useEffect(() => { reloadSnippets(); }, [reloadSnippets]);
+    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
+        const knownNoteIds = new Set(snippetsRef.current.map((snippet) => snippet.noteId));
+        if (isCodeSnippetChange(loadResults, knownNoteIds)) {
+            reloadSnippets();
+        }
+    });
 
     useEffect(() => {
         if (!editorView) return;
@@ -675,7 +691,18 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                         view.dispatch({ changes: { from, to, insert } });
                                     }
                                 };
-                            })
+                            }),
+                        ...snippetsRef.current.map((snippet) => ({
+                            label: snippet.description
+                                ? `/snippet:${snippet.title} - ${snippet.description}`
+                                : `/snippet:${snippet.title}`,
+                            apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
+                                view.dispatch({
+                                    changes: { from, to, insert: snippet.content },
+                                    selection: { anchor: from + snippet.content.length }
+                                });
+                            }
+                        }))
                     ]
                 };
             }],
