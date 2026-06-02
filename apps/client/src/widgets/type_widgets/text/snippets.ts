@@ -28,7 +28,7 @@ export default async function getTemplates() {
         // starting with "(" trips the search lexer (the leading paren is dropped, see lex.ts), which
         // corrupts the parse and matches every note.
         const snippets = (await search.searchForNotes("#textSnippet OR #snippet"))
-            .filter((snippet) => snippet.type === "text" && !snippet.isArchived);
+            .filter((snippet) => snippet.type === "text" && !snippet.isArchived && snippet.isContentAvailable());
         const definitions: TemplateDefinition[] = [];
         for (const snippet of snippets) {
             const { description } = await invalidateCacheFor(snippet);

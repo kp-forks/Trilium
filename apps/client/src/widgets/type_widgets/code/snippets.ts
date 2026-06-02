@@ -25,15 +25,22 @@ export interface CodeSnippet {
  * Markdown editor, or a MIME comparison for a code editor).
  */
 export async function getCodeSnippets(matches: (note: FNote) => boolean): Promise<CodeSnippet[]> {
-    // The `search` route includes archived notes, so drop archived snippets explicitly.
-    const notes = (await search.searchForNotes("#snippet")).filter((note) => matches(note) && !note.isArchived);
+    try {
+        // The `search` route includes archived notes, so drop archived ones; also skip protected
+        // snippets whose content isn't available (no active protected session) — they can't be inserted.
+        const notes = (await search.searchForNotes("#snippet"))
+            .filter((note) => matches(note) && !note.isArchived && note.isContentAvailable());
 
-    return Promise.all(notes.map(async (note) => ({
-        noteId: note.noteId,
-        title: note.title,
-        description: note.getLabelValue("snippetDescription") ?? undefined,
-        content: (await note.getContent()) ?? ""
-    })));
+        return await Promise.all(notes.map(async (note) => ({
+            noteId: note.noteId,
+            title: note.title,
+            description: note.getLabelValue("snippetDescription") ?? undefined,
+            content: (await note.getContent()) ?? ""
+        })));
+    } catch (e) {
+        logError("Error while building code snippets: ", e);
+        return [];
+    }
 }
 
 /**
