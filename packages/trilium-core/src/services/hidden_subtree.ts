@@ -429,6 +429,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             noteId: item.id,
             title: item.title,
             type: item.type,
+            mime: item.mime,
             parentNoteId,
             content: item.content ?? "",
             ignoreForbiddenParents: true
@@ -511,6 +512,12 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
     if (note.type !== item.type) {
         // enforce a correct note type
         note.type = item.type;
+        note.save();
+    }
+
+    if (item.mime && note.mime !== item.mime) {
+        // enforce a correct MIME type
+        note.mime = item.mime;
         note.save();
     }
 
