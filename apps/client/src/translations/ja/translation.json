@@ -611,7 +611,7 @@
     "hide_child_notes": "ツリー内の子ノートを非表示",
     "open_all_in_tabs": "すべて開く",
     "open_all_in_tabs_tooltip": "すべての結果を新しいタブで開く",
-    "open_all_confirm": "{{count}} 件のノートが新しいタブで開かれます。続行しますか？"
+    "open_all_confirm_other": "{{count}} 件のノートが新しいタブで開かれます。続行しますか？"
   },
   "note_types": {
     "geo-map": "ジオマップ",
@@ -1589,7 +1589,7 @@
     "title": "ノートマップ",
     "link-distance": "リンク距離",
     "fix-nodes": "ノードを修正",
-    "too-many-notes": "ここには {{count}} 件のノートがあります。すべて表示すると処理速度が遅くなる可能性があります。",
+    "too-many-notes_other": "ここには {{count}} 件のノートがあります。すべて表示すると処理速度が遅くなる可能性があります。",
     "show-anyway": "マップを表示"
   },
   "owned_attribute_list": {
@@ -2021,7 +2021,7 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} ノート",
+    "total_notes_other": "{{count}} ノート",
     "prev_page": "前のページ",
     "next_page": "次のページ"
   },
@@ -2192,7 +2192,7 @@
     "note_paths_other": "{{count}} 個のパス",
     "tab_width": "タブ幅: {{width}}",
     "tab_width_title": "タブ幅を変更",
-    "tab_width_spaces": "{{count}} スペース",
+    "tab_width_spaces_other": "{{count}} スペース",
     "tab_width_spaces_short": "スペース: {{width}}",
     "tab_width_tabs": "タブ: {{width}}",
     "tab_width_use_default": "デフォルトを使用 ({{width}})",
