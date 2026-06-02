@@ -816,7 +816,8 @@
     "hide_child_notes": "Untergeordnete Notizen im Baum ausblenden",
     "open_all_in_tabs": "Alle öffnen",
     "open_all_in_tabs_tooltip": "Alle Resultate in neuen Tabs öffnen",
-    "open_all_confirm": "Dies öffnet {{count}} Notizen in neuen Tabs. Fortfahren?"
+    "open_all_confirm_one": "Dies öffnet {{count}} Notizen in neuen Tabs. Fortfahren?",
+    "open_all_confirm_other": ""
   },
   "edited_notes": {
     "no_edited_notes_found": "An diesem Tag wurden noch keine Notizen bearbeitet...",
@@ -860,7 +861,8 @@
     "note_size": "Notengröße",
     "note_size_info": "Die Notizgröße bietet eine grobe Schätzung des Speicherbedarfs für diese Notiz. Es berücksichtigt den Inhalt der Notiz und den Inhalt ihrer Notizrevisionen.",
     "calculate": "berechnen",
-    "subtree_size": "(Zweiggröße: {{size}} in {{count}} Notizen)",
+    "subtree_size_one": "(Zweiggröße: {{size}} in {{count}} Notizen)",
+    "subtree_size_other": "",
     "title": "Notizinfo",
     "mime": "MIME Typ",
     "show_similar_notes": "Zeige ähnliche Notizen"
