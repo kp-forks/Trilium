@@ -869,7 +869,7 @@
     "title": "筆記地圖",
     "fix-nodes": "固定節點",
     "link-distance": "連結距離",
-    "too-many-notes": "此子樹包含 {{count}} 則筆記，已超過筆記地圖中可顯示的 {{max}} 則上限。"
+    "too-many-notes_one": "此子樹包含 {{count}} 則筆記，已超過筆記地圖中可顯示的 {{max}} 則上限。"
   },
   "note_paths": {
     "title": "筆記路徑",
@@ -1518,7 +1518,7 @@
     "export": "匯出",
     "import-into-note": "匯入至筆記",
     "apply-bulk-actions": "套用批次操作",
-    "converted-to-attachments": "{{count}} 個筆記已被轉換為附件。",
+    "converted-to-attachments_one": "{{count}} 個筆記已被轉換為附件。",
     "convert-to-attachment-confirm": "確定要將所選的筆記轉換為其父級筆記的附件嗎？此操作僅適用於圖像筆記，其他筆記將被跳過。",
     "duplicate": "複製副本",
     "open-in-popup": "快速編輯",
