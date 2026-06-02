@@ -860,7 +860,7 @@
     "note_size": "笔记大小",
     "note_size_info": "笔记大小提供了该笔记存储需求的粗略估计。它考虑了笔记的内容及其笔记修订历史的内容。",
     "calculate": "计算",
-    "subtree_size": "(子树大小: {{size}}, 共计 {{count}} 个笔记)",
+    "subtree_size_other": "(子树大小: {{size}}, 共计 {{count}} 个笔记)",
     "title": "笔记信息",
     "show_similar_notes": "显示相似的笔记",
     "mime": "文件类型"
@@ -1566,7 +1566,7 @@
     "export": "导出",
     "import-into-note": "导入到笔记",
     "apply-bulk-actions": "应用批量操作",
-    "converted-to-attachments": "{{count}} 个笔记已被转换为附件。",
+    "converted-to-attachments_other": "{{count}} 个笔记已被转换为附件。",
     "convert-to-attachment-confirm": "确定要将选中的笔记转换为其父笔记的附件吗？此操作仅适用于图像笔记，其他笔记将被跳过。",
     "duplicate": "复制",
     "open-in-popup": "快速编辑",
