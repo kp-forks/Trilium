@@ -2112,7 +2112,8 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} Notizen",
+    "total_notes_one": "{{count}} Notizen",
+    "total_notes_other": "",
     "prev_page": "Vorherige Seite",
     "next_page": "Nächste Seite"
   },
