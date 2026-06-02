@@ -1099,7 +1099,9 @@
     "hide_child_notes": "Скрыть дочерние заметки в дереве",
     "open_all_in_tabs": "Открыть все",
     "open_all_in_tabs_tooltip": "Открыть все результаты в новых вкладках",
-    "open_all_confirm": "Это откроет заметки ({{count}}) в новых вкладках. Продолжить?",
+    "open_all_confirm_one": "Это откроет заметки ({{count}}) в новых вкладках. Продолжить?",
+    "open_all_confirm_few": "",
+    "open_all_confirm_many": "",
     "open_all_too_one": "Слишком много результатов ({{count}}). Максимум — {{max}}.",
     "open_all_too_few": "Слишком много результатов ({{count}}). Максимум — {{max}}.",
     "open_all_too_many": "Слишком много результатов ({{count}}). Максимум — {{max}}."
