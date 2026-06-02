@@ -35,6 +35,27 @@ export default function buildHiddenSubtreeTemplates() {
                 ]
             },
             {
+                id: "_template_snippet",
+                type: "code",
+                title: t("hidden_subtree_templates.snippet"),
+                icon: "bx-align-left",
+                attributes: [
+                    {
+                        name: "template",
+                        type: "label"
+                    },
+                    {
+                        name: "snippet",
+                        type: "label"
+                    },
+                    {
+                        name: "label:snippetDescription",
+                        type: "label",
+                        value: `promoted,alias=${t("hidden_subtree_templates.description")},single,text`
+                    }
+                ]
+            },
+            {
                 id: "_template_list_view",
                 type: "book",
                 title: t("hidden_subtree_templates.list-view"),

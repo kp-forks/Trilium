@@ -393,6 +393,7 @@
   },
   "hidden_subtree_templates": {
     "text-snippet": "Text Snippet",
+    "snippet": "Snippet",
     "description": "Description",
     "list-view": "List View",
     "grid-view": "Grid View",
