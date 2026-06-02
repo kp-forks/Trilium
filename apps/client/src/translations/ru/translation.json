@@ -898,7 +898,9 @@
     "recent-changes-in-subtree": "Последние изменения в поддереве",
     "copy-note-path-to-clipboard": "Копировать путь к заметке в буфер обмена",
     "convert-to-attachment-confirm": "Вы уверены, что хотите преобразовать выбранные заметки во вложения их родительских заметок? Эта операция применяется только к заметкам в виде изображений; другие заметки будут пропущены.",
-    "converted-to-attachments": "{{count}} заметок были преобразованы во вложения.",
+    "converted-to-attachments_one": "{{count}} заметок были преобразованы во вложения.",
+    "converted-to-attachments_few": "",
+    "converted-to-attachments_many": "",
     "archive": "Архивировать",
     "unarchive": "Разархивировать",
     "open-in-a-new-window": "Открыть в новом окне",
@@ -1144,7 +1146,9 @@
     "title": "Информация",
     "calculate": "подсчитать",
     "note_size_info": "Размер заметки позволяет приблизительно оценить требования к объёму хранилища для данной заметки. Он учитывает её содержание и содержание её сохраненных версий.",
-    "subtree_size": "(размер поддерева: {{size}} в {{count}} заметках)",
+    "subtree_size_one": "(размер поддерева: {{size}} в {{count}} заметках)",
+    "subtree_size_few": "",
+    "subtree_size_many": "",
     "mime": "MIME тип",
     "show_similar_notes": "Похожие заметки"
   },
@@ -1662,7 +1666,9 @@
     "collapse": "Свернуть к нормальному размеру",
     "link-distance": "Расстояние связи",
     "open_full": "Развернуть полностью",
-    "too-many-notes": "Здесь {{count}} заметок. Отображение всех может замедлить работу.",
+    "too-many-notes_one": "Здесь {{count}} заметок. Отображение всех может замедлить работу.",
+    "too-many-notes_few": "",
+    "too-many-notes_many": "",
     "show-anyway": "Всё равно показать"
   },
   "owned_attribute_list": {
@@ -2116,7 +2122,9 @@
     "rendering_error": "Невозможно отобразить содержимое из-за ошибки."
   },
   "pagination": {
-    "total_notes": "{{count}} заметок",
+    "total_notes_one": "{{count}} заметок",
+    "total_notes_few": "",
+    "total_notes_many": "",
     "prev_page": "Предыдущая страница",
     "next_page": "Следующая страница"
   },
@@ -2146,7 +2154,9 @@
     "backlinks_title_many": "Обратные ссылки",
     "tab_width": "Ширина табуляции: {{width}}",
     "tab_width_title": "Изменить ширину табуляции",
-    "tab_width_spaces": "{{count}} пробелов",
+    "tab_width_spaces_one": "{{count}} пробелов",
+    "tab_width_spaces_few": "",
+    "tab_width_spaces_many": "",
     "tab_width_spaces_short": "Пробелы: {{width}}",
     "tab_width_tabs": "Табуляция: {{width}}",
     "tab_width_use_default": "По умолчанию ({{width}})",
