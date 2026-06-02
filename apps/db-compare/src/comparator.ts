@@ -80,13 +80,15 @@ export const COMPARISONS: Comparison[] = [
 
 /** Returns the items of `ids1` that are not present in `ids2`. */
 export function findMissing(ids1: string[], ids2: string[]) {
-    return ids1.filter(item => ids2.indexOf(item) < 0);
+    const present = new Set(ids2);
+    return ids1.filter(item => !present.has(item));
 }
 
 /** Normalizes a row whose `content` column is a Buffer into a plain string so it can be compared. */
 export function handleBuffer(obj: Row): Row {
     if (Buffer.isBuffer(obj.content)) {
-        obj.content = obj.content.toString();
+        // Return a normalized copy rather than mutating the caller's row in place.
+        return { ...obj, content: obj.content.toString() };
     }
 
     return obj;
@@ -97,7 +99,8 @@ export function compareRows(table: string, column: string, rsLeft: Record<string
     const leftIds = Object.keys(rsLeft);
     const rightIds = Object.keys(rsRight);
 
-    const commonIds = leftIds.filter(item => rightIds.includes(item));
+    const rightIdSet = new Set(rightIds);
+    const commonIds = leftIds.filter(item => rightIdSet.has(item));
     const differingRows: RowDifference[] = [];
 
     for (const id of commonIds) {
