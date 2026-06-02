@@ -1965,7 +1965,9 @@
     "shared_locally": "Esta nota é compartilhada localmente em {{- link}}."
   },
   "pagination": {
-    "total_notes": "{{count}} notas"
+    "total_notes_one": "{{count}} notas",
+    "total_notes_many": "",
+    "total_notes_other": ""
   },
   "collections": {
     "rendering_error": "Não foi possível exibir o conteúdo devido a um erro."
