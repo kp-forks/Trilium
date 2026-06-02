@@ -251,7 +251,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} notatek",
+    "total_notes_one": "{{count}} notatek",
+    "total_notes_few": "",
+    "total_notes_many": "",
     "prev_page": "Poprzednia strona",
     "next_page": "Następna strona"
   },
@@ -1696,7 +1698,9 @@
     "export": "Eksportuj",
     "import-into-note": "Importuj do notatki",
     "apply-bulk-actions": "Zastosuj akcje masowe",
-    "converted-to-attachments": "{{count}} notatek zostało przekonwertowanych na załączniki.",
+    "converted-to-attachments_one": "{{count}} notatek zostało przekonwertowanych na załączniki.",
+    "converted-to-attachments_few": "",
+    "converted-to-attachments_many": "",
     "convert-to-attachment-confirm": "Czy na pewno chcesz przekonwertować wybrane notatki na załączniki ich notatek nadrzędnych? Ta operacja dotyczy tylko notatek Obrazów, inne notatki zostaną pominięte.",
     "open-in-popup": "Szybka edycja",
     "open-in-a-new-window": "Otwórz w nowym oknie",
