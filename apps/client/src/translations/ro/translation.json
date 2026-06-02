@@ -500,8 +500,9 @@
     "close": "Închide",
     "title": "Șterge notițele",
     "clones_label": "Clone",
-    "delete_clones_description_one": "Șterge și {{count}} altă clonă. Poate fi anulat din modificările recente.",
-    "delete_clones_description_other": "Șterge și {{count}} alte clone. Poate fi anulat din modificările recente.",
+    "delete_clones_description_one": "Șterge și {{count}} altă clonă. Poate fi anulată din modificările recente.",
+    "delete_clones_description_few": "Șterge și {{count}} alte clone. Pot fi anulate din modificările recente.",
+    "delete_clones_description_other": "Șterge și {{count}} de alte clone. Pot fi anulate din modificările recente.",
     "erase_notes_label": "Șterge permanent",
     "table_note_with_relation": "Notiță cu relație",
     "table_relation": "Relație",
@@ -2257,7 +2258,8 @@
     "pages_alt": "Pagina {{pageNumber}}",
     "pages_loading": "Încărcare...",
     "annotations_one": "{{count}} adnotare",
-    "annotations_other": "{{count}} adnotări"
+    "annotations_few": "{{count}} adnotări",
+    "annotations_other": "{{count}} de adnotări"
   },
   "platform_indicator": {
     "available_on": "Disponibil pe {{platform}}"
@@ -2496,7 +2498,7 @@
     "empty_state": "Începeți o conversație scriind un mesaj mai jos.",
     "searching_web": "Se caută pe web...",
     "web_search": "Căutare web",
-    "web_search_unavailable_gemini": "Indisponibil pe modelele Gemini cât timp accesul la notițe este activat — API-ul Google nu permite combinarea ambelor. Dezactivați accesul la notițe sau treceți la un alt furnizor pentru a folosi căutarea web.",
+    "web_search_unavailable_gemini": "Indisponibilă pe modelele Gemini cât timp accesul la notițe este activat — API-ul Google nu permite combinarea ambelor. Dezactivați accesul la notițe sau treceți la un alt furnizor pentru a folosi căutarea web.",
     "note_tools": "Acces la notițe",
     "sources": "Surse",
     "sources_summary": "{{count}} surse de pe {{sites}} site-uri",
@@ -2546,7 +2548,8 @@
     "loading": "Se încarcă...",
     "empty": "Această notiță nu are subnotițe.",
     "children_count_one": "{{count}} notiță",
-    "children_count_other": "{{count}} notițe",
+    "children_count_few": "{{count}} notițe",
+    "children_count_other": "{{count}} de notițe",
     "add_child": "Adaugă subnotiță",
     "more_actions": "Mai multe acțiuni"
   },

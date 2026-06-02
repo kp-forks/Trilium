@@ -444,7 +444,7 @@
     "enable-message": "Sigur doriți să activați {{settingLabel}}?",
     "enable-detail": "{{warning}}\n\nActivați această opțiune doar dacă intenționați în mod explicit să folosiți această funcție. Nu o activați dacă vi se solicită de către un script sau o notiță necunoscută.\n\nAceastă modificare necesită o repornire pentru a avea efect.",
     "disable-title": "Dezactivează {{settingLabel}}",
-    "disable-message": "{{settingLabel}} va fi dezactivat.",
+    "disable-message": "Opțiunea {{settingLabel}} va fi dezactivată.",
     "disable-detail": "Această modificare necesită o repornire pentru a avea efect.",
     "cancel": "Anulează",
     "enable": "Activează",
