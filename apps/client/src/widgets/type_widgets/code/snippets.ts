@@ -25,7 +25,8 @@ export interface CodeSnippet {
  * Markdown editor, or a MIME comparison for a code editor).
  */
 export async function getCodeSnippets(matches: (note: FNote) => boolean): Promise<CodeSnippet[]> {
-    const notes = (await search.searchForNotes("#snippet")).filter(matches);
+    // The `search` route includes archived notes, so drop archived snippets explicitly.
+    const notes = (await search.searchForNotes("#snippet")).filter((note) => matches(note) && !note.isArchived);
 
     return Promise.all(notes.map(async (note) => ({
         noteId: note.noteId,
