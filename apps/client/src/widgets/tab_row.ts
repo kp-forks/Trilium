@@ -7,6 +7,7 @@ import attributeService from "../services/attributes.js";
 import froca from "../services/froca.js";
 import { t } from "../services/i18n.js";
 import keyboardActionService from "../services/keyboard_actions.js";
+import { clampDragDestination } from "../services/tab_pinning.js";
 import utils from "../services/utils.js";
 import BasicWidget from "./basic_widget.js";
 import { setupHorizontalScrollViaWheel } from "./widget_utils.js";
@@ -31,6 +32,7 @@ const TAB_TPL = `
     <div class="note-tab-drag-handle"></div>
     <div class="note-tab-icon"></div>
     <div class="note-tab-title"></div>
+    <div class="note-tab-pin-indicator bx bx-pin" title="${t("tab_row.unpin_tab")}"></div>
     <div class="note-tab-close bx bx-x" title="${t("tab_row.close_tab")}"></div>
   </div>
 </div>`;
@@ -194,6 +196,26 @@ const TAB_ROW_TPL = `
         text-align: center;
     }
 
+    .tab-row-widget .note-tab .note-tab-pin-indicator {
+        display: none;
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        /* purely a visual indicator: clicks fall through to the tab so it activates, never unpins */
+        pointer-events: none;
+    }
+
+    .tab-row-widget .note-tab[pinned] .note-tab-pin-indicator {
+        display: flex;
+    }
+
+    .tab-row-widget .note-tab[pinned] .note-tab-close {
+        display: none;
+    }
+
     .tab-scroll-button-left, .tab-scroll-button-right {
         display: none;
         flex: 0 0 ${SCROLL_BUTTON_WIDTH}px;
@@ -346,11 +368,21 @@ export default class TabRowWidget extends BasicWidget {
 
             const ntxId = $(e.target).closest(".note-tab").attr("data-ntx-id");
 
+            const mainContext = appContext.tabManager.getMainNoteContexts().find((nc) => nc.ntxId === ntxId);
+            const isPinned = !!mainContext?.pinned;
+            const isEmpty = !mainContext || mainContext.isEmpty();
+
             contextMenu.show<CommandNames>({
                 x: e.pageX,
                 y: e.pageY,
                 items: [
-                    { title: t("tab_row.close"), command: "closeTab", uiIcon: "bx bx-x" },
+                    isPinned
+                        ? { title: t("tab_row.unpin_tab"), command: "unpinTab", uiIcon: "bx bx-pin" }
+                        : { title: t("tab_row.pin_tab"), command: "pinTab", uiIcon: "bx bx-pin", enabled: !isEmpty },
+
+                    { kind: "separator" },
+
+                    { title: t("tab_row.close"), command: "closeTab", uiIcon: "bx bx-x", enabled: !isPinned },
                     { title: t("tab_row.close_other_tabs"), command: "closeOtherTabs", uiIcon: "bx bx-empty", enabled: appContext.tabManager.noteContexts.length !== 1 },
                     { title: t("tab_row.close_right_tabs"), command: "closeRightTabs", uiIcon: "bx bx-empty", enabled: appContext.tabManager.noteContexts?.at(-1)?.ntxId !== ntxId },
                     { title: t("tab_row.close_all_tabs"), command: "closeAllTabs", uiIcon: "bx bx-empty" },
@@ -361,7 +393,7 @@ export default class TabRowWidget extends BasicWidget {
 
                     { kind: "separator" },
 
-                    { title: t("tab_row.move_tab_to_new_window"), command: "moveTabToNewWindow", uiIcon: "bx bx-window-open" },
+                    { title: t("tab_row.move_tab_to_new_window"), command: "moveTabToNewWindow", uiIcon: "bx bx-window-open", enabled: !isPinned },
                     { title: t("tab_row.copy_tab_to_new_window"), command: "copyTabToNewWindow", uiIcon: "bx bx-empty" }
                 ],
                 selectMenuItemHandler: ({ command }) => {
@@ -743,13 +775,16 @@ export default class TabRowWidget extends BasicWidget {
                 tabEl.style.transform = `translate3d(${translateX}px, 0, 0)`;
                 const currentTabPositionX = originalTabPositionX + translateX;
                 const destinationIndexTarget = this.closest(currentTabPositionX, tabPositions);
-                const destinationIndex = Math.max(0, Math.min(tabEls.length, destinationIndexTarget));
+                // keep pinned and unpinned tabs in their own zones — neither can cross the boundary
+                const pinnedCount = tabEls.filter((el) => el.hasAttribute("pinned")).length;
+                const destinationIndex = clampDragDestination(destinationIndexTarget, tabEl.hasAttribute("pinned"), pinnedCount, tabEls.length);
 
                 if (currentIndex !== destinationIndex) {
                     this.animateTabMove(tabEl, currentIndex, destinationIndex);
                 }
 
-                if (Math.abs(moveVector.y) > 100) {
+                // pinned tabs stay put — don't trigger the drag-to-new-window tear-off
+                if (Math.abs(moveVector.y) > 100 && !tabEl.hasAttribute("pinned")) {
                     this.triggerCommand("moveTabToNewWindow", { ntxId: this.getTabId($(tabEl)) });
                 }
             });
@@ -846,6 +881,9 @@ export default class TabRowWidget extends BasicWidget {
             return;
         }
 
+        // keep the pinned attribute in sync (drives the pin indicator + hidden close button)
+        $tab.attr("pinned", noteContext.getMainContext().pinned ? "" : null);
+
         for (const clazz of Array.from($tab[0].classList)) {
             // create copy to safely iterate over while removing classes
             if (clazz !== "note-tab") {
@@ -927,6 +965,32 @@ export default class TabRowWidget extends BasicWidget {
             const noteContext = appContext.tabManager.getNoteContextById(ntxId);
 
             this.updateTab($tab, noteContext);
+        }
+    }
+
+    tabPinStateChangedEvent({ ntxId, pinned }: EventData<"tabPinStateChanged">) {
+        const $tab = this.getTabById(ntxId);
+
+        if (!$tab.length) {
+            return;
+        }
+
+        $tab.attr("pinned", pinned ? "" : null);
+
+        // the model already moved the context; mirror that order in the DOM and re-layout
+        this.syncTabOrder();
+        this.layoutTabs();
+        this.setupDraggabilly();
+    }
+
+    /** Reorders the tab elements in the DOM to match the model order (pinned tabs grouped first). */
+    syncTabOrder() {
+        for (const noteContext of appContext.tabManager.getMainNoteContexts()) {
+            const tabEl = this.getTabById(noteContext.ntxId)[0];
+
+            if (tabEl) {
+                this.$containerAnchor.before(tabEl);
+            }
         }
     }
 }
