@@ -25,6 +25,7 @@ interface NoteContextState {
     active: boolean;
     viewScope: Record<string, any>;
     pinned?: boolean;
+    lastActiveNtxId?: string | null;
 }
 
 export default class TabManager extends Component {
@@ -111,7 +112,7 @@ export default class TabManager extends Component {
 
             await this.tabsUpdate.allowUpdateWithoutChange(async () => {
                 for (const tab of filteredNoteContexts) {
-                    await this.openContextWithNote(tab.notePath, {
+                    const noteContext = await this.openContextWithNote(tab.notePath, {
                         activate: tab.active,
                         ntxId: tab.ntxId,
                         mainNtxId: tab.mainNtxId,
@@ -119,6 +120,11 @@ export default class TabManager extends Component {
                         viewScope: tab.viewScope,
                         pinned: tab.pinned
                     });
+
+                    // restore which split was last focused in this tab (validated lazily on read)
+                    if (tab.lastActiveNtxId) {
+                        noteContext.lastActiveNtxId = tab.lastActiveNtxId;
+                    }
                 }
             });
 
@@ -397,6 +403,12 @@ export default class TabManager extends Component {
 
         this.activeNtxId = ntxId;
 
+        // remember which split is focused within its tab, so re-activating the tab restores it
+        const activatedContext = this.noteContexts.find((nc) => nc.ntxId === ntxId);
+        if (activatedContext) {
+            activatedContext.getMainContext().lastActiveNtxId = ntxId;
+        }
+
         if (triggerEvent) {
             await this.triggerEvent("activeContextChanged", {
                 noteContext: this.getNoteContextById(ntxId)
@@ -406,6 +418,26 @@ export default class TabManager extends Component {
         this.tabsUpdate.scheduleUpdate();
 
         this.setCurrentNavigationStateToHash();
+    }
+
+    /** Activates a tab, restoring focus to the split that was last focused within it (or its main split). */
+    async activateTabContext(mainNtxId: string | null) {
+        if (!mainNtxId) {
+            return;
+        }
+
+        const mainContext = this.noteContexts.find((nc) => nc.ntxId === mainNtxId);
+        if (!mainContext) {
+            // tab vanished (e.g. closed mid-switch); avoid activateNoteContext throwing on a stale id
+            return;
+        }
+
+        const remembered = mainContext.lastActiveNtxId;
+        const targetNtxId = remembered && this.noteContexts.some((nc) => nc.ntxId === remembered)
+            ? remembered
+            : mainNtxId;
+
+        await this.activateNoteContext(targetNtxId);
     }
 
     async removeNoteContext(ntxId: string | null): Promise<boolean> {
@@ -561,7 +593,7 @@ export default class TabManager extends Component {
         const oldIdx = this.mainNoteContexts.findIndex((nc) => nc.ntxId === activeMainNtxId);
         const newActiveNtxId = this.mainNoteContexts[oldIdx === this.mainNoteContexts.length - 1 ? 0 : oldIdx + 1].ntxId;
 
-        await this.activateNoteContext(newActiveNtxId);
+        await this.activateTabContext(newActiveNtxId);
     }
 
     async activatePreviousTabCommand() {
@@ -571,7 +603,7 @@ export default class TabManager extends Component {
         const oldIdx = this.mainNoteContexts.findIndex((nc) => nc.ntxId === activeMainNtxId);
         const newActiveNtxId = this.mainNoteContexts[oldIdx === 0 ? this.mainNoteContexts.length - 1 : oldIdx - 1].ntxId;
 
-        await this.activateNoteContext(newActiveNtxId);
+        await this.activateTabContext(newActiveNtxId);
     }
 
     async closeActiveTabCommand() {

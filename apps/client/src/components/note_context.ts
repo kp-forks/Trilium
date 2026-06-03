@@ -72,6 +72,9 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
     /** When true, this tab stays on its current note: navigations to a different note open a new tab instead. Only meaningful on a main context. */
     pinned = false;
 
+    /** ntxId of the split most recently focused within this tab; re-activating the tab restores it. Only meaningful on a main context. */
+    lastActiveNtxId?: string | null;
+
     notePath?: string | null;
     noteId?: string | null;
     parentNoteId?: string | null;
@@ -308,7 +311,8 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
             hoistedNoteId: this.hoistedNoteId,
             active: this.isActive(),
             viewScope: this.viewScope,
-            pinned: this.pinned
+            pinned: this.pinned,
+            lastActiveNtxId: this.lastActiveNtxId
         };
     }
 

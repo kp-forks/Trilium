@@ -2003,6 +2003,7 @@
     "close_all_tabs": "Close all tabs",
     "pin_tab": "Pin tab",
     "unpin_tab": "Unpin tab",
+    "pinned_prefix": "Pinned: ",
     "reopen_last_tab": "Reopen last closed tab",
     "move_tab_to_new_window": "Move this tab to a new window",
     "copy_tab_to_new_window": "Copy this tab to a new window",
