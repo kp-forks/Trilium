@@ -9,6 +9,7 @@ import type { ViewScope } from "../services/link.js";
 import options from "../services/options.js";
 import protectedSessionHolder from "../services/protected_session_holder.js";
 import server from "../services/server.js";
+import { shouldRedirectPinnedNavigation } from "../services/tab_pinning.js";
 import treeService from "../services/tree.js";
 import utils from "../services/utils.js";
 import { ReactWrappedWidget } from "../widgets/basic_widget.js";
@@ -67,6 +68,9 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
     ntxId: string | null;
     hoistedNoteId: string;
     mainNtxId: string | null;
+
+    /** When true, this tab stays on its current note: navigations to a different note open a new tab instead. Only meaningful on a main context. */
+    pinned = false;
 
     notePath?: string | null;
     noteId?: string | null;
@@ -128,6 +132,17 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
         }
 
         if (this.notePath === resolvedNotePath && utils.areObjectsEqual(this.viewScope, opts.viewScope)) {
+            return;
+        }
+
+        // Pinned tabs stay on the note they were pinned to — redirect navigation to a new tab instead.
+        const { noteId: targetNoteId } = treeService.getNoteIdAndParentIdFromUrl(resolvedNotePath);
+        if (shouldRedirectPinnedNavigation(this.pinned, this.noteId, targetNoteId)) {
+            await appContext.tabManager.openContextWithNote(resolvedNotePath, {
+                activate: true,
+                viewScope: opts.viewScope,
+                hoistedNoteId: this.hoistedNoteId
+            });
             return;
         }
 
@@ -290,7 +305,8 @@ class NoteContext extends Component implements EventListener<"entitiesReloaded">
             notePath: this.notePath,
             hoistedNoteId: this.hoistedNoteId,
             active: this.isActive(),
-            viewScope: this.viewScope
+            viewScope: this.viewScope,
+            pinned: this.pinned
         };
     }
 
