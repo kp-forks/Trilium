@@ -725,7 +725,8 @@ export default class TabRowWidget extends BasicWidget {
             this.draggabillies.push(draggabilly);
 
             draggabilly.on("staticClick", () => {
-                appContext.tabManager.activateNoteContext(tabEl.getAttribute("data-ntx-id"));
+                // restore the tab's last-focused split rather than always jumping to its main split
+                appContext.tabManager.activateTabContext(tabEl.getAttribute("data-ntx-id"));
             });
 
             draggabilly.on("dragStart", () => {
@@ -929,12 +930,14 @@ export default class TabRowWidget extends BasicWidget {
             $tab.find(".note-tab-wrapper").removeAttr("style");
         }
 
-        await this.updateTabTitle($tab, mainContext);
+        const subContexts = mainContext.getSubContexts();
+        const focusedNtxId = this.getFocusedNtxId(mainContext, subContexts);
 
-        // The icon and type classes follow the focused split when this tab is active; otherwise they
-        // fall back to its main (first) split.
-        const activeNtxId = appContext.tabManager.activeNtxId;
-        const displayContext = mainContext.getSubContexts().find((ctx) => ctx.ntxId === activeNtxId) ?? mainContext;
+        await this.updateTabTitle($tab, subContexts, focusedNtxId);
+
+        // The icon and type classes follow the tab's focused split (remembered across activations),
+        // falling back to its main (first) split.
+        const displayContext = subContexts.find((ctx) => ctx.ntxId === focusedNtxId) ?? mainContext;
         const note = displayContext.note;
         if (note) {
             $tab.addClass(note.getCssClass());
@@ -955,14 +958,11 @@ export default class TabRowWidget extends BasicWidget {
      * Builds the tab title from every split in the tab, e.g. "Note A • Note B • Note C", with the
      * currently focused split emphasized. The full text is also set as the tooltip.
      */
-    async updateTabTitle($tab: JQuery<HTMLElement>, mainContext: NoteContext) {
-        const activeNtxId = appContext.tabManager.activeNtxId;
-        const subContexts = mainContext.getSubContexts();
-
+    async updateTabTitle($tab: JQuery<HTMLElement>, subContexts: NoteContext[], focusedNtxId: string | null) {
         const splits = await Promise.all(
             subContexts.map(async (ctx) => ({
                 title: ctx.note ? await ctx.getNavigationTitle() : null,
-                active: !!ctx.ntxId && ctx.ntxId === activeNtxId
+                active: !!ctx.ntxId && ctx.ntxId === focusedNtxId
             }))
         );
 
@@ -981,6 +981,15 @@ export default class TabRowWidget extends BasicWidget {
             }
             $title.append($segment);
         });
+    }
+
+    /** The split a tab currently represents: its remembered last-focused split (if still open), else its main split. */
+    getFocusedNtxId(mainContext: NoteContext, subContexts: NoteContext[]): string | null {
+        const remembered = mainContext.lastActiveNtxId;
+        if (remembered && subContexts.some((ctx) => ctx.ntxId === remembered)) {
+            return remembered;
+        }
+        return mainContext.ntxId;
     }
 
     /** Rebuilds a tab in place (title, icon, classes) without scrolling it into view. */
