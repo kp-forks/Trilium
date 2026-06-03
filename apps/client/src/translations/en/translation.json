@@ -2738,7 +2738,8 @@
     "cancel": "Cancel"
   },
   "spreadsheet": {
-    "read-only": "This note is read-only."
+    "read-only": "This note is read-only.",
+    "export-xlsx": "Export to Excel (.xlsx)"
   },
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
