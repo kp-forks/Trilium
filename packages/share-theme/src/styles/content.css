@@ -99,3 +99,16 @@ body.type-webView {
     background-color: var(--background-secondary);
     font-weight: bold;
 }
+
+/* Spreadsheet (Univer) tables are emitted as a static <table> whose cells carry their
+   own inline borders/fills. They live under #content.type-spreadsheet, not .ck-content,
+   so the rule above does not reach them. Collapse the borders so adjacent cell borders
+   merge into single lines instead of doubling across the default border-spacing gaps. */
+.spreadsheet-table {
+    border-collapse: collapse;
+    width: auto;
+}
+
+.spreadsheet-table td {
+    padding: 2px 4px;
+}
