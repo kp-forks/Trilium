@@ -25,6 +25,7 @@ interface NoteContextState {
     active: boolean;
     viewScope: Record<string, any>;
     pinned?: boolean;
+    lastActiveNtxId?: string | null;
 }
 
 export default class TabManager extends Component {
@@ -111,7 +112,7 @@ export default class TabManager extends Component {
 
             await this.tabsUpdate.allowUpdateWithoutChange(async () => {
                 for (const tab of filteredNoteContexts) {
-                    await this.openContextWithNote(tab.notePath, {
+                    const noteContext = await this.openContextWithNote(tab.notePath, {
                         activate: tab.active,
                         ntxId: tab.ntxId,
                         mainNtxId: tab.mainNtxId,
@@ -119,6 +120,11 @@ export default class TabManager extends Component {
                         viewScope: tab.viewScope,
                         pinned: tab.pinned
                     });
+
+                    // restore which split was last focused in this tab (validated lazily on read)
+                    if (tab.lastActiveNtxId) {
+                        noteContext.lastActiveNtxId = tab.lastActiveNtxId;
+                    }
                 }
             });
 
