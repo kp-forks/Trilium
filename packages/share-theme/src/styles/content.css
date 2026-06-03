@@ -107,6 +107,7 @@ body.type-webView {
 .spreadsheet-table {
     border-collapse: collapse;
     width: auto;
+    margin-top: 1em;
 }
 
 .spreadsheet-table td {
