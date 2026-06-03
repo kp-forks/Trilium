@@ -26,7 +26,7 @@ import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { UniverSheetsSortPreset } from '@univerjs/preset-sheets-sort';
 import UniverPresetSheetsSortEnUS from '@univerjs/preset-sheets-sort/locales/en-US';
 import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
-import { IDialogService, ISidebarService } from '@univerjs/ui';
+import { IDialogService, IShortcutService, ISidebarService } from '@univerjs/ui';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context";
@@ -71,6 +71,7 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
     const apiRef = useRef<FUniver>();
 
     useInitializeSpreadsheet(containerRef, apiRef, readOnly);
+    useReleaseFillShortcuts(apiRef);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef);
     useSearchIntegration(apiRef, noteContext);
@@ -118,6 +119,52 @@ function useFixRadixPortals() {
             document.removeEventListener("dismissableLayer.focusOutside", preventDismiss, true);
         };
     }, []);
+}
+
+// Univer binds Ctrl+R to fill-right and Ctrl+D to fill-down, which shadow the
+// browser/Electron refresh (Ctrl+R) and bookmark (Ctrl+D) shortcuts.
+const FILL_SHORTCUT_COMMAND_IDS = new Set([
+    "sheet.command.copy-right", // Ctrl+R
+    "sheet.command.copy-down"   // Ctrl+D
+]);
+
+interface ShortcutItemLike { id: string; }
+interface ShortcutServiceLike {
+    getAllShortcuts(): ShortcutItemLike[];
+    registerShortcut(shortcut: ShortcutItemLike): { dispose(): void };
+}
+
+/**
+ * Unregister Univer's fill-right (Ctrl+R) and fill-down (Ctrl+D) keyboard bindings so
+ * the keystrokes fall through to the browser instead of silently copying the active
+ * cell into its neighbour when a user presses Ctrl+R expecting a reload. The commands
+ * remain available via the toolbar/context menu and the fill handle.
+ */
+function useReleaseFillShortcuts(apiRef: MutableRef<FUniver | undefined>) {
+    useEffect(() => {
+        const univerAPI = apiRef.current;
+        if (!univerAPI) return;
+
+        // Shortcuts are registered during plugin init, so release them once rendered.
+        const disposable = univerAPI.addEvent(univerAPI.Event.LifeCycleChanged, ({ stage }) => {
+            if (stage !== univerAPI.Enum.LifecycleStages.Rendered) return;
+            try {
+                const injector = (univerAPI as unknown as { _injector: { get(id: unknown): ShortcutServiceLike } })._injector;
+                const shortcutService = injector.get(IShortcutService);
+                for (const shortcut of shortcutService.getAllShortcuts()) {
+                    if (FILL_SHORTCUT_COMMAND_IDS.has(shortcut.id)) {
+                        // registerShortcut() returns a disposer that removes exactly this
+                        // already-registered item; disposing it immediately unregisters the
+                        // binding so the keystroke is no longer captured (and not preventDefault-ed).
+                        shortcutService.registerShortcut(shortcut).dispose();
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to release spreadsheet fill shortcuts", e);
+            }
+        });
+        return () => disposable.dispose();
+    }, [ apiRef ]);
 }
 
 function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean) {
