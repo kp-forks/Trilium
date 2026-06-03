@@ -2739,7 +2739,8 @@
   },
   "spreadsheet": {
     "read-only": "This note is read-only.",
-    "export-xlsx": "Export to Excel (.xlsx)"
+    "export-xlsx": "Export to Excel (.xlsx)",
+    "export-failed": "Failed to export the spreadsheet to Excel."
   },
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",
