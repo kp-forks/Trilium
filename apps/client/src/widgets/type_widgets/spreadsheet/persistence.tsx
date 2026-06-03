@@ -205,10 +205,11 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
  *   removed. Univer leaves an absent resource's plugin at its default (empty) state
  *   on load, which is identical to restoring these.
  *
- * Operates on a shallow copy so the live workbook object is left untouched.
+ * Mutates the input in place: `workbook.save()` already returns a fresh, deep-cloned
+ * snapshot that the caller owns, so there is nothing live to protect.
  */
 export function slimWorkbookData(workbookData: IWorkbookData): Partial<IWorkbookData> {
-    const slimmed: Partial<IWorkbookData> = { ...workbookData };
+    const slimmed = workbookData as Partial<IWorkbookData>;
     delete slimmed.id;
 
     if (slimmed.resources) {

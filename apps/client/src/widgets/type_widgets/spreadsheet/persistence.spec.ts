@@ -32,7 +32,7 @@ describe("slimWorkbookData", () => {
         ]);
     });
 
-    it("leaves an all-empty resource list as an empty array, tolerates absent resources, and does not mutate the input", () => {
+    it("leaves an all-empty resource list as an empty array and tolerates absent resources", () => {
         expect(slimWorkbookData(makeWorkbook({
             resources: [
                 { name: "A", data: "" },
@@ -41,10 +41,5 @@ describe("slimWorkbookData", () => {
         })).resources).toEqual([]);
 
         expect(slimWorkbookData(makeWorkbook({})).resources).toBeUndefined();
-
-        const input = makeWorkbook({ id: "keep", resources: [{ name: "A", data: "" }] });
-        slimWorkbookData(input);
-        expect(input.id).toBe("keep");
-        expect(input.resources).toHaveLength(1);
     });
 });
