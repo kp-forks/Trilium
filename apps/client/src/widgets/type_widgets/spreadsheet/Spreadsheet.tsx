@@ -26,6 +26,7 @@ import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { UniverSheetsSortPreset } from '@univerjs/preset-sheets-sort';
 import UniverPresetSheetsSortEnUS from '@univerjs/preset-sheets-sort/locales/en-US';
 import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
+import { CalculationMode } from '@univerjs/sheets-formula';
 import { IDialogService, IShortcutService, ISidebarService } from '@univerjs/ui';
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
@@ -199,6 +200,13 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                     contextMenu: !readOnly,
                     formulaBar: !readOnly,
                     footer: readOnly ? false : undefined,
+                    // Skip the formula recalculation Univer runs on workbook load. Our
+                    // content is always Univer-saved (formulas already carry cached
+                    // results), so the default WHEN_EMPTY mode only re-runs formulas that
+                    // evaluate to 0/"" and writes identical results back — which the change
+                    // listener persists as a spurious save on every open. NO_CALCULATION
+                    // avoids that; edit-driven recalculation is unaffected.
+                    formula: { initialFormulaComputing: CalculationMode.NO_CALCULATION },
                     menu: {
                         "sheet.contextMenu.permission": { hidden: true },
                         "sheet-permission.operation.openPanel": { hidden: true },
