@@ -157,7 +157,7 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
             // timeout, so it can't stall the save.
             if (recalcPending.current) {
                 try {
-                    await univerAPI.getFormula().onCalculationResultApplied();
+                    await univerAPI.getFormula?.()?.onCalculationResultApplied?.();
                 } catch {
                     // Backstop timeout tripped — serialize the current state rather than block the save.
                 }
@@ -240,7 +240,13 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
     // instead of waiting on onCalculationResultApplied's idle timeout.
     useEffect(() => {
         const formula = apiRef.current?.getFormula?.();
-        const disposable = formula?.calculationResultApplied(() => {
+        if (!formula) {
+            // The eager-clear optimization is disabled without it; getData() still falls back
+            // to onCalculationResultApplied's timeout, so saves stay correct (just slower).
+            console.warn("Spreadsheet formula service unavailable; recalc-pending flag will not be cleared eagerly.");
+            return;
+        }
+        const disposable = formula.calculationResultApplied(() => {
             recalcPending.current = false;
         });
         return () => disposable?.dispose?.();

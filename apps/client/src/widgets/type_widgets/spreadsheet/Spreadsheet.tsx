@@ -146,22 +146,39 @@ function useReleaseFillShortcuts(apiRef: MutableRef<FUniver | undefined>) {
         const univerAPI = apiRef.current;
         if (!univerAPI) return;
 
-        // Shortcuts are registered during plugin init, so release them once rendered.
-        const disposable = univerAPI.addEvent(univerAPI.Event.LifeCycleChanged, ({ stage }) => {
-            if (stage !== univerAPI.Enum.LifecycleStages.Rendered) return;
+        const releaseShortcuts = () => {
             try {
                 const injector = (univerAPI as unknown as { _injector: { get(id: unknown): ShortcutServiceLike } })._injector;
                 const shortcutService = injector.get(IShortcutService);
                 for (const shortcut of shortcutService.getAllShortcuts()) {
                     if (FILL_SHORTCUT_COMMAND_IDS.has(shortcut.id)) {
-                        // registerShortcut() returns a disposer that removes exactly this
-                        // already-registered item; disposing it immediately unregisters the
-                        // binding so the keystroke is no longer captured (and not preventDefault-ed).
+                        // getAllShortcuts() hands back the exact item objects the service stores
+                        // in its internal Sets, keyed by identity. registerShortcut(item) re-adds
+                        // that same object (a Set no-op) and returns a disposer that deletes it —
+                        // so disposing immediately removes the original binding, not a duplicate.
                         shortcutService.registerShortcut(shortcut).dispose();
                     }
                 }
+                // Guard the undocumented mechanic above against future Univer changes: if any
+                // fill binding survived, the keystrokes are still captured and our refresh/bookmark
+                // fix is silently broken.
+                const stillBound = shortcutService.getAllShortcuts().some(s => FILL_SHORTCUT_COMMAND_IDS.has(s.id));
+                if (stillBound) {
+                    console.warn("Spreadsheet fill shortcuts could not be released; Ctrl+R/Ctrl+D may be captured.");
+                }
             } catch (e) {
                 console.error("Failed to release spreadsheet fill shortcuts", e);
+            }
+        };
+
+        // Shortcuts are registered during plugin init. The Rendered stage may already have
+        // been reached synchronously while the Univer instance was created (in which case the
+        // event below never fires again), so release immediately and keep the listener as a
+        // fallback for the asynchronous case.
+        releaseShortcuts();
+        const disposable = univerAPI.addEvent(univerAPI.Event.LifeCycleChanged, ({ stage }) => {
+            if (stage === univerAPI.Enum.LifecycleStages.Rendered) {
+                releaseShortcuts();
             }
         });
         return () => disposable.dispose();
