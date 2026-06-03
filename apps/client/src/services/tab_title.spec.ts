@@ -84,4 +84,30 @@ describe("buildTabTitle tooltipHtml", () => {
 
         expect(tooltipHtml).toBe("A &amp; B &lt;c&gt;");
     });
+
+    it("does not bold the active segment when there is only one split", () => {
+        const { tooltipHtml } = buildTabTitle([{ title: "Solo", active: true }], "New tab");
+
+        expect(tooltipHtml).toBe("Solo");
+    });
+
+    it("prepends the pinned prefix to both tooltip strings, escaping it in the HTML one", () => {
+        const { tooltip, tooltipHtml } = buildTabTitle(
+            [
+                { title: "Inbox", active: false },
+                { title: "Tasks", active: true }
+            ],
+            "New tab",
+            { pinnedPrefix: "Pinned: " }
+        );
+
+        expect(tooltip).toBe(`Pinned: Inbox${TAB_TITLE_SEPARATOR}Tasks`);
+        expect(tooltipHtml).toBe(`Pinned: Inbox${TAB_TITLE_SEPARATOR}<strong>Tasks</strong>`);
+    });
+
+    it("escapes the pinned prefix too", () => {
+        const { tooltipHtml } = buildTabTitle([{ title: "Inbox", active: false }], "New tab", { pinnedPrefix: "A & B: " });
+
+        expect(tooltipHtml).toBe("A &amp; B: Inbox");
+    });
 });

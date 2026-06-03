@@ -476,6 +476,28 @@ export default class TabRowWidget extends BasicWidget {
         this.$widget.show();
     }
 
+    /**
+     * Enables/disables all tab tooltips. Disabled while dragging so a `mouseenter` from the moving tab
+     * can't re-show a tooltip that would be stranded at a stale position (it lives in `<body>`).
+     */
+    setTooltipsEnabled(enabled: boolean) {
+        for (const tabEl of this.tabEls) {
+            const wrapperEl = tabEl.querySelector(".note-tab-wrapper");
+            const tooltip = wrapperEl ? Tooltip.getInstance(wrapperEl) : null;
+
+            if (!tooltip) {
+                continue;
+            }
+
+            if (enabled) {
+                tooltip.enable();
+            } else {
+                tooltip.hide();
+                tooltip.disable();
+            }
+        }
+    }
+
     get tabEls() {
         return Array.prototype.slice.call(this.$widget.find(".note-tab"));
     }
@@ -755,12 +777,16 @@ export default class TabRowWidget extends BasicWidget {
                 tabEl.classList.add("note-tab-is-dragging");
                 this.$widget.addClass("tab-row-widget-is-sorting");
 
+                // tooltips live in <body> and won't follow the tab — turn them off for the whole drag
+                this.setTooltipsEnabled(false);
+
                 initialScrollLeft = this.$tabScrollingContainer?.scrollLeft() ?? 0;
                 draggabilly.positionDrag = () => { };
             });
 
             draggabilly.on("dragEnd", () => {
                 this.isDragging = false;
+                this.setTooltipsEnabled(true);
                 const currentScrollLeft = this.$tabScrollingContainer?.scrollLeft() ?? 0;
                 const scrollDelta = currentScrollLeft - initialScrollLeft;
                 const translateX = parseFloat(tabEl.style.left) + scrollDelta;
@@ -953,7 +979,7 @@ export default class TabRowWidget extends BasicWidget {
         const subContexts = mainContext.getSubContexts();
         const focusedNtxId = this.getFocusedNtxId(mainContext, subContexts);
 
-        await this.updateTabTitle($tab, subContexts, focusedNtxId);
+        await this.updateTabTitle($tab, subContexts, focusedNtxId, mainContext.pinned);
 
         // The icon and type classes follow the tab's focused split (remembered across activations),
         // falling back to its main (first) split.
@@ -978,7 +1004,7 @@ export default class TabRowWidget extends BasicWidget {
      * Builds the tab title from every split in the tab, e.g. "Note A • Note B • Note C", with the
      * currently focused split emphasized. The full text is also set as the tooltip.
      */
-    async updateTabTitle($tab: JQuery<HTMLElement>, subContexts: NoteContext[], focusedNtxId: string | null) {
+    async updateTabTitle($tab: JQuery<HTMLElement>, subContexts: NoteContext[], focusedNtxId: string | null, pinned: boolean) {
         const splits = await Promise.all(
             subContexts.map(async (ctx) => ({
                 title: ctx.note ? await ctx.getNavigationTitle() : null,
@@ -986,7 +1012,9 @@ export default class TabRowWidget extends BasicWidget {
             }))
         );
 
-        const { segments, tooltipHtml } = buildTabTitle(splits, t("tab_row.new_tab"));
+        const { segments, tooltipHtml } = buildTabTitle(splits, t("tab_row.new_tab"), {
+            pinnedPrefix: pinned ? t("tab_row.pinned_prefix") : undefined
+        });
 
         $tab.attr("data-tab-title", tooltipHtml);
 
