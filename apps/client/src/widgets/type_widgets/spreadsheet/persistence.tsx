@@ -3,6 +3,7 @@ import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
+import { randomString } from "../../../services/utils";
 import { SavedData, useEditorSpacedUpdate } from "../../react/hooks";
 
 interface PersistedData {
@@ -83,6 +84,13 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
                 console.error("Failed to parse spreadsheet content", e);
             }
         }
+
+        // Always assign a fresh unit id. The persisted id is reused verbatim, but the
+        // new workbook is created below BEFORE the old one is disposed, so a stale or
+        // shared id (e.g. a duplicated/cloned note, or this note's content being
+        // re-applied) would collide in Univer's unit registry and throw. The id is
+        // ephemeral — view state keys off the sheet id, not the workbook id.
+        workbookData.id = randomString();
 
         // Create the new workbook BEFORE disposing the old one so the formula
         // engine transitions cleanly without a gap where stale state could leak.
