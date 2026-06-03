@@ -112,3 +112,20 @@ body.type-webView {
 .spreadsheet-table td {
     padding: 2px 4px;
 }
+
+/* When the source sheet has gridlines enabled, draw a light line on every cell edge.
+   Gridlines are rendered as an inset box-shadow rather than a border so they do NOT take
+   part in the border-collapse conflict resolution: an inset shadow paints below the border
+   layer, so any real cell border from the workbook data (emitted inline, in any style or
+   width) renders on top and is never clobbered — matching how the editor layers cell
+   borders over the grid. The color comes from the sheet when set, otherwise falls back to
+   the theme's table border color.
+
+   Filled cells (`has-fill`) are excluded: in the editor a background fill covers the grid,
+   so only unfilled cells show gridlines. An unfilled neighbour still draws the shared edge,
+   so the visible grid stops cleanly at a fill boundary. */
+.spreadsheet-table.show-gridlines td:not(.has-fill) {
+    box-shadow:
+        inset -1px -1px 0 0 var(--spreadsheet-gridline-color, var(--background-highlight)),
+        inset 1px 1px 0 0 var(--spreadsheet-gridline-color, var(--background-highlight));
+}

@@ -38,6 +38,7 @@ interface IWorksheetData {
     rowData?: Record<number, IRowData>;
     columnData?: Record<number, IColumnData>;
     showGridlines?: number;
+    gridlinesColor?: string | null;
 }
 
 type CellMatrix = Record<number, Record<number, ICellData>>;
@@ -117,13 +118,22 @@ const enum VerticalAlign {
     BOTTOM = 3
 }
 
-// Border style enum
+// Border style enum — mirrors Univer's `BorderStyleTypes` (@univerjs/core).
 const enum BorderStyle {
+    NONE = 0,
     THIN = 1,
-    MEDIUM = 6,
-    THICK = 9,
-    DASHED = 3,
-    DOTTED = 4
+    HAIR = 2,
+    DOTTED = 3,
+    DASHED = 4,
+    DASH_DOT = 5,
+    DASH_DOT_DOT = 6,
+    DOUBLE = 7,
+    MEDIUM = 8,
+    MEDIUM_DASHED = 9,
+    MEDIUM_DASH_DOT = 10,
+    MEDIUM_DASH_DOT_DOT = 11,
+    SLANT_DASH_DOT = 12,
+    THICK = 13
 }
 
 // #endregion
@@ -180,7 +190,7 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
     const mergeMap = buildMergeMap(mergeData, minRow, maxRow, minCol, maxCol);
 
     const lines: string[] = [];
-    lines.push('<table class="spreadsheet-table">');
+    lines.push(buildTableTag(sheet));
 
     // Colgroup for column widths.
     const defaultWidth = sheet.defaultColumnWidth ?? 88;
@@ -214,6 +224,9 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
             const value = formatCellValue(cell, cellStyle);
 
             const attrs: string[] = [];
+            // Cells with a background fill carry `has-fill` so the stylesheet can suppress
+            // gridlines under the fill, matching the editor (a fill covers the grid).
+            if (cellStyle?.bg?.rgb) attrs.push(`class="has-fill"`);
             if (cssText) attrs.push(`style="${cssText}"`);
             if (mergeInfo) {
                 if (mergeInfo.rowSpan > 1) attrs.push(`rowspan="${mergeInfo.rowSpan}"`);
@@ -228,6 +241,27 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
 
     lines.push("</table>");
     return lines.join("\n");
+}
+
+/**
+ * Builds the opening `<table>` tag, reflecting the sheet's gridline state. Univer stores
+ * gridline visibility per sheet (`showGridlines`, 0 = hidden) and an optional custom
+ * `gridlinesColor`. When gridlines are on, the table gets a `show-gridlines` class so the
+ * stylesheet can draw a light border on every cell; explicit per-cell borders from the
+ * data are emitted inline and override those on the sides they define.
+ */
+function buildTableTag(sheet: IWorksheetData): string {
+    // Default to shown (matching the editor) unless explicitly disabled.
+    const showGridlines = sheet.showGridlines !== 0;
+    if (!showGridlines) {
+        return '<table class="spreadsheet-table">';
+    }
+
+    let style = "";
+    if (sheet.gridlinesColor) {
+        style = ` style="--spreadsheet-gridline-color:${sanitizeCssColor(sheet.gridlinesColor)}"`;
+    }
+    return `<table class="spreadsheet-table show-gridlines"${style}>`;
 }
 
 // #region Bounds computation
@@ -388,7 +422,7 @@ function verticalAlignToCss(align: number): string | null {
 }
 
 function appendBorderCss(parts: string[], property: string, border: IBorderStyleData | null | undefined): void {
-    if (!border) return;
+    if (!border || border.s === BorderStyle.NONE) return;
     const width = borderStyleToWidth(border.s);
     const color = sanitizeCssColor(border.cl?.rgb ?? "#000");
     const style = borderStyleToCss(border.s);
@@ -397,17 +431,36 @@ function appendBorderCss(parts: string[], property: string, border: IBorderStyle
 
 function borderStyleToWidth(style: number | undefined): string {
     switch (style) {
-        case BorderStyle.MEDIUM: return "2px";
-        case BorderStyle.THICK: return "3px";
-        default: return "1px";
+        case BorderStyle.MEDIUM:
+        case BorderStyle.MEDIUM_DASHED:
+        case BorderStyle.MEDIUM_DASH_DOT:
+        case BorderStyle.MEDIUM_DASH_DOT_DOT:
+        case BorderStyle.SLANT_DASH_DOT:
+            return "2px";
+        case BorderStyle.THICK:
+        case BorderStyle.DOUBLE:
+            return "3px";
+        default:
+            return "1px";
     }
 }
 
 function borderStyleToCss(style: number | undefined): string {
     switch (style) {
-        case BorderStyle.DASHED: return "dashed";
-        case BorderStyle.DOTTED: return "dotted";
-        default: return "solid";
+        case BorderStyle.DOTTED:
+            return "dotted";
+        case BorderStyle.DASHED:
+        case BorderStyle.DASH_DOT:
+        case BorderStyle.DASH_DOT_DOT:
+        case BorderStyle.MEDIUM_DASHED:
+        case BorderStyle.MEDIUM_DASH_DOT:
+        case BorderStyle.MEDIUM_DASH_DOT_DOT:
+        case BorderStyle.SLANT_DASH_DOT:
+            return "dashed";
+        case BorderStyle.DOUBLE:
+            return "double";
+        default:
+            return "solid";
     }
 }
 

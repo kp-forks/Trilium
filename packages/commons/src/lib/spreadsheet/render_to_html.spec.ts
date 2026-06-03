@@ -640,16 +640,17 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("<td>x</td>");
     });
 
-    it("renders borders on all four sides with widths and styles", () => {
+    it("renders borders on all four sides with the correct Univer widths and styles", () => {
+        // Univer BorderStyleTypes: THIN=1, DOTTED=3, DOUBLE=7, MEDIUM=8, THICK=13.
         const html = renderSpreadsheetToHtml(
             singleCellWorkbook({
                 v: "bordered",
                 s: {
                     bd: {
                         t: { s: 1, cl: { rgb: "#111111" } }, // THIN -> 1px solid
-                        r: { s: 6, cl: { rgb: "#222222" } }, // MEDIUM -> 2px solid
-                        b: { s: 9, cl: { rgb: "#333333" } }, // THICK -> 3px solid
-                        l: { s: 3, cl: { rgb: "#444444" } } // DASHED -> 1px dashed
+                        r: { s: 8, cl: { rgb: "#222222" } }, // MEDIUM -> 2px solid
+                        b: { s: 13, cl: { rgb: "#333333" } }, // THICK -> 3px solid
+                        l: { s: 4, cl: { rgb: "#444444" } } // DASHED -> 1px dashed
                     }
                 }
             })
@@ -660,18 +661,52 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("border-left:1px dashed #444444");
     });
 
-    it("renders dotted border style and defaults missing border color to #000", () => {
+    it("renders dotted (3), double (7) and medium-dashed (9) border styles", () => {
         const html = renderSpreadsheetToHtml(
             singleCellWorkbook({
-                v: "dotted",
+                v: "styles",
                 s: {
                     bd: {
-                        t: { s: 4 } // DOTTED, no color -> default #000
+                        t: { s: 3, cl: { rgb: "#111111" } }, // DOTTED -> 1px dotted
+                        r: { s: 7, cl: { rgb: "#222222" } }, // DOUBLE -> 3px double
+                        b: { s: 9, cl: { rgb: "#333333" } } // MEDIUM_DASHED -> 2px dashed
                     }
                 }
             })
         );
-        expect(html).toContain("border-top:1px dotted #000");
+        expect(html).toContain("border-top:1px dotted #111111");
+        expect(html).toContain("border-right:3px double #222222");
+        expect(html).toContain("border-bottom:2px dashed #333333");
+    });
+
+    it("defaults a missing border style to 1px solid and missing color to #000", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                v: "default",
+                s: {
+                    bd: {
+                        t: {} // no style, no color -> 1px solid #000
+                    }
+                }
+            })
+        );
+        expect(html).toContain("border-top:1px solid #000");
+    });
+
+    it("skips a border side explicitly set to NONE (0)", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                v: "none",
+                s: {
+                    bd: {
+                        t: { s: 0, cl: { rgb: "#111111" } },
+                        b: { s: 1, cl: { rgb: "#222222" } }
+                    }
+                }
+            })
+        );
+        expect(html).not.toContain("border-top");
+        expect(html).toContain("border-bottom:1px solid #222222");
     });
 
     it("skips border sides that are null or undefined", () => {
@@ -1054,6 +1089,88 @@ describe("renderSpreadsheetToHtml", () => {
     it("renders an unformatted number when no pattern is set", () => {
         const html = renderSpreadsheetToHtml(singleCellWorkbook({ v: 1234.5, t: 2 }));
         expect(html).toContain("<td>1234.5</td>");
+    });
+
+    it("marks the table with show-gridlines when the sheet has gridlines enabled", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "x" }, { showGridlines: 1 })
+        );
+        expect(html).toContain('<table class="spreadsheet-table show-gridlines">');
+    });
+
+    it("marks a filled cell with has-fill so gridlines can be suppressed under the fill", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "x", s: { bg: { rgb: "#f9f9f9" } } }, { showGridlines: 1 })
+        );
+        expect(html).toContain('class="has-fill"');
+    });
+
+    it("marks a cell filled via a referenced style", () => {
+        const input = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: { band: { bg: { rgb: "#f1f1f1" } } },
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 10,
+                        columnCount: 5,
+                        mergeData: [],
+                        cellData: { "0": { "0": { s: "band", v: "x" } } },
+                        rowData: {},
+                        columnData: {}
+                    }
+                }
+            }
+        });
+        const html = renderSpreadsheetToHtml(input);
+        expect(html).toContain('class="has-fill"');
+    });
+
+    it("does not add has-fill to a cell without a background", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "x", s: { cl: { rgb: "#414657" } } }, { showGridlines: 1 })
+        );
+        expect(html).not.toContain("has-fill");
+    });
+
+    it("shows gridlines by default when showGridlines is absent (editor default)", () => {
+        // singleCellWorkbook does not set showGridlines.
+        const html = renderSpreadsheetToHtml(singleCellWorkbook({ v: "x" }));
+        expect(html).toContain("spreadsheet-table show-gridlines");
+    });
+
+    it("omits show-gridlines when the sheet hides gridlines", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "x" }, { showGridlines: 0 })
+        );
+        expect(html).toContain('<table class="spreadsheet-table">');
+        expect(html).not.toContain("show-gridlines");
+    });
+
+    it("emits a custom gridline color as a CSS variable", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "x" }, { showGridlines: 1, gridlinesColor: "#abcdef" })
+        );
+        expect(html).toContain("--spreadsheet-gridline-color:#abcdef");
+    });
+
+    it("does not emit a gridline color variable when gridlines are hidden", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "x" }, { showGridlines: 0, gridlinesColor: "#abcdef" })
+        );
+        expect(html).not.toContain("--spreadsheet-gridline-color");
+    });
+
+    it("sanitizes a malicious gridline color", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "x" }, { showGridlines: 1, gridlinesColor: "#000;background:url(//evil.com)" })
+        );
+        expect(html).not.toContain("evil.com");
+        expect(html).toContain("--spreadsheet-gridline-color:transparent");
     });
 
     it("extends bounds to cover a merge range that exceeds the cell data", () => {
