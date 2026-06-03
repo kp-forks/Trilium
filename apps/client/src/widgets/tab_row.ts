@@ -41,7 +41,7 @@ const TAB_TPL = `
 
 const CONTAINER_ANCHOR_TPL = `<div class="tab-row-container-anchor"></div>`;
 
-const NEW_TAB_BUTTON_TPL = `<div class="note-new-tab" data-trigger-command="openNewTab" title="${t("tab_row.add_new_tab")}">+</div>`;
+const NEW_TAB_BUTTON_TPL = `<div class="note-new-tab" data-trigger-command="openNewTab" aria-label="${t("tab_row.add_new_tab")}">+</div>`;
 const FILLER_TPL = `<div class="tab-row-filler"></div>`;
 
 const TAB_ROW_TPL = `
@@ -873,6 +873,14 @@ export default class TabRowWidget extends BasicWidget {
     setupNewButton() {
         this.$newTab = $(NEW_TAB_BUTTON_TPL);
         this.$widget.append(this.$newTab);
+
+        new Tooltip(this.$newTab[0], {
+            title: t("tab_row.add_new_tab"),
+            trigger: "hover",
+            placement: "bottom",
+            container: "body",
+            delay: { show: 500, hide: 0 }
+        });
     }
 
     setupFiller() {
