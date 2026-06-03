@@ -4,7 +4,13 @@
  *
  * Only the subset of UniversJS types needed for rendering is defined here,
  * to avoid depending on @univerjs/core.
+ *
+ * Number formatting is delegated to the `numfmt` library — the same ECMA-376
+ * formatter Univer itself uses internally (`@univerjs/core` re-exports it) — so
+ * shared output matches what the editor displays.
  */
+
+import { format as formatNumfmt, formatColor as formatNumfmtColor } from "numfmt";
 
 // #region UniversJS type subset
 
@@ -32,6 +38,7 @@ interface IWorksheetData {
     rowData?: Record<number, IRowData>;
     columnData?: Record<number, IColumnData>;
     showGridlines?: number;
+    gridlinesColor?: string | null;
 }
 
 type CellMatrix = Record<number, Record<number, ICellData>>;
@@ -54,6 +61,11 @@ interface IStyleData {
     ht?: number | null;
     vt?: number | null;
     bd?: IBorderData | null;
+    n?: INumberFormat | null;
+}
+
+interface INumberFormat {
+    pattern?: string | null;
 }
 
 interface ITextDecoration {
@@ -106,13 +118,22 @@ const enum VerticalAlign {
     BOTTOM = 3
 }
 
-// Border style enum
+// Border style enum — mirrors Univer's `BorderStyleTypes` (@univerjs/core).
 const enum BorderStyle {
+    NONE = 0,
     THIN = 1,
-    MEDIUM = 6,
-    THICK = 9,
-    DASHED = 3,
-    DOTTED = 4
+    HAIR = 2,
+    DOTTED = 3,
+    DASHED = 4,
+    DASH_DOT = 5,
+    DASH_DOT_DOT = 6,
+    DOUBLE = 7,
+    MEDIUM = 8,
+    MEDIUM_DASHED = 9,
+    MEDIUM_DASH_DOT = 10,
+    MEDIUM_DASH_DOT_DOT = 11,
+    SLANT_DASH_DOT = 12,
+    THICK = 13
 }
 
 // #endregion
@@ -169,7 +190,7 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
     const mergeMap = buildMergeMap(mergeData, minRow, maxRow, minCol, maxCol);
 
     const lines: string[] = [];
-    lines.push('<table class="spreadsheet-table">');
+    lines.push(buildTableTag(sheet));
 
     // Colgroup for column widths.
     const defaultWidth = sheet.defaultColumnWidth ?? 88;
@@ -199,10 +220,13 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
 
             const cell = cellData[row]?.[col];
             const cellStyle = resolveCellStyle(cell, styles);
-            const cssText = buildCssText(cellStyle);
-            const value = formatCellValue(cell);
+            const cssText = buildCssText(cellStyle, cell);
+            const value = formatCellValue(cell, cellStyle);
 
             const attrs: string[] = [];
+            // Cells with a background fill carry `has-fill` so the stylesheet can suppress
+            // gridlines under the fill, matching the editor (a fill covers the grid).
+            if (cellStyle?.bg?.rgb) attrs.push(`class="has-fill"`);
             if (cssText) attrs.push(`style="${cssText}"`);
             if (mergeInfo) {
                 if (mergeInfo.rowSpan > 1) attrs.push(`rowspan="${mergeInfo.rowSpan}"`);
@@ -217,6 +241,27 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
 
     lines.push("</table>");
     return lines.join("\n");
+}
+
+/**
+ * Builds the opening `<table>` tag, reflecting the sheet's gridline state. Univer stores
+ * gridline visibility per sheet (`showGridlines`, 0 = hidden) and an optional custom
+ * `gridlinesColor`. When gridlines are on, the table gets a `show-gridlines` class so the
+ * stylesheet can draw a light border on every cell; explicit per-cell borders from the
+ * data are emitted inline and override those on the sides they define.
+ */
+function buildTableTag(sheet: IWorksheetData): string {
+    // Default to shown (matching the editor) unless explicitly disabled.
+    const showGridlines = sheet.showGridlines !== 0;
+    if (!showGridlines) {
+        return '<table class="spreadsheet-table">';
+    }
+
+    let style = "";
+    if (sheet.gridlinesColor) {
+        style = ` style="--spreadsheet-gridline-color:${sanitizeCssColor(sheet.gridlinesColor)}"`;
+    }
+    return `<table class="spreadsheet-table show-gridlines"${style}>`;
 }
 
 // #region Bounds computation
@@ -312,7 +357,7 @@ function resolveCellStyle(cell: ICellData | undefined, styles: Record<string, IS
     return cell.s;
 }
 
-function buildCssText(style: IStyleData | null): string {
+function buildCssText(style: IStyleData | null, cell?: ICellData): string {
     if (!style) return "";
 
     const parts: string[] = [];
@@ -332,7 +377,12 @@ function buildCssText(style: IStyleData | null): string {
     if (style.fs && isFiniteNumber(style.fs)) parts.push(`font-size:${style.fs}pt`);
     if (style.ff) parts.push(`font-family:${sanitizeCssValue(style.ff)}`);
     if (style.bg?.rgb) parts.push(`background-color:${sanitizeCssColor(style.bg.rgb)}`);
-    if (style.cl?.rgb) parts.push(`color:${sanitizeCssColor(style.cl.rgb)}`);
+
+    // A color produced by the number-format pattern (e.g. `[Red]` for negatives) takes
+    // precedence over the cell's own text color, matching Univer's rendering.
+    const patternColor = resolvePatternColor(style, cell);
+    const textColor = patternColor ?? style.cl?.rgb;
+    if (textColor) parts.push(`color:${sanitizeCssColor(textColor)}`);
 
     if (style.ht != null) {
         const align = horizontalAlignToCss(style.ht);
@@ -372,7 +422,7 @@ function verticalAlignToCss(align: number): string | null {
 }
 
 function appendBorderCss(parts: string[], property: string, border: IBorderStyleData | null | undefined): void {
-    if (!border) return;
+    if (!border || border.s === BorderStyle.NONE) return;
     const width = borderStyleToWidth(border.s);
     const color = sanitizeCssColor(border.cl?.rgb ?? "#000");
     const style = borderStyleToCss(border.s);
@@ -381,17 +431,36 @@ function appendBorderCss(parts: string[], property: string, border: IBorderStyle
 
 function borderStyleToWidth(style: number | undefined): string {
     switch (style) {
-        case BorderStyle.MEDIUM: return "2px";
-        case BorderStyle.THICK: return "3px";
-        default: return "1px";
+        case BorderStyle.MEDIUM:
+        case BorderStyle.MEDIUM_DASHED:
+        case BorderStyle.MEDIUM_DASH_DOT:
+        case BorderStyle.MEDIUM_DASH_DOT_DOT:
+        case BorderStyle.SLANT_DASH_DOT:
+            return "2px";
+        case BorderStyle.THICK:
+        case BorderStyle.DOUBLE:
+            return "3px";
+        default:
+            return "1px";
     }
 }
 
 function borderStyleToCss(style: number | undefined): string {
     switch (style) {
-        case BorderStyle.DASHED: return "dashed";
-        case BorderStyle.DOTTED: return "dotted";
-        default: return "solid";
+        case BorderStyle.DOTTED:
+            return "dotted";
+        case BorderStyle.DASHED:
+        case BorderStyle.DASH_DOT:
+        case BorderStyle.DASH_DOT_DOT:
+        case BorderStyle.MEDIUM_DASHED:
+        case BorderStyle.MEDIUM_DASH_DOT:
+        case BorderStyle.MEDIUM_DASH_DOT_DOT:
+        case BorderStyle.SLANT_DASH_DOT:
+            return "dashed";
+        case BorderStyle.DOUBLE:
+            return "double";
+        default:
+            return "solid";
     }
 }
 
@@ -428,14 +497,43 @@ function sanitizeCssColor(value: string): string {
 
 // #region Value formatting
 
-function formatCellValue(cell: ICellData | undefined): string {
+function formatCellValue(cell: ICellData | undefined, style: IStyleData | null): string {
     if (!cell || cell.v == null) return "";
 
     if (typeof cell.v === "boolean") {
         return cell.v ? "TRUE" : "FALSE";
     }
 
+    // Apply the number-format pattern to numeric values (this also covers dates,
+    // which Univer stores as serial numbers with a date pattern). On an invalid or
+    // unsupported pattern, fall back to the raw value rather than losing the data.
+    const pattern = style?.n?.pattern;
+    if (pattern && isFiniteNumber(cell.v)) {
+        try {
+            return escapeHtml(formatNumfmt(pattern, cell.v));
+        } catch {
+            // Fall through to the raw value.
+        }
+    }
+
     return escapeHtml(String(cell.v));
+}
+
+/**
+ * Returns the text color dictated by a number-format pattern for this cell's value
+ * (e.g. `[Red]` on the negative section), or `null` when the pattern specifies no
+ * color for the value or the cell is not a formatted number.
+ */
+function resolvePatternColor(style: IStyleData | null, cell: ICellData | undefined): string | null {
+    const pattern = style?.n?.pattern;
+    if (!pattern || !cell || !isFiniteNumber(cell.v)) return null;
+
+    try {
+        const color = formatNumfmtColor(pattern, cell.v);
+        return typeof color === "string" ? color : null;
+    } catch {
+        return null;
+    }
 }
 
 function escapeHtml(text: string): string {
