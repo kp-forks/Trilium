@@ -113,19 +113,19 @@ body.type-webView {
     padding: 2px 4px;
 }
 
-/* When the source sheet has gridlines enabled, draw a light line on every cell edge.
-   Gridlines are rendered as an inset box-shadow rather than a border so they do NOT take
-   part in the border-collapse conflict resolution: an inset shadow paints below the border
-   layer, so any real cell border from the workbook data (emitted inline, in any style or
-   width) renders on top and is never clobbered — matching how the editor layers cell
-   borders over the grid. The color comes from the sheet when set, otherwise falls back to
-   the theme's table border color.
+/* When the source sheet has gridlines enabled, draw a light 1px line on every cell edge.
+   Implemented as a real border (not a box-shadow) so the gridline sits in the same
+   border-collapse model as the cells' own borders and aligns pixel-exactly with them — an
+   inset shadow is offset 1px inside the edge and visibly misaligns with collapsed borders.
+   Borders collapse, so adjacent cells' gridlines merge into single 1px lines (no doubling).
 
-   Filled cells (`has-fill`) are excluded: in the editor a background fill covers the grid,
-   so only unfilled cells show gridlines. An unfilled neighbour still draws the shared edge,
-   so the visible grid stops cleanly at a fill boundary. */
+   Filled cells (`has-fill`) are skipped: in the editor a background fill covers the grid, so
+   only unfilled cells show gridlines; a filled neighbour hides the line on that shared edge.
+   The color comes from the sheet when set, else the theme's table border color.
+
+   A real data border at the same 1px width ties the gridline under collapse and wins by
+   source order, so heavier (>=2px) and filled-cell borders always show; an unfilled cell's
+   own 1px border may cede its top/left edge to a neighbour's gridline — fine for a faint grid. */
 .spreadsheet-table.show-gridlines td:not(.has-fill) {
-    box-shadow:
-        inset -1px -1px 0 0 var(--spreadsheet-gridline-color, var(--background-highlight)),
-        inset 1px 1px 0 0 var(--spreadsheet-gridline-color, var(--background-highlight));
+    border: 1px solid var(--spreadsheet-gridline-color, var(--background-highlight));
 }
