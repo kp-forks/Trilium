@@ -8,6 +8,7 @@ import froca from "../services/froca.js";
 import { t } from "../services/i18n.js";
 import keyboardActionService from "../services/keyboard_actions.js";
 import { clampDragDestination } from "../services/tab_pinning.js";
+import { buildTabTitle, TAB_TITLE_SEPARATOR } from "../services/tab_title.js";
 import utils from "../services/utils.js";
 import BasicWidget from "./basic_widget.js";
 import { setupHorizontalScrollViaWheel } from "./widget_utils.js";
@@ -166,6 +167,13 @@ const TAB_ROW_TPL = `
         vertical-align: top;
         overflow: hidden;
         white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    /* In the active tab, dim every split segment except the focused one so it stands out. */
+    .tab-row-widget .note-tab[active] .note-tab-segment:not(.note-tab-segment-active) {
+        opacity: 0.55;
+        font-weight: normal;
     }
 
     .tab-row-widget .note-tab .note-tab-icon {
@@ -623,9 +631,19 @@ export default class TabRowWidget extends BasicWidget {
 
         const tabEl = this.getTabById(activeNoteContext.ntxId)[0];
         const activeTabEl = this.activeTabEl;
-        if (activeTabEl === tabEl) return;
-        if (activeTabEl) activeTabEl.removeAttribute("active");
-        if (tabEl) tabEl.setAttribute("active", "");
+
+        if (activeTabEl !== tabEl) {
+            if (activeTabEl) {
+                activeTabEl.removeAttribute("active");
+                // the previously active tab loses its emphasized segment
+                this.refreshTab(activeTabEl.getAttribute("data-ntx-id"));
+            }
+            if (tabEl) tabEl.setAttribute("active", "");
+        }
+
+        // (re)emphasize the focused split within the now-active tab — also covers switching panes
+        // within the same tab, where the active tab element itself doesn't change
+        this.refreshTab(activeNoteContext.ntxId);
     }
 
     newNoteContextCreatedEvent({ noteContext }: EventData<"newNoteContextCreated">) {
@@ -667,6 +685,9 @@ export default class TabRowWidget extends BasicWidget {
         for (const ntxId of ntxIds) {
             this.removeTab(ntxId);
         }
+
+        // a closed split must drop its segment from the owning tab's title
+        this.refreshAllTabs();
     }
 
     cleanUpPreviouslyDraggedTabs() {
@@ -844,14 +865,13 @@ export default class TabRowWidget extends BasicWidget {
     }
 
     noteContextReorderEvent({ oldMainNtxId, newMainNtxId }: EventData<"noteContextReorder">) {
-        if (!oldMainNtxId || !newMainNtxId) {
-            // no need to update tab row
-            return;
+        if (oldMainNtxId && newMainNtxId) {
+            // the main split of a tab changed — the tab now represents the new main context
+            this.getTabById(oldMainNtxId).attr("data-ntx-id", newMainNtxId);
         }
 
-        // update tab id for the new main context
-        this.getTabById(oldMainNtxId).attr("data-ntx-id", newMainNtxId);
-        this.updateTabById(newMainNtxId);
+        // split order (or main context) changed → rebuild composite titles so the segments reflect it
+        this.refreshAllTabs();
     }
 
     contextsReopenedEvent({ mainNtxId, tabPosition }: EventData<"contextsReopened">) {
@@ -864,6 +884,9 @@ export default class TabRowWidget extends BasicWidget {
         if ( tabEl && tabEl.parentNode ){
             tabEl.parentNode.insertBefore(tabEl, this.tabEls[tabPosition]);
         }
+
+        // a reopened split may have changed this tab's composition
+        this.refreshTab(mainNtxId);
     }
 
     updateTabById(ntxId: string | null) {
@@ -881,8 +904,11 @@ export default class TabRowWidget extends BasicWidget {
             return;
         }
 
+        // a tab is the main context; its icon/classes follow the first split, the title spans them all
+        const mainContext = noteContext.getMainContext();
+
         // keep the pinned attribute in sync (drives the pin indicator + hidden close button)
-        $tab.attr("pinned", noteContext.getMainContext().pinned ? "" : null);
+        $tab.attr("pinned", mainContext.pinned ? "" : null);
 
         for (const clazz of Array.from($tab[0].classList)) {
             // create copy to safely iterate over while removing classes
@@ -893,37 +919,27 @@ export default class TabRowWidget extends BasicWidget {
 
         let noteIcon = "";
 
-        if (noteContext) {
-            const hoistedNote = froca.getNoteFromCache(noteContext.hoistedNoteId);
-
-            if (hoistedNote) {
-                $tab.find(".note-tab-wrapper").css("--workspace-tab-background-color", hoistedNote.getWorkspaceTabBackgroundColor());
-                if (!this.showNoteIcons) {
-                    noteIcon = hoistedNote.getWorkspaceIconClass();
-                }
-            } else {
-                $tab.find(".note-tab-wrapper").removeAttr("style");
+        const hoistedNote = froca.getNoteFromCache(mainContext.hoistedNoteId);
+        if (hoistedNote) {
+            $tab.find(".note-tab-wrapper").css("--workspace-tab-background-color", hoistedNote.getWorkspaceTabBackgroundColor());
+            if (!this.showNoteIcons) {
+                noteIcon = hoistedNote.getWorkspaceIconClass();
             }
+        } else {
+            $tab.find(".note-tab-wrapper").removeAttr("style");
         }
 
-        const { note } = noteContext;
+        await this.updateTabTitle($tab, mainContext);
 
-        if (!note) {
-            this.updateTitle($tab, t("tab_row.new_tab"));
-            return;
-        }
+        const note = mainContext.note;
+        if (note) {
+            $tab.addClass(note.getCssClass());
+            $tab.addClass(utils.getNoteTypeClass(note.type));
+            $tab.addClass(utils.getMimeTypeClass(note.mime));
 
-        const title = await noteContext.getNavigationTitle();
-        if (title) {
-            this.updateTitle($tab, title);
-        }
-
-        $tab.addClass(note.getCssClass());
-        $tab.addClass(utils.getNoteTypeClass(note.type));
-        $tab.addClass(utils.getMimeTypeClass(note.mime));
-
-        if (this.showNoteIcons) {
-            noteIcon = note.getIcon();
+            if (this.showNoteIcons) {
+                noteIcon = note.getIcon();
+            }
         }
 
         if (noteIcon) {
@@ -931,7 +947,62 @@ export default class TabRowWidget extends BasicWidget {
         }
     }
 
+    /**
+     * Builds the tab title from every split in the tab, e.g. "Note A • Note B • Note C", with the
+     * currently focused split emphasized. The full text is also set as the tooltip.
+     */
+    async updateTabTitle($tab: JQuery<HTMLElement>, mainContext: NoteContext) {
+        const activeNtxId = appContext.tabManager.activeNtxId;
+        const subContexts = mainContext.getSubContexts();
+
+        const splits = await Promise.all(
+            subContexts.map(async (ctx) => ({
+                title: ctx.note ? await ctx.getNavigationTitle() : null,
+                active: !!ctx.ntxId && ctx.ntxId === activeNtxId
+            }))
+        );
+
+        const { segments, tooltip } = buildTabTitle(splits, t("tab_row.new_tab"));
+
+        $tab.attr("title", tooltip);
+
+        const $title = $tab.find(".note-tab-title").empty();
+        segments.forEach((segment, idx) => {
+            if (idx > 0) {
+                $title.append(document.createTextNode(TAB_TITLE_SEPARATOR));
+            }
+            const $segment = $("<span>").addClass("note-tab-segment").text(segment.text);
+            if (segment.active) {
+                $segment.addClass("note-tab-segment-active");
+            }
+            $title.append($segment);
+        });
+    }
+
+    /** Rebuilds a tab in place (title, icon, classes) without scrolling it into view. */
+    refreshTab(ntxId: string | null | undefined) {
+        if (!ntxId) {
+            return;
+        }
+        const $tab = this.getTabById(ntxId);
+        const noteContext = appContext.tabManager.noteContexts.find((nc) => nc.ntxId === ntxId);
+        if ($tab.length && noteContext) {
+            this.updateTab($tab, noteContext);
+        }
+    }
+
+    /** Rebuilds every tab's title — used when a split was added/removed/reordered in some tab. */
+    refreshAllTabs() {
+        for (const mainContext of appContext.tabManager.getMainNoteContexts()) {
+            this.refreshTab(mainContext.ntxId);
+        }
+    }
+
     async entitiesReloadedEvent({ loadResults }: EventData<"entitiesReloaded">) {
+        // A reloaded note may live in a split (sub-context), which has no tab of its own — refresh the
+        // owning tab so its composite title picks up the change. Dedupe so each tab rebuilds once.
+        const mainNtxIdsToRefresh = new Set<string>();
+
         for (const noteContext of appContext.tabManager.noteContexts) {
             if (!noteContext.noteId) {
                 continue;
@@ -943,10 +1014,15 @@ export default class TabRowWidget extends BasicWidget {
                     .getAttributeRows()
                     .find((attr) => ["workspace", "iconClass", "workspaceIconClass", "workspaceTabBackgroundColor"].includes(attr.name || "") && attributeService.isAffecting(attr, noteContext.note))
             ) {
-                const $tab = this.getTabById(noteContext.ntxId);
-
-                this.updateTab($tab, noteContext);
+                const mainNtxId = noteContext.mainNtxId || noteContext.ntxId;
+                if (mainNtxId) {
+                    mainNtxIdsToRefresh.add(mainNtxId);
+                }
             }
+        }
+
+        for (const mainNtxId of mainNtxIdsToRefresh) {
+            this.refreshTab(mainNtxId);
         }
     }
 
