@@ -22,6 +22,10 @@ interface SpreadsheetViewState {
 export default function usePersistence(note: FNote, noteContext: NoteContext | null | undefined, apiRef: MutableRef<FUniver | undefined>, containerRef: MutableRef<HTMLDivElement | null>) {
     const changeListener = useRef<IDisposable>(null);
     const pendingContent = useRef<string | null>(null);
+    // Set when a value edit has been made whose formula recalculation hasn't been
+    // applied yet. getData() waits for that pending recalc before serializing, so a
+    // save can't persist pre-recalc (stale) formula results.
+    const recalcPending = useRef(false);
 
     function saveViewState(univerAPI: FUniver): SpreadsheetViewState {
         const state: SpreadsheetViewState = {};
@@ -113,6 +117,16 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
         }
         changeListener.current = workbook.onCommandExecuted(command => {
             if (command.type !== CommandType.MUTATION) return;
+
+            // A value write triggered by a command (a user edit, paste, fill, …) will be
+            // followed by a formula recalc. Mark it so the next save waits for that recalc
+            // to be applied before serializing. Recalc *result* writes carry no trigger,
+            // so they don't re-arm this (the completion handler below clears it).
+            const params = (command as { params?: { trigger?: string } }).params;
+            if (command.id === "sheet.mutation.set-range-values" && params?.trigger) {
+                recalcPending.current = true;
+            }
+
             spacedUpdate.scheduleUpdate();
         });
     }
@@ -132,9 +146,29 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
             if (!univerAPI) return undefined;
             const workbook = univerAPI.getActiveWorkbook();
             if (!workbook) return undefined;
+
+            // If a value edit's recalc hasn't been applied yet, wait for it before
+            // serializing — otherwise the save can persist stale (even garbage) formula
+            // results, since a save can be triggered by the edit mutation itself, ahead
+            // of Univer's debounced recalc. We wait for the *natural incremental* recalc
+            // (only the affected cells), not a forced full recalc, so this stays cheap on
+            // large sheets. onCalculationResultApplied resolves when results are written
+            // to the cells, falls through quickly if nothing computes, and has its own
+            // timeout, so it can't stall the save.
+            if (recalcPending.current) {
+                try {
+                    await univerAPI.getFormula().onCalculationResultApplied();
+                } catch {
+                    // Backstop timeout tripped — serialize the current state rather than block the save.
+                }
+                recalcPending.current = false;
+            }
+
+            const saved = workbook.save();
+
             const content = {
                 version: 1,
-                workbook: slimWorkbookData(workbook.save())
+                workbook: slimWorkbookData(saved)
             };
 
             const attachments: SavedData["attachments"] = [];
@@ -200,6 +234,17 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
             }
         };
     }, []);
+
+    // Clear the pending flag as soon as a recalc's results are applied, so a debounced
+    // save that fires well after the recalc already settled serializes immediately
+    // instead of waiting on onCalculationResultApplied's idle timeout.
+    useEffect(() => {
+        const formula = apiRef.current?.getFormula?.();
+        const disposable = formula?.calculationResultApplied(() => {
+            recalcPending.current = false;
+        });
+        return () => disposable?.dispose?.();
+    }, [ apiRef ]);
 }
 
 /**
