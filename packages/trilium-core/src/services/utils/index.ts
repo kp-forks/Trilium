@@ -29,7 +29,6 @@ export function isStringNote(type: string | undefined, mime: string) {
     return (type && STRING_NOTE_TYPES.has(type)) || mime.startsWith("text/") || STRING_MIME_TYPES.has(mime);
 }
 
-// TODO: Refactor to use getCrypto() directly.
 export function randomString(length: number) {
     return getCrypto().randomString(length);
 }
@@ -410,7 +409,7 @@ export function stripTags(text: string) {
 }
 
 export function toObject<T, K extends string | number | symbol, V>(array: T[], fn: (item: T) => [K, V]): Record<K, V> {
-    const obj: Record<K, V> = {} as Record<K, V>; // TODO: unsafe?
+    const obj: Record<K, V> = {} as Record<K, V>;
 
     for (const item of array) {
         const ret = fn(item);
