@@ -1,4 +1,4 @@
-import { CommandType, FUniver, IDisposable, IWorkbookData } from "@univerjs/presets";
+import { CommandType, FUniver, IDisposable, IWorkbookData, LocaleType } from "@univerjs/presets";
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../../components/note_context";
@@ -91,6 +91,12 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
         // re-applied) would collide in Univer's unit registry and throw. The id is
         // ephemeral — view state keys off the sheet id, not the workbook id.
         workbookData.id = randomString();
+
+        // Pin the workbook locale to the only locale bundle the editor registers (see
+        // Spreadsheet.tsx). Univer's workbook model otherwise defaults a missing locale
+        // to "zhCN", which mismatches the English UI; pinning it here keeps new and
+        // loaded workbooks consistent and lets the persisted value be dropped on save.
+        workbookData.locale = LocaleType.EN_US;
 
         // Create the new workbook BEFORE disposing the old one so the formula
         // engine transitions cleanly without a gap where stale state could leak.
@@ -199,8 +205,8 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
 /**
  * Trims fields from the workbook data that are dead weight in the saved payload:
  *
- * - The top-level workbook `id` is regenerated on every load (see `applyContent`),
- *   so the persisted value is never read — dropping it is lossless.
+ * - The top-level workbook `id` and `locale` are both reassigned on every load (see
+ *   `applyContent`), so the persisted values are never read — dropping them is lossless.
  * - Plugin resources whose `data` carries no information (empty string or "{}") are
  *   removed. Univer leaves an absent resource's plugin at its default (empty) state
  *   on load, which is identical to restoring these.
@@ -211,6 +217,7 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
 export function slimWorkbookData(workbookData: IWorkbookData): Partial<IWorkbookData> {
     const slimmed = workbookData as Partial<IWorkbookData>;
     delete slimmed.id;
+    delete slimmed.locale;
 
     if (slimmed.resources) {
         slimmed.resources = slimmed.resources.filter(

@@ -1,4 +1,4 @@
-import { IWorkbookData } from "@univerjs/presets";
+import { IWorkbookData, LocaleType } from "@univerjs/presets";
 import { describe, expect, it } from "vitest";
 
 import { slimWorkbookData } from "./persistence";
@@ -8,10 +8,11 @@ function makeWorkbook(workbook: Partial<IWorkbookData>): IWorkbookData {
 }
 
 describe("slimWorkbookData", () => {
-    it("drops the top-level workbook id (regenerated on load)", () => {
-        const result = slimWorkbookData(makeWorkbook({ id: "abc123", name: "Sheet" }));
+    it("drops the top-level workbook id and locale (both reassigned on load)", () => {
+        const result = slimWorkbookData(makeWorkbook({ id: "abc123", locale: LocaleType.ZH_CN, name: "Sheet" }));
 
         expect(result.id).toBeUndefined();
+        expect(result.locale).toBeUndefined();
         expect(result.name).toBe("Sheet");
     });
 
