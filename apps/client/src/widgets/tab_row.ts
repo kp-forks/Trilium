@@ -350,6 +350,9 @@ export default class TabRowWidget extends BasicWidget {
     private newTabOuterWidth: number = 0;
     private scrollButtonsOuterWidth: number = 0;
 
+    /** Monotonic id stamped on a tab per `updateTab` call, so an out-of-order async update can detect it's stale. */
+    private tabUpdateId = 0;
+
     doRender() {
         this.$widget = $(TAB_ROW_TPL);
         this.$tabScrollingContainer = this.$widget.children(".tab-row-widget-scrolling-container");
@@ -476,24 +479,27 @@ export default class TabRowWidget extends BasicWidget {
         this.$widget.show();
     }
 
+    /** A tab carries two Bootstrap tooltips: the composite title (on the drag handle) and the close button. */
+    getTabTooltips(tabEl: Element): Tooltip[] {
+        return [".note-tab-drag-handle", ".note-tab-close"]
+            .map((selector) => tabEl.querySelector(selector))
+            .map((el) => (el ? Tooltip.getInstance(el) : null))
+            .filter((tooltip): tooltip is Tooltip => !!tooltip);
+    }
+
     /**
      * Enables/disables all tab tooltips. Disabled while dragging so a `mouseenter` from the moving tab
      * can't re-show a tooltip that would be stranded at a stale position (it lives in `<body>`).
      */
     setTooltipsEnabled(enabled: boolean) {
         for (const tabEl of this.tabEls) {
-            const wrapperEl = tabEl.querySelector(".note-tab-wrapper");
-            const tooltip = wrapperEl ? Tooltip.getInstance(wrapperEl) : null;
-
-            if (!tooltip) {
-                continue;
-            }
-
-            if (enabled) {
-                tooltip.enable();
-            } else {
-                tooltip.hide();
-                tooltip.disable();
+            for (const tooltip of this.getTabTooltips(tabEl)) {
+                if (enabled) {
+                    tooltip.enable();
+                } else {
+                    tooltip.hide();
+                    tooltip.disable();
+                }
             }
         }
     }
@@ -613,13 +619,22 @@ export default class TabRowWidget extends BasicWidget {
         this.updateTitle($tab, t("tab_row.new_tab"));
 
         // Trilium-styled tooltip instead of the native one; reads the live composite title each time.
-        // Attach to the wrapper, not .note-tab — the latter has `pointer-events: none`, which makes
-        // Bootstrap's hover tracking misfire (tooltip shows then instantly hides).
-        new Tooltip($tab.find(".note-tab-wrapper")[0], {
+        // Attach to the drag handle (the full-tab interaction layer, `pointer-events` enabled) rather
+        // than .note-tab, whose `pointer-events: none` makes Bootstrap's hover tracking misfire. The
+        // close button sits above the handle (higher z-index) with its own tooltip, so they never overlap.
+        new Tooltip($tab.find(".note-tab-drag-handle")[0], {
             // titles are pre-escaped in buildTabTitle (only the active <strong> wrapper is trusted);
             // Bootstrap's own sanitizer stays on as a second layer
             html: true,
             title: () => $tab.attr("data-tab-title") || "",
+            trigger: "hover",
+            placement: "bottom",
+            container: "body",
+            delay: { show: 500, hide: 0 }
+        });
+
+        new Tooltip($tab.find(".note-tab-close")[0], {
+            title: t("tab_row.close_tab"),
             trigger: "hover",
             placement: "bottom",
             container: "body",
@@ -694,9 +709,8 @@ export default class TabRowWidget extends BasicWidget {
         const tabEl = this.getTabById(ntxId)[0];
 
         if (tabEl) {
-            const wrapperEl = tabEl.querySelector(".note-tab-wrapper");
-            if (wrapperEl) {
-                Tooltip.getInstance(wrapperEl)?.dispose();
+            for (const tooltip of this.getTabTooltips(tabEl)) {
+                tooltip.dispose();
             }
             tabEl.parentNode?.removeChild(tabEl);
             this.cleanUpPreviouslyDraggedTabs();
@@ -984,10 +998,18 @@ export default class TabRowWidget extends BasicWidget {
             $tab.find(".note-tab-wrapper").removeAttr("style");
         }
 
+        const updateId = ++this.tabUpdateId;
+        $tab.data("update-id", updateId);
+
         const subContexts = mainContext.getSubContexts();
         const focusedNtxId = this.getFocusedNtxId(mainContext, subContexts);
 
-        await this.updateTabTitle($tab, subContexts, focusedNtxId, mainContext.pinned);
+        await this.updateTabTitle($tab, subContexts, focusedNtxId, mainContext.pinned, updateId);
+
+        // a newer updateTab may have started during the await — don't overwrite it with stale icon/classes
+        if ($tab.data("update-id") !== updateId) {
+            return;
+        }
 
         // The icon and type classes follow the tab's focused split (remembered across activations),
         // falling back to its main (first) split.
@@ -1012,13 +1034,18 @@ export default class TabRowWidget extends BasicWidget {
      * Builds the tab title from every split in the tab, e.g. "Note A • Note B • Note C", with the
      * currently focused split emphasized. The full text is also set as the tooltip.
      */
-    async updateTabTitle($tab: JQuery<HTMLElement>, subContexts: NoteContext[], focusedNtxId: string | null, pinned: boolean) {
+    async updateTabTitle($tab: JQuery<HTMLElement>, subContexts: NoteContext[], focusedNtxId: string | null, pinned: boolean, updateId?: number) {
         const splits = await Promise.all(
             subContexts.map(async (ctx) => ({
                 title: ctx.note ? await ctx.getNavigationTitle() : null,
                 active: !!ctx.ntxId && ctx.ntxId === focusedNtxId
             }))
         );
+
+        // bail if a newer update superseded this one while titles were resolving
+        if (updateId !== undefined && $tab.data("update-id") !== updateId) {
+            return;
+        }
 
         const { segments, tooltipHtml } = buildTabTitle(splits, t("tab_row.new_tab"), {
             pinnedPrefix: pinned ? t("tab_row.pinned_prefix") : undefined

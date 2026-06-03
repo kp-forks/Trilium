@@ -427,7 +427,12 @@ export default class TabManager extends Component {
         }
 
         const mainContext = this.noteContexts.find((nc) => nc.ntxId === mainNtxId);
-        const remembered = mainContext?.lastActiveNtxId;
+        if (!mainContext) {
+            // tab vanished (e.g. closed mid-switch); avoid activateNoteContext throwing on a stale id
+            return;
+        }
+
+        const remembered = mainContext.lastActiveNtxId;
         const targetNtxId = remembered && this.noteContexts.some((nc) => nc.ntxId === remembered)
             ? remembered
             : mainNtxId;
