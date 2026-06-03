@@ -421,9 +421,10 @@ export default class TabManager extends Component {
                 return false;
             }
 
-            if (noteContextToRemove.isMainContext() && noteContextToRemove.pinned) {
-                // pinned tabs can't be closed — they must be unpinned first. This single guard also
-                // makes Ctrl-W, middle-click and the bulk "close others/right/all" commands skip them.
+            if (noteContextToRemove.pinned) {
+                // a pinned context can't be closed — the tab must be unpinned first. This single guard
+                // makes Ctrl-W, middle-click, the bulk "close others/right/all" commands and the
+                // pinned note's split pane all refuse to close it.
                 return false;
             }
 
