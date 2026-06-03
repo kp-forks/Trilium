@@ -931,7 +931,11 @@ export default class TabRowWidget extends BasicWidget {
 
         await this.updateTabTitle($tab, mainContext);
 
-        const note = mainContext.note;
+        // The icon and type classes follow the focused split when this tab is active; otherwise they
+        // fall back to its main (first) split.
+        const activeNtxId = appContext.tabManager.activeNtxId;
+        const displayContext = mainContext.getSubContexts().find((ctx) => ctx.ntxId === activeNtxId) ?? mainContext;
+        const note = displayContext.note;
         if (note) {
             $tab.addClass(note.getCssClass());
             $tab.addClass(utils.getNoteTypeClass(note.type));
