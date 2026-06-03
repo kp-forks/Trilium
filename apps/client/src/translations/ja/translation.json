@@ -289,7 +289,7 @@
     "export_type_subtree": "このノートとすべての子孫",
     "format_html": "HTML - すべての書式が保たれるため、おすすめ",
     "format_html_zip": "HTML ZIPアーカイブ - すべての書式が保たれるため、推奨されます。",
-    "format_markdown": "Markdown - ほとんどの書式が維持される。",
+    "format_markdown": "マークダウン - ほとんどの書式が維持される。",
     "format_opml": "OPML - テキストのみのアウトライン交換フォーマットです。書式設定、画像、ファイルは含まれません。",
     "opml_version_1": "OPML v1.0 - プレーンテキストのみ",
     "opml_version_2": "OPML v2.0 - HTMLが許可されています",
@@ -338,7 +338,7 @@
     "followLink": "カーソル下のリンクをたどる",
     "insertDateTime": "カーソル位置に現在の日時を挿入",
     "jumpToTreePane": "ツリーペインにジャンプし、アクティブなノートまでスクロール",
-    "markdownAutoformat": "Markdownライクな自動フォーマット",
+    "markdownAutoformat": "マークダウンライクな自動フォーマット",
     "headings": "<code>##</code>, <code>###</code>, <code>####</code>  など。その後にスペースで見出しになる",
     "bulletList": "<code>*</code> または <code>-</code> その後にスペースで箇条書きになる",
     "numberedList": "<code>1.</code> または <code>1)</code> その後にスペースで番号付きリストになる",
@@ -368,7 +368,7 @@
     "explodeArchivesTooltip": "これがチェックされている場合、Triliumは<code>.zip</code>、<code>.enex</code>、<code>.opml</code>ファイルを読み込み、それらのアーカイブからノートを作成します。チェックされていない場合、Triliumはアーカイブ自体をノートに添付します。",
     "shrinkImagesTooltip": "<p>これをチェックすると、Triliumはインポートされた画像を、拡大縮小や最適化によって縮小しようとします。これにより、画像の品質が損なわれる可能性があります。チェックを外すと、画像は変更されずにインポートされます。</p><p>これは、メタデータ付きの<code>.zip</code>インポートには適用されません。これらのファイルは既に最適化されていると考えられるためです。</p>",
     "shrinkImages": "画像を縮小",
-    "textImportedAsText": "メタデータから判断できない場合は、HTML、Markdown、TXTをテキストノートとしてインポート",
+    "textImportedAsText": "メタデータから判断できない場合は、HTML、マークダウン、TXTをテキストノートとしてインポート",
     "codeImportedAsCode": "メタデータから判断できない場合は、コードファイル（例: <code>.json</code>）をコードノートとしてインポート",
     "replaceUnderscoresWithSpaces": "インポートされたノート名のアンダーバーをスペースに置換する",
     "import": "インポート",
@@ -462,7 +462,7 @@
     "export": "エクスポート",
     "import-into-note": "ノートにインポート",
     "apply-bulk-actions": "一括操作の適用",
-    "converted-to-attachments_other": "{{count}}ノートが添付ファイルに変換されました。",
+    "converted-to-attachments_other": "{{count}} 件のノートが添付ファイルに変換されました。",
     "convert-to-attachment": "添付ファイルに変換",
     "convert-to-attachment-confirm": "選択したノートを親ノートの添付ファイルに変換してもよろしいですか？この操作は画像ノートにのみ適用され、その他のノートはスキップされます。",
     "open-in-popup": "クイック編集",
@@ -611,7 +611,7 @@
     "hide_child_notes": "ツリー内の子ノートを非表示",
     "open_all_in_tabs": "すべて開く",
     "open_all_in_tabs_tooltip": "すべての結果を新しいタブで開く",
-    "open_all_confirm_other": "{{count}} 件のノートが新しいタブで開かれます。続行しますか？"
+    "open_all_confirm_other": "{{count}} 件のノートを新しいタブで開きます。続行しますか？"
   },
   "note_types": {
     "geo-map": "ジオマップ",
@@ -639,7 +639,7 @@
     "ai-chat": "AI チャット",
     "spreadsheet": "スプレッドシート",
     "llm-chat": "AI チャット",
-    "markdown": "Markdown"
+    "markdown": "マークダウン"
   },
   "edited_notes": {
     "no_edited_notes_found": "この日の編集されたノートはまだありません...",
@@ -665,7 +665,7 @@
     "type": "タイプ",
     "note_size": "ノートサイズ",
     "calculate": "計算",
-    "subtree_size_other": "（サブツリーサイズ: {{size}}、ノード数: {{count}}）",
+    "subtree_size_other": "（サブツリーサイズ: {{count}} 件のノート {{size}}）",
     "title": "ノート情報",
     "note_size_info": "ノートのサイズは、このノートに必要なストレージの概算を示します。これは、ノートの内容とそのノートの編集履歴の内容を考慮したものです。",
     "show_similar_notes": "類似のノートを表示",
@@ -971,7 +971,7 @@
     "title": "見出しのスタイル",
     "plain": "プレーン",
     "underline": "下線",
-    "markdown": "Markdownスタイル",
+    "markdown": "マークダウンスタイル",
     "description": "テキストノート内の見出しの表示スタイル。"
   },
   "highlights_list": {
@@ -1417,7 +1417,7 @@
     "add-term-to-dictionary": "辞書に \"{{term}}\" を追加",
     "cut": "切り取り",
     "copy": "コピー",
-    "copy-as-markdown": "Markdownとしてコピー",
+    "copy-as-markdown": "マークダウンとしてコピー",
     "copy-link": "リンクをコピー",
     "paste": "貼り付け",
     "paste-as-plain-text": "プレーンテキストで貼り付け",
@@ -1589,7 +1589,7 @@
     "title": "ノートマップ",
     "link-distance": "リンク距離",
     "fix-nodes": "ノードを修正",
-    "too-many-notes_other": "ここには {{count}} 件のノートがあります。すべて表示すると処理速度が遅くなる可能性があります。",
+    "too-many-notes_other": "ここに {{count}} 件のノートがあります。表示すると処理速度が遅くなる可能性があります。",
     "show-anyway": "マップを表示"
   },
   "owned_attribute_list": {
@@ -1705,10 +1705,10 @@
     "search_button": "全文検索"
   },
   "markdown_import": {
-    "dialog_title": "Markdownをインポート",
-    "modal_body_text": "ブラウザサンドボックスのため、JavaScriptからクリップボードの内容を直接読み込むことはできません。インポートするMarkdownを以下のテキストエリアに貼り付け、インポートボタンをクリックしてください",
+    "dialog_title": "マークダウンをインポート",
+    "modal_body_text": "ブラウザサンドボックスのため、JavaScriptからクリップボードの内容を直接読み込むことはできません。インポートするマークダウンを以下のテキストエリアに貼り付け、インポートボタンをクリックしてください",
     "import_button": "インポート",
-    "import_success": "Markdown コンテンツがドキュメントにインポートされました。"
+    "import_success": "マークダウンコンテンツがドキュメントにインポートされました。"
   },
   "note_type_chooser": {
     "change_path_prompt": "新しいノートを作成する場所を変更する:",
@@ -2730,5 +2730,11 @@
     "server_env_hint": "または、以下の環境変数を設定してください:",
     "restart_required": "この変更を有効にするには、再起動が必要です。",
     "restart_now": "今すぐアプリケーションを再起動する"
+  },
+  "snippet_badge": {
+    "label": "{{type}} スニペット",
+    "type_text": "テキスト",
+    "type_code": "コード",
+    "tooltip": "エディタに挿入するための、繰り返し利用できるテキストまたはコードです（ツールバーのスニペットメニュー、またはスラッシュコマンドから挿入できます）。"
   }
 }
