@@ -1,3 +1,4 @@
+import { Tooltip } from "bootstrap";
 import Draggabilly, { type MoveVector } from "draggabilly";
 
 import appContext, { type CommandListenerData, type CommandNames, type EventData } from "../components/app_context.js";
@@ -33,8 +34,8 @@ const TAB_TPL = `
     <div class="note-tab-drag-handle"></div>
     <div class="note-tab-icon"></div>
     <div class="note-tab-title"></div>
-    <div class="note-tab-pin-indicator bx bx-pin" title="${t("tab_row.unpin_tab")}"></div>
-    <div class="note-tab-close bx bx-x" title="${t("tab_row.close_tab")}"></div>
+    <div class="note-tab-pin-indicator bx bx-pin" aria-label="${t("tab_row.unpin_tab")}"></div>
+    <div class="note-tab-close bx bx-x" aria-label="${t("tab_row.close_tab")}"></div>
   </div>
 </div>`;
 
@@ -588,6 +589,21 @@ export default class TabRowWidget extends BasicWidget {
         this.setVisibility();
         this.setTabCloseEvent($tab);
         this.updateTitle($tab, t("tab_row.new_tab"));
+
+        // Trilium-styled tooltip instead of the native one; reads the live composite title each time.
+        // Attach to the wrapper, not .note-tab — the latter has `pointer-events: none`, which makes
+        // Bootstrap's hover tracking misfire (tooltip shows then instantly hides).
+        new Tooltip($tab.find(".note-tab-wrapper")[0], {
+            // titles are pre-escaped in buildTabTitle (only the active <strong> wrapper is trusted);
+            // Bootstrap's own sanitizer stays on as a second layer
+            html: true,
+            title: () => $tab.attr("data-tab-title") || "",
+            trigger: "hover",
+            placement: "bottom",
+            container: "body",
+            delay: { show: 500, hide: 0 }
+        });
+
         this.cleanUpPreviouslyDraggedTabs();
         this.layoutTabs();
         this.setupDraggabilly();
@@ -656,6 +672,10 @@ export default class TabRowWidget extends BasicWidget {
         const tabEl = this.getTabById(ntxId)[0];
 
         if (tabEl) {
+            const wrapperEl = tabEl.querySelector(".note-tab-wrapper");
+            if (wrapperEl) {
+                Tooltip.getInstance(wrapperEl)?.dispose();
+            }
             tabEl.parentNode?.removeChild(tabEl);
             this.cleanUpPreviouslyDraggedTabs();
             this.layoutTabs();
@@ -669,7 +689,7 @@ export default class TabRowWidget extends BasicWidget {
     }
 
     updateTitle($tab: JQuery<HTMLElement>, title: string) {
-        $tab.attr("title", title);
+        $tab.attr("data-tab-title", title);
         $tab.find(".note-tab-title").text(title);
     }
 
@@ -966,9 +986,9 @@ export default class TabRowWidget extends BasicWidget {
             }))
         );
 
-        const { segments, tooltip } = buildTabTitle(splits, t("tab_row.new_tab"));
+        const { segments, tooltipHtml } = buildTabTitle(splits, t("tab_row.new_tab"));
 
-        $tab.attr("title", tooltip);
+        $tab.attr("data-tab-title", tooltipHtml);
 
         const $title = $tab.find(".note-tab-title").empty();
         segments.forEach((segment, idx) => {

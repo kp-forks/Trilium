@@ -42,9 +42,46 @@ describe("buildTabTitle", () => {
     });
 
     it("handles an empty split list", () => {
-        const { segments, tooltip } = buildTabTitle([], "New tab");
+        const { segments, tooltip, tooltipHtml } = buildTabTitle([], "New tab");
 
         expect(segments).toEqual([]);
         expect(tooltip).toBe("");
+        expect(tooltipHtml).toBe("");
+    });
+});
+
+describe("buildTabTitle tooltipHtml", () => {
+    it("wraps the active segment in <strong> and joins with the separator", () => {
+        const { tooltipHtml } = buildTabTitle(
+            [
+                { title: "Inbox", active: false },
+                { title: "Tasks", active: true }
+            ],
+            "New tab"
+        );
+
+        expect(tooltipHtml).toBe(`Inbox${TAB_TITLE_SEPARATOR}<strong>Tasks</strong>`);
+    });
+
+    it("escapes HTML in note titles to prevent injection (active and inactive)", () => {
+        const { tooltipHtml } = buildTabTitle(
+            [
+                { title: `<img src=x onerror=alert(1)>`, active: false },
+                { title: `<script>alert("xss")</script>`, active: true }
+            ],
+            "New tab"
+        );
+
+        expect(tooltipHtml).toBe(
+            `&lt;img src=x onerror=alert(1)&gt;${TAB_TITLE_SEPARATOR}<strong>&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;</strong>`
+        );
+        expect(tooltipHtml).not.toContain("<img");
+        expect(tooltipHtml).not.toContain("<script>");
+    });
+
+    it("escapes ampersands before other entities", () => {
+        const { tooltipHtml } = buildTabTitle([{ title: "A & B <c>", active: false }], "New tab");
+
+        expect(tooltipHtml).toBe("A &amp; B &lt;c&gt;");
     });
 });
