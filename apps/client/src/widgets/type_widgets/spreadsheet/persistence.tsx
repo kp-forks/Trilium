@@ -128,7 +128,7 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
             if (!workbook) return undefined;
             const content = {
                 version: 1,
-                workbook: workbook.save()
+                workbook: stripEmptyResources(workbook.save())
             };
 
             const attachments: SavedData["attachments"] = [];
@@ -194,4 +194,19 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
             }
         };
     }, []);
+}
+
+/**
+ * Drops plugin resources that carry no information (empty string or "{}") from the
+ * workbook data before persisting. Univer leaves an absent resource's plugin at its
+ * default (empty) state on load, which is identical to restoring these, so omitting
+ * them is lossless and removes a large dead-weight block from the saved payload.
+ */
+export function stripEmptyResources(workbookData: IWorkbookData): IWorkbookData {
+    if (workbookData.resources) {
+        workbookData.resources = workbookData.resources.filter(
+            resource => resource.data !== "" && resource.data !== "{}"
+        );
+    }
+    return workbookData;
 }

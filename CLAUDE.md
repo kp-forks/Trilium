@@ -267,6 +267,7 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 - Unix line endings
 - Import sorting via `eslint-plugin-simple-import-sort`
 - **Never use the TypeScript non-null assertion operator (postfix `!`)** — including in tests. Narrow instead: optional chaining (`?.`), a `?? fallback`, an explicit null check before use, or an `*OrThrow` accessor (e.g. `becca.getNoteOrThrow(id)` rather than `becca.getNote(id)!`).
+- **Helper placement** — when extracting a standalone helper function from a component, widget, hook, or route, place it **below** the primary export it supports (or in a separate module), not wedged between the imports and the main definition. Keep the file's primary export near the top so the entry point reads first; supporting helpers follow it.
 
 ## Testing
 
