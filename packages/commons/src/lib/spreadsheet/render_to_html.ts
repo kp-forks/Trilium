@@ -4,7 +4,13 @@
  *
  * Only the subset of UniversJS types needed for rendering is defined here,
  * to avoid depending on @univerjs/core.
+ *
+ * Number formatting is delegated to the `numfmt` library — the same ECMA-376
+ * formatter Univer itself uses internally (`@univerjs/core` re-exports it) — so
+ * shared output matches what the editor displays.
  */
+
+import { format as formatNumfmt, formatColor as formatNumfmtColor } from "numfmt";
 
 // #region UniversJS type subset
 
@@ -54,6 +60,11 @@ interface IStyleData {
     ht?: number | null;
     vt?: number | null;
     bd?: IBorderData | null;
+    n?: INumberFormat | null;
+}
+
+interface INumberFormat {
+    pattern?: string | null;
 }
 
 interface ITextDecoration {
@@ -199,8 +210,8 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
 
             const cell = cellData[row]?.[col];
             const cellStyle = resolveCellStyle(cell, styles);
-            const cssText = buildCssText(cellStyle);
-            const value = formatCellValue(cell);
+            const cssText = buildCssText(cellStyle, cell);
+            const value = formatCellValue(cell, cellStyle);
 
             const attrs: string[] = [];
             if (cssText) attrs.push(`style="${cssText}"`);
@@ -312,7 +323,7 @@ function resolveCellStyle(cell: ICellData | undefined, styles: Record<string, IS
     return cell.s;
 }
 
-function buildCssText(style: IStyleData | null): string {
+function buildCssText(style: IStyleData | null, cell?: ICellData): string {
     if (!style) return "";
 
     const parts: string[] = [];
@@ -332,7 +343,12 @@ function buildCssText(style: IStyleData | null): string {
     if (style.fs && isFiniteNumber(style.fs)) parts.push(`font-size:${style.fs}pt`);
     if (style.ff) parts.push(`font-family:${sanitizeCssValue(style.ff)}`);
     if (style.bg?.rgb) parts.push(`background-color:${sanitizeCssColor(style.bg.rgb)}`);
-    if (style.cl?.rgb) parts.push(`color:${sanitizeCssColor(style.cl.rgb)}`);
+
+    // A color produced by the number-format pattern (e.g. `[Red]` for negatives) takes
+    // precedence over the cell's own text color, matching Univer's rendering.
+    const patternColor = resolvePatternColor(style, cell);
+    const textColor = patternColor ?? style.cl?.rgb;
+    if (textColor) parts.push(`color:${sanitizeCssColor(textColor)}`);
 
     if (style.ht != null) {
         const align = horizontalAlignToCss(style.ht);
@@ -428,14 +444,43 @@ function sanitizeCssColor(value: string): string {
 
 // #region Value formatting
 
-function formatCellValue(cell: ICellData | undefined): string {
+function formatCellValue(cell: ICellData | undefined, style: IStyleData | null): string {
     if (!cell || cell.v == null) return "";
 
     if (typeof cell.v === "boolean") {
         return cell.v ? "TRUE" : "FALSE";
     }
 
+    // Apply the number-format pattern to numeric values (this also covers dates,
+    // which Univer stores as serial numbers with a date pattern). On an invalid or
+    // unsupported pattern, fall back to the raw value rather than losing the data.
+    const pattern = style?.n?.pattern;
+    if (pattern && isFiniteNumber(cell.v)) {
+        try {
+            return escapeHtml(formatNumfmt(pattern, cell.v));
+        } catch {
+            // Fall through to the raw value.
+        }
+    }
+
     return escapeHtml(String(cell.v));
+}
+
+/**
+ * Returns the text color dictated by a number-format pattern for this cell's value
+ * (e.g. `[Red]` on the negative section), or `null` when the pattern specifies no
+ * color for the value or the cell is not a formatted number.
+ */
+function resolvePatternColor(style: IStyleData | null, cell: ICellData | undefined): string | null {
+    const pattern = style?.n?.pattern;
+    if (!pattern || !cell || !isFiniteNumber(cell.v)) return null;
+
+    try {
+        const color = formatNumfmtColor(pattern, cell.v);
+        return typeof color === "string" ? color : null;
+    } catch {
+        return null;
+    }
 }
 
 function escapeHtml(text: string): string {

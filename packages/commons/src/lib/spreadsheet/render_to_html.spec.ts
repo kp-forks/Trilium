@@ -935,6 +935,127 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).not.toContain("colspan");
     });
 
+    it("formats a numeric cell using its number-format pattern", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: 1234.5, t: 2, s: { n: { pattern: "#,##0.00" } } })
+        );
+        expect(html).toContain("<td>1,234.50</td>");
+        expect(html).not.toContain("1234.5<");
+    });
+
+    it("formats a numeric cell via a style referenced by id", () => {
+        const input = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: {
+                    money: { n: { pattern: "#,##0.00" } }
+                },
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 10,
+                        columnCount: 5,
+                        mergeData: [],
+                        cellData: { "0": { "0": { s: "money", v: 1000000, t: 2 } } },
+                        rowData: {},
+                        columnData: {}
+                    }
+                }
+            }
+        });
+        const html = renderSpreadsheetToHtml(input);
+        expect(html).toContain("1,000,000.00");
+    });
+
+    it("applies the [Red] negative color from the pattern as a text color", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: -8800.2, t: 2, s: { n: { pattern: "#,##0.00;[Red]#,##0.00" } } })
+        );
+        // Negative section has no minus sign -> value shown unsigned, in red.
+        expect(html).toContain("8,800.20");
+        expect(html).not.toContain("-8,800.20");
+        expect(html).toContain("color:red");
+    });
+
+    it("does not apply the pattern color to a positive value", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: 12.5, t: 2, s: { n: { pattern: "#,##0.00;[Red]#,##0.00" } } })
+        );
+        expect(html).toContain("12.50");
+        expect(html).not.toContain("color:red");
+    });
+
+    it("lets the pattern's negative color win over an explicit cell color (matching Univer)", () => {
+        // In the Univer editor, a [Red] negative section overrides an explicit text
+        // color: setting a different color on a negative cell does not take effect.
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                v: -5,
+                t: 2,
+                s: { n: { pattern: "#,##0.00;[Red]#,##0.00" }, cl: { rgb: "#0da471" } }
+            })
+        );
+        expect(html).toContain("color:red");
+        expect(html).not.toContain("color:#0da471");
+    });
+
+    it("uses the explicit cell color when the pattern yields no color for the value", () => {
+        // Positive value -> the [Red] section never applies, so cl is used.
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                v: 5,
+                t: 2,
+                s: { n: { pattern: "#,##0.00;[Red]#,##0.00" }, cl: { rgb: "#0da471" } }
+            })
+        );
+        expect(html).toContain("color:#0da471");
+    });
+
+    it("formats percentages and dates", () => {
+        const percent = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: 0.156, t: 2, s: { n: { pattern: "0.0%" } } })
+        );
+        expect(percent).toContain("15.6%");
+
+        const date = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: 45000, t: 2, s: { n: { pattern: "yyyy-mm-dd" } } })
+        );
+        expect(date).toContain("2023-03-15");
+    });
+
+    it("escapes formatted output that contains HTML-significant characters", () => {
+        // A pattern that wraps the number in literal angle brackets.
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: 5, t: 2, s: { n: { pattern: "\"<b>\"0\"</b>\"" } } })
+        );
+        expect(html).not.toContain("<b>5</b>");
+        expect(html).toContain("&lt;b&gt;5&lt;/b&gt;");
+    });
+
+    it("leaves a string cell untouched even when a number pattern is present", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "n/a", t: 1, s: { n: { pattern: "#,##0.00" } } })
+        );
+        expect(html).toContain("<td>n/a</td>");
+    });
+
+    it("falls back to the raw value for an invalid pattern instead of throwing", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: 42, t: 2, s: { n: { pattern: "[" } } })
+        );
+        // Must not throw; the cell still renders something containing the digits.
+        expect(html).toContain("<table");
+        expect(html).toContain("42");
+    });
+
+    it("renders an unformatted number when no pattern is set", () => {
+        const html = renderSpreadsheetToHtml(singleCellWorkbook({ v: 1234.5, t: 2 }));
+        expect(html).toContain("<td>1234.5</td>");
+    });
+
     it("extends bounds to cover a merge range that exceeds the cell data", () => {
         const input = JSON.stringify({
             version: 1,
