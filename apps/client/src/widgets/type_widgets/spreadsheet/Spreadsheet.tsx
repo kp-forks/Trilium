@@ -76,7 +76,7 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
     useReleaseFillShortcuts(apiRef);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef);
-    useSpreadsheetExport(apiRef, note);
+    useSpreadsheetExport(apiRef, note, noteContext);
     useSearchIntegration(apiRef, noteContext);
     useDismissDialogsOnNoteSwitch(apiRef);
     useFixRadixPortals();

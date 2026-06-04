@@ -492,6 +492,7 @@ type EventMappings = {
     };
     exportSvg: { ntxId: string | null | undefined; };
     exportPng: { ntxId: string | null | undefined; };
+    exportXlsx: { ntxId: string | null | undefined; };
     geoMapCreateChildNote: {
         ntxId: string | null | undefined; // TODO: deduplicate ntxId
     };

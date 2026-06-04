@@ -1,66 +1,33 @@
 import { FUniver } from "@univerjs/presets";
-import { MutableRef, useEffect, useRef } from "preact/hooks";
+import { MutableRef } from "preact/hooks";
 
+import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import toast from "../../../services/toast";
 import utils from "../../../services/utils";
+import { useTriliumEvent } from "../../react/hooks";
 
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-const ICON_ID = "trilium-export-xlsx-icon";
-const MENU_ID = "trilium.spreadsheet.export-xlsx";
 
 /**
- * Adds an "Export to Excel" entry to the Univer toolbar (and right-click menu) that
- * serializes the live workbook and downloads it as an `.xlsx` file. The conversion runs
- * client-side via the `exceljs`-backed exporter in `@triliumnext/commons`, dynamically
- * imported so exceljs is only fetched when the user actually exports (and never enters the
- * standalone/core bundles).
- *
- * Note: Univer hides its toolbar and context menu in read-only mode, so this entry is only
- * reachable while the note is editable.
+ * Exports the spreadsheet to an `.xlsx` file when the `exportXlsx` event fires for this note
+ * context. The event is raised from the note actions menu and the floating buttons (the same
+ * surfaces the PNG/SVG exports use), so it works regardless of Univer's own toolbar (which is
+ * hidden in read-only mode). The conversion runs client-side via the `exceljs`-backed exporter
+ * in `@triliumnext/commons`, dynamically imported so exceljs is only fetched on export (and
+ * never enters the standalone/core bundles).
  */
-export default function useSpreadsheetExport(apiRef: MutableRef<FUniver | undefined>, note: FNote) {
-    // The Univer instance is reused across notes, so keep the latest note in a ref and have
-    // the action (registered once) read it at click time rather than capturing a stale note.
-    const noteRef = useRef(note);
-    noteRef.current = note;
-
-    useEffect(() => {
-        const univerAPI = apiRef.current;
-        if (!univerAPI) return;
-
-        try {
-            // Toolbar buttons need a registered icon component to render at all.
-            univerAPI.registerComponent(ICON_ID, ExportIcon);
-
-            const menu = univerAPI.createMenu({
-                id: MENU_ID,
-                icon: ICON_ID,
-                title: t("spreadsheet.export-xlsx"),
-                tooltip: t("spreadsheet.export-xlsx"),
-                action: () => void exportToXlsx(univerAPI, noteRef.current)
-            });
-            // appendTo takes a single position string; call once per location (an array is
-            // interpreted as one nested path, not several positions).
-            menu.appendTo("ribbon.start.others");
-            menu.appendTo("contextMenu.others");
-        } catch (e) {
-            console.error("Failed to register spreadsheet export menu", e);
-        }
-    }, [ apiRef ]);
+export default function useSpreadsheetExport(apiRef: MutableRef<FUniver | undefined>, note: FNote, noteContext: NoteContext | null | undefined) {
+    useTriliumEvent("exportXlsx", ({ ntxId }) => {
+        if (ntxId !== noteContext?.ntxId) return;
+        void exportToXlsx(apiRef.current, note);
+    });
 }
 
-function ExportIcon() {
-    return (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 1.5v7.5m0 0L5.2 6.2M8 9l2.8-2.8" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M2.75 10.5v1.75A1.25 1.25 0 0 0 4 13.5h8a1.25 1.25 0 0 0 1.25-1.25V10.5" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
+async function exportToXlsx(univerAPI: FUniver | undefined, note: FNote) {
+    if (!univerAPI) return;
 
-async function exportToXlsx(univerAPI: FUniver, note: FNote) {
     try {
         const workbook = univerAPI.getActiveWorkbook();
         if (!workbook) return;
