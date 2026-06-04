@@ -13,7 +13,10 @@ import { getNoteTitle } from "../utils/index.js";
 import { sanitizeHtml } from "../sanitizer.js";
 import { processStringOrBuffer } from "../utils/binary.js";
 
-function importSingleFile(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
+// MIME of an `.xlsx` upload (Office Open XML spreadsheet), as resolved by `mime-types`.
+const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+async function importSingleFile(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const mime = mimeService.getMime(file.originalname) || file.mimetype;
 
     if (taskContext?.data?.textImportedAsText) {
@@ -24,6 +27,13 @@ function importSingleFile(taskContext: TaskContext<"importNotes">, file: File, p
         } else if (mime === "text/plain") {
             return importPlainText(taskContext, file, parentNote);
         }
+    }
+
+    // TODO: gate behind an import option (e.g. `spreadsheetImportedAsSpreadsheet`) once exposed,
+    // mirroring `textImportedAsText`/`codeImportedAsCode`. For now an `.xlsx` always becomes an
+    // editable spreadsheet note rather than an opaque attachment.
+    if (mime === XLSX_MIME) {
+        return importSpreadsheet(taskContext, file, parentNote);
     }
 
     if (mime === "text/vnd.mermaid") {
@@ -109,6 +119,32 @@ function importCustomType(taskContext: TaskContext<"importNotes">, file: File, p
         mime,
         isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable()
     });
+
+    taskContext.increaseProgressCount();
+
+    return note;
+}
+
+async function importSpreadsheet(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
+    const title = getNoteTitle(file.originalname, !!taskContext.data?.replaceUnderscoresWithSpaces);
+
+    // Dynamically import the exceljs-backed parser so exceljs only loads when an `.xlsx` is
+    // actually imported, keeping it out of the core barrel (and the standalone/browser bundle).
+    const { parseXlsxToWorkbook } = await import("@triliumnext/commons/src/lib/spreadsheet/parse_from_xlsx.js");
+    const buffer = typeof file.buffer === "string" ? Buffer.from(file.buffer) : file.buffer;
+    const workbook = await parseXlsxToWorkbook(buffer);
+    const content = JSON.stringify(workbook);
+
+    const { note } = noteService.createNewNote({
+        parentNoteId: parentNote.noteId,
+        title,
+        content,
+        type: "spreadsheet",
+        mime: "text/x-spreadsheet",
+        isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable()
+    });
+
+    note.addLabel("originalFileName", file.originalname);
 
     taskContext.increaseProgressCount();
 

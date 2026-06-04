@@ -48,9 +48,7 @@ const DEFAULT_COLUMN_COUNT = 20;
 export async function parseXlsxToWorkbook(input: ArrayBuffer | Uint8Array): Promise<PersistedData> {
     const wb = new ExcelJS.Workbook();
     try {
-        // exceljs accepts a Node Buffer or an ArrayBuffer; normalize a Uint8Array view to its buffer.
-        const buffer = input instanceof Uint8Array ? input.buffer : input;
-        await wb.xlsx.load(buffer as ArrayBuffer);
+        await wb.xlsx.load(toArrayBuffer(input));
     } catch {
         throw new Error("Unable to parse spreadsheet file.");
     }
@@ -185,7 +183,11 @@ function assignPrimitive(data: ICellData, result: ExcelJS.Cell["result"]): void 
     if (typeof result === "number") { data.v = result; data.t = CellValueType.NUMBER; return; }
     if (typeof result === "boolean") { data.v = result; data.t = CellValueType.BOOLEAN; return; }
     if (result instanceof Date) { data.v = dateToSerial(result); data.t = CellValueType.NUMBER; return; }
-    if (typeof result === "object" && "error" in result) { data.v = String(result.error); data.t = CellValueType.FORCE_STRING; return; }
+    if (typeof result === "object" && result !== null && "error" in result) {
+        data.v = String((result as ExcelJS.CellErrorValue).error);
+        data.t = CellValueType.FORCE_STRING;
+        return;
+    }
     data.v = String(result);
     data.t = CellValueType.STRING;
 }
@@ -377,10 +379,12 @@ function solidFillColor(fill: ExcelJS.Fill | undefined): Partial<ExcelJS.Color> 
 function excelColorToRgb(color: Partial<ExcelJS.Color> | undefined): string | null {
     if (!color) return null;
     if (typeof color.argb === "string") return argbToHex(color.argb);
-    if (typeof color.theme === "number") {
-        const base = THEME_COLORS[color.theme];
+    // exceljs' `Color` type omits `tint`, though it's present on theme colors at runtime.
+    const themed = color as { theme?: number; tint?: number };
+    if (typeof themed.theme === "number") {
+        const base = THEME_COLORS[themed.theme];
         if (!base) return null;
-        return applyTint(base, isFiniteNumber(color.tint) ? color.tint : 0);
+        return applyTint(base, isFiniteNumber(themed.tint) ? themed.tint : 0);
     }
     return null;
 }
@@ -509,4 +513,15 @@ function dateToSerial(date: Date): number {
 
 function isFiniteNumber(v: unknown): v is number {
     return typeof v === "number" && Number.isFinite(v);
+}
+
+/**
+ * Normalizes input to a tight `ArrayBuffer` for exceljs. A `Uint8Array`/Node `Buffer` can be a
+ * view into a larger pooled buffer, so reading `.buffer` directly would include foreign bytes —
+ * slice by its offset/length when it isn't already a full-buffer view.
+ */
+function toArrayBuffer(input: ArrayBuffer | Uint8Array): ArrayBuffer {
+    if (!(input instanceof Uint8Array)) return input;
+    // `slice()` copies into a fresh, tightly-sized ArrayBuffer — independent of any pool.
+    return input.slice().buffer as ArrayBuffer;
 }

@@ -69,7 +69,7 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
                 return importResult;
             }
         } else {
-            note = singleImportService.importSingleFile(taskContext, file, parentNote);
+            note = await singleImportService.importSingleFile(taskContext, file, parentNote);
         }
     } catch (e: unknown) {
         const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
