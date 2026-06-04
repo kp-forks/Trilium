@@ -144,7 +144,7 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
     const supportsOcr = attachment.role === "image" || attachment.role === "file";
 
     function refresh() {
-        content_renderer.getRenderedContent(attachment, { imageHasZoom: isFullDetail })
+        content_renderer.getRenderedContent(attachment)
             .then(({ $renderedContent }) => {
                 contentWrapper.current?.replaceChildren(...$renderedContent);
             });
