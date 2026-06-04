@@ -793,8 +793,8 @@ importers:
         specifier: 8.0.14
         version: 8.0.14(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)
       yauzl:
-        specifier: 3.3.1
-        version: 3.3.1
+        specifier: 3.3.2
+        version: 3.3.2
 
   apps/standalone:
     dependencies:
@@ -13529,6 +13529,10 @@ packages:
 
   yauzl@3.3.1:
     resolution: {integrity: sha512-RNPCUkiE/ZgO4w8i9U5yDQVHaFDdnzaFANElRvpJteCspvmv2VqrRb9lvS6odVD+jqI/zDsxAHJVsafpcheVQQ==}
+    engines: {node: '>=12'}
+
+  yauzl@3.3.2:
+    resolution: {integrity: sha512-Md9ankxxN23wncAN8s7+Tn3Co52zLUPMtnrLAbVCnfG5d2tKBFfmygYSgXlqFgXObtzIgqkx7aNgDBpso9+4qA==}
     engines: {node: '>=12'}
 
   yocto-queue@0.1.0:
@@ -28723,6 +28727,10 @@ snapshots:
   yauzl@3.3.1:
     dependencies:
       buffer-crc32: 0.2.13
+      pend: 1.2.0
+
+  yauzl@3.3.2:
+    dependencies:
       pend: 1.2.0
 
   yocto-queue@0.1.0: {}
