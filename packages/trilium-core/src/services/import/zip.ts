@@ -21,6 +21,12 @@ import { AttributeMeta, NoteMeta } from "../../meta.js";
 import { isMarkdownCodeNote } from "../export/rewrite_links.js";
 import { sanitizeHtml } from "../sanitizer.js";
 
+// Source mimes that import as editable spreadsheet notes (parsed to Univer workbook JSON),
+// mirroring the single-file importer. As resolved by `mime-types` from the entry extension.
+const CSV_MIME = "text/csv";
+const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const SPREADSHEET_MIME = "text/x-spreadsheet";
+
 interface MetaFile {
     files: NoteMeta[];
 }
@@ -174,6 +180,14 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
 
     function detectFileTypeAndMime(taskContext: TaskContext<"importNotes">, filePath: string) {
         const rawMime = mimeService.getMime(filePath) || "application/octet-stream";
+
+        // CSV/XLSX entries become editable spreadsheet notes (matching single-file import). The
+        // raw mime is kept so `saveNote` knows which parser to run; it's swapped for the
+        // spreadsheet mime once the bytes have been converted to the Univer workbook JSON.
+        if (rawMime === CSV_MIME || rawMime === XLSX_MIME) {
+            return { mime: rawMime, type: "spreadsheet" as NoteType };
+        }
+
         const type = mimeService.getType(taskContext.data || {}, rawMime);
         // Normalize aliased code MIMEs (e.g. `text/markdown` → `text/x-markdown`,
         // `application/javascript` → `text/javascript`) so the
@@ -481,7 +495,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         return content;
     }
 
-    function saveNote(filePath: string, content: string | Uint8Array) {
+    async function saveNote(filePath: string, content: string | Uint8Array) {
         const { parentNoteMeta, noteMeta, attachmentMeta } = getMeta(filePath);
 
         if (noteMeta?.noImport) {
@@ -528,6 +542,14 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         const type = resolveNoteType(detectedType);
         if (mime == null) {
             throw new Error("Unable to resolve mime type.");
+        }
+
+        // A raw CSV/XLSX entry still holds its source bytes; convert them to the Univer workbook
+        // JSON a spreadsheet note stores, then record the spreadsheet mime. Entries from a Trilium
+        // export already carry workbook JSON and the spreadsheet mime, so they skip this.
+        if (type === "spreadsheet" && (mime === CSV_MIME || mime === XLSX_MIME)) {
+            content = await convertSpreadsheetContent(mime, content);
+            mime = SPREADSHEET_MIME;
         }
 
         if (type !== "file" && type !== "image") {
@@ -662,7 +684,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         if (/\/$/.test(entry.fileName)) {
             saveDirectory(filePath);
         } else if (filePath !== "!!!meta.json") {
-            saveNote(filePath, await readContent());
+            await saveNote(filePath, await readContent());
         }
 
         taskContext.increaseProgressCount();
@@ -737,6 +759,22 @@ function resolveNoteType(type: string | undefined): NoteType {
     }
     return "text";
 
+}
+
+/**
+ * Parses a raw CSV or XLSX entry into the Univer workbook JSON a spreadsheet note stores.
+ * The parsers are dynamically imported so exceljs only loads when such a file is imported
+ * (keeping it out of the core barrel and the standalone/browser bundle).
+ */
+async function convertSpreadsheetContent(mime: string, content: string | Uint8Array): Promise<string> {
+    if (mime === XLSX_MIME) {
+        const { parseXlsxToWorkbook } = await import("@triliumnext/commons/src/lib/spreadsheet/parse_from_xlsx.js");
+        const buffer = typeof content === "string" ? Buffer.from(content) : content;
+        return JSON.stringify(await parseXlsxToWorkbook(buffer));
+    }
+
+    const { parseCsvToWorkbook } = await import("@triliumnext/commons/src/lib/spreadsheet/parse_from_csv.js");
+    return JSON.stringify(parseCsvToWorkbook(processStringOrBuffer(content)));
 }
 
 export function removeTriliumTags(content: string) {

@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import ExcelJS from "exceljs";
 import { ZipArchive } from "archiver";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -178,7 +179,47 @@ describe("processNoteContent", () => {
         expect(content).toContain("/image/image.jpg)");
         expect(content).not.toContain("Markdown Note_image.jpg");
     });
+
+    it("imports a CSV entry as an editable spreadsheet note", async () => {
+        const zipBuffer = await createZipBuffer({ "csv_import_sample.csv": "a,b\r\n1,2" });
+        const { rootNote } = await testImportBuffer(zipBuffer, "import-csv", {});
+
+        const note = rootNote.getChildNotes().find((n) => n.title === "csv_import_sample");
+        expect(note?.type).toBe("spreadsheet");
+        expect(note?.mime).toBe("text/x-spreadsheet");
+
+        const sheet = parseWorkbookSheet(note?.getContent());
+        expect(sheet.cellData[0][0].v).toBe("a");
+        expect(sheet.cellData[1][1].v).toBe(2);
+    });
+
+    it("imports an XLSX entry as an editable spreadsheet note", async () => {
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet("Sheet1");
+        ws.getCell("A1").value = "hello";
+        ws.getCell("B1").value = 42;
+        const xlsxBuffer = Buffer.from(await wb.xlsx.writeBuffer());
+
+        const zipBuffer = await createZipBuffer({ "xlsx_import_sample.xlsx": xlsxBuffer });
+        const { rootNote } = await testImportBuffer(zipBuffer, "import-xlsx", {});
+
+        const note = rootNote.getChildNotes().find((n) => n.title === "xlsx_import_sample");
+        expect(note?.type).toBe("spreadsheet");
+        expect(note?.mime).toBe("text/x-spreadsheet");
+
+        const sheet = parseWorkbookSheet(note?.getContent());
+        expect(sheet.cellData[0][0].v).toBe("hello");
+        expect(sheet.cellData[0][1].v).toBe(42);
+    });
 }, 60_000);
+
+/** Parses a spreadsheet note's content and returns its single (first) sheet's data. */
+function parseWorkbookSheet(content: string | Uint8Array | undefined) {
+    expect(typeof content).toBe("string");
+    const parsed = JSON.parse(content as string);
+    const sheetId = parsed.workbook.sheetOrder[0];
+    return parsed.workbook.sheets[sheetId];
+}
 
 function getNoteByTitlePath(parentNote: BNote, ...titlePath: string[]) {
     let cursor = parentNote;
