@@ -114,6 +114,16 @@ export interface IColumnData {
     hd?: number;
 }
 
+// Univer's cell value type (`ICellData.t`). Tells the editor how to render/sort a value
+// independently of the JS type of `v` (e.g. FORCE_STRING keeps a numeric-looking string
+// left-aligned and un-coerced).
+export const enum CellValueType {
+    STRING = 1,
+    NUMBER = 2,
+    BOOLEAN = 3,
+    FORCE_STRING = 4
+}
+
 // Alignment enums (from UniversJS).
 export const enum HorizontalAlign {
     LEFT = 1,

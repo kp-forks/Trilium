@@ -61,6 +61,39 @@ describe("renderSpreadsheetToCsv", () => {
         expect(csv).toBe("3");
     });
 
+    it("renders date serials as ISO 8601 (yyyy-mm-dd), not the raw serial", () => {
+        // 46118 is 2026-04-06 in Excel's serial date system.
+        const inlineStyle = renderSpreadsheetToCsv(workbook({
+            0: { 0: { v: 46118, t: 2, s: { n: { pattern: "m/d/yy" } } } }
+        }));
+        expect(inlineStyle).toBe("2026-04-06");
+
+        // A date pattern referenced from the shared styles table resolves the same way.
+        const sharedStyle = renderSpreadsheetToCsv(workbook(
+            { 0: { 0: { v: 46118, t: 2, s: "d1" } } },
+            {},
+            { styles: { d1: { n: { pattern: "dd/mm/yyyy" } } } }
+        ));
+        expect(sharedStyle).toBe("2026-04-06");
+    });
+
+    it("appends the time portion when the date format carries one", () => {
+        const csv = renderSpreadsheetToCsv(workbook({
+            0: {
+                0: { v: 46118.5, t: 2, s: { n: { pattern: "yyyy-mm-dd hh:mm" } } },
+                1: { v: 46118.5, t: 2, s: { n: { pattern: "m/d/yy h:mm:ss" } } }
+            }
+        }));
+        expect(csv).toBe("2026-04-06 12:00,2026-04-06 12:00:00");
+    });
+
+    it("keeps a non-date numeric cell raw even when it has a number format", () => {
+        const csv = renderSpreadsheetToCsv(workbook({
+            0: { 0: { v: 1234.5, t: 2, s: { n: { pattern: "#,##0.00" } } } }
+        }));
+        expect(csv).toBe("1234.5");
+    });
+
     it("quotes fields containing commas, quotes, or newlines (RFC 4180)", () => {
         const csv = renderSpreadsheetToCsv(workbook({
             0: { 0: { v: "a,b" }, 1: { v: 'he said "hi"' }, 2: { v: "line1\nline2" } }
