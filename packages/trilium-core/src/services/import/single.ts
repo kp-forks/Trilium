@@ -15,6 +15,8 @@ import { processStringOrBuffer } from "../utils/binary.js";
 
 // MIME of an `.xlsx` upload (Office Open XML spreadsheet), as resolved by `mime-types`.
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+// MIME of a `.csv` upload, as resolved by `mime-types`.
+const CSV_MIME = "text/csv";
 
 async function importSingleFile(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
     const mime = mimeService.getMime(file.originalname) || file.mimetype;
@@ -34,6 +36,10 @@ async function importSingleFile(taskContext: TaskContext<"importNotes">, file: F
     // editable spreadsheet note rather than an opaque attachment.
     if (mime === XLSX_MIME) {
         return importSpreadsheet(taskContext, file, parentNote);
+    }
+
+    if (mime === CSV_MIME) {
+        return importSpreadsheetFromCsv(taskContext, file, parentNote);
     }
 
     if (mime === "text/vnd.mermaid") {
@@ -126,14 +132,25 @@ function importCustomType(taskContext: TaskContext<"importNotes">, file: File, p
 }
 
 async function importSpreadsheet(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
-    const title = getNoteTitle(file.originalname, !!taskContext.data?.replaceUnderscoresWithSpaces);
-
     // Dynamically import the exceljs-backed parser so exceljs only loads when an `.xlsx` is
     // actually imported, keeping it out of the core barrel (and the standalone/browser bundle).
     const { parseXlsxToWorkbook } = await import("@triliumnext/commons/src/lib/spreadsheet/parse_from_xlsx.js");
     const buffer = typeof file.buffer === "string" ? Buffer.from(file.buffer) : file.buffer;
     const workbook = await parseXlsxToWorkbook(buffer);
-    const content = JSON.stringify(workbook);
+
+    return createSpreadsheetNote(taskContext, file, parentNote, JSON.stringify(workbook));
+}
+
+async function importSpreadsheetFromCsv(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote) {
+    const csv = processStringOrBuffer(file.buffer);
+    const { parseCsvToWorkbook } = await import("@triliumnext/commons/src/lib/spreadsheet/parse_from_csv.js");
+    const workbook = parseCsvToWorkbook(csv);
+
+    return createSpreadsheetNote(taskContext, file, parentNote, JSON.stringify(workbook));
+}
+
+function createSpreadsheetNote(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote, content: string) {
+    const title = getNoteTitle(file.originalname, !!taskContext.data?.replaceUnderscoresWithSpaces);
 
     const { note } = noteService.createNewNote({
         parentNoteId: parentNote.noteId,
