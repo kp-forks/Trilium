@@ -11,6 +11,8 @@ import ImageViewer from "../react/ImageViewer";
 import { refToJQuerySelector } from "../react/react_utils";
 import { TypeWidgetProps } from "./type_widget";
 
+const ZOOM_STEP = 0.5;
+
 export default function Image({ note, ntxId }: TypeWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const copyRef = useRef<HTMLDivElement>(null);
@@ -33,8 +35,8 @@ export default function Image({ note, ntxId }: TypeWidgetProps) {
     useTriliumEvents([ "imageZoomIn", "imageZoomOut", "imageZoomReset" ], ({ ntxId: eventNtxId }, eventName) => {
         const zoom = zoomRef.current;
         if (eventNtxId !== ntxId || !zoom) return;
-        if (eventName === "imageZoomIn") zoom.zoomIn();
-        else if (eventName === "imageZoomOut") zoom.zoomOut();
+        if (eventName === "imageZoomIn") zoom.zoomIn(ZOOM_STEP);
+        else if (eventName === "imageZoomOut") zoom.zoomOut(ZOOM_STEP);
         else zoom.resetTransform();
     });
 
