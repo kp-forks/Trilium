@@ -12,141 +12,29 @@
 
 import { format as formatNumfmt, formatColor as formatNumfmtColor } from "numfmt";
 
-// #region UniversJS type subset
-
-interface PersistedData {
-    version: number;
-    workbook: IWorkbookData;
-}
-
-interface IWorkbookData {
-    sheetOrder: string[];
-    styles?: Record<string, IStyleData | null>;
-    sheets: Record<string, IWorksheetData>;
-}
-
-interface IWorksheetData {
-    id: string;
-    name: string;
-    hidden?: number;
-    rowCount: number;
-    columnCount: number;
-    defaultColumnWidth?: number;
-    defaultRowHeight?: number;
-    mergeData?: IRange[];
-    cellData: CellMatrix;
-    rowData?: Record<number, IRowData>;
-    columnData?: Record<number, IColumnData>;
-    showGridlines?: number;
-    gridlinesColor?: string | null;
-}
-
-type CellMatrix = Record<number, Record<number, ICellData>>;
-
-interface ICellData {
-    v?: string | number | boolean | null;
-    t?: number | null;
-    s?: IStyleData | string | null;
-}
-
-interface IStyleData {
-    bl?: number;
-    it?: number;
-    ul?: ITextDecoration;
-    st?: ITextDecoration;
-    fs?: number;
-    ff?: string | null;
-    bg?: IColorStyle | null;
-    cl?: IColorStyle | null;
-    ht?: number | null;
-    vt?: number | null;
-    bd?: IBorderData | null;
-    n?: INumberFormat | null;
-}
-
-interface INumberFormat {
-    pattern?: string | null;
-}
-
-interface ITextDecoration {
-    s?: number;
-}
-
-interface IColorStyle {
-    rgb?: string | null;
-}
-
-interface IBorderData {
-    t?: IBorderStyleData | null;
-    r?: IBorderStyleData | null;
-    b?: IBorderStyleData | null;
-    l?: IBorderStyleData | null;
-}
-
-interface IBorderStyleData {
-    s?: number;
-    cl?: IColorStyle;
-}
-
-interface IRange {
-    startRow: number;
-    endRow: number;
-    startColumn: number;
-    endColumn: number;
-}
-
-interface IRowData {
-    h?: number;
-    hd?: number;
-}
-
-interface IColumnData {
-    w?: number;
-    hd?: number;
-}
-
-// Alignment enums (from UniversJS)
-const enum HorizontalAlign {
-    LEFT = 1,
-    CENTER = 2,
-    RIGHT = 3
-}
-
-const enum VerticalAlign {
-    TOP = 1,
-    MIDDLE = 2,
-    BOTTOM = 3
-}
-
-// Border style enum — mirrors Univer's `BorderStyleTypes` (@univerjs/core).
-const enum BorderStyle {
-    NONE = 0,
-    THIN = 1,
-    HAIR = 2,
-    DOTTED = 3,
-    DASHED = 4,
-    DASH_DOT = 5,
-    DASH_DOT_DOT = 6,
-    DOUBLE = 7,
-    MEDIUM = 8,
-    MEDIUM_DASHED = 9,
-    MEDIUM_DASH_DOT = 10,
-    MEDIUM_DASH_DOT_DOT = 11,
-    SLANT_DASH_DOT = 12,
-    THICK = 13
-}
-
-// #endregion
+import {
+    BorderStyle,
+    computeBounds,
+    getVisibleSheets,
+    HorizontalAlign,
+    type IBorderStyleData,
+    type ICellData,
+    isFiniteNumber,
+    type IRange,
+    type IStyleData,
+    type IWorksheetData,
+    parseWorkbookData,
+    resolveCellStyle,
+    VerticalAlign
+} from "./workbook_model.js";
 
 /**
  * Parses the raw JSON content of a spreadsheet note and renders it as HTML.
  * Returns an HTML string containing one `<table>` per visible sheet.
  */
 export function renderSpreadsheetToHtml(jsonContent: string): string {
-    let data: PersistedData;
-    try {
-        data = JSON.parse(jsonContent);
-    } catch {
+    const { ok, data } = parseWorkbookData(jsonContent);
+    if (!ok) {
         return "<p>Unable to parse spreadsheet data.</p>";
     }
 
@@ -155,10 +43,7 @@ export function renderSpreadsheetToHtml(jsonContent: string): string {
     }
 
     const { workbook } = data;
-    const sheetIds = workbook.sheetOrder ?? Object.keys(workbook.sheets);
-    const visibleSheets = sheetIds
-        .map((id) => workbook.sheets[id])
-        .filter((s) => s && !s.hidden);
+    const visibleSheets = getVisibleSheets(workbook);
 
     if (visibleSheets.length === 0) {
         return "<p>Empty spreadsheet.</p>";
@@ -219,7 +104,7 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
             if (mergeInfo === "hidden") continue;
 
             const cell = cellData[row]?.[col];
-            const cellStyle = resolveCellStyle(cell, styles);
+            const cellStyle = resolveCellStyle(cell?.s, styles);
             const cssText = buildCssText(cellStyle, cell);
             const value = formatCellValue(cell, cellStyle);
 
@@ -264,47 +149,6 @@ function buildTableTag(sheet: IWorksheetData): string {
     return `<table class="spreadsheet-table show-gridlines"${style}>`;
 }
 
-// #region Bounds computation
-
-interface Bounds {
-    minRow: number;
-    maxRow: number;
-    minCol: number;
-    maxCol: number;
-}
-
-function computeBounds(cellData: CellMatrix, mergeData: IRange[]): Bounds | null {
-    let minRow = Infinity;
-    let maxRow = -Infinity;
-    let minCol = Infinity;
-    let maxCol = -Infinity;
-
-    for (const rowStr of Object.keys(cellData)) {
-        const row = Number(rowStr);
-        const cols = cellData[row];
-        for (const colStr of Object.keys(cols)) {
-            const col = Number(colStr);
-            if (minRow > row) minRow = row;
-            if (maxRow < row) maxRow = row;
-            if (minCol > col) minCol = col;
-            if (maxCol < col) maxCol = col;
-        }
-    }
-
-    // Extend bounds to cover merged ranges.
-    for (const range of mergeData) {
-        if (minRow > range.startRow) minRow = range.startRow;
-        if (maxRow < range.endRow) maxRow = range.endRow;
-        if (minCol > range.startColumn) minCol = range.startColumn;
-        if (maxCol < range.endColumn) maxCol = range.endColumn;
-    }
-
-    if (minRow > maxRow) return null;
-    return { minRow, maxRow, minCol, maxCol };
-}
-
-// #endregion
-
 // #region Merge handling
 
 interface MergeOrigin {
@@ -346,16 +190,6 @@ function buildMergeMap(mergeData: IRange[], minRow: number, maxRow: number, minC
 // #endregion
 
 // #region Style resolution
-
-function resolveCellStyle(cell: ICellData | undefined, styles: Record<string, IStyleData | null>): IStyleData | null {
-    if (!cell?.s) return null;
-
-    if (typeof cell.s === "string") {
-        return styles[cell.s] ?? null;
-    }
-
-    return cell.s;
-}
 
 function buildCssText(style: IStyleData | null, cell?: ICellData): string {
     if (!style) return "";
@@ -462,11 +296,6 @@ function borderStyleToCss(style: number | undefined): string {
         default:
             return "solid";
     }
-}
-
-/** Checks that a value is a finite number (guards against stringified payloads from JSON). */
-function isFiniteNumber(v: unknown): v is number {
-    return typeof v === "number" && Number.isFinite(v);
 }
 
 /**

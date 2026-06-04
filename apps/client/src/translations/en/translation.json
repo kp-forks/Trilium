@@ -214,6 +214,7 @@
     "shrinkImages": "Shrink images",
     "textImportedAsText": "Import HTML, Markdown and TXT as text notes if it's unclear from metadata",
     "codeImportedAsCode": "Import recognized code files (e.g. <code>.json</code>) as code notes if it's unclear from metadata",
+    "spreadsheetImportedAsSpreadsheet": "Import CSV and Excel files as editable spreadsheets rather than files",
     "replaceUnderscoresWithSpaces": "Replace underscores with spaces in imported note names",
     "import": "Import",
     "failed": "Import failed: {{message}}.",
@@ -2745,7 +2746,11 @@
     "cancel": "Cancel"
   },
   "spreadsheet": {
-    "read-only": "This note is read-only."
+    "read-only": "This note is read-only.",
+    "export-xlsx": "Export to Excel (.xlsx)",
+    "export-csv": "Export to CSV (.csv)",
+    "export-failed": "Failed to export the spreadsheet to Excel.",
+    "export-csv-failed": "Failed to export the spreadsheet to CSV."
   },
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",

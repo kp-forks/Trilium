@@ -282,6 +282,8 @@ export function removeFileExtension(filePath: string, mime?: string) {
         case ".mermaid":
         case ".mmd":
         case ".pdf":
+        case ".xlsx":
+        case ".csv":
             return filePath.substring(0, filePath.length - extension.length);
         default:
             return filePath;
