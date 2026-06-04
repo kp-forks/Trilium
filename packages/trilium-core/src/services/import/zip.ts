@@ -181,10 +181,11 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     function detectFileTypeAndMime(taskContext: TaskContext<"importNotes">, filePath: string) {
         const rawMime = mimeService.getMime(filePath) || "application/octet-stream";
 
-        // CSV/XLSX entries become editable spreadsheet notes (matching single-file import). The
-        // raw mime is kept so `saveNote` knows which parser to run; it's swapped for the
-        // spreadsheet mime once the bytes have been converted to the Univer workbook JSON.
-        if (rawMime === CSV_MIME || rawMime === XLSX_MIME) {
+        // CSV/XLSX entries become editable spreadsheet notes (matching single-file import) unless
+        // the user opts out, in which case they fall through to a plain file attachment. The raw
+        // mime is kept so `saveNote` knows which parser to run; it's swapped for the spreadsheet
+        // mime once the bytes have been converted to the Univer workbook JSON.
+        if (taskContext.data?.spreadsheetImportedAsSpreadsheet && (rawMime === CSV_MIME || rawMime === XLSX_MIME)) {
             return { mime: rawMime, type: "spreadsheet" as NoteType };
         }
 

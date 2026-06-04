@@ -16,7 +16,8 @@ async function testImport(fileName: string, mimetype: string, bufferOverride?: B
     const buffer = bufferOverride ?? fs.readFileSync(`${scriptDir}/samples/${fileName}`);
     const taskContext = TaskContext.getInstance("import-mdx", "importNotes", {
         textImportedAsText: true,
-        codeImportedAsCode: true
+        codeImportedAsCode: true,
+        spreadsheetImportedAsSpreadsheet: true
     });
 
     return new Promise<{ buffer: Buffer; importedNote: BNote }>((resolve, reject) => {

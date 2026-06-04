@@ -182,7 +182,7 @@ describe("processNoteContent", () => {
 
     it("imports a CSV entry as an editable spreadsheet note", async () => {
         const zipBuffer = await createZipBuffer({ "csv_import_sample.csv": "a,b\r\n1,2" });
-        const { rootNote } = await testImportBuffer(zipBuffer, "import-csv", {});
+        const { rootNote } = await testImportBuffer(zipBuffer, "import-csv", { spreadsheetImportedAsSpreadsheet: true });
 
         const note = rootNote.getChildNotes().find((n) => n.title === "csv_import_sample");
         expect(note?.type).toBe("spreadsheet");
@@ -201,7 +201,7 @@ describe("processNoteContent", () => {
         const xlsxBuffer = Buffer.from(await wb.xlsx.writeBuffer());
 
         const zipBuffer = await createZipBuffer({ "xlsx_import_sample.xlsx": xlsxBuffer });
-        const { rootNote } = await testImportBuffer(zipBuffer, "import-xlsx", {});
+        const { rootNote } = await testImportBuffer(zipBuffer, "import-xlsx", { spreadsheetImportedAsSpreadsheet: true });
 
         const note = rootNote.getChildNotes().find((n) => n.title === "xlsx_import_sample");
         expect(note?.type).toBe("spreadsheet");
@@ -210,6 +210,15 @@ describe("processNoteContent", () => {
         const sheet = parseWorkbookSheet(note?.getContent());
         expect(sheet.cellData[0][0].v).toBe("hello");
         expect(sheet.cellData[0][1].v).toBe(42);
+    });
+
+    it("imports a CSV entry as a plain file note when the spreadsheet option is off", async () => {
+        const zipBuffer = await createZipBuffer({ "csv_as_file_sample.csv": "a,b\r\n1,2" });
+        const { rootNote } = await testImportBuffer(zipBuffer, "import-csv-off", { spreadsheetImportedAsSpreadsheet: false });
+
+        const note = rootNote.getChildNotes().find((n) => n.title === "csv_as_file_sample");
+        expect(note?.type).toBe("file");
+        expect(note?.mime).toBe("text/csv");
     });
 }, 60_000);
 

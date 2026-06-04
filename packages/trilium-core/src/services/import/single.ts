@@ -31,15 +31,16 @@ async function importSingleFile(taskContext: TaskContext<"importNotes">, file: F
         }
     }
 
-    // TODO: gate behind an import option (e.g. `spreadsheetImportedAsSpreadsheet`) once exposed,
-    // mirroring `textImportedAsText`/`codeImportedAsCode`. For now an `.xlsx` always becomes an
-    // editable spreadsheet note rather than an opaque attachment.
-    if (mime === XLSX_MIME) {
-        return importSpreadsheet(taskContext, file, parentNote);
-    }
+    // CSV/XLSX become editable spreadsheet notes unless the user opts out (then they fall through
+    // to a plain file attachment), mirroring `textImportedAsText`/`codeImportedAsCode`.
+    if (taskContext?.data?.spreadsheetImportedAsSpreadsheet) {
+        if (mime === XLSX_MIME) {
+            return importSpreadsheet(taskContext, file, parentNote);
+        }
 
-    if (mime === CSV_MIME) {
-        return importSpreadsheetFromCsv(taskContext, file, parentNote);
+        if (mime === CSV_MIME) {
+            return importSpreadsheetFromCsv(taskContext, file, parentNote);
+        }
     }
 
     if (mime === "text/vnd.mermaid") {
