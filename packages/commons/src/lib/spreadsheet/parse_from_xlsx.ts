@@ -39,6 +39,9 @@ import {
 const DEFAULT_ROW_COUNT = 1000;
 const DEFAULT_COLUMN_COUNT = 20;
 
+/** Excel's default body font size (points); exceljs reports it on every theme-default font. */
+const EXCEL_DEFAULT_FONT_SIZE = 11;
+
 /**
  * Reads an `.xlsx` binary and produces a UniversJS workbook. Hidden sheets/rows/columns are
  * preserved and flagged hidden. Styles are emitted inline on each cell (Univer accepts either
@@ -225,15 +228,25 @@ function readFont(font: Partial<ExcelJS.Font> | undefined): Partial<IStyleData> 
     const out: Partial<IStyleData> = {};
     let any = false;
 
-    if (font.name) { out.ff = font.name; any = true; }
-    if (isFiniteNumber(font.size)) { out.fs = font.size; any = true; }
+    // exceljs injects the workbook-default font (Calibri 11, theme-1 text color, `scheme` set)
+    // onto any cell that has *other* styling but no explicit font. Carrying that back as an
+    // explicit font would override Univer's own default font — so skip the theme-derived name,
+    // the default size, and the default text color, while keeping bold/italic/underline/strike
+    // and any genuinely-explicit size/color (which exceljs reports without `scheme`).
+    const isThemeFont = Boolean(font.scheme);
+
+    if (font.name && !isThemeFont) { out.ff = font.name; any = true; }
+    if (isFiniteNumber(font.size) && !(isThemeFont && font.size === EXCEL_DEFAULT_FONT_SIZE)) { out.fs = font.size; any = true; }
     if (font.bold) { out.bl = 1; any = true; }
     if (font.italic) { out.it = 1; any = true; }
     if (font.underline) { out.ul = { s: 1 }; any = true; }
     if (font.strike) { out.st = { s: 1 }; any = true; }
 
-    const color = excelColorToRgb(font.color);
-    if (color) { out.cl = { rgb: color }; any = true; }
+    // Skip the default text color (theme 1) so the cell inherits Univer's default text color.
+    if (font.color?.theme !== 1) {
+        const color = excelColorToRgb(font.color);
+        if (color) { out.cl = { rgb: color }; any = true; }
+    }
 
     return any ? out : null;
 }

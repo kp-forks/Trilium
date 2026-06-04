@@ -7,6 +7,7 @@ import {
     CellValueType,
     HorizontalAlign,
     type ICellData,
+    type IStyleData,
     type IWorksheetData,
     VerticalAlign,
     WrapStrategy
@@ -25,6 +26,12 @@ async function roundTrip(build: (wb: ExcelJS.Workbook) => void, sheetIndex = 0):
 /** Convenience: the single styled cell at A1 (row 0, col 0). */
 function cellA1(sheet: IWorksheetData): ICellData | undefined {
     return sheet.cellData[0]?.[0];
+}
+
+/** The inline style object on a cell — the importer never emits string style references. */
+function styleOf(cell: ICellData | undefined): IStyleData {
+    const s = cell?.s;
+    return s && typeof s === "object" ? s : {};
 }
 
 describe("parseXlsxToWorkbook", () => {
@@ -60,6 +67,36 @@ describe("parseXlsxToWorkbook", () => {
         expect(cellA1(sheet)?.s).toMatchObject({
             ff: "Arial", fs: 14, bl: 1, it: 1, ul: { s: 1 }, st: { s: 1 }, cl: { rgb: "#414657" }
         });
+    });
+
+    it("does not capture the workbook-default font as an explicit font", async () => {
+        // A cell with other styling (number format) but no explicit font: exceljs reports the
+        // theme-default Calibri 11 — which must NOT become an explicit font, so the cell keeps
+        // inheriting Univer's default font.
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            const cell = ws.getCell("A1");
+            cell.value = 5;
+            cell.numFmt = "0.00";
+        });
+        const style = styleOf(cellA1(sheet));
+        expect(style.ff).toBeUndefined();
+        expect(style.fs).toBeUndefined();
+        expect(style.cl).toBeUndefined();
+        expect(style.n).toMatchObject({ pattern: "0.00" });
+    });
+
+    it("keeps an explicit font size/color on a default-family font", async () => {
+        // No explicit family, but an explicit size and color — both must survive even though the
+        // family is left to the theme default.
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            const cell = ws.getCell("A1");
+            cell.value = "x";
+            cell.font = { size: 19, color: { argb: "FF036672" } };
+        });
+        expect(cellA1(sheet)?.s).toMatchObject({ fs: 19, cl: { rgb: "#036672" } });
+        expect(styleOf(cellA1(sheet)).ff).toBeUndefined();
     });
 
     it("reads a solid fill into the background color", async () => {
