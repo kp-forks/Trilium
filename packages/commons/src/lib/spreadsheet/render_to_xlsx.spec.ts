@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { renderSpreadsheetToXlsx } from "./render_to_xlsx.js";
+import { renderSpreadsheetToXlsx, uniqueSheetName } from "./render_to_xlsx.js";
 
 /** Wrap a single styled cell (at A1 / row 0, col 0) into a complete workbook payload. */
 function singleCellWorkbook(cell: unknown, sheetExtra: Record<string, unknown> = {}, styles: Record<string, unknown> = {}): string {
@@ -225,3 +225,68 @@ describe("renderSpreadsheetToXlsx", () => {
         });
     });
 });
+
+describe("uniqueSheetName", () => {
+    it("sanitises illegal characters, apostrophes, over-long and empty/reserved names", () => {
+        // Excel/exceljs reject \ / ? * : [ ] -> replace with underscore.
+        expect(uniqueSheetName("Sheet/1", new Set())).toBe("Sheet_1");
+        expect(uniqueSheetName("a:b*c?", new Set())).toBe("a_b_c_");
+        expect(uniqueSheetName("[ledger]\\", new Set())).toBe("_ledger__");
+        // A leading/trailing single quote is rejected.
+        expect(uniqueSheetName("'quoted'", new Set())).toBe("_quoted_");
+        // 31-char cap.
+        expect(uniqueSheetName("A".repeat(40), new Set())).toBe("A".repeat(31));
+        // Empty/whitespace falls back to a default; "History" is reserved (case-insensitive).
+        expect(uniqueSheetName("", new Set())).toBe("Sheet");
+        expect(uniqueSheetName("   ", new Set())).toBe("Sheet");
+        expect(uniqueSheetName("History", new Set())).toBe("History_");
+        expect(uniqueSheetName("history", new Set())).toBe("history_");
+    });
+
+    it("de-duplicates case-insensitively, keeping names within the 31-char limit", () => {
+        const used = new Set<string>();
+        expect(uniqueSheetName("Data", used)).toBe("Data");
+        expect(uniqueSheetName("data", used)).toBe("data (2)");
+        expect(uniqueSheetName("DATA", used)).toBe("DATA (3)");
+
+        const long = new Set<string>();
+        expect(uniqueSheetName("A".repeat(40), long)).toBe("A".repeat(31));
+        const second = uniqueSheetName("A".repeat(40), long);
+        expect(second).toHaveLength(31);
+        expect(second.endsWith(" (2)")).toBe(true);
+    });
+});
+
+describe("renderSpreadsheetToXlsx sheet-name safety", () => {
+    it("writes hostile sheet names as legal, unique, readable sheets without throwing", async () => {
+        const json = workbookWithSheetNames(["Sheet/1", "History", "'Sales'", "A".repeat(40)]);
+        const wb = await roundTrip(json);
+        expect(wb.worksheets.map((ws) => ws.name)).toEqual(["Sheet_1", "History_", "_Sales_", "A".repeat(31)]);
+    });
+
+    it("de-duplicates colliding sheet names case-insensitively", async () => {
+        const json = workbookWithSheetNames(["Data", "data", "DATA"]);
+        const wb = await roundTrip(json);
+        expect(wb.worksheets.map((ws) => ws.name)).toEqual(["Data", "data (2)", "DATA (3)"]);
+    });
+});
+
+/** Build a workbook payload whose visible sheets carry the given (possibly hostile) names. */
+function workbookWithSheetNames(names: string[]): string {
+    const sheets: Record<string, unknown> = {};
+    const sheetOrder: string[] = [];
+    names.forEach((name, i) => {
+        const id = `s${i}`;
+        sheetOrder.push(id);
+        sheets[id] = {
+            id,
+            name,
+            hidden: 0,
+            mergeData: [],
+            cellData: { "0": { "0": { v: `cell-${i}`, t: 1 } } },
+            rowData: {},
+            columnData: {}
+        };
+    });
+    return JSON.stringify({ version: 1, workbook: { sheetOrder, styles: {}, sheets } });
+}

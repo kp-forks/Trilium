@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 
-import { parseXlsxToWorkbook } from "./parse_from_xlsx.js";
+import { parseXlsxToWorkbook, toArrayBuffer } from "./parse_from_xlsx.js";
 import {
     BorderStyle,
     CellValueType,
@@ -217,5 +217,61 @@ describe("parseXlsxToWorkbook", () => {
 
     it("throws on a non-xlsx buffer", async () => {
         await expect(parseXlsxToWorkbook(new Uint8Array([1, 2, 3]))).rejects.toThrow(/parse/i);
+    });
+
+    it("parses an xlsx delivered as an offset view into a larger buffer (Node Buffer import path)", async () => {
+        // Reproduces the real server-import shape: a Node Buffer that views part of a larger
+        // backing buffer at a non-zero offset (single.ts / zip.ts both pass Buffers). With the
+        // buggy `slice().buffer`, exceljs receives the WHOLE backing; the stray end-of-central-
+        // directory marker placed in the trailing bytes then makes JSZip read an empty archive,
+        // silently dropping every sheet.
+        const wb = new ExcelJS.Workbook();
+        wb.addWorksheet("Data").getCell("A1").value = "survived";
+        const xlsx = Buffer.from((await wb.xlsx.writeBuffer()) as ArrayBuffer);
+
+        const PREFIX = 8;
+        const TRAILER = 32;
+        const backing = Buffer.alloc(PREFIX + xlsx.length + TRAILER); // standalone, zero-filled
+        xlsx.copy(backing, PREFIX);
+        // A fake EOCD signature ("PK\x05\x06") at the very end; the 18 zero bytes after it read as
+        // a valid record describing zero entries, so the whole backing parses as an empty zip.
+        backing.set([0x50, 0x4b, 0x05, 0x06], backing.length - 22);
+        const view = backing.subarray(PREFIX, PREFIX + xlsx.length);
+
+        const { workbook } = await parseXlsxToWorkbook(view);
+        const sheet = workbook.sheets[workbook.sheetOrder[0]];
+        expect(sheet?.cellData[0]?.[0]).toMatchObject({ v: "survived" });
+    });
+});
+
+describe("toArrayBuffer", () => {
+    it("copies a Node Buffer view into a tightly-sized ArrayBuffer, not the whole backing", () => {
+        // Buffer.prototype.slice returns a VIEW over the same backing (unlike
+        // Uint8Array.prototype.slice, which copies), so `input.slice().buffer` would expose the
+        // entire backing — foreign bytes and all — to exceljs.
+        const backing = Buffer.alloc(64);
+        for (let i = 0; i < backing.length; i++) backing[i] = i;
+        const view = backing.subarray(8, 24); // 16 bytes at a non-zero offset
+
+        const result = toArrayBuffer(view);
+
+        expect(result.byteLength).toBe(view.byteLength);
+        expect([...new Uint8Array(result)]).toEqual([...view]);
+    });
+
+    it("copies a Uint8Array subarray tightly (browser/standalone import path)", () => {
+        const backing = new Uint8Array(64);
+        for (let i = 0; i < backing.length; i++) backing[i] = i;
+        const view = backing.subarray(8, 24);
+
+        const result = toArrayBuffer(view);
+
+        expect(result.byteLength).toBe(view.byteLength);
+        expect([...new Uint8Array(result)]).toEqual([...view]);
+    });
+
+    it("returns a standalone ArrayBuffer unchanged", () => {
+        const ab = new ArrayBuffer(8);
+        expect(toArrayBuffer(ab)).toBe(ab);
     });
 });

@@ -54,15 +54,50 @@ export async function renderSpreadsheetToXlsx(jsonContent: string): Promise<Exce
         return out.xlsx.writeBuffer();
     }
 
+    // Sheet names come from arbitrary user/imported data; exceljs throws (aborting the whole
+    // export) on names that are illegal or collide, so resolve each to an Excel-legal unique name.
+    const usedNames = new Set<string>();
     for (const sheet of visibleSheets) {
-        writeSheet(out, sheet, styles);
+        writeSheet(out, sheet, uniqueSheetName(sheet.name, usedNames), styles);
     }
 
     return out.xlsx.writeBuffer();
 }
 
-function writeSheet(out: ExcelJS.Workbook, sheet: IWorksheetData, styles: Record<string, IStyleData | null>): void {
-    const ws = out.addWorksheet(sheet.name || "Sheet", {
+const MAX_SHEET_NAME_LENGTH = 31;
+// Excel/exceljs reject these characters anywhere in a worksheet name.
+const ILLEGAL_SHEET_NAME_CHARS = /[\\/?*:[\]]/g;
+
+/**
+ * Returns an Excel-legal, workbook-unique worksheet name derived from `name`, recording the result
+ * in `usedNames`. exceljs throws when a name is empty, equals the reserved "History", contains
+ * \ / ? * : [ ], begins/ends with a single quote, or collides case-insensitively with an existing
+ * sheet — so sanitise, truncate, then de-duplicate.
+ */
+export function uniqueSheetName(name: string | undefined, usedNames: Set<string>): string {
+    const base = sanitizeSheetName(name);
+    let candidate = base;
+    for (let n = 2; usedNames.has(candidate.toLowerCase()); n++) {
+        const suffix = ` (${n})`;
+        candidate = `${base.slice(0, MAX_SHEET_NAME_LENGTH - suffix.length)}${suffix}`;
+    }
+    usedNames.add(candidate.toLowerCase());
+    return candidate;
+}
+
+function sanitizeSheetName(name: string | undefined): string {
+    const cleaned = (name ?? "")
+        .replace(ILLEGAL_SHEET_NAME_CHARS, "_")
+        .trim()
+        .slice(0, MAX_SHEET_NAME_LENGTH)
+        .replace(/^'+|'+$/g, "_"); // a leading/trailing single quote is illegal — check after the cut
+    if (cleaned === "") return "Sheet";
+    if (/^history$/i.test(cleaned)) return `${cleaned}_`;
+    return cleaned;
+}
+
+function writeSheet(out: ExcelJS.Workbook, sheet: IWorksheetData, name: string, styles: Record<string, IStyleData | null>): void {
+    const ws = out.addWorksheet(name, {
         views: [{ showGridLines: sheet.showGridlines !== 0 }],
         // Carry Univer's sheet-wide defaults so rows/columns without an explicit size keep it on
         // round-trip; otherwise Excel falls back to its own defaults (15pt rows / 8.43-char cols).

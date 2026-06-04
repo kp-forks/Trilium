@@ -538,10 +538,13 @@ function isFiniteNumber(v: unknown): v is number {
 /**
  * Normalizes input to a tight `ArrayBuffer` for exceljs. A `Uint8Array`/Node `Buffer` can be a
  * view into a larger pooled buffer, so reading `.buffer` directly would include foreign bytes —
- * slice by its offset/length when it isn't already a full-buffer view.
+ * slice by its offset/length to copy out exactly the viewed region.
  */
-function toArrayBuffer(input: ArrayBuffer | Uint8Array): ArrayBuffer {
+export function toArrayBuffer(input: ArrayBuffer | Uint8Array): ArrayBuffer {
     if (!(input instanceof Uint8Array)) return input;
-    // `slice()` copies into a fresh, tightly-sized ArrayBuffer — independent of any pool.
-    return input.slice().buffer as ArrayBuffer;
+    // NB: `input.slice()` can't be used here — Node's `Buffer.prototype.slice` returns a VIEW over
+    // the same (often pooled) backing, so `.buffer` would expose the entire backing. Slicing the
+    // backing ArrayBuffer by offset/length copies out exactly the viewed bytes in both Node and
+    // the browser.
+    return input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength) as ArrayBuffer;
 }
