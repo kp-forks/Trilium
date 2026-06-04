@@ -224,7 +224,10 @@
     "reopen_last_tab": "最後に閉じたタブを開く",
     "move_tab_to_new_window": "このタブを新しいウィンドウに移動",
     "copy_tab_to_new_window": "このタブを新しいウィンドウにコピーする",
-    "new_tab": "新しいタブ"
+    "new_tab": "新しいタブ",
+    "pin_tab": "タブを固定",
+    "unpin_tab": "タブの固定を解除",
+    "pinned_prefix": "固定済み: "
   },
   "tasks": {
     "due": {
@@ -533,7 +536,11 @@
     "show_attachments_title": "添付ファイルを表示",
     "show_attachments_description": "ノートの添付ファイルを表示",
     "configure_launch_bar_title": "ランチャーバーの設定",
-    "configure_launch_bar_description": "ランチャーバーの構成を開き、項目を追加または削除します。"
+    "configure_launch_bar_description": "ランチャーバーの構成を開き、項目を追加または削除します。",
+    "pin_tab_title": "タブを固定",
+    "pin_tab_description": "このノートを常にタブバーの先頭で開いたままにし、誤って閉じられるのを防ぎます",
+    "unpin_tab_title": "タブの固定を解除",
+    "unpin_tab_description": "このタブの固定を解除し、自由に閉じたり移動したりできるようにする"
   },
   "delete_note": {
     "delete_note": "ノートを削除",
