@@ -303,6 +303,8 @@ describe("#removeFileExtension", () => {
         [ "w/ 'test.markdown' it should strip '.markdown'", [ "test.markdown" ], "test" ],
         [ "w/ 'test.html' it should strip '.html'", [ "test.html" ], "test" ],
         [ "w/ 'test.htm' it should strip '.htm'", [ "test.htm" ], "test" ],
+        [ "w/ 'test.xlsx' it should strip '.xlsx'", [ "test.xlsx" ], "test" ],
+        [ "w/ 'test.csv' it should strip '.csv'", [ "test.csv" ], "test" ],
         [ "w/ 'test.zip' it should NOT strip '.zip'", [ "test.zip" ], "test.zip" ]
     ];
 
