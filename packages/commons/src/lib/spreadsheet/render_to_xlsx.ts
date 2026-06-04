@@ -6,144 +6,26 @@
  * Excel's, and fonts/fills/alignment/merges map directly. The heavy lifting (zip + XML) is
  * delegated to `exceljs`.
  *
- * DRAFT: the workbook-reading type subset and the `BorderStyle` enum are duplicated from
- * `render_to_html.ts` for now. Once a second consumer lands, lift the shared reader (parse,
- * sheet selection, style resolution, the type subset) into its own module and have both the
- * HTML and XLSX emitters depend on it.
+ * The workbook type subset, sheet selection, and style resolution live in the shared
+ * `workbook_model` reader; this module only owns the Univer→OOXML translation.
  */
 
 import ExcelJS from "exceljs";
 
-// #region UniversJS type subset
-
-interface PersistedData {
-    version: number;
-    workbook: IWorkbookData;
-}
-
-interface IWorkbookData {
-    sheetOrder: string[];
-    name?: string;
-    styles?: Record<string, IStyleData | null>;
-    sheets: Record<string, IWorksheetData>;
-}
-
-interface IWorksheetData {
-    id: string;
-    name: string;
-    hidden?: number;
-    defaultColumnWidth?: number;
-    defaultRowHeight?: number;
-    mergeData?: IRange[];
-    cellData: CellMatrix;
-    rowData?: Record<number, IRowData>;
-    columnData?: Record<number, IColumnData>;
-    showGridlines?: number;
-}
-
-type CellMatrix = Record<number, Record<number, ICellData>>;
-
-interface ICellData {
-    v?: string | number | boolean | null;
-    t?: number | null;
-    s?: IStyleData | string | null;
-    f?: string | null;
-}
-
-interface IStyleData {
-    bl?: number;
-    it?: number;
-    ul?: ITextDecoration;
-    st?: ITextDecoration;
-    fs?: number;
-    ff?: string | null;
-    bg?: IColorStyle | null;
-    cl?: IColorStyle | null;
-    ht?: number | null;
-    vt?: number | null;
-    tb?: number | null;
-    tr?: ITextRotation | null;
-    bd?: IBorderData | null;
-    n?: { pattern?: string | null } | null;
-}
-
-interface ITextDecoration {
-    s?: number;
-}
-
-interface IColorStyle {
-    rgb?: string | null;
-}
-
-interface ITextRotation {
-    a?: number;
-    v?: number;
-}
-
-interface IBorderData {
-    t?: IBorderStyleData | null;
-    r?: IBorderStyleData | null;
-    b?: IBorderStyleData | null;
-    l?: IBorderStyleData | null;
-}
-
-interface IBorderStyleData {
-    s?: number;
-    cl?: IColorStyle;
-}
-
-interface IRange {
-    startRow: number;
-    endRow: number;
-    startColumn: number;
-    endColumn: number;
-}
-
-interface IRowData {
-    h?: number;
-    hd?: number;
-}
-
-interface IColumnData {
-    w?: number;
-    hd?: number;
-}
-
-const enum HorizontalAlign {
-    LEFT = 1,
-    CENTER = 2,
-    RIGHT = 3
-}
-
-const enum VerticalAlign {
-    TOP = 1,
-    MIDDLE = 2,
-    BOTTOM = 3
-}
-
-const enum WrapStrategy {
-    WRAP = 3
-}
-
-// Univer BorderStyleTypes (@univerjs/core) -> exceljs border styles (OOXML names).
-const enum BorderStyle {
-    NONE = 0,
-    THIN = 1,
-    HAIR = 2,
-    DOTTED = 3,
-    DASHED = 4,
-    DASH_DOT = 5,
-    DASH_DOT_DOT = 6,
-    DOUBLE = 7,
-    MEDIUM = 8,
-    MEDIUM_DASHED = 9,
-    MEDIUM_DASH_DOT = 10,
-    MEDIUM_DASH_DOT_DOT = 11,
-    SLANT_DASH_DOT = 12,
-    THICK = 13
-}
-
-// #endregion
+import {
+    BorderStyle,
+    getVisibleSheets,
+    HorizontalAlign,
+    type IBorderData,
+    type ICellData,
+    isFiniteNumber,
+    type IStyleData,
+    type IWorksheetData,
+    parseWorkbookData,
+    resolveCellStyle,
+    VerticalAlign,
+    WrapStrategy
+} from "./workbook_model.js";
 
 /**
  * Parses the raw JSON content of a spreadsheet note and produces an `.xlsx` workbook as a
@@ -151,10 +33,8 @@ const enum BorderStyle {
  * hidden (Excel keeps the data). Throws if the content is not a parseable workbook.
  */
 export async function renderSpreadsheetToXlsx(jsonContent: string): Promise<ExcelJS.Buffer> {
-    let data: PersistedData;
-    try {
-        data = JSON.parse(jsonContent);
-    } catch {
+    const { ok, data } = parseWorkbookData(jsonContent);
+    if (!ok) {
         throw new Error("Unable to parse spreadsheet data.");
     }
 
@@ -166,10 +46,7 @@ export async function renderSpreadsheetToXlsx(jsonContent: string): Promise<Exce
     const styles = workbook.styles ?? {};
     const out = new ExcelJS.Workbook();
 
-    const sheetIds = workbook.sheetOrder ?? Object.keys(workbook.sheets);
-    const visibleSheets = sheetIds
-        .map((id) => workbook.sheets[id])
-        .filter((s) => s && !s.hidden);
+    const visibleSheets = getVisibleSheets(workbook);
 
     // Always emit at least one sheet so the file is a valid workbook.
     if (visibleSheets.length === 0) {
@@ -237,7 +114,7 @@ function writeCell(target: ExcelJS.Cell, cell: ICellData | undefined, styles: Re
 
     setCellValue(target, cell);
 
-    const style = resolveStyle(cell.s, styles);
+    const style = resolveCellStyle(cell.s, styles);
     if (!style) return;
 
     if (style.n?.pattern) target.numFmt = style.n.pattern;
@@ -264,12 +141,6 @@ function setCellValue(target: ExcelJS.Cell, cell: ICellData): void {
     }
     if (cell.v == null) return;
     target.value = cell.v;
-}
-
-function resolveStyle(s: ICellData["s"], styles: Record<string, IStyleData | null>): IStyleData | null {
-    if (!s) return null;
-    if (typeof s === "string") return styles[s] ?? null;
-    return s;
 }
 
 function buildFont(style: IStyleData): Partial<ExcelJS.Font> | null {
@@ -386,8 +257,4 @@ function pxToExcelWidth(px: number): number {
 /** Univer stores row heights in pixels; Excel uses points (1px = 0.75pt at 96dpi). */
 function pxToPoints(px: number): number {
     return px * 0.75;
-}
-
-function isFiniteNumber(v: unknown): v is number {
-    return typeof v === "number" && Number.isFinite(v);
 }
