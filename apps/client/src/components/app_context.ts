@@ -263,6 +263,8 @@ export type CommandMappings = {
     closeOtherTabs: CommandData;
     closeRightTabs: CommandData;
     closeAllTabs: CommandData;
+    pinTab: CommandData;
+    unpinTab: CommandData;
     reopenLastTab: CommandData;
     moveTabToNewWindow: CommandData;
     copyTabToNewWindow: CommandData;
@@ -497,6 +499,10 @@ type EventMappings = {
     };
     tabReorder: {
         ntxIdsInOrder: string[];
+    };
+    tabPinStateChanged: {
+        ntxId: string | null;
+        pinned: boolean;
     };
     refreshNoteList: {
         noteId: string;

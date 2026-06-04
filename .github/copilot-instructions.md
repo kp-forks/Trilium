@@ -255,6 +255,7 @@ Tools are defined using `defineTools()` in `apps/server/src/services/llm/tools/`
 - **Build system**: Uses Vite for fast development, ESBuild for production optimization
 - **Patches**: Custom patches in `patches/` directory for CKEditor and other dependencies
 - **No non-null assertions**: Never use the TypeScript non-null assertion operator (postfix `!`), including in tests. Narrow instead — optional chaining (`?.`), a `?? fallback`, an explicit null check, or an `*OrThrow` accessor (e.g. `becca.getNoteOrThrow(id)` rather than `becca.getNote(id)!`).
+- **Helper placement**: When extracting a standalone helper function from a component, widget, hook, or route, place it below the primary export it supports (or in a separate module), not wedged between the imports and the main definition. The file's primary export stays near the top; supporting helpers follow it.
 
 ## Key Files for Context
 
