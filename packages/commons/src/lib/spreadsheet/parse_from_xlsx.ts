@@ -108,8 +108,11 @@ function readSheet(ws: ExcelJS.Worksheet, id: string): IWorksheetData {
 function readCells(ws: ExcelJS.Worksheet): Record<number, Record<number, ICellData>> {
     const cellData: Record<number, Record<number, ICellData>> = {};
 
-    ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-        row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+    // `includeEmpty: true` so cells carrying only a style (e.g. a header background with no
+    // text) are visited — `readCell` drops the truly-empty ones. With `false`, exceljs skips
+    // any cell/row without a value, silently losing fills on blank cells.
+    ws.eachRow({ includeEmpty: true }, (row, rowNumber) => {
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
             const data = readCell(cell);
             if (!data) return;
             const r = rowNumber - 1;
@@ -296,11 +299,15 @@ function readRows(ws: ExcelJS.Worksheet): { rowData: Record<number, IRowData>; m
     const rowData: Record<number, IRowData> = {};
     let maxRow = 0;
 
-    ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    // `includeEmpty: true` keeps custom heights on rows that hold only styled (valueless) cells,
+    // such as a thin spacer row, which `false` would skip.
+    ws.eachRow({ includeEmpty: true }, (row, rowNumber) => {
         const index = rowNumber - 1;
         if (rowNumber > maxRow) maxRow = rowNumber - 1;
 
         const meta: IRowData = {};
+        // exceljs leaves `row.height` undefined unless the row carries a custom height, so this
+        // never picks up the sheet default (which lives on `ws.properties.defaultRowHeight`).
         if (isFiniteNumber(row.height)) meta.h = pointsToPx(row.height);
         if (row.hidden) meta.hd = 1;
         if (meta.h != null || meta.hd != null) rowData[index] = meta;

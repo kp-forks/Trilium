@@ -63,7 +63,13 @@ export async function renderSpreadsheetToXlsx(jsonContent: string): Promise<Exce
 
 function writeSheet(out: ExcelJS.Workbook, sheet: IWorksheetData, styles: Record<string, IStyleData | null>): void {
     const ws = out.addWorksheet(sheet.name || "Sheet", {
-        views: [{ showGridLines: sheet.showGridlines !== 0 }]
+        views: [{ showGridLines: sheet.showGridlines !== 0 }],
+        // Carry Univer's sheet-wide defaults so rows/columns without an explicit size keep it on
+        // round-trip; otherwise Excel falls back to its own defaults (15pt rows / 8.43-char cols).
+        properties: {
+            ...(isFiniteNumber(sheet.defaultRowHeight) ? { defaultRowHeight: pxToPoints(sheet.defaultRowHeight) } : {}),
+            ...(isFiniteNumber(sheet.defaultColumnWidth) ? { defaultColWidth: pxToExcelWidth(sheet.defaultColumnWidth) } : {})
+        }
     });
 
     applyColumns(ws, sheet);

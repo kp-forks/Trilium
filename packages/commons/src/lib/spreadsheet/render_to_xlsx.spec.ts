@@ -170,6 +170,15 @@ describe("renderSpreadsheetToXlsx", () => {
         expect(on.views[0].showGridLines).toBe(true);
     });
 
+    it("emits sheet default row height and column width", async () => {
+        const ws = (await roundTrip(
+            singleCellWorkbook({ v: "x" }, { defaultRowHeight: 24, defaultColumnWidth: 88 })
+        )).worksheets[0];
+        // 24px -> 18pt; 88px -> (88-5)/7 ≈ 11.86 chars.
+        expect(ws.properties.defaultRowHeight).toBeCloseTo(18, 1);
+        expect(ws.properties.defaultColWidth).toBeCloseTo(11.86, 1);
+    });
+
     it("writes a formula with its cached result", async () => {
         const ws = (await roundTrip(singleCellWorkbook({ f: "=SUM(B1:B2)", v: 7, t: 2 }))).worksheets[0];
         const value = ws.getCell("A1").value as ExcelJS.CellFormulaValue;

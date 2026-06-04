@@ -149,6 +149,26 @@ describe("parseXlsxToWorkbook", () => {
         expect(sheet.rowData?.[0]?.hd).toBe(1);
     });
 
+    it("keeps the background of an empty (value-less) styled cell", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = "x";
+            // B1 has only a fill, no value — must still survive the round-trip.
+            ws.getCell("B1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF9F9F9" } };
+        });
+        expect(sheet.cellData[0][1]?.s).toMatchObject({ bg: { rgb: "#F9F9F9" } });
+    });
+
+    it("reads the sheet default row height and column width", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S", { properties: { defaultRowHeight: 18, defaultColWidth: 11.857 } });
+            ws.getCell("A1").value = "x";
+        });
+        // 18pt -> 18/0.75 = 24px; 11.857 chars -> 11.857*7+5 ≈ 88px.
+        expect(sheet.defaultRowHeight).toBeCloseTo(24, 0);
+        expect(sheet.defaultColumnWidth).toBeCloseTo(88, 0);
+    });
+
     it("preserves sheet order across multiple sheets", async () => {
         const wb = new ExcelJS.Workbook();
         wb.addWorksheet("First").getCell("A1").value = "1";
