@@ -189,9 +189,13 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
 
     useTriliumEvent("customDownload", ({ ntxId }) => {
         if (ntxId !== noteContext.ntxId) return;
-        iframeRef.current?.contentWindow?.postMessage({
-            type: "trilium-request-download"
-        });
+
+        const url = `${window.glob.baseApiUrl}notes/${note.noteId}/download?${Date.now()}`;
+        if (window.electronApi) {
+            window.electronApi.shell.downloadURL(url);
+        } else {
+            window.location.href = url;
+        }
     });
 
     useTriliumEvent("printActiveNote", () => {
