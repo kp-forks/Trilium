@@ -10,6 +10,7 @@ import { useTriliumEvent } from "../../react/hooks";
 
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const CSV_MIME = "text/csv;charset=utf-8";
+const ZIP_MIME = "application/zip";
 // Excel on Windows only auto-detects UTF-8 in a CSV when it starts with a byte-order mark.
 const UTF8_BOM = "\uFEFF";
 
@@ -48,15 +49,23 @@ async function exportToXlsx(univerAPI: FUniver | undefined, note: FNote) {
 }
 
 async function exportToCsv(univerAPI: FUniver | undefined, note: FNote) {
-    if (!univerAPI) return;
+    const workbook = univerAPI?.getActiveWorkbook();
+    if (!workbook) return;
 
-    const json = serializeWorkbook(univerAPI);
-    if (json == null) return;
+    const wbData = workbook.save();
+    const json = JSON.stringify({ version: 1, workbook: wbData });
 
     try {
-        // CSV holds a single sheet, so export the one the user is looking at.
-        const sheetId = univerAPI.getActiveWorkbook()?.getActiveSheet()?.getSheetId();
+        // A workbook with multiple visible sheets can't fit in one CSV, so bundle one file per
+        // sheet into a zip; a single-sheet workbook downloads as a plain .csv of that sheet.
+        if (countVisibleSheets(wbData) > 1) {
+            const { renderSpreadsheetToCsvZip } = await import("@triliumnext/commons/src/lib/spreadsheet/render_to_csv");
+            const zip = await renderSpreadsheetToCsvZip(json);
+            await download(note, "zip", new Blob([zip as BlobPart], { type: ZIP_MIME }));
+            return;
+        }
 
+        const sheetId = workbook.getActiveSheet()?.getSheetId();
         const { renderSpreadsheetToCsv } = await import("@triliumnext/commons/src/lib/spreadsheet/render_to_csv");
         const csv = renderSpreadsheetToCsv(json, { sheetId });
         await download(note, "csv", new Blob([UTF8_BOM + csv], { type: CSV_MIME }));
@@ -64,6 +73,13 @@ async function exportToCsv(univerAPI: FUniver | undefined, note: FNote) {
         console.error("[spreadsheet-export] csv failed", e);
         toast.showError(t("spreadsheet.export-csv-failed"));
     }
+}
+
+/** Counts the sheets Univer's `save()` reports as not hidden — mirrors `getVisibleSheets` in commons. */
+function countVisibleSheets(wbData: { sheetOrder?: string[]; sheets?: Record<string, { hidden?: number }> }): number {
+    const sheets = wbData.sheets ?? {};
+    const ids = wbData.sheetOrder ?? Object.keys(sheets);
+    return ids.filter((id) => sheets[id] && !sheets[id].hidden).length;
 }
 
 /** Serializes the live workbook in the same shape the note is persisted in. */

@@ -1,6 +1,38 @@
+import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
 
-import { renderSpreadsheetToCsv } from "./render_to_csv.js";
+import { renderSpreadsheetToCsv, renderSpreadsheetToCsvZip } from "./render_to_csv.js";
+
+/** A sheet definition for {@link multiSheetWorkbook}. */
+interface SheetSpec {
+    id: string;
+    name: string;
+    hidden?: number;
+    cellData: Record<number, Record<number, unknown>>;
+}
+
+/** Build a workbook payload from several sheets, preserving their order. */
+function multiSheetWorkbook(sheets: SheetSpec[]): string {
+    return JSON.stringify({
+        version: 1,
+        workbook: {
+            sheetOrder: sheets.map((s) => s.id),
+            styles: {},
+            sheets: Object.fromEntries(sheets.map((s) => [s.id, { mergeData: [], rowData: {}, columnData: {}, ...s }]))
+        }
+    });
+}
+
+/** Render a zip and read its entries back as `{ name: csvContent }`, BOM stripped. */
+async function readZip(buffer: Uint8Array): Promise<Record<string, string>> {
+    const zip = await JSZip.loadAsync(buffer);
+    const entries: Record<string, string> = {};
+    for (const name of Object.keys(zip.files)) {
+        const content = await zip.files[name].async("string");
+        entries[name] = content.replace(/^\uFEFF/, "");
+    }
+    return entries;
+}
 
 /** Build a workbook payload from a sparse cell matrix (keyed by row, then column). */
 function workbook(
@@ -157,5 +189,54 @@ describe("renderSpreadsheetToCsv", () => {
     it("throws on unparseable JSON and on a workbook with no sheets", () => {
         expect(() => renderSpreadsheetToCsv("not json")).toThrow(/parse/i);
         expect(() => renderSpreadsheetToCsv(JSON.stringify({ version: 1 }))).toThrow(/no sheets/i);
+    });
+});
+
+describe("renderSpreadsheetToCsvZip", () => {
+    it("emits one BOM-prefixed CSV per visible sheet, named after the sheet", async () => {
+        const buffer = await renderSpreadsheetToCsvZip(multiSheetWorkbook([
+            { id: "s1", name: "Budget", cellData: { 0: { 0: { v: "a" }, 1: { v: 1 } } } },
+            { id: "s2", name: "Notes", cellData: { 0: { 0: { v: "hello" } } } }
+        ]));
+
+        const entries = await readZip(buffer);
+        expect(Object.keys(entries).sort()).toEqual(["Budget.csv", "Notes.csv"]);
+        expect(entries["Budget.csv"]).toBe("a,1");
+        expect(entries["Notes.csv"]).toBe("hello");
+
+        // Each entry must keep its UTF-8 BOM (readZip strips it before returning).
+        const zip = await JSZip.loadAsync(buffer);
+        expect(await zip.files["Budget.csv"].async("string")).toMatch(/^\uFEFF/);
+    });
+
+    it("skips hidden sheets", async () => {
+        const entries = await readZip(await renderSpreadsheetToCsvZip(multiSheetWorkbook([
+            { id: "s1", name: "Visible", cellData: { 0: { 0: { v: "x" } } } },
+            { id: "s2", name: "Secret", hidden: 1, cellData: { 0: { 0: { v: "y" } } } }
+        ])));
+        expect(Object.keys(entries)).toEqual(["Visible.csv"]);
+    });
+
+    it("sanitizes illegal filename characters in sheet names", async () => {
+        const entries = await readZip(await renderSpreadsheetToCsvZip(multiSheetWorkbook([
+            { id: "s1", name: "2026/Q1: a*b?", cellData: { 0: { 0: { v: "v" } } } }
+        ])));
+        expect(Object.keys(entries)).toEqual(["2026_Q1_ a_b_.csv"]);
+    });
+
+    it("de-duplicates colliding sheet names (case-insensitively)", async () => {
+        const entries = await readZip(await renderSpreadsheetToCsvZip(multiSheetWorkbook([
+            { id: "s1", name: "Sheet", cellData: { 0: { 0: { v: 1 } } } },
+            { id: "s2", name: "sheet", cellData: { 0: { 0: { v: 2 } } } },
+            { id: "s3", name: "", cellData: { 0: { 0: { v: 3 } } } }
+        ])));
+        // Each base keeps its own casing; collisions are detected case-insensitively, so "sheet"
+        // and the blank name (which falls back to "Sheet") get numbered suffixes.
+        expect(Object.keys(entries).sort()).toEqual(["Sheet (3).csv", "Sheet.csv", "sheet (2).csv"]);
+    });
+
+    it("throws on unparseable JSON and on a workbook with no sheets", async () => {
+        await expect(renderSpreadsheetToCsvZip("not json")).rejects.toThrow(/parse/i);
+        await expect(renderSpreadsheetToCsvZip(JSON.stringify({ version: 1 }))).rejects.toThrow(/no sheets/i);
     });
 });
