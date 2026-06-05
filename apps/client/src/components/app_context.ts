@@ -515,9 +515,6 @@ type EventMappings = {
     relationMapResetPanZoom: { ntxId: string | null | undefined };
     relationMapResetZoomIn: { ntxId: string | null | undefined };
     relationMapResetZoomOut: { ntxId: string | null | undefined };
-    imageZoomIn: { ntxId: string | null | undefined };
-    imageZoomOut: { ntxId: string | null | undefined };
-    imageZoomReset: { ntxId: string | null | undefined };
     activeNoteChanged: {ntxId: string | null | undefined};
     showAddLinkDialog: AddLinkOpts;
     showIncludeDialog: IncludeNoteOpts;

@@ -1,20 +1,17 @@
 import "./Image.css";
 
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 import image_context_menu from "../../menus/image_context_menu";
 import { copyImageReferenceToClipboard } from "../../services/image";
 import { createImageSrcUrl } from "../../services/utils";
-import { useTriliumEvent, useTriliumEvents } from "../react/hooks";
+import { useTriliumEvent } from "../react/hooks";
 import ImageViewer from "../react/ImageViewer";
 import { refToJQuerySelector } from "../react/react_utils";
-import { applyImageZoom } from "./image_zoom";
 import { TypeWidgetProps } from "./type_widget";
 
 export default function Image({ note, ntxId }: TypeWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const zoomRef = useRef<ReactZoomPanPinchRef>(null);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
 
     useEffect(() => image_context_menu.setupContextMenu(refToJQuerySelector(containerRef)), []);
@@ -27,10 +24,6 @@ export default function Image({ note, ntxId }: TypeWidgetProps) {
         if ($img.length) copyImageReferenceToClipboard($img.parent());
     });
 
-    useTriliumEvents([ "imageZoomIn", "imageZoomOut", "imageZoomReset" ], ({ ntxId: eventNtxId }, eventName) =>
-        applyImageZoom(zoomRef.current, eventName, eventNtxId, ntxId)
-    );
-
     // A new revision swaps the image content; remount so it re-fits to the viewport.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.isNoteReloaded(note.noteId)) {
@@ -42,7 +35,6 @@ export default function Image({ note, ntxId }: TypeWidgetProps) {
         <div ref={containerRef} className="note-detail-image-wrapper">
             <ImageViewer
                 key={`${note.noteId}-${refreshCounter}`}
-                apiRef={zoomRef}
                 imgClassName="note-detail-image-view"
                 src={createImageSrcUrl(note)}
                 alt={note.title}

@@ -12,6 +12,9 @@ vi.mock("react-zoom-pan-pinch", () => ({
     TransformComponent: (props: { children?: ComponentChildren }) => props.children
 }));
 
+// Avoid pulling the real hooks module (bootstrap tooltips + app context) into the test.
+vi.mock("./hooks", () => ({ useStaticTooltip: () => {} }));
+
 import ImageViewer, { evaluateImageZoom } from "./ImageViewer";
 
 function renderViewer(props: Parameters<typeof ImageViewer>[0]) {
@@ -77,5 +80,11 @@ describe("evaluateImageZoom", () => {
     it("never goes crisp when the image is missing or not yet loaded", () => {
         expect(evaluateImageZoom(50, null).largeZoom).toBe(false);
         expect(evaluateImageZoom(50, img(0, 800)).largeZoom).toBe(false);
+    });
+
+    it("reports on-screen size relative to native resolution", () => {
+        expect(evaluateImageZoom(1, img(800, 800)).nativeScale).toBe(1);
+        expect(evaluateImageZoom(5, img(4000, 800)).nativeScale).toBe(1); // 0.2x fit, 1x native at scale 5
+        expect(evaluateImageZoom(50, null).nativeScale).toBe(0);
     });
 });
