@@ -14,21 +14,16 @@ import { TypeWidgetProps } from "./type_widget";
 
 export default function Image({ note, ntxId }: TypeWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const copyRef = useRef<HTMLDivElement>(null);
     const zoomRef = useRef<ReactZoomPanPinchRef>(null);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
 
     useEffect(() => image_context_menu.setupContextMenu(refToJQuerySelector(containerRef)), []);
 
-    // The ribbon's "copy reference" button triggers this. Copy a plain <img> rather than the
-    // zoom wrapper so the clipboard gets clean markup without the transform containers.
+    // The ribbon's "copy reference" button triggers this. Select the rendered image's wrapper so
+    // the clipboard gets clean <img> markup without the surrounding zoom/transform containers.
     useTriliumEvent("copyImageReferenceToClipboard", ({ ntxId: eventNtxId }) => {
-        if (eventNtxId !== ntxId || !copyRef.current) return;
-        const img = document.createElement("img");
-        img.src = createImageSrcUrl(note);
-        copyRef.current.replaceChildren(img);
-        copyImageReferenceToClipboard(refToJQuerySelector(copyRef));
-        copyRef.current.replaceChildren();
+        if (eventNtxId !== ntxId) return;
+        copyImageReferenceToClipboard(refToJQuerySelector(containerRef).find("img").parent());
     });
 
     useTriliumEvents([ "imageZoomIn", "imageZoomOut", "imageZoomReset" ], ({ ntxId: eventNtxId }, eventName) =>
@@ -49,8 +44,8 @@ export default function Image({ note, ntxId }: TypeWidgetProps) {
                 apiRef={zoomRef}
                 imgClassName="note-detail-image-view"
                 src={createImageSrcUrl(note)}
+                alt={note.title}
             />
-            <div ref={copyRef} className="image-copy-reference-source" />
         </div>
     );
 }

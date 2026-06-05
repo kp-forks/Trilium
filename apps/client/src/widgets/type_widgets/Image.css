@@ -11,10 +11,3 @@
     overflow: hidden;
     height: 100%;
 }
-
-/* Off-screen host used only to copy a clean image reference to the clipboard. */
-.image-copy-reference-source {
-    position: absolute;
-    pointer-events: none;
-    opacity: 0;
-}

@@ -1,11 +1,12 @@
 import "./ImageViewer.css";
 
 import { Ref } from "preact";
-import { type ReactZoomPanPinchRef,TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 interface ImageViewerProps {
     src: string;
     imgClassName?: string;
+    /** Alt text for the image; callers should pass a descriptive value such as the note title. */
     alt?: string;
     minScale?: number;
     maxScale?: number;
