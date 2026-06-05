@@ -113,11 +113,11 @@ export default class RootCommandExecutor extends Component {
         await this.showAndHoistSubtree("_hidden");
     }
 
-    async showOptionsCommand({ section }: CommandListenerData<"showOptions">) {
-        await appContext.tabManager.openContextWithNote(section || "_options", {
-            activate: true,
-            hoistedNoteId: "_options"
-        });
+    showOptionsCommand({ section }: CommandListenerData<"showOptions">) {
+        // Open settings in the quick-edit popup on the first page (Appearance) by default, instead
+        // of opening a new hoisted tab (which confused users by seemingly hiding the note tree).
+        // The in-page settings selector lets users switch between pages from within the popup.
+        void appContext.triggerCommand("openInPopup", { noteIdOrPath: section ?? "_optionsAppearance" });
     }
 
     async showSQLConsoleHistoryCommand() {

@@ -399,7 +399,10 @@ export function useNoteContext() {
     }, [ notePath ]);
 
     useTriliumEvents([ "setNoteContext", "activeContextChanged", "noteSwitchedAndActivated", "noteSwitched" ], ({ noteContext }) => {
-        if (noteContextContext) return;
+        // When bound to a specific context via the provider (the quick-edit popup), ignore events for
+        // other contexts, but still react when our own bound context navigates in place (e.g. switching
+        // settings pages from the in-popup selector) — otherwise the popup would stay on the first page.
+        if (noteContextContext && noteContext !== noteContextContext) return;
         setNoteContext(noteContext);
         setHoistedNoteId(noteContext.hoistedNoteId);
         setNotePath(noteContext.notePath);

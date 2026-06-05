@@ -63,7 +63,7 @@ export default function ContentWidget({ note, ...restProps }: TypeWidgetProps) {
     if (isOptions) {
         return (
             <div className="options-with-nav">
-                <SettingsNavigation activeNoteId={note.noteId} />
+                <SettingsNavigation activeNoteId={note.noteId} noteContext={restProps.noteContext} />
                 <div className="note-detail-content-widget-content options">
                     {content}
                 </div>
