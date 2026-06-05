@@ -19,6 +19,7 @@ import LlmSettings from "./options/llm";
 import "./ContentWidget.css";
 import { t } from "../../services/i18n";
 import BackendLog from "./code/BackendLog";
+import SettingsNavigation from "./options/components/SettingsNavigation";
 
 export type OptionPages = "_optionsAppearance" | "_optionsShortcuts" | "_optionsTextNotes" | "_optionsCodeNotes" | "_optionsMedia" | "_optionsSpellcheck" | "_optionsPassword" | "_optionsMFA" | "_optionsEtapi" | "_optionsBackup" | "_optionsSync" | "_optionsOther" | "_optionsLocalization" | "_optionsSecurity" | "_optionsAdvanced" | "_optionsLlm";
 
@@ -50,11 +51,29 @@ const CONTENT_WIDGETS: Record<OptionPages | "_backendLog", (props: TypeWidgetPro
  */
 export default function ContentWidget({ note, ...restProps }: TypeWidgetProps) {
     const Content = CONTENT_WIDGETS[note.noteId];
+    const isOptions = note.noteId.startsWith("_options");
+    const content = Content
+        ? <Content note={note} {...restProps} />
+        : (t("content_widget.unknown_widget", { id: note.noteId }));
+
+    // For options pages, render an in-content page selector beside the page. The selector
+    // duplicates the (hoisted) note tree's list so users can switch pages without the tree.
+    // `.note-detail-content-widget-content.options` stays the direct parent of the page so the
+    // theme's existing options styling keeps applying.
+    if (isOptions) {
+        return (
+            <div className="options-with-nav">
+                <SettingsNavigation activeNoteId={note.noteId} />
+                <div className="note-detail-content-widget-content options">
+                    {content}
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className={`note-detail-content-widget-content ${note.noteId.startsWith("_options") ? "options" : ""}`}>
-            {Content
-                ? <Content note={note} {...restProps} />
-                : (t("content_widget.unknown_widget", { id: note.noteId }))}
+        <div className="note-detail-content-widget-content">
+            {content}
         </div>
     )
 }
