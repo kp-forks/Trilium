@@ -386,7 +386,8 @@
     "in-progress": "インポート中: {{progress}}",
     "successful": "インポートは正常に終了しました。",
     "explodeArchives": "<code>.zip</code>, <code>.enex</code> および <code>.opml</code> アーカイブの内容を読み取ります。",
-    "importZipRecommendation": "ZIP ファイルをインポートすると、ノートの階層はアーカイブ内のサブディレクトリ構造を反映します。"
+    "importZipRecommendation": "ZIP ファイルをインポートすると、ノートの階層はアーカイブ内のサブディレクトリ構造を反映します。",
+    "spreadsheetImportedAsSpreadsheet": "CSV ファイルや Excel ファイルを、ファイルとしてではなく編集可能なスプレッドシートとしてインポートする"
   },
   "password_not_set": {
     "title": "パスワードが設定されていない",
@@ -2598,7 +2599,11 @@
     "cancel": "キャンセル"
   },
   "spreadsheet": {
-    "read-only": "このノートは読み取り専用です。"
+    "read-only": "このノートは読み取り専用です。",
+    "export-xlsx": "Excel にエクスポート (.xlsx)",
+    "export-csv": "CSV にエクスポート (.csv)",
+    "export-failed": "スプレッドシートを Excel にエクスポートできませんでした。",
+    "export-csv-failed": "スプレッドシートを CSV にエクスポートできませんでした。"
   },
   "markdown_editor": {
     "image_upload_failed": "画像 \"{{name}}\" をアップロードできません。"
