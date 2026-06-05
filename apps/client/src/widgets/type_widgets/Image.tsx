@@ -1,52 +1,52 @@
-import { useEffect, useRef, useState } from "preact/hooks";
-import { createImageSrcUrl } from "../../services/utils";
-import { useTriliumEvent, useUniqueName } from "../react/hooks";
 import "./Image.css";
-import { TypeWidgetProps } from "./type_widget";
-import WheelZoom from 'vanilla-js-wheel-zoom';
+
+import { useEffect, useRef, useState } from "preact/hooks";
+import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
+
 import image_context_menu from "../../menus/image_context_menu";
-import { refToJQuerySelector } from "../react/react_utils";
 import { copyImageReferenceToClipboard } from "../../services/image";
+import { createImageSrcUrl } from "../../services/utils";
+import { useTriliumEvent, useTriliumEvents } from "../react/hooks";
+import ImageViewer from "../react/ImageViewer";
+import { refToJQuerySelector } from "../react/react_utils";
+import { applyImageZoom } from "./image_zoom";
+import { TypeWidgetProps } from "./type_widget";
 
 export default function Image({ note, ntxId }: TypeWidgetProps) {
-    const uniqueId = useUniqueName("image");
     const containerRef = useRef<HTMLDivElement>(null);
+    const zoomRef = useRef<ReactZoomPanPinchRef>(null);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
 
-    // Set up pan & zoom
-    useEffect(() => {
-        const zoomInstance = WheelZoom.create(`#${uniqueId}`, {
-            maxScale: 50,
-            speed: 1.3,
-            zoomOnClick: false
-        });
-
-        return () => zoomInstance.destroy();
-    }, [ note ]);
-
-    // Set up context menu
     useEffect(() => image_context_menu.setupContextMenu(refToJQuerySelector(containerRef)), []);
 
-    // Copy reference events
+    // The ribbon's "copy reference" button triggers this. Select the rendered image's wrapper so
+    // the clipboard gets clean <img> markup without the surrounding zoom/transform containers.
     useTriliumEvent("copyImageReferenceToClipboard", ({ ntxId: eventNtxId }) => {
         if (eventNtxId !== ntxId) return;
-        copyImageReferenceToClipboard(refToJQuerySelector(containerRef));
+        const $img = refToJQuerySelector(containerRef).find("img");
+        if ($img.length) copyImageReferenceToClipboard($img.parent());
     });
 
-    // React to new revisions.
+    useTriliumEvents([ "imageZoomIn", "imageZoomOut", "imageZoomReset" ], ({ ntxId: eventNtxId }, eventName) =>
+        applyImageZoom(zoomRef.current, eventName, eventNtxId, ntxId)
+    );
+
+    // A new revision swaps the image content; remount so it re-fits to the viewport.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.isNoteReloaded(note.noteId)) {
-            setRefreshCounter(refreshCounter + 1);
+            setRefreshCounter((c) => c + 1);
         }
     });
 
     return (
         <div ref={containerRef} className="note-detail-image-wrapper">
-            <img
-                id={uniqueId}
-                className="note-detail-image-view"
+            <ImageViewer
+                key={`${note.noteId}-${refreshCounter}`}
+                apiRef={zoomRef}
+                imgClassName="note-detail-image-view"
                 src={createImageSrcUrl(note)}
+                alt={note.title}
             />
         </div>
-    )
+    );
 }

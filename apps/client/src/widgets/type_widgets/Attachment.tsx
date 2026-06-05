@@ -7,6 +7,7 @@ import { useContext, useEffect, useRef, useState } from "preact/hooks";
 import appContext from "../../components/app_context";
 import FAttachment from "../../entities/fattachment";
 import FNote from "../../entities/fnote";
+import imageContextMenu from "../../menus/image_context_menu";
 import content_renderer from "../../services/content_renderer";
 import dialog from "../../services/dialog";
 import froca from "../../services/froca";
@@ -26,6 +27,7 @@ import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import HelpButton from "../react/HelpButton";
 import { useTriliumEvent } from "../react/hooks";
 import Icon from "../react/Icon";
+import ImageViewer from "../react/ImageViewer";
 import NoItems from "../react/NoItems";
 import NoteLink from "../react/NoteLink";
 import { ParentComponent, refToJQuerySelector } from "../react/react_utils";
@@ -139,15 +141,23 @@ export function AttachmentDetail({ note, viewScope }: TypeWidgetProps) {
 
 function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment, isFullDetail?: boolean }) {
     const contentWrapper = useRef<HTMLDivElement>(null);
+    const imageViewerWrapper = useRef<HTMLDivElement>(null);
     const [ title, setTitle ] = useState(attachment.title);
     const [ textContent, setTextContent ] = useState<string | null>(null);
     const supportsOcr = attachment.role === "image" || attachment.role === "file";
 
+    // Image attachments opened in full detail get the interactive zoom/pan viewer; everything
+    // else is rendered imperatively via the content renderer.
+    const isZoomableImage = !!isFullDetail && attachment.role === "image";
+    const imageSrc = `api/attachments/${attachment.attachmentId}/image/${encodeURIComponent(attachment.title)}?${attachment.utcDateModified}`;
+
     function refresh() {
-        content_renderer.getRenderedContent(attachment, { imageHasZoom: isFullDetail })
-            .then(({ $renderedContent }) => {
-                contentWrapper.current?.replaceChildren(...$renderedContent);
-            });
+        if (!isZoomableImage) {
+            content_renderer.getRenderedContent(attachment)
+                .then(({ $renderedContent }) => {
+                    contentWrapper.current?.replaceChildren(...$renderedContent);
+                });
+        }
 
         if (attachment.role === "file") {
             attachment.getBlob().then(blob => setTextContent(blob?.content ?? null));
@@ -156,17 +166,24 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
         setTitle(attachment.title);
     }
 
-    useEffect(refresh, [ attachment ]);
+    useEffect(refresh, [ attachment, isZoomableImage ]);
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.getAttachmentRows().find(attachment => attachment.attachmentId)) {
             refresh();
         }
     });
 
+    // Electron right-click menu (copy image / reference) for the interactive image viewer.
+    useEffect(() => {
+        if (isZoomableImage) {
+            return imageContextMenu.setupContextMenu(refToJQuerySelector(imageViewerWrapper));
+        }
+    }, [ isZoomableImage ]);
+
     async function copyAttachmentLinkToClipboard() {
         if (attachment.role === "image") {
-            const $contentWrapper = refToJQuerySelector(contentWrapper);
-            image.copyImageReferenceToClipboard($contentWrapper);
+            const $img = refToJQuerySelector(isZoomableImage ? imageViewerWrapper : contentWrapper).find("img");
+            if ($img.length) image.copyImageReferenceToClipboard($img.parent());
         } else if (attachment.role === "file") {
             const $link = await link.createLink(attachment.ownerId, {
                 referenceLink: true,
@@ -220,7 +237,13 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
 
                 {attachment.utcDateScheduledForErasureSince && <DeletionAlert utcDateScheduledForErasureSince={attachment.utcDateScheduledForErasureSince} />}
                 {textContent && <TextPreview content={textContent} />}
-                <div ref={contentWrapper} className="attachment-content-wrapper" />
+                {isZoomableImage ? (
+                    <div key="image-viewer" ref={imageViewerWrapper} className="attachment-content-wrapper attachment-image-viewer">
+                        <ImageViewer key={`${attachment.attachmentId}-${attachment.utcDateModified}`} src={imageSrc} alt={attachment.title} />
+                    </div>
+                ) : (
+                    <div key="rendered" ref={contentWrapper} className="attachment-content-wrapper" />
+                )}
             </div>
 
         </div>

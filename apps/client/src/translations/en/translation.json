@@ -862,6 +862,11 @@
     "zoom_in_title": "Zoom In",
     "zoom_out_title": "Zoom Out"
   },
+  "image_buttons": {
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "reset_zoom": "Reset zoom"
+  },
   "zpetne_odkazy": {
     "backlink_one": "{{count}} Backlink",
     "backlink_other": "{{count}} Backlinks",
