@@ -1,8 +1,10 @@
 import "./ImageViewer.css";
 
 import { Ref } from "preact";
-import { useRef, useState } from "preact/hooks";
+import { useCallback, useRef, useState } from "preact/hooks";
 import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+
+import { useImageViewerKeyboard } from "./image_viewer_keyboard";
 
 interface ImageViewerProps {
     src: string;
@@ -39,6 +41,17 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     const [ panning, setPanning ] = useState(false);
     const [ largeZoom, setLargeZoom ] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const zoomRef = useRef<ReactZoomPanPinchRef>(null);
+
+    // Keep our own ref to drive keyboard control, while still forwarding to the caller's apiRef.
+    const setZoomRef = useCallback((instance: ReactZoomPanPinchRef | null) => {
+        zoomRef.current = instance;
+        if (typeof apiRef === "function") apiRef(instance);
+        else if (apiRef) (apiRef as { current: ReactZoomPanPinchRef | null }).current = instance;
+    }, [ apiRef ]);
+
+    useImageViewerKeyboard(zoomRef, rootRef);
 
     const wrapperClass = [
         "image-viewer-viewport",
@@ -48,26 +61,28 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     ].filter(Boolean).join(" ");
 
     return (
-        <TransformWrapper
-            ref={apiRef}
-            minScale={minScale}
-            maxScale={maxScale}
-            centerOnInit
-            centerZoomedOut
-            wheel={{ step: 0.0085 }}
-            autoAlignment={{ disabled: true }}
-            doubleClick={{ mode: "reset" }}
-            onTransform={(_ref, { scale }) => {
-                const { pannable: nextPannable, largeZoom: nextLargeZoom } = evaluateImageZoom(scale, imgRef.current);
-                if (nextPannable !== pannable) setPannable(nextPannable);
-                if (nextLargeZoom !== largeZoom) setLargeZoom(nextLargeZoom);
-            }}
-            onPanningStart={() => setPanning(true)}
-            onPanningStop={() => setPanning(false)}
-        >
-            <TransformComponent wrapperClass={wrapperClass} contentClass="image-viewer-content">
-                <img ref={imgRef} className={imgClassName} src={src} alt={alt} />
-            </TransformComponent>
-        </TransformWrapper>
+        <div ref={rootRef} tabIndex={0} className="image-viewer-root">
+            <TransformWrapper
+                ref={setZoomRef}
+                minScale={minScale}
+                maxScale={maxScale}
+                centerOnInit
+                centerZoomedOut
+                wheel={{ step: 0.0085 }}
+                autoAlignment={{ disabled: true }}
+                doubleClick={{ mode: "reset" }}
+                onTransform={(_ref, { scale }) => {
+                    const { pannable: nextPannable, largeZoom: nextLargeZoom } = evaluateImageZoom(scale, imgRef.current);
+                    if (nextPannable !== pannable) setPannable(nextPannable);
+                    if (nextLargeZoom !== largeZoom) setLargeZoom(nextLargeZoom);
+                }}
+                onPanningStart={() => setPanning(true)}
+                onPanningStop={() => setPanning(false)}
+            >
+                <TransformComponent wrapperClass={wrapperClass} contentClass="image-viewer-content">
+                    <img ref={imgRef} className={imgClassName} src={src} alt={alt} />
+                </TransformComponent>
+            </TransformWrapper>
+        </div>
     );
 }
