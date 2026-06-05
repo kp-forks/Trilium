@@ -112,7 +112,10 @@ describe("createNewNote (real DB)", () => {
 });
 ```
 
-**Mutations require CLS:** wrap `setContent`/`createNewNote`/etc. in `cls.init(() => ...)`. Supertest route tests get CLS for free; direct service calls do not.
+**Mutations require CLS** — wrap `setContent`/`createNewNote`/`BAttribute.save()`/etc. (anything that emits an entity change or opens a transaction) in a CLS context, or they throw. Supertest route tests and `CoreApiTester` (Pattern 0) get CLS for free; direct service/entity calls do not.
+- **In `apps/server` specs**, use `cls.init(() => ...)` from `@triliumnext/core` (as above).
+- **In `packages/trilium-core/src/**` specs** (which run cross-runtime and must NOT self-import `@triliumnext/core`), import `getContext` from a relative `context.js` and call it inline: `import { getContext } from "../services/context.js";` then `getContext().init(() => ...)`, or `await getContext().init(async () => { ... })` for async work (`init` returns the callback's promise, so awaiting and throwing propagate normally). See `import/enex.spec.ts` / `import/single.spec.ts` for the inline async form.
+- **Do NOT wrap this in a per-file helper.** A local `withContext(fn)` that just does `return getContext().init(fn)` is a pointless duplicate of the existing `getContext().init` / `cls.init` export — and because specs get written file-by-file, that wrapper once metastasised into 35 identical copies before being removed. Call `getContext().init(...)` / `cls.init(...)` directly at the call site.
 
 ## Pattern 4 — pure service, zero infra
 

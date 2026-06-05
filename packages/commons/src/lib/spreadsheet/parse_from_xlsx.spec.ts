@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 
-import { parseXlsxToWorkbook, toArrayBuffer } from "./parse_from_xlsx.js";
+import { excelColorToRgb, parseRange, parseXlsxToWorkbook, toArrayBuffer } from "./parse_from_xlsx.js";
 import {
     BorderStyle,
     CellValueType,
@@ -215,8 +215,231 @@ describe("parseXlsxToWorkbook", () => {
         expect(workbook.sheetOrder.map((id) => workbook.sheets[id].name)).toEqual(["First", "Second"]);
     });
 
+    it("handles a sheet with no cells (null columns)", async () => {
+        // An empty worksheet reports `ws.columns === null`, exercising readColumns' `?? []` fallback.
+        const sheet = await roundTrip((wb) => {
+            wb.addWorksheet("Empty");
+        });
+        expect(sheet.columnData).toEqual({});
+        expect(sheet.columnCount).toBe(20);
+    });
+
     it("throws on a non-xlsx buffer", async () => {
         await expect(parseXlsxToWorkbook(new Uint8Array([1, 2, 3]))).rejects.toThrow(/parse/i);
+    });
+
+    it("reads a date value as an Excel serial number", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = new Date(Date.UTC(2026, 3, 6));
+        });
+        expect(cellA1(sheet)).toMatchObject({ v: 46118, t: CellValueType.NUMBER });
+    });
+
+    it("reads a hyperlink keeping the display text only", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = { text: "Click", hyperlink: "https://example.com" };
+        });
+        expect(cellA1(sheet)).toMatchObject({ v: "Click", t: CellValueType.STRING });
+    });
+
+    it("flattens rich text into plain text", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = { richText: [{ text: "Hello " }, { text: "World" }] };
+        });
+        expect(cellA1(sheet)).toMatchObject({ v: "Hello World", t: CellValueType.STRING });
+    });
+
+    it("reads an error value as a forced string", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = { error: "#DIV/0!" } as ExcelJS.CellErrorValue;
+        });
+        expect(cellA1(sheet)).toMatchObject({ v: "#DIV/0!", t: CellValueType.FORCE_STRING });
+    });
+
+    it("reads cached formula results of every primitive kind", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = { formula: "TRUE()", result: true } as ExcelJS.CellFormulaValue;
+            ws.getCell("A2").value = {
+                formula: "TODAY()",
+                result: new Date(Date.UTC(2026, 3, 6))
+            } as ExcelJS.CellFormulaValue;
+            ws.getCell("A3").value = {
+                formula: "1/0",
+                result: { error: "#DIV/0!" }
+            } as ExcelJS.CellFormulaValue;
+            ws.getCell("A4").value = { formula: "T(1)", result: "txt" } as ExcelJS.CellFormulaValue;
+            ws.getCell("A5").value = { formula: "NA()", result: undefined } as ExcelJS.CellFormulaValue;
+        });
+        expect(sheet.cellData[0][0]).toMatchObject({ f: "=TRUE()", v: true, t: CellValueType.BOOLEAN });
+        expect(sheet.cellData[1][0]).toMatchObject({ f: "=TODAY()", v: 46118, t: CellValueType.NUMBER });
+        expect(sheet.cellData[2][0]).toMatchObject({ f: "=1/0", v: "#DIV/0!", t: CellValueType.FORCE_STRING });
+        expect(sheet.cellData[3][0]).toMatchObject({ f: "=T(1)", v: "txt", t: CellValueType.STRING });
+        const naCell = sheet.cellData[4][0];
+        expect(naCell?.f).toBe("=NA()");
+        expect(naCell?.v).toBeUndefined();
+    });
+
+    it("maps the remaining horizontal and vertical alignment options", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = "a";
+            ws.getCell("A1").alignment = { horizontal: "left", vertical: "top" };
+            ws.getCell("B1").value = "b";
+            ws.getCell("B1").alignment = { horizontal: "center", vertical: "bottom" };
+        });
+        expect(sheet.cellData[0][0]?.s).toMatchObject({ ht: HorizontalAlign.LEFT, vt: VerticalAlign.TOP });
+        expect(sheet.cellData[0][1]?.s).toMatchObject({ ht: HorizontalAlign.CENTER, vt: VerticalAlign.BOTTOM });
+    });
+
+    it("ignores alignment axes that have no Univer equivalent", async () => {
+        // Only a vertical set -> horizontalAlign returns null (default branch); only a horizontal
+        // set -> verticalAlign returns null. Each cell must carry exactly one of ht/vt.
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = "a";
+            ws.getCell("A1").alignment = { vertical: "middle" };
+            ws.getCell("B1").value = "b";
+            ws.getCell("B1").alignment = { horizontal: "right" };
+        });
+        const aStyle = styleOf(sheet.cellData[0][0]);
+        expect(aStyle.vt).toBe(VerticalAlign.MIDDLE);
+        expect(aStyle.ht).toBeUndefined();
+        const bStyle = styleOf(sheet.cellData[0][1]);
+        expect(bStyle.ht).toBe(HorizontalAlign.RIGHT);
+        expect(bStyle.vt).toBeUndefined();
+    });
+
+    it("reads vertical and angled text rotation", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = "a";
+            ws.getCell("A1").alignment = { textRotation: "vertical" };
+            ws.getCell("B1").value = "b";
+            ws.getCell("B1").alignment = { textRotation: 45 };
+        });
+        expect(sheet.cellData[0][0]?.s).toMatchObject({ tr: { v: 1 } });
+        expect(sheet.cellData[0][1]?.s).toMatchObject({ tr: { a: 45 } });
+    });
+
+    it("maps every remaining exceljs border style to the Univer enum", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            const styles = [
+                ["A1", "hair", BorderStyle.HAIR],
+                ["B1", "dashed", BorderStyle.DASHED],
+                ["C1", "dashDot", BorderStyle.DASH_DOT],
+                ["D1", "dashDotDot", BorderStyle.DASH_DOT_DOT],
+                ["E1", "double", BorderStyle.DOUBLE],
+                ["F1", "mediumDashed", BorderStyle.MEDIUM_DASHED],
+                ["G1", "mediumDashDot", BorderStyle.MEDIUM_DASH_DOT],
+                ["H1", "mediumDashDotDot", BorderStyle.MEDIUM_DASH_DOT_DOT],
+                ["I1", "slantDashDot", BorderStyle.SLANT_DASH_DOT]
+            ] as const;
+            for (const [addr, excelStyle] of styles) {
+                const cell = ws.getCell(addr);
+                cell.value = "b";
+                cell.border = { top: { style: excelStyle } };
+            }
+        });
+        const expectations: Array<[number, BorderStyle]> = [
+            [0, BorderStyle.HAIR],
+            [1, BorderStyle.DASHED],
+            [2, BorderStyle.DASH_DOT],
+            [3, BorderStyle.DASH_DOT_DOT],
+            [4, BorderStyle.DOUBLE],
+            [5, BorderStyle.MEDIUM_DASHED],
+            [6, BorderStyle.MEDIUM_DASH_DOT],
+            [7, BorderStyle.MEDIUM_DASH_DOT_DOT],
+            [8, BorderStyle.SLANT_DASH_DOT]
+        ];
+        for (const [col, expected] of expectations) {
+            expect(sheet.cellData[0][col]?.s).toMatchObject({ bd: { t: { s: expected } } });
+        }
+    });
+
+    it("resolves theme colors with tint across every HSL branch", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            // theme 5 (#ED7D31, max===r) tint +0.4 -> #F4B183, on font color.
+            const orange = ws.getCell("A1");
+            orange.value = "o";
+            orange.font = { color: { theme: 5, tint: 0.4 } as unknown as ExcelJS.Color };
+            // theme 4 (#4472C4, max===b) tint -0.25 -> #2F5597, on solid fill.
+            const blue = ws.getCell("B1");
+            blue.value = "b";
+            blue.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { theme: 4, tint: -0.25 } as unknown as ExcelJS.Color
+            };
+            // theme 9 (#70AD47, max===g) tint +0.6.
+            const green = ws.getCell("C1");
+            green.value = "g";
+            green.font = { color: { theme: 9, tint: 0.6 } as unknown as ExcelJS.Color };
+            // theme 0 (#FFFFFF, gray path max===min) tint -0.5 -> #808080 (hslToRgb s===0).
+            const gray = ws.getCell("D1");
+            gray.value = "w";
+            gray.font = { color: { theme: 0, tint: -0.5 } as unknown as ExcelJS.Color };
+        });
+        expect(sheet.cellData[0][0]?.s).toMatchObject({ cl: { rgb: "#F4B183" } });
+        expect(sheet.cellData[0][1]?.s).toMatchObject({ bg: { rgb: "#2F5597" } });
+        // green/gray just need to resolve to a hex string and exercise their branches.
+        expect(styleOf(sheet.cellData[0][2]).cl?.rgb).toMatch(/^#[0-9A-F]{6}$/);
+        expect(sheet.cellData[0][3]?.s).toMatchObject({ cl: { rgb: "#808080" } });
+    });
+
+    it("flags a sheet with gridlines turned off", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = "x";
+            ws.views = [{ showGridLines: false } as ExcelJS.WorksheetView];
+        });
+        expect(sheet.showGridlines).toBe(0);
+    });
+
+    it("drops a font color that resolves to nothing while keeping other font styling", async () => {
+        // A fully-transparent (alpha 00) font color resolves to null, so no `cl` is emitted, but
+        // the bold flag still survives (covers the `if (color)` false branch in readFont).
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            const cell = ws.getCell("A1");
+            cell.value = "x";
+            cell.font = { bold: true, color: { argb: "00FF0000" } };
+        });
+        const style = styleOf(cellA1(sheet));
+        expect(style.bl).toBe(1);
+        expect(style.cl).toBeUndefined();
+    });
+
+    it("ignores an alignment object whose only setting has no Univer equivalent", async () => {
+        // `horizontal: "fill"` maps to null and nothing else is set, so readAlignment returns null
+        // and the cell carries no alignment style at all.
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            const cell = ws.getCell("A1");
+            cell.value = "x";
+            cell.alignment = { horizontal: "fill" };
+        });
+        const style = styleOf(cellA1(sheet));
+        expect(style.ht).toBeUndefined();
+        expect(style.vt).toBeUndefined();
+    });
+
+    it("skips the theme-1 default text color so the cell inherits Univer's default", async () => {
+        const sheet = await roundTrip((wb) => {
+            const ws = wb.addWorksheet("S");
+            const cell = ws.getCell("A1");
+            cell.value = "x";
+            cell.font = { bold: true, color: { theme: 1 } as unknown as ExcelJS.Color };
+        });
+        const style = styleOf(cellA1(sheet));
+        expect(style.bl).toBe(1);
+        expect(style.cl).toBeUndefined();
     });
 
     it("parses an xlsx delivered as an offset view into a larger buffer (Node Buffer import path)", async () => {
@@ -273,5 +496,49 @@ describe("toArrayBuffer", () => {
     it("returns a standalone ArrayBuffer unchanged", () => {
         const ab = new ArrayBuffer(8);
         expect(toArrayBuffer(ab)).toBe(ab);
+    });
+});
+
+describe("excelColorToRgb", () => {
+    it("resolves ARGB, theme and edge-case colors", () => {
+        // 8-digit ARGB drops the alpha; 6-digit ARGB is taken verbatim.
+        expect(excelColorToRgb({ argb: "FF112233" })).toBe("#112233");
+        expect(excelColorToRgb({ argb: "ABCDEF" } as Partial<ExcelJS.Color>)).toBe("#ABCDEF");
+        // Fully-transparent (alpha "00") and non-hex strings resolve to null.
+        expect(excelColorToRgb({ argb: "00FFFFFF" })).toBeNull();
+        expect(excelColorToRgb({ argb: "nothex" })).toBeNull();
+        // Theme + tint resolves against the Office palette.
+        expect(excelColorToRgb({ theme: 5, tint: 0.4 } as Partial<ExcelJS.Color>)).toBe("#F4B183");
+        // Out-of-range theme index, missing color and empty object all resolve to null.
+        expect(excelColorToRgb({ theme: 99 } as Partial<ExcelJS.Color>)).toBeNull();
+        expect(excelColorToRgb(undefined)).toBeNull();
+        expect(excelColorToRgb({} as Partial<ExcelJS.Color>)).toBeNull();
+    });
+
+    it("exercises the tint and hue branches of the HSL math", () => {
+        // A theme color with no tint short-circuits applyTint (returns the base hex untouched).
+        expect(excelColorToRgb({ theme: 4 } as Partial<ExcelJS.Color>)).toBe("#4472C4");
+        // theme 11 (#954F72): max===r with g < b, and a hue > 2/3 so hueToChannel's t>1 wraps.
+        // A non-zero tint forces the value through rgbToHsl/hslToRgb/hueToChannel.
+        expect(excelColorToRgb({ theme: 11, tint: 0.2 } as Partial<ExcelJS.Color>)).toMatch(/^#[0-9A-F]{6}$/);
+        // theme 8 (#5B9BD5): max===b with a low hue so hueToChannel's t<0 wraps the other way.
+        expect(excelColorToRgb({ theme: 8, tint: -0.3 } as Partial<ExcelJS.Color>)).toMatch(/^#[0-9A-F]{6}$/);
+    });
+});
+
+describe("parseRange", () => {
+    it("parses ranges, single cells and rejects malformed refs", () => {
+        // A two-cell range, normalized to 0-based inclusive bounds.
+        expect(parseRange("B2:D5")).toEqual({ startRow: 1, endRow: 4, startColumn: 1, endColumn: 3 });
+        // Reversed corners are normalized via min/max, so endpoint order doesn't matter.
+        expect(parseRange("D5:B2")).toEqual({ startRow: 1, endRow: 4, startColumn: 1, endColumn: 3 });
+        // A single address (no ":") collapses to a 1×1 range (the `to ?? from` fallback).
+        expect(parseRange("A1")).toEqual({ startRow: 0, endRow: 0, startColumn: 0, endColumn: 0 });
+        // Multi-letter columns advance base-26: AA -> column index 26.
+        expect(parseRange("AA10")).toEqual({ startRow: 9, endRow: 9, startColumn: 26, endColumn: 26 });
+        // A malformed start endpoint (no row digits) yields null.
+        expect(parseRange("zzz")).toBeNull();
+        // A malformed end endpoint yields null too (covers the `!end` half of the guard).
+        expect(parseRange("A1:zz")).toBeNull();
     });
 });

@@ -101,6 +101,7 @@ function readSheet(ws: ExcelJS.Worksheet, id: string): IWorksheetData {
     if (isFiniteNumber(ws.properties?.defaultColWidth)) {
         sheet.defaultColumnWidth = excelWidthToPx(ws.properties.defaultColWidth);
     }
+    /* v8 ignore next -- defensive: exceljs always reports a defaultRowHeight (15pt default), so the non-finite branch is unreachable */
     if (isFiniteNumber(ws.properties?.defaultRowHeight)) {
         sheet.defaultRowHeight = pointsToPx(ws.properties.defaultRowHeight);
     }
@@ -162,6 +163,7 @@ function applyCellValue(data: ICellData, cell: ExcelJS.Cell): void {
             break;
         case ExcelJS.ValueType.Hyperlink:
             // Keep the display text; the link itself has no inline Univer equivalent.
+            /* v8 ignore next -- defensive: a hyperlink cell always carries display text */
             data.v = String((cell.value as ExcelJS.CellHyperlinkValue)?.text ?? "");
             data.t = CellValueType.STRING;
             break;
@@ -170,6 +172,7 @@ function applyCellValue(data: ICellData, cell: ExcelJS.Cell): void {
             data.t = CellValueType.STRING;
             break;
         case ExcelJS.ValueType.Error:
+            /* v8 ignore next -- defensive: an error cell always carries an error code */
             data.v = String((cell.value as ExcelJS.CellErrorValue)?.error ?? "#ERROR!");
             data.t = CellValueType.FORCE_STRING;
             break;
@@ -199,6 +202,7 @@ function assignPrimitive(data: ICellData, result: ExcelJS.Cell["result"]): void 
 }
 
 function flattenRichText(value: ExcelJS.CellRichTextValue): string {
+    /* v8 ignore next -- defensive: a rich-text cell always carries a richText run array */
     return (value?.richText ?? []).map((run) => run.text).join("");
 }
 
@@ -299,10 +303,12 @@ function readBorderSide(side: Partial<ExcelJS.Border> | undefined): IBorderStyle
 
 function readMerges(ws: ExcelJS.Worksheet): IRange[] {
     // exceljs exposes merges as A1-style range strings on the worksheet model.
+    /* v8 ignore next -- defensive: exceljs always exposes model.merges as an array */
     const merges = (ws.model as { merges?: string[] })?.merges ?? [];
     const ranges: IRange[] = [];
     for (const ref of merges) {
         const range = parseRange(ref);
+        /* v8 ignore next -- defensive: exceljs merge refs are always well-formed ranges */
         if (range) ranges.push(range);
     }
     return ranges;
@@ -316,7 +322,7 @@ function readRows(ws: ExcelJS.Worksheet): { rowData: Record<number, IRowData>; m
     // such as a thin spacer row, which `false` would skip.
     ws.eachRow({ includeEmpty: true }, (row, rowNumber) => {
         const index = rowNumber - 1;
-        if (rowNumber > maxRow) maxRow = rowNumber - 1;
+        if (index > maxRow) maxRow = index;
 
         const meta: IRowData = {};
         // exceljs leaves `row.height` undefined unless the row carries a custom height, so this
@@ -396,7 +402,7 @@ function solidFillColor(fill: ExcelJS.Fill | undefined): Partial<ExcelJS.Color> 
  * Handles explicit ARGB and theme colors (resolved against the standard Office palette plus
  * tint). Indexed (legacy) colors are not handled.
  */
-function excelColorToRgb(color: Partial<ExcelJS.Color> | undefined): string | null {
+export function excelColorToRgb(color: Partial<ExcelJS.Color> | undefined): string | null {
     if (!color) return null;
     if (typeof color.argb === "string") return argbToHex(color.argb);
     // exceljs' `Color` type omits `tint`, though it's present on theme colors at runtime.
@@ -493,7 +499,7 @@ function clampChannel(v: number): string {
 }
 
 /** Parses an A1-style range ("B2:D5" or a single "A1") into a 0-based inclusive `IRange`. */
-function parseRange(ref: string): IRange | null {
+export function parseRange(ref: string): IRange | null {
     const [from, to] = ref.split(":");
     const start = parseAddress(from);
     const end = parseAddress(to ?? from);
