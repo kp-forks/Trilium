@@ -146,3 +146,13 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
     width: 240px;
     padding: 8px;
 }
+
+/* In the settings layout the main header only carries the window (maximize/close) buttons, with the
+   title moved into the sidebar. Slim that header and drop the page's own top spacing so the content
+   starts right beneath it, instead of leaving a tall empty band at the top of the content area. */
+.modal.popup-editor-dialog .modal-content-with-sidebar .modal-header {
+    position: absolute;
+    top: 0;
+    right: 4px;
+    z-index: 9999;
+}
