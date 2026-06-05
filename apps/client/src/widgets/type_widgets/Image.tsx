@@ -23,7 +23,8 @@ export default function Image({ note, ntxId }: TypeWidgetProps) {
     // the clipboard gets clean <img> markup without the surrounding zoom/transform containers.
     useTriliumEvent("copyImageReferenceToClipboard", ({ ntxId: eventNtxId }) => {
         if (eventNtxId !== ntxId) return;
-        copyImageReferenceToClipboard(refToJQuerySelector(containerRef).find("img").parent());
+        const $img = refToJQuerySelector(containerRef).find("img");
+        if ($img.length) copyImageReferenceToClipboard($img.parent());
     });
 
     useTriliumEvents([ "imageZoomIn", "imageZoomOut", "imageZoomReset" ], ({ ntxId: eventNtxId }, eventName) =>

@@ -182,8 +182,8 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
 
     async function copyAttachmentLinkToClipboard() {
         if (attachment.role === "image") {
-            const $imageWrapper = refToJQuerySelector(isZoomableImage ? imageViewerWrapper : contentWrapper);
-            image.copyImageReferenceToClipboard($imageWrapper.find("img").parent());
+            const $img = refToJQuerySelector(isZoomableImage ? imageViewerWrapper : contentWrapper).find("img");
+            if ($img.length) image.copyImageReferenceToClipboard($img.parent());
         } else if (attachment.role === "file") {
             const $link = await link.createLink(attachment.ownerId, {
                 referenceLink: true,
