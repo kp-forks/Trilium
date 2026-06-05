@@ -2133,5 +2133,8 @@
   },
   "setup_form": {
     "more_info": "और जानें"
+  },
+  "sidebar_chat": {
+    "view_all_chats": "सभी चैट देखें"
   }
 }
