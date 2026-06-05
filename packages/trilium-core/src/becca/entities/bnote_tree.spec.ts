@@ -28,7 +28,7 @@ function createNote(
         noteService.createNewNote({
             parentNoteId,
             title: `bnote-tree-spec-${counter}`,
-            content: type === "search" ? content : content,
+            content: type === "search" ? "" : content,
             type
         })
     );
