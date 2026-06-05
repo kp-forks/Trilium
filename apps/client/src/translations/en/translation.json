@@ -867,6 +867,10 @@
     "zoom_out": "Zoom out",
     "reset_zoom": "Reset zoom"
   },
+  "image_navigation": {
+    "previous": "Previous image: {{- title}}",
+    "next": "Next image: {{- title}}"
+  },
   "zpetne_odkazy": {
     "backlink_one": "{{count}} Backlink",
     "backlink_other": "{{count}} Backlinks",

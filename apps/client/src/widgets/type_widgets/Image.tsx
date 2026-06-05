@@ -8,9 +8,10 @@ import { createImageSrcUrl } from "../../services/utils";
 import { useTriliumEvent } from "../react/hooks";
 import ImageViewer from "../react/ImageViewer";
 import { refToJQuerySelector } from "../react/react_utils";
+import SiblingNavigator from "../react/SiblingNavigator";
 import { TypeWidgetProps } from "./type_widget";
 
-export default function Image({ note, ntxId }: TypeWidgetProps) {
+export default function Image({ note, ntxId, noteContext }: TypeWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
 
@@ -38,6 +39,12 @@ export default function Image({ note, ntxId }: TypeWidgetProps) {
                 imgClassName="note-detail-image-view"
                 src={createImageSrcUrl(note)}
                 alt={note.title}
+            />
+            <SiblingNavigator
+                note={note}
+                noteContext={noteContext}
+                previousTooltip="image_navigation.previous"
+                nextTooltip="image_navigation.next"
             />
         </div>
     );

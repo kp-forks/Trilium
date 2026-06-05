@@ -115,6 +115,11 @@
     object-fit: unset;
 }
 
+/* Anchor the (disabled) sibling-navigation overlay to the viewer. */
+.attachment-content-wrapper.attachment-image-viewer {
+    position: relative;
+}
+
 .attachment-detail-wrapper.scheduled-for-deletion .attachment-content-wrapper img {
     filter: contrast(10%);
 }
