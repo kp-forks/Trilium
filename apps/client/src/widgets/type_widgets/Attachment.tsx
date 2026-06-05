@@ -239,7 +239,7 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                 {textContent && <TextPreview content={textContent} />}
                 {isZoomableImage ? (
                     <div key="image-viewer" ref={imageViewerWrapper} className="attachment-content-wrapper attachment-image-viewer">
-                        <ImageViewer key={attachment.utcDateModified} src={imageSrc} alt={attachment.title} />
+                        <ImageViewer key={`${attachment.attachmentId}-${attachment.utcDateModified}`} src={imageSrc} alt={attachment.title} />
                     </div>
                 ) : (
                     <div key="rendered" ref={contentWrapper} className="attachment-content-wrapper" />

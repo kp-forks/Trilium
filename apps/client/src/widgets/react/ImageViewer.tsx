@@ -58,9 +58,9 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
             autoAlignment={{ disabled: true }}
             doubleClick={{ mode: "reset" }}
             onTransform={(_ref, { scale }) => {
-                const { pannable, largeZoom } = evaluateImageZoom(scale, imgRef.current);
-                setPannable(pannable);
-                setLargeZoom(largeZoom);
+                const { pannable: nextPannable, largeZoom: nextLargeZoom } = evaluateImageZoom(scale, imgRef.current);
+                if (nextPannable !== pannable) setPannable(nextPannable);
+                if (nextLargeZoom !== largeZoom) setLargeZoom(nextLargeZoom);
             }}
             onPanningStart={() => setPanning(true)}
             onPanningStop={() => setPanning(false)}
