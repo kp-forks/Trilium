@@ -11,14 +11,6 @@ import type BBranch from "./bbranch.js";
 import type BNote from "./bnote.js";
 import { compareNotePathRecords } from "./bnote.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * createLabel, cloning) require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /**
@@ -32,7 +24,7 @@ function createNote(
     content = "<p>hello</p>"
 ): { note: BNote; branch: BBranch } {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId,
             title: `bnote-tree-spec-${counter}`,
@@ -60,7 +52,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
     describe("isArchived / areAllNotePathsArchived / hasInheritableArchivedLabel", () => {
         it("reports a directly archived note and resolves the best note path as archived", () => {
             const { note } = createNote("root");
-            withContext(() => attributeService.createLabel(note.noteId, "archived", ""));
+            getContext().init(() => attributeService.createLabel(note.noteId, "archived", ""));
 
             expect(note.isArchived).toBe(true);
             // Lines 713-725: best note path record exists and is flagged archived.
@@ -85,7 +77,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
 
         it("detects an inheritable archived label and skips a non-inheritable one", () => {
             const inheritable = createNote("root").note;
-            withContext(() =>
+            getContext().init(() =>
                 attributeService.createAttribute({
                     noteId: inheritable.noteId,
                     type: "label",
@@ -98,7 +90,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             expect(inheritable.hasInheritableArchivedLabel()).toBe(true);
 
             const plain = createNote("root").note;
-            withContext(() => attributeService.createLabel(plain.noteId, "archived", ""));
+            getContext().init(() => attributeService.createLabel(plain.noteId, "archived", ""));
             // Non-inheritable archived label: loop completes without an early return.
             expect(plain.hasInheritableArchivedLabel()).toBe(false);
         });
@@ -110,18 +102,18 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
 
             const normalParent = createNote("root").note;
             const archivedParent = createNote("root").note;
-            withContext(() => attributeService.createLabel(archivedParent.noteId, "archived", ""));
+            getContext().init(() => attributeService.createLabel(archivedParent.noteId, "archived", ""));
 
             // A parent that is hidden completely: create it under root, clone it
             // into _hidden and drop the root branch so its only path is via _hidden.
             const hiddenParent = createNote("root");
-            withContext(() => {
+            getContext().init(() => {
                 cloningService.cloneNoteToParentNote(hiddenParent.note.noteId, "_hidden");
                 cloningService.ensureNoteIsAbsentFromParent(hiddenParent.note.noteId, "root");
             });
             expect(hiddenParent.note.isHiddenCompletely()).toBe(true);
 
-            withContext(() => {
+            getContext().init(() => {
                 cloningService.cloneNoteToParentNote(child.noteId, normalParent.noteId);
                 cloningService.cloneNoteToParentNote(child.noteId, archivedParent.noteId);
                 cloningService.cloneNoteToParentNote(child.noteId, hiddenParent.note.noteId);
@@ -148,7 +140,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const parent = createNote("root").note;
             const child = createNote("root").note;
 
-            withContext(() =>
+            getContext().init(() =>
                 cloningService.cloneNoteToParentNote(child.noteId, parent.noteId, "MYPREFIX")
             );
             child.invalidateThisCache();
@@ -167,7 +159,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const template = createNote("root").note;
             const instance = createNote("root").note;
             // instance ~template-> template, so template has a target relation.
-            withContext(() =>
+            getContext().init(() =>
                 attributeService.createRelation(instance.noteId, "template", template.noteId)
             );
 
@@ -190,7 +182,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             // An instance whose ~template relation targets `child`; walking `child`'s
             // targetRelations therefore reaches `instance`.
             const instance = createNote("root").note;
-            withContext(() => attributeService.createRelation(instance.noteId, "template", child.noteId));
+            getContext().init(() => attributeService.createRelation(instance.noteId, "template", child.noteId));
 
             // Walking from subtreeRoot: recurses into child (line 866-867) and
             // grandchild, then follows child's target relation to instance.
@@ -215,7 +207,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const root = createNote("root").note;
             const viaInherit = createNote("root").note;
             const viaOther = createNote("root").note;
-            withContext(() => {
+            getContext().init(() => {
                 // Line 871 right operand: name === "inherit".
                 attributeService.createRelation(viaInherit.noteId, "inherit", root.noteId);
                 // Line 871 false side: a target relation that is neither template nor inherit.
@@ -239,7 +231,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const target = createNote("root").note;
 
             const search = createNote("root", "search").note;
-            withContext(() =>
+            getContext().init(() =>
                 attributeService.createLabel(search.noteId, "searchString", `note.title = "${target.title}"`)
             );
 
@@ -266,7 +258,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const a = createNote(root.noteId).note;
             const b = createNote(root.noteId).note;
             // Clone `a` under `b` so we get two relationships to the same note.
-            withContext(() => cloningService.cloneNoteToParentNote(a.noteId, b.noteId));
+            getContext().init(() => cloningService.cloneNoteToParentNote(a.noteId, b.noteId));
 
             const { notes, relationships } = root.getSubtree();
             const noteIds = notes.map((n) => n.noteId);
@@ -296,7 +288,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const root = createNote("root").note;
             const normal = createNote(root.noteId).note;
             const archived = createNote(root.noteId).note;
-            withContext(() => attributeService.createLabel(archived.noteId, "archived", ""));
+            getContext().init(() => attributeService.createLabel(archived.noteId, "archived", ""));
 
             const noteIds = root
                 .getSubtree({ includeArchived: false })
@@ -311,7 +303,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
 
             const parent = createNote("root").note;
             const search = createNote(parent.noteId, "search").note;
-            withContext(() =>
+            getContext().init(() =>
                 attributeService.createLabel(search.noteId, "searchString", `note.title = "${target.title}"`)
             );
 
@@ -347,7 +339,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const leaf = createNote(left.noteId).note;
             // Clone leaf under `right` too: now leaf reaches `ancestor` via both
             // `left` and `right`.
-            withContext(() => cloningService.cloneNoteToParentNote(leaf.noteId, right.noteId));
+            getContext().init(() => cloningService.cloneNoteToParentNote(leaf.noteId, right.noteId));
 
             const ancestorIds = leaf.getAncestorNoteIds();
             // ancestor must appear exactly once despite two paths.
@@ -363,7 +355,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const grandparent = createNote("root").note;
             const parent = createNote(grandparent.noteId).note;
             const leaf = createNote(parent.noteId).note;
-            withContext(() => cloningService.cloneNoteToParentNote(leaf.noteId, grandparent.noteId));
+            getContext().init(() => cloningService.cloneNoteToParentNote(leaf.noteId, grandparent.noteId));
 
             const ancestorIds = leaf.getAncestorNoteIds();
             expect(ancestorIds.filter((id) => id === grandparent.noteId).length).toBe(1);
@@ -375,7 +367,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
         it("includes notes whose template/inherit relation targets this note", () => {
             const template = createNote("root").note;
             const instance = createNote("root").note;
-            withContext(() =>
+            getContext().init(() =>
                 attributeService.createRelation(instance.noteId, "template", template.noteId)
             );
 
@@ -389,7 +381,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const template = createNote("root").note;
             const viaInherit = createNote("root").note;
             const viaOther = createNote("root").note;
-            withContext(() => {
+            getContext().init(() => {
                 // Line 1071 right operand: name === "inherit".
                 attributeService.createRelation(viaInherit.noteId, "inherit", template.noteId);
                 // Line 1071 false side: a non-template/inherit target relation is skipped.
@@ -406,10 +398,10 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
         it("sorts visible paths before archived and hidden ones", () => {
             const visibleParent = createNote("root").note;
             const archivedParent = createNote("root").note;
-            withContext(() => attributeService.createLabel(archivedParent.noteId, "archived", ""));
+            getContext().init(() => attributeService.createLabel(archivedParent.noteId, "archived", ""));
 
             const leaf = createNote(visibleParent.noteId).note;
-            withContext(() => {
+            getContext().init(() => {
                 cloningService.cloneNoteToParentNote(leaf.noteId, archivedParent.noteId);
                 cloningService.cloneNoteToParentNote(leaf.noteId, "_hidden");
             });
@@ -435,7 +427,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const hoisted = createNote("root").note;
             const outside = createNote("root").note;
             const leaf = createNote(hoisted.noteId).note;
-            withContext(() => cloningService.cloneNoteToParentNote(leaf.noteId, outside.noteId));
+            getContext().init(() => cloningService.cloneNoteToParentNote(leaf.noteId, outside.noteId));
 
             // Lines 1169 / 1175-1176: isInHoistedSubTree comparator wins.
             const best = leaf.getBestNotePath(hoisted.noteId);
@@ -449,10 +441,10 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const out1 = createNote("root").note;
             const out2 = createNote("root").note;
             const archivedParent = createNote("root").note;
-            withContext(() => attributeService.createLabel(archivedParent.noteId, "archived", ""));
+            getContext().init(() => attributeService.createLabel(archivedParent.noteId, "archived", ""));
 
             const leaf = createNote(hoisted.noteId).note;
-            withContext(() => {
+            getContext().init(() => {
                 cloningService.cloneNoteToParentNote(leaf.noteId, out1.noteId);
                 cloningService.cloneNoteToParentNote(leaf.noteId, out2.noteId);
                 cloningService.cloneNoteToParentNote(leaf.noteId, archivedParent.noteId);
@@ -528,7 +520,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             const parent = createNote("root").note;
             const visible = createNote(parent.noteId).note;
             const hiddenLabelled = createNote(parent.noteId).note;
-            withContext(() =>
+            getContext().init(() =>
                 attributeService.createLabel(hiddenLabelled.noteId, "shareHiddenFromTree", "true")
             );
 
@@ -550,7 +542,7 @@ describe("BNote tree / note-path / subtree methods (real DB)", () => {
             // A note whose only child is underscore-prefixed has no visible
             // children: clone a system "_"-note into a fresh parent.
             const emptyParent = createNote("root").note;
-            withContext(() =>
+            getContext().init(() =>
                 cloningService.cloneNoteToParentNote("_globalNoteMap", emptyParent.noteId)
             );
             expect(emptyParent.getChildNotes().length).toBeGreaterThanOrEqual(1);

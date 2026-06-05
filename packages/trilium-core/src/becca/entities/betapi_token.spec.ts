@@ -5,11 +5,6 @@ import BEtapiToken from "./betapi_token.js";
 import { getContext } from "../../services/context.js";
 import { getSql } from "../../services/sql/index.js";
 
-/** Wraps mutations in a CLS context, required for entity saves. */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 describe("BEtapiToken static metadata", () => {
     it("exposes entityName, primaryKeyName and hashedProperties", () => {
         expect(BEtapiToken.entityName).toBe("etapi_tokens");
@@ -121,7 +116,7 @@ describe("BEtapiToken save (beforeSaving)", () => {
             utcDateModified: "2025-06-27 14:10:39.688+0300"
         });
 
-        withContext(() => token.save());
+        getContext().init(() => token.save());
 
         const row = getSql().getRow<Record<string, unknown>>(
             "SELECT * FROM etapi_tokens WHERE etapiTokenId = ?",

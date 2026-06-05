@@ -7,14 +7,6 @@ import BBranchEntity from "./bbranch.js";
 import type BBranch from "./bbranch.js";
 import type BNote from "./bnote.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * attribute.save(), markAsDeleted) require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /**
@@ -24,7 +16,7 @@ let counter = 0;
  */
 function createNote(parentNoteId: string): { note: BNote; branch: BBranch } {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId,
             title: `bnote-attrs-spec-${counter}`,
@@ -39,7 +31,7 @@ describe("BNote attribute methods (real DB)", () => {
         it("filters by type+name, type only, and name only", () => {
             const { note } = createNote("root");
 
-            withContext(() => {
+            getContext().init(() => {
                 note.addLabel("colorTag", "red");
                 note.addRelation("linkTag", note.noteId);
             });
@@ -78,7 +70,7 @@ describe("BNote attribute methods (real DB)", () => {
     describe("attribute inheritance and template resolution", () => {
         it("inherits an inheritable label from a parent and resolves template labels", () => {
             const parent = createNote("root");
-            withContext(() => parent.note.addLabel("inheritedFlag", "yes", true));
+            getContext().init(() => parent.note.addLabel("inheritedFlag", "yes", true));
 
             const child = createNote(parent.note.noteId);
 
@@ -94,13 +86,13 @@ describe("BNote attribute methods (real DB)", () => {
 
             // Template note carrying labels, applied via a ~template relation.
             const template = createNote("root");
-            withContext(() => {
+            getContext().init(() => {
                 template.note.addLabel("fromTemplate", "tval");
                 template.note.addLabel("template"); // marker, must NOT be inherited
             });
 
             const consumer = createNote("root");
-            withContext(() => consumer.note.addRelation("template", template.note.noteId));
+            getContext().init(() => consumer.note.addRelation("template", template.note.noteId));
 
             const templated = consumer.note.getAttributes("label", "fromTemplate");
             expect(templated).toHaveLength(1);
@@ -120,7 +112,7 @@ describe("BNote attribute methods (real DB)", () => {
             // A note whose ~template relation points back to itself triggers the
             // path-cycle short-circuit inside __getAttributes.
             const selfTemplate = createNote("root");
-            withContext(() => {
+            getContext().init(() => {
                 selfTemplate.note.addLabel("selfLabel", "v");
                 selfTemplate.note.addRelation("template", selfTemplate.note.noteId);
             });
@@ -133,7 +125,7 @@ describe("BNote attribute methods (real DB)", () => {
             // A two-note ~inherit cycle exercises the mutual recursion guard as well.
             const a = createNote("root");
             const b = createNote("root");
-            withContext(() => {
+            getContext().init(() => {
                 a.note.addLabel("aLabel", "av");
                 b.note.addLabel("bLabel", "bv");
                 a.note.addRelation("inherit", b.note.noteId);
@@ -174,7 +166,7 @@ describe("BNote attribute methods (real DB)", () => {
             const target = createNote("root");
             const { note } = createNote("root");
 
-            withContext(() => {
+            getContext().init(() => {
                 note.addLabel("MyLabel", "Val");
                 note.addRelation("myRel", target.note.noteId);
             });
@@ -201,7 +193,7 @@ describe("BNote attribute methods (real DB)", () => {
             const target = createNote("root");
             const { note } = createNote("root");
 
-            withContext(() => {
+            getContext().init(() => {
                 note.addLabel("ownLabel", "lv");
                 note.addRelation("ownRel", target.note.noteId);
             });
@@ -224,10 +216,10 @@ describe("BNote attribute methods (real DB)", () => {
     describe("label value collectors", () => {
         it("covers getLabelValues and getOwnedLabelValues", () => {
             const parent = createNote("root");
-            withContext(() => parent.note.addLabel("multi", "inherited", true));
+            getContext().init(() => parent.note.addLabel("multi", "inherited", true));
 
             const child = createNote(parent.note.noteId);
-            withContext(() => child.note.addLabel("multi", "own"));
+            getContext().init(() => child.note.addLabel("multi", "own"));
 
             const allValues = child.note.getLabelValues("multi");
             expect(allValues).toContain("own");
@@ -242,7 +234,7 @@ describe("BNote attribute methods (real DB)", () => {
         it("covers type+name+value, type+name, type only and name only", () => {
             const { note } = createNote("root");
 
-            withContext(() => {
+            getContext().init(() => {
                 note.addLabel("oa", "v1");
                 note.addLabel("oa", "v2");
                 note.addRelation("orel", note.noteId);
@@ -274,7 +266,7 @@ describe("BNote attribute methods (real DB)", () => {
     describe("definition collectors", () => {
         it("covers getRelationDefinitions and getLabelDefinitions", () => {
             const { note } = createNote("root");
-            withContext(() => {
+            getContext().init(() => {
                 note.addLabel("relation:child", "");
                 note.addLabel("plain", "x");
             });
@@ -287,12 +279,12 @@ describe("BNote attribute methods (real DB)", () => {
     describe("mutation helpers", () => {
         it("removeAttribute honours the value-match branch", () => {
             const { note } = createNote("root");
-            withContext(() => {
+            getContext().init(() => {
                 note.addLabel("rm", "keep");
                 note.addLabel("rm", "drop");
             });
 
-            withContext(() => note.removeAttribute("label", "rm", "drop"));
+            getContext().init(() => note.removeAttribute("label", "rm", "drop"));
 
             const remaining = note.getOwnedAttributes("label", "rm");
             expect(remaining).toHaveLength(1);
@@ -303,14 +295,14 @@ describe("BNote attribute methods (real DB)", () => {
             const target = createNote("root");
             const { note } = createNote("root");
 
-            withContext(() => {
+            getContext().init(() => {
                 note.toggleLabel(true, "toggled", "on");
                 note.toggleRelation(true, "togRel", target.note.noteId);
             });
             expect(note.getOwnedLabel("toggled")?.value).toBe("on");
             expect(note.getOwnedRelation("togRel")?.value).toBe(target.note.noteId);
 
-            withContext(() => {
+            getContext().init(() => {
                 note.toggleLabel(false, "toggled");
                 note.toggleRelation(false, "togRel");
             });
@@ -322,10 +314,10 @@ describe("BNote attribute methods (real DB)", () => {
             const target = createNote("root");
             const { note } = createNote("root");
 
-            withContext(() => note.addRelation("delRel", target.note.noteId));
+            getContext().init(() => note.addRelation("delRel", target.note.noteId));
             expect(note.getOwnedRelation("delRel")).not.toBeNull();
 
-            withContext(() => note.removeRelation("delRel"));
+            getContext().init(() => note.removeRelation("delRel"));
             expect(note.getOwnedRelation("delRel")).toBeNull();
         });
     });
@@ -333,7 +325,7 @@ describe("BNote attribute methods (real DB)", () => {
     describe("attribute-by-id accessors", () => {
         it("getAttributeById finds via the cache", () => {
             const { note } = createNote("root");
-            const attr = withContext(() => note.addLabel("byId", "value"));
+            const attr = getContext().init(() => note.addLabel("byId", "value"));
 
             const found = note.getAttributeById(attr.attributeId);
             expect(found?.attributeId).toBe(attr.attributeId);
@@ -342,20 +334,20 @@ describe("BNote attribute methods (real DB)", () => {
 
         it("setAttributeValueById updates the value and throws when not found", () => {
             const { note } = createNote("root");
-            const attr = withContext(() => note.addLabel("settable", "old"));
+            const attr = getContext().init(() => note.addLabel("settable", "old"));
 
-            withContext(() => note.setAttributeValueById(attr.attributeId, "new"));
+            getContext().init(() => note.setAttributeValueById(attr.attributeId, "new"));
             expect(note.getOwnedLabel("settable")?.value).toBe("new");
 
             // Setting the same value again is a no-op (value unchanged).
-            withContext(() => note.setAttributeValueById(attr.attributeId, "new"));
+            getContext().init(() => note.setAttributeValueById(attr.attributeId, "new"));
             expect(note.getOwnedLabel("settable")?.value).toBe("new");
 
             // Omitting the value coalesces to "" (the `value?.toString() || ""` fallback).
-            withContext(() => note.setAttributeValueById(attr.attributeId));
+            getContext().init(() => note.setAttributeValueById(attr.attributeId));
             expect(note.getOwnedLabel("settable")?.value).toBe("");
 
-            expect(() => withContext(() => note.setAttributeValueById("missing-attr-id", "x"))).toThrow();
+            expect(() => getContext().init(() => note.setAttributeValueById("missing-attr-id", "x"))).toThrow();
         });
     });
 });

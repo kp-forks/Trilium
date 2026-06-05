@@ -21,17 +21,12 @@ import type BNote from "./bnote.js";
 // exact specifier and hand back a stub exposing executeNote.
 const executeNoteMock = vi.fn();
 
-/** Wraps mutations in a CLS context, required for entity saves/content writes. */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /** Creates a fresh note under the given parent in the shared in-memory DB. */
 function createNote(opts: { parentNoteId?: string; content?: string; type?: "text" | "code" | "image"; mime?: string; isProtected?: boolean } = {}): BNote {
     counter++;
-    return withContext(() => {
+    return getContext().init(() => {
         const { note } = noteService.createNewNote({
             parentNoteId: opts.parentNoteId ?? "root",
             title: `bnote-content-spec-${counter}`,
@@ -68,7 +63,7 @@ describe("BNote content / misc getters", () => {
     describe("setJsonContent (line 240-241)", () => {
         it("serialises an object as JSON content and reads it back", () => {
             const note = createNote();
-            withContext(() => note.setJsonContent({ a: 1, b: "two" }));
+            getContext().init(() => note.setJsonContent({ a: 1, b: "two" }));
 
             expect(note.getJsonContent()).toEqual({ a: 1, b: "two" });
         });
@@ -192,7 +187,7 @@ describe("BNote content / misc getters", () => {
             const note = createNote();
             const target = createNote();
 
-            withContext(() => {
+            getContext().init(() => {
                 note.addLabel("plainLabel", "v");
                 note.addRelation("relTo", target.noteId); // not an auto-link
                 note.addRelation("internalLink", target.noteId); // auto-link
@@ -224,7 +219,7 @@ describe("BNote content / misc getters", () => {
             const source = createNote();
             const target = createNote();
 
-            const res = withContext(() => source.cloneTo(target.noteId));
+            const res = getContext().init(() => source.cloneTo(target.noteId));
 
             expect(res.success).toBe(true);
             expect(becca.getBranchFromChildAndParent(source.noteId, target.noteId)).not.toBeNull();
@@ -245,7 +240,7 @@ describe("BNote content / misc getters", () => {
             const parent = createNote({ content: "" });
             const image = createNote({ parentNoteId: parent.noteId, type: "image", mime: "image/png", content: "binary" });
             // Parent references the image and contains the image URL in its content.
-            withContext(() => {
+            getContext().init(() => {
                 parent.addRelation("imageLink", image.noteId);
                 parent.setContent(`<img src="api/images/${image.noteId}/foo.png">`);
             });
@@ -268,7 +263,7 @@ describe("BNote content / misc getters", () => {
             const parentA = createNote({ content: "" });
             const parentB = createNote({ content: "" });
             const image = createNote({ parentNoteId: parentA.noteId, type: "image", mime: "image/png", content: "x" });
-            withContext(() => image.cloneTo(parentB.noteId));
+            getContext().init(() => image.cloneTo(parentB.noteId));
             expect(image.getParentBranches().length).toBeGreaterThan(1);
             expect(image.isEligibleForConversionToAttachment()).toBe(false);
         });
@@ -283,7 +278,7 @@ describe("BNote content / misc getters", () => {
             const parent = createNote({ content: "" });
             const other = createNote({ content: "" });
             const image = createNote({ parentNoteId: parent.noteId, type: "image", mime: "image/png", content: "x" });
-            withContext(() => {
+            getContext().init(() => {
                 parent.addRelation("imageLink", image.noteId);
                 other.addRelation("imageLink", image.noteId);
             });
@@ -296,14 +291,14 @@ describe("BNote content / misc getters", () => {
             const other = createNote({ content: "" });
             const image = createNote({ parentNoteId: parent.noteId, type: "image", mime: "image/png", content: "x" });
             // The single imageLink comes from a note that is NOT the image's parent.
-            withContext(() => other.addRelation("imageLink", image.noteId));
+            getContext().init(() => other.addRelation("imageLink", image.noteId));
             expect(image.isEligibleForConversionToAttachment()).toBe(false);
         });
 
         it("rejects when the parent note is not a text note", () => {
             const parent = createNote({ type: "code", mime: "text/plain", content: "x" });
             const image = createNote({ parentNoteId: parent.noteId, type: "image", mime: "image/png", content: "x" });
-            withContext(() => parent.addRelation("imageLink", image.noteId));
+            getContext().init(() => parent.addRelation("imageLink", image.noteId));
             expect(image.isEligibleForConversionToAttachment()).toBe(false);
         });
 
@@ -313,7 +308,7 @@ describe("BNote content / misc getters", () => {
             expect(image.isEligibleForConversionToAttachment()).toBe(true);
 
             const imageNoteId = image.noteId;
-            const attachment = withContext(() => image.convertToParentAttachment());
+            const attachment = getContext().init(() => image.convertToParentAttachment());
 
             expect(attachment).not.toBeNull();
             expect(attachment?.ownerId).toBe(parent.noteId);
@@ -327,7 +322,7 @@ describe("BNote content / misc getters", () => {
 
         it("convertToParentAttachment returns null when the note is not eligible", () => {
             const text = createNote();
-            expect(withContext(() => text.convertToParentAttachment())).toBeNull();
+            expect(getContext().init(() => text.convertToParentAttachment())).toBeNull();
         });
     });
 
@@ -336,18 +331,18 @@ describe("BNote content / misc getters", () => {
             const note = createNote();
             expect(note.isDeleted).toBe(false);
 
-            withContext(() => note.deleteNote());
+            getContext().init(() => note.deleteNote());
 
             expect(note.isDeleted).toBe(true);
         });
 
         it("is a no-op when the note is already deleted", () => {
             const note = createNote();
-            withContext(() => note.deleteNote());
+            getContext().init(() => note.deleteNote());
             expect(note.isDeleted).toBe(true);
 
             // Second call hits the early `isDeleted` return.
-            expect(() => withContext(() => note.deleteNote())).not.toThrow();
+            expect(() => getContext().init(() => note.deleteNote())).not.toThrow();
         });
     });
 
@@ -399,7 +394,7 @@ describe("BNote content / misc getters", () => {
     describe("saveRevision / eraseExcessRevisionSnapshots (lines 1551-1620)", () => {
         it("saves a revision and copies note attachments onto it", () => {
             const note = createNote();
-            withContext(() =>
+            getContext().init(() =>
                 note.saveAttachment({
                     role: "image",
                     mime: "image/png",
@@ -408,7 +403,7 @@ describe("BNote content / misc getters", () => {
                 })
             );
 
-            const revision = withContext(() => note.saveRevision({ description: "d", source: "test" as never }));
+            const revision = getContext().init(() => note.saveRevision({ description: "d", source: "test" as never }));
 
             expect(revision.revisionId).toBeDefined();
             expect(revision.getAttachments().length).toBe(1);
@@ -416,15 +411,15 @@ describe("BNote content / misc getters", () => {
 
         it("erases excess revisions beyond the #versioningLimit label", () => {
             const note = createNote();
-            withContext(() => note.setLabel("versioningLimit", "2"));
+            getContext().init(() => note.setLabel("versioningLimit", "2"));
 
             const eraseSpy = vi.spyOn(eraseService, "eraseRevisions");
 
             // Create more revisions than the limit.
-            withContext(() => note.saveRevision());
-            withContext(() => note.saveRevision());
-            withContext(() => note.saveRevision());
-            withContext(() => note.saveRevision());
+            getContext().init(() => note.saveRevision());
+            getContext().init(() => note.saveRevision());
+            getContext().init(() => note.saveRevision());
+            getContext().init(() => note.saveRevision());
 
             // With a limit of 2, the older revisions beyond the 2 most recent are erased.
             expect(eraseSpy).toHaveBeenCalled();
@@ -436,15 +431,15 @@ describe("BNote content / misc getters", () => {
 
         it("falls back to the option limit when no label is present", () => {
             const note = createNote();
-            withContext(() => optionService.setOption("revisionSnapshotNumberLimit", "1"));
+            getContext().init(() => optionService.setOption("revisionSnapshotNumberLimit", "1"));
             try {
-                withContext(() => note.saveRevision());
-                withContext(() => note.saveRevision());
-                withContext(() => note.saveRevision());
+                getContext().init(() => note.saveRevision());
+                getContext().init(() => note.saveRevision());
+                getContext().init(() => note.saveRevision());
 
                 expect(note.getRevisions().length).toBeLessThanOrEqual(1);
             } finally {
-                withContext(() => optionService.setOption("revisionSnapshotNumberLimit", "-1"));
+                getContext().init(() => optionService.setOption("revisionSnapshotNumberLimit", "-1"));
             }
         });
     });
@@ -452,10 +447,10 @@ describe("BNote content / misc getters", () => {
     describe("saveAttachment matchBy (lines 1628-1655)", () => {
         it("matches an existing attachment by title", () => {
             const note = createNote();
-            const first = withContext(() =>
+            const first = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "by-title-" + counter, content: "a" })
             );
-            const second = withContext(() =>
+            const second = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "by-title-" + counter, content: "b" }, "title")
             );
 
@@ -467,11 +462,11 @@ describe("BNote content / misc getters", () => {
 
         it("matches an existing attachment by attachmentId (default)", () => {
             const note = createNote();
-            const first = withContext(() =>
+            const first = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "by-id-" + counter, content: "a" })
             );
             const attachmentId = first.attachmentId ?? "";
-            const second = withContext(() =>
+            const second = getContext().init(() =>
                 note.saveAttachment({ attachmentId, role: "file", mime: "text/plain", title: "by-id-" + counter, content: "b" })
             );
 
@@ -482,7 +477,7 @@ describe("BNote content / misc getters", () => {
         it("throws for an unsupported matchBy value", () => {
             const note = createNote();
             expect(() =>
-                withContext(() =>
+                getContext().init(() =>
                     note.saveAttachment(
                         { role: "file", mime: "text/plain", title: "bad", content: "x" },
                         "bogus" as never

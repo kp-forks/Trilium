@@ -8,17 +8,12 @@ import noteService from "../../services/notes.js";
 import protectedSession from "../../services/protected_session.js";
 import { encodeUtf8, unwrapStringOrBuffer } from "../../services/utils/binary.js";
 
-/** Wraps mutations in a CLS context, required for entity saves/content writes. */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /** Creates a fresh text note in the real in-memory DB with a unique title. */
 function createNote(content = "<p>hello</p>"): BNote {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId: "root",
             title: `brevision-spec-${counter}`,
@@ -175,7 +170,7 @@ describe("Revision constructor (protected)", () => {
 describe("Revision JSON content", () => {
     function saveRevisionWithContent(content: string): BRevision {
         const note = createNote();
-        const revision = withContext(() => {
+        const revision = getContext().init(() => {
             const rev = note.saveRevision();
             rev.setContent(content, { forceSave: true });
             return rev;
@@ -210,7 +205,7 @@ describe("Revision attachments", () => {
 
     function setup(): BRevision {
         const note = createNote();
-        return withContext(() => {
+        return getContext().init(() => {
             note.saveAttachment({
                 attachmentId: undefined,
                 role: "image",
@@ -272,7 +267,7 @@ describe("Revision attachments", () => {
 describe("Revision getNote", () => {
     it("resolves the owning note from becca", () => {
         const note = createNote();
-        const revision = withContext(() => note.saveRevision());
+        const revision = getContext().init(() => note.saveRevision());
 
         expect(revision.getNote()).toBe(note);
     });
@@ -281,12 +276,12 @@ describe("Revision getNote", () => {
 describe("Revision eraseRevision", () => {
     it("hard-deletes the revision so it is no longer retrievable", () => {
         const note = createNote();
-        const revision = withContext(() => note.saveRevision());
+        const revision = getContext().init(() => note.saveRevision());
         const revisionId = revision.revisionId ?? "";
         expect(revisionId).not.toBe("");
         expect(becca.getRevision(revisionId)).not.toBeNull();
 
-        withContext(() => revision.eraseRevision());
+        getContext().init(() => revision.eraseRevision());
 
         expect(becca.getRevision(revisionId)).toBeNull();
     });

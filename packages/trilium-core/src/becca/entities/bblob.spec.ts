@@ -4,11 +4,6 @@ import BBlob from "./bblob.js";
 import { getContext } from "../../services/context.js";
 import { getSql } from "../../services/sql/index.js";
 
-/** Wraps mutations in a CLS context, required for entity saves. */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 describe("BBlob static metadata", () => {
     it("exposes entityName, primaryKeyName and hashedProperties", () => {
         expect(BBlob.entityName).toBe("blobs");
@@ -84,7 +79,7 @@ describe("BBlob save (getPojoToSave omits contentLength)", () => {
             utcDateModified: "2025-06-27 14:10:39.688+0300"
         });
 
-        withContext(() => blob.save());
+        getContext().init(() => blob.save());
 
         const row = getSql().getRow<Record<string, unknown>>(
             "SELECT * FROM blobs WHERE blobId = ?",

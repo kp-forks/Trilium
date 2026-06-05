@@ -9,20 +9,12 @@ import type BNote from "./bnote.js";
 import BBlob from "./bblob.js";
 import BOption from "./boption.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * setContent, save) require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /** Creates a fresh text note under root in the shared in-memory DB. */
 function createNote(opts: { isProtected?: boolean } = {}): BNote {
     counter++;
-    return withContext(() => {
+    return getContext().init(() => {
         const { note } = noteService.createNewNote({
             parentNoteId: "root",
             title: `abstract-becca-entity-spec-${counter}`,
@@ -113,7 +105,7 @@ describe("AbstractBeccaEntity (real DB)", () => {
                 isSynced: false,
                 utcDateModified: "2020-01-01 00:00:00.000Z"
             });
-            withContext(() => option.save());
+            getContext().init(() => option.save());
 
             const stored = getSql().getValue<string>(
                 "SELECT value FROM options WHERE name = ?",
@@ -126,7 +118,7 @@ describe("AbstractBeccaEntity (real DB)", () => {
     describe("_setContent guards", () => {
         it("throws when content is null", () => {
             const note = createNote();
-            expect(() => withContext(() => note.setContent(null as unknown as string))).toThrow(
+            expect(() => getContext().init(() => note.setContent(null as unknown as string))).toThrow(
                 /Cannot set null content/
             );
         });
@@ -134,7 +126,7 @@ describe("AbstractBeccaEntity (real DB)", () => {
         it("throws when content is undefined", () => {
             const note = createNote();
             expect(() =>
-                withContext(() => note.setContent(undefined as unknown as string))
+                getContext().init(() => note.setContent(undefined as unknown as string))
             ).toThrow(/Cannot set null content/);
         });
     });
@@ -142,7 +134,7 @@ describe("AbstractBeccaEntity (real DB)", () => {
     describe("forceFrontendReload componentId branch (saveBlob)", () => {
         it("saves new content with forceFrontendReload set", () => {
             const note = createNote();
-            withContext(() =>
+            getContext().init(() =>
                 note.setContent("<p>reload-me-" + counter + "</p>", { forceFrontendReload: true })
             );
 
@@ -155,7 +147,7 @@ describe("AbstractBeccaEntity (real DB)", () => {
             protectedSessionService.setDataKey(PROTECTED_KEY);
             const note = createNote({ isProtected: true });
 
-            withContext(() => note.setContent("super secret " + counter));
+            getContext().init(() => note.setContent("super secret " + counter));
 
             // Round-trips back to plaintext while the session is available.
             expect(unwrapStringOrBuffer(note.getContent())).toBe("super secret " + counter);
@@ -167,7 +159,7 @@ describe("AbstractBeccaEntity (real DB)", () => {
 
             vi.spyOn(protectedSessionService, "encrypt").mockReturnValue(null);
 
-            expect(() => withContext(() => note.setContent("won't encrypt " + counter))).toThrow(
+            expect(() => getContext().init(() => note.setContent("won't encrypt " + counter))).toThrow(
                 /Unable to encrypt/
             );
         });
@@ -178,7 +170,7 @@ describe("AbstractBeccaEntity (real DB)", () => {
             const note = createNote({ isProtected: true });
             protectedSessionService.resetDataKey();
 
-            expect(() => withContext(() => note.setContent("no session " + counter))).toThrow(
+            expect(() => getContext().init(() => note.setContent("no session " + counter))).toThrow(
                 /protected session is not available/
             );
         });

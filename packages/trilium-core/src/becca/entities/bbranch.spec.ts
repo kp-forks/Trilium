@@ -6,14 +6,6 @@ import noteService from "../../services/notes.js";
 import BBranch from "./bbranch.js";
 import type BNote from "./bnote.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * branch.save(), branch.deleteBranch(), markAsDeleted()) require CLS.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /**
@@ -23,7 +15,7 @@ let counter = 0;
  */
 function createNote(parentNoteId: string): { note: BNote; branch: BBranch } {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId,
             title: `bbranch-spec-${counter}`,
@@ -38,13 +30,13 @@ describe("BBranch (real DB)", () => {
         it("refuses to delete the root branch", () => {
             const rootBranch = becca.getBranchOrThrow("none_root");
 
-            expect(() => withContext(() => rootBranch.deleteBranch())).toThrow();
+            expect(() => getContext().init(() => rootBranch.deleteBranch())).toThrow();
         });
 
         it("deletes a note that has only one strong parent branch", () => {
             const { note, branch } = createNote("root");
 
-            const deleted = withContext(() => branch.deleteBranch());
+            const deleted = getContext().init(() => branch.deleteBranch());
 
             expect(deleted).toBe(true);
             expect(branch.isDeleted).toBe(true);
@@ -56,7 +48,7 @@ describe("BBranch (real DB)", () => {
             const otherParent = createNote("root");
 
             // Add a second strong branch under another parent.
-            const secondBranch = withContext(() => {
+            const secondBranch = getContext().init(() => {
                 const b = new BBranch({
                     noteId: note.noteId,
                     parentNoteId: otherParent.note.noteId,
@@ -70,7 +62,7 @@ describe("BBranch (real DB)", () => {
             const firstBranch = note.getParentBranches().find((b) => b.parentNoteId === "root");
             expect(firstBranch).toBeDefined();
 
-            const deleted = withContext(() => firstBranch?.deleteBranch());
+            const deleted = getContext().init(() => firstBranch?.deleteBranch());
 
             expect(deleted).toBe(false);
             expect(note.isDeleted).toBe(false);
@@ -82,7 +74,7 @@ describe("BBranch (real DB)", () => {
 
             // Add a weak clone under the bookmarks container so the note has a
             // strong branch (under root) plus a weak branch (under _lbBookmarks).
-            const weakBranch = withContext(() => {
+            const weakBranch = getContext().init(() => {
                 const b = new BBranch({
                     noteId: note.noteId,
                     parentNoteId: "_lbBookmarks",
@@ -96,7 +88,7 @@ describe("BBranch (real DB)", () => {
             expect(weakBranch.isWeak).toBe(true);
             expect(note.getStrongParentBranches().length).toBe(1);
 
-            const deleted = withContext(() => branch.deleteBranch());
+            const deleted = getContext().init(() => branch.deleteBranch());
 
             // The single strong branch is gone, so the note (and its weak branch)
             // are deleted as well.
@@ -108,7 +100,7 @@ describe("BBranch (real DB)", () => {
         it("deletes attached attachments together with the note", () => {
             const { note, branch } = createNote("root");
 
-            const attachment = withContext(() =>
+            const attachment = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -119,7 +111,7 @@ describe("BBranch (real DB)", () => {
 
             expect(note.getAttachments().some((a) => a.attachmentId === attachment.attachmentId)).toBe(true);
 
-            const deleted = withContext(() => branch.deleteBranch());
+            const deleted = getContext().init(() => branch.deleteBranch());
 
             expect(deleted).toBe(true);
             // The attachment was marked deleted as part of the note deletion, so it
@@ -132,7 +124,7 @@ describe("BBranch (real DB)", () => {
         it("throws when noteId or parentNoteId are missing", () => {
             const branch = new BBranch();
 
-            expect(() => withContext(() => branch.save())).toThrow();
+            expect(() => getContext().init(() => branch.save())).toThrow();
         });
 
         it("computes notePosition as max sibling position + 10, skipping _hidden", () => {
@@ -142,7 +134,7 @@ describe("BBranch (real DB)", () => {
             const maxPos = existing.branch.notePosition;
             const child = createNote("root");
 
-            const newBranch = withContext(() => {
+            const newBranch = getContext().init(() => {
                 const b = new BBranch({
                     noteId: child.note.noteId,
                     parentNoteId: parent.note.noteId,
@@ -171,7 +163,7 @@ describe("BBranch (real DB)", () => {
             delete becca.childParentToBranch[key];
 
             try {
-                const newBranch = withContext(() => {
+                const newBranch = getContext().init(() => {
                     const b = new BBranch({
                         noteId: child.note.noteId,
                         parentNoteId: parent.note.noteId,
@@ -198,7 +190,7 @@ describe("BBranch (real DB)", () => {
             const target = createNote("root");
 
             // Create the clone under the target first.
-            const firstClone = withContext(() => {
+            const firstClone = getContext().init(() => {
                 const clone = branch.createClone(target.note.noteId);
                 clone.save();
                 return clone;
@@ -209,7 +201,7 @@ describe("BBranch (real DB)", () => {
 
             // Cloning again to the same parent with a position returns the existing
             // branch and updates its notePosition.
-            const secondClone = withContext(() => branch.createClone(target.note.noteId, 555));
+            const secondClone = getContext().init(() => branch.createClone(target.note.noteId, 555));
 
             expect(secondClone).toBe(firstClone);
             expect(secondClone.notePosition).toBe(555);
@@ -219,14 +211,14 @@ describe("BBranch (real DB)", () => {
             const { branch } = createNote("root");
             const target = createNote("root");
 
-            const firstClone = withContext(() => {
+            const firstClone = getContext().init(() => {
                 const clone = branch.createClone(target.note.noteId);
                 clone.save();
                 return clone;
             });
 
             const originalPos = firstClone.notePosition;
-            const secondClone = withContext(() => branch.createClone(target.note.noteId));
+            const secondClone = getContext().init(() => branch.createClone(target.note.noteId));
 
             expect(secondClone).toBe(firstClone);
             expect(secondClone.notePosition).toBe(originalPos);

@@ -7,21 +7,13 @@ import noteService from "../services/notes.js";
 let counter = 0;
 
 /**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * saveAttachment) require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
-/**
  * Creates a fresh text note under the given parent in the real in-memory DB.
  * Each call uses a unique title since the same fixture DB is shared between
  * the `it()`s in this file.
  */
 function createNote(parentNoteId: string, title?: string) {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId,
             title: title ?? `becca-interface-spec-${counter}`,
@@ -78,7 +70,7 @@ describe("Becca interface (real DB)", () => {
 
         it("returns the attribute when present", () => {
             const { note } = createNote("root");
-            const attr = withContext(() => note.addLabel("becca-interface-label"));
+            const attr = getContext().init(() => note.addLabel("becca-interface-label"));
             const fetched = becca.getAttributeOrThrow(attr.attributeId);
             expect(fetched.attributeId).toBe(attr.attributeId);
         });
@@ -87,7 +79,7 @@ describe("Becca interface (real DB)", () => {
     describe("getAttachments / getBlob", () => {
         it("fetches existing attachments by id via getManyRows", () => {
             const { note } = createNote("root");
-            const attachment = withContext(() =>
+            const attachment = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -110,7 +102,7 @@ describe("Becca interface (real DB)", () => {
 
         it("getBlob returns a blob for a saved attachment's blobId", () => {
             const { note } = createNote("root");
-            const attachment = withContext(() =>
+            const attachment = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -153,7 +145,7 @@ describe("Becca interface (real DB)", () => {
 
         it("routes 'attachments' to getAttachment", () => {
             const { note } = createNote("root");
-            const attachment = withContext(() =>
+            const attachment = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",

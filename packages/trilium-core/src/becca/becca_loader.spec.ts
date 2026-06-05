@@ -9,19 +9,11 @@ import becca from "./becca.js";
 import beccaLoader, { load, reload } from "./becca_loader.js";
 import BNote from "./entities/bnote.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote)
- * require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 function createNote(parentNoteId: string): BNote {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId,
             title: `becca-loader-spec-${counter}`,
@@ -163,7 +155,7 @@ describe("becca_loader", () => {
             const etapiTokenId = "loaderEtapiToken1";
             const now = "2025-01-01 00:00:00.000Z";
 
-            withContext(() => {
+            getContext().init(() => {
                 getSql().execute(
                     /*sql*/`INSERT INTO etapi_tokens (etapiTokenId, name, tokenHash, utcDateCreated, utcDateModified, isDeleted)
                             VALUES (?, ?, ?, ?, ?, 0)`,
@@ -184,7 +176,7 @@ describe("becca_loader", () => {
         it("reloads becca and notifies the frontend with the supplied reason", () => {
             const spy = vi.spyOn(ws, "reloadFrontend").mockImplementation(() => {});
 
-            withContext(() => reload("custom reason"));
+            getContext().init(() => reload("custom reason"));
 
             expect(becca.loaded).toBe(true);
             expect(spy).toHaveBeenCalledWith("custom reason");
@@ -193,7 +185,7 @@ describe("becca_loader", () => {
         it("falls back to a default reason when none is given", () => {
             const spy = vi.spyOn(ws, "reloadFrontend").mockImplementation(() => {});
 
-            withContext(() => reload(""));
+            getContext().init(() => reload(""));
 
             // The empty reason triggers the `reason || "becca reloaded"` fallback.
             expect(spy).toHaveBeenCalledWith("becca reloaded");

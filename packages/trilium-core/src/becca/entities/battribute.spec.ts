@@ -7,20 +7,12 @@ import becca from "../becca.js";
 import BAttribute from "./battribute.js";
 import BNote from "./bnote.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * attribute.save()) require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /** Creates a fresh text note under root in the real in-memory DB. */
 function createNote(): BNote {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId: "root",
             title: `battribute-spec-${counter}`,

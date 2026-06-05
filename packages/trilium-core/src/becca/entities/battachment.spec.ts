@@ -10,20 +10,12 @@ import becca from "../becca.js";
 import BAttachment from "./battachment.js";
 import type BNote from "./bnote.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * saveAttachment/setContent, markAsDeleted, convertToNote) require CLS.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /** Creates a fresh text note under root in the shared in-memory DB. */
 function createNote(opts: { isProtected?: boolean; content?: string } = {}): BNote {
     counter++;
-    return withContext(() => {
+    return getContext().init(() => {
         const { note } = noteService.createNewNote({
             parentNoteId: "root",
             title: `battachment-spec-${counter}`,
@@ -94,7 +86,7 @@ describe("BAttachment (real DB)", () => {
     describe("copy / getNote / hasStringContent / getFileName", () => {
         it("copy produces an independent attachment with the same descriptive fields", () => {
             const note = createNote();
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "orig", content: "hi" })
             );
 
@@ -110,7 +102,7 @@ describe("BAttachment (real DB)", () => {
 
         it("getNote resolves the owning note through becca", () => {
             const note = createNote();
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "gn", content: "x" })
             );
 
@@ -137,11 +129,11 @@ describe("BAttachment (real DB)", () => {
     describe("content round-trip", () => {
         it("setContent then getContent round-trips through the blob store", () => {
             const note = createNote();
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "rt", content: "" })
             );
 
-            withContext(() => att.setContent("payload-" + counter, { forceSave: true }));
+            getContext().init(() => att.setContent("payload-" + counter, { forceSave: true }));
 
             expect(unwrapStringOrBuffer(att.getContent())).toBe("payload-" + counter);
         });
@@ -150,7 +142,7 @@ describe("BAttachment (real DB)", () => {
     describe("isContentAvailable / getTitleOrProtected / decrypt", () => {
         it("a non-protected attachment is always content-available and exposes its title", () => {
             const note = createNote();
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "plain", content: "x" })
             );
 
@@ -161,7 +153,7 @@ describe("BAttachment (real DB)", () => {
         it("a protected attachment hides its title once the session is dropped", () => {
             protectedSessionService.setDataKey(PROTECTED_KEY);
             const note = createNote({ isProtected: true });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -188,7 +180,7 @@ describe("BAttachment (real DB)", () => {
             protectedSessionService.setDataKey(PROTECTED_KEY);
             const note = createNote({ isProtected: true });
             const plainTitle = "decrypt-me-" + counter;
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -209,7 +201,7 @@ describe("BAttachment (real DB)", () => {
         it("decrypt falls back to an empty title when decryptString yields a falsy value", () => {
             protectedSessionService.setDataKey(PROTECTED_KEY);
             const note = createNote({ isProtected: true });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -231,7 +223,7 @@ describe("BAttachment (real DB)", () => {
         it("decrypt swallows decryption errors and leaves the entity not-decrypted", () => {
             protectedSessionService.setDataKey(PROTECTED_KEY);
             const note = createNote({ isProtected: true });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -259,7 +251,7 @@ describe("BAttachment (real DB)", () => {
             const att = new BAttachment(baseRow({ role: "file", mime: "text/plain", title: "srch" }));
             (att as unknown as { type: string }).type = "search";
 
-            expect(() => withContext(() => att.convertToNote())).toThrow(/search/);
+            expect(() => getContext().init(() => att.convertToNote())).toThrow(/search/);
         });
 
         it("throws when the owning note cannot be found", () => {
@@ -267,24 +259,24 @@ describe("BAttachment (real DB)", () => {
                 baseRow({ ownerId: "missingOwner123", role: "file", mime: "text/plain", title: "noOwner" })
             );
 
-            expect(() => withContext(() => att.convertToNote())).toThrow(/Cannot find note/);
+            expect(() => getContext().init(() => att.convertToNote())).toThrow(/Cannot find note/);
         });
 
         it("throws when the role has no note-type mapping", () => {
             const note = createNote();
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({ role: "file", mime: "text/plain", title: "badrole", content: "x" })
             );
             // Mutate to an unmapped role after construction.
             att.role = "unknownRole";
 
-            expect(() => withContext(() => att.convertToNote())).toThrow(/Mapping from attachment role/);
+            expect(() => getContext().init(() => att.convertToNote())).toThrow(/Mapping from attachment role/);
         });
 
         it("throws when converting a protected attachment outside of a protected session", () => {
             protectedSessionService.setDataKey(PROTECTED_KEY);
             const note = createNote({ isProtected: true });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -298,13 +290,13 @@ describe("BAttachment (real DB)", () => {
             protectedSessionService.resetDataKey();
             const reloaded = attachmentId ? becca.getAttachmentOrThrow(attachmentId) : att;
 
-            expect(() => withContext(() => reloaded.convertToNote())).toThrow(/protected session/);
+            expect(() => getContext().init(() => reloaded.convertToNote())).toThrow(/protected session/);
         });
 
         it("converts a 'file' attachment into a note without rewriting parent content", () => {
             const parentContent = "<p>no image refs here</p>";
             const note = createNote({ content: parentContent });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
@@ -315,7 +307,7 @@ describe("BAttachment (real DB)", () => {
             const attachmentId = att.attachmentId;
             expect(attachmentId).toBeDefined();
 
-            const { note: created, branch } = withContext(() => att.convertToNote());
+            const { note: created, branch } = getContext().init(() => att.convertToNote());
 
             expect(created.type).toBe("file");
             expect(created.title).toBe("fileconv-" + counter);
@@ -328,7 +320,7 @@ describe("BAttachment (real DB)", () => {
 
         it("converts an 'image' attachment and rewrites the embedded attachment URL in the parent", () => {
             const note = createNote({ content: "<p>placeholder</p>" });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "image",
                     mime: "image/png",
@@ -341,9 +333,9 @@ describe("BAttachment (real DB)", () => {
 
             // Embed a reference to the attachment image URL so replaceAll has something to change.
             const refContent = `<img src="api/attachments/${attachmentId}/image/foo.png">`;
-            withContext(() => note.setContent(refContent));
+            getContext().init(() => note.setContent(refContent));
 
-            const { note: created } = withContext(() => att.convertToNote());
+            const { note: created } = getContext().init(() => att.convertToNote());
 
             expect(created.type).toBe("image");
             // The parent content's attachment URL has been rewritten to the new image note URL.
@@ -354,7 +346,7 @@ describe("BAttachment (real DB)", () => {
         it("converts an 'image' attachment without touching content that has no matching URL", () => {
             const stableContent = "<p>nothing to rewrite</p>";
             const note = createNote({ content: stableContent });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "image",
                     mime: "image/png",
@@ -363,7 +355,7 @@ describe("BAttachment (real DB)", () => {
                 })
             );
 
-            const { note: created } = withContext(() => att.convertToNote());
+            const { note: created } = getContext().init(() => att.convertToNote());
 
             expect(created.type).toBe("image");
             // No URL matched, so the parent content stays exactly as it was.
@@ -374,7 +366,7 @@ describe("BAttachment (real DB)", () => {
             // Build a text parent but force its content to be non-string so the
             // type guard inside the image branch fires.
             const note = createNote({ content: "<p>x</p>" });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "image",
                     mime: "image/png",
@@ -385,7 +377,7 @@ describe("BAttachment (real DB)", () => {
 
             vi.spyOn(note, "getContent").mockReturnValue(new Uint8Array([1, 2, 3]));
 
-            expect(() => withContext(() => att.convertToNote())).toThrow(/non-string content/);
+            expect(() => getContext().init(() => att.convertToNote())).toThrow(/non-string content/);
         });
     });
 
@@ -454,7 +446,7 @@ describe("BAttachment (real DB)", () => {
         it("getPojoToSave drops the title for a protected attachment outside a session", () => {
             protectedSessionService.setDataKey(PROTECTED_KEY);
             const note = createNote({ isProtected: true });
-            const att = withContext(() =>
+            const att = getContext().init(() =>
                 note.saveAttachment({
                     role: "file",
                     mime: "text/plain",
