@@ -12,7 +12,7 @@ vi.mock("react-zoom-pan-pinch", () => ({
     TransformComponent: (props: { children?: ComponentChildren }) => props.children
 }));
 
-import ImageViewer from "./ImageViewer";
+import ImageViewer, { evaluateImageZoom } from "./ImageViewer";
 
 function renderViewer(props: Parameters<typeof ImageViewer>[0]) {
     const container = document.createElement("div");
@@ -49,5 +49,33 @@ describe("ImageViewer", () => {
         const props = transformWrapperSpy.mock.calls[0][0];
         expect(props.minScale).toBe(1);
         expect(props.maxScale).toBe(8);
+    });
+});
+
+describe("evaluateImageZoom", () => {
+    const img = (naturalWidth: number, clientWidth: number) => ({ naturalWidth, clientWidth });
+
+    it("is pannable only once zoomed past the fitted size", () => {
+        expect(evaluateImageZoom(0.5, img(800, 800)).pannable).toBe(false);
+        expect(evaluateImageZoom(1, img(800, 800)).pannable).toBe(false);
+        expect(evaluateImageZoom(1.5, img(800, 800)).pannable).toBe(true);
+    });
+
+    it("goes crisp only past 4x native for a downscaled image", () => {
+        // native 4000 fitted to 800 => 1x native at scale 5, exactly 4x native at scale 20
+        expect(evaluateImageZoom(5, img(4000, 800)).largeZoom).toBe(false);
+        expect(evaluateImageZoom(20, img(4000, 800)).largeZoom).toBe(false);
+        expect(evaluateImageZoom(21, img(4000, 800)).largeZoom).toBe(true);
+    });
+
+    it("goes crisp past 4x scale for an image shown at native size", () => {
+        // native 200 shown at 200 => exactly 4x native at scale 4
+        expect(evaluateImageZoom(4, img(200, 200)).largeZoom).toBe(false);
+        expect(evaluateImageZoom(5, img(200, 200)).largeZoom).toBe(true);
+    });
+
+    it("never goes crisp when the image is missing or not yet loaded", () => {
+        expect(evaluateImageZoom(50, null).largeZoom).toBe(false);
+        expect(evaluateImageZoom(50, img(0, 800)).largeZoom).toBe(false);
     });
 });

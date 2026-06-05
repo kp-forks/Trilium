@@ -24,3 +24,8 @@
 .image-viewer-viewport.pannable.panning {
     cursor: grabbing;
 }
+
+/* At high zoom, render crisp edges instead of blurred interpolation. */
+.image-viewer-viewport.tn-image-large-zoom img {
+    image-rendering: crisp-edges;
+}
