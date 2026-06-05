@@ -11,6 +11,10 @@ import { refToJQuerySelector } from "../react/react_utils";
 import SiblingNavigator from "../react/SiblingNavigator";
 import { TypeWidgetProps } from "./type_widget";
 
+// In addition to PageUp/PageDown, the image viewer navigates with Backspace (previous) and Space (next).
+const IMAGE_PREVIOUS_KEYS = [ "Backspace" ];
+const IMAGE_NEXT_KEYS = [ "Space" ];
+
 export default function Image({ note, ntxId, noteContext }: TypeWidgetProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
@@ -45,6 +49,8 @@ export default function Image({ note, ntxId, noteContext }: TypeWidgetProps) {
                 noteContext={noteContext}
                 previousTooltip="image_navigation.previous"
                 nextTooltip="image_navigation.next"
+                extraPreviousKeys={IMAGE_PREVIOUS_KEYS}
+                extraNextKeys={IMAGE_NEXT_KEYS}
             />
         </div>
     );

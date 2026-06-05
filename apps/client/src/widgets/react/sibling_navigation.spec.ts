@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getParentFromNotePath, getSiblingNavigation } from "./sibling_navigation";
+import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isTextEntryTarget } from "./sibling_navigation";
 
 describe("getParentFromNotePath", () => {
     it("splits the in-tab path into parent path + parent note id", () => {
@@ -17,22 +17,55 @@ describe("getParentFromNotePath", () => {
 });
 
 describe("getSiblingNavigation", () => {
-    it("returns the adjacent siblings with a 1-based index and total", () => {
-        expect(getSiblingNavigation([ "a", "b", "c" ], "b")).toEqual({ previous: "a", next: "c", index: 2, total: 3 });
+    it("returns the adjacent and edge siblings with a 1-based index and total", () => {
+        expect(getSiblingNavigation([ "a", "b", "c" ], "b")).toEqual({ previous: "a", next: "c", first: "a", last: "c", index: 2, total: 3 });
     });
 
-    it("wraps around infinitely at both ends", () => {
-        expect(getSiblingNavigation([ "a", "b", "c" ], "a")).toEqual({ previous: "c", next: "b", index: 1, total: 3 });
-        expect(getSiblingNavigation([ "a", "b", "c" ], "c")).toEqual({ previous: "b", next: "a", index: 3, total: 3 });
+    it("wraps prev/next around infinitely while first/last stay absolute", () => {
+        expect(getSiblingNavigation([ "a", "b", "c" ], "a")).toEqual({ previous: "c", next: "b", first: "a", last: "c", index: 1, total: 3 });
+        expect(getSiblingNavigation([ "a", "b", "c" ], "c")).toEqual({ previous: "b", next: "a", first: "a", last: "c", index: 3, total: 3 });
     });
 
     it("wraps to the other sibling with exactly two", () => {
-        expect(getSiblingNavigation([ "a", "b" ], "a")).toEqual({ previous: "b", next: "b", index: 1, total: 2 });
+        expect(getSiblingNavigation([ "a", "b" ], "a")).toEqual({ previous: "b", next: "b", first: "a", last: "b", index: 1, total: 2 });
     });
 
     it("returns null with fewer than two siblings or when the note is absent", () => {
         expect(getSiblingNavigation([ "a" ], "a")).toBeNull();
         expect(getSiblingNavigation([], "a")).toBeNull();
         expect(getSiblingNavigation([ "a", "b" ], "x")).toBeNull();
+    });
+});
+
+describe("codeToSiblingDirection", () => {
+    it("maps PageUp/PageDown (prev/next) and Home/End (first/last) by default", () => {
+        expect(codeToSiblingDirection("PageUp", [], [])).toBe("previous");
+        expect(codeToSiblingDirection("PageDown", [], [])).toBe("next");
+        expect(codeToSiblingDirection("Home", [], [])).toBe("first");
+        expect(codeToSiblingDirection("End", [], [])).toBe("last");
+    });
+
+    it("honors caller-provided extra keys (e.g. the image viewer's Backspace/Space)", () => {
+        expect(codeToSiblingDirection("Backspace", [ "Backspace" ], [ "Space" ])).toBe("previous");
+        expect(codeToSiblingDirection("Space", [ "Backspace" ], [ "Space" ])).toBe("next");
+    });
+
+    it("returns null for unrelated keys", () => {
+        expect(codeToSiblingDirection("Space", [], [])).toBeNull();
+        expect(codeToSiblingDirection("KeyA", [ "Backspace" ], [ "Space" ])).toBeNull();
+    });
+});
+
+describe("isTextEntryTarget", () => {
+    it("is true for text-entry elements", () => {
+        expect(isTextEntryTarget({ tagName: "INPUT" })).toBe(true);
+        expect(isTextEntryTarget({ tagName: "textarea" })).toBe(true);
+        expect(isTextEntryTarget({ tagName: "DIV", isContentEditable: true })).toBe(true);
+    });
+
+    it("is false for non-text targets and nullish input", () => {
+        expect(isTextEntryTarget({ tagName: "DIV" })).toBe(false);
+        expect(isTextEntryTarget({ tagName: "BUTTON" })).toBe(false);
+        expect(isTextEntryTarget(null)).toBe(false);
     });
 });
