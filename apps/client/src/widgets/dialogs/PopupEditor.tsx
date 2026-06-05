@@ -24,6 +24,7 @@ import { NoteContextContext, ParentComponent } from "../react/react_utils";
 import ReadOnlyNoteInfoBar from "../ReadOnlyNoteInfoBar";
 import StandaloneRibbonAdapter from "../ribbon/components/StandaloneRibbonAdapter";
 import FormattingToolbar from "../ribbon/FormattingToolbar";
+import SettingsNavigation from "../type_widgets/options/components/SettingsNavigation";
 import MobileEditorToolbar from "../type_widgets/text/mobile_editor_toolbar";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
@@ -81,11 +82,17 @@ export default function PopupEditor() {
         return () => popupBackdrop.classList.remove("popup-editor-backdrop");
     }, [shown, stacked]);
 
+    // Settings pages get the revisions-style layout: a full-height sidebar (the page selector) with
+    // the "Options" title above it, instead of the per-note title bar. This avoids duplicating the
+    // current page name between the title and the highlighted selector entry.
+    const isOptions = noteContext.note?.isOptions() ?? false;
+
     return (
         <NoteContextContext.Provider value={noteContext}>
             <DialogWrapper>
                 <Modal
-                    title={<TitleRow />}
+                    title={isOptions ? t("options.title") : <TitleRow />}
+                    sidebar={isOptions ? <SettingsPopupSidebar /> : undefined}
                     customTitleBarButtons={[{
                         iconClassName: "bx-expand-alt",
                         title: t("popup-editor.maximize"),
@@ -141,4 +148,15 @@ export function TitleRow() {
             {isNewLayout && <NoteBadges />}
         </div>
     );
+}
+
+/**
+ * The settings page selector shown in the quick-edit popup's sidebar. It derives the active page and
+ * the context to navigate from `useNoteContext()` (resolved against the popup's own context via the
+ * surrounding provider), so switching pages updates both the content and the highlighted entry.
+ */
+function SettingsPopupSidebar() {
+    const { noteId, noteContext } = useNoteContext();
+    if (!noteId) return null;
+    return <SettingsNavigation activeNoteId={noteId} noteContext={noteContext} />;
 }

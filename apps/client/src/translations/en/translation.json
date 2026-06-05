@@ -736,6 +736,9 @@
   "show_highlights_list_widget_button": {
     "show_highlights_list": "Show Highlights List"
   },
+  "options": {
+    "title": "Options"
+  },
   "global_menu": {
     "menu": "Menu",
     "options": "Options",

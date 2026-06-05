@@ -1,15 +1,9 @@
+/* Layout-neutral styling for the settings page selector. Container-specific layout (sticky column
+   in the options page, full-height column in the quick-edit popup) lives with each container. */
 .settings-navigation {
-    flex: 0 0 auto;
-    align-self: flex-start;
-    position: sticky;
-    top: 0;
-    width: 220px;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    /* Align the first entry with the first card of the page (which has its own top padding/margin). */
-    padding-block-start: calc(15px + 1em);
-    padding-inline: 12px 12px;
 }
 
 .settings-navigation .settings-navigation-item {
@@ -43,11 +37,4 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-}
-
-/* On narrow screens the tree is the primary navigation, so the in-content list collapses away. */
-@media (max-width: 768px) {
-    .settings-navigation {
-        display: none;
-    }
 }

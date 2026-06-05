@@ -60,7 +60,17 @@ export default function ContentWidget({ note, ...restProps }: TypeWidgetProps) {
     // duplicates the (hoisted) note tree's list so users can switch pages without the tree.
     // `.note-detail-content-widget-content.options` stays the direct parent of the page so the
     // theme's existing options styling keeps applying.
+    // In the quick-edit popup the selector is provided by the modal's own sidebar instead, so we
+    // skip the in-content one there to avoid showing it twice.
     if (isOptions) {
+        const inPopupEditor = restProps.noteContext?.ntxId === "_popup-editor";
+        if (inPopupEditor) {
+            return (
+                <div className="note-detail-content-widget-content options">
+                    {content}
+                </div>
+            );
+        }
         return (
             <div className="options-with-nav">
                 <SettingsNavigation activeNoteId={note.noteId} noteContext={restProps.noteContext} />
