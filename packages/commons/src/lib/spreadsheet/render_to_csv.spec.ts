@@ -1,7 +1,7 @@
 import JSZip from "jszip";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { renderSpreadsheetToCsv, renderSpreadsheetToCsvZip } from "./render_to_csv.js";
+import { formatDate, renderSpreadsheetToCsv, renderSpreadsheetToCsvZip } from "./render_to_csv.js";
 
 /** A sheet definition for {@link multiSheetWorkbook}. */
 interface SheetSpec {
@@ -119,6 +119,19 @@ describe("renderSpreadsheetToCsv", () => {
         expect(csv).toBe("2026-04-06 12:00,2026-04-06 12:00:00");
     });
 
+    it("falls back to the cell's own pattern for partial date formats (not full y/m/d)", () => {
+        // Month-year / year-only patterns are date formats but lack a day component, so they
+        // fall through to formatNumfmt(pattern, serial) rather than the ISO yyyy-mm-dd path.
+        const csv = renderSpreadsheetToCsv(workbook({
+            0: {
+                0: { v: 46118.5, t: 2, s: { n: { pattern: "mmm yyyy" } } },
+                1: { v: 46118.5, t: 2, s: { n: { pattern: "mmm-yy" } } },
+                2: { v: 46118.5, t: 2, s: { n: { pattern: "yyyy" } } }
+            }
+        }));
+        expect(csv).toBe("Apr 2026,Apr-26,2026");
+    });
+
     it("keeps a non-date numeric cell raw even when it has a number format", () => {
         const csv = renderSpreadsheetToCsv(workbook({
             0: { 0: { v: 1234.5, t: 2, s: { n: { pattern: "#,##0.00" } } } }
@@ -186,6 +199,21 @@ describe("renderSpreadsheetToCsv", () => {
         expect(renderSpreadsheetToCsv(allHidden)).toBe("");
     });
 
+    it("renders cell values when the workbook has no styles table", () => {
+        // The `workbook` helper always sets `styles`, so build a literal without that key to
+        // exercise the `workbook.styles ?? {}` fallback.
+        const noStyles = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                sheets: {
+                    s1: { id: "s1", name: "Sheet1", hidden: 0, cellData: { 0: { 0: { v: "a" }, 1: { v: "b" } } } }
+                }
+            }
+        });
+        expect(renderSpreadsheetToCsv(noStyles)).toBe("a,b");
+    });
+
     it("throws on unparseable JSON and on a workbook with no sheets", () => {
         expect(() => renderSpreadsheetToCsv("not json")).toThrow(/parse/i);
         expect(() => renderSpreadsheetToCsv(JSON.stringify({ version: 1 }))).toThrow(/no sheets/i);
@@ -235,8 +263,84 @@ describe("renderSpreadsheetToCsvZip", () => {
         expect(Object.keys(entries).sort()).toEqual(["Sheet (3).csv", "Sheet.csv", "sheet (2).csv"]);
     });
 
+    it("renders cell values when the workbook has no styles table", async () => {
+        // `multiSheetWorkbook` always sets `styles`, so build a literal without that key to
+        // exercise the `workbook.styles ?? {}` fallback in the zip path.
+        const noStyles = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                sheets: {
+                    s1: { id: "s1", name: "Data", hidden: 0, cellData: { 0: { 0: { v: "a" }, 1: { v: "b" } } } }
+                }
+            }
+        });
+        const entries = await readZip(await renderSpreadsheetToCsvZip(noStyles));
+        expect(entries["Data.csv"]).toBe("a,b");
+    });
+
+    it("falls back to 'Sheet.csv' when a sheet has no name", async () => {
+        // A visible sheet whose `name` is omitted (undefined) exercises the `sheetName ?? ""`
+        // nullish fallback, which then resolves to "Sheet".
+        const noName = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                sheets: {
+                    s1: { id: "s1", hidden: 0, cellData: { 0: { 0: { v: "x" } } } }
+                }
+            }
+        });
+        const entries = await readZip(await renderSpreadsheetToCsvZip(noName));
+        expect(Object.keys(entries)).toEqual(["Sheet.csv"]);
+        expect(entries["Sheet.csv"]).toBe("x");
+    });
+
     it("throws on unparseable JSON and on a workbook with no sheets", async () => {
         await expect(renderSpreadsheetToCsvZip("not json")).rejects.toThrow(/parse/i);
         await expect(renderSpreadsheetToCsvZip(JSON.stringify({ version: 1 }))).rejects.toThrow(/no sheets/i);
+    });
+});
+
+describe("formatDate", () => {
+    it("renders a full y/m/d date as ISO 8601, partial formats via their own pattern", () => {
+        // 46118 is 2026-04-06 in Excel's serial date system.
+        expect(formatDate("yyyy-mm-dd", 46118)).toBe("2026-04-06");
+        // A partial (month-year) date format falls through to formatNumfmt(pattern, serial).
+        expect(formatDate("mmm yyyy", 46118)).toBe("Apr 2026");
+    });
+
+    it("returns null when the formatter throws", () => {
+        // getFormatDateInfo("General;General;General;yyyy") reports no date parts (so the ISO
+        // branch is skipped), then format() throws on the partition syntax, hitting the catch.
+        expect(formatDate("General;General;General;yyyy", 46118.5)).toBeNull();
+    });
+});
+
+describe("renderSpreadsheetToCsv (formatDate returns null)", () => {
+    afterEach(() => {
+        vi.resetModules();
+        vi.doUnmock("numfmt");
+    });
+
+    it("falls back to the raw value when a date cell can't be formatted", async () => {
+        // No public, real numfmt pattern makes isDateFormat() true yet formatDate() return null,
+        // so the only way to exercise cellText's `formatted == null` fallback is to mock numfmt:
+        // isDateFormat -> true (enters the date branch) and format -> throws (formatDate returns
+        // null), leaving cellText to emit String(cell.v) — the raw serial.
+        vi.resetModules();
+        vi.doMock("numfmt", () => ({
+            isDateFormat: () => true,
+            getFormatDateInfo: () => ({ year: true, month: false, day: false }),
+            format: () => {
+                throw new Error("boom");
+            }
+        }));
+
+        const { renderSpreadsheetToCsv: render } = await import("./render_to_csv.js");
+        const csv = render(workbook({
+            0: { 0: { v: 46118, t: 2, s: { n: { pattern: "yyyy-mm-dd" } } } }
+        }));
+        expect(csv).toBe("46118");
     });
 });

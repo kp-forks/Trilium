@@ -166,7 +166,7 @@ function cellText(cell: ICellData | undefined, styles: Record<string, IStyleData
  * fall back to the cell's own pattern so the output stays a readable date, never a serial.
  * Returns `null` if the value can't be formatted, so the caller falls back to the raw value.
  */
-function formatDate(pattern: string, serial: number): string | null {
+export function formatDate(pattern: string, serial: number): string | null {
     try {
         const info = getFormatDateInfo(pattern);
         if (info.year && info.month && info.day) {

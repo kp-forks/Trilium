@@ -213,6 +213,168 @@ describe("renderSpreadsheetToXlsx", () => {
         await expect(renderSpreadsheetToXlsx("not json")).rejects.toThrow(/parse/i);
     });
 
+    it("throws when the workbook has no sheets", async () => {
+        await expect(renderSpreadsheetToXlsx(JSON.stringify({ version: 1, workbook: {} }))).rejects.toThrow(/no sheets/i);
+    });
+
+    it("emits a single empty Sheet1 when no sheets are visible", async () => {
+        const json = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: {},
+                sheets: {
+                    s1: { id: "s1", name: "Secret", hidden: 1, mergeData: [], cellData: {}, rowData: {}, columnData: {} }
+                }
+            }
+        });
+        const wb = await roundTrip(json);
+        expect(wb.worksheets.map((w) => w.name)).toEqual(["Sheet1"]);
+    });
+
+    it("renders a workbook with no styles key and a sheet omitting merge/column/row data", async () => {
+        // No `styles` key on the workbook, and the sheet omits mergeData/columnData/rowData
+        // entirely so the `?? {}` / `?? []` fallbacks are exercised (do not use singleCellWorkbook
+        // which always sets these).
+        const json = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                sheets: {
+                    s1: { id: "s1", name: "Bare", hidden: 0, cellData: { "0": { "0": { v: "x", t: 1 } } } }
+                }
+            }
+        });
+        const ws = (await roundTrip(json)).worksheets[0];
+        expect(ws.name).toBe("Bare");
+        expect(ws.getCell("A1").value).toBe("x");
+    });
+
+    it("skips a null cell, an empty merge/column/row set, without error", async () => {
+        // cellData entry whose value is null -> writeCell must skip it (the `!cell` guard).
+        const ws = (await roundTrip(
+            singleCellWorkbook(null, { cellData: { "0": { "0": null, "1": { v: "kept", t: 1 } } } })
+        )).worksheets[0];
+        expect(ws.getCell("A1").value).toBeNull();
+        expect(ws.getCell("B1").value).toBe("kept");
+    });
+
+    it("applies style to a cell with no value (non-formula)", async () => {
+        // A cell `{ s: { bl: 1 } }` with no `v` and no `f`: font applied, no value written.
+        const ws = (await roundTrip(singleCellWorkbook({ s: { bl: 1 } }))).worksheets[0];
+        expect(ws.getCell("A1").value).toBeNull();
+        expect(ws.getCell("A1").font.bold).toBe(true);
+    });
+
+    it("writes a formula with no cached result", async () => {
+        // A formula cell with no `v` -> result is undefined.
+        const ws = (await roundTrip(singleCellWorkbook({ f: "=A1" }))).worksheets[0];
+        const value = ws.getCell("A1").value as ExcelJS.CellFormulaValue;
+        expect(value.formula).toBe("A1");
+        expect(value.result).toBeUndefined();
+    });
+
+    it("maps text rotation: vertical, an explicit angle, and ignores a zero angle", async () => {
+        const vertical = (await roundTrip(singleCellWorkbook({ v: "x", s: { tr: { v: 1 } } }))).worksheets[0];
+        expect(vertical.getCell("A1").alignment.textRotation).toBe("vertical");
+
+        const angled = (await roundTrip(singleCellWorkbook({ v: "x", s: { tr: { a: 45 } } }))).worksheets[0];
+        expect(angled.getCell("A1").alignment.textRotation).toBe(45);
+
+        // tr present but angle is 0 -> the `!== 0` guard means no textRotation (and no alignment,
+        // which exceljs reads back as undefined).
+        const zero = (await roundTrip(singleCellWorkbook({ v: "x", s: { tr: { a: 0 } } }))).worksheets[0];
+        expect(zero.getCell("A1").alignment).toBeUndefined();
+    });
+
+    it("maps left/center horizontal and top/bottom vertical alignment", async () => {
+        const left = (await roundTrip(singleCellWorkbook({ v: "x", s: { ht: 1 } }))).worksheets[0];
+        expect(left.getCell("A1").alignment.horizontal).toBe("left");
+
+        const center = (await roundTrip(singleCellWorkbook({ v: "x", s: { ht: 2 } }))).worksheets[0];
+        expect(center.getCell("A1").alignment.horizontal).toBe("center");
+
+        const top = (await roundTrip(singleCellWorkbook({ v: "x", s: { vt: 1 } }))).worksheets[0];
+        expect(top.getCell("A1").alignment.vertical).toBe("top");
+
+        const bottom = (await roundTrip(singleCellWorkbook({ v: "x", s: { vt: 3 } }))).worksheets[0];
+        expect(bottom.getCell("A1").alignment.vertical).toBe("bottom");
+    });
+
+    it("ignores unknown horizontal/vertical alignment codes", async () => {
+        // Unknown ht/vt fall through to the default branch -> no alignment applied (exceljs reads
+        // back as undefined).
+        const ws = (await roundTrip(singleCellWorkbook({ v: "x", s: { ht: 99, vt: 99 } }))).worksheets[0];
+        expect(ws.getCell("A1").alignment).toBeUndefined();
+    });
+
+    it("maps the remaining Univer border-style enum codes to exceljs styles", async () => {
+        // A cell can carry only 4 border sides, so split the 9 remaining codes across cells.
+        // HAIR=2, DASHED=4, DASH_DOT=5, DASH_DOT_DOT=6 / DOUBLE=7, MEDIUM_DASHED=9,
+        // MEDIUM_DASH_DOT=10, MEDIUM_DASH_DOT_DOT=11 / SLANT_DASH_DOT=12.
+        const first = (await roundTrip(singleCellWorkbook({
+            v: "b",
+            s: { bd: { t: { s: 2 }, r: { s: 4 }, b: { s: 5 }, l: { s: 6 } } }
+        }))).worksheets[0];
+        let border = first.getCell("A1").border;
+        expect(border.top?.style).toBe("hair");
+        expect(border.right?.style).toBe("dashed");
+        expect(border.bottom?.style).toBe("dashDot");
+        expect(border.left?.style).toBe("dashDotDot");
+
+        const second = (await roundTrip(singleCellWorkbook({
+            v: "b",
+            s: { bd: { t: { s: 7 }, r: { s: 9 }, b: { s: 10 }, l: { s: 11 } } }
+        }))).worksheets[0];
+        border = second.getCell("A1").border;
+        expect(border.top?.style).toBe("double");
+        expect(border.right?.style).toBe("mediumDashed");
+        expect(border.bottom?.style).toBe("mediumDashDot");
+        expect(border.left?.style).toBe("mediumDashDotDot");
+
+        const third = (await roundTrip(singleCellWorkbook({
+            v: "b",
+            s: { bd: { t: { s: 12 } } }
+        }))).worksheets[0];
+        expect(third.getCell("A1").border.top?.style).toBe("slantDashDot");
+    });
+
+    it("falls back to FF000000 for a border side with a style but no color", async () => {
+        const ws = (await roundTrip(singleCellWorkbook({ v: "b", s: { bd: { b: { s: 1 } } } }))).worksheets[0];
+        expect(ws.getCell("A1").border.bottom?.style).toBe("thin");
+        expect(ws.getCell("A1").border.bottom?.color?.argb).toBe("FF000000");
+    });
+
+    it("applies no border when the only side is NONE", async () => {
+        // buildBorder returns null because every side resolves to no style -> exceljs reads back
+        // the whole border as undefined.
+        const ws = (await roundTrip(singleCellWorkbook({ v: "b", s: { bd: { t: { s: 0 } } } }))).worksheets[0];
+        expect(ws.getCell("A1").border).toBeUndefined();
+    });
+
+    it("passes an 8-digit AARRGGBB color through verbatim", async () => {
+        const ws = (await roundTrip(singleCellWorkbook({ v: "x", s: { cl: { rgb: "#11223344" } } }))).worksheets[0];
+        expect(ws.getCell("A1").font.color?.argb).toBe("11223344");
+    });
+
+    it("applies no color for an invalid rgb (font and border)", async () => {
+        // Invalid rgb -> toArgb returns null: no font color; border side with a style but an
+        // invalid color falls back to FF000000.
+        const ws = (await roundTrip(singleCellWorkbook({
+            v: "x",
+            s: { bl: 1, cl: { rgb: "notacolor" }, bd: { b: { s: 1, cl: { rgb: "#zzz" } } } }
+        }))).worksheets[0];
+        const cell = ws.getCell("A1");
+        // Font still applied (bold), but no color attached.
+        expect(cell.font.bold).toBe(true);
+        expect(cell.font.color).toBeUndefined();
+        // No fill written -> exceljs reads back the default "none" pattern fill.
+        expect((cell.fill as ExcelJS.FillPattern)?.pattern).toBe("none");
+        // Border keeps the style with the fallback color.
+        expect(cell.border.bottom?.style).toBe("thin");
+        expect(cell.border.bottom?.color?.argb).toBe("FF000000");
+    });
+
     describe("output is a valid xlsx", () => {
         let buffer: ExcelJS.Buffer;
         beforeAll(async () => {
@@ -241,6 +403,8 @@ describe("uniqueSheetName", () => {
         expect(uniqueSheetName("   ", new Set())).toBe("Sheet");
         expect(uniqueSheetName("History", new Set())).toBe("History_");
         expect(uniqueSheetName("history", new Set())).toBe("history_");
+        // An undefined name exercises the `name ?? ""` fallback in sanitizeSheetName.
+        expect(uniqueSheetName(undefined, new Set())).toBe("Sheet");
     });
 
     it("de-duplicates case-insensitively, keeping names within the 31-char limit", () => {
