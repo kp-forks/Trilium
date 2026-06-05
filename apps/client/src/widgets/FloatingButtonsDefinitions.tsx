@@ -62,6 +62,7 @@ export const DESKTOP_FLOATING_BUTTONS: FloatingButtonsList = [
     ImageZoomButtons,
     CopyImageReferenceButton,
     ExportImageButtons,
+    ExportSpreadsheetButton,
     InAppHelpButton,
     Backlinks
 ];
@@ -351,6 +352,24 @@ function ExportImageButtons({ note, triggerEvent, isDefaultViewMode }: FloatingB
                 icon="bx bxs-file-png"
                 text={t("png_export_button.button_title")}
                 onClick={() => triggerEvent("exportPng")}
+            />
+        </>
+    );
+}
+
+function ExportSpreadsheetButton({ note, triggerEvent, isDefaultViewMode }: FloatingButtonContext) {
+    const isEnabled = note?.type === "spreadsheet" && note?.isContentAvailable() && isDefaultViewMode;
+    return isEnabled && (
+        <>
+            <FloatingButton
+                icon="bx bxs-spreadsheet"
+                text={t("spreadsheet.export-xlsx")}
+                onClick={() => triggerEvent("exportXlsx")}
+            />
+            <FloatingButton
+                icon="bx bxs-spreadsheet"
+                text={t("spreadsheet.export-csv")}
+                onClick={() => triggerEvent("exportCsv")}
             />
         </>
     );

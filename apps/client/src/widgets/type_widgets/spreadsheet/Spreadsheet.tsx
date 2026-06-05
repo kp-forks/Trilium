@@ -34,6 +34,7 @@ import type NoteContext from "../../../components/note_context";
 import { t } from "../../../services/i18n";
 import { useColorScheme, useEffectiveReadOnly, useTriliumEvent, useTriliumEvents } from "../../react/hooks";
 import { TypeWidgetProps } from "../type_widget";
+import useSpreadsheetExport from "./export";
 import usePersistence from "./persistence";
 
 function buildReadOnlyLocaleOverrides() {
@@ -75,6 +76,7 @@ function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { 
     useReleaseFillShortcuts(apiRef);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef);
+    useSpreadsheetExport(apiRef, note, noteContext);
     useSearchIntegration(apiRef, noteContext);
     useDismissDialogsOnNoteSwitch(apiRef);
     useFixRadixPortals();

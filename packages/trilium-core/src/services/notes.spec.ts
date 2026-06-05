@@ -15,14 +15,6 @@ import { getSql } from "./sql/index.js";
  * write paths (note creation, update, duplication) which that spec stubs out.
  */
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * setContent, BAttribute.save(), etc.) require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /**
@@ -35,7 +27,7 @@ function createNote(parentNoteId: string, overrides: Partial<Parameters<typeof n
     branch: BBranch;
 } {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId,
             title: `notes-spec-${counter}`,
@@ -97,7 +89,7 @@ describe("notes service (real DB)", () => {
 
         it("throws when the content is null/undefined", () => {
             expect(() =>
-                withContext(() =>
+                getContext().init(() =>
                     noteService.createNewNote({
                         parentNoteId: "root",
                         title: "spec-null-content",
@@ -118,7 +110,7 @@ describe("notes service (real DB)", () => {
         it("inherits the template's mime and adds a template relation when creating from a template", () => {
             const template = createNote("root", { title: "spec-template", content: "<p>tmpl</p>" });
             // Give the template a non-default mime so we can verify inheritance.
-            withContext(() => {
+            getContext().init(() => {
                 template.note.mime = "text/special";
                 template.note.save();
             });
@@ -138,7 +130,7 @@ describe("notes service (real DB)", () => {
         it("defaults the type from the parent and creates the note for 'into'", () => {
             const parent = createNote("root", { title: "spec-into-parent" });
 
-            const { note, branch } = withContext(() =>
+            const { note, branch } = getContext().init(() =>
                 noteService.createNewNoteWithTarget("into", undefined, {
                     parentNoteId: parent.note.noteId,
                     title: "spec-into-child",
@@ -156,7 +148,7 @@ describe("notes service (real DB)", () => {
             const parent = createNote("root", { title: "spec-after-parent" });
             const first = createNote(parent.note.noteId, { title: "spec-after-first" });
 
-            const { branch } = withContext(() =>
+            const { branch } = getContext().init(() =>
                 noteService.createNewNoteWithTarget("after", first.branch.branchId, {
                     parentNoteId: parent.note.noteId,
                     title: "spec-after-second",
@@ -170,7 +162,7 @@ describe("notes service (real DB)", () => {
 
         it("throws on an unknown target", () => {
             expect(() =>
-                withContext(() =>
+                getContext().init(() =>
                     noteService.createNewNoteWithTarget("sideways" as "into", undefined, {
                         parentNoteId: "root",
                         title: "spec-bad-target",
@@ -189,7 +181,7 @@ describe("notes service (real DB)", () => {
 
             const content = `<p>link <a href="http://example.com/#root/${target.note.noteId}">here</a></p>`;
 
-            const { content: newContent } = withContext(() => saveLinks(source.note, content));
+            const { content: newContent } = getContext().init(() => saveLinks(source.note, content));
 
             // Absolute href is rewritten to a relative #root reference.
             expect(newContent).toContain(`href="#root/${target.note.noteId}"`);
@@ -205,11 +197,11 @@ describe("notes service (real DB)", () => {
             const source = createNote("root", { title: "spec-unused-source" });
 
             // First, create the link.
-            withContext(() => saveLinks(source.note, `<a href="#root/${target.note.noteId}">x</a>`));
+            getContext().init(() => saveLinks(source.note, `<a href="#root/${target.note.noteId}">x</a>`));
             expect(source.note.getRelations().some((r) => r.name === "internalLink")).toBe(true);
 
             // Then save content without the link; the relation should be marked deleted.
-            withContext(() => saveLinks(source.note, "<p>no links anymore</p>"));
+            getContext().init(() => saveLinks(source.note, "<p>no links anymore</p>"));
             expect(source.note.getRelations().some((r) => r.name === "internalLink" && !r.isDeleted)).toBe(false);
         });
 
@@ -222,7 +214,7 @@ describe("notes service (real DB)", () => {
             });
 
             const content = `<a href="#root/root">x</a>`;
-            const res = withContext(() => saveLinks(code.note, content));
+            const res = getContext().init(() => saveLinks(code.note, content));
 
             expect(res).toEqual({ forceFrontendReload: false, content });
             expect(code.note.getRelations().some((r) => r.name === "internalLink")).toBe(false);
@@ -235,7 +227,7 @@ describe("notes service (real DB)", () => {
             const pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
             const content = `<p><a href="data:image/png;base64,${pngBase64}">my &amp; file.png</a></p>`;
 
-            const { content: newContent } = withContext(() => saveLinks(source.note, content));
+            const { content: newContent } = getContext().init(() => saveLinks(source.note, content));
 
             const attachments = source.note.getAttachments().filter((a) => a.role === "file");
             expect(attachments).toHaveLength(1);
@@ -255,7 +247,7 @@ describe("notes service (real DB)", () => {
             const note = createNote("root", { title: "spec-update", content: "<p>old</p>" }).note;
 
             const content = `<p>new <a href="#root/${target.note.noteId}">link</a></p>`;
-            withContext(() => noteService.updateNoteData(note.noteId, content));
+            getContext().init(() => noteService.updateNoteData(note.noteId, content));
 
             expect(note.getContent()).toContain("new");
             expect(
@@ -264,7 +256,7 @@ describe("notes service (real DB)", () => {
         });
 
         it("throws when the note is not available", () => {
-            expect(() => withContext(() => noteService.updateNoteData("doesNotExist99", "<p>x</p>"))).toThrow(
+            expect(() => getContext().init(() => noteService.updateNoteData("doesNotExist99", "<p>x</p>"))).toThrow(
                 /not available for change/
             );
         });
@@ -276,9 +268,9 @@ describe("notes service (real DB)", () => {
             const child = createNote(root.note.noteId, { title: "spec-dup-child" });
 
             // Add a relation from the parent to its own child so we can verify remapping.
-            withContext(() => root.note.setRelation("myRel", child.note.noteId));
+            getContext().init(() => root.note.setRelation("myRel", child.note.noteId));
 
-            const { note: dupNote } = withContext(() => noteService.duplicateSubtree(root.note.noteId, "root"));
+            const { note: dupNote } = getContext().init(() => noteService.duplicateSubtree(root.note.noteId, "root"));
 
             // A brand new note id is allocated.
             expect(dupNote.noteId).not.toBe(root.note.noteId);
@@ -293,7 +285,7 @@ describe("notes service (real DB)", () => {
         });
 
         it("refuses to duplicate the root note", () => {
-            expect(() => withContext(() => noteService.duplicateSubtree("root", "root"))).toThrow(
+            expect(() => getContext().init(() => noteService.duplicateSubtree("root", "root"))).toThrow(
                 /Duplicating root is not possible/
             );
         });
@@ -310,11 +302,11 @@ describe("notes service (real DB)", () => {
 
         beforeAll(() => {
             originalInterval = optionService.getOption("revisionSnapshotTimeInterval");
-            withContext(() => optionService.setOption("revisionSnapshotTimeInterval", "0"));
+            getContext().init(() => optionService.setOption("revisionSnapshotTimeInterval", "0"));
         });
 
         afterAll(() => {
-            withContext(() => optionService.setOption("revisionSnapshotTimeInterval", originalInterval));
+            getContext().init(() => optionService.setOption("revisionSnapshotTimeInterval", originalInterval));
         });
 
         function revisionCount(note: BNote): number {
@@ -328,7 +320,7 @@ describe("notes service (real DB)", () => {
             }).note;
 
             const before = revisionCount(note);
-            withContext(() => noteService.saveRevisionIfNeeded(note));
+            getContext().init(() => noteService.saveRevisionIfNeeded(note));
             const after = revisionCount(note);
 
             expect(after).toBe(before + 1);
@@ -344,7 +336,7 @@ describe("notes service (real DB)", () => {
             }).note;
 
             const before = revisionCount(note);
-            withContext(() => noteService.saveRevisionIfNeeded(note));
+            getContext().init(() => noteService.saveRevisionIfNeeded(note));
             const after = revisionCount(note);
 
             expect(after).toBe(before);
