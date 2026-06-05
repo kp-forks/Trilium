@@ -42,16 +42,19 @@ export default function NoteDetail() {
     const hasFixedTree = note && noteContext?.hoistedNoteId === "_lbMobileRoot" && isMobile() && note.noteId.startsWith("_lbMobile");
 
     // Defer loading for tabs that haven't been active yet (e.g. on app refresh).
+    // A tab can hold multiple splits; activating the tab makes all of them visible at once, so deferral
+    // is keyed on the whole tab (the main context) rather than the individual split. Keying it on the
+    // active split would leave the non-focused split of the active tab blank until it's clicked.
     // Special contexts (ntxId starting with "_", e.g. popup editor) are always considered active.
     const isSpecialContext = ntxId?.startsWith("_") ?? false;
-    const [ hasTabBeenActive, setHasTabBeenActive ] = useState(() => isSpecialContext || (noteContext?.isActive() ?? false));
+    const [ hasTabBeenActive, setHasTabBeenActive ] = useState(() => isSpecialContext || isContextInActiveTab(noteContext));
     useEffect(() => {
-        if (!hasTabBeenActive && noteContext?.isActive()) {
+        if (!hasTabBeenActive && isContextInActiveTab(noteContext)) {
             setHasTabBeenActive(true);
         }
     }, [ noteContext, hasTabBeenActive ]);
-    useTriliumEvent("activeNoteChanged", ({ ntxId: eventNtxId }) => {
-        if (eventNtxId === ntxId && !hasTabBeenActive) {
+    useTriliumEvent("activeNoteChanged", () => {
+        if (!hasTabBeenActive && isContextInActiveTab(noteContext)) {
             setHasTabBeenActive(true);
         }
     });
@@ -231,6 +234,20 @@ export default function NoteDetail() {
             })}
         </div>
     );
+}
+
+/**
+ * True when the given context belongs to the currently active tab. A tab can hold several splits, but
+ * only one of them is the "active" context at a time; every split of the active tab is visible and must
+ * load eagerly, so the deferral check is keyed on the tab (the main context), not the individual split.
+ */
+function isContextInActiveTab(noteContext: NoteContext | undefined): boolean {
+    if (!noteContext) {
+        return false;
+    }
+
+    const activeMainNtxId = appContext.tabManager.getActiveMainContext()?.ntxId;
+    return activeMainNtxId != null && activeMainNtxId === noteContext.getMainContext().ntxId;
 }
 
 function FixedTree({ noteContext }: { noteContext: NoteContext }) {
