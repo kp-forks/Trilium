@@ -241,7 +241,7 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                 {isZoomableImage ? (
                     <div key="image-viewer" ref={imageViewerWrapper} className="attachment-content-wrapper attachment-image-viewer">
                         <ImageViewer key={`${attachment.attachmentId}-${attachment.utcDateModified}`} src={imageSrc} alt={attachment.title} />
-                        <SiblingNavigator disabled previousTooltip="image_navigation.previous" nextTooltip="image_navigation.next" />
+                        <SiblingNavigator disabled previousTooltipI18nKey="image_navigation.previous" nextTooltipI18nKey="image_navigation.next" />
                     </div>
                 ) : (
                     <div key="rendered" ref={contentWrapper} className="attachment-content-wrapper" />

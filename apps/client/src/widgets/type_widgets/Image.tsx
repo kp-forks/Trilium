@@ -47,8 +47,8 @@ export default function Image({ note, ntxId, noteContext }: TypeWidgetProps) {
             <SiblingNavigator
                 note={note}
                 noteContext={noteContext}
-                previousTooltip="image_navigation.previous"
-                nextTooltip="image_navigation.next"
+                previousTooltipI18nKey="image_navigation.previous"
+                nextTooltipI18nKey="image_navigation.next"
                 extraPreviousKeys={IMAGE_PREVIOUS_KEYS}
                 extraNextKeys={IMAGE_NEXT_KEYS}
             />

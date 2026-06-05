@@ -20,10 +20,10 @@ interface SiblingNavigatorProps {
     siblingType?: string;
     /** Render inert buttons (e.g. when the viewer is reused for an attachment preview). */
     disabled?: boolean;
-    /** i18n key for the previous-button tooltip; receives the target note's title as `{{title}}`. */
-    previousTooltip: string;
-    /** i18n key for the next-button tooltip; receives the target note's title as `{{title}}`. */
-    nextTooltip: string;
+    /** i18n translation key (resolved via `t()`) for the previous-button tooltip; receives the target note's title as `{{title}}`. E.g. `"image_navigation.previous"`. */
+    previousTooltipI18nKey: string;
+    /** i18n translation key (resolved via `t()`) for the next-button tooltip; receives the target note's title as `{{title}}`. E.g. `"image_navigation.next"`. */
+    nextTooltipI18nKey: string;
     /**
      * Optional element to scope keyboard navigation to: keys act only while focus is inside it. When
      * omitted, navigation is scoped to the active tab/pane instead, so it works without any wiring.
@@ -102,19 +102,19 @@ export function useSiblingNavigation(note: FNote | undefined, noteContext: NoteC
 /**
  * Floating previous/next navigation between a note's same-type siblings (within the current tab's
  * parent), with a "<index>/<total>" indicator and tooltips naming the target note. The tooltip text
- * comes from the caller-provided i18n keys (`previousTooltip`/`nextTooltip`), so each note type can
+ * comes from the caller-provided i18n keys (`previousTooltipI18nKey`/`nextTooltipI18nKey`), so each note type can
  * phrase it ("Previous image: …", "Previous video: …"). Renders nothing when there is no sibling to
  * move between — unless `disabled`, which shows the buttons in an inert state.
  */
-export default function SiblingNavigator({ note, noteContext, siblingType, disabled, previousTooltip, nextTooltip, keyboardTarget, extraPreviousKeys = NO_KEYS, extraNextKeys = NO_KEYS }: SiblingNavigatorProps) {
+export default function SiblingNavigator({ note, noteContext, siblingType, disabled, previousTooltipI18nKey, nextTooltipI18nKey, keyboardTarget, extraPreviousKeys = NO_KEYS, extraNextKeys = NO_KEYS }: SiblingNavigatorProps) {
     const previousRef = useRef<HTMLButtonElement>(null);
     const nextRef = useRef<HTMLButtonElement>(null);
 
     const navigation = useSiblingNavigation(note, noteContext, siblingType);
     useSiblingKeyboard(disabled ? null : navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys);
 
-    const previousText = navigation ? t(previousTooltip, { title: navigation.previousTitle }) : "";
-    const nextText = navigation ? t(nextTooltip, { title: navigation.nextTitle }) : "";
+    const previousText = navigation ? t(previousTooltipI18nKey, { title: navigation.previousTitle }) : "";
+    const nextText = navigation ? t(nextTooltipI18nKey, { title: navigation.nextTitle }) : "";
     // Memoize so the bootstrap tooltip is only recreated when the target note's name actually changes.
     const previousConfig = useMemo(() => ({ title: previousText, placement: "bottom" as const }), [ previousText ]);
     const nextConfig = useMemo(() => ({ title: nextText, placement: "bottom" as const }), [ nextText ]);
