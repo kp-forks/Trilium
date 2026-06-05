@@ -151,6 +151,11 @@ body.mobile .modal.popup-editor-dialog .modal-dialog {
     margin: auto;
 }
 
+.modal.popup-editor-dialog .modal-content-with-sidebar .note-detail-content-widget-content.options {
+    --options-first-item-top-margin: 30px;
+    padding-top: var(--options-first-item-top-margin);
+}
+
 /* In the settings layout the main header only carries the window (maximize/close) buttons, with the
    title moved into the sidebar. Slim that header and drop the page's own top spacing so the content
    starts right beneath it, instead of leaving a tall empty band at the top of the content area. */
