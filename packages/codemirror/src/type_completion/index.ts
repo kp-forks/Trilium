@@ -1,5 +1,6 @@
 import type { CompletionSource } from "@codemirror/autocomplete";
 import type { Extension } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 
 /**
  * Full IntelliSense for backend/frontend script notes.
@@ -167,10 +168,76 @@ export async function buildTypeCompletion(mime: string): Promise<TypeCompletion>
             tsFacet.of({ env, path: scriptPath(mime) }),
             tsSync(),
             tsLinter({ diagnosticCodesToIgnore: ignoredDiagnosticCodes(mime) }),
-            tsHover()
+            tsHover({ renderTooltip: renderHoverTooltip }),
+            hoverTheme
         ],
         source: tsAutocomplete()
     };
+}
+
+/** Separates the JSDoc body/tags from the signature in the hover tooltip. */
+const hoverTheme = EditorView.baseTheme({
+    ".cm-ts-hover-doc": {
+        marginTop: "4px",
+        paddingTop: "4px",
+        borderTop: "1px solid rgba(128, 128, 128, 0.3)",
+        whiteSpace: "pre-wrap",
+        opacity: "0.85"
+    },
+    ".cm-ts-hover-tag": {
+        marginTop: "2px",
+        opacity: "0.8"
+    },
+    ".cm-ts-hover-tag-name": {
+        fontWeight: "bold"
+    }
+});
+
+/** A SymbolDisplayPart-ish text fragment, as returned by the TS quick-info API. */
+interface DisplayPart {
+    text: string;
+    kind?: string;
+}
+
+/**
+ * Hover tooltip renderer that — unlike `@valtown/codemirror-ts`'s default, which
+ * shows only the signature — also renders the JSDoc body and tags (`@param`,
+ * `@returns`, `@example`, …). The doc text comes straight from the shared API
+ * surface's `/** … *​/` comments.
+ */
+function renderHoverTooltip(info: { quickInfo?: { displayParts?: DisplayPart[]; documentation?: DisplayPart[]; tags?: { name: string; text?: DisplayPart[] }[] } }): { dom: HTMLElement } {
+    const quickInfo = info.quickInfo;
+    const dom = document.createElement("div");
+    dom.className = "cm-ts-hover";
+
+    const signature = dom.appendChild(document.createElement("div"));
+    signature.className = "cm-ts-hover-signature";
+    for (const part of quickInfo?.displayParts ?? []) {
+        const span = signature.appendChild(document.createElement("span"));
+        span.className = `quick-info-${part.kind ?? "text"}`;
+        span.textContent = part.text;
+    }
+
+    const documentation = (quickInfo?.documentation ?? []).map((p) => p.text).join("");
+    if (documentation) {
+        const docEl = dom.appendChild(document.createElement("div"));
+        docEl.className = "cm-ts-hover-doc";
+        docEl.textContent = documentation;
+    }
+
+    for (const tag of quickInfo?.tags ?? []) {
+        const tagEl = dom.appendChild(document.createElement("div"));
+        tagEl.className = "cm-ts-hover-tag";
+        const name = tagEl.appendChild(document.createElement("span"));
+        name.className = "cm-ts-hover-tag-name";
+        name.textContent = `@${tag.name}`;
+        const text = (tag.text ?? []).map((p) => p.text).join("");
+        if (text) {
+            tagEl.appendChild(document.createTextNode(` ${text}`));
+        }
+    }
+
+    return { dom };
 }
 
 /** TS1108: A 'return' statement can only be used within a function body. */
