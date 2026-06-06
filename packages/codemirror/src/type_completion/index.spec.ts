@@ -6,6 +6,8 @@ import { getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND } f
 const TS_IMPLICIT_ANY = 7006;
 /** "Property 'x' does not exist on type 'y'." */
 const TS_UNKNOWN_PROPERTY = 2339;
+/** "A 'return' statement can only be used within a function body." */
+const TS_RETURN_OUTSIDE_FUNCTION = 1108;
 
 // Loading TypeScript + the bundled lib.*.d.ts the first time is not instant.
 const TIMEOUT = 30_000;
@@ -26,6 +28,24 @@ describe("script note diagnostics", () => {
             "function process(note, depth) { return note; }"
         );
         expect(codes).not.toContain(TS_IMPLICIT_ANY);
+    }, TIMEOUT);
+
+    it("does not flag a top-level return (scripts run inside a function wrapper)", async () => {
+        // Trilium wraps scripts in a function before executing them, so a
+        // top-level `return` is valid at runtime and must not be flagged.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "if (!api.currentNote) { return; }\nreturn api.showMessage('done');"
+        );
+        expect(codes).not.toContain(TS_RETURN_OUTSIDE_FUNCTION);
+    }, TIMEOUT);
+
+    it("does not flag a top-level return in backend scripts either", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const note = api.getNote('root');\nif (!note) { return; }\nreturn note.title;"
+        );
+        expect(codes).not.toContain(TS_RETURN_OUTSIDE_FUNCTION);
     }, TIMEOUT);
 
     it("still surfaces real errors (unknown api member)", async () => {

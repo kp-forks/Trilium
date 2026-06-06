@@ -104,7 +104,7 @@ export async function buildTypeCompletion(mime: string): Promise<TypeCompletion>
         extensions: [
             tsFacet.of({ env, path: SCRIPT_PATH }),
             tsSync(),
-            tsLinter(),
+            tsLinter({ diagnosticCodesToIgnore: IGNORED_DIAGNOSTIC_CODES }),
             tsHover()
         ],
         source: tsAutocomplete()
@@ -112,13 +112,31 @@ export async function buildTypeCompletion(mime: string): Promise<TypeCompletion>
 }
 
 /**
- * Returns the TypeScript semantic diagnostic codes the script-note language
- * service reports for `code` under the given script MIME type, using the exact
- * compiler options the editor uses. Intended for tests asserting which
- * diagnostics are (and aren't) surfaced.
+ * Diagnostic codes suppressed for script notes. Trilium wraps every script in a
+ * function before executing it (see the client's `bundle.ts` and the server's
+ * `script.ts`), so grammar that TypeScript only permits inside a function body
+ * is actually valid at runtime.
+ */
+export const IGNORED_DIAGNOSTIC_CODES: number[] = [
+    1108 // TS1108: A 'return' statement can only be used within a function body.
+];
+
+/**
+ * Returns the TypeScript diagnostic codes the script-note language service
+ * surfaces for `code` under the given script MIME type, using the exact compiler
+ * options and ignore list the editor uses. Mirrors `@valtown/codemirror-ts`'s
+ * `getLints` (syntactic + semantic, minus the ignored codes), so tests reflect
+ * what the user actually sees. Intended for tests asserting which diagnostics
+ * are (and aren't) surfaced.
  */
 export async function getScriptDiagnosticCodes(mime: string, code: string): Promise<number[]> {
     const env = await createEnv(mime);
     env.updateFile(SCRIPT_PATH, code.length ? code : " ");
-    return env.languageService.getSemanticDiagnostics(SCRIPT_PATH).map((d) => d.code);
+    const diagnostics = [
+        ...env.languageService.getSyntacticDiagnostics(SCRIPT_PATH),
+        ...env.languageService.getSemanticDiagnostics(SCRIPT_PATH)
+    ];
+    return diagnostics
+        .map((d) => d.code)
+        .filter((code) => !IGNORED_DIAGNOSTIC_CODES.includes(code));
 }
