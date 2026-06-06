@@ -9,6 +9,7 @@ import byMimeType from "./syntax_highlighting.js";
 import smartIndentWithTab from "./extensions/custom_tab.js";
 import type { ThemeDefinition } from "./color_themes.js";
 import { createSearchHighlighter, SearchHighlighter, searchMatchHighlightTheme } from "./find_replace.js";
+import { buildTypeCompletion } from "./type_completion/index.js";
 
 export { default as ColorThemes, type ThemeDefinition, type ThemeVariant, getThemeById } from "./color_themes.js";
 
@@ -54,8 +55,11 @@ export default class CodeMirror extends EditorView {
     private lineWrappingCompartment: Compartment;
     private indentUnitCompartment: Compartment;
     private searchHighlightCompartment: Compartment;
+    private typeCompletionCompartment: Compartment;
     private searchPlugin?: SearchHighlighter | null;
     private namedCompartments = new Map<string, Compartment>();
+    /** Monotonic token guarding against out-of-order async type-completion updates. */
+    private typeCompletionToken = 0;
 
     constructor(config: EditorConfig) {
         const languageCompartment = new Compartment();
@@ -64,6 +68,7 @@ export default class CodeMirror extends EditorView {
         const lineWrappingCompartment = new Compartment();
         const indentUnitCompartment = new Compartment();
         const searchHighlightCompartment = new Compartment();
+        const typeCompletionCompartment = new Compartment();
 
         let extensions: Extension[] = [];
 
@@ -77,6 +82,7 @@ export default class CodeMirror extends EditorView {
             lineWrappingCompartment.of(config.lineWrapping ? EditorView.lineWrapping : []),
             searchMatchHighlightTheme,
             searchHighlightCompartment.of([]),
+            typeCompletionCompartment.of([]),
             highlightActiveLine(),
             lineNumbers(),
             themeCompartment.of([
@@ -135,6 +141,7 @@ export default class CodeMirror extends EditorView {
         this.lineWrappingCompartment = lineWrappingCompartment;
         this.indentUnitCompartment = indentUnitCompartment;
         this.searchHighlightCompartment = searchHighlightCompartment;
+        this.typeCompletionCompartment = typeCompletionCompartment;
     }
 
     #onDocumentUpdated(v: ViewUpdate) {
@@ -314,6 +321,25 @@ export default class CodeMirror extends EditorView {
 
         this.dispatch({
             effects: this.languageCompartment.reconfigure(newExtension)
+        });
+
+        await this.#updateTypeCompletion(mime);
+    }
+
+    /**
+     * Enables the TypeScript language service (full completion, hover docs and
+     * diagnostics) for backend/frontend script notes, and clears it otherwise.
+     * Guarded by a token so a slow async build for a previous MIME type can't
+     * overwrite a newer one.
+     */
+    async #updateTypeCompletion(mime: string) {
+        const token = ++this.typeCompletionToken;
+        const extensions = await buildTypeCompletion(mime);
+        if (token !== this.typeCompletionToken) {
+            return; // a newer setMimeType call superseded this one
+        }
+        this.dispatch({
+            effects: this.typeCompletionCompartment.reconfigure(extensions)
         });
     }
 }

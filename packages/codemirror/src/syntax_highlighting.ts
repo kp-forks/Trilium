@@ -4,15 +4,24 @@ import type { Extension } from "@codemirror/state";
 import { SupportedMimeTypes } from "@triliumnext/commons";
 
 async function buildJavaScript(mimeType: string) {
-    const { javascript, esLint } = await import('@codemirror/lang-javascript');
-    const lint = (await import("./extensions/eslint.js")).lint;
+    const { javascript } = await import('@codemirror/lang-javascript');
     const extensions: Extension[] = [ javascript() ];
 
-    const result = await lint(mimeType);
-    if ("linter" in result) {
-        const { linter, config } = result;
-        extensions.push(linterExtension(esLint(linter, config)));
-        extensions.push(lintGutter())
+    // Backend/frontend script notes get full type-aware diagnostics from the
+    // TypeScript language service (see ./type_completion), so the ESLint pass
+    // would only duplicate (and conflict with) it. Plain JS keeps ESLint.
+    const isScriptNote = mimeType === "application/javascript;env=frontend"
+        || mimeType === "application/javascript;env=backend";
+
+    if (!isScriptNote) {
+        const { esLint } = await import('@codemirror/lang-javascript');
+        const lint = (await import("./extensions/eslint.js")).lint;
+        const result = await lint(mimeType);
+        if ("linter" in result) {
+            const { linter, config } = result;
+            extensions.push(linterExtension(esLint(linter, config)));
+            extensions.push(lintGutter());
+        }
     }
 
     return extensions;
