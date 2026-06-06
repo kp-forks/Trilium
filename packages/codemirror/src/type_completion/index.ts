@@ -1,4 +1,4 @@
-import { autocompletion } from "@codemirror/autocomplete";
+import type { CompletionSource } from "@codemirror/autocomplete";
 import type { Extension } from "@codemirror/state";
 
 import backendApiDts from "./backend_api.js";
@@ -87,24 +87,36 @@ async function createEnv(mime: string) {
     );
 }
 
+export interface TypeCompletion {
+    /** Editor extensions wiring the TypeScript environment (sync, lint, hover). */
+    extensions: Extension[];
+    /** Autocompletion source for the editor's shared `autocompletion()`, or null. */
+    source: CompletionSource | null;
+}
+
 /**
- * Builds the set of CodeMirror extensions that wire the TypeScript language
- * service into the editor for the given script MIME type. Returns an empty
- * array (no completion) for non-script MIME types.
+ * Wires the TypeScript language service into the editor for the given script
+ * MIME type. The completion `source` is returned separately (rather than as its
+ * own `autocompletion()` extension) so it can be merged with other sources —
+ * e.g. snippet slash-commands — into the editor's single autocompletion.
+ *
+ * Returns empty extensions and a null source for non-script MIME types.
  */
-export async function buildTypeCompletion(mime: string): Promise<Extension[]> {
+export async function buildTypeCompletion(mime: string): Promise<TypeCompletion> {
     if (!isScriptMime(mime)) {
-        return [];
+        return { extensions: [], source: null };
     }
 
     const env = await createEnv(mime);
     const { tsFacet, tsSync, tsAutocomplete, tsLinter, tsHover } = await import("@valtown/codemirror-ts");
 
-    return [
-        tsFacet.of({ env, path: SCRIPT_PATH }),
-        tsSync(),
-        tsLinter(),
-        autocompletion({ override: [tsAutocomplete()] }),
-        tsHover()
-    ];
+    return {
+        extensions: [
+            tsFacet.of({ env, path: SCRIPT_PATH }),
+            tsSync(),
+            tsLinter(),
+            tsHover()
+        ],
+        source: tsAutocomplete()
+    };
 }

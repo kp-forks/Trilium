@@ -1,6 +1,6 @@
 import "./code.css";
 
-import { default as VanillaCodeMirror, getThemeById, isScriptMime } from "@triliumnext/codemirror";
+import { default as VanillaCodeMirror, getThemeById } from "@triliumnext/codemirror";
 import { NoteType } from "@triliumnext/commons";
 import { Ref } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
@@ -130,14 +130,14 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     useKeyboardShortcuts("code-detail", containerRef, parentComponent, ntxId);
 
     // Code snippets (#snippet notes with a matching MIME) as `/snippet:<name>` slash commands.
-    // Disabled for Markdown notes, whose editor provides its own combined slash-command menu, and
-    // for backend/frontend script notes, where the TypeScript language service owns the editor's
-    // single autocompletion (CodeMirror allows only one `override` completion config per editor).
+    // Disabled for Markdown notes, whose editor provides its own combined slash-command menu. On
+    // script notes the snippet source co-exists with the TypeScript language service's source via
+    // the editor's shared completion-source registry.
     useSnippetSlashCommands(
         editorView,
         (candidate) => candidate.type === "code" && (candidate.mime === note.mime || candidate.mime === "text/plain"),
         note.mime,
-        !note.isMarkdown() && !isScriptMime(note.mime),
+        !note.isMarkdown(),
         note.noteId
     );
 

@@ -3,6 +3,7 @@ import { EditorView, highlightActiveLine, keymap, lineNumbers, placeholder, View
 import { defaultHighlightStyle, StreamLanguage, syntaxHighlighting, indentUnit, bracketMatching, foldGutter, codeFolding } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, StateEffect, type Extension } from "@codemirror/state";
 import { highlightSelectionMatches } from "@codemirror/search";
+import { autocompletion, type CompletionSource } from "@codemirror/autocomplete";
 import { vim } from "@replit/codemirror-vim";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
 import byMimeType from "./syntax_highlighting.js";
@@ -57,8 +58,11 @@ export default class CodeMirror extends EditorView {
     private indentUnitCompartment: Compartment;
     private searchHighlightCompartment: Compartment;
     private typeCompletionCompartment: Compartment;
+    private completionSourceCompartment: Compartment;
     private searchPlugin?: SearchHighlighter | null;
     private namedCompartments = new Map<string, Compartment>();
+    /** Named completion sources aggregated into the editor's single autocompletion. */
+    private completionSources = new Map<string, CompletionSource>();
     /** Monotonic token guarding against out-of-order async type-completion updates. */
     private typeCompletionToken = 0;
 
@@ -70,6 +74,7 @@ export default class CodeMirror extends EditorView {
         const indentUnitCompartment = new Compartment();
         const searchHighlightCompartment = new Compartment();
         const typeCompletionCompartment = new Compartment();
+        const completionSourceCompartment = new Compartment();
 
         let extensions: Extension[] = [];
 
@@ -84,6 +89,7 @@ export default class CodeMirror extends EditorView {
             searchMatchHighlightTheme,
             searchHighlightCompartment.of([]),
             typeCompletionCompartment.of([]),
+            completionSourceCompartment.of([]),
             highlightActiveLine(),
             lineNumbers(),
             themeCompartment.of([
@@ -143,6 +149,7 @@ export default class CodeMirror extends EditorView {
         this.indentUnitCompartment = indentUnitCompartment;
         this.searchHighlightCompartment = searchHighlightCompartment;
         this.typeCompletionCompartment = typeCompletionCompartment;
+        this.completionSourceCompartment = completionSourceCompartment;
     }
 
     #onDocumentUpdated(v: ViewUpdate) {
@@ -335,12 +342,36 @@ export default class CodeMirror extends EditorView {
      */
     async #updateTypeCompletion(mime: string) {
         const token = ++this.typeCompletionToken;
-        const extensions = await buildTypeCompletion(mime);
+        const { extensions, source } = await buildTypeCompletion(mime);
         if (token !== this.typeCompletionToken) {
             return; // a newer setMimeType call superseded this one
         }
         this.dispatch({
             effects: this.typeCompletionCompartment.reconfigure(extensions)
+        });
+        this.setCompletionSource("typescript", source);
+    }
+
+    /**
+     * Registers (or, with `null`, removes) a named autocompletion source. All
+     * registered sources are merged into the editor's single `autocompletion()`
+     * extension — CodeMirror permits only one `override` config per editor, so
+     * features (snippets, the TypeScript language service, …) contribute sources
+     * here rather than each adding their own autocompletion.
+     */
+    setCompletionSource(name: string, source: CompletionSource | null) {
+        if (source) {
+            this.completionSources.set(name, source);
+        } else {
+            this.completionSources.delete(name);
+        }
+        const sources = [...this.completionSources.values()];
+        this.dispatch({
+            effects: this.completionSourceCompartment.reconfigure(
+                sources.length
+                    ? autocompletion({ override: sources, activateOnTyping: true })
+                    : []
+            )
         });
     }
 }
