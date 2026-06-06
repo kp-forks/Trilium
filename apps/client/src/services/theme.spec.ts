@@ -168,6 +168,11 @@ describe("buildThemeStylesheetRefs", () => {
 
 describe("applyTheme", () => {
     beforeEach(() => {
+        // Prevent happy-dom from fetching the stylesheet links over the network; we only assert on the DOM.
+        const happyDOM = (window as unknown as { happyDOM?: { settings: { disableCSSFileLoading: boolean } } }).happyDOM;
+        if (happyDOM) {
+            happyDOM.settings.disableCSSFileLoading = true;
+        }
         win.glob = { ...(win.glob ?? {}), assetPath: "/assets" };
         document.head.innerHTML = "";
         document.body.removeAttribute("data-theme-id");

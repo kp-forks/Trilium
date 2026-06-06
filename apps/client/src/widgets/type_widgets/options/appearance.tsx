@@ -417,12 +417,6 @@ function Fonts() {
             <Font label={t("fonts.note_tree_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="treeFontFamily" fontSizeOption="treeFontSize" disabled={!isEnabled} />
             <Font label={t("fonts.note_detail_font")} sizeDescription={t("fonts.size_relative_to_general")} fontFamilyOption="detailFontFamily" fontSizeOption="detailFontSize" disabled={!isEnabled} />
             <Font label={t("fonts.monospace_font")} description={t("fonts.monospace_font_description")} fontFamilyOption="monospaceFontFamily" fontSizeOption="monospaceFontSize" disabled={!isEnabled} isMonospace />
-
-            <OptionsRowWithButton
-                label={t("fonts.apply_changes")}
-                icon="bx bx-refresh"
-                onClick={reloadFrontendApp}
-            />
         </OptionsSection>
     );
 }

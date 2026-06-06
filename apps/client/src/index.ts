@@ -1,3 +1,4 @@
+import { createFontStylesheetLink } from "./services/font";
 import { buildThemeStylesheetRefs, createStylesheetLink, getThemeStyle, StylesheetRef } from "./services/theme";
 
 async function bootstrap() {
@@ -87,7 +88,8 @@ function loadStylesheets() {
 
     const stylesheetsPath = `${assetPath}/stylesheets`;
     appendStylesheet({ href: `${stylesheetsPath}/ckeditor-theme.css` });
-    appendStylesheet({ href: `api/fonts` });
+    // Marked so it can be swapped when font options change without reloading.
+    document.head.appendChild(createFontStylesheetLink());
     // The light theme is always loaded as the baseline and acts as the anchor for live theme swapping.
     appendStylesheet({ href: `${stylesheetsPath}/theme-light.css` }, { base: true });
     for (const ref of buildThemeStylesheetRefs(theme, customThemeCssUrl, themeBase)) {
