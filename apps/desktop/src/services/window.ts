@@ -158,9 +158,6 @@ function getWindowExtraOpts() {
                 extraOpts.visualEffectState = "active";
             } else if (coreUtils.isWindows()) {
                 extraOpts.backgroundMaterial = "auto";
-            } else {
-                // Linux or other platforms.
-                extraOpts.transparent = true;
             }
         }
     }
