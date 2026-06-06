@@ -1,6 +1,6 @@
 import "./PopupEditor.css";
 
-import { ComponentChildren } from "preact";
+import { ComponentChildren, RefObject } from "preact";
 import { useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
@@ -66,37 +66,9 @@ export default function PopupEditor() {
         setShown(true);
     });
 
-    // Keep navigation that follows internal links (note links, "Related settings", etc.) inside the
-    // popup, instead of letting the global link handler open the target in the background tab. We
-    // intercept the click before it bubbles to the document-level handler and drive the popup's own
-    // context. Modified/middle clicks and external links are left untouched so they can still open in
-    // a new tab/window or externally.
-    useEffect(() => {
-        const modalEl = modalRef.current;
-        if (!modalEl) return;
-
-        function onClick(e: MouseEvent) {
-            if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-
-            const link = (e.target as HTMLElement).closest("a");
-            if (!link || link.getAttribute("target") === "_blank") return;
-            // Don't hijack clicks while editing rich text (there the click places the caret).
-            if (link.closest("[contenteditable]")) return;
-
-            const href = link.getAttribute("href") ?? link.getAttribute("data-href");
-            if (!href?.startsWith("#root/")) return; // external links / in-page anchors handled elsewhere
-
-            const { notePath, viewScope } = parseNavigationStateFromUrl(href);
-            if (!notePath) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-            void noteContext.setNote(notePath, { viewScope, keepActiveDialog: true });
-        }
-
-        modalEl.addEventListener("click", onClick);
-        return () => modalEl.removeEventListener("click", onClick);
-    }, [ noteContext ]);
+    // Keep navigation that follows internal links inside the popup, rather than letting the global
+    // link handler open the target in the background tab.
+    useContainedLinkNavigation(modalRef, noteContext);
 
     // Add a global class to be able to handle issues with z-index due to rendering in a popup.
     useEffect(() => {
@@ -186,12 +158,50 @@ export function TitleRow() {
 }
 
 /**
- * The settings page selector shown in the quick-edit popup's sidebar. It derives the active page and
- * the context to navigate from `useNoteContext()` (resolved against the popup's own context via the
- * surrounding provider), so switching pages updates both the content and the highlighted entry.
+ * The settings page selector shown in the quick-edit popup's sidebar. It derives the active page from
+ * `useNoteContext()` (resolved against the popup's own context via the surrounding provider) so the
+ * highlighted entry tracks navigation. The link clicks themselves are handled by the popup's
+ * {@link useContainedLinkNavigation} interceptor.
  */
 function SettingsPopupSidebar() {
-    const { noteId, noteContext } = useNoteContext();
+    const { noteId } = useNoteContext();
     if (!noteId) return null;
-    return <SettingsNavigation activeNoteId={noteId} noteContext={noteContext} />;
+    return <SettingsNavigation activeNoteId={noteId} />;
+}
+
+/**
+ * Keeps navigation that follows internal note links (note links, reference links, "Related settings",
+ * etc.) inside the popup — whose context lives outside the tab manager — instead of letting the
+ * global link handler resolve to the active tab in the background.
+ *
+ * The listener is attached to `containerRef` in the capture phase so it runs before the
+ * document-level `goToLink` handler (and before anything that might stop propagation). Modified or
+ * middle clicks and external links are left untouched so they can still open in a new tab/window or
+ * externally, and clicks inside editable rich text are ignored so they keep placing the caret.
+ */
+function useContainedLinkNavigation(containerRef: RefObject<HTMLElement>, noteContext: NoteContext) {
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        function onClick(e: MouseEvent) {
+            if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+            const link = (e.target as HTMLElement).closest("a");
+            if (!link || link.getAttribute("target") === "_blank" || link.isContentEditable) return;
+
+            const href = link.getAttribute("href") ?? link.getAttribute("data-href");
+            if (!href?.startsWith("#root/")) return; // external links / in-page anchors handled elsewhere
+
+            const { notePath, viewScope } = parseNavigationStateFromUrl(href);
+            if (!notePath) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            void noteContext.setNote(notePath, { viewScope, keepActiveDialog: true });
+        }
+
+        container.addEventListener("click", onClick, true);
+        return () => container.removeEventListener("click", onClick, true);
+    }, [ containerRef, noteContext ]);
 }
