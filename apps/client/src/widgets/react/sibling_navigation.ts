@@ -54,3 +54,13 @@ export function isInteractiveTarget(target: { tagName?: string; getAttribute?(na
     const tag = target.tagName.toUpperCase();
     return tag === "BUTTON" || tag === "A" || tag === "SUMMARY" || target.getAttribute?.("role") === "button";
 }
+
+/**
+ * From a note's ordered attachments and the currently-shown one, keeps those sharing its role (so the
+ * viewer cycles e.g. image-with-image), mapped to `{ id, title }`. Empty when the current one is absent.
+ */
+export function sameRoleAttachments(attachments: readonly { attachmentId: string; role: string; title: string }[], currentAttachmentId: string | undefined): { id: string; title: string }[] {
+    const role = attachments.find((attachment) => attachment.attachmentId === currentAttachmentId)?.role;
+    if (!role) return [];
+    return attachments.filter((attachment) => attachment.role === role).map((attachment) => ({ id: attachment.attachmentId, title: attachment.title }));
+}
