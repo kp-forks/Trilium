@@ -828,7 +828,11 @@
     "hide_child_notes": "Folaigh nótaí leanaí sa chrann",
     "open_all_in_tabs": "Oscail gach rud",
     "open_all_in_tabs_tooltip": "Oscail na torthaí go léir i gcluaisíní nua",
-    "open_all_confirm": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?"
+    "open_all_confirm_one": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
+    "open_all_confirm_two": "",
+    "open_all_confirm_few": "",
+    "open_all_confirm_many": "",
+    "open_all_confirm_other": ""
   },
   "edited_notes": {
     "no_edited_notes_found": "Gan aon nótaí eagarthóireachta ar an lá seo go fóill...",
@@ -873,7 +877,11 @@
     "note_size": "Méid nóta",
     "note_size_info": "Tugann méid an nóta meastachán garbh ar riachtanais stórála don nóta seo. Cuirtear ábhar an nóta agus ábhar a athbhreithnithe nótaí san áireamh ann.",
     "calculate": "ríomh",
-    "subtree_size": "(méid fo-chrainn: {{size}} i nótaí {{count}})",
+    "subtree_size_one": "(méid fo-chrainn: {{size}} i nótaí {{count}})",
+    "subtree_size_two": "",
+    "subtree_size_few": "",
+    "subtree_size_many": "",
+    "subtree_size_other": "",
     "title": "Eolas Nóta",
     "show_similar_notes": "Taispeáin nótaí comhchosúla"
   },
@@ -883,7 +891,11 @@
     "title": "Léarscáil Nótaí",
     "fix-nodes": "Deisigh nóid",
     "link-distance": "Fad naisc",
-    "too-many-notes": "Tá {{count}} nótaí anseo. D’fhéadfadh sé go mbeadh moill ar rudaí má thaispeántar iad go léir.",
+    "too-many-notes_one": "Tá {{count}} nótaí anseo. D’fhéadfadh sé go mbeadh moill ar rudaí má thaispeántar iad go léir.",
+    "too-many-notes_two": "",
+    "too-many-notes_few": "",
+    "too-many-notes_many": "",
+    "too-many-notes_other": "",
     "show-anyway": "Taispeáin léarscáil"
   },
   "note_paths": {
@@ -1613,7 +1625,11 @@
     "export": "Easpórtáil",
     "import-into-note": "Iompórtáil isteach i nóta",
     "apply-bulk-actions": "Cuir gníomhartha mórchóir i bhfeidhm",
-    "converted-to-attachments": "Tá {{count}} nótaí tiontaithe ina gceangaltáin.",
+    "converted-to-attachments_one": "Tá {{count}} nótaí tiontaithe ina gceangaltáin.",
+    "converted-to-attachments_two": "",
+    "converted-to-attachments_few": "",
+    "converted-to-attachments_many": "",
+    "converted-to-attachments_other": "",
     "convert-to-attachment-confirm": "An bhfuil tú cinnte gur mian leat na nótaí roghnaithe a thiontú ina gceangaltáin dá nótaí tuismitheora? Ní bhaineann an oibríocht seo ach le nótaí Íomhá, scipeálfar nótaí eile.",
     "open-in-popup": "Eagarthóireacht thapa"
   },
@@ -2150,7 +2166,11 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} nótaí",
+    "total_notes_one": "{{count}} nótaí",
+    "total_notes_two": "",
+    "total_notes_few": "",
+    "total_notes_many": "",
+    "total_notes_other": "",
     "prev_page": "Leathanach roimhe seo",
     "next_page": "An chéad leathanach eile"
   },
@@ -2248,7 +2268,11 @@
     "code_note_switcher": "Athraigh mód teanga",
     "tab_width": "Leithead an Chluaisín: {{width}}",
     "tab_width_title": "Athraigh leithead an chluaisín",
-    "tab_width_spaces": "{{count}} spásanna",
+    "tab_width_spaces_one": "{{count}} spásanna",
+    "tab_width_spaces_two": "",
+    "tab_width_spaces_few": "",
+    "tab_width_spaces_many": "",
+    "tab_width_spaces_other": "",
     "tab_width_spaces_short": "Spásanna: {{width}}",
     "tab_width_tabs": "Cluaisíní: {{width}}",
     "tab_width_use_default": "Úsáid an réamhshocrú ({{width}})",

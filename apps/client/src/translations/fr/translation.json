@@ -821,7 +821,9 @@
     "expand_all_levels": "Développer tous les niveaux",
     "hide_child_notes": "Masquer les notes enfants dans l’arborescence",
     "open_all_in_tabs_tooltip": "Ouvrir tous les résultats dans de nouveaux onglets",
-    "open_all_confirm": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
+    "open_all_confirm_one": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
+    "open_all_confirm_many": "",
+    "open_all_confirm_other": "",
     "open_all_in_tabs": "Tout ouvrir"
   },
   "edited_notes": {
@@ -866,7 +868,9 @@
     "note_size": "Taille de la note",
     "note_size_info": "La taille de la note fournit une estimation approximative des besoins de stockage pour cette note. Il prend en compte le contenu de la note et de ses versions.",
     "calculate": "calculer",
-    "subtree_size": "(taille du sous-arbre : {{size}} pour {{count}} notes)",
+    "subtree_size_one": "(taille du sous-arbre : {{size}} pour {{count}} notes)",
+    "subtree_size_many": "",
+    "subtree_size_other": "",
     "title": "Infos sur la Note",
     "mime": "type MIME",
     "show_similar_notes": "Afficher des notes similaires"
@@ -877,7 +881,9 @@
     "title": "Carte des notes",
     "fix-nodes": "Réparer les nœuds",
     "link-distance": "Longueur des liens",
-    "too-many-notes": "Il y a {{count}} notes ici. Les afficher toutes pourrait ralentir le chargement.",
+    "too-many-notes_one": "Il y a {{count}} notes ici. Les afficher toutes pourrait ralentir le chargement.",
+    "too-many-notes_many": "",
+    "too-many-notes_other": "",
     "show-anyway": "Afficher la carte"
   },
   "note_paths": {
@@ -1540,7 +1546,9 @@
     "export": "Exporter",
     "import-into-note": "Importer dans la note",
     "apply-bulk-actions": "Appliquer des Actions groupées",
-    "converted-to-attachments": "Les notes {{count}} ont été converties en pièces jointes.",
+    "converted-to-attachments_one": "Les notes {{count}} ont été converties en pièces jointes.",
+    "converted-to-attachments_many": "",
+    "converted-to-attachments_other": "",
     "convert-to-attachment-confirm": "Voulez-vous vraiment convertir les notes sélectionnées en pièces jointes de leurs notes parents ? Cette opération ne s’applique qu’aux notes de type image ; les autres notes seront ignorées.",
     "archive": "Archive",
     "unarchive": "Désarchiver",
@@ -2052,7 +2060,9 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} notes",
+    "total_notes_one": "{{count}} notes",
+    "total_notes_many": "",
+    "total_notes_other": "",
     "prev_page": "Page précédente",
     "next_page": "Page suivante"
   },
@@ -2466,7 +2476,9 @@
     "code_note_switcher": "Changer de langue",
     "tab_width": "Largeur de tabulation : {{width}}",
     "tab_width_title": "Modifier la largeur de tabulation",
-    "tab_width_spaces": "{{count}} espaces",
+    "tab_width_spaces_one": "{{count}} espaces",
+    "tab_width_spaces_many": "",
+    "tab_width_spaces_other": "",
     "tab_width_spaces_short": "Espaces : {{width}}",
     "tab_width_tabs": "Tabulations : {{width}}",
     "tab_width_use_default": "Utiliser la valeur par défaut ({{width}})",
