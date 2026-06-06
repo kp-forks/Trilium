@@ -59,7 +59,6 @@ export const DESKTOP_FLOATING_BUTTONS: FloatingButtonsList = [
     OpenElectronApiDocsButton,
     SaveToNoteButton,
     RelationMapButtons,
-    ImageZoomButtons,
     CopyImageReferenceButton,
     ExportImageButtons,
     ExportSpreadsheetButton,
@@ -275,33 +274,6 @@ function RelationMapButtons({ note, isDefaultViewMode, triggerEvent }: FloatingB
                     icon="bx bx-zoom-out"
                     text={t("relation_map_buttons.zoom_out_title")}
                     onClick={() => triggerEvent("relationMapResetZoomOut")}
-                />
-            </div>
-        </>
-    );
-}
-
-function ImageZoomButtons({ note, isDefaultViewMode, triggerEvent }: FloatingButtonContext) {
-    const isEnabled = note.type === "image" && note.isContentAvailable() && isDefaultViewMode;
-    return isEnabled && (
-        <>
-            <FloatingButton
-                icon="bx bx-crop"
-                text={t("image_buttons.reset_zoom")}
-                onClick={() => triggerEvent("imageZoomReset")}
-            />
-
-            <div className="btn-group">
-                <FloatingButton
-                    icon="bx bx-zoom-in"
-                    text={t("image_buttons.zoom_in")}
-                    onClick={() => triggerEvent("imageZoomIn")}
-                />
-
-                <FloatingButton
-                    icon="bx bx-zoom-out"
-                    text={t("image_buttons.zoom_out")}
-                    onClick={() => triggerEvent("imageZoomOut")}
                 />
             </div>
         </>
