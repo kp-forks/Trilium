@@ -54,6 +54,13 @@ describe("codeToSiblingDirection", () => {
         expect(codeToSiblingDirection("Space", [], [])).toBeNull();
         expect(codeToSiblingDirection("KeyA", [ "Backspace" ], [ "Space" ])).toBeNull();
     });
+
+    it("omits Home/End when edge keys are disabled, keeping PageUp/PageDown", () => {
+        expect(codeToSiblingDirection("Home", [], [], false)).toBeNull();
+        expect(codeToSiblingDirection("End", [], [], false)).toBeNull();
+        expect(codeToSiblingDirection("PageUp", [], [], false)).toBe("previous");
+        expect(codeToSiblingDirection("PageDown", [], [], false)).toBe("next");
+    });
 });
 
 describe("isTextEntryTarget", () => {

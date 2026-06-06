@@ -1176,6 +1176,8 @@
     "pause": "Pause (Space)",
     "back-10s": "Back 10s (Left arrow key)",
     "forward-30s": "Forward 30s",
+    "previous-video": "Previous video: {{- title}}",
+    "next-video": "Next video: {{- title}}",
     "mute": "Mute (M)",
     "unmute": "Unmute (M)",
     "playback-speed": "Playback speed",

@@ -3,10 +3,15 @@ import "./MediaPlayer.css";
 import { RefObject } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
+import type NoteContext from "../../../components/note_context";
+import type FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import Icon from "../../react/Icon";
+import { noteSiblingProvider, type SiblingNavigationState, useSiblingKeyboard, useSiblingNavigation } from "../../react/SiblingNavigator";
+
+const NO_KEYS: readonly string[] = [];
 
 export function SeekBar({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement> }) {
     const [currentTime, setCurrentTime] = useState(0);
@@ -126,6 +131,29 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
                 onInput={onVolumeChange}
             />
         </div>
+    );
+}
+
+/**
+ * Sibling navigation across the note's same-mime media siblings (e.g. all `video/` files in the parent),
+ * with PageUp/PageDown wired to previous/next. Edge keys (Home/End) and Space are left to the player.
+ */
+export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string) {
+    const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
+    useSiblingKeyboard(navigation, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
+    return navigation;
+}
+
+/** "Skip to previous/next sibling" control, styled like the other media buttons; renders nothing without siblings. */
+export function MediaSiblingButton({ navigation, direction, tooltipI18nKey }: { navigation: SiblingNavigationState | null, direction: "previous" | "next", tooltipI18nKey: string }) {
+    if (!navigation) return null;
+    const isPrevious = direction === "previous";
+    return (
+        <ActionButton
+            icon={isPrevious ? "bx bx-skip-previous" : "bx bx-skip-next"}
+            text={t(tooltipI18nKey, { title: isPrevious ? navigation.previousTitle : navigation.nextTitle })}
+            onClick={() => (isPrevious ? navigation.navigatePrevious() : navigation.navigateNext())}
+        />
     );
 }
 
