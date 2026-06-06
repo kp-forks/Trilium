@@ -9,7 +9,7 @@ import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import { isMobile } from "../../services/utils";
 import { useStaticTooltip, useTriliumEvent } from "./hooks";
-import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isTextEntryTarget } from "./sibling_navigation";
+import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isInteractiveTarget, isTextEntryTarget } from "./sibling_navigation";
 
 const NO_KEYS: readonly string[] = [];
 
@@ -62,11 +62,12 @@ export function useSiblingNavigation(note: FNote | undefined, noteContext: NoteC
         }
 
         let active = true;
-        void froca.getNote(parent.parentNoteId)
+        froca.getNote(parent.parentNoteId)
             .then((parentNote) => parentNote?.getChildNotes() ?? [])
             .then((children) => {
                 if (active) setSiblings(children.filter((child) => child.type === type).map((child) => ({ noteId: child.noteId, title: child.title })));
-            });
+            })
+            .catch(() => { if (active) setSiblings([]); });
         return () => { active = false; };
     }, [ notePath, type, refreshCounter ]);
 
@@ -77,6 +78,10 @@ export function useSiblingNavigation(note: FNote | undefined, noteContext: NoteC
         const siblingChanged = loadResults.getNoteIds().some((noteId) => siblings.some((sibling) => sibling.noteId === noteId));
         if (branchesChanged || siblingChanged) setRefreshCounter((counter) => counter + 1);
     });
+
+    // froca replaces every cached FNote on a full reload (e.g. a protected-session unlock), so re-fetch
+    // to refresh the sibling titles held as plain strings in state.
+    useTriliumEvent("frocaReloaded", () => setRefreshCounter((counter) => counter + 1));
 
     const parent = getParentFromNotePath(notePath);
     if (!note || !parent) return null;
@@ -125,13 +130,17 @@ export default function SiblingNavigator({ note, noteContext, siblingType, previ
         <div className="sibling-navigator">
             <button
                 ref={previousRef}
+                type="button"
                 className="icon-action bx bx-chevron-left"
+                aria-label={previousText}
                 onClick={() => navigation.navigatePrevious()}
             />
             <span className="sibling-navigator-index">{navigation.index}/{navigation.total}</span>
             <button
                 ref={nextRef}
+                type="button"
                 className="icon-action bx bx-chevron-right"
+                aria-label={nextText}
                 onClick={() => navigation.navigateNext()}
             />
         </div>
@@ -157,10 +166,13 @@ function useSiblingKeyboard(
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
             const { navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys } = stateRef.current;
-            if (!navigation || isTextEntryTarget(e.target as Element | null)) return;
+            const target = e.target as Element | null;
+            if (!navigation || isTextEntryTarget(target)) return;
+            // Don't hijack Space from a focused button or other interactive control — it activates them.
+            if (e.code === "Space" && isInteractiveTarget(target)) return;
             if (keyboardTarget) {
                 if (!keyboardTarget.current?.contains(document.activeElement)) return;
             } else if (noteContext && !noteContext.isActive()) {

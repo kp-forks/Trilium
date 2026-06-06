@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isTextEntryTarget } from "./sibling_navigation";
+import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isInteractiveTarget, isTextEntryTarget } from "./sibling_navigation";
 
 describe("getParentFromNotePath", () => {
     it("splits the in-tab path into parent path + parent note id", () => {
@@ -67,5 +67,19 @@ describe("isTextEntryTarget", () => {
         expect(isTextEntryTarget({ tagName: "DIV" })).toBe(false);
         expect(isTextEntryTarget({ tagName: "BUTTON" })).toBe(false);
         expect(isTextEntryTarget(null)).toBe(false);
+    });
+});
+
+describe("isInteractiveTarget", () => {
+    it("is true for buttons, links and role=button", () => {
+        expect(isInteractiveTarget({ tagName: "BUTTON" })).toBe(true);
+        expect(isInteractiveTarget({ tagName: "a" })).toBe(true);
+        expect(isInteractiveTarget({ tagName: "DIV", getAttribute: () => "button" })).toBe(true);
+    });
+
+    it("is false for plain elements and nullish input", () => {
+        expect(isInteractiveTarget({ tagName: "DIV", getAttribute: () => null })).toBe(false);
+        expect(isInteractiveTarget({ tagName: "IMG" })).toBe(false);
+        expect(isInteractiveTarget(null)).toBe(false);
     });
 });

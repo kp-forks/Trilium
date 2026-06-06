@@ -47,3 +47,10 @@ export function isTextEntryTarget(target: { tagName?: string; isContentEditable?
     const tag = target.tagName.toUpperCase();
     return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable === true;
 }
+
+/** Whether the target is an interactive control that uses Space/Enter for activation (so we must not hijack Space from it). */
+export function isInteractiveTarget(target: { tagName?: string; getAttribute?(name: string): string | null } | null | undefined): boolean {
+    if (!target?.tagName) return false;
+    const tag = target.tagName.toUpperCase();
+    return tag === "BUTTON" || tag === "A" || tag === "SUMMARY" || target.getAttribute?.("role") === "button";
+}

@@ -65,12 +65,12 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     }, [ apiRef ]);
 
     // Recompute the cursor/rendering flags and the displayed (native-relative) zoom percentage.
+    // The setters bail out on identical values, so no manual change checks are needed.
     const updateZoomState = (scale: number) => {
         const { pannable: nextPannable, largeZoom: nextLargeZoom, nativeScale } = evaluateImageZoom(scale, imgRef.current);
-        if (nextPannable !== pannable) setPannable(nextPannable);
-        if (nextLargeZoom !== largeZoom) setLargeZoom(nextLargeZoom);
-        const percent = Math.round(nativeScale * 100);
-        if (percent !== zoomPercent) setZoomPercent(percent);
+        setPannable(nextPannable);
+        setLargeZoom(nextLargeZoom);
+        setZoomPercent(Math.round(nativeScale * 100));
     };
 
     // Reveal (or fail) the image, driven by decode() rather than the load event. decode() resolves once
@@ -100,7 +100,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
         img.decode().then(reveal, () => settle(() => setLoadingError(true)));
 
         return () => settle(() => {});
-    }, [ src ]); // eslint-disable-line react-hooks/exhaustive-deps -- updateZoomState identity changes each render
+    }, [ src ]);
 
     useImageViewerKeyboard(zoomRef, rootRef);
     useStaticTooltip(zoomOutRef, { title: t("image_buttons.zoom_out"), placement: "top" });
@@ -144,7 +144,13 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
                             setLoaded(true);
                             updateZoomState(zoomRef.current?.instance?.state?.scale ?? 1);
                         }}
-                        onError={() => setLoadingError(true)}
+                        onError={() => {
+                            // decode()'s rejection reports failures where supported — and goes through `settle`,
+                            // clearing the fallback timer so it can't race and reveal a failed image. This only
+                            // covers the rare environment without decode().
+                            if (typeof imgRef.current?.decode === "function") return;
+                            setLoadingError(true);
+                        }}
                     />
                 </TransformComponent>
             </TransformWrapper>
@@ -157,19 +163,25 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
                 <div className="image-viewer-controls">
                     <button
                         ref={zoomOutRef}
+                        type="button"
                         className="icon-action bx bx-zoom-out"
+                        aria-label={t("image_buttons.zoom_out")}
                         onClick={() => zoomRef.current?.zoomOut(BUTTON_ZOOM_STEP)}
                     />
                     <button
                         ref={zoomLevelRef}
+                        type="button"
                         className="image-viewer-zoom-level"
+                        aria-label={t("image_buttons.reset_zoom")}
                         onClick={() => zoomRef.current?.resetTransform()}
                     >
                         {zoomPercent}%
                     </button>
                     <button
                         ref={zoomInRef}
+                        type="button"
                         className="icon-action bx bx-zoom-in"
+                        aria-label={t("image_buttons.zoom_in")}
                         onClick={() => zoomRef.current?.zoomIn(BUTTON_ZOOM_STEP)}
                     />
                 </div>
