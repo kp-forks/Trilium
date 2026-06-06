@@ -307,12 +307,12 @@ describe("window service", () => {
             expect(opts.backgroundMaterial).toBe("auto");
         });
 
-        it("applies Linux transparent effect when background effects enabled", async () => {
+        it("does not apply Linux transparent effect when background effects enabled", async () => {
             state.optionBools = { backgroundEffects: true };
             await windowService.createMainWindow();
             const opts = state.windows[state.windows.length - 1].opts as Record<string, unknown>;
             expect(opts.frame).toBe(false);
-            expect(opts.transparent).toBe(true);
+            expect(opts.transparent).toBe(undefined);
         });
 
         it("keeps native title bar when option enabled", async () => {
