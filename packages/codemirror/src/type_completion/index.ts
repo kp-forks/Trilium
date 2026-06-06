@@ -51,12 +51,6 @@ function scriptPath(mime: string): string {
     return mime === SCRIPT_MIME_JSX ? JSX_SCRIPT_PATH : SCRIPT_PATH;
 }
 
-// Shorthand ambient declarations for the bare-specifier imports a JSX render
-// note uses (`import { h } from "trilium:preact"`). A bodyless `declare module`
-// types every import from them as `any` — enough to silence "cannot find
-// module" (TS2307) without (yet) vendoring real Preact types.
-const triliumModulesDts = `declare module "trilium:preact";\ndeclare module "trilium:api";\n`;
-
 const COMPILER_OPTIONS = {
     // `target`/`lib` are filled in lazily once TypeScript is loaded (needs the ts enums).
     allowJs: true,
@@ -116,7 +110,12 @@ async function createEnv(mime: string) {
 
     if (mime === SCRIPT_MIME_JSX) {
         // JSX notes import Preact/the api via bare specifiers (`trilium:preact`,
-        // `trilium:api`); declare them so those imports resolve.
+        // `trilium:api`). Inject the real Preact .d.ts under `/node_modules/preact`
+        // so those modules — and the `JSX.IntrinsicElements` namespace — resolve.
+        const { preactVfsFiles, triliumModulesDts } = await import("./preact_types.js");
+        for (const [filePath, content] of Object.entries(preactVfsFiles)) {
+            fsMap.set(filePath, content);
+        }
         fsMap.set(TRILIUM_MODULES_DTS_PATH, triliumModulesDts);
         rootFiles.push(TRILIUM_MODULES_DTS_PATH);
     }
@@ -125,11 +124,13 @@ async function createEnv(mime: string) {
         ...COMPILER_OPTIONS,
         target: ts.ScriptTarget.ES2020,
         lib: ["es2020", "dom"],
-        // `Preserve` type-checks JSX without requiring a factory symbol in scope.
-        // Intrinsic elements fall back to `any` (no `JSX.IntrinsicElements`), which
-        // `noImplicitAny: false` keeps quiet — so JSX parses without nagging until
-        // real Preact types are vendored.
-        ...(mime === SCRIPT_MIME_JSX ? { jsx: ts.JsxEmit.Preserve } : {})
+        // The runtime uses the classic `h` transform, but we only type-check (never
+        // emit), so the automatic runtime is cleaner: it pulls `JSX.IntrinsicElements`
+        // from `preact/jsx-runtime`, giving real element/attribute typing without a
+        // factory symbol in scope.
+        ...(mime === SCRIPT_MIME_JSX
+            ? { jsx: ts.JsxEmit.ReactJSX, jsxImportSource: "preact" }
+            : {})
     };
 
     const system = createSystem(fsMap);

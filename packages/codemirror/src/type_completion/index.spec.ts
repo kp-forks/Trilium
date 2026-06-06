@@ -4,6 +4,10 @@ import { getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND, SC
 
 /** "Property 'x' does not exist on type 'y'." */
 const TS_UNKNOWN_PROPERTY = 2339;
+/** "Argument of type 'x' is not assignable to parameter of type 'y'." */
+const TS_ARGUMENT_NOT_ASSIGNABLE = 2345;
+/** "Type 'x' is not assignable to type 'y'." */
+const TS_TYPE_NOT_ASSIGNABLE = 2322;
 /** "'await' expressions are only allowed at the top level of a file when that file is a module…" */
 const TS_TOP_LEVEL_AWAIT = 1375;
 /** "Cannot find name '$'. Do you need to install type definitions for jQuery?…" */
@@ -110,6 +114,35 @@ describe("script note diagnostics", () => {
             "import { h, Fragment } from \"trilium:preact\";\nexport default function App() { return <><div>hi</div></>; }"
         );
         expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("provides real Preact hook types from trilium:preact (type inference)", async () => {
+        // Correct usage: `useState(0)` infers a number setter.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "import { useState } from \"trilium:preact\";\nconst [count, setCount] = useState(0);\nsetCount(count + 1);"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("type-checks Preact hook arguments (real types, not any)", async () => {
+        // `useState(0)` → setter takes a number; passing a string must error,
+        // proving the hooks resolve to real types rather than `any`.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "import { useState } from \"trilium:preact\";\nconst [count, setCount] = useState(0);\nsetCount(\"not a number\");"
+        );
+        expect(codes).toContain(TS_ARGUMENT_NOT_ASSIGNABLE);
+    }, TIMEOUT);
+
+    it("type-checks JSX intrinsic element attributes (real JSX.IntrinsicElements)", async () => {
+        // `tabIndex` is typed as a number on Preact's HTMLAttributes; a string
+        // value must error, proving intrinsic-element typing is wired (not `any`).
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "const el = <div tabIndex=\"oops\">hi</div>;"
+        );
+        expect(codes).toContain(TS_TYPE_NOT_ASSIGNABLE);
     }, TIMEOUT);
 
     it("provides jQuery to JSX render notes (browser runtime, like frontend)", async () => {
