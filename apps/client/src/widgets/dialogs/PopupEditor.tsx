@@ -30,11 +30,18 @@ import MobileEditorToolbar from "../type_widgets/text/mobile_editor_toolbar";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
 
+/** The settings page the cog opens by default — see `showOptionsCommand`. Treated as the entry point
+ *  that gets redirected to the last-viewed section. */
+const DEFAULT_OPTIONS_SECTION = "_optionsAppearance";
+
 export default function PopupEditor() {
     const [ shown, setShown ] = useState(false);
     const [ stacked, setStacked ] = useState(false);
     const parentComponent = useContext(ParentComponent);
     const [ noteContext, setNoteContext ] = useState(new NoteContext("_popup-editor"));
+    // Remembers the settings page last viewed this session so reopening the options popup lands there
+    // instead of always on Appearance. Kept in component state (resets on reload), not persisted.
+    const [ lastOptionsSection, setLastOptionsSection ] = useState<string | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
     const isMobile = utils.isMobile();
     const items = useMemo(() => {
@@ -46,13 +53,18 @@ export default function PopupEditor() {
         const noteContext = new NoteContext("_popup-editor");
         setStacked(!!document.querySelector(".modal.show"));
 
-        const noteId = tree.getNoteIdAndParentIdFromUrl(noteIdOrPath);
+        // Reopen settings on the page last viewed this session instead of always on Appearance.
+        const targetIdOrPath = noteIdOrPath === DEFAULT_OPTIONS_SECTION && lastOptionsSection
+            ? lastOptionsSection
+            : noteIdOrPath;
+
+        const noteId = tree.getNoteIdAndParentIdFromUrl(targetIdOrPath);
         if (!noteId.noteId) return;
         const note = await froca.getNote(noteId.noteId);
         if (!note) return;
 
         const hasUserSetNoteReadOnly = note.hasLabel("readOnly");
-        await noteContext.setNote(noteIdOrPath, {
+        await noteContext.setNote(targetIdOrPath, {
             viewScope: {
                 // Override auto-readonly notes to be editable, but respect user's choice to have a read-only note.
                 readOnlyTemporarilyDisabled: !hasUserSetNoteReadOnly
@@ -114,7 +126,14 @@ export default function PopupEditor() {
                     size="lg"
                     show={shown}
                     onShown={() => parentComponent?.handleEvent("focusOnDetail", { ntxId: noteContext.ntxId })}
-                    onHidden={() => setShown(false)}
+                    onHidden={() => {
+                        // Remember the settings page in view so the next open lands on it.
+                        const note = noteContext.note;
+                        if (note?.isOptions()) {
+                            setLastOptionsSection(note.noteId);
+                        }
+                        setShown(false);
+                    }}
                     keepInDom // needed for faster loading
                     noFocus // automatic focus breaks block popup
                     stackable
