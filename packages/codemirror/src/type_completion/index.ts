@@ -27,6 +27,7 @@ export function isScriptMime(mime: string): boolean {
 
 const SCRIPT_PATH = "/script.js";
 const API_DTS_PATH = "/trilium-api.d.ts";
+const JQUERY_DTS_PATH = "/jquery-globals.d.ts";
 
 const COMPILER_OPTIONS = {
     // `target`/`lib` are filled in lazily once TypeScript is loaded (needs the ts enums).
@@ -62,6 +63,17 @@ async function createEnv(mime: string) {
     // likewise pushes `doc || ' '`, so the script file is never empty at runtime.
     fsMap.set(SCRIPT_PATH, " ");
 
+    const rootFiles = [SCRIPT_PATH, API_DTS_PATH];
+
+    // Frontend scripts run in the browser with jQuery available as `$` / `jQuery`;
+    // backend scripts run server-side and have neither. Inject the vendored jQuery
+    // global declarations (lazily) only for frontend notes.
+    if (mime === SCRIPT_MIME_FRONTEND) {
+        const jqueryGlobals = (await import("./jquery/jquery-globals.d.ts.txt?raw")).default;
+        fsMap.set(JQUERY_DTS_PATH, jqueryGlobals);
+        rootFiles.push(JQUERY_DTS_PATH);
+    }
+
     const compilerOptions = {
         ...COMPILER_OPTIONS,
         target: ts.ScriptTarget.ES2020,
@@ -69,12 +81,7 @@ async function createEnv(mime: string) {
     };
 
     const system = createSystem(fsMap);
-    return createVirtualTypeScriptEnvironment(
-        system,
-        [SCRIPT_PATH, API_DTS_PATH],
-        ts,
-        compilerOptions
-    );
+    return createVirtualTypeScriptEnvironment(system, rootFiles, ts, compilerOptions);
 }
 
 export interface TypeCompletion {

@@ -6,6 +6,8 @@ import { getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND } f
 const TS_UNKNOWN_PROPERTY = 2339;
 /** "'await' expressions are only allowed at the top level of a file when that file is a module…" */
 const TS_TOP_LEVEL_AWAIT = 1375;
+/** "Cannot find name '$'. Do you need to install type definitions for jQuery?…" */
+const TS_JQUERY_NOT_FOUND = 2592;
 
 // Loading TypeScript + the bundled lib.*.d.ts the first time is not instant.
 const TIMEOUT = 30_000;
@@ -64,6 +66,22 @@ describe("script note diagnostics", () => {
             "const value = await Promise.resolve(1);"
         );
         expect(codes).toContain(TS_TOP_LEVEL_AWAIT);
+    }, TIMEOUT);
+
+    it("provides jQuery types to frontend scripts ($ and JQuery methods)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const $widget = $('<div>'); $widget.addClass('active').on('click', () => {});"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("does not provide jQuery to backend scripts ($ is unavailable server-side)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const el = $('<div>');"
+        );
+        expect(codes).toContain(TS_JQUERY_NOT_FOUND);
     }, TIMEOUT);
 
     it("still surfaces real errors (unknown api member)", async () => {
