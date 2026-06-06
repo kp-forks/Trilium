@@ -1,5 +1,6 @@
 import { type AttributeRow, dayjs, formatLogMessage } from "@triliumnext/commons";
 import type { BackendApi as PublicBackendApi, ScriptBNote as PublicScriptBNote } from "@triliumnext/commons/src/lib/script_api.js";
+import type { Request, Response } from "express";
 import AbstractBeccaEntity from "../becca/entities/abstract_becca_entity";
 import Becca from "../becca/becca-interface";
 import * as cheerio from "cheerio";
@@ -77,6 +78,23 @@ export interface Api {
      * Entity whose event triggered this execution
      */
     originEntity?: AbstractBeccaEntity<any> | null;
+
+    /**
+     * Express request object. Only present when the script runs as a custom request
+     * handler (a note with the `#customRequestHandler` label invoked via `/custom/...`);
+     * `undefined` for every other backend script.
+     */
+    req?: Request;
+    /**
+     * Express response object — write the HTTP response here. Only present in custom
+     * request handlers; `undefined` otherwise.
+     */
+    res?: Response;
+    /**
+     * Capture groups from the `#customRequestHandler` regex that matched this request's
+     * URL, in order. Only present in custom request handlers.
+     */
+    pathParams?: string[];
 
     /**
      * @deprecated Axios was deprecated since April 2024 and has now been removed following the March 2026 supply chain attack.
