@@ -246,6 +246,8 @@ export interface ScriptBNote {
     getContent(): string | Uint8Array;
     setContent(content: string | Uint8Array, opts?: { forceFrontendReload?: boolean }): void;
     getJsonContent<T = unknown>(): T | null;
+    /** Plain serialisable representation of the note (the real return type is `NotePojo`). */
+    getPojo(): Record<string, unknown>;
 
     getParentNotes(): ScriptBNote[];
     getChildNotes(): ScriptBNote[];
