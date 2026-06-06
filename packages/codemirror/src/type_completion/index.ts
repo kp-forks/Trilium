@@ -69,7 +69,7 @@ async function createEnv(mime: string) {
     // backend scripts run server-side and have neither. Inject the vendored jQuery
     // global declarations (lazily) only for frontend notes.
     if (mime === SCRIPT_MIME_FRONTEND) {
-        const jqueryGlobals = (await import("./jquery/jquery-globals.d.ts.txt?raw")).default;
+        const { jqueryGlobals } = await import("./jquery_types.js");
         fsMap.set(JQUERY_DTS_PATH, jqueryGlobals);
         rootFiles.push(JQUERY_DTS_PATH);
     }
