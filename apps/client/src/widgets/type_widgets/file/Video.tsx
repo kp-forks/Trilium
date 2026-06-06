@@ -39,7 +39,7 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
     }, [togglePlayback]);
 
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
-    const siblingNavigation = useMediaSiblingNavigation(note, noteContext, "video/");
+    const siblingNavigation = useMediaSiblingNavigation(note, noteContext, "video/", videoRef);
 
     if (error) {
         return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;

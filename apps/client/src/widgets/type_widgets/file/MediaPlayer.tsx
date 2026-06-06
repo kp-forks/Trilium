@@ -134,14 +134,40 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
     );
 }
 
+/** Set when jumping to a sibling, so the media opened next auto-plays — like a playlist. */
+let autoPlayNextMedia = false;
+
 /**
  * Sibling navigation across the note's same-mime media siblings (e.g. all `video/` files in the parent),
- * with PageUp/PageDown wired to previous/next. Edge keys (Home/End) and Space are left to the player.
+ * with PageUp/PageDown wired to previous/next (Home/End and Space are left to the player). Jumping to a
+ * sibling auto-plays it once loaded, like a playlist.
  */
-export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string) {
+export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
-    useSiblingKeyboard(navigation, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
-    return navigation;
+    const wrapped = navigation && {
+        ...navigation,
+        navigatePrevious: () => { autoPlayNextMedia = true; navigation.navigatePrevious(); },
+        navigateNext: () => { autoPlayNextMedia = true; navigation.navigateNext(); }
+    };
+
+    useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
+
+    // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
+    useEffect(() => {
+        if (!autoPlayNextMedia) return;
+        autoPlayNextMedia = false;
+        const media = mediaRef.current;
+        if (!media) return;
+        const play = () => { media.play().catch(() => {}); };
+        if (media.readyState >= media.HAVE_FUTURE_DATA) {
+            play();
+        } else {
+            media.addEventListener("canplay", play, { once: true });
+            return () => media.removeEventListener("canplay", play);
+        }
+    }, [ note.noteId, mediaRef ]);
+
+    return wrapped;
 }
 
 /** "Skip to previous/next sibling" control, styled like the other media buttons; renders nothing without siblings. */

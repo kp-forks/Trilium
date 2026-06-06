@@ -26,7 +26,7 @@ export default function AudioPreview({ note, noteContext }: { note: FNote, noteC
 
     useEffect(() => setError(false), [note.noteId]);
     const onError = useCallback(() => setError(true), []);
-    const siblingNavigation = useMediaSiblingNavigation(note, noteContext, "audio/");
+    const siblingNavigation = useMediaSiblingNavigation(note, noteContext, "audio/", audioRef);
 
     if (error) {
         return <NoItems icon="bx bx-volume-mute" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
