@@ -85,15 +85,17 @@ describe("ImageViewer", () => {
         await vi.waitFor(() => expect(wrapperClassList(container)?.contains("img-loaded")).toBe(true));
         expect(wrapperClassList(container)?.contains("img-loading-error")).toBe(false);
         expect(container.querySelector(".image-viewer-controls")).not.toBeNull();
+        expect(container.querySelector(".content-error-message")).toBeNull();
     });
 
-    it("tints the viewport red, keeping the image hidden, when decoding fails", async () => {
+    it("tints the viewport red and shows an error message, keeping the image hidden, when decoding fails", async () => {
         HTMLImageElement.prototype.decode = () => Promise.reject(new Error("decode failed"));
         const container = renderViewer({ src: "x" });
 
         await vi.waitFor(() => expect(wrapperClassList(container)?.contains("img-loading-error")).toBe(true));
         expect(wrapperClassList(container)?.contains("img-loaded")).toBe(false);
         expect(container.querySelector(".image-viewer-controls")).toBeNull();
+        expect(container.querySelector(".content-error-message")).not.toBeNull();
     });
 });
 

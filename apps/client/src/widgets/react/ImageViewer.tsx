@@ -6,6 +6,7 @@ import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from 
 
 import { t } from "../../services/i18n";
 import { isMobile } from "../../services/utils";
+import ContentErrorMessage from "./ContentErrorMessage";
 import { useStaticTooltip } from "./hooks";
 import { useImageViewerKeyboard } from "./image_viewer_keyboard";
 
@@ -147,6 +148,10 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
                     />
                 </TransformComponent>
             </TransformWrapper>
+
+            {loadingError && (
+                <ContentErrorMessage message={t("image_viewer.loading_error")} />
+            )}
 
             {!isMobile() && loaded && (
                 <div className="image-viewer-controls">
