@@ -77,6 +77,56 @@ export type ScriptDayjs = (date?: string | number | Date) => {
 
 type Func = ((...args: unknown[]) => unknown) | string;
 
+/** Instance shape of `BasicWidget` (subset) — the base for custom frontend widgets. */
+interface BasicWidget {
+    /**
+     * The widget's root jQuery element (assign in `doRender`, e.g. `this.$widget = $(TPL)`).
+     * Typed loosely because jQuery types can't be imported into this self-contained module;
+     * inside the editor it is a real `JQuery<HTMLElement>` so all jQuery methods work.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $widget: any;
+    /** Whether the widget should be shown for the current context. */
+    isEnabled(): boolean | null | undefined;
+    /** Builds `this.$widget`. Override to render the widget's DOM. */
+    doRender(): void;
+    /** Renders the widget and returns its root element. */
+    render(): unknown;
+    /** Tears down the widget; override to release resources. */
+    cleanup(): void;
+    /** Fluent builder: set the element id. Chainable. */
+    id(id: string): this;
+    /** Fluent builder: add a CSS class. Chainable. */
+    class(className: string): this;
+    /** Fluent builder: set an inline CSS property. Chainable. */
+    css(name: string, value: string): this;
+    /** Fluent builder: append child components. Chainable. */
+    child(...components: unknown[]): this;
+}
+
+/** Instance shape of `NoteContextAwareWidget` (subset) — reacts to the active note. */
+interface NoteContextAwareWidget extends BasicWidget {
+    /** The note currently shown in this widget's context. */
+    note: ScriptFNote | null;
+    /** The note context (split) this widget is attached to. */
+    noteContext?: ScriptNoteContext;
+    /** Called when the active note changes. Override to update the widget. */
+    refreshWithNote(note: ScriptFNote | null | undefined): void | Promise<void>;
+    /** Forces a refresh against the current note. */
+    refresh(): void | Promise<void>;
+}
+
+/** Instance shape of `RightPanelWidget` (subset) — a widget shown in the right sidebar. */
+interface RightPanelWidget extends NoteContextAwareWidget {
+    /** Title shown in the right-panel header. */
+    readonly widgetTitle: string;
+    /** Builds the panel body. Override to render the right-panel content. */
+    doRenderBody(): void | Promise<void>;
+}
+
+/** Constructor type allowing `class X extends api.Widget { … }`. */
+type WidgetClass<T> = new (...args: unknown[]) => T;
+
 /**
  * The `api` global available inside **frontend** script notes
  * (`application/javascript;env=frontend`).
@@ -109,12 +159,12 @@ export interface FrontendApi {
      */
     dayjs: ScriptDayjs;
 
-    /** Base class for right-panel widgets. */
-    RightPanelWidget: unknown;
-    /** Base class for note-context-aware widgets. */
-    NoteContextAwareWidget: unknown;
-    /** Base class for basic widgets. */
-    BasicWidget: unknown;
+    /** Base class for right-panel widgets — `class X extends api.RightPanelWidget { … }`. */
+    RightPanelWidget: WidgetClass<RightPanelWidget>;
+    /** Base class for note-context-aware widgets — `class X extends api.NoteContextAwareWidget { … }`. */
+    NoteContextAwareWidget: WidgetClass<NoteContextAwareWidget>;
+    /** Base class for basic widgets — `class X extends api.BasicWidget { … }`. */
+    BasicWidget: WidgetClass<BasicWidget>;
 
     /**
      * Activates note in the tree and in the note detail.
@@ -495,6 +545,51 @@ export interface ScriptNoteAndBranch {
 }
 
 /**
+ * Minimal Express `Request` surface available to **custom request handlers**
+ * (a subset of Express's `Request` — re-declared here to keep this module
+ * self-contained). Only the commonly used members are typed; the real object is
+ * a full Express request.
+ */
+export interface ScriptRequest {
+    /** Route/path parameters. */
+    params: Record<string, string>;
+    /** Parsed query-string parameters. */
+    query: Record<string, unknown>;
+    /** Parsed request body (requires a matching body parser). */
+    body: unknown;
+    /** Request headers (lower-cased names). */
+    headers: Record<string, string | string[] | undefined>;
+    /** HTTP method, e.g. "GET", "POST". */
+    method: string;
+    /** Request URL (path + query string). */
+    url: string;
+    /** Returns the value of the given (case-insensitive) header. */
+    get(headerName: string): string | undefined;
+}
+
+/**
+ * Minimal Express `Response` surface available to **custom request handlers**
+ * (a subset of Express's `Response`). Write the HTTP response through this
+ * object, e.g. `api.res.status(200).json({ ok: true })`.
+ */
+export interface ScriptResponse {
+    /** Sets the HTTP status code (chainable). */
+    status(code: number): ScriptResponse;
+    /** Sends the response body (string, Buffer, object, …) and ends the response. */
+    send(body?: unknown): ScriptResponse;
+    /** Sends a JSON response and ends the response. */
+    json(body: unknown): ScriptResponse;
+    /** Sets a response header (chainable). */
+    setHeader(name: string, value: string | string[]): ScriptResponse;
+    /** Sets a response header (Express alias of `setHeader`, chainable). */
+    set(field: string, value?: string): ScriptResponse;
+    /** Redirects to the given URL. */
+    redirect(url: string): void;
+    /** Ends the response without further data. */
+    end(): void;
+}
+
+/**
  * The `api` global available inside **backend** script notes
  * (`application/javascript;env=backend`). Runs server-side: no DOM, no jQuery.
  */
@@ -515,6 +610,25 @@ export interface BackendApi {
      * Entity whose event triggered this execution
      */
     originEntity?: unknown | null;
+
+    /**
+     * Express request object. **Only** available when the script runs as a custom
+     * request handler — i.e. a note with the `#customRequestHandler` label invoked
+     * via a `/custom/...` URL. `undefined` for every other backend script (events,
+     * manual runs, scheduled scripts, …), so guard with `if (api.req)` before use.
+     */
+    req?: ScriptRequest;
+    /**
+     * Express response object — write the HTTP response here, e.g.
+     * `api.res.status(200).json({ ok: true })`. **Only** available in custom
+     * request handlers; `undefined` otherwise.
+     */
+    res?: ScriptResponse;
+    /**
+     * The capture groups from the `#customRequestHandler` regex that matched this
+     * request's URL, in order. **Only** available in custom request handlers.
+     */
+    pathParams?: string[];
 
     /**
      * day.js library for date manipulation. See {@link https://day.js.org} for documentation

@@ -104,6 +104,17 @@ describe("script note diagnostics", () => {
         expect(codes).toContain(TS_UNKNOWN_PROPERTY);
     }, TIMEOUT);
 
+    it("allows extending api widget base classes (constructor types, not unknown)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "class MyWidget extends api.NoteContextAwareWidget {\n"
+            + "    doRender() { this.$widget = $('<div>'); }\n"
+            + "    async refreshWithNote(note) { this.$widget.text(note?.title ?? ''); }\n"
+            + "}"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
     it("parses JSX in render notes without nagging about intrinsic elements (TS7026)", async () => {
         // Minimal JSX support: intrinsic elements have no typing yet and fall back
         // to `any` — which must stay quiet rather than erroring on every tag.
@@ -174,6 +185,38 @@ describe("script note diagnostics", () => {
             "api.thisMethodDoesNotExist();\nconst el = <div/>;"
         );
         expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+});
+
+describe("backend custom request handler api (req/res/pathParams)", () => {
+    it("offers req, res and pathParams as backend api members", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_BACKEND, "api.|");
+        expect(names).toContain("req");
+        expect(names).toContain("res");
+        expect(names).toContain("pathParams");
+    }, TIMEOUT);
+
+    it("types the res object's methods (status/send/json), not unknown", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_BACKEND, "api.res?.|");
+        expect(names).toContain("status");
+        expect(names).toContain("send");
+        expect(names).toContain("json");
+    }, TIMEOUT);
+
+    it("accepts a chained res response and req access without errors", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const id = api.pathParams?.[0];\n"
+            + "api.res?.status(200).json({ id, method: api.req?.method });"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("does not expose req/res/pathParams to frontend scripts (server-only)", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_FRONTEND, "api.|");
+        expect(names).not.toContain("req");
+        expect(names).not.toContain("res");
+        expect(names).not.toContain("pathParams");
     }, TIMEOUT);
 });
 
