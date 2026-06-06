@@ -32,6 +32,11 @@ const COMPILER_OPTIONS = {
     // `target`/`lib` are filled in lazily once TypeScript is loaded (needs the ts enums).
     allowJs: true,
     checkJs: true,
+    // Script notes are loose JS — `@typescript/vfs` forces `strict: true`, which makes
+    // every untyped parameter a TS7006 ("implicitly has an 'any' type") error. Keep the
+    // useful semantic checks (unknown api members, wrong arg counts) but don't nag about
+    // missing type annotations.
+    noImplicitAny: false,
     // `@typescript/vfs` defaults moduleResolution to the legacy `node10`, which
     // TypeScript 6 rejects unless deprecations are explicitly silenced.
     ignoreDeprecations: "6.0"
@@ -104,4 +109,16 @@ export async function buildTypeCompletion(mime: string): Promise<TypeCompletion>
         ],
         source: tsAutocomplete()
     };
+}
+
+/**
+ * Returns the TypeScript semantic diagnostic codes the script-note language
+ * service reports for `code` under the given script MIME type, using the exact
+ * compiler options the editor uses. Intended for tests asserting which
+ * diagnostics are (and aren't) surfaced.
+ */
+export async function getScriptDiagnosticCodes(mime: string, code: string): Promise<number[]> {
+    const env = await createEnv(mime);
+    env.updateFile(SCRIPT_PATH, code.length ? code : " ");
+    return env.languageService.getSemanticDiagnostics(SCRIPT_PATH).map((d) => d.code);
 }
