@@ -1,4 +1,5 @@
 import { type AttributeRow, dayjs, formatLogMessage } from "@triliumnext/commons";
+import type { BackendApi as PublicBackendApi, ScriptBNote as PublicScriptBNote } from "@triliumnext/commons/src/lib/script_api.js";
 import AbstractBeccaEntity from "../becca/entities/abstract_becca_entity";
 import Becca from "../becca/becca-interface";
 import * as cheerio from "cheerio";
@@ -729,3 +730,16 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
 export default BackendScriptApi as any as {
     new(currentNote: BNote, apiParams: ApiParams): Api;
 };
+
+// --- Drift guards -----------------------------------------------------------
+// The public backend script API surface lives in @triliumnext/commons (self-
+// contained so it can feed the in-editor language service and the script-
+// deployer). These checks fail to compile — naming the offending member — if
+// that public surface claims an `api`/`BNote` member that has since been renamed
+// or removed here.
+type _MissingBackendApiMembers = Exclude<keyof PublicBackendApi, keyof Api>;
+type _MissingBNoteMembers = Exclude<keyof PublicScriptBNote, keyof BNote>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _backendApiDriftGuard: [_MissingBackendApiMembers] extends [never] ? true : _MissingBackendApiMembers = true;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _bnoteDriftGuard: [_MissingBNoteMembers] extends [never] ? true : _MissingBNoteMembers = true;

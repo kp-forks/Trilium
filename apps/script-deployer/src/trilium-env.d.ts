@@ -115,4 +115,4 @@ declare module "trilium:preact" {
  * Trilium injects this as a global.
  */
 // eslint-disable-next-line no-var
-declare var api: import("@triliumnext/server/src/services/backend_script_api").Api;
+declare var api: import("@triliumnext/commons/src/lib/script_api").BackendApi;

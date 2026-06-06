@@ -1,8 +1,6 @@
 import type { CompletionSource } from "@codemirror/autocomplete";
 import type { Extension } from "@codemirror/state";
 
-import backendApiDts from "./backend_api.js";
-
 /**
  * Full IntelliSense for backend/frontend script notes.
  *
@@ -104,8 +102,12 @@ async function createEnv(mime: string) {
         fsMap.set(JQUERY_DTS_PATH, jqueryGlobals);
         rootFiles.push(JQUERY_DTS_PATH);
     } else {
-        // Backend still uses the curated stub (migrating to the shared module next).
-        fsMap.set(API_GLOBALS_PATH, backendApiDts);
+        // Backend `api` types come from the same shared public surface in commons
+        // (single source of truth, drift-guarded). No jQuery/DOM server-side.
+        const apiTypes = (await import("../../../commons/src/lib/script_api.ts?raw")).default;
+        fsMap.set(API_TYPES_PATH, apiTypes);
+        fsMap.set(API_GLOBALS_PATH, `import type { BackendApi } from "./trilium-script-api";\ndeclare global {\n    // eslint-disable-next-line no-var\n    var api: BackendApi;\n}\n`);
+        rootFiles.push(API_TYPES_PATH);
     }
 
     if (mime === SCRIPT_MIME_JSX) {
@@ -220,4 +222,19 @@ export async function getScriptDiagnosticCodes(mime: string, code: string): Prom
     return diagnostics
         .map((d) => d.code)
         .filter((code) => !ignored.includes(code));
+}
+
+/**
+ * Returns the completion entry names the language service offers at `offset` in
+ * `code` for the given script MIME type — the same `getCompletionsAtPosition`
+ * call that backs the editor's `tsAutocomplete()` source. Intended for tests
+ * asserting which completions (api members, JSX elements/attributes, …) are
+ * surfaced.
+ */
+export async function getScriptCompletions(mime: string, code: string, offset: number): Promise<string[]> {
+    const env = await createEnv(mime);
+    const path = scriptPath(mime);
+    env.updateFile(path, code.length ? code : " ");
+    const completions = env.languageService.getCompletionsAtPosition(path, offset, {});
+    return completions?.entries.map((entry) => entry.name) ?? [];
 }

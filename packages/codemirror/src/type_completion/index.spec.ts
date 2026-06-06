@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND, SCRIPT_MIME_JSX } from "./index.js";
+import { getScriptCompletions, getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND, SCRIPT_MIME_JSX } from "./index.js";
+
+/** Returns completions at the `|` marker in `source` (the marker is stripped). */
+function completionsAtMarker(mime: string, source: string) {
+    const offset = source.indexOf("|");
+    return getScriptCompletions(mime, source.replace("|", ""), offset);
+}
 
 /** "Property 'x' does not exist on type 'y'." */
 const TS_UNKNOWN_PROPERTY = 2339;
 /** "Argument of type 'x' is not assignable to parameter of type 'y'." */
 const TS_ARGUMENT_NOT_ASSIGNABLE = 2345;
-/** "Type 'x' is not assignable to type 'y'." */
+/** "Type 'x' is not assignable to type 'y'." (also raised for a missing required JSX prop) */
 const TS_TYPE_NOT_ASSIGNABLE = 2322;
 /** "'await' expressions are only allowed at the top level of a file when that file is a module…" */
 const TS_TOP_LEVEL_AWAIT = 1375;
@@ -159,5 +165,79 @@ describe("script note diagnostics", () => {
             "api.thisMethodDoesNotExist();\nconst el = <div/>;"
         );
         expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+});
+
+describe("JSX autocompletion", () => {
+    it("offers intrinsic element names while typing a tag", async () => {
+        // A bare `<` is ambiguous (less-than operator); completing within an actual
+        // tag name puts the parser unambiguously in JSX-element context.
+        const names = await completionsAtMarker(SCRIPT_MIME_JSX, "const el = <div|></div>;");
+        expect(names).toContain("div");
+        expect(names).toContain("span");
+        expect(names).toContain("button");
+    }, TIMEOUT);
+
+    it("offers element attribute names inside an opening tag", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_JSX, "const el = <div |></div>;");
+        expect(names).toContain("className");
+        expect(names).toContain("tabIndex");
+        expect(names).toContain("onClick");
+    }, TIMEOUT);
+
+    it("offers api members inside JSX expressions", async () => {
+        const names = await completionsAtMarker(
+            SCRIPT_MIME_JSX,
+            "const title = api.|;\nconst el = <div/>;"
+        );
+        expect(names).toContain("showMessage");
+        expect(names).toContain("getNote");
+    }, TIMEOUT);
+
+    it("offers a trilium:preact component's own prop names", async () => {
+        const names = await completionsAtMarker(
+            SCRIPT_MIME_JSX,
+            "import { Admonition } from \"trilium:preact\";\nconst el = <Admonition |>x</Admonition>;"
+        );
+        expect(names).toContain("type");
+        expect(names).toContain("className");
+    }, TIMEOUT);
+
+    it("offers a component prop's literal values", async () => {
+        // Admonition's `type` is a union — completing the value offers the members.
+        const names = await completionsAtMarker(
+            SCRIPT_MIME_JSX,
+            "import { Admonition } from \"trilium:preact\";\nconst el = <Admonition type=\"|\">x</Admonition>;"
+        );
+        expect(names).toContain("warning");
+        expect(names).toContain("note");
+        expect(names).toContain("caution");
+    }, TIMEOUT);
+});
+
+describe("JSX component typing", () => {
+    it("accepts valid component props", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "import { Admonition } from \"trilium:preact\";\nexport default () => <Admonition type=\"note\">hi</Admonition>;"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("rejects an invalid component prop value (real prop types, not any)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "import { Admonition } from \"trilium:preact\";\nexport default () => <Admonition type=\"bogus\">hi</Admonition>;"
+        );
+        expect(codes).toContain(TS_TYPE_NOT_ASSIGNABLE);
+    }, TIMEOUT);
+
+    it("flags a missing required component prop", async () => {
+        // `Admonition` requires `type`; omitting it must error.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "import { Admonition } from \"trilium:preact\";\nexport default () => <Admonition>hi</Admonition>;"
+        );
+        expect(codes).toContain(TS_TYPE_NOT_ASSIGNABLE);
     }, TIMEOUT);
 });
