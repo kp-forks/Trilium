@@ -18,8 +18,6 @@ interface SiblingNavigatorProps {
     noteContext?: NoteContext;
     /** Match siblings of this type; defaults to the current note's type. */
     siblingType?: string;
-    /** Render inert buttons (e.g. when the viewer is reused for an attachment preview). */
-    disabled?: boolean;
     /** i18n translation key (resolved via `t()`) for the previous-button tooltip; receives the target note's title as `{{title}}`. E.g. `"image_navigation.previous"`. */
     previousTooltipI18nKey: string;
     /** i18n translation key (resolved via `t()`) for the next-button tooltip; receives the target note's title as `{{title}}`. E.g. `"image_navigation.next"`. */
@@ -104,14 +102,14 @@ export function useSiblingNavigation(note: FNote | undefined, noteContext: NoteC
  * parent), with a "<index>/<total>" indicator and tooltips naming the target note. The tooltip text
  * comes from the caller-provided i18n keys (`previousTooltipI18nKey`/`nextTooltipI18nKey`), so each note type can
  * phrase it ("Previous image: …", "Previous video: …"). Renders nothing when there is no sibling to
- * move between — unless `disabled`, which shows the buttons in an inert state.
+ * move between.
  */
-export default function SiblingNavigator({ note, noteContext, siblingType, disabled, previousTooltipI18nKey, nextTooltipI18nKey, keyboardTarget, extraPreviousKeys = NO_KEYS, extraNextKeys = NO_KEYS }: SiblingNavigatorProps) {
+export default function SiblingNavigator({ note, noteContext, siblingType, previousTooltipI18nKey, nextTooltipI18nKey, keyboardTarget, extraPreviousKeys = NO_KEYS, extraNextKeys = NO_KEYS }: SiblingNavigatorProps) {
     const previousRef = useRef<HTMLButtonElement>(null);
     const nextRef = useRef<HTMLButtonElement>(null);
 
     const navigation = useSiblingNavigation(note, noteContext, siblingType);
-    useSiblingKeyboard(disabled ? null : navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys);
+    useSiblingKeyboard(navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys);
 
     const previousText = navigation ? t(previousTooltipI18nKey, { title: navigation.previousTitle }) : "";
     const nextText = navigation ? t(nextTooltipI18nKey, { title: navigation.nextTitle }) : "";
@@ -121,22 +119,20 @@ export default function SiblingNavigator({ note, noteContext, siblingType, disab
     useStaticTooltip(previousRef, previousConfig);
     useStaticTooltip(nextRef, nextConfig);
 
-    if (isMobile() || (!disabled && !navigation)) return null;
+    if (isMobile() || !navigation) return null;
 
     return (
         <div className="sibling-navigator">
             <button
                 ref={previousRef}
                 className="icon-action bx bx-chevron-left"
-                disabled={disabled}
-                onClick={() => navigation?.navigatePrevious()}
+                onClick={() => navigation.navigatePrevious()}
             />
-            {navigation && <span className="sibling-navigator-index">{navigation.index}/{navigation.total}</span>}
+            <span className="sibling-navigator-index">{navigation.index}/{navigation.total}</span>
             <button
                 ref={nextRef}
                 className="icon-action bx bx-chevron-right"
-                disabled={disabled}
-                onClick={() => navigation?.navigateNext()}
+                onClick={() => navigation.navigateNext()}
             />
         </div>
     );
