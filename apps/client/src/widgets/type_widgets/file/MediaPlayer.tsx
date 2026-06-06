@@ -177,9 +177,10 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
 
     useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
 
-    // Bind the OS Media Session (which desktop/hardware media keys route to, rather than keydown) while
-    // this is the shown player. The handlers are global, so only ever release our own — otherwise the
-    // outgoing player's cleanup (switching media → media) would clobber the incoming player's handlers.
+    // Bind the OS Media Session (which desktop/hardware media keys route to, rather than keydown) and its
+    // metadata while this is the shown player. They're global, so only ever release our own — otherwise the
+    // outgoing player's cleanup (switching media → media) would clobber the incoming player's; the release
+    // also clears them so nothing lingers in the OS overlay after leaving media.
     const hasMediaNav = !!wrapped;
     const wrappedRef = useRef(wrapped);
     wrappedRef.current = wrapped;
@@ -193,12 +194,16 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
             if (mediaSessionOwner !== note.noteId) return;
             mediaSessionOwner = null;
             for (const action of OWNED_MEDIA_ACTIONS) setHandler(action, null);
+            mediaSession.metadata = null;
         };
         if (!isShown) {
             release();
             return;
         }
         mediaSessionOwner = note.noteId;
+        // Metadata makes Chromium reliably present the OS controls for video (it does so for audio by
+        // default) and shows the note title there.
+        if (typeof MediaMetadata !== "undefined") mediaSession.metadata = new MediaMetadata({ title: note.title });
         // Previous/next track navigate siblings (only when there are any); the live re-check covers the
         // window before a backgrounded player re-renders.
         setHandler("previoustrack", hasMediaNav ? () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigatePrevious(); } : null);
@@ -209,14 +214,7 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
         setHandler("seekto", (details) => { if (details.seekTime != null) seekTo(mediaRef, details.seekTime); });
         setHandler("stop", () => stopMedia(mediaRef));
         return release;
-    }, [ isShown, hasMediaNav, noteContext, note.noteId, mediaRef ]);
-
-    // Give the session metadata while shown: Chromium otherwise often won't present the OS media controls
-    // for video (it does for audio), and this also shows the note title in those controls.
-    useEffect(() => {
-        if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined" || !isShown) return;
-        navigator.mediaSession.metadata = new MediaMetadata({ title: note.title });
-    }, [ isShown, note.noteId, note.title ]);
+    }, [ isShown, hasMediaNav, noteContext, note.noteId, note.title, mediaRef ]);
 
     // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
     useEffect(() => {
