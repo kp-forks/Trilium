@@ -168,7 +168,7 @@ function noteSiblingProvider(note: FNote | undefined, noteContext: NoteContext |
     const parent = getParentFromNotePath(notePath);
     return {
         currentId: note?.noteId,
-        depsKey: `note:${notePath ?? ""}:${type ?? ""}`,
+        depsKey: `note:${parent?.parentPath ?? ""}:${type ?? ""}`,
         loadSiblings: async () => {
             if (!parent || !type) return [];
             const parentNote = await froca.getNote(parent.parentNoteId);
@@ -189,9 +189,11 @@ function noteSiblingProvider(note: FNote | undefined, noteContext: NoteContext |
 function attachmentSiblingProvider(note: FNote | undefined, noteContext: NoteContext | undefined, viewScope: ViewScope): SiblingNavigationProvider {
     const notePath = noteContext?.notePath;
     const attachmentId = viewScope.attachmentId;
+    // Key on the role rather than the id, so cycling same-role attachments doesn't re-fetch the list.
+    const role = note?.attachments?.find((attachment) => attachment.attachmentId === attachmentId)?.role;
     return {
         currentId: attachmentId,
-        depsKey: `attachment:${note?.noteId ?? ""}:${attachmentId ?? ""}`,
+        depsKey: `attachment:${note?.noteId ?? ""}:${role ?? attachmentId ?? ""}`,
         loadSiblings: async () => {
             if (!note) return [];
             return sameRoleAttachments(Array.from(await note.getAttachments()), attachmentId);
