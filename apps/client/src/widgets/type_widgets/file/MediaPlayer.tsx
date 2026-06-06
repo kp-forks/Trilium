@@ -136,8 +136,8 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
     );
 }
 
-/** Set when jumping to a sibling, so the media opened next auto-plays — like a playlist. */
-let autoPlayNextMedia = false;
+/** noteId of the sibling we're jumping to, so only *that* note auto-plays (a cancelled jump can't leak). */
+let autoPlayTargetNoteId: string | null = null;
 
 /** noteId of the player currently owning the (global) Media Session action handlers, if any. */
 let mediaSessionOwner: string | null = null;
@@ -171,8 +171,8 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
 
     const wrapped = navigation && isShown ? {
         ...navigation,
-        navigatePrevious: () => { autoPlayNextMedia = true; navigation.navigatePrevious(); },
-        navigateNext: () => { autoPlayNextMedia = true; navigation.navigateNext(); }
+        navigatePrevious: () => { autoPlayTargetNoteId = navigation.previousId; navigation.navigatePrevious(); },
+        navigateNext: () => { autoPlayTargetNoteId = navigation.nextId; navigation.navigateNext(); }
     } : null;
 
     useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
@@ -214,14 +214,14 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
     // Give the session metadata while shown: Chromium otherwise often won't present the OS media controls
     // for video (it does for audio), and this also shows the note title in those controls.
     useEffect(() => {
-        if (!("mediaSession" in navigator) || !isShown) return;
+        if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined" || !isShown) return;
         navigator.mediaSession.metadata = new MediaMetadata({ title: note.title });
     }, [ isShown, note.noteId, note.title ]);
 
     // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
     useEffect(() => {
-        if (!autoPlayNextMedia) return;
-        autoPlayNextMedia = false;
+        if (autoPlayTargetNoteId !== note.noteId) return;
+        autoPlayTargetNoteId = null;
         const media = mediaRef.current;
         if (!media) return;
         const play = () => { media.play().catch(() => {}); };
@@ -243,12 +243,13 @@ function isShownNote(noteContext: NoteContext | undefined, noteId: string): bool
 
 function seekBy(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, offset: number) {
     const media = mediaRef.current;
-    if (media) media.currentTime = Math.max(0, Math.min(media.duration, media.currentTime + offset));
+    // duration is NaN until metadata loads; setting currentTime to NaN throws.
+    if (media && Number.isFinite(media.duration)) media.currentTime = Math.max(0, Math.min(media.duration, media.currentTime + offset));
 }
 
 function seekTo(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, time: number) {
     const media = mediaRef.current;
-    if (media) media.currentTime = time;
+    if (media && Number.isFinite(time)) media.currentTime = time;
 }
 
 function stopMedia(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {

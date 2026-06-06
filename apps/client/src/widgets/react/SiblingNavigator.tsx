@@ -39,6 +39,8 @@ interface SiblingNavigatorProps {
 export interface SiblingNavigationState {
     index: number;
     total: number;
+    previousId: string;
+    nextId: string;
     previousTitle: string;
     nextTitle: string;
     navigatePrevious: () => void;
@@ -152,6 +154,8 @@ export function useSiblingNavigation(provider: SiblingNavigationProvider): Sibli
     return {
         index: navigation.index,
         total: navigation.total,
+        previousId: navigation.previous,
+        nextId: navigation.next,
         previousTitle: titleOf(navigation.previous),
         nextTitle: titleOf(navigation.next),
         navigatePrevious: () => navigateTo(navigation.previous),
@@ -173,7 +177,7 @@ export function noteSiblingProvider(note: FNote | undefined, noteContext: NoteCo
     const type = filter.type ?? note?.type;
     const { mimePrefix } = filter;
     const parent = getParentFromNotePath(notePath);
-    const matches = (sibling: FNote) => sibling.type === type && (!mimePrefix || sibling.mime.startsWith(mimePrefix));
+    const matches = (sibling: FNote) => sibling.type === type && (!mimePrefix || !!sibling.mime?.startsWith(mimePrefix));
     return {
         currentId: note?.noteId,
         depsKey: `note:${parent?.parentPath ?? ""}:${type ?? ""}:${mimePrefix ?? ""}`,
