@@ -9,7 +9,7 @@ import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
 import NoItems from "../../react/NoItems";
-import { LoopButton, MediaSiblingButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, useMediaSiblingNavigation, VolumeControl } from "./MediaPlayer";
+import { LoopButton, MediaSiblingButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
@@ -39,7 +39,7 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
     }, [togglePlayback]);
 
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
-    const siblingNavigation = useMediaSiblingNavigation(note, noteContext, "video/", videoRef);
+    const siblingNavigation = useMediaSessionController(note, noteContext, "video/", videoRef);
 
     if (error) {
         return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;

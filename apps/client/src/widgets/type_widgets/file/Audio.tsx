@@ -6,7 +6,7 @@ import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
-import { LoopButton, MediaSiblingButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, useMediaSiblingNavigation, VolumeControl } from "./MediaPlayer";
+import { LoopButton, MediaSiblingButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 export default function AudioPreview({ note, noteContext }: { note: FNote, noteContext?: NoteContext }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -26,7 +26,7 @@ export default function AudioPreview({ note, noteContext }: { note: FNote, noteC
 
     useEffect(() => setError(false), [note.noteId]);
     const onError = useCallback(() => setError(true), []);
-    const siblingNavigation = useMediaSiblingNavigation(note, noteContext, "audio/", audioRef);
+    const siblingNavigation = useMediaSessionController(note, noteContext, "audio/", audioRef);
 
     if (error) {
         return <NoItems icon="bx bx-volume-mute" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;

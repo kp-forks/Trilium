@@ -142,18 +142,29 @@ let autoPlayNextMedia = false;
 /** noteId of the player currently owning the (global) Media Session action handlers, if any. */
 let mediaSessionOwner: string | null = null;
 
+/** Seconds the OS seek-back/seek-forward jump, matching the player's rewind/fast-forward buttons. */
+const SEEK_BACK_SECONDS = 10;
+const SEEK_FORWARD_SECONDS = 30;
+
+/** Media Session actions this controller owns (and must release together) — distinct from play/pause/seek,
+ * which the browser binds to the media element on its own. */
+const OWNED_MEDIA_ACTIONS: MediaSessionAction[] = [ "previoustrack", "nexttrack", "seekbackward", "seekforward", "seekto", "stop" ];
+
 /**
- * Sibling navigation across the note's same-mime media siblings (e.g. all `video/` files in the parent),
- * with PageUp/PageDown wired to previous/next (Home/End and Space are left to the player). Jumping to a
- * sibling auto-plays it once loaded, like a playlist.
+ * Wires a media player to its surroundings: sibling navigation (returned, for the prev/next buttons) plus
+ * PageUp/PageDown, and the OS Media Session — previous/next track, seek (matching the −10s/+30s buttons),
+ * seek-to (scrubber) and stop, with the note title as metadata. Play/pause and basic seek are left to the
+ * browser's default binding on the element. Jumping to a sibling auto-plays it, like a playlist. Everything
+ * is scoped to the note actually shown in the active tab, so a cached background player stands down and
+ * can't hijack the global Media Session.
  */
-export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
+export function useMediaSessionController(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
 
     // The previous note's player can linger mounted (cached) in the background while its context still
-    // reports active, so gate everything — keyboard, media keys and buttons — on this note being the one
-    // actually shown in the active tab. Computed each render so it tracks navigation immediately; the
-    // events only force a re-render for cached players, which otherwise wouldn't re-evaluate.
+    // reports active, so gate everything on this note being the one actually shown in the active tab.
+    // Computed each render so it tracks navigation immediately; the events only force a re-render for
+    // cached players, which otherwise wouldn't re-evaluate.
     const [ , bumpOnNoteSwitch ] = useState(0);
     useTriliumEvents([ "activeContextChanged", "activeNoteChanged" ], () => bumpOnNoteSwitch((tick) => tick + 1));
     const isShown = isShownNote(noteContext, note.noteId);
@@ -166,9 +177,9 @@ export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext 
 
     useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
 
-    // Bind the OS media controls / hardware media keys (previous/next track) to navigation — desktop
-    // routes these to the (global) Media Session rather than to keydown. Gated on `wrapped`, with a
-    // live re-check inside the handler to cover the window before a backgrounded player re-renders.
+    // Bind the OS Media Session (which desktop/hardware media keys route to, rather than keydown) while
+    // this is the shown player. The handlers are global, so only ever release our own — otherwise the
+    // outgoing player's cleanup (switching media → media) would clobber the incoming player's handlers.
     const hasMediaNav = !!wrapped;
     const wrappedRef = useRef(wrapped);
     wrappedRef.current = wrapped;
@@ -178,23 +189,27 @@ export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext 
         const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
             try { mediaSession.setActionHandler(action, handler); } catch { /* action unsupported */ }
         };
-        // The handlers are global, so only ever release our own — otherwise the outgoing player's cleanup
-        // (when switching media → media) would clobber the handlers the incoming player just registered.
         const release = () => {
             if (mediaSessionOwner !== note.noteId) return;
             mediaSessionOwner = null;
-            setHandler("previoustrack", null);
-            setHandler("nexttrack", null);
+            for (const action of OWNED_MEDIA_ACTIONS) setHandler(action, null);
         };
-        if (!hasMediaNav) {
+        if (!isShown) {
             release();
             return;
         }
         mediaSessionOwner = note.noteId;
-        setHandler("previoustrack", () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigatePrevious(); });
-        setHandler("nexttrack", () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigateNext(); });
+        // Previous/next track navigate siblings (only when there are any); the live re-check covers the
+        // window before a backgrounded player re-renders.
+        setHandler("previoustrack", hasMediaNav ? () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigatePrevious(); } : null);
+        setHandler("nexttrack", hasMediaNav ? () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigateNext(); } : null);
+        // Seek/stop drive this player's element, using the same amounts as its rewind/fast-forward buttons.
+        setHandler("seekbackward", (details) => seekBy(mediaRef, -(details.seekOffset || SEEK_BACK_SECONDS)));
+        setHandler("seekforward", (details) => seekBy(mediaRef, details.seekOffset || SEEK_FORWARD_SECONDS));
+        setHandler("seekto", (details) => { if (details.seekTime != null) seekTo(mediaRef, details.seekTime); });
+        setHandler("stop", () => stopMedia(mediaRef));
         return release;
-    }, [ hasMediaNav, noteContext, note.noteId ]);
+    }, [ isShown, hasMediaNav, noteContext, note.noteId, mediaRef ]);
 
     // Give the session metadata while shown: Chromium otherwise often won't present the OS media controls
     // for video (it does for audio), and this also shows the note title in those controls.
@@ -224,6 +239,23 @@ export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext 
 /** Whether `noteId` is the note actually shown in the active tab (so a cached background player stands down). */
 function isShownNote(noteContext: NoteContext | undefined, noteId: string): boolean {
     return !!noteContext && noteContext.isActive() && appContext.tabManager.getActiveContextNoteId() === noteId;
+}
+
+function seekBy(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, offset: number) {
+    const media = mediaRef.current;
+    if (media) media.currentTime = Math.max(0, Math.min(media.duration, media.currentTime + offset));
+}
+
+function seekTo(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, time: number) {
+    const media = mediaRef.current;
+    if (media) media.currentTime = time;
+}
+
+function stopMedia(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
+    const media = mediaRef.current;
+    if (!media) return;
+    media.pause();
+    media.currentTime = 0;
 }
 
 /** "Skip to previous/next sibling" control, styled like the other media buttons; renders nothing without siblings. */
