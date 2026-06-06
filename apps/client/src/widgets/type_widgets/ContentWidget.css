@@ -6,31 +6,3 @@
     padding: 0;
     height: 100%;
 }
-
-/* Options pages: in-content page selector on the left, the page itself on the right. */
-.options-with-nav {
-    display: flex;
-    align-items: flex-start;
-}
-
-.options-with-nav > .note-detail-content-widget-content.options {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-.options-with-nav > .settings-navigation {
-    flex: 0 0 auto;
-    align-self: flex-start;
-    position: sticky;
-    top: 0;
-    width: 220px;
-    /* Align the first entry with the first card of the page (which has its own top padding/margin). */
-    padding: calc(15px + 1em) 12px 15px 15px;
-}
-
-/* On narrow screens the tree is the primary navigation, so the in-content list collapses away. */
-@media (max-width: 768px) {
-    .options-with-nav > .settings-navigation {
-        display: none;
-    }
-}
