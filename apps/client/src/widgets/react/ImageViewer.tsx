@@ -1,7 +1,7 @@
 import "./ImageViewer.css";
 
 import { Ref } from "preact";
-import { useCallback, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 import { t } from "../../services/i18n";
@@ -24,6 +24,8 @@ interface ImageViewerProps {
 const CRISP_NATIVE_SCALE = 4;
 /** Scale step applied per zoom-in/out button click (react-zoom-pan-pinch's zoomIn/zoomOut step). */
 const BUTTON_ZOOM_STEP = 0.5;
+/** Reveal the image even if `decode()` never settles (it can stall for some images, e.g. SVGs). */
+const REVEAL_FALLBACK_MS = 1000;
 
 /**
  * Derives the zoom-driven values: whether the image is pannable (zoomed past the fitted size),
@@ -45,6 +47,8 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     const [ panning, setPanning ] = useState(false);
     const [ largeZoom, setLargeZoom ] = useState(false);
     const [ zoomPercent, setZoomPercent ] = useState(0);
+    const [ loaded, setLoaded ] = useState(false);
+    const [ loadingError, setLoadingError ] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const zoomRef = useRef<ReactZoomPanPinchRef>(null);
@@ -59,11 +63,6 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
         else if (apiRef) (apiRef as { current: ReactZoomPanPinchRef | null }).current = instance;
     }, [ apiRef ]);
 
-    useImageViewerKeyboard(zoomRef, rootRef);
-    useStaticTooltip(zoomOutRef, { title: t("image_buttons.zoom_out"), placement: "top" });
-    useStaticTooltip(zoomLevelRef, { title: t("image_buttons.reset_zoom"), placement: "top" });
-    useStaticTooltip(zoomInRef, { title: t("image_buttons.zoom_in"), placement: "top" });
-
     // Recompute the cursor/rendering flags and the displayed (native-relative) zoom percentage.
     const updateZoomState = (scale: number) => {
         const { pannable: nextPannable, largeZoom: nextLargeZoom, nativeScale } = evaluateImageZoom(scale, imgRef.current);
@@ -73,11 +72,47 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
         if (percent !== zoomPercent) setZoomPercent(percent);
     };
 
+    // Reveal (or fail) the image, driven by decode() rather than the load event. decode() resolves once
+    // the bitmap is ready whether or not we observed `load`, so a fast/cached image that finishes before
+    // the handler is wired can't stay hidden forever (a race the load event has). Large images therefore
+    // fade in on real pixels; the timer guarantees we always reveal even if decode() never settles (it
+    // can, e.g. for some SVGs). Where decode() is unavailable, the load/error events take over.
+    useEffect(() => {
+        setLoaded(false);
+        setLoadingError(false);
+
+        const img = imgRef.current;
+        if (!img || typeof img.decode !== "function") return;
+
+        let settled = false;
+        const settle = (action: () => void) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            action();
+        };
+        const reveal = () => settle(() => {
+            setLoaded(true);
+            updateZoomState(zoomRef.current?.instance?.state?.scale ?? 1);
+        });
+        const timer = setTimeout(reveal, REVEAL_FALLBACK_MS);
+        img.decode().then(reveal, () => settle(() => setLoadingError(true)));
+
+        return () => settle(() => {});
+    }, [ src ]); // eslint-disable-line react-hooks/exhaustive-deps -- updateZoomState identity changes each render
+
+    useImageViewerKeyboard(zoomRef, rootRef);
+    useStaticTooltip(zoomOutRef, { title: t("image_buttons.zoom_out"), placement: "top" });
+    useStaticTooltip(zoomLevelRef, { title: t("image_buttons.reset_zoom"), placement: "top" });
+    useStaticTooltip(zoomInRef, { title: t("image_buttons.zoom_in"), placement: "top" });
+
     const wrapperClass = [
         "image-viewer-viewport",
         pannable && "pannable",
         panning && "panning",
-        largeZoom && "tn-image-large-zoom"
+        largeZoom && "tn-image-large-zoom",
+        loaded && "img-loaded",
+        loadingError && "img-loading-error"
     ].filter(Boolean).join(" ");
 
     return (
@@ -101,12 +136,19 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
                         className={imgClassName}
                         src={src}
                         alt={alt}
-                        onLoad={() => updateZoomState(zoomRef.current?.instance.state.scale ?? 1)}
+                        onLoad={() => {
+                            // The decode() effect handles the reveal where supported; this only covers the rare
+                            // environment without decode() (the effect bails there).
+                            if (typeof imgRef.current?.decode === "function") return;
+                            setLoaded(true);
+                            updateZoomState(zoomRef.current?.instance?.state?.scale ?? 1);
+                        }}
+                        onError={() => setLoadingError(true)}
                     />
                 </TransformComponent>
             </TransformWrapper>
 
-            {!isMobile() && (
+            {!isMobile() && loaded && (
                 <div className="image-viewer-controls">
                     <button
                         ref={zoomOutRef}
