@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND } from "./index.js";
+import { getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND, SCRIPT_MIME_JSX } from "./index.js";
 
 /** "Property 'x' does not exist on type 'y'." */
 const TS_UNKNOWN_PROPERTY = 2339;
@@ -90,6 +90,40 @@ describe("script note diagnostics", () => {
         const codes = await getScriptDiagnosticCodes(
             SCRIPT_MIME_FRONTEND,
             "api.thisMethodDoesNotExist();"
+        );
+        expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+
+    it("parses JSX in render notes without nagging about intrinsic elements (TS7026)", async () => {
+        // Minimal JSX support: intrinsic elements have no typing yet and fall back
+        // to `any` — which must stay quiet rather than erroring on every tag.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "const el = <div className=\"box\"><span>hi</span></div>;"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("resolves the trilium:preact import a render note uses (TS2307)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "import { h, Fragment } from \"trilium:preact\";\nexport default function App() { return <><div>hi</div></>; }"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("provides jQuery to JSX render notes (browser runtime, like frontend)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "const $widget = $('<div>'); $widget.addClass('active');"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("still surfaces real errors in JSX notes (unknown api member)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "api.thisMethodDoesNotExist();\nconst el = <div/>;"
         );
         expect(codes).toContain(TS_UNKNOWN_PROPERTY);
     }, TIMEOUT);

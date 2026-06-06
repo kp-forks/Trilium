@@ -2,7 +2,6 @@ import type { CompletionSource } from "@codemirror/autocomplete";
 import type { Extension } from "@codemirror/state";
 
 import backendApiDts from "./backend_api.js";
-import frontendApiDts from "./frontend_api.js";
 
 /**
  * Full IntelliSense for backend/frontend script notes.
@@ -20,14 +19,43 @@ import frontendApiDts from "./frontend_api.js";
 
 export const SCRIPT_MIME_FRONTEND = "application/javascript;env=frontend";
 export const SCRIPT_MIME_BACKEND = "application/javascript;env=backend";
+/**
+ * JSX render notes. They run in the browser like frontend scripts but are
+ * transpiled (sucrase) to Preact `h`/`Fragment` calls before execution — see
+ * `buildJsx` in `packages/trilium-core/src/services/script.ts`.
+ */
+export const SCRIPT_MIME_JSX = "text/jsx";
 
 export function isScriptMime(mime: string): boolean {
-    return mime === SCRIPT_MIME_FRONTEND || mime === SCRIPT_MIME_BACKEND;
+    return mime === SCRIPT_MIME_FRONTEND || mime === SCRIPT_MIME_BACKEND || mime === SCRIPT_MIME_JSX;
+}
+
+/** Frontend and JSX scripts share the browser runtime (frontend `api`, jQuery). */
+function isFrontendMime(mime: string): boolean {
+    return mime === SCRIPT_MIME_FRONTEND || mime === SCRIPT_MIME_JSX;
 }
 
 const SCRIPT_PATH = "/script.js";
-const API_DTS_PATH = "/trilium-api.d.ts";
+// TypeScript only parses JSX when the source file has a `.tsx`/`.jsx` extension,
+// so JSX notes get their own virtual path.
+const JSX_SCRIPT_PATH = "/script.tsx";
+/** Ambient file declaring the `api` global (a bridge for frontend, the curated stub for backend). */
+const API_GLOBALS_PATH = "/trilium-api.d.ts";
+/** The shared public API types module (frontend), injected verbatim from commons. */
+const API_TYPES_PATH = "/trilium-script-api.ts";
 const JQUERY_DTS_PATH = "/jquery-globals.d.ts";
+const TRILIUM_MODULES_DTS_PATH = "/trilium-modules.d.ts";
+
+/** The virtual source-file path used for a given script MIME type. */
+function scriptPath(mime: string): string {
+    return mime === SCRIPT_MIME_JSX ? JSX_SCRIPT_PATH : SCRIPT_PATH;
+}
+
+// Shorthand ambient declarations for the bare-specifier imports a JSX render
+// note uses (`import { h } from "trilium:preact"`). A bodyless `declare module`
+// types every import from them as `any` — enough to silence "cannot find
+// module" (TS2307) without (yet) vendoring real Preact types.
+const triliumModulesDts = `declare module "trilium:preact";\ndeclare module "trilium:api";\n`;
 
 const COMPILER_OPTIONS = {
     // `target`/`lib` are filled in lazily once TypeScript is loaded (needs the ts enums).
@@ -57,27 +85,51 @@ async function createEnv(mime: string) {
     // map so concurrent script notes (e.g. split view) don't clobber each
     // other's source file.
     const fsMap = new Map<string, string>(Object.entries(tsLibFiles));
-    fsMap.set(API_DTS_PATH, mime === SCRIPT_MIME_BACKEND ? backendApiDts : frontendApiDts);
+    const path = scriptPath(mime);
     // Seed with a space, never an empty string: `@typescript/vfs` treats an
     // empty root file as "not found" (TS6053) at program creation. `tsSync`
     // likewise pushes `doc || ' '`, so the script file is never empty at runtime.
-    fsMap.set(SCRIPT_PATH, " ");
+    fsMap.set(path, " ");
 
-    const rootFiles = [SCRIPT_PATH, API_DTS_PATH];
+    const rootFiles = [path, API_GLOBALS_PATH];
 
-    // Frontend scripts run in the browser with jQuery available as `$` / `jQuery`;
-    // backend scripts run server-side and have neither. Inject the vendored jQuery
-    // global declarations (lazily) only for frontend notes.
-    if (mime === SCRIPT_MIME_FRONTEND) {
+    if (isFrontendMime(mime)) {
+        // Frontend `api` types come from the shared, self-contained public surface
+        // in @triliumnext/commons (single source of truth, drift-guarded against the
+        // real implementation). Inject the module verbatim plus a bridge that exposes
+        // it as the `api` global. Relative `?raw` (not a bare specifier) so it lands
+        // in the lazy chunk and isn't gated by package `exports`.
+        const apiTypes = (await import("../../../commons/src/lib/script_api.ts?raw")).default;
+        fsMap.set(API_TYPES_PATH, apiTypes);
+        fsMap.set(API_GLOBALS_PATH, `import type { FrontendApi } from "./trilium-script-api";\ndeclare global {\n    // eslint-disable-next-line no-var\n    var api: FrontendApi;\n}\n`);
+        rootFiles.push(API_TYPES_PATH);
+
+        // Frontend scripts run in the browser with jQuery available as `$` / `jQuery`;
+        // backend scripts run server-side and have neither.
         const { jqueryGlobals } = await import("./jquery_types.js");
         fsMap.set(JQUERY_DTS_PATH, jqueryGlobals);
         rootFiles.push(JQUERY_DTS_PATH);
+    } else {
+        // Backend still uses the curated stub (migrating to the shared module next).
+        fsMap.set(API_GLOBALS_PATH, backendApiDts);
+    }
+
+    if (mime === SCRIPT_MIME_JSX) {
+        // JSX notes import Preact/the api via bare specifiers (`trilium:preact`,
+        // `trilium:api`); declare them so those imports resolve.
+        fsMap.set(TRILIUM_MODULES_DTS_PATH, triliumModulesDts);
+        rootFiles.push(TRILIUM_MODULES_DTS_PATH);
     }
 
     const compilerOptions = {
         ...COMPILER_OPTIONS,
         target: ts.ScriptTarget.ES2020,
-        lib: ["es2020", "dom"]
+        lib: ["es2020", "dom"],
+        // `Preserve` type-checks JSX without requiring a factory symbol in scope.
+        // Intrinsic elements fall back to `any` (no `JSX.IntrinsicElements`), which
+        // `noImplicitAny: false` keeps quiet — so JSX parses without nagging until
+        // real Preact types are vendored.
+        ...(mime === SCRIPT_MIME_JSX ? { jsx: ts.JsxEmit.Preserve } : {})
     };
 
     const system = createSystem(fsMap);
@@ -109,7 +161,7 @@ export async function buildTypeCompletion(mime: string): Promise<TypeCompletion>
 
     return {
         extensions: [
-            tsFacet.of({ env, path: SCRIPT_PATH }),
+            tsFacet.of({ env, path: scriptPath(mime) }),
             tsSync(),
             tsLinter({ diagnosticCodesToIgnore: ignoredDiagnosticCodes(mime) }),
             tsHover()
@@ -133,6 +185,13 @@ const TS_TOP_LEVEL_AWAIT = 1375;
  *    frontend scripts but genuinely invalid in backend ones.
  */
 function ignoredDiagnosticCodes(mime: string): number[] {
+    // JSX render notes are real modules (`import`/`export default`) transpiled by
+    // `buildJsx`, not wrapped in a function — so the function-body grammar
+    // exemptions below don't apply (top-level `return` is genuinely invalid, and
+    // top-level `await` is allowed natively in a module).
+    if (mime === SCRIPT_MIME_JSX) {
+        return [];
+    }
     const codes = [TS_RETURN_OUTSIDE_FUNCTION];
     if (mime === SCRIPT_MIME_FRONTEND) {
         codes.push(TS_TOP_LEVEL_AWAIT);
@@ -150,10 +209,11 @@ function ignoredDiagnosticCodes(mime: string): number[] {
  */
 export async function getScriptDiagnosticCodes(mime: string, code: string): Promise<number[]> {
     const env = await createEnv(mime);
-    env.updateFile(SCRIPT_PATH, code.length ? code : " ");
+    const path = scriptPath(mime);
+    env.updateFile(path, code.length ? code : " ");
     const diagnostics = [
-        ...env.languageService.getSyntacticDiagnostics(SCRIPT_PATH),
-        ...env.languageService.getSemanticDiagnostics(SCRIPT_PATH)
+        ...env.languageService.getSyntacticDiagnostics(path),
+        ...env.languageService.getSemanticDiagnostics(path)
     ];
     const ignored = ignoredDiagnosticCodes(mime);
     return diagnostics

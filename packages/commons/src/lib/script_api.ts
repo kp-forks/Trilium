@@ -1,0 +1,224 @@
+/**
+ * Public type surface for Trilium **user scripts** — the shape of the `api`
+ * global available inside frontend/backend script notes.
+ *
+ * This is the single source of truth for script API types, consumed by:
+ *  - the in-editor TypeScript language service (bundled into the script-note vfs),
+ *  - the `script-deployer` app (script authoring/typechecking),
+ * and kept honest against the real implementations by member-presence drift
+ * guards (see `frontend_script_api.ts` / `backend_script_api.ts`).
+ *
+ * It is intentionally **self-contained** (no imports): the real `Api` interfaces
+ * drag in the whole client/server graph (froca, widgets, jQuery, Vite `?raw`
+ * imports) which can't be resolved by a browser-based language service. These
+ * are faithful, decoupled re-declarations of the public surface — heavy or
+ * advanced members (widget base classes, editor instances, the Preact API) are
+ * typed as `unknown` rather than pulling in their real types.
+ */
+
+/** A label or relation attached to a note. */
+export interface ScriptAttribute {
+    attributeId: string;
+    type: "label" | "relation";
+    name: string;
+    value: string;
+    isInheritable: boolean;
+    isOwned: boolean;
+}
+
+/** A note as seen by frontend scripts (subset of the client's `FNote`). */
+export interface ScriptFNote {
+    noteId: string;
+    title: string;
+    type: string;
+    mime: string;
+    isProtected: boolean;
+    attributes: string[];
+    parents: string[];
+    children: string[];
+
+    getParentNotes(): ScriptFNote[];
+    getChildNotes(): Promise<ScriptFNote[]>;
+    getParentNoteIds(): string[];
+    getChildNoteIds(): string[];
+
+    getAttributes(type?: string, name?: string): ScriptAttribute[];
+    getOwnedAttributes(type?: string, name?: string): ScriptAttribute[];
+    getAttribute(type: string, name: string): ScriptAttribute | null;
+    hasAttribute(type: string, name: string): boolean;
+    getLabels(name?: string): ScriptAttribute[];
+    getLabelValue(name: string): string | null;
+    hasLabel(name: string): boolean;
+    getRelations(name?: string): ScriptAttribute[];
+    getRelationValue(name: string): string | null;
+    getRelationTarget(name: string): Promise<ScriptFNote | null>;
+
+    getContent(): Promise<string | Uint8Array>;
+    getIcon(): string;
+    isRoot(): boolean;
+}
+
+/** A split/tab context as seen by frontend scripts (subset of `NoteContext`). */
+export interface ScriptNoteContext {
+    ntxId: string | null;
+    note: ScriptFNote | null;
+    notePath: string | null;
+    getCodeEditor(): Promise<unknown>;
+    getTextEditor(): Promise<unknown>;
+}
+
+/** Minimal day.js surface (the real API exposes the full day.js factory). */
+export type ScriptDayjs = (date?: string | number | Date) => {
+    format(template?: string): string;
+    add(value: number, unit: string): ReturnType<ScriptDayjs>;
+    subtract(value: number, unit: string): ReturnType<ScriptDayjs>;
+    toDate(): Date;
+};
+
+type Func = ((...args: unknown[]) => unknown) | string;
+
+/**
+ * The `api` global available inside **frontend** script notes
+ * (`application/javascript;env=frontend`).
+ */
+export interface FrontendApi {
+    /** Container of all the rendered script content (jQuery element). */
+    $container: unknown;
+    /** Note where the script started executing (the event entrypoint). */
+    startNote: ScriptFNote;
+    /** Note where the script is currently executing. */
+    currentNote: ScriptFNote;
+    /** Entity whose event triggered this execution (a note, or null). */
+    originEntity: unknown | null;
+    /** day.js library for date manipulation. See https://day.js.org */
+    dayjs: ScriptDayjs;
+
+    /** Base class for right-panel widgets. */
+    RightPanelWidget: unknown;
+    /** Base class for note-context-aware widgets. */
+    NoteContextAwareWidget: unknown;
+    /** Base class for basic widgets. */
+    BasicWidget: unknown;
+
+    /** Activates a note in the tree and in the note detail. */
+    activateNote(notePath: string): Promise<void>;
+    /** Activates a newly created note, ensuring the frontend has fully synced first. */
+    activateNewNote(notePath: string): Promise<void>;
+    /** Opens a note in a new tab. */
+    openTabWithNote(notePath: string, activate: boolean): Promise<void>;
+    /** Opens a note in a new split. */
+    openSplitWithNote(notePath: string, activate: boolean): Promise<void>;
+
+    /** Executes the given (synchronous) function on the backend. */
+    runOnBackend(func: Func, params?: unknown[]): Promise<unknown>;
+    /** Executes the given async function on the backend with manual transaction handling. */
+    runAsyncOnBackendWithManualTransactionHandling(func: Func, params?: unknown[]): Promise<unknown>;
+
+    /** Powerful attribute/value search, e.g. "#dateModified =* MONTH AND #log". */
+    searchForNotes(searchString: string): Promise<ScriptFNote[]>;
+    /** Returns the first note matching the search, or null. */
+    searchForNote(searchString: string): Promise<ScriptFNote | null>;
+    /** Returns a note by its ID (loading it into the cache if needed), or null. */
+    getNote(noteId: string): Promise<ScriptFNote | null>;
+    /** Returns multiple notes by their IDs (bulk-fills the cache). */
+    getNotes(noteIds: string[], silentNotFoundError?: boolean): Promise<ScriptFNote[]>;
+    /** Refreshes the given notes in the frontend cache from the backend. */
+    reloadNotes(noteIds: string[]): Promise<void>;
+    /** The name identifying this particular Trilium instance, or null. */
+    getInstanceName(): string | null;
+
+    /** Adds plain text at the active editor's cursor. */
+    addTextToActiveContextEditor(text: string): void;
+    /** The active note loaded into the center pane. */
+    getActiveContextNote(): ScriptFNote;
+    /** The currently active/focused split in the current tab. */
+    getActiveContext(): ScriptNoteContext;
+    /** The main (left-most) context of the current tab. */
+    getActiveMainContext(): ScriptNoteContext;
+    /** All note contexts (splits) across all tabs. */
+    getNoteContexts(): ScriptNoteContext[];
+    /** All main contexts (one per tab). */
+    getMainNoteContexts(): ScriptNoteContext[];
+    /** The CKEditor instance of the active text note, if any. */
+    getActiveContextTextEditor(): Promise<unknown>;
+    /** The CodeMirror instance of the active code note, if any. */
+    getActiveContextCodeEditor(): Promise<unknown>;
+    /** The widget handling the active note detail. */
+    getActiveNoteDetailWidget(): Promise<unknown>;
+    /** The note path of the active note, or null. */
+    getActiveContextNotePath(): string | null;
+    /** The component owning the given DOM element (nearest parent in the DOM tree). */
+    getComponentByEl(el: HTMLElement): unknown;
+
+    /** Shows an info toast message to the user. */
+    showMessage(message: string, delay?: number): void;
+    /** Shows an error toast message to the user. */
+    showError(message: string, delay?: number): void;
+    /** Shows an info dialog to the user. */
+    showInfoDialog(message: string): Promise<void>;
+    /** Shows a confirm dialog; resolves true if the user confirmed. */
+    showConfirmDialog(message: string): Promise<boolean>;
+    /** Shows a prompt dialog; resolves to the user's answer. */
+    showPromptDialog(props: { title?: string; message?: string; defaultValue?: string }): Promise<string | null>;
+
+    /** Creates a note link (jQuery element) for the given note path. */
+    createLink(notePath: string, params?: Record<string, unknown>): unknown;
+    /** @deprecated use createLink() instead */
+    createNoteLink(notePath: string, params?: Record<string, unknown>): unknown;
+
+    /** Triggers a Trilium command (low-level). */
+    triggerCommand(name: string, data?: Record<string, unknown>): Promise<unknown>;
+    /** Triggers a Trilium event (low-level). */
+    triggerEvent(name: string, data?: Record<string, unknown>): Promise<unknown>;
+    /** Sets up a tooltip on the given jQuery element. */
+    setupElementTooltip(el: unknown): void;
+    /** Protects/unprotects a note. */
+    protectNote(noteId: string, protect: boolean): Promise<void>;
+    /** Protects/unprotects a whole subtree. */
+    protectSubTree(noteId: string, protect: boolean): Promise<void>;
+
+    /** Returns (creating if needed) the date-note for today. */
+    getTodayNote(): Promise<ScriptFNote>;
+    /** Returns (creating if needed) the day-note for the given "YYYY-MM-DD" date. */
+    getDayNote(date: string): Promise<ScriptFNote>;
+    /** Returns (creating if needed) the week's first day-note for the given date. */
+    getWeekFirstDayNote(date: string): Promise<ScriptFNote>;
+    /** Returns (creating if needed) the week-note for the given "YYYY-MM-DD" date. */
+    getWeekNote(date: string): Promise<ScriptFNote>;
+    /** Returns (creating if needed) the month-note for the given "YYYY-MM" month. */
+    getMonthNote(month: string): Promise<ScriptFNote>;
+    /** Returns (creating if needed) the quarter-note for the given date. */
+    getQuarterNote(date: string): Promise<ScriptFNote>;
+    /** Returns (creating if needed) the year-note for the given "YYYY" year. */
+    getYearNote(year: string): Promise<ScriptFNote>;
+
+    /** Hoists a note in the current tab ('root' effectively unhoists). */
+    setHoistedNoteId(noteId: string): void;
+    /** Binds a global keyboard shortcut (e.g. "ctrl+shift+a") to a handler. */
+    bindGlobalShortcut(keyboardShortcut: string, handler: () => void, namespace?: string): void;
+    /** Resolves once all backend → frontend synchronization is finished. */
+    waitUntilSynced(): Promise<unknown>;
+    /** Refreshes all open notes that include the given note. */
+    refreshIncludedNote(includedNoteId: string): void;
+
+    /** Returns a random (non-cryptographic) alphanumeric string of the given length. */
+    randomString(length: number): string;
+    /** Formats a size in bytes into a human-readable string. */
+    formatSize(size: number): string;
+    /** @deprecated use formatSize() */
+    formatNoteSize(size: number): string;
+    /** Formats a date as "YYYY-MM-DD". */
+    formatDateISO(date: Date): string;
+    /** Parses a date string into a Date. */
+    parseDate(str: string): Date;
+
+    /** Per-note log message buffers shown in the UI log pane. */
+    logMessages: Record<string, string[]>;
+    /** Per-note spaced-update handlers for the log pane. */
+    logSpacedUpdates: Record<string, unknown>;
+    /** Logs a message to the UI log pane (joins arguments like console.log). */
+    log(...args: unknown[]): void;
+
+    /** The Preact API surface (components, hooks) for render scripts. */
+    preact: unknown;
+}

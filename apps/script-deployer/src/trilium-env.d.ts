@@ -8,11 +8,14 @@
  * runtime — but providing declarations here gives us editor
  * intellisense and `tsc` checking for scripts in the `scripts/` dir.
  *
- * Types are pulled directly from the real implementations so they
- * stay in sync automatically.
+ * The frontend `api` surface comes from the shared public script-API module in
+ * `@triliumnext/commons` — the same definition the in-editor language service
+ * uses — so the deployer and the editor agree. It's kept honest against the real
+ * implementation by drift guards in `frontend_script_api.ts`. The Preact API is
+ * still pulled directly from its real implementation.
  */
 
-type FrontendApi = import("@triliumnext/client/src/services/frontend_script_api").Api;
+type FrontendApi = import("@triliumnext/commons/src/lib/script_api").FrontendApi;
 type PreactApi = typeof import("@triliumnext/client/src/services/frontend_script_api_preact").preactAPI;
 
 /**
