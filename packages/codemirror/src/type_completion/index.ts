@@ -37,35 +37,20 @@ const COMPILER_OPTIONS = {
     ignoreDeprecations: "6.0"
 };
 
-// The default TypeScript lib.*.d.ts map is large and identical for every
-// editor, so fetch it once per session and share it (cloned) across envs.
-let libMapPromise: Promise<Map<string, string>> | null = null;
-
-async function getLibMap(ts: typeof import("typescript")) {
-    const { createDefaultMapFromCDN } = await import("@typescript/vfs");
-    const compilerOptions = {
-        ...COMPILER_OPTIONS,
-        target: ts.ScriptTarget.ES2020,
-        lib: ["es2020", "dom"]
-    };
-    // cache=false: we keep the map in module memory instead of localStorage
-    // (Trilium avoids localStorage; in-memory sharing is enough per session).
-    return createDefaultMapFromCDN(compilerOptions, ts.version, false, ts);
-}
-
 async function createEnv(mime: string) {
     const tsModule = await import("typescript");
     const ts = tsModule.default ?? tsModule;
     const { createSystem, createVirtualTypeScriptEnvironment } = await import("@typescript/vfs");
+    // Dynamically imported so the bundled lib.*.d.ts text lands in the lazy
+    // script-editor chunk (loaded only when a script note opens), not the editor
+    // core used by every code note.
+    const { tsLibFiles } = await import("./ts_lib_files.js");
 
-    if (!libMapPromise) {
-        libMapPromise = getLibMap(ts);
-    }
-    const libMap = await libMapPromise;
-
-    // Each editor gets its own copy so concurrent script notes (e.g. split
-    // view) don't clobber each other's source file.
-    const fsMap = new Map(libMap);
+    // The TypeScript lib.*.d.ts files are bundled (see ./ts_lib_files) so the
+    // language service works offline — no CDN fetch. Each editor gets its own
+    // map so concurrent script notes (e.g. split view) don't clobber each
+    // other's source file.
+    const fsMap = new Map<string, string>(Object.entries(tsLibFiles));
     fsMap.set(API_DTS_PATH, mime === SCRIPT_MIME_BACKEND ? backendApiDts : frontendApiDts);
     // Seed with a space, never an empty string: `@typescript/vfs` treats an
     // empty root file as "not found" (TS6053) at program creation. `tsSync`
