@@ -45,6 +45,11 @@ describe("codeToSiblingDirection", () => {
         expect(codeToSiblingDirection("End", [], [])).toBe("last");
     });
 
+    it("maps the Previous/Next Track media keys", () => {
+        expect(codeToSiblingDirection("MediaTrackPrevious", [], [])).toBe("previous");
+        expect(codeToSiblingDirection("MediaTrackNext", [], [])).toBe("next");
+    });
+
     it("honors caller-provided extra keys (e.g. the image viewer's Backspace/Space)", () => {
         expect(codeToSiblingDirection("Backspace", [ "Backspace" ], [ "Space" ])).toBe("previous");
         expect(codeToSiblingDirection("Space", [ "Backspace" ], [ "Space" ])).toBe("next");

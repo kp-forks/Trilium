@@ -1,13 +1,15 @@
 import "./MediaPlayer.css";
 
 import { RefObject } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
+import appContext from "../../../components/app_context";
 import type NoteContext from "../../../components/note_context";
 import type FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
+import { useTriliumEvents } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import { noteSiblingProvider, type SiblingNavigationState, useSiblingKeyboard, useSiblingNavigation } from "../../react/SiblingNavigator";
 
@@ -137,6 +139,9 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
 /** Set when jumping to a sibling, so the media opened next auto-plays — like a playlist. */
 let autoPlayNextMedia = false;
 
+/** noteId of the player currently owning the (global) Media Session action handlers, if any. */
+let mediaSessionOwner: string | null = null;
+
 /**
  * Sibling navigation across the note's same-mime media siblings (e.g. all `video/` files in the parent),
  * with PageUp/PageDown wired to previous/next (Home/End and Space are left to the player). Jumping to a
@@ -144,13 +149,59 @@ let autoPlayNextMedia = false;
  */
 export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
-    const wrapped = navigation && {
+
+    // The previous note's player can linger mounted (cached) in the background while its context still
+    // reports active, so gate everything — keyboard, media keys and buttons — on this note being the one
+    // actually shown in the active tab. Computed each render so it tracks navigation immediately; the
+    // events only force a re-render for cached players, which otherwise wouldn't re-evaluate.
+    const [ , bumpOnNoteSwitch ] = useState(0);
+    useTriliumEvents([ "activeContextChanged", "activeNoteChanged" ], () => bumpOnNoteSwitch((tick) => tick + 1));
+    const isShown = isShownNote(noteContext, note.noteId);
+
+    const wrapped = navigation && isShown ? {
         ...navigation,
         navigatePrevious: () => { autoPlayNextMedia = true; navigation.navigatePrevious(); },
         navigateNext: () => { autoPlayNextMedia = true; navigation.navigateNext(); }
-    };
+    } : null;
 
     useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
+
+    // Bind the OS media controls / hardware media keys (previous/next track) to navigation — desktop
+    // routes these to the (global) Media Session rather than to keydown. Gated on `wrapped`, with a
+    // live re-check inside the handler to cover the window before a backgrounded player re-renders.
+    const hasMediaNav = !!wrapped;
+    const wrappedRef = useRef(wrapped);
+    wrappedRef.current = wrapped;
+    useEffect(() => {
+        if (!("mediaSession" in navigator)) return;
+        const mediaSession = navigator.mediaSession;
+        const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+            try { mediaSession.setActionHandler(action, handler); } catch { /* action unsupported */ }
+        };
+        // The handlers are global, so only ever release our own — otherwise the outgoing player's cleanup
+        // (when switching media → media) would clobber the handlers the incoming player just registered.
+        const release = () => {
+            if (mediaSessionOwner !== note.noteId) return;
+            mediaSessionOwner = null;
+            setHandler("previoustrack", null);
+            setHandler("nexttrack", null);
+        };
+        if (!hasMediaNav) {
+            release();
+            return;
+        }
+        mediaSessionOwner = note.noteId;
+        setHandler("previoustrack", () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigatePrevious(); });
+        setHandler("nexttrack", () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigateNext(); });
+        return release;
+    }, [ hasMediaNav, noteContext, note.noteId ]);
+
+    // Give the session metadata while shown: Chromium otherwise often won't present the OS media controls
+    // for video (it does for audio), and this also shows the note title in those controls.
+    useEffect(() => {
+        if (!("mediaSession" in navigator) || !isShown) return;
+        navigator.mediaSession.metadata = new MediaMetadata({ title: note.title });
+    }, [ isShown, note.noteId, note.title ]);
 
     // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
     useEffect(() => {
@@ -168,6 +219,11 @@ export function useMediaSiblingNavigation(note: FNote, noteContext: NoteContext 
     }, [ note.noteId, mediaRef ]);
 
     return wrapped;
+}
+
+/** Whether `noteId` is the note actually shown in the active tab (so a cached background player stands down). */
+function isShownNote(noteContext: NoteContext | undefined, noteId: string): boolean {
+    return !!noteContext && noteContext.isActive() && appContext.tabManager.getActiveContextNoteId() === noteId;
 }
 
 /** "Skip to previous/next sibling" control, styled like the other media buttons; renders nothing without siblings. */
