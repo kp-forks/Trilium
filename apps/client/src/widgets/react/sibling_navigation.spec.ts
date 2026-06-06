@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isInteractiveTarget, isTextEntryTarget } from "./sibling_navigation";
+import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isInteractiveTarget, isTextEntryTarget, sameRoleAttachments } from "./sibling_navigation";
 
 describe("getParentFromNotePath", () => {
     it("splits the in-tab path into parent path + parent note id", () => {
@@ -81,5 +81,24 @@ describe("isInteractiveTarget", () => {
         expect(isInteractiveTarget({ tagName: "DIV", getAttribute: () => null })).toBe(false);
         expect(isInteractiveTarget({ tagName: "IMG" })).toBe(false);
         expect(isInteractiveTarget(null)).toBe(false);
+    });
+});
+
+describe("sameRoleAttachments", () => {
+    const attachments = [
+        { attachmentId: "a", role: "image", title: "A" },
+        { attachmentId: "b", role: "file", title: "B" },
+        { attachmentId: "c", role: "image", title: "C" }
+    ];
+
+    it("keeps only attachments sharing the current one's role, in order, as { id, title }", () => {
+        expect(sameRoleAttachments(attachments, "a")).toEqual([ { id: "a", title: "A" }, { id: "c", title: "C" } ]);
+        expect(sameRoleAttachments(attachments, "b")).toEqual([ { id: "b", title: "B" } ]);
+    });
+
+    it("returns empty when the current attachment is absent or unset", () => {
+        expect(sameRoleAttachments(attachments, "x")).toEqual([]);
+        expect(sameRoleAttachments(attachments, undefined)).toEqual([]);
+        expect(sameRoleAttachments([], "a")).toEqual([]);
     });
 });

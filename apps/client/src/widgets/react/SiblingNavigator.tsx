@@ -7,20 +7,24 @@ import type NoteContext from "../../components/note_context";
 import type FNote from "../../entities/fnote";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
+import type { ViewScope } from "../../services/link";
+import type LoadResults from "../../services/load_results";
 import { isMobile } from "../../services/utils";
 import { useStaticTooltip, useTriliumEvent } from "./hooks";
-import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isInteractiveTarget, isTextEntryTarget } from "./sibling_navigation";
+import { codeToSiblingDirection, getParentFromNotePath, getSiblingNavigation, isInteractiveTarget, isTextEntryTarget, sameRoleAttachments } from "./sibling_navigation";
 
 const NO_KEYS: readonly string[] = [];
 
 interface SiblingNavigatorProps {
     note?: FNote;
     noteContext?: NoteContext;
-    /** Match siblings of this type; defaults to the current note's type. */
+    /** When it carries an `attachmentId`, navigation operates over the note's attachments instead of its siblings. */
+    viewScope?: ViewScope;
+    /** For note siblings, match this type; defaults to the current note's type. (Ignored for attachments.) */
     siblingType?: string;
-    /** i18n translation key (resolved via `t()`) for the previous-button tooltip; receives the target note's title as `{{title}}`. E.g. `"image_navigation.previous"`. */
+    /** i18n translation key (resolved via `t()`) for the previous-button tooltip; receives the target's title as `{{title}}`. E.g. `"image_navigation.previous"`. */
     previousTooltipI18nKey: string;
-    /** i18n translation key (resolved via `t()`) for the next-button tooltip; receives the target note's title as `{{title}}`. E.g. `"image_navigation.next"`. */
+    /** i18n translation key (resolved via `t()`) for the next-button tooltip; receives the target's title as `{{title}}`. E.g. `"image_navigation.next"`. */
     nextTooltipI18nKey: string;
     /**
      * Optional element to scope keyboard navigation to: keys act only while focus is inside it. When
@@ -44,81 +48,43 @@ interface SiblingNavigationState {
 }
 
 /**
- * Computes prev/next navigation among the current note's same-type siblings within the parent of the
- * current tab (clone-aware), exposing the target notes' titles. Pass `siblingType` to match a different
- * type. Reusable for any note type; returns null when there is nothing to navigate. Served from froca.
+ * The iterator behind sibling navigation: where the ordered siblings come from, which one is current,
+ * how to move to one, and which entity changes should refresh the list. Swapping it switches navigation
+ * between notes and attachments — see {@link noteSiblingProvider} / {@link attachmentSiblingProvider}.
  */
-export function useSiblingNavigation(note: FNote | undefined, noteContext: NoteContext | undefined, siblingType?: string): SiblingNavigationState | null {
-    const notePath = noteContext?.notePath;
-    const type = siblingType ?? note?.type;
-    const [ siblings, setSiblings ] = useState<{ noteId: string; title: string }[]>([]);
-    const [ refreshCounter, setRefreshCounter ] = useState(0);
-
-    useEffect(() => {
-        const parent = getParentFromNotePath(notePath);
-        if (!parent || !type) {
-            setSiblings([]);
-            return;
-        }
-
-        let active = true;
-        froca.getNote(parent.parentNoteId)
-            .then((parentNote) => parentNote?.getChildNotes() ?? [])
-            .then((children) => {
-                if (active) setSiblings(children.filter((child) => child.type === type).map((child) => ({ noteId: child.noteId, title: child.title })));
-            })
-            .catch(() => { if (active) setSiblings([]); });
-        return () => { active = false; };
-    }, [ notePath, type, refreshCounter ]);
-
-    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
-        const parent = getParentFromNotePath(notePath);
-        if (!parent) return;
-        const branchesChanged = loadResults.getBranchRows().some((branch) => branch.parentNoteId === parent.parentNoteId);
-        const siblingChanged = loadResults.getNoteIds().some((noteId) => siblings.some((sibling) => sibling.noteId === noteId));
-        if (branchesChanged || siblingChanged) setRefreshCounter((counter) => counter + 1);
-    });
-
-    // froca replaces every cached FNote on a full reload (e.g. a protected-session unlock), so re-fetch
-    // to refresh the sibling titles held as plain strings in state.
-    useTriliumEvent("frocaReloaded", () => setRefreshCounter((counter) => counter + 1));
-
-    const parent = getParentFromNotePath(notePath);
-    if (!note || !parent) return null;
-    const navigation = getSiblingNavigation(siblings.map((sibling) => sibling.noteId), note.noteId);
-    if (!navigation) return null;
-
-    const titleOf = (noteId: string) => siblings.find((sibling) => sibling.noteId === noteId)?.title ?? "";
-    const navigateTo = (noteId: string) => void noteContext?.setNote(`${parent.parentPath}/${noteId}`);
-    return {
-        index: navigation.index,
-        total: navigation.total,
-        previousTitle: titleOf(navigation.previous),
-        nextTitle: titleOf(navigation.next),
-        navigatePrevious: () => navigateTo(navigation.previous),
-        navigateNext: () => navigateTo(navigation.next),
-        navigateFirst: () => navigateTo(navigation.first),
-        navigateLast: () => navigateTo(navigation.last)
-    };
+export interface SiblingNavigationProvider {
+    /** Id of the item currently shown (a noteId or attachmentId); undefined when there is nothing to navigate. */
+    currentId: string | undefined;
+    /** Changes whenever the loaded collection or current item changes; used as the load effect's key. */
+    depsKey: string;
+    /** Loads the ordered siblings (including the current item) as `{ id, title }`. */
+    loadSiblings(): Promise<{ id: string; title: string }[]>;
+    /** Navigates the current tab to the sibling with the given id. */
+    navigateTo(id: string): void;
+    /** Whether an `entitiesReloaded` event touches this collection (given the currently-loaded ids). */
+    shouldRefresh(loadResults: LoadResults, currentSiblingIds: string[]): boolean;
 }
 
 /**
- * Floating previous/next navigation between a note's same-type siblings (within the current tab's
- * parent), with a "<index>/<total>" indicator and tooltips naming the target note. The tooltip text
- * comes from the caller-provided i18n keys (`previousTooltipI18nKey`/`nextTooltipI18nKey`), so each note type can
- * phrase it ("Previous image: …", "Previous video: …"). Renders nothing when there is no sibling to
- * move between.
+ * Floating previous/next navigation between a note's same-type siblings — or, when shown over a single
+ * attachment, the note's same-role attachments — with a "<index>/<total>" indicator and tooltips naming
+ * the target. The iterator is chosen automatically from the view (no caller wiring). Tooltip text comes
+ * from the caller-provided i18n keys. Renders nothing when there is no sibling to move between.
  */
-export default function SiblingNavigator({ note, noteContext, siblingType, previousTooltipI18nKey, nextTooltipI18nKey, keyboardTarget, extraPreviousKeys = NO_KEYS, extraNextKeys = NO_KEYS }: SiblingNavigatorProps) {
+export default function SiblingNavigator({ note, noteContext, viewScope, siblingType, previousTooltipI18nKey, nextTooltipI18nKey, keyboardTarget, extraPreviousKeys = NO_KEYS, extraNextKeys = NO_KEYS }: SiblingNavigatorProps) {
     const previousRef = useRef<HTMLButtonElement>(null);
     const nextRef = useRef<HTMLButtonElement>(null);
 
-    const navigation = useSiblingNavigation(note, noteContext, siblingType);
+    // Viewing a single attachment → cycle the note's attachments; otherwise its note siblings.
+    const provider = viewScope?.attachmentId
+        ? attachmentSiblingProvider(note, noteContext, viewScope)
+        : noteSiblingProvider(note, noteContext, siblingType);
+    const navigation = useSiblingNavigation(provider);
     useSiblingKeyboard(navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys);
 
     const previousText = navigation ? t(previousTooltipI18nKey, { title: navigation.previousTitle }) : "";
     const nextText = navigation ? t(nextTooltipI18nKey, { title: navigation.nextTitle }) : "";
-    // Memoize so the bootstrap tooltip is only recreated when the target note's name actually changes.
+    // Memoize so the bootstrap tooltip is only recreated when the target's name actually changes.
     const previousConfig = useMemo(() => ({ title: previousText, placement: "bottom" as const }), [ previousText ]);
     const nextConfig = useMemo(() => ({ title: nextText, placement: "bottom" as const }), [ nextText ]);
     useStaticTooltip(previousRef, previousConfig);
@@ -145,6 +111,96 @@ export default function SiblingNavigator({ note, noteContext, siblingType, previ
             />
         </div>
     );
+}
+
+/**
+ * Generic sibling-navigation engine over a {@link SiblingNavigationProvider}: loads the siblings, keeps
+ * them fresh across entity/froca reloads, and exposes the current index/total plus prev/next/first/last
+ * navigation. Returns null when there is nothing to navigate.
+ */
+export function useSiblingNavigation(provider: SiblingNavigationProvider): SiblingNavigationState | null {
+    const [ siblings, setSiblings ] = useState<{ id: string; title: string }[]>([]);
+    const [ refreshCounter, setRefreshCounter ] = useState(0);
+    const providerRef = useRef(provider);
+    providerRef.current = provider;
+
+    const { currentId, depsKey } = provider;
+
+    useEffect(() => {
+        let active = true;
+        providerRef.current.loadSiblings()
+            .then((loaded) => { if (active) setSiblings(loaded); })
+            .catch(() => { if (active) setSiblings([]); });
+        return () => { active = false; };
+    }, [ depsKey, refreshCounter ]);
+
+    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
+        if (providerRef.current.shouldRefresh(loadResults, siblings.map((sibling) => sibling.id))) {
+            setRefreshCounter((counter) => counter + 1);
+        }
+    });
+
+    // froca replaces every cached entity on a full reload (e.g. a protected-session unlock), refreshing titles.
+    useTriliumEvent("frocaReloaded", () => setRefreshCounter((counter) => counter + 1));
+
+    if (!currentId) return null;
+    const navigation = getSiblingNavigation(siblings.map((sibling) => sibling.id), currentId);
+    if (!navigation) return null;
+
+    const titleOf = (id: string) => siblings.find((sibling) => sibling.id === id)?.title ?? "";
+    const navigateTo = (id: string) => providerRef.current.navigateTo(id);
+    return {
+        index: navigation.index,
+        total: navigation.total,
+        previousTitle: titleOf(navigation.previous),
+        nextTitle: titleOf(navigation.next),
+        navigatePrevious: () => navigateTo(navigation.previous),
+        navigateNext: () => navigateTo(navigation.next),
+        navigateFirst: () => navigateTo(navigation.first),
+        navigateLast: () => navigateTo(navigation.last)
+    };
+}
+
+/** Iterator over the current note's same-type siblings within the parent of the current tab (clone-aware). */
+function noteSiblingProvider(note: FNote | undefined, noteContext: NoteContext | undefined, siblingType: string | undefined): SiblingNavigationProvider {
+    const notePath = noteContext?.notePath;
+    const type = siblingType ?? note?.type;
+    const parent = getParentFromNotePath(notePath);
+    return {
+        currentId: note?.noteId,
+        depsKey: `note:${parent?.parentPath ?? ""}:${type ?? ""}`,
+        loadSiblings: async () => {
+            if (!parent || !type) return [];
+            const parentNote = await froca.getNote(parent.parentNoteId);
+            const children = (await parentNote?.getChildNotes()) ?? [];
+            return children.filter((child) => child.type === type).map((child) => ({ id: child.noteId, title: child.title }));
+        },
+        navigateTo: (id) => { if (parent) void noteContext?.setNote(`${parent.parentPath}/${id}`); },
+        shouldRefresh: (loadResults, currentSiblingIds) => {
+            if (!parent) return false;
+            const branchesChanged = loadResults.getBranchRows().some((branch) => branch.parentNoteId === parent.parentNoteId);
+            const siblingChanged = loadResults.getNoteIds().some((noteId) => currentSiblingIds.includes(noteId));
+            return branchesChanged || siblingChanged;
+        }
+    };
+}
+
+/** Iterator over the note's same-role attachments, with the role taken from the currently-shown attachment. */
+function attachmentSiblingProvider(note: FNote | undefined, noteContext: NoteContext | undefined, viewScope: ViewScope): SiblingNavigationProvider {
+    const notePath = noteContext?.notePath;
+    const attachmentId = viewScope.attachmentId;
+    // Key on the role rather than the id, so cycling same-role attachments doesn't re-fetch the list.
+    const role = note?.attachments?.find((attachment) => attachment.attachmentId === attachmentId)?.role;
+    return {
+        currentId: attachmentId,
+        depsKey: `attachment:${note?.noteId ?? ""}:${role ?? attachmentId ?? ""}`,
+        loadSiblings: async () => {
+            if (!note) return [];
+            return sameRoleAttachments(Array.from(await note.getAttachments()), attachmentId);
+        },
+        navigateTo: (id) => { if (notePath) void noteContext?.setNote(notePath, { viewScope: { ...viewScope, attachmentId: id } }); },
+        shouldRefresh: (loadResults) => !!note && loadResults.getAttachmentRows().some((row) => row.ownerId === note.noteId)
+    };
 }
 
 /**
