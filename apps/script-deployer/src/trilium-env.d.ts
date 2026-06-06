@@ -16,7 +16,6 @@
  */
 
 type FrontendApi = import("@triliumnext/commons/src/lib/script_api").FrontendApi;
-type PreactApi = typeof import("@triliumnext/client/src/services/frontend_script_api_preact").preactAPI;
 
 /**
  * `trilium:api` — destructured members of the frontend script API.
@@ -52,61 +51,19 @@ declare module "trilium:api" {
 }
 
 /**
- * `trilium:preact` — destructured members of the Preact API surface.
+ * `trilium:preact` — the Preact API surface.
  *
- * At runtime the server rewrites `require("trilium:preact")` to
- * `api.preact`, which is the frozen preactAPI object. Scripts
- * destructure from it: `import { useState, h } from "trilium:preact"`.
+ * At runtime the server rewrites `require("trilium:preact")` to `api.preact`
+ * (the frozen `preactAPI` object). Scripts destructure from it:
+ * `import { useState, h, Button } from "trilium:preact"`. Preact core + hooks
+ * come straight from the real `preact` package; the Trilium components and
+ * `defineWidget` come from the shared, drift-guarded surface in commons — the
+ * same definition the in-editor language service uses.
  */
 declare module "trilium:preact" {
-    export const {
-        // Core
-        h,
-        Fragment,
-        createContext,
-        defineWidget,
-        defineLauncherWidget,
-
-        // Hooks
-        useCallback,
-        useContext,
-        useEffect,
-        useLayoutEffect,
-        useMemo,
-        useReducer,
-        useRef,
-        useState,
-
-        // Built-in components
-        ActionButton,
-        Admonition,
-        Button,
-        CKEditor,
-        Collapsible,
-        Dropdown,
-        FormCheckbox,
-        FormDropdownList,
-        FormFileUploadButton,
-        FormFileUploadActionButton,
-        FormGroup,
-        FormListItem,
-        FormDropdownDivider,
-        FormDropdownSubmenu,
-        FormRadioGroup,
-        FormText,
-        FormTextArea,
-        FormTextBox,
-        FormToggle,
-        Icon,
-        LinkButton,
-        LoadingSpinner,
-        Modal,
-        NoteAutocomplete,
-        NoteLink,
-        RawHtml,
-        Slider,
-        RightPanelWidget,
-    }: PreactApi;
+    export * from "preact";
+    export * from "preact/hooks";
+    export * from "@triliumnext/commons/src/lib/script_api_preact";
 }
 
 /**

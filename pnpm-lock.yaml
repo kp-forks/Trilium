@@ -1550,6 +1550,10 @@ importers:
       numfmt:
         specifier: 3.2.6
         version: 3.2.6
+    devDependencies:
+      preact:
+        specifier: 10.29.2
+        version: 10.29.2
 
   packages/express-partial-content: {}
 
