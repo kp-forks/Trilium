@@ -3,6 +3,7 @@ import { LOCALES } from "@triliumnext/commons";
 import { EventData } from "../../components/app_context.js";
 import { getEnabledExperimentalFeatureIds } from "../../services/experimental_features.js";
 import options from "../../services/options.js";
+import { applyThemeFromOptions, updateColorSchemeClasses } from "../../services/theme.js";
 import utils, { isIOS, isMobile } from "../../services/utils.js";
 import { readCssVar } from "../../utils/css-var.js";
 import type BasicWidget from "../basic_widget.js";
@@ -51,6 +52,10 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     }
 
     entitiesReloadedEvent({ loadResults }: EventData<"entitiesReloaded">) {
+        if (loadResults.isOptionReloaded("theme")) {
+            void applyThemeFromOptions();
+        }
+
         if (loadResults.isOptionReloaded("motionEnabled")) {
             this.#setMotion();
         }
@@ -71,7 +76,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     }
 
     #initTheme() {
-        const colorSchemeChangeObserver = matchMedia("(prefers-color-scheme: dark)")
+        const colorSchemeChangeObserver = matchMedia("(prefers-color-scheme: dark)");
         colorSchemeChangeObserver.addEventListener("change", () => this.#updateColorScheme());
         this.#updateColorScheme();
         
@@ -79,10 +84,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     }
 
     #updateColorScheme() {
-        const colorScheme = readCssVar(document.body, "theme-style").asString();
-        
-        document.body.classList.toggle("light-theme", colorScheme === "light");
-        document.body.classList.toggle("dark-theme", colorScheme === "dark");
+        updateColorSchemeClasses();
     }
 
     #onMobileResize() {

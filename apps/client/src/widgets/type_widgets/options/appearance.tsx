@@ -146,7 +146,7 @@ export default function AppearanceSettings() {
 }
 
 function UserInterface() {
-    const [ theme, setTheme ] = useTriliumOption("theme", true);
+    const [ theme, setTheme ] = useTriliumOption("theme");
     const [ customThemes, setCustomThemes ] = useState<CustomTheme[]>([]);
     const [ newLayout, setNewLayout ] = useTriliumOptionBool("newLayout");
     const [ layoutOrientation, setLayoutOrientation ] = useTriliumOption("layoutOrientation", true);
