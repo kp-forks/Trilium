@@ -124,7 +124,7 @@ const FONT_FAMILIES: FontGroup[] = [
 
 export default function AppearanceSettings() {
     return (
-        <div>
+        <>
             <UserInterface />
             <Fonts />
             {isElectron() && <ElectronIntegration /> }
@@ -141,7 +141,7 @@ export default function AppearanceSettings() {
                     targetPage: "_optionsCodeNotes"
                 }
             ]} />
-        </div>
+        </>
     );
 }
 
