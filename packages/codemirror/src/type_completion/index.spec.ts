@@ -5,7 +5,10 @@ import { getScriptCompletions, getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SC
 /** Returns completions at the `|` marker in `source` (the marker is stripped). */
 function completionsAtMarker(mime: string, source: string, context?: { customRequestHandler?: boolean }) {
     const offset = source.indexOf("|");
-    return getScriptCompletions(mime, source.replace("|", ""), offset, context);
+    // Strip exactly the marker at `offset` (not the first `|` in the string, which
+    // may differ if the snippet legitimately contains a `|` operator earlier).
+    const stripped = source.slice(0, offset) + source.slice(offset + 1);
+    return getScriptCompletions(mime, stripped, offset, context);
 }
 
 /** "Property 'x' does not exist on type 'y'." */
