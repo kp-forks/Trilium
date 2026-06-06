@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { getScriptCompletions, getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND, SCRIPT_MIME_JSX } from "./index.js";
 
 /** Returns completions at the `|` marker in `source` (the marker is stripped). */
-function completionsAtMarker(mime: string, source: string) {
+function completionsAtMarker(mime: string, source: string, context?: { customRequestHandler?: boolean }) {
     const offset = source.indexOf("|");
-    return getScriptCompletions(mime, source.replace("|", ""), offset);
+    return getScriptCompletions(mime, source.replace("|", ""), offset, context);
 }
 
 /** "Property 'x' does not exist on type 'y'." */
@@ -189,31 +189,50 @@ describe("script note diagnostics", () => {
 });
 
 describe("backend custom request handler api (req/res/pathParams)", () => {
-    it("offers req, res and pathParams as backend api members", async () => {
-        const names = await completionsAtMarker(SCRIPT_MIME_BACKEND, "api.|");
+    const HANDLER = { customRequestHandler: true };
+
+    it("offers req, res and pathParams to custom request handler notes", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_BACKEND, "api.|", HANDLER);
         expect(names).toContain("req");
         expect(names).toContain("res");
         expect(names).toContain("pathParams");
     }, TIMEOUT);
 
     it("types the res object's methods (status/send/json), not unknown", async () => {
-        const names = await completionsAtMarker(SCRIPT_MIME_BACKEND, "api.res?.|");
+        const names = await completionsAtMarker(SCRIPT_MIME_BACKEND, "api.res?.|", HANDLER);
         expect(names).toContain("status");
         expect(names).toContain("send");
         expect(names).toContain("json");
     }, TIMEOUT);
 
-    it("accepts a chained res response and req access without errors", async () => {
+    it("exposes req/res/pathParams as non-optional (no null-check needed in a handler)", async () => {
+        // No optional chaining: if these were typed optional, accessing them would
+        // raise TS18048 ("possibly undefined"). They're guaranteed in a handler.
         const codes = await getScriptDiagnosticCodes(
             SCRIPT_MIME_BACKEND,
-            "const id = api.pathParams?.[0];\n"
-            + "api.res?.status(200).json({ id, method: api.req?.method });"
+            "const id = api.pathParams[0];\n"
+            + "api.res.status(200).json({ id, method: api.req.method });",
+            HANDLER
         );
         expect(codes).toEqual([]);
     }, TIMEOUT);
 
+    it("hides req/res/pathParams from backend notes that are not custom request handlers", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_BACKEND, "api.|");
+        expect(names).not.toContain("req");
+        expect(names).not.toContain("res");
+        expect(names).not.toContain("pathParams");
+        // The rest of the backend api stays available.
+        expect(names).toContain("getNote");
+    }, TIMEOUT);
+
+    it("flags req/res access in a non-handler backend note (omitted from the api type)", async () => {
+        const codes = await getScriptDiagnosticCodes(SCRIPT_MIME_BACKEND, "api.res?.send('hi');");
+        expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+
     it("does not expose req/res/pathParams to frontend scripts (server-only)", async () => {
-        const names = await completionsAtMarker(SCRIPT_MIME_FRONTEND, "api.|");
+        const names = await completionsAtMarker(SCRIPT_MIME_FRONTEND, "api.|", HANDLER);
         expect(names).not.toContain("req");
         expect(names).not.toContain("res");
         expect(names).not.toContain("pathParams");

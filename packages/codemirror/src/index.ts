@@ -10,10 +10,10 @@ import byMimeType from "./syntax_highlighting.js";
 import smartIndentWithTab from "./extensions/custom_tab.js";
 import type { ThemeDefinition } from "./color_themes.js";
 import { createSearchHighlighter, SearchHighlighter, searchMatchHighlightTheme } from "./find_replace.js";
-import { buildTypeCompletion } from "./type_completion/index.js";
+import { buildTypeCompletion, type ScriptApiContext } from "./type_completion/index.js";
 
 export { default as ColorThemes, type ThemeDefinition, type ThemeVariant, getThemeById } from "./color_themes.js";
-export { isScriptMime, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND } from "./type_completion/index.js";
+export { isScriptMime, type ScriptApiContext, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND } from "./type_completion/index.js";
 
 // Custom keymap to prevent Ctrl+Enter from inserting a newline
 // This allows the parent application to handle the shortcut (e.g., for "Run Active Note")
@@ -65,6 +65,10 @@ export default class CodeMirror extends EditorView {
     private completionSources = new Map<string, CompletionSource>();
     /** Monotonic token guarding against out-of-order async type-completion updates. */
     private typeCompletionToken = 0;
+    /** Current MIME type, retained so the type completion can be rebuilt when only the api context changes. */
+    private currentMime: string | null = null;
+    /** Per-note context tuning the script `api` surface (e.g. custom-request-handler members). */
+    private scriptApiContext: ScriptApiContext = {};
 
     constructor(config: EditorConfig) {
         const languageCompartment = new Compartment();
@@ -311,6 +315,7 @@ export default class CodeMirror extends EditorView {
     }
 
     async setMimeType(mime: string) {
+        this.currentMime = mime;
         let newExtension: Extension[] = [];
 
         const correspondingSyntax = byMimeType[mime];
@@ -335,6 +340,19 @@ export default class CodeMirror extends EditorView {
     }
 
     /**
+     * Updates the per-note script `api` context (e.g. whether the note is a custom
+     * request handler, which gates the `req`/`res`/`pathParams` members) and rebuilds
+     * the type completion in place. Safe to call before a MIME type is set — it takes
+     * effect on the next `setMimeType`.
+     */
+    async setScriptApiContext(context: ScriptApiContext) {
+        this.scriptApiContext = context;
+        if (this.currentMime !== null) {
+            await this.#updateTypeCompletion(this.currentMime);
+        }
+    }
+
+    /**
      * Enables the TypeScript language service (full completion, hover docs and
      * diagnostics) for backend/frontend script notes, and clears it otherwise.
      * Guarded by a token so a slow async build for a previous MIME type can't
@@ -342,7 +360,7 @@ export default class CodeMirror extends EditorView {
      */
     async #updateTypeCompletion(mime: string) {
         const token = ++this.typeCompletionToken;
-        const { extensions, source } = await buildTypeCompletion(mime);
+        const { extensions, source } = await buildTypeCompletion(mime, this.scriptApiContext);
         if (token !== this.typeCompletionToken) {
             return; // a newer setMimeType call superseded this one
         }

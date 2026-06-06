@@ -79,6 +79,9 @@ export interface Api {
      */
     originEntity?: AbstractBeccaEntity<any> | null;
 
+    // Note: these are optional here (unlike the gated public surface in
+    // `@triliumnext/commons`, where they're required) because this interface types
+    // *every* backend script, and they're only populated for custom request handlers.
     /**
      * Express request object. Only present when the script runs as a custom request
      * handler (a note with the `#customRequestHandler` label invoked via `/custom/...`);

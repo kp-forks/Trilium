@@ -612,23 +612,23 @@ export interface BackendApi {
     originEntity?: unknown | null;
 
     /**
-     * Express request object. **Only** available when the script runs as a custom
-     * request handler — i.e. a note with the `#customRequestHandler` label invoked
-     * via a `/custom/...` URL. `undefined` for every other backend script (events,
-     * manual runs, scheduled scripts, …), so guard with `if (api.req)` before use.
+     * Express request object. Available only inside custom request handlers — a note
+     * with the `#customRequestHandler` label, invoked via a `/custom/...` URL. The
+     * editor surfaces this member only for such notes (where the request always
+     * supplies it), so it is non-optional rather than forcing a null-check.
      */
-    req?: ScriptRequest;
+    req: ScriptRequest;
     /**
      * Express response object — write the HTTP response here, e.g.
-     * `api.res.status(200).json({ ok: true })`. **Only** available in custom
-     * request handlers; `undefined` otherwise.
+     * `api.res.status(200).json({ ok: true })`. Available only inside custom request
+     * handlers (where it is always supplied), so it is non-optional.
      */
-    res?: ScriptResponse;
+    res: ScriptResponse;
     /**
      * The capture groups from the `#customRequestHandler` regex that matched this
-     * request's URL, in order. **Only** available in custom request handlers.
+     * request's URL, in order. Available only inside custom request handlers.
      */
-    pathParams?: string[];
+    pathParams: string[];
 
     /**
      * day.js library for date manipulation. See {@link https://day.js.org} for documentation

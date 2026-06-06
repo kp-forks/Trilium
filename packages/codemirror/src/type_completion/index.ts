@@ -29,6 +29,27 @@ export function isScriptMime(mime: string): boolean {
     return mime === SCRIPT_MIME_FRONTEND || mime === SCRIPT_MIME_BACKEND || mime === SCRIPT_MIME_JSX;
 }
 
+/**
+ * Per-note context that tunes the script `api` surface offered to the editor,
+ * beyond what the MIME type alone implies.
+ */
+export interface ScriptApiContext {
+    /**
+     * Whether the note is a custom request handler (has the `#customRequestHandler`
+     * label). Only such backend notes receive Express `req`/`res`/`pathParams` at
+     * runtime, so the `api.req`/`api.res`/`api.pathParams` members are offered only
+     * when this is true.
+     */
+    customRequestHandler?: boolean;
+}
+
+/**
+ * `BackendApi` members that exist only inside custom request handlers. When the
+ * note isn't a custom request handler we `Omit` these from the `api` global so
+ * they don't show up as (always-undefined) completions.
+ */
+const CUSTOM_REQUEST_HANDLER_MEMBERS = ["req", "res", "pathParams"] as const;
+
 /** Frontend and JSX scripts share the browser runtime (frontend `api`, jQuery). */
 function isFrontendMime(mime: string): boolean {
     return mime === SCRIPT_MIME_FRONTEND || mime === SCRIPT_MIME_JSX;
@@ -64,7 +85,7 @@ const COMPILER_OPTIONS = {
     ignoreDeprecations: "6.0"
 };
 
-async function createEnv(mime: string) {
+async function createEnv(mime: string, context: ScriptApiContext = {}) {
     const tsModule = await import("typescript");
     const ts = tsModule.default ?? tsModule;
     const { createSystem, createVirtualTypeScriptEnvironment } = await import("@typescript/vfs");
@@ -107,7 +128,12 @@ async function createEnv(mime: string) {
         // (single source of truth, drift-guarded). No jQuery/DOM server-side.
         const apiTypes = (await import("../../../commons/src/lib/script_api.ts?raw")).default;
         fsMap.set(API_TYPES_PATH, apiTypes);
-        fsMap.set(API_GLOBALS_PATH, `import type { BackendApi } from "./trilium-script-api";\ndeclare global {\n    // eslint-disable-next-line no-var\n    var api: BackendApi;\n}\n`);
+        // `req`/`res`/`pathParams` only exist at runtime for custom request handlers,
+        // so omit them from the `api` global for every other backend note.
+        const apiType = context.customRequestHandler
+            ? "BackendApi"
+            : `Omit<BackendApi, ${CUSTOM_REQUEST_HANDLER_MEMBERS.map((m) => `"${m}"`).join(" | ")}>`;
+        fsMap.set(API_GLOBALS_PATH, `import type { BackendApi } from "./trilium-script-api";\ndeclare global {\n    // eslint-disable-next-line no-var\n    var api: ${apiType};\n}\n`);
         rootFiles.push(API_TYPES_PATH);
     }
 
@@ -154,13 +180,16 @@ export interface TypeCompletion {
  * e.g. snippet slash-commands — into the editor's single autocompletion.
  *
  * Returns empty extensions and a null source for non-script MIME types.
+ *
+ * `context` tunes the offered `api` surface per note (e.g. exposing
+ * `req`/`res`/`pathParams` only for custom request handlers).
  */
-export async function buildTypeCompletion(mime: string): Promise<TypeCompletion> {
+export async function buildTypeCompletion(mime: string, context: ScriptApiContext = {}): Promise<TypeCompletion> {
     if (!isScriptMime(mime)) {
         return { extensions: [], source: null };
     }
 
-    const env = await createEnv(mime);
+    const env = await createEnv(mime, context);
     const { tsFacet, tsSync, tsAutocomplete, tsLinter, tsHover } = await import("@valtown/codemirror-ts");
 
     return {
@@ -277,8 +306,8 @@ function ignoredDiagnosticCodes(mime: string): number[] {
  * what the user actually sees. Intended for tests asserting which diagnostics
  * are (and aren't) surfaced.
  */
-export async function getScriptDiagnosticCodes(mime: string, code: string): Promise<number[]> {
-    const env = await createEnv(mime);
+export async function getScriptDiagnosticCodes(mime: string, code: string, context: ScriptApiContext = {}): Promise<number[]> {
+    const env = await createEnv(mime, context);
     const path = scriptPath(mime);
     env.updateFile(path, code.length ? code : " ");
     const diagnostics = [
@@ -298,8 +327,8 @@ export async function getScriptDiagnosticCodes(mime: string, code: string): Prom
  * asserting which completions (api members, JSX elements/attributes, …) are
  * surfaced.
  */
-export async function getScriptCompletions(mime: string, code: string, offset: number): Promise<string[]> {
-    const env = await createEnv(mime);
+export async function getScriptCompletions(mime: string, code: string, offset: number, context: ScriptApiContext = {}): Promise<string[]> {
+    const env = await createEnv(mime, context);
     const path = scriptPath(mime);
     env.updateFile(path, code.length ? code : " ");
     const completions = env.languageService.getCompletionsAtPosition(path, offset, {});
