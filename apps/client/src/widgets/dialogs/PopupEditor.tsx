@@ -8,6 +8,7 @@ import NoteContext from "../../components/note_context";
 import { isExperimentalFeatureEnabled } from "../../services/experimental_features";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
+import { parseNavigationStateFromUrl } from "../../services/link";
 import tree from "../../services/tree";
 import utils from "../../services/utils";
 import NoteList from "../collections/NoteList";
@@ -34,6 +35,7 @@ export default function PopupEditor() {
     const [ stacked, setStacked ] = useState(false);
     const parentComponent = useContext(ParentComponent);
     const [ noteContext, setNoteContext ] = useState(new NoteContext("_popup-editor"));
+    const modalRef = useRef<HTMLDivElement>(null);
     const isMobile = utils.isMobile();
     const items = useMemo(() => {
         const baseItems = isMobile ? [] : DESKTOP_FLOATING_BUTTONS;
@@ -64,6 +66,38 @@ export default function PopupEditor() {
         setShown(true);
     });
 
+    // Keep navigation that follows internal links (note links, "Related settings", etc.) inside the
+    // popup, instead of letting the global link handler open the target in the background tab. We
+    // intercept the click before it bubbles to the document-level handler and drive the popup's own
+    // context. Modified/middle clicks and external links are left untouched so they can still open in
+    // a new tab/window or externally.
+    useEffect(() => {
+        const modalEl = modalRef.current;
+        if (!modalEl) return;
+
+        function onClick(e: MouseEvent) {
+            if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+            const link = (e.target as HTMLElement).closest("a");
+            if (!link || link.getAttribute("target") === "_blank") return;
+            // Don't hijack clicks while editing rich text (there the click places the caret).
+            if (link.closest("[contenteditable]")) return;
+
+            const href = link.getAttribute("href") ?? link.getAttribute("data-href");
+            if (!href?.startsWith("#root/")) return; // external links / in-page anchors handled elsewhere
+
+            const { notePath, viewScope } = parseNavigationStateFromUrl(href);
+            if (!notePath) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            void noteContext.setNote(notePath, { viewScope, keepActiveDialog: true });
+        }
+
+        modalEl.addEventListener("click", onClick);
+        return () => modalEl.removeEventListener("click", onClick);
+    }, [ noteContext ]);
+
     // Add a global class to be able to handle issues with z-index due to rendering in a popup.
     useEffect(() => {
         document.body.classList.toggle("popup-editor-open", shown);
@@ -91,6 +125,7 @@ export default function PopupEditor() {
         <NoteContextContext.Provider value={noteContext}>
             <DialogWrapper>
                 <Modal
+                    modalRef={modalRef}
                     title={isOptions ? t("options.title") : <TitleRow />}
                     sidebar={isOptions ? <SettingsPopupSidebar /> : undefined}
                     customTitleBarButtons={[{
