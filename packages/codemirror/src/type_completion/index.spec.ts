@@ -18,6 +18,8 @@ const TS_TYPE_NOT_ASSIGNABLE = 2322;
 const TS_TOP_LEVEL_AWAIT = 1375;
 /** "Cannot find name '$'. Do you need to install type definitions for jQuery?…" */
 const TS_JQUERY_NOT_FOUND = 2592;
+/** "Unreachable code detected." — the one diagnostic rendered as a warning marker. */
+const TS_UNREACHABLE_CODE = 7027;
 
 // Loading TypeScript + the bundled lib.*.d.ts the first time is not instant.
 const TIMEOUT = 30_000;
@@ -102,6 +104,16 @@ describe("script note diagnostics", () => {
             "api.thisMethodDoesNotExist();"
         );
         expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+
+    it("flags unreachable code (TS7027) — the editor's one warning-severity diagnostic", async () => {
+        // `allowUnreachableCode: false` surfaces dead code after a `return` as a
+        // warning marker in the gutter.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "function f() {\n    return 1;\n    console.log('dead');\n}"
+        );
+        expect(codes).toContain(TS_UNREACHABLE_CODE);
     }, TIMEOUT);
 
     it("allows extending api widget base classes (constructor types, not unknown)", async () => {

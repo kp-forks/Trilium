@@ -80,6 +80,11 @@ const COMPILER_OPTIONS = {
     // useful semantic checks (unknown api members, wrong arg counts) but don't nag about
     // missing type annotations.
     noImplicitAny: false,
+    // Surface dead code (e.g. statements after a `return`) as a TS7027 "Unreachable
+    // code detected." diagnostic, which `@valtown/codemirror-ts` renders as a
+    // *warning* marker rather than an error — the one warning-severity diagnostic
+    // the script linter emits.
+    allowUnreachableCode: false,
     // `@typescript/vfs` defaults moduleResolution to the legacy `node10`, which
     // TypeScript 6 rejects unless deprecations are explicitly silenced.
     ignoreDeprecations: "6.0"
@@ -191,6 +196,9 @@ export async function buildTypeCompletion(mime: string, context: ScriptApiContex
 
     const env = await createEnv(mime, context);
     const { tsFacet, tsSync, tsAutocomplete, tsLinter, tsHover } = await import("@valtown/codemirror-ts");
+    // `tsLinter` only underlines diagnostics inline; `lintGutter` adds the
+    // error/warning markers in the gutter (as the old ESLint integration did).
+    const { lintGutter } = await import("@codemirror/lint");
 
     return {
         extensions: [
@@ -198,6 +206,7 @@ export async function buildTypeCompletion(mime: string, context: ScriptApiContex
             tsSync(),
             tsLinter({ diagnosticCodesToIgnore: ignoredDiagnosticCodes(mime) }),
             tsHover({ renderTooltip: renderHoverTooltip }),
+            lintGutter(),
             hoverTheme
         ],
         source: tsAutocomplete()
