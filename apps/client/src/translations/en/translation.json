@@ -1178,6 +1178,8 @@
     "forward-30s": "Forward 30s",
     "previous-video": "Previous video: {{- title}}",
     "next-video": "Next video: {{- title}}",
+    "previous-audio": "Previous audio: {{- title}}",
+    "next-audio": "Next audio: {{- title}}",
     "mute": "Mute (M)",
     "unmute": "Unmute (M)",
     "playback-speed": "Playback speed",

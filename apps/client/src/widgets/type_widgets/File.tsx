@@ -20,7 +20,7 @@ export default function FileTypeWidget({ note, parentComponent, noteContext }: T
     } else if (note.mime.startsWith("video/")) {
         return <VideoPreview note={note} noteContext={noteContext} />;
     } else if (note.mime.startsWith("audio/")) {
-        return <AudioPreview note={note} />;
+        return <AudioPreview note={note} noteContext={noteContext} />;
     }
     return <NoPreview />;
 
