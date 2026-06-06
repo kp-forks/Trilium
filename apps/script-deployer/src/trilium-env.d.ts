@@ -25,28 +25,25 @@ type FrontendApi = import("@triliumnext/commons/src/lib/script_api").FrontendApi
  * members from it: `import { runOnBackend, showMessage } from "trilium:api"`.
  */
 declare module "trilium:api" {
-    // Re-export every member of the frontend API as a named export.
+    // Re-export every member of the frontend API as a named export. Kept in sync
+    // with the editor's `trilium:api` declaration (packages/codemirror's
+    // preact_types.ts); both destructure the shared `FrontendApi`.
     export const {
-        activateNote,
-        showMessage,
-        showError,
-        runOnBackend,
-        getNote,
-        getActiveContextNote,
-        getActiveContextTextEditor,
-        getActiveContextCodeEditor,
-        getActiveContextNotePath,
-        getComponentByEl,
-        bindGlobalShortcut,
-        triggerEvent,
-        triggerCommand,
-        getNoteContexts,
-        refreshIncludedNote,
-        createLink,
-        startNote,
-        currentNote,
-        originEntity,
-        dayjs,
+        $container, startNote, currentNote, originEntity, dayjs,
+        RightPanelWidget, NoteContextAwareWidget, BasicWidget,
+        activateNote, activateNewNote, openTabWithNote, openSplitWithNote,
+        runOnBackend, runAsyncOnBackendWithManualTransactionHandling,
+        searchForNotes, searchForNote, getNote, getNotes, reloadNotes, getInstanceName,
+        addTextToActiveContextEditor, getActiveContextNote, getActiveContext, getActiveMainContext,
+        getNoteContexts, getMainNoteContexts, getActiveContextTextEditor, getActiveContextCodeEditor,
+        getActiveNoteDetailWidget, getActiveContextNotePath, getComponentByEl,
+        showMessage, showError, showInfoDialog, showConfirmDialog, showPromptDialog,
+        createLink, createNoteLink, triggerCommand, triggerEvent, setupElementTooltip,
+        protectNote, protectSubTree,
+        getTodayNote, getDayNote, getWeekFirstDayNote, getWeekNote, getMonthNote, getQuarterNote, getYearNote,
+        setHoistedNoteId, bindGlobalShortcut, waitUntilSynced, refreshIncludedNote,
+        randomString, formatSize, formatNoteSize, formatDateISO, parseDate,
+        logMessages, logSpacedUpdates, log, preact,
     }: FrontendApi;
 }
 

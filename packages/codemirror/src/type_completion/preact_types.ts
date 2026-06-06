@@ -69,7 +69,27 @@ ${triliumPreactBody}
 }
 
 declare module "trilium:api" {
-    const api: typeof globalThis.api;
-    export default api;
+    import type { FrontendApi } from "./trilium-script-api";
+    // Render notes import members by name (\`import { showMessage } from "trilium:api"\`),
+    // which the server rewrites to property access on the \`api\` global at runtime.
+    // A destructuring export is the only declaration form that exposes named members
+    // (a default/\`export =\` of the object does not).
+    export const {
+        $container, startNote, currentNote, originEntity, dayjs,
+        RightPanelWidget, NoteContextAwareWidget, BasicWidget,
+        activateNote, activateNewNote, openTabWithNote, openSplitWithNote,
+        runOnBackend, runAsyncOnBackendWithManualTransactionHandling,
+        searchForNotes, searchForNote, getNote, getNotes, reloadNotes, getInstanceName,
+        addTextToActiveContextEditor, getActiveContextNote, getActiveContext, getActiveMainContext,
+        getNoteContexts, getMainNoteContexts, getActiveContextTextEditor, getActiveContextCodeEditor,
+        getActiveNoteDetailWidget, getActiveContextNotePath, getComponentByEl,
+        showMessage, showError, showInfoDialog, showConfirmDialog, showPromptDialog,
+        createLink, createNoteLink, triggerCommand, triggerEvent, setupElementTooltip,
+        protectNote, protectSubTree,
+        getTodayNote, getDayNote, getWeekFirstDayNote, getWeekNote, getMonthNote, getQuarterNote, getYearNote,
+        setHoistedNoteId, bindGlobalShortcut, waitUntilSynced, refreshIncludedNote,
+        randomString, formatSize, formatNoteSize, formatDateISO, parseDate,
+        logMessages, logSpacedUpdates, log, preact,
+    }: FrontendApi;
 }
 `;

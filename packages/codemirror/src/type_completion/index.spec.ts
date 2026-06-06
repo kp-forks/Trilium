@@ -114,6 +114,15 @@ describe("script note diagnostics", () => {
         expect(codes).toEqual([]);
     }, TIMEOUT);
 
+    it("exposes named members of the api via the trilium:api import (TS2305/TS2614)", async () => {
+        // Render notes import api members by name: `import { showMessage } from "trilium:api"`.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_JSX,
+            "import { showMessage, getNote } from \"trilium:api\";\nshowMessage(\"hi\");\nvoid getNote(\"root\");"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
     it("resolves the trilium:preact import a render note uses (TS2307)", async () => {
         const codes = await getScriptDiagnosticCodes(
             SCRIPT_MIME_JSX,
