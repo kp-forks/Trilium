@@ -4,6 +4,8 @@ import { getScriptDiagnosticCodes, SCRIPT_MIME_BACKEND, SCRIPT_MIME_FRONTEND } f
 
 /** "Property 'x' does not exist on type 'y'." */
 const TS_UNKNOWN_PROPERTY = 2339;
+/** "'await' expressions are only allowed at the top level of a file when that file is a module…" */
+const TS_TOP_LEVEL_AWAIT = 1375;
 
 // Loading TypeScript + the bundled lib.*.d.ts the first time is not instant.
 const TIMEOUT = 30_000;
@@ -44,6 +46,24 @@ describe("script note diagnostics", () => {
             "const note = api.getNote('root');\nif (!note) { return; }\nreturn note.title;"
         );
         expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("supports top-level await in frontend scripts — async wrapper (TS1375)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const value = await Promise.resolve(1);"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("flags top-level await in backend scripts — non-async wrapper (TS1375)", async () => {
+        // The backend wrapper is a plain function, so top-level await is genuinely
+        // invalid there and must stay flagged.
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const value = await Promise.resolve(1);"
+        );
+        expect(codes).toContain(TS_TOP_LEVEL_AWAIT);
     }, TIMEOUT);
 
     it("still surfaces real errors (unknown api member)", async () => {

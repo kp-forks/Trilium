@@ -104,22 +104,34 @@ export async function buildTypeCompletion(mime: string): Promise<TypeCompletion>
         extensions: [
             tsFacet.of({ env, path: SCRIPT_PATH }),
             tsSync(),
-            tsLinter({ diagnosticCodesToIgnore: IGNORED_DIAGNOSTIC_CODES }),
+            tsLinter({ diagnosticCodesToIgnore: ignoredDiagnosticCodes(mime) }),
             tsHover()
         ],
         source: tsAutocomplete()
     };
 }
 
+/** TS1108: A 'return' statement can only be used within a function body. */
+const TS_RETURN_OUTSIDE_FUNCTION = 1108;
+/** TS1375: top-level 'await' is only allowed when the file is a module. */
+const TS_TOP_LEVEL_AWAIT = 1375;
+
 /**
- * Diagnostic codes suppressed for script notes. Trilium wraps every script in a
- * function before executing it (see the client's `bundle.ts` and the server's
- * `script.ts`), so grammar that TypeScript only permits inside a function body
- * is actually valid at runtime.
+ * Diagnostic codes suppressed for the given script MIME type. Trilium wraps every
+ * script in a function before executing it (see the client's `bundle.ts` and the
+ * server's `script.ts`), so grammar that's only valid inside a function body is
+ * fine at runtime:
+ *  - both wrappers are functions, so a top-level `return` is always valid;
+ *  - only the frontend wrapper is `async`, so top-level `await` is valid in
+ *    frontend scripts but genuinely invalid in backend ones.
  */
-export const IGNORED_DIAGNOSTIC_CODES: number[] = [
-    1108 // TS1108: A 'return' statement can only be used within a function body.
-];
+function ignoredDiagnosticCodes(mime: string): number[] {
+    const codes = [TS_RETURN_OUTSIDE_FUNCTION];
+    if (mime === SCRIPT_MIME_FRONTEND) {
+        codes.push(TS_TOP_LEVEL_AWAIT);
+    }
+    return codes;
+}
 
 /**
  * Returns the TypeScript diagnostic codes the script-note language service
@@ -136,7 +148,8 @@ export async function getScriptDiagnosticCodes(mime: string, code: string): Prom
         ...env.languageService.getSyntacticDiagnostics(SCRIPT_PATH),
         ...env.languageService.getSemanticDiagnostics(SCRIPT_PATH)
     ];
+    const ignored = ignoredDiagnosticCodes(mime);
     return diagnostics
         .map((d) => d.code)
-        .filter((code) => !IGNORED_DIAGNOSTIC_CODES.includes(code));
+        .filter((code) => !ignored.includes(code));
 }
