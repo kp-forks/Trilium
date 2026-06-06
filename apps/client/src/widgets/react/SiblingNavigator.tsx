@@ -36,9 +36,11 @@ interface SiblingNavigatorProps {
     extraNextKeys?: readonly string[];
 }
 
-interface SiblingNavigationState {
+export interface SiblingNavigationState {
     index: number;
     total: number;
+    previousId: string;
+    nextId: string;
     previousTitle: string;
     nextTitle: string;
     navigatePrevious: () => void;
@@ -78,7 +80,7 @@ export default function SiblingNavigator({ note, noteContext, viewScope, sibling
     // Viewing a single attachment → cycle the note's attachments; otherwise its note siblings.
     const provider = viewScope?.attachmentId
         ? attachmentSiblingProvider(note, noteContext, viewScope)
-        : noteSiblingProvider(note, noteContext, siblingType);
+        : noteSiblingProvider(note, noteContext, { type: siblingType });
     const navigation = useSiblingNavigation(provider);
     useSiblingKeyboard(navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys);
 
@@ -152,6 +154,8 @@ export function useSiblingNavigation(provider: SiblingNavigationProvider): Sibli
     return {
         index: navigation.index,
         total: navigation.total,
+        previousId: navigation.previous,
+        nextId: navigation.next,
         previousTitle: titleOf(navigation.previous),
         nextTitle: titleOf(navigation.next),
         navigatePrevious: () => navigateTo(navigation.previous),
@@ -161,19 +165,27 @@ export function useSiblingNavigation(provider: SiblingNavigationProvider): Sibli
     };
 }
 
-/** Iterator over the current note's same-type siblings within the parent of the current tab (clone-aware). */
-function noteSiblingProvider(note: FNote | undefined, noteContext: NoteContext | undefined, siblingType: string | undefined): SiblingNavigationProvider {
+/** Filter for note siblings: a note type (defaults to the current note's), optionally narrowed by a mime prefix. */
+export interface NoteSiblingFilter {
+    type?: string;
+    mimePrefix?: string;
+}
+
+/** Iterator over the current note's matching siblings within the parent of the current tab (clone-aware). */
+export function noteSiblingProvider(note: FNote | undefined, noteContext: NoteContext | undefined, filter: NoteSiblingFilter = {}): SiblingNavigationProvider {
     const notePath = noteContext?.notePath;
-    const type = siblingType ?? note?.type;
+    const type = filter.type ?? note?.type;
+    const { mimePrefix } = filter;
     const parent = getParentFromNotePath(notePath);
+    const matches = (sibling: FNote) => sibling.type === type && (!mimePrefix || !!sibling.mime?.startsWith(mimePrefix));
     return {
         currentId: note?.noteId,
-        depsKey: `note:${parent?.parentPath ?? ""}:${type ?? ""}`,
+        depsKey: `note:${parent?.parentPath ?? ""}:${type ?? ""}:${mimePrefix ?? ""}`,
         loadSiblings: async () => {
             if (!parent || !type) return [];
             const parentNote = await froca.getNote(parent.parentNoteId);
             const children = (await parentNote?.getChildNotes()) ?? [];
-            return children.filter((child) => child.type === type).map((child) => ({ id: child.noteId, title: child.title }));
+            return children.filter(matches).map((child) => ({ id: child.noteId, title: child.title }));
         },
         navigateTo: (id) => { if (parent) void noteContext?.setNote(`${parent.parentPath}/${id}`); },
         shouldRefresh: (loadResults, currentSiblingIds) => {
@@ -205,26 +217,29 @@ function attachmentSiblingProvider(note: FNote | undefined, noteContext: NoteCon
 
 /**
  * Drives sibling navigation from the keyboard. A single document-level listener (stable across the
- * viewer remounting on each navigation) maps PageUp/PageDown — plus any caller-provided extra keys —
- * to previous/next. It acts only when a `keyboardTarget` (if given) holds focus, otherwise when the
- * note context is the active tab/pane, and never while the user is typing in a text field.
+ * viewer remounting on each navigation) maps PageUp/PageDown — Home/End too unless `edgeKeys` is false
+ * (media players reserve those for seeking) — plus any caller-provided extra keys, to previous/next. It
+ * acts only when a `keyboardTarget` (if given) holds focus, otherwise when the note context is the
+ * active tab/pane, and never while the user is typing in a text field.
  */
-function useSiblingKeyboard(
+export function useSiblingKeyboard(
     navigation: SiblingNavigationState | null,
     noteContext: NoteContext | undefined,
     keyboardTarget: RefObject<HTMLElement | null> | undefined,
     extraPreviousKeys: readonly string[],
-    extraNextKeys: readonly string[]
+    extraNextKeys: readonly string[],
+    options: { edgeKeys?: boolean } = {}
 ) {
+    const { edgeKeys = true } = options;
     // Read the freshest values from inside the listener without re-attaching it on every change.
-    const stateRef = useRef({ navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys });
-    stateRef.current = { navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys };
+    const stateRef = useRef({ navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys, edgeKeys });
+    stateRef.current = { navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys, edgeKeys };
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
-            const { navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys } = stateRef.current;
+            const { navigation, noteContext, keyboardTarget, extraPreviousKeys, extraNextKeys, edgeKeys } = stateRef.current;
             const target = e.target as Element | null;
             if (!navigation || isTextEntryTarget(target)) return;
             // Don't hijack Space from a focused button or other interactive control — it activates them.
@@ -235,7 +250,7 @@ function useSiblingKeyboard(
                 return;
             }
 
-            const direction = codeToSiblingDirection(e.code, extraPreviousKeys, extraNextKeys);
+            const direction = codeToSiblingDirection(e.code, extraPreviousKeys, extraNextKeys, edgeKeys);
             if (!direction) return;
             e.preventDefault();
             if (direction === "previous") navigation.navigatePrevious();
