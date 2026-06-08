@@ -13,7 +13,7 @@ import dialog from "../services/dialog";
 import { t } from "../services/i18n";
 import protected_session_holder from "../services/protected_session_holder";
 import toast from "../services/toast.js";
-import { dynamicRequire, isElectron, isMobile } from "../services/utils";
+import { isElectron, isMobile } from "../services/utils";
 import NoteTreeWidget from "./note_tree";
 import { ExtendedNoteType, TYPE_MAPPINGS, TypeWidget } from "./note_types";
 import { useLegacyWidget, useNoteContext, useTriliumEvent } from "./react/hooks";
@@ -42,16 +42,21 @@ export default function NoteDetail() {
     const hasFixedTree = note && noteContext?.hoistedNoteId === "_lbMobileRoot" && isMobile() && note.noteId.startsWith("_lbMobile");
 
     // Defer loading for tabs that haven't been active yet (e.g. on app refresh).
+    // A tab can hold multiple splits; activating the tab makes all of them visible at once, so deferral
+    // is keyed on the whole tab (the main context) rather than the individual split. Keying it on the
+    // active split would leave the non-focused split of the active tab blank until it's clicked.
     // Special contexts (ntxId starting with "_", e.g. popup editor) are always considered active.
     const isSpecialContext = ntxId?.startsWith("_") ?? false;
-    const [ hasTabBeenActive, setHasTabBeenActive ] = useState(() => isSpecialContext || (noteContext?.isActive() ?? false));
+    const isInActiveTab = () =>
+        isContextInActiveTab(noteContext, appContext.tabManager.getActiveMainContext()?.ntxId);
+    const [ hasTabBeenActive, setHasTabBeenActive ] = useState(() => isSpecialContext || isInActiveTab());
     useEffect(() => {
-        if (!hasTabBeenActive && noteContext?.isActive()) {
+        if (!hasTabBeenActive && isInActiveTab()) {
             setHasTabBeenActive(true);
         }
-    }, [ noteContext, hasTabBeenActive ]);
-    useTriliumEvent("activeNoteChanged", ({ ntxId: eventNtxId }) => {
-        if (eventNtxId === ntxId && !hasTabBeenActive) {
+    }, [ noteContext, hasTabBeenActive ]); // eslint-disable-line react-hooks/exhaustive-deps
+    useTriliumEvent("activeNoteChanged", () => {
+        if (!hasTabBeenActive && isInActiveTab()) {
             setHasTabBeenActive(true);
         }
     });
@@ -140,18 +145,15 @@ export default function NoteDetail() {
 
     // Handle toast notifications.
     useEffect(() => {
-        if (!isElectron()) return;
-        const { ipcRenderer } = dynamicRequire("electron");
-        const onPrintProgress = (_e: any, { progress, action }: { progress: number, action: "printing" | "exporting_pdf" }) => showToast(action, progress);
-        const onPrintDone = (_e, printReport: PrintReport) => {
+        const api = window.electronApi?.printing;
+        if (!api) return;
+        api.onPrintProgress(({ progress, action }) => showToast(action as "printing" | "exporting_pdf", progress));
+        api.onPrintDone((printReport) => {
             toast.closePersistent("printing");
-            handlePrintReport(printReport);
-        };
-        ipcRenderer.on("print-progress", onPrintProgress);
-        ipcRenderer.on("print-done", onPrintDone);
+            handlePrintReport(printReport as PrintReport);
+        });
         return () => {
-            ipcRenderer.off("print-progress", onPrintProgress);
-            ipcRenderer.off("print-done", onPrintDone);
+            api.removePrintListeners();
         };
     }, [note]);
 
@@ -234,6 +236,20 @@ export default function NoteDetail() {
             })}
         </div>
     );
+}
+
+/**
+ * True when the given context belongs to the active tab, identified by `activeMainNtxId` (the ntxId of
+ * the active tab's main context). A tab can hold several splits, but only one of them is the "active"
+ * context at a time; every split of the active tab is visible and must load eagerly, so the deferral
+ * check is keyed on the tab (the main context), not the individual split.
+ */
+export function isContextInActiveTab(noteContext: NoteContext | undefined, activeMainNtxId: string | null | undefined): boolean {
+    if (!noteContext || activeMainNtxId == null) {
+        return false;
+    }
+
+    return activeMainNtxId === noteContext.getMainContext().ntxId;
 }
 
 function FixedTree({ noteContext }: { noteContext: NoteContext }) {
@@ -325,8 +341,6 @@ export async function getExtendedWidgetType(note: FNote | null | undefined, note
 
     if (noteContext?.viewScope?.viewMode === "source") {
         resultingType = "readOnlyCode";
-    } else if (noteContext.viewScope?.viewMode === "ocr") {
-        resultingType = "readOnlyOCRText";
     } else if (noteContext.viewScope?.viewMode === "attachments") {
         resultingType = noteContext.viewScope.attachmentId ? "attachmentDetail" : "attachmentList";
     } else if (noteContext.viewScope?.viewMode === "note-map") {

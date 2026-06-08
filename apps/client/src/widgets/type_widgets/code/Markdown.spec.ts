@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderWithSourceLines } from "./Markdown.js";
+import { buildTaskItemInsert, renderWithSourceLines } from "./Markdown.js";
 
 describe("renderWithSourceLines", () => {
     function extractLines(src: string): number[] {
@@ -69,7 +69,9 @@ describe("renderWithSourceLines", () => {
     });
 
     it("normalizes fenced code languages to CKEditor MIME identifiers for syntax highlighting", () => {
-        expect(html("```javascript\nconst x = 1;\n```")).toMatch(/class="language-application-javascript-env-(backend|frontend)"/);
+        // A markdown code fence is not a Trilium script, so `javascript` maps to plain JavaScript
+        // (`text/javascript`) rather than the frontend/backend script variants.
+        expect(html("```javascript\nconst x = 1;\n```")).toMatch(/class="language-text-javascript"/);
     });
 
     it("produces CKEditor admonition markup for GFM callouts", () => {
@@ -82,6 +84,38 @@ describe("renderWithSourceLines", () => {
 
     it("produces math-tex spans for inline math", () => {
         expect(html("Energy: $e=mc^2$.")).toContain('<span class="math-tex">');
+    });
+
+    it("renders the default /todo:<state> templates to their task states", () => {
+        // The `/todo:*` commands insert `- [<symbol>] `; verify each default state's marker
+        // round-trips to the right rendered task item. The ` ` (unchecked) and `x` (checked)
+        // anchors map to native checkboxes; custom states carry data-trilium-task-state.
+        const unchecked = html("- [ ] groceries");
+        expect(unchecked).toContain('type="checkbox"');
+        expect(unchecked).not.toContain("checked");
+        expect(unchecked).not.toContain("data-trilium-task-state");
+
+        expect(html("- [x] groceries")).toContain("checked");
+        expect(html("- [/] groceries")).toContain('data-trilium-task-state="doing"');
+        expect(html("- [?] groceries")).toContain('data-trilium-task-state="maybe"');
+        expect(html("- [-] groceries")).toContain('data-trilium-task-state="cancelled"');
+    });
+
+    it("renders the /collapsible template as a details block", () => {
+        // Mirrors the markdown the `/collapsible` slash command inserts.
+        const src = [
+            '<details class="trilium-collapsible">',
+            "<summary>Summary</summary>",
+            "",
+            "Details",
+            "",
+            "</details>"
+        ].join("\n");
+
+        const result = html(src);
+        expect(result).toContain("<details");
+        expect(result).toContain("<summary>Summary</summary>");
+        expect(result).toContain("Details");
     });
 
     it("renders [[wikilinks]] with hash-router hrefs so the preview navigates correctly", () => {
@@ -107,5 +141,69 @@ describe("renderWithSourceLines", () => {
             { id: "md-heading-1", level: 2, text: "Section", line: 5 },
             { id: "md-heading-2", level: 3, text: "Sub", line: 7 }
         ]);
+    });
+
+    it("renders inline markdown formatting in heading text", () => {
+        const src = [
+            "## **Bold heading**",
+            "",
+            "## *Italic heading*",
+            "",
+            "## `Code in heading`",
+            "",
+            "## Heading with **bold** and `code`",
+            "",
+            "## Heading with ~~strikethrough~~",
+            "",
+            "## Heading with [a link](https://example.com)"
+        ].join("\n");
+
+        const { headings } = renderWithSourceLines(src);
+        expect(headings[0].text).toBe("<strong>Bold heading</strong>");
+        expect(headings[1].text).toBe("<em>Italic heading</em>");
+        expect(headings[2].text).toBe("<code>Code in heading</code>");
+        expect(headings[3].text).toBe("Heading with <strong>bold</strong> and <code>code</code>");
+        expect(headings[4].text).toBe("Heading with <del>strikethrough</del>");
+        expect(headings[5].text).toBe('Heading with <a href="https://example.com">a link</a>');
+    });
+
+    it("sanitizes XSS vectors in heading text", () => {
+        const src = [
+            "## <script>alert('XSS via script tag')</script>",
+            "",
+            '## <button onclick="alert(\'clicked!\')">Click me</button>',
+            "",
+            '## <img src="x" onerror="alert(\'img onerror XSS\')">',
+            "",
+            '## <a href="javascript:alert(\'javascript: URL\')">Innocent link</a>',
+            "",
+            '## <svg onload="alert(\'SVG onload XSS\')"><rect width="100" height="100"/></svg>',
+            "",
+            "## <details><summary>Collapsible</summary><script>alert('inside details')</script></details>"
+        ].join("\n");
+
+        const { headings } = renderWithSourceLines(src);
+
+        for (const h of headings) {
+            expect(h.text).not.toMatch(/<script/i);
+            expect(h.text).not.toMatch(/onerror/i);
+            expect(h.text).not.toMatch(/onclick/i);
+            expect(h.text).not.toMatch(/onload/i);
+            expect(h.text).not.toMatch(/javascript:/i);
+        }
+    });
+});
+
+describe("buildTaskItemInsert", () => {
+    it("prepends a bullet when not already in a list item", () => {
+        expect(buildTaskItemInsert(" ", false)).toBe("- [ ] ");
+        expect(buildTaskItemInsert("x", false)).toBe("- [x] ");
+        expect(buildTaskItemInsert("/", false)).toBe("- [/] ");
+    });
+
+    it("reuses an existing '- ' bullet to avoid a doubled marker", () => {
+        expect(buildTaskItemInsert(" ", true)).toBe("[ ] ");
+        expect(buildTaskItemInsert("x", true)).toBe("[x] ");
+        expect(buildTaskItemInsert("/", true)).toBe("[/] ");
     });
 });

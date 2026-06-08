@@ -2,7 +2,7 @@ import type express from "express";
 import session, { Store } from "express-session";
 
 import config from "../services/config.js";
-import log from "../services/log.js";
+import { getLog } from "@triliumnext/core";
 import sessionSecret from "../services/session_secret.js";
 import sql from "../services/sql.js";
 import sqlInit from "../services/sql_init.js";
@@ -34,7 +34,7 @@ export class SQLiteSessionStore extends Store {
             }
             return callback(null, session);
         } catch (e: unknown) {
-            log.error(e);
+            getLog().error(e);
             return callback(e);
         }
     }
@@ -57,7 +57,7 @@ export class SQLiteSessionStore extends Store {
             });
             callback?.();
         } catch (e) {
-            log.error(e);
+            getLog().error(e);
             return callback?.(e);
         }
     }
@@ -71,7 +71,7 @@ export class SQLiteSessionStore extends Store {
             sql.execute(/*sql*/`DELETE FROM sessions WHERE id = ?`, sid);
             callback?.();
         } catch (e) {
-            log.error(e);
+            getLog().error(e);
             callback?.(e);
         }
     }
@@ -92,7 +92,7 @@ export class SQLiteSessionStore extends Store {
             sql.execute(/*sql*/`UPDATE sessions SET expires = ? WHERE id = ?`, [expires, sid]);
             callback?.();
         } catch (e) {
-            log.error(e);
+            getLog().error(e);
             callback?.(e);
         }
     }
@@ -108,7 +108,7 @@ export class SQLiteSessionStore extends Store {
             const expires = sql.getValue<number>(/*sql*/`SELECT expires FROM sessions WHERE id = ?`, sid);
             return expires !== undefined ? new Date(expires) : null;
         } catch (e) {
-            log.error(e);
+            getLog().error(e);
             return null;
         }
     }
@@ -116,12 +116,6 @@ export class SQLiteSessionStore extends Store {
 }
 
 export const sessionStore = new SQLiteSessionStore();
-
-// Enable cross-site cookies only when CORS is configured with a specific
-// origin allowlist. A wildcard or unset origin means there's no trusted
-// cross-site consumer, so we keep the safer SameSite=Lax default.
-const corsAllowOrigin = (config["Network"]["corsAllowOrigin"] || "").trim();
-const allowCrossSiteCookie = corsAllowOrigin !== "" && corsAllowOrigin !== "*";
 
 const sessionParser: express.RequestHandler = session({
     secret: sessionSecret,
@@ -131,8 +125,8 @@ const sessionParser: express.RequestHandler = session({
     cookie: {
         path: "/",
         httpOnly: true,
-        sameSite: allowCrossSiteCookie ? "none" : "lax",
-        secure: allowCrossSiteCookie,
+        secure: config.Network.https,
+        sameSite: "lax",
         maxAge: config.Session.cookieMaxAge * 1000 // needs value in milliseconds
     },
     name: "trilium.sid",

@@ -5,13 +5,15 @@ import { t } from "i18next";
 import { useContext, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
+import type NoteContext from "../../components/note_context";
 import FAttachment from "../../entities/fattachment";
 import FNote from "../../entities/fnote";
+import imageContextMenu from "../../menus/image_context_menu";
 import content_renderer from "../../services/content_renderer";
 import dialog from "../../services/dialog";
 import froca from "../../services/froca";
 import image from "../../services/image";
-import link from "../../services/link";
+import link, { type ViewScope } from "../../services/link";
 import open from "../../services/open";
 import options from "../../services/options";
 import server from "../../services/server";
@@ -19,7 +21,6 @@ import toast from "../../services/toast";
 import utils from "../../services/utils";
 import ws from "../../services/ws";
 import Admonition from "../react/Admonition";
-import Alert from "../react/Alert";
 import Button from "../react/Button";
 import Dropdown from "../react/Dropdown";
 import FormFileUpload from "../react/FormFileUpload";
@@ -27,11 +28,12 @@ import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import HelpButton from "../react/HelpButton";
 import { useTriliumEvent } from "../react/hooks";
 import Icon from "../react/Icon";
-import Modal from "../react/Modal";
+import ImageViewer from "../react/ImageViewer";
+import NoItems from "../react/NoItems";
 import NoteLink from "../react/NoteLink";
 import { ParentComponent, refToJQuerySelector } from "../react/react_utils";
+import SiblingNavigator from "../react/SiblingNavigator";
 import { TextPreview } from "./File";
-import { TextRepresentation } from "./ReadOnlyTextRepresentation";
 import { TypeWidgetProps } from "./type_widget";
 
 /**
@@ -45,16 +47,13 @@ export function AttachmentList({ note }: TypeWidgetProps) {
         <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
             <AttachmentListHeader noteId={note.noteId} />
             <div style={{overflow: "auto", flexGrow: 1}}>
-
-                <div className="attachment-list-wrapper">
-                    {attachments.length ? (
-                        attachments.map(attachment => <AttachmentInfo key={attachment.attachmentId} attachment={attachment} />)
-                    ) : (
-                        <Alert type="info">
-                            {t("attachment_list.no_attachments")}
-                        </Alert>
-                    )}
-                </div>
+                {attachments.length ? (
+                    <div className="attachment-list-wrapper">
+                        {attachments.map(attachment => <AttachmentInfo key={attachment.attachmentId} attachment={attachment} />)}
+                    </div>
+                ) : (
+                    <NoItems icon="bx bx-unlink" text={t("attachment_list.no_attachments")} />
+                )}
             </div>
         </div>
     );
@@ -106,7 +105,7 @@ function AttachmentListHeader({ noteId }: { noteId: string }) {
 /**
  * Displays information about a single attachment.
  */
-export function AttachmentDetail({ note, viewScope }: TypeWidgetProps) {
+export function AttachmentDetail({ note, viewScope, noteContext }: TypeWidgetProps) {
     const [ attachment, setAttachment ] = useState<FAttachment | null | undefined>(undefined);
 
     useEffect(() => {
@@ -133,7 +132,7 @@ export function AttachmentDetail({ note, viewScope }: TypeWidgetProps) {
 
             <div className="attachment-wrapper">
                 {attachment !== null ? (
-                    attachment && <AttachmentInfo attachment={attachment} isFullDetail />
+                    attachment && <AttachmentInfo attachment={attachment} isFullDetail ownerNote={note} noteContext={noteContext} viewScope={viewScope} />
                 ) : (
                     <strong>{t("attachment_detail.attachment_deleted")}</strong>
                 )}
@@ -142,34 +141,51 @@ export function AttachmentDetail({ note, viewScope }: TypeWidgetProps) {
     );
 }
 
-function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment, isFullDetail?: boolean }) {
+function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, viewScope }: { attachment: FAttachment, isFullDetail?: boolean, ownerNote?: FNote, noteContext?: NoteContext, viewScope?: ViewScope }) {
     const contentWrapper = useRef<HTMLDivElement>(null);
-    const [ ocrModalShown, setOcrModalShown ] = useState(false);
+    const imageViewerWrapper = useRef<HTMLDivElement>(null);
+    const [ title, setTitle ] = useState(attachment.title);
     const [ textContent, setTextContent ] = useState<string | null>(null);
     const supportsOcr = attachment.role === "image" || attachment.role === "file";
 
+    // Image attachments opened in full detail get the interactive zoom/pan viewer; everything
+    // else is rendered imperatively via the content renderer.
+    const isZoomableImage = !!isFullDetail && attachment.role === "image";
+    const imageSrc = `api/attachments/${attachment.attachmentId}/image/${encodeURIComponent(attachment.title)}?${attachment.utcDateModified}`;
+
     function refresh() {
-        content_renderer.getRenderedContent(attachment, { imageHasZoom: isFullDetail })
-            .then(({ $renderedContent }) => {
-                contentWrapper.current?.replaceChildren(...$renderedContent);
-            });
+        if (!isZoomableImage) {
+            content_renderer.getRenderedContent(attachment)
+                .then(({ $renderedContent }) => {
+                    contentWrapper.current?.replaceChildren(...$renderedContent);
+                });
+        }
 
         if (attachment.role === "file") {
             attachment.getBlob().then(blob => setTextContent(blob?.content ?? null));
         }
+
+        setTitle(attachment.title);
     }
 
-    useEffect(refresh, [ attachment ]);
+    useEffect(refresh, [ attachment, isZoomableImage ]);
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.getAttachmentRows().find(attachment => attachment.attachmentId)) {
             refresh();
         }
     });
 
+    // Electron right-click menu (copy image / reference) for the interactive image viewer.
+    useEffect(() => {
+        if (isZoomableImage) {
+            return imageContextMenu.setupContextMenu(refToJQuerySelector(imageViewerWrapper));
+        }
+    }, [ isZoomableImage ]);
+
     async function copyAttachmentLinkToClipboard() {
         if (attachment.role === "image") {
-            const $contentWrapper = refToJQuerySelector(contentWrapper);
-            image.copyImageReferenceToClipboard($contentWrapper);
+            const $img = refToJQuerySelector(isZoomableImage ? imageViewerWrapper : contentWrapper).find("img");
+            if ($img.length) image.copyImageReferenceToClipboard($img.parent());
         } else if (attachment.role === "file") {
             const $link = await link.createLink(attachment.ownerId, {
                 referenceLink: true,
@@ -194,19 +210,22 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
                     <AttachmentActions
                         attachment={attachment}
                         copyAttachmentLinkToClipboard={copyAttachmentLinkToClipboard}
-                        onShowOcr={supportsOcr ? () => setOcrModalShown(true) : undefined}
+                        onShowOcr={supportsOcr ? () => appContext.triggerCommand("showOcrTextDialog", {
+                            textUrl: `ocr/attachments/${attachment.attachmentId}/text`,
+                            processUrl: `ocr/process-attachment/${attachment.attachmentId}`
+                        }) : undefined}
                     />
                     <h4 className="attachment-title">
                         {!isFullDetail ? (
                             <NoteLink
                                 notePath={attachment.ownerId}
-                                title={attachment.title}
+                                title={title}
                                 viewScope={{
                                     viewMode: "attachments",
                                     attachmentId: attachment.attachmentId
                                 }}
                             />
-                        ) : (attachment.title)}
+                        ) : title}
                     </h4>
                     <div className="attachment-details">
                         {t("attachment_detail_2.role_and_size", {
@@ -220,24 +239,24 @@ function AttachmentInfo({ attachment, isFullDetail }: { attachment: FAttachment,
 
                 {attachment.utcDateScheduledForErasureSince && <DeletionAlert utcDateScheduledForErasureSince={attachment.utcDateScheduledForErasureSince} />}
                 {textContent && <TextPreview content={textContent} />}
-                <div ref={contentWrapper} className="attachment-content-wrapper" />
+                {isZoomableImage ? (
+                    <div key="image-viewer" ref={imageViewerWrapper} className="attachment-content-wrapper attachment-image-viewer">
+                        <ImageViewer key={`${attachment.attachmentId}-${attachment.utcDateModified}`} src={imageSrc} alt={attachment.title} />
+                        <SiblingNavigator
+                            note={ownerNote}
+                            noteContext={noteContext}
+                            viewScope={viewScope}
+                            previousTooltipI18nKey="image_navigation.previous"
+                            nextTooltipI18nKey="image_navigation.next"
+                            extraPreviousKeys={[ "Backspace" ]}
+                            extraNextKeys={[ "Space" ]}
+                        />
+                    </div>
+                ) : (
+                    <div key="rendered" ref={contentWrapper} className="attachment-content-wrapper" />
+                )}
             </div>
 
-            {supportsOcr && (
-                <Modal
-                    className="ocr-text-modal"
-                    title={t("ocr.extracted_text_title")}
-                    show={ocrModalShown}
-                    onHidden={() => setOcrModalShown(false)}
-                    size="lg"
-                    scrollable
-                >
-                    <TextRepresentation
-                        textUrl={`ocr/attachments/${attachment.attachmentId}/text`}
-                        processUrl={`ocr/process-attachment/${attachment.attachmentId}`}
-                    />
-                </Modal>
-            )}
         </div>
     );
 }

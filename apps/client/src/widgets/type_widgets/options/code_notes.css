@@ -3,14 +3,31 @@
     list-style-type: none;
     column-width: 250px;
     padding-inline-start: 0;
-}
 
-.options-mime-types > section {
-    margin-bottom: 1em;
-    break-inside: avoid-column;
-}
+    & > section {
+        margin-bottom: 1em;
+        break-inside: avoid-column;
+    }
 
-.options-mime-types ul {
-    padding-inline-start: 0;
+    ul {
+        padding-inline-start: 0;
+    }
 }
 /* #endregion */
+
+.note-detail-content-widget-content.options {
+    /* #region Code Preview */
+    .options-section.code-block-appearance .options-section-card {
+        overflow: hidden;
+
+        .option-row:nth-last-child(2) {
+            border-bottom: 0;
+        }
+
+        .note-detail-readonly-code-content {
+            border-top: solid 1px var(--main-border-color);
+            margin: 0 calc(var(--options-card-padding) * -1) calc(var(--options-card-padding) * -1) calc(var(--options-card-padding) * -1) !important;
+        }
+    }
+    /* #endregion */
+}

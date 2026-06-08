@@ -18,7 +18,14 @@ import treeService from "../tree.js";
 import markdownService from "./markdown.js";
 import mimeService from "./mime.js";
 import { AttributeMeta, NoteMeta } from "../../meta.js";
+import { isMarkdownCodeNote } from "../export/rewrite_links.js";
 import { sanitizeHtml } from "../sanitizer.js";
+
+// Source mimes that import as editable spreadsheet notes (parsed to Univer workbook JSON),
+// mirroring the single-file importer. As resolved by `mime-types` from the entry extension.
+const CSV_MIME = "text/csv";
+const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const SPREADSHEET_MIME = "text/x-spreadsheet";
 
 interface MetaFile {
     files: NoteMeta[];
@@ -173,9 +180,18 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
 
     function detectFileTypeAndMime(taskContext: TaskContext<"importNotes">, filePath: string) {
         const rawMime = mimeService.getMime(filePath) || "application/octet-stream";
+
+        // CSV/XLSX entries become editable spreadsheet notes (matching single-file import) unless
+        // the user opts out, in which case they fall through to a plain file attachment. The raw
+        // mime is kept so `saveNote` knows which parser to run; it's swapped for the spreadsheet
+        // mime once the bytes have been converted to the Univer workbook JSON.
+        if (taskContext.data?.spreadsheetImportedAsSpreadsheet && (rawMime === CSV_MIME || rawMime === XLSX_MIME)) {
+            return { mime: rawMime, type: "spreadsheet" as NoteType };
+        }
+
         const type = mimeService.getType(taskContext.data || {}, rawMime);
         // Normalize aliased code MIMEs (e.g. `text/markdown` → `text/x-markdown`,
-        // `application/javascript` → `application/javascript;env=frontend`) so the
+        // `application/javascript` → `text/javascript`) so the
         // stored MIME matches what the rest of the app expects.
         const mime = (type === "code" && mimeService.normalizeMimeType(rawMime)) || rawMime;
 
@@ -293,6 +309,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         if (attachmentMeta && attachmentMeta.attachmentId && noteMeta.noteId) {
             return {
                 attachmentId: getNewAttachmentId(attachmentMeta.attachmentId),
+                attachmentTitle: attachmentMeta.title,
                 noteId: getNewNoteId(noteMeta.noteId)
             };
         }
@@ -397,8 +414,17 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
             content = markdownService.renderToHtml(content, noteTitle);
         }
 
-        if (type === "text" && typeof content === "string") {
+        // `book` notes are rendered as rich HTML through the same `renderText()` path as
+        // `text` notes (see content_renderer), so their content must receive the same
+        // import processing — crucially the Safe Import HTML sanitization. Otherwise a
+        // malicious `book` note bypasses sanitization and achieves stored XSS/RCE when its
+        // content is previewed in a grid/list view.
+        if ((type === "text" || type === "book") && typeof content === "string") {
             content = processTextNoteContent(content, noteTitle, filePath, noteMeta);
+        }
+
+        if (type === "code" && isMarkdownCodeNote(mime) && typeof content === "string") {
+            content = processMarkdownCodeNoteContent(content, filePath);
         }
 
         if (type === "relationMap" && noteMeta && typeof content === "string") {
@@ -414,7 +440,63 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         return content;
     }
 
-    function saveNote(filePath: string, content: string | Uint8Array) {
+    /**
+     * Rewrites relative file paths in markdown code notes back to Trilium internal
+     * URLs (counterpart to `rewriteMarkdownContentLinks` in the export).
+     */
+    function processMarkdownCodeNoteContent(content: string, filePath: string) {
+        function isUrlAbsolute(url: string) {
+            return /^(?:[a-z]+:)?\/\//i.test(url);
+        }
+
+        // Image links: ![alt](relative/path)
+        content = content.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+            try {
+                url = decodeURIComponent(url).trim();
+            } catch {
+                return match;
+            }
+
+            if (isUrlAbsolute(url) || url.startsWith("api/")) {
+                return match;
+            }
+
+            const target = getEntityIdFromRelativeUrl(url, filePath);
+
+            if (target.attachmentId) {
+                return `![${alt}](api/attachments/${target.attachmentId}/image/${encodeURIComponent(target.attachmentTitle || "image")})`;
+            } else if (target.noteId) {
+                return `![${alt}](api/images/${target.noteId}/${basename(url)})`;
+            }
+            return match;
+        });
+
+        // Non-image links: [text](relative/path)
+        content = content.replace(/(?<!!)\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
+            try {
+                url = decodeURIComponent(url).trim();
+            } catch {
+                return match;
+            }
+
+            if (isUrlAbsolute(url) || url.startsWith("#") || url.startsWith("api/")) {
+                return match;
+            }
+
+            const target = getEntityIdFromRelativeUrl(url, filePath);
+
+            if (target.attachmentId) {
+                return `[${text}](#root/${target.noteId}?viewMode=attachments&attachmentId=${target.attachmentId})`;
+            } else if (target.noteId) {
+                return `[${text}](#root/${target.noteId})`;
+            }
+            return match;
+        });
+
+        return content;
+    }
+
+    async function saveNote(filePath: string, content: string | Uint8Array) {
         const { parentNoteMeta, noteMeta, attachmentMeta } = getMeta(filePath);
 
         if (noteMeta?.noImport) {
@@ -461,6 +543,14 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         const type = resolveNoteType(detectedType);
         if (mime == null) {
             throw new Error("Unable to resolve mime type.");
+        }
+
+        // A raw CSV/XLSX entry still holds its source bytes; convert them to the Univer workbook
+        // JSON a spreadsheet note stores, then record the spreadsheet mime. Entries from a Trilium
+        // export already carry workbook JSON and the spreadsheet mime, so they skip this.
+        if (type === "spreadsheet" && (mime === CSV_MIME || mime === XLSX_MIME)) {
+            content = await convertSpreadsheetContent(mime, content);
+            mime = SPREADSHEET_MIME;
         }
 
         if (type !== "file" && type !== "image") {
@@ -556,12 +646,20 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         }
     }
 
+    const zipProvider = getZipProvider();
+
+    // Detect filename encoding once for the whole ZIP (e.g. GBK for Chinese Windows ZIPs)
+    const filenameEncoding = await zipProvider.detectFilenameEncoding(fileBuffer);
+
     // we're running two passes in order to obtain critical information first (meta file and root)
     const topLevelItems = new Set<string>();
-    const zipProvider = getZipProvider();
 
     await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
+
+        if (isMacOSMetadata(filePath)) {
+            return;
+        }
 
         // make sure that the meta file is loaded before the rest of the files is processed.
         if (filePath === "!!!meta.json") {
@@ -573,21 +671,25 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         const firstSlash = filePath.indexOf("/");
         const topLevelPath = (firstSlash !== -1 ? filePath.substring(0, firstSlash) : filePath);
         topLevelItems.add(topLevelPath);
-    });
+    }, filenameEncoding);
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
 
     await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
+        if (isMacOSMetadata(filePath)) {
+            return;
+        }
+
         if (/\/$/.test(entry.fileName)) {
             saveDirectory(filePath);
         } else if (filePath !== "!!!meta.json") {
-            saveNote(filePath, await readContent());
+            await saveNote(filePath, await readContent());
         }
 
         taskContext.increaseProgressCount();
-    });
+    }, filenameEncoding);
 
     for (const noteId of createdNoteIds) {
         const note = becca.getNote(noteId);
@@ -618,6 +720,11 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     }
 
     return firstNote;
+}
+
+/** Skips macOS resource fork metadata that pollutes ZIP archives created on macOS. */
+function isMacOSMetadata(filePath: string): boolean {
+    return filePath.startsWith("__MACOSX/") || filePath === "__MACOSX";
 }
 
 /** @returns path without leading or trailing slash and backslashes converted to forward ones */
@@ -653,6 +760,22 @@ function resolveNoteType(type: string | undefined): NoteType {
     }
     return "text";
 
+}
+
+/**
+ * Parses a raw CSV or XLSX entry into the Univer workbook JSON a spreadsheet note stores.
+ * The parsers are dynamically imported so exceljs only loads when such a file is imported
+ * (keeping it out of the core barrel and the standalone/browser bundle).
+ */
+async function convertSpreadsheetContent(mime: string, content: string | Uint8Array): Promise<string> {
+    if (mime === XLSX_MIME) {
+        const { parseXlsxToWorkbook } = await import("@triliumnext/commons/src/lib/spreadsheet/parse_from_xlsx.js");
+        const buffer = typeof content === "string" ? Buffer.from(content) : content;
+        return JSON.stringify(await parseXlsxToWorkbook(buffer));
+    }
+
+    const { parseCsvToWorkbook } = await import("@triliumnext/commons/src/lib/spreadsheet/parse_from_csv.js");
+    return JSON.stringify(parseCsvToWorkbook(processStringOrBuffer(content)));
 }
 
 export function removeTriliumTags(content: string) {

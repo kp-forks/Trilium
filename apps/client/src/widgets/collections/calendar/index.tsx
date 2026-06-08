@@ -13,7 +13,7 @@ import date_notes from "../../../services/date_notes";
 import dialog from "../../../services/dialog";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
-import { isMobile } from "../../../services/utils";
+import { escapeHtml, isMobile } from "../../../services/utils";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import Button, { ButtonGroup } from "../../react/Button";
@@ -21,7 +21,6 @@ import Dropdown from "../../react/Dropdown";
 import { FormListItem } from "../../react/FormList";
 import { useNoteLabel, useNoteLabelBoolean, useResizeObserver, useSpacedUpdate, useTriliumEvent, useTriliumOption, useTriliumOptionInt } from "../../react/hooks";
 import { ParentComponent } from "../../react/react_utils";
-import TouchBar, { TouchBarButton, TouchBarLabel, TouchBarSegmentedControl, TouchBarSpacer } from "../../react/TouchBar";
 import { ViewModeProps } from "../interface";
 import { changeEvent, newEvent } from "./api";
 import Calendar from "./calendar";
@@ -80,6 +79,7 @@ export const LOCALE_MAPPINGS: Record<DISPLAYABLE_LOCALE_IDS, (() => Promise<{ de
     fr: () => import("@fullcalendar/core/locales/fr"),
     it: () => import("@fullcalendar/core/locales/it"),
     hi: () => import("@fullcalendar/core/locales/hi"),
+    id: () => import("@fullcalendar/core/locales/id"),
     ga: null,
     cn: () => import("@fullcalendar/core/locales/zh-cn"),
     cs: () => import("@fullcalendar/core/locales/cs"),
@@ -165,7 +165,7 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
                 firstDay={firstDayOfWeek ?? 0}
                 weekends={!hideWeekends}
                 weekNumbers={weekNumbers}
-                height="90%"
+                height="100%"
                 nowIndicator
                 handleWindowResize={false}
                 initialDate={initialDate || undefined}
@@ -179,7 +179,6 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
                     }
                 }}
             />
-            <CalendarTouchBar calendarRef={calendarRef} />
         </div>
     );
 }
@@ -356,7 +355,7 @@ function useEventDisplayCustomization(parentNote: FNote, componentId: string | u
             }
 
             if (titleContainer) {
-                const icon = /*html*/`<span class="${iconClass}"></span> `;
+                const icon = /*html*/`<span class="${escapeHtml(iconClass)}"></span> `;
                 titleContainer.insertAdjacentHTML("afterbegin", icon);
             }
         }
@@ -403,40 +402,6 @@ function useEventDisplayCustomization(parentNote: FNote, componentId: string | u
         }
     }, []);
     return { eventDidMount };
-}
-
-function CalendarTouchBar({ calendarRef }: { calendarRef: RefObject<FullCalendar> }) {
-    const { title, viewType } = useOnDatesSet(calendarRef);
-
-    return (
-        <TouchBar>
-            <TouchBarSegmentedControl
-                mode="single"
-                segments={CALENDAR_VIEWS.map(({ name }) => ({
-                    label: name,
-                }))}
-                selectedIndex={CALENDAR_VIEWS.findIndex(v => v.type === viewType) ?? 0}
-                onChange={(selectedIndex) => calendarRef.current?.changeView(CALENDAR_VIEWS[selectedIndex].type)}
-            />
-
-            <TouchBarSpacer size="flexible" />
-            <TouchBarLabel label={title ?? ""} />
-            <TouchBarSpacer size="flexible" />
-
-            <TouchBarButton
-                label={t("calendar.today")}
-                click={() => calendarRef.current?.today()}
-            />
-            <TouchBarButton
-                icon="NSImageNameTouchBarGoBackTemplate"
-                click={() => calendarRef.current?.prev()}
-            />
-            <TouchBarButton
-                icon="NSImageNameTouchBarGoForwardTemplate"
-                click={() => calendarRef.current?.next()}
-            />
-        </TouchBar>
-    );
 }
 
 function useOnDatesSet(calendarRef: RefObject<FullCalendar>) {

@@ -53,6 +53,12 @@ export default function buildLaunchBarConfig() {
             builtinWidget: "bookmarks",
             icon: "bx bx-bookmark"
         },
+        syncStatus: {
+            title: t("hidden-subtree.sync-status-title"),
+            type: "launcher",
+            builtinWidget: "syncStatus",
+            icon: "bx bx-wifi"
+        },
     };
 
     const desktopAvailableLaunchers: HiddenSubtreeItem[] = [
@@ -162,10 +168,7 @@ export default function buildLaunchBarConfig() {
         },
         {
             id: "_lbSyncStatus",
-            title: t("hidden-subtree.sync-status-title"),
-            type: "launcher",
-            builtinWidget: "syncStatus",
-            icon: "bx bx-wifi"
+            ...sharedLaunchers.syncStatus
         },
         {
             id: "_lbSettings",
@@ -181,7 +184,8 @@ export default function buildLaunchBarConfig() {
         { id: "_lbMobileSearchNotes", ...sharedLaunchers.searchNotes },
         { id: "_lbMobileToday", ...sharedLaunchers.openToday },
         { id: "_lbMobileRecentChanges", ...sharedLaunchers.recentChanges },
-        { id: "_lbMobileBookmarks", ...sharedLaunchers.bookmarks }
+        { id: "_lbMobileBookmarks", ...sharedLaunchers.bookmarks },
+        { id: "_lbMobileSyncStatus", ...sharedLaunchers.syncStatus }
     ];
 
     const mobileVisibleLaunchers: HiddenSubtreeItem[] = [

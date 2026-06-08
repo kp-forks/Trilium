@@ -53,6 +53,7 @@ const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown
     "text/coffeescript": async () => (await import('@codemirror/legacy-modes/mode/coffeescript')).coffeeScript,
     "text/css": async () => (await import('@codemirror/lang-css')).css(),
     "text/html": async () => (await import('@codemirror/lang-html')).html(),
+    "text/javascript": async () => buildJavaScript("text/javascript"),
     "text/jinja2": async () => (await import('@codemirror/legacy-modes/mode/jinja2')).jinja2,
     "text/jsx": async () => (await import('@codemirror/lang-javascript')).javascript({ jsx: true }),
     "text/mirc": async () => (await import('@codemirror/legacy-modes/mode/mirc')).mirc,
@@ -127,9 +128,9 @@ const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown
     "text/x-lua": async () => (await import('@codemirror/legacy-modes/mode/lua')).lua,
     "text/x-mariadb": async () => (await import('@codemirror/legacy-modes/mode/sql')).sqlite,
     "text/x-markdown": async () => {
-        const { markdown } = (await import('@codemirror/lang-markdown'));
+        const { markdown, markdownLanguage } = (await import('@codemirror/lang-markdown'));
         const { languages } = (await import('@codemirror/language-data'));
-        return markdown({ codeLanguages: languages });
+        return markdown({ base: markdownLanguage, codeLanguages: languages });
     },
     "text/x-mathematica": async () => (await import('@codemirror/legacy-modes/mode/mathematica')).mathematica,
     "text/x-modelica": async () => (await import('@codemirror/legacy-modes/mode/modelica')).modelica,

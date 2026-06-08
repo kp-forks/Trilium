@@ -17,7 +17,7 @@ import LoadResults from "../services/load_results";
 import server from "../services/server";
 import toast from "../services/toast";
 import tree from "../services/tree";
-import { createImageSrcUrl, openInAppHelpFromUrl } from "../services/utils";
+import { createImageSrcUrl, isElectron, openInAppHelpFromUrl } from "../services/utils";
 import { ViewTypeOptions } from "./collections/interface";
 import ActionButton, { ActionButtonProps } from "./react/ActionButton";
 import { ButtonGroup } from "./react/Button";
@@ -56,10 +56,12 @@ export const DESKTOP_FLOATING_BUTTONS: FloatingButtonsList = [
     ShowHighlightsListWidgetButton,
     RunActiveNoteButton,
     OpenTriliumApiDocsButton,
+    OpenElectronApiDocsButton,
     SaveToNoteButton,
     RelationMapButtons,
     CopyImageReferenceButton,
     ExportImageButtons,
+    ExportSpreadsheetButton,
     InAppHelpButton,
     Backlinks
 ];
@@ -214,6 +216,15 @@ function OpenTriliumApiDocsButton({ note }: FloatingButtonContext) {
     />;
 }
 
+function OpenElectronApiDocsButton({ note }: FloatingButtonContext) {
+    const isEnabled = note.mime === "application/javascript;env=frontend" && isElectron();
+    return isEnabled && <FloatingButton
+        icon="bx bx-window-alt"
+        text={t("code_buttons.electron_api_docs_button_title")}
+        onClick={() => openInAppHelpFromUrl("GFXVHyblVN3d")}
+    />;
+}
+
 function SaveToNoteButton({ note }: FloatingButtonContext) {
     const isEnabled = note.mime === "text/x-sqlite;schema=trilium" && note.isHiddenCompletely();
     return isEnabled && <FloatingButton
@@ -313,6 +324,24 @@ function ExportImageButtons({ note, triggerEvent, isDefaultViewMode }: FloatingB
                 icon="bx bxs-file-png"
                 text={t("png_export_button.button_title")}
                 onClick={() => triggerEvent("exportPng")}
+            />
+        </>
+    );
+}
+
+function ExportSpreadsheetButton({ note, triggerEvent, isDefaultViewMode }: FloatingButtonContext) {
+    const isEnabled = note?.type === "spreadsheet" && note?.isContentAvailable() && isDefaultViewMode;
+    return isEnabled && (
+        <>
+            <FloatingButton
+                icon="bx bxs-spreadsheet"
+                text={t("spreadsheet.export-xlsx")}
+                onClick={() => triggerEvent("exportXlsx")}
+            />
+            <FloatingButton
+                icon="bx bxs-spreadsheet"
+                text={t("spreadsheet.export-csv")}
+                onClick={() => triggerEvent("exportCsv")}
             />
         </>
     );

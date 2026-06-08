@@ -17,6 +17,7 @@ import etapiSpecialNoteRoutes from "../etapi/special_notes.js";
 import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
 import { isElectron } from "../services/utils.js";
+
 import shareRoutes from "../share/routes.js";
 import clipperRoute from "./api/clipper.js";
 import databaseRoute from "./api/database.js";
@@ -33,6 +34,7 @@ import senderRoute from "./api/sender.js";
 import systemInfoRoute from "./api/system_info.js";
 import totp from './api/totp.js';
 // API routes
+import linkEmbedRoute from "./api/link_embed.js";
 import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
 import * as indexRoute from "./index.js";
 import loginRoute from "./login.js";
@@ -120,16 +122,13 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/attachments/:attachmentId/upload-modified-file", filesRoute.uploadModifiedFileToAttachment);
     route(PUT, "/api/attachments/:attachmentId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateAttachment, apiResultHandler);
 
-    // TODO: Re-enable once we support route()
-    // route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
-
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
     apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);
 
     // docker health check
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);
 
-    route(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
+    asyncRoute(PST, "/api/login/sync", [loginRateLimiter], loginApiRoute.loginSync, apiResultHandler);
     asyncRoute(PST, "/api/login/token", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
 
     apiRoute(GET, "/api/etapi-tokens", etapiTokensApiRoutes.getTokens);
@@ -176,6 +175,7 @@ function register(app: express.Application) {
     asyncRoute(PST, "/api/sender/note", [auth.checkEtapiToken], senderRoute.saveNote, apiResultHandler);
 
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
+    asyncApiRoute(GET, "/api/link-embed/metadata", linkEmbedRoute.getMetadata);
 
     shareRoutes.register(router);
 

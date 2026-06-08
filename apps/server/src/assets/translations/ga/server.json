@@ -104,7 +104,8 @@
     "toggle-classic-editor-toolbar": "Athraigh an cluaisín Formáidithe don eagarthóir leis an mbarra uirlisí socraithe",
     "export-as-pdf": "Easpórtáil an nóta reatha mar PDF",
     "toggle-zen-mode": "Cumasaíonn/díchumasaíonn sé an mód zen (comhad úsáideora íosta le haghaidh eagarthóireacht níos dírithe)",
-    "save-named-revision": "Sábháil athbhreithniú ainmnithe den nóta gníomhach"
+    "save-named-revision": "Sábháil athbhreithniú ainmnithe den nóta gníomhach",
+    "toggle-archived-notes": "Taispeáin/folaigh nótaí cartlannaithe sa chrann nótaí"
   },
   "keyboard_action_names": {
     "back-in-note-history": "Ar ais i Stair na Nótaí",
@@ -202,7 +203,8 @@
     "reset-zoom-level": "Athshocraigh Leibhéal Súmála",
     "copy-without-formatting": "Cóipeáil Gan Formáidiú",
     "force-save-revision": "Athbhreithniú Sábháilte Fórsála",
-    "save-named-revision": "Sábháil Athbhreithniú Ainmnithe"
+    "save-named-revision": "Sábháil Athbhreithniú Ainmnithe",
+    "toggle-archived-notes": "Infheictheacht Nótaí Cartlainne a Athrú"
   },
   "login": {
     "title": "Logáil Isteach",
@@ -321,7 +323,19 @@
     "llm-chat-history-title": "Stair Comhrá AI",
     "llm-title": "AI / LLM",
     "sidebar-chat-title": "Comhrá AI",
-    "custom-dictionary-title": "Foclóir Saincheaptha"
+    "custom-dictionary-title": "Foclóir Saincheaptha",
+    "task-states-title": "Stáit na dTascanna",
+    "task-state-none": "Dada",
+    "task-state-doing": "Ag déanamh",
+    "task-state-done": "Déanta",
+    "task-state-maybe": "B’fhéidir",
+    "task-state-cancelled": "Cealaithe",
+    "task-state-attr-state-id": "Aitheantóir (riachtanach)",
+    "task-state-attr-markdown-symbol": "Siombail Markdown",
+    "task-state-attr-is-completed": "Comhaireamh mar chríochnaithe",
+    "task-state-attr-color": "Dath",
+    "task-state-attr-is-hidden": "I bhfolach ón liosta",
+    "security-title": "Slándáil"
   },
   "notes": {
     "new-note": "Nóta nua",
@@ -356,7 +370,8 @@
     "old_version": "Ní thacaítear le haistriú díreach ó do leagan reatha. Uasghrádaigh go dtí an leagan is déanaí v0.60.4 ar dtús agus ansin go dtí an leagan seo amháin.",
     "error_message": "Earráid le linn imirce go leagan {{version}}: {{stack}}",
     "wrong_db_version": "Tá leagan an bhunachair shonraí ({{version}}) níos nuaí ná mar a bhfuil súil ag an bhfeidhmchlár leis ({{targetVersion}}), rud a chiallaíonn gur cruthaíodh é le leagan níos nuaí agus neamh-chomhoiriúnach de Trilium. Uasghrádaigh go dtí an leagan is déanaí de Trilium chun an fhadhb seo a réiteach.",
-    "invalid_db_version": "Ní uimhir bhailí í an leagan bunachar sonraí. De ghnáth léiríonn sé seo go bhfuil an rogha 'dbVersion' truaillithe sa bhunachar sonraí. Athchóirigh ó chúltaca le do thoil."
+    "invalid_db_version": "Ní uimhir bhailí í an leagan bunachar sonraí. De ghnáth léiríonn sé seo go bhfuil an rogha 'dbVersion' truaillithe sa bhunachar sonraí. Athchóirigh ó chúltaca le do thoil.",
+    "automatic_migrations_disabled": "Tá imirce uathoibríoch DB díchumasaithe tríd an athróg timpeallachta TRILIUM_MANUAL_DB_MIGRATION = {{envVarValue}}"
   },
   "modals": {
     "error_title": "Earráid"
@@ -423,5 +438,21 @@
   },
   "password": {
     "incorrect": "Tá an focal faire a chuir tú isteach mícheart."
+  },
+  "security-dialog": {
+    "enable-title": "Cumasaigh {{settingLabel}}",
+    "enable-message": "An bhfuil tú cinnte gur mian leat {{settingLabel}} a chumasú?",
+    "enable-detail": "{{warning}}\n\nNá cumasaigh é seo ach amháin má tá sé beartaithe agat go sainráite an ghné seo a úsáid. Ná cumasaigh é má iarrtar ort é a dhéanamh le script nó le nóta nach bhfuil tú eolach air.\n\nÉilíonn atosú chun go dtiocfaidh an t-athrú seo i bhfeidhm.",
+    "disable-title": "Díchumasaigh {{settingLabel}}",
+    "disable-message": "Díchumasófar {{settingLabel}}.",
+    "disable-detail": "Éilíonn an t-athrú seo atosú chun go dtiocfaidh sé i bhfeidhm.",
+    "cancel": "Cealaigh",
+    "enable": "Cumasaigh",
+    "disable": "Díchumasaigh",
+    "dont-ask-again": "Ná fiafraigh arís go dtí go n-atosófar",
+    "backend-scripting": "Forghníomhú script chúltaca",
+    "backend-scripting-warning": "Tá rochtain iomlán ag scripteanna cúil ar an bhfreastalaí, lena n-áirítear an córas comhad agus an líonra.",
+    "sql-console": "Consól SQL",
+    "sql-console-warning": "Ceadaíonn consól SQL ceisteanna SQL treallacha a fhorghníomhú i gcoinne an bhunachar sonraí."
   }
 }

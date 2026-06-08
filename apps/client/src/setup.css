@@ -159,6 +159,10 @@ body.setup {
                 margin-inline: -2rem;
                 margin-bottom: -2rem;
                 padding-inline: 2rem;
+
+                body.background-effects & {
+                    background: transparent;
+                }
             }
 
             >.page-error {

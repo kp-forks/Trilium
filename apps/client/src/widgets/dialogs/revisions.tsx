@@ -17,6 +17,7 @@ import { renderMathInElement } from "../../services/math";
 import open from "../../services/open";
 import options from "../../services/options";
 import protected_session_holder from "../../services/protected_session_holder";
+import { sanitizeNoteContentHtml } from "../../services/sanitize_content.js";
 import server from "../../services/server";
 import toast from "../../services/toast";
 import utils from "../../services/utils";
@@ -579,7 +580,7 @@ function RevisionContentText({ content }: { content: string | Uint8Array | undef
             renderMathInElement(contentRef.current, { trust: true });
         }
     }, [content]);
-    return <RawHtmlBlock containerRef={contentRef} className="ck-content" html={content as string} />;
+    return <RawHtmlBlock containerRef={contentRef} className="ck-content" html={sanitizeNoteContentHtml(content as string)} />;
 }
 
 function RevisionContentDiff({ noteContent, itemContent, itemType }: {
@@ -587,8 +588,12 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
     itemContent: string | Uint8Array | undefined,
     itemType: string
 }) {
-    if (!noteContent || typeof itemContent !== "string") {
-        return <div className="revision-diff-content">{t("revisions.diff_not_available")}</div>;
+    if (typeof itemContent !== "string") {
+        return (
+            <div className="revision-diff-content">
+                <NoItems icon="bx bx-low-vision" text={t("revisions.diff_not_available")} />
+            </div>
+        );
     }
 
     let diffHtml: string;
@@ -597,7 +602,7 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
         diffHtml = HtmlDiff.execute(noteContent, itemContent);
     } else {
         // Use word diff for code/mermaid (plain text)
-        const diff = diffWords(noteContent, itemContent);
+        const diff = diffWords(noteContent ?? "", itemContent);
         diffHtml = diff.map(part => {
             if (part.added) {
                 return `<span class="revision-diff-added">${utils.escapeHtml(part.value)}</span>`;
@@ -606,6 +611,11 @@ function RevisionContentDiff({ noteContent, itemContent, itemType }: {
             }
             return utils.escapeHtml(part.value);
         }).join("");
+    }
+
+    // Diff returned no results, meaning that they are identical.
+    if (!diffHtml) {
+        return <NoItems className="revision-diff-content" icon="bx bx-copy" text={t("revisions.diff_identical")} />;
     }
 
     return <SanitizedHtml

@@ -7,6 +7,7 @@ import type BNote from "../becca/entities/bnote.js";
 import type { ApiParams } from "./backend_script_api_interface.js";
 import { getLog } from "./log.js";
 import ScriptContext from "./script_context.js";
+import { assertScriptingEnabled } from "./scripting_guard.js";
 import { getContext } from "./context.js";
 import { unwrapStringOrBuffer } from "./utils/binary.js";
 import ws from "./ws.js";
@@ -60,6 +61,13 @@ function executeNoteNoException(note: BNote, apiParams: ApiParams) {
 }
 
 export function executeBundle(bundle: Bundle, apiParams: ApiParams = {}) {
+    // Security boundary: all backend script execution funnels through here, so this is the
+    // single point that enforces the backendScriptingEnabled toggle. Call sites may also check
+    // beforehand to fail gracefully (skip, return [], 403), but this guarantees no script runs
+    // when scripting is disabled, regardless of how executeBundle is reached (e.g. via the
+    // script-facing BNote.executeScript()).
+    assertScriptingEnabled();
+
     if (!apiParams.startNote) {
         // this is the default case, the only exception is when we want to preserve frontend startNote
         apiParams.startNote = bundle.note;
@@ -137,8 +145,10 @@ function getParams(params?: ScriptParams) {
 }
 
 function getScriptBundleForFrontend(note: BNote, script?: string, params?: ScriptParams) {
-    // Warn the user if they're trying to run a backend script in the frontend
-    if (note.isJavaScript() && note.getScriptEnv() === "backend") {
+    // Warn the user if they're trying to run a backend script in the frontend.
+    // Skip this check when an override script is provided (e.g. from runOnFrontend),
+    // since the override is already meant for the frontend.
+    if (!script && note.isJavaScript() && note.getScriptEnv() === "backend") {
         getLog().info(`Cannot execute note ${note.noteId} "${note.getTitleOrProtected()}" in frontend, note is of type "Code: JS backend"`);
 
         const message = t("script.wrong-environment", {

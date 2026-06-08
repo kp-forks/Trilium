@@ -22,12 +22,21 @@ export interface FileStream {
 
 export interface ZipProvider {
     /**
+     * Detects the filename encoding used in a ZIP file by collecting all
+     * non-UTF-8-flagged entry names and running charset detection on them.
+     * Returns the detected encoding label (usable with TextDecoder), or "utf-8" as fallback.
+     */
+    detectFilenameEncoding(buffer: Uint8Array): Promise<string>;
+
+    /**
      * Iterates over every entry in a ZIP buffer, calling `processEntry` for each one.
      * `readContent()` inside the callback reads the raw bytes of that entry on demand.
+     * If `filenameEncoding` is provided, non-UTF-8-flagged filenames are decoded using it.
      */
     readZipFile(
         buffer: Uint8Array,
-        processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>
+        processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>,
+        filenameEncoding?: string
     ): Promise<void>;
 
     createZipArchive(): ZipArchive;

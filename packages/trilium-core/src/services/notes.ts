@@ -1,7 +1,6 @@
 import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, type NoteType } from "@triliumnext/commons";
-import fs from "fs";
-import html2plaintext from "html2plaintext";
 import { t } from "i18next";
+import { parse as parseHtml } from "node-html-parser";
 import url from "url";
 
 import becca from "../becca/becca.js";
@@ -20,6 +19,7 @@ import noteTypesService from "./note_types.js";
 import optionService from "./options.js";
 import request from "./request.js";
 import revisionService from "./revisions.js";
+import { evaluateTemplateSafe } from "./safe_template.js";
 import { sanitizeHtml } from "./sanitizer.js";
 import { getSql } from "./sql/index.js";
 import type TaskContext from "./task_context.js";
@@ -147,17 +147,17 @@ function getNewNoteTitle(parentNote: BNote) {
     const titleTemplate = parentNote.getLabelValue("titleTemplate");
 
     if (titleTemplate !== null) {
-        try {
-            const now = dayjs(date_utils.localNowDateTime() || new Date());
+        const now = dayjs(date_utils.localNowDateTime() || new Date());
 
-            // "officially" injected values:
-            // - now
-            // - parentNote
-
-            title = eval(`\`${titleTemplate}\``);
-        } catch (e: any) {
-            getLog().error(`Title template of note '${parentNote.noteId}' failed with: ${e.message}`);
-        }
+        // "officially" injected values:
+        // - now
+        // - parentNote
+        title = evaluateTemplateSafe(
+            titleTemplate,
+            { now, parentNote },
+            title,
+            `titleTemplate of note '${parentNote.noteId}'`
+        );
     }
 
     // this isn't in theory a good place to sanitize title, but this will catch a lot of XSS attempts.
@@ -416,18 +416,28 @@ function protectNote(note: BNote, protect: boolean) {
     }
 }
 
-function checkImageAttachments(note: BNote, content: string) {
+export function checkImageAttachments(note: BNote, content: string) {
     const foundAttachmentIds = new Set<string>();
     let match;
 
-    const imgRegExp = /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g;
-    while ((match = imgRegExp.exec(content))) {
-        foundAttachmentIds.add(match[1]);
-    }
+    const patterns = note.isMarkdown()
+        ? [
+            // ![...](api/attachments/{id}/image/...) or similar markdown image syntax
+            /api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
+            /attachmentId=([a-zA-Z0-9_]+)/g
+        ]
+        : [
+            // <img src="api/attachments/{id}/image/...">
+            /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+            // <a href="...attachmentId={id}">
+            /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g
+        ];
 
-    const linkRegExp = /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g;
-    while ((match = linkRegExp.exec(content))) {
+    for (const pattern of patterns) {
+        while ((match = pattern.exec(content))) {
         foundAttachmentIds.add(match[1]);
+        }
     }
 
     const attachments = note.getAttachments();
@@ -503,59 +513,22 @@ function findImageLinks(content: string, foundLinks: FoundLink[]) {
     return content.replace(/src="[^"]*\/api\/images\//g, 'src="api/images/');
 }
 
-function findInternalLinks(content: string, foundLinks: FoundLink[]) {
-    const re = /href="[^"]*#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)\/?"/g;
-    let match;
-
-    while ((match = re.exec(content))) {
-        foundLinks.push({
-            name: "internalLink",
-            value: match[1]
-        });
-    }
-
-    // removing absolute references to server to keep it working between instances
-    return content.replace(/href="[^"]*#root/g, 'href="#root');
-}
-
-function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
-    const re = /<section class="include-note[^>]+data-note-id="([a-zA-Z0-9_]+)"[^>]*>/g;
-    let match;
-
-    while ((match = re.exec(content))) {
-        foundLinks.push({
-            name: "includeNoteLink",
-            value: match[1]
-        });
-    }
-
-    return content;
-}
-
 /**
  * Extracts bookmark IDs from CKEditor bookmark anchors (`<a id="..."></a>` without href).
  * Bookmarks are stored as labels on the note so they can be looked up without parsing content.
- * Matches id regardless of attribute order; skips anchors with href (those are regular links).
  */
 export function findBookmarks(content: string): string[] {
-    const re = /<a\b([^>]*)>(<\/a>)?/g;
+    const re = /<a\s+id="([^"]+)"[^>]*>(<\/a>)?/g;
     const bookmarks: string[] = [];
     let match;
 
     while ((match = re.exec(content))) {
-        const attrs = match[1];
-
         // Skip anchors that also have an href (those are regular links, not bookmarks)
-        if (/\bhref\s*=/.test(attrs)) {
+        if (match[0].includes("href=")) {
             continue;
         }
 
-        const idMatch = /\bid\s*=\s*"([^"]+)"/.exec(attrs) ?? /\bid\s*=\s*'([^']+)'/.exec(attrs);
-        if (!idMatch) {
-            continue;
-        }
-
-        const id = idMatch[1];
+        const id = match[1];
         if (!bookmarks.includes(id)) {
             bookmarks.push(id);
         }
@@ -588,6 +561,124 @@ function saveBookmarks(note: BNote, content: string) {
     }
 }
 
+function findInternalLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /href="[^"]*#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)\/?"/g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+
+    // removing absolute references to server to keep it working between instances
+    return content.replace(/href="[^"]*#root/g, 'href="#root');
+}
+
+function findMarkdownImageLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /api\/images\/([a-zA-Z0-9_]+)\//g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "imageLink",
+            value: match[1]
+        });
+    }
+}
+
+function findMarkdownInternalLinks(content: string, foundLinks: FoundLink[]) {
+    // [text](#root/.../noteId) or [text](#root/.../noteId?query)
+    const hashRootRe = /#root[a-zA-Z0-9_/]*\/([a-zA-Z0-9_]+)/g;
+    let match;
+
+    while ((match = hashRootRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+
+    // [[noteId]] wiki-links
+    const wikiLinkRe = /\[\[([a-zA-Z0-9_]+)\]\]/g;
+
+    while ((match = wikiLinkRe.exec(content))) {
+        foundLinks.push({
+            name: "internalLink",
+            value: match[1]
+        });
+    }
+}
+
+/**
+ * Extract internal-link note IDs from an llmChat note's JSON content.
+ *
+ * Two sources are scanned:
+ * 1. `[[noteId]]` wiki-links inside assistant text blocks
+ * 2. `noteId` / `parentNoteId` fields in tool-call inputs
+ */
+export function findLlmChatLinks(content: string, foundLinks: FoundLink[]) {
+    let parsed: { messages?: unknown[] };
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        return;
+    }
+
+    if (!Array.isArray(parsed.messages)) {
+        return;
+    }
+
+    const wikiLinkRe = /\[\[([a-zA-Z0-9_]+)\]\]/g;
+
+    for (const msg of parsed.messages) {
+        if (typeof msg !== "object" || msg === null) continue;
+        const { role, content: msgContent } = msg as Record<string, unknown>;
+
+        if (role !== "assistant" || !Array.isArray(msgContent)) continue;
+
+        for (const block of msgContent) {
+            if (typeof block !== "object" || block === null) continue;
+            const b = block as Record<string, unknown>;
+
+            if (b.type === "text" && typeof b.content === "string") {
+                let match;
+                while ((match = wikiLinkRe.exec(b.content))) {
+                    foundLinks.push({ name: "internalLink", value: match[1] });
+                }
+            } else if (b.type === "tool_call") {
+                const toolCall = b.toolCall as Record<string, unknown> | undefined;
+                if (!toolCall || typeof toolCall !== "object") continue;
+
+                const input = toolCall.input as Record<string, unknown> | undefined;
+                if (input && typeof input === "object") {
+                    if (typeof input.noteId === "string" && input.noteId) {
+                        foundLinks.push({ name: "internalLink", value: input.noteId });
+                    }
+                    if (typeof input.parentNoteId === "string" && input.parentNoteId) {
+                        foundLinks.push({ name: "internalLink", value: input.parentNoteId });
+                    }
+                }
+            }
+        }
+    }
+}
+
+function findIncludeNoteLinks(content: string, foundLinks: FoundLink[]) {
+    const re = /<section class="include-note[^>]+data-note-id="([a-zA-Z0-9_]+)"[^>]*>/g;
+    let match;
+
+    while ((match = re.exec(content))) {
+        foundLinks.push({
+            name: "includeNoteLink",
+            value: match[1]
+        });
+    }
+
+    return content;
+}
+
 function findRelationMapLinks(content: string, foundLinks: FoundLink[]) {
     try {
         const obj = JSON.parse(content);
@@ -608,24 +699,20 @@ const imageUrlToAttachmentIdMapping: Record<string, string> = {};
 async function downloadImage(noteId: string, imageUrl: string) {
     const unescapedUrl = unescapeHtml(imageUrl);
 
+    // SSRF protection: only allow http(s) URLs and block file:// and other schemes.
     try {
-        let imageBuffer: Uint8Array;
-
-        if (imageUrl.toLowerCase().startsWith("file://")) {
-            imageBuffer = await new Promise((res, rej) => {
-                const localFilePath = imageUrl.substring("file://".length);
-
-                return fs.readFile(localFilePath, (err, data) => {
-                    if (err) {
-                        rej(err);
-                    } else {
-                        res(data);
-                    }
-                });
-            });
-        } else {
-            imageBuffer = new Uint8Array(await request.getImage(unescapedUrl));
+        const parsed = new URL(unescapedUrl);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            getLog().error(`Download of '${imageUrl}' for note '${noteId}' rejected: only http/https URLs are allowed.`);
+            return;
         }
+    } catch {
+        getLog().error(`Download of '${imageUrl}' for note '${noteId}' rejected: invalid URL.`);
+        return;
+    }
+
+    try {
+        const imageBuffer = new Uint8Array(await request.getImage(unescapedUrl));
 
         const parsedUrl = url.parse(unescapedUrl);
         const title = basename(parsedUrl.pathname || "");
@@ -756,6 +843,17 @@ function downloadImages(noteId: string, content: string) {
     return content;
 }
 
+/**
+ * Derives a plain-text attachment title from the inner HTML of an inline
+ * attachment's link label: strips tags, decodes HTML entities, collapses
+ * whitespace and trims.
+ */
+export function prepareTitle(html: string): string {
+    // `.text` strips tags and decodes HTML entities (via `he`); we then collapse
+    // whitespace and trim, matching the former `html2plaintext` behavior.
+    return parseHtml(html).text.replace(/\s+/g, " ").trim();
+}
+
 function saveAttachments(note: BNote, content: string) {
     const inlineAttachmentRe = /<a[^>]*?\shref=['"]data:([^;'">]+);base64,([^'">]+)['"][^>]*>(.*?)<\/a>/gim;
     let attachmentMatch;
@@ -766,7 +864,7 @@ function saveAttachments(note: BNote, content: string) {
         const base64data = attachmentMatch[2];
         const buffer = decodeBase64(base64data);
 
-        const title = html2plaintext(attachmentMatch[3]);
+        const title = prepareTitle(attachmentMatch[3]);
 
         const attachment = note.saveAttachment({
             role: "file",
@@ -785,8 +883,9 @@ function saveAttachments(note: BNote, content: string) {
     return content;
 }
 
-function saveLinks(note: BNote, content: string | Uint8Array) {
-    if ((note.type !== "text" && note.type !== "relationMap") || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
+
+export function saveLinks(note: BNote, content: string | Uint8Array) {
+    if ((note.type !== "text" && note.type !== "relationMap" && note.type !== "llmChat" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
         return {
             forceFrontendReload: false,
             content
@@ -806,8 +905,14 @@ function saveLinks(note: BNote, content: string | Uint8Array) {
         saveBookmarks(note, content);
 
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
+    } else if (note.isMarkdown() && typeof content === "string") {
+        findMarkdownImageLinks(content, foundLinks);
+        findMarkdownInternalLinks(content, foundLinks);
+        ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {
         findRelationMapLinks(content, foundLinks);
+    } else if (note.type === "llmChat" && typeof content === "string") {
+        findLlmChatLinks(content, foundLinks);
     } else {
         throw new Error(`Unrecognized type '${note.type}'`);
     }

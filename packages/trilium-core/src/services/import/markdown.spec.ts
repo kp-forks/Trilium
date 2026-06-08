@@ -8,7 +8,7 @@ describe("markdown", () => {
         const conversionTable = {
             "nginx": "language-text-x-nginx-conf",
             "diff": "language-text-x-diff",
-            "javascript": "language-application-javascript-env-backend",
+            "javascript": "language-text-javascript",
             "css": "language-text-css",
             "mips": "language-text-x-asm-mips",
             "jsx": "language-text-jsx",
@@ -281,6 +281,21 @@ $$`;
             - [x] Hello
             - [ ] World`;
         const expected = `<ul class="todo-list"><li><label class="todo-list__label"><input type="checkbox" checked="checked" disabled="disabled"><span class="todo-list__label__description">Hello</span></label></li><li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">World</span></label></li></ul>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
+    it("imports todo list multistate markers as data-trilium-task-state", () => {
+        const input = trimIndentation`\
+            - [/] Doing
+            - [-] Cancelled
+            - [?] Maybe`;
+        const expected = [
+            `<ul class="todo-list">`,
+            `<li data-trilium-task-state="doing"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Doing</span></label></li>`,
+            `<li data-trilium-task-state="cancelled"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Cancelled</span></label></li>`,
+            `<li data-trilium-task-state="maybe"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Maybe</span></label></li>`,
+            `</ul>`
+        ].join("");
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 

@@ -1,5 +1,6 @@
 import { AttributeEditor as CKEditorAttributeEditor, MentionFeed, ModelElement, ModelNode, ModelPosition } from "@triliumnext/ckeditor5";
 import { AttributeType } from "@triliumnext/commons";
+import type { Tooltip } from "bootstrap";
 import { createPortal } from "preact/compat";
 import { MutableRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "preact/hooks";
 
@@ -27,9 +28,7 @@ type AttributeCommandNames = FilteredCommandNames<CommandData>;
 
 const HELP_TEXT = `
 <p>${t("attribute_editor.help_text_body1")}</p>
-
 <p>${t("attribute_editor.help_text_body2")}</p>
-
 <p>${t("attribute_editor.help_text_body3")}</p>`;
 
 const mentionSetup: MentionFeed[] = [
@@ -107,13 +106,19 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
     const editorRef = useRef<CKEditorApi>();
     const [ locale ] = useTriliumOption("locale");
 
-    const { showTooltip, hideTooltip } = useTooltip(wrapperRef, {
+    // Stable config so `useTooltip`'s effect doesn't dispose/recreate the tooltip
+    // on every render (it runs on each keystroke). `focus` shows the help when the
+    // editor is focused; `state` below force-hides it when the attribute-detail
+    // popup takes over.
+    const tooltipConfig = useMemo<Partial<Tooltip.Options>>(() => ({
         trigger: "focus",
         html: true,
         title: HELP_TEXT,
         placement: "bottom",
         offset: "0,30"
-    });
+    }), []);
+
+    const { showTooltip, hideTooltip } = useTooltip(wrapperRef, tooltipConfig);
 
     const [ attributeDetailWidgetEl, attributeDetailWidget ] = useLegacyWidget(() => new AttributeDetailWidget());
 

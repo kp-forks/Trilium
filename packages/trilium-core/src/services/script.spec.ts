@@ -1,32 +1,31 @@
 import { trimIndentation } from "@triliumnext/commons";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import becca from "../becca/becca.js";
-import BBranch from "../becca/entities/bbranch.js";
-import BNote from "../becca/entities/bnote.js";
 import { buildNote } from "../test/becca_easy_mocking.js";
-import { NoteBuilder } from "../test/becca_mocking.js";
+import config from "./config.js";
 import { getContext } from "./context.js";
-import { buildJsx, executeBundle, getScriptBundle } from "./script.js";
+import scriptService, { buildJsx, executeBundle, getScriptBundle } from "./script.js";
+import ws from "./ws.js";
 
 describe("Script", () => {
+    // executeBundle enforces the backendScriptingEnabled security toggle (default false).
+    const originalScriptingEnabled = config.Security.backendScriptingEnabled;
+
+    beforeAll(() => {
+        config.Security.backendScriptingEnabled = true;
+    });
+
+    afterAll(() => {
+        config.Security.backendScriptingEnabled = originalScriptingEnabled;
+    });
+
     beforeEach(() => {
 
         becca.reset();
+        vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {}).mockClear();
 
-        new NoteBuilder(
-            new BNote({
-                noteId: "root",
-                title: "root",
-                type: "text"
-            })
-        );
-        new BBranch({
-            branchId: "none_root",
-            noteId: "root",
-            parentNoteId: "none",
-            notePosition: 10
-        });
+        buildNote({ id: "root", title: "root" });
 
         vi.mock("./sql.js", () => {
             return {
@@ -42,11 +41,11 @@ describe("Script", () => {
         });
 
         vi.mock("./sql_init.js", () => {
-            return {
-                dbReady: () => {
-                    console.log("Hello world");
-                }
+            const mock = {
+                initializeDb: () => {},
+                dbReady: Promise.resolve()
             };
+            return { default: mock, ...mock };
         });
     });
 
@@ -57,6 +56,32 @@ describe("Script", () => {
                 html: "",
             });
             expect(result).toBe("world");
+        });
+    });
+
+    it("executes runOnFrontend from a backend script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: ""
+        });
+
+        getContext().init(() => {
+            const bundle = getScriptBundle(note, true, "backend", [], `
+                api.runOnFrontend(() => {
+                    api.showMessage("Hello frontend");
+                });
+            `);
+            expect(bundle).toBeDefined();
+            executeBundle(bundle!);
+
+            expect(ws.sendMessageToAllClients).toHaveBeenCalledOnce();
+            expect(ws.sendMessageToAllClients).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: "execute-script",
+                    script: expect.stringContaining("Hello frontend")
+                })
+            );
         });
     });
 
@@ -92,6 +117,160 @@ describe("Script", () => {
                 expect(result).toBe(true);
             });
         });
+    });
+});
+
+describe("getScriptBundle", () => {
+    beforeEach(() => {
+        becca.reset();
+    });
+
+    it("returns a bundle for a backend script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = getScriptBundle(note, true, "backend");
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("api.log('hello');");
+        expect(bundle!.note).toBe(note);
+        expect(bundle!.allNotes).toContain(note);
+    });
+
+    it("returns a bundle for a frontend script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=frontend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = getScriptBundle(note, true, "frontend");
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("api.log('hello');");
+    });
+
+    it("returns undefined for non-script notes", () => {
+        const note = buildNote({ type: "text", content: "just text" });
+
+        const bundle = getScriptBundle(note, true, "backend");
+        expect(bundle).toBeUndefined();
+    });
+
+    it("skips child notes with mismatched script env", () => {
+        const parent = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: "api.log('backend');",
+            children: [{
+                type: "code",
+                mime: "application/javascript;env=frontend",
+                content: "api.log('frontend');"
+            }]
+        });
+
+        const bundle = getScriptBundle(parent, true, "backend");
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("api.log('backend');");
+        expect(bundle!.script).not.toContain("api.log('frontend');");
+    });
+
+    it("builds an HTML bundle for an HTML note", () => {
+        const note = buildNote({ type: "render", mime: "text/html", content: "<p>hi</p>" });
+
+        const bundle = getScriptBundle(note, true, "frontend");
+        expect(bundle).toBeDefined();
+        expect(bundle?.html).toContain("<p>hi</p>");
+    });
+
+    it("throws when the note's content is not available (protected)", () => {
+        const note = buildNote({ type: "code", mime: "application/javascript;env=backend", content: "" });
+        note.isContentAvailable = () => false;
+
+        expect(() => getScriptBundle(note)).toThrow(/protected/);
+    });
+});
+
+describe("executeNote", () => {
+    beforeEach(() => {
+        becca.reset();
+        vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {}).mockClear();
+    });
+
+    it("sends a toast when trying to execute a frontend script in the backend", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=frontend",
+            content: "api.log('hello');"
+        });
+
+        scriptService.executeNote(note, {});
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledOnce();
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledWith(
+            expect.objectContaining({ type: "toast" })
+        );
+    });
+
+    it("throws when the note is protected and unavailable", () => {
+        const note = buildNote({ type: "code", mime: "application/javascript;env=backend", content: "" });
+        note.isContentAvailable = () => false;
+
+        expect(() => scriptService.executeNote(note, {})).toThrow(/protected/);
+    });
+});
+
+describe("getScriptBundleForFrontend", () => {
+    beforeEach(() => {
+        becca.reset();
+        vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {}).mockClear();
+    });
+
+    it("returns a bundle with noteIds instead of note objects", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=frontend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = scriptService.getScriptBundleForFrontend(note);
+        expect(bundle).toBeDefined();
+        expect(bundle!.noteId).toBe(note.noteId);
+        expect(bundle!.note).toBeUndefined();
+        expect(bundle!.allNoteIds).toContain(note.noteId);
+        expect(bundle!.allNotes).toBeUndefined();
+    });
+
+    it("returns undefined and sends a toast for backend scripts", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: "api.log('hello');"
+        });
+
+        const bundle = scriptService.getScriptBundleForFrontend(note);
+        expect(bundle).toBeUndefined();
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledOnce();
+        expect(ws.sendMessageToAllClients).toHaveBeenCalledWith(
+            expect.objectContaining({ type: "toast" })
+        );
+    });
+
+    it("returns a bundle when a backend note uses runOnFrontend with an override script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: `
+                api.runOnFrontend(() => {
+                    api.showMessage("Hello frontend");
+                });
+            `
+        });
+
+        const frontendScript = `() => { api.showMessage("Hello frontend"); }`;
+        const bundle = scriptService.getScriptBundleForFrontend(note, frontendScript);
+        expect(bundle).toBeDefined();
+        expect(bundle!.script).toContain("Hello frontend");
     });
 });
 
@@ -184,5 +363,74 @@ describe("JSX building", () => {
             _triliumapi.log.call(void 0, "Hi");
         `;
         expect(buildJsx(script).code).toStrictEqual(expected);
+    });
+});
+
+describe("executeScript", () => {
+    // executeScript funnels through executeBundle, which enforces backendScriptingEnabled.
+    const originalScriptingEnabled = config.Security.backendScriptingEnabled;
+
+    beforeAll(() => {
+        config.Security.backendScriptingEnabled = true;
+    });
+
+    afterAll(() => {
+        config.Security.backendScriptingEnabled = originalScriptingEnabled;
+    });
+
+    beforeEach(() => {
+        becca.reset();
+    });
+
+    it("executes a frontend script excerpt in the backend context", () => {
+        const note = buildNote({ type: "code", mime: "application/javascript;env=backend", content: "" });
+
+        getContext().init(() => {
+            const result = scriptService.executeScript(`() => "hello from excerpt"`, [], note.noteId, note.noteId, "notes", note.noteId, becca);
+            expect(result).toBe("hello from excerpt");
+        });
+    });
+
+    it("serializes params and passes them to the excerpt", () => {
+        const note = buildNote({ type: "code", mime: "application/javascript;env=backend", content: "" });
+
+        getContext().init(() => {
+            const result = scriptService.executeScript(`(count, label) => label + ":" + (count + 1)`, [4, "n"], note.noteId, note.noteId, "notes", note.noteId, becca);
+            expect(result).toBe("n:5");
+        });
+    });
+
+    it("throws when the current note cannot be found", () => {
+        getContext().init(() => {
+            expect(() => scriptService.executeScript(`() => 1`, [], "missing", "missing", "notes", "missing", becca)).toThrow(/Cannot find note/);
+        });
+    });
+});
+
+describe("executeNoteNoException", () => {
+    const originalScriptingEnabled = config.Security.backendScriptingEnabled;
+
+    beforeAll(() => {
+        config.Security.backendScriptingEnabled = true;
+    });
+
+    afterAll(() => {
+        config.Security.backendScriptingEnabled = originalScriptingEnabled;
+    });
+
+    beforeEach(() => {
+        becca.reset();
+    });
+
+    it("swallows runtime errors thrown by the script", () => {
+        const note = buildNote({
+            type: "code",
+            mime: "application/javascript;env=backend",
+            content: `throw new Error("boom");`
+        });
+
+        getContext().init(() => {
+            expect(() => scriptService.executeNoteNoException(note, {})).not.toThrow();
+        });
     });
 });

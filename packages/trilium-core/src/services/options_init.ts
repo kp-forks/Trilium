@@ -69,6 +69,7 @@ export async function initNotSyncedOptions(initialized: boolean, opts: NotSynced
     optionService.createOption("syncServerHost", opts.syncServerHost || "", false);
     optionService.createOption("syncServerTimeout", "120", false); // 120 seconds (2 minutes)
     optionService.createOption("syncProxy", opts.syncProxy || "", false);
+    optionService.createOption("syncIncomplete", "false", false);
 }
 
 /**
@@ -136,7 +137,7 @@ const defaultOptions: DefaultOption[] = [
     { name: "codeNoteIndentWithTabs", value: "false", isSynced: true },
     {
         name: "codeNotesMimeTypes",
-        value: '["text/x-csrc","text/x-c++src","text/x-csharp","text/css","text/x-elixir","text/x-go","text/x-groovy","text/x-haskell","text/html","message/http","text/x-java","application/javascript;env=frontend","application/javascript;env=backend","application/json","text/x-kotlin","text/x-markdown","text/x-perl","text/x-php","text/x-python","text/x-ruby",null,"text/x-sql","text/x-sqlite;schema=trilium","text/x-swift","text/xml","text/x-yaml","text/x-sh","application/typescript"]',
+        value: '["text/x-csrc","text/x-c++src","text/x-csharp","text/css","text/x-elixir","text/x-go","text/x-groovy","text/x-haskell","text/html","message/http","text/x-java","text/javascript","application/javascript;env=frontend","application/javascript;env=backend","application/json","text/x-kotlin","text/x-markdown","text/x-perl","text/x-php","text/x-python","text/x-ruby",null,"text/x-sql","text/x-sqlite;schema=trilium","text/x-swift","text/xml","text/x-yaml","text/x-sh","application/typescript"]',
         isSynced: true
     },
     { name: "leftPaneWidth", value: "25", isSynced: false },
@@ -197,6 +198,9 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "codeNoteThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeNoteThemeLight", value: "default:vs-code-light", isSynced: false },
+    { name: "codeNoteThemeDark", value: "default:vs-code-dark", isSynced: false },
     { name: "motionEnabled", value: "true", isSynced: false },
     { name: "shadowsEnabled", value: "true", isSynced: false },
     { name: "backdropEffectsEnabled", value: "true", isSynced: false },
@@ -223,6 +227,9 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "codeBlockThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeBlockThemeLight", value: "default:stackoverflow-light", isSynced: false },
+    { name: "codeBlockThemeDark", value: "default:stackoverflow-dark", isSynced: false },
     { name: "codeBlockWordWrap", value: "false", isSynced: true },
     { name: "codeBlockTabWidth", value: "4", isSynced: true },
 

@@ -14,14 +14,18 @@ import IndentBlockShortcutPlugin from "./plugins/indent_block_shortcut.js";
 import MarkdownImportPlugin from "./plugins/markdownimport.js";
 import MentionCustomization from "./plugins/mention_customization.js";
 import IncludeNote from "./plugins/includenote.js";
+import LinkEmbed from "./plugins/linkembed.js";
 import Uploadfileplugin from "./plugins/file_upload/uploadfileplugin.js";
 import SyntaxHighlighting from "./plugins/syntax_highlighting/index.js";
 import { Kbd } from "@triliumnext/ckeditor5-keyboard-marker";
 import { Mermaid } from "@triliumnext/ckeditor5-mermaid";
 import { Admonition } from "@triliumnext/ckeditor5-admonition";
+import { Collapsible } from "@triliumnext/ckeditor5-collapsible";
 import { Footnotes } from "@triliumnext/ckeditor5-footnotes";
 import { Math, AutoformatMath } from "@triliumnext/ckeditor5-math";
 import CopyAnchorLinkButton from "./plugins/copy_anchor_link.js";
+import CopyLinkUrlButton from "./plugins/copy_link_url.js";
+import ImageActions from "./plugins/image_actions.js";
 
 // import "@triliumnext/ckeditor5-mermaid/index.css";
 // import "@triliumnext/ckeditor5-admonition/index.css";
@@ -37,6 +41,8 @@ import AdmonitionTypeDropdown from "./plugins/admonition_type_dropdown.js";
 import AdmonitionToolbar from "./plugins/admonition_toolbar.js";
 import IncludeNoteBoxSizeDropdown from "./plugins/include_note_box_size_dropdown.js";
 import IncludeNoteToolbar from "./plugins/include_note_toolbar.js";
+import LinkEmbedToolbar from "./plugins/link_embed_toolbar.js";
+import TodoListMultistate from "./plugins/todo_list_multistate/todo_list_multistate.js";
 
 /**
  * Plugins that are specific to Trilium and not part of the CKEditor 5 core, included in both text editors but not in the attribute editor.
@@ -52,6 +58,7 @@ const TRILIUM_PLUGINS: typeof Plugin[] = [
     IndentBlockShortcutPlugin,
     MarkdownImportPlugin,
     IncludeNote,
+    LinkEmbed,
     Uploadfileplugin,
     SyntaxHighlighting,
     CodeBlockLanguageDropdown,
@@ -64,7 +71,11 @@ const TRILIUM_PLUGINS: typeof Plugin[] = [
     AdmonitionToolbar,
     IncludeNoteBoxSizeDropdown,
     IncludeNoteToolbar,
+    LinkEmbedToolbar,
+    TodoListMultistate,
     CopyAnchorLinkButton,
+    CopyLinkUrlButton,
+    ImageActions,
 ];
 
 /**
@@ -74,6 +85,7 @@ const EXTERNAL_PLUGINS: typeof Plugin[] = [
     Kbd,
     Mermaid,
     Admonition,
+    Collapsible,
     Footnotes,
     Math,
 	AutoformatMath

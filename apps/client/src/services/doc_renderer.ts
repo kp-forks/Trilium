@@ -10,7 +10,7 @@ import { formatCodeBlocks } from "./syntax_highlight.js";
  */
 export function isValidDocName(docName: string): boolean {
     // Allow alphanumeric characters, spaces, underscores, hyphens, and forward slashes.
-    const validDocNameRegex = /^[a-zA-Z0-9_/\- ]+$/;
+    const validDocNameRegex = /^[a-zA-Z0-9_/\- ()]+$/;
     return validDocNameRegex.test(docName);
 }
 
@@ -28,6 +28,7 @@ export default function renderDoc(note: FNote) {
                 if (status === "error") {
                     const fallbackUrl = getUrl(docName, "en");
 
+                    /* v8 ignore next 8 -- the else branch is unreachable: fallbackUrl only differs from the primary url by language, so if the primary url was valid (we got here from a successful .load call) the "en" fallback url is valid too and never null */
                     if (fallbackUrl) {
                         $content.load(fallbackUrl, async () => {
                             await processContent(fallbackUrl, $content);

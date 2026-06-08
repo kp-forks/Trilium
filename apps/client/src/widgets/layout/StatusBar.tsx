@@ -61,7 +61,7 @@ export default function StatusBar() {
     const isHiddenNote = note?.isHiddenCompletely();
 
     return (
-        <div className="status-bar">
+        <div className={clsx("status-bar", {"status-bar-panel-open": !!activePane})}>
             {attributesContext && <AttributesPane {...attributesContext} />}
             {noteInfoContext && <SimilarNotesPane {...noteInfoContext} />}
 
@@ -504,7 +504,6 @@ function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
                 </FormListItem>
             }
 
-            <FormDropdownDivider />
             <FormListHeader text={t("status_bar.tab_width_display_header")} />
             {TAB_WIDTH_OPTIONS.map(size => (
                 <FormListItem
@@ -521,7 +520,6 @@ function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
                 </FormListItem>
             }
 
-            <FormDropdownDivider />
             <FormListHeader text={t("status_bar.tab_width_reindent_header")} />
             {TAB_WIDTH_OPTIONS.map(size => (
                 <FormListItem
@@ -547,10 +545,10 @@ function TabWidthSwitcher({ note, noteContext }: StatusBarContext) {
 function CodeNoteSwitcher({ note }: StatusBarContext) {
     const [ modalShown, setModalShown ] = useState(false);
     const currentNoteMime = useNoteProperty(note, "mime");
-    const mimeTypes = useMimeTypes();
+    const { enabledMimeTypes, allMimeTypes } = useMimeTypes();
     const correspondingMimeType = useMemo(() => (
-        mimeTypes.find(m => m.mime === currentNoteMime)
-    ), [ mimeTypes, currentNoteMime ]);
+        allMimeTypes.find(m => m.mime === currentNoteMime)
+    ), [ allMimeTypes, currentNoteMime ]);
 
     return (note.type === "code" &&
         <>
@@ -562,7 +560,7 @@ function CodeNoteSwitcher({ note }: StatusBarContext) {
             >
                 <NoteTypeCodeNoteList
                     currentMimeType={currentNoteMime}
-                    mimeTypes={mimeTypes}
+                    mimeTypes={enabledMimeTypes}
                     changeNoteType={(type, mime) => server.put(`notes/${note.noteId}/type`, { type, mime })}
                     setModalShown={() => setModalShown(true)}
                 />

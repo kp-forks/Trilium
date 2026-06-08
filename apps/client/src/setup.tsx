@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useTranslation } from "react-i18next";
 
 import logo from "./assets/icon-color.svg?url";
-import { initLocale, t } from "./services/i18n";
+import { getCurrentLanguage, initLocale, t } from "./services/i18n";
 import server from "./services/server";
 import { isElectron, isMobileApp, replaceHtmlEscapedSlashes } from "./services/utils";
 import ActionButton from "./widgets/react/ActionButton";
@@ -26,7 +26,7 @@ async function main() {
     bodyWrapper.classList.add("setup-outer-wrapper");
     document.body.classList.add("setup", window.glob.device || "desktop");
     if (isElectron()) {
-        document.body.classList.add("electron", `platform-${window.process.platform}`, "background-effects");
+        document.body.classList.add("electron", `platform-${window.glob.platform}`, "background-effects");
     }
     render(<App />, bodyWrapper);
     document.body.replaceChildren(bodyWrapper);
@@ -181,18 +181,30 @@ function useWakeLock() {
 
         let released = false;
 
-        navigator.wakeLock.request("screen").then((lock) => {
-            if (released) {
-                lock.release();
-            } else {
-                wakeLockRef.current = lock;
+        const acquireLock = () => {
+            navigator.wakeLock.request("screen").then((lock) => {
+                if (released) {
+                    lock.release();
+                } else {
+                    wakeLockRef.current = lock;
+                }
+            }).catch(() => {
+                // Wake Lock not supported or permission denied — ignore silently.
+            });
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible" && !released) {
+                acquireLock();
             }
-        }).catch(() => {
-            // Wake Lock not supported or permission denied — ignore silently.
-        });
+        };
+
+        acquireLock();
+        document.addEventListener("visibilitychange", onVisibilityChange);
 
         return () => {
             released = true;
+            document.removeEventListener("visibilitychange", onVisibilityChange);
             wakeLockRef.current?.release();
             wakeLockRef.current = null;
         };
@@ -295,7 +307,7 @@ function CreateNewDocumentOptions({ setState }: { setState: (state: State) => vo
 
 function CreateNewDocumentInProgress({ withDemo = false }: { withDemo?: boolean }) {
     useEffect(() => {
-        server.post(`setup/new-document${withDemo ? "" : "?skipDemoDb"}`).then(onSetupFinished);
+        server.post(`setup/new-document${withDemo ? "" : "?skipDemoDb"}`, { locale: getCurrentLanguage() }).then(onSetupFinished);
     }, [ withDemo ]);
 
     return (

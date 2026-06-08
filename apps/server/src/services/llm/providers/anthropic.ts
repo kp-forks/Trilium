@@ -1,9 +1,12 @@
-import { createAnthropic, type AnthropicProvider as AnthropicSDKProvider } from "@ai-sdk/anthropic";
-import { stepCountIs, streamText, type ModelMessage, type ToolSet } from "ai";
+import { type AnthropicProvider as AnthropicSDKProvider,createAnthropic } from "@ai-sdk/anthropic";
 import type { LlmMessage } from "@triliumnext/commons";
+import { type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type ToolSet } from "ai";
 
 import type { LlmProviderConfig, StreamResult } from "../types.js";
-import { BaseProvider, buildModelList } from "./base_provider.js";
+import { BaseProvider, buildModelList, buildModelMessage } from "./base_provider.js";
+
+/** Anthropic ephemeral prompt-caching breakpoint. */
+const CACHE_CONTROL = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
 
 /**
  * Available Anthropic models with pricing (USD per million tokens).
@@ -84,12 +87,12 @@ export class AnthropicProvider extends BaseProvider {
 
     private anthropic: AnthropicSDKProvider;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, baseURL?: string) {
         super();
         if (!apiKey) {
             throw new Error("API key is required for Anthropic provider");
         }
-        this.anthropic = createAnthropic({ apiKey });
+        this.anthropic = createAnthropic({ apiKey, ...(baseURL && { baseURL }) });
     }
 
     protected createModel(modelId: string) {
@@ -103,32 +106,42 @@ export class AnthropicProvider extends BaseProvider {
     }
 
     /**
+     * Override buildSystemMessage to add an Anthropic cache control breakpoint
+     * on the system prompt.
+     */
+    protected override buildSystemMessage(systemPrompt: string | undefined): SystemModelMessage | undefined {
+        if (!systemPrompt) {
+            return undefined;
+        }
+
+        return {
+            role: "system",
+            content: systemPrompt,
+            providerOptions: CACHE_CONTROL
+        };
+    }
+
+    /**
      * Override buildMessages to add Anthropic-specific cache control breakpoints.
      */
-    protected override buildMessages(chatMessages: LlmMessage[], systemPrompt: string | undefined): ModelMessage[] {
-        const CACHE_CONTROL = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
+    protected override buildMessages(chatMessages: LlmMessage[]): ModelMessage[] {
         const coreMessages: ModelMessage[] = [];
-
-        if (systemPrompt) {
-            coreMessages.push({
-                role: "system",
-                content: systemPrompt,
-                providerOptions: CACHE_CONTROL
-            });
-        }
 
         for (let i = 0; i < chatMessages.length; i++) {
             const m = chatMessages[i];
             const isLastBeforeNewTurn = i === chatMessages.length - 2;
-            // Anthropic rejects empty text content blocks. Replace empty
-            // content (e.g. tool-only assistant turns) with a placeholder
-            // to preserve conversation flow.
-            const content = m.content || "(tool use)";
-            coreMessages.push({
-                role: m.role as "user" | "assistant",
-                content,
-                ...(isLastBeforeNewTurn && { providerOptions: CACHE_CONTROL })
-            });
+            // Anthropic rejects empty text content blocks. For purely-empty
+            // string content (e.g. tool-only assistant turns), substitute a
+            // placeholder so the turn still has a body.
+            const normalized: LlmMessage = (typeof m.content === "string" && !m.content)
+                ? { ...m, content: "(tool use)" }
+                : m;
+            const base = buildModelMessage(normalized);
+            coreMessages.push(
+                isLastBeforeNewTurn
+                    ? { ...base, providerOptions: CACHE_CONTROL }
+                    : base
+            );
         }
 
         return coreMessages;
@@ -143,16 +156,19 @@ export class AnthropicProvider extends BaseProvider {
         }
 
         const systemPrompt = this.buildSystemPrompt(messages, config);
-        const chatMessages = messages.filter(m => m.role !== "system");
-        const coreMessages = this.buildMessages(chatMessages, systemPrompt);
+        const chatMessages = this.applyNoteHint(messages.filter(m => m.role !== "system"), config);
+        const coreMessages = this.buildMessages(chatMessages);
 
         const thinkingBudget = config.thinkingBudget || 10000;
         const maxTokens = Math.max(config.maxTokens || 8096, thinkingBudget + 4000);
 
         const streamOptions: Parameters<typeof streamText>[0] = {
             model: this.createModel(config.model || this.defaultModel),
+            system: this.buildSystemMessage(systemPrompt),
             messages: coreMessages,
             maxOutputTokens: maxTokens,
+            // Reject any system message smuggled into `messages` (prompt injection guard).
+            allowSystemInMessages: false,
             providerOptions: {
                 anthropic: {
                     thinking: {

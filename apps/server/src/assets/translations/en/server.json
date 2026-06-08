@@ -11,6 +11,7 @@
     "collapse-tree": "Collapses the complete note tree",
     "collapse-subtree": "Collapses subtree of current note",
     "sort-child-notes": "Sort child notes",
+    "toggle-archived-notes": "Show/hide archived notes in the note tree",
     "creating-and-moving-notes": "Creating and moving notes",
     "create-note-after": "Create note after active note",
     "create-note-into": "Create note as child of active note",
@@ -118,6 +119,7 @@
     "collapse-tree": "Collapse Tree",
     "collapse-subtree": "Collapse Subtree",
     "sort-child-notes": "Sort Child Notes",
+    "toggle-archived-notes": "Toggle Archived Notes Visibility",
     "create-note-after": "Create Note After",
     "create-note-into": "Create Note Into",
     "create-note-into-inbox": "Create Note Into Inbox",
@@ -276,6 +278,17 @@
     "llm-chat-history-title": "AI Chat History",
     "shared-notes-title": "Shared Notes",
     "bulk-action-title": "Bulk Action",
+    "task-states-title": "Task States",
+    "task-state-none": "None",
+    "task-state-doing": "Doing",
+    "task-state-done": "Done",
+    "task-state-maybe": "Maybe",
+    "task-state-cancelled": "Cancelled",
+    "task-state-attr-state-id": "Identifier (required)",
+    "task-state-attr-markdown-symbol": "Markdown symbol",
+    "task-state-attr-is-completed": "Counts as completed",
+    "task-state-attr-color": "Color",
+    "task-state-attr-is-hidden": "Hidden from list",
     "backend-log-title": "Backend Log",
     "custom-dictionary-title": "Custom Dictionary",
     "user-hidden-title": "User Hidden",
@@ -311,6 +324,7 @@
     "code-notes-title": "Code Notes",
     "images-title": "Media",
     "spellcheck-title": "Spellcheck",
+    "security-title": "Security",
     "password-title": "Password",
     "multi-factor-authentication-title": "MFA",
     "etapi-title": "ETAPI",
@@ -358,6 +372,7 @@
   "migration": {
     "old_version": "Direct migration from your current version is not supported. Please upgrade to the latest v0.60.4 first and only then to this version.",
     "error_message": "Error during migration to version {{version}}: {{stack}}",
+    "automatic_migrations_disabled": "Automatic DB migrations are disabled via environment variable TRILIUM_MANUAL_DB_MIGRATION = {{envVarValue}}",
     "wrong_db_version": "The version of the database ({{version}}) is newer than what the application expects ({{targetVersion}}), which means that it was created by a newer and incompatible version of Trilium. Upgrade to the latest version of Trilium to resolve this issue.",
     "invalid_db_version": "The database version is not a valid number. This usually indicates a corrupted 'dbVersion' option in the database. Please restore from a backup."
   },
@@ -378,6 +393,8 @@
   },
   "hidden_subtree_templates": {
     "text-snippet": "Text Snippet",
+    "markdown-snippet": "Markdown Snippet",
+    "code-snippet": "Code Snippet",
     "description": "Description",
     "list-view": "List View",
     "grid-view": "Grid View",
@@ -423,5 +440,21 @@
       "fulltext-after-expression": "\"{{- token}}\" is not a valid expression. To search for text, place it before attribute filters (e.g., \"{{- token}} #label\" instead of \"#label {{- token}}\").",
       "unrecognized-expression": "Unrecognized expression \"{{- token}}\""
     }
+  },
+  "security-dialog": {
+    "enable-title": "Enable {{settingLabel}}",
+    "enable-message": "Are you sure you want to enable {{settingLabel}}?",
+    "enable-detail": "{{warning}}\n\nOnly enable this if you explicitly intend to use this feature. Do not enable it if prompted by a script or an unfamiliar note.\n\nThis change requires a restart to take effect.",
+    "disable-title": "Disable {{settingLabel}}",
+    "disable-message": "{{settingLabel}} will be disabled.",
+    "disable-detail": "This change requires a restart to take effect.",
+    "cancel": "Cancel",
+    "enable": "Enable",
+    "disable": "Disable",
+    "dont-ask-again": "Don't ask again until restart",
+    "backend-scripting": "Backend script execution",
+    "backend-scripting-warning": "Backend scripts have full access to the server, including the file system and network.",
+    "sql-console": "SQL console",
+    "sql-console-warning": "The SQL console allows executing arbitrary SQL queries against the database."
   }
 }

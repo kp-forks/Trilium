@@ -137,7 +137,14 @@ export interface TriliumConfig {
          * log files created by Trilium older than the specified amount of time will be deleted.
          */
         retentionDays: number;
-    }
+    };
+    /** Security and code execution configuration */
+    Security: {
+        /** Whether backend script execution is enabled (default: false for server, true for desktop) */
+        backendScriptingEnabled: boolean;
+        /** Whether the SQL console is accessible (default: false) */
+        sqlConsoleEnabled: boolean;
+    };
 }
 
 /**
@@ -394,7 +401,11 @@ const configMapping = {
             // alternative format
             aliasEnvVars: ['TRILIUM_SYNC_SERVER_TIMEOUT'],
             iniGetter: () => getIniSection("Sync")?.syncServerTimeout,
-            defaultValue: '120000'
+            // Empty string signals "no override" so sync_options falls back to
+            // the user's `syncServerTimeout` DB option. Setting a literal
+            // default here would always take precedence and silently shadow
+            // the value the user configured in the settings UI.
+            defaultValue: ''
         },
         syncProxy: {
             standardEnvVar: 'TRILIUM_SYNC_SYNCPROXY',
@@ -459,6 +470,21 @@ const configMapping = {
             defaultValue: LOGGING_DEFAULT_RETENTION_DAYS,
             transformer: (value: unknown) => utils.stringToInt(String(value)) ?? LOGGING_DEFAULT_RETENTION_DAYS
         }
+    },
+    Security: {
+        backendScriptingEnabled: {
+            standardEnvVar: 'TRILIUM_SECURITY_BACKEND_SCRIPTING_ENABLED',
+            iniGetter: () => getIniSection("Security")?.backendScriptingEnabled,
+            defaultValue: false,
+            transformer: transformBoolean
+        },
+        sqlConsoleEnabled: {
+            standardEnvVar: 'TRILIUM_SECURITY_SQL_CONSOLE_ENABLED',
+            aliasEnvVars: ['TRILIUM_SECURITY_SQLCONSOLEENABLED'],
+            iniGetter: () => getIniSection("Security")?.sqlConsoleEnabled,
+            defaultValue: false,
+            transformer: transformBoolean
+        }
     }
 };
 
@@ -512,8 +538,13 @@ const config: TriliumConfig = {
     },
     Logging: {
         retentionDays: getConfigValue(configMapping.Logging.retentionDays)
+    },
+    Security: {
+        backendScriptingEnabled: getConfigValue(configMapping.Security.backendScriptingEnabled),
+        sqlConsoleEnabled: getConfigValue(configMapping.Security.sqlConsoleEnabled)
     }
 };
+
 
 /**
  * =====================================================================

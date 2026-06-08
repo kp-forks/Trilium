@@ -60,6 +60,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     syncServerTimeout: string;
     syncServerTimeoutTimeScale: number;
     syncProxy: string;
+    syncIncomplete: boolean;
     mainFontFamily: FontFamily;
     treeFontFamily: FontFamily;
     detailFontFamily: FontFamily;
@@ -73,6 +74,9 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     locale: string;
     formattingLocale: string;
     codeBlockTheme: string;
+    codeBlockThemeMatchesApp: boolean;
+    codeBlockThemeLight: string;
+    codeBlockThemeDark: string;
     textNoteEditorType: string;
     layoutOrientation: string;
     allowedHtmlTags: string;
@@ -136,9 +140,15 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     backdropEffectsEnabled: boolean;
     smoothScrollEnabled: boolean;
     codeNoteTheme: string;
+    codeNoteThemeMatchesApp: boolean;
+    codeNoteThemeLight: string;
+    codeNoteThemeDark: string;
 
     initialized: boolean;
     databaseReadonly: boolean;
+    backendScriptingEnabled: boolean;
+    sqlConsoleEnabled: boolean;
+    hasUserBackendScripts: boolean;
     isPasswordSet: boolean;
     overrideThemeFonts: boolean;
     spellCheckEnabled: boolean;
