@@ -153,7 +153,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
     // paint the previous SVG (by position) as a placeholder and queue a
     // re-render. This way the user keeps seeing the old diagram until mermaid
     // has finished producing the new one.
-    const pending: Array<{ visible: HTMLElement; source: string; hasPlaceholder: boolean }> = [];
+    const pending: Array<{ visible: HTMLElement; source: string }> = [];
     const seenSources = new Set<string>();
     for (const [ index, node ] of nodes.entries()) {
         /* v8 ignore next -- defensive fallback: textContent on an HTMLElement is always a string */
@@ -164,11 +164,12 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
         if (cached) {
             node.innerHTML = cached;
             node.setAttribute("data-processed", "true");
+            node.classList.remove("mermaid-error");
             continue;
         }
 
+        pending.push({ visible: node, source });
         const placeholder = lastRendered[index];
-        pending.push({ visible: node, source, hasPlaceholder: Boolean(placeholder) });
         if (placeholder) {
             node.innerHTML = placeholder;
         }
@@ -193,22 +194,21 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
     // inside a collapsed offscreen container silently broke measurement-sensitive
     // diagrams (e.g. gantt). Each diagram renders independently so one failure
     // surfaces its own error instead of blanking the diagrams beside it.
-    for (const { visible, source, hasPlaceholder } of pending) {
+    for (const { visible, source } of pending) {
         try {
             await loadElkIfNeeded(mermaid, source);
             const { svg } = await mermaid.render(`mermaid-inline-${mermaidRenderId++}`, source);
             const processed = postprocessMermaidSvg(svg);
             visible.innerHTML = processed;
             visible.setAttribute("data-processed", "true");
+            visible.classList.remove("mermaid-error");
             cache.set(source, processed);
         } catch (e) {
             console.error(e);
-            // Keep a prior good render (shown as placeholder) rather than flashing
-            // an error mid-edit; otherwise surface the failure so it isn't silently
-            // swallowed (e.g. an invalid diagram in a chat reply).
-            if (!hasPlaceholder) {
-                showMermaidError(visible, e);
-            }
+            // Surface the failure in place, replacing any placeholder from a prior
+            // good render. A broken diagram must look broken — keeping the stale
+            // render would hide the error until a full refresh.
+            showMermaidError(visible, e);
         }
     }
 
@@ -218,6 +218,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
 /** Render a mermaid failure in place so it's visible instead of console-only. */
 function showMermaidError(node: HTMLElement, error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
+    node.removeAttribute("data-processed");
     node.classList.add("mermaid-error");
     node.textContent = t("content_renderer.mermaid_diagram_error", { error: message });
 }

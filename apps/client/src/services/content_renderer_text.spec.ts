@@ -493,21 +493,28 @@ describe("applyInlineMermaid", () => {
         error.mockRestore();
     });
 
-    it("keeps the previous render as placeholder instead of an error when a re-render fails", async () => {
+    it("surfaces the error on a failed re-render even when a previous render exists", async () => {
         const error = vi.spyOn(console, "error").mockImplementation(() => {});
         const container = makeContainer(["graph V1"]);
         await applyInlineMermaid(container);
 
+        // Break the source: the stale render must not mask the failure — otherwise
+        // the diagram looks fine until a full refresh.
         const node = container.querySelector("div.mermaid-diagram") as HTMLElement;
-        const previousSvg = node.innerHTML;
         node.textContent = "graph BROKEN";
         mermaidRenderImpl = () => {
             throw new Error("still broken");
         };
         await applyInlineMermaid(container);
-        // A prior good render is showing, so keep it rather than flashing an error.
+        expect(node.classList.contains("mermaid-error")).toBe(true);
+        expect(node.textContent).toContain("still broken");
+
+        // Recovery: fixing the source clears the error state and renders cleanly.
+        node.textContent = "graph FIXED";
+        mermaidRenderImpl = (_id, source) => ({ svg: `<svg>${source}</svg>` });
+        await applyInlineMermaid(container);
         expect(node.classList.contains("mermaid-error")).toBe(false);
-        expect(node.innerHTML).toBe(previousSvg);
+        expect(node.innerHTML).toBe("<svg>graph FIXED</svg>");
         error.mockRestore();
     });
 });
