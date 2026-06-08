@@ -50,7 +50,17 @@ export type NativeHttpHandler = (request: {
 }) => Promise<{
     status: number;
     headers: Record<string, string>;
-    body: string;
+    // Exactly one of these will be set:
+    // - `data` carries an already-parsed JSON response straight through the
+    //   structured-clone postMessage. The worker uses it as-is and skips
+    //   JSON.parse, avoiding the ~2× memory blowup that killed large blobs
+    //   (parsed object + an intermediate ~60MB string was OOM-ing the iOS
+    //   worker). The handler must NOT JSON.stringify the response itself.
+    // - `body` is the raw string body — used for non-JSON responses (e.g.
+    //   base64 binary returned for `responseType: "arraybuffer"`) and for
+    //   error bodies the worker needs to inspect.
+    data?: unknown;
+    body?: string;
 }>;
 
 let nativeHttpHandler: NativeHttpHandler | null = null;
