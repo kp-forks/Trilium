@@ -186,7 +186,7 @@ export async function applyInlineMermaid(container: HTMLDivElement) {
     }
 
     const mermaid = (await import("mermaid")).default;
-    mermaid.initialize({ startOnLoad: false, ...getMermaidConfig() });
+    mermaid.initialize({ ...getMermaidConfig(), startOnLoad: false });
 
     // Render each diagram to an SVG string via mermaid.render() — the same API the
     // editable note and standalone Mermaid widget use. mermaid.render() builds its
