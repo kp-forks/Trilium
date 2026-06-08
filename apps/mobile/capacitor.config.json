@@ -8,7 +8,8 @@
     "hostname": "localhost"
   },
   "ios": {
-    "limitsNavigationsToAppBoundDomains": true
+    "limitsNavigationsToAppBoundDomains": true,
+    "includePlugins": ["@capacitor/keyboard"]
   },
   "plugins": {
     "Keyboard": {
