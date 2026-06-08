@@ -45,6 +45,11 @@ describe("codeToSiblingDirection", () => {
         expect(codeToSiblingDirection("End", [], [])).toBe("last");
     });
 
+    it("maps the Previous/Next Track media keys", () => {
+        expect(codeToSiblingDirection("MediaTrackPrevious", [], [])).toBe("previous");
+        expect(codeToSiblingDirection("MediaTrackNext", [], [])).toBe("next");
+    });
+
     it("honors caller-provided extra keys (e.g. the image viewer's Backspace/Space)", () => {
         expect(codeToSiblingDirection("Backspace", [ "Backspace" ], [ "Space" ])).toBe("previous");
         expect(codeToSiblingDirection("Space", [ "Backspace" ], [ "Space" ])).toBe("next");
@@ -53,6 +58,13 @@ describe("codeToSiblingDirection", () => {
     it("returns null for unrelated keys", () => {
         expect(codeToSiblingDirection("Space", [], [])).toBeNull();
         expect(codeToSiblingDirection("KeyA", [ "Backspace" ], [ "Space" ])).toBeNull();
+    });
+
+    it("omits Home/End when edge keys are disabled, keeping PageUp/PageDown", () => {
+        expect(codeToSiblingDirection("Home", [], [], false)).toBeNull();
+        expect(codeToSiblingDirection("End", [], [], false)).toBeNull();
+        expect(codeToSiblingDirection("PageUp", [], [], false)).toBe("previous");
+        expect(codeToSiblingDirection("PageDown", [], [], false)).toBe("next");
     });
 });
 

@@ -312,7 +312,7 @@ describe("window service", () => {
             await windowService.createMainWindow();
             const opts = state.windows[state.windows.length - 1].opts as Record<string, unknown>;
             expect(opts.frame).toBe(false);
-            expect(opts.transparent).toBe(false);
+            expect(opts.transparent).toBe(undefined);
         });
 
         it("keeps native title bar when option enabled", async () => {

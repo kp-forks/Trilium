@@ -34,7 +34,7 @@
     "@triliumnext/highlightjs": "workspace:*",
     "@triliumnext/share-theme": "workspace:*",
     "@triliumnext/split.js": "workspace:*",
-    "@zumer/snapdom": "2.12.2",
+    "@zumer/snapdom": "2.12.8",
     "autocomplete.js": "0.38.1",
     "bootstrap": "5.3.8",
     "boxicons": "2.1.4",
@@ -44,7 +44,7 @@
     "fflate": "0.8.3",
     "force-graph": "1.51.4",
     "globals": "17.6.0",
-    "i18next": "26.3.0",
+    "i18next": "26.3.1",
     "i18next-http-backend": "4.0.0",
     "aes-js": "3.1.2",
     "jquery": "4.0.0",
@@ -83,9 +83,9 @@
     "@types/leaflet-gpx": "1.3.8",
     "@types/mark.js": "8.11.12",
     "@types/reveal.js": "5.2.2",
-    "@types/tabulator-tables": "6.3.3",
+    "@types/tabulator-tables": "6.3.4",
     "cross-env": "10.1.0",
-    "happy-dom": "20.9.0",
+    "happy-dom": "20.10.1",
     "vite-plugin-static-copy": "4.1.0"
   }
 }
