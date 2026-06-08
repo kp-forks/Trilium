@@ -6,6 +6,8 @@ settings:
 
 overrides:
   '@codemirror/language': 6.12.3
+  '@codemirror/autocomplete': 6.20.2
+  '@codemirror/lint': 6.9.6
   '@lezer/highlight': 1.2.3
   '@lezer/common': 1.5.2
   mermaid: 11.15.0
@@ -1355,6 +1357,9 @@ importers:
       '@catppuccin/codemirror':
         specifier: 1.0.3
         version: 1.0.3
+      '@codemirror/autocomplete':
+        specifier: 6.20.2
+        version: 6.20.2
       '@codemirror/commands':
         specifier: 6.10.3
         version: 6.10.3
@@ -1388,6 +1393,9 @@ importers:
       '@codemirror/legacy-modes':
         specifier: 6.5.3
         version: 6.5.3
+      '@codemirror/lint':
+        specifier: 6.9.6
+        version: 6.9.6
       '@codemirror/search':
         specifier: 6.7.0
         version: 6.7.0
@@ -1397,9 +1405,6 @@ importers:
       '@codemirror/view':
         specifier: 6.42.1
         version: 6.42.1
-      '@eslint/js':
-        specifier: 10.0.1
-        version: 10.0.1(eslint@10.4.1(jiti@2.7.0))
       '@fsegurai/codemirror-theme-abcdef':
         specifier: 6.2.5
         version: 6.2.5(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.42.1)(@lezer/highlight@1.2.3)
@@ -1502,6 +1507,12 @@ importers:
       '@triliumnext/commons':
         specifier: workspace:*
         version: link:../commons
+      '@typescript/vfs':
+        specifier: 1.6.1
+        version: 1.6.1(typescript@6.0.3)
+      '@valtown/codemirror-ts':
+        specifier: 2.3.1
+        version: 2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.6)(@codemirror/state@6.6.0)(@codemirror/view@6.42.1)
       codemirror-lang-elixir:
         specifier: 4.0.1
         version: 4.0.1
@@ -1511,12 +1522,16 @@ importers:
       codemirror-lang-mermaid:
         specifier: 0.5.0
         version: 0.5.0
-      eslint-linter-browserify:
-        specifier: 10.4.1
-        version: 10.4.1
-      globals:
-        specifier: 17.6.0
-        version: 17.6.0
+      comlink:
+        specifier: 4.4.2
+        version: 4.4.2
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+    devDependencies:
+      '@types/jquery':
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/commons:
     dependencies:
@@ -1538,6 +1553,10 @@ importers:
       numfmt:
         specifier: 3.2.6
         version: 3.2.6
+    devDependencies:
+      preact:
+        specifier: 10.29.2
+        version: 10.29.2
 
   packages/express-partial-content: {}
 
@@ -2940,15 +2959,6 @@ packages:
   '@eslint/core@1.2.1':
     resolution: {integrity: sha512-MwcE1P+AZ4C6DWlpin/OmOA54mmIZ/+xZuJiQd4SyB29oAJjN30UW9wkKNptW2ctp4cEsvhlLY/CsQ1uoHDloQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
-
-  '@eslint/js@10.0.1':
-    resolution: {integrity: sha512-zeR9k5pd4gxjZ0abRoIaxdc7I3nDktoXZk2qOv9gCNWx3mVwEn32VRhyLaRsDiJjTs0xq/T8mfPtyuXu7GWBcA==}
-    engines: {node: ^20.19.0 || ^22.13.0 || >=24}
-    peerDependencies:
-      eslint: ^10.0.0
-    peerDependenciesMeta:
-      eslint:
-        optional: true
 
   '@eslint/js@9.39.4':
     resolution: {integrity: sha512-nE7DEIchvtiFTwBw4Lfbu59PG+kCofhjsKaCWzxTpt4lfRjRMqG6uMBzKXuEcyXhOHoUp9riAm7/aWYGhXZ9cw==}
@@ -4928,7 +4938,7 @@ packages:
   '@replit/codemirror-lang-nix@6.0.1':
     resolution: {integrity: sha512-lvzjoYn9nfJzBD5qdm3Ut6G3+Or2wEacYIDJ49h9+19WSChVnxv4ojf+rNmQ78ncuxIt/bfbMvDLMeMP0xze6g==}
     peerDependencies:
-      '@codemirror/autocomplete': ^6.0.0
+      '@codemirror/autocomplete': 6.20.2
       '@codemirror/language': 6.12.3
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
@@ -5720,6 +5730,11 @@ packages:
     resolution: {integrity: sha512-EbGRQg4FhrmwLodl+t3JNAnXHWVr9Vp+Zl1QBZVPY4ByfkzIT8cX3K6QWODHtkIZqqJVEWvhHSx3v5PDHsaQag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@typescript/vfs@1.6.1':
+    resolution: {integrity: sha512-JwoxboBh7Oz1v38tPbkrZ62ZXNHAk9bJ7c9x0eI5zBfBnBYGhURdbnh7Z4smN/MV48Y5OCcZb58n972UtbazsA==}
+    peerDependencies:
+      typescript: '*'
+
   '@ungap/structured-clone@1.3.1':
     resolution: {integrity: sha512-mUFwbeTqrVgDQxFveS+df2yfap6iuP20NAKAsBt5jDEoOTDew+zwLAOilHCeQJOVSvmgCX4ogqIrA0mnyr08yQ==}
 
@@ -6287,6 +6302,14 @@ packages:
 
   '@upsetjs/venn.js@2.0.0':
     resolution: {integrity: sha512-WbBhLrooyePuQ1VZxrJjtLvTc4NVfpOyKx0sKqioq9bX1C1m7Jgykkn8gLrtwumBioXIqam8DLxp88Adbue6Hw==}
+
+  '@valtown/codemirror-ts@2.3.1':
+    resolution: {integrity: sha512-v5XiI4WA+bUy0XDgkrqZksqBWgIUeyLZuC94Px/rhXBph8ASmVXaimlGDtt0vH/9t8aDdIZYdr59r9H3oKMFOg==}
+    peerDependencies:
+      '@codemirror/autocomplete': 6.20.2
+      '@codemirror/lint': 6.9.6
+      '@codemirror/state': ^6
+      '@codemirror/view': ^6
 
   '@vercel/oidc@3.2.0':
     resolution: {integrity: sha512-UycprH3T6n3jH0k44NHMa7pnFHGu/N05MjojYr+Mc6I7obkoLIJujSWwin1pCvdy/eOxrI/l3uDLQsmcrOb4ug==}
@@ -7335,6 +7358,9 @@ packages:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
 
+  comlink@4.4.2:
+    resolution: {integrity: sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g==}
+
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
 
@@ -8270,9 +8296,6 @@ packages:
     resolution: {integrity: sha512-TFj70lEE7y3R9DQAFJ/clRfVmyaXdwE3q56gA9zm+iTmlpYjtZKtV1jv/jtgdF2LqgvJjlGlGE1rHVwE9yNdkg==}
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0
-
-  eslint-linter-browserify@10.4.1:
-    resolution: {integrity: sha512-mIs4xbUDjkijfVNs3F973k7HPJ0MhQZ77PotlaCX9xUbI/jwgv5sAh+O2mgKr6j3CM2aaGlbdvRFOyycN5VZxg==}
 
   eslint-plugin-ckeditor5-rules@15.1.0:
     resolution: {integrity: sha512-qD0dNIMGVX0I5ntUGX0XSGsq2P6z8qGHHRIcA5eScZDxzCZ/Me2mpjLDd1WPU/1C0gmeuzjfFKWpd3xbB3WGUg==}
@@ -15938,10 +15961,6 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
 
-  '@eslint/js@10.0.1(eslint@10.4.1(jiti@2.7.0))':
-    optionalDependencies:
-      eslint: 10.4.1(jiti@2.7.0)
-
   '@eslint/js@9.39.4': {}
 
   '@eslint/markdown@6.6.0':
@@ -18913,6 +18932,13 @@ snapshots:
       '@typescript-eslint/types': 8.60.1
       eslint-visitor-keys: 5.0.1
 
+  '@typescript/vfs@1.6.1(typescript@6.0.3)':
+    dependencies:
+      debug: 4.4.3
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
   '@ungap/structured-clone@1.3.1': {}
 
   '@univerjs-pro/collaboration-client-ui@0.24.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rxjs@7.8.2)':
@@ -20366,6 +20392,13 @@ snapshots:
       d3-selection: 3.0.0
       d3-transition: 3.0.1(d3-selection@3.0.0)
 
+  '@valtown/codemirror-ts@2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.6)(@codemirror/state@6.6.0)(@codemirror/view@6.42.1)':
+    dependencies:
+      '@codemirror/autocomplete': 6.20.2
+      '@codemirror/lint': 6.9.6
+      '@codemirror/state': 6.6.0
+      '@codemirror/view': 6.42.1
+
   '@vercel/oidc@3.2.0': {}
 
   '@vitest/browser-webdriverio@4.1.8(vite@8.0.14(@types/node@24.13.0)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))(vitest@4.1.8)(webdriverio@9.27.2)':
@@ -21722,6 +21755,8 @@ snapshots:
     dependencies:
       delayed-stream: 1.0.0
 
+  comlink@4.4.2: {}
+
   comma-separated-tokens@2.0.3: {}
 
   commander@11.1.0: {}
@@ -22832,8 +22867,6 @@ snapshots:
       globals: 16.5.0
     transitivePeerDependencies:
       - supports-color
-
-  eslint-linter-browserify@10.4.1: {}
 
   eslint-plugin-ckeditor5-rules@15.1.0:
     dependencies:
