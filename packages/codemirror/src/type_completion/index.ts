@@ -90,6 +90,9 @@ const COMPILER_OPTIONS = {
     ignoreDeprecations: "6.0"
 };
 
+/** Cached lib.*.d.ts map; built once (see `createEnv`) and cloned per editor. */
+let cachedLibFilesMap: Map<string, string> | null = null;
+
 async function createEnv(mime: string, context: ScriptApiContext = {}) {
     const tsModule = await import("typescript");
     const ts = tsModule.default ?? tsModule;
@@ -100,10 +103,15 @@ async function createEnv(mime: string, context: ScriptApiContext = {}) {
     const { tsLibFiles } = await import("./ts_lib_files.js");
 
     // The TypeScript lib.*.d.ts files are bundled (see ./ts_lib_files) so the
-    // language service works offline — no CDN fetch. Each editor gets its own
-    // map so concurrent script notes (e.g. split view) don't clobber each
-    // other's source file.
-    const fsMap = new Map<string, string>(Object.entries(tsLibFiles));
+    // language service works offline — no CDN fetch. The lib map is built once
+    // and cached at module level: `Object.entries` over dozens of large .d.ts
+    // strings is expensive, so subsequent calls clone the cached map instead.
+    // Each editor still gets its own copy so concurrent script notes (e.g.
+    // split view) don't clobber each other's source file.
+    if (!cachedLibFilesMap) {
+        cachedLibFilesMap = new Map<string, string>(Object.entries(tsLibFiles));
+    }
+    const fsMap = new Map<string, string>(cachedLibFilesMap);
     const path = scriptPath(mime);
     // Seed with a space, never an empty string: `@typescript/vfs` treats an
     // empty root file as "not found" (TS6053) at program creation. `tsSync`
