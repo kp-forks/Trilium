@@ -76,7 +76,7 @@ body[data-note-type="text"] .ck-content {
         --task-state-glyph-font-family: initial;
         --task-state-color: initial;
     }
-    
+
     :where(.ck-content .todo-list li:where(:not([data-trilium-task-state]), [data-trilium-task-state="done"]):has(> .todo-list__label input[type="checkbox"]:checked)) {
         --task-state-glyph: "";
         --task-state-glyph-font-family: boxicons;
@@ -87,7 +87,7 @@ body[data-note-type="text"] .ck-content {
         --box-ratio: 0.75;
         /* The size of the gap between the check box and the caption */
         --box-text-gap: 0.25em;
-        
+
         /* The percentage of the box size that the glyph occupies. */
         --glyph-ratio: .70;
 
@@ -144,6 +144,12 @@ li.footnote-item {
 
 .ck-content .footnote-back-link {
     margin-right: 0.25em;
+}
+
+.ck-content .footnote-section {
+    margin-top: 1em;
+    border-top: 1px solid #ccc;
+    padding-top: 1em;
 }
 
 .ck-content .footnote-content {
