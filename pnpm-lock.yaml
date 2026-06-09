@@ -384,8 +384,8 @@ importers:
         specifier: 5.2.11
         version: 5.2.11
       '@types/jquery':
-        specifier: 4.0.0
-        version: 4.0.0
+        specifier: 4.0.1
+        version: 4.0.1
       '@types/leaflet':
         specifier: 1.9.21
         version: 1.9.21
@@ -988,8 +988,8 @@ importers:
         specifier: 5.2.11
         version: 5.2.11
       '@types/jquery':
-        specifier: 4.0.0
-        version: 4.0.0
+        specifier: 4.0.1
+        version: 4.0.1
       '@types/leaflet':
         specifier: 1.9.21
         version: 1.9.21
@@ -1530,8 +1530,8 @@ importers:
         version: 6.0.3
     devDependencies:
       '@types/jquery':
-        specifier: 4.0.0
-        version: 4.0.0
+        specifier: 4.0.1
+        version: 4.0.1
 
   packages/commons:
     dependencies:
@@ -5470,6 +5470,9 @@ packages:
 
   '@types/jquery@4.0.0':
     resolution: {integrity: sha512-Z+to+A2VkaHq1DfI2oSwsoCdhCHMpTSgjWzNcbNlRGYzksDBpPUgEcAL+RQjOBJRaLoEAOHXxqDGBVP+BblBwg==}
+
+  '@types/jquery@4.0.1':
+    resolution: {integrity: sha512-9a59A/tycXgYuPABcp6/3spSShn0NT2UOM4EfHvMumjYi4lJWTsK5SZWjhx3yRm9IHGCeWXdV2YfNsrWrft/CA==}
 
   '@types/js-yaml@4.0.9':
     resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
@@ -18603,6 +18606,8 @@ snapshots:
   '@types/ini@4.1.1': {}
 
   '@types/jquery@4.0.0': {}
+
+  '@types/jquery@4.0.1': {}
 
   '@types/js-yaml@4.0.9': {}
 
