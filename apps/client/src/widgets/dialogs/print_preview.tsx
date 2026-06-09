@@ -276,7 +276,7 @@ export default function PrintPreviewDialog() {
             sidebar={
                 <div class="print-preview-settings">
                     <OptionsSection noCard>
-                        <OptionsRow name="destination" label={t("print_preview.destination")}>
+                        <OptionsRow name="destination" label={t("print_preview.destination")} stacked>
                             <Dropdown
                                 disabled={loading}
                                 text={<DestinationLabel destination={destination} printers={printers} />}
@@ -303,8 +303,8 @@ export default function PrintPreviewDialog() {
                             </Dropdown>
                         </OptionsRow>
 
-                        <OptionsRow name="orientation" label={t("print_preview.orientation")}>
-                            <ButtonGroup>
+                        <OptionsRow name="orientation" label={t("print_preview.orientation")} stacked>
+                            <ButtonGroup className="print-preview-orientation">
                                 <Button
                                     text={t("print_preview.portrait")}
                                     icon="bx-rectangle bx-rotate-90"
@@ -369,6 +369,7 @@ export default function PrintPreviewDialog() {
                             name="pageRanges"
                             label={t("print_preview.page_ranges")}
                             description={!pageRangesValid ? t("print_preview.page_ranges_invalid") : t("print_preview.page_ranges_hint")}
+                            stacked
                         >
                             <FormTextBox
                                 className={`print-preview-page-ranges ${!pageRangesValid ? "is-invalid" : ""}`}

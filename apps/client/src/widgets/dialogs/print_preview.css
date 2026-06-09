@@ -20,8 +20,16 @@ body.desktop .print-preview-dialog .modal-content-with-sidebar {
         padding: 16px;
     }
 
+    .print-preview-orientation {
+        width: 100%;
+
+        .btn {
+            flex: 1;
+        }
+    }
+
     .print-preview-page-ranges {
-        width: 140px;
+        width: 100%;
     }
 
     .print-preview-pane {
@@ -53,11 +61,11 @@ body.desktop .print-preview-dialog .modal-content-with-sidebar {
 
     .margin-editor-row {
         display: flex;
-        gap: 24px;
+        gap: 8px;
         align-items: center;
     }
 
     .margin-spinner {
-        width: 130px;
+        width: 72px !important;
     }
 }
