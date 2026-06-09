@@ -20,26 +20,18 @@ vi.mock('@triliumnext/core', async (importOriginal) => {
 let OfficeProcessor: typeof import('./office_processor.js').OfficeProcessor;
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 const ODT = 'application/vnd.oasis.opendocument.text';
+const ODS = 'application/vnd.oasis.opendocument.spreadsheet';
 const ODP = 'application/vnd.oasis.opendocument.presentation';
 
 const SAMPLES_DIR = join(__dirname, 'samples');
 
-// Each sample exercises a distinct officeparser code path: DOCX -> WordParser,
-// PPTX -> PowerPointParser, ODT/ODP -> OpenOfficeParser (text vs. presentation
-// element handling), with OOXML vs. ODF magic-byte detection on top.
-const SAMPLES = [
-    { label: 'DOCX', file: 'demo.docx', mimeType: DOCX },
-    { label: 'PPTX', file: 'demo.pptx', mimeType: PPTX },
-    { label: 'ODT', file: 'demo.odt', mimeType: ODT },
-    { label: 'ODP', file: 'demo.odp', mimeType: ODP }
-];
-
-// Phrases drawn from across the shared sample content (heading, body, URL, code
+// Phrases drawn from across the shared document samples (heading, body, URL, code
 // block, ordered/unordered lists, block quote, closing line). Asserting on all of
 // them proves the parser walked the whole document, not just the first paragraph.
-const EXPECTED_PHRASES = [
+const DOCUMENT_PHRASES = [
     'Welcome to Trilium Notes!',
     'showcase some of its features',
     'https://github.com/TriliumNext',
@@ -50,19 +42,42 @@ const EXPECTED_PHRASES = [
     'Checkout also other examples like tables'
 ];
 
+// The spreadsheet samples hold a different document (a Romanian client-account
+// sheet); these header/label cells are present verbatim in both XLSX and ODS and
+// also confirm UTF-8 handling of diacritics.
+const SPREADSHEET_PHRASES = [
+    'Sold (RON):',
+    'Fișă de cont client',
+    'Descriere',
+    'Plată'
+];
+
+// Each sample exercises a distinct officeparser code path: DOCX -> WordParser,
+// XLSX -> ExcelParser, PPTX -> PowerPointParser, ODT/ODS/ODP -> OpenOfficeParser
+// (text / spreadsheet / presentation element handling), with OOXML vs. ODF
+// magic-byte detection on top.
+const SAMPLES = [
+    { label: 'DOCX', file: 'demo.docx', mimeType: DOCX, phrases: DOCUMENT_PHRASES },
+    { label: 'XLSX', file: 'demo.xlsx', mimeType: XLSX, phrases: SPREADSHEET_PHRASES },
+    { label: 'PPTX', file: 'demo.pptx', mimeType: PPTX, phrases: DOCUMENT_PHRASES },
+    { label: 'ODT', file: 'demo.odt', mimeType: ODT, phrases: DOCUMENT_PHRASES },
+    { label: 'ODS', file: 'demo.ods', mimeType: ODS, phrases: SPREADSHEET_PHRASES },
+    { label: 'ODP', file: 'demo.odp', mimeType: ODP, phrases: DOCUMENT_PHRASES }
+];
+
 beforeEach(async () => {
     vi.clearAllMocks();
     ({ OfficeProcessor } = await import('./office_processor.js'));
 });
 
 describe('OfficeProcessor (integration — real officeparser)', () => {
-    describe.each(SAMPLES)('$label', ({ file, mimeType }) => {
+    describe.each(SAMPLES)('$label', ({ file, mimeType, phrases }) => {
         it('extracts the embedded text with high confidence', async () => {
             const processor = new OfficeProcessor();
 
             const result = await processor.extractText(readSample(file), { mimeType });
 
-            for (const phrase of EXPECTED_PHRASES) {
+            for (const phrase of phrases) {
                 expect(result.text).toContain(phrase);
             }
             // Multi-paragraph output joined by the configured newline delimiter.
