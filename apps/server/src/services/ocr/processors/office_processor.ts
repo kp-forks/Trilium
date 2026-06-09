@@ -18,8 +18,7 @@ const SUPPORTED_MIME_TYPES = new Set([
 const PARSER_CONFIG: OfficeParserConfig = {
     outputErrorToConsole: false,
     newlineDelimiter: '\n',
-    ignoreNotes: false,
-    putNotesAtLast: false
+    ignoreNotes: false
 };
 
 /**

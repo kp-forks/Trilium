@@ -58,8 +58,7 @@ describe('OfficeProcessor', () => {
         expect(mockParseOffice).toHaveBeenCalledWith(buffer, {
             outputErrorToConsole: false,
             newlineDelimiter: '\n',
-            ignoreNotes: false,
-            putNotesAtLast: false
+            ignoreNotes: false
         });
     });
 
