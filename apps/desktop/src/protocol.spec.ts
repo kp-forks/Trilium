@@ -15,7 +15,7 @@ vi.mock("electron", () => ({
     protocol: { registerSchemesAsPrivileged: electronMock.registerSchemesAsPrivileged }
 }));
 
-const { dispatch, registerTriliumAppScheme, setupTriliumAppProtocol } = await import("./protocol.js");
+const { dispatch, isDispatchOriginAllowed, registerTriliumAppScheme, setupTriliumAppProtocol } = await import("./protocol.js");
 const { isInternalElectronRequest } = await import("@triliumnext/server/src/services/electron_request.js");
 
 function buildTestApp() {
@@ -417,6 +417,104 @@ describe("trilium-app protocol dispatcher", () => {
                 privileges: expect.objectContaining({ standard: true, secure: true, supportFetchAPI: true, corsEnabled: true })
             })
         ]);
+    });
+
+    // Every dispatched request gets the auth/CSRF-bypassing internal marker,
+    // so the protocol handler must refuse requests that Chromium attests came
+    // from a foreign origin (`Origin` is a forbidden header — page JS cannot
+    // forge it) before they ever reach `dispatch`.
+    describe("origin gate", () => {
+        async function installHandler(app: Parameters<typeof setupTriliumAppProtocol>[0]) {
+            electronMock.handle.mockReset();
+            setupTriliumAppProtocol(app);
+            await Promise.resolve(); // let whenReady().then(...) run
+            return electronMock.handle.mock.calls[0][1] as (req: Request) => Promise<Response>;
+        }
+
+        // Real `Request` objects can't be used here: undici may strip the
+        // forbidden `Origin` header, while Chromium's protocol handler hands
+        // us requests that DO carry it. A plain Headers-backed shape models
+        // the production input deterministically.
+        function fakeRequest(method: string, origin?: string): Request {
+            return {
+                method,
+                url: "trilium-app://app/probe",
+                headers: new Headers(origin === undefined ? {} : { origin }),
+                signal: null,
+                body: null
+            } as unknown as Request;
+        }
+
+        it("isDispatchOriginAllowed implements the three-rule policy", () => {
+            // Rule 3: Origin-less GET / HEAD — top-level navigations
+            // (main-process loadURL, print window) and same-origin
+            // subresource loads legitimately carry no Origin.
+            expect(isDispatchOriginAllowed("GET", null)).toBe(true);
+            expect(isDispatchOriginAllowed("HEAD", null)).toBe(true);
+
+            // Rule 2: Origin-less writes are anomalous — Chromium always
+            // attaches Origin to state-changing requests.
+            for (const method of ["POST", "PUT", "PATCH", "DELETE", "OPTIONS"]) {
+                expect(isDispatchOriginAllowed(method, null)).toBe(false);
+            }
+
+            // Rule 1: foreign origins are rejected regardless of method,
+            // including the opaque "null" origin of sandboxed frames.
+            expect(isDispatchOriginAllowed("GET", "https://evil.example")).toBe(false);
+            expect(isDispatchOriginAllowed("POST", "https://evil.example")).toBe(false);
+            expect(isDispatchOriginAllowed("POST", "null")).toBe(false);
+
+            // Our own scheme passes for both reads and writes.
+            expect(isDispatchOriginAllowed("GET", "trilium-app://app")).toBe(true);
+            expect(isDispatchOriginAllowed("POST", "trilium-app://app")).toBe(true);
+        });
+
+        it("returns 403 without invoking the Express app for a foreign-origin request", async () => {
+            let appInvoked = false;
+            const app = express();
+            app.post("/probe", (_req, res) => {
+                appInvoked = true;
+                res.send("ok");
+            });
+            const handler = await installHandler(app);
+
+            const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            const response = await handler(fakeRequest("POST", "https://evil.example"));
+            errorSpy.mockRestore();
+
+            expect(response.status).toBe(403);
+            expect(appInvoked).toBe(false);
+        });
+
+        it("returns 403 for an Origin-less state-changing request", async () => {
+            const handler = await installHandler(express());
+
+            const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            const response = await handler(fakeRequest("POST"));
+            errorSpy.mockRestore();
+
+            expect(response.status).toBe(403);
+        });
+
+        it("dispatches same-origin requests carrying a trilium-app Origin", async () => {
+            const app = express();
+            app.post("/probe", (_req, res) => res.send("written"));
+            const handler = await installHandler(app);
+
+            const response = await handler(fakeRequest("POST", "trilium-app://app"));
+            expect(response.status).toBe(200);
+            expect(await response.text()).toBe("written");
+        });
+
+        it("dispatches Origin-less GETs (top-level navigation path)", async () => {
+            const app = express();
+            app.get("/probe", (_req, res) => res.send("page"));
+            const handler = await installHandler(app);
+
+            const response = await handler(fakeRequest("GET"));
+            expect(response.status).toBe(200);
+            expect(await response.text()).toBe("page");
+        });
     });
 
     it("does NOT tag plain Express requests with the internal-electron marker", () => {

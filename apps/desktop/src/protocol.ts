@@ -49,6 +49,10 @@ export function registerTriliumAppScheme() {
 export function setupTriliumAppProtocol(app: Application) {
     electron.app.whenReady().then(() => {
         electron.protocol.handle("trilium-app", async (request) => {
+            if (!isDispatchOriginAllowed(request.method, request.headers.get("origin"))) {
+                console.error(`[trilium-app] blocked ${request.method} ${request.url} from origin '${request.headers.get("origin")}'`);
+                return new Response("Forbidden", { status: 403 });
+            }
             try {
                 return await dispatch(app, request);
             } catch (err) {
@@ -57,6 +61,37 @@ export function setupTriliumAppProtocol(app: Application) {
             }
         });
     });
+}
+
+/**
+ * Origin gate in front of `dispatch`. Every dispatched request is tagged with
+ * `markAsInternalElectronRequest`, which bypasses auth and CSRF — so before
+ * dispatching we require Chromium's attestation that the request actually
+ * originates from our own scheme.
+ *
+ * `Origin` is a forbidden header name: page JavaScript cannot set or override
+ * it, Chromium stamps the requesting frame's true origin. And since
+ * `trilium-app://` is not a network listener — it only exists in this
+ * process's protocol registry — every request seen here comes from a Chromium
+ * frame whose Origin header (when present) is trustworthy.
+ *
+ * Policy:
+ * 1. `Origin` present but not `trilium-app://...` → reject. Catches foreign
+ *    http(s) frames and the opaque `"null"` origin of sandboxed frames.
+ * 2. No `Origin` on a state-changing method → reject. Chromium always
+ *    attaches Origin to cross-origin and non-GET/HEAD requests, so a write
+ *    without one is anomalous by construction.
+ * 3. No `Origin` on GET / HEAD → allow. Legitimate for top-level navigations
+ *    (main-process `loadURL`, the print window) and same-origin subresource
+ *    loads. Foreign-frame GETs can't read responses anyway: `corsEnabled` on
+ *    the scheme means CORS applies and no `Access-Control-Allow-Origin` is
+ *    ever returned.
+ */
+export function isDispatchOriginAllowed(method: string, origin: string | null): boolean {
+    if (origin !== null) {
+        return origin.startsWith("trilium-app://");
+    }
+    return method === "GET" || method === "HEAD";
 }
 
 export async function dispatch(app: Application, request: Request): Promise<Response> {
