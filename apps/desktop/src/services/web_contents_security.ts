@@ -1,3 +1,4 @@
+import { WEBVIEW_SESSION_PARTITION } from "@triliumnext/commons";
 import { getLog } from "@triliumnext/core";
 import electron from "electron";
 
@@ -32,7 +33,10 @@ import electron from "electron";
 export function setupWebContentsSecurity() {
     electron.app.on("web-contents-created", (_event, webContents) => {
         webContents.on("will-attach-webview", (attachEvent, webPreferences, params) => {
-            const violations = hardenWebviewPreferences(webPreferences);
+            // Depending on the Electron version the `partition` attribute
+            // surfaces on `webPreferences` or only on the attach params, so
+            // feed both into the check.
+            const violations = hardenWebviewPreferences(webPreferences, params.partition);
             if (violations.length > 0) {
                 attachEvent.preventDefault();
                 getLog().error(`Blocked <webview> attach requesting [${violations.join(", ")}] for src: ${params.src}`);
@@ -50,7 +54,7 @@ export function setupWebContentsSecurity() {
  * reported: Electron may legitimately pass them unset for guests, so they are
  * normalization, not evidence of hostile markup.
  */
-export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences): string[] {
+export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences, requestedPartition?: string): string[] {
     const violations: string[] = [];
 
     // `preloadURL` is the legacy alias of `preload`; Electron still honours it.
@@ -73,7 +77,17 @@ export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences
     if (prefs.allowRunningInsecureContent) {
         violations.push("allowRunningInsecureContent");
     }
+    // The only legitimate <webview> (the Web View note type) always declares
+    // the dedicated guest partition. Explicitly requesting a different one is
+    // hostile markup; omitting it would attach the guest into the *default*
+    // session — shared cookie jar and trilium-app:// protocol registry — so
+    // it is force-set below either way.
+    const partition = prefs.partition ?? requestedPartition;
+    if (partition !== undefined && partition !== WEBVIEW_SESSION_PARTITION) {
+        violations.push(`partition '${partition}'`);
+    }
 
+    prefs.partition = WEBVIEW_SESSION_PARTITION;
     prefs.nodeIntegration = false;
     prefs.nodeIntegrationInSubFrames = false;
     prefs.webSecurity = true;

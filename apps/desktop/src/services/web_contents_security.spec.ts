@@ -34,8 +34,26 @@ describe("hardenWebviewPreferences", () => {
             webSecurity: true,
             allowRunningInsecureContent: false,
             contextIsolation: true,
-            sandbox: true
+            sandbox: true,
+            partition: "persist:webview"
         });
+    });
+
+    it("accepts the dedicated guest partition and rejects any other", () => {
+        const legit: Electron.WebPreferences = { partition: "persist:webview" };
+        expect(hardenWebviewPreferences(legit)).toEqual([]);
+
+        // Wrong partition in the web preferences (e.g. trying to share the
+        // default session's persistent storage under another name).
+        const hostile: Electron.WebPreferences = { partition: "persist:evil" };
+        expect(hardenWebviewPreferences(hostile)).toEqual(["partition 'persist:evil'"]);
+        expect(hostile.partition).toBe("persist:webview");
+
+        // Wrong partition surfaced only via the attach params (attribute
+        // plumbing differs between Electron versions).
+        const viaParams: Electron.WebPreferences = {};
+        expect(hardenWebviewPreferences(viaParams, "persist:evil")).toEqual(["partition 'persist:evil'"]);
+        expect(viaParams.partition).toBe("persist:webview");
     });
 
     it("normalizes explicitly-disabled isolation silently (Electron default plumbing, not hostile markup)", () => {
@@ -96,7 +114,7 @@ describe("setupWebContentsSecurity", () => {
     });
 
     /** Simulates a window being created and then a <webview> attaching inside it. */
-    function attachWebview(prefs: Electron.WebPreferences, src = "https://example.com"): MockAttach {
+    function attachWebview(prefs: Electron.WebPreferences, src = "https://example.com", partition?: string): MockAttach {
         const created = state.appHandlers.get("web-contents-created");
         if (!created) throw new Error("web-contents-created not registered");
 
@@ -107,17 +125,25 @@ describe("setupWebContentsSecurity", () => {
         if (!willAttach) throw new Error("will-attach-webview not registered");
 
         const preventDefault = vi.fn();
-        willAttach({ preventDefault }, prefs, { src });
+        willAttach({ preventDefault }, prefs, { src, partition });
         return { preventDefault, prefs };
     }
 
     it("lets a benign webview attach with hardened preferences", () => {
-        const { preventDefault, prefs } = attachWebview({});
+        const { preventDefault, prefs } = attachWebview({}, "https://example.com", "persist:webview");
 
         expect(preventDefault).not.toHaveBeenCalled();
         expect(state.errors).toEqual([]);
         expect(prefs.nodeIntegration).toBe(false);
         expect(prefs.contextIsolation).toBe(true);
+        expect(prefs.partition).toBe("persist:webview");
+    });
+
+    it("denies an attach requesting a foreign partition passed via attach params", () => {
+        const { preventDefault } = attachWebview({}, "https://evil.example", "persist:other");
+
+        expect(preventDefault).toHaveBeenCalledOnce();
+        expect(state.errors[0]).toContain("partition 'persist:other'");
     });
 
     it("denies an attach requesting nodeIntegration and logs the src", () => {
