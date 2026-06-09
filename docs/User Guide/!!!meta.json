@@ -16972,6 +16972,13 @@
                             "value": "bx bxs-file-js",
                             "isInheritable": false,
                             "position": 80
+                        },
+                        {
+                            "type": "relation",
+                            "name": "internalLink",
+                            "value": "wy8So3yZZlH9",
+                            "isInheritable": false,
+                            "position": 90
                         }
                     ],
                     "format": "markdown",
