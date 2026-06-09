@@ -459,12 +459,16 @@ describe("trilium-app protocol dispatcher", () => {
             }
 
             // Rule 1: foreign origins are rejected regardless of method,
-            // including the opaque "null" origin of sandboxed frames.
+            // including the opaque "null" origin of sandboxed frames and
+            // other hosts under our own scheme — `trilium-app://app` is the
+            // only origin the app ever loads.
             expect(isDispatchOriginAllowed("GET", "https://evil.example")).toBe(false);
             expect(isDispatchOriginAllowed("POST", "https://evil.example")).toBe(false);
             expect(isDispatchOriginAllowed("POST", "null")).toBe(false);
+            expect(isDispatchOriginAllowed("POST", "trilium-app://evil")).toBe(false);
+            expect(isDispatchOriginAllowed("POST", "trilium-app://app.evil.example")).toBe(false);
 
-            // Our own scheme passes for both reads and writes.
+            // The app's own exact origin passes for both reads and writes.
             expect(isDispatchOriginAllowed("GET", "trilium-app://app")).toBe(true);
             expect(isDispatchOriginAllowed("POST", "trilium-app://app")).toBe(true);
         });

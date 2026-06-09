@@ -49,8 +49,9 @@ export function registerTriliumAppScheme() {
 export function setupTriliumAppProtocol(app: Application) {
     electron.app.whenReady().then(() => {
         electron.protocol.handle("trilium-app", async (request) => {
-            if (!isDispatchOriginAllowed(request.method, request.headers.get("origin"))) {
-                console.error(`[trilium-app] blocked ${request.method} ${request.url} from origin '${request.headers.get("origin")}'`);
+            const origin = request.headers.get("origin");
+            if (!isDispatchOriginAllowed(request.method, origin)) {
+                console.error(`[trilium-app] blocked ${request.method} ${request.url} from origin '${origin}'`);
                 return new Response("Forbidden", { status: 403 });
             }
             try {
@@ -76,8 +77,10 @@ export function setupTriliumAppProtocol(app: Application) {
  * frame whose Origin header (when present) is trustworthy.
  *
  * Policy:
- * 1. `Origin` present but not `trilium-app://...` → reject. Catches foreign
- *    http(s) frames and the opaque `"null"` origin of sandboxed frames.
+ * 1. `Origin` present but not exactly `trilium-app://app` (the sole origin
+ *    the app ever loads — see the loadURL call sites) → reject. Catches
+ *    foreign http(s) frames, the opaque `"null"` origin of sandboxed frames,
+ *    and any other host under our own scheme.
  * 2. No `Origin` on a state-changing method → reject. Chromium always
  *    attaches Origin to cross-origin and non-GET/HEAD requests, so a write
  *    without one is anomalous by construction.
@@ -89,7 +92,7 @@ export function setupTriliumAppProtocol(app: Application) {
  */
 export function isDispatchOriginAllowed(method: string, origin: string | null): boolean {
     if (origin !== null) {
-        return origin.startsWith("trilium-app://");
+        return origin === "trilium-app://app";
     }
     return method === "GET" || method === "HEAD";
 }

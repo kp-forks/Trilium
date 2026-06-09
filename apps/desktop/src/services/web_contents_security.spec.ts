@@ -408,6 +408,8 @@ describe("navigation guard", () => {
         expect(isNavigationAllowed("https://evil.example/page")).toBe(false);
         // Internal host but non-root path is blocked.
         expect(isNavigationAllowed("http://localhost/somewhere")).toBe(false);
+        // Our scheme but not the app host — only `trilium-app://app` is ever served.
+        expect(isNavigationAllowed("trilium-app://evil/")).toBe(false);
         // URL with no hostname falls back to "" and is blocked.
         expect(isNavigationAllowed("javascript:void(0)")).toBe(false);
     });
