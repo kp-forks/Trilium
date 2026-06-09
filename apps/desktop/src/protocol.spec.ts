@@ -4,18 +4,20 @@ import { describe, expect, it, vi } from "vitest";
 
 const electronMock = vi.hoisted(() => ({
     registerSchemesAsPrivileged: vi.fn(),
-    handle: vi.fn()
+    handle: vi.fn(),
+    onBeforeRequest: vi.fn()
 }));
 
 vi.mock("electron", () => ({
     default: {
         app: { whenReady: () => Promise.resolve() },
-        protocol: { handle: electronMock.handle }
+        protocol: { handle: electronMock.handle },
+        session: { defaultSession: { webRequest: { onBeforeRequest: electronMock.onBeforeRequest } } }
     },
     protocol: { registerSchemesAsPrivileged: electronMock.registerSchemesAsPrivileged }
 }));
 
-const { dispatch, isDispatchOriginAllowed, registerTriliumAppScheme, setupTriliumAppProtocol } = await import("./protocol.js");
+const { dispatch, isDispatchOriginAllowed, isRequestorChainTrusted, registerTriliumAppScheme, setupTriliumAppProtocol } = await import("./protocol.js");
 const { isInternalElectronRequest } = await import("@triliumnext/server/src/services/electron_request.js");
 
 function buildTestApp() {
@@ -420,9 +422,11 @@ describe("trilium-app protocol dispatcher", () => {
     });
 
     // Every dispatched request gets the auth/CSRF-bypassing internal marker,
-    // so the protocol handler must refuse requests that Chromium attests came
-    // from a foreign origin (`Origin` is a forbidden header — page JS cannot
-    // forge it) before they ever reach `dispatch`.
+    // so requests must be vetted before they ever reach `dispatch`. The
+    // primary gate is the webRequest frame-origin guard (headers cannot
+    // distinguish friend from foe on a custom scheme — see protocol.ts);
+    // the Origin check on the handler itself is the secondary layer for
+    // navigation-style requests, the only ones that carry an Origin.
     describe("origin gate", () => {
         async function installHandler(app: Parameters<typeof setupTriliumAppProtocol>[0]) {
             electronMock.handle.mockReset();
@@ -445,32 +449,23 @@ describe("trilium-app protocol dispatcher", () => {
             } as unknown as Request;
         }
 
-        it("isDispatchOriginAllowed implements the three-rule policy", () => {
-            // Rule 3: Origin-less GET / HEAD — top-level navigations
-            // (main-process loadURL, print window) and same-origin
-            // subresource loads legitimately carry no Origin.
-            expect(isDispatchOriginAllowed("GET", null)).toBe(true);
-            expect(isDispatchOriginAllowed("HEAD", null)).toBe(true);
+        it("isDispatchOriginAllowed only rejects positively-attested foreign origins", () => {
+            // Foreign origins are rejected, including the opaque "null"
+            // origin of sandboxed frames and other hosts under our own
+            // scheme — `trilium-app://app` is the only origin the app ever
+            // loads.
+            expect(isDispatchOriginAllowed("https://evil.example")).toBe(false);
+            expect(isDispatchOriginAllowed("null")).toBe(false);
+            expect(isDispatchOriginAllowed("trilium-app://evil")).toBe(false);
+            expect(isDispatchOriginAllowed("trilium-app://app.evil.example")).toBe(false);
 
-            // Rule 2: Origin-less writes are anomalous — Chromium always
-            // attaches Origin to state-changing requests.
-            for (const method of ["POST", "PUT", "PATCH", "DELETE", "OPTIONS"]) {
-                expect(isDispatchOriginAllowed(method, null)).toBe(false);
-            }
+            // The app's own exact origin passes.
+            expect(isDispatchOriginAllowed("trilium-app://app")).toBe(true);
 
-            // Rule 1: foreign origins are rejected regardless of method,
-            // including the opaque "null" origin of sandboxed frames and
-            // other hosts under our own scheme — `trilium-app://app` is the
-            // only origin the app ever loads.
-            expect(isDispatchOriginAllowed("GET", "https://evil.example")).toBe(false);
-            expect(isDispatchOriginAllowed("POST", "https://evil.example")).toBe(false);
-            expect(isDispatchOriginAllowed("POST", "null")).toBe(false);
-            expect(isDispatchOriginAllowed("POST", "trilium-app://evil")).toBe(false);
-            expect(isDispatchOriginAllowed("POST", "trilium-app://app.evil.example")).toBe(false);
-
-            // The app's own exact origin passes for both reads and writes.
-            expect(isDispatchOriginAllowed("GET", "trilium-app://app")).toBe(true);
-            expect(isDispatchOriginAllowed("POST", "trilium-app://app")).toBe(true);
+            // No Origin proves nothing on a custom scheme: Chromium omits it
+            // even on the renderer's own POST/PUT requests, so absence must
+            // be allowed through (the frame guard already vetted the source).
+            expect(isDispatchOriginAllowed(null)).toBe(true);
         });
 
         it("returns 403 without invoking the Express app for a foreign-origin request", async () => {
@@ -490,17 +485,20 @@ describe("trilium-app protocol dispatcher", () => {
             expect(appInvoked).toBe(false);
         });
 
-        it("returns 403 for an Origin-less state-changing request", async () => {
-            const handler = await installHandler(express());
+        // Regression test: same-origin renderer writes (tree/load,
+        // recent-notes, ...) arrive with NO Origin header on the custom
+        // scheme and must not be rejected.
+        it("dispatches Origin-less writes (the renderer's own API calls)", async () => {
+            const app = express();
+            app.post("/probe", (_req, res) => res.send("written"));
+            const handler = await installHandler(app);
 
-            const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
             const response = await handler(fakeRequest("POST"));
-            errorSpy.mockRestore();
-
-            expect(response.status).toBe(403);
+            expect(response.status).toBe(200);
+            expect(await response.text()).toBe("written");
         });
 
-        it("dispatches same-origin requests carrying a trilium-app Origin", async () => {
+        it("dispatches writes carrying the exact trilium-app Origin", async () => {
             const app = express();
             app.post("/probe", (_req, res) => res.send("written"));
             const handler = await installHandler(app);
@@ -518,6 +516,110 @@ describe("trilium-app protocol dispatcher", () => {
             const response = await handler(fakeRequest("GET"));
             expect(response.status).toBe(200);
             expect(await response.text()).toBe("page");
+        });
+    });
+
+    // The primary gate: a webRequest hook cancels any trilium-app:// request
+    // whose requesting frame chain is not exclusively the app shell. Frame
+    // URLs are main-process-side state that renderer content cannot forge,
+    // unlike every header on this scheme.
+    describe("frame origin guard", () => {
+        type OnBeforeRequestListener = (
+            details: {
+                method: string;
+                url: string;
+                resourceType: string;
+                frame?: { url: string; parent: unknown } | null;
+            },
+            callback: (response: { cancel: boolean }) => void
+        ) => void;
+
+        async function installGuard() {
+            electronMock.onBeforeRequest.mockReset();
+            setupTriliumAppProtocol(express());
+            await Promise.resolve(); // let whenReady().then(...) run
+            const [filter, listener] = electronMock.onBeforeRequest.mock.calls[0] as [
+                { urls: string[] },
+                OnBeforeRequestListener
+            ];
+            return { filter, listener };
+        }
+
+        function frameChain(...urls: string[]) {
+            return urls.reduceRight<{ url: string; parent: unknown } | null>(
+                (parent, url) => ({ url, parent }),
+                null
+            );
+        }
+
+        function decide(listener: OnBeforeRequestListener, resourceType: string, frame: { url: string; parent: unknown } | null | undefined) {
+            let cancelled: boolean | undefined;
+            const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            listener(
+                { method: "POST", url: "trilium-app://app/api/probe", resourceType, frame },
+                ({ cancel }) => { cancelled = cancel; }
+            );
+            errorSpy.mockRestore();
+            return cancelled;
+        }
+
+        it("isRequestorChainTrusted implements the frame-chain policy", () => {
+            // Top-level navigations come from main-process loadURL calls or
+            // are vetted by the will-navigate guard — always allowed.
+            expect(isRequestorChainTrusted("mainFrame", [""])).toBe(true);
+
+            // The renderer's own fetch/XHR.
+            expect(isRequestorChainTrusted("xhr", ["trilium-app://app/"])).toBe(true);
+            // ... including from same-origin iframes (pdfjs viewer, print).
+            expect(isRequestorChainTrusted("xhr", ["trilium-app://app/pdfjs/web/viewer.html", "trilium-app://app/"])).toBe(true);
+            // Subframe navigation of a legit app iframe: the navigated frame
+            // reports its uncommitted URL; the app-shell parent attests it.
+            expect(isRequestorChainTrusted("subFrame", ["", "trilium-app://app/"])).toBe(true);
+            expect(isRequestorChainTrusted("subFrame", ["about:blank", "trilium-app://app/"])).toBe(true);
+            // DevTools fetching source maps for trilium-app:// scripts.
+            expect(isRequestorChainTrusted("xhr", ["devtools://devtools/bundled/devtools_app.html"])).toBe(true);
+
+            // A foreign window's fetch.
+            expect(isRequestorChainTrusted("xhr", ["http://127.0.0.1:8080/"])).toBe(false);
+            // A foreign iframe embedded in the app window — the app-shell
+            // ancestor does not launder the hostile requesting frame.
+            expect(isRequestorChainTrusted("xhr", ["http://evil.example/", "trilium-app://app/"])).toBe(false);
+            // A hostile form POST targeting an iframe, from a foreign window
+            // or nested inside the app window.
+            expect(isRequestorChainTrusted("subFrame", ["about:blank", "http://evil.example/"])).toBe(false);
+            expect(isRequestorChainTrusted("subFrame", ["about:blank", "http://evil.example/", "trilium-app://app/"])).toBe(false);
+            // Lookalike hosts under our own or other schemes.
+            expect(isRequestorChainTrusted("xhr", ["trilium-app://app.evil.example/"])).toBe(false);
+            expect(isRequestorChainTrusted("xhr", ["trilium-app://evil/"])).toBe(false);
+            // Chains with no committed frame at all attest nothing.
+            expect(isRequestorChainTrusted("xhr", ["about:blank"])).toBe(false);
+            expect(isRequestorChainTrusted("xhr", [])).toBe(false);
+            // Unparseable frame URLs.
+            expect(isRequestorChainTrusted("xhr", ["<disposed frame>"])).toBe(false);
+        });
+
+        it("registers for trilium-app URLs and cancels based on the frame chain", async () => {
+            const { filter, listener } = await installGuard();
+            expect(filter).toEqual({ urls: ["trilium-app://*/*"] });
+
+            expect(decide(listener, "xhr", frameChain("trilium-app://app/"))).toBe(false);
+            expect(decide(listener, "xhr", frameChain("http://evil.example/", "trilium-app://app/"))).toBe(true);
+            expect(decide(listener, "mainFrame", frameChain(""))).toBe(false);
+        });
+
+        it("denies subresource requests with no frame attached", async () => {
+            const { listener } = await installGuard();
+            expect(decide(listener, "xhr", null)).toBe(true);
+            expect(decide(listener, "xhr", undefined)).toBe(true);
+        });
+
+        it("denies when reading the frame chain throws (disposed frame)", async () => {
+            const { listener } = await installGuard();
+            const disposed = {
+                get url(): string { throw new Error("Render frame was disposed"); },
+                parent: null
+            };
+            expect(decide(listener, "xhr", disposed)).toBe(true);
         });
     });
 

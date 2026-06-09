@@ -48,9 +48,10 @@ export function registerTriliumAppScheme() {
  */
 export function setupTriliumAppProtocol(app: Application) {
     electron.app.whenReady().then(() => {
+        installFrameOriginGuard();
         electron.protocol.handle("trilium-app", async (request) => {
             const origin = request.headers.get("origin");
-            if (!isDispatchOriginAllowed(request.method, origin)) {
+            if (!isDispatchOriginAllowed(origin)) {
                 console.error(`[trilium-app] blocked ${request.method} ${request.url} from origin '${origin}'`);
                 return new Response("Forbidden", { status: 403 });
             }
@@ -65,36 +66,99 @@ export function setupTriliumAppProtocol(app: Application) {
 }
 
 /**
- * Origin gate in front of `dispatch`. Every dispatched request is tagged with
- * `markAsInternalElectronRequest`, which bypasses auth and CSRF — so before
- * dispatching we require Chromium's attestation that the request actually
- * originates from our own scheme.
+ * The primary gate in front of `dispatch`. Every dispatched request is tagged
+ * with `markAsInternalElectronRequest`, which bypasses auth and CSRF — so a
+ * request may only reach `dispatch` if it comes from the app shell itself.
  *
- * `Origin` is a forbidden header name: page JavaScript cannot set or override
- * it, Chromium stamps the requesting frame's true origin. And since
- * `trilium-app://` is not a network listener — it only exists in this
- * process's protocol registry — every request seen here comes from a Chromium
- * frame whose Origin header (when present) is trustworthy.
+ * Request headers cannot make that distinction. Empirically (Electron 41, and
+ * contrary to how http(s) origins behave) Chromium stamps **no** identifying
+ * headers on requests to a privileged custom scheme: same-origin renderer
+ * requests carry no `Origin` even on POST/PUT, cross-origin `fetch()` calls
+ * from foreign http(s) or sandboxed frames *also* arrive without `Origin`,
+ * and no `Sec-Fetch-*` or `Referer` headers exist at all. Worse, `corsEnabled`
+ * is not actually enforced for reads — a foreign frame can both send and read
+ * responses. Only navigation-style requests (e.g. `<form>` POSTs) get an
+ * `Origin` stamped. Custom marker headers are no help either: foreign frames
+ * can attach them without triggering a CORS preflight.
  *
- * Policy:
- * 1. `Origin` present but not exactly `trilium-app://app` (the sole origin
- *    the app ever loads — see the loadURL call sites) → reject. Catches
- *    foreign http(s) frames, the opaque `"null"` origin of sandboxed frames,
- *    and any other host under our own scheme.
- * 2. No `Origin` on a state-changing method → reject. Chromium always
- *    attaches Origin to cross-origin and non-GET/HEAD requests, so a write
- *    without one is anomalous by construction.
- * 3. No `Origin` on GET / HEAD → allow. Legitimate for top-level navigations
- *    (main-process `loadURL`, the print window) and same-origin subresource
- *    loads. Foreign-frame GETs can't read responses anyway: `corsEnabled` on
- *    the scheme means CORS applies and no `Access-Control-Allow-Origin` is
- *    ever returned.
+ * What Chromium *does* expose truthfully is the requesting frame, via
+ * `webRequest` — `details.frame` and its `parent` chain are main-process-side
+ * state that renderer content cannot forge. So the policy is enforced in
+ * `onBeforeRequest`, before the protocol handler ever runs:
+ *
+ * - Top-level navigations are allowed: they originate from main-process
+ *   `loadURL` calls (main / extra / setup / print windows) or are already
+ *   vetted by the `will-navigate` guard in `web_contents_security.ts`.
+ * - Every other request — subframe navigations, fetch/XHR, scripts, images —
+ *   must come from a frame chain consisting solely of the app shell
+ *   (`trilium-app://app`, the sole origin ever loaded — see the loadURL call
+ *   sites). Uncommitted frames (`about:blank` / `about:srcdoc` / empty URL)
+ *   inherit their embedder's trust, mirroring Chromium's own origin
+ *   inheritance; the chain still has to contain at least one committed app
+ *   frame. This denies requests from foreign frames anywhere in the chain —
+ *   e.g. a remote page loaded into an iframe — including frames *nested
+ *   inside* such content.
+ * - DevTools frames are allowed so source-map fetches for `trilium-app://`
+ *   scripts keep working; page content can never navigate a frame to the
+ *   privileged `devtools://` scheme.
+ *
+ * `<webview>` guests are out of scope by construction: they live in a
+ * dedicated session partition where the `trilium-app://` handler is not even
+ * registered, so the scheme does not resolve there at all.
  */
-export function isDispatchOriginAllowed(method: string, origin: string | null): boolean {
-    if (origin !== null) {
-        return origin === "trilium-app://app";
+function installFrameOriginGuard() {
+    electron.session.defaultSession.webRequest.onBeforeRequest({ urls: ["trilium-app://*/*"] }, (details, callback) => {
+        let frameUrls: string[];
+        try {
+            frameUrls = [];
+            for (let frame = details.frame; frame; frame = frame.parent) {
+                frameUrls.push(frame.url);
+            }
+        } catch {
+            // Accessing a disposed frame throws; with no attestation left the
+            // requester is gone anyway, so deny.
+            frameUrls = ["<disposed frame>"];
+        }
+
+        const allowed = isRequestorChainTrusted(details.resourceType, frameUrls);
+        if (!allowed) {
+            console.error(`[trilium-app] blocked ${details.method} ${details.url} from frame chain [${frameUrls.join(" ← ")}]`);
+        }
+        callback({ cancel: !allowed });
+    });
+}
+
+/** Pure policy behind {@link installFrameOriginGuard}; exported for tests. */
+export function isRequestorChainTrusted(resourceType: string, frameUrls: string[]): boolean {
+    if (resourceType === "mainFrame") {
+        return true;
     }
-    return method === "GET" || method === "HEAD";
+    const committed = frameUrls.filter((frameUrl) => frameUrl !== "" && frameUrl !== "about:blank" && frameUrl !== "about:srcdoc");
+    if (committed.length === 0) {
+        return false;
+    }
+    return committed.every(isTrustedFrameUrl);
+}
+
+function isTrustedFrameUrl(frameUrl: string): boolean {
+    try {
+        const parsed = new URL(frameUrl);
+        return (parsed.protocol === "trilium-app:" && parsed.host === "app") || parsed.protocol === "devtools:";
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Second, weaker layer behind the frame-origin guard: rejects any request
+ * that *positively* attests a foreign origin. As described above, the only
+ * requests that carry an `Origin` on this scheme are navigation-style ones
+ * (e.g. a hostile `<form method=POST>` targeting `trilium-app://`); the app's
+ * own traffic and — unfortunately — foreign `fetch()` calls carry none, so
+ * the absence of the header proves nothing and must be allowed through.
+ */
+export function isDispatchOriginAllowed(origin: string | null): boolean {
+    return origin === null || origin === "trilium-app://app";
 }
 
 export async function dispatch(app: Application, request: Request): Promise<Response> {
