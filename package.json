@@ -79,7 +79,7 @@
     "tsx": "4.21.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.60.1",
-    "vite": "8.0.14",
+    "vite": "8.0.16",
     "vitest": "4.1.8"
   },
   "license": "AGPL-3.0-only",
