@@ -413,7 +413,7 @@ export default function PrintPreviewDialog() {
                         <span class="bx bx-loader-circle bx-spin" />
                     </div>
                 )}
-                {pdfUrl && <PdfViewer pdfUrl={pdfUrl} toolbar={false} disableSelection />}
+                {pdfUrl && <PdfViewer pdfUrl={pdfUrl} toolbar={false} disableSelection minPixelRatio={2} />}
             </div>
         </Modal>
     );
