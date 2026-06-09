@@ -4,10 +4,37 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // on CI its entry point throws ("Electron failed to install correctly") when
 // the binary isn't materialized; `getLog` is stubbed because the log service
 // requires `initializeCore`.
-const state = vi.hoisted(() => ({
-    appHandlers: new Map<string, (...args: unknown[]) => unknown>(),
-    errors: [] as string[]
-}));
+const state = vi.hoisted(() => {
+    type PermissionRequestHandler = (
+        webContents: unknown,
+        permission: string,
+        callback: (granted: boolean) => void,
+        details: { requestingUrl: string }
+    ) => void;
+    type PermissionCheckHandler = (webContents: unknown, permission: string) => boolean;
+
+    /** Fake Electron session capturing the permission handlers installed on it. */
+    function makeFakeSession() {
+        return {
+            requestHandler: undefined as PermissionRequestHandler | undefined,
+            checkHandler: undefined as PermissionCheckHandler | undefined,
+            setPermissionRequestHandler(fn: PermissionRequestHandler) {
+                this.requestHandler = fn;
+            },
+            setPermissionCheckHandler(fn: PermissionCheckHandler) {
+                this.checkHandler = fn;
+            }
+        };
+    }
+
+    return {
+        appHandlers: new Map<string, (...args: unknown[]) => unknown>(),
+        errors: [] as string[],
+        defaultSession: makeFakeSession(),
+        partitionSessions: new Map<string, ReturnType<typeof makeFakeSession>>(),
+        makeFakeSession
+    };
+});
 
 vi.mock("@triliumnext/core", () => ({
     getLog: () => ({ error: (msg: string) => state.errors.push(msg) })
@@ -15,11 +42,27 @@ vi.mock("@triliumnext/core", () => ({
 
 vi.mock("electron", () => ({
     default: {
-        app: { on: (event: string, fn: (...args: unknown[]) => unknown) => state.appHandlers.set(event, fn) }
+        app: {
+            on: (event: string, fn: (...args: unknown[]) => unknown) => state.appHandlers.set(event, fn),
+            whenReady: () => Promise.resolve()
+        },
+        session: {
+            get defaultSession() {
+                return state.defaultSession;
+            },
+            fromPartition: (partition: string) => {
+                let session = state.partitionSessions.get(partition);
+                if (!session) {
+                    session = state.makeFakeSession();
+                    state.partitionSessions.set(partition, session);
+                }
+                return session;
+            }
+        }
     }
 }));
 
-const { hardenWebviewPreferences, setupWebContentsSecurity } = await import("./web_contents_security.js");
+const { hardenWebviewPreferences, isPermissionAllowed, setupWebContentsSecurity } = await import("./web_contents_security.js");
 
 describe("hardenWebviewPreferences", () => {
     it("reports no violations for a benign attach and forces isolation on", () => {
@@ -160,5 +203,82 @@ describe("setupWebContentsSecurity", () => {
 
         expect(preventDefault).toHaveBeenCalledOnce();
         expect(state.errors[0]).toContain("preload script");
+    });
+});
+
+describe("isPermissionAllowed", () => {
+    it("implements the per-session allowlist matrix", () => {
+        // App session: the renderer copies note content and toggles fullscreen.
+        expect(isPermissionAllowed("app", "clipboard-sanitized-write")).toBe(true);
+        expect(isPermissionAllowed("app", "fullscreen")).toBe(true);
+
+        // Guest session: only fullscreen (embedded video players).
+        expect(isPermissionAllowed("guest", "fullscreen")).toBe(true);
+        expect(isPermissionAllowed("guest", "clipboard-sanitized-write")).toBe(false);
+
+        // Everything else is denied everywhere.
+        for (const permission of ["media", "geolocation", "notifications", "midi", "hid", "serial", "usb", "pointerLock", "clipboard-read", "openExternal"]) {
+            expect(isPermissionAllowed("app", permission)).toBe(false);
+            expect(isPermissionAllowed("guest", permission)).toBe(false);
+        }
+    });
+});
+
+describe("permission handlers", () => {
+    beforeEach(async () => {
+        state.appHandlers.clear();
+        state.errors.length = 0;
+        state.defaultSession = state.makeFakeSession();
+        state.partitionSessions.clear();
+        setupWebContentsSecurity();
+        // Installation is gated on app.whenReady(); flush the microtask queue.
+        await Promise.resolve();
+    });
+
+    it("installs request and check handlers on both the default and the webview partition session", () => {
+        expect(state.defaultSession.requestHandler).toBeDefined();
+        expect(state.defaultSession.checkHandler).toBeDefined();
+
+        const guestSession = state.partitionSessions.get("persist:webview");
+        expect(guestSession?.requestHandler).toBeDefined();
+        expect(guestSession?.checkHandler).toBeDefined();
+        expect(state.partitionSessions.size).toBe(1);
+    });
+
+    it("grants allowlisted permission requests without logging", () => {
+        const handler = state.defaultSession.requestHandler;
+        if (!handler) throw new Error("request handler not installed");
+
+        const callback = vi.fn();
+        handler({}, "fullscreen", callback, { requestingUrl: "trilium-app://main/" });
+
+        expect(callback).toHaveBeenCalledWith(true);
+        expect(state.errors).toEqual([]);
+    });
+
+    it("denies non-allowlisted permission requests and logs the requesting URL", () => {
+        const guestSession = state.partitionSessions.get("persist:webview");
+        const handler = guestSession?.requestHandler;
+        if (!handler) throw new Error("request handler not installed");
+
+        const callback = vi.fn();
+        handler({}, "media", callback, { requestingUrl: "https://evil.example/" });
+
+        expect(callback).toHaveBeenCalledWith(false);
+        expect(state.errors).toHaveLength(1);
+        expect(state.errors[0]).toContain("media");
+        expect(state.errors[0]).toContain("https://evil.example/");
+        expect(state.errors[0]).toContain("guest");
+    });
+
+    it("mirrors the policy in the synchronous check handler", () => {
+        const appCheck = state.defaultSession.checkHandler;
+        const guestCheck = state.partitionSessions.get("persist:webview")?.checkHandler;
+        if (!appCheck || !guestCheck) throw new Error("check handlers not installed");
+
+        expect(appCheck({}, "clipboard-sanitized-write")).toBe(true);
+        expect(appCheck({}, "geolocation")).toBe(false);
+        expect(guestCheck({}, "fullscreen")).toBe(true);
+        expect(guestCheck({}, "clipboard-sanitized-write")).toBe(false);
     });
 });

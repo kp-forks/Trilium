@@ -20,7 +20,8 @@ import electron from "electron";
 /**
  * Registers a main-process hook that vets every `<webview>` before it
  * attaches, on every WebContents the app ever creates (main, extra, setup and
- * print windows alike).
+ * print windows alike), and installs deny-by-default permission handlers on
+ * both the app session and the dedicated `<webview>` guest session.
  *
  * Attach attempts that explicitly request a dangerous capability (Node
  * integration, a preload script, disabled web security) are denied outright —
@@ -42,6 +43,13 @@ export function setupWebContentsSecurity() {
                 getLog().error(`Blocked <webview> attach requesting [${violations.join(", ")}] for src: ${params.src}`);
             }
         });
+    });
+
+    // Sessions only exist once the app is ready; both handlers below replace
+    // Electron's default behaviour of granting every permission request.
+    electron.app.whenReady().then(() => {
+        installPermissionPolicy(electron.session.defaultSession, "app");
+        installPermissionPolicy(electron.session.fromPartition(WEBVIEW_SESSION_PARTITION), "guest");
     });
 }
 
@@ -96,4 +104,42 @@ export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences
     prefs.sandbox = true;
 
     return violations;
+}
+
+/**
+ * Permission allowlists per session kind. Unset handlers make Electron GRANT
+ * every request, so anything not listed here (camera, microphone, geolocation,
+ * notifications, MIDI, HID, serial, USB, pointer lock, clipboard read, …) is
+ * denied.
+ *
+ * - `app`: the default session — the Trilium renderer itself. It legitimately
+ *   writes to the clipboard (copy note content/links) and toggles fullscreen
+ *   (e.g. presentations, zen mode), nothing else.
+ * - `guest`: the `<webview>` partition hosting arbitrary remote pages from
+ *   Web View notes. Fullscreen only (embedded video players).
+ */
+const PERMISSION_ALLOWLIST = {
+    app: new Set(["clipboard-sanitized-write", "fullscreen"]),
+    guest: new Set(["fullscreen"])
+} as const;
+
+export type SessionKind = keyof typeof PERMISSION_ALLOWLIST;
+
+/** Pure policy check: is `permission` allowed for the given session kind? */
+export function isPermissionAllowed(kind: SessionKind, permission: string): boolean {
+    return PERMISSION_ALLOWLIST[kind].has(permission);
+}
+
+function installPermissionPolicy(session: Electron.Session, kind: SessionKind) {
+    // Asynchronous requests (e.g. getUserMedia prompting for the camera).
+    session.setPermissionRequestHandler((_webContents, permission, callback, details) => {
+        const allowed = isPermissionAllowed(kind, permission);
+        if (!allowed) {
+            getLog().error(`Denied '${permission}' permission request from ${details.requestingUrl} (${kind} session)`);
+        }
+        callback(allowed);
+    });
+    // Synchronous checks (e.g. navigator.permissions.query, push subscription
+    // state) — without this handler Electron reports everything as granted.
+    session.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(kind, permission));
 }
