@@ -25,6 +25,7 @@ const PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.prese
 const ODT = 'application/vnd.oasis.opendocument.text';
 const ODS = 'application/vnd.oasis.opendocument.spreadsheet';
 const ODP = 'application/vnd.oasis.opendocument.presentation';
+const RTF = 'application/rtf';
 
 const SAMPLES_DIR = join(__dirname, 'samples');
 
@@ -54,15 +55,16 @@ const SPREADSHEET_PHRASES = [
 
 // Each sample exercises a distinct officeparser code path: DOCX -> WordParser,
 // XLSX -> ExcelParser, PPTX -> PowerPointParser, ODT/ODS/ODP -> OpenOfficeParser
-// (text / spreadsheet / presentation element handling), with OOXML vs. ODF
-// magic-byte detection on top.
+// (text / spreadsheet / presentation element handling), RTF -> RtfParser (routed
+// via an explicit fileType hint), with OOXML vs. ODF magic-byte detection on top.
 const SAMPLES = [
     { label: 'DOCX', file: 'demo.docx', mimeType: DOCX, phrases: DOCUMENT_PHRASES },
     { label: 'XLSX', file: 'demo.xlsx', mimeType: XLSX, phrases: SPREADSHEET_PHRASES },
     { label: 'PPTX', file: 'demo.pptx', mimeType: PPTX, phrases: DOCUMENT_PHRASES },
     { label: 'ODT', file: 'demo.odt', mimeType: ODT, phrases: DOCUMENT_PHRASES },
     { label: 'ODS', file: 'demo.ods', mimeType: ODS, phrases: SPREADSHEET_PHRASES },
-    { label: 'ODP', file: 'demo.odp', mimeType: ODP, phrases: DOCUMENT_PHRASES }
+    { label: 'ODP', file: 'demo.odp', mimeType: ODP, phrases: DOCUMENT_PHRASES },
+    { label: 'RTF', file: 'demo.rtf', mimeType: RTF, phrases: DOCUMENT_PHRASES }
 ];
 
 beforeEach(async () => {
