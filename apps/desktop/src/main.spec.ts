@@ -176,6 +176,7 @@ vi.mock("./services/custom_dictionary", () => ({ setupCustomDictionary: vi.fn() 
 vi.mock("./services/printing", () => ({ setupPrintingHandlers: vi.fn() }));
 vi.mock("./services/tray", () => ({ setupSystemTray: vi.fn() }));
 vi.mock("./services/shell", () => ({ setupShellHandlers: vi.fn() }));
+vi.mock("./services/web_contents_security", () => ({ setupWebContentsSecurity: vi.fn() }));
 vi.mock("./services/security_settings", () => ({
     getSecuritySettings: () => h.securitySettings,
     registerSecurityIpcHandlers: vi.fn()

@@ -5,6 +5,7 @@ import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import ServerPlatformProvider from "@triliumnext/server/src/platform_provider.js";
 import { serverImageProvider } from "@triliumnext/server/src/services/image_provider.js";
+import { setupWebContentsSecurity } from "@triliumnext/desktop/src/services/web_contents_security.js";
 import windowService, { setupWindowing } from "@triliumnext/desktop/src/services/window.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
@@ -108,6 +109,10 @@ export function startElectron(callback: () => void): DeferredPromise<void> {
         // render loop with tens of thousands of blocking sendSync calls and pegs
         // the renderer. Desktop registers these in apps/desktop/src/main.ts.
         setupWindowing();
+
+        // Vet <webview> attach attempts (the windows enable `webviewTag`);
+        // desktop does the same in apps/desktop/src/main.ts.
+        setupWebContentsSecurity();
 
         // Create the main window.
         await windowService.createMainWindow();
