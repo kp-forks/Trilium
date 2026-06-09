@@ -32,7 +32,7 @@ body.desktop .print-preview-dialog .modal-content-with-sidebar {
         width: 100%;
     }
 
-    .print-preview-pane {
+    .print-preview-pane iframe {
         position: absolute;
         inset: 0;
     }
