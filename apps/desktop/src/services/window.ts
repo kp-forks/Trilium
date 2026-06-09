@@ -4,6 +4,8 @@ import { type BrowserWindow, type BrowserWindowConstructorOptions, default as el
 import path from "path";
 import url from "url";
 
+import { validateOpenExternalUrl } from "./shell.js";
+
 // Preload bundle path. Two layouts:
 //   - Dev: this file lives at apps/desktop/src/services/window.ts, and the
 //     preload bundle is one level up at apps/desktop/src/preload.compiled.cjs
@@ -168,7 +170,13 @@ function getWindowExtraOpts() {
 async function configureWebContents(webContents: WebContents, spellcheckEnabled: boolean) {
     webContents.setWindowOpenHandler((details) => {
         async function openExternal() {
-            (await import("electron")).shell.openExternal(details.url);
+            // A target=_blank link or window.open() from note content is just
+            // as attacker-controllable as an IPC payload, so enforce the same
+            // scheme allowlist as the open-external IPC channel — otherwise
+            // Follina-class (ms-msdt:) and credential-leak (smb:) URLs would
+            // bypass it here.
+            const validated = validateOpenExternalUrl(details.url);
+            (await import("electron")).shell.openExternal(validated.toString());
         }
 
         openExternal().catch(err => {

@@ -390,7 +390,25 @@ describe("window service", () => {
             const result = handlerArg({ url: "https://example.com" });
             expect(result).toEqual({ action: "deny" });
             await new Promise((r) => setTimeout(r, 0));
-            expect(fakeShell.openExternal).toHaveBeenCalledWith("https://example.com");
+            // URL round-trips through the validator, which normalizes it.
+            expect(fakeShell.openExternal).toHaveBeenCalledWith("https://example.com/");
+        });
+
+        it("refuses to open URLs with blocked schemes externally", async () => {
+            const wc = state.windows[state.windows.length - 1].webContents;
+            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
+
+            // Follina-class and credential-leak schemes must not reach the OS
+            // handler via window.open / target=_blank either — same allowlist
+            // as the open-external IPC channel.
+            for (const hostileUrl of ["ms-msdt:/id PCWDiagnostic", "smb://attacker.example/share", "not a url"]) {
+                const result = handlerArg({ url: hostileUrl });
+                expect(result).toEqual({ action: "deny" });
+            }
+            await new Promise((r) => setTimeout(r, 0));
+
+            expect(fakeShell.openExternal).not.toHaveBeenCalled();
+            expect(state.log.error).toHaveBeenCalledTimes(3);
         });
 
         it("logs when external open fails", async () => {
