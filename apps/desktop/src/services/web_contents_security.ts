@@ -1,6 +1,9 @@
 import { WEBVIEW_SESSION_PARTITION } from "@triliumnext/commons";
 import { getLog } from "@triliumnext/core";
 import electron from "electron";
+import url from "url";
+
+import { validateOpenExternalUrl } from "./shell.js";
 
 /**
  * Security guard for `<webview>` attachment.
@@ -18,10 +21,16 @@ import electron from "electron";
  */
 
 /**
- * Registers a main-process hook that vets every `<webview>` before it
- * attaches, on every WebContents the app ever creates (main, extra, setup and
- * print windows alike), and installs deny-by-default permission handlers on
- * both the app session and the dedicated `<webview>` guest session.
+ * Registers a main-process hook that applies a uniform security policy to
+ * every WebContents the app ever creates (main, extra, setup and print
+ * windows as well as `<webview>` guests):
+ *
+ * - vets every `<webview>` before it attaches,
+ * - denies all window-open requests, routing allowlisted URLs to the OS
+ *   browser instead,
+ * - blocks navigation away from the app shell,
+ * - installs deny-by-default permission handlers on both the app session and
+ *   the dedicated `<webview>` guest session.
  *
  * Attach attempts that explicitly request a dangerous capability (Node
  * integration, a preload script, disabled web security) are denied outright —
@@ -43,6 +52,9 @@ export function setupWebContentsSecurity() {
                 getLog().error(`Blocked <webview> attach requesting [${violations.join(", ")}] for src: ${params.src}`);
             }
         });
+
+        installWindowOpenPolicy(webContents);
+        installNavigationGuard(webContents);
     });
 
     // Sessions only exist once the app is ready; both handlers below replace
@@ -131,6 +143,71 @@ export type SessionKind = keyof typeof PERMISSION_ALLOWLIST;
 /** Pure policy check: is `permission` allowed for the given session kind? */
 export function isPermissionAllowed(kind: SessionKind, permission: string): boolean {
     return PERMISSION_ALLOWLIST[kind].has(permission);
+}
+
+/**
+ * Decides whether a renderer-initiated navigation (link click, drag & drop,
+ * meta refresh) may proceed. Only the app shell itself is allowed: the
+ * `trilium-app://` protocol or localhost, and only at the root path —
+ * internal redirects from the setup and migration pages land there. Anything
+ * deeper is in-page SPA routing (which `will-navigate` does not fire for) or
+ * hostile.
+ */
+export function isNavigationAllowed(targetUrl: string): boolean {
+    const parsedUrl = url.parse(targetUrl);
+
+    const isInternal = parsedUrl.protocol === "trilium-app:"
+        || ["localhost", "127.0.0.1"].includes(parsedUrl.hostname || "");
+    return isInternal && (!parsedUrl.path || parsedUrl.path === "/" || parsedUrl.path === "/?");
+}
+
+/**
+ * Denies every window-open request (`window.open`, `target=_blank`). For app
+ * windows the URL is routed to the OS browser instead, after passing the same
+ * scheme allowlist as the open-external IPC channel — a link in note content
+ * is just as attacker-controllable as an IPC payload, so Follina-class
+ * (`ms-msdt:`) and credential-leak (`smb:`) URLs must not bypass it here.
+ *
+ * `<webview>` guests are denied without the external dispatch: the tag never
+ * sets `allowpopups`, so popups are already impossible there — this keeps it
+ * that way even if a future Electron version changes the default, and stops
+ * remote pages from triggering OS protocol handlers.
+ */
+function installWindowOpenPolicy(webContents: Electron.WebContents) {
+    webContents.setWindowOpenHandler((details) => {
+        if (webContents.getType() === "webview") {
+            getLog().error(`Blocked window.open from <webview> guest for URL: ${details.url}`);
+            return { action: "deny" };
+        }
+
+        async function openExternal() {
+            const validated = validateOpenExternalUrl(details.url);
+            await electron.shell.openExternal(validated.toString());
+        }
+
+        openExternal().catch(err => {
+            getLog().error(`Failed to open external URL ${details.url}: ${err}`);
+        });
+        return { action: "deny" };
+    });
+}
+
+/**
+ * Prevents drag & drop, link clicks etc. from navigating an app window away
+ * from Trilium. `<webview>` guests are exempt — they are embedded browsers
+ * the user navigates freely. Main-process `loadURL` calls are unaffected
+ * (`will-navigate` does not fire for them).
+ */
+function installNavigationGuard(webContents: Electron.WebContents) {
+    if (webContents.getType() === "webview") {
+        return;
+    }
+
+    webContents.on("will-navigate", (ev, targetUrl) => {
+        if (!isNavigationAllowed(targetUrl)) {
+            ev.preventDefault();
+        }
+    });
 }
 
 function installPermissionPolicy(session: Electron.Session, kind: SessionKind) {

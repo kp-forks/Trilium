@@ -2,9 +2,6 @@ import { app_info, cls, events, getLog, keyboard_actions as keyboardActionsServi
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
-import url from "url";
-
-import { validateOpenExternalUrl } from "./shell.js";
 
 // Preload bundle path. Two layouts:
 //   - Dev: this file lives at apps/desktop/src/services/window.ts, and the
@@ -168,34 +165,9 @@ function getWindowExtraOpts() {
 }
 
 async function configureWebContents(webContents: WebContents, spellcheckEnabled: boolean) {
-    webContents.setWindowOpenHandler((details) => {
-        async function openExternal() {
-            // A target=_blank link or window.open() from note content is just
-            // as attacker-controllable as an IPC payload, so enforce the same
-            // scheme allowlist as the open-external IPC channel — otherwise
-            // Follina-class (ms-msdt:) and credential-leak (smb:) URLs would
-            // bypass it here.
-            const validated = validateOpenExternalUrl(details.url);
-            (await import("electron")).shell.openExternal(validated.toString());
-        }
-
-        openExternal().catch(err => {
-            getLog().error(`Failed to open external URL ${details.url}: ${err}`);
-        });
-        return { action: "deny" };
-    });
-
-    // prevent drag & drop to navigate away from trilium
-    webContents.on("will-navigate", (ev, targetUrl) => {
-        const parsedUrl = url.parse(targetUrl);
-
-        // we still need to allow internal redirects from setup and migration pages
-        const isInternal = parsedUrl.protocol === "trilium-app:"
-            || ["localhost", "127.0.0.1"].includes(parsedUrl.hostname || "");
-        if (!isInternal || (parsedUrl.path && parsedUrl.path !== "/" && parsedUrl.path !== "/?")) {
-            ev.preventDefault();
-        }
-    });
+    // Window-open and navigation policy is NOT applied here: it is installed
+    // globally for every WebContents (including setup and print windows,
+    // which never pass through this function) by web_contents_security.ts.
 
     if (spellcheckEnabled) {
         setupSpellcheckForSession(webContents.session);

@@ -32,12 +32,21 @@ const state = vi.hoisted(() => {
         errors: [] as string[],
         defaultSession: makeFakeSession(),
         partitionSessions: new Map<string, ReturnType<typeof makeFakeSession>>(),
-        makeFakeSession
+        makeFakeSession,
+        shellOpenExternal: [] as string[],
+        shellOpenExternalThrow: false
     };
 });
 
 vi.mock("@triliumnext/core", () => ({
     getLog: () => ({ error: (msg: string) => state.errors.push(msg) })
+}));
+
+// shell.ts (imported for validateOpenExternalUrl) transitively pulls in the
+// server's data_dir module, which resolves and creates directories at import
+// time — stub it out to keep this spec free of filesystem side effects.
+vi.mock("@triliumnext/server/src/services/data_dir.js", () => ({
+    default: { TMP_DIR: "/tmp" }
 }));
 
 vi.mock("electron", () => ({
@@ -58,11 +67,60 @@ vi.mock("electron", () => ({
                 }
                 return session;
             }
+        },
+        shell: {
+            openExternal: (target: string) => {
+                if (state.shellOpenExternalThrow) {
+                    return Promise.reject(new Error("boom"));
+                }
+                state.shellOpenExternal.push(target);
+                return Promise.resolve();
+            }
         }
     }
 }));
 
-const { hardenWebviewPreferences, isPermissionAllowed, setupWebContentsSecurity } = await import("./web_contents_security.js");
+const { hardenWebviewPreferences, isNavigationAllowed, isPermissionAllowed, setupWebContentsSecurity } = await import("./web_contents_security.js");
+
+interface WindowOpenResult {
+    action: "allow" | "deny";
+}
+
+/**
+ * Simulates the main process creating a WebContents of the given type and
+ * returns the security hooks the global handler installed on it.
+ */
+function createContents(type: "window" | "webview" = "window") {
+    const created = state.appHandlers.get("web-contents-created");
+    if (!created) throw new Error("web-contents-created not registered");
+
+    const handlers = new Map<string, (...args: unknown[]) => unknown>();
+    let windowOpenHandler: ((details: { url: string }) => WindowOpenResult) | undefined;
+    created({}, {
+        getType: () => type,
+        on: (event: string, fn: (...args: unknown[]) => unknown) => handlers.set(event, fn),
+        setWindowOpenHandler: (fn: (details: { url: string }) => WindowOpenResult) => {
+            windowOpenHandler = fn;
+        }
+    });
+
+    return {
+        handlers,
+        openWindow(url: string): WindowOpenResult {
+            if (!windowOpenHandler) throw new Error("window open handler not installed");
+            return windowOpenHandler({ url });
+        }
+    };
+}
+
+function resetState() {
+    state.appHandlers.clear();
+    state.errors.length = 0;
+    state.defaultSession = state.makeFakeSession();
+    state.partitionSessions.clear();
+    state.shellOpenExternal.length = 0;
+    state.shellOpenExternalThrow = false;
+}
 
 describe("hardenWebviewPreferences", () => {
     it("reports no violations for a benign attach and forces isolation on", () => {
@@ -151,20 +209,15 @@ describe("setupWebContentsSecurity", () => {
     }
 
     beforeEach(() => {
-        state.appHandlers.clear();
-        state.errors.length = 0;
+        resetState();
         setupWebContentsSecurity();
     });
 
     /** Simulates a window being created and then a <webview> attaching inside it. */
     function attachWebview(prefs: Electron.WebPreferences, src = "https://example.com", partition?: string): MockAttach {
-        const created = state.appHandlers.get("web-contents-created");
-        if (!created) throw new Error("web-contents-created not registered");
+        const { handlers } = createContents();
 
-        const contentsHandlers = new Map<string, (...args: unknown[]) => unknown>();
-        created({}, { on: (event: string, fn: (...args: unknown[]) => unknown) => contentsHandlers.set(event, fn) });
-
-        const willAttach = contentsHandlers.get("will-attach-webview");
+        const willAttach = handlers.get("will-attach-webview");
         if (!willAttach) throw new Error("will-attach-webview not registered");
 
         const preventDefault = vi.fn();
@@ -230,10 +283,7 @@ describe("isPermissionAllowed", () => {
 
 describe("permission handlers", () => {
     beforeEach(async () => {
-        state.appHandlers.clear();
-        state.errors.length = 0;
-        state.defaultSession = state.makeFakeSession();
-        state.partitionSessions.clear();
+        resetState();
         setupWebContentsSecurity();
         // Installation is gated on app.whenReady(); flush the microtask queue.
         await Promise.resolve();
@@ -284,5 +334,100 @@ describe("permission handlers", () => {
         expect(appCheck({}, "geolocation")).toBe(false);
         expect(guestCheck({}, "fullscreen")).toBe(true);
         expect(guestCheck({}, "clipboard-sanitized-write")).toBe(false);
+    });
+});
+
+describe("window-open policy", () => {
+    beforeEach(() => {
+        resetState();
+        setupWebContentsSecurity();
+    });
+
+    it("denies the popup and opens allowlisted URLs in the OS browser", async () => {
+        const contents = createContents();
+
+        expect(contents.openWindow("https://example.com")).toEqual({ action: "deny" });
+        await new Promise((r) => setTimeout(r, 0));
+
+        // URL round-trips through the validator, which normalizes it.
+        expect(state.shellOpenExternal).toEqual(["https://example.com/"]);
+        expect(state.errors).toEqual([]);
+    });
+
+    it("refuses to open URLs with blocked schemes externally", async () => {
+        const contents = createContents();
+
+        // Follina-class and credential-leak schemes must not reach the OS
+        // handler via window.open / target=_blank either — same allowlist
+        // as the open-external IPC channel.
+        for (const hostileUrl of ["ms-msdt:/id PCWDiagnostic", "smb://attacker.example/share", "not a url"]) {
+            expect(contents.openWindow(hostileUrl)).toEqual({ action: "deny" });
+        }
+        await new Promise((r) => setTimeout(r, 0));
+
+        expect(state.shellOpenExternal).toEqual([]);
+        expect(state.errors).toHaveLength(3);
+    });
+
+    it("logs when the external open fails", async () => {
+        state.shellOpenExternalThrow = true;
+        const contents = createContents();
+
+        expect(contents.openWindow("https://bad.example")).toEqual({ action: "deny" });
+        await new Promise((r) => setTimeout(r, 0));
+
+        expect(state.errors).toHaveLength(1);
+        expect(state.errors[0]).toContain("https://bad.example");
+    });
+
+    it("denies window.open from webview guests without dispatching to the OS", async () => {
+        const contents = createContents("webview");
+
+        expect(contents.openWindow("https://example.com")).toEqual({ action: "deny" });
+        await new Promise((r) => setTimeout(r, 0));
+
+        expect(state.shellOpenExternal).toEqual([]);
+        expect(state.errors).toHaveLength(1);
+        expect(state.errors[0]).toContain("https://example.com");
+    });
+});
+
+describe("navigation guard", () => {
+    beforeEach(() => {
+        resetState();
+        setupWebContentsSecurity();
+    });
+
+    it("only allows internal root navigation (setup and migration redirects)", () => {
+        expect(isNavigationAllowed("trilium-app://app/")).toBe(true);
+        // Internal host with the root "/?" path is allowed.
+        expect(isNavigationAllowed("trilium-app://app/?")).toBe(true);
+        expect(isNavigationAllowed("http://localhost/")).toBe(true);
+        expect(isNavigationAllowed("http://127.0.0.1/")).toBe(true);
+
+        expect(isNavigationAllowed("https://evil.example/page")).toBe(false);
+        // Internal host but non-root path is blocked.
+        expect(isNavigationAllowed("http://localhost/somewhere")).toBe(false);
+        // URL with no hostname falls back to "" and is blocked.
+        expect(isNavigationAllowed("javascript:void(0)")).toBe(false);
+    });
+
+    it("prevents disallowed navigations on app windows", () => {
+        const { handlers } = createContents();
+        const willNavigate = handlers.get("will-navigate");
+        if (!willNavigate) throw new Error("will-navigate not registered");
+
+        const external = { preventDefault: vi.fn() };
+        willNavigate(external, "https://evil.example/page");
+        expect(external.preventDefault).toHaveBeenCalled();
+
+        const internal = { preventDefault: vi.fn() };
+        willNavigate(internal, "trilium-app://app/");
+        expect(internal.preventDefault).not.toHaveBeenCalled();
+    });
+
+    it("does not install a navigation guard on webview guests", () => {
+        const { handlers } = createContents("webview");
+        expect(handlers.has("will-navigate")).toBe(false);
     });
 });

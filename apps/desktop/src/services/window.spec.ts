@@ -47,7 +47,6 @@ class FakeWebContents {
         return this;
     });
     public listeners = new Map<string, Handler[]>();
-    public setWindowOpenHandler = vi.fn();
     public toggleDevTools = vi.fn();
     public cut = vi.fn();
     public copy = vi.fn();
@@ -329,7 +328,7 @@ describe("window service", () => {
             await windowService.createExtraWindow("#root/abc");
             const win = state.windows[state.windows.length - 1];
             expect(win.loadURL).toHaveBeenCalledWith("trilium-app://app/?extraWindow=1#root/abc");
-            expect(win.webContents.setWindowOpenHandler).toHaveBeenCalled();
+            expect(win.webContents.session.setSpellCheckerLanguages).toHaveBeenCalled();
         });
     });
 
@@ -384,71 +383,8 @@ describe("window service", () => {
             await windowService.createMainWindow();
         });
 
-        it("denies new windows and opens them externally", async () => {
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
-            const result = handlerArg({ url: "https://example.com" });
-            expect(result).toEqual({ action: "deny" });
-            await new Promise((r) => setTimeout(r, 0));
-            // URL round-trips through the validator, which normalizes it.
-            expect(fakeShell.openExternal).toHaveBeenCalledWith("https://example.com/");
-        });
-
-        it("refuses to open URLs with blocked schemes externally", async () => {
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
-
-            // Follina-class and credential-leak schemes must not reach the OS
-            // handler via window.open / target=_blank either — same allowlist
-            // as the open-external IPC channel.
-            for (const hostileUrl of ["ms-msdt:/id PCWDiagnostic", "smb://attacker.example/share", "not a url"]) {
-                const result = handlerArg({ url: hostileUrl });
-                expect(result).toEqual({ action: "deny" });
-            }
-            await new Promise((r) => setTimeout(r, 0));
-
-            expect(fakeShell.openExternal).not.toHaveBeenCalled();
-            expect(state.log.error).toHaveBeenCalledTimes(3);
-        });
-
-        it("logs when external open fails", async () => {
-            // The inner `openExternal()` doesn't await `shell.openExternal`, so only a
-            // synchronous throw inside it rejects the wrapper and hits the `.catch`.
-            fakeShell.openExternal.mockImplementationOnce(() => {
-                throw new Error("boom");
-            });
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
-            handlerArg({ url: "https://bad.example" });
-            await new Promise((r) => setTimeout(r, 0));
-            expect(state.log.error).toHaveBeenCalled();
-        });
-
-        it("blocks external navigation but allows internal redirects", () => {
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const external = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", external, "https://evil.example/page");
-            expect(external.preventDefault).toHaveBeenCalled();
-
-            const internal = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", internal, "trilium-app://app/");
-            expect(internal.preventDefault).not.toHaveBeenCalled();
-
-            // internal host but non-root path is blocked
-            const internalPath = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", internalPath, "http://localhost/somewhere");
-            expect(internalPath.preventDefault).toHaveBeenCalled();
-
-            // URL with no hostname falls back to "" (covers `hostname || ""`) and is blocked.
-            const noHost = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", noHost, "javascript:void(0)");
-            expect(noHost.preventDefault).toHaveBeenCalled();
-
-            // internal host with the root "/?" path is allowed (covers that path comparison).
-            const rootQuery = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", rootQuery, "trilium-app://app/?");
-            expect(rootQuery.preventDefault).not.toHaveBeenCalled();
-        });
+        // Window-open and navigation policy is installed globally by
+        // web_contents_security.ts and tested in web_contents_security.spec.ts.
 
         it("forwards full-screen, navigation and context-menu events", () => {
             const win = state.windows[state.windows.length - 1];
