@@ -186,7 +186,7 @@ function installWindowOpenPolicy(webContents: Electron.WebContents) {
         }
 
         openExternal().catch(err => {
-            getLog().error(`Failed to open external URL ${details.url}: ${err}`);
+            getLog().error(`Blocked or failed to open external URL ${details.url}: ${err}`);
         });
         return { action: "deny" };
     });
