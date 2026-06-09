@@ -113,13 +113,16 @@ export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences
  * denied.
  *
  * - `app`: the default session — the Trilium renderer itself. It legitimately
- *   writes to the clipboard (copy note content/links) and toggles fullscreen
- *   (e.g. presentations, zen mode), nothing else.
+ *   writes to the clipboard (copy note content/links), toggles fullscreen
+ *   (e.g. presentations, zen mode) and shows notifications (user scripts
+ *   commonly call `new Notification()` for reminders; the renderer only runs
+ *   trusted code, so this stays available to the scripting ecosystem).
  * - `guest`: the `<webview>` partition hosting arbitrary remote pages from
- *   Web View notes. Fullscreen only (embedded video players).
+ *   Web View notes. Fullscreen only (embedded video players) — a remote page
+ *   must not show OS notifications that appear to come from Trilium.
  */
 const PERMISSION_ALLOWLIST = {
-    app: new Set(["clipboard-sanitized-write", "fullscreen"]),
+    app: new Set(["clipboard-sanitized-write", "fullscreen", "notifications"]),
     guest: new Set(["fullscreen"])
 } as const;
 

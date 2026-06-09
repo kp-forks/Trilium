@@ -208,16 +208,20 @@ describe("setupWebContentsSecurity", () => {
 
 describe("isPermissionAllowed", () => {
     it("implements the per-session allowlist matrix", () => {
-        // App session: the renderer copies note content and toggles fullscreen.
+        // App session: the renderer copies note content, toggles fullscreen
+        // and shows notifications (user scripts rely on `new Notification()`).
         expect(isPermissionAllowed("app", "clipboard-sanitized-write")).toBe(true);
         expect(isPermissionAllowed("app", "fullscreen")).toBe(true);
+        expect(isPermissionAllowed("app", "notifications")).toBe(true);
 
-        // Guest session: only fullscreen (embedded video players).
+        // Guest session: only fullscreen (embedded video players). Remote
+        // pages must not show OS notifications appearing to come from Trilium.
         expect(isPermissionAllowed("guest", "fullscreen")).toBe(true);
         expect(isPermissionAllowed("guest", "clipboard-sanitized-write")).toBe(false);
+        expect(isPermissionAllowed("guest", "notifications")).toBe(false);
 
         // Everything else is denied everywhere.
-        for (const permission of ["media", "geolocation", "notifications", "midi", "hid", "serial", "usb", "pointerLock", "clipboard-read", "openExternal"]) {
+        for (const permission of ["media", "geolocation", "midi", "hid", "serial", "usb", "pointerLock", "clipboard-read", "openExternal"]) {
             expect(isPermissionAllowed("app", permission)).toBe(false);
             expect(isPermissionAllowed("guest", permission)).toBe(false);
         }
