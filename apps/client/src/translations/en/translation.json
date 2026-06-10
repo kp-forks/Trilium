@@ -1590,6 +1590,7 @@
     "backup_now": "Backup now",
     "backup_database_now": "Backup database now",
     "existing_backups": "Existing backups",
+    "backup_location_description": "Backups are stored in {{- backupFolder}}.",
     "date-and-time": "Date & time",
     "path": "Path",
     "database_backed_up_to": "Database has been backed up to {{- backupFilePath}}",

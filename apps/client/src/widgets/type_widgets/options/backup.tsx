@@ -85,15 +85,24 @@ export function BackupConfiguration({ refreshCallback }: { refreshCallback: () =
 }
 
 export function BackupList({ backups }: { backups: DatabaseBackup[] }) {
+    // All backups live in the same directory, so display it once instead of repeating it per file.
+    const firstBackup = backups.at(0);
+    const backupFolder = firstBackup?.filePath.slice(0, -(firstBackup.fileName.length + 1));
+
     return (
-        <OptionsSection title={t("backup.existing_backups")}>
+        <OptionsSection
+            title={t("backup.existing_backups")}
+            description={backupFolder && (
+                <span className="selectable-text">{t("backup.backup_location_description", { backupFolder })}</span>
+            )}
+        >
             {backups.length > 0 ? (
-                backups.map(({ mtime, filePath }) => (
+                backups.map(({ fileName, filePath, mtime }) => (
                     <OptionsRow
                         key={filePath}
                         name="existing-backup"
-                        label={mtime ? formatDateTime(mtime) : "-"}
-                        description={<span className="selectable-text">{filePath}</span>}
+                        label={<span className="selectable-text">{fileName}</span>}
+                        description={mtime ? formatDateTime(mtime) : "-"}
                     >
                         <a href={`api/database/backup/download?filePath=${encodeURIComponent(filePath)}`} download>
                             <ActionButton icon="bx bx-download" text={t("backup.download")} />
