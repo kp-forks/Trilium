@@ -34,8 +34,11 @@
         cursor: grab;
         border-bottom: 1px solid var(--main-border-color);
 
+        .tn-icon + span {
+            flex-grow: 1;
+        }
+
         .note-book-title {
-            flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
